@@ -198,7 +198,7 @@ def card():
     return shell
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 的门槛是 2.0；数值实测）：
+# 对比度（WCAG 相对亮度比，de-design-lint 的门槛是 2.0；数值实测）：
 #   c-ink    on c-bg      18.83      c-muted on c-bg       8.49  ← 最低
 #   c-accent on c-bg      14.36      c-bg    on c-accent  14.36
 #   c-accent on c-surface 13.07      c-ink   on c-surface 17.13

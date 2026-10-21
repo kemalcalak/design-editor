@@ -5,8 +5,8 @@ import UIKit
 /// Keeps a user-started AI generation alive after UIKit backgrounds the app.
 /// The engine stays suspended and only its render-free owner-thread pump runs.
 final class GenerationBackgroundCoordinator {
-    static let permittedIdentifier = "tech.zseven.openpencil.generation.*"
-    private static let continuedIdentifierPrefix = "tech.zseven.openpencil.generation."
+    static let permittedIdentifier = "com.kemalcalak.designeditor.generation.*"
+    private static let continuedIdentifierPrefix = "com.kemalcalak.designeditor.generation."
 
     private weak var host: OpEngineHost?
     private var state = GenerationBackgroundState()
@@ -134,7 +134,7 @@ final class GenerationBackgroundCoordinator {
         // delivery if the user backgrounds immediately after pressing Send.
         guard startApplicationProtection(
             token: token,
-            name: "OpenPencil continued-processing handoff"
+            name: "Design Editor continued-processing handoff"
         ) else {
             failContinuedProtection(registration: registration)
             NSLog("Could not acquire iOS continued-processing handoff")
@@ -210,7 +210,7 @@ final class GenerationBackgroundCoordinator {
     }
 
     private func requestFallbackProtection(token: String) {
-        if !startApplicationProtection(token: token, name: "OpenPencil generation") {
+        if !startApplicationProtection(token: token, name: "Design Editor generation") {
             apply(state.protectionFailed())
         }
     }

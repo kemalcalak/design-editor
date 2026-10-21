@@ -13,8 +13,8 @@ api_key_base64=${APP_STORE_CONNECT_API_KEY_BASE64:-}
 api_key_id=${APP_STORE_CONNECT_API_KEY_ID:-}
 api_key_issuer_id=${APP_STORE_CONNECT_ISSUER_ID:-}
 apple_team_id=${APPLE_TEAM_ID:-}
-relay_bootstrap_cn=${OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN:-}
-relay_bootstrap_global=${OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:-}
+relay_bootstrap_cn=${DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN:-}
+relay_bootstrap_global=${DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:-}
 export -n \
     certificate_base64 certificate_password profile_base64 \
     api_key_base64 api_key_id api_key_issuer_id apple_team_id \
@@ -26,13 +26,13 @@ unset APP_STORE_CONNECT_API_KEY_BASE64
 unset APP_STORE_CONNECT_API_KEY_ID
 unset APP_STORE_CONNECT_ISSUER_ID
 unset APPLE_TEAM_ID
-unset OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN
-unset OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
+unset DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN
+unset DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
 umask 077
 
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd)
-bundle_id=tech.zseven.openpencil
+bundle_id=com.kemalcalak.designeditor
 ios_target=aarch64-apple-ios
 
 targets=(
@@ -55,8 +55,8 @@ usage() {
         'Required environment:' \
         '  OP_AUTH_ARTIFACT_ROOT' \
         '  IOS_MARKETING_VERSION, IOS_BUILD_NUMBER, APPLE_TEAM_ID' \
-        '  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN' \
-        '  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL' \
+        '  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN' \
+        '  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL' \
         '  IOS_DISTRIBUTION_CERTIFICATE_BASE64' \
         '  IOS_DISTRIBUTION_CERTIFICATE_PASSWORD' \
         '  IOS_PROVISIONING_PROFILE_BASE64' \
@@ -138,8 +138,8 @@ require_secret_value APP_STORE_CONNECT_API_KEY_BASE64 "$api_key_base64"
 require_secret_value APP_STORE_CONNECT_API_KEY_ID "$api_key_id"
 require_secret_value APP_STORE_CONNECT_ISSUER_ID "$api_key_issuer_id"
 require_secret_value APPLE_TEAM_ID "$apple_team_id"
-require_secret_value OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN "$relay_bootstrap_cn"
-require_secret_value OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL "$relay_bootstrap_global"
+require_secret_value DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN "$relay_bootstrap_cn"
+require_secret_value DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL "$relay_bootstrap_global"
 
 for command in \
     base64 cargo codesign find grep openssl plutil python3 rustup security \
@@ -149,7 +149,7 @@ done
 
 workspace_version=$("$repo_root/scripts/workspace-version.sh")
 [[ "$IOS_MARKETING_VERSION" == "$workspace_version" ]] || {
-    printf 'error: iOS marketing version must match the OpenPencil workspace\n' >&2
+    printf 'error: iOS marketing version must match the Design Editor workspace\n' >&2
     exit 2
 }
 [[ "$IOS_BUILD_NUMBER" \
@@ -190,10 +190,10 @@ esac
 }
 
 work_root=${RUNNER_TEMP:-${TMPDIR:-/tmp}}
-temp_dir=$(mktemp -d "$work_root/openpencil-testflight.XXXXXX")
+temp_dir=$(mktemp -d "$work_root/design-editor-testflight.XXXXXX")
 staged_prebuilt=$temp_dir/prebuilt
 keychain_path=$temp_dir/signing.keychain-db
-canonical_prebuilt=$repo_root/crates/op-auth-bridge/prebuilt
+canonical_prebuilt=$repo_root/crates/de-auth-bridge/prebuilt
 canonical_ios=$canonical_prebuilt/$ios_target
 canonical_ios_backup=$temp_dir/canonical-ios-backup
 canonical_ios_existed=0
@@ -287,7 +287,7 @@ done
 # check-op-auth-prebuilt only checks that a key exists; matrix signature
 # verification below always reads the canonical source key directly. This
 # staged copy is from that trusted key, never from the artifact checkout.
-trusted_public_key=$repo_root/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY
+trusted_public_key=$repo_root/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY
 require_regular_file "$trusted_public_key"
 trusted_public_key_sha=$(sha256_file "$trusted_public_key")
 cp -p "$trusted_public_key" "$staged_prebuilt/PROVENANCE_PUBKEY"
@@ -335,13 +335,13 @@ cargo clean -p skia-bindings --target aarch64-apple-ios --release
 # actual deployment target (project.yml IPHONEOS_DEPLOYMENT_TARGET).
 RUSTUP_TOOLCHAIN=1.94 \
 IPHONEOS_DEPLOYMENT_TARGET=15.0 \
-OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN=$relay_bootstrap_cn \
-OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL=$relay_bootstrap_global \
-    cargo build --locked --release -p op-engine-ffi \
+DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN=$relay_bootstrap_cn \
+DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL=$relay_bootstrap_global \
+    cargo build --locked --release -p de-engine-ffi \
         --target aarch64-apple-ios --features metal,editor,pinned-skia-binaries
 OP_AUTH_CARGO_TARGET=aarch64-apple-ios \
     "$repo_root/tools/check-op-auth-cargo-build.sh"
-engine_archive=$repo_root/target/aarch64-apple-ios/release/libop_engine_ffi.a
+engine_archive=$repo_root/target/aarch64-apple-ios/release/libde_engine_ffi.a
 require_regular_file "$engine_archive"
 undefined_symbols=$temp_dir/engine-undefined-symbols
 xcrun nm -u "$engine_archive" > "$undefined_symbols"
@@ -366,11 +366,11 @@ LC_ALL=C grep -aFq "$relay_bootstrap_global" "$engine_archive" || {
 player_dir=$repo_root/packaging/ios
 (cd "$player_dir" && "$XCODEGEN_BIN" generate --spec project.yml)
 ruby - "$player_dir/project.yml" \
-    "$player_dir/OpenPencilPlayer.xcodeproj/project.pbxproj" <<'RUBY'
+    "$player_dir/DesignEditorPlayer.xcodeproj/project.pbxproj" <<'RUBY'
 require "yaml"
 
 project = YAML.safe_load(File.read(ARGV.fetch(0)), aliases: true)
-target = project.fetch("targets").fetch("OpenPencilPlayer")
+target = project.fetch("targets").fetch("DesignEditorPlayer")
 
 # Every shell phase in the release build is pinned verbatim: the vendored
 # sign-in SDK fetch, the optional auth-archive gate, and the Douyin resource
@@ -538,14 +538,14 @@ security find-identity -v -p codesigning "$keychain_path" \
     exit 1
 }
 
-archive_path=$temp_dir/OpenPencilPlayer.xcarchive
+archive_path=$temp_dir/DesignEditorPlayer.xcarchive
 derived_data=$temp_dir/DerivedData
 encryption_build_settings=(
     "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption=NO"
 )
 xcodebuild \
-    -project "$player_dir/OpenPencilPlayer.xcodeproj" \
-    -scheme OpenPencilPlayer \
+    -project "$player_dir/DesignEditorPlayer.xcodeproj" \
+    -scheme DesignEditorPlayer \
     -configuration Release \
     -destination 'generic/platform=iOS' \
     -archivePath "$archive_path" \
@@ -565,7 +565,7 @@ xcodebuild \
     OP_AUTH_ARCHIVE="$auth_archive" \
     archive
 
-app_path=$archive_path/Products/Applications/OpenPencilPlayer.app
+app_path=$archive_path/Products/Applications/DesignEditorPlayer.app
 app_info=$app_path/Info.plist
 require_regular_file "$app_info"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app_info")" \

@@ -7,22 +7,22 @@ services:
     command:
       - --production
     environment:
-      OPENPENCIL_COLLAB_RELAY_TICKET_POLICY_FILE: /run/secrets/openpencil-collab-policy.json
-      OPENPENCIL_COLLAB_RELAY_LOCATOR_KEYS_FILE: /run/secrets/openpencil-relay-locator-keys.json
-      OPENPENCIL_COLLAB_RELAY_X25519_KEYS_FILE: /run/secrets/openpencil-relay-x25519-keys.json
-      OPENPENCIL_COLLAB_RELAY_POLICY_MAX_AGE_SECONDS: "60"
+      DESIGN_EDITOR_COLLAB_RELAY_TICKET_POLICY_FILE: /run/secrets/design-editor-collab-policy.json
+      DESIGN_EDITOR_COLLAB_RELAY_LOCATOR_KEYS_FILE: /run/secrets/design-editor-relay-locator-keys.json
+      DESIGN_EDITOR_COLLAB_RELAY_X25519_KEYS_FILE: /run/secrets/design-editor-relay-x25519-keys.json
+      DESIGN_EDITOR_COLLAB_RELAY_POLICY_MAX_AGE_SECONDS: "60"
     secrets:
-      - source: openpencil_collab_policy
-        target: openpencil-collab-policy.json
-      - source: openpencil_relay_locator_keys
-        target: openpencil-relay-locator-keys.json
-      - source: openpencil_relay_x25519_keys
-        target: openpencil-relay-x25519-keys.json
+      - source: design_editor_collab_policy
+        target: design-editor-collab-policy.json
+      - source: design_editor_relay_locator_keys
+        target: design-editor-relay-locator-keys.json
+      - source: design_editor_relay_x25519_keys
+        target: design-editor-relay-x25519-keys.json
 
 secrets:
-  openpencil_collab_policy:
-    file: ${OPENPENCIL_COLLAB_POLICY_HOST_FILE:?set an absolute signed-policy file path}
-  openpencil_relay_locator_keys:
-    file: ${OPENPENCIL_RELAY_LOCATOR_KEYS_HOST_FILE:?set an absolute locator-key file path}
-  openpencil_relay_x25519_keys:
-    file: ${OPENPENCIL_RELAY_X25519_KEYS_HOST_FILE:?set an absolute relay X25519 key file path}
+  design_editor_collab_policy:
+    file: ${DESIGN_EDITOR_COLLAB_POLICY_HOST_FILE:?set an absolute signed-policy file path}
+  design_editor_relay_locator_keys:
+    file: ${DESIGN_EDITOR_RELAY_LOCATOR_KEYS_HOST_FILE:?set an absolute locator-key file path}
+  design_editor_relay_x25519_keys:
+    file: ${DESIGN_EDITOR_RELAY_X25519_KEYS_HOST_FILE:?set an absolute relay X25519 key file path}

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">OpenPencil</string>
+    <string name="app_name" translatable="false">Design Editor</string>
     <string name="document_open_failed">Couldn\'t open this file.</string>
     <string name="document_type_unsupported">Choose an .op or .pen file.</string>
     <string name="document_export_failed">Couldn\'t export this file.</string>
     <string name="document_save_failed">Couldn\'t save this document.</string>
     <string name="image_import_failed">Choose a PNG, JPEG, GIF, WebP, or SVG file up to 32 MiB.</string>
-    <string name="native_login_title">Sign in to OpenPencil</string>
+    <string name="native_login_title">Sign in to Design Editor</string>
     <string name="native_login_close">Close</string>
     <string name="native_login_email">Email</string>
     <string name="native_login_password">Password</string>
@@ -30,11 +30,11 @@
     <string name="account_center_region_value">Sign-in region: %1$s</string>
     <string name="account_center_manage">Manage account in browser</string>
     <string name="account_center_sign_out">Sign out</string>
-    <string name="account_center_sign_out_confirm">Sign out of OpenPencil?</string>
+    <string name="account_center_sign_out_confirm">Sign out of Design Editor?</string>
     <string name="sso_region_china">Mainland China</string>
     <string name="sso_region_global">Global</string>
     <string name="sso_region_picker_title">Sign-in region</string>
-    <string name="sso_region_restart_note">A region change takes effect after you restart OpenPencil.</string>
+    <string name="sso_region_restart_note">A region change takes effect after you restart Design Editor.</string>
     <string name="native_login_welcome">Welcome back</string>
     <string name="native_login_subtitle">Sign in to ZSeven</string>
     <string name="native_login_email_label">Email address</string>
@@ -69,12 +69,12 @@
     <string name="sso_region_restart_now">Restart now</string>
     <string name="language_picker_title">Language</string>
     <string name="background_generation_channel">AI generation</string>
-    <string name="background_generation_channel_description">Progress while OpenPencil generates in the background</string>
+    <string name="background_generation_channel_description">Progress while Design Editor generates in the background</string>
     <string name="background_generation_result_channel">Generation results</string>
-    <string name="background_generation_running_title">OpenPencil is generating</string>
+    <string name="background_generation_running_title">Design Editor is generating</string>
     <string name="background_generation_running_body">You can use other apps while generation continues.</string>
     <string name="background_generation_complete_title">Generation complete</string>
-    <string name="background_generation_complete_body">Tap to review the result in OpenPencil.</string>
+    <string name="background_generation_complete_body">Tap to review the result in Design Editor.</string>
     <string name="background_generation_paused_title">Background generation paused</string>
-    <string name="background_generation_paused_body">Android’s background time limit was reached. Return to OpenPencil to continue.</string>
+    <string name="background_generation_paused_body">Android’s background time limit was reached. Return to Design Editor to continue.</string>
 </resources>

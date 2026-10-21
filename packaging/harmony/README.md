@@ -1,6 +1,6 @@
-# OpenPencil HarmonyOS Player
+# Design Editor HarmonyOS Player
 
-A thin ArkUI shell around the OpenPencil Rust engine, targeting **HarmonyOS 5
+A thin ArkUI shell around the Design Editor Rust engine, targeting **HarmonyOS 5
 (API 12+)** as ONE app for `phone`, `tablet`, and `2in1` (PC). The engine
 paints the entire UI inside a single `XComponent` surface; ArkTS forwards
 lifecycle, raw pointers, keys, the IME, and the file pickers, and nothing
@@ -24,16 +24,16 @@ framework source files and generated/AI bundle ZIPs.
 
 ```text
 packaging/harmony/
-├── AppScope/app.json5                     bundleName tech.zseven.openpencil
+├── AppScope/app.json5                     bundleName com.kemalcalak.designeditor
 ├── build-profile.json5                    products, SDK floor, signing placeholder
 ├── hvigorfile.ts / oh-package.json5
 ├── entry/
 │   ├── build-profile.json5                prebuilt-.so packaging (no CMake target)
-│   ├── oh-package.json5                   wires the libopenpencil.so type package
-│   ├── libs/arm64-v8a/libopenpencil.so    ← produced by scripts/build-ohos.sh
+│   ├── oh-package.json5                   wires the libdesign_editor.so type package
+│   ├── libs/arm64-v8a/libdesign_editor.so    ← produced by scripts/build-ohos.sh
 │   └── src/main/
 │       ├── module.json5                   deviceTypes [phone, tablet, 2in1]
-│       ├── cpp/types/libopenpencil/       index.d.ts: the NAPI contract
+│       ├── cpp/types/libdesign_editor/       index.d.ts: the NAPI contract
 │       ├── ets/entryability/EntryAbility.ets
 │       ├── ets/pages/Index.ets            the XComponent + shell-action sink
 │       ├── ets/common/*.ets               engine host, input, IME, pickers, dialogs
@@ -61,7 +61,7 @@ packaging/harmony/
 ## Build the engine library
 
 The ArkTS shell does **not** compile any native code. It consumes a prebuilt
-`libopenpencil.so` (crate `op-engine-napi`), built by the OHOS build script:
+`libdesign_editor.so` (crate `de-engine-napi`), built by the OHOS build script:
 
 ```bash
 # From the repository root, with OHOS_NDK_HOME exported.
@@ -75,7 +75,7 @@ timestamped editor-pointer (`editorPressAt` / `editorMoveAt` /
 and an atomic rename to:
 
 ```text
-packaging/harmony/entry/libs/arm64-v8a/libopenpencil.so
+packaging/harmony/entry/libs/arm64-v8a/libdesign_editor.so
 ```
 
 A failed build, marker check, or copy leaves the previous HAP payload
@@ -89,7 +89,7 @@ hvigor packages everything under `entry/libs/<abi>/` into the HAP, so no
 Only `arm64-v8a` is shipped: every HarmonyOS 5 device is 64-bit ARM. If you
 add `x86_64` for the emulator, drop it in `entry/libs/x86_64/`.
 
-The ArkTS side is compiled against `entry/src/main/cpp/types/libopenpencil/index.d.ts`.
+The ArkTS side is compiled against `entry/src/main/cpp/types/libdesign_editor/index.d.ts`.
 That file is the **contract with the Rust crate** — every function is the
 Android JNI surface (`packaging/android/.../OpNative.kt`) with the `native`
 prefix removed and the first letter lower-cased (`nativeCreate` → `create`,
@@ -121,11 +121,11 @@ unavailable. Completion, foreground resume, teardown, and the system expiry
 callback all stop the timer and cancel the grant immediately. Regular 100 ms
 ticks have already persisted each applied revision, so the deadline callback
 does no additional tool or file work. It leaves unfinished generation pending;
-returning to OpenPencil resumes it and shows an honest "background time ended"
+returning to Design Editor resumes it and shows an honest "background time ended"
 notice.
 
 Transient suspension delay needs no manifest permission or persistent
-notification. OpenPencil does not mislabel AI generation as a `DATA_TRANSFER`
+notification. Design Editor does not mislabel AI generation as a `DATA_TRANSFER`
 continuous task, and does not use `TASK_KEEPING`, which is limited to eligible
 2-in-1 computing-task scenarios.
 
@@ -166,8 +166,8 @@ hdc list targets
 hdc install entry/build/default/outputs/default/entry-default-signed.hap
 
 # Launch and follow the log
-hdc shell aa start -a EntryAbility -b tech.zseven.openpencil
-hdc hilog | grep OpenPencilPlayer
+hdc shell aa start -a EntryAbility -b com.kemalcalak.designeditor
+hdc hilog | grep DesignEditorPlayer
 ```
 
 Building from DevEco Studio (*Build ▸ Build Hap(s)/APP(s)*) is equivalent and
@@ -207,10 +207,10 @@ ruby packaging/harmony/Tests/HarmonyProjectContractTests.rb
 ruby packaging/harmony/Tests/HarmonyShellContractTests.rb
 ```
 
-They pin the XComponent ↔ `libopenpencil.so` binding, the device-type list,
+They pin the XComponent ↔ `libdesign_editor.so` binding, the device-type list,
 the bundle name, the render-free transient background-generation lifecycle,
 all shell action codes against
-`crates/op-engine-ffi/include/op_engine.h`, the empty-conduit backspace
+`crates/de-engine-ffi/include/op_engine.h`, the empty-conduit backspace
 contract, the bounded one-shot image/SVG picker, the 15-locale table
 (cross-checked against the Android shell), the export format set without WebP,
 and the rule that the ArkTS NAPI declaration matches the Android JNI surface
@@ -227,7 +227,7 @@ an in-memory `Map`, and nothing in the auth path logs a credential.
 
 - **Background generation is time-bounded by HarmonyOS.** It continues under
   a transient grant for up to 3 minutes normally (1 minute on low battery),
-  then pauses safely until OpenPencil returns to the foreground. It is not a
+  then pauses safely until Design Editor returns to the foreground. It is not a
   promise of unlimited background execution.
 - **Sign-in is native, and splits by form factor.** Shell actions 2
   (OpenLoginWebView), 5 (OpenAccountCenter), and 6 (RequestLogin) are wired
@@ -256,7 +256,7 @@ an in-memory `Map`, and nothing in the auth path logs a credential.
     ability and the user reopens the app.
 - **Collaboration credentials are not stored.** `onCredentialLoad` returns
   null and `onCredentialStoreIfAbsent` returns false: HarmonyOS has no
-  OpenPencil credential store yet, and storing a device key in plaintext
+  Design Editor credential store yet, and storing a device key in plaintext
   would be worse than not having one.
 - **WebP export is hidden**, matching iOS: the pinned mobile Skia archive
   ships no WebP encoder.

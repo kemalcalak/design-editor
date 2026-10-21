@@ -38,7 +38,7 @@ before using the result.
 Both the relay tunnel and locator clients use port `443`, but the Global layer
 must not inspect SNI or HTTP to choose an upstream. Give the locator ingress a
 different public IP and bind it with
-`OPENPENCIL_LOCATOR_EDGE_PUBLIC_BIND_IP`. Its listener always reaches the one
+`DESIGN_EDITOR_LOCATOR_EDGE_PUBLIC_BIND_IP`. Its listener always reaches the one
 CN locator federation target. The relay data-plane listener remains a
 different deployment and a different fixed target.
 
@@ -67,7 +67,7 @@ The Global host has no client-facing TLS private key.
 For an overseas desktop:
 
 ```sh
-export OPENPENCIL_COLLAB_RELAY_LOCATOR_URL='https://locator.example.cn/v1/locator'
+export DESIGN_EDITOR_COLLAB_RELAY_LOCATOR_URL='https://locator.example.cn/v1/locator'
 ```
 
 GeoDNS may resolve that hostname to the dedicated Global locator IP overseas
@@ -108,11 +108,11 @@ network can be joined by the dedicated HTTPS terminator:
 
 ```sh
 docker compose \
-  -p openpencil-collab-locator-cn \
+  -p design-editor-collab-locator-cn \
   -f deploy/collab-relay-locator/compose.yaml \
   up -d --build
 
-export OPENPENCIL_LOCATOR_BACKEND_NETWORK='openpencil-collab-locator-cn_default'
+export DESIGN_EDITOR_LOCATOR_BACKEND_NETWORK='design-editor-collab-locator-cn_default'
 ```
 
 Keep this backend network dedicated. Do not publish the Rust service's port
@@ -121,12 +121,12 @@ Keep this backend network dedicated. Do not publish the Rust service's port
 ## Deploy the private CN inner-HTTPS listener
 
 ```sh
-export OPENPENCIL_LOCATOR_EDGE_IMAGE_REPOSITORY='registry.example/nginx-unprivileged'
-export OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256='<reviewed-64-lowercase-hex-digest>'
-export OPENPENCIL_LOCATOR_CN_HTTPS_BIND_IP='10.0.8.23'
-export OPENPENCIL_LOCATOR_BACKEND_NETWORK='openpencil-collab-locator-cn_default'
-export OPENPENCIL_LOCATOR_CN_INNER_FULLCHAIN='/secure/cn/locator-inner-fullchain.pem'
-export OPENPENCIL_LOCATOR_CN_INNER_PRIVKEY='/secure/cn/locator-inner-privkey.pem'
+export DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_REPOSITORY='registry.example/nginx-unprivileged'
+export DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_SHA256='<reviewed-64-lowercase-hex-digest>'
+export DESIGN_EDITOR_LOCATOR_CN_HTTPS_BIND_IP='10.0.8.23'
+export DESIGN_EDITOR_LOCATOR_BACKEND_NETWORK='design-editor-collab-locator-cn_default'
+export DESIGN_EDITOR_LOCATOR_CN_INNER_FULLCHAIN='/secure/cn/locator-inner-fullchain.pem'
+export DESIGN_EDITOR_LOCATOR_CN_INNER_PRIVKEY='/secure/cn/locator-inner-privkey.pem'
 
 docker compose \
   -f deploy/collab-relay-locator-edge/compose.cn-https.yaml \
@@ -141,11 +141,11 @@ Bind/firewall port `8445` only to the CN locator-federation proxy.
 ## Deploy the private CN outer-mTLS listener
 
 ```sh
-export OPENPENCIL_LOCATOR_CN_FEDERATION_BIND_IP='10.0.8.22'
-export OPENPENCIL_LOCATOR_CN_FEDERATION_CERT='/secure/cn/locator-federation-server.pem'
-export OPENPENCIL_LOCATOR_CN_FEDERATION_KEY='/secure/cn/locator-federation-server-key.pem'
-export OPENPENCIL_LOCATOR_EDGE_CLIENT_CA='/secure/cn/locator-edge-client-ca.pem'
-export OPENPENCIL_LOCATOR_EDGE_CLIENT_CRL='/secure/cn/locator-edge-client-crl.pem'
+export DESIGN_EDITOR_LOCATOR_CN_FEDERATION_BIND_IP='10.0.8.22'
+export DESIGN_EDITOR_LOCATOR_CN_FEDERATION_CERT='/secure/cn/locator-federation-server.pem'
+export DESIGN_EDITOR_LOCATOR_CN_FEDERATION_KEY='/secure/cn/locator-federation-server-key.pem'
+export DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CA='/secure/cn/locator-edge-client-ca.pem'
+export DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CRL='/secure/cn/locator-edge-client-crl.pem'
 
 docker compose \
   -f deploy/collab-relay-locator-edge/compose.cn.yaml \
@@ -170,18 +170,18 @@ argument and generates the fixed nftables transaction itself; it never
 executes a caller-supplied rules file:
 
 ```sh
-export OPENPENCIL_LOCATOR_EDGE_PUBLIC_BIND_IP='<real-dedicated-public-ipv4>'
+export DESIGN_EDITOR_LOCATOR_EDGE_PUBLIC_BIND_IP='<real-dedicated-public-ipv4>'
 sudo deploy/collab-relay-locator-edge/install-global-new-connection-rate.sh \
-  "$OPENPENCIL_LOCATOR_EDGE_PUBLIC_BIND_IP"
+  "$DESIGN_EDITOR_LOCATOR_EDGE_PUBLIC_BIND_IP"
 sudo deploy/collab-relay-locator-edge/verify-global-new-connection-rate.sh \
-  "$OPENPENCIL_LOCATOR_EDGE_PUBLIC_BIND_IP"
+  "$DESIGN_EDITOR_LOCATOR_EDGE_PUBLIC_BIND_IP"
 ```
 
 Install this table through the host's boot-persistent nftables configuration
 and order its restore before Docker. The Global Compose service deliberately
 has `restart: "no"` so Docker can never republish it before that gate. Install
 the reviewed
-`openpencil-collab-locator-global.service.example` as a host unit after
+`design-editor-collab-locator-global.service.example` as a host unit after
 replacing its immutable release path. That unit orders nftables before Docker,
 and its supervised foreground wrapper reinstalls and independently verifies
 the exact table before every initial start or crash restart. Reboot once
@@ -191,14 +191,14 @@ Direct `docker compose up` for the Global file is not a production path.
 ## Deploy Global
 
 ```sh
-export OPENPENCIL_LOCATOR_EDGE_PUBLIC_BIND_IP='<real-dedicated-public-ipv4>'
-export OPENPENCIL_LOCATOR_EDGE_CLIENT_CERT='/secure/global/locator-edge-client.pem'
-export OPENPENCIL_LOCATOR_EDGE_CLIENT_KEY='/secure/global/locator-edge-client-key.pem'
-export OPENPENCIL_LOCATOR_CN_FEDERATION_CA='/secure/global/locator-federation-ca.pem'
-export OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM='10.0.8.22:9543'
-export OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_INNER_HTTPS_UPSTREAM='10.0.8.23:8445'
-export OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_NAME='locator-federation.collab.your-company.cn'
-export OPENPENCIL_LOCATOR_EDGE_EXPECTED_INNER_HOST='locator.collab.your-company.cn'
+export DESIGN_EDITOR_LOCATOR_EDGE_PUBLIC_BIND_IP='<real-dedicated-public-ipv4>'
+export DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CERT='/secure/global/locator-edge-client.pem'
+export DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_KEY='/secure/global/locator-edge-client-key.pem'
+export DESIGN_EDITOR_LOCATOR_CN_FEDERATION_CA='/secure/global/locator-federation-ca.pem'
+export DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM='10.0.8.22:9543'
+export DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_INNER_HTTPS_UPSTREAM='10.0.8.23:8445'
+export DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_NAME='locator-federation.collab.your-company.cn'
+export DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_INNER_HOST='locator.collab.your-company.cn'
 
 deploy/collab-relay-locator-edge/deploy-global.sh
 ```
@@ -216,11 +216,11 @@ reloading only Nginx is insufficient. Use the independent
 monotonically numbered CRL, then force-recreate
 `locator-cn-federation`. The helper preserves a `.previous` file for rollback.
 
-Set `OPENPENCIL_LOCATOR_EDGE_CLIENT_CRL` and
-`OPENPENCIL_LOCATOR_EDGE_CLIENT_CA` to the active absolute locator-specific
+Set `DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CRL` and
+`DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CA` to the active absolute locator-specific
 files. Both active files must be `root:101` mode `0440` in root-owned secure
 directories. Also load the same root-owned deployment environment containing
-all four audited `OPENPENCIL_LOCATOR_EDGE_EXPECTED_*` values used by
+all four audited `DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_*` values used by
 production validation. Then run the helper as root with a candidate complete CRL and the
 certificate being revoked. It freezes the candidate bytes, verifies the
 dedicated CA and target certificate, requires a strictly increasing
@@ -258,8 +258,8 @@ bash deploy/collab-relay-locator-edge/validate.sh
 ```
 
 For production, replace the static targets/names in the three Nginx files,
-set all four `OPENPENCIL_LOCATOR_EDGE_EXPECTED_*` values shown above, and run
-with `OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE=production`. Production mode
+set all four `DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_*` values shown above, and run
+with `DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE=production`. Production mode
 rejects TEST-NET upstreams and example DNS names instead of hard-coding the
 scaffold values.
 

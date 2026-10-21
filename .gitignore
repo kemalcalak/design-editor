@@ -9,7 +9,7 @@ count.txt
 .vinxi
 __unconfig*
 todos.json
-.openpencil-tmp/
+.design-editor-tmp/
 .superpowers/
 .playwright-cli/
 .playwright-mcp/
@@ -32,13 +32,13 @@ docs/
 
 # The bare `docs/` pattern above also shadows this test-fixture dir, which
 # MUST be tracked (the CI diagnostics-golden drift guard reads it).
-!crates/op-design-lint/tests/fixtures/docs/
+!crates/de-design-lint/tests/fixtures/docs/
 
 # Keep the Chrome Web Store policy alongside the extension source. The bare
 # `docs/` rule above also matches nested extension documentation directories.
-!packages/op-chrome-extension/docs/
-packages/op-chrome-extension/docs/*
-!packages/op-chrome-extension/docs/privacy-policy.md
+!packages/de-chrome-extension/docs/
+packages/de-chrome-extension/docs/*
+!packages/de-chrome-extension/docs/privacy-policy.md
 
 # Build outputs
 out/
@@ -68,7 +68,7 @@ Cargo.lock.merge-conflict
 tools/__pycache__/
 __pycache__/
 *.pyc
-openpencil-docs
+design-editor-docs
 output
 
 # op-auth provenance signing private key — NEVER commit

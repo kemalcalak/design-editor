@@ -4,7 +4,7 @@ import napi from './OpNative';
 import { MonotonicClock } from './MonotonicClock';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilBackground';
+const TAG = 'DesignEditorBackground';
 const TICK_INTERVAL_MS = 100;
 const REQUEST_RETRY_MS = 5000;
 const NO_REQUEST = -1;
@@ -116,7 +116,7 @@ export class BackgroundGenerationCoordinator {
     this.requestGeneration = generation;
     try {
       const info: backgroundTaskManager.DelaySuspendInfo =
-        backgroundTaskManager.requestSuspendDelay('Finish OpenPencil generation', () => {
+        backgroundTaskManager.requestSuspendDelay('Finish Design Editor generation', () => {
           this.onDelayExpiring(generation);
         });
       if (this.destroyed || generation !== this.requestGeneration) {

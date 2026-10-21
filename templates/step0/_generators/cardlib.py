@@ -1,6 +1,6 @@
 """卡片体系的共享契约 —— 画幅、安全区、网格、字阶、字族。
 
-来源是 `openpencil-docs/openpencil/generation/card-system-0808.md` 的 §4.0
+来源是 `design-editor-docs/design-editor/generation/card-system-0808.md` 的 §4.0
 （全局网格与字阶）与 §5（平台规格）。六套卡片模板都从这里取值，spec 改了
 只需要改这一个文件 —— 把 §4.0 抄六遍，第七套模板就会和前六套对不齐。
 

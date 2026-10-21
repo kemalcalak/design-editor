@@ -45,7 +45,7 @@ sign_provenance() {
 
 new_fixture() {
     fixture_root=$test_root/$1
-    target_dir=$fixture_root/crates/op-auth-bridge/prebuilt/x86_64-unknown-linux-gnu
+    target_dir=$fixture_root/crates/de-auth-bridge/prebuilt/x86_64-unknown-linux-gnu
     mkdir -p "$fixture_root/tools" "$target_dir"
     cp "$checker" "$fixture_root/tools/check-op-auth-prebuilt.sh"
     artifact=$target_dir/libop_auth.a
@@ -86,7 +86,7 @@ source_revision=1111111111111111111111111111111111111111
 build_id=op-auth-prebuilt-test.a2
 EOF
     write_public_key \
-        "$signing_key" "$fixture_root/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
+        "$signing_key" "$fixture_root/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
     sign_provenance "$signing_key" "$target_dir/PROVENANCE.sig"
 }
 
@@ -197,7 +197,7 @@ expect_failure "rejects a malformed provenance signature" \
 new_fixture corrupt-public-key
 make_signed_abi_v2
 printf 'not-a-public-key\n' \
-    > "$fixture_root/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
+    > "$fixture_root/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
 expect_failure "rejects a malformed checkout provenance public key" \
     "release provenance public key encoding is invalid" --require-hardened
 

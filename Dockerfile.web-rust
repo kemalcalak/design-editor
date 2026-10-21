@@ -2,32 +2,32 @@
 #
 # Dockerfile.web-rust — container for the RUST web host (C1).
 #
-# Serves the Rust CanvasKit web editor: the `op-host-web-server` daemon running
+# Serves the Rust CanvasKit web editor: the `de-host-web-server` daemon running
 # in `--serve-web` mode, hosting the wasm-bindgen bundle + the vendored
 # CanvasKit artifact out of a `web-bundle/` directory placed next to the binary.
 # This is the sole web container now that the TypeScript/Nitro web app (and its
 # root `Dockerfile`) have been retired.
 #
 # Build (self-contained, builds the wasm bundle in-image — the default):
-#   docker build -f Dockerfile.web-rust -t openpencil-web-rust .
+#   docker build -f Dockerfile.web-rust -t design-editor-web-rust .
 #
-# Build reusing a prebuilt bundle (the `op-web-bundle` artifact from the
+# Build reusing a prebuilt bundle (the `de-web-bundle` artifact from the
 # `wasm-bundle-build.yml` CI job — skips the in-image wasm rebuild):
 #   # download + unzip the CI artifact into ./web-bundle first, then:
 #   docker build -f Dockerfile.web-rust --build-arg WEB_BUNDLE_SOURCE=copy \
-#     -t openpencil-web-rust .
+#     -t design-editor-web-rust .
 #
 # Run (single-user, the historical default):
-#   docker run -p 3100:3100 openpencil-web-rust
+#   docker run -p 3100:3100 design-editor-web-rust
 #   # then open http://localhost:3100/
 #
 # Run (multi-account online mode, behind a reverse proxy on one public origin):
 #   docker run -p 3100:3100 \
-#     -e OPENPENCIL_SERVE_MODE=online \
-#     -e OPENPENCIL_HUB_BASE_URL=http://backend:8080 \
-#     -e OPENPENCIL_HUB_INTERNAL_AUTH="$(cat /run/secrets/op-canvas-internal-auth)" \
-#     -e OPENPENCIL_WEB_ALLOWED_ORIGINS=https://hub.example.com \
-#     openpencil-web-rust
+#     -e DESIGN_EDITOR_SERVE_MODE=online \
+#     -e DESIGN_EDITOR_HUB_BASE_URL=http://backend:8080 \
+#     -e DESIGN_EDITOR_HUB_INTERNAL_AUTH="$(cat /run/secrets/de-canvas-internal-auth)" \
+#     -e DESIGN_EDITOR_WEB_ALLOWED_ORIGINS=https://hub.example.com \
+#     design-editor-web-rust
 #   Every request is then attributed to a verified op-hub account and served
 #   against that account's own document. See `web_canvas_server/online_policy.rs`
 #   for what online mode refuses, and `hub_auth_client.rs` for the identity call.
@@ -57,15 +57,15 @@ ENV BINARYEN_VERSION=version_123 \
     BINARYEN_SHA256=e959f2170af4c20c552e9de3a0253704d6a9d2766e8fdb88e4d6ac4bae9388fe \
     SKIA_BINARY_KEY=da8fc6731fc439bc3b6a-x86_64-unknown-linux-gnu-jpegd-jpege-pdf-textlayout \
     SKIA_BINARY_SHA256=c066658b13e257d418f647447d06eb8a83cb060b037228da838589dd863bf053 \
-    SKIA_BINARIES_URL=file:///opt/openpencil-skia-cache/skia-binaries-{key}.tar.gz
+    SKIA_BINARIES_URL=file:///opt/design-editor-skia-cache/skia-binaries-{key}.tar.gz
 
 # Port baked into the image's CMD; overridable at build + run time.
 ARG SERVE_PORT=3100
 
 # pinned Binaryen -> wasm-opt -Oz ; nodejs -> the 0-env-import assert in the gate
 # script; python3 -> deterministic runtime i18n catalog export during asset
-# staging. op-host-web-server is the headless raster daemon (links
-# op-host-services only — no winit/glutin/skia-GL under Approach Y), so NONE of
+# staging. de-host-web-server is the headless raster daemon (links
+# de-host-services only — no winit/glutin/skia-GL under Approach Y), so NONE of
 # the GL/X11 link-time libs the desktop binary needed are required here. It does
 # need OpenSSL for SDK/native-tls compatibility plus freetype/fontconfig (+ CJK
 # fonts) for skia's raster text shaping at export.
@@ -91,10 +91,10 @@ RUN sed -ri \
     && rm -f /tmp/binaryen.tar.gz \
     && ln -s "/opt/binaryen-${BINARYEN_VERSION}/bin/wasm-opt" /usr/local/bin/wasm-opt \
     && wasm-opt --version \
-    && mkdir -p /opt/openpencil-skia-cache \
-    && curl -fsSL --output "/opt/openpencil-skia-cache/skia-binaries-${SKIA_BINARY_KEY}.tar.gz" \
+    && mkdir -p /opt/design-editor-skia-cache \
+    && curl -fsSL --output "/opt/design-editor-skia-cache/skia-binaries-${SKIA_BINARY_KEY}.tar.gz" \
       "https://github.com/rust-skia/skia-binaries/releases/download/0.97.2/skia-binaries-${SKIA_BINARY_KEY}.tar.gz" \
-    && printf '%s  %s\n' "$SKIA_BINARY_SHA256" "/opt/openpencil-skia-cache/skia-binaries-${SKIA_BINARY_KEY}.tar.gz" \
+    && printf '%s  %s\n' "$SKIA_BINARY_SHA256" "/opt/design-editor-skia-cache/skia-binaries-${SKIA_BINARY_KEY}.tar.gz" \
       | sha256sum -c -
 
 WORKDIR /src
@@ -105,9 +105,9 @@ WORKDIR /src
 COPY . .
 
 # Build the headless web/MCP server binary (the `--serve-web` host) — links
-# op-host-services only, no winit/skia-GL. Always built; this is the runtime
+# de-host-services only, no winit/skia-GL. Always built; this is the runtime
 # binary regardless of how the web bundle is produced.
-RUN cargo build -p op-host-web-server --features pinned-skia-binaries --release --locked
+RUN cargo build -p de-host-web-server --features pinned-skia-binaries --release --locked
 
 # Build the canvaskit wasm bundle in-image, UNLESS WEB_BUNDLE_SOURCE=copy.
 # Mirrors `tools/check-wasm-bundle.sh` exactly (cargo build --features canvaskit
@@ -135,14 +135,14 @@ RUN if [ "$WEB_BUNDLE_SOURCE" = "build" ]; then \
 # has one stable source path either way.
 RUN mkdir -p /out/web-bundle && \
     if [ "$WEB_BUNDLE_SOURCE" = "build" ]; then \
-      cp -R crates/op-host-web/pkg/. /out/web-bundle/ && \
-      cp -R crates/op-host-web/assets/canvaskit /out/web-bundle/canvaskit ; \
+      cp -R crates/de-host-web/pkg/. /out/web-bundle/ && \
+      cp -R crates/de-host-web/assets/canvaskit /out/web-bundle/canvaskit ; \
     else \
       cp -R web-bundle/. /out/web-bundle/ ; \
     fi && \
     echo "assembled web-bundle:" && find /out/web-bundle -maxdepth 2 -type f | sort && \
     # The browser fetches these from `/pkg/assets/…` at run time (see
-    # `op_editor_core::web_assets`); without them previews fall back to
+    # `de_editor_core::web_assets`); without them previews fall back to
     # placeholders, templates refuse to instantiate, the icon panel stays
     # empty, and locale switches fail. Catch it here rather than in production
     # — the `copy` path is the likely offender, fed a pre-split artifact.
@@ -170,8 +170,8 @@ ARG SERVE_PORT=3100
 # `local` keeps the historical single-user daemon; `online` adds `--online`,
 # the multi-account mode. Set at run time, so one image serves both.
 ARG SERVE_MODE=local
-ENV OPENPENCIL_SERVE_PORT=${SERVE_PORT} \
-    OPENPENCIL_SERVE_MODE=${SERVE_MODE}
+ENV DESIGN_EDITOR_SERVE_PORT=${SERVE_PORT} \
+    DESIGN_EDITOR_SERVE_MODE=${SERVE_MODE}
 
 RUN sed -ri \
       -e 's|^URIs: http://deb.debian.org/debian$|URIs: http://snapshot.debian.org/archive/debian/20260803T000000Z|' \
@@ -183,8 +183,8 @@ RUN sed -ri \
       libssl3 \
       libfreetype6 libfontconfig1 fonts-noto-cjk \
     && rm -rf /var/lib/apt/lists/* \
-    && groupadd -g 10001 openpencil \
-    && useradd -r -u 10001 -g openpencil -M -d /app openpencil
+    && groupadd -g 10001 design-editor \
+    && useradd -r -u 10001 -g design-editor -M -d /app design-editor
 
 WORKDIR /app
 
@@ -192,7 +192,7 @@ WORKDIR /app
 # bundle as `<exe_dir>/web-bundle` (and CanvasKit as `<exe_dir>/web-bundle/
 # canvaskit`). Keep the binary + the bundle dir as siblings under /app so that
 # `<exe_dir> == /app`.
-COPY --from=builder --chown=10001:10001 /src/target/release/op-host-web-server /app/op-host-web-server
+COPY --from=builder --chown=10001:10001 /src/target/release/de-host-web-server /app/de-host-web-server
 COPY --from=builder --chown=10001:10001 /out/web-bundle /app/web-bundle
 
 # The daemon writes nothing outside /tmp in online mode (settings persistence
@@ -211,14 +211,14 @@ EXPOSE ${SERVE_PORT}
 # only probe that works for both `local` and `online`.
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=6 \
     CMD wget --quiet --output-document=/dev/null \
-        "http://127.0.0.1:${OPENPENCIL_SERVE_PORT}/" || exit 1
+        "http://127.0.0.1:${DESIGN_EDITOR_SERVE_PORT}/" || exit 1
 
 STOPSIGNAL SIGTERM
 
 # Bind 0.0.0.0 so the daemon is reachable from outside the container (the LAN /
 # Docker opt-in documented in `parse_serve_web_args`). No TLS — front with a
 # reverse proxy for anything beyond a trusted network. The port is taken from
-# the build-time SERVE_PORT (baked into OPENPENCIL_SERVE_PORT); `sh -c` lets the
+# the build-time SERVE_PORT (baked into DESIGN_EDITOR_SERVE_PORT); `sh -c` lets the
 # env var expand at container start.
-CMD ["sh", "-c", "if [ \"${OPENPENCIL_SERVE_MODE}\" = online ]; then set -- --online; else set --; fi; \
-exec /app/op-host-web-server --serve-web \"${OPENPENCIL_SERVE_PORT}\" --host 0.0.0.0 \"$@\""]
+CMD ["sh", "-c", "if [ \"${DESIGN_EDITOR_SERVE_MODE}\" = online ]; then set -- --online; else set --; fi; \
+exec /app/de-host-web-server --serve-web \"${DESIGN_EDITOR_SERVE_PORT}\" --host 0.0.0.0 \"$@\""]

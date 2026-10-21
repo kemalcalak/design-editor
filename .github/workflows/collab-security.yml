@@ -8,26 +8,26 @@ on:
       - '.dockerignore'
       - '.gitignore'
       - 'rust-toolchain.toml'
-      - 'crates/op-collab/**'
-      - 'crates/op-collab-smoke/**'
-      - 'crates/op-collab-transport/**'
-      - 'crates/op-collab-relay-protocol/**'
-      - 'crates/op-collab-relay-client/**'
-      - 'crates/op-collab-relay-server/**'
-      - 'crates/op-collab-relay-control-plane/**'
-      - 'crates/op-collab-policy-file/**'
-      - 'crates/op-collab-relay-locator-hsm/**'
-      - 'crates/op-collab-relay-locator-server/**'
-      - 'crates/op-auth-bridge/**'
-      - 'crates/op-util/**'
-      - 'crates/op-editor-core/**'
-      - 'crates/op-editor-host-core/**'
-      - 'crates/op-editor-ui/**'
-      - 'crates/op-host-native/**'
-      - 'crates/op-host-desktop/**'
-      - 'crates/op-chat-agent/src/provider_dial.rs'
-      - 'crates/op-host-services/**'
-      - 'crates/op-i18n/**'
+      - 'crates/de-collab/**'
+      - 'crates/de-collab-smoke/**'
+      - 'crates/de-collab-transport/**'
+      - 'crates/de-collab-relay-protocol/**'
+      - 'crates/de-collab-relay-client/**'
+      - 'crates/de-collab-relay-server/**'
+      - 'crates/de-collab-relay-control-plane/**'
+      - 'crates/de-collab-policy-file/**'
+      - 'crates/de-collab-relay-locator-hsm/**'
+      - 'crates/de-collab-relay-locator-server/**'
+      - 'crates/de-auth-bridge/**'
+      - 'crates/de-util/**'
+      - 'crates/de-editor-core/**'
+      - 'crates/de-editor-host-core/**'
+      - 'crates/de-editor-ui/**'
+      - 'crates/de-host-native/**'
+      - 'crates/de-host-desktop/**'
+      - 'crates/de-chat-agent/src/provider_dial.rs'
+      - 'crates/de-host-services/**'
+      - 'crates/de-i18n/**'
       - 'deploy/collab-relay/**'
       - 'deploy/collab-relay-edge/**'
       - 'deploy/collab-relay-locator/**'
@@ -45,33 +45,33 @@ on:
       - '.github/workflows/collab-security.yml'
       - '.github/workflows/collab-platform-acceptance.yml'
   push:
-    branches: ['**']
+    branches: [main]
     paths:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.dockerignore'
       - '.gitignore'
       - 'rust-toolchain.toml'
-      - 'crates/op-collab/**'
-      - 'crates/op-collab-smoke/**'
-      - 'crates/op-collab-transport/**'
-      - 'crates/op-collab-relay-protocol/**'
-      - 'crates/op-collab-relay-client/**'
-      - 'crates/op-collab-relay-server/**'
-      - 'crates/op-collab-relay-control-plane/**'
-      - 'crates/op-collab-policy-file/**'
-      - 'crates/op-collab-relay-locator-hsm/**'
-      - 'crates/op-collab-relay-locator-server/**'
-      - 'crates/op-auth-bridge/**'
-      - 'crates/op-util/**'
-      - 'crates/op-editor-core/**'
-      - 'crates/op-editor-host-core/**'
-      - 'crates/op-editor-ui/**'
-      - 'crates/op-host-native/**'
-      - 'crates/op-host-desktop/**'
-      - 'crates/op-chat-agent/src/provider_dial.rs'
-      - 'crates/op-host-services/**'
-      - 'crates/op-i18n/**'
+      - 'crates/de-collab/**'
+      - 'crates/de-collab-smoke/**'
+      - 'crates/de-collab-transport/**'
+      - 'crates/de-collab-relay-protocol/**'
+      - 'crates/de-collab-relay-client/**'
+      - 'crates/de-collab-relay-server/**'
+      - 'crates/de-collab-relay-control-plane/**'
+      - 'crates/de-collab-policy-file/**'
+      - 'crates/de-collab-relay-locator-hsm/**'
+      - 'crates/de-collab-relay-locator-server/**'
+      - 'crates/de-auth-bridge/**'
+      - 'crates/de-util/**'
+      - 'crates/de-editor-core/**'
+      - 'crates/de-editor-host-core/**'
+      - 'crates/de-editor-ui/**'
+      - 'crates/de-host-native/**'
+      - 'crates/de-host-desktop/**'
+      - 'crates/de-chat-agent/src/provider_dial.rs'
+      - 'crates/de-host-services/**'
+      - 'crates/de-i18n/**'
       - 'deploy/collab-relay/**'
       - 'deploy/collab-relay-edge/**'
       - 'deploy/collab-relay-locator/**'
@@ -92,6 +92,12 @@ on:
 
 permissions:
   contents: read
+
+# One run per PR (or per branch push); a newer push to a PR cancels the
+# older run. Pushes to main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   collaboration-security:
@@ -137,23 +143,23 @@ jobs:
       - name: Compile the public protocol core for wasm
         run: |
           cargo check --locked --target wasm32-unknown-unknown \
-            -p op-collab --no-default-features
+            -p de-collab --no-default-features
           cargo check --locked --target wasm32-unknown-unknown \
-            -p op-collab-relay-protocol --no-default-features
+            -p de-collab-relay-protocol --no-default-features
 
       - name: Test protocol state machines, properties, and resource limits
         run: |
-          cargo test --locked -p op-collab
-          cargo test --locked -p op-collab-transport
-          cargo test --locked -p op-collab-transport config::tests
-          cargo test --locked -p op-collab-transport frame::tests
-          cargo test --locked -p op-collab-relay-protocol --all-features
-          cargo test --locked -p op-collab-relay-client
-          cargo test --locked -p op-collab-relay-server
-          cargo test --locked -p op-collab-relay-control-plane
-          cargo test --locked -p op-collab-policy-file
-          cargo test --locked -p op-collab-relay-locator-hsm
-          cargo test --locked -p op-collab-relay-locator-server
+          cargo test --locked -p de-collab
+          cargo test --locked -p de-collab-transport
+          cargo test --locked -p de-collab-transport config::tests
+          cargo test --locked -p de-collab-transport frame::tests
+          cargo test --locked -p de-collab-relay-protocol --all-features
+          cargo test --locked -p de-collab-relay-client
+          cargo test --locked -p de-collab-relay-server
+          cargo test --locked -p de-collab-relay-control-plane
+          cargo test --locked -p de-collab-policy-file
+          cargo test --locked -p de-collab-relay-locator-hsm
+          cargo test --locked -p de-collab-relay-locator-server
 
       - name: Test the locator signer against SoftHSM
         run: |
@@ -162,16 +168,16 @@ jobs:
 
       - name: Test production/test trust-root isolation
         run: |
-          cargo test --locked -p op-auth-bridge --features test-issuer \
+          cargo test --locked -p de-auth-bridge --features test-issuer \
             verifies_the_frozen_go_production_root_fixture
-          cargo test --locked -p op-auth-bridge --features test-issuer \
+          cargo test --locked -p de-auth-bridge --features test-issuer \
             production_signed_policy_path_never_falls_back_to_raw_jwks
-          cargo test --locked -p op-auth-bridge --features test-issuer \
+          cargo test --locked -p de-auth-bridge --features test-issuer \
             --test collab_verifier
 
       - name: Verify every committed authentication archive
-        run: cargo test --locked -p op-auth-bridge --test prebuilt_provenance
+        run: cargo test --locked -p de-auth-bridge --test prebuilt_provenance
 
       - name: Exercise two-process authenticated collaboration
         run: |
-          cargo run --locked -p op-collab-smoke --features test-issuer -- run
+          cargo run --locked -p de-collab-smoke --features test-issuer -- run

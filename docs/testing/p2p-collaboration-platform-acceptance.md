@@ -6,7 +6,7 @@ from a two-physical-device acceptance result.
 
 ## Evidence rules
 
-- Use the exact same OpenPencil revision on both devices.
+- Use the exact same Design Editor revision on both devices.
 - Record the OS, architecture, revision, commands, exit status, and complete
   machine-readable result.
 - A two-device result requires two different physical devices. Two processes,
@@ -18,7 +18,7 @@ from a two-physical-device acceptance result.
 
 ## Frozen Go issuer interoperability
 
-The public `op-auth-bridge` fixture is a permanent, non-production
+The public `de-auth-bridge` fixture is a permanent, non-production
 interoperability vector emitted by the real Go issuer service with deterministic
 test-only data. It uses `https://sso.example.invalid`, stores the compact JWS as
 three separate segments, and locks
@@ -52,14 +52,14 @@ explicit collaboration trust root. For example:
 
 ```text
 # Domestic client
-OPENPENCIL_SSO_URL=https://login.cn.example
-OPENPENCIL_COLLAB_ISSUER=https://collab.example
-OPENPENCIL_COLLAB_POLICY_ENDPOINT=https://login.cn.example/api/v1/collab/policy
+DESIGN_EDITOR_SSO_URL=https://login.cn.example
+DESIGN_EDITOR_COLLAB_ISSUER=https://collab.example
+DESIGN_EDITOR_COLLAB_POLICY_ENDPOINT=https://login.cn.example/api/v1/collab/policy
 
 # Overseas client
-OPENPENCIL_SSO_URL=https://login.global.example
-OPENPENCIL_COLLAB_ISSUER=https://collab.example
-OPENPENCIL_COLLAB_POLICY_ENDPOINT=https://login.global.example/api/v1/collab/policy
+DESIGN_EDITOR_SSO_URL=https://login.global.example
+DESIGN_EDITOR_COLLAB_ISSUER=https://collab.example
+DESIGN_EDITOR_COLLAB_POLICY_ENDPOINT=https://login.global.example/api/v1/collab/policy
 ```
 
 Before network testing, prove all of the following without recording live
@@ -72,14 +72,14 @@ tickets or identities:
 - both broker configs load the same offline-signed policy containing every
   region's active/next pair and any live retired overlap;
 - both pinned regional mirrors return the same canonical policy body and ETag,
-  and the OpenPencil verifier accepts its pinned-root signature;
+  and the Design Editor verifier accepts its pinned-root signature;
 - a domestic ticket verifies on the overseas client and an overseas ticket
   verifies on the domestic client, including Noise static-key binding;
 - a different issuer, region-local account id, missing regional key, rewritten
   `kid`, remote private object, bad policy signature, generation rollback,
   same-generation rewrite, premature next-key use, or expired overlap is
   rejected;
-- setting either endpoint without `OPENPENCIL_COLLAB_ISSUER`, setting policy
+- setting either endpoint without `DESIGN_EDITOR_COLLAB_ISSUER`, setting policy
   and JWKS endpoints together, or supplying an HTTP/path-bearing issuer makes
   collaboration startup fail closed without falling back to raw JWKS.
 
@@ -94,28 +94,28 @@ close before the previously verified ticket expires.
 
 The manual workflow
 `.github/workflows/collab-platform-acceptance.yml` targets dedicated physical
-macOS, Linux, and Windows runners labelled `openpencil-mdns`. Each runner must
+macOS, Linux, and Windows runners labelled `design-editor-mdns`. Each runner must
 have multicast access to a real LAN. Run the equivalent command locally when
 diagnosing a runner:
 
 ```bash
-cargo test --locked -p op-collab-transport --features mdns \
+cargo test --locked -p de-collab-transport --features mdns \
   --test mdns_smoke -- \
   --ignored \
   --exact publisher_is_discovered_and_unregisters_cleanly \
   --nocapture
 ```
 
-The test must discover the ephemeral `_openpencil-collab._tcp.local.` service,
+The test must discover the ephemeral `_design-editor-collab._tcp.local.` service,
 verify its port, then observe its removal after unregister. A compile-only
 result or a hosted network that suppresses multicast is inconclusive, not a
 pass.
 
 On macOS, an accepted package must also contain the canonical
 `NSLocalNetworkUsageDescription` and exactly one `NSBonjourServices` entry,
-`_openpencil-collab._tcp`. The checked-in plist and both macOS bundle scripts
+`_design-editor-collab._tcp`. The checked-in plist and both macOS bundle scripts
 use one canonical helper and validate the final bundle plist. The release
-workflow checks the exact `OpenPencil.app/Contents/Info.plist` path that it
+workflow checks the exact `Design Editor.app/Contents/Info.plist` path that it
 submits before app notarization. Missing, wrong, empty, or extra values fail the
 package gate.
 
@@ -136,7 +136,7 @@ diagnostic against the working tree based on revision
 - process cleanup left no diagnostic `dns-sd` publisher running.
 
 The diagnostic output was inspected locally and intentionally does not record
-the personal host label or interface address here. OpenPencil advertised a
+the personal host label or interface address here. Design Editor advertised a
 fresh random service label and a fresh random `op-*.local.` hostname, not the
 macOS user-visible Computer Name or LocalHostName.
 
@@ -166,16 +166,16 @@ command rejects wildcard, loopback, and multicast addresses.
 
 ```bash
 # Device A
-cargo run --locked -p op-collab-smoke --features test-issuer -- \
+cargo run --locked -p de-collab-smoke --features test-issuer -- \
   lan-owner 192.168.1.20:45123
 
 # Device B
-cargo run --locked -p op-collab-smoke --features test-issuer -- \
+cargo run --locked -p de-collab-smoke --features test-issuer -- \
   lan-guest 192.168.1.20:45123
 ```
 
 Both commands must exit successfully and emit
-`openpencil-p2p-lan-smoke/v1` JSON with identical `canonical_hash` values.
+`design-editor-p2p-lan-smoke/v1` JSON with identical `canonical_hash` values.
 Repeat once after joining through mDNS and once after disabling mDNS and
 entering the owner address manually.
 
@@ -183,7 +183,7 @@ entering the owner address manually.
 
 The `lan-owner` and `lan-guest` commands completed over the Mac's real `en0`
 unicast address with manual address entry. Both emitted
-`openpencil-p2p-lan-smoke/v1` and the same canonical document hash:
+`design-editor-p2p-lan-smoke/v1` and the same canonical document hash:
 
 ```text
 f3bebaedd7fe0c29c2b1ff766e2a3f663609e0aea2aa7f6caa69da2ed4bfa3e9

@@ -16,12 +16,12 @@ import {
 
 const fixtureManagedPaths = [
   'package.json',
-  'op-web-sdk/package.json',
-  'op-web-sdk-react/package.json',
-  'op-web-sdk-vue/package.json',
-  'op-web-sdk/src/index.ts',
-  'op-web-sdk-react/src/index.ts',
-  'op-web-sdk-vue/src/index.ts',
+  'de-web-sdk/package.json',
+  'de-web-sdk-react/package.json',
+  'de-web-sdk-vue/package.json',
+  'de-web-sdk/src/index.ts',
+  'de-web-sdk-react/src/index.ts',
+  'de-web-sdk-vue/src/index.ts',
   'bun.lock',
 ];
 
@@ -29,10 +29,10 @@ function fixtureLockfile(version) {
   return `{
   "lockfileVersion": 1,
   "workspaces": {
-    "": { "name": "@zseven-w/openpencil-packages" },
-    "op-web-sdk": { "version": "${version}" },
-    "op-web-sdk-react": { "version": "${version}" },
-    "op-web-sdk-vue": { "version": "${version}" },
+    "": { "name": "@kemalcalak/design-editor-packages" },
+    "de-web-sdk": { "version": "${version}" },
+    "de-web-sdk-react": { "version": "${version}" },
+    "de-web-sdk-vue": { "version": "${version}" },
   },
 }
 `;
@@ -45,12 +45,12 @@ async function createRepositoryFixture(t, version = '1.0.0') {
 
   const files = {
     'package.json': `${JSON.stringify({ name: 'fixture-root', version }, null, 2)}\n`,
-    'op-web-sdk/package.json': `${JSON.stringify({ name: 'op-web-sdk', version }, null, 2)}\n`,
-    'op-web-sdk-react/package.json': `${JSON.stringify({ name: 'op-web-sdk-react', version }, null, 2)}\n`,
-    'op-web-sdk-vue/package.json': `${JSON.stringify({ name: 'op-web-sdk-vue', version }, null, 2)}\n`,
-    'op-web-sdk/src/index.ts': `export const VERSION = '${version}';\n`,
-    'op-web-sdk-react/src/index.ts': `export const VERSION = '${version}';\n`,
-    'op-web-sdk-vue/src/index.ts': `export const VERSION = '${version}';\n`,
+    'de-web-sdk/package.json': `${JSON.stringify({ name: 'de-web-sdk', version }, null, 2)}\n`,
+    'de-web-sdk-react/package.json': `${JSON.stringify({ name: 'de-web-sdk-react', version }, null, 2)}\n`,
+    'de-web-sdk-vue/package.json': `${JSON.stringify({ name: 'de-web-sdk-vue', version }, null, 2)}\n`,
+    'de-web-sdk/src/index.ts': `export const VERSION = '${version}';\n`,
+    'de-web-sdk-react/src/index.ts': `export const VERSION = '${version}';\n`,
+    'de-web-sdk-vue/src/index.ts': `export const VERSION = '${version}';\n`,
     'bun.lock': fixtureLockfile(version),
   };
 
@@ -372,28 +372,28 @@ test('Bun lock inspection finds every versioned SDK workspace and ignores the ro
   const lockfile = `{
     "workspaces": {
       "": {
-        "name": "@zseven-w/openpencil-packages",
+        "name": "@kemalcalak/design-editor-packages",
       },
-      "op-web-sdk": {
-        "name": "@zseven-w/op-web-sdk",
+      "de-web-sdk": {
+        "name": "@kemalcalak/de-web-sdk",
         "version": "1.0.0",
         "devDependencies": { "fixture": "1.2.3" },
       },
-      "op-web-sdk-react": {
-        "name": "@zseven-w/op-web-sdk-react",
+      "de-web-sdk-react": {
+        "name": "@kemalcalak/de-web-sdk-react",
         "version": "1.0.1",
       },
-      "op-web-sdk-vue": {
-        "name": "@zseven-w/op-web-sdk-vue",
+      "de-web-sdk-vue": {
+        "name": "@kemalcalak/de-web-sdk-vue",
         "version": "1.0.2",
       },
     },
   }`;
 
   assert.deepEqual(inspectBunLockWorkspaceVersions(lockfile), {
-    'op-web-sdk': '1.0.0',
-    'op-web-sdk-react': '1.0.1',
-    'op-web-sdk-vue': '1.0.2',
+    'de-web-sdk': '1.0.0',
+    'de-web-sdk-react': '1.0.1',
+    'de-web-sdk-vue': '1.0.2',
   });
 });
 
@@ -401,12 +401,12 @@ test('Bun lock inspection ignores structural delimiters in block comments after 
   const lockfile = `{
     "lockfileVersion": 1 /* comma, brace }, bracket ] */,
     "workspaces": {
-      "op-web-sdk": { "version": "1.0.0" },
+      "de-web-sdk": { "version": "1.0.0" },
     },
   }`;
 
   assert.deepEqual(inspectBunLockWorkspaceVersions(lockfile), {
-    'op-web-sdk': '1.0.0',
+    'de-web-sdk': '1.0.0',
   });
 });
 
@@ -415,12 +415,12 @@ test('Bun lock inspection ignores structural delimiters in line comments after p
     "lockfileVersion": 1 // comma, brace }, bracket ]
     ,
     "workspaces": {
-      "op-web-sdk": { "version": "1.0.0" },
+      "de-web-sdk": { "version": "1.0.0" },
     },
   }`;
 
   assert.deepEqual(inspectBunLockWorkspaceVersions(lockfile), {
-    'op-web-sdk': '1.0.0',
+    'de-web-sdk': '1.0.0',
   });
 });
 
@@ -436,18 +436,18 @@ test('Bun lock inspection still rejects unterminated block comments after primit
 test('Bun lock rendering updates only managed workspace version literals', () => {
   const lockfile = `{
     "workspaces": {
-      "": { "name": "@zseven-w/openpencil-packages" },
-      "op-web-sdk": { "version": "1.0.0", "fixture": "1.0.0" },
-      "op-web-sdk-react": { "version": "1.0.1" },
-      "op-web-sdk-vue": { "version": "1.0.2" },
+      "": { "name": "@kemalcalak/design-editor-packages" },
+      "de-web-sdk": { "version": "1.0.0", "fixture": "1.0.0" },
+      "de-web-sdk-react": { "version": "1.0.1" },
+      "de-web-sdk-vue": { "version": "1.0.2" },
     },
   }`;
 
   const output = renderBunLockWorkspaceVersions(lockfile, '2.3.4');
   assert.deepEqual(inspectBunLockWorkspaceVersions(output), {
-    'op-web-sdk': '2.3.4',
-    'op-web-sdk-react': '2.3.4',
-    'op-web-sdk-vue': '2.3.4',
+    'de-web-sdk': '2.3.4',
+    'de-web-sdk-react': '2.3.4',
+    'de-web-sdk-vue': '2.3.4',
   });
   assert.match(output, /"fixture": "1\.0\.0"/);
 });
@@ -456,8 +456,8 @@ test('drift collection reports each stale path with expected and actual versions
   assert.deepEqual(
     collectVersionDrift('2.3.4', [
       { path: 'packages/package.json', actualVersion: '2.3.3' },
-      { path: 'packages/op-web-sdk/package.json', actualVersion: '2.3.4' },
-      { path: 'packages/bun.lock#op-web-sdk', actualVersion: undefined },
+      { path: 'packages/de-web-sdk/package.json', actualVersion: '2.3.4' },
+      { path: 'packages/bun.lock#de-web-sdk', actualVersion: undefined },
     ]),
     [
       {
@@ -466,7 +466,7 @@ test('drift collection reports each stale path with expected and actual versions
         actualVersion: '2.3.3',
       },
       {
-        path: 'packages/bun.lock#op-web-sdk',
+        path: 'packages/bun.lock#de-web-sdk',
         expectedVersion: '2.3.4',
         actualVersion: undefined,
       },
@@ -480,9 +480,9 @@ test('an already synchronized in-memory repository reports no drift', () => {
   const sdkEntry = renderSdkEntry("export const VERSION = '1.0.0';\n", version);
   const lockVersions = inspectBunLockWorkspaceVersions(`{
     "workspaces": {
-      "op-web-sdk": { "version": "${version}" },
-      "op-web-sdk-react": { "version": "${version}" },
-      "op-web-sdk-vue": { "version": "${version}" },
+      "de-web-sdk": { "version": "${version}" },
+      "de-web-sdk-react": { "version": "${version}" },
+      "de-web-sdk-vue": { "version": "${version}" },
     },
   }`);
 
@@ -490,7 +490,7 @@ test('an already synchronized in-memory repository reports no drift', () => {
     collectVersionDrift(version, [
       { path: 'packages/package.json', actualVersion: JSON.parse(manifest).version },
       {
-        path: 'packages/op-web-sdk/src/index.ts',
+        path: 'packages/de-web-sdk/src/index.ts',
         actualVersion: sdkEntry.match(/VERSION = '([^']+)'/)?.[1],
       },
       ...Object.entries(lockVersions).map(([workspace, actualVersion]) => ({
@@ -518,15 +518,15 @@ test('check mode reports stale paths without changing managed files', async (t) 
     result.drift.map(({ path }) => path),
     [
       'packages/package.json',
-      'packages/op-web-sdk/package.json',
-      'packages/op-web-sdk-react/package.json',
-      'packages/op-web-sdk-vue/package.json',
-      'packages/op-web-sdk/src/index.ts',
-      'packages/op-web-sdk-react/src/index.ts',
-      'packages/op-web-sdk-vue/src/index.ts',
-      'packages/bun.lock#workspaces.op-web-sdk',
-      'packages/bun.lock#workspaces.op-web-sdk-react',
-      'packages/bun.lock#workspaces.op-web-sdk-vue',
+      'packages/de-web-sdk/package.json',
+      'packages/de-web-sdk-react/package.json',
+      'packages/de-web-sdk-vue/package.json',
+      'packages/de-web-sdk/src/index.ts',
+      'packages/de-web-sdk-react/src/index.ts',
+      'packages/de-web-sdk-vue/src/index.ts',
+      'packages/bun.lock#workspaces.de-web-sdk',
+      'packages/bun.lock#workspaces.de-web-sdk-react',
+      'packages/bun.lock#workspaces.de-web-sdk-vue',
     ],
   );
   assert.deepEqual(await readManagedFiles(fixture.managedPaths), before);
@@ -565,9 +565,9 @@ test('write mode synchronizes every consumer and is idempotent', async (t) => {
   assert.deepEqual(
     inspectBunLockWorkspaceVersions(await readFile(fixture.managedPaths[7], 'utf8')),
     {
-      'op-web-sdk': '2.3.4',
-      'op-web-sdk-react': '2.3.4',
-      'op-web-sdk-vue': '2.3.4',
+      'de-web-sdk': '2.3.4',
+      'de-web-sdk-react': '2.3.4',
+      'de-web-sdk-vue': '2.3.4',
     },
   );
   assert.equal(runner.calls.filter(([, argument]) => argument === 'install').length, 2);
@@ -644,9 +644,9 @@ test('write mode repairs workspace versions when Bun leaves them stale', async (
   assert.deepEqual(
     inspectBunLockWorkspaceVersions(await readFile(fixture.managedPaths[7], 'utf8')),
     {
-      'op-web-sdk': '2.3.4',
-      'op-web-sdk-react': '2.3.4',
-      'op-web-sdk-vue': '2.3.4',
+      'de-web-sdk': '2.3.4',
+      'de-web-sdk-react': '2.3.4',
+      'de-web-sdk-vue': '2.3.4',
     },
   );
 });

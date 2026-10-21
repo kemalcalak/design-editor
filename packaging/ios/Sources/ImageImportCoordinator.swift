@@ -16,7 +16,7 @@ final class ImageImportCoordinator: NSObject {
     private var activeReadToken: UUID?
     private var importErrorPending = false
     private let readQueue = DispatchQueue(
-        label: "tech.zseven.openpencil.image-import",
+        label: "com.kemalcalak.designeditor.image-import",
         qos: .userInitiated
     )
 
@@ -101,7 +101,7 @@ final class ImageImportCoordinator: NSObject {
         case .success(let data):
             returnPickedBytes(data, filename: filename)
         case .failure(let error):
-            NSLog("OpenPencil could not read image %@: %@", filename, error.localizedDescription)
+            NSLog("Design Editor could not read image %@: %@", filename, error.localizedDescription)
             presentImportError()
         }
     }

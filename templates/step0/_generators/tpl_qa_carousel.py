@@ -436,7 +436,7 @@ def build():
     return [cover(), q_choice(), q_explain(), q_flow(), q_flip(), closing()]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；本表逐对实算）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；本表逐对实算）：
 #   c-chalk  on c-bg    12.32    c-dim    on c-bg     7.16
 #   c-faint  on c-bg     4.05    c-yellow on c-bg    10.08
 #   c-rose   on c-bg     8.56    c-sky    on c-bg     9.24

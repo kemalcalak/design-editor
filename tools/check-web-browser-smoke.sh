@@ -6,7 +6,7 @@
 #   2. `/` — daemon-served host page, including `/api/mcp/sync-reset`.
 #
 # The script intentionally uses Chrome/Chromium headless directly instead of a
-# new test dependency. The pages write `data-op-smoke="ok"` only after the wasm
+# new test dependency. The pages write `data-de-smoke="ok"` only after the wasm
 # bundle has loaded and `mount_ck()` has resolved.
 set -euo pipefail
 
@@ -25,8 +25,8 @@ need() {
 }
 
 find_chrome() {
-  if [ -n "${OPENPENCIL_CHROME_BIN:-}" ]; then
-    printf '%s\n' "$OPENPENCIL_CHROME_BIN"
+  if [ -n "${DESIGN_EDITOR_CHROME_BIN:-}" ]; then
+    printf '%s\n' "$DESIGN_EDITOR_CHROME_BIN"
     return
   fi
   for bin in google-chrome-stable google-chrome chromium chromium-browser; do
@@ -58,7 +58,7 @@ PY
 
 wait_for_health() {
   local url="$1"
-  local tries="${OPENPENCIL_BROWSER_SMOKE_WAIT_TRIES:-100}"
+  local tries="${DESIGN_EDITOR_BROWSER_SMOKE_WAIT_TRIES:-100}"
   for _ in $(seq 1 "$tries"); do
     if curl -fsS "$url" >/dev/null 2>&1; then
       return 0
@@ -83,7 +83,7 @@ chrome_dump() {
   local url="$1"
   local out="$2"
   local profile="$TMP_DIR/chrome-$(basename "$out" .html)"
-  local timeout="${OPENPENCIL_BROWSER_SMOKE_TIMEOUT_SECS:-45}"
+  local timeout="${DESIGN_EDITOR_BROWSER_SMOKE_TIMEOUT_SECS:-45}"
   mkdir -p "$profile"
   "$CHROME_BIN" \
     --headless=new \
@@ -102,7 +102,7 @@ chrome_dump() {
     --window-size=1280,800 \
     --user-data-dir="$profile" \
     --enable-logging=stderr \
-    --virtual-time-budget="${OPENPENCIL_BROWSER_SMOKE_VIRTUAL_TIME_MS:-15000}" \
+    --virtual-time-budget="${DESIGN_EDITOR_BROWSER_SMOKE_VIRTUAL_TIME_MS:-15000}" \
     --dump-dom "$url" >"$out" 2>"$out.stderr" &
   local chrome_pid=$!
   for _ in $(seq 1 "$timeout"); do
@@ -111,13 +111,13 @@ chrome_dump() {
     # mirror on stderr arrives incrementally, so it is the readiness
     # signal; a successful mount synthesizes the DOM line the assertions
     # expect.
-    if grep -Fq 'op-smoke:ok' "$out.stderr" 2>/dev/null; then
-      printf '<html data-op-smoke="ok"><!-- synthesized from console marker --></html>\n' >"$out"
+    if grep -Fq 'de-smoke:ok' "$out.stderr" 2>/dev/null; then
+      printf '<html data-de-smoke="ok"><!-- synthesized from console marker --></html>\n' >"$out"
       kill -9 "$chrome_pid" >/dev/null 2>&1 || true
       wait "$chrome_pid" >/dev/null 2>&1 || true
       return 0
     fi
-    if grep -Fq 'data-op-smoke="ok"' "$out" 2>/dev/null; then
+    if grep -Fq 'data-de-smoke="ok"' "$out" 2>/dev/null; then
       kill -9 "$chrome_pid" >/dev/null 2>&1 || true
       wait "$chrome_pid" >/dev/null 2>&1 || true
       return 0
@@ -140,17 +140,17 @@ need curl
 need python3
 
 CHROME_BIN="$(find_chrome)" || {
-  printf 'missing prerequisite: Chrome/Chromium (set OPENPENCIL_CHROME_BIN)\n' >&2
+  printf 'missing prerequisite: Chrome/Chromium (set DESIGN_EDITOR_CHROME_BIN)\n' >&2
   exit 2
 }
 
-if [ "${OPENPENCIL_SKIP_WASM_BUILD:-0}" != "1" ]; then
+if [ "${DESIGN_EDITOR_SKIP_WASM_BUILD:-0}" != "1" ]; then
   bash tools/check-wasm-bundle.sh
 fi
 
-SERVER_BIN="${OPENPENCIL_WEB_SERVER_BIN:-target/release/op-host-web-server}"
-if [ "${OPENPENCIL_SKIP_SERVER_BUILD:-0}" != "1" ]; then
-  cargo build -p op-host-web-server --release >/dev/null
+SERVER_BIN="${DESIGN_EDITOR_WEB_SERVER_BIN:-target/release/de-host-web-server}"
+if [ "${DESIGN_EDITOR_SKIP_SERVER_BUILD:-0}" != "1" ]; then
+  cargo build -p de-host-web-server --release >/dev/null
 fi
 [ -x "$SERVER_BIN" ] || fail "server binary is not executable: $SERVER_BIN"
 
@@ -175,12 +175,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-PORT="${OPENPENCIL_WEB_SMOKE_PORT:-$(pick_port)}"
+PORT="${DESIGN_EDITOR_WEB_SMOKE_PORT:-$(pick_port)}"
 BASE_URL="http://127.0.0.1:${PORT}"
 SERVER_LOG="$TMP_DIR/server.log"
 
-OPENPENCIL_WEB_BUNDLE_DIR="${OPENPENCIL_WEB_BUNDLE_DIR:-$PWD/crates/op-host-web/pkg}" \
-OPENPENCIL_CANVASKIT_DIR="${OPENPENCIL_CANVASKIT_DIR:-$PWD/crates/op-host-web/assets/canvaskit}" \
+DESIGN_EDITOR_WEB_BUNDLE_DIR="${DESIGN_EDITOR_WEB_BUNDLE_DIR:-$PWD/crates/de-host-web/pkg}" \
+DESIGN_EDITOR_CANVASKIT_DIR="${DESIGN_EDITOR_CANVASKIT_DIR:-$PWD/crates/de-host-web/assets/canvaskit}" \
   "$SERVER_BIN" --serve-web "$PORT" --host 127.0.0.1 >"$SERVER_LOG" 2>&1 &
 SERVER_PID="$!"
 
@@ -199,10 +199,10 @@ curl -fsS "$BASE_URL/assets/iconify-catalog-brands.json" >/dev/null
 
 pure="$TMP_DIR/pure-smoke.html"
 chrome_dump "$BASE_URL/smoke/step-1b.html" "$pure"
-assert_contains "$pure" 'data-op-smoke="ok"' "pure CanvasKit smoke should mount"
+assert_contains "$pure" 'data-de-smoke="ok"' "pure CanvasKit smoke should mount"
 
 daemon="$TMP_DIR/daemon-smoke.html"
 chrome_dump "$BASE_URL/" "$daemon"
-assert_contains "$daemon" 'data-op-smoke="ok"' "daemon host page should mount"
+assert_contains "$daemon" 'data-de-smoke="ok"' "daemon host page should mount"
 
 printf 'PASS: browser smoke mounted CanvasKit via /smoke/step-1b.html and daemon /\n'

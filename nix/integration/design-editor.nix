@@ -1,0 +1,11 @@
+{ integration = { __pkl_class = "Integration"; schemaVersion = 1; id = "design-editor"; systems = [
+      "x86_64-linux"
+    ]; packages = { __pkl_class = "PackageOutputs"; sourceRuntime = "runtime"; prebuiltRuntime = "runtime-prebuilt"; webServer = "web-server"; skills = "skills"; }; executables = { __pkl_class = "Executables"; desktop = "design-editor"; cli = "op"; }; documentTemplate = "share/design-editor/default.op"; mcp = { stdio = { __pkl_class = "McpTransport"; kind = "stdio"; args = [
+          "--mcp"
+          "{document}"
+        ]; urlTemplate = null; launcherArgs = [ ]; loopbackOnly = true; }; http = { __pkl_class = "McpTransport"; kind = "http"; args = [ ]; urlTemplate = "http://127.0.0.1:{port}/mcp"; launcherArgs = [
+          "--live-mcp"
+          "{port}"
+        ]; loopbackOnly = true; }; }; harnesses = { claude = { __pkl_class = "HarnessAdapter"; format = "json"; configPath = "~/.claude.json"; serverKey = "design-editor"; }; codex = { __pkl_class = "HarnessAdapter"; format = "toml"; configPath = "~/.codex/config.toml"; serverKey = "design-editor"; }; gemini = { __pkl_class = "HarnessAdapter"; format = "json"; configPath = "~/.gemini/settings.json"; serverKey = "design-editor"; }; opencode = { __pkl_class = "HarnessAdapter"; format = "json"; configPath = "~/.opencode/config.json"; serverKey = "design-editor"; }; kiro = { __pkl_class = "HarnessAdapter"; format = "json"; configPath = "~/.kiro/settings.json"; serverKey = "design-editor"; }; copilot = { __pkl_class = "HarnessAdapter"; format = "json"; configPath = "~/.config/github-copilot/mcp.json"; serverKey = "design-editor"; }; antigravity = { __pkl_class = "HarnessAdapter"; format = "json"; configPath = "~/.gemini/config/mcp_config.json"; serverKey = "design-editor"; }; grok-build = { __pkl_class = "HarnessAdapter"; format = "toml"; configPath = "~/.grok/config.toml"; serverKey = "design-editor"; }; hermes = { __pkl_class = "HarnessAdapter"; format = "nix"; configPath = "services.infernix.hermes-agent.mcpServers"; serverKey = "design-editor"; }; }; skillnetManifest = "share/skillnet/design-editor/Skillnet.pkl"; skills = [
+      "design-editor-design"
+    ]; }; }

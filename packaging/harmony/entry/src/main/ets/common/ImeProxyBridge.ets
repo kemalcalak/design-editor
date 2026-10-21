@@ -2,7 +2,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import napi, { OpStatus } from './OpNative';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /** Focus id of the hidden proxy input; `focusControl` addresses it by this. */
 export const IME_PROXY_ID = 'op_ime_proxy';
@@ -172,7 +172,7 @@ export class ImeProxyBridge {
    * Whether `keyCode` is a bare modifier / lock key rather than a character.
    *
    * These are frozen OS values from `oh_key_code.h` — the same transcription
-   * the native key channel keeps in `op-engine-napi/src/xcomponent.rs`, which
+   * the native key channel keeps in `de-engine-napi/src/xcomponent.rs`, which
    * tracks them as a bitmask instead of forwarding them.
    */
   private static isModifierKey(keyCode: number): boolean {

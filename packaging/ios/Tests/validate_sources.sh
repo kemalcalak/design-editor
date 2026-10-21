@@ -3,12 +3,12 @@ set -euo pipefail
 
 player_dir="$(cd "$(dirname "$0")/.." && pwd)"
 repo_dir="$(cd "$player_dir/../.." && pwd)"
-header_dir="$repo_dir/crates/op-engine-ffi/include"
-fixture="$repo_dir/crates/op-editor-core/assets/scene_templates/daily-sign-card.op"
+header_dir="$repo_dir/crates/de-engine-ffi/include"
+fixture="$repo_dir/crates/de-editor-core/assets/scene_templates/daily-sign-card.op"
 
 required=(
-  "$player_dir/OpenPencilPlayer-Bridging-Header.h"
-  "$player_dir/OpenPencilPlayer.entitlements"
+  "$player_dir/DesignEditorPlayer-Bridging-Header.h"
+  "$player_dir/DesignEditorPlayer.entitlements"
   "$player_dir/project.yml"
   "$player_dir/README.md"
   "$player_dir/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png"
@@ -51,7 +51,7 @@ for path in "${required[@]}"; do
   fi
 done
 
-background_identifier="tech.zseven.openpencil.generation.*"
+background_identifier="com.kemalcalak.designeditor.generation.*"
 if [[ "$(plutil -extract BGTaskSchedulerPermittedIdentifiers.0 raw -o - \
   "$player_dir/Info.plist" 2>/dev/null)" != "$background_identifier" ]]; then
   echo "Info.plist must authorize the continued-processing identifier wildcard" >&2
@@ -65,7 +65,7 @@ fi
 
 plutil -lint \
   "$player_dir/Info.plist" \
-  "$player_dir/OpenPencilPlayer.entitlements" \
+  "$player_dir/DesignEditorPlayer.entitlements" \
   "$player_dir/Resources/en.lproj/InfoPlist.strings" \
   "$player_dir/Resources/zh-Hans.lproj/InfoPlist.strings" >/dev/null
 grep -Fq '"NSLocalNetworkUsageDescription"' "$player_dir/Resources/en.lproj/InfoPlist.strings"
@@ -121,13 +121,13 @@ done < <(find "$player_dir/Sources" -name '*.swift' -type f -print)
 ruby - "$player_dir/project.yml" <<'RUBY'
 require "yaml"
 project = YAML.safe_load(File.read(ARGV.fetch(0)), aliases: true)
-target = project.fetch("targets").fetch("OpenPencilPlayer")
-raise "OpenPencilPlayer must be an iOS application" unless target["platform"] == "iOS" && target["type"] == "application"
-raise "bundle-id prefix must be tech.zseven" unless project.fetch("options").fetch("bundleIdPrefix") == "tech.zseven"
+target = project.fetch("targets").fetch("DesignEditorPlayer")
+raise "DesignEditorPlayer must be an iOS application" unless target["platform"] == "iOS" && target["type"] == "application"
+raise "bundle-id prefix must be com.kemalcalak" unless project.fetch("options").fetch("bundleIdPrefix") == "com.kemalcalak"
 settings = target.fetch("settings").fetch("base")
-raise "bundle identifier must be tech.zseven.openpencil" unless settings.fetch("PRODUCT_BUNDLE_IDENTIFIER") == "tech.zseven.openpencil"
+raise "bundle identifier must be com.kemalcalak.designeditor" unless settings.fetch("PRODUCT_BUNDLE_IDENTIFIER") == "com.kemalcalak.designeditor"
 raise "deployment target must be iOS 15+" unless settings.fetch("IPHONEOS_DEPLOYMENT_TARGET").to_f >= 15.0
-raise "display name must be OpenPencil" unless settings.fetch("INFOPLIST_KEY_CFBundleDisplayName") == "OpenPencil"
+raise "display name must be Design Editor" unless settings.fetch("INFOPLIST_KEY_CFBundleDisplayName") == "Design Editor"
 raise "export-compliance exemption must stay source-controlled" unless settings.fetch("INFOPLIST_KEY_ITSAppUsesNonExemptEncryption") == "NO"
 raise "exempt builds must not carry an export-compliance code" if settings.key?("INFOPLIST_KEY_ITSEncryptionExportComplianceCode")
 iphone_orientations = settings.fetch("INFOPLIST_KEY_UISupportedInterfaceOrientations").split
@@ -146,7 +146,7 @@ raise "relay-only mobile builds must not declare Bonjour discovery" if settings.
 raise "system appearance must remain runtime-controlled" if settings.key?("INFOPLIST_KEY_UIUserInterfaceStyle")
 raise "AppIcon catalog setting missing" unless settings.fetch("ASSETCATALOG_COMPILER_APPICON_NAME") == "AppIcon"
 raise "bridging header setting missing" unless settings.key?("SWIFT_OBJC_BRIDGING_HEADER")
-raise "op_engine.h search path missing" unless settings.fetch("HEADER_SEARCH_PATHS").to_s.include?("op-engine-ffi/include")
+raise "op_engine.h search path missing" unless settings.fetch("HEADER_SEARCH_PATHS").to_s.include?("de-engine-ffi/include")
 raise "device staticlib search path missing" unless settings.fetch("LIBRARY_SEARCH_PATHS[sdk=iphoneos*]").include?("aarch64-apple-ios/release")
 raise "simulator staticlib search path missing" unless settings.fetch("LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]").include?("aarch64-apple-ios-sim/release")
 frameworks = target.fetch("dependencies").map { |entry| entry["sdk"] }.compact
@@ -156,19 +156,19 @@ end
 raise "native login must not link WebKit" if frameworks.include?("WebKit.framework")
 raise "optional auth archive must be empty by default" unless settings.fetch("OP_AUTH_ARCHIVE") == ""
 raise "final link must consume the explicit auth archive setting" unless settings.fetch("OTHER_LDFLAGS").include?("$(OP_AUTH_ARCHIVE)")
-raise "final link must consume the exact engine archive setting" unless settings.fetch("OTHER_LDFLAGS").include?("$(OP_ENGINE_ARCHIVE)")
+raise "final link must consume the exact engine archive setting" unless settings.fetch("OTHER_LDFLAGS").include?("$(DE_ENGINE_ARCHIVE)")
 configs = target.fetch("settings").fetch("configs")
 debug = configs.fetch("Debug")
 release = configs.fetch("Release")
-raise "Debug simulator must link the static debug engine" unless debug.fetch("OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/debug/libop_engine_ffi.a")
-raise "Debug device must link the static debug engine" unless debug.fetch("OP_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/debug/libop_engine_ffi.a")
-raise "Release simulator must link the static release engine" unless release.fetch("OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/release/libop_engine_ffi.a")
-raise "Release device must link the static release engine" unless release.fetch("OP_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/release/libop_engine_ffi.a")
+raise "Debug simulator must link the static debug engine" unless debug.fetch("DE_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/debug/libde_engine_ffi.a")
+raise "Debug device must link the static debug engine" unless debug.fetch("DE_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/debug/libde_engine_ffi.a")
+raise "Release simulator must link the static release engine" unless release.fetch("DE_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/release/libde_engine_ffi.a")
+raise "Release device must link the static release engine" unless release.fetch("DE_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/release/libde_engine_ffi.a")
 info_properties = target.fetch("info").fetch("properties")
 %w[UIFileSharingEnabled LSSupportsOpeningDocumentsInPlace].each do |key|
   raise "#{key} must be declared so saved documents appear in Files" unless info_properties[key] == true
 end
-expected_background_ids = ["tech.zseven.openpencil.generation.*"]
+expected_background_ids = ["com.kemalcalak.designeditor.generation.*"]
 raise "continued-processing wildcard drifted" unless info_properties["BGTaskSchedulerPermittedIdentifiers"] == expected_background_ids
 raise "background processing mode missing" unless info_properties["UIBackgroundModes"] == ["processing"]
 scripts = target.fetch("preBuildScripts")
@@ -177,12 +177,12 @@ raise "mobile auth link gate missing" unless auth_gate
 raise "mobile auth link gate must call the repository verifier" unless auth_gate.fetch("script").include?("check-mobile-auth-link-input.sh")
 RUBY
 
-pbxproj="$player_dir/OpenPencilPlayer.xcodeproj/project.pbxproj"
+pbxproj="$player_dir/DesignEditorPlayer.xcodeproj/project.pbxproj"
 if [[ -f "$pbxproj" ]]; then
   ruby - "$pbxproj" <<'RUBY'
 project = File.read(ARGV.fetch(0))
 display_names = project.scan(/^\s*INFOPLIST_KEY_CFBundleDisplayName = (?:"([^"]+)"|([^;]+));$/).map { |quoted, plain| quoted || plain }
-raise "generated project has stale display-name settings" unless display_names == ["OpenPencil", "OpenPencil"]
+raise "generated project has stale display-name settings" unless display_names == ["Design Editor", "Design Editor"]
 encryption_declarations = project.scan(/^\s*INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = (?:"([^"]+)"|([^;]+));$/).map { |quoted, plain| quoted || plain }
 raise "generated project has stale export-compliance settings" unless encryption_declarations == ["NO", "NO"]
 raise "generated project must not contain an export-compliance code" if project.include?("INFOPLIST_KEY_ITSEncryptionExportComplianceCode")
@@ -213,8 +213,8 @@ RUBY
 
 grep -Fq -- "-sdk iphonesimulator26.4" "$player_dir/README.md"
 grep -Fq -- "-destination 'platform=iOS Simulator,id=<sim-id>'" "$player_dir/README.md"
-grep -Fq -- "aarch64-apple-ios-sim/release/libop_engine_ffi.a -lc++" "$player_dir/README.md"
-grep -Fq -- "aarch64-apple-ios/release/libop_engine_ffi.a -lc++" "$player_dir/README.md"
+grep -Fq -- "aarch64-apple-ios-sim/release/libde_engine_ffi.a -lc++" "$player_dir/README.md"
+grep -Fq -- "aarch64-apple-ios/release/libde_engine_ffi.a -lc++" "$player_dir/README.md"
 grep -Fq -- "-framework Metal" "$player_dir/README.md"
 grep -Fq -- "-framework CoreFoundation" "$player_dir/README.md"
 grep -Fq -- "-framework Security" "$player_dir/README.md"
@@ -334,7 +334,7 @@ raise "teardown must stop pump, cancel engine work, then finish the task" unless
 raise "foreground frames must observe generation work" unless host[/func displayLinkDidFire\b.*?(?=\n    \/\/\/ Keeps native)/m]&.include?("generationBackgroundCoordinator.observeEngineWork()")
 release = host[/func editorRelease\b.*?(?=\n    func editorCancelGesture)/m]
 raise "pointer release must observe newly submitted generation work" unless release&.include?("generationBackgroundCoordinator.observeEngineWork()")
-raise "continued identifier prefix must match the permitted wildcard" unless coordinator.include?('continuedIdentifierPrefix = "tech.zseven.openpencil.generation."')
+raise "continued identifier prefix must match the permitted wildcard" unless coordinator.include?('continuedIdentifierPrefix = "com.kemalcalak.designeditor.generation."')
 raise "each generation must use a unique identifier suffix" unless coordinator.include?("UUID().uuidString.lowercased()")
 request = coordinator[/private func requestContinuedProtection\b.*?(?=\n    @available\(iOS 26\.0, \*\)\n    private func handleContinuedTask)/m]
 raise "continued-processing request path missing" unless request
@@ -384,12 +384,12 @@ raise "continued tasks must run their handler on the owner queue" unless coordin
 raise "continued tasks must not request background GPU" if coordinator.include?("requiredResources = .gpu")
 RUBY
 
-ruby - "$player_dir/OpenPencilPlayer.entitlements" <<'RUBY'
+ruby - "$player_dir/DesignEditorPlayer.entitlements" <<'RUBY'
 source = File.read(ARGV.fetch(0))
 raise "Associated Domains entitlement missing" unless source.include?(
   "<key>com.apple.developer.associated-domains</key>"
 )
-raise "canonical OpenPencil applinks domain missing" unless source.include?(
+raise "canonical Design Editor applinks domain missing" unless source.include?(
   "<string>applinks:op.zseven.cn</string>"
 )
 raise "redirecting global domain must not be associated" if source.include?(
@@ -530,7 +530,7 @@ xcrun clang \
   -fsyntax-only \
   -x objective-c \
   -I "$header_dir" \
-  "$player_dir/OpenPencilPlayer-Bridging-Header.h"
+  "$player_dir/DesignEditorPlayer-Bridging-Header.h"
 
 xcrun swiftc \
   -typecheck \
@@ -538,7 +538,7 @@ xcrun swiftc \
   -parse-as-library \
   -target "$target" \
   -sdk "$sdk" \
-  -import-objc-header "$player_dir/OpenPencilPlayer-Bridging-Header.h" \
+  -import-objc-header "$player_dir/DesignEditorPlayer-Bridging-Header.h" \
   -module-cache-path "$module_cache" \
   -Xcc -I \
   -Xcc "$header_dir" \

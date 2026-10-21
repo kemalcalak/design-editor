@@ -8,15 +8,15 @@ on:
       - "README*.md"
       - "crates/**/Cargo.toml"
       - "crates/**/*.rs"
-      - "crates/op-cli/assets/skill-bundle.json"
+      - "crates/de-cli/assets/skill-bundle.json"
       - "packages/package.json"
       - "packages/bun.lock"
-      - "packages/op-web-sdk/package.json"
-      - "packages/op-web-sdk/src/index.ts"
-      - "packages/op-web-sdk-react/package.json"
-      - "packages/op-web-sdk-react/src/index.ts"
-      - "packages/op-web-sdk-vue/package.json"
-      - "packages/op-web-sdk-vue/src/index.ts"
+      - "packages/de-web-sdk/package.json"
+      - "packages/de-web-sdk/src/index.ts"
+      - "packages/de-web-sdk-react/package.json"
+      - "packages/de-web-sdk-react/src/index.ts"
+      - "packages/de-web-sdk-vue/package.json"
+      - "packages/de-web-sdk-vue/src/index.ts"
       - "packages/scripts/sync-version.mjs"
       - "packages/scripts/sync-version.test.mjs"
       - "scripts/workspace-version.sh"
@@ -28,9 +28,9 @@ on:
       - "packaging/android/README.md"
       - "packaging/android/app/build.gradle.kts"
       - "scripts/bundle-macos.sh"
-      - "crates/op-host-desktop/Info.plist"
+      - "crates/de-host-desktop/Info.plist"
       - "scripts/package-windows.nsi"
-      - "scripts/install-op.sh"
+      - "scripts/install-de.sh"
       - "tools/check-version-sync.sh"
       - "tools/check-version-sync.test.sh"
       - "tools/check-version-sync-policy.test-cases.sh"
@@ -44,21 +44,22 @@ on:
       - ".github/workflows/rust-release.yml"
       - ".github/workflows/version-sync.yml"
   push:
+    branches: [main]
     paths:
       - "Cargo.toml"
       - "Cargo.lock"
       - "README*.md"
       - "crates/**/Cargo.toml"
       - "crates/**/*.rs"
-      - "crates/op-cli/assets/skill-bundle.json"
+      - "crates/de-cli/assets/skill-bundle.json"
       - "packages/package.json"
       - "packages/bun.lock"
-      - "packages/op-web-sdk/package.json"
-      - "packages/op-web-sdk/src/index.ts"
-      - "packages/op-web-sdk-react/package.json"
-      - "packages/op-web-sdk-react/src/index.ts"
-      - "packages/op-web-sdk-vue/package.json"
-      - "packages/op-web-sdk-vue/src/index.ts"
+      - "packages/de-web-sdk/package.json"
+      - "packages/de-web-sdk/src/index.ts"
+      - "packages/de-web-sdk-react/package.json"
+      - "packages/de-web-sdk-react/src/index.ts"
+      - "packages/de-web-sdk-vue/package.json"
+      - "packages/de-web-sdk-vue/src/index.ts"
       - "packages/scripts/sync-version.mjs"
       - "packages/scripts/sync-version.test.mjs"
       - "scripts/workspace-version.sh"
@@ -70,9 +71,9 @@ on:
       - "packaging/android/README.md"
       - "packaging/android/app/build.gradle.kts"
       - "scripts/bundle-macos.sh"
-      - "crates/op-host-desktop/Info.plist"
+      - "crates/de-host-desktop/Info.plist"
       - "scripts/package-windows.nsi"
-      - "scripts/install-op.sh"
+      - "scripts/install-de.sh"
       - "tools/check-version-sync.sh"
       - "tools/check-version-sync.test.sh"
       - "tools/check-version-sync-policy.test-cases.sh"
@@ -88,6 +89,12 @@ on:
 
 permissions:
   contents: read
+
+# One run per PR (or per branch push); a newer push to a PR cancels the
+# older run. Pushes to main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   version-sync:

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Build a Debian package for the OpenPencil Rust desktop shell + `op` CLI.
+# Build a Debian package for the Design Editor Rust desktop shell + `de` CLI.
 #
 # Payload:
-#   usr/bin/openpencil-desktop          editor binary
-#   usr/bin/op                          CLI binary
-#   usr/share/applications/openpencil.desktop
-#       Desktop entry with MimeType=application/x-openpencil so .op/.pen
+#   usr/bin/design-editor          editor binary
+#   usr/bin/de                          CLI binary
+#   usr/share/applications/design-editor.desktop
+#       Desktop entry with MimeType=application/x-design-editor so .op/.pen
 #       double-clicks route to the editor after update-desktop-database.
-#   usr/share/mime/packages/openpencil.xml
+#   usr/share/mime/packages/design-editor.xml
 #       shared-mime-info definition registering the .op/.pen globs.
-#   usr/share/icons/hicolor/1024x1024/apps/openpencil.png (+ pixmaps fallback)
+#   usr/share/icons/hicolor/1024x1024/apps/design-editor.png (+ pixmaps fallback)
 #   DEBIAN/control, postinst, postrm
 #       postinst refreshes the mime / desktop / icon caches (guarded — the
 #       tools are Recommends-level, absent on minimal containers).
@@ -23,7 +23,7 @@
 #                  layout logic can be smoke-tested on machines without dpkg
 #                  (e.g. macOS dev boxes). CI always does the full build.
 #
-# Output: <out-dir>/OpenPencil-<version>-<x64|arm64>-linux.deb
+# Output: <out-dir>/Design-Editor-<version>-<x64|arm64>-linux.deb
 # (filename matches electron-builder's artifactName pattern
 #  `${productName}-${version}-${arch}-linux.${ext}`; the Debian *control*
 #  Architecture field still uses proper dpkg arch names amd64/arm64).
@@ -84,7 +84,7 @@ mkdir -p "$STAGE/DEBIAN"
 INSTALLED_SIZE="$(du -sk "$STAGE/usr" | cut -f1)"
 
 cat > "$STAGE/DEBIAN/control" <<EOF
-Package: openpencil
+Package: design-editor
 Version: $VERSION
 Section: graphics
 Priority: optional
@@ -93,11 +93,11 @@ Maintainer: ZSeven-W <fini.yang@gmail.com>
 Installed-Size: $INSTALLED_SIZE
 Depends: libc6, libssl3, libfontconfig1, libfreetype6, libegl1, libgles2, libgbm1, libxkbcommon0, libxkbcommon-x11-0, libwayland-client0
 Recommends: shared-mime-info, desktop-file-utils
-Homepage: https://github.com/ZSeven-W/openpencil
-Description: OpenPencil — open-source AI-native vector design tool
- Native desktop editor (openpencil-desktop) built on the Rust shell, plus
- the op command-line client that drives the editor over MCP.
- Registers the application/x-openpencil MIME type for .op and .pen files.
+Homepage: https://github.com/kemalcalak/design-editor
+Description: Design Editor — open-source AI-native vector design tool
+ Native desktop editor (design-editor) built on the Rust shell, plus
+ the de command-line client that drives the editor over MCP.
+ Registers the application/x-design-editor MIME type for .op and .pen files.
 EOF
 
 cat > "$STAGE/DEBIAN/postinst" <<'EOF'
@@ -145,7 +145,7 @@ command -v dpkg-deb >/dev/null 2>&1 || {
 }
 
 mkdir -p "$OUT_DIR"
-DEB_PATH="$OUT_DIR/OpenPencil-$VERSION-$ARTIFACT_ARCH-linux.deb"
+DEB_PATH="$OUT_DIR/Design-Editor-$VERSION-$ARTIFACT_ARCH-linux.deb"
 echo "==> dpkg-deb build"
 # --root-owner-group: payload owned by root:root without needing fakeroot
 # (dpkg-deb >= 1.19; Ubuntu 24.04 runners ship 1.22).

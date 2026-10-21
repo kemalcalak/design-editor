@@ -426,7 +426,7 @@ def build():
     return [cover(), margin_note(), insights(), quote_frame(), closing()]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；本表逐对实算）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；本表逐对实算）：
 #   c-ink        on c-bg    11.06    c-soft        on c-bg    5.35
 #   c-azurite-d  on c-bg     7.43    c-malachite-d on c-bg    5.11
 #   c-ink        on c-deep    9.47   c-soft        on c-deep  4.58

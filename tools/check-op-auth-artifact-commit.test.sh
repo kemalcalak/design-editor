@@ -15,7 +15,7 @@ trap cleanup EXIT
 
 mkdir -p \
     "$fixture/tools" "$fixture/scripts" \
-    "$fixture/crates/op-auth-bridge/prebuilt/aarch64-apple-ios"
+    "$fixture/crates/de-auth-bridge/prebuilt/aarch64-apple-ios"
 cp "$script_dir/check-op-auth-artifact-commit.sh" "$fixture/tools/"
 grep -Fq \
     'unexpected=$(LC_ALL=C comm -23 "$actual_changes" "$allowed_changes")' \
@@ -25,7 +25,7 @@ printf '#!/usr/bin/env bash\nprintf "1.2.3\\n"\n' \
 printf '%s\n' \
     '#!/usr/bin/env bash' \
     'set -euo pipefail' \
-    '[[ "$OP_AUTH_PREBUILT_ROOT" == "$PWD/crates/op-auth-bridge/prebuilt" ]]' \
+    '[[ "$OP_AUTH_PREBUILT_ROOT" == "$PWD/crates/de-auth-bridge/prebuilt" ]]' \
     'if [[ -n "${OP_AUTH_RELEASE_WORKSPACE_VERSION:-}" || -n "${OP_AUTH_RELEASE_EXPECTED_OPENPENCIL_REVISION:-}" ]]; then' \
     '    [[ "$OP_AUTH_RELEASE_EXPECTED_OPENPENCIL_REVISION" == "$EXPECTED_FIXTURE_PARENT" ]]' \
     '    [[ "$OP_AUTH_RELEASE_WORKSPACE_VERSION" == 1.2.3 ]]' \
@@ -38,32 +38,32 @@ printf '%s\n' \
     '#!/usr/bin/env bash' \
     'set -euo pipefail' \
     '[[ "$1" == --require-hardened ]]' \
-    '[[ "$OP_AUTH_PREBUILT_ROOT" == "$PWD/crates/op-auth-bridge/prebuilt" ]]' \
+    '[[ "$OP_AUTH_PREBUILT_ROOT" == "$PWD/crates/de-auth-bridge/prebuilt" ]]' \
     > "$fixture/tools/check-op-auth-prebuilt.sh"
 chmod +x "$fixture/tools/"*.sh "$fixture/scripts/workspace-version.sh"
 
 git -C "$fixture" init -q
-git -C "$fixture" config user.name 'OpenPencil fixture'
-git -C "$fixture" config user.email 'fixture@openpencil.invalid'
+git -C "$fixture" config user.name 'Design Editor fixture'
+git -C "$fixture" config user.email 'fixture@design-editor.invalid'
 printf 'trusted-key\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
+    > "$fixture/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
 printf 'old source adoption policy\n' \
-    > "$fixture/crates/op-auth-bridge/AUTH-RELEASE-POLICY"
+    > "$fixture/crates/de-auth-bridge/AUTH-RELEASE-POLICY"
 git -C "$fixture" add .
 git -C "$fixture" commit -q -m 'fixture source S'
 source_sha=$(git -C "$fixture" rev-parse HEAD)
 
 printf 'manifest\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST"
+    > "$fixture/crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST"
 printf 'signature\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST.sig"
+    > "$fixture/crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST.sig"
 printf 'ios archive\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a"
+    > "$fixture/crates/de-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a"
 printf 'new matrix adoption policy\n' \
-    > "$fixture/crates/op-auth-bridge/AUTH-RELEASE-POLICY"
+    > "$fixture/crates/de-auth-bridge/AUTH-RELEASE-POLICY"
 git -C "$fixture" add \
-    crates/op-auth-bridge/prebuilt \
-    crates/op-auth-bridge/AUTH-RELEASE-POLICY
+    crates/de-auth-bridge/prebuilt \
+    crates/de-auth-bridge/AUTH-RELEASE-POLICY
 git -C "$fixture" commit -q -m 'fixture auth-only A'
 artifact_sha=$(git -C "$fixture" rev-parse HEAD)
 
@@ -124,14 +124,14 @@ fi
 # A complete matrix replacement without the source-owned policy update must
 # not be promotable, even though every historical matrix path changed.
 git -C "$fixture" checkout -q --detach "$source_sha"
-mkdir -p "$fixture/crates/op-auth-bridge/prebuilt/aarch64-apple-ios"
+mkdir -p "$fixture/crates/de-auth-bridge/prebuilt/aarch64-apple-ios"
 printf 'manifest without adoption\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST"
+    > "$fixture/crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST"
 printf 'signature without adoption\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST.sig"
+    > "$fixture/crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST.sig"
 printf 'archive without adoption\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a"
-git -C "$fixture" add crates/op-auth-bridge/prebuilt
+    > "$fixture/crates/de-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a"
+git -C "$fixture" add crates/de-auth-bridge/prebuilt
 git -C "$fixture" commit -q -m 'fixture matrix without adoption policy'
 missing_policy_sha=$(git -C "$fixture" rev-parse HEAD)
 if (
@@ -172,8 +172,8 @@ if (
 fi
 
 printf 'missing required archive change\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST"
-git -C "$fixture" add crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST
+    > "$fixture/crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST"
+git -C "$fixture" add crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST
 git -C "$fixture" commit -q -m 'fixture incomplete auth transition'
 incomplete_sha=$(git -C "$fixture" rev-parse HEAD)
 if (
@@ -189,13 +189,13 @@ if (
 fi
 
 printf 'changed manifest\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST"
+    > "$fixture/crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST"
 printf 'changed signature\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST.sig"
+    > "$fixture/crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST.sig"
 printf 'changed iOS archive\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a"
+    > "$fixture/crates/de-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a"
 printf 'forged key\n' \
-    > "$fixture/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
+    > "$fixture/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
 git -C "$fixture" add .
 git -C "$fixture" commit -q -m 'fixture forged-key transition'
 forbidden_sha=$(git -C "$fixture" rev-parse HEAD)

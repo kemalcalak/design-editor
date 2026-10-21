@@ -18,9 +18,9 @@ name: WASM bundle build (#56 — real canvaskit deployable)
 #
 # Authoritative recipe mirrored from `tools/check-wasm-bundle.sh`:
 #   prerequisites: cargo, wasm-bindgen, wasm-opt, node, python3, gzip (NO EMSDK)
-#   1. cargo build -p op-host-web --target wasm32-unknown-unknown \
+#   1. cargo build -p de-host-web --target wasm32-unknown-unknown \
 #        --no-default-features --features canvaskit --release
-#   2. wasm-bindgen --target web --out-dir crates/op-host-web/pkg <target.wasm>
+#   2. wasm-bindgen --target web --out-dir crates/de-host-web/pkg --out-name op_host_web <target.wasm>
 #   3. assert 0 env.* imports (LinkError guard)
 #   4. wasm-opt -Oz with the rustc-emitted WebAssembly feature flags, then
 #      gzip size <= ceiling (default 6291456 bytes = 6 MiB, overridable via
@@ -42,7 +42,7 @@ on:
       - 'tools/test_export_i18n_catalogs.py'
       - '.github/workflows/wasm-bundle-build.yml'
   push:
-    branches: ['**']
+    branches: [main]
     paths:
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -55,6 +55,12 @@ on:
   # Allow on-demand runs so a release can produce the artifact without a code
   # change (e.g. to re-bundle against an updated toolchain).
   workflow_dispatch:
+
+# One run per PR (or per branch push); a newer push to a PR cancels the
+# older run. Pushes to main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-canvaskit-bundle:
@@ -156,13 +162,13 @@ jobs:
         run: bash tools/check-wasm-bundle.sh
 
       - name: Browser smoke the canvaskit bundle + daemon
-        run: OPENPENCIL_SKIP_WASM_BUILD=1 bash tools/check-web-browser-smoke.sh
+        run: DESIGN_EDITOR_SKIP_WASM_BUILD=1 bash tools/check-web-browser-smoke.sh
 
       # Assemble the deployable layout the daemon's `web_static.rs` expects: the
       # wasm-bindgen `pkg/` output PLUS the vendored CanvasKit artifact under a
       # `canvaskit/` subdir, all inside a single `web-bundle/` directory. This
       # mirrors the `<exe_dir>/web-bundle` + `web-bundle/canvaskit` resolution
-      # order in `crates/op-host-services/src/web_static.rs`.
+      # order in `crates/de-host-services/src/web_static.rs`.
       #
       # `pkg/` also carries `assets/` — previews, templates, the icon catalog,
       # fonts, and the 13 locale catalogs the wasm bundle no longer embeds.
@@ -174,8 +180,8 @@ jobs:
           set -euo pipefail
           rm -rf web-bundle
           mkdir -p web-bundle
-          cp -R crates/op-host-web/pkg/. web-bundle/
-          cp -R crates/op-host-web/assets/canvaskit web-bundle/canvaskit
+          cp -R crates/de-host-web/pkg/. web-bundle/
+          cp -R crates/de-host-web/assets/canvaskit web-bundle/canvaskit
           for required in assets/prompt_center_previews assets/scene_template_previews \
                           assets/scene_templates assets/iconify-catalog-core.json \
                           assets/i18n; do
@@ -203,7 +209,7 @@ jobs:
       - name: Upload deployable web-bundle artifact
         uses: actions/upload-artifact@v4
         with:
-          name: op-web-bundle
+          name: de-web-bundle
           path: web-bundle
           if-no-files-found: error
           # The bundle is deterministic from the inputs; keep it briefly so a

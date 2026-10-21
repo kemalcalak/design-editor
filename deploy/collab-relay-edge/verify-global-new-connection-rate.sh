@@ -5,9 +5,9 @@ export LC_ALL
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 rules_verifier="$script_dir/verify-rate-rules.py"
-table_name=openpencil_relay_edge_rate
+table_name=design_editor_relay_edge_rate
 meter_name=relay_edge_new_v4
-rule_comment='OpenPencil relay edge per-source new connections'
+rule_comment='Design Editor relay edge per-source new connections'
 
 if [ "$#" -ne 1 ]; then
     echo "usage: $0 DEDICATED_PUBLIC_IPV4" >&2

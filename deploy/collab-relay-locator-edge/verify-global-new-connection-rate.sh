@@ -17,7 +17,7 @@ for command_name in nft python3; do
     }
 done
 "$rules_verifier" --address "$public_ipv4"
-nft --json --numeric list table inet openpencil_locator_edge_rate |
+nft --json --numeric list table inet design_editor_locator_edge_rate |
     "$rules_verifier" --address "$public_ipv4" --rules-json
 
 echo "active locator-edge IPv4 new-connection limiter verified"

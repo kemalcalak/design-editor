@@ -204,7 +204,7 @@ function Assert-BuildToolsetsCovered {
 
 function Invoke-SelfTest {
   $temporary = Join-Path ([IO.Path]::GetTempPath()) (
-    'openpencil-vcredist-selftest-' + [Guid]::NewGuid().ToString('N')
+    'design-editor-vcredist-selftest-' + [Guid]::NewGuid().ToString('N')
   )
   $testFile = Join-Path $temporary 'unsigned.exe'
   New-Item -ItemType Directory -Path $temporary | Out-Null
@@ -307,7 +307,7 @@ if (Test-Path -LiteralPath $destinationPath) {
 }
 
 $temporary = Join-Path ([IO.Path]::GetTempPath()) (
-  'openpencil-vcredist-' + [Guid]::NewGuid().ToString('N')
+  'design-editor-vcredist-' + [Guid]::NewGuid().ToString('N')
 )
 $downloadPath = Join-Path $temporary 'VC_redist.x64.exe'
 New-Item -ItemType Directory -Path $temporary | Out-Null

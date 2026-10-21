@@ -1,13 +1,13 @@
 
 > [English](./BUILD_WINDOWS.md) · [简体中文](./BUILD_WINDOWS.zh.md) · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · [한국어](./BUILD_WINDOWS.ko.md) · [Français](./BUILD_WINDOWS.fr.md) · **Español** · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · [हिन्दी](./BUILD_WINDOWS.hi.md) · [Türkçe](./BUILD_WINDOWS.tr.md) · [ไทย](./BUILD_WINDOWS.th.md) · [Tiếng Việt](./BUILD_WINDOWS.vi.md) · [Bahasa Indonesia](./BUILD_WINDOWS.id.md)
 
-# Guía de compilación de OpenPencil para Windows
+# Guía de compilación de Design Editor para Windows
 
 ## 1. Descargar el código fuente
 
-1. Descargue el código fuente del repositorio openpencil
+1. Descargue el código fuente del repositorio design-editor
 
-2. openpencil tiene 3 submódulos de dependencias en el directorio `vendor` (jian, casement, agent) que deben descargarse por separado
+2. design-editor tiene 3 submódulos de dependencias en el directorio `vendor` (jian, casement, agent) que deben descargarse por separado
 
     - 2.1 jian (framework UI): [https://github.com/ZSeven-W/jian](https://github.com/ZSeven-W/jian) → extraer en `vendor\jian`
 
@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 Descargue `rustup-init.exe` desde rustup.rs y ejecútelo. En PowerShell ejecute los siguientes comandos. **Corresponde a `openpencil 0.8.4`**:
+    - 2.3 Descargue `rustup-init.exe` desde rustup.rs y ejecútelo. En PowerShell ejecute los siguientes comandos. **Corresponde a `design-editor 0.8.4`**:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Instale wasm-bindgen-cli para la generación de enlaces WASM-JS. En PowerShell ejecute el siguiente comando. **Corresponde a `openpencil 0.8.4`**:
+    - 2.4 Instale wasm-bindgen-cli para la generación de enlaces WASM-JS. En PowerShell ejecute el siguiente comando. **Corresponde a `design-editor 0.8.4`**:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -95,64 +95,64 @@
     - 2.1 Compilación de la biblioteca WASM. En la raíz del repositorio, abra PowerShell y ejecute:
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 Generación de archivos de enlaces JS
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 Copie los recursos de renderizado CanvasKit desde `crates\op-host-web\assets\canvaskit` a `web-bundle`:
+    - 2.3 Copie los recursos de renderizado CanvasKit desde `crates\de-host-web\assets\canvaskit` a `web-bundle`:
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 Estructura de directorios final
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
-        ├── op.exe
+        ├── design-editor.exe
+        ├── de-host-web-server.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web.js
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 4. Configurar variables de entorno para el plugin dsh-openpencil
+## 4. Configurar variables de entorno para el plugin dsh-design-editor
 
 1. Ejecute PowerShell como administrador y ejecute los siguientes comandos (reemplace la ruta con la raíz real del repositorio):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. Verificación
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # La ventana aparece brevemente y se cierra — el servicio escucha en el puerto 3100 en segundo plano
     ```
 
-2. op-host-web-server.exe  <i>` (no requerido para el plugin dsh) `</i>
+2. de-host-web-server.exe  <i>` (no requerido para el plugin dsh) `</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
-    # Verá dos líneas de «openpencil-desktop --serve-web:» y el puerto 3100 en PowerShell
+    ./de-host-web-server.exe --serve-web 3100
+    # Verá dos líneas de «design-editor --serve-web:» y el puerto 3100 en PowerShell
     ```
 
 ---
@@ -162,7 +162,7 @@
 1. Preste atención al parámetro `--features` al compilar WASM
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > Use `--features "web canvaskit"` en lugar de `--features "web"`.
@@ -173,8 +173,8 @@
 
 2. El servidor mapea todo el directorio `web-bundle` a la ruta HTTP `/pkg/`
 
-    > Ruta en disco `web-bundle/op_host_web.js` → URL del navegador `/pkg/op_host_web.js`
+    > Ruta en disco `web-bundle/de_host_web.js` → URL del navegador `/pkg/de_host_web.js`
     > 
-    > Si la página indica que no se encuentra `/pkg/op_host_web.js`, falta el archivo en `web-bundle/`.
+    > Si la página indica que no se encuentra `/pkg/de_host_web.js`, falta el archivo en `web-bundle/`.
 
-3. Este documento está escrito para la versión `openpencil 0.8.4`. La versión de la cadena de herramientas rustup `1.94`, wasm-bindgen-cli `0.2.117` y skia-bindings `0.97.2` están alineadas con esta versión — otras versiones pueden diferir.
+3. Este documento está escrito para la versión `design-editor 0.8.4`. La versión de la cadena de herramientas rustup `1.94`, wasm-bindgen-cli `0.2.117` y skia-bindings `0.97.2` están alineadas con esta versión — otras versiones pueden diferir.

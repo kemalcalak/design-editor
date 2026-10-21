@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Per-node render-parity diff: Pencil baseline render vs OpenPencil Rust render.
+"""Per-node render-parity diff: Pencil baseline render vs Design Editor Rust render.
 
 Both sides export one PNG per node id (filename stem = node id):
   baseline/  <- Pencil export_nodes(png@2x)
-  ours/      <- openpencil-desktop --render-shots (same .pen converted via pen2op)
+  ours/      <- design-editor --render-shots (same .pen converted via pen2op)
 
 Because pen2op preserves node ids 1:1, the same <id>.png exists on both sides,
 so parity is measured per node. Metric is perceptual (the agreed bar — both

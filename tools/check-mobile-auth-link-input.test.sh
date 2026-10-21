@@ -22,10 +22,10 @@ fi
 
 CONFIGURATION=Debug \
 OP_AUTH_ARCHIVE="$archive" \
-OPENPENCIL_DEV_OP_AUTH_ABI_VERSION=3 \
+DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION=3 \
     bash "$checker" >/dev/null
 
-signed_archive=$script_dir/../crates/op-auth-bridge/prebuilt/aarch64-apple-ios-sim/libop_auth.a
+signed_archive=$script_dir/../crates/de-auth-bridge/prebuilt/aarch64-apple-ios-sim/libop_auth.a
 CONFIGURATION=Release \
 OP_AUTH_ARCHIVE="$(cd "$(dirname "$signed_archive")" && pwd -P)/libop_auth.a" \
 OP_AUTH_TARGET=aarch64-apple-ios-sim \
@@ -48,9 +48,9 @@ expect_failure() {
 
 expect_failure \
     "Debug rejects unsupported ABI" \
-    "requires OPENPENCIL_DEV_OP_AUTH_ABI_VERSION=2 or 3" \
+    "requires DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION=2 or 3" \
     env CONFIGURATION=Debug OP_AUTH_ARCHIVE="$archive" \
-        OPENPENCIL_DEV_OP_AUTH_ABI_VERSION=1 bash "$checker"
+        DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION=1 bash "$checker"
 
 expect_failure \
     "Release rejects an unsigned external archive" \
@@ -69,7 +69,7 @@ expect_failure \
     "unsigned development auth lane is forbidden in Release" \
     env CONFIGURATION=Release OP_AUTH_ARCHIVE="$archive" \
         OP_AUTH_TARGET=aarch64-apple-ios-sim \
-        OPENPENCIL_DEV_OP_AUTH_ABI_VERSION=3 bash "$checker"
+        DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION=3 bash "$checker"
 
 expect_failure \
     "Release rejects an unsupported mobile target" \

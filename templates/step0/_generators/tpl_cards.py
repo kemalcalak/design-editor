@@ -231,7 +231,7 @@ def square():
                                     slogan_size=step("caption")[0], gap=22)])
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 的门槛是 2.0）：
+# 对比度（WCAG 相对亮度比，de-design-lint 的门槛是 2.0）：
 #   c-ink   on c-bg          16.09      c-muted on c-bg          5.24
 #   c-accent on c-bg          4.27      c-accent on c-accent-soft 3.67
 #   #FFFFFF on c-accent       4.53

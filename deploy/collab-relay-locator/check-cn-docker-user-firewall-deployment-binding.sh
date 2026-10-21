@@ -73,7 +73,7 @@ extract_overlay_bind() {
 locator_bind=$(extract_overlay_bind "$locator_overlay" 8092)
 relay_bind=$(extract_overlay_bind "$relay_overlay" 8091)
 if [ "$locator_bind" != "$relay_bind" ] ||
-    [ "$locator_bind" != "$OPENPENCIL_CN_SERVICE_IPV4" ]
+    [ "$locator_bind" != "$DESIGN_EDITOR_CN_SERVICE_IPV4" ]
 then
     cn_firewall_fail \
         "inventory service IPv4 must equal both immutable CN Compose host_ip values"

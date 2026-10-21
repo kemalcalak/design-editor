@@ -1,0 +1,6 @@
+{
+  "name": "libdesign_editor.so",
+  "types": "./index.d.ts",
+  "version": "1.0.0",
+  "description": "Type declaration for the prebuilt de-engine-napi module."
+}

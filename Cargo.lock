@@ -1454,6 +1454,914 @@ dependencies = [
 ]
 
 [[package]]
+name = "de-acp"
+version = "0.1.0"
+dependencies = [
+ "agent-client-protocol",
+ "de-ai",
+ "de-process-io",
+ "de-rpc-transport",
+ "de-util",
+ "futures-util",
+ "rustls",
+ "rustls-native-certs",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-tungstenite",
+ "webpki-roots 0.26.11",
+]
+
+[[package]]
+name = "de-ai"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
+name = "de-ai-skills"
+version = "0.1.0"
+dependencies = [
+ "de-util",
+ "include_dir",
+ "jian-core",
+ "jian-ops-schema",
+ "serde_json",
+]
+
+[[package]]
+name = "de-auth-bridge"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "ed25519-dalek",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 1.0.69",
+ "zeroize",
+]
+
+[[package]]
+name = "de-builtin-model-discovery"
+version = "0.1.0"
+dependencies = [
+ "de-editor-core",
+ "futures",
+ "reqwest 0.12.28",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "de-chat-agent"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "de-ai",
+ "de-ai-skills",
+ "de-design-lint",
+ "de-editor-core",
+ "de-editor-host-core",
+ "de-editor-ui",
+ "de-mcp",
+ "de-orchestrator",
+ "de-pen-loader",
+ "futures",
+ "jian-ops-schema",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "skia-safe",
+ "tokio",
+]
+
+[[package]]
+name = "de-chrome-extension-core"
+version = "0.1.0"
+dependencies = [
+ "de-html",
+ "de-util",
+ "jian-ops-schema",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "de-cli"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "de-ai-skills",
+ "de-config-store",
+ "de-editor-core",
+ "de-figma",
+ "de-html",
+ "de-pen-loader",
+ "de-process-io",
+ "de-rpc-transport",
+ "de-util",
+ "jian-ops-schema",
+ "serde_json",
+]
+
+[[package]]
+name = "de-codegen"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "de-ai",
+ "de-editor-core",
+ "de-util",
+ "jian-ops-schema",
+ "serde",
+ "serde_json",
+ "zip 9.0.4",
+]
+
+[[package]]
+name = "de-collab"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "de-util",
+ "jian-ops-schema",
+ "serde",
+ "serde_json",
+ "static_assertions",
+ "thiserror 1.0.69",
+ "zeroize",
+]
+
+[[package]]
+name = "de-collab-host"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "de-auth-bridge",
+ "de-collab",
+ "de-collab-relay-client",
+ "de-collab-relay-control-plane",
+ "de-collab-relay-protocol",
+ "de-collab-transport",
+ "de-config-store",
+ "de-editor-core",
+ "de-editor-host-core",
+ "de-editor-ui",
+ "ed25519-dalek",
+ "getrandom 0.3.4",
+ "if-addrs",
+ "jian-ops-schema",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "sha2",
+ "socket2 0.6.3",
+ "static_assertions",
+ "subtle",
+ "thiserror 1.0.69",
+ "tokio",
+ "zeroize",
+]
+
+[[package]]
+name = "de-collab-policy-file"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "blake3",
+ "de-auth-bridge",
+ "de-collab-relay-protocol",
+ "ed25519-dalek",
+ "libc",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "de-collab-relay-client"
+version = "0.1.0"
+dependencies = [
+ "de-collab-relay-protocol",
+ "futures-util",
+ "rustls",
+ "rustls-native-certs",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-tungstenite",
+ "url",
+ "webpki-roots 0.26.11",
+ "zeroize",
+]
+
+[[package]]
+name = "de-collab-relay-control-plane"
+version = "0.1.0"
+dependencies = [
+ "de-auth-bridge",
+ "de-collab-relay-protocol",
+ "ed25519-dalek",
+ "getrandom 0.3.4",
+ "reqwest 0.12.28",
+ "subtle",
+ "thiserror 1.0.69",
+ "url",
+ "zeroize",
+]
+
+[[package]]
+name = "de-collab-relay-locator-hsm"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "cryptoki",
+ "de-collab-relay-protocol",
+ "ed25519-dalek",
+ "libc",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tracing",
+ "tracing-subscriber",
+ "zeroize",
+]
+
+[[package]]
+name = "de-collab-relay-locator-server"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64",
+ "bytes",
+ "de-auth-bridge",
+ "de-collab-policy-file",
+ "de-collab-relay-control-plane",
+ "de-collab-relay-protocol",
+ "ed25519-dalek",
+ "hyper",
+ "hyper-util",
+ "libc",
+ "reqwest 0.12.28",
+ "serde_json",
+ "sha2",
+ "socket2 0.6.3",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tower-http",
+ "tower-service",
+ "tracing",
+ "tracing-subscriber",
+ "zeroize",
+]
+
+[[package]]
+name = "de-collab-relay-protocol"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "blake3",
+ "chacha20poly1305",
+ "getrandom 0.3.4",
+ "hkdf",
+ "hmac",
+ "sha2",
+ "thiserror 1.0.69",
+ "zeroize",
+]
+
+[[package]]
+name = "de-collab-relay-server"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "blake3",
+ "de-auth-bridge",
+ "de-collab-policy-file",
+ "de-collab-relay-protocol",
+ "ed25519-dalek",
+ "futures-util",
+ "libc",
+ "serde",
+ "serde_json",
+ "sha2",
+ "subtle",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-tungstenite",
+ "tracing",
+ "tracing-subscriber",
+ "x25519-dalek",
+ "zeroize",
+]
+
+[[package]]
+name = "de-collab-smoke"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "de-auth-bridge",
+ "de-collab",
+ "de-collab-transport",
+ "jian-ops-schema",
+ "serde_json",
+]
+
+[[package]]
+name = "de-collab-transport"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "core-foundation 0.9.4",
+ "core-foundation-sys",
+ "de-collab",
+ "getrandom 0.3.4",
+ "jian-ops-schema",
+ "keyring",
+ "libc",
+ "mdns-sd",
+ "polling",
+ "secret-service",
+ "security-framework-sys",
+ "serde_json",
+ "snow",
+ "socket2 0.6.3",
+ "static_assertions",
+ "thiserror 1.0.69",
+ "windows-sys 0.61.2",
+ "x25519-dalek",
+ "zeroize",
+]
+
+[[package]]
+name = "de-config-store"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "de-design-lint"
+version = "0.1.0"
+dependencies = [
+ "de-util",
+ "jian-ops-schema",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "de-editor-core"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "de-ai",
+ "de-i18n",
+ "de-orchestrator",
+ "de-util",
+ "glam",
+ "jian-core",
+ "jian-ops-schema",
+ "jian-widgets",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "de-editor-host-core"
+version = "0.1.0"
+dependencies = [
+ "de-ai",
+ "de-ai-skills",
+ "de-codegen",
+ "de-collab",
+ "de-config-store",
+ "de-editor-core",
+ "de-i18n",
+ "de-orchestrator",
+ "dirs 5.0.1",
+ "jian-ops-schema",
+ "serde",
+ "serde_json",
+ "sys-locale",
+ "thiserror 1.0.69",
+ "tracing",
+ "zip 9.0.4",
+]
+
+[[package]]
+name = "de-editor-ui"
+version = "0.1.0"
+dependencies = [
+ "accesskit",
+ "base64",
+ "bitflags 2.11.1",
+ "de-ai-skills",
+ "de-editor-core",
+ "de-i18n",
+ "de-util",
+ "glam",
+ "jian-core",
+ "jian-ops-schema",
+ "jian-scene",
+ "jian-widgets",
+ "resvg",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "de-engine-ffi"
+version = "0.1.0"
+dependencies = [
+ "de-ai",
+ "de-ai-skills",
+ "de-builtin-model-discovery",
+ "de-chat-agent",
+ "de-collab-host",
+ "de-collab-transport",
+ "de-config-store",
+ "de-editor-core",
+ "de-editor-host-core",
+ "de-editor-ui",
+ "de-host-native",
+ "de-i18n",
+ "de-image-enrich",
+ "de-orchestrator",
+ "de-pen-loader",
+ "de-render-export",
+ "futures",
+ "jian-core",
+ "jian-ops-schema",
+ "jian-skia",
+ "reqwest 0.12.28",
+ "rquickjs",
+ "serde_json",
+ "skia-safe",
+ "tokio",
+ "zeroize",
+]
+
+[[package]]
+name = "de-engine-jni"
+version = "0.1.0"
+dependencies = [
+ "de-engine-ffi",
+ "jni 0.21.1",
+ "ndk-sys",
+ "zeroize",
+]
+
+[[package]]
+name = "de-engine-napi"
+version = "0.1.0"
+dependencies = [
+ "de-engine-ffi",
+ "de-engine-jni",
+ "napi-derive-ohos",
+ "napi-ohos",
+]
+
+[[package]]
+name = "de-figma"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "de-editor-core",
+ "de-editor-ui",
+ "de-host-services",
+ "de-pen-loader",
+ "flate2",
+ "jian-ops-schema",
+ "ruzstd",
+ "serde_json",
+]
+
+[[package]]
+name = "de-git"
+version = "0.1.0"
+dependencies = [
+ "de-config-store",
+ "git2",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "de-host-desktop"
+version = "0.1.0"
+dependencies = [
+ "accesskit",
+ "accesskit_macos",
+ "accesskit_unix",
+ "accesskit_windows",
+ "agent",
+ "anthropic-agent-sdk",
+ "arboard",
+ "async-trait",
+ "base64",
+ "casement",
+ "de-acp",
+ "de-ai",
+ "de-ai-skills",
+ "de-auth-bridge",
+ "de-codegen",
+ "de-collab",
+ "de-collab-host",
+ "de-collab-relay-client",
+ "de-collab-relay-control-plane",
+ "de-collab-relay-protocol",
+ "de-collab-transport",
+ "de-config-store",
+ "de-design-lint",
+ "de-editor-core",
+ "de-editor-host-core",
+ "de-editor-ui",
+ "de-figma",
+ "de-git",
+ "de-host-native",
+ "de-host-services",
+ "de-html",
+ "de-i18n",
+ "de-image-enrich",
+ "de-mcp",
+ "de-opmerge",
+ "de-orchestrator",
+ "de-pen-loader",
+ "de-process-io",
+ "dirs 5.0.1",
+ "ed25519-dalek",
+ "futures",
+ "getrandom 0.3.4",
+ "glam",
+ "if-addrs",
+ "jian-core",
+ "jian-ops-schema",
+ "jian-skia",
+ "muda",
+ "objc2 0.5.2",
+ "objc2-app-kit 0.2.2",
+ "objc2-foundation 0.2.2",
+ "reqwest 0.12.28",
+ "rfd",
+ "serde",
+ "serde_json",
+ "sha2",
+ "skia-safe",
+ "socket2 0.6.3",
+ "static_assertions",
+ "subtle",
+ "thiserror 1.0.69",
+ "tokio",
+ "toml_edit",
+ "tracing",
+ "tracing-subscriber",
+ "wl-clipboard-rs",
+ "zeroize",
+ "zip 9.0.4",
+]
+
+[[package]]
+name = "de-host-native"
+version = "0.1.0"
+dependencies = [
+ "accesskit",
+ "casement",
+ "de-ai-skills",
+ "de-auth-bridge",
+ "de-collab-host",
+ "de-editor-core",
+ "de-editor-host-core",
+ "de-editor-ui",
+ "de-i18n",
+ "de-orchestrator",
+ "de-pen-loader",
+ "de-preview-core",
+ "glow",
+ "glutin",
+ "jian-core",
+ "jian-host-desktop",
+ "jian-ops-schema",
+ "jian-skia",
+ "khronos-egl",
+ "libloading 0.8.9",
+ "raw-window-handle",
+ "scopeguard",
+ "serde_json",
+ "skia-safe",
+ "sysinfo",
+ "thiserror 1.0.69",
+ "tracing",
+ "tracing-test",
+]
+
+[[package]]
+name = "de-host-services"
+version = "0.1.0"
+dependencies = [
+ "agent",
+ "anthropic-agent-sdk",
+ "async-trait",
+ "base64",
+ "de-acp",
+ "de-ai",
+ "de-ai-skills",
+ "de-auth-bridge",
+ "de-builtin-model-discovery",
+ "de-chat-agent",
+ "de-collab-host",
+ "de-config-store",
+ "de-design-lint",
+ "de-editor-core",
+ "de-editor-host-core",
+ "de-editor-ui",
+ "de-figma",
+ "de-html",
+ "de-i18n",
+ "de-image-enrich",
+ "de-mcp",
+ "de-orchestrator",
+ "de-pen-loader",
+ "de-process-io",
+ "de-render-export",
+ "de-util",
+ "dirs 5.0.1",
+ "futures",
+ "getrandom 0.3.4",
+ "github-copilot-sdk",
+ "hmac",
+ "jian-ops-schema",
+ "libc",
+ "memmap2",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "sha2",
+ "signal-hook",
+ "skia-safe",
+ "tokio",
+ "tracing",
+ "zip 9.0.4",
+]
+
+[[package]]
+name = "de-host-web"
+version = "0.1.0"
+dependencies = [
+ "accesskit",
+ "base64",
+ "console_error_panic_hook",
+ "de-ai",
+ "de-codegen",
+ "de-editor-core",
+ "de-editor-host-core",
+ "de-editor-ui",
+ "de-figma",
+ "de-host-native",
+ "de-html",
+ "de-i18n",
+ "de-pen-loader",
+ "de-preview-core",
+ "de-util",
+ "jian-core",
+ "jian-ops-schema",
+ "js-sys",
+ "serde",
+ "serde_json",
+ "skia-safe",
+ "ttf-parser",
+ "url",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "de-host-web-server"
+version = "0.1.0"
+dependencies = [
+ "de-host-services",
+ "serde_json",
+]
+
+[[package]]
+name = "de-html"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "de-util",
+ "encoding_rs",
+ "flate2",
+ "html5ever",
+ "jian-ops-schema",
+ "markup5ever_rcdom",
+ "serde_json",
+ "url",
+ "zip 9.0.4",
+]
+
+[[package]]
+name = "de-i18n"
+version = "0.1.0"
+dependencies = [
+ "de-html",
+]
+
+[[package]]
+name = "de-image-enrich"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "de-editor-core",
+ "de-editor-ui",
+ "de-pen-loader",
+ "image",
+ "jian-ops-schema",
+ "reqwest 0.12.28",
+ "serde_json",
+ "skia-safe",
+ "tokio",
+]
+
+[[package]]
+name = "de-mcp"
+version = "0.1.0"
+dependencies = [
+ "de-ai-skills",
+ "de-codegen",
+ "de-config-store",
+ "de-design-lint",
+ "de-editor-core",
+ "de-html",
+ "de-pen-loader",
+ "de-util",
+ "jian-ops-schema",
+ "jian-scene",
+ "regex",
+ "rquickjs",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "de-opmerge"
+version = "0.1.0"
+dependencies = [
+ "jian-ops-schema",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "de-orchestrator"
+version = "0.1.0"
+dependencies = [
+ "de-ai-skills",
+ "de-design-lint",
+ "de-editor-core",
+ "de-editor-ui",
+ "de-image-enrich",
+ "de-mcp",
+ "de-pen-loader",
+ "de-util",
+ "futures",
+ "jian-ops-schema",
+ "jian-scene",
+ "regex",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "de-pen-loader"
+version = "0.1.0"
+dependencies = [
+ "de-editor-core",
+ "de-html",
+ "de-util",
+ "jian-core",
+ "jian-ops-schema",
+ "jian-scene",
+ "jian-skia",
+ "serde",
+ "serde_json",
+ "serde_stacker",
+]
+
+[[package]]
+name = "de-preview-contracts"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "de-preview-core"
+version = "0.1.0"
+dependencies = [
+ "de-editor-core",
+ "de-editor-ui",
+ "de-orchestrator",
+ "de-pen-loader",
+ "de-preview-contracts",
+ "jian-core",
+ "jian-ops-schema",
+ "jian-skia",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tracing",
+]
+
+[[package]]
+name = "de-process-io"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "tokio",
+]
+
+[[package]]
+name = "de-render-export"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "de-editor-core",
+ "de-editor-ui",
+ "de-host-native",
+ "de-pen-loader",
+ "glam",
+ "jian-ops-schema",
+ "skia-safe",
+]
+
+[[package]]
+name = "de-rpc-transport"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "de-smoke"
+version = "0.1.0"
+dependencies = [
+ "agent",
+ "de-ai",
+ "de-ai-skills",
+ "de-chat-agent",
+ "de-editor-core",
+ "de-host-services",
+ "de-image-enrich",
+ "de-mcp",
+ "de-orchestrator",
+ "de-pen-loader",
+ "futures",
+ "jian-ops-schema",
+ "reqwest 0.12.28",
+ "serde_json",
+ "sha2",
+ "tokio",
+]
+
+[[package]]
+name = "de-util"
+version = "0.1.0"
+
+[[package]]
+name = "de-web-sdk"
+version = "0.1.0"
+dependencies = [
+ "console_error_panic_hook",
+ "de-editor-core",
+ "de-editor-ui",
+ "de-host-web",
+ "de-pen-loader",
+ "jian-ops-schema",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "defmt"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2523,7 +3431,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tower-service",
- "webpki-roots 1.0.7",
+ "webpki-roots 1.0.10",
 ]
 
 [[package]]
@@ -4033,914 +4941,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
-name = "op-acp"
-version = "0.1.0"
-dependencies = [
- "agent-client-protocol",
- "futures-util",
- "op-ai",
- "op-process-io",
- "op-rpc-transport",
- "op-util",
- "rustls",
- "rustls-native-certs",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-tungstenite",
- "webpki-roots 0.26.11",
-]
-
-[[package]]
-name = "op-ai"
-version = "0.1.0"
-dependencies = [
- "serde_json",
-]
-
-[[package]]
-name = "op-ai-skills"
-version = "0.1.0"
-dependencies = [
- "include_dir",
- "jian-core",
- "jian-ops-schema",
- "op-util",
- "serde_json",
-]
-
-[[package]]
-name = "op-auth-bridge"
-version = "0.1.0"
-dependencies = [
- "base64",
- "ed25519-dalek",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 1.0.69",
- "zeroize",
-]
-
-[[package]]
-name = "op-builtin-model-discovery"
-version = "0.1.0"
-dependencies = [
- "futures",
- "op-editor-core",
- "reqwest 0.12.28",
- "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "op-chat-agent"
-version = "0.1.0"
-dependencies = [
- "base64",
- "futures",
- "jian-ops-schema",
- "op-ai",
- "op-ai-skills",
- "op-design-lint",
- "op-editor-core",
- "op-editor-host-core",
- "op-editor-ui",
- "op-mcp",
- "op-orchestrator",
- "op-pen-loader",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "skia-safe",
- "tokio",
-]
-
-[[package]]
-name = "op-chrome-extension-core"
-version = "0.1.0"
-dependencies = [
- "jian-ops-schema",
- "op-html",
- "op-util",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "op-cli"
-version = "0.1.0"
-dependencies = [
- "base64",
- "jian-ops-schema",
- "op-ai-skills",
- "op-config-store",
- "op-editor-core",
- "op-figma",
- "op-html",
- "op-pen-loader",
- "op-process-io",
- "op-rpc-transport",
- "op-util",
- "serde_json",
-]
-
-[[package]]
-name = "op-codegen"
-version = "0.1.0"
-dependencies = [
- "base64",
- "jian-ops-schema",
- "op-ai",
- "op-editor-core",
- "op-util",
- "serde",
- "serde_json",
- "zip 9.0.4",
-]
-
-[[package]]
-name = "op-collab"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "jian-ops-schema",
- "op-util",
- "serde",
- "serde_json",
- "static_assertions",
- "thiserror 1.0.69",
- "zeroize",
-]
-
-[[package]]
-name = "op-collab-host"
-version = "0.1.0"
-dependencies = [
- "base64",
- "ed25519-dalek",
- "getrandom 0.3.4",
- "if-addrs",
- "jian-ops-schema",
- "op-auth-bridge",
- "op-collab",
- "op-collab-relay-client",
- "op-collab-relay-control-plane",
- "op-collab-relay-protocol",
- "op-collab-transport",
- "op-config-store",
- "op-editor-core",
- "op-editor-host-core",
- "op-editor-ui",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "sha2",
- "socket2 0.6.3",
- "static_assertions",
- "subtle",
- "thiserror 1.0.69",
- "tokio",
- "zeroize",
-]
-
-[[package]]
-name = "op-collab-policy-file"
-version = "0.1.0"
-dependencies = [
- "base64",
- "blake3",
- "ed25519-dalek",
- "libc",
- "op-auth-bridge",
- "op-collab-relay-protocol",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "op-collab-relay-client"
-version = "0.1.0"
-dependencies = [
- "futures-util",
- "op-collab-relay-protocol",
- "rustls",
- "rustls-native-certs",
- "thiserror 1.0.69",
- "tokio",
- "tokio-tungstenite",
- "url",
- "webpki-roots 0.26.11",
- "zeroize",
-]
-
-[[package]]
-name = "op-collab-relay-control-plane"
-version = "0.1.0"
-dependencies = [
- "ed25519-dalek",
- "getrandom 0.3.4",
- "op-auth-bridge",
- "op-collab-relay-protocol",
- "reqwest 0.12.28",
- "subtle",
- "thiserror 1.0.69",
- "url",
- "zeroize",
-]
-
-[[package]]
-name = "op-collab-relay-locator-hsm"
-version = "0.1.0"
-dependencies = [
- "base64",
- "cryptoki",
- "ed25519-dalek",
- "libc",
- "op-collab-relay-protocol",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 1.0.69",
- "tracing",
- "tracing-subscriber",
- "zeroize",
-]
-
-[[package]]
-name = "op-collab-relay-locator-server"
-version = "0.1.0"
-dependencies = [
- "axum",
- "base64",
- "bytes",
- "ed25519-dalek",
- "hyper",
- "hyper-util",
- "libc",
- "op-auth-bridge",
- "op-collab-policy-file",
- "op-collab-relay-control-plane",
- "op-collab-relay-protocol",
- "reqwest 0.12.28",
- "serde_json",
- "sha2",
- "socket2 0.6.3",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tower-http",
- "tower-service",
- "tracing",
- "tracing-subscriber",
- "zeroize",
-]
-
-[[package]]
-name = "op-collab-relay-protocol"
-version = "0.1.0"
-dependencies = [
- "base64",
- "blake3",
- "chacha20poly1305",
- "getrandom 0.3.4",
- "hkdf",
- "hmac",
- "sha2",
- "thiserror 1.0.69",
- "zeroize",
-]
-
-[[package]]
-name = "op-collab-relay-server"
-version = "0.1.0"
-dependencies = [
- "base64",
- "blake3",
- "ed25519-dalek",
- "futures-util",
- "libc",
- "op-auth-bridge",
- "op-collab-policy-file",
- "op-collab-relay-protocol",
- "serde",
- "serde_json",
- "sha2",
- "subtle",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tokio-tungstenite",
- "tracing",
- "tracing-subscriber",
- "x25519-dalek",
- "zeroize",
-]
-
-[[package]]
-name = "op-collab-smoke"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "jian-ops-schema",
- "op-auth-bridge",
- "op-collab",
- "op-collab-transport",
- "serde_json",
-]
-
-[[package]]
-name = "op-collab-transport"
-version = "0.1.0"
-dependencies = [
- "base64",
- "core-foundation 0.9.4",
- "core-foundation-sys",
- "getrandom 0.3.4",
- "jian-ops-schema",
- "keyring",
- "libc",
- "mdns-sd",
- "op-collab",
- "polling",
- "secret-service",
- "security-framework-sys",
- "serde_json",
- "snow",
- "socket2 0.6.3",
- "static_assertions",
- "thiserror 1.0.69",
- "windows-sys 0.61.2",
- "x25519-dalek",
- "zeroize",
-]
-
-[[package]]
-name = "op-config-store"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "op-design-lint"
-version = "0.1.0"
-dependencies = [
- "jian-ops-schema",
- "op-util",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "op-editor-core"
-version = "0.1.0"
-dependencies = [
- "base64",
- "glam",
- "jian-core",
- "jian-ops-schema",
- "jian-widgets",
- "op-ai",
- "op-i18n",
- "op-orchestrator",
- "op-util",
- "serde",
- "serde_json",
- "tracing",
-]
-
-[[package]]
-name = "op-editor-host-core"
-version = "0.1.0"
-dependencies = [
- "dirs 5.0.1",
- "jian-ops-schema",
- "op-ai",
- "op-ai-skills",
- "op-codegen",
- "op-collab",
- "op-config-store",
- "op-editor-core",
- "op-i18n",
- "op-orchestrator",
- "serde",
- "serde_json",
- "sys-locale",
- "thiserror 1.0.69",
- "tracing",
- "zip 9.0.4",
-]
-
-[[package]]
-name = "op-editor-ui"
-version = "0.1.0"
-dependencies = [
- "accesskit",
- "base64",
- "bitflags 2.11.1",
- "glam",
- "jian-core",
- "jian-ops-schema",
- "jian-scene",
- "jian-widgets",
- "op-ai-skills",
- "op-editor-core",
- "op-i18n",
- "op-util",
- "resvg",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "op-engine-ffi"
-version = "0.1.0"
-dependencies = [
- "futures",
- "jian-core",
- "jian-ops-schema",
- "jian-skia",
- "op-ai",
- "op-ai-skills",
- "op-builtin-model-discovery",
- "op-chat-agent",
- "op-collab-host",
- "op-collab-transport",
- "op-config-store",
- "op-editor-core",
- "op-editor-host-core",
- "op-editor-ui",
- "op-host-native",
- "op-i18n",
- "op-image-enrich",
- "op-orchestrator",
- "op-pen-loader",
- "op-render-export",
- "reqwest 0.12.28",
- "rquickjs",
- "serde_json",
- "skia-safe",
- "tokio",
- "zeroize",
-]
-
-[[package]]
-name = "op-engine-jni"
-version = "0.1.0"
-dependencies = [
- "jni 0.21.1",
- "ndk-sys",
- "op-engine-ffi",
- "zeroize",
-]
-
-[[package]]
-name = "op-engine-napi"
-version = "0.1.0"
-dependencies = [
- "napi-derive-ohos",
- "napi-ohos",
- "op-engine-ffi",
- "op-engine-jni",
-]
-
-[[package]]
-name = "op-figma"
-version = "0.1.0"
-dependencies = [
- "base64",
- "flate2",
- "jian-ops-schema",
- "op-editor-core",
- "op-editor-ui",
- "op-host-services",
- "op-pen-loader",
- "ruzstd",
- "serde_json",
-]
-
-[[package]]
-name = "op-git"
-version = "0.1.0"
-dependencies = [
- "git2",
- "op-config-store",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "op-host-desktop"
-version = "0.1.0"
-dependencies = [
- "accesskit",
- "accesskit_macos",
- "accesskit_unix",
- "accesskit_windows",
- "agent",
- "anthropic-agent-sdk",
- "arboard",
- "async-trait",
- "base64",
- "casement",
- "dirs 5.0.1",
- "ed25519-dalek",
- "futures",
- "getrandom 0.3.4",
- "glam",
- "if-addrs",
- "jian-core",
- "jian-ops-schema",
- "jian-skia",
- "muda",
- "objc2 0.5.2",
- "objc2-app-kit 0.2.2",
- "objc2-foundation 0.2.2",
- "op-acp",
- "op-ai",
- "op-ai-skills",
- "op-auth-bridge",
- "op-codegen",
- "op-collab",
- "op-collab-host",
- "op-collab-relay-client",
- "op-collab-relay-control-plane",
- "op-collab-relay-protocol",
- "op-collab-transport",
- "op-config-store",
- "op-design-lint",
- "op-editor-core",
- "op-editor-host-core",
- "op-editor-ui",
- "op-figma",
- "op-git",
- "op-host-native",
- "op-host-services",
- "op-html",
- "op-i18n",
- "op-image-enrich",
- "op-mcp",
- "op-opmerge",
- "op-orchestrator",
- "op-pen-loader",
- "op-process-io",
- "reqwest 0.12.28",
- "rfd",
- "serde",
- "serde_json",
- "sha2",
- "skia-safe",
- "socket2 0.6.3",
- "static_assertions",
- "subtle",
- "thiserror 1.0.69",
- "tokio",
- "toml_edit",
- "tracing",
- "tracing-subscriber",
- "wl-clipboard-rs",
- "zeroize",
- "zip 9.0.4",
-]
-
-[[package]]
-name = "op-host-native"
-version = "0.1.0"
-dependencies = [
- "accesskit",
- "casement",
- "glow",
- "glutin",
- "jian-core",
- "jian-host-desktop",
- "jian-ops-schema",
- "jian-skia",
- "khronos-egl",
- "libloading 0.8.9",
- "op-ai-skills",
- "op-auth-bridge",
- "op-collab-host",
- "op-editor-core",
- "op-editor-host-core",
- "op-editor-ui",
- "op-i18n",
- "op-orchestrator",
- "op-pen-loader",
- "op-preview-core",
- "raw-window-handle",
- "scopeguard",
- "serde_json",
- "skia-safe",
- "sysinfo",
- "thiserror 1.0.69",
- "tracing",
- "tracing-test",
-]
-
-[[package]]
-name = "op-host-services"
-version = "0.1.0"
-dependencies = [
- "agent",
- "anthropic-agent-sdk",
- "async-trait",
- "base64",
- "dirs 5.0.1",
- "futures",
- "getrandom 0.3.4",
- "github-copilot-sdk",
- "hmac",
- "jian-ops-schema",
- "libc",
- "memmap2",
- "op-acp",
- "op-ai",
- "op-ai-skills",
- "op-auth-bridge",
- "op-builtin-model-discovery",
- "op-chat-agent",
- "op-collab-host",
- "op-config-store",
- "op-design-lint",
- "op-editor-core",
- "op-editor-host-core",
- "op-editor-ui",
- "op-figma",
- "op-html",
- "op-i18n",
- "op-image-enrich",
- "op-mcp",
- "op-orchestrator",
- "op-pen-loader",
- "op-process-io",
- "op-render-export",
- "op-util",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "sha2",
- "signal-hook",
- "skia-safe",
- "tokio",
- "tracing",
- "zip 9.0.4",
-]
-
-[[package]]
-name = "op-host-web"
-version = "0.1.0"
-dependencies = [
- "accesskit",
- "base64",
- "console_error_panic_hook",
- "jian-core",
- "jian-ops-schema",
- "js-sys",
- "op-ai",
- "op-codegen",
- "op-editor-core",
- "op-editor-host-core",
- "op-editor-ui",
- "op-figma",
- "op-host-native",
- "op-html",
- "op-i18n",
- "op-pen-loader",
- "op-preview-core",
- "op-util",
- "serde",
- "serde_json",
- "skia-safe",
- "ttf-parser",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "op-host-web-server"
-version = "0.1.0"
-dependencies = [
- "op-host-services",
- "serde_json",
-]
-
-[[package]]
-name = "op-html"
-version = "0.1.0"
-dependencies = [
- "base64",
- "encoding_rs",
- "flate2",
- "html5ever",
- "jian-ops-schema",
- "markup5ever_rcdom",
- "op-util",
- "serde_json",
- "url",
- "zip 9.0.4",
-]
-
-[[package]]
-name = "op-i18n"
-version = "0.1.0"
-dependencies = [
- "op-html",
-]
-
-[[package]]
-name = "op-image-enrich"
-version = "0.1.0"
-dependencies = [
- "base64",
- "image",
- "jian-ops-schema",
- "op-editor-core",
- "op-editor-ui",
- "op-pen-loader",
- "reqwest 0.12.28",
- "serde_json",
- "skia-safe",
- "tokio",
-]
-
-[[package]]
-name = "op-mcp"
-version = "0.1.0"
-dependencies = [
- "jian-ops-schema",
- "jian-scene",
- "op-ai-skills",
- "op-codegen",
- "op-config-store",
- "op-design-lint",
- "op-editor-core",
- "op-html",
- "op-pen-loader",
- "op-util",
- "regex",
- "rquickjs",
- "serde",
- "serde_json",
- "tracing",
-]
-
-[[package]]
-name = "op-opmerge"
-version = "0.1.0"
-dependencies = [
- "jian-ops-schema",
- "serde_json",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "op-orchestrator"
-version = "0.1.0"
-dependencies = [
- "futures",
- "jian-ops-schema",
- "jian-scene",
- "op-ai-skills",
- "op-design-lint",
- "op-editor-core",
- "op-editor-ui",
- "op-image-enrich",
- "op-mcp",
- "op-pen-loader",
- "op-util",
- "regex",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "op-pen-loader"
-version = "0.1.0"
-dependencies = [
- "jian-core",
- "jian-ops-schema",
- "jian-scene",
- "jian-skia",
- "op-editor-core",
- "op-html",
- "op-util",
- "serde",
- "serde_json",
- "serde_stacker",
-]
-
-[[package]]
-name = "op-preview-contracts"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "op-preview-core"
-version = "0.1.0"
-dependencies = [
- "jian-core",
- "jian-ops-schema",
- "jian-skia",
- "op-editor-core",
- "op-editor-ui",
- "op-orchestrator",
- "op-pen-loader",
- "op-preview-contracts",
- "serde_json",
- "thiserror 1.0.69",
- "tracing",
-]
-
-[[package]]
-name = "op-process-io"
-version = "0.1.0"
-dependencies = [
- "libc",
- "tokio",
-]
-
-[[package]]
-name = "op-render-export"
-version = "0.1.0"
-dependencies = [
- "base64",
- "glam",
- "jian-ops-schema",
- "op-editor-core",
- "op-editor-ui",
- "op-host-native",
- "op-pen-loader",
- "skia-safe",
-]
-
-[[package]]
-name = "op-rpc-transport"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "op-smoke"
-version = "0.1.0"
-dependencies = [
- "agent",
- "futures",
- "jian-ops-schema",
- "op-ai",
- "op-ai-skills",
- "op-chat-agent",
- "op-editor-core",
- "op-host-services",
- "op-image-enrich",
- "op-mcp",
- "op-orchestrator",
- "op-pen-loader",
- "reqwest 0.12.28",
- "serde_json",
- "sha2",
- "tokio",
-]
-
-[[package]]
-name = "op-util"
-version = "0.1.0"
-
-[[package]]
-name = "op-web-sdk"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "jian-ops-schema",
- "op-editor-core",
- "op-editor-ui",
- "op-host-web",
- "op-pen-loader",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
 name = "opaque-debug"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5737,7 +5737,7 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams 0.4.2",
  "web-sys",
- "webpki-roots 1.0.7",
+ "webpki-roots 1.0.10",
 ]
 
 [[package]]
@@ -6021,9 +6021,9 @@ checksum = "f87165f0995f63a9fbeea62b64d10b4d9d8e78ec6d7d51fb2125fda7bb36788f"
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.15"
+version = "0.103.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
+checksum = "4443b1b6d39d7c663139942cc4558262562d2c84123bb6282ef177009ca8b281"
 dependencies = [
  "aws-lc-rs",
  "ring",
@@ -7780,9 +7780,9 @@ dependencies = [
 
 [[package]]
 name = "webpki-root-certs"
-version = "1.0.7"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f31141ce3fc3e300ae89b78c0dd67f9708061d1d2eda54b8209346fd6be9a92c"
+checksum = "58ec80e73fd8baf57bf0d9615554c75348bda990d6d5bbeab964dd068319fecb"
 dependencies = [
  "rustls-pki-types",
 ]
@@ -7793,14 +7793,14 @@ version = "0.26.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "521bc38abb08001b01866da9f51eb7c5d647a19260e00054a8c7fd5f9e57f7a9"
 dependencies = [
- "webpki-roots 1.0.7",
+ "webpki-roots 1.0.10",
 ]
 
 [[package]]
 name = "webpki-roots"
-version = "1.0.7"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52f5ee44c96cf55f1b349600768e3ece3a8f26010c05265ab73f945bb1a2eb9d"
+checksum = "1c1c8e20c8a38fc7d65abfe74eb7280e4aa667e8eec8bc84996d2874810748d9"
 dependencies = [
  "rustls-pki-types",
 ]

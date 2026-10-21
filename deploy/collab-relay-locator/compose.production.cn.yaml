@@ -1,8 +1,8 @@
 services:
   locator:
     environment:
-      OPENPENCIL_COLLAB_LOCATOR_HOME_REGION: cn
-      OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND: "100"
+      DESIGN_EDITOR_COLLAB_LOCATOR_HOME_REGION: cn
+      DESIGN_EDITOR_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND: "100"
     ports:
       - target: 8092
         published: "8092"

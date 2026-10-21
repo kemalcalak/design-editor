@@ -14,14 +14,14 @@ exclude = [
   "node_modules",
 ]
 # A bare `cargo build` / `cargo test` (no `-p`, no `--workspace`) operates on
-# this set only — the native shippable artifacts (the desktop app + the `op`
-# CLI), exactly what `rust-release.yml` builds via `-p op-host-desktop -p op-cli`.
+# this set only — the native shippable artifacts (the desktop app + the `de`
+# CLI), exactly what `rust-release.yml` builds via `-p de-host-desktop -p de-cli`.
 # This stops a plain `cargo build` from also compiling the wasm host
-# (`op-host-web`) on the native target — a wasted compile, since its real build
-# is always `cargo build -p op-host-web --target wasm32-unknown-unknown`. CI and
+# (`de-host-web`) on the native target — a wasted compile, since its real build
+# is always `cargo build -p de-host-web --target wasm32-unknown-unknown`. CI and
 # the `package.json` cargo:* scripts are unaffected: they all pass `--workspace`
 # explicitly, which overrides `default-members`.
-default-members = ["crates/op-host-desktop", "crates/op-cli", "crates/op-host-web-server"]
+default-members = ["crates/de-host-desktop", "crates/de-cli", "crates/de-host-web-server"]
 
 [workspace.package]
 version = "0.1.0"
@@ -31,7 +31,7 @@ edition = "2021"
 rust-version = "1.94"
 license = "MIT"
 authors = ["ZSeven-W <fini.yang@gmail.com>"]
-repository = "https://github.com/ZSeven-W/openpencil"
+repository = "https://github.com/kemalcalak/design-editor"
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -52,7 +52,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # from-scratch wasm32-unknown-unknown skia web build, which CanvasKit now
 # replaces. With no wasm32 skia consumer left, `skia-safe` / `skia-bindings`
 # resolve to upstream crates.io 0.97.0 — used only by the native desktop host
-# (`op-host-desktop`) + `jian-skia`, where the fork was byte-identical anyway.
+# (`de-host-desktop`) + `jian-skia`, where the fork was byte-identical anyway.
 # No `[patch.crates-io]` needed.
 
 # Release profile. Previously unset → Rust defaults (no LTO, codegen-units=16,

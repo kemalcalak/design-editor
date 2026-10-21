@@ -5,12 +5,12 @@
 
     分帧 PNG   templates/step0/previews/<id>.png 或 <id>-NN.png
     overview   templates/step0/previews/<id>-overview.png（整页拼合）
-    卡片 JPEG  crates/op-editor-ui/assets/scene_template_previews/<id>.jpg
+    卡片 JPEG  crates/de-editor-ui/assets/scene_template_previews/<id>.jpg
 
 过期的来源有两个，第二个是这个工具存在的理由：
 
   1. **文档变了**没重渲 —— 改了 .op 忘了刷预览，这个还算好想到；
-  2. **渲染器变了** —— .op 一个字节没动，但 openpencil-desktop 重新编译后
+  2. **渲染器变了** —— .op 一个字节没动，但 design-editor 重新编译后
      文字栅格化的结果变了，落盘图就从此对不上了。2026-08-09 那次就是这样：
      minimal-keynote 的 01/03/08 帧文档内容与 HEAD 完全一致，渲染出来却和落
      盘 PNG 不一致，查到最后是二进制在 08-07 之后重建过。
@@ -44,10 +44,10 @@ import tempfile
 # qa/ 比 _generators/ 深一级，所以是 parents[4] 而不是 scene_preview_cards.py
 # 用的 parents[3]。算错一级不会报错，只会让 glob 落空、审计静默地零套通过。
 REPO = pathlib.Path(__file__).resolve().parents[4]
-BIN = REPO / "target" / "release" / "openpencil-desktop"
-DOCS = REPO / "crates" / "op-editor-core" / "assets" / "scene_templates"
+BIN = REPO / "target" / "release" / "design-editor"
+DOCS = REPO / "crates" / "de-editor-core" / "assets" / "scene_templates"
 PREVIEWS = REPO / "templates" / "step0" / "previews"
-CARDS_DIR = REPO / "crates" / "op-editor-ui" / "assets" / "scene_template_previews"
+CARDS_DIR = REPO / "crates" / "de-editor-ui" / "assets" / "scene_template_previews"
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
@@ -75,7 +75,7 @@ def render_frames(doc: pathlib.Path, out: pathlib.Path, template: str) -> list[p
     subprocess.run(
         [str(BIN), "--render-shots", str(doc), str(shots), "2"],
         capture_output=True, text=True,
-        env={"PATH": "/usr/bin:/bin", "OPENPENCIL_RENDER_MARGIN": "0"},
+        env={"PATH": "/usr/bin:/bin", "DESIGN_EDITOR_RENDER_MARGIN": "0"},
     )
     kids = boards(doc)
     written = []
@@ -236,7 +236,7 @@ def main(argv: list[str]) -> int:
     if "--selftest" in argv:
         return selftest()
     if not BIN.exists():
-        print(f"缺少渲染二进制 {BIN}；先 cargo build --release -p op-host-desktop",
+        print(f"缺少渲染二进制 {BIN}；先 cargo build --release -p de-host-desktop",
               file=sys.stderr)
         return 2
     templates = args or sorted(p.stem for p in DOCS.glob("*.op"))

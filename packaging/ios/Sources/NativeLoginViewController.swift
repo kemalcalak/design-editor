@@ -620,7 +620,7 @@ final class NativeLoginViewController: UIViewController {
         regionLabel.text = regionRowTitle()
         regionNoteLabel.text = NSLocalizedString(
             "sso.region.restartNote",
-            value: "A region change takes effect after you restart OpenPencil.",
+            value: "A region change takes effect after you restart Design Editor.",
             comment: "Region restart note"
         )
         regionNoteLabel.isHidden = false
@@ -638,7 +638,7 @@ final class NativeLoginViewController: UIViewController {
             ),
             message: NSLocalizedString(
                 "sso.region.restartNote",
-                value: "A region change takes effect after you restart OpenPencil.",
+                value: "A region change takes effect after you restart Design Editor.",
                 comment: "Region restart note"
             ),
             preferredStyle: .alert

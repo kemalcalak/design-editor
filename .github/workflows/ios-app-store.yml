@@ -22,8 +22,8 @@ name: iOS App Store / TestFlight
 #
 # Existing repository secrets (used only by the protected publish job):
 # - APPLE_TEAM_ID
-# - OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN
-# - OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
+# - DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN
+# - DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
 #
 # The App Store encryption questionnaire concluded that this build needs no
 # export-compliance documents. The Xcode project therefore source-controls
@@ -62,10 +62,10 @@ on:
       IOS_PROVISIONING_PROFILE_BASE64:
         description: App Store provisioning profile
         required: false
-      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN:
+      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN:
         description: Reviewed China collaboration bootstrap URL
         required: true
-      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:
+      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:
         description: Reviewed global collaboration bootstrap URL
         required: true
   workflow_dispatch:
@@ -86,7 +86,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ios-app-store-tech-zseven-openpencil
+  group: ios-app-store-com-kemalcalak-designeditor
   cancel-in-progress: false
 
 jobs:
@@ -134,12 +134,12 @@ jobs:
         id: release
         shell: bash
         env:
-          OPENPENCIL_RELEASE_SHA: ${{ inputs.release_sha }}
-          OPENPENCIL_RELEASE_REF: ${{ inputs.release_ref }}
-          OPENPENCIL_CANONICAL_REMOTE: https://github.com/ZSeven-W/openpencil.git
+          DESIGN_EDITOR_RELEASE_SHA: ${{ inputs.release_sha }}
+          DESIGN_EDITOR_RELEASE_REF: ${{ inputs.release_ref }}
+          DESIGN_EDITOR_CANONICAL_REMOTE: https://github.com/kemalcalak/design-editor.git
         run: |
           set -euo pipefail
-          [[ "$(git rev-parse HEAD)" == "$OPENPENCIL_RELEASE_SHA" ]] || {
+          [[ "$(git rev-parse HEAD)" == "$DESIGN_EDITOR_RELEASE_SHA" ]] || {
             echo "::error::checkout does not match the requested release source"
             exit 1
           }
@@ -147,7 +147,7 @@ jobs:
           tools/check-op-auth-remote-ref.sh
           tools/ios-build-number.sh --self-test
           version=$(scripts/workspace-version.sh)
-          case "$OPENPENCIL_RELEASE_REF" in
+          case "$DESIGN_EDITOR_RELEASE_REF" in
             "refs/heads/v$version"|"refs/tags/v$version") ;;
             *)
               echo "::error::release ref must exactly match workspace version v$version"
@@ -156,7 +156,7 @@ jobs:
           esac
           build_number=$(tools/ios-build-number.sh)
           [[ "$build_number" =~ ^[1-9][0-9]{0,3}\.([0-9]|[1-9][0-9])\.([0-9]|[1-9][0-9])$ ]]
-          echo "source_sha=$OPENPENCIL_RELEASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$DESIGN_EDITOR_RELEASE_SHA" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
 
@@ -170,7 +170,7 @@ jobs:
           tools/check-op-auth-release-matrix.sh
           tools/check-op-auth-prebuilt.sh --require-hardened
           CONFIGURATION=Release \
-          OP_AUTH_ARCHIVE="$GITHUB_WORKSPACE/crates/op-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a" \
+          OP_AUTH_ARCHIVE="$GITHUB_WORKSPACE/crates/de-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a" \
           OP_AUTH_TARGET=aarch64-apple-ios \
             tools/check-mobile-auth-link-input.sh
 
@@ -223,7 +223,7 @@ jobs:
         shell: bash
         run: >-
           tools/pinned-release-tools.sh skia ios aarch64-apple-ios
-          "$RUNNER_TEMP/openpencil-skia-aarch64-apple-ios"
+          "$RUNNER_TEMP/design-editor-skia-aarch64-apple-ios"
 
       - name: Validate Xcode 26, iOS 26 SDK, and source before credentials are exposed
         shell: bash
@@ -257,8 +257,8 @@ jobs:
       - name: Validate protected production release configuration
         shell: bash
         env:
-          RELAY_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-          RELAY_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+          RELAY_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+          RELAY_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
         run: |
           set -euo pipefail
           relay_cn=$RELAY_CN
@@ -280,8 +280,8 @@ jobs:
           IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
           IOS_MARKETING_VERSION: ${{ needs.verify.outputs.version }}
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
-          OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/op-auth-bridge/prebuilt
+          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+          OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/de-auth-bridge/prebuilt
           XCODEGEN_BIN: ${{ steps.xcodegen.outputs.binary }}
         run: scripts/publish-ios-testflight.sh

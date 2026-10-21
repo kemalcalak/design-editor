@@ -12,9 +12,9 @@ const SETS = ['lucide', 'feather', 'simple-icons'];
 // they never bloat the wasm first-load.
 const CORE_SETS = new Set(['lucide', 'feather']);
 // Anchored to this script's location (packages/scripts/), not the CWD, so the
-// catalog always lands in crates/op-editor-ui/assets regardless of where the
+// catalog always lands in crates/de-editor-ui/assets regardless of where the
 // `generate-iconify-catalog` script is invoked from.
-const OUT_DIR = fileURLToPath(new URL('../../crates/op-editor-ui/assets', import.meta.url));
+const OUT_DIR = fileURLToPath(new URL('../../crates/de-editor-ui/assets', import.meta.url));
 const OUT_CORE = path.join(OUT_DIR, 'iconify-catalog-core.json');
 const OUT_BRANDS = path.join(OUT_DIR, 'iconify-catalog-brands.json');
 

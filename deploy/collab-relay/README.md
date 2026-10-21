@@ -1,4 +1,4 @@
-# OpenPencil collaboration relay
+# Design Editor collaboration relay
 
 The relay is an untrusted, blind WebSocket byte forwarder. TLS terminates at
 the edge and the Rust process listens on `127.0.0.1:8091` by default. The
@@ -19,11 +19,11 @@ For every successful authenticated WebSocket upgrade the relay sends exactly
 one fresh:
 
 ```text
-OpenPencil-Relay-Challenge: oprc1_<canonical-base64url>
+Design-Editor-Relay-Challenge: oprc1_<canonical-base64url>
 ```
 
 Nginx must preserve this `101` response header.
-`nginx.conf` sets `proxy_pass_header OpenPencil-Relay-Challenge` explicitly.
+`nginx.conf` sets `proxy_pass_header Design-Editor-Relay-Challenge` explicitly.
 Strict clients reject a missing, duplicate, malformed, unknown-key, or
 noncanonical challenge before sending a hello.
 
@@ -53,32 +53,32 @@ packaged CLI also provides a sealed-file adapter for deployments without that
 adapter; no private key belongs in source control or an image layer.
 
 Blocking policy, signature, and proof operations run outside Tokio workers
-behind `OPENPENCIL_COLLAB_RELAY_MAX_AUTH_IN_FLIGHT`. Its permit remains held
+behind `DESIGN_EDITOR_COLLAB_RELAY_MAX_AUTH_IN_FLIGHT`. Its permit remains held
 through challenge issuance, WebSocket upgrade, hello receipt, and actual
 verification.
 
 ## Required settings
 
-- `OPENPENCIL_COLLAB_RELAY_HOME_REGION=cn|global`
-- `OPENPENCIL_COLLAB_RELAY_TICKET_POLICY_FILE`: absolute path to the pinned
+- `DESIGN_EDITOR_COLLAB_RELAY_HOME_REGION=cn|global`
+- `DESIGN_EDITOR_COLLAB_RELAY_TICKET_POLICY_FILE`: absolute path to the pinned
   signed union-policy JSON
-- `OPENPENCIL_COLLAB_RELAY_LOCATOR_KEYS_FILE`: absolute path to locator
+- `DESIGN_EDITOR_COLLAB_RELAY_LOCATOR_KEYS_FILE`: absolute path to locator
   Ed25519 public keys
-- `OPENPENCIL_COLLAB_RELAY_X25519_KEYS_FILE`: absolute path to the sealed relay
+- `DESIGN_EDITOR_COLLAB_RELAY_X25519_KEYS_FILE`: absolute path to the sealed relay
   X25519 key set
-- optional `OPENPENCIL_COLLAB_RELAY_POLICY_MAX_AGE_SECONDS` (`1..=3600`,
+- optional `DESIGN_EDITOR_COLLAB_RELAY_POLICY_MAX_AGE_SECONDS` (`1..=3600`,
   default `60`)
-- optional `OPENPENCIL_COLLAB_RELAY_LOG_LEVEL=error|warn|info|debug` (default
+- optional `DESIGN_EDITOR_COLLAB_RELAY_LOG_LEVEL=error|warn|info|debug` (default
   `info`); arbitrary `RUST_LOG` dependency filters and `trace` are not accepted
-- optional `OPENPENCIL_COLLAB_RELAY_WAITING_TIMEOUT_SECS` (`55..=900`, default
+- optional `DESIGN_EDITOR_COLLAB_RELAY_WAITING_TIMEOUT_SECS` (`55..=900`, default
   `60`): how long an un-paired peer may sit in the waiting queue before the
   relay rejects it with `PairingTimeout`. With the waiting lease on (the
   default) this is the length of **one lease**, not a countdown from
   registration. Both bounds come from
-  `op_collab_relay_protocol::pairing_window`, shared with the client, and the
+  `de_collab_relay_protocol::pairing_window`, shared with the client, and the
   relay refuses to start outside them rather than silently inverting the
   pairing contract described below.
-- optional `OPENPENCIL_COLLAB_RELAY_WAITING_LEASE` (`0` or `1`, default `1`):
+- optional `DESIGN_EDITOR_COLLAB_RELAY_WAITING_LEASE` (`0` or `1`, default `1`):
   renew an un-paired peer's waiting slot for as long as it answers the relay's
   WebSocket pings. Set it to `0` to restore the pre-lease fixed countdown.
 
@@ -89,7 +89,7 @@ when that slot is released, and **the client's must expire first**:
 
 - the relay's `waiting_timeout`, after which it rejects with `PairingTimeout`;
 - the owner client's lane recycle budget,
-  `op_collab_relay_client::RelayLimits::owner_pair` (45 s).
+  `de_collab_relay_client::RelayLimits::owner_pair` (45 s).
 
 If the relay wins that race, the owner lane learns about the close late — or,
 behind a NAT that silently reaps the idle flow, not at all — and the owner is
@@ -109,17 +109,17 @@ stops answering, and `max_waiting_per_route` still bounds abuse.
 
 ### Mixed-fleet migration
 
-**No client change is required, and none is gated on.** Every OpenPencil relay
+**No client change is required, and none is gated on.** Every Design Editor relay
 client answers a WebSocket ping while it is reading — that is how tungstenite
 behaves — so an already-shipped client renews its lease without knowing the
 lease exists. Enabling the lease makes old clients *more* correct: their
 five-minute pair budget stops being cut short at 60 s.
 
 Newer clients additionally read an optional capability header on the upgrade
-response, `openpencil-relay-waiting`, e.g.:
+response, `design-editor-relay-waiting`, e.g.:
 
 ```text
-openpencil-relay-waiting: oprw1 window=43200 renew=1
+design-editor-relay-waiting: oprw1 window=43200 renew=1
 ```
 
 A client never adopts that value verbatim. It computes
@@ -140,7 +140,7 @@ safe:
 | lease off | old | Unchanged from today. |
 
 The one operator action that is *not* safe is lowering
-`OPENPENCIL_COLLAB_RELAY_WAITING_TIMEOUT_SECS` below the validated floor; the
+`DESIGN_EDITOR_COLLAB_RELAY_WAITING_TIMEOUT_SECS` below the validated floor; the
 relay refuses to start rather than accept it.
 
 ## Operational logging
@@ -150,7 +150,7 @@ minute — and none at all while idle — carrying the last window's counters pl
 the live waiting-queue depth:
 
 ```text
-INFO op_collab_relay_server::observe: relay census relay_event="census"
+INFO de_collab_relay_server::observe: relay census relay_event="census"
   window_secs=60 accepted=6 admission_refused=0 handshake_failed=1
   registered=5 paired=4 rejected_pairing_timeout=1 rejected_authentication=0
   rejected_capacity=0 rejected_other=0 closed_orderly=3 closed_peer_eof=1
@@ -168,13 +168,13 @@ looks healthy. `closed_orderly` is kept apart from `closed_peer_eof` and
 `closed_peer_reset` so a relay retiring lanes on schedule is never confused
 with an intermediary severing tunnels.
 
-Setting `OPENPENCIL_COLLAB_RELAY_LOG_LEVEL=debug` adds one line per connection
+Setting `DESIGN_EDITOR_COLLAB_RELAY_LOG_LEVEL=debug` adds one line per connection
 lifecycle transition (`accepted` / `handshake-failed` / `registered` /
 `paired` / `rejected` / `closed`), so no connection can disappear without a
 reason:
 
 ```text
-DEBUG op_collab_relay_server::observe: relay rejected a peer
+DEBUG de_collab_relay_server::observe: relay rejected a peer
   relay_event="rejected" conn=1 role=owner route_ref=3d6d1666d4868b6f0aa50f02
   reason="pairing-timeout" elapsed_ms=123
 ```
@@ -229,11 +229,11 @@ or `0444` is accepted; writable modes fail closed.
 Run full challenge-bound production mode:
 
 ```sh
-export OPENPENCIL_COLLAB_POLICY_HOST_FILE=/secure/public/collab-policy.json
-export OPENPENCIL_RELAY_LOCATOR_KEYS_HOST_FILE=/secure/public/locator-keys.json
-export OPENPENCIL_RELAY_X25519_KEYS_HOST_FILE=/secure/private/relay-x25519-keys.json
-sudo chown 65532:65532 "$OPENPENCIL_RELAY_X25519_KEYS_HOST_FILE"
-sudo chmod 0400 "$OPENPENCIL_RELAY_X25519_KEYS_HOST_FILE"
+export DESIGN_EDITOR_COLLAB_POLICY_HOST_FILE=/secure/public/collab-policy.json
+export DESIGN_EDITOR_RELAY_LOCATOR_KEYS_HOST_FILE=/secure/public/locator-keys.json
+export DESIGN_EDITOR_RELAY_X25519_KEYS_HOST_FILE=/secure/private/relay-x25519-keys.json
+sudo chown 65532:65532 "$DESIGN_EDITOR_RELAY_X25519_KEYS_HOST_FILE"
+sudo chmod 0400 "$DESIGN_EDITOR_RELAY_X25519_KEYS_HOST_FILE"
 docker compose \
   -f deploy/collab-relay/compose.yaml \
   -f deploy/collab-relay/compose.production.yaml \
@@ -265,8 +265,8 @@ Clients not yet wired for authentication mode 2 may use only the separate,
 explicit reduced-assurance overlay:
 
 ```sh
-export OPENPENCIL_COLLAB_POLICY_HOST_FILE=/secure/public/collab-policy.json
-export OPENPENCIL_RELAY_LOCATOR_KEYS_HOST_FILE=/secure/public/locator-keys.json
+export DESIGN_EDITOR_COLLAB_POLICY_HOST_FILE=/secure/public/collab-policy.json
+export DESIGN_EDITOR_RELAY_LOCATOR_KEYS_HOST_FILE=/secure/public/locator-keys.json
 docker compose \
   -f deploy/collab-relay/compose.yaml \
   -f deploy/collab-relay/compose.reduced-assurance.yaml \
@@ -307,7 +307,7 @@ separate networks, so host Nginx must never use Docker service names such as
 `relay` or `locator` as upstreams. The common Compose files publish no host
 ports. Immutable regional overlays bind both the home region and the only
 permitted host address; there is no host-bind variable or wildcard default.
-They also fix `OPENPENCIL_COLLAB_RELAY_MAX_PENDING_PER_SOURCE=1024`, equal to
+They also fix `DESIGN_EDITOR_COLLAB_RELAY_MAX_PENDING_PER_SOURCE=1024`, equal to
 the process-wide pending ceiling. The common Compose files do not set this
 production override.
 
@@ -389,11 +389,11 @@ table, and the CN authenticator remains authoritative for the signed
 nested-TLS topology, certificates, limits, and validation steps.
 
 On an overseas desktop, configure the logical CN endpoint
-`OPENPENCIL_COLLAB_RELAY_CN_URL` with the Global ingress WSS hostname, or use
+`DESIGN_EDITOR_COLLAB_RELAY_CN_URL` with the Global ingress WSS hostname, or use
 GeoDNS/split DNS so that the same CN endpoint hostname resolves to Global
 ingress overseas and the direct CN terminator domestically. The inner
 certificate is still presented by the CN terminator and must cover that
-hostname. `OPENPENCIL_COLLAB_RELAY_GLOBAL_URL` remains reserved for locators
+hostname. `DESIGN_EDITOR_COLLAB_RELAY_GLOBAL_URL` remains reserved for locators
 whose signed home region is actually `global`; it is never an implicit
 fallback for a CN locator. A domestic peer and an overseas peer can therefore
 take different network paths while converging on the same CN relay

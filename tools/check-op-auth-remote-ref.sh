@@ -6,9 +6,9 @@
 
 set -euo pipefail
 
-release_sha=${OPENPENCIL_RELEASE_SHA:-}
-release_ref=${OPENPENCIL_RELEASE_REF:-}
-canonical_remote=${OPENPENCIL_CANONICAL_REMOTE:-}
+release_sha=${DESIGN_EDITOR_RELEASE_SHA:-}
+release_ref=${DESIGN_EDITOR_RELEASE_REF:-}
+canonical_remote=${DESIGN_EDITOR_CANONICAL_REMOTE:-}
 
 validate_inputs() {
     [[ "$release_sha" =~ ^[0-9a-f]{40}$ ]] || {
@@ -20,8 +20,8 @@ validate_inputs() {
         printf 'error: release ref must be an exact version branch or tag\n' >&2
         return 2
     }
-    [[ "$canonical_remote" == https://github.com/ZSeven-W/openpencil.git ]] || {
-        printf 'error: release ref must use the canonical OpenPencil repository\n' >&2
+    [[ "$canonical_remote" == https://github.com/kemalcalak/design-editor.git ]] || {
+        printf 'error: release ref must use the canonical Design Editor repository\n' >&2
         return 2
     }
 }
@@ -96,7 +96,7 @@ self_test() {
     local fixture
 
     release_sha=$a
-    canonical_remote=https://github.com/ZSeven-W/openpencil.git
+    canonical_remote=https://github.com/kemalcalak/design-editor.git
 
     release_ref=refs/heads/v1.2.3
     validate_inputs

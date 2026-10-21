@@ -1,7 +1,7 @@
 # Antivirus False Positives on Windows Builds
 
-Some antivirus engines occasionally flag the OpenPencil Windows installer
-(`OpenPencil-<version>-<arch>-win-setup.exe`) as a trojan or generic threat
+Some antivirus engines occasionally flag the Design Editor Windows installer
+(`Design-Editor-<version>-<arch>-win-setup.exe`) as a trojan or generic threat
 (e.g. `Wacatac`, `Trojan.Generic`, `Unsafe.AI_Score`). These detections are
 **heuristic false positives**, not evidence of malware. This page explains
 why they happen and how to verify that your download is the exact file our
@@ -11,9 +11,9 @@ CI produced.
 
 - **Low prevalence.** Reputation-based engines (Microsoft SmartScreen,
   many cloud AV heuristics) score files by how many machines have seen
-  them. Every new OpenPencil release is a brand-new binary with a new
+  them. Every new Design Editor release is a brand-new binary with a new
   hash, so it starts with zero reputation until enough users run it.
-- **NSIS installer packaging.** OpenPencil ships in an NSIS installer —
+- **NSIS installer packaging.** Design Editor ships in an NSIS installer —
   the same packaging used by thousands of legitimate apps, but also
   historically abused by malware droppers. Several heuristics weight NSIS
   self-extractors negatively by default.
@@ -32,7 +32,7 @@ directly by CI — no human touches the binaries.
    your download:
 
    ```powershell
-   Get-FileHash .\OpenPencil-<version>-<arch>-win-setup.exe -Algorithm SHA256
+   Get-FileHash .\Design-Editor-<version>-<arch>-win-setup.exe -Algorithm SHA256
    ```
 
 2. **Build provenance.** Each asset carries a signed [SLSA build
@@ -41,20 +41,20 @@ directly by CI — no human touches the binaries.
    specific commit:
 
    ```bash
-   gh attestation verify OpenPencil-<version>-<arch>-win-setup.exe \
-     --repo ZSeven-W/openpencil
+   gh attestation verify Design-Editor-<version>-<arch>-win-setup.exe \
+     --repo kemalcalak/design-editor
    ```
 
 3. **Build it yourself.** The entire product is open source:
 
    ```bash
-   cargo build -p op-host-desktop --release
+   cargo build -p de-host-desktop --release
    ```
 
 ## If your antivirus flags a release
 
 - Verify the file with the steps above. If verification **fails**, delete
-  the file and [open an issue](https://github.com/ZSeven-W/openpencil/issues)
+  the file and [open an issue](https://github.com/kemalcalak/design-editor/issues)
   immediately.
 - If verification passes, the detection is a false positive. Please report
   it to your AV vendor (for Microsoft Defender:

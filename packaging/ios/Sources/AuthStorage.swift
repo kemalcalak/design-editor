@@ -27,7 +27,7 @@ enum AuthStorage {
                 create: true
             )
             let directory = applicationSupport
-                .appendingPathComponent("OpenPencil", isDirectory: true)
+                .appendingPathComponent("Design Editor", isDirectory: true)
                 .appendingPathComponent("Auth", isDirectory: true)
             try fileManager.createDirectory(
                 at: directory,
@@ -44,7 +44,7 @@ enum AuthStorage {
             )
             return directory
         } catch {
-            NSLog("OpenPencil could not prepare auth storage: %@", error.localizedDescription)
+            NSLog("Design Editor could not prepare auth storage: %@", error.localizedDescription)
             return nil
         }
     }

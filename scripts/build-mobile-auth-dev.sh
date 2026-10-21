@@ -64,23 +64,23 @@ if [[ -L "$archive" || ! -f "$archive" || "$(basename "$archive")" != libop_auth
 fi
 archive=$(cd "$(dirname "$archive")" && pwd -P)/libop_auth.a
 
-export OPENPENCIL_DEV_OP_AUTH_ARCHIVE="$archive"
-export OPENPENCIL_DEV_OP_AUTH_ABI_VERSION="$abi"
+export DESIGN_EDITOR_DEV_OP_AUTH_ARCHIVE="$archive"
+export DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION="$abi"
 cd "$repo_root"
 
 case "$platform" in
     ios-simulator)
         target=aarch64-apple-ios-sim
-        cargo build --locked -p op-engine-ffi --target "$target" \
+        cargo build --locked -p de-engine-ffi --target "$target" \
             --features metal,editor,mobile-auth-dev
-        printf 'built %s\n' "$repo_root/target/$target/debug/libop_engine_ffi.a"
+        printf 'built %s\n' "$repo_root/target/$target/debug/libde_engine_ffi.a"
         printf 'Xcode auth link input: OP_AUTH_ARCHIVE=%s\n' "$archive"
         ;;
     ios-device)
         target=aarch64-apple-ios
-        cargo build --locked -p op-engine-ffi --target "$target" \
+        cargo build --locked -p de-engine-ffi --target "$target" \
             --features metal,editor,mobile-auth-dev
-        printf 'built %s\n' "$repo_root/target/$target/debug/libop_engine_ffi.a"
+        printf 'built %s\n' "$repo_root/target/$target/debug/libde_engine_ffi.a"
         printf 'Xcode auth link input: OP_AUTH_ARCHIVE=%s\n' "$archive"
         ;;
     android-arm64)
@@ -90,7 +90,7 @@ case "$platform" in
         }
         cargo ndk -t arm64-v8a \
             -o packaging/android/app/src/debug/jniLibs \
-            build --locked -p op-engine-jni --features gl,editor,mobile-auth-dev
+            build --locked -p de-engine-jni --features gl,editor,mobile-auth-dev
         ;;
     android-x86_64)
         command -v cargo-ndk >/dev/null 2>&1 || {
@@ -99,7 +99,7 @@ case "$platform" in
         }
         cargo ndk -t x86_64 \
             -o packaging/android/app/src/debug/jniLibs \
-            build --locked -p op-engine-jni --features gl,editor,mobile-auth-dev
+            build --locked -p de-engine-jni --features gl,editor,mobile-auth-dev
         ;;
     *)
         printf 'error: unsupported --platform: %s\n' "$platform" >&2

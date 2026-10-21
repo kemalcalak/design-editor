@@ -4,13 +4,13 @@ LC_ALL=C
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 export LC_ALL PATH
 
-runtime_dir=/usr/local/libexec/openpencil-collab-cn-firewall
-config_dir=/etc/openpencil
+runtime_dir=/usr/local/libexec/design-editor-collab-cn-firewall
+config_dir=/etc/design-editor
 config_file=$config_dir/collab-cn-firewall.env
 binding_file=$config_dir/collab-cn-firewall-compose.env
-unit_file=/etc/systemd/system/openpencil-collab-cn-firewall.service
+unit_file=/etc/systemd/system/design-editor-collab-cn-firewall.service
 docker_dropin_dir=/etc/systemd/system/docker.service.d
-docker_dropin=$docker_dropin_dir/50-openpencil-collab-cn-firewall.conf
+docker_dropin=$docker_dropin_dir/50-design-editor-collab-cn-firewall.conf
 
 if [ "$#" -ne 1 ]; then
     echo "usage: $0 ROOT_OWNED_INVENTORY_FILE" >&2
@@ -53,8 +53,8 @@ for source_file in \
     check-cn-docker-user-firewall-deployment-binding.sh \
     apply-cn-docker-user-firewall.sh \
     verify-cn-docker-user-firewall.sh \
-    openpencil-collab-cn-firewall.service \
-    openpencil-collab-cn-firewall-docker.conf
+    design-editor-collab-cn-firewall.service \
+    design-editor-collab-cn-firewall-docker.conf
 do
     if [ ! -f "$script_dir/$source_file" ] || [ -L "$script_dir/$source_file" ]; then
         echo "CN firewall: release artifact is missing or a symlink: $source_file" >&2
@@ -116,7 +116,7 @@ elif [ ! -d "$config_dir" ] || [ -L "$config_dir" ] ||
     [ "$(stat -c '%u:%g' -- "$config_dir")" != '0:0' ] ||
     ! cn_firewall_mode_is_directory_safe "$(stat -c '%a' -- "$config_dir")"
 then
-    echo "CN firewall: existing /etc/openpencil directory is not root-owned and safe" >&2
+    echo "CN firewall: existing /etc/design-editor directory is not root-owned and safe" >&2
     exit 1
 fi
 expected_service_ipv4=$(
@@ -147,7 +147,7 @@ if [ "$staged_expected_service_ipv4" != "$expected_service_ipv4" ]; then
     exit 1
 fi
 printf '%s\n' \
-    "OPENPENCIL_CN_EXPECTED_SERVICE_IPV4=$expected_service_ipv4" \
+    "DESIGN_EDITOR_CN_EXPECTED_SERVICE_IPV4=$expected_service_ipv4" \
     >"$staged_binding"
 chmod 0400 "$staged_binding"
 cn_firewall_load_config "$staged_config" strict
@@ -157,12 +157,12 @@ mv -f "$staged_binding" "$binding_file"
 trap - EXIT HUP INT TERM
 
 install -o root -g root -m 0644 \
-    "$script_dir/openpencil-collab-cn-firewall.service" "$unit_file"
+    "$script_dir/design-editor-collab-cn-firewall.service" "$unit_file"
 install -o root -g root -m 0644 \
-    "$script_dir/openpencil-collab-cn-firewall-docker.conf" "$docker_dropin"
+    "$script_dir/design-editor-collab-cn-firewall-docker.conf" "$docker_dropin"
 
 systemctl daemon-reload
-systemctl enable openpencil-collab-cn-firewall.service
+systemctl enable design-editor-collab-cn-firewall.service
 if systemctl is-active --quiet docker.service; then
     docker_pid_before=$(systemctl show --property MainPID --value docker.service)
     case $docker_pid_before in
@@ -187,11 +187,11 @@ if systemctl is-active --quiet docker.service; then
         exit 1
     fi
 else
-    if systemctl is-active --quiet openpencil-collab-cn-firewall.service; then
+    if systemctl is-active --quiet design-editor-collab-cn-firewall.service; then
         "$runtime_dir/apply-cn-docker-user-firewall.sh"
         "$runtime_dir/verify-cn-docker-user-firewall.sh" --pre-docker
     else
-        systemctl start openpencil-collab-cn-firewall.service
+        systemctl start design-editor-collab-cn-firewall.service
         "$runtime_dir/verify-cn-docker-user-firewall.sh" --pre-docker
     fi
 fi

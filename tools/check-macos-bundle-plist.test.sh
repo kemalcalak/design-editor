@@ -4,8 +4,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CHECKER="$ROOT/tools/check-macos-bundle-plist.sh"
-FIXTURE="$ROOT/crates/op-host-desktop/Info.plist"
-TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/openpencil-macos-plist.XXXXXX")"
+FIXTURE="$ROOT/crates/de-host-desktop/Info.plist"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/design-editor-macos-plist.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 expect_rejected() {
@@ -45,7 +45,7 @@ cases = {
     },
     "wrong-description.plist": {
         **baseline,
-        "NSLocalNetworkUsageDescription": "OpenPencil scans your network.",
+        "NSLocalNetworkUsageDescription": "Design Editor scans your network.",
     },
     "missing-service.plist": {
         **baseline,
@@ -54,7 +54,7 @@ cases = {
     "extra-service.plist": {
         **baseline,
         "NSBonjourServices": [
-            "_openpencil-collab._tcp",
+            "_design-editor-collab._tcp",
             "_unrelated._tcp",
         ],
     },
@@ -85,7 +85,7 @@ if [[ "$(uname -s)" == Darwin ]]; then
   cp "$TMP_DIR/missing-description.plist" "$TMP_DIR/patched.plist"
   # shellcheck source=macos-local-network-plist.sh
   source "$ROOT/tools/macos-local-network-plist.sh"
-  openpencil_apply_macos_local_network_plist "$TMP_DIR/patched.plist"
+  design_editor_apply_macos_local_network_plist "$TMP_DIR/patched.plist"
   bash "$CHECKER" "$TMP_DIR/patched.plist"
 fi
 

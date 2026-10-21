@@ -148,7 +148,7 @@ def page_head(title, subtitle=None):
 # ------------------------------------------------------------------ 01 封面
 def cover():
     # 135° = 左上 → 右下（`.op` 的角度约定：0° 自下而上、90° 自左向右，见
-    # op-host-native/src/backend/skia/gradient.rs）。标题在左上的纯白一侧，
+    # de-host-native/src/backend/skia/gradient.rs）。标题在左上的纯白一侧，
     # 淡蓝沉到右下，正好接住那一枚装饰圆弧。
     s = slide("01 封面", fill=linear(135, [(0.0, "$c-bg"), (1.0, "$c-bg-tint")]),
               justify="space_between", gap=48,

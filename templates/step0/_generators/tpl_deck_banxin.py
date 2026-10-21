@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """banxin-rule-deck.op — 版心界行 · 中文原生排版档（7 页 1920×1080）
 
-spec: openpencil-docs/openpencil/generation/deck-system-0809.md §2 · D9
+spec: design-editor-docs/design-editor/generation/deck-system-0809.md §2 · D9
 落格：medium-high formality × medium-high density × **mixed**（深浅书挡）
 
 这一档跟仓里其它 deck 的分野只有一句话：**中文正文本身是主角**。所以它

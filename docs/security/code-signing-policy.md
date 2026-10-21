@@ -1,13 +1,13 @@
 # Code Signing Policy
 
-This document describes how OpenPencil release binaries are built and signed,
+This document describes how Design Editor release binaries are built and signed,
 and the rules the project follows for code signing.
 
 ## What gets signed
 
-- **Windows:** the NSIS installer `OpenPencil-<version>-<arch>-win-setup.exe`
-  (x64 and arm64), containing the desktop app `openpencil-desktop.exe`, the
-  CLI `op.exe`, the bundled ANGLE runtime DLLs, and an unmodified
+- **Windows:** the NSIS installer `Design-Editor-<version>-<arch>-win-setup.exe`
+  (x64 and arm64), containing the desktop app `design-editor.exe`, the
+  CLI `de.exe`, the bundled ANGLE runtime DLLs, and an unmodified
   Microsoft-signed Visual C++ Redistributable prerequisite.
 - **macOS:** the `.dmg` disk images and the app bundle inside them
   (Developer ID signing + notarization when release certificates are
@@ -17,7 +17,7 @@ and the rules the project follows for code signing.
 
 Every release artifact is produced by the public GitHub Actions workflow
 [`.github/workflows/rust-release.yml`](../../.github/workflows/rust-release.yml)
-from a version tag on this repository. OpenPencil binaries are compiled from
+from a version tag on this repository. Design Editor binaries are compiled from
 the tagged source, packaged, checksummed into `SHA256SUMS.txt`, attested with a
 signed SLSA build-provenance attestation, and uploaded to GitHub Releases
 directly by CI. The Windows packaging job additionally downloads the Visual C++
@@ -30,7 +30,7 @@ between build and publication.
 Anyone can verify an asset's origin:
 
 ```bash
-gh attestation verify <downloaded-file> --repo ZSeven-W/openpencil
+gh attestation verify <downloaded-file> --repo kemalcalak/design-editor
 ```
 
 ## Signing rules
@@ -43,24 +43,24 @@ gh attestation verify <downloaded-file> --repo ZSeven-W/openpencil
   which the same team maintains). When present, the Windows installer's outer
   signature covers the complete installer, including the unmodified
   Microsoft-signed Visual C++ prerequisite; it does not replace Microsoft's
-  nested signature or claim that prerequisite as OpenPencil code. We never
-  apply an OpenPencil signature to a standalone third-party binary or to
+  nested signature or claim that prerequisite as Design Editor code. We never
+  apply a Design Editor signature to a standalone third-party binary or to
   locally built artifacts.
 - Signing is performed in CI as part of the release pipeline; signing
   credentials are never exported to developer machines.
 - The team responsible for code signing is the same team that develops and
-  maintains OpenPencil and owns this source repository.
+  maintains Design Editor and owns this source repository.
 
 ## Privacy policy
 
-OpenPencil is a local-first design tool. The application does not collect or
+Design Editor is a local-first design tool. The application does not collect or
 transmit personal data or telemetry. Network access happens only for features
 the user explicitly invokes (e.g. optional AI providers, collaboration, or
 image search), using endpoints the user configures or enables.
 
 ## Team
 
-OpenPencil is developed and maintained by the ZSeven-W organization. The
-maintainers listed on the [GitHub organization](https://github.com/ZSeven-W)
+Design Editor is developed and maintained by the kemalcalak/design-editor maintainers. The
+maintainers listed on the [GitHub repository](https://github.com/kemalcalak/design-editor)
 are the only people with commit access to this repository and control over the
 release workflow.

@@ -4,7 +4,7 @@ import { EngineLanguage, EngineLocale } from './EngineLanguage';
  * Shell action 7: the engine's 15-language picker.
  *
  * The list is `EngineLanguage.all` verbatim — same codes, same order, same
- * display names as the Android and iOS shells and as `op_i18n::Locale::ALL`.
+ * display names as the Android and iOS shells and as `de_i18n::Locale::ALL`.
  * The engine applies the choice immediately; the shell persists it so the
  * next launch re-applies it right after engine create.
  */

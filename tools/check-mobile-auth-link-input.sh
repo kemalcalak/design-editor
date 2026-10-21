@@ -24,11 +24,11 @@ fi
 archive=$(cd "$(dirname "$archive")" && pwd -P)/libop_auth.a
 
 if [[ "$configuration" == Debug ]]; then
-    case "${OPENPENCIL_DEV_OP_AUTH_ABI_VERSION:-}" in
+    case "${DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION:-}" in
         2|3) ;;
         *)
             printf '%s\n' \
-                'error: Debug auth linking requires OPENPENCIL_DEV_OP_AUTH_ABI_VERSION=2 or 3' \
+                'error: Debug auth linking requires DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION=2 or 3' \
                 >&2
             exit 1
             ;;
@@ -41,7 +41,7 @@ if [[ "$configuration" != Release ]]; then
     printf 'error: auth archive linking requires CONFIGURATION=Debug or Release\n' >&2
     exit 1
 fi
-if [[ -n "${OPENPENCIL_DEV_OP_AUTH_ABI_VERSION:-}" ]]; then
+if [[ -n "${DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION:-}" ]]; then
     printf 'error: the unsigned development auth lane is forbidden in Release\n' >&2
     exit 1
 fi
@@ -54,7 +54,7 @@ case "$target" in
         ;;
 esac
 
-prebuilt_root=$(cd "$repo_root/crates/op-auth-bridge/prebuilt" && pwd -P)
+prebuilt_root=$(cd "$repo_root/crates/de-auth-bridge/prebuilt" && pwd -P)
 target_dir=$prebuilt_root/$target
 expected_archive=$target_dir/libop_auth.a
 if [[ "$archive" != "$expected_archive" ]]; then

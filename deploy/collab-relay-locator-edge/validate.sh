@@ -15,7 +15,7 @@ nft_installer="$script_dir/install-global-new-connection-rate.sh"
 nft_verifier="$script_dir/verify-global-new-connection-rate.sh"
 rate_rules_verifier="$script_dir/../collab-relay-edge/verify-rate-rules.py"
 global_deployer="$script_dir/deploy-global.sh"
-global_service="$script_dir/openpencil-collab-locator-global.service.example"
+global_service="$script_dir/design-editor-collab-locator-global.service.example"
 crl_rotation="$script_dir/rotate-cn-crl.sh"
 
 require_literal() {
@@ -69,7 +69,7 @@ require_single_upstream_server() {
     fi
 }
 
-validation_mode=${OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE:-scaffold}
+validation_mode=${DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE:-scaffold}
 case "$validation_mode" in
     scaffold)
         expected_cn_upstream=192.0.2.30:9543
@@ -78,14 +78,14 @@ case "$validation_mode" in
         expected_inner_host=locator.example.cn
         ;;
     production)
-        : "${OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM:?set fixed CN federation IPv4:port}"
-        : "${OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_INNER_HTTPS_UPSTREAM:?set fixed CN inner HTTPS IPv4:port}"
-        : "${OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_NAME:?set outer TLS DNS name}"
-        : "${OPENPENCIL_LOCATOR_EDGE_EXPECTED_INNER_HOST:?set common client hostname}"
-        expected_cn_upstream=$OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM
-        expected_inner_upstream=$OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_INNER_HTTPS_UPSTREAM
-        expected_outer_name=$OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_NAME
-        expected_inner_host=$OPENPENCIL_LOCATOR_EDGE_EXPECTED_INNER_HOST
+        : "${DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM:?set fixed CN federation IPv4:port}"
+        : "${DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_INNER_HTTPS_UPSTREAM:?set fixed CN inner HTTPS IPv4:port}"
+        : "${DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_NAME:?set outer TLS DNS name}"
+        : "${DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_INNER_HOST:?set common client hostname}"
+        expected_cn_upstream=$DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM
+        expected_inner_upstream=$DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_INNER_HTTPS_UPSTREAM
+        expected_outer_name=$DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_NAME
+        expected_inner_host=$DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_INNER_HOST
         for endpoint in "$expected_cn_upstream" "$expected_inner_upstream"; do
             if ! printf '%s\n' "$endpoint" |
                 grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}:[1-9][0-9]{0,4}$'
@@ -105,7 +105,7 @@ case "$validation_mode" in
         done
         ;;
     *)
-        echo "OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE must be scaffold or production" >&2
+        echo "DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE must be scaffold or production" >&2
         exit 2
         ;;
 esac
@@ -176,12 +176,12 @@ for pattern in \
     'proxy_set_header Content-Length 191;' \
     'proxy_set_header Transfer-Encoding "";' \
     'proxy_set_header Content-Encoding "";' \
-    'proxy_pass http://openpencil_locator/v1/locator;' \
-    'proxy_pass http://openpencil_locator/v1/pairing-code;' \
-    'proxy_pass http://openpencil_locator/v1/pairing-code/claim;' \
-    'application/vnd.openpencil.relay-pairing-publish-v1' \
-    'application/vnd.openpencil.relay-pairing-claim-v1' \
-    'application/vnd.openpencil.relay-sealed-invite-v1' \
+    'proxy_pass http://design_editor_locator/v1/locator;' \
+    'proxy_pass http://design_editor_locator/v1/pairing-code;' \
+    'proxy_pass http://design_editor_locator/v1/pairing-code/claim;' \
+    'application/vnd.design-editor.relay-pairing-publish-v1' \
+    'application/vnd.design-editor.relay-pairing-claim-v1' \
+    'application/vnd.design-editor.relay-sealed-invite-v1' \
     'proxy_request_buffering on;' \
     'proxy_buffering off;' \
     'location / {' \
@@ -196,7 +196,7 @@ require_single_upstream_server \
 require_single_upstream_server \
     cn_locator_inner_https "$expected_inner_upstream" "$cn_config"
 require_single_upstream_server \
-    openpencil_locator 'locator:8092' "$https_config"
+    design_editor_locator 'locator:8092' "$https_config"
 
 for config in "$global_config" "$cn_config"; do
     [ "$(grep -Ec '^[[:space:]]*proxy_pass[[:space:]]+' "$config" || true)" -eq 1 ]
@@ -244,7 +244,7 @@ fi
 for compose_file in "$global_compose" "$cn_compose" "$https_compose"; do
     for pattern in \
         'user: "101:101"' \
-        '@sha256:${OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}' \
+        '@sha256:${DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}' \
         'read_only: true' \
         'cap_drop:' \
         '- ALL' \
@@ -268,7 +268,7 @@ require_literal 'restart: unless-stopped' "$cn_compose"
 require_literal 'restart: unless-stopped' "$https_compose"
 
 require_literal \
-    'host_ip: ${OPENPENCIL_LOCATOR_EDGE_PUBLIC_BIND_IP:?set a dedicated overseas public IP}' \
+    'host_ip: ${DESIGN_EDITOR_LOCATOR_EDGE_PUBLIC_BIND_IP:?set a dedicated overseas public IP}' \
     "$global_compose"
 require_literal 'published: 443' "$global_compose"
 require_literal 'global-locator-edge-client-crl.pem' "$cn_compose"
@@ -291,7 +291,7 @@ do
     require_literal "$pattern" "$nft_installer"
 done
 for pattern in \
-    'nft --json --numeric list table inet openpencil_locator_edge_rate' \
+    'nft --json --numeric list table inet design_editor_locator_edge_rate' \
     '"$rules_verifier" --address "$public_ipv4" --rules-json'
 do
     require_literal "$pattern" "$nft_verifier"
@@ -308,7 +308,7 @@ do
 done
 for pattern in \
     '"$script_dir/install-global-new-connection-rate.sh"' \
-    'OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE=production' \
+    'DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE=production' \
     '--abort-on-container-exit --exit-code-from global-locator-edge'
 do
     require_literal "$pattern" "$global_deployer"
@@ -316,7 +316,7 @@ done
 for pattern in \
     'Requires=docker.service nftables.service' \
     'After=network-online.target nftables.service docker.service' \
-    'ExecStart=/opt/openpencil/deploy/collab-relay-locator-edge/deploy-global.sh' \
+    'ExecStart=/opt/design-editor/deploy/collab-relay-locator-edge/deploy-global.sh' \
     'Restart=always'
 do
     require_literal "$pattern" "$global_service"
@@ -326,7 +326,7 @@ for pattern in \
     'candidate CRL drops an existing revoked certificate serial' \
     'CRL activation requires root' \
     'CRL/CA files must be root:101 mode 0440' \
-    'OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE=production' \
+    'DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE=production' \
     'Revalidate the exact staged inode after its final ownership/mode changes.' \
     'up -d --no-deps --force-recreate' \
     'exec -T locator-cn-federation nginx -t'
@@ -334,40 +334,40 @@ do
     require_literal "$pattern" "$crl_rotation"
 done
 
-if [ -n "${OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256:-}" ] &&
-    ! printf '%s\n' "$OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256" |
+if [ -n "${DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_SHA256:-}" ] &&
+    ! printf '%s\n' "$DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_SHA256" |
         grep -Eq '^[0-9a-f]{64}$'
 then
-    echo "OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256 must be 64 lowercase hex characters" >&2
+    echo "DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_SHA256 must be 64 lowercase hex characters" >&2
     exit 1
 fi
 
 if command -v docker >/dev/null 2>&1 &&
     docker compose version >/dev/null 2>&1
 then
-    test_repository=nginx-unprivileged.invalid/openpencil-locator-edge
+    test_repository=nginx-unprivileged.invalid/design-editor-locator-edge
     test_digest=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-    OPENPENCIL_LOCATOR_EDGE_IMAGE_REPOSITORY=$test_repository \
-    OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256=$test_digest \
-    OPENPENCIL_LOCATOR_EDGE_PUBLIC_BIND_IP=203.0.113.20 \
-    OPENPENCIL_LOCATOR_EDGE_CLIENT_CERT=/dev/null \
-    OPENPENCIL_LOCATOR_EDGE_CLIENT_KEY=/dev/null \
-    OPENPENCIL_LOCATOR_CN_FEDERATION_CA=/dev/null \
+    DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_REPOSITORY=$test_repository \
+    DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_SHA256=$test_digest \
+    DESIGN_EDITOR_LOCATOR_EDGE_PUBLIC_BIND_IP=203.0.113.20 \
+    DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CERT=/dev/null \
+    DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_KEY=/dev/null \
+    DESIGN_EDITOR_LOCATOR_CN_FEDERATION_CA=/dev/null \
         docker compose -f "$global_compose" config -q
-    OPENPENCIL_LOCATOR_EDGE_IMAGE_REPOSITORY=$test_repository \
-    OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256=$test_digest \
-    OPENPENCIL_LOCATOR_CN_FEDERATION_BIND_IP=10.0.8.22 \
-    OPENPENCIL_LOCATOR_CN_FEDERATION_CERT=/dev/null \
-    OPENPENCIL_LOCATOR_CN_FEDERATION_KEY=/dev/null \
-    OPENPENCIL_LOCATOR_EDGE_CLIENT_CA=/dev/null \
-    OPENPENCIL_LOCATOR_EDGE_CLIENT_CRL=/dev/null \
+    DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_REPOSITORY=$test_repository \
+    DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_SHA256=$test_digest \
+    DESIGN_EDITOR_LOCATOR_CN_FEDERATION_BIND_IP=10.0.8.22 \
+    DESIGN_EDITOR_LOCATOR_CN_FEDERATION_CERT=/dev/null \
+    DESIGN_EDITOR_LOCATOR_CN_FEDERATION_KEY=/dev/null \
+    DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CA=/dev/null \
+    DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CRL=/dev/null \
         docker compose -f "$cn_compose" config -q
-    OPENPENCIL_LOCATOR_EDGE_IMAGE_REPOSITORY=$test_repository \
-    OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256=$test_digest \
-    OPENPENCIL_LOCATOR_CN_HTTPS_BIND_IP=10.0.8.23 \
-    OPENPENCIL_LOCATOR_BACKEND_NETWORK=openpencil-collab-locator-cn_default \
-    OPENPENCIL_LOCATOR_CN_INNER_FULLCHAIN=/dev/null \
-    OPENPENCIL_LOCATOR_CN_INNER_PRIVKEY=/dev/null \
+    DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_REPOSITORY=$test_repository \
+    DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_SHA256=$test_digest \
+    DESIGN_EDITOR_LOCATOR_CN_HTTPS_BIND_IP=10.0.8.23 \
+    DESIGN_EDITOR_LOCATOR_BACKEND_NETWORK=design-editor-collab-locator-cn_default \
+    DESIGN_EDITOR_LOCATOR_CN_INNER_FULLCHAIN=/dev/null \
+    DESIGN_EDITOR_LOCATOR_CN_INNER_PRIVKEY=/dev/null \
         docker compose -f "$https_compose" config -q
 fi
 

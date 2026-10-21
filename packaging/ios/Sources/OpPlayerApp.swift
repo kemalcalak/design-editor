@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct OpenPencilPlayerApp: App {
+struct DesignEditorPlayerApp: App {
     var body: some Scene {
         WindowGroup {
             // Edge-to-edge: the Metal view spans the full screen; the

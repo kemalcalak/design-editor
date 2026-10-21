@@ -3,7 +3,7 @@ import QuartzCore
 import UIKit
 import UniformTypeIdentifiers
 
-/// The OpenPencil player surface: a `CAMetalLayer`-backed view that owns
+/// The Design Editor player surface: a `CAMetalLayer`-backed view that owns
 /// the engine host, forwards touches (the engine interprets tap / pan /
 /// pinch / long-press in editor mode), bridges the system keyboard/IME,
 /// and tracks safe-area + keyboard occlusion changes.
@@ -323,9 +323,9 @@ final class OpPlayerView: UIView, UITextViewDelegate, UIDocumentPickerDelegate {
             presenter.presentedViewController == nil
         else { return }
 
-        let openPencil = UTType(filenameExtension: "op")
+        let designEditor = UTType(filenameExtension: "op")
         let legacyPen = UTType(filenameExtension: "pen")
-        let types = [openPencil, legacyPen].compactMap { $0 } + [.data]
+        let types = [designEditor, legacyPen].compactMap { $0 } + [.data]
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: types, asCopy: true)
         picker.delegate = self
         picker.allowsMultipleSelection = false
@@ -357,7 +357,7 @@ final class OpPlayerView: UIView, UITextViewDelegate, UIDocumentPickerDelegate {
                     self.host.openDocument(document, filename: filename)
                 }
             } catch {
-                NSLog("OpenPencil could not read %@: %@", filename, error.localizedDescription)
+                NSLog("Design Editor could not read %@: %@", filename, error.localizedDescription)
                 DispatchQueue.main.async { [weak self] in
                     self?.showDocumentOpenError()
                 }
@@ -393,7 +393,7 @@ final class OpPlayerView: UIView, UITextViewDelegate, UIDocumentPickerDelegate {
         let alert = UIAlertController(
             title: NSLocalizedString("Unable to Open File", comment: "Document-open failure title"),
             message: NSLocalizedString(
-                "Choose a valid OpenPencil .op or .pen file.",
+                "Choose a valid Design Editor .op or .pen file.",
                 comment: "Document-open failure message"
             ),
             preferredStyle: .alert

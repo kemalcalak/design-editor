@@ -71,7 +71,7 @@ CJK = "Noto Sans SC"
 NUM = "Inter"
 
 # 135° = 左上 → 右下（`.op` 的角度约定：0° 自下而上、90° 自左向右，见
-# op-host-native/src/backend/skia/gradient.rs）。
+# de-host-native/src/backend/skia/gradient.rs）。
 PAGE_ANGLE = 135
 
 
@@ -456,7 +456,7 @@ def build():
     return boards
 
 
-# 对比度（WCAG 相对亮度比，投影场景自设门槛 4.5，远高于 op-design-lint 的
+# 对比度（WCAG 相对亮度比，投影场景自设门槛 4.5，远高于 de-design-lint 的
 # 2.5）。页面底是渐变，所以按**三个 stop 分别量、取最差**——lint 只读
 # stops[0]，靠它兜不住：
 #   c-ink   on 页面渐变    17.30 / 15.87 / 16.72

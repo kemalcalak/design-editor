@@ -51,7 +51,7 @@ $packageVersion = '3.12.0'
 $packageUrl = "https://community.chocolatey.org/api/v2/package/nsis.install/$packageVersion"
 $packageSha256 = '4a1bbf9987e5b9b6bda4c2433af62bb79f2d9d3bd67b392f29a069ecda8c5f64'
 $installerSha256 = '3bc2b06253a7e4957111be152ac6a536e0c7478a706e19da814038db5d706495'
-$temporary = Join-Path $env:RUNNER_TEMP ("openpencil-nsis-" + [Guid]::NewGuid().ToString('N'))
+$temporary = Join-Path $env:RUNNER_TEMP ("design-editor-nsis-" + [Guid]::NewGuid().ToString('N'))
 $packagePath = Join-Path $temporary 'nsis.install.nupkg'
 $installerPath = Join-Path $temporary 'nsis-3.12-setup.exe'
 

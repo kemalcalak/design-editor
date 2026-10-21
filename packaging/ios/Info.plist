@@ -4,7 +4,7 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>tech.zseven.openpencil.generation.*</string>
+		<string>com.kemalcalak.designeditor.generation.*</string>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
@@ -24,7 +24,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>tech.zseven.openpencil.douyin</string>
+			<string>com.kemalcalak.designeditor.douyin</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>awbponwo0ls6cjos</string>
@@ -32,15 +32,15 @@
 		</dict>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>tech.zseven.openpencil.alipay</string>
+			<string>com.kemalcalak.designeditor.alipay</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>openpencilalipay</string>
+				<string>designeditoralipay</string>
 			</array>
 		</dict>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>tech.zseven.openpencil.wechat</string>
+			<string>com.kemalcalak.designeditor.wechat</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>wx327d6a759ea9fe62</string>

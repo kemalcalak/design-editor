@@ -1,13 +1,13 @@
 
 > [English](./BUILD_WINDOWS.md) · [简体中文](./BUILD_WINDOWS.zh.md) · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · [한국어](./BUILD_WINDOWS.ko.md) · [Français](./BUILD_WINDOWS.fr.md) · [Español](./BUILD_WINDOWS.es.md) · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · [हिन्दी](./BUILD_WINDOWS.hi.md) · **Türkçe** · [ไทย](./BUILD_WINDOWS.th.md) · [Tiếng Việt](./BUILD_WINDOWS.vi.md) · [Bahasa Indonesia](./BUILD_WINDOWS.id.md)
 
-# OpenPencil Windows Derleme Kılavuzu
+# Design Editor Windows Derleme Kılavuzu
 
 ## 1. Kaynak kodunu indirme
 
-1. openpencil deposunun kaynak kodunu indirin
+1. design-editor deposunun kaynak kodunu indirin
 
-2. openpencil, `vendor` dizininde 3 bağımlılık alt modülü (jian, casement, agent) içerir ve bunları ayrı ayrı indirmeniz gerekir
+2. design-editor, `vendor` dizininde 3 bağımlılık alt modülü (jian, casement, agent) içerir ve bunları ayrı ayrı indirmeniz gerekir
 
     - 2.1 jian (UI çerçevesi): [https://github.com/ZSeven-W/jian](https://github.com/ZSeven-W/jian) → `vendor\jian` dizinine çıkarın
 
@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 rustup.rs adresinden `rustup-init.exe` dosyasını indirin ve çalıştırın. PowerShell'de aşağıdaki komutları çalıştırın. **`openpencil 0.8.4` sürümüne karşılık gelir**:
+    - 2.3 rustup.rs adresinden `rustup-init.exe` dosyasını indirin ve çalıştırın. PowerShell'de aşağıdaki komutları çalıştırın. **`design-editor 0.8.4` sürümüne karşılık gelir**:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 WASM-JS bağımlılık oluşturma için wasm-bindgen-cli'yi yükleyin. PowerShell'de aşağıdaki komutu çalıştırın. **`openpencil 0.8.4` sürümüne karşılık gelir**:
+    - 2.4 WASM-JS bağımlılık oluşturma için wasm-bindgen-cli'yi yükleyin. PowerShell'de aşağıdaki komutu çalıştırın. **`design-editor 0.8.4` sürümüne karşılık gelir**:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -95,64 +95,64 @@
     - 2.1 Kütüphaneyi derleyin. Depo kök dizininde PowerShell'i açın ve çalıştırın:
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 JS bağımlılık dosyalarını oluşturun
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 CanvasKit işleme varlıklarını `crates\op-host-web\assets\canvaskit` dizininden `web-bundle` dizinine kopyalayın:
+    - 2.3 CanvasKit işleme varlıklarını `crates\de-host-web\assets\canvaskit` dizininden `web-bundle` dizinine kopyalayın:
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 Son dizin yapısı
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
-        ├── op.exe
+        ├── design-editor.exe
+        ├── de-host-web-server.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web.js
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 4. dsh-openpencil eklentisi için ortam değişkenlerini yapılandırma
+## 4. dsh-design-editor eklentisi için ortam değişkenlerini yapılandırma
 
 1. Yönetici olarak PowerShell'i çalıştırın ve aşağıdaki komutları çalıştırın (yolu gerçek depo kök dizinyle değiştirin):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. Doğrulama
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # Pencere kısa süre görünür ve kapanır — arka planda 3100 portunu dinleyen servis çalışır
     ```
 
-2. op-host-web-server.exe  <i>` (dsh eklentisi için gerekli değildir) `</i>
+2. de-host-web-server.exe  <i>` (dsh eklentisi için gerekli değildir) `</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
-    # PowerShell'de iki "openpencil-desktop --serve-web:" satırı ve 3100 portunu göreceksiniz
+    ./de-host-web-server.exe --serve-web 3100
+    # PowerShell'de iki "design-editor --serve-web:" satırı ve 3100 portunu göreceksiniz
     ```
 
 ---
@@ -162,7 +162,7 @@
 1. WASM derlerken `--features` parametresine dikkat edin
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > `--features "web"` yerine `--features "web canvaskit"` kullanın.
@@ -173,8 +173,8 @@
 
 2. Sunucu, tüm `web-bundle` dizinini HTTP `/pkg/` rotasına eşler
 
-    > Disk yolu `web-bundle/op_host_web.js` → Tarayıcı URL'si `/pkg/op_host_web.js`
+    > Disk yolu `web-bundle/de_host_web.js` → Tarayıcı URL'si `/pkg/de_host_web.js`
     > 
-    > Sayfa `/pkg/op_host_web.js` bulunamadığını belirtiyorsa, `web-bundle/` dizininde dosya eksiktir.
+    > Sayfa `/pkg/de_host_web.js` bulunamadığını belirtiyorsa, `web-bundle/` dizininde dosya eksiktir.
 
-3. Bu belge `openpencil 0.8.4` sürümü için yazılmıştır. Rustup araç zinciri sürümü `1.94`、wasm-bindgen-cli sürümü `0.2.117` ve skia-bindings sürümü `0.97.2` bu sürüme görelidir — diğer sürümler farklı olabilir.
+3. Bu belge `design-editor 0.8.4` sürümü için yazılmıştır. Rustup araç zinciri sürümü `1.94`、wasm-bindgen-cli sürümü `0.2.117` ve skia-bindings sürümü `0.97.2` bu sürüme görelidir — diğer sürümler farklı olabilir.

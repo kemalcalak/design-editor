@@ -4,16 +4,16 @@ LC_ALL=C
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 export LC_ALL PATH
 
-runtime_dir=/usr/local/libexec/openpencil-collab-cn-firewall
-config_file=/etc/openpencil/collab-cn-firewall.env
-binding_file=/etc/openpencil/collab-cn-firewall-compose.env
-chain_name=OPENPENCIL-CN-INGRESS
-anchor_comment=openpencil-cn-ingress-v1
-allow_relay_comment=openpencil-cn-allow-8091-v1
-drop_relay_comment=openpencil-cn-drop-8091-v1
-allow_locator_comment=openpencil-cn-allow-8092-v1
-drop_locator_comment=openpencil-cn-drop-8092-v1
-fallthrough_comment=openpencil-cn-fallthrough-v1
+runtime_dir=/usr/local/libexec/design-editor-collab-cn-firewall
+config_file=/etc/design-editor/collab-cn-firewall.env
+binding_file=/etc/design-editor/collab-cn-firewall-compose.env
+chain_name=DESIGN-EDITOR-CN-INGRESS
+anchor_comment=design-editor-cn-ingress-v1
+allow_relay_comment=design-editor-cn-allow-8091-v1
+drop_relay_comment=design-editor-cn-drop-8091-v1
+allow_locator_comment=design-editor-cn-allow-8092-v1
+drop_locator_comment=design-editor-cn-drop-8092-v1
+fallthrough_comment=design-editor-cn-fallthrough-v1
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "CN firewall: kernel verification requires root" >&2
@@ -78,24 +78,24 @@ if [ "$cn_fw_verify_mode" = config-only ]; then
     exit 0
 fi
 cn_firewall_load_deployment_binding "$binding_file"
-if ! ip link show dev "$OPENPENCIL_CN_INGRESS_INTERFACE" >/dev/null 2>&1; then
+if ! ip link show dev "$DESIGN_EDITOR_CN_INGRESS_INTERFACE" >/dev/null 2>&1; then
     cn_firewall_fail "configured ingress interface does not exist"
     exit 1
 fi
 cn_fw_interface_addresses=$(ip -4 -o addr show dev \
-    "$OPENPENCIL_CN_INGRESS_INTERFACE") || {
+    "$DESIGN_EDITOR_CN_INGRESS_INTERFACE") || {
     cn_firewall_fail "could not inspect configured ingress-interface addresses"
     exit 1
 }
 cn_fw_service_assignments=$(printf '%s\n' "$cn_fw_interface_addresses" | awk \
-    -v expected_ipv4="$OPENPENCIL_CN_SERVICE_IPV4" -f "$address_checker")
+    -v expected_ipv4="$DESIGN_EDITOR_CN_SERVICE_IPV4" -f "$address_checker")
 if [ "$cn_fw_service_assignments" -ne 1 ]; then
     cn_firewall_fail \
         "configured service IPv4 must be assigned exactly once to the ingress interface"
     exit 1
 fi
 
-exec 9>/run/openpencil-collab-cn-firewall.lock
+exec 9>/run/design-editor-collab-cn-firewall.lock
 flock -s 9
 filter_snapshot=$(iptables-save -t filter)
 anchor_summary=$(printf '%s\n' "$filter_snapshot" | awk \
@@ -134,9 +134,9 @@ fi
 
 managed_summary=$(printf '%s\n' "$filter_snapshot" | awk \
     -v managed_chain="$chain_name" \
-    -v ingress_interface="$OPENPENCIL_CN_INGRESS_INTERFACE" \
-    -v gateway_ipv4="$OPENPENCIL_CN_GATEWAY_SOURCE_IPV4" \
-    -v service_ipv4="$OPENPENCIL_CN_SERVICE_IPV4" \
+    -v ingress_interface="$DESIGN_EDITOR_CN_INGRESS_INTERFACE" \
+    -v gateway_ipv4="$DESIGN_EDITOR_CN_GATEWAY_SOURCE_IPV4" \
+    -v service_ipv4="$DESIGN_EDITOR_CN_SERVICE_IPV4" \
     -v allow_relay_comment="$allow_relay_comment" \
     -v drop_relay_comment="$drop_relay_comment" \
     -v allow_locator_comment="$allow_locator_comment" \

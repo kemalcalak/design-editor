@@ -54,7 +54,7 @@ if [ -z "$RELEASE_TAG" ] || [ -z "$RELEASE_FILE" ]; then
   exit 0
 fi
 
-RELEASE_URL="https://github.com/ZSeven-W/openpencil/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
+RELEASE_URL="https://github.com/kemalcalak/design-editor/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
 echo "fetching skia artifact: $RELEASE_URL"
 curl -fL "$RELEASE_URL" -o "$DEST"
 

@@ -7,7 +7,7 @@ import { EngineHost } from './EngineHost';
 import { OpStatus } from './OpNative';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /**
  * NAPI, the UTF-8 ABI copy, and document decoding temporarily coexist. Keep

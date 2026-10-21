@@ -198,7 +198,7 @@ def sample(good):
         box["fill"] = solid("$c-card")
         # 这里**不要**写 dashPattern。`PenStroke` 的 schema 里有这个字段
         # （jian-ops-schema/src/style.rs 的 `dash_pattern`），但整条渲染链
-        # 上没有任何一处读它 —— 全仓只有 op-html 的 mapper 会产出它。写了会
+        # 上没有任何一处读它 —— 全仓只有 de-html 的 mapper 会产出它。写了会
         # 画成实线，于是「虚线 = 未定稿」这层暗示只存在于源码里，读者看不
         # 见。空 / 实这条通道改由「只有描边 vs 整块实心」承担，那是真的画得
         # 出来的差别。
@@ -298,7 +298,7 @@ def build():
     return [page]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；数值由 contrast.py 实测）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；数值由 contrast.py 实测）：
 #   c-ink  on c-bg    17.01   c-muted on c-bg     7.03
 #   c-ink  on c-card  18.86   c-muted on c-card   7.80
 #   c-ink  on c-panel 15.14   c-muted on c-panel  6.26

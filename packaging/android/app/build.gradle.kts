@@ -23,19 +23,19 @@ val canonicalVersionCode = Regex("""versionCode=([1-9][0-9]*)""")
     ?: error("scripts/android-version.sh returned a non-numeric versionCode")
 
 android {
-    namespace = "tech.zseven.openpencil"
+    namespace = "com.kemalcalak.designeditor"
     compileSdk = 36
     buildToolsVersion = "36.0.0"
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        applicationId = "tech.zseven.openpencil"
+        applicationId = "com.kemalcalak.designeditor"
         minSdk = 26
         targetSdk = 36
         versionCode = canonicalVersionCode
         versionName = canonicalVersionName
         ndk {
-            // The op-engine-jni cdylib is built by cargo-ndk into jniLibs;
+            // The de-engine-jni cdylib is built by cargo-ndk into jniLibs;
             // ship only the ABIs it produces.
             abiFilters += listOf("arm64-v8a", "x86_64")
         }
@@ -93,7 +93,7 @@ dependencies {
     testImplementation("org.json:json:20240303")
 }
 
-tasks.register("printOpenPencilVersion") {
+tasks.register("printDesignEditorVersion") {
     group = "verification"
     description = "Print the canonical Android version metadata"
     doLast {

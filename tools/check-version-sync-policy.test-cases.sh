@@ -1,29 +1,29 @@
 repo=$(new_repo ordinary_dynamic_rust_fixture 0.8.1)
 printf '%s\n' \
-    'let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));' \
-    >> "$repo/crates/op-editor-core/src/host_support.rs"
+    'let src = src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"));' \
+    >> "$repo/crates/de-editor-core/src/host_support.rs"
 run_guard "$repo"
 assert_status 1 'ordinary dynamic Rust fixture'
-assert_contains 'crates/op-editor-core/src/host_support.rs:1: error: ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION' \
+assert_contains 'crates/de-editor-core/src/host_support.rs:1: error: ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION' \
     'ordinary dynamic Rust fixture'
 assert_no_success_output 'ordinary dynamic Rust fixture'
 pass 'ordinary Rust fixtures cannot masquerade as product-version producers'
 
 repo=$(new_repo dynamic_rust_fixture_balanced_count 0.8.1)
-cat > "$repo/crates/op-editor-core/src/host_support.rs" <<'RUST'
+cat > "$repo/crates/de-editor-core/src/host_support.rs" <<'RUST'
 pub fn sample() {
-let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
+let src = src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"));
 }
 pub fn starter() {
 }
 #[cfg(test)]
 mod tests {
-let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
+let src = src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"));
 }
 RUST
 run_guard "$repo"
 assert_status 1 'dynamic Rust fixture with balanced count'
-assert_contains 'crates/op-editor-core/src/host_support.rs:1: error: ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION' \
+assert_contains 'crates/de-editor-core/src/host_support.rs:1: error: ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION' \
     'dynamic Rust fixture with balanced count'
 assert_no_success_output 'dynamic Rust fixture with balanced count'
 pass 'a dynamic test fixture cannot replace one of the two production producers'
@@ -34,7 +34,7 @@ sed -i.bak 's/version[.]workspace = true/version = "0.8.1"/' \
 rm "$repo/crates/example/Cargo.toml.bak"
 run_guard "$repo"
 assert_status 1 'Cargo manifest literal workspace version'
-assert_contains 'crates/example/Cargo.toml:3: error: local op-* package must declare exactly one active version.workspace = true in [package]' \
+assert_contains 'crates/example/Cargo.toml:3: error: local de-* package must declare exactly one active version.workspace = true in [package]' \
     'Cargo manifest literal workspace version'
 assert_no_success_output 'Cargo manifest literal workspace version'
 pass 'metadata equality cannot hide a literal local package version'
@@ -44,10 +44,10 @@ sed -i.bak '/version[.]workspace = true/d' "$repo/crates/example/Cargo.toml"
 rm "$repo/crates/example/Cargo.toml.bak"
 run_guard "$repo"
 assert_status 1 'Cargo manifest missing workspace version'
-assert_contains 'crates/example/Cargo.toml:1: error: local op-* package must declare exactly one active version.workspace = true in [package]' \
+assert_contains 'crates/example/Cargo.toml:1: error: local de-* package must declare exactly one active version.workspace = true in [package]' \
     'Cargo manifest missing workspace version'
 assert_no_success_output 'Cargo manifest missing workspace version'
-pass 'local op-* manifests must inherit the workspace version'
+pass 'local de-* manifests must inherit the workspace version'
 
 repo=$(new_repo cargo_manifest_commented_workspace_version 0.8.1)
 sed -i.bak 's/^version[.]workspace = true/# version.workspace = true/' \
@@ -55,13 +55,13 @@ sed -i.bak 's/^version[.]workspace = true/# version.workspace = true/' \
 rm "$repo/crates/example/Cargo.toml.bak"
 run_guard "$repo"
 assert_status 1 'Cargo manifest commented workspace version'
-assert_contains 'crates/example/Cargo.toml:1: error: local op-* package must declare exactly one active version.workspace = true in [package]' \
+assert_contains 'crates/example/Cargo.toml:1: error: local de-* package must declare exactly one active version.workspace = true in [package]' \
     'Cargo manifest commented workspace version'
 assert_no_success_output 'Cargo manifest commented workspace version'
 pass 'commented inheritance declarations do not satisfy the manifest guard'
 
 repo=$(new_repo readme_numeric_docker_tag 0.8.1)
-printf '%s\n' 'docker pull ghcr.io/zseven-w/openpencil-web:v0.8.2' >> "$repo/README.md"
+printf '%s\n' 'docker pull ghcr.io/kemalcalak/design-editor-web:v0.8.2' >> "$repo/README.md"
 run_guard "$repo"
 assert_status 1 'README numeric Docker tag'
 assert_contains 'README.md:' 'README numeric Docker tag'

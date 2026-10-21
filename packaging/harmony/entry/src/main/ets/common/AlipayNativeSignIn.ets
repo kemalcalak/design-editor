@@ -49,7 +49,7 @@ export class AlipayNativeSignIn {
       bizParams,
       /* isForceH5 */ false,
       /* useLanding */ true,
-      'scheme:openpencil',
+      'scheme:design-editor',
       backWant,
       (response: AFAuthServiceResponse): void => {
         completion(AlipayNativeSignIn.outcomeOf(response));

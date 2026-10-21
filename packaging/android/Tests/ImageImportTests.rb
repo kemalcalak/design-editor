@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 player_dir = File.expand_path("..", __dir__)
-source_dir = File.join(player_dir, "app/src/main/kotlin/tech/zseven/openpencil")
+source_dir = File.join(player_dir, "app/src/main/kotlin/com/kemalcalak/designeditor")
 activity = File.read(File.join(source_dir, "MainActivity.kt"))
 surface = File.read(File.join(source_dir, "OpSurfaceView.kt"))
 # pollShellAction / importImageOrSvg moved into the shell bridge split.
@@ -35,7 +35,7 @@ read = activity[/private fun readAndImportImageOrSvg\(.*?(?=\n    private fun im
 raise "bounded image reader missing" unless read
 raise "known-size image must be bounded" unless read.include?("metadata.size > MAX_DOCUMENT_BYTES")
 raise "unknown-size image must use the bounded reader" unless read.include?("readDocumentBytes(uri, metadata.size)")
-raise "image bytes must be read off the main thread" unless read.include?("OpenPencilImageImporter")
+raise "image bytes must be read off the main thread" unless read.include?("DesignEditorImageImporter")
 
 return_bytes = surface_bridge[/fun importImageOrSvg\(.*?(?=\n    \/\*\*)/m]
 raise "image ABI return missing" unless return_bytes&.include?("nativeEditorImportImageOrSvg")

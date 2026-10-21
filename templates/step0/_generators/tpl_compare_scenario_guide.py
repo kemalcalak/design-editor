@@ -271,7 +271,7 @@ def build():
     return [page]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；数值由 contrast.py 实测）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；数值由 contrast.py 实测）：
 #   c-ink on c-bg    16.45   c-muted on c-bg      7.05
 #   c-ink on c-card  18.11   c-muted on c-card    7.76
 #   c-a   on c-a-soft 7.11   c-b     on c-b-soft  5.25

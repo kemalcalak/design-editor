@@ -79,7 +79,7 @@ $env:WIN_CSC_KEY_PASSWORD = $null
 $env:WIN_CSC_PFX_SHA256 = $null
 $env:WIN_CSC_CERTIFICATE_SHA1 = $null
 
-$pfx = Join-Path $env:RUNNER_TEMP ("openpencil-codesign-{0}.pfx" -f [Guid]::NewGuid())
+$pfx = Join-Path $env:RUNNER_TEMP ("design-editor-codesign-{0}.pfx" -f [Guid]::NewGuid())
 try {
     [IO.File]::WriteAllBytes($pfx, $pfxBytes)
     [Array]::Clear($pfxBytes, 0, $pfxBytes.Length)

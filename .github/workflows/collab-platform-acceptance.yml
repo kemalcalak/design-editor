@@ -8,12 +8,12 @@ permissions:
 
 # These jobs intentionally require dedicated physical runners. Generic hosted
 # networks often suppress multicast, so a green hosted build is not accepted as
-# mDNS platform evidence. Register one runner per OS with the openpencil-mdns
+# mDNS platform evidence. Register one runner per OS with the design-editor-mdns
 # label and multicast access to its local LAN.
 jobs:
   mdns:
     name: ${{ matrix.platform }} real multicast
-    runs-on: [self-hosted, '${{ matrix.runner_os }}', openpencil-mdns]
+    runs-on: [self-hosted, '${{ matrix.runner_os }}', design-editor-mdns]
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -38,11 +38,11 @@ jobs:
           key: collab-mdns-${{ matrix.platform }}
 
       - name: Build native collaboration transport
-        run: cargo test --locked -p op-collab-transport --features mdns --no-run
+        run: cargo test --locked -p de-collab-transport --features mdns --no-run
 
       - name: Exercise real multicast publish, discover, and unregister
         run: >-
-          cargo test --locked -p op-collab-transport --features mdns
+          cargo test --locked -p de-collab-transport --features mdns
           --test mdns_smoke --
           --ignored
           --exact publisher_is_discovered_and_unregisters_cleanly

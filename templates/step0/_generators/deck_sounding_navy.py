@@ -684,7 +684,7 @@ def build():
 
 
 # 对比度（WCAG 相对亮度比，实算）。deck 是投影物，自设门槛远高于
-# op-design-lint 的 2.5：
+# de-design-lint 的 2.5：
 #   c-ink        on c-paper       14.58     c-ink-soft on c-paper      6.24
 #   c-ink-faint  on c-paper        3.58  ← 只承载 ≥24px 的脚注/页码/图注
 #   c-ink        on c-paper-deep  13.34     c-ink-soft on c-paper-deep 5.71

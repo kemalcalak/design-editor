@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Assemble an AppImage for the OpenPencil Rust desktop shell + `op` CLI.
+# Assemble an AppImage for the Design Editor Rust desktop shell + `de` CLI.
 #
 # AppDir layout (usr/ tree shared with the .deb via package-linux-common.sh):
-#   AppRun -> usr/bin/openpencil-desktop   (symlink entrypoint)
-#   openpencil.desktop, openpencil.png, .DirIcon   (AppImage root metadata)
-#   usr/bin/{openpencil-desktop,op}
+#   AppRun -> usr/bin/design-editor   (symlink entrypoint)
+#   design-editor.desktop, design-editor.png, .DirIcon   (AppImage root metadata)
+#   usr/bin/{design-editor,de}
 #   usr/share/{applications,mime/packages,icons,pixmaps}/...
 #
 # The packing tool and type2 runtime are downloaded with reviewed SHA-256 pins
@@ -25,7 +25,7 @@
 #                       --out-dir DIR [--tool PATH --runtime-file PATH] \
 #                       [--layout-only]
 #
-# Output: <out-dir>/OpenPencil-<version>-<x64|arm64>-linux.AppImage
+# Output: <out-dir>/Design-Editor-<version>-<x64|arm64>-linux.AppImage
 # (matches electron-builder's `${productName}-${version}-${arch}-linux.${ext}`)
 
 set -euo pipefail
@@ -76,7 +76,7 @@ esac
 ARTIFACT_ARCH="$(op_artifact_arch "$AI_ARCH")"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
-APPDIR="$STAGE/OpenPencil.AppDir"
+APPDIR="$STAGE/design-editor.AppDir"
 mkdir -p "$APPDIR"
 
 echo "==> staging AppDir"
@@ -84,10 +84,10 @@ op_install_usr_tree "$APPDIR" "$DESKTOP_BIN" "$CLI_BIN" "$ICON_PNG"
 
 # AppImage root metadata: desktop entry + icon must sit at AppDir root;
 # .DirIcon is what most file managers display for the mounted image.
-cp "$APPDIR/usr/share/applications/openpencil.desktop" "$APPDIR/openpencil.desktop"
-cp "$ICON_PNG" "$APPDIR/openpencil.png"
+cp "$APPDIR/usr/share/applications/design-editor.desktop" "$APPDIR/design-editor.desktop"
+cp "$ICON_PNG" "$APPDIR/design-editor.png"
 cp "$ICON_PNG" "$APPDIR/.DirIcon"
-ln -sf usr/bin/openpencil-desktop "$APPDIR/AppRun"
+ln -sf usr/bin/design-editor "$APPDIR/AppRun"
 
 if [ "$LAYOUT_ONLY" = 1 ] || [ -z "$TOOL" ]; then
   echo "==> layout-only mode: assembled AppDir"
@@ -105,7 +105,7 @@ fi
 }
 
 mkdir -p "$OUT_DIR"
-OUT_PATH="$OUT_DIR/OpenPencil-$VERSION-$ARTIFACT_ARCH-linux.AppImage"
+OUT_PATH="$OUT_DIR/Design-Editor-$VERSION-$ARTIFACT_ARCH-linux.AppImage"
 echo "==> packing AppImage ($AI_ARCH)"
 # --appimage-extract-and-run: appimagetool itself ships as an AppImage and
 # CI runners have no FUSE; this flag self-extracts instead of mounting.
