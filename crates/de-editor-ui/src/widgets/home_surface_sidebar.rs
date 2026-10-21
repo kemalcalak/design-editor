@@ -148,7 +148,7 @@ fn paint_mcp_card(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &Home
         cx,
         tr(surface.locale, state_key),
         SANS,
-        12.0,
+        12.5,
         p.text,
         600,
         Point2D::new(x + 14.0, card.origin.y + 25.0),
@@ -157,7 +157,7 @@ fn paint_mcp_card(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &Home
         cx,
         &format!("127.0.0.1:{}/mcp", surface.mcp.port),
         MONO,
-        10.5,
+        11.0,
         p.text_2,
         Point2D::new(x, card.origin.y + 46.0),
     );
@@ -176,7 +176,7 @@ fn paint_mcp_card(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &Home
         cx,
         &agent,
         SANS,
-        11.0,
+        11.5,
         p.text_2,
         Point2D::new(x, card.origin.y + 67.0),
     );

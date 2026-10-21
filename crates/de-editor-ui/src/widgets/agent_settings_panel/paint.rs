@@ -115,13 +115,33 @@ fn paint_panel(cx: &mut PaintCx<'_>, panel: Rect, args: PanelPaintArgs<'_>) {
             cx.backend.stroke_round_rect(panel, 20.0, theme.border, 1.0);
         }
         AgentSettingsSurfaceKind::Desktop => {
-            cx.backend.fill_round_rect(panel, 18.0, theme.card);
-            cx.backend.stroke_round_rect(panel, 18.0, theme.border, 1.0);
+            cx.backend.fill_round_rect(panel, 12.0, theme.card);
+            // The navigation rail sits on the page background: a rounded
+            // fill for the left corners, squared off on its right edge.
+            let rail = crate::widgets::agent_settings_panel_geometry::nav_rail_rect(panel);
+            cx.backend.fill_round_rect(rail, 12.0, theme.background);
+            cx.backend.fill_rect(
+                Rect::xywh(
+                    rail.origin.x + rail.size.x - 12.0,
+                    rail.origin.y,
+                    12.0,
+                    rail.size.y,
+                ),
+                theme.background,
+            );
+            cx.backend.fill_rect(
+                Rect::xywh(
+                    rail.origin.x + rail.size.x,
+                    panel.origin.y,
+                    1.0,
+                    panel.size.y,
+                ),
+                theme.border,
+            );
+            cx.backend.stroke_round_rect(panel, 12.0, theme.border, 1.0);
         }
     }
-    if layout.kind != AgentSettingsSurfaceKind::Desktop {
-        paint_touch_title(cx, theme, ui, layout);
-    }
+    paint_touch_title(cx, theme, ui, layout);
     if layout.kind == AgentSettingsSurfaceKind::Expanded {
         let x = panel.origin.x + layout.header.size.x;
         cx.backend.stroke_line(
@@ -192,16 +212,23 @@ fn paint_touch_title(
     ui: &EditorUiState,
     layout: AgentSettingsLayout,
 ) {
+    // Desktop titles the rail in Home's 15 px semibold; touch keeps its
+    // larger header title.
+    let desktop = layout.kind == AgentSettingsSurfaceKind::Desktop;
     let text = TextLayout::single_run(
         t_settings(ui, "settings.title"),
         crate::widgets::agent_settings_rows::SETTINGS_FONT_FAMILY,
-        20.0,
+        if desktop { 15.0 } else { 20.0 },
         theme.foreground.to_jian(),
         Point2D::new(0.0, 0.0),
-    );
+    )
+    .with_font_weight(if desktop { 600 } else { 400 });
     cx.backend.draw_text(
         &text,
-        Point2D::new(layout.header.origin.x + 20.0, layout.header.origin.y + 36.0),
+        Point2D::new(
+            layout.header.origin.x + 20.0,
+            layout.header.origin.y + if desktop { 34.0 } else { 36.0 },
+        ),
     );
 }
 
@@ -217,12 +244,9 @@ fn paint_secondary_hero(
     prefix: &str,
 ) {
     let (title, subtitle) = match prefix {
-        "settings.images" => ("settings.images.heroTitle", "settings.images.heroSubtitle"),
-        "settings.fonts" => ("settings.fonts.heroTitle", "settings.fonts.heroSubtitle"),
-        _ => (
-            "settings.account.heroTitle",
-            "settings.account.heroSubtitle",
-        ),
+        "settings.images" => ("settings.tab.images", "settings.images.heroSubtitle"),
+        "settings.fonts" => ("settings.tab.fonts", "settings.fonts.heroSubtitle"),
+        _ => ("settings.tab.account", "settings.account.heroSubtitle"),
     };
     crate::widgets::agent_settings_rows::paint_tab_intro_for_ui(
         cx,

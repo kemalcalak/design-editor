@@ -632,14 +632,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "slidesPanel.exportAllSlides" => "导出全部幻灯片",
         "slidesPanel.exportSelectedSlides" => "导出所选幻灯片（{{count}}）",
         "settings.tab.ai" => "AI",
-        "settings.agents.heroTitle" => "连接你的 AI 服务商",
         "settings.agents.heroSubtitle" => {
             "Design Editor 直接驱动本地 CLI Agent 与 API 服务商，连接任意一个即可开始生成设计。"
         }
         "settings.agents.statusConnected" => "已连接",
         "settings.agents.statusNotConnected" => "未连接",
         "settings.agents.statusChecking" => "正在检测…",
-        "settings.mcp.heroTitle" => "从外部通过 MCP 连接 Design Editor",
         "settings.mcp.heroSubtitle" => {
             "把任意支持 MCP 的 CLI 或编辑器指向这个工作区，即可用内置 Agent 同款工具驱动画布。"
         }
@@ -647,17 +645,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.customConfigTitle" => "自定义 MCP 服务器配置",
         "settings.mcp.customConfigDesc" => "粘贴到任何读取标准 MCP server 配置块的客户端即可。",
         "settings.mcp.copyConfig" => "复制 MCP 配置",
-        "settings.system.heroTitle" => "系统偏好",
         "settings.system.heroSubtitle" => "本机安装的外观、更新与画布行为。",
         "settings.system.appearance" => "外观",
         "settings.system.appearanceLight" => "浅色",
         "settings.system.appearanceDark" => "深色",
         "settings.system.pencilCursor" => "画笔光标",
-        "settings.images.heroTitle" => "为设计配图",
         "settings.images.heroSubtitle" => "在 Openverse 搜索图片，或接入服务商按需生成。",
-        "settings.fonts.heroTitle" => "本文档的字体",
         "settings.fonts.heroSubtitle" => "补齐文档需要但本机缺失的字体，并管理你导入的字体。",
-        "settings.account.heroTitle" => "你的账户",
         "settings.account.heroSubtitle" => "登录后可在多设备间同步工作区与授权。",
         "tooltip.topbar.file" => "文件",
         "tooltip.topbar.import" => "导入",

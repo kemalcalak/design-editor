@@ -26,12 +26,13 @@ use crate::{Point2D, Rect, TextLayout};
 /// The font family every string in this modal is DRAWN with. Measurement
 /// has to name it too — see [`fit_text`]. Aliases the workspace-wide chrome
 /// family so the modal cannot drift from the rest of the editor.
-pub(super) const SETTINGS_FONT_FAMILY: &str = crate::widgets::text_metrics::CHROME_FONT_FAMILY;
+/// Settings paints in Home's UI face (bundled on desktop and web).
+pub(super) const SETTINGS_FONT_FAMILY: &str = "Manrope";
 
 /// Tab intro: a section-sized title with one optional muted line under
 /// it. Deliberately the same size as a section title — the intro IS a
 /// section header for the page, not a poster for it.
-pub(super) const INTRO_TITLE_FONT: f32 = 15.0;
+pub(super) const INTRO_TITLE_FONT: f32 = 16.0;
 pub(super) const INTRO_DESC_FONT: f32 = 12.0;
 const TOUCH_INTRO_TITLE_FONT: f32 = 17.0;
 const TOUCH_INTRO_DESC_FONT: f32 = 14.0;
@@ -217,7 +218,8 @@ pub(super) fn paint_tab_intro_for_ui(
         metrics.title_font,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
-    );
+    )
+    .with_font_weight(700);
     cx.backend.draw_text(
         &title_layout,
         Point2D::new(
@@ -556,7 +558,7 @@ mod tests {
             tab_intro_height_for_ui(false, false),
             tab_intro_height(false)
         );
-        assert_eq!(tab_intro_height(true), 48.0);
+        assert_eq!(tab_intro_height(true), 49.0);
         assert!((tab_intro_height_for_ui(true, true) - 52.0).abs() < 0.01);
         assert!(tab_intro_height_for_ui(false, true) > tab_intro_height(false));
     }

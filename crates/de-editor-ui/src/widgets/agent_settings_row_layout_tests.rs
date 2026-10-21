@@ -229,7 +229,12 @@ fn a_section_header_leaves_its_first_row_clear() {
     );
 
     for (text, font_size, at) in &runs {
-        if at.y <= first_row.origin.y || at.y > first_row.origin.y + first_row.size.y {
+        // Only the body's runs: the navigation rail's labels sit at the
+        // same heights, left of the content column.
+        if at.x < content.origin.x
+            || at.y <= first_row.origin.y
+            || at.y > first_row.origin.y + first_row.size.y
+        {
             continue;
         }
         let (top, _) = ink_span(*font_size, at.y);

@@ -3,8 +3,8 @@
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_panel::{
     AGENTS_HERO_HEIGHT, CARD_GAP, CARD_HEIGHT, CONNECT_BTN_H, CONNECT_BTN_W, CONTENT_BOTTOM_PAD,
-    HEADER_HEIGHT, PAD, SECTION_GAP, STATUS_PILL_HEIGHT, STATUS_PILL_SLOT, TAB_BAR_TOP, TAB_GAP,
-    TAB_HEIGHT, TAB_MAX_WIDTH, TAB_MIN_WIDTH,
+    HEADER_HEIGHT, NAV_ITEM_GAP, NAV_ITEM_H, NAV_TITLE_H, NAV_W, PAD, SECTION_GAP,
+    STATUS_PILL_HEIGHT, STATUS_PILL_SLOT,
 };
 use crate::widgets::{agent_settings_acp, agent_settings_builtin};
 use crate::{Point2D, Rect};
@@ -25,9 +25,6 @@ pub(super) const PROVIDER_SECTION_HEADER_H: f32 =
     crate::widgets::agent_settings_metrics::SECTION_HEADER_H;
 /// Muted hint under a connected Claude Code row.
 pub(super) const CLAUDE_HINT_H: f32 = 24.0;
-/// Space kept clear at the right of the left-aligned tab strip so a wide
-/// strip can never slide under the close button.
-const TAB_STRIP_SIDE_RESERVE: f32 = 72.0;
 
 const FULL_TABS_WITHOUT_ACCOUNT: [AgentSettingsTab; 5] = [
     AgentSettingsTab::Agents,
@@ -87,12 +84,21 @@ pub(super) fn status_pill_slot_rect_at(card: Rect) -> Rect {
 }
 
 pub(super) fn content_rect(panel: Rect) -> Rect {
+    let x = panel.origin.x + NAV_W + PAD;
     Rect {
-        origin: Point2D::new(panel.origin.x + PAD, panel.origin.y + HEADER_HEIGHT),
+        origin: Point2D::new(x, panel.origin.y + HEADER_HEIGHT),
         size: Point2D::new(
-            panel.size.x - PAD * 2.0,
+            (panel.size.x - NAV_W - PAD * 2.0).max(0.0),
             panel.size.y - HEADER_HEIGHT - CONTENT_BOTTOM_PAD,
         ),
+    }
+}
+
+/// The left navigation rail (its fill and right hairline).
+pub(super) fn nav_rail_rect(panel: Rect) -> Rect {
+    Rect {
+        origin: panel.origin,
+        size: Point2D::new(NAV_W, panel.size.y),
     }
 }
 
@@ -108,18 +114,14 @@ pub(super) fn content_paint_clip_rect(panel: Rect) -> Rect {
     }
 }
 
-/// One pill in the left-aligned horizontal tab strip. All pills share a
-/// width derived from the panel width and the visible-tab `count`, so the
-/// geometry needs no text measurement; paint centres icon + label inside.
-pub(super) fn nav_item_rect(panel: Rect, i: usize, count: usize) -> Rect {
-    let count = count.max(1);
-    let available = (panel.size.x - PAD - TAB_STRIP_SIDE_RESERVE).max(TAB_MIN_WIDTH);
-    let tab_w = ((available - TAB_GAP * (count - 1) as f32) / count as f32)
-        .clamp(TAB_MIN_WIDTH, TAB_MAX_WIDTH);
-    let x = panel.origin.x + PAD + i as f32 * (tab_w + TAB_GAP);
+/// One row of the left navigation rail, under the "Settings" title.
+pub(super) fn nav_item_rect(panel: Rect, i: usize, _count: usize) -> Rect {
     Rect {
-        origin: Point2D::new(x, panel.origin.y + TAB_BAR_TOP),
-        size: Point2D::new(tab_w, TAB_HEIGHT),
+        origin: Point2D::new(
+            panel.origin.x + 10.0,
+            panel.origin.y + NAV_TITLE_H + i as f32 * (NAV_ITEM_H + NAV_ITEM_GAP),
+        ),
+        size: Point2D::new(NAV_W - 20.0, NAV_ITEM_H),
     }
 }
 
@@ -127,8 +129,8 @@ pub(super) fn close_rect(panel: Rect) -> Rect {
     let s = 16.0;
     Rect {
         origin: Point2D::new(
-            panel.origin.x + panel.size.x - 16.0 - s,
-            panel.origin.y + TAB_BAR_TOP + (TAB_HEIGHT - s) / 2.0,
+            panel.origin.x + panel.size.x - 20.0 - s,
+            panel.origin.y + 24.0,
         ),
         size: Point2D::new(s, s),
     }

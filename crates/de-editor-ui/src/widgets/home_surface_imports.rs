@@ -58,7 +58,7 @@ pub(super) fn paint_imports(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, lay
             cx,
             tr(surface.locale, sub),
             SANS,
-            11.5,
+            12.0,
             p.text_3,
             Point2D::new(x, rect.origin.y + 47.0),
         );

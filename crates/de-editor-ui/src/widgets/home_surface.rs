@@ -16,8 +16,8 @@ use de_editor_core::{
 
 #[path = "home_surface_palette.rs"]
 mod palette;
-pub use palette::HomePalette;
 pub(crate) use palette::{fade, MONO, SANS};
+pub use palette::{settings_theme, HomePalette};
 
 #[path = "home_surface_icons.rs"]
 mod icons;

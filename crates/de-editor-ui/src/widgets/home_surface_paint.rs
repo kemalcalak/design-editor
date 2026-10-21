@@ -97,7 +97,7 @@ pub(super) fn caption(cx: &mut PaintCx<'_>, surface: &HomeSurface<'_>, text: &st
         cx,
         &text.to_uppercase(),
         super::SANS,
-        10.0,
+        11.0,
         surface.palette.text_3,
         600,
         Point2D::new(x, y),

@@ -195,7 +195,7 @@ pub(super) fn paint_system_tab(
         cx,
         theme,
         content,
-        t_settings(ui, "settings.system.heroTitle"),
+        t_settings(ui, "settings.tab.system"),
         Some(t_settings(ui, "settings.system.heroSubtitle")),
     );
 

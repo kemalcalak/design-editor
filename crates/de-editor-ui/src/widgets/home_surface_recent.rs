@@ -23,7 +23,7 @@ pub(super) fn paint_recent(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layo
         surface,
         tr(surface.locale, "home.recent.title"),
         header.origin.x,
-        baseline(header, 10.0),
+        baseline(header, 11.0),
     );
     if surface.recent.is_empty() {
         paint_empty(surface, cx, layout.recent_frame);
@@ -137,12 +137,12 @@ fn paint_card(
     let age = age(surface, entry);
     if !age.is_empty() {
         let label = edited_label(surface.locale, &age);
-        let label = fit_in_family(cx.backend, &label, text_w, 11.5, SANS);
+        let label = fit_in_family(cx.backend, &label, text_w, 12.0, SANS);
         draw_text(
             cx,
             &label,
             SANS,
-            11.5,
+            12.0,
             p.text_3,
             Point2D::new(x, thumb.origin.y + thumb.size.y + 44.0),
         );
@@ -156,7 +156,7 @@ fn paint_list(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &HomeLayo
     cx.backend.stroke_round_rect(frame, 10.0, p.border, 1.0);
     let (folder_x, edited_x) = list_columns(frame);
     let head = Rect::xywh(frame.origin.x, frame.origin.y, frame.size.x, LIST_HEADER_H);
-    let head_y = baseline(head, 10.0);
+    let head_y = baseline(head, 11.0);
     caption(
         cx,
         surface,

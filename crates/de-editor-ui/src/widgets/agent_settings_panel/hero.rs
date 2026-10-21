@@ -56,7 +56,7 @@ pub(super) fn paint_agents_hero(
         cx,
         theme,
         content,
-        t_settings(ui, "settings.agents.heroTitle"),
+        t_settings(ui, "settings.tab.agents"),
         roll.as_deref(),
     );
 }

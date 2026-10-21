@@ -224,7 +224,7 @@ pub(super) fn paint_mcp_tab(
         cx,
         theme,
         content,
-        t_settings(ui, "settings.mcp.heroTitle"),
+        t_settings(ui, "settings.tab.mcp"),
         Some(t_settings(ui, "settings.mcp.heroSubtitle")),
     );
     paint_server_row(cx, theme, settings, ui, content, now_ms);

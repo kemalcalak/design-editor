@@ -2,6 +2,7 @@
 //! of the editor chrome theme so the approved frames' light/dark values
 //! stay testable without a renderer.
 
+use crate::theme::Theme;
 use crate::Color;
 use de_editor_core::ThemeMode;
 
@@ -95,5 +96,40 @@ pub(crate) fn fade(color: Color, factor: f32) -> Color {
     Color {
         a: color.a * factor,
         ..color
+    }
+}
+
+/// The editor `Theme` the Settings modal paints with: Home's tokens
+/// mapped onto the shadcn-style slots every Settings section already
+/// reads, so the modal shares Home's v2 look without each section
+/// learning a second palette.
+pub fn settings_theme(mode: ThemeMode) -> Theme {
+    let p = HomePalette::for_mode(mode);
+    let base = match mode {
+        ThemeMode::Dark => Theme::dark(),
+        ThemeMode::Light => Theme::light(),
+    };
+    Theme {
+        background: p.bg,
+        foreground: p.text,
+        card: p.surface,
+        card_foreground: p.text,
+        popover: p.surface,
+        popover_foreground: p.text,
+        primary: p.accent,
+        // White on the accent, matching the white knob jian's Switch paints.
+        primary_foreground: Color::WHITE,
+        muted: p.subtle,
+        muted_foreground: p.text_2,
+        border: p.border,
+        accent: p.subtle,
+        accent_foreground: p.text,
+        secondary: p.subtle,
+        secondary_foreground: p.text,
+        input: p.border,
+        ring: p.accent,
+        button_hover: p.subtle,
+        row_selected: p.subtle,
+        ..base
     }
 }
