@@ -373,6 +373,91 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
     assert!(!state.editor_ui.preserve_authored_geometry);
 }
 
+/// `document_edited` is the host's cue to bring the canvas forward for an
+/// external MCP edit, so chrome-only commands must not raise it.
+#[test]
+fn pump_flags_document_edited_only_when_the_document_changes() {
+    let (req_tx, req_rx) = mpsc::channel();
+    let (stop_tx, _stop_rx) = mpsc::channel();
+    let mut server = fresh_mcp_server(req_rx, stop_tx);
+    let mut state = EditorState::new();
+    state.selection.anchor = de_editor_core::NodeId::new("n1");
+    state.selection.set = vec![de_editor_core::NodeId::new("n1")];
+
+    let (selection_ack_tx, _selection_ack_rx) = mpsc::sync_channel(1);
+    req_tx
+        .send(UiRequest::Apply {
+            tool_name: "clear_selection".to_string(),
+            cmd: EditorCommand::ClearSelection,
+            ack: selection_ack_tx,
+        })
+        .expect("queue selection request");
+    let selection = server.pump(&mut state);
+    assert!(
+        !selection.document_edited,
+        "selection-only MCP commands do not edit the document"
+    );
+
+    let (viewport_ack_tx, _viewport_ack_rx) = mpsc::sync_channel(1);
+    req_tx
+        .send(UiRequest::Apply {
+            tool_name: "set_viewport".to_string(),
+            cmd: EditorCommand::SetViewport {
+                pan_x: Some(40),
+                pan_y: Some(40),
+                zoom_percent: Some(150),
+            },
+            ack: viewport_ack_tx,
+        })
+        .expect("queue viewport request");
+    let viewport = server.pump(&mut state);
+    assert!(viewport.repaint, "the viewport change must apply");
+    assert!(
+        !viewport.document_edited,
+        "viewport-only MCP commands do not edit the document"
+    );
+
+    let (insert_ack_tx, _insert_ack_rx) = mpsc::sync_channel(1);
+    req_tx
+        .send(UiRequest::Apply {
+            tool_name: "insert_node".to_string(),
+            cmd: EditorCommand::InsertNode {
+                kind: "rect".to_string(),
+                name: "Box".to_string(),
+                x: 0,
+                y: 0,
+                width: 10,
+                height: 10,
+                fill_hex: None,
+                target_parent: de_editor_core::NodeId::NONE,
+                page_id: None,
+            },
+            ack: insert_ack_tx,
+        })
+        .expect("queue insert request");
+    assert!(server.pump(&mut state).document_edited);
+
+    let replacement_doc = de_pen_loader::load_canonical(
+        r#"{"version":"1.0","children":[],"pages":[{"id":"p1","name":"One","children":[]}] }"#,
+    )
+    .expect("one-page replacement")
+    .value;
+    let (replace_ack_tx, _replace_ack_rx) = mpsc::sync_channel(1);
+    req_tx
+        .send(UiRequest::ReplaceDocument {
+            doc: Box::new(replacement_doc),
+            editor_meta: de_pen_loader::EditorMeta {
+                active_page_index: 0,
+                preserve_authored_geometry: false,
+                scenario: None,
+                pinned_style_guide: None,
+            },
+            ack: replace_ack_tx,
+        })
+        .expect("queue replace-document request");
+    assert!(server.pump(&mut state).document_edited);
+}
+
 fn set_active_collaboration(state: &mut EditorState, role: de_editor_core::CollabUiRole) {
     assert!(state.editor_ui.collab.set_authenticated_session(
         de_editor_core::CollabConnectionPhase::Active,
