@@ -65,9 +65,9 @@ trap cleanup EXIT
 
 {
     printf '%s\n' \
-        crates/op-auth-bridge/AUTH-RELEASE-POLICY \
-        crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST \
-        crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST.sig
+        crates/de-auth-bridge/AUTH-RELEASE-POLICY \
+        crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST \
+        crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST.sig
     for target in \
         aarch64-apple-darwin \
         aarch64-apple-ios \
@@ -84,7 +84,7 @@ trap cleanup EXIT
         for file in \
             ABI_VERSION HARDENING-ATTESTATION PROVENANCE PROVENANCE.sig \
             SHA256 VERSION "$artifact"; do
-            printf 'crates/op-auth-bridge/prebuilt/%s/%s\n' "$target" "$file"
+            printf 'crates/de-auth-bridge/prebuilt/%s/%s\n' "$target" "$file"
         done
     done
 } | LC_ALL=C sort > "$allowed_changes"
@@ -97,10 +97,10 @@ unexpected=$(LC_ALL=C comm -23 "$actual_changes" "$allowed_changes")
     exit 1
 }
 for required_change in \
-    crates/op-auth-bridge/AUTH-RELEASE-POLICY \
-    crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST \
-    crates/op-auth-bridge/prebuilt/RELEASE-MANIFEST.sig \
-    crates/op-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a; do
+    crates/de-auth-bridge/AUTH-RELEASE-POLICY \
+    crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST \
+    crates/de-auth-bridge/prebuilt/RELEASE-MANIFEST.sig \
+    crates/de-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a; do
     grep -Fxq "$required_change" "$actual_changes" || {
         printf 'error: artifact commit did not update %s\n' "$required_change" >&2
         exit 1
@@ -108,14 +108,14 @@ for required_change in \
 done
 policy_change=$(git -C "$repo_root" diff-tree --no-commit-id --name-status \
     --no-renames -r "$parent" "$artifact_commit" -- \
-    crates/op-auth-bridge/AUTH-RELEASE-POLICY)
-[[ "$policy_change" == $'A\tcrates/op-auth-bridge/AUTH-RELEASE-POLICY' \
-    || "$policy_change" == $'M\tcrates/op-auth-bridge/AUTH-RELEASE-POLICY' ]] || {
+    crates/de-auth-bridge/AUTH-RELEASE-POLICY)
+[[ "$policy_change" == $'A\tcrates/de-auth-bridge/AUTH-RELEASE-POLICY' \
+    || "$policy_change" == $'M\tcrates/de-auth-bridge/AUTH-RELEASE-POLICY' ]] || {
     printf 'error: artifact commit must add or modify the auth release adoption policy\n' >&2
     exit 1
 }
-[[ -f "$repo_root/crates/op-auth-bridge/AUTH-RELEASE-POLICY" \
-    && ! -L "$repo_root/crates/op-auth-bridge/AUTH-RELEASE-POLICY" ]] || {
+[[ -f "$repo_root/crates/de-auth-bridge/AUTH-RELEASE-POLICY" \
+    && ! -L "$repo_root/crates/de-auth-bridge/AUTH-RELEASE-POLICY" ]] || {
     printf 'error: auth release adoption policy is missing or symlinked\n' >&2
     exit 1
 }
@@ -125,16 +125,16 @@ if [[ -n "$ref_version" && "$ref_version" != "$version" ]]; then
     printf 'error: branch or tag version does not match the Cargo workspace\n' >&2
     exit 1
 fi
-OP_AUTH_PREBUILT_ROOT=$repo_root/crates/op-auth-bridge/prebuilt \
+OP_AUTH_PREBUILT_ROOT=$repo_root/crates/de-auth-bridge/prebuilt \
 OP_AUTH_RELEASE_EXPECTED_OPENPENCIL_REVISION=$parent \
 OP_AUTH_RELEASE_WORKSPACE_VERSION=$version \
     "$repo_root/tools/check-op-auth-release-matrix.sh"
 # Strict promotion verifies a newly produced matrix before adoption. The same
 # checkout must then pass consumer mode, proving the committed policy precisely
 # adopts the key, manifest digest, private source, build id, ABI, and hardening.
-OP_AUTH_PREBUILT_ROOT=$repo_root/crates/op-auth-bridge/prebuilt \
+OP_AUTH_PREBUILT_ROOT=$repo_root/crates/de-auth-bridge/prebuilt \
     "$repo_root/tools/check-op-auth-release-matrix.sh"
-OP_AUTH_PREBUILT_ROOT=$repo_root/crates/op-auth-bridge/prebuilt \
+OP_AUTH_PREBUILT_ROOT=$repo_root/crates/de-auth-bridge/prebuilt \
     "$repo_root/tools/check-op-auth-prebuilt.sh" --require-hardened
 
 if [[ -n "$output_file" ]]; then

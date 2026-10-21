@@ -54,7 +54,7 @@ case "$target" in
         ;;
 esac
 
-prebuilt_root=$(cd "$repo_root/crates/op-auth-bridge/prebuilt" && pwd -P)
+prebuilt_root=$(cd "$repo_root/crates/de-auth-bridge/prebuilt" && pwd -P)
 target_dir=$prebuilt_root/$target
 expected_archive=$target_dir/libop_auth.a
 if [[ "$archive" != "$expected_archive" ]]; then

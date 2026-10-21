@@ -1,16 +1,16 @@
 repo=$(new_repo ordinary_dynamic_rust_fixture 0.8.1)
 printf '%s\n' \
     'let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));' \
-    >> "$repo/crates/op-editor-core/src/host_support.rs"
+    >> "$repo/crates/de-editor-core/src/host_support.rs"
 run_guard "$repo"
 assert_status 1 'ordinary dynamic Rust fixture'
-assert_contains 'crates/op-editor-core/src/host_support.rs:1: error: ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION' \
+assert_contains 'crates/de-editor-core/src/host_support.rs:1: error: ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION' \
     'ordinary dynamic Rust fixture'
 assert_no_success_output 'ordinary dynamic Rust fixture'
 pass 'ordinary Rust fixtures cannot masquerade as product-version producers'
 
 repo=$(new_repo dynamic_rust_fixture_balanced_count 0.8.1)
-cat > "$repo/crates/op-editor-core/src/host_support.rs" <<'RUST'
+cat > "$repo/crates/de-editor-core/src/host_support.rs" <<'RUST'
 pub fn sample() {
 let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
 }
@@ -23,7 +23,7 @@ let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
 RUST
 run_guard "$repo"
 assert_status 1 'dynamic Rust fixture with balanced count'
-assert_contains 'crates/op-editor-core/src/host_support.rs:1: error: ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION' \
+assert_contains 'crates/de-editor-core/src/host_support.rs:1: error: ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION' \
     'dynamic Rust fixture with balanced count'
 assert_no_success_output 'dynamic Rust fixture with balanced count'
 pass 'a dynamic test fixture cannot replace one of the two production producers'

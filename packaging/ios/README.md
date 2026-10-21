@@ -1,8 +1,8 @@
 # OpenPencil iOS Player
 
-This directory is a source-only SwiftUI/UIKit shell for `op-engine-ffi`. XcodeGen creates the project; the Rust archive remains an external build input and is not copied into this directory.
+This directory is a source-only SwiftUI/UIKit shell for `de-engine-ffi`. XcodeGen creates the project; the Rust archive remains an external build input and is not copied into this directory.
 
-The full editor starts with a new untitled `.op` document instead of loading demo content. Pass `-doc ppt-demo` to load the bundled six-slide, 16:9 presentation deck, or `-doc sample` to load `Resources/sample.op` (a byte-for-byte copy of `crates/op-editor-core/assets/scene_templates/daily-sign-card.op`); more generally, `-doc <name>` selects any bundled `<name>.op` document. A viewer-only build still falls back to `Resources/ppt-demo.op` when no override is supplied. `OpPlayerView` owns its `CAMetalLayer`; the pointer passed to OpenPencil is borrowed and is valid until `op_suspend`/`op_destroy` returns. UIKit, CADisplayLink, all engine calls, and all callback reactions run on the main thread. A collaboration worker may enter only the redraw callback to restart a paused pump; that callback immediately dispatches its reaction to the main queue. Other callback payloads are copied synchronously, then their reactions are also dispatched asynchronously so callbacks never re-enter the ABI.
+The full editor starts with a new untitled `.op` document instead of loading demo content. Pass `-doc ppt-demo` to load the bundled six-slide, 16:9 presentation deck, or `-doc sample` to load `Resources/sample.op` (a byte-for-byte copy of `crates/de-editor-core/assets/scene_templates/daily-sign-card.op`); more generally, `-doc <name>` selects any bundled `<name>.op` document. A viewer-only build still falls back to `Resources/ppt-demo.op` when no override is supplied. `OpPlayerView` owns its `CAMetalLayer`; the pointer passed to OpenPencil is borrowed and is valid until `op_suspend`/`op_destroy` returns. UIKit, CADisplayLink, all engine calls, and all callback reactions run on the main thread. A collaboration worker may enter only the redraw callback to restart a paused pump; that callback immediately dispatches its reaction to the main queue. Other callback payloads are copied synchronously, then their reactions are also dispatched asynchronously so callbacks never re-enter the ABI.
 
 User-started AI generation submits a uniquely identified iOS 26 continued-processing task while the app is still in the foreground. A short `beginBackgroundTask` handoff covers the gap until that task's handler starts; iOS 15–25 uses the same API as its time-limited fallback. In the background the host detaches Metal with `op_suspend` and advances only the render-free generation pump on the engine's main-thread owner. Returning to the foreground stops that pump before Metal reattaches. System expiration or user cancellation stops the current generation before releasing the allowance; force-quitting ends the process outright.
 
@@ -17,14 +17,14 @@ not already present:
 
 ```bash
 # `editor` enables the full desktop chrome (viewer-only without it).
-cargo build -p op-engine-ffi --release --target aarch64-apple-ios-sim --features metal,editor
-cargo build -p op-engine-ffi --release --target aarch64-apple-ios --features metal,editor
+cargo build -p de-engine-ffi --release --target aarch64-apple-ios-sim --features metal,editor
+cargo build -p de-engine-ffi --release --target aarch64-apple-ios --features metal,editor
 ```
 
 The resulting archives are relative to the repository root:
 
-- Simulator: `target/aarch64-apple-ios-sim/release/libop_engine_ffi.a`
-- Device: `target/aarch64-apple-ios/release/libop_engine_ffi.a`
+- Simulator: `target/aarch64-apple-ios-sim/release/libde_engine_ffi.a`
+- Device: `target/aarch64-apple-ios/release/libde_engine_ffi.a`
 
 Authentication is an optional, explicit final-link input. A normal source
 checkout leaves `OP_AUTH_ARCHIVE` empty and uses the public stub. For local
@@ -40,7 +40,7 @@ scripts/build-mobile-auth-dev.sh \
 Then pass that exact archive to Xcode as `OP_AUTH_ARCHIVE` and repeat the ABI
 with `OPENPENCIL_DEV_OP_AUTH_ABI_VERSION`. The project pre-build gate accepts
 an unsigned archive only for `CONFIGURATION=Debug`. Release linking accepts
-only the adopted ABI-v3 matrix under `crates/op-auth-bridge/prebuilt/`: every
+only the adopted ABI-v3 matrix under `crates/de-auth-bridge/prebuilt/`: every
 target is SHA-pinned and Ed25519-signed, while the source-owned
 `AUTH-RELEASE-POLICY` pins the exact complete matrix and private build identity.
 The matrix's signed `VERSION` and `openpencil_revision` record its own release
@@ -106,8 +106,8 @@ xcodebuild \
   -sdk iphonesimulator26.4 \
   -destination 'platform=iOS Simulator,id=<sim-id>' \
   -derivedDataPath "$PWD/.derived-data" \
-  HEADER_SEARCH_PATHS="$PWD/../../crates/op-engine-ffi/include" \
-  OTHER_LDFLAGS="$PWD/../../target/aarch64-apple-ios-sim/release/libop_engine_ffi.a -lc++ -framework BackgroundTasks -framework CoreFoundation -framework CoreGraphics -framework CoreText -framework ImageIO -framework MobileCoreServices -framework UIKit -framework Foundation -framework Metal -framework QuartzCore -framework Security" \
+  HEADER_SEARCH_PATHS="$PWD/../../crates/de-engine-ffi/include" \
+  OTHER_LDFLAGS="$PWD/../../target/aarch64-apple-ios-sim/release/libde_engine_ffi.a -lc++ -framework BackgroundTasks -framework CoreFoundation -framework CoreGraphics -framework CoreText -framework ImageIO -framework MobileCoreServices -framework UIKit -framework Foundation -framework Metal -framework QuartzCore -framework Security" \
   build
 
 xcrun simctl install <sim-id> "$PWD/.derived-data/Build/Products/Release-iphonesimulator/OpenPencilPlayer.app"
@@ -130,9 +130,9 @@ xcodebuild \
   -sdk iphoneos26.4 \
   -destination 'platform=iOS,id=<device-id>' \
   -derivedDataPath "$PWD/.derived-data-device" \
-  HEADER_SEARCH_PATHS="$PWD/../../crates/op-engine-ffi/include" \
+  HEADER_SEARCH_PATHS="$PWD/../../crates/de-engine-ffi/include" \
   FRAMEWORK_SEARCH_PATHS="$PWD/Vendor" \
-  OTHER_LDFLAGS="$PWD/../../target/aarch64-apple-ios/release/libop_engine_ffi.a -lc++ -ObjC -Wl,-no_compact_unwind -framework DouyinOpenSDK -framework AFServiceSDK -framework WechatOpenSDK -framework WebKit -framework CoreData -framework SystemConfiguration -framework Network -lz -lsqlite3.0 -framework BackgroundTasks -framework CoreFoundation -framework CoreGraphics -framework CoreText -framework ImageIO -framework MobileCoreServices -framework UIKit -framework Foundation -framework Metal -framework QuartzCore -framework Security" \
+  OTHER_LDFLAGS="$PWD/../../target/aarch64-apple-ios/release/libde_engine_ffi.a -lc++ -ObjC -Wl,-no_compact_unwind -framework DouyinOpenSDK -framework AFServiceSDK -framework WechatOpenSDK -framework WebKit -framework CoreData -framework SystemConfiguration -framework Network -lz -lsqlite3.0 -framework BackgroundTasks -framework CoreFoundation -framework CoreGraphics -framework CoreText -framework ImageIO -framework MobileCoreServices -framework UIKit -framework Foundation -framework Metal -framework QuartzCore -framework Security" \
   build
 ```
 

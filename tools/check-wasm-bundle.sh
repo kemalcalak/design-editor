@@ -6,7 +6,7 @@
 #   1. Required local tools are available: cargo, wasm-bindgen, wasm-opt,
 #      node, python3, and gzip. CanvasKit needs no EMSDK / skia-safe / libc shim.
 #   2. cargo build → wasm-bindgen → wasm-opt -Oz pipeline produces the
-#      served crates/op-host-web/pkg/op_host_web_bg.wasm. `wasm-opt` is invoked
+#      served crates/de-host-web/pkg/op_host_web_bg.wasm. `wasm-opt` is invoked
 #      with the core WebAssembly features emitted by current rustc.
 #   3. Post-bindgen bundle has 0 env.* imports
 #      (i.e. all imports come from `./op_host_web_bg.js`,
@@ -25,11 +25,11 @@
 
 set -euo pipefail
 
-CRATE_DIR="crates/op-host-web"
+CRATE_DIR="crates/de-host-web"
 PKG_DIR="${CRATE_DIR}/pkg"
 WASM_RAW="${PKG_DIR}/op_host_web_bg.wasm"
 WASM_OPT="${PKG_DIR}/op_host_web_bg.opt.wasm"
-TARGET_WASM="target/wasm32-unknown-unknown/release/op_host_web.wasm"
+TARGET_WASM="target/wasm32-unknown-unknown/release/de_host_web.wasm"
 # The wasm feature flags rustc emits for wasm32-unknown-unknown that wasm-opt
 # must be told to accept. Kept as CANDIDATES because binaryen versions disagree
 # on their spelling: newer binaryen (dev machines, v117+) split bulk-memory into
@@ -53,7 +53,7 @@ WASM_OPT_CANDIDATE_FEATURES=(
 #
 # Re-baselined from 8 MiB to 6 MiB once the ~2.4 MiB of preview JPEGs moved out
 # of the binary and behind the runtime `/pkg/assets/` fetch (step 4 above;
-# `op_editor_core::web_assets`). The bundle measures ~5.35 MiB today, so the
+# `de_editor_core::web_assets`). The bundle measures ~5.35 MiB today, so the
 # ceiling is still a runaway-regression tripwire rather than a budget — but a
 # tripwire 3 MiB above the real number catches nothing, which is why it moves
 # down with the bundle. TODO(perf): the template documents and icon catalog can
@@ -77,14 +77,14 @@ need gzip
 # Rust bundle is pure logic. (The retired skia raster path needed EMSDK.)
 
 step 2 7 "Verify CanvasKit bridge scale bucketing"
-node --test crates/op-host-web/tests/op_ck_bridge_scale.test.mjs
+node --test crates/de-host-web/tests/op_ck_bridge_scale.test.mjs
 
 # `canvaskit` is the production browser feature set: the editor renders through
 # CanvasKit on the GPU and bundles the full app logic absorbed from the retired
 # skia raster path — daemon-backed AI chat (`web_chat`), live-sync, browser file
 # IO, clipboard/Figma paste, icon search, system fonts, and the codegen pipeline.
 step 3 7 "Build shell-web wasm32-unknown-unknown with --features canvaskit"
-cargo build -p op-host-web \
+cargo build -p de-host-web \
   --target wasm32-unknown-unknown --no-default-features --features canvaskit --release --locked >/dev/null
 
 step 4 7 "wasm-bindgen --target web → ${PKG_DIR}/"

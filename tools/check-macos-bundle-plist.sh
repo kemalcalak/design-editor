@@ -78,7 +78,7 @@ if (($# > 0)); then
   exit 0
 fi
 
-check_plists "$ROOT/crates/op-host-desktop/Info.plist"
+check_plists "$ROOT/crates/de-host-desktop/Info.plist"
 
 for bundle_script in scripts/bundle-macos.sh tools/bundle-macos.sh; do
   require_regex \

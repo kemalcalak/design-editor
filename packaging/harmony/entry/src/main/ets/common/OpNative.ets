@@ -1,7 +1,7 @@
 import napi from 'libopenpencil.so';
 
 /**
- * The C-ABI engine surface, marshalled by `crates/op-engine-napi`. Every
+ * The C-ABI engine surface, marshalled by `crates/de-engine-napi`. Every
  * exported function dispatches onto the engine's dedicated thread; a
  * closed/unknown handle returns `OpStatus.CLOSING`.
  *
@@ -30,7 +30,7 @@ export enum OpStatus {
 
 /**
  * Shell actions the engine hands to the platform shell, pinned to
- * `OpShellAction` in `crates/op-engine-ffi/include/op_engine.h`.
+ * `OpShellAction` in `crates/de-engine-ffi/include/op_engine.h`.
  */
 export enum OpShellAction {
   NONE = 0,
@@ -68,7 +68,7 @@ export enum OpPointerPhase {
   CANCEL = 3,
 }
 
-/** Editor key codes (mirror `KEY_*` in op-engine-ffi/src/editor.rs). */
+/** Editor key codes (mirror `KEY_*` in de-engine-ffi/src/editor.rs). */
 export enum OpKey {
   BACKSPACE = 1,
   DELETE = 2,

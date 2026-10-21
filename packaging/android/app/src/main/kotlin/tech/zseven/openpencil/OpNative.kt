@@ -3,10 +3,10 @@ package tech.zseven.openpencil
 import android.view.Surface
 
 /**
- * The C-ABI engine surface, marshalled by `crates/op-engine-jni`. Every
+ * The C-ABI engine surface, marshalled by `crates/de-engine-jni`. Every
  * `external` method dispatches onto the engine's dedicated thread; a
  * closed/unknown handle returns [STATUS_CLOSING]. Loaded from
- * `libop_engine_jni.so` (packaged into jniLibs by `cargo ndk`).
+ * `libde_engine_jni.so` (packaged into jniLibs by `cargo ndk`).
  */
 object OpNative {
     const val STATUS_CLOSING = -1
@@ -23,7 +23,7 @@ object OpNative {
     const val SHELL_ACTION_IMPORT_IMAGE_OR_SVG = 12
 
     init {
-        System.loadLibrary("op_engine_jni")
+        System.loadLibrary("de_engine_jni")
     }
 
     external fun nativeCreate(
@@ -145,7 +145,7 @@ object OpNative {
     external fun nativeEditorLocaleCode(engine: Long): String?
 }
 
-/** Editor key codes (mirror `KEY_*` in op-engine-ffi/src/editor.rs). */
+/** Editor key codes (mirror `KEY_*` in de-engine-ffi/src/editor.rs). */
 object OpKeys {
     const val BACKSPACE = 1
     const val DELETE = 2

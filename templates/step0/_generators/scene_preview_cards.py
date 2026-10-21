@@ -35,7 +35,7 @@ class Top(NamedTuple):
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
 SRC = REPO / "templates" / "step0" / "previews"
-DST = REPO / "crates" / "op-editor-ui" / "assets" / "scene_template_previews"
+DST = REPO / "crates" / "de-editor-ui" / "assets" / "scene_template_previews"
 
 # 2x the widest preview the gallery can paint, and no more — every byte here
 # is embedded in the wasm bundle, which has a hard ceiling.

@@ -1,0 +1,61 @@
+[package]
+name = "de-editor-host-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Transport-free editor host state machines shared by OpenPencil hosts"
+
+[dependencies]
+jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema", optional = true }
+de-ai = { path = "../de-ai", optional = true }
+de-ai-skills = { path = "../de-ai-skills", optional = true }
+de-codegen = { path = "../de-codegen", features = ["ai"], optional = true }
+de-collab = { path = "../de-collab" }
+# `settings-io` only: the explicit app-sandbox config root selected by
+# embedded (mobile) shells decides where `settings.json` lives.
+de-config-store = { path = "../de-config-store", optional = true }
+de-editor-core = { path = "../de-editor-core" }
+# `settings-io` only: persisted-locale parsing for the settings file.
+de-i18n = { path = "../de-i18n", optional = true }
+de-orchestrator = { path = "../de-orchestrator", optional = true }
+# Non-optional: `settings_payload` (shared settings serde shapes) is part of
+# the crate baseline and stays wasm32-clean.
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, optional = true }
+tracing = { workspace = true, optional = true }
+thiserror = { workspace = true }
+# `settings-io` only: the desktop settings-file location. NOT wasm32-clean —
+# the feature must stay out of the browser bundle's graph.
+dirs = { version = "5", optional = true }
+# `settings-io` only: the OS preferred-language list for the first-run
+# locale (Dock-launched macOS apps get no LANG / LC_*).
+sys-locale = { version = "0.3", optional = true }
+
+[features]
+default = ["chat", "codegen", "design"]
+chat = ["dep:de-ai", "dep:serde_json"]
+codegen = [
+  "dep:jian-ops-schema",
+  "dep:de-ai",
+  "dep:de-ai-skills",
+  "dep:de-codegen",
+  "dep:serde_json",
+  "dep:tracing",
+]
+design = ["dep:de-orchestrator"]
+# File-backed user settings persistence (`settings.json` load / save /
+# fingerprint). Non-default and NOT wasm32-clean (`dirs` + real file IO):
+# enabled by de-host-services (desktop + web daemon) and de-engine-ffi
+# (mobile shells), never by the browser host.
+settings-io = [
+  "dep:dirs",
+  "dep:sys-locale",
+  "dep:de-config-store",
+  "dep:de-i18n",
+  "dep:serde_json",
+]
+
+[dev-dependencies]
+serde_json = { workspace = true }
+zip = { version = "9", default-features = false, features = ["deflate-flate2"] }

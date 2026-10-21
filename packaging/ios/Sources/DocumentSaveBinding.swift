@@ -5,7 +5,7 @@ import Foundation
 /// again on the next save.
 ///
 /// The engine deliberately treats this as an opaque string (see
-/// `DocumentBinding::Shell` in `op-engine-ffi/src/editor_document.rs`) — a
+/// `DocumentBinding::Shell` in `de-engine-ffi/src/editor_document.rs`) — a
 /// picked destination is not a path the engine can open. On iOS the token is
 /// base64-encoded bookmark data, which survives app relaunches and keeps
 /// working when the user later moves or renames the file in Files.

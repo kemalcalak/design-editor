@@ -95,19 +95,19 @@
     - 2.1 คอมไพล์ไลบรารี WASM ในรูทของคลังเก็บ เปิด PowerShell แล้วรัน:
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 สร้างไฟล์ JS binding
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 คัดลอกทรัพยากร CanvasKit rendering จาก `crates\op-host-web\assets\canvaskit` ไปยัง `web-bundle`:
+    - 2.3 คัดลอกทรัพยากร CanvasKit rendering จาก `crates\de-host-web\assets\canvaskit` ไปยัง `web-bundle`:
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 โครงสร้างไดเรกทอรีสุดท้าย
@@ -115,7 +115,7 @@
         ```plaintext
         target\release\
         ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
+        ├── de-host-web-server.exe
         ├── op.exe
         └── web-bundle\
             ├── canvaskit\
@@ -123,7 +123,7 @@
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
+            ├── de_host_web.js
             ├── op_host_web_bg.wasm
             └── op_host_web_bg.wasm.d.ts
         ```
@@ -147,11 +147,11 @@
     # หน้าต่างจะกะพริบแล้วปิด — บริการทำงานในพื้นหลังและฟังพอร์ต 3100
     ```
 
-2. op-host-web-server.exe  <i>` (ไม่จำเป็นสำหรับปลั๊กอิน dsh) `</i>
+2. de-host-web-server.exe  <i>` (ไม่จำเป็นสำหรับปลั๊กอิน dsh) `</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
+    ./de-host-web-server.exe --serve-web 3100
     # คุณจะเห็นสองบรรทัด "openpencil-desktop --serve-web:" และพอร์ต 3100 ใน PowerShell
     ```
 
@@ -162,7 +162,7 @@
 1. ให้ความสำคัญกับพารามิเตอร์ `--features` เมื่อคอมไพล์ WASM
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > ใช้ `--features "web canvaskit"` แทน `--features "web"`
@@ -173,8 +173,8 @@
 
 2. เซิร์ฟเวอร์จะแมปไดเรกทอรี `web-bundle` ทั้งหมดไปยังเส้นทาง HTTP `/pkg/`
 
-    > เส้นทางดิ스크 `web-bundle/op_host_web.js` → URL ในเบราว์เซอร์ `/pkg/op_host_web.js`
+    > เส้นทางดิ스크 `web-bundle/de_host_web.js` → URL ในเบราว์เซอร์ `/pkg/de_host_web.js`
     > 
-    > ถ้าหน้าเว็บแจ้งว่าไม่พบ `/pkg/op_host_web.js` แสดงว่าไฟล์หายไปจาก `web-bundle/`
+    > ถ้าหน้าเว็บแจ้งว่าไม่พบ `/pkg/de_host_web.js` แสดงว่าไฟล์หายไปจาก `web-bundle/`
 
 3. เอกสารนี้เขียนสำหรับ `openpencil 0.8.4` เวอร์ชัน rustup toolchain `1.94`、wasm-bindgen-cli `0.2.117` และ skia-bindings `0.97.2` สอดคล้องกับเวอร์ชันนี้ — เวอร์ชันอื่นอาจแตกต่างกัน

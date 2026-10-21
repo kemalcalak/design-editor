@@ -12,7 +12,7 @@
 # already-granted app inherits that grant. This is why the TS app can
 # commit a `.op` file on the Desktop and an unsigned dev build cannot.
 #
-# Usage: tools/bundle-macos.sh   (after `cargo build -p op-host-desktop --release`)
+# Usage: tools/bundle-macos.sh   (after `cargo build -p de-host-desktop --release`)
 # Then launch via LaunchServices so the app is its own TCC responsible
 # process:   open target/release/OpenPencil.app
 #
@@ -38,8 +38,8 @@ if [ "${OPENPENCIL_VALIDATE_VERSION_ONLY:-}" = 1 ]; then
   exit 0
 fi
 BIN="$ROOT/target/release/openpencil-desktop"
-ICON="$ROOT/crates/op-host-desktop/assets/icon.icns"
-ENTITLEMENTS="$ROOT/crates/op-host-desktop/entitlements.plist"
+ICON="$ROOT/crates/de-host-desktop/assets/icon.icns"
+ENTITLEMENTS="$ROOT/crates/de-host-desktop/entitlements.plist"
 APP="$ROOT/target/release/OpenPencil.app"
 
 # Match the TS app exactly so the two share one TCC designated requirement.
@@ -47,7 +47,7 @@ BUNDLE_ID="dev.openpencil.app"
 SIGN_ID="${OPENPENCIL_SIGN_ID:-Developer ID Application: Shanghai Yixing Intelligence Technology Co., Ltd. (CYHUA8SZF6)}"
 
 if [ ! -x "$BIN" ]; then
-  echo "bundle-macos: $BIN not found — run 'cargo build -p op-host-desktop --release' first" >&2
+  echo "bundle-macos: $BIN not found — run 'cargo build -p de-host-desktop --release' first" >&2
   exit 1
 fi
 

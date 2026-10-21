@@ -35,7 +35,7 @@ android {
         versionCode = canonicalVersionCode
         versionName = canonicalVersionName
         ndk {
-            // The op-engine-jni cdylib is built by cargo-ndk into jniLibs;
+            // The de-engine-jni cdylib is built by cargo-ndk into jniLibs;
             // ship only the ABIs it produces.
             abiFilters += listOf("arm64-v8a", "x86_64")
         }

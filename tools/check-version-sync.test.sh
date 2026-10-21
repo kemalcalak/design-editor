@@ -201,12 +201,12 @@ new_repo() {
         "$repo/tools" \
         "$repo/scripts" \
         "$repo/packaging/android/app" \
-        "$repo/crates/op-cli/assets" \
-        "$repo/crates/op-cli/src" \
-        "$repo/crates/op-editor-core/src" \
-        "$repo/crates/op-host-desktop" \
+        "$repo/crates/de-cli/assets" \
+        "$repo/crates/de-cli/src" \
+        "$repo/crates/de-editor-core/src" \
+        "$repo/crates/de-host-desktop" \
         "$repo/crates/example/src" \
-        "$repo/crates/op-host-desktop/src"
+        "$repo/crates/de-host-desktop/src"
     git -C "$repo" init -q
     cp "$guard_source" "$repo/tools/check-version-sync.sh"
     cp "$reader_source" "$repo/scripts/workspace-version.sh"
@@ -222,9 +222,9 @@ new_repo() {
         'edition = "2024"' > "$repo/Cargo.toml"
     printf '%s\n' 'version = 4' > "$repo/Cargo.lock"
     printf '%s\n' '{"name":"fixture-packages"}' > "$repo/packages/package.json"
-    mkdir -p "$repo/packages/op-chrome-extension"
+    mkdir -p "$repo/packages/de-chrome-extension"
     printf '{"manifest_version":3,"name":"fixture-extension","version":"%s"}\n' "$version" \
-        > "$repo/packages/op-chrome-extension/manifest.json"
+        > "$repo/packages/de-chrome-extension/manifest.json"
     cat > "$repo/packaging/android/app/build.gradle.kts" <<'KOTLIN'
 val repositoryRoot = rootProject.layout.projectDirectory.dir("../..")
 val androidVersionOutput = providers.exec {
@@ -245,13 +245,13 @@ android {
     }
 }
 KOTLIN
-    cat > "$repo/crates/op-cli/assets/skill-bundle.json" <<'JSON'
+    cat > "$repo/crates/de-cli/assets/skill-bundle.json" <<'JSON'
 {"one":"__OPENPENCIL_VERSION__","two":"__OPENPENCIL_VERSION__","three":"__OPENPENCIL_VERSION__","four":"__OPENPENCIL_VERSION__","five":"__OPENPENCIL_VERSION__"}
 JSON
-    cat > "$repo/crates/op-editor-core/src/state.rs" <<'RUST'
+    cat > "$repo/crates/de-editor-core/src/state.rs" <<'RUST'
 version: env!("CARGO_PKG_VERSION").to_owned(),
 RUST
-    cat > "$repo/crates/op-editor-core/src/host_support.rs" <<'RUST'
+    cat > "$repo/crates/de-editor-core/src/host_support.rs" <<'RUST'
 pub fn sample() {
 let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
 }
@@ -262,11 +262,11 @@ let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
 mod tests {
 }
 RUST
-    cat > "$repo/crates/op-cli/src/app_control_cli.rs" <<'RUST'
+    cat > "$repo/crates/de-cli/src/app_control_cli.rs" <<'RUST'
 const MINIMAL_DOCUMENT: &str = concat!(env!("CARGO_PKG_VERSION"));
 RUST
-    cat > "$repo/crates/op-host-desktop/Cargo.toml" <<'TOML'
-op-host-native = { path = "../op-host-native", features = ["gl-host"] }
+    cat > "$repo/crates/de-host-desktop/Cargo.toml" <<'TOML'
+de-host-native = { path = "../de-host-native", features = ["gl-host"] }
 TOML
     cat > "$repo/crates/example/Cargo.toml" <<'TOML'
 [package]
@@ -410,7 +410,7 @@ pass 'ordinary current-version fixture is rejected with guidance'
 
 repo=$(new_repo updater_compatibility 0.8.1)
 printf '%s\n' 'assert!(is_newer("0.8.1", "0.8.0"));' \
-    > "$repo/crates/op-host-desktop/src/update_check.rs"
+    > "$repo/crates/de-host-desktop/src/update_check.rs"
 run_guard "$repo"
 assert_status 0 'updater compatibility literal'
 assert_contains 'no ordinary Rust fixtures copy current product version 0.8.1' \
@@ -716,42 +716,42 @@ pass 'mismatched v* release tags are rejected outside the release workflow too'
 
 repo=$(new_repo cli_bundle_wrong_sentinel_count 0.8.1)
 sed -i.bak 's/,"five":"__OPENPENCIL_VERSION__"//' \
-    "$repo/crates/op-cli/assets/skill-bundle.json"
-rm "$repo/crates/op-cli/assets/skill-bundle.json.bak"
+    "$repo/crates/de-cli/assets/skill-bundle.json"
+rm "$repo/crates/de-cli/assets/skill-bundle.json.bak"
 run_guard "$repo"
 assert_status 1 'CLI bundle sentinel count'
-assert_contains 'crates/op-cli/assets/skill-bundle.json:1: error: expected exactly 5 version sentinels' \
+assert_contains 'crates/de-cli/assets/skill-bundle.json:1: error: expected exactly 5 version sentinels' \
     'CLI bundle sentinel count'
 assert_no_success_output 'CLI bundle sentinel count'
 pass 'embedded CLI bundle retains exactly five version sentinels'
 
 repo=$(new_repo cli_bundle_without_sentinels 0.8.1)
 sed -i.bak 's/__OPENPENCIL_VERSION__/__MISSING_VERSION__/g' \
-    "$repo/crates/op-cli/assets/skill-bundle.json"
-rm "$repo/crates/op-cli/assets/skill-bundle.json.bak"
+    "$repo/crates/de-cli/assets/skill-bundle.json"
+rm "$repo/crates/de-cli/assets/skill-bundle.json.bak"
 run_guard "$repo"
 assert_status 1 'CLI bundle missing sentinels'
-assert_contains 'crates/op-cli/assets/skill-bundle.json:1: error: expected exactly 5 version sentinels' \
+assert_contains 'crates/de-cli/assets/skill-bundle.json:1: error: expected exactly 5 version sentinels' \
     'CLI bundle missing sentinels'
 assert_contains '(found 0)' 'CLI bundle missing sentinels'
 assert_no_success_output 'CLI bundle missing sentinels'
 pass 'embedded CLI bundle reports zero missing version sentinels actionably'
 
 repo=$(new_repo cli_bundle_numeric_product_version 0.8.1)
-printf '%s\n' '{"stale":"0.8.1"}' >> "$repo/crates/op-cli/assets/skill-bundle.json"
+printf '%s\n' '{"stale":"0.8.1"}' >> "$repo/crates/de-cli/assets/skill-bundle.json"
 run_guard "$repo"
 assert_status 1 'CLI bundle numeric product version'
-assert_contains 'crates/op-cli/assets/skill-bundle.json:' 'CLI bundle numeric product version'
+assert_contains 'crates/de-cli/assets/skill-bundle.json:' 'CLI bundle numeric product version'
 assert_contains 'error: embedded CLI bundle must not contain the canonical version literal' \
     'CLI bundle numeric product version'
 assert_no_success_output 'CLI bundle numeric product version'
 pass 'embedded CLI bundle cannot duplicate the numeric product version'
 
 repo=$(new_repo hardcoded_rust_product_version 0.8.1)
-printf '%s\n' 'version: "0.8.1".to_owned(),' > "$repo/crates/op-editor-core/src/state.rs"
+printf '%s\n' 'version: "0.8.1".to_owned(),' > "$repo/crates/de-editor-core/src/state.rs"
 run_guard "$repo"
 assert_status 1 'hardcoded Rust product version'
-assert_contains 'crates/op-editor-core/src/state.rs:1: error: empty documents must derive their version from CARGO_PKG_VERSION' \
+assert_contains 'crates/de-editor-core/src/state.rs:1: error: empty documents must derive their version from CARGO_PKG_VERSION' \
     'hardcoded Rust product version'
 assert_no_success_output 'hardcoded Rust product version'
 pass 'Rust product-version producers remain derived from Cargo metadata'
@@ -776,11 +776,11 @@ pass 'Android Gradle cannot hard-code versions or bypass the canonical resolver'
 
 repo=$(new_repo versioned_local_product_dependency 0.8.1)
 printf '%s\n' \
-    'op-host-native = { path = "../op-host-native", version = "0.8.1", features = ["gl-host"] }' \
-    > "$repo/crates/op-host-desktop/Cargo.toml"
+    'de-host-native = { path = "../de-host-native", version = "0.8.1", features = ["gl-host"] }' \
+    > "$repo/crates/de-host-desktop/Cargo.toml"
 run_guard "$repo"
 assert_status 1 'versioned local product dependency'
-assert_contains 'crates/op-host-desktop/Cargo.toml:1: error: local op-host-native dependency must not duplicate the product version' \
+assert_contains 'crates/de-host-desktop/Cargo.toml:1: error: local de-host-native dependency must not duplicate the product version' \
     'versioned local product dependency'
 assert_no_success_output 'versioned local product dependency'
 pass 'local product dependencies do not repeat the workspace version'

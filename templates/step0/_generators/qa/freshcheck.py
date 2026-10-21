@@ -5,7 +5,7 @@
 
     分帧 PNG   templates/step0/previews/<id>.png 或 <id>-NN.png
     overview   templates/step0/previews/<id>-overview.png（整页拼合）
-    卡片 JPEG  crates/op-editor-ui/assets/scene_template_previews/<id>.jpg
+    卡片 JPEG  crates/de-editor-ui/assets/scene_template_previews/<id>.jpg
 
 过期的来源有两个，第二个是这个工具存在的理由：
 
@@ -45,9 +45,9 @@ import tempfile
 # 用的 parents[3]。算错一级不会报错，只会让 glob 落空、审计静默地零套通过。
 REPO = pathlib.Path(__file__).resolve().parents[4]
 BIN = REPO / "target" / "release" / "openpencil-desktop"
-DOCS = REPO / "crates" / "op-editor-core" / "assets" / "scene_templates"
+DOCS = REPO / "crates" / "de-editor-core" / "assets" / "scene_templates"
 PREVIEWS = REPO / "templates" / "step0" / "previews"
-CARDS_DIR = REPO / "crates" / "op-editor-ui" / "assets" / "scene_template_previews"
+CARDS_DIR = REPO / "crates" / "de-editor-ui" / "assets" / "scene_template_previews"
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
@@ -236,7 +236,7 @@ def main(argv: list[str]) -> int:
     if "--selftest" in argv:
         return selftest()
     if not BIN.exists():
-        print(f"缺少渲染二进制 {BIN}；先 cargo build --release -p op-host-desktop",
+        print(f"缺少渲染二进制 {BIN}；先 cargo build --release -p de-host-desktop",
               file=sys.stderr)
         return 2
     templates = args or sorted(p.stem for p in DOCS.glob("*.op"))

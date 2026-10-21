@@ -1,0 +1,35 @@
+[package]
+name = "de-codegen"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "OpenPencil code generators — emit HTML/Vue/Svelte/React/Flutter/SwiftUI/Compose/RN from a PenDocument"
+
+[lib]
+name = "de_codegen"
+path = "src/lib.rs"
+
+[dependencies]
+jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
+de-editor-core = { path = "../de-editor-core" }
+# Canonical HTML escaping (dependency-free, wasm-clean).
+de-util = { path = "../de-util" }
+serde_json = { workspace = true }
+
+# AI pipeline deps — optional, pulled in only by the `ai` feature so
+# non-AI consumers (and the deterministic generators) stay lean. de-ai
+# is dependency-free + wasm-clean; de-codegen does NOT depend on
+# de-ai-skills (skill corpus is expanded at the transport edge).
+de-ai = { path = "../de-ai", optional = true }
+serde = { workspace = true, features = ["derive"], optional = true }
+base64 = { version = "0.22", optional = true }
+
+[dev-dependencies]
+# Round-trip validation for the hand-rolled STORED zip encoder
+# (test-only; never reaches the wasm build).
+zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
+
+[features]
+# Gates the AI code-generation pipeline (src/ai/). Off by default.
+ai = ["dep:de-ai", "dep:serde", "dep:base64"]

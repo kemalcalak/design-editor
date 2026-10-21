@@ -18,7 +18,7 @@ from a two-physical-device acceptance result.
 
 ## Frozen Go issuer interoperability
 
-The public `op-auth-bridge` fixture is a permanent, non-production
+The public `de-auth-bridge` fixture is a permanent, non-production
 interoperability vector emitted by the real Go issuer service with deterministic
 test-only data. It uses `https://sso.example.invalid`, stores the compact JWS as
 three separate segments, and locks
@@ -99,7 +99,7 @@ have multicast access to a real LAN. Run the equivalent command locally when
 diagnosing a runner:
 
 ```bash
-cargo test --locked -p op-collab-transport --features mdns \
+cargo test --locked -p de-collab-transport --features mdns \
   --test mdns_smoke -- \
   --ignored \
   --exact publisher_is_discovered_and_unregisters_cleanly \
@@ -166,11 +166,11 @@ command rejects wildcard, loopback, and multicast addresses.
 
 ```bash
 # Device A
-cargo run --locked -p op-collab-smoke --features test-issuer -- \
+cargo run --locked -p de-collab-smoke --features test-issuer -- \
   lan-owner 192.168.1.20:45123
 
 # Device B
-cargo run --locked -p op-collab-smoke --features test-issuer -- \
+cargo run --locked -p de-collab-smoke --features test-issuer -- \
   lan-guest 192.168.1.20:45123
 ```
 

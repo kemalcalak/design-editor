@@ -14,7 +14,7 @@ ios_build_number=$repo_root/tools/ios-build-number.sh
 relay_verifier=$repo_root/tools/check-collab-bootstrap-urls.py
 project=$repo_root/packaging/ios/project.yml
 pinned_tools=$repo_root/tools/pinned-release-tools.sh
-engine_manifest=$repo_root/crates/op-engine-ffi/Cargo.toml
+engine_manifest=$repo_root/crates/de-engine-ffi/Cargo.toml
 
 require_literal() {
     grep -Fq -- "$1" "$2" || {
@@ -338,7 +338,7 @@ reject_literal 'OP_AUTH_RELEASE_WORKSPACE_VERSION' "$publisher"
 require_literal 'pinned-skia-binaries = ["skia-safe/no-compile"]' "$engine_manifest"
 require_literal '4abbaea5e4e8934a6f19c5de44eaba9bf9238af4abbe57dbac5f2dc03923b182' "$pinned_tools"
 
-require_literal 'public_key=$repo_root/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY' "$matrix_verifier"
+require_literal 'public_key=$repo_root/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY' "$matrix_verifier"
 require_literal 'build_id=$build_id.a3.$hardening_sha' "$matrix_verifier"
 reject_literal 'public_key=$prebuilt_root/PROVENANCE_PUBKEY' "$matrix_verifier"
 require_literal 'git ls-remote --exit-code "$canonical_remote"' "$remote_ref_gate"

@@ -2,7 +2,7 @@
 """把空态提示烘焙成 assets/*.png —— 必须先于 tpl1.py / tpl3.py 运行。
 
 为什么要烤：拖图时编辑器写的是 fill[0]
-(`op-editor-core/src/image_fill_upload.rs`: `fills[0] = body`)。把提示做成
+(`de-editor-core/src/image_fill_upload.rs`: `fills[0] = body`)。把提示做成
 fill[0] 的内嵌 PNG，用户拖图就是"直接替换提示"，零手工、随框自适应，
 不依赖任何 jian 布局修复，也不用写死浮层尺寸。
 

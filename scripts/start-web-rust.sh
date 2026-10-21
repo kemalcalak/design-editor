@@ -2,7 +2,7 @@
 # Build and serve the Rust CanvasKit web editor without Docker.
 #
 # This is the script-publish counterpart to Dockerfile.web-rust. It builds the
-# deployable wasm bundle, builds the GUI-free op-host-web-server daemon, then
+# deployable wasm bundle, builds the GUI-free de-host-web-server daemon, then
 # serves the browser editor through `--serve-web`.
 set -euo pipefail
 
@@ -17,17 +17,17 @@ if [ "${OPENPENCIL_SKIP_WASM_BUILD:-0}" != "1" ]; then
 fi
 
 if [ "${OPENPENCIL_SKIP_SERVER_BUILD:-0}" != "1" ]; then
-  cargo build -p op-host-web-server --release
+  cargo build -p de-host-web-server --release
 fi
 
-SERVER_BIN="${OPENPENCIL_WEB_SERVER_BIN:-target/release/op-host-web-server}"
+SERVER_BIN="${OPENPENCIL_WEB_SERVER_BIN:-target/release/de-host-web-server}"
 if [ ! -x "$SERVER_BIN" ]; then
   echo "error: server binary is not executable: $SERVER_BIN" >&2
   exit 1
 fi
 
-export OPENPENCIL_WEB_BUNDLE_DIR="${OPENPENCIL_WEB_BUNDLE_DIR:-$PWD/crates/op-host-web/pkg}"
-export OPENPENCIL_CANVASKIT_DIR="${OPENPENCIL_CANVASKIT_DIR:-$PWD/crates/op-host-web/assets/canvaskit}"
+export OPENPENCIL_WEB_BUNDLE_DIR="${OPENPENCIL_WEB_BUNDLE_DIR:-$PWD/crates/de-host-web/pkg}"
+export OPENPENCIL_CANVASKIT_DIR="${OPENPENCIL_CANVASKIT_DIR:-$PWD/crates/de-host-web/assets/canvaskit}"
 
 echo "OpenPencil Rust web editor: http://${HOST}:${PORT}/"
 echo "bundle: ${OPENPENCIL_WEB_BUNDLE_DIR}"

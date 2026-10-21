@@ -184,13 +184,13 @@
           // {
             pname = "openpencil-native";
             buildInputs = commonArgs.buildInputs ++ [pkgs.openssl];
-            cargoBuildCommand = "cargo build --release --package op-host-desktop --package op-cli --package op-host-web-server";
+            cargoBuildCommand = "cargo build --release --package de-host-desktop --package de-cli --package de-host-web-server";
             installPhase = ''
               runHook preInstall
               install -Dm755 target/release/openpencil-desktop $out/bin/openpencil-desktop
               install -Dm755 target/release/op $out/bin/op
-              install -Dm755 target/release/op-host-web-server $out/bin/op-host-web-server
-              install -Dm644 crates/op-host-desktop/assets/icon.png $out/share/icons/hicolor/1024x1024/apps/openpencil.png
+              install -Dm755 target/release/de-host-web-server $out/bin/de-host-web-server
+              install -Dm644 crates/de-host-desktop/assets/icon.png $out/share/icons/hicolor/1024x1024/apps/openpencil.png
               install -Dm644 ${pkgs.writeText "openpencil.desktop" ''
                 [Desktop Entry]
                 Name=OpenPencil
@@ -212,11 +212,11 @@
                   </mime-type>
                 </mime-info>
               ''} $out/share/mime/packages/openpencil.xml
-              install -Dm644 crates/op-host-desktop/assets/icon.png $out/share/pixmaps/openpencil.png
+              install -Dm644 crates/de-host-desktop/assets/icon.png $out/share/pixmaps/openpencil.png
               runHook postInstall
             '';
             postFixup = ''
-              for program in openpencil-desktop op op-host-web-server; do
+              for program in openpencil-desktop op de-host-web-server; do
                 wrapProgram "$out/bin/$program" \
                   --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath runtimeLibraries}
               done
@@ -249,7 +249,7 @@
             runHook preInstall
             tar -xzf "$src" -C "$TMPDIR"
             install -Dm755 "$TMPDIR/openpencil-desktop" $out/bin/openpencil-desktop
-            install -Dm644 ${./crates/op-host-desktop/assets/icon.png} \
+            install -Dm644 ${./crates/de-host-desktop/assets/icon.png} \
               $out/share/icons/hicolor/1024x1024/apps/openpencil.png
             install -Dm644 ${pkgs.writeText "openpencil-prebuilt.desktop" ''
               [Desktop Entry]
@@ -317,13 +317,13 @@
         webHostBundle = craneLib.buildPackage (commonArgs
           // {
             pname = "openpencil-web-bundle";
-            cargoBuildCommand = "cargo build --release --target wasm32-unknown-unknown --no-default-features --features canvaskit --package op-host-web";
+            cargoBuildCommand = "cargo build --release --target wasm32-unknown-unknown --no-default-features --features canvaskit --package de-host-web";
             nativeBuildInputs = commonArgs.nativeBuildInputs ++ [wasmBindgen.package pkgs.binaryen pkgs.nodejs pkgs.gzip];
             installPhase = ''
               runHook preInstall
               mkdir -p $out
-              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out target/wasm32-unknown-unknown/release/op_host_web.wasm
-              cp -R crates/op-host-web/assets/canvaskit $out/canvaskit
+              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out target/wasm32-unknown-unknown/release/de_host_web.wasm
+              cp -R crates/de-host-web/assets/canvaskit $out/canvaskit
               ${wasmGate "op_host_web_bg.wasm" "op_host_web_bg.opt.wasm"}
               runHook postInstall
             '';
@@ -332,12 +332,12 @@
         webSdkWasm = craneLib.buildPackage (commonArgs
           // {
             pname = "openpencil-web-sdk-wasm";
-            cargoBuildCommand = "cargo build --release --target wasm32-unknown-unknown --features canvaskit --package op-web-sdk";
+            cargoBuildCommand = "cargo build --release --target wasm32-unknown-unknown --features canvaskit --package de-web-sdk";
             nativeBuildInputs = commonArgs.nativeBuildInputs ++ [wasmBindgen.package pkgs.binaryen pkgs.nodejs pkgs.gzip];
             installPhase = ''
               runHook preInstall
               mkdir -p $out
-              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out target/wasm32-unknown-unknown/release/op_web_sdk.wasm
+              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out target/wasm32-unknown-unknown/release/de_web_sdk.wasm
               ${wasmGate "op_web_sdk_bg.wasm" "op_web_sdk_bg.opt.wasm"}
               runHook postInstall
             '';
@@ -399,38 +399,38 @@
           nativeBuildInputs = [bunToolchain.bun pkgs.coreutils pkgs.nodejs_22];
           buildPhase = ''
             runHook preBuild
-            rm -rf packages/node_modules packages/op-web-sdk/wasm
+            rm -rf packages/node_modules packages/de-web-sdk/wasm
             cp -R ${bunDeps}/packages/node_modules packages/node_modules
-            for workspace in op-web-sdk op-web-sdk-react op-web-sdk-vue; do
+            for workspace in de-web-sdk de-web-sdk-react de-web-sdk-vue; do
               cp -R ${bunDeps}/packages/$workspace/node_modules packages/$workspace/
             done
             chmod -R u+w packages/node_modules
-            chmod -R u+w packages/op-web-sdk/node_modules packages/op-web-sdk-react/node_modules packages/op-web-sdk-vue/node_modules
+            chmod -R u+w packages/de-web-sdk/node_modules packages/de-web-sdk-react/node_modules packages/de-web-sdk-vue/node_modules
             patchShebangs packages/node_modules
             find packages/node_modules -type f -exec sed -i \
               -e 's|^#!/usr/bin/env bun$|#!${bunToolchain.bun}/bin/bun|' \
               -e 's|^#!/usr/bin/env node$|#!${pkgs.nodejs_22}/bin/node|' {} +
-            mkdir -p packages/op-web-sdk/wasm
-            cp -R ${webSdkWasm}/. packages/op-web-sdk/wasm/
+            mkdir -p packages/de-web-sdk/wasm
+            cp -R ${webSdkWasm}/. packages/de-web-sdk/wasm/
             bun run --cwd packages sync-version:check
             bun run --cwd packages lint
-            bun run --cwd packages/op-web-sdk typecheck
-            bun run --cwd packages/op-web-sdk test
-            bun run --cwd packages/op-web-sdk build
-            bun run --cwd packages/op-web-sdk-react typecheck
-            bun run --cwd packages/op-web-sdk-react test
-            bun run --cwd packages/op-web-sdk-react build
-            bun run --cwd packages/op-web-sdk-vue typecheck
-            bun run --cwd packages/op-web-sdk-vue test
-            bun run --cwd packages/op-web-sdk-vue build
+            bun run --cwd packages/de-web-sdk typecheck
+            bun run --cwd packages/de-web-sdk test
+            bun run --cwd packages/de-web-sdk build
+            bun run --cwd packages/de-web-sdk-react typecheck
+            bun run --cwd packages/de-web-sdk-react test
+            bun run --cwd packages/de-web-sdk-react build
+            bun run --cwd packages/de-web-sdk-vue typecheck
+            bun run --cwd packages/de-web-sdk-vue test
+            bun run --cwd packages/de-web-sdk-vue build
             runHook postBuild
           '';
           installPhase = ''
             runHook preInstall
             mkdir -p $out
-            (cd packages/op-web-sdk && bun pm pack --destination $out)
-            (cd packages/op-web-sdk-react && bun pm pack --destination $out)
-            (cd packages/op-web-sdk-vue && bun pm pack --destination $out)
+            (cd packages/de-web-sdk && bun pm pack --destination $out)
+            (cd packages/de-web-sdk-react && bun pm pack --destination $out)
+            (cd packages/de-web-sdk-vue && bun pm pack --destination $out)
             runHook postInstall
           '';
         };
@@ -507,7 +507,7 @@
         '';
 
         webServerToolsCheck = pkgs.runCommand "openpencil-web-server-tools-${version}" {} ''
-          test -x ${webServerPackage}/bin/op-host-web-server
+          test -x ${webServerPackage}/bin/de-host-web-server
           test -d ${webServerPackage}/bin/web-bundle
           touch "$out"
         '';
@@ -516,7 +516,7 @@
           builtins.replaceStrings
           ["__OPENPENCIL_VERSION__"]
           [version]
-          (builtins.readFile ./crates/op-cli/assets/skill-bundle.json)
+          (builtins.readFile ./crates/de-cli/assets/skill-bundle.json)
         );
         skillBundleFiles =
           builtins.mapAttrs
@@ -545,7 +545,7 @@
         packages = {
           default = webServerPackage;
           openpencil = webServerPackage;
-          op-cli = opCliPackage;
+          de-cli = opCliPackage;
           runtime = runtimePackage;
           runtime-prebuilt = runtimePrebuiltPackage;
           prebuilt = prebuiltDesktopPackage;
@@ -578,7 +578,7 @@
           };
           web-server = {
             type = "app";
-            program = "${webServerPackage}/bin/op-host-web-server";
+            program = "${webServerPackage}/bin/de-host-web-server";
           };
           integration-export = {
             type = "app";

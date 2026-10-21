@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """One-shot: merge the settings-modal `settings.*` strings into the
-15 canonical op-i18n locale tables.
+15 canonical de-i18n locale tables.
 
 The agent-settings modal strings used to live in a hand-maintained
 EN/ZH table (`agent_settings_i18n.rs`). They are now sunk into the
-canonical op-i18n tables so every one of the 15 locales is covered.
+canonical de-i18n tables so every one of the 15 locales is covered.
 
 `settings.title` is intentionally NOT inserted: it already exists in
-op-i18n; re-adding it would create a duplicate match arm.
+de-i18n; re-adding it would create a duplicate match arm.
 
 Idempotent: skips a file that already carries `settings.tab.agents`.
 """
@@ -15,7 +15,7 @@ Idempotent: skips a file that already carries `settings.tab.agents`.
 import os
 import re
 
-I18N_DIR = os.path.join(os.path.dirname(__file__), "..", "crates", "op-i18n", "src", "i18n")
+I18N_DIR = os.path.join(os.path.dirname(__file__), "..", "crates", "de-i18n", "src", "i18n")
 
 # Ordered key list — keeps the emitted block stable across runs.
 KEYS = [

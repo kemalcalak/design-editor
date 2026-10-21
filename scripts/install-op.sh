@@ -2,7 +2,7 @@
 # Install the OpenPencil `op` CLI from a GitHub Release.
 #
 # Detects the host OS + architecture, downloads the matching standalone
-# `op-cli-<label>` tarball published by .github/workflows/rust-release.yml,
+# `de-cli-<label>` tarball published by .github/workflows/rust-release.yml,
 # and installs the `op` binary into a bin directory on PATH.
 #
 # Usage:
@@ -100,7 +100,7 @@ main() {
   local label version asset url tmp expected_sha actual_sha
   label="$(detect_label)"
   version="$(resolve_version)"
-  asset="op-cli-${label}.tar.gz"
+  asset="de-cli-${label}.tar.gz"
   url="https://github.com/${OWNER}/${REPO}/releases/download/v${version}/${asset}"
   expected_sha="$(expected_sha_for_label "$label")"
 

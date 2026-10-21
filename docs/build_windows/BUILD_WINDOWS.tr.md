@@ -95,19 +95,19 @@
     - 2.1 Kütüphaneyi derleyin. Depo kök dizininde PowerShell'i açın ve çalıştırın:
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 JS bağımlılık dosyalarını oluşturun
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 CanvasKit işleme varlıklarını `crates\op-host-web\assets\canvaskit` dizininden `web-bundle` dizinine kopyalayın:
+    - 2.3 CanvasKit işleme varlıklarını `crates\de-host-web\assets\canvaskit` dizininden `web-bundle` dizinine kopyalayın:
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 Son dizin yapısı
@@ -115,7 +115,7 @@
         ```plaintext
         target\release\
         ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
+        ├── de-host-web-server.exe
         ├── op.exe
         └── web-bundle\
             ├── canvaskit\
@@ -123,7 +123,7 @@
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
+            ├── de_host_web.js
             ├── op_host_web_bg.wasm
             └── op_host_web_bg.wasm.d.ts
         ```
@@ -147,11 +147,11 @@
     # Pencere kısa süre görünür ve kapanır — arka planda 3100 portunu dinleyen servis çalışır
     ```
 
-2. op-host-web-server.exe  <i>` (dsh eklentisi için gerekli değildir) `</i>
+2. de-host-web-server.exe  <i>` (dsh eklentisi için gerekli değildir) `</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
+    ./de-host-web-server.exe --serve-web 3100
     # PowerShell'de iki "openpencil-desktop --serve-web:" satırı ve 3100 portunu göreceksiniz
     ```
 
@@ -162,7 +162,7 @@
 1. WASM derlerken `--features` parametresine dikkat edin
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > `--features "web"` yerine `--features "web canvaskit"` kullanın.
@@ -173,8 +173,8 @@
 
 2. Sunucu, tüm `web-bundle` dizinini HTTP `/pkg/` rotasına eşler
 
-    > Disk yolu `web-bundle/op_host_web.js` → Tarayıcı URL'si `/pkg/op_host_web.js`
+    > Disk yolu `web-bundle/de_host_web.js` → Tarayıcı URL'si `/pkg/de_host_web.js`
     > 
-    > Sayfa `/pkg/op_host_web.js` bulunamadığını belirtiyorsa, `web-bundle/` dizininde dosya eksiktir.
+    > Sayfa `/pkg/de_host_web.js` bulunamadığını belirtiyorsa, `web-bundle/` dizininde dosya eksiktir.
 
 3. Bu belge `openpencil 0.8.4` sürümü için yazılmıştır. Rustup araç zinciri sürümü `1.94`、wasm-bindgen-cli sürümü `0.2.117` ve skia-bindings sürümü `0.97.2` bu sürüme görelidir — diğer sürümler farklı olabilir.

@@ -39,7 +39,7 @@ build_root=$target_dir/$target/$profile/build
 }
 
 shopt -s nullglob
-outputs=("$build_root"/op-auth-bridge-*/output)
+outputs=("$build_root"/de-auth-bridge-*/output)
 [[ "${#outputs[@]}" -gt 0 ]] || {
     printf 'error: Cargo emitted no op-auth build-script evidence for %s\n' "$target" >&2
     exit 1

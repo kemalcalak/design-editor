@@ -1,6 +1,6 @@
 /**
  * Type declaration for the prebuilt Rust NAPI module `libopenpencil.so`
- * (crate `op-engine-napi`).
+ * (crate `de-engine-napi`).
  *
  * CONTRACT: every function below is the Android JNI surface
  * (`packaging/android/.../OpNative.kt`) translated to camelCase with

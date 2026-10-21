@@ -33,7 +33,7 @@ expected_icons = {
   "xxxhdpi" => [192, "46f1a8488bfe20c19d3c8c3dca17981286b212c3c0c10c129098f9a6ecd96664"],
 }.freeze
 
-canonical_icon = File.join(repo_dir, "crates/op-host-desktop/assets/icon.png")
+canonical_icon = File.join(repo_dir, "crates/de-host-desktop/assets/icon.png")
 canonical_hash = "d4dcfe16a1cdfc2f7caaf945f84582fb02404f67024ffd6294f1d138fab67941"
 raise "canonical OpenPencil icon changed without regenerating mobile assets" unless Digest::SHA256.file(canonical_icon).hexdigest == canonical_hash
 

@@ -280,8 +280,8 @@ python3 "$script_dir/digest-op-auth-tree.py" \
     --root "$signed_root" --expected "$signed_tree_digest" >/dev/null
 
 promotion_repo=$temp_dir/promotion-repo
-prebuilt=$promotion_repo/crates/op-auth-bridge/prebuilt
-policy=$promotion_repo/crates/op-auth-bridge/AUTH-RELEASE-POLICY
+prebuilt=$promotion_repo/crates/de-auth-bridge/prebuilt
+policy=$promotion_repo/crates/de-auth-bridge/AUTH-RELEASE-POLICY
 mkdir -p "$prebuilt" "$promotion_repo/tools"
 git -C "$temp_dir" init -q -b main promotion-repo
 git -C "$promotion_repo" config user.name fixture
@@ -292,8 +292,8 @@ cp "$trusted_public_key" "$prebuilt/PROVENANCE_PUBKEY"
 printf 'previous source adoption policy\n' > "$policy"
 git -C "$promotion_repo" add \
     tools/check-op-auth-release-matrix.sh \
-    crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY \
-    crates/op-auth-bridge/AUTH-RELEASE-POLICY
+    crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY \
+    crates/de-auth-bridge/AUTH-RELEASE-POLICY
 git -C "$promotion_repo" commit -q -m 'test: base trust root'
 parent=$(git -C "$promotion_repo" rev-parse HEAD)
 cp -R "$signed_root"/. "$prebuilt"/
@@ -310,8 +310,8 @@ EOF
 valid_policy=$temp_dir/valid-auth-release-policy
 cp "$policy" "$valid_policy"
 git -C "$promotion_repo" add -A \
-    crates/op-auth-bridge/prebuilt \
-    crates/op-auth-bridge/AUTH-RELEASE-POLICY
+    crates/de-auth-bridge/prebuilt \
+    crates/de-auth-bridge/AUTH-RELEASE-POLICY
 bash "$script_dir/verify-op-auth-promotion-diff.sh" \
     --repo "$promotion_repo" --expected-parent "$parent" >/dev/null
 
@@ -319,7 +319,7 @@ expect_policy_rejection() {
     local field=$1
     local value=$2
     sed "s#^$field=.*#$field=$value#" "$valid_policy" > "$policy"
-    git -C "$promotion_repo" add crates/op-auth-bridge/AUTH-RELEASE-POLICY
+    git -C "$promotion_repo" add crates/de-auth-bridge/AUTH-RELEASE-POLICY
     if bash "$script_dir/verify-op-auth-promotion-diff.sh" \
         --repo "$promotion_repo" --expected-parent "$parent" >/dev/null 2>&1; then
         printf 'error: promotion policy with wrong %s was accepted\n' "$field" >&2
@@ -335,7 +335,7 @@ expect_policy_rejection source_revision \
     9999999999999999999999999999999999999999
 expect_policy_rejection build_id wrong-build
 cp "$valid_policy" "$policy"
-git -C "$promotion_repo" add crates/op-auth-bridge/AUTH-RELEASE-POLICY
+git -C "$promotion_repo" add crates/de-auth-bridge/AUTH-RELEASE-POLICY
 
 printf 'outside auth matrix\n' > "$promotion_repo/OUTSIDE"
 git -C "$promotion_repo" add OUTSIDE

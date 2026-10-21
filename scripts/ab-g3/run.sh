@@ -11,7 +11,7 @@ MODELS_ARG="${OPENPENCIL_AB_G3_MODELS:-}"
 TIMEOUT_S="${OPENPENCIL_AB_G3_TIMEOUT_SECONDS:-900}"
 AUDIT_TIMEOUT_S="${OPENPENCIL_AB_G3_AUDIT_TIMEOUT_SECONDS:-120}"
 RENDER_TIMEOUT_S="${OPENPENCIL_AB_G3_RENDER_TIMEOUT_SECONDS:-120}"
-SMOKE="${OPENPENCIL_AB_G3_SMOKE_BIN:-$REPO/target/release/op-smoke}"
+SMOKE="${OPENPENCIL_AB_G3_SMOKE_BIN:-$REPO/target/release/de-smoke}"
 DESKTOP="${OPENPENCIL_AB_G3_DESKTOP_BIN:-$REPO/target/release/openpencil-desktop}"
 DRY_RUN="${OPENPENCIL_AB_G3_DRY_RUN:-0}"
 SUMMARY_PATH=""
@@ -121,8 +121,8 @@ record_gap() {
 require_tools() {
   command -v python3 >/dev/null 2>&1 || die "python3 is required"
   if ! is_truthy "$DRY_RUN"; then
-    [ -x "$SMOKE" ] || die "missing executable: $SMOKE (build with: cargo build --release -p op-smoke)"
-    [ -x "$DESKTOP" ] || die "missing executable: $DESKTOP (build with: cargo build --release -p op-host-desktop)"
+    [ -x "$SMOKE" ] || die "missing executable: $SMOKE (build with: cargo build --release -p de-smoke)"
+    [ -x "$DESKTOP" ] || die "missing executable: $DESKTOP (build with: cargo build --release -p de-host-desktop)"
   fi
 }
 
@@ -155,7 +155,7 @@ default_models() {
   elif [ -n "${OPENAI_API_KEY:-${OPENPENCIL_OPENAI_API_KEY:-}}" ]; then
     models="$models,$OPENAI_STRONG_LABEL"
   elif [ -n "${ANTHROPIC_API_KEY:-${OPENPENCIL_ANTHROPIC_API_KEY:-}}" ]; then
-    record_gap "ANTHROPIC_API_KEY is present but was not auto-added as a strong model because current op-smoke loop mode only supports OpenAI-compatible OPENPENCIL_LLM_* wiring."
+    record_gap "ANTHROPIC_API_KEY is present but was not auto-added as a strong model because current de-smoke loop mode only supports OpenAI-compatible OPENPENCIL_LLM_* wiring."
   fi
   printf '%s' "$models"
 }
@@ -425,7 +425,7 @@ if audit_path and os.path.exists(audit_path) and os.path.getsize(audit_path) > 0
         audit_issue_count = audit.get("issueCount", len(issues) if isinstance(issues, list) else None)
         if isinstance(issues, list):
             audit_kinds = dict(Counter(classify_issue(str(issue)) for issue in issues))
-        # Rubric block (op-smoke audit >= 0710): chrome completeness /
+        # Rubric block (de-smoke audit >= 0710): chrome completeness /
         # node-vocabulary richness / density counters — the dimensions the
         # 07-04 comparison missed. Absent on older binaries → fields None.
         rubric = audit.get("rubric") or {}
@@ -693,12 +693,12 @@ lines.append(f"- Output root: `{out_root}`")
 lines.append(f"- Summary path: `{summary_path}`")
 lines.append(f"- Resume marker: each completed cell has `result.json` under `<out>/<model>/<mode>/<p##>/`.")
 lines.append("")
-lines.append("## op-smoke Env Contract")
+lines.append("## de-smoke Env Contract")
 lines.append("")
 lines.append("- `glm-5.2`: `GLM_KEY` is mapped to `OPENPENCIL_LLM_API_KEY`; base URL is `https://open.bigmodel.cn/api/coding/paas/v4`; model is `OPENPENCIL_ORCHESTRATOR_MODEL=glm-5.2`.")
 lines.append("- Both modes use `OPENPENCIL_LLM_PROVIDER=openai-compat`, `OPENPENCIL_LLM_BASE_URL`, `OPENPENCIL_LLM_API_KEY`, `OPENPENCIL_ORCHESTRATOR_MODEL`, and `OPENPENCIL_SMOKE_OUT`.")
 lines.append("- Orchestrator mode adds `OPENPENCIL_SMOKE_DIRECT=1`; loop mode adds `OPENPENCIL_SMOKE_LOOP=1` and currently requires OpenAI-compatible provider wiring.")
-lines.append("- Audit runs `OPENPENCIL_SMOKE_AUDIT=<file.op> op-smoke audit`; current `op-smoke` still constructs the provider before the audit branch, so the harness passes the same `OPENPENCIL_LLM_*` env into audit. Audit output has `issueCount` plus string `issues`, not structured categories.")
+lines.append("- Audit runs `OPENPENCIL_SMOKE_AUDIT=<file.op> de-smoke audit`; current `de-smoke` still constructs the provider before the audit branch, so the harness passes the same `OPENPENCIL_LLM_*` env into audit. Audit output has `issueCount` plus string `issues`, not structured categories.")
 lines.append("- Render shots run `openpencil-desktop --render-shots <file.op> <outdir>`.")
 lines.append("")
 lines.append("## Models")

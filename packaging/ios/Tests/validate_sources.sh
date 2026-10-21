@@ -3,8 +3,8 @@ set -euo pipefail
 
 player_dir="$(cd "$(dirname "$0")/.." && pwd)"
 repo_dir="$(cd "$player_dir/../.." && pwd)"
-header_dir="$repo_dir/crates/op-engine-ffi/include"
-fixture="$repo_dir/crates/op-editor-core/assets/scene_templates/daily-sign-card.op"
+header_dir="$repo_dir/crates/de-engine-ffi/include"
+fixture="$repo_dir/crates/de-editor-core/assets/scene_templates/daily-sign-card.op"
 
 required=(
   "$player_dir/OpenPencilPlayer-Bridging-Header.h"
@@ -146,7 +146,7 @@ raise "relay-only mobile builds must not declare Bonjour discovery" if settings.
 raise "system appearance must remain runtime-controlled" if settings.key?("INFOPLIST_KEY_UIUserInterfaceStyle")
 raise "AppIcon catalog setting missing" unless settings.fetch("ASSETCATALOG_COMPILER_APPICON_NAME") == "AppIcon"
 raise "bridging header setting missing" unless settings.key?("SWIFT_OBJC_BRIDGING_HEADER")
-raise "op_engine.h search path missing" unless settings.fetch("HEADER_SEARCH_PATHS").to_s.include?("op-engine-ffi/include")
+raise "op_engine.h search path missing" unless settings.fetch("HEADER_SEARCH_PATHS").to_s.include?("de-engine-ffi/include")
 raise "device staticlib search path missing" unless settings.fetch("LIBRARY_SEARCH_PATHS[sdk=iphoneos*]").include?("aarch64-apple-ios/release")
 raise "simulator staticlib search path missing" unless settings.fetch("LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]").include?("aarch64-apple-ios-sim/release")
 frameworks = target.fetch("dependencies").map { |entry| entry["sdk"] }.compact
@@ -160,10 +160,10 @@ raise "final link must consume the exact engine archive setting" unless settings
 configs = target.fetch("settings").fetch("configs")
 debug = configs.fetch("Debug")
 release = configs.fetch("Release")
-raise "Debug simulator must link the static debug engine" unless debug.fetch("OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/debug/libop_engine_ffi.a")
-raise "Debug device must link the static debug engine" unless debug.fetch("OP_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/debug/libop_engine_ffi.a")
-raise "Release simulator must link the static release engine" unless release.fetch("OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/release/libop_engine_ffi.a")
-raise "Release device must link the static release engine" unless release.fetch("OP_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/release/libop_engine_ffi.a")
+raise "Debug simulator must link the static debug engine" unless debug.fetch("OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/debug/libde_engine_ffi.a")
+raise "Debug device must link the static debug engine" unless debug.fetch("OP_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/debug/libde_engine_ffi.a")
+raise "Release simulator must link the static release engine" unless release.fetch("OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/release/libde_engine_ffi.a")
+raise "Release device must link the static release engine" unless release.fetch("OP_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/release/libde_engine_ffi.a")
 info_properties = target.fetch("info").fetch("properties")
 %w[UIFileSharingEnabled LSSupportsOpeningDocumentsInPlace].each do |key|
   raise "#{key} must be declared so saved documents appear in Files" unless info_properties[key] == true
@@ -213,8 +213,8 @@ RUBY
 
 grep -Fq -- "-sdk iphonesimulator26.4" "$player_dir/README.md"
 grep -Fq -- "-destination 'platform=iOS Simulator,id=<sim-id>'" "$player_dir/README.md"
-grep -Fq -- "aarch64-apple-ios-sim/release/libop_engine_ffi.a -lc++" "$player_dir/README.md"
-grep -Fq -- "aarch64-apple-ios/release/libop_engine_ffi.a -lc++" "$player_dir/README.md"
+grep -Fq -- "aarch64-apple-ios-sim/release/libde_engine_ffi.a -lc++" "$player_dir/README.md"
+grep -Fq -- "aarch64-apple-ios/release/libde_engine_ffi.a -lc++" "$player_dir/README.md"
 grep -Fq -- "-framework Metal" "$player_dir/README.md"
 grep -Fq -- "-framework CoreFoundation" "$player_dir/README.md"
 grep -Fq -- "-framework Security" "$player_dir/README.md"

@@ -298,7 +298,7 @@ def build():
     return [page]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；数值由脚本实测）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；数值由脚本实测）：
 #   c-chalk  on c-board  11.97   c-muted on c-board   6.66
 #   c-chalk  on c-panel  10.45   c-muted on c-panel   5.81
 #   c-chalk  on c-card    9.18   c-muted on c-card    5.11

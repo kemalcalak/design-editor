@@ -590,7 +590,7 @@ def build():
             quote(), recap()]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；本表逐对实算）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；本表逐对实算）：
 #   c-shell   on c-bg     15.27    c-dim       on c-bg      9.07
 #   c-faint   on c-bg      5.01    c-cinnabar  on c-bg      3.94
 #   c-azurite on c-bg      3.79    c-gold      on c-bg      8.40

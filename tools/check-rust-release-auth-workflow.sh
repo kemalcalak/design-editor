@@ -25,9 +25,9 @@ release_flattener_test=$repo_root/tools/flatten-release-artifacts.test.sh
 appimage_packager=$repo_root/scripts/package-appimage.sh
 macos_bundler=$repo_root/scripts/bundle-macos.sh
 wasm_builder=$repo_root/tools/check-wasm-bundle.sh
-sdk_wasm_builder=$repo_root/crates/op-web-sdk/tools/build-wasm.sh
+sdk_wasm_builder=$repo_root/crates/de-web-sdk/tools/build-wasm.sh
 dockerfile=${OPENPENCIL_WEB_DOCKERFILE:-$repo_root/Dockerfile.web-rust}
-vscode_package=$repo_root/packages/op-vscode/package.json
+vscode_package=$repo_root/packages/de-vscode/package.json
 bun_lock=$repo_root/packages/bun.lock
 version_sync_workflow=${OPENPENCIL_VERSION_SYNC_WORKFLOW:-$repo_root/.github/workflows/version-sync.yml}
 ios_workflow=$repo_root/.github/workflows/ios-app-store.yml
@@ -553,7 +553,7 @@ reject_literal 'tools/check-op-auth-artifact-commit.test.sh' "$workflow"
 reject_literal 'OP_AUTH_RELEASE_EXPECTED_OPENPENCIL_REVISION:' "$workflow"
 reject_literal 'OP_AUTH_RELEASE_WORKSPACE_VERSION:' "$workflow"
 require_literal 'tools/check-collab-bootstrap-urls.py' "$release_builder"
-require_literal 'cargo clean -p op-auth-bridge' "$release_builder"
+require_literal 'cargo clean -p de-auth-bridge' "$release_builder"
 require_literal 'tools/check-op-auth-cargo-build.sh' "$release_builder"
 require_literal '--target "$release_target" --release --locked' "$release_builder"
 
@@ -646,11 +646,11 @@ require_literal 'pinned-skia-binaries' "$release_builder"
 require_literal 'cargo clean -p skia-bindings' "$release_builder"
 require_literal '[[ -z ${FORCE_SKIA_BINARIES_DOWNLOAD:-}' "$release_builder"
 require_literal 'pinned-skia-binaries = ["skia-safe/no-compile"]' \
-    "$repo_root/crates/op-host-desktop/Cargo.toml"
+    "$repo_root/crates/de-host-desktop/Cargo.toml"
 require_literal 'pinned-skia-binaries = ["skia-safe/no-compile"]' \
-    "$repo_root/crates/op-host-services/Cargo.toml"
-require_literal 'pinned-skia-binaries = ["op-host-services/pinned-skia-binaries"]' \
-    "$repo_root/crates/op-host-web-server/Cargo.toml"
+    "$repo_root/crates/de-host-services/Cargo.toml"
+require_literal 'pinned-skia-binaries = ["de-host-services/pinned-skia-binaries"]' \
+    "$repo_root/crates/de-host-web-server/Cargo.toml"
 
 require_literal '52bbe826b5e9d0dc779321866043d310aa8072d44ef3c05d7cdd3c4a69228fa0' "$angle_stager"
 require_literal '781209a26586dcb1e545335dc451479424e94407f73cc25696f0035a31273323' "$angle_stager"
@@ -695,7 +695,7 @@ require_literal 'FROM debian:bookworm-slim@sha256:abd67ffcfa541b485a3dff59865ab6
 require_literal 'BINARYEN_SHA256=e959f2170af4c20c552e9de3a0253704d6a9d2766e8fdb88e4d6ac4bae9388fe' "$dockerfile"
 require_literal 'sha256sum -c -' "$dockerfile"
 require_literal 'SKIA_BINARY_SHA256=c066658b13e257d418f647447d06eb8a83cb060b037228da838589dd863bf053' "$dockerfile"
-require_literal 'cargo build -p op-host-web-server --features pinned-skia-binaries --release --locked' "$dockerfile"
+require_literal 'cargo build -p de-host-web-server --features pinned-skia-binaries --release --locked' "$dockerfile"
 require_literal 'snapshot.debian.org/archive/debian/20260406T000000Z' "$dockerfile"
 require_literal 'snapshot.debian.org/archive/debian/20260803T000000Z' "$dockerfile"
 require_count 2 'Check-Valid-Until: no' "$dockerfile"

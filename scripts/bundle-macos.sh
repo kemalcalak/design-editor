@@ -107,7 +107,7 @@ else
 fi
 
 echo "==> running cargo-bundle"
-( cd "$WS_ROOT/crates/op-host-desktop" \
+( cd "$WS_ROOT/crates/de-host-desktop" \
     && export CARGO_BUNDLE_SKIP_BUILD=1 \
     && "$CARGO_BUNDLE" bundle --bin openpencil-desktop --release --format osx \
          ${TARGET_TRIPLE:+--target "$TARGET_TRIPLE"} )
@@ -117,7 +117,7 @@ if [ -n "$TARGET_TRIPLE" ]; then
 else
   OUT_DIR="$WS_ROOT/target/release/bundle/osx"
 fi
-RAW_APP="$OUT_DIR/op-host-desktop.app"
+RAW_APP="$OUT_DIR/de-host-desktop.app"
 APP="$OUT_DIR/OpenPencil.app"
 
 if [ ! -d "$RAW_APP" ]; then
@@ -194,7 +194,7 @@ bash "$WS_ROOT/tools/check-macos-bundle-plist.sh" "$PLIST"
 
 echo "==> copying icon into Resources/"
 mkdir -p "$APP/Contents/Resources"
-cp "$WS_ROOT/crates/op-host-desktop/assets/icon.icns" "$APP/Contents/Resources/icon.icns"
+cp "$WS_ROOT/crates/de-host-desktop/assets/icon.icns" "$APP/Contents/Resources/icon.icns"
 
 if [ -n "${OPENPENCIL_BINARY:-}" ]; then
   echo "==> installing prebuilt binary into Contents/MacOS/"

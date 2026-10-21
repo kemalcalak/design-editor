@@ -504,7 +504,7 @@ def build():
     return boards
 
 
-# 对比度（WCAG 相对亮度比，投影场景自设门槛 4.5，远高于 op-design-lint 的 2.5）：
+# 对比度（WCAG 相对亮度比，投影场景自设门槛 4.5，远高于 de-design-lint 的 2.5）：
 #   c-ink   on c-bg      14.25    c-ink   on c-surface     16.53
 #   c-muted on c-bg       5.46    c-muted on c-surface      6.33
 #   c-accent on c-bg      5.56    c-accent on c-surface     6.45

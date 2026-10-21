@@ -59,7 +59,7 @@ fi
 
 shopt -s nullglob
 native=("$temporary"/OpenPencil-* "$temporary"/openpencil-desktop-*)
-cli=("$temporary"/op-cli-*)
+cli=("$temporary"/de-cli-*)
 sdk=("$temporary"/*.tgz)
 vsix=("$temporary"/*.vsix)
 android_apk=("$temporary"/*.apk)
@@ -70,7 +70,7 @@ if [ "${#native[@]}" -eq 0 ]; then
     exit 1
 fi
 if [ "${#cli[@]}" -eq 0 ]; then
-    printf 'error: missing op-cli artifacts\n' >&2
+    printf 'error: missing de-cli artifacts\n' >&2
     exit 1
 fi
 for required in \

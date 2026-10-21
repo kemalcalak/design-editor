@@ -203,7 +203,7 @@ raise "the surface must take focus for keyboard input" unless index.include?(".f
 # A SURFACE XComponent consumes hardware keys on the NATIVE channel, so ArkTS
 # `onKeyEvent` never fires while it holds focus: the key path lives in
 # `xcomponent.rs`. A second ArkTS forwarder would double every keystroke.
-xcomponent = read(repo_dir, "crates/op-engine-napi/src/xcomponent.rs")
+xcomponent = read(repo_dir, "crates/de-engine-napi/src/xcomponent.rs")
 raise "physical keys must be forwarded on the native channel" unless xcomponent.include?(
   "OH_NativeXComponent_RegisterKeyEventCallback",
 )

@@ -2,7 +2,7 @@
 #
 # Dockerfile.web-rust — container for the RUST web host (C1).
 #
-# Serves the Rust CanvasKit web editor: the `op-host-web-server` daemon running
+# Serves the Rust CanvasKit web editor: the `de-host-web-server` daemon running
 # in `--serve-web` mode, hosting the wasm-bindgen bundle + the vendored
 # CanvasKit artifact out of a `web-bundle/` directory placed next to the binary.
 # This is the sole web container now that the TypeScript/Nitro web app (and its
@@ -64,8 +64,8 @@ ARG SERVE_PORT=3100
 
 # pinned Binaryen -> wasm-opt -Oz ; nodejs -> the 0-env-import assert in the gate
 # script; python3 -> deterministic runtime i18n catalog export during asset
-# staging. op-host-web-server is the headless raster daemon (links
-# op-host-services only — no winit/glutin/skia-GL under Approach Y), so NONE of
+# staging. de-host-web-server is the headless raster daemon (links
+# de-host-services only — no winit/glutin/skia-GL under Approach Y), so NONE of
 # the GL/X11 link-time libs the desktop binary needed are required here. It does
 # need OpenSSL for SDK/native-tls compatibility plus freetype/fontconfig (+ CJK
 # fonts) for skia's raster text shaping at export.
@@ -105,9 +105,9 @@ WORKDIR /src
 COPY . .
 
 # Build the headless web/MCP server binary (the `--serve-web` host) — links
-# op-host-services only, no winit/skia-GL. Always built; this is the runtime
+# de-host-services only, no winit/skia-GL. Always built; this is the runtime
 # binary regardless of how the web bundle is produced.
-RUN cargo build -p op-host-web-server --features pinned-skia-binaries --release --locked
+RUN cargo build -p de-host-web-server --features pinned-skia-binaries --release --locked
 
 # Build the canvaskit wasm bundle in-image, UNLESS WEB_BUNDLE_SOURCE=copy.
 # Mirrors `tools/check-wasm-bundle.sh` exactly (cargo build --features canvaskit
@@ -135,14 +135,14 @@ RUN if [ "$WEB_BUNDLE_SOURCE" = "build" ]; then \
 # has one stable source path either way.
 RUN mkdir -p /out/web-bundle && \
     if [ "$WEB_BUNDLE_SOURCE" = "build" ]; then \
-      cp -R crates/op-host-web/pkg/. /out/web-bundle/ && \
-      cp -R crates/op-host-web/assets/canvaskit /out/web-bundle/canvaskit ; \
+      cp -R crates/de-host-web/pkg/. /out/web-bundle/ && \
+      cp -R crates/de-host-web/assets/canvaskit /out/web-bundle/canvaskit ; \
     else \
       cp -R web-bundle/. /out/web-bundle/ ; \
     fi && \
     echo "assembled web-bundle:" && find /out/web-bundle -maxdepth 2 -type f | sort && \
     # The browser fetches these from `/pkg/assets/…` at run time (see
-    # `op_editor_core::web_assets`); without them previews fall back to
+    # `de_editor_core::web_assets`); without them previews fall back to
     # placeholders, templates refuse to instantiate, the icon panel stays
     # empty, and locale switches fail. Catch it here rather than in production
     # — the `copy` path is the likely offender, fed a pre-split artifact.
@@ -192,7 +192,7 @@ WORKDIR /app
 # bundle as `<exe_dir>/web-bundle` (and CanvasKit as `<exe_dir>/web-bundle/
 # canvaskit`). Keep the binary + the bundle dir as siblings under /app so that
 # `<exe_dir> == /app`.
-COPY --from=builder --chown=10001:10001 /src/target/release/op-host-web-server /app/op-host-web-server
+COPY --from=builder --chown=10001:10001 /src/target/release/de-host-web-server /app/de-host-web-server
 COPY --from=builder --chown=10001:10001 /out/web-bundle /app/web-bundle
 
 # The daemon writes nothing outside /tmp in online mode (settings persistence
@@ -221,4 +221,4 @@ STOPSIGNAL SIGTERM
 # the build-time SERVE_PORT (baked into OPENPENCIL_SERVE_PORT); `sh -c` lets the
 # env var expand at container start.
 CMD ["sh", "-c", "if [ \"${OPENPENCIL_SERVE_MODE}\" = online ]; then set -- --online; else set --; fi; \
-exec /app/op-host-web-server --serve-web \"${OPENPENCIL_SERVE_PORT}\" --host 0.0.0.0 \"$@\""]
+exec /app/de-host-web-server --serve-web \"${OPENPENCIL_SERVE_PORT}\" --host 0.0.0.0 \"$@\""]

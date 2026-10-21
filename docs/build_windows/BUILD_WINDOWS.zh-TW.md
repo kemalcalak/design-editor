@@ -95,19 +95,19 @@
     - 2.1 編譯 WASM 函式庫。在儲存庫根目錄打開 PowerShell，執行：
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 生成 JS 綁定檔案
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 複製 CanvasKit 渲染資源。從 `crates\op-host-web\assets\canvaskit` 複製到 `web-bundle`：
+    - 2.3 複製 CanvasKit 渲染資源。從 `crates\de-host-web\assets\canvaskit` 複製到 `web-bundle`：
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 最終目錄結構
@@ -115,7 +115,7 @@
         ```plaintext
         target\release\
         ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
+        ├── de-host-web-server.exe
         ├── op.exe
         └── web-bundle\
             ├── canvaskit\
@@ -123,7 +123,7 @@
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
+            ├── de_host_web.js
             ├── op_host_web_bg.wasm
             └── op_host_web_bg.wasm.d.ts
         ```
@@ -147,11 +147,11 @@
     # 視窗會一閃而過，背景執行服務並監聽 3100 埠
     ```
 
-2. op-host-web-server.exe  <i>`（dsh 外掛可以不用這個檔案）`</i>
+2. de-host-web-server.exe  <i>`（dsh 外掛可以不用這個檔案）`</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
+    ./de-host-web-server.exe --serve-web 3100
     # 會看到兩段「openpencil-desktop --serve-web:」，在 PowerShell 中監聽 3100 埠
     ```
 
@@ -162,7 +162,7 @@
 1. WASM 編譯時注意 `--features` 參數
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > 請使用 `--features "web canvaskit"` 而非 `--features "web"`。
@@ -173,8 +173,8 @@
 
 2. 伺服器已將整個 `web-bundle` 目錄對應到 HTTP 的 `/pkg/` 路由
 
-    > 磁碟路徑 `web-bundle/op_host_web.js` → 瀏覽器 URL `/pkg/op_host_web.js`
+    > 磁碟路徑 `web-bundle/de_host_web.js` → 瀏覽器 URL `/pkg/de_host_web.js`
     > 
-    > 頁面顯示找不到 `/pkg/op_host_web.js` 時，表示 `web-bundle/` 中缺少該檔案。
+    > 頁面顯示找不到 `/pkg/de_host_web.js` 時，表示 `web-bundle/` 中缺少該檔案。
 
 3. 本文檔以 `openpencil 0.8.4` 版本編寫，rustup 工具鏈版本 `1.94`、wasm-bindgen-cli 版本 `0.2.117`、skia-bindings 版本 `0.97.2` 均與該版本對齊，其他版本可能存在差異

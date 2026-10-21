@@ -104,19 +104,19 @@
     - 2\.1 编译 WASM 库，在仓库根目录打开 PowerShell，执行：
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2\.2 生成 JS 绑定文件
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2\.3 补全 CanvasKit 渲染资源，从 `crates\op-host-web\assets\` 目录把 `canvaskit` 复制到 `web-bundle` 中
+    - 2\.3 补全 CanvasKit 渲染资源，从 `crates\de-host-web\assets\` 目录把 `canvaskit` 复制到 `web-bundle` 中
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2\.4 最终目录结构（`target\release\` 下）
@@ -124,7 +124,7 @@
         ```plaintext
         release\
         ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
+        ├── de-host-web-server.exe
         ├── op.exe
         └── web-bundle\
             ├── canvaskit\
@@ -132,7 +132,7 @@
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
+            ├── de_host_web.js
             ├── op_host_web_bg.wasm
             └── op_host_web_bg.wasm.d.ts
         ```
@@ -156,11 +156,11 @@
     #屏幕会一闪而过，后台运行openpencil-desktop服务监听3100端口
     ```
 
-2. op-host-web-server.exe  <i>` (dsh插件可以不用这个文件) `</i>
+2. de-host-web-server.exe  <i>` (dsh插件可以不用这个文件) `</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
+    ./de-host-web-server.exe --serve-web 3100
     #会看到两段“openpencil-desktop --serve-web: ”，在PowerShell中监听3100端口
     ```
 
@@ -171,7 +171,7 @@
 1.  --feature 参数
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > 是`--features "web canvaskit"` 而不是`--features "web"`，
@@ -182,9 +182,9 @@
 
 2. web-bundle 目录映射到 HTTP 的 /pkg/ 路由
 
-    > 磁盘路径 `web-bundle/op_host_web.js` → 浏览器对应 `/pkg/op_host_web.js`
+    > 磁盘路径 `web-bundle/de_host_web.js` → 浏览器对应 `/pkg/de_host_web.js`
     > 
-    > 页面报找不到 `/pkg/op_host_web.js` 时，是文件夹没有 `web-bundle/op_host_web.js` 文件
+    > 页面报找不到 `/pkg/de_host_web.js` 时，是文件夹没有 `web-bundle/de_host_web.js` 文件
 
 3. 本文档以 `openpencil 0.8.4` 版本编写，rustup 工具链版本 `1.94`、wasm-bindgen-cli 版本 `0.2.117`、skia-bindings 版本 `0.97.2` 均与该版本对齐，其他版本可能存在差异
 

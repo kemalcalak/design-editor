@@ -61,7 +61,7 @@ packaging/harmony/
 ## Build the engine library
 
 The ArkTS shell does **not** compile any native code. It consumes a prebuilt
-`libopenpencil.so` (crate `op-engine-napi`), built by the OHOS build script:
+`libopenpencil.so` (crate `de-engine-napi`), built by the OHOS build script:
 
 ```bash
 # From the repository root, with OHOS_NDK_HOME exported.
@@ -210,7 +210,7 @@ ruby packaging/harmony/Tests/HarmonyShellContractTests.rb
 They pin the XComponent ↔ `libopenpencil.so` binding, the device-type list,
 the bundle name, the render-free transient background-generation lifecycle,
 all shell action codes against
-`crates/op-engine-ffi/include/op_engine.h`, the empty-conduit backspace
+`crates/de-engine-ffi/include/op_engine.h`, the empty-conduit backspace
 contract, the bounded one-shot image/SVG picker, the 15-locale table
 (cross-checked against the Android shell), the export format set without WebP,
 and the rule that the ArkTS NAPI declaration matches the Android JNI surface

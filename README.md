@@ -5,7 +5,7 @@ Personal build of a Rust, AI-native vector design editor driven over MCP.
 ## Build and run (macOS)
 
 ```bash
-cargo build -p op-host-desktop --release
+cargo build -p de-host-desktop --release
 OPENPENCIL_DESKTOP_BIN="$PWD/target/release/openpencil-desktop" op start
 ```
 

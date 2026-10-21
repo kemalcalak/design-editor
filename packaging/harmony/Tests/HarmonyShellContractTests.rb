@@ -25,8 +25,8 @@ export_support = read(ets_dir, "common/DocumentExportSupport.ets")
 document_shell = read(ets_dir, "common/DocumentShell.ets")
 language = read(ets_dir, "common/EngineLanguage.ets")
 declaration = read(player_dir, "entry/src/main/cpp/types/libopenpencil/index.d.ts")
-napi_readme = read(repo_dir, "crates/op-engine-napi/README.md")
-header = read(repo_dir, "crates/op-engine-ffi/include/op_engine.h")
+napi_readme = read(repo_dir, "crates/de-engine-napi/README.md")
+header = read(repo_dir, "crates/de-engine-ffi/include/op_engine.h")
 background = read(ets_dir, "common/BackgroundGenerationCoordinator.ets")
 
 # ---- NAPI surface: OpNative.kt externals, camelCase, no `native` prefix ----
@@ -124,12 +124,12 @@ raise "editor cancel must carry TouchEvent.timestamp ms" unless pointer_router.i
 raise "synthetic cancels must use the shared monotonic clock" unless pointer_router.include?(
   "napi.editorCancelGestureAt(engine, MonotonicClock.nowMs())",
 )
-napi_editor = read(repo_dir, "crates/op-engine-napi/src/bindings_editor.rs")
+napi_editor = read(repo_dir, "crates/de-engine-napi/src/bindings_editor.rs")
 raise "the NAPI binding must forward the dedicated _at entry points" unless napi_editor.include?(
-  "op_engine_ffi::op_editor_press_at(",
-) && napi_editor.include?("op_engine_ffi::op_editor_move_at(") &&
-  napi_editor.include?("op_engine_ffi::op_editor_release_at(") &&
-  napi_editor.include?("op_engine_ffi::op_editor_cancel_gesture_at(")
+  "de_engine_ffi::op_editor_press_at(",
+) && napi_editor.include?("de_engine_ffi::op_editor_move_at(") &&
+  napi_editor.include?("de_engine_ffi::op_editor_release_at(") &&
+  napi_editor.include?("de_engine_ffi::op_editor_cancel_gesture_at(")
 raise "the NAPI clock must clamp at zero before u64" unless napi_editor.include?(
   "t_ms.max(0.0) as u64",
 ) || napi_editor.include?("clamp_t_ms(t_ms)")
@@ -225,7 +225,7 @@ raise "image import NAPI declaration missing" unless declaration.match?(
 raise "image import must cross NAPI with bytes and name" unless engine_host.include?(
   "napi.editorImportImageOrSvg(this.engine, bytes, displayName)",
 )
-napi_editor = read(repo_dir, "crates/op-engine-napi/src/bindings_editor.rs")
+napi_editor = read(repo_dir, "crates/de-engine-napi/src/bindings_editor.rs")
 raise "NAPI image import must call the canonical FFI" unless napi_editor.include?(
   "op_editor_import_image_or_svg(",
 )
@@ -412,7 +412,7 @@ raise "IME focus must drive attach on every form factor" unless engine_host.matc
 codes = language.scan(/new EngineLocale\('([^']+)', '([^']+)'\)/)
 raise "the locale table must have exactly 15 entries (found #{codes.length})" unless codes.length == 15
 expected_codes = %w[en-US zh-CN zh-TW ja ko fr es de pt ru hi tr th vi id]
-raise "locale codes drifted from op_i18n::Locale::ALL" unless codes.map(&:first) == expected_codes
+raise "locale codes drifted from de_i18n::Locale::ALL" unless codes.map(&:first) == expected_codes
 
 if File.exist?(File.join(android_dir, "EngineLanguage.kt"))
   android_codes = read(android_dir, "EngineLanguage.kt").scan(/"([a-zA-Z-]+)" to "([^"]+)"/)

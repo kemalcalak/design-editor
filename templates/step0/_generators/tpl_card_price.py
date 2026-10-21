@@ -196,7 +196,7 @@ def card():
     return shell
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 的门槛是 2.0；数值实测）：
+# 对比度（WCAG 相对亮度比，de-design-lint 的门槛是 2.0；数值实测）：
 #   c-acrylic       on c-night  15.04    c-acrylic-dim   on c-night   8.65
 #   c-acrylic-faint on c-night   4.50    c-acrylic       on c-panel  12.98
 #   c-acrylic-dim   on c-panel   7.47    c-acrylic-faint on c-panel   3.89

@@ -20,7 +20,7 @@ FAIL=0
 for f in "$@"; do
   name=$(basename "$f" .op)
   issues=$(OPENPENCIL_ANTHROPIC_API_KEY=dummy OPENPENCIL_SMOKE_AUDIT="$f" \
-    "$REPO/target/release/op-smoke" audit 2>/dev/null \
+    "$REPO/target/release/de-smoke" audit 2>/dev/null \
     | python3 -c "import sys,json;print(json.loads(sys.stdin.read())['issueCount'])")
   if [ "$issues" != "0" ]; then
     echo "✗ $name  audit=$issues"

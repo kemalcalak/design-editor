@@ -255,9 +255,9 @@ expose an account credential or a production signing secret.
 
 | Component | Repository boundary | Rationale |
 | --- | --- | --- |
-| Wire protocol, exact diff/apply, canonical hash, owner/guest state machines | Public `openpencil/crates/op-collab` | Reviewable deterministic behavior; wasm-compatible |
-| Noise/TCP framing, admission, limits, queues, discovery, key-store interface and safe fallback | Public `openpencil/crates/op-collab-transport` | Security comes from open protocol and audited libraries |
-| Ticket claims/profile, signed-union-policy and legacy JWKS parser/cache, Ed25519 verifier, provider trait, stub, ABI declarations | Public `openpencil/crates/op-auth-bridge` | Trust decisions must remain reviewable |
+| Wire protocol, exact diff/apply, canonical hash, owner/guest state machines | Public `openpencil/crates/de-collab` | Reviewable deterministic behavior; wasm-compatible |
+| Noise/TCP framing, admission, limits, queues, discovery, key-store interface and safe fallback | Public `openpencil/crates/de-collab-transport` | Security comes from open protocol and audited libraries |
+| Ticket claims/profile, signed-union-policy and legacy JWKS parser/cache, Ed25519 verifier, provider trait, stub, ABI declarations | Public `openpencil/crates/de-auth-bridge` | Trust decisions must remain reviewable |
 | Relay protocol/client/server, signed locator verifier, bootstrap verifier/cache, canonical wire and rollback tests | Public `openpencil` crates and desktop host | Endpoint, key-selection, and data-plane trust decisions must remain reviewable |
 | Signed bootstrap HTTP serving and deployment | Private `op-hub` service; public signed response | The online service holds no root private key; private deployment topology is not a cryptographic control |
 | Deterministic issuer and rotation fixtures | Public, compiled only for tests or `test-issuer` | Contain deliberately public seeds and a `.invalid` issuer; production verifier rejects that issuer |
@@ -681,9 +681,9 @@ bash tools/check-macos-bundle-plist.test.sh
 
 The gate verifies:
 
-- the `op-collab` wasm dependency closure contains no native transport,
+- the `de-collab` wasm dependency closure contains no native transport,
   authentication, network, or random-key dependencies;
-- every `op-collab*` crate and `op-auth-bridge` resolves its license from the
+- every `de-collab*` crate and `de-auth-bridge` resolves its license from the
   MIT workspace license;
 - required typed protocol, apply, transport, queue, and hard-limit anchors are
   present, and collaboration source does not return `Result<_, String>`;
@@ -697,7 +697,7 @@ The gate verifies:
   exact local-network and Bonjour plist declarations;
 - collaboration Rust files stay within the repository's 800-line limit.
 
-The independent `collab-security.yml` workflow also compiles `op-collab` for
+The independent `collab-security.yml` workflow also compiles `de-collab` for
 `wasm32-unknown-unknown`, runs the full protocol/state-machine/property suite,
 checks transport limits and production-verifier isolation, and exercises the
 two-process Noise/ticket collaboration smoke with the isolated public test
@@ -719,7 +719,7 @@ Request a security review when any change:
 - introduces an externally controlled allocation, retry, cache, or queue;
 - adds a new collaboration crate or moves code across the public/private
   boundary;
-- adds a native dependency to `op-collab` or enables a new default feature;
+- adds a native dependency to `de-collab` or enables a new default feature;
 - changes persistent private-key storage.
 
 Security reports should identify the affected boundary and avoid attaching

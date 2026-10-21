@@ -33,31 +33,31 @@ for required in \
     .dockerignore \
     .gitignore \
     Cargo.toml \
-    crates/op-collab/Cargo.toml \
-    crates/op-collab/LICENSE \
-    crates/op-collab/src/ticket_json.rs \
-    crates/op-collab/tests/credential_ownership.rs \
-    crates/op-collab-transport/Cargo.toml \
-    crates/op-collab-transport/LICENSE \
-    crates/op-collab-relay-protocol/Cargo.toml \
-    crates/op-collab-relay-protocol/LICENSE \
-    crates/op-collab-relay-client/Cargo.toml \
-    crates/op-collab-relay-client/LICENSE \
-    crates/op-collab-relay-server/Cargo.toml \
-    crates/op-collab-relay-server/LICENSE \
-    crates/op-collab-relay-control-plane/Cargo.toml \
-    crates/op-collab-relay-control-plane/LICENSE \
-    crates/op-collab-policy-file/Cargo.toml \
-    crates/op-collab-policy-file/LICENSE \
-    crates/op-collab-relay-locator-hsm/Cargo.toml \
-    crates/op-collab-relay-locator-hsm/LICENSE \
-    crates/op-collab-relay-locator-hsm/tests/softhsm.rs \
-    crates/op-collab-relay-locator-server/Cargo.toml \
-    crates/op-collab-relay-locator-server/LICENSE \
-    crates/op-collab-smoke/LICENSE \
-    crates/op-auth-bridge/Cargo.toml \
-    crates/op-auth-bridge/LICENSE \
-    crates/op-auth-bridge/prebuilt_provenance.rs \
+    crates/de-collab/Cargo.toml \
+    crates/de-collab/LICENSE \
+    crates/de-collab/src/ticket_json.rs \
+    crates/de-collab/tests/credential_ownership.rs \
+    crates/de-collab-transport/Cargo.toml \
+    crates/de-collab-transport/LICENSE \
+    crates/de-collab-relay-protocol/Cargo.toml \
+    crates/de-collab-relay-protocol/LICENSE \
+    crates/de-collab-relay-client/Cargo.toml \
+    crates/de-collab-relay-client/LICENSE \
+    crates/de-collab-relay-server/Cargo.toml \
+    crates/de-collab-relay-server/LICENSE \
+    crates/de-collab-relay-control-plane/Cargo.toml \
+    crates/de-collab-relay-control-plane/LICENSE \
+    crates/de-collab-policy-file/Cargo.toml \
+    crates/de-collab-policy-file/LICENSE \
+    crates/de-collab-relay-locator-hsm/Cargo.toml \
+    crates/de-collab-relay-locator-hsm/LICENSE \
+    crates/de-collab-relay-locator-hsm/tests/softhsm.rs \
+    crates/de-collab-relay-locator-server/Cargo.toml \
+    crates/de-collab-relay-locator-server/LICENSE \
+    crates/de-collab-smoke/LICENSE \
+    crates/de-auth-bridge/Cargo.toml \
+    crates/de-auth-bridge/LICENSE \
+    crates/de-auth-bridge/prebuilt_provenance.rs \
     deploy/collab-relay/Dockerfile \
     deploy/collab-relay/README.md \
     deploy/collab-relay/compose.yaml \
@@ -137,23 +137,23 @@ done
 for workflow_path in \
     ".dockerignore" \
     ".gitignore" \
-    "crates/op-collab-smoke/**" \
-    "crates/op-collab-relay-protocol/**" \
-    "crates/op-collab-relay-client/**" \
-    "crates/op-collab-relay-server/**" \
-    "crates/op-collab-relay-control-plane/**" \
-    "crates/op-collab-policy-file/**" \
-    "crates/op-collab-relay-locator-hsm/**" \
-    "crates/op-collab-relay-locator-server/**" \
-    "crates/op-util/**" \
-    "crates/op-editor-core/**" \
-    "crates/op-editor-host-core/**" \
-    "crates/op-editor-ui/**" \
-    "crates/op-host-native/**" \
-    "crates/op-host-desktop/**" \
-    "crates/op-chat-agent/src/provider_dial.rs" \
-    "crates/op-host-services/**" \
-    "crates/op-i18n/**" \
+    "crates/de-collab-smoke/**" \
+    "crates/de-collab-relay-protocol/**" \
+    "crates/de-collab-relay-client/**" \
+    "crates/de-collab-relay-server/**" \
+    "crates/de-collab-relay-control-plane/**" \
+    "crates/de-collab-policy-file/**" \
+    "crates/de-collab-relay-locator-hsm/**" \
+    "crates/de-collab-relay-locator-server/**" \
+    "crates/de-util/**" \
+    "crates/de-editor-core/**" \
+    "crates/de-editor-host-core/**" \
+    "crates/de-editor-ui/**" \
+    "crates/de-host-native/**" \
+    "crates/de-host-desktop/**" \
+    "crates/de-chat-agent/src/provider_dial.rs" \
+    "crates/de-host-services/**" \
+    "crates/de-i18n/**" \
     "deploy/collab-relay/**" \
     "deploy/collab-relay-edge/**" \
     "deploy/collab-relay-locator/**" \
@@ -332,7 +332,7 @@ for locator_container_anchor in \
         "$locator_container_anchor" "locator production container boundary"
 done
 require_literal deploy/collab-relay-locator/Dockerfile \
-    'ENTRYPOINT ["/usr/local/bin/op-collab-relay-locator-server", "--production"]' \
+    'ENTRYPOINT ["/usr/local/bin/de-collab-relay-locator-server", "--production"]' \
     "locator production-only image entrypoint"
 for relay_dockerfile in \
     deploy/collab-relay/Dockerfile \
@@ -352,7 +352,7 @@ require_literal .github/workflows/collab-security.yml \
     "bash deploy/collab-relay-locator/validate.sh" \
     "locator deployment workflow validation"
 require_literal .github/workflows/collab-security.yml \
-    "cargo test --locked -p op-collab-relay-locator-hsm" \
+    "cargo test --locked -p de-collab-relay-locator-hsm" \
     "locator HSM crate workflow test"
 require_literal .github/workflows/collab-security.yml \
     "docker build --target test" \
@@ -363,7 +363,7 @@ require_literal .github/workflows/collab-security.yml \
 for locator_hsm_test_anchor in \
     "FROM build AS test" \
     "apt-get install -y --no-install-recommends softhsm2" \
-    "cargo test --locked -p op-collab-relay-locator-hsm --test softhsm -- --nocapture"; do
+    "cargo test --locked -p de-collab-relay-locator-hsm --test softhsm -- --nocapture"; do
     require_literal deploy/collab-relay-locator-hsm/Dockerfile \
         "$locator_hsm_test_anchor" "real SoftHSM image test boundary"
 done

@@ -13,7 +13,7 @@ app_gradle=${OPENPENCIL_ANDROID_APP_GRADLE:-$repo_root/packaging/android/app/bui
 root_gradle=${OPENPENCIL_ANDROID_ROOT_GRADLE:-$repo_root/packaging/android/build.gradle.kts}
 wrapper=${OPENPENCIL_ANDROID_GRADLE_WRAPPER:-$repo_root/packaging/android/gradle/wrapper/gradle-wrapper.properties}
 verification=${OPENPENCIL_ANDROID_VERIFICATION_METADATA:-$repo_root/packaging/android/gradle/verification-metadata.xml}
-jni_manifest=${OPENPENCIL_ANDROID_JNI_MANIFEST:-$repo_root/crates/op-engine-jni/Cargo.toml}
+jni_manifest=${OPENPENCIL_ANDROID_JNI_MANIFEST:-$repo_root/crates/de-engine-jni/Cargo.toml}
 pinned_tools=${OPENPENCIL_ANDROID_PINNED_TOOLS:-$repo_root/tools/pinned-release-tools.sh}
 sdk_installer=${OPENPENCIL_ANDROID_SDK_INSTALLER:-$repo_root/tools/install-pinned-android-sdk.sh}
 mobile_auth_gate=${OPENPENCIL_ANDROID_AUTH_GATE:-$repo_root/tools/check-mobile-auth-link-input.sh}
@@ -187,7 +187,7 @@ end
 unless build_handoff.fetch("env").fetch("OPENPENCIL_RELEASE_SOURCE_SHA") ==
       '${{ needs.verify.outputs.source_sha }}' &&
     build_handoff.fetch("env").fetch("OP_AUTH_ARTIFACT_ROOT") ==
-      '${{ github.workspace }}/crates/op-auth-bridge/prebuilt'
+      '${{ github.workspace }}/crates/de-auth-bridge/prebuilt'
   raise "Android build must consume the verified matrix from the release source"
 end
 sign_handoff = sign_steps.find do |step|
@@ -219,7 +219,7 @@ require_literal 'tools/check-op-auth-release-matrix.test.sh' "$workflow"
 require_literal 'tools/check-op-auth-release-matrix.sh' "$workflow"
 require_literal 'tools/check-op-auth-prebuilt.sh --require-hardened' "$workflow"
 require_literal 'OPENPENCIL_RELEASE_SOURCE_SHA: ${{ needs.verify.outputs.source_sha }}' "$workflow"
-require_literal 'OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/op-auth-bridge/prebuilt' "$workflow"
+require_literal 'OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/de-auth-bridge/prebuilt' "$workflow"
 reject_literal 'tools/check-op-auth-artifact-commit.sh' "$workflow"
 reject_literal 'OP_AUTH_RELEASE_EXPECTED_OPENPENCIL_REVISION:' "$workflow"
 reject_literal 'OP_AUTH_RELEASE_WORKSPACE_VERSION:' "$workflow"
@@ -280,7 +280,7 @@ require_literal 'name="activity-ktx" version="1.7.0"' "$verification"
 require_literal 'name="appcompat" version="1.7.0"' "$verification"
 require_literal 'name="junit" version="4.13.2"' "$verification"
 
-require_literal 'pinned-skia-binaries = ["op-engine-ffi/pinned-skia-binaries"]' "$jni_manifest"
+require_literal 'pinned-skia-binaries = ["de-engine-ffi/pinned-skia-binaries"]' "$jni_manifest"
 require_literal 'aarch64-linux-android) expected=82ca6dd1720bbe8b105c12c4d0c78786d2c792e9d2a7f2102ab66bb24dafa9d0' "$pinned_tools"
 require_literal 'x86_64-linux-android) expected=ca217df6ffced17381cbea4df044969a493a46bddc757ee844e2fbaf54fa1257' "$pinned_tools"
 require_literal 'a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29' "$pinned_tools"

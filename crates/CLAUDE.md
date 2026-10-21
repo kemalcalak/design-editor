@@ -7,10 +7,10 @@ Native + web editor chrome implemented in Rust against jian-skia. This is the **
 > **Phase 7.3 reorg — read before trusting paths below.** The old
 > `openpencil-shell-*` crates were dissolved/renamed; deeper sections in this doc
 > may still cite pre-reorg paths. Map them: `openpencil-shell-native` →
-> **`op-host-native`**, `openpencil-shell-web` → **`op-host-web`**,
-> `openpencil-desktop` → **`op-host-desktop`**. `openpencil-shell-core` was
+> **`de-host-native`**, `openpencil-shell-web` → **`de-host-web`**,
+> `openpencil-desktop` → **`de-host-desktop`**. `openpencil-shell-core` was
 > **split**, not just renamed: widgets / Document / `RenderBackend` →
-> **`op-editor-ui`**, the MCP wire layer → **`op-mcp`** (flat `op-mcp/src/*.rs`,
+> **`de-editor-ui`**, the MCP wire layer → **`de-mcp`** (flat `de-mcp/src/*.rs`,
 > no `mcp/` subdir). The `wasm-libc-shim` + `vendor/skia-safe-op` wasm-skia fork
 > are **retired** — the browser renders through the official CanvasKit skia WASM
 > (loaded separately), so the Rust wasm bundle is pure logic; the **"Web runner"
@@ -18,7 +18,7 @@ Native + web editor chrome implemented in Rust against jian-skia. This is the **
 >
 > **2026-07 dedupe + split campaign (`839f474a..d2d8104c`) — second stale-path
 > layer.** Three structural changes ripple through the sections below. (1) The
-> canonical editor state is `EditorState` in **`op-editor-core/src/state.rs`**;
+> canonical editor state is `EditorState` in **`de-editor-core/src/state.rs`**;
 > there is no `document/` directory in any crate, so every `shell-core/src/document/*.rs`
 > path in the "Document model", pen-tool, colour-picker, and hot-path sections
 > names a file that no longer exists — the behaviour they describe is still
@@ -30,48 +30,48 @@ Native + web editor chrome implemented in Rust against jian-skia. This is the **
 
 ```
 crates/
-├── op-editor-ui/         Platform-free widgets + RenderBackend facade (wasm32-clean); re-exports the render scene from jian-scene + scene_vars from op-editor-core
-├── op-editor-core/       Canonical `.op` (PenDocument) editor state + EditorCommand + scene_vars (design-variable resolution)
-├── op-editor-host-core/  Transport-free host state machines shared by all hosts
-├── op-collab/            Open, transport-free collaboration protocol + canonical hash + exact document apply (wasm32-clean)
-├── op-collab-host/       Host-agnostic collaboration session runtime (`CollabRuntime` + `CollabHost`); desktop and the serve-web daemon both drive it
-├── op-host-native/       Native host lib: WidgetHostNative + skia-safe GL backend (desktop + mobile)
-├── op-engine-ffi/        Player C ABI: embed the canvas in iOS / Android shells (metal / gl / raster surfaces)
-├── op-engine-jni/        Android JNI marshalling layer for op-engine-ffi (engine thread, registry, callbacks)
-├── op-engine-napi/       OpenHarmony (OHOS) Node-API layer → `libopenpencil.so`; reuses op-engine-jni's engine thread + registry, everything else target-gated on `target_env = "ohos"` (see its README for the ArkTS API table)
-├── op-host-web/          Browser bundle entry: wasm32-unknown-unknown cdylib, CanvasKit renderer
-├── op-host-desktop/      Desktop binary `openpencil-desktop` (winit + skia-safe GL); also the `--serve-web` daemon
-├── op-cli/               `op` command-line tool
-├── op-util/              Dependency-free leaf: shared collaboration-id grammar + hex-colour / JSON / XML helpers
-└── …                     op-mcp / op-ai / op-ai-skills / op-codegen / op-orchestrator / op-figma /
-                          op-git / op-opmerge / op-pen-loader / op-design-lint / op-config-store /
-                          op-process-io / op-acp / op-i18n / op-rpc-transport / op-smoke /
-                          op-host-services / op-host-web-server / op-html / op-auth-bridge / op-web-sdk
+├── de-editor-ui/         Platform-free widgets + RenderBackend facade (wasm32-clean); re-exports the render scene from jian-scene + scene_vars from de-editor-core
+├── de-editor-core/       Canonical `.op` (PenDocument) editor state + EditorCommand + scene_vars (design-variable resolution)
+├── de-editor-host-core/  Transport-free host state machines shared by all hosts
+├── de-collab/            Open, transport-free collaboration protocol + canonical hash + exact document apply (wasm32-clean)
+├── de-collab-host/       Host-agnostic collaboration session runtime (`CollabRuntime` + `CollabHost`); desktop and the serve-web daemon both drive it
+├── de-host-native/       Native host lib: WidgetHostNative + skia-safe GL backend (desktop + mobile)
+├── de-engine-ffi/        Player C ABI: embed the canvas in iOS / Android shells (metal / gl / raster surfaces)
+├── de-engine-jni/        Android JNI marshalling layer for de-engine-ffi (engine thread, registry, callbacks)
+├── de-engine-napi/       OpenHarmony (OHOS) Node-API layer → `libopenpencil.so`; reuses de-engine-jni's engine thread + registry, everything else target-gated on `target_env = "ohos"` (see its README for the ArkTS API table)
+├── de-host-web/          Browser bundle entry: wasm32-unknown-unknown cdylib, CanvasKit renderer
+├── de-host-desktop/      Desktop binary `openpencil-desktop` (winit + skia-safe GL); also the `--serve-web` daemon
+├── de-cli/               `op` command-line tool
+├── de-util/              Dependency-free leaf: shared collaboration-id grammar + hex-colour / JSON / XML helpers
+└── …                     de-mcp / de-ai / de-ai-skills / de-codegen / de-orchestrator / de-figma /
+                          de-git / de-opmerge / de-pen-loader / de-design-lint / de-config-store /
+                          de-process-io / de-acp / de-i18n / de-rpc-transport / de-smoke /
+                          de-host-services / de-host-web-server / de-html / de-auth-bridge / de-web-sdk
 ```
 
-`op-util` is the workspace's single source for the collaboration namespace/id
+`de-util` is the workspace's single source for the collaboration namespace/id
 grammar and three helpers that had drifted
 into many copies: `hex_color` (nine divergent implementations, one of which
 panicked on non-ASCII input), `json_escape` (one copy was lossy), and
 `xml_escape` (one copy omitted the quote entity — an attribute-injection gap).
 It must stay dependency-free and wasm32-clean: it sits in the browser host's
-build graph via op-editor-core / op-editor-ui. Reach for it instead of writing
+build graph via de-editor-core / de-editor-ui. Reach for it instead of writing
 a local `parse_hex` / `escape_json` again.
 
 `vendor/jian/` is a submodule providing the rendering primitive layer (`jian-skia` Skia adapter, `jian-host-desktop` GL plumbing, `jian-core` event types + taffy layout, `jian-scene` canonical render scene — `LayoutScene` + hit-test + path geometry, consumed by OP and any jian app); `vendor/casement` is the winit fork; `vendor/agent` is the cross-product Rust agent runtime. All are referenced by path in the workspace Cargo.toml.
 
 ## Key invariants
 
-- **op-host-native tests need `--features gl-host`.** `gl-host` is a non-default feature (keeps `skia-safe/gl` out of mobile builds), and the entire `widget_host` module is gated behind it — a default-feature `cargo test -p op-host-native` runs 55 tests instead of 676 and gives ZERO coverage of `widget_host/` changes. Always test native with `--features gl-host`.
+- **de-host-native tests need `--features gl-host`.** `gl-host` is a non-default feature (keeps `skia-safe/gl` out of mobile builds), and the entire `widget_host` module is gated behind it — a default-feature `cargo test -p de-host-native` runs 55 tests instead of 676 and gives ZERO coverage of `widget_host/` changes. Always test native with `--features gl-host`.
 
-- **op-editor-ui (widgets) stays wasm32-clean** (spec v19 §1.2). No skia-safe / winit / accesskit_winit. The `RenderBackend` trait is the only seam between widget code and platform.
-- **Widget code lives in op-editor-ui only.** Hosts (op-host-native `widget_host.rs`, op-host-web `widget_host.rs`) are the ONLY files allowed to call `op_editor_ui::widgets::*`. Boundary script: `tools/check-widget-boundary.sh`.
+- **de-editor-ui (widgets) stays wasm32-clean** (spec v19 §1.2). No skia-safe / winit / accesskit_winit. The `RenderBackend` trait is the only seam between widget code and platform.
+- **Widget code lives in de-editor-ui only.** Hosts (de-host-native `widget_host.rs`, de-host-web `widget_host.rs`) are the ONLY files allowed to call `de_editor_ui::widgets::*`. Boundary script: `tools/check-widget-boundary.sh`.
 - **Max 800 lines per file — zero violations workspace-wide.** As of `d2d8104c` no `.rs` file in `crates/` exceeds the cap, and the sibling-module split is the universal shape: a spine keeps the public surface and `mod` declarations, cohesive clusters move into siblings, and re-exports keep every import path and test name stable. Splits are pure code motion — when you split, do not also change behaviour. Test modules follow the same rule (`foo_tests.rs`, or a `foo/tests/` directory when the tests themselves outgrow the cap). Check with `find crates -name '*.rs' -exec wc -l {} + | awk '$1>800'`.
-- **Blocking on a future from sync host code goes through `op_host_services::chat_runtime::block_on_anywhere`.** A bare `Runtime::block_on` (or a privately-built current-thread runtime) aborts with "runtime within runtime" when the caller happens to sit on a tokio worker. `block_on_anywhere` picks the safe strategy for whichever context it is called from; it is the only sanctioned entry point and is exercised by tests for the no-runtime, multi-thread-worker, and borrowing-non-`Send`-future cases.
+- **Blocking on a future from sync host code goes through `de_host_services::chat_runtime::block_on_anywhere`.** A bare `Runtime::block_on` (or a privately-built current-thread runtime) aborts with "runtime within runtime" when the caller happens to sit on a tokio worker. `block_on_anywhere` picks the safe strategy for whichever context it is called from; it is the only sanctioned entry point and is exercised by tests for the no-runtime, multi-thread-worker, and borrowing-non-`Send`-future cases.
 - **Fallible paths carry typed error enums, not `String`.** The whole workspace is converted (80+ enums; `Result<_, String>` survives at exactly two documented boundary sites). Find the domain's enum in its `*_error.rs` / `error.rs` sibling module (e.g. `CliError`, `ProgramError`, `WebCanvasError`, `McpServeError`, `ExportError`, `McpLiveError`, `DocIoError`, `ImageGenerateError`). The pattern to copy: one enum per failure domain in its own sibling module, structured fields instead of pre-formatted text, a `Display` impl that reproduces the previous message **byte-identically** (so user-visible strings and their tests don't move), and `From` impls that collapse the `map_err` adapters at the call sites. New fallible code should introduce or reuse an enum rather than add another `Result<_, String>`.
 - **Web bundle ceiling: 6 MiB gzip + 0 env.\* imports.** Enforced by `tools/check-wasm-bundle.sh`. The CanvasKit bundle carries the full app logic (codegen AI pipeline, Figma parser, AI/live-sync, collaboration) plus the still-embedded AI skill corpus (~1.1 MiB of markdown via `include_dir!`), so the ceiling sits well above the retired skia raster path's 1 MiB (**4.93 MiB today**; the ceiling is a runaway-regression tripwire, not a budget). Re-baselined from 8 MiB once the ~2.4 MiB of preview JPEGs moved out — see below. The 0 env.\* guard still holds — CanvasKit needs no libc shim.
-- **Product assets are embedded on native and fetched on wasm.** `op-editor-core/src/web_assets.rs` is the platform-free half: a process-global `route -> bytes` registry with single-flight, a widget-records / host-drains request queue, and `Absent/Pending/Ready/Failed` states. The widget layer calls `web_assets::request(route)` from paint and draws a placeholder; `op-host-web/src/web_asset_fetch.rs` drains it once per frame over XHR and installs the bytes. Native keeps its `include_bytes!` unchanged behind `#[cfg(not(target_arch = "wasm32"))]`, so desktop behaviour is byte-identical. Assets are served from `/pkg/assets/…` (**not** `/assets/`, which belongs to the hub frontend) and staged into the bundle by `tools/stage-web-assets.sh`, which `check-wasm-bundle.sh` runs as step 4 and both the CI workflow and `Dockerfile.web-rust` inherit. Moved: the Prompt Center (~2.1 MiB) and 80 Scene Template preview JPEGs (~3.4 MiB), the 80 scene-template `.op` documents (~6.6 MiB), and `iconify-catalog-core.json` (~452 KiB) — ~12.6 MiB of staged assets in total. Still embedded everywhere: the `op-ai-skills` corpus (~1.1 MiB, `include_dir!`).
-- **The icon-catalog split is opt-in, the rest is `cfg(target_arch = "wasm32")`.** `op-editor-ui`'s `runtime-icon-catalog` feature is enabled only by `op-host-web`, which has a daemon to fetch from and a frame pump to install on. `op-web-sdk` renders iconFont nodes but has no daemon, so it keeps the embed — for that viewer "not fetched yet" would mean "never". Bundle ceilings are per-bundle and measured: op-host-web 6 MiB (5.17 MiB measured), op-web-sdk 6 MiB (5.20 MiB measured).
+- **Product assets are embedded on native and fetched on wasm.** `de-editor-core/src/web_assets.rs` is the platform-free half: a process-global `route -> bytes` registry with single-flight, a widget-records / host-drains request queue, and `Absent/Pending/Ready/Failed` states. The widget layer calls `web_assets::request(route)` from paint and draws a placeholder; `de-host-web/src/web_asset_fetch.rs` drains it once per frame over XHR and installs the bytes. Native keeps its `include_bytes!` unchanged behind `#[cfg(not(target_arch = "wasm32"))]`, so desktop behaviour is byte-identical. Assets are served from `/pkg/assets/…` (**not** `/assets/`, which belongs to the hub frontend) and staged into the bundle by `tools/stage-web-assets.sh`, which `check-wasm-bundle.sh` runs as step 4 and both the CI workflow and `Dockerfile.web-rust` inherit. Moved: the Prompt Center (~2.1 MiB) and 80 Scene Template preview JPEGs (~3.4 MiB), the 80 scene-template `.op` documents (~6.6 MiB), and `iconify-catalog-core.json` (~452 KiB) — ~12.6 MiB of staged assets in total. Still embedded everywhere: the `de-ai-skills` corpus (~1.1 MiB, `include_dir!`).
+- **The icon-catalog split is opt-in, the rest is `cfg(target_arch = "wasm32")`.** `de-editor-ui`'s `runtime-icon-catalog` feature is enabled only by `de-host-web`, which has a daemon to fetch from and a frame pump to install on. `de-web-sdk` renders iconFont nodes but has no daemon, so it keeps the embed — for that viewer "not fetched yet" would mean "never". Bundle ceilings are per-bundle and measured: de-host-web 6 MiB (5.17 MiB measured), de-web-sdk 6 MiB (5.20 MiB measured).
 
 ## Document model (`shell-core/src/document/`)
 
@@ -145,7 +145,7 @@ Mutators on `Document`:
 | LayerContextMenu  | Right-click overlay on layer rows + page tabs (Rename / Duplicate / Delete / Group / Ungroup / Lock / Hide; subset on page tabs)     | `layer_context_menu.rs`                                                                                                                 |
 | AgentSettings     | Cmd+, modal — 880×640 with sidebar nav (Agents / MCP / Images / System) + scrollable right pane                                      | `agent_settings_panel.rs` + `agent_settings_{i18n,images,mcp,system}.rs`                                                                |
 | theme             | shadcn-dark palette tokens (incl. `canvas_surface`)                                                                                  | `theme.rs`                                                                                                                              |
-| i18n              | 15 canonical locale catalogs, 1,679 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `op-i18n` crate                       | `op-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
+| i18n              | 15 canonical locale catalogs, 1,679 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
 
 ## Theme + i18n
 
@@ -156,12 +156,12 @@ Mutators on `Document`:
 - 15 supported locales (matches TS dropdown order): EnUs / ZhCn / ZhTw / Ja / Ko / Fr / Es / De / Pt / Ru / Hi / Tr / Th / Vi / Id. Each carries a `display_name()` (English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Français / Español / Deutsch / Português / Русский / हिन्दी / Türkçe / ไทย / Tiếng Việt / Bahasa Indonesia).
 - TopBar Globe-button is a 44 px-wide compound (globe + chevron-down) opening a `LocalePicker` dropdown. Native applies a clicked locale immediately; web closes the picker but keeps the old locale while an uninstalled runtime catalog is pending, then mutates `Document.ui.locale` once the JSON is ready. Clicking outside (or the Globe again) closes silently. The picker paints as the top-most overlay so it covers chat / status / canvas.
 - Multi-script chrome strings (한국어 / हिन्दी / ไทย / Tiếng Việt) render against per-codepoint typeface lookups (`FontMgr::match_family_style_character` cached per `i32` in `NativeBackend`), with each string broken into contiguous-typeface segments before draw.
-- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,679 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `op-host-web` enables `op-editor-ui`'s forwarding `runtime-locale-catalog` feature; `op-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,679-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
+- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,679 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,679-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
 
   **Adding a new key: put it in `<locale>_collab.rs` (the terminal overflow shard), in all 15 locales.** The main tables sit at or just under the repo's 800-line ceiling (`zh_cn.rs` is exactly 800, `en.rs` 798), so a new entry there does not fit — the `_panel` shards exist precisely to absorb overflow and have room. Only edit a main or `_git` table when you are changing the wording of a key that already lives there. Then bump the expected count in `catalog_integrity_tests.rs` and run:
 
   ```sh
-  cargo test -p op-i18n
+  cargo test -p de-i18n
   ```
 
   Catalog integrity tests enforce the exact cross-locale key set across all four shards, reject duplicate or unsupported match arms, and require every translation to preserve the English placeholder set. The `i18n/mod.rs` tests were split into sibling modules alongside it (`tests.rs`, `catalog_integrity_tests.rs`, plus per-feature key guards: `figma_property_panel_key_tests.rs`, `html_import_key_tests.rs`, `missing_fonts_key_tests.rs`, `preview_device_key_tests.rs`, `vector_fidelity_property_keys.rs`) — add a feature's key guard next to those rather than growing `mod.rs`. `tools/convert-locales.py` is a deliberate failing shim because its retired TypeScript source no longer exists. Runtime lookup still falls back through English and then the raw key for debug visibility, while the tests prevent shipped locale gaps.
@@ -223,7 +223,7 @@ The hit-test walker `action_button_rects_with_fill_picker(panel_rect, visible, f
 
 ### File split
 
-The panel is a `property_panel_*.rs` family in `op-editor-ui/src/widgets/` (plus the `property_panel/`, `property_panel_snapshot/`, and `property_panel_tests/` directories) — one file per section or concern, all under the 800-line ceiling. The load-bearing entries:
+The panel is a `property_panel_*.rs` family in `de-editor-ui/src/widgets/` (plus the `property_panel/`, `property_panel_snapshot/`, and `property_panel_tests/` directories) — one file per section or concern, all under the 800-line ceiling. The load-bearing entries:
 
 - `property_panel.rs` — `PropertyPanel`, snapshot, `SectionCapabilities`, hit-test entry points.
 - `property_panel_sections.rs` — section paint routines + `PropertyLabels` + `EditContext`.
@@ -249,7 +249,7 @@ resize / dpi_scale
 
 ## Native widget_host layout
 
-`crates/op-host-native/src/widget_host.rs` is a spine (~690 lines) holding the public surface — the `WidgetHostNative` struct, `CursorHint` / `PanelResizeKind` enums, the constructor and small accessors (`set_now_ms` / `chat_focused` / `next_animation_deadline_ms`) — plus the `mod` declarations for ~130 sibling submodules under `widget_host/`. Its web twin, `op-host-web/src/widget_host.rs` (~500 lines), has the same shape. The drag-state structs are **not** declared here any more: both hosts share them from `op_editor_core::host_drag_state`.
+`crates/de-host-native/src/widget_host.rs` is a spine (~690 lines) holding the public surface — the `WidgetHostNative` struct, `CursorHint` / `PanelResizeKind` enums, the constructor and small accessors (`set_now_ms` / `chat_focused` / `next_animation_deadline_ms`) — plus the `mod` declarations for ~130 sibling submodules under `widget_host/`. Its web twin, `de-host-web/src/widget_host.rs` (~500 lines), has the same shape. The drag-state structs are **not** declared here any more: both hosts share them from `de_editor_core::host_drag_state`.
 
 The directory is too large to table exhaustively; the naming scheme tells you where to look:
 
@@ -258,13 +258,13 @@ The directory is too large to table exhaustively; the naming scheme tells you wh
 | `press.rs` + `press_ctx.rs` + `press_*_tiers.rs`     | The `apply_press` hit-test ladder — spine, per-event scratch struct, and the ordered tier bodies (see "Hit-test order")                                          |
 | `input.rs` + `cursor_move_ctx.rs` + `cursor_move_*.rs` | The `apply_cursor_move` hover ladder, same spine/ctx/tier shape (native only; web's cursor path lives in `cursor_input.rs`)                                    |
 | `keyboard.rs` + `keyboard_*.rs`                     | Key dispatch split by concern — caret, clipboard, delete, escape, send, IME                                                                                     |
-| `*_dispatch.rs`                                     | Thin platform arms over the shared `op-editor-ui` dispatch flows (property, image panel, settings, font picker)                                                 |
+| `*_dispatch.rs`                                     | Thin platform arms over the shared `de-editor-ui` dispatch flows (property, image panel, settings, font picker)                                                 |
 | `paint.rs`, `paint_pan_cache.rs`, `scene_state.rs`  | The composition pass and its caches                                                                                                                             |
 | `host_lifecycle.rs`, `host_requests.rs`             | Host boot / teardown and outbound request plumbing carved off the spine                                                                                         |
-| `geometry.rs`, `overlay_rects.rs`, `helpers.rs`     | Thin forwarders to the shared geometry in `op-editor-ui` plus the few genuinely platform-specific rects                                                          |
+| `geometry.rs`, `overlay_rects.rs`, `helpers.rs`     | Thin forwarders to the shared geometry in `de-editor-ui` plus the few genuinely platform-specific rects                                                          |
 | `*_tests.rs` / `*_tests/`                           | Per-concern test siblings; a directory means the tests themselves outgrew the cap                                                                               |
 
-`NativeFrameBackend` (the `RenderBackend` impl over `NativeBackend` + `&Canvas`) moved out of `widget_host/` — it lives in `op-host-native/src/backend/frame_backend.rs` alongside `frame_offscreen.rs` and the `skia/` split.
+`NativeFrameBackend` (the `RenderBackend` impl over `NativeBackend` + `&Canvas`) moved out of `widget_host/` — it lives in `de-host-native/src/backend/frame_backend.rs` alongside `frame_offscreen.rs` and the `skia/` split.
 
 ### The three input ladders
 
@@ -289,7 +289,7 @@ Native (`openpencil-desktop`) + web (`shell-web`) both dispatch the following P1
 | `Escape`                  | `apply_escape`        | One layer per press, in priority order: property-focus → locale picker → shape picker → fill-type picker → chat focus → selection. |
 | `Enter`                   | `apply_send`          | Commits property edit or sends chat.                                                                                               |
 
-The shared implementation of these lives in `op_editor_core::host_keyboard_transitions` + `host_escape_transitions`; the host `keyboard*.rs` files are the platform arms.
+The shared implementation of these lives in `de_editor_core::host_keyboard_transitions` + `host_escape_transitions`; the host `keyboard*.rs` files are the platform arms.
 
 ## Desktop binary (`openpencil-desktop/`)
 
@@ -347,7 +347,7 @@ Web's `apply_press` runs the same order with two extra tiers split out (`press_i
 
 Every input path that reasons about the canvas region MUST derive its rects from `canvas_region(…)`. Never reuse `LAYER_PANEL_WIDTH` for hit-test — paint follows `canvas_region`, which collapses to `canvas_left = 0` when the sidebar is closed. Sites that proved this rule by violating it: `over_canvas`, `apply_wheel` cursor offset, toolbar hit rect in `apply_press` / `apply_click`. Web `apply_wheel` zoom anchor + `toolbar_rect()` follow the same rule.
 
-The invariant now has **one implementation**: `op-editor-ui/src/widgets/host_canvas_geometry.rs` owns `canvas_origin` / `canvas_region` / `canvas_rect` / `over_canvas` / `canvas_doc_point[_unclamped]` / `canvas_centre_doc_point` / `layer_panel_rect` / `property_panel_rect` / `toolbar_rect*` / `status_bar_rect` / `marquee_rect` / `path_anchor_hit`, and each host's `widget_host/geometry.rs` is a thin forwarder. Both hosts previously carried byte-identical copies of this math — exactly the drift the invariant exists to prevent. Sixteen inline screen-to-doc conversions were routed through the shared helper as part of the same pass; do not add a seventeenth by hand.
+The invariant now has **one implementation**: `de-editor-ui/src/widgets/host_canvas_geometry.rs` owns `canvas_origin` / `canvas_region` / `canvas_rect` / `over_canvas` / `canvas_doc_point[_unclamped]` / `canvas_centre_doc_point` / `layer_panel_rect` / `property_panel_rect` / `toolbar_rect*` / `status_bar_rect` / `marquee_rect` / `path_anchor_hit`, and each host's `widget_host/geometry.rs` is a thin forwarder. Both hosts previously carried byte-identical copies of this math — exactly the drift the invariant exists to prevent. Sixteen inline screen-to-doc conversions were routed through the shared helper as part of the same pass; do not add a seventeenth by hand.
 
 ## Settings modal (`Cmd+,`)
 
@@ -358,7 +358,7 @@ The invariant now has **one implementation**: `op-editor-ui/src/widgets/host_can
 - **Images** — Image Search Ready/Not-configured indicator + collapsible Advanced section (Openverse OAuth Client ID / Secret + Register link + Test button), then Image Generation section with `+ Add` empty state.
 - **System** — read-only Auto-update status card (no updater backend wired yet — a togglable switch would lie to the user; the row paints as informational text).
 
-`agent_settings_i18n.rs` is a thin widget-layer adapter over the shared `op-i18n` lookup. All `settings.*` strings (`settings.tab.*` / `settings.agents.*` / `settings.mcp.*` / `settings.images.*` / `settings.system.*` / `settings.provider.*`) live directly in every one of the 15 canonical locale tables.
+`agent_settings_i18n.rs` is a thin widget-layer adapter over the shared `de-i18n` lookup. All `settings.*` strings (`settings.tab.*` / `settings.agents.*` / `settings.mcp.*` / `settings.images.*` / `settings.system.*` / `settings.provider.*`) live directly in every one of the 15 canonical locale tables.
 
 ### Settings input editing
 
@@ -406,15 +406,15 @@ Layer-panel drag now supports **cross-parent reparenting**: a drag whose drop-ta
 - **Viewport culling** (`widgets/canvas_viewport.rs`) — `paint_node` takes a `cull: Rect` (canvas region + 64 px stroke/handle margin). Leaf nodes outside the cull skip paint entirely; containers always recurse so off-screen-parent / on-screen-child still renders.
 - **Redraw scheduler** (`openpencil-desktop/src/main.rs`) — `request_redraw(dirty: bool)` + a `prepare_redraw` step that skips paint when only a tracked redraw fired and no visible state changed (kills the first-click chip flicker because macOS GL swap chain didn't perfectly hide `canvas.clear(BLACK)` between same-output frames).
 - **Cursor-move coalescing** — `apply_cursor_move` cached as `pending_cursor_move`, drained on `RedrawRequested` AND right before `apply_press` / `apply_release` / `apply_right_press` (so the final drag-end frame isn't dropped). Without the press-time drain a fast drag-release could fire press before the queued cursor-move and the release saw stale hover state.
-- **Font cache prewarm** (`op-host-native/src/backend/skia.rs`) — `NativeBackend::new` walks `PREWARM_CJK_CODEPOINTS` (~50 chars covering every CJK glyph used in the chrome + settings modal) through `FontMgr::match_family_style_character` at startup. Without this the first cross-tab paint stutters because each unseen CJK char triggers a synchronous system font scan.
+- **Font cache prewarm** (`de-host-native/src/backend/skia.rs`) — `NativeBackend::new` walks `PREWARM_CJK_CODEPOINTS` (~50 chars covering every CJK glyph used in the chrome + settings modal) through `FontMgr::match_family_style_character` at startup. Without this the first cross-tab paint stutters because each unseen CJK char triggers a synchronous system font scan.
 
 ## Shared host logic (the native↔web `widget_host` fork is single-sourced)
 
-`op-host-native/src/widget_host/` and `op-host-web/src/widget_host/` used to be a copy-pasted twin pair, and the copies had silently drifted apart — web's Interactions actions were dead no-ops, native's shift-drag skipped the undo snapshot, native painted two variables menus at once, web's marquee release never synced the entered container, and so on. Every one of those was a *real user-visible bug* found only because the twins were diffed. The fork is now single-sourced.
+`de-host-native/src/widget_host/` and `de-host-web/src/widget_host/` used to be a copy-pasted twin pair, and the copies had silently drifted apart — web's Interactions actions were dead no-ops, native's shift-drag skipped the undo snapshot, native painted two variables menus at once, web's marquee release never synced the entered container, and so on. Every one of those was a *real user-visible bug* found only because the twins were diffed. The fork is now single-sourced.
 
 **Before adding logic to either host, check whether it belongs in one of these.** A host file should be a thin platform arm: hit-test, call the shared flow, run the platform tail. Genuinely platform-specific behaviour stays host-side **with a comment saying why**.
 
-Pure state transitions — no widget types, wasm32-clean — live in **`op-editor-core/src/`**:
+Pure state transitions — no widget types, wasm32-clean — live in **`de-editor-core/src/`**:
 
 | Module                             | Owns                                                                                    |
 | ---------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -432,9 +432,9 @@ Pure state transitions — no widget types, wasm32-clean — live in **`op-edito
 | `request_snapshot.rs`              | `narrowed_snapshot` — see below                                                           |
 | `agent_reveals.rs`                 | Before/after node-id diff + staggered reveal bookkeeping for freshly inserted subtrees    |
 | `auth_routes.rs`                   | Device-login HTTP route paths shared by the web shell (client) and serve-web daemon (server) |
-| `collab_routes.rs` + `collab_wire.rs` | Collaboration is **not desktop-only**: the wasm bundle carries the UI but no transport, so the browser drives a daemon-hosted session over `/api/collab/{state,action,presence,avatar}` with versioned wire DTOs (client `op-host-web/src/collab_sync.rs`, server `op-host-services/src/web_canvas_server/collab_routes.rs`) |
+| `collab_routes.rs` + `collab_wire.rs` | Collaboration is **not desktop-only**: the wasm bundle carries the UI but no transport, so the browser drives a daemon-hosted session over `/api/collab/{state,action,presence,avatar}` with versioned wire DTOs (client `de-host-web/src/collab_sync.rs`, server `de-host-services/src/web_canvas_server/collab_routes.rs`) |
 
-Widget-typed shared logic lives in **`op-editor-ui/src/widgets/`**:
+Widget-typed shared logic lives in **`de-editor-ui/src/widgets/`**:
 
 | Module                                                     | Owns                                                                              |
 | ---------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -460,13 +460,13 @@ Widget-typed shared logic lives in **`op-editor-ui/src/widgets/`**:
 | `settings_form.rs`                                         | Shared card-form chrome for the Agent settings sections                            |
 | `test_capture_backend.rs`                                  | Test-only `RenderBackend` stub recording `fill_round_rect` calls                   |
 
-`op-editor-ui/src/accessibility_regions.rs` (crate root, not `widgets/`) single-sources the a11y region walk behind native's `widget_host/a11y.rs` and web's `a11y_bridge.rs`.
+`de-editor-ui/src/accessibility_regions.rs` (crate root, not `widgets/`) single-sources the a11y region walk behind native's `widget_host/a11y.rs` and web's `a11y_bridge.rs`.
 
-Outside the widget hosts the same rule applies: settings payload serde lives in `op-editor-host-core/src/settings_payload.rs`, image generate / search in `op-host-services/src/web_image_{generate,search}.rs`, and the `--mcp` / `--mcp-http` / `--serve-web` argv dispatch in `op_host_services::cli_modes` (shared by `op-host-desktop` and `op-host-web-server`, which differ only in what an unknown mode means). Desktop no longer carries drifted copies of any of them.
+Outside the widget hosts the same rule applies: settings payload serde lives in `de-editor-host-core/src/settings_payload.rs`, image generate / search in `de-host-services/src/web_image_{generate,search}.rs`, and the `--mcp` / `--mcp-http` / `--serve-web` argv dispatch in `de_host_services::cli_modes` (shared by `de-host-desktop` and `de-host-web-server`, which differ only in what an unknown mode means). Desktop no longer carries drifted copies of any of them.
 
 ### `EditorUiState` split + narrowed snapshots
 
-`op-editor-core/src/editor_ui_state.rs` is a spine over seven siblings (`chrome`, `defaults`, `git_panel`, `groups`, `methods`, `pickers`, `tests`), with re-exports keeping every import path stable. Three measured field clusters became substructs in `editor_ui_state/groups.rs` — `PreviewState`, `SizeToggleState`, `DesignMdPanelState` (192 → 176 flat fields). Larger clusters were rejected on workspace touch-count, so don't group further without measuring.
+`de-editor-core/src/editor_ui_state.rs` is a spine over seven siblings (`chrome`, `defaults`, `git_panel`, `groups`, `methods`, `pickers`, `tests`), with re-exports keeping every import path stable. Three measured field clusters became substructs in `editor_ui_state/groups.rs` — `PreviewState`, `SizeToggleState`, `DesignMdPanelState` (192 → 176 flat fields). Larger clusters were rejected on workspace touch-count, so don't group further without measuring.
 
 `request_snapshot::narrowed_snapshot(&mut EditorState)` is the sanctioned way to hand editor state to a worker thread. The MCP request path, the chat-launch path, and the desktop design pump's per-apply-ack all use it: it drops `chat` / `codegen` / `theme_presets`, which grow with session length and are read by no consumer on the worker side. A full `EditorState::clone()` on a request path is a bug.
 
@@ -523,22 +523,22 @@ Every host close path clears its respective hover state so reopening starts un-h
 
 `persistence.rs::show_error_dialog` pops a native `rfd::MessageDialog` on every failed load / save / export with a bilingual (EN / ZH per `Document.ui.locale`) title + path + detail body. `OpenRecent` failures additionally prune the stale entry from `Document.ui.recent_files`.
 
-## MCP server (`op-mcp`)
+## MCP server (`de-mcp`)
 
-The **`op-mcp`** crate carries the MCP wire layer that mirrors the retired TS `packages/pen-mcp` server: a flat `op-mcp/src/*.rs` module set with `lib.rs` as the spine (types + `ToolRegistry` + `run_stdio*`). There is no `mcp/` subdirectory. A serde-free hand-rolled JSON-RPC parser keeps the wasm32 bundle small.
+The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `packages/pen-mcp` server: a flat `de-mcp/src/*.rs` module set with `lib.rs` as the spine (types + `ToolRegistry` + `run_stdio*`). There is no `mcp/` subdirectory. A serde-free hand-rolled JSON-RPC parser keeps the wasm32 bundle small.
 
 ### Tool catalog
 
 **123 static-schema tools** registered today. The authoritative list
-is `op-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
+is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in
-`op-host-services/src/mcp_serve.rs`, guarded by an exact-count
+`de-host-services/src/mcp_serve.rs`, guarded by an exact-count
 assertion test in `mcp_serve/tests.rs`
 (`tools_list_response_includes_all_registered_tools`). A further
 **37 kit-component tools** (`insert_<component>`, one per built-in
 UIKit component — 6 starter-kit + 31 shadcn) are appended dynamically
-via `op_mcp::element_tools::insert_kit_component_tools` and ride
+via `de_mcp::element_tools::insert_kit_component_tools` and ride
 alongside the static schemas in the `tools/list` response. These 37
 tools are what remains of the old TS element ecosystem — the ~188
 `add_*` element-alias tools, their per-category builders/shards, and
@@ -555,31 +555,31 @@ By category:
   `get_history_depth` / `get_viewport` / `get_selection_set`.
   Each snapshots `Document` state at registration.
 - **Node write (insert/update/delete/move/copy/replace)** —
-  `op-mcp/src/write_tools.rs`.
+  `de-mcp/src/write_tools.rs`.
 - **Per-node attribute writers** — `set_node_rotation` / `_text` /
   `_corner_radius` / `_font_size` / `_font_weight` / `_stroke_hex` /
-  `_stroke_width` / `_fill_hex` / `_name` (`op-mcp/src/node_attr_tools.rs`).
+  `_stroke_width` / `_fill_hex` / `_name` (`de-mcp/src/node_attr_tools.rs`).
 - **Selection / clipboard / canvas ops** — `set_selection` /
   `set_selection_set` / `toggle_node_selection` / `clear_selection`
   / `duplicate` / `delete` / `nudge` / `group` / `ungroup` /
   `reorder` / `align_selected` / `copy_selected` / `cut_selected`
   / `paste_clipboard` / `set_active_tool` / `set_viewport` /
   `set_node_hidden|locked|collapsed` / `undo` / `redo`
-  (`op-mcp/src/selected_ops_tools.rs` + `op-mcp/src/component_tools.rs`).
+  (`de-mcp/src/selected_ops_tools.rs` + `de-mcp/src/component_tools.rs`).
 - **Pages + components** — `add_page` / `rename_page` /
   `delete_page` / `duplicate_page` / `reorder_page` /
   `set_active_page` / `instantiate_component` / `create_component`
-  / `delete_component` / `rename_component` (`op-mcp/src/component_tools.rs`).
+  / `delete_component` / `rename_component` (`de-mcp/src/component_tools.rs`).
 - **Variables + themes** — `set_variable_color|number|string|boolean`
   / `create_variable` / `delete_variable` / `rename_variable` /
   `set_active_axis_value` / `cycle_active_axis_value`
-  (`op-mcp/src/scalar_vars.rs` + `op-mcp/src/component_tools.rs`).
+  (`de-mcp/src/scalar_vars.rs` + `de-mcp/src/component_tools.rs`).
 - **Batch design** — `batch_design` / `design_skeleton` /
-  `design_content` / `design_refine` (`op-mcp/src/batch_design.rs`).
+  `design_content` / `design_refine` (`de-mcp/src/batch_design.rs`).
   `batch_design` accepts exactly one of `nodes_json` (a flat
   descriptor array), `operations` (the insert-only `I(parent, node)`
   program DSL), or `script` — a JavaScript program sandboxed through
-  `op_mcp::script_runner` (feature `script`, native-only; 64 MiB
+  `de_mcp::script_runner` (feature `script`, native-only; 64 MiB
   memory / 2 s wall-clock / 4096 recorded-line / 256 KiB source-size
   limits) whose only effect is calling `I(parent, node)` to emit the
   same program. The orchestrator's subagents share this exact runner:
@@ -595,7 +595,7 @@ Read tools snapshot `Document` state at registration time. Write tools stay `&se
 
 ### Wire-format hardening
 
-`op-mcp/src/parser.rs::parse_tool_call` accepts both the real MCP `tools/call` envelope and the legacy direct-method shape. Multiple stop-gates baked in:
+`de-mcp/src/parser.rs::parse_tool_call` accepts both the real MCP `tools/call` envelope and the legacy direct-method shape. Multiple stop-gates baked in:
 
 - **Structured args reject the parse.** `parse_flat_object_body` returns `None` on `{` or `[` for any value; `parse_tool_call` propagates that through a tri-state (`ParamsResult::Missing` / `Body` / `Malformed`). No scalar tool ever sees an object or array as a string-typed arg — earlier sentinel approaches were dropped because a literal `{...}` could collide with a real variable name.
 - **`arguments` field is a top-level walker.** `arguments_field` iterates top-level key/value pairs in the params body so a nested `meta.arguments` can't shadow the real top-level field, and `"name":"arguments"` doesn't false-positive.
@@ -604,7 +604,7 @@ Read tools snapshot `Document` state at registration time. Write tools stay `&se
 
 ### File layout
 
-All paths below are `op-mcp/src/` — flat, no subdirectory:
+All paths below are `de-mcp/src/` — flat, no subdirectory:
 
 ```
 lib.rs                       Spine: types + ToolRegistry + run_stdio*
@@ -636,7 +636,7 @@ mcp_tests.rs                 Cross-cutting: stdio dispatch, parser invariants
 
 ### Host wiring
 
-`openpencil-desktop --mcp <path>` (`crates/op-host-services/src/mcp_serve.rs`, shared by the desktop binary and `op-host-web-server` via `op_host_services::cli_modes`) runs a JSON-RPC stdio MCP server backed by the .op file at `<path>`. External CLIs (Claude Code / Codex / OpenCode / Kiro / Copilot / Antigravity / Grok Build) spawn the binary in this mode to drive the Rust editor. The module is itself a spine over `mcp_serve/` siblings: `schemas.rs` (the `TOOL_SCHEMAS` catalog), `wire.rs`, `sniff.rs` (top-level method / id sniffing), `error.rs` (`McpServeError`, which separates protocol faults from socket failures), `file_path.rs`, `doc_sync.rs`, and the export / screenshot tool arms.
+`openpencil-desktop --mcp <path>` (`crates/de-host-services/src/mcp_serve.rs`, shared by the desktop binary and `de-host-web-server` via `de_host_services::cli_modes`) runs a JSON-RPC stdio MCP server backed by the .op file at `<path>`. External CLIs (Claude Code / Codex / OpenCode / Kiro / Copilot / Antigravity / Grok Build) spawn the binary in this mode to drive the Rust editor. The module is itself a spine over `mcp_serve/` siblings: `schemas.rs` (the `TOOL_SCHEMAS` catalog), `wire.rs`, `sniff.rs` (top-level method / id sniffing), `error.rs` (`McpServeError`, which separates protocol faults from socket failures), `file_path.rs`, `doc_sync.rs`, and the export / screenshot tool arms.
 
 - Handshake: `initialize` returns protocol version + capabilities + serverInfo; `tools/list` enumerates the full catalog with JSON inputSchemas; `notifications/initialized` + `ping` handled inline.
 - Per-call lifecycle: re-build the `ToolRegistry` against the live document (so read-tool snapshots reflect prior writes) → dispatch through `run_stdio_with_applier` → applier closure mutates the doc + saves to disk on each successful write.

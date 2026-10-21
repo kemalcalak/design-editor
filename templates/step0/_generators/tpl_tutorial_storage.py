@@ -307,7 +307,7 @@ def build():
     return pages
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；数值由脚本实测）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；数值由脚本实测）：
 #   c-ink    on c-bg      13.53   c-muted on c-bg       5.75
 #   c-ink    on c-card    15.40   c-muted on c-card      6.55
 #   c-ink    on c-slot    11.89   c-muted on c-slot      5.06

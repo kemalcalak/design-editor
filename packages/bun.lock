@@ -13,7 +13,7 @@
         "typescript": "^5.7.2",
       },
     },
-    "op-vscode": {
+    "de-vscode": {
       "name": "openpencil-vscode",
       "version": "0.8.3",
       "devDependencies": {
@@ -28,8 +28,8 @@
         "typescript": "^5",
       },
     },
-    "op-web-sdk": {
-      "name": "@zseven-w/op-web-sdk",
+    "de-web-sdk": {
+      "name": "@zseven-w/de-web-sdk",
       "version": "0.1.0",
       "devDependencies": {
         "jsdom": "^25.0.0",
@@ -38,11 +38,11 @@
         "vitest": "^3.0.0",
       },
     },
-    "op-web-sdk-react": {
-      "name": "@zseven-w/op-web-sdk-react",
+    "de-web-sdk-react": {
+      "name": "@zseven-w/de-web-sdk-react",
       "version": "0.1.0",
       "dependencies": {
-        "@zseven-w/op-web-sdk": "workspace:*",
+        "@zseven-w/de-web-sdk": "workspace:*",
       },
       "devDependencies": {
         "@testing-library/react": "^16.0.0",
@@ -60,11 +60,11 @@
         "react-dom": "^19.0.0",
       },
     },
-    "op-web-sdk-vue": {
-      "name": "@zseven-w/op-web-sdk-vue",
+    "de-web-sdk-vue": {
+      "name": "@zseven-w/de-web-sdk-vue",
       "version": "0.1.0",
       "dependencies": {
-        "@zseven-w/op-web-sdk": "workspace:*",
+        "@zseven-w/de-web-sdk": "workspace:*",
       },
       "devDependencies": {
         "@vitejs/plugin-vue": "^5.0.0",
@@ -545,11 +545,11 @@
 
     "@vue/test-utils": ["@vue/test-utils@2.4.11", "", { "dependencies": { "js-beautify": "^1.14.9", "vue-component-type-helpers": "^3.0.0" }, "peerDependencies": { "@vue/compiler-dom": "3.x", "@vue/server-renderer": "3.x", "vue": "3.x" }, "optionalPeers": ["@vue/server-renderer"] }, "sha512-GDqaqZsA6m2E5vNzej0aYiIb6BX8xV9pNSbbbXKOfEYwg7ZNblVX8suyqmUBThq8VIrgAJNxn+z72hVtUeiWHA=="],
 
-    "@zseven-w/op-web-sdk": ["@zseven-w/op-web-sdk@workspace:op-web-sdk"],
+    "@zseven-w/de-web-sdk": ["@zseven-w/de-web-sdk@workspace:de-web-sdk"],
 
-    "@zseven-w/op-web-sdk-react": ["@zseven-w/op-web-sdk-react@workspace:op-web-sdk-react"],
+    "@zseven-w/de-web-sdk-react": ["@zseven-w/de-web-sdk-react@workspace:de-web-sdk-react"],
 
-    "@zseven-w/op-web-sdk-vue": ["@zseven-w/op-web-sdk-vue@workspace:op-web-sdk-vue"],
+    "@zseven-w/de-web-sdk-vue": ["@zseven-w/de-web-sdk-vue@workspace:de-web-sdk-vue"],
 
     "abbrev": ["abbrev@2.0.0", "", {}, "sha512-6/mh1E2u2YgEsCHdY0Yx5oW+61gZU+1vXaoiHHrpKeuRNNgFvS+/jrwHiQhB5apAf5oB7UB7E19ol2R2LKH8hQ=="],
 
@@ -969,7 +969,7 @@
 
     "open": ["open@10.2.0", "", { "dependencies": { "default-browser": "^5.2.1", "define-lazy-prop": "^3.0.0", "is-inside-container": "^1.0.0", "wsl-utils": "^0.1.0" } }, "sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA=="],
 
-    "openpencil-vscode": ["openpencil-vscode@workspace:op-vscode"],
+    "openpencil-vscode": ["openpencil-vscode@workspace:de-vscode"],
 
     "ovsx": ["ovsx@1.1.1", "", { "dependencies": { "@inquirer/prompts": "^7.10.1", "@vscode/vsce": "^3.7.1", "commander": "^6.2.1", "cross-keychain": "^1.1.0", "follow-redirects": "^1.16.0", "is-ci": "^2.0.0", "leven": "^3.1.0", "semver": "^7.6.0", "tmp": "^0.2.3", "yauzl-promise": "^4.0.0" }, "bin": { "ovsx": "bin/ovsx" } }, "sha512-tklsCzvGVWKlM91Vc9U8tNnaQ+XacPJ12SWHjDaHGUJB49oMhoAULsJGeefhHebPvvckbcWbKqKIXODMZah5SA=="],
 

@@ -1,6 +1,6 @@
 # OpenHarmony cross-compilation
 
-Toolchain plumbing for `crates/op-engine-napi` → `libopenpencil.so`, the
+Toolchain plumbing for `crates/de-engine-napi` → `libopenpencil.so`, the
 native module the ArkTS app in `packaging/harmony` loads.
 
 | File | Role |
@@ -90,18 +90,18 @@ bundled ones do not run on your host.
 `--features gl` currently buys **nothing on OHOS**, and this is a genuine
 functional gap, not a configuration mistake:
 
-* `op-engine-ffi`'s `gl` feature forwards to `jian-skia/gl`, but the EGL
+* `de-engine-ffi`'s `gl` feature forwards to `jian-skia/gl`, but the EGL
   surface backend is gated `#[cfg(all(target_os = "android", feature = "gl"))]`
   in `vendor/jian/crates/jian-skia/src/surface/mod.rs`, and its `khronos-egl`
   dependency sits under `[target.'cfg(target_os = "android")'.dependencies]`.
-* `op-engine-ffi`'s `build_surface` (`src/lifecycle.rs`) is gated the same way
+* `de-engine-ffi`'s `build_surface` (`src/lifecycle.rs`) is gated the same way
   and falls through to
   `OpStatus::NotReady` — *"no GPU surface backend compiled for this
   target/features"* — on OHOS.
 
 So `attachSurface` will return `NotReady` (10) on a real device until the gate
 is widened. Closing it is a **`vendor/jian` submodule change** plus a two-line
-gate widening in `op-engine-ffi`, and is deliberately out of scope for the
+gate widening in `de-engine-ffi`, and is deliberately out of scope for the
 in-repo OHOS work:
 
 1. `jian-skia/Cargo.toml`: make `khronos-egl` available for
@@ -109,7 +109,7 @@ in-repo OHOS work:
 2. `jian-skia/src/surface/mod.rs`: widen the `egl_android` module gate the same
    way (the module's body is plain EGL over a `void*` native window — nothing
    in it is Android-specific beyond the name).
-3. `op-engine-ffi/src/lifecycle.rs`: widen the two
+3. `de-engine-ffi/src/lifecycle.rs`: widen the two
    `all(feature = "gl", target_os = "android")` gates (`SurfaceSlot::Egl`
    construction and the `draw_frame` arm) to accept `target_env = "ohos"`.
 
@@ -140,9 +140,9 @@ The following still require a successful matching-SDK build/device run:
 * **The final NAPI link and ArkTS load.** The attempted Cargo build stopped in
   `skia-bindings`, so everything downstream of that build script is
   unexecuted. What HAS been verified here is the NAPI/NDK-facing Rust: every module in
-  `op-engine-napi` type-checks and passes `clippy -D warnings` for
-  `aarch64-unknown-linux-ohos` against stubbed `op-engine-ffi` /
-  `op-engine-jni` crates (see the crate README).
+  `de-engine-napi` type-checks and passes `clippy -D warnings` for
+  `aarch64-unknown-linux-ohos` against stubbed `de-engine-ffi` /
+  `de-engine-jni` crates (see the crate README).
 * **HarmonyOS 5.0.0(12) Native cross-build.** The exact SDK lane used by the
   HAP profile has not completed the Skia/NAPI link. `build-ohos.sh` validates
   the SDK directory layout and fails with the exact missing path rather than

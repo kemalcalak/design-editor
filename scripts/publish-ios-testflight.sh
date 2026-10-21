@@ -193,7 +193,7 @@ work_root=${RUNNER_TEMP:-${TMPDIR:-/tmp}}
 temp_dir=$(mktemp -d "$work_root/openpencil-testflight.XXXXXX")
 staged_prebuilt=$temp_dir/prebuilt
 keychain_path=$temp_dir/signing.keychain-db
-canonical_prebuilt=$repo_root/crates/op-auth-bridge/prebuilt
+canonical_prebuilt=$repo_root/crates/de-auth-bridge/prebuilt
 canonical_ios=$canonical_prebuilt/$ios_target
 canonical_ios_backup=$temp_dir/canonical-ios-backup
 canonical_ios_existed=0
@@ -287,7 +287,7 @@ done
 # check-op-auth-prebuilt only checks that a key exists; matrix signature
 # verification below always reads the canonical source key directly. This
 # staged copy is from that trusted key, never from the artifact checkout.
-trusted_public_key=$repo_root/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY
+trusted_public_key=$repo_root/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY
 require_regular_file "$trusted_public_key"
 trusted_public_key_sha=$(sha256_file "$trusted_public_key")
 cp -p "$trusted_public_key" "$staged_prebuilt/PROVENANCE_PUBKEY"
@@ -337,11 +337,11 @@ RUSTUP_TOOLCHAIN=1.94 \
 IPHONEOS_DEPLOYMENT_TARGET=15.0 \
 OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN=$relay_bootstrap_cn \
 OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL=$relay_bootstrap_global \
-    cargo build --locked --release -p op-engine-ffi \
+    cargo build --locked --release -p de-engine-ffi \
         --target aarch64-apple-ios --features metal,editor,pinned-skia-binaries
 OP_AUTH_CARGO_TARGET=aarch64-apple-ios \
     "$repo_root/tools/check-op-auth-cargo-build.sh"
-engine_archive=$repo_root/target/aarch64-apple-ios/release/libop_engine_ffi.a
+engine_archive=$repo_root/target/aarch64-apple-ios/release/libde_engine_ffi.a
 require_regular_file "$engine_archive"
 undefined_symbols=$temp_dir/engine-undefined-symbols
 xcrun nm -u "$engine_archive" > "$undefined_symbols"

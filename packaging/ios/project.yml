@@ -42,7 +42,7 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         SWIFT_OBJC_BRIDGING_HEADER: "$(SRCROOT)/OpenPencilPlayer-Bridging-Header.h"
         CODE_SIGN_ENTITLEMENTS: "$(SRCROOT)/OpenPencilPlayer.entitlements"
-        HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../../crates/op-engine-ffi/include"
+        HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../../crates/de-engine-ffi/include"
         "LIBRARY_SEARCH_PATHS[sdk=iphoneos*]": "$(inherited) $(SRCROOT)/../../target/aarch64-apple-ios/release"
         "LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]": "$(inherited) $(SRCROOT)/../../target/aarch64-apple-ios-sim/release"
         OP_AUTH_ARCHIVE: ""
@@ -62,12 +62,12 @@ targets:
         "OTHER_LDFLAGS[sdk=iphoneos*]": "$(inherited) -ObjC -framework DouyinOpenSDK -framework AFServiceSDK -framework WechatOpenSDK -framework WebKit -framework CoreData -framework SystemConfiguration -framework Network -lz -lsqlite3.0 -Wl,-no_compact_unwind"
       configs:
         Debug:
-          "OP_ENGINE_ARCHIVE[sdk=iphoneos*]": "$(SRCROOT)/../../target/aarch64-apple-ios/debug/libop_engine_ffi.a"
-          "OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]": "$(SRCROOT)/../../target/aarch64-apple-ios-sim/debug/libop_engine_ffi.a"
+          "OP_ENGINE_ARCHIVE[sdk=iphoneos*]": "$(SRCROOT)/../../target/aarch64-apple-ios/debug/libde_engine_ffi.a"
+          "OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]": "$(SRCROOT)/../../target/aarch64-apple-ios-sim/debug/libde_engine_ffi.a"
         Release:
           GCC_OPTIMIZATION_LEVEL: s
-          "OP_ENGINE_ARCHIVE[sdk=iphoneos*]": "$(SRCROOT)/../../target/aarch64-apple-ios/release/libop_engine_ffi.a"
-          "OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]": "$(SRCROOT)/../../target/aarch64-apple-ios-sim/release/libop_engine_ffi.a"
+          "OP_ENGINE_ARCHIVE[sdk=iphoneos*]": "$(SRCROOT)/../../target/aarch64-apple-ios/release/libde_engine_ffi.a"
+          "OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]": "$(SRCROOT)/../../target/aarch64-apple-ios-sim/release/libde_engine_ffi.a"
     info:
       path: Info.plist
       properties:

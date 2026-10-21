@@ -460,7 +460,7 @@ def build():
             recap()]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；本表逐对实算）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；本表逐对实算）：
 #   c-ink    on c-bg    13.95    c-soft  on c-bg      6.52
 #   c-faint  on c-bg     4.76    c-red   on c-bg      5.07
 #   c-ink    on c-panel 12.96    c-soft  on c-panel   6.06

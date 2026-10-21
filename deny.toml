@@ -81,9 +81,9 @@ wildcards = "allow"
 allow-wildcard-paths = true
 deny = [
   # WASM bundle blacklist (kickoff spec §1.2 invariant).
-  # `agent` is not listed: it is a native-only dependency of op-host-desktop
+  # `agent` is not listed: it is a native-only dependency of de-host-desktop
   # (the desktop binary, never compiled to wasm); wasm isolation is
-  # structural (op-host-web does not depend on it) and verified by
+  # structural (de-host-web does not depend on it) and verified by
   # tools/check-wasm-bundle.sh.
   "pen-agent-cli",
   "pen-server",
@@ -114,7 +114,7 @@ exact = true
 reason = "OpenPencil must use the separately installed CLI without embedding SDK runtime artifacts"
 
 # tokio's process / rt-multi-thread features are no longer banned:
-# op-host-desktop's native (async) agent runtime legitimately needs them.
+# de-host-desktop's native (async) agent runtime legitimately needs them.
 # The wasm side is structurally safe — both features depend on OS
 # threads/processes and cannot compile to wasm32 — and is verified by
 # tools/check-wasm-bundle.sh.

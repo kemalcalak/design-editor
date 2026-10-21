@@ -7,7 +7,7 @@ script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 temp_root=$(mktemp -d "${TMPDIR:-/tmp}/op-auth-matrix-test.XXXXXX")
 fixture_repo=$temp_root/repo
 attacker_repo=$temp_root/attacker-repo
-trusted_prebuilt=$fixture_repo/crates/op-auth-bridge/prebuilt
+trusted_prebuilt=$fixture_repo/crates/de-auth-bridge/prebuilt
 prebuilt=$temp_root/artifact-prebuilt
 version=9.8.7
 source_revision=1111111111111111111111111111111111111111
@@ -49,13 +49,13 @@ write_policy() {
         printf 'release_manifest_sha256=%s\n' "$manifest_sha"
         printf 'source_revision=%s\n' "$source_revision"
         printf 'build_id=%s\n' "$build_id"
-    } > "$repo/crates/op-auth-bridge/AUTH-RELEASE-POLICY"
+    } > "$repo/crates/de-auth-bridge/AUTH-RELEASE-POLICY"
 }
 
 mkdir -p \
     "$fixture_repo/tools" "$fixture_repo/scripts" \
     "$attacker_repo/tools" "$attacker_repo/scripts" \
-    "$attacker_repo/crates/op-auth-bridge/prebuilt" \
+    "$attacker_repo/crates/de-auth-bridge/prebuilt" \
     "$trusted_prebuilt" "$prebuilt"
 cp "$script_dir/check-op-auth-release-matrix.sh" "$fixture_repo/tools/"
 cp "$script_dir/check-op-auth-release-matrix.sh" "$attacker_repo/tools/"
@@ -276,9 +276,9 @@ cp "$valid_signature" "$prebuilt/RELEASE-MANIFEST.sig"
 openssl pkey -in "$forged_key" -pubout -outform DER \
     | tail -c 32 | xxd -p -c 256 > "$prebuilt/PROVENANCE_PUBKEY"
 cp "$prebuilt/PROVENANCE_PUBKEY" \
-    "$attacker_repo/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
+    "$attacker_repo/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
 write_policy "$attacker_repo" \
-    "$attacker_repo/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY" \
+    "$attacker_repo/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY" \
     "$prebuilt/RELEASE-MANIFEST"
 for target in "${targets[@]}"; do
     sign_hex "$forged_key" \

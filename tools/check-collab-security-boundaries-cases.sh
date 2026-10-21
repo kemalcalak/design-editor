@@ -7,23 +7,23 @@ pull_request:
   paths:
     - '.dockerignore'
     - '.gitignore'
-    - 'crates/op-collab-smoke/**'
-    - 'crates/op-collab-relay-protocol/**'
-    - 'crates/op-collab-relay-client/**'
-    - 'crates/op-collab-relay-server/**'
-    - 'crates/op-collab-relay-control-plane/**'
-    - 'crates/op-collab-policy-file/**'
-    - 'crates/op-collab-relay-locator-hsm/**'
-    - 'crates/op-collab-relay-locator-server/**'
-    - 'crates/op-util/**'
-    - 'crates/op-editor-core/**'
-    - 'crates/op-editor-host-core/**'
-    - 'crates/op-editor-ui/**'
-    - 'crates/op-host-native/**'
-    - 'crates/op-host-desktop/**'
-    - 'crates/op-chat-agent/src/provider_dial.rs'
-    - 'crates/op-host-services/**'
-    - 'crates/op-i18n/**'
+    - 'crates/de-collab-smoke/**'
+    - 'crates/de-collab-relay-protocol/**'
+    - 'crates/de-collab-relay-client/**'
+    - 'crates/de-collab-relay-server/**'
+    - 'crates/de-collab-relay-control-plane/**'
+    - 'crates/de-collab-policy-file/**'
+    - 'crates/de-collab-relay-locator-hsm/**'
+    - 'crates/de-collab-relay-locator-server/**'
+    - 'crates/de-util/**'
+    - 'crates/de-editor-core/**'
+    - 'crates/de-editor-host-core/**'
+    - 'crates/de-editor-ui/**'
+    - 'crates/de-host-native/**'
+    - 'crates/de-host-desktop/**'
+    - 'crates/de-chat-agent/src/provider_dial.rs'
+    - 'crates/de-host-services/**'
+    - 'crates/de-i18n/**'
     - 'deploy/collab-relay/**'
     - 'deploy/collab-relay-edge/**'
     - 'deploy/collab-relay-locator/**'
@@ -38,23 +38,23 @@ push:
   paths:
     - '.dockerignore'
     - '.gitignore'
-    - 'crates/op-collab-smoke/**'
-    - 'crates/op-collab-relay-protocol/**'
-    - 'crates/op-collab-relay-client/**'
-    - 'crates/op-collab-relay-server/**'
-    - 'crates/op-collab-relay-control-plane/**'
-    - 'crates/op-collab-policy-file/**'
-    - 'crates/op-collab-relay-locator-hsm/**'
-    - 'crates/op-collab-relay-locator-server/**'
-    - 'crates/op-util/**'
-    - 'crates/op-editor-core/**'
-    - 'crates/op-editor-host-core/**'
-    - 'crates/op-editor-ui/**'
-    - 'crates/op-host-native/**'
-    - 'crates/op-host-desktop/**'
-    - 'crates/op-chat-agent/src/provider_dial.rs'
-    - 'crates/op-host-services/**'
-    - 'crates/op-i18n/**'
+    - 'crates/de-collab-smoke/**'
+    - 'crates/de-collab-relay-protocol/**'
+    - 'crates/de-collab-relay-client/**'
+    - 'crates/de-collab-relay-server/**'
+    - 'crates/de-collab-relay-control-plane/**'
+    - 'crates/de-collab-policy-file/**'
+    - 'crates/de-collab-relay-locator-hsm/**'
+    - 'crates/de-collab-relay-locator-server/**'
+    - 'crates/de-util/**'
+    - 'crates/de-editor-core/**'
+    - 'crates/de-editor-host-core/**'
+    - 'crates/de-editor-ui/**'
+    - 'crates/de-host-native/**'
+    - 'crates/de-host-desktop/**'
+    - 'crates/de-chat-agent/src/provider_dial.rs'
+    - 'crates/de-host-services/**'
+    - 'crates/de-i18n/**'
     - 'deploy/collab-relay/**'
     - 'deploy/collab-relay-edge/**'
     - 'deploy/collab-relay-locator/**'
@@ -69,11 +69,11 @@ steps:
   - run: bash tools/check-op-auth-prebuilt.sh
   - run: bash tools/check-op-auth-prebuilt.test.sh
   - run: bash -n tools/package-op-auth-prebuilt.sh
-  - run: cargo test --locked -p op-auth-bridge --test prebuilt_provenance
-  - run: cargo test --locked -p op-collab-transport
-  - run: cargo test --locked -p op-collab-transport config::tests
-  - run: cargo test --locked -p op-collab-transport frame::tests
-  - run: cargo test --locked -p op-collab-relay-locator-hsm
+  - run: cargo test --locked -p de-auth-bridge --test prebuilt_provenance
+  - run: cargo test --locked -p de-collab-transport
+  - run: cargo test --locked -p de-collab-transport config::tests
+  - run: cargo test --locked -p de-collab-transport frame::tests
+  - run: cargo test --locked -p de-collab-relay-locator-hsm
   - run: |
       docker build --target test \
         -f deploy/collab-relay-locator-hsm/Dockerfile .
@@ -93,16 +93,16 @@ expect_failure "rejects native dependencies in the wasm closure" \
 
 new_fixture credential-clone-assertion-removed
 sed '/assert_not_impl_any!(OpaqueTicket: Clone);/d' \
-    "$fixture_root/crates/op-collab/tests/credential_ownership.rs" \
-    > "$fixture_root/crates/op-collab/tests/credential_ownership.rs.next"
+    "$fixture_root/crates/de-collab/tests/credential_ownership.rs" \
+    > "$fixture_root/crates/de-collab/tests/credential_ownership.rs.next"
 mv \
-    "$fixture_root/crates/op-collab/tests/credential_ownership.rs.next" \
-    "$fixture_root/crates/op-collab/tests/credential_ownership.rs"
+    "$fixture_root/crates/de-collab/tests/credential_ownership.rs.next" \
+    "$fixture_root/crates/de-collab/tests/credential_ownership.rs"
 expect_failure "requires compile-time non-Clone credential assertions" \
     "credential-bearing protocol type must remain non-Clone"
 
 new_fixture dedicated-ticket-codec-removed
-: > "$fixture_root/crates/op-collab/src/error.rs"
+: > "$fixture_root/crates/de-collab/src/error.rs"
 expect_failure "requires the dedicated credential codec failure" \
     "dedicated credential codec failure"
 
@@ -120,11 +120,11 @@ awk '
     }
     { print }
 ' \
-    "$fixture_root/crates/op-collab/src/codec.rs" \
-    > "$fixture_root/crates/op-collab/src/codec.rs.next"
+    "$fixture_root/crates/de-collab/src/codec.rs" \
+    > "$fixture_root/crates/de-collab/src/codec.rs.next"
 mv \
-    "$fixture_root/crates/op-collab/src/codec.rs.next" \
-    "$fixture_root/crates/op-collab/src/codec.rs"
+    "$fixture_root/crates/de-collab/src/codec.rs.next" \
+    "$fixture_root/crates/de-collab/src/codec.rs"
 expect_failure "requires credential classification before generic Value decoding" \
     "generic credential discriminator must run before JSON Value decoding"
 
@@ -142,72 +142,72 @@ awk '
     }
     { print }
 ' \
-    "$fixture_root/crates/op-collab/src/codec.rs" \
-    > "$fixture_root/crates/op-collab/src/codec.rs.next"
+    "$fixture_root/crates/de-collab/src/codec.rs" \
+    > "$fixture_root/crates/de-collab/src/codec.rs.next"
 mv \
-    "$fixture_root/crates/op-collab/src/codec.rs.next" \
-    "$fixture_root/crates/op-collab/src/codec.rs"
+    "$fixture_root/crates/de-collab/src/codec.rs.next" \
+    "$fixture_root/crates/de-collab/src/codec.rs"
 expect_failure "requires trusted direction budgeting before wire discrimination" \
     "trusted per-direction inbound envelope limit must run before discriminator and JSON Value decoding"
 
 new_fixture dedicated-ticket-zeroizing-decoder-removed
 sed '/Zeroizing::new(String::with_capacity/d' \
-    "$fixture_root/crates/op-collab/src/ticket_json.rs" \
-    > "$fixture_root/crates/op-collab/src/ticket_json.rs.next"
+    "$fixture_root/crates/de-collab/src/ticket_json.rs" \
+    > "$fixture_root/crates/de-collab/src/ticket_json.rs.next"
 mv \
-    "$fixture_root/crates/op-collab/src/ticket_json.rs.next" \
-    "$fixture_root/crates/op-collab/src/ticket_json.rs"
+    "$fixture_root/crates/de-collab/src/ticket_json.rs.next" \
+    "$fixture_root/crates/de-collab/src/ticket_json.rs"
 expect_failure "requires direct zeroizing ticket string decoding" \
     "direct zeroizing ticket string decoder"
 
 new_fixture dedicated-ticket-ordinary-string-deserializer
 printf '%s\n' \
     'fn bad() { let _ = String::deserialize(deserializer); }' \
-    >> "$fixture_root/crates/op-collab/src/ticket_json.rs"
+    >> "$fixture_root/crates/de-collab/src/ticket_json.rs"
 expect_failure "rejects ordinary String deserialization in the ticket decoder" \
     "dedicated ticket decoder must not materialize ordinary strings or Values"
 
 new_fixture opaque-ticket-generic-string-deserializer
 printf '%s\n' \
     'fn bad() { let _ = String::deserialize(deserializer); }' \
-    >> "$fixture_root/crates/op-collab/src/protocol.rs"
+    >> "$fixture_root/crates/de-collab/src/protocol.rs"
 expect_failure "rejects ordinary String deserialization in OpaqueTicket" \
     "OpaqueTicket must not deserialize through an ordinary String"
 
 new_fixture generic-renewal-deserialize-assertion-removed
 sed '/assert_not_impl_any!(RenewTicket: serde::de::DeserializeOwned);/d' \
-    "$fixture_root/crates/op-collab/tests/credential_ownership.rs" \
-    > "$fixture_root/crates/op-collab/tests/credential_ownership.rs.next"
+    "$fixture_root/crates/de-collab/tests/credential_ownership.rs" \
+    > "$fixture_root/crates/de-collab/tests/credential_ownership.rs.next"
 mv \
-    "$fixture_root/crates/op-collab/tests/credential_ownership.rs.next" \
-    "$fixture_root/crates/op-collab/tests/credential_ownership.rs"
+    "$fixture_root/crates/de-collab/tests/credential_ownership.rs.next" \
+    "$fixture_root/crates/de-collab/tests/credential_ownership.rs"
 expect_failure "requires the generic renewal Deserialize compile-time boundary" \
     "credential-bearing protocol type must not implement generic Deserialize"
 
 new_fixture derived-collab-message-deserializer
 printf '%s\n' \
     '#[derive(PartialEq, Serialize, Deserialize)]' \
-    >> "$fixture_root/crates/op-collab/src/protocol.rs"
+    >> "$fixture_root/crates/de-collab/src/protocol.rs"
 expect_failure "rejects derived adjacent-tag CollabMessage deserialization" \
     "CollabMessage must not use derived Deserialize"
 
 new_fixture direct-serde-renewal-serialization-regression-removed
 sed '/direct_serde_renewal_serialization_is_fail_closed/d' \
-    "$fixture_root/crates/op-collab/tests/credential_ownership.rs" \
-    > "$fixture_root/crates/op-collab/tests/credential_ownership.rs.next"
+    "$fixture_root/crates/de-collab/tests/credential_ownership.rs" \
+    > "$fixture_root/crates/de-collab/tests/credential_ownership.rs.next"
 mv \
-    "$fixture_root/crates/op-collab/tests/credential_ownership.rs.next" \
-    "$fixture_root/crates/op-collab/tests/credential_ownership.rs"
+    "$fixture_root/crates/de-collab/tests/credential_ownership.rs.next" \
+    "$fixture_root/crates/de-collab/tests/credential_ownership.rs"
 expect_failure "requires the direct serde renewal serialization regression" \
     "direct serde credential serialization rejection test"
 
 new_fixture mislabeled-renewal-regression-removed
-: > "$fixture_root/crates/op-collab-transport/src/frame.rs"
+: > "$fixture_root/crates/de-collab-transport/src/frame.rs"
 expect_failure "requires the mislabeled renewal transport regression" \
     "mislabeled credential transport regression test"
 
 new_fixture credential-transport-workflow-test-removed
-sed '/cargo test --locked -p op-collab-transport frame::tests/d' \
+sed '/cargo test --locked -p de-collab-transport frame::tests/d' \
     "$fixture_root/.github/workflows/collab-security.yml" \
     > "$fixture_root/.github/workflows/collab-security.yml.next"
 mv \
@@ -217,7 +217,7 @@ expect_failure "requires the credential transport codec workflow test" \
     "credential transport codec workflow test"
 
 new_fixture complete-transport-workflow-test-removed
-sed '/cargo test --locked -p op-collab-transport$/d' \
+sed '/cargo test --locked -p de-collab-transport$/d' \
     "$fixture_root/.github/workflows/collab-security.yml" \
     > "$fixture_root/.github/workflows/collab-security.yml.next"
 mv \
@@ -228,7 +228,7 @@ expect_failure "requires the complete transport resource-limit test suite" \
 
 new_fixture locator-hsm-workflow-tests-removed
 sed \
-    -e '/cargo test --locked -p op-collab-relay-locator-hsm/d' \
+    -e '/cargo test --locked -p de-collab-relay-locator-hsm/d' \
     -e '/docker build --target test/d' \
     "$fixture_root/.github/workflows/collab-security.yml" \
     > "$fixture_root/.github/workflows/collab-security.yml.next"
@@ -251,21 +251,21 @@ expect_failure "requires the real SoftHSM Docker test stage" \
 new_fixture locator-hsm-production-seed
 printf '%s\n' \
     'const PRODUCTION_SIGNING_SEED: [u8; 32] = [9; 32];' \
-    >> "$fixture_root/crates/op-collab-relay-locator-hsm/src/lib.rs"
+    >> "$fixture_root/crates/de-collab-relay-locator-hsm/src/lib.rs"
 expect_failure "scans the locator HSM crate for deterministic production keys" \
     "deterministic signing/key seed leaked"
 
 new_fixture desktop-renewal-vec-copy
 printf '%s\n' \
     'fn bad(ticket: Ticket) { let _ = ticket.expose().as_bytes().to_vec(); }' \
-    >> "$fixture_root/crates/op-collab-host/src/runtime/types.rs"
+    >> "$fixture_root/crates/de-collab-host/src/runtime/types.rs"
 expect_failure "rejects ordinary Vec copies in desktop renewal commands" \
     "desktop renewal commands must move OpaqueTicket"
 
 new_fixture non-mit-crate
-cat > "$fixture_root/crates/op-collab-transport/Cargo.toml" <<'EOF'
+cat > "$fixture_root/crates/de-collab-transport/Cargo.toml" <<'EOF'
 [package]
-name = "op-collab-transport"
+name = "de-collab-transport"
 version = "0.0.0"
 license = "Apache-2.0"
 EOF
@@ -275,54 +275,54 @@ expect_failure "rejects a non-MIT collaboration crate" \
 new_fixture deterministic-production-seed
 printf '%s\n' \
     'const PRODUCTION_SIGNING_SEED: [u8; 32] = [9; 32];' \
-    >> "$fixture_root/crates/op-collab/src/protocol.rs"
+    >> "$fixture_root/crates/de-collab/src/protocol.rs"
 expect_failure "rejects deterministic key material in production source" \
     "deterministic signing/key seed leaked"
 
 new_fixture deterministic-production-seed-after-test-module
 printf '%s\n' \
     'const PRODUCTION_SIGNING_SEED: [u8; 32] = [9; 32];' \
-    >> "$fixture_root/crates/op-auth-bridge/src/collab_verifier.rs"
+    >> "$fixture_root/crates/de-auth-bridge/src/collab_verifier.rs"
 expect_failure "scans production items after an inline cfg(test) module" \
     "deterministic signing/key seed leaked"
 
 new_fixture deterministic-external-test-without-cfg
 sed '/#!\[cfg(test)\]/d' \
-    "$fixture_root/crates/op-auth-bridge/src/collab_jwks_cache_cancellation_tests.rs" \
-    > "$fixture_root/crates/op-auth-bridge/src/collab_jwks_cache_cancellation_tests.rs.next"
+    "$fixture_root/crates/de-auth-bridge/src/collab_jwks_cache_cancellation_tests.rs" \
+    > "$fixture_root/crates/de-auth-bridge/src/collab_jwks_cache_cancellation_tests.rs.next"
 mv \
-    "$fixture_root/crates/op-auth-bridge/src/collab_jwks_cache_cancellation_tests.rs.next" \
-    "$fixture_root/crates/op-auth-bridge/src/collab_jwks_cache_cancellation_tests.rs"
+    "$fixture_root/crates/de-auth-bridge/src/collab_jwks_cache_cancellation_tests.rs.next" \
+    "$fixture_root/crates/de-auth-bridge/src/collab_jwks_cache_cancellation_tests.rs"
 expect_failure "requires an explicit cfg(test) boundary for external unit tests" \
     "deterministic signing/key seed leaked"
 
 new_fixture deterministic-path-test-without-parent-cfg
 sed '/#\[cfg(test)\]/d' \
-    "$fixture_root/crates/op-auth-bridge/src/collab_jwks_cache.rs" \
-    > "$fixture_root/crates/op-auth-bridge/src/collab_jwks_cache.rs.next"
+    "$fixture_root/crates/de-auth-bridge/src/collab_jwks_cache.rs" \
+    > "$fixture_root/crates/de-auth-bridge/src/collab_jwks_cache.rs.next"
 mv \
-    "$fixture_root/crates/op-auth-bridge/src/collab_jwks_cache.rs.next" \
-    "$fixture_root/crates/op-auth-bridge/src/collab_jwks_cache.rs"
+    "$fixture_root/crates/de-auth-bridge/src/collab_jwks_cache.rs.next" \
+    "$fixture_root/crates/de-auth-bridge/src/collab_jwks_cache.rs"
 expect_failure "requires cfg(test) on path-based external unit-test modules" \
     "deterministic signing/key seed leaked"
 
 new_fixture production-root-fixture-regression-removed
 sed '/verifies_the_frozen_go_production_root_fixture/d' \
-    "$fixture_root/crates/op-auth-bridge/src/collab_union_policy_tests.rs" \
-    > "$fixture_root/crates/op-auth-bridge/src/collab_union_policy_tests.rs.next"
+    "$fixture_root/crates/de-auth-bridge/src/collab_union_policy_tests.rs" \
+    > "$fixture_root/crates/de-auth-bridge/src/collab_union_policy_tests.rs.next"
 mv \
-    "$fixture_root/crates/op-auth-bridge/src/collab_union_policy_tests.rs.next" \
-    "$fixture_root/crates/op-auth-bridge/src/collab_union_policy_tests.rs"
+    "$fixture_root/crates/de-auth-bridge/src/collab_union_policy_tests.rs.next" \
+    "$fixture_root/crates/de-auth-bridge/src/collab_union_policy_tests.rs"
 expect_failure "requires the split production root fixture regression" \
     "production trust-root fixture regression test"
 
 new_fixture production-policy-fail-closed-regression-removed
 sed '/production_signed_policy_path_never_falls_back_to_raw_jwks/d' \
-    "$fixture_root/crates/op-auth-bridge/src/collab_verifier.rs" \
-    > "$fixture_root/crates/op-auth-bridge/src/collab_verifier.rs.next"
+    "$fixture_root/crates/de-auth-bridge/src/collab_verifier.rs" \
+    > "$fixture_root/crates/de-auth-bridge/src/collab_verifier.rs.next"
 mv \
-    "$fixture_root/crates/op-auth-bridge/src/collab_verifier.rs.next" \
-    "$fixture_root/crates/op-auth-bridge/src/collab_verifier.rs"
+    "$fixture_root/crates/de-auth-bridge/src/collab_verifier.rs.next" \
+    "$fixture_root/crates/de-auth-bridge/src/collab_verifier.rs"
 expect_failure "requires the split production policy fail-closed regression" \
     "production/test issuer isolation regression test"
 
@@ -331,11 +331,11 @@ new_fixture integration-fixture-header-removed
 # raced grep's early exit under pipefail); this mutation proves the rewritten
 # check still fails closed when the feature gate is missing.
 sed '1d' \
-    "$fixture_root/crates/op-auth-bridge/tests/collab_verifier.rs" \
-    > "$fixture_root/crates/op-auth-bridge/tests/collab_verifier.rs.next"
+    "$fixture_root/crates/de-auth-bridge/tests/collab_verifier.rs" \
+    > "$fixture_root/crates/de-auth-bridge/tests/collab_verifier.rs.next"
 mv \
-    "$fixture_root/crates/op-auth-bridge/tests/collab_verifier.rs.next" \
-    "$fixture_root/crates/op-auth-bridge/tests/collab_verifier.rs"
+    "$fixture_root/crates/de-auth-bridge/tests/collab_verifier.rs.next" \
+    "$fixture_root/crates/de-auth-bridge/tests/collab_verifier.rs"
 expect_failure "requires the test-issuer feature gate on auth integration fixtures" \
     "auth integration fixtures must require feature"
 
@@ -347,31 +347,31 @@ new_fixture large-external-cfg-test-list
 # the whole pipeline to false, and a covered literal failed as uncovered (CI,
 # commit b23409a1d). 1000 `#[cfg(test)] mod tests;` declarations yield a
 # ~96 KiB membership list. Both guarded literals are moved into genuine
-# external cfg(test) modules declared by op-auth-bridge sources: their
-# membership entries sort near the top of the list (op-auth-bridge before
-# op-util), so grep matches in its first read and exits while printf still
+# external cfg(test) modules declared by de-auth-bridge sources: their
+# membership entries sort near the top of the list (de-auth-bridge before
+# de-util), so grep matches in its first read and exits while printf still
 # has far more buffered than any pipe can hold — the race fires every run
 # instead of only when buffer timing loses.
 awk -v root="$fixture_root" 'BEGIN {
     for (i = 1; i <= 1000; i++) {
-        path = root "/crates/op-util/src/cfg_test_external_" i ".rs"
+        path = root "/crates/de-util/src/cfg_test_external_" i ".rs"
         printf "#[cfg(test)]\nmod tests;\n" > path
         close(path)
     }
 }'
-cat > "$fixture_root/crates/op-auth-bridge/src/collab_verifier.rs" <<'EOF'
+cat > "$fixture_root/crates/de-auth-bridge/src/collab_verifier.rs" <<'EOF'
 #[cfg(test)]
 #[path = "collab_verifier_tests.rs"]
 mod tests;
 EOF
-cat > "$fixture_root/crates/op-auth-bridge/src/collab_verifier_tests.rs" <<'EOF'
+cat > "$fixture_root/crates/de-auth-bridge/src/collab_verifier_tests.rs" <<'EOF'
 #[test]
 fn production_signed_policy_path_never_falls_back_to_raw_jwks() {}
 EOF
 expect_pass "keeps cfg(test) literal membership SIGPIPE-free on a large external source list"
 
 new_fixture sensitive-key-file
-: > "$fixture_root/crates/op-collab-transport/peer.key"
+: > "$fixture_root/crates/de-collab-transport/peer.key"
 expect_failure "rejects key-shaped repository fixtures" \
     "sensitive key/token-shaped files are forbidden"
 
@@ -397,48 +397,48 @@ expect_failure "requires private Relay key JSON exclusion from Git staging" \
     "Git private-key exclusion"
 
 new_fixture compact-token
-mkdir -p "$fixture_root/crates/op-collab/fixtures"
+mkdir -p "$fixture_root/crates/de-collab/fixtures"
 printf '%s\n' \
     '"abcdefghijklmnop.qrstuvwxyzABCDEF.abcdefghijklmnopqrstuvwxyzABCDEF0123456789"' \
-    > "$fixture_root/crates/op-collab/fixtures/captured-ticket.txt"
+    > "$fixture_root/crates/de-collab/fixtures/captured-ticket.txt"
 expect_failure "rejects compact bearer tokens in non-source fixtures" \
     "high-signal credential/private-key material detected"
 
 new_fixture smoke-compact-token
 printf '%s\n' \
     '"abcdefghijklmnop.qrstuvwxyzABCDEF.abcdefghijklmnopqrstuvwxyzABCDEF0123456789"' \
-    > "$fixture_root/crates/op-collab-smoke/captured-ticket.txt"
+    > "$fixture_root/crates/de-collab-smoke/captured-ticket.txt"
 expect_failure "rejects compact bearer tokens in the smoke crate" \
     "high-signal credential/private-key material detected"
 
 new_fixture desktop-sensitive-file
-: > "$fixture_root/crates/op-collab-host/src/runtime/runtime-ticket.token"
+: > "$fixture_root/crates/de-collab-host/src/runtime/runtime-ticket.token"
 expect_failure "rejects sensitive files in desktop collaboration integration" \
     "sensitive key/token-shaped files are forbidden"
 
 new_fixture avatar-redirect-limit-removed
 sed '/MAX_REDIRECTS/d' \
-    "$fixture_root/crates/op-host-services/src/profile_avatar_fetch.rs" \
-    > "$fixture_root/crates/op-host-services/src/profile_avatar_fetch.rs.next"
+    "$fixture_root/crates/de-host-services/src/profile_avatar_fetch.rs" \
+    > "$fixture_root/crates/de-host-services/src/profile_avatar_fetch.rs.next"
 mv \
-    "$fixture_root/crates/op-host-services/src/profile_avatar_fetch.rs.next" \
-    "$fixture_root/crates/op-host-services/src/profile_avatar_fetch.rs"
+    "$fixture_root/crates/de-host-services/src/profile_avatar_fetch.rs.next" \
+    "$fixture_root/crates/de-host-services/src/profile_avatar_fetch.rs"
 expect_failure "requires the shared avatar redirect limit" \
     "bounded collaboration avatar fetch"
 
 new_fixture desktop-public-avatar-delegation-removed
 sed '/fetch_profile_avatar_blocking(request.url())/d' \
-    "$fixture_root/crates/op-host-desktop/src/collab_avatar_host.rs" \
-    > "$fixture_root/crates/op-host-desktop/src/collab_avatar_host.rs.next"
+    "$fixture_root/crates/de-host-desktop/src/collab_avatar_host.rs" \
+    > "$fixture_root/crates/de-host-desktop/src/collab_avatar_host.rs.next"
 mv \
-    "$fixture_root/crates/op-host-desktop/src/collab_avatar_host.rs.next" \
-    "$fixture_root/crates/op-host-desktop/src/collab_avatar_host.rs"
+    "$fixture_root/crates/de-host-desktop/src/collab_avatar_host.rs.next" \
+    "$fixture_root/crates/de-host-desktop/src/collab_avatar_host.rs"
 expect_failure "requires public-only desktop collaboration avatar delegation" \
     "desktop avatar security-policy delegation"
 
 new_fixture avatar-proxy-bypass-removed
-: > "$fixture_root/crates/op-chat-agent/src/provider_dial.rs"
-cat > "$fixture_root/crates/op-host-services/src/provider_dial.rs" <<'EOF'
+: > "$fixture_root/crates/de-chat-agent/src/provider_dial.rs"
+cat > "$fixture_root/crates/de-host-services/src/provider_dial.rs" <<'EOF'
 fn fake_pinned_client() {
     let _ = ".no_proxy()";
     let _ = ".resolve_to_addrs";
@@ -449,27 +449,27 @@ expect_failure "requires proxy-free pinned avatar dialing" \
 
 new_fixture avatar-dns-pinning-removed
 sed '/\.resolve_to_addrs/d' \
-    "$fixture_root/crates/op-chat-agent/src/provider_dial.rs" \
-    > "$fixture_root/crates/op-chat-agent/src/provider_dial.rs.next"
+    "$fixture_root/crates/de-chat-agent/src/provider_dial.rs" \
+    > "$fixture_root/crates/de-chat-agent/src/provider_dial.rs.next"
 mv \
-    "$fixture_root/crates/op-chat-agent/src/provider_dial.rs.next" \
-    "$fixture_root/crates/op-chat-agent/src/provider_dial.rs"
+    "$fixture_root/crates/de-chat-agent/src/provider_dial.rs.next" \
+    "$fixture_root/crates/de-chat-agent/src/provider_dial.rs"
 expect_failure "requires connect-time DNS pinning for public avatar dialing" \
     "public HTTPS DNS pinning"
 
 new_fixture auth-artifact-integrity-removed
-: > "$fixture_root/crates/op-auth-bridge/build.rs"
+: > "$fixture_root/crates/de-auth-bridge/build.rs"
 expect_failure "requires authentication artifact integrity verification" \
     "authentication artifact integrity gate"
 
 new_fixture auth-artifact-signature-removed
-: > "$fixture_root/crates/op-auth-bridge/prebuilt_provenance.rs"
+: > "$fixture_root/crates/de-auth-bridge/prebuilt_provenance.rs"
 expect_failure "requires authentication artifact signature verification" \
     "authentication artifact signature verification"
 
 new_fixture auth-matrix-test-removed
 sed \
-    '/cargo test --locked -p op-auth-bridge --test prebuilt_provenance/d' \
+    '/cargo test --locked -p de-auth-bridge --test prebuilt_provenance/d' \
     "$fixture_root/.github/workflows/collab-security.yml" \
     > "$fixture_root/.github/workflows/collab-security.yml.next"
 mv \
@@ -480,13 +480,13 @@ expect_failure "requires the committed authentication matrix test" \
 
 new_fixture integration-line-cap
 awk 'BEGIN { for (line = 1; line <= 801; line++) print "// integration line" }' \
-    > "$fixture_root/crates/op-editor-host-core/src/collab/oversized.rs"
+    > "$fixture_root/crates/de-editor-host-core/src/collab/oversized.rs"
 expect_failure "enforces the line cap across collaboration integration source" \
     "has 801 lines; maximum is 800"
 
 new_fixture missing-provider-dial-workflow-trigger
 awk '
-    !removed && index($0, "crates/op-chat-agent/src/provider_dial.rs") {
+    !removed && index($0, "crates/de-chat-agent/src/provider_dial.rs") {
         removed = 1
         next
     }
@@ -679,29 +679,29 @@ expect_failure "requires the overseas locator per-source connection-rate gate" \
 
 new_fixture missing-hard-limit
 awk '!/MAX_OPS_PER_TXN/' \
-    "$fixture_root/crates/op-collab/src/protocol.rs" \
-    > "$fixture_root/crates/op-collab/src/protocol.rs.next"
+    "$fixture_root/crates/de-collab/src/protocol.rs" \
+    > "$fixture_root/crates/de-collab/src/protocol.rs.next"
 mv \
-    "$fixture_root/crates/op-collab/src/protocol.rs.next" \
-    "$fixture_root/crates/op-collab/src/protocol.rs"
+    "$fixture_root/crates/de-collab/src/protocol.rs.next" \
+    "$fixture_root/crates/de-collab/src/protocol.rs"
 expect_failure "rejects removal of a protocol hard-limit anchor" \
     "protocol hard limit"
 
 new_fixture public-transport-queue
 sed \
     's/pub(crate) struct BoundedTransferQueue/pub struct BoundedTransferQueue/' \
-    "$fixture_root/crates/op-collab-transport/src/queue.rs" \
-    > "$fixture_root/crates/op-collab-transport/src/queue.rs.next"
+    "$fixture_root/crates/de-collab-transport/src/queue.rs" \
+    > "$fixture_root/crates/de-collab-transport/src/queue.rs.next"
 mv \
-    "$fixture_root/crates/op-collab-transport/src/queue.rs.next" \
-    "$fixture_root/crates/op-collab-transport/src/queue.rs"
+    "$fixture_root/crates/de-collab-transport/src/queue.rs.next" \
+    "$fixture_root/crates/de-collab-transport/src/queue.rs"
 expect_failure "rejects exposing the transport queue implementation" \
     "bounded queue/rate type"
 
 new_fixture untyped-boundary-error
 printf '%s\n' \
     'fn bad_boundary() -> Result<(), String> { Ok(()) }' \
-    >> "$fixture_root/crates/op-collab/src/protocol.rs"
+    >> "$fixture_root/crates/de-collab/src/protocol.rs"
 expect_failure "rejects untyped public boundary errors" \
     "untyped Result<_, String/&str>"
 

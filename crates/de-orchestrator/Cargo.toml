@@ -1,0 +1,35 @@
+[package]
+name = "de-orchestrator"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+de-editor-core = { path = "../de-editor-core" }
+de-editor-ui = { path = "../de-editor-ui" }
+de-design-lint = { path = "../de-design-lint" }
+de-mcp = { path = "../de-mcp", features = ["script"] }
+de-ai-skills = { path = "../de-ai-skills" }
+# Real jian flex layout (resolved absolute rects) for geometry-driven structural
+# validation — the deterministic analogue of Pencil's per-batch snapshot_layout.
+# Already in the dep tree via de-mcp; direct dep makes `editor_state_to_layout_scene`
+# callable. Default features (skia-measure) match de-mcp's snapshot_layout.
+de-pen-loader = { path = "../de-pen-loader" }
+de-image-enrich = { path = "../de-image-enrich" }
+jian-scene = { path = "../../vendor/jian/crates/jian-scene" }
+jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
+# Canonical hex-color parsing (dependency-free).
+de-util = { path = "../de-util" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+futures = "0.3"
+regex = "1"
+tracing = { workspace = true }
+tokio = { version = "1", features = ["sync", "rt", "macros"] }
+
+[dev-dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }

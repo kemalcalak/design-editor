@@ -343,9 +343,9 @@ badging=$("$aapt_bin" dump badging "$signed_apk")
     exit 1
 }
 
-arm64_sha=$(unzip -p "$signed_apk" lib/arm64-v8a/libop_engine_jni.so \
+arm64_sha=$(unzip -p "$signed_apk" lib/arm64-v8a/libde_engine_jni.so \
     | sha256sum | awk '{ print $1 }')
-x86_64_sha=$(unzip -p "$signed_apk" lib/x86_64/libop_engine_jni.so \
+x86_64_sha=$(unzip -p "$signed_apk" lib/x86_64/libde_engine_jni.so \
     | sha256sum | awk '{ print $1 }')
 [[ "$arm64_sha" == "$(manifest_field arm64_v8a_sha256 "$manifest")" \
     && "$x86_64_sha" == "$(manifest_field x86_64_sha256 "$manifest")" ]] || {

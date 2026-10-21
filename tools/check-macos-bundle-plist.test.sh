@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CHECKER="$ROOT/tools/check-macos-bundle-plist.sh"
-FIXTURE="$ROOT/crates/op-host-desktop/Info.plist"
+FIXTURE="$ROOT/crates/de-host-desktop/Info.plist"
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/openpencil-macos-plist.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 

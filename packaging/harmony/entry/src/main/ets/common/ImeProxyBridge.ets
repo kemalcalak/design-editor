@@ -172,7 +172,7 @@ export class ImeProxyBridge {
    * Whether `keyCode` is a bare modifier / lock key rather than a character.
    *
    * These are frozen OS values from `oh_key_code.h` — the same transcription
-   * the native key channel keeps in `op-engine-napi/src/xcomponent.rs`, which
+   * the native key channel keeps in `de-engine-napi/src/xcomponent.rs`, which
    * tracks them as a bitmask instead of forwarding them.
    */
   private static isModifierKey(keyCode: number): boolean {

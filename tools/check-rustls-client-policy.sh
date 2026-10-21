@@ -29,9 +29,9 @@ if rg -U -n --pcre2 \
 fi
 
 for file in \
-  crates/op-collab-host/src/jwks.rs \
-  crates/op-collab-host/src/runtime/relay_bootstrap.rs \
-  crates/op-collab-relay-control-plane/src/http_client.rs; do
+  crates/de-collab-host/src/jwks.rs \
+  crates/de-collab-host/src/runtime/relay_bootstrap.rs \
+  crates/de-collab-relay-control-plane/src/http_client.rs; do
   if ! rg -U -q 'Client::builder\(\)\s*\.use_rustls_tls\(\)' "$file"; then
     echo "error: $file must pin its aliased reqwest Client builder to rustls" >&2
     exit 1
@@ -39,12 +39,12 @@ for file in \
 done
 
 if rg -n 'connect_async(_with_config)?\(' \
-  crates/op-acp/src/client.rs crates/op-collab-relay-client/src/session.rs; then
+  crates/de-acp/src/client.rs crates/de-collab-relay-client/src/session.rs; then
   echo "error: WebSocket clients must pass an explicit rustls Connector" >&2
   exit 1
 fi
 
-for file in crates/op-acp/src/client.rs crates/op-collab-relay-client/src/session.rs; do
+for file in crates/de-acp/src/client.rs crates/de-collab-relay-client/src/session.rs; do
   if ! rg -q 'connect_async_tls_with_config' "$file"; then
     echo "error: $file is missing the explicit TLS connector path" >&2
     exit 1

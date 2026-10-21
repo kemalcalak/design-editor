@@ -16,7 +16,7 @@ surface_bridge = File.read(File.join(root, "OpSurfaceViewShellBridge.kt"))
 runtime = File.read(File.join(root, "AndroidAuthRuntime.kt"))
 client = File.read(File.join(root, "SsoAuthClient.kt"))
 header = File.read(File.expand_path(
-  "../../../crates/op-engine-ffi/include/op_engine.h", __dir__
+  "../../../crates/de-engine-ffi/include/op_engine.h", __dir__
 ))
 
 # The login URL comes only from native; the shell never manufactures one.

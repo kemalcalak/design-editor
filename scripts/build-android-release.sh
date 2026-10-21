@@ -169,7 +169,7 @@ done
 "$repo_root/tools/pinned-release-tools.sh" verify-skia android \
     x86_64-linux-android "$ANDROID_SKIA_X86_64_BINARIES_URL"
 
-canonical_prebuilt=$repo_root/crates/op-auth-bridge/prebuilt
+canonical_prebuilt=$repo_root/crates/de-auth-bridge/prebuilt
 release_jni=$repo_root/packaging/android/app/src/release/jniLibs
 [[ ! -e "$release_jni" && ! -L "$release_jni" ]] || {
     printf 'error: refusing to replace an existing Android Release jniLibs directory\n' >&2
@@ -286,7 +286,7 @@ build_target() {
     local cargo_env_target=${env_target^^}
     local cc=$ndk_tools/${clang_prefix}26-clang
     local cxx=$ndk_tools/${clang_prefix}26-clang++
-    local so=$repo_root/target/$target/release/libop_engine_jni.so
+    local so=$repo_root/target/$target/release/libde_engine_jni.so
     require_ndk_tool "$cc"
     require_ndk_tool "$cxx"
     require_ndk_tool "$ndk_tools/llvm-ar"
@@ -302,7 +302,7 @@ build_target() {
         SKIA_BINARIES_URL="$skia_url" \
         OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN="$relay_bootstrap_cn" \
         OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL="$relay_bootstrap_global" \
-        cargo build --locked --release -p op-engine-jni --target "$target" \
+        cargo build --locked --release -p de-engine-jni --target "$target" \
             --features gl,editor,pinned-skia-binaries
     OP_AUTH_CARGO_TARGET=$target \
         "$repo_root/tools/check-op-auth-cargo-build.sh"
@@ -317,7 +317,7 @@ build_target() {
         exit 1
     }
     mkdir -p "$release_jni/$abi"
-    install -m 0755 "$so" "$release_jni/$abi/libop_engine_jni.so"
+    install -m 0755 "$so" "$release_jni/$abi/libde_engine_jni.so"
 }
 
 build_target \
@@ -382,8 +382,8 @@ install -m 0644 "$unsigned_apk" "$ANDROID_UNSIGNED_OUTPUT_DIR/$apk_name"
 install -m 0644 "$unsigned_aab" "$ANDROID_UNSIGNED_OUTPUT_DIR/$aab_name"
 apk_sha=$(sha256_file "$ANDROID_UNSIGNED_OUTPUT_DIR/$apk_name")
 aab_sha=$(sha256_file "$ANDROID_UNSIGNED_OUTPUT_DIR/$aab_name")
-arm64_sha=$(sha256_file "$release_jni/arm64-v8a/libop_engine_jni.so")
-x86_64_sha=$(sha256_file "$release_jni/x86_64/libop_engine_jni.so")
+arm64_sha=$(sha256_file "$release_jni/arm64-v8a/libde_engine_jni.so")
+x86_64_sha=$(sha256_file "$release_jni/x86_64/libde_engine_jni.so")
 auth_matrix_sha=$(sha256_file "$staged_prebuilt/RELEASE-MANIFEST")
 cat > "$ANDROID_UNSIGNED_OUTPUT_DIR/ANDROID-RELEASE-MANIFEST" <<EOF
 format=openpencil-android-unsigned-v2

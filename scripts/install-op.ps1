@@ -200,7 +200,7 @@ switch ($NativeProcessorArchitecture) {
 }
 
 $Version = Resolve-Version
-$Asset = "op-cli-$Label.zip"
+$Asset = "de-cli-$Label.zip"
 $Url = "https://github.com/$Owner/$Repo/releases/download/v$Version/$Asset"
 
 Write-Host "==> Installing op $Version ($Label)"

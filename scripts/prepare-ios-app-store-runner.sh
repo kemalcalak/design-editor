@@ -16,7 +16,7 @@ tools/ios-build-number.sh --self-test
 build_number=$(tools/ios-build-number.sh)
 [[ "$build_number" =~ ^[1-9][0-9]{0,3}\.([0-9]|[1-9][0-9])\.([0-9]|[1-9][0-9])$ ]]
 CONFIGURATION=Release \
-OP_AUTH_ARCHIVE="$GITHUB_WORKSPACE/crates/op-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a" \
+OP_AUTH_ARCHIVE="$GITHUB_WORKSPACE/crates/de-auth-bridge/prebuilt/aarch64-apple-ios/libop_auth.a" \
 OP_AUTH_TARGET=aarch64-apple-ios \
     tools/check-mobile-auth-link-input.sh
 

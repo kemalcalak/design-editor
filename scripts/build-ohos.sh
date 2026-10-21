@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the OpenHarmony engine module (`libopenpencil.so`) from op-engine-napi.
+# Build the OpenHarmony engine module (`libopenpencil.so`) from de-engine-napi.
 #
 # Usage:
 #   OHOS_NDK_HOME=/path/to/openharmony scripts/build-ohos.sh [extra cargo args]
@@ -117,7 +117,7 @@ export "CFLAGS_${env_target}=--target=$clang_target --sysroot=$ndk_root/sysroot"
 # escaped quotes survive cc's whitespace-split env parsing.
 sk_font_prefix_define='-DSK_FONT_FILE_PREFIX="/system/fonts/"'
 export "CXXFLAGS_${env_target}=--target=$clang_target --sysroot=$ndk_root/sysroot $sk_font_prefix_define"
-# rquickjs-sys (QuickJS behind op-mcp's `script` feature, pulled in by the
+# rquickjs-sys (QuickJS behind de-mcp's `script` feature, pulled in by the
 # editor's design pipeline) generates its FFI bindings at build time on OHOS
 # (`bindgen` feature — no pregenerated bindings exist for these triples).
 # bindgen's libclang does not read CC/CFLAGS, so hand it the target + sysroot
@@ -159,7 +159,7 @@ export ohos_sdk_native="$ndk_root"
 if [ -n "${OPENPENCIL_DEV_OP_AUTH_ARCHIVE:-}" ]; then
   features="$features,mobile-auth-dev"
 fi
-cargo_args=(build -p op-engine-napi --target "$target" --features "$features")
+cargo_args=(build -p de-engine-napi --target "$target" --features "$features")
 if [[ "$profile" == "release" ]]; then
   cargo_args+=(--release)
 fi

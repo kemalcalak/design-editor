@@ -349,7 +349,7 @@ validate_package_versions() {
 }
 
 validate_chrome_extension_manifest_version() {
-    manifest=packages/op-chrome-extension/manifest.json
+    manifest=packages/de-chrome-extension/manifest.json
     if [[ ! -f "$manifest" ]]; then
         report_missing "$manifest" \
             'Chrome extension manifest is missing; it must exist and carry the Cargo workspace version'
@@ -358,7 +358,7 @@ validate_chrome_extension_manifest_version() {
     manifest_version=$(jq -r '.version' "$manifest")
     if [[ "$manifest_version" != "$current_version" ]]; then
         report_missing "$manifest" \
-            "Chrome extension manifest version ${manifest_version} must match Cargo workspace version ${current_version}; edit the \"version\" field (scripts/sync-version.sh does not rewrite this file — see packages/op-chrome-extension/README.md)"
+            "Chrome extension manifest version ${manifest_version} must match Cargo workspace version ${current_version}; edit the \"version\" field (scripts/sync-version.sh does not rewrite this file — see packages/de-chrome-extension/README.md)"
     fi
 }
 
@@ -452,7 +452,7 @@ validate_release_tag() {
 }
 
 validate_cli_bundle_version_template() {
-    bundle=crates/op-cli/assets/skill-bundle.json
+    bundle=crates/de-cli/assets/skill-bundle.json
     sentinel=__OPENPENCIL_VERSION__
     sentinel_count=$(rg --fixed-strings --count-matches -- "$sentinel" "$bundle" || true)
     if [[ "${sentinel_count:-0}" != 5 ]]; then
@@ -464,11 +464,11 @@ validate_cli_bundle_version_template() {
 }
 
 validate_rust_product_version_producers() {
-    require_statement crates/op-editor-core/src/state.rs \
+    require_statement crates/de-editor-core/src/state.rs \
         'version:[[:space:]]*env!\("CARGO_PKG_VERSION"\)[.]to_owned\(\),' \
         'empty documents must derive their version from CARGO_PKG_VERSION'
 
-    host_support=crates/op-editor-core/src/host_support.rs
+    host_support=crates/de-editor-core/src/host_support.rs
     read -r host_production_version_count host_test_version_count < <(
         awk \
             -v needle='src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"))' \
@@ -490,16 +490,16 @@ validate_rust_product_version_producers() {
             'ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION'
     fi
 
-    cli_source=crates/op-cli/src/app_control_cli.rs
+    cli_source=crates/de-cli/src/app_control_cli.rs
     require_regex "$cli_source" 'env!\("CARGO_PKG_VERSION"\)' \
         'CLI starter documents must derive their version from CARGO_PKG_VERSION'
     reject_matches regex "$cli_source" \
         '"version"[^[:cntrl:]]*"[0-9]+[.][0-9]+[.][0-9]+' \
         'CLI starter documents must not hard-code a product version'
 
-    reject_matches regex crates/op-host-desktop/Cargo.toml \
-        '^[[:space:]]*op-host-native[[:space:]]*=.*path[[:space:]]*=.*version[[:space:]]*=' \
-        'local op-host-native dependency must not duplicate the product version'
+    reject_matches regex crates/de-host-desktop/Cargo.toml \
+        '^[[:space:]]*de-host-native[[:space:]]*=.*path[[:space:]]*=.*version[[:space:]]*=' \
+        'local de-host-native dependency must not duplicate the product version'
 }
 
 validate_workspace_package_versions
@@ -524,7 +524,7 @@ else
         --with-filename \
         --color never \
         --glob '*.rs' \
-        --glob '!**/op-host-desktop/src/update_check.rs' \
+        --glob '!**/de-host-desktop/src/update_check.rs' \
         "$current_version" \
         crates) || rg_status=$?
 

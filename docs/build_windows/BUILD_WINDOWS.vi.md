@@ -95,19 +95,19 @@
     - 2.1 Biên dịch thư viện WASM. Tại gốc kho lưu trữ, mở PowerShell và thực thi:
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 Tạo file ràng buộc JS
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 Sao chép tài nguyên CanvasKit rendering từ `crates\op-host-web\assets\canvaskit` vào `web-bundle`:
+    - 2.3 Sao chép tài nguyên CanvasKit rendering từ `crates\de-host-web\assets\canvaskit` vào `web-bundle`:
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 Cấu trúc thư mục cuối cùng
@@ -115,7 +115,7 @@
         ```plaintext
         target\release\
         ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
+        ├── de-host-web-server.exe
         ├── op.exe
         └── web-bundle\
             ├── canvaskit\
@@ -123,7 +123,7 @@
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
+            ├── de_host_web.js
             ├── op_host_web_bg.wasm
             └── op_host_web_bg.wasm.d.ts
         ```
@@ -147,11 +147,11 @@
     # Cửa sổ xuất hiện rồi đóng — dịch vụ chạy nền và lắng nghe cổng 3100
     ```
 
-2. op-host-web-server.exe  <i>` (không bắt buộc cho plugin dsh) `</i>
+2. de-host-web-server.exe  <i>` (không bắt buộc cho plugin dsh) `</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
+    ./de-host-web-server.exe --serve-web 3100
     # Bạn sẽ thấy hai dòng "openpencil-desktop --serve-web:" và cổng 3100 trong PowerShell
     ```
 
@@ -162,7 +162,7 @@
 1. Chú ý tham số `--features` khi biên dịch WASM
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > Sử dụng `--features "web canvaskit"` thay vì `--features "web"`.
@@ -173,8 +173,8 @@
 
 2. Server ánh xạ toàn bộ thư mục `web-bundle` vào tuyến HTTP `/pkg/`
 
-    > Đường dẫn ổ đĩa `web-bundle/op_host_web.js` → URL trình duyệt `/pkg/op_host_web.js`
+    > Đường dẫn ổ đĩa `web-bundle/de_host_web.js` → URL trình duyệt `/pkg/de_host_web.js`
     > 
-    > Nếu trang hiển thị không tìm thấy `/pkg/op_host_web.js`, file bị thiếu trong `web-bundle/`.
+    > Nếu trang hiển thị không tìm thấy `/pkg/de_host_web.js`, file bị thiếu trong `web-bundle/`.
 
 3. Tài liệu này được viết cho phiên bản `openpencil 0.8.4`. Phiên bản chuỗi công cụ rustup `1.94`、wasm-bindgen-cli `0.2.117` và skia-bindings `0.97.2` được căn chỉnh theo phiên bản này — các phiên bản khác có thể khác biệt.

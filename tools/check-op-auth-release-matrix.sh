@@ -7,7 +7,7 @@ set -euo pipefail
 
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd)
-prebuilt_root=${OP_AUTH_PREBUILT_ROOT:-$repo_root/crates/op-auth-bridge/prebuilt}
+prebuilt_root=${OP_AUTH_PREBUILT_ROOT:-$repo_root/crates/de-auth-bridge/prebuilt}
 expected_version=${OP_AUTH_RELEASE_WORKSPACE_VERSION:-}
 expected_openpencil_revision=${OP_AUTH_RELEASE_EXPECTED_OPENPENCIL_REVISION:-}
 
@@ -104,11 +104,11 @@ verify_ed25519_hex_signature() {
 
 manifest=$prebuilt_root/RELEASE-MANIFEST
 manifest_signature=$prebuilt_root/RELEASE-MANIFEST.sig
-policy=$repo_root/crates/op-auth-bridge/AUTH-RELEASE-POLICY
+policy=$repo_root/crates/de-auth-bridge/AUTH-RELEASE-POLICY
 # The artifact root is untrusted until verification succeeds. Its copy of the
 # key, if any, is deliberately ignored: only the key in the current reviewed
 # source checkout may authenticate a release matrix.
-public_key=$repo_root/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY
+public_key=$repo_root/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY
 require_regular_file "$policy"
 require_regular_file "$public_key"
 require_regular_file "$manifest"

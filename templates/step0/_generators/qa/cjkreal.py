@@ -28,7 +28,7 @@ def texts(doc):
             for c in n: go(c)
     go(doc.get("children") or []); return m
 ARGS=[pathlib.Path(a) for a in sys.argv[1:]]
-TARGETS=ARGS or sorted(pathlib.Path("crates/op-editor-core/assets/scene_templates").glob("*.op"))
+TARGETS=ARGS or sorted(pathlib.Path("crates/de-editor-core/assets/scene_templates").glob("*.op"))
 total_real=0
 for p in TARGETS:
     rep=subprocess.run([sys.executable,TOOL,str(p)],capture_output=True,text=True).stdout

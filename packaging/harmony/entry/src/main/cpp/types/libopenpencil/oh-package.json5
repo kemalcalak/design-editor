@@ -2,5 +2,5 @@
   "name": "libopenpencil.so",
   "types": "./index.d.ts",
   "version": "1.0.0",
-  "description": "Type declaration for the prebuilt op-engine-napi module."
+  "description": "Type declaration for the prebuilt de-engine-napi module."
 }

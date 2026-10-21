@@ -111,7 +111,7 @@ chrome_dump() {
     # mirror on stderr arrives incrementally, so it is the readiness
     # signal; a successful mount synthesizes the DOM line the assertions
     # expect.
-    if grep -Fq 'op-smoke:ok' "$out.stderr" 2>/dev/null; then
+    if grep -Fq 'de-smoke:ok' "$out.stderr" 2>/dev/null; then
       printf '<html data-op-smoke="ok"><!-- synthesized from console marker --></html>\n' >"$out"
       kill -9 "$chrome_pid" >/dev/null 2>&1 || true
       wait "$chrome_pid" >/dev/null 2>&1 || true
@@ -148,9 +148,9 @@ if [ "${OPENPENCIL_SKIP_WASM_BUILD:-0}" != "1" ]; then
   bash tools/check-wasm-bundle.sh
 fi
 
-SERVER_BIN="${OPENPENCIL_WEB_SERVER_BIN:-target/release/op-host-web-server}"
+SERVER_BIN="${OPENPENCIL_WEB_SERVER_BIN:-target/release/de-host-web-server}"
 if [ "${OPENPENCIL_SKIP_SERVER_BUILD:-0}" != "1" ]; then
-  cargo build -p op-host-web-server --release >/dev/null
+  cargo build -p de-host-web-server --release >/dev/null
 fi
 [ -x "$SERVER_BIN" ] || fail "server binary is not executable: $SERVER_BIN"
 
@@ -179,8 +179,8 @@ PORT="${OPENPENCIL_WEB_SMOKE_PORT:-$(pick_port)}"
 BASE_URL="http://127.0.0.1:${PORT}"
 SERVER_LOG="$TMP_DIR/server.log"
 
-OPENPENCIL_WEB_BUNDLE_DIR="${OPENPENCIL_WEB_BUNDLE_DIR:-$PWD/crates/op-host-web/pkg}" \
-OPENPENCIL_CANVASKIT_DIR="${OPENPENCIL_CANVASKIT_DIR:-$PWD/crates/op-host-web/assets/canvaskit}" \
+OPENPENCIL_WEB_BUNDLE_DIR="${OPENPENCIL_WEB_BUNDLE_DIR:-$PWD/crates/de-host-web/pkg}" \
+OPENPENCIL_CANVASKIT_DIR="${OPENPENCIL_CANVASKIT_DIR:-$PWD/crates/de-host-web/assets/canvaskit}" \
   "$SERVER_BIN" --serve-web "$PORT" --host 127.0.0.1 >"$SERVER_LOG" 2>&1 &
 SERVER_PID="$!"
 
@@ -193,7 +193,7 @@ wait_for_health "$BASE_URL/api/mcp/server" || {
 health="$TMP_DIR/health.json"
 curl -fsS "$BASE_URL/api/mcp/server" >"$health"
 assert_contains "$health" '"mode":"web-canvas"' "daemon health should report web-canvas mode"
-curl -fsS "$BASE_URL/pkg/op_host_web.js" >/dev/null
+curl -fsS "$BASE_URL/pkg/de_host_web.js" >/dev/null
 curl -fsS "$BASE_URL/canvaskit/canvaskit.js" >/dev/null
 curl -fsS "$BASE_URL/assets/iconify-catalog-brands.json" >/dev/null
 

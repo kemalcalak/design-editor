@@ -1,0 +1,38 @@
+[package]
+name = "de-mcp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "OpenPencil MCP server — JSON-RPC tool registry over de-editor-core EditorState / EditorCommand"
+
+[lib]
+name = "de_mcp"
+path = "src/lib.rs"
+
+[features]
+default = []
+debug-tools = []
+# Native-only QuickJS script→program expansion for batch_design + the
+# orchestrator. Never enabled by wasm consumers (bundled C engine).
+script = ["dep:rquickjs", "dep:tracing"]
+
+[dependencies]
+de-codegen = { path = "../de-codegen" }
+jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
+jian-scene = { path = "../../vendor/jian/crates/jian-scene" }
+de-ai-skills = { path = "../de-ai-skills" }
+# `~/.openpencil` resolution for the debug-tools log reader (single source
+# of truth for the config-dir path; tiny serde-only crate).
+de-config-store = { path = "../de-config-store" }
+de-design-lint = { path = "../de-design-lint" }
+de-editor-core = { path = "../de-editor-core" }
+de-html = { path = "../de-html" }
+de-pen-loader = { path = "../de-pen-loader" }
+# Canonical JSON string escaping (dependency-free, wasm-clean).
+de-util = { path = "../de-util" }
+regex = "1"
+rquickjs = { version = "0.12", optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true, optional = true }

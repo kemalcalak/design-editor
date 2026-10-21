@@ -2,7 +2,7 @@
 """ab-v9 — element-manifest arm matrix over the ab-v3 corpus (Rust pipeline).
 
 Spec: openpencil-docs/superpowers/specs/2026-06-10-element-manifest-v2.md §2.
-Runs the FULL Rust orchestrator (op-smoke headless, `OPENPENCIL_MANIFEST=1`)
+Runs the FULL Rust orchestrator (de-smoke headless, `OPENPENCIL_MANIFEST=1`)
 for every corpus prompt × provider, then scores M3 (expected-shape: required
 roles present in the saved .op tree) + M5 (semantic element selection,
 version-suffix-stripped) like the TS harness's score-run.ts.
@@ -35,7 +35,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 # retirement removed the original packages/pen-ai-skills/corpus/ab-v3 (see
 # scripts/ab-v9/corpus/ab-v3/README.md).
 CORPUS = os.path.join(REPO, "scripts/ab-v9/corpus/ab-v3")
-SMOKE = os.path.join(REPO, "target/debug/op-smoke")
+SMOKE = os.path.join(REPO, "target/debug/de-smoke")
 
 ARK_BASE = "https://ark.cn-beijing.volces.com/api/coding/v3"
 # GLM 原生 Coding Plan(open.bigmodel.cn/api/coding/paas/v4,CN)。key 是

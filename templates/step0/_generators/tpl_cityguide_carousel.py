@@ -484,7 +484,7 @@ def build():
             recap()]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；本表逐对实算）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；本表逐对实算）：
 #   c-silver    on c-bg  12.26    c-dim    on c-bg      6.55
 #   c-safelight on c-bg   3.74    c-silver on c-gate   10.72
 #   c-dim       on c-gate  5.73   c-print  on c-bg     16.49

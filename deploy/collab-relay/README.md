@@ -75,7 +75,7 @@ verification.
   relay rejects it with `PairingTimeout`. With the waiting lease on (the
   default) this is the length of **one lease**, not a countdown from
   registration. Both bounds come from
-  `op_collab_relay_protocol::pairing_window`, shared with the client, and the
+  `de_collab_relay_protocol::pairing_window`, shared with the client, and the
   relay refuses to start outside them rather than silently inverting the
   pairing contract described below.
 - optional `OPENPENCIL_COLLAB_RELAY_WAITING_LEASE` (`0` or `1`, default `1`):
@@ -89,7 +89,7 @@ when that slot is released, and **the client's must expire first**:
 
 - the relay's `waiting_timeout`, after which it rejects with `PairingTimeout`;
 - the owner client's lane recycle budget,
-  `op_collab_relay_client::RelayLimits::owner_pair` (45 s).
+  `de_collab_relay_client::RelayLimits::owner_pair` (45 s).
 
 If the relay wins that race, the owner lane learns about the close late — or,
 behind a NAT that silently reaps the idle flow, not at all — and the owner is
@@ -150,7 +150,7 @@ minute — and none at all while idle — carrying the last window's counters pl
 the live waiting-queue depth:
 
 ```text
-INFO op_collab_relay_server::observe: relay census relay_event="census"
+INFO de_collab_relay_server::observe: relay census relay_event="census"
   window_secs=60 accepted=6 admission_refused=0 handshake_failed=1
   registered=5 paired=4 rejected_pairing_timeout=1 rejected_authentication=0
   rejected_capacity=0 rejected_other=0 closed_orderly=3 closed_peer_eof=1
@@ -174,7 +174,7 @@ lifecycle transition (`accepted` / `handshake-failed` / `registered` /
 reason:
 
 ```text
-DEBUG op_collab_relay_server::observe: relay rejected a peer
+DEBUG de_collab_relay_server::observe: relay rejected a peer
   relay_event="rejected" conn=1 role=owner route_ref=3d6d1666d4868b6f0aa50f02
   reason="pairing-timeout" elapsed_ms=123
 ```

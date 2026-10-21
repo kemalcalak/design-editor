@@ -25,7 +25,7 @@ if [ ! -x "$CARGO_BUNDLE_HOME/bin/cargo-bundle" ]; then
 fi
 
 echo "==> building release binaries"
-( cd "$WS_ROOT" && cargo build --release --locked -p op-host-desktop -p op-cli )
+( cd "$WS_ROOT" && cargo build --release --locked -p de-host-desktop -p de-cli )
 
 echo "==> bundling"
 OPENPENCIL_BINARY="$WS_ROOT/target/release/openpencil-desktop" \

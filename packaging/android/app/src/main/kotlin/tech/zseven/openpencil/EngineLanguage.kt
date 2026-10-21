@@ -3,7 +3,7 @@ package tech.zseven.openpencil
 import android.content.Context
 
 /**
- * The engine's 15 UI locales (mirrors `op_i18n::Locale::ALL` order and
+ * The engine's 15 UI locales (mirrors `de_i18n::Locale::ALL` order and
  * codes; the native-login contract pins the codes against the engine
  * header side). Display names match the engine's own picker.
  */

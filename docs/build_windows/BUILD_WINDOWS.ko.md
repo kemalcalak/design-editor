@@ -95,19 +95,19 @@
     - 2.1 WASM 라이브러리 컴파일. 저장소 루트에서 PowerShell을 열고 실행:
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 JS 바인딩 파일 생성
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 CanvasKit 렌더링 에셋을 `crates\op-host-web\assets\canvaskit`에서 `web-bundle`로 복사:
+    - 2.3 CanvasKit 렌더링 에셋을 `crates\de-host-web\assets\canvaskit`에서 `web-bundle`로 복사:
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 최종 디렉토리 구조
@@ -115,7 +115,7 @@
         ```plaintext
         target\release\
         ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
+        ├── de-host-web-server.exe
         ├── op.exe
         └── web-bundle\
             ├── canvaskit\
@@ -123,7 +123,7 @@
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
+            ├── de_host_web.js
             ├── op_host_web_bg.wasm
             └── op_host_web_bg.wasm.d.ts
         ```
@@ -147,11 +147,11 @@
     # 창이 순간 나타났다 사라집니다 — 백그라운드에서 3100 포트를 수신합니다
     ```
 
-2. op-host-web-server.exe  <i>`(dsh 플러그인에서는 필요하지 않음)`</i>
+2. de-host-web-server.exe  <i>`(dsh 플러그인에서는 필요하지 않음)`</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
+    ./de-host-web-server.exe --serve-web 3100
     # PowerShell에서 "openpencil-desktop --serve-web:"가 두 번 표시되고 3100 포트를 수신합니다
     ```
 
@@ -162,7 +162,7 @@
 1. WASM 빌드 시 `--features` 매개변수에 주의
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > `--features "web"`이 아닌 `--features "web canvaskit"`을 사용하세요.
@@ -173,8 +173,8 @@
 
 2. 서버는 `web-bundle` 디렉토리 전체를 HTTP의 `/pkg/` 라우트에 매핑합니다
 
-    > 디스크 경로 `web-bundle/op_host_web.js` → 브라우저 URL `/pkg/op_host_web.js`
+    > 디스크 경로 `web-bundle/de_host_web.js` → 브라우저 URL `/pkg/de_host_web.js`
     > 
-    > 페이지에서 `/pkg/op_host_web.js`를 찾을 수 없다고 표시되면 `web-bundle/`에 파일이 없는 것입니다.
+    > 페이지에서 `/pkg/de_host_web.js`를 찾을 수 없다고 표시되면 `web-bundle/`에 파일이 없는 것입니다.
 
 3. 이 문서는 `openpencil 0.8.4` 버전을 기준으로 작성되었습니다. rustup 툴체인 버전 `1.94`、wasm-bindgen-cli 버전 `0.2.117`、skia-bindings 버전 `0.97.2`는 이 버전에 맞춰진 것이며, 다른 버전은 다를 수 있습니다.

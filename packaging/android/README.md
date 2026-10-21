@@ -1,6 +1,6 @@
 # OpenPencilPlayer (Android)
 
-A thin Android host for the OpenPencil engine, consuming `crates/op-engine-jni`'s
+A thin Android host for the OpenPencil engine, consuming `crates/de-engine-jni`'s
 `tech.zseven.openpencil.OpNative` C-ABI surface. The engine renders through
 EGL/GLES onto a `SurfaceView`; the shell owns lifecycle, insets, touch, and
 the frame pump. Gestures are interpreted by the engine: single-finger tap
@@ -18,7 +18,7 @@ Studio's bundled JBR works):
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 export ANDROID_NDK_HOME="$HOME/Library/Android/sdk/ndk/<version>"
 
-# rquickjs-sys (QuickJS behind op-mcp's `script` feature, pulled in by the
+# rquickjs-sys (QuickJS behind de-mcp's `script` feature, pulled in by the
 # editor's design pipeline) generates its FFI bindings at build time on
 # Android (no pregenerated bindings for these triples). cargo-ndk exports
 # CC/CFLAGS, but bindgen's own libclang reads neither — without these it
@@ -30,9 +30,9 @@ export BINDGEN_EXTRA_CLANG_ARGS_x86_64_linux_android="--target=x86_64-linux-andr
 
 # Build the cdylib into the Debug-only jniLibs source set (arm64-v8a + x86_64),
 # then install. Release has a separate empty source set by default:
-# `editor` forwards to op-engine-ffi/editor (full desktop chrome).
+# `editor` forwards to de-engine-ffi/editor (full desktop chrome).
 cargo ndk -t arm64-v8a -t x86_64 -o packaging/android/app/src/debug/jniLibs \
-  build -p op-engine-jni --features gl,editor
+  build -p de-engine-jni --features gl,editor
 cd packaging/android && ./gradlew installDebug && cd -
 ```
 
@@ -49,11 +49,11 @@ cd packaging/android && ./gradlew installDebug && cd -
 ```
 
 The bridge accepts that override only in Cargo's `debug` profile. The archive
-is linked into `libop_engine_jni.so`; it is never packaged as an Android asset
+is linked into `libde_engine_jni.so`; it is never packaged as an Android asset
 or standalone `.a`. Both the archive and generated `.so` stay ignored by Git.
 The Gradle Release variant reads only `app/src/release/jniLibs`, so a local
 Debug auth library cannot leak into Release. Production consumes the adopted
-ten-target ABI-v3 matrix under `crates/op-auth-bridge/prebuilt/`. Its signatures
+ten-target ABI-v3 matrix under `crates/de-auth-bridge/prebuilt/`. Its signatures
 and source-owned `AUTH-RELEASE-POLICY` pin the exact matrix and private build
 identity; the matrix's signed version and public revision are provenance, not
 requirements that every consuming OpenPencil commit must match.
@@ -64,7 +64,7 @@ desktop targets. The candidate artifacts are never production link inputs. An
 authenticated Android Release first verifies the adopted policy and complete
 signed matrix, then builds both JNI ABIs in Cargo's release profile into
 `app/src/release/jniLibs` and proves Cargo actually selected signed ABI 3. Only
-the resulting `libop_engine_jni.so` files enter the APK; the `.a` archives are
+the resulting `libde_engine_jni.so` files enter the APK; the `.a` archives are
 never packaged as assets. Any policy, matrix, provenance, ABI, hardening,
 signature, or digest failure stops the release instead of falling back to
 unsigned code. OpenPencil-only commits and version bumps reuse the adopted
@@ -173,7 +173,7 @@ adb shell am start -n tech.zseven.openpencil/.MainActivity --es doc ppt-demo
 ```
 
 The demo is derived from
-`crates/op-editor-core/assets/scene_templates/slide-deck.op` and pinned to the
+`crates/de-editor-core/assets/scene_templates/slide-deck.op` and pinned to the
 `corporate-blue-light` style guide. Use `--es doc sample` to load the bundled
 sample instead. A viewer-only launch (`--ez editor false`) still falls back to
 `ppt-demo.op` when no `doc` override is supplied.
@@ -218,9 +218,9 @@ runtime initializes once per process.
   process-owned engine lease, while active generation or an unread background
   result keeps that engine alive for bounded foreground recovery.
 - `OpNative` / `OpCallbacks` — the JNI surface contract with
-  `crates/op-engine-jni` (engine-thread upcalls, blocking barriers for
+  `crates/de-engine-jni` (engine-thread upcalls, blocking barriers for
   lifecycle calls).
 
 Everything else — document loading/layout, painting, gesture
 interpretation, fit-to-view, selection — lives in the engine
-(`crates/op-engine-ffi`).
+(`crates/de-engine-ffi`).

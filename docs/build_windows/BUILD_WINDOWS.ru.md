@@ -95,19 +95,19 @@
     - 2.1 Компиляция WASM-библиотеки. В корне репозитория откройте PowerShell и выполните:
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 Генерация файлов привязок JS
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 Скопируйте ресурсы рендеринга CanvasKit из `crates\op-host-web\assets\canvaskit` в `web-bundle`:
+    - 2.3 Скопируйте ресурсы рендеринга CanvasKit из `crates\de-host-web\assets\canvaskit` в `web-bundle`:
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 Итоговая структура каталогов
@@ -115,7 +115,7 @@
         ```plaintext
         target\release\
         ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
+        ├── de-host-web-server.exe
         ├── op.exe
         └── web-bundle\
             ├── canvaskit\
@@ -123,7 +123,7 @@
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
+            ├── de_host_web.js
             ├── op_host_web_bg.wasm
             └── op_host_web_bg.wasm.d.ts
         ```
@@ -147,11 +147,11 @@
     # Окно мелькнет и закроется — служба работает в фоновом режиме и слушает порт 3100
     ```
 
-2. op-host-web-server.exe  <i>` (не требуется для плагина dsh) `</i>
+2. de-host-web-server.exe  <i>` (не требуется для плагина dsh) `</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
+    ./de-host-web-server.exe --serve-web 3100
     # Вы увидите две строки «openpencil-desktop --serve-web:» и порт 3100 в PowerShell
     ```
 
@@ -162,7 +162,7 @@
 1. Обратите внимание на параметр `--features` при компиляции WASM
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > Используйте `--features "web canvaskit"`, а не `--features "web"`.
@@ -173,8 +173,8 @@
 
 2. Сервер отображает весь каталог `web-bundle` на маршрут HTTP `/pkg/`
 
-    > Путь на диске `web-bundle/op_host_web.js` → URL в браузере `/pkg/op_host_web.js`
+    > Путь на диске `web-bundle/de_host_web.js` → URL в браузере `/pkg/de_host_web.js`
     > 
-    > Если страница сообщает, что `/pkg/op_host_web.js` не найден, файл отсутствует в `web-bundle/`.
+    > Если страница сообщает, что `/pkg/de_host_web.js` не найден, файл отсутствует в `web-bundle/`.
 
 3. Этот документ написан для версии `openpencil 0.8.4`. Версия цепочки инструментов rustup `1.94`, wasm-bindgen-cli `0.2.117` и skia-bindings `0.97.2` соответствуют этой версии — другие версии могут отличаться.

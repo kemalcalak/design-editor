@@ -44,15 +44,15 @@ command -v "$python_command" >/dev/null 2>&1 || {
 cd "$repo_root"
 printf '%s\0%s\0' "$relay_cn" "$relay_global" \
     | "$python_command" tools/check-collab-bootstrap-urls.py
-cargo clean -p op-auth-bridge --target "$release_target" --release
+cargo clean -p de-auth-bridge --target "$release_target" --release
 cargo clean -p skia-bindings --target "$release_target" --release
 "$repo_root/tools/pinned-release-tools.sh" verify-skia \
     desktop "$release_target" "$SKIA_BINARIES_URL"
 OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN=$relay_cn \
 OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL=$relay_global \
     cargo build \
-        -p op-host-desktop -p op-cli -p op-host-web-server \
+        -p de-host-desktop -p de-cli -p de-host-web-server \
         --target "$release_target" --release --locked \
         --features \
-          op-host-desktop/pinned-skia-binaries,op-host-web-server/pinned-skia-binaries
+          de-host-desktop/pinned-skia-binaries,de-host-web-server/pinned-skia-binaries
 OP_AUTH_CARGO_TARGET=$release_target tools/check-op-auth-cargo-build.sh

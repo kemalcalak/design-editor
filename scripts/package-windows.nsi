@@ -8,7 +8,7 @@
 ; Installs:
 ;   openpencil-desktop.exe  editor binary
 ;   op.exe                  CLI binary (also shipped standalone as
-;                           op-cli-<target>.zip in the release; $INSTDIR is
+;                           de-cli-<target>.zip in the release; $INSTDIR is
 ;                           NOT added to PATH — doing so reliably needs the
 ;                           non-stock EnVar plugin, deferred)
 ;   openpencil.ico          icon used by shortcuts + the .op/.pen ProgID
@@ -27,7 +27,7 @@
 ; workflow passes absolute /D defines):
 ;   makensis "/DVERSION=X.Y.Z" "/DARCH=x64" ^
 ;     "/DBIN_DIR=D:\w\target\x86_64-pc-windows-msvc\release" ^
-;     "/DICON_FILE=D:\w\crates\op-host-desktop\assets\icon.ico" ^
+;     "/DICON_FILE=D:\w\crates\de-host-desktop\assets\icon.ico" ^
 ;     "/DVC_REDIST_FILE=D:\w\VC_redist.x64.exe" ^
 ;     "/DOUT_FILE=D:\w\OpenPencil-X.Y.Z-x64-win-setup.exe" ^
 ;     scripts\package-windows.nsi
@@ -56,7 +56,7 @@ Unicode true
   !define BIN_DIR "..\target\release"
 !endif
 !ifndef ICON_FILE
-  !define ICON_FILE "..\crates\op-host-desktop\assets\icon.ico"
+  !define ICON_FILE "..\crates\de-host-desktop\assets\icon.ico"
 !endif
 !ifndef OUT_FILE
   !define OUT_FILE "OpenPencil-${VERSION}-${ARCH}-win-setup.exe"

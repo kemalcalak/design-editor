@@ -74,7 +74,7 @@ for t in "${templates[@]}"; do
   # The documents themselves are shipped assets (embedded by the scene
   # template catalogue); this directory keeps only the generators and the
   # full-resolution renders they produce.
-  op=$R/crates/op-editor-core/assets/scene_templates/$t.op
+  op=$R/crates/de-editor-core/assets/scene_templates/$t.op
   rm -rf "$TMP/$t"; mkdir -p "$TMP/$t"
   OPENPENCIL_RENDER_MARGIN=0 "$BIN" --render-shots "$op" "$TMP/$t" 2 >/dev/null
 

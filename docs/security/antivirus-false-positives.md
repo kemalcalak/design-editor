@@ -48,7 +48,7 @@ directly by CI — no human touches the binaries.
 3. **Build it yourself.** The entire product is open source:
 
    ```bash
-   cargo build -p op-host-desktop --release
+   cargo build -p de-host-desktop --release
    ```
 
 ## If your antivirus flags a release

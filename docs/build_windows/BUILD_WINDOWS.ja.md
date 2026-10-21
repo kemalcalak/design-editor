@@ -95,19 +95,19 @@
     - 2.1 WASM ライブラリのコンパイル。リポジトリルートで PowerShell を開き、以下を実行：
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 JS バインドファイルの生成
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 CanvasKit レンダリングアセットを `crates\op-host-web\assets\canvaskit` から `web-bundle` にコピー：
+    - 2.3 CanvasKit レンダリングアセットを `crates\de-host-web\assets\canvaskit` から `web-bundle` にコピー：
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 最終ディレクトリ構造
@@ -115,7 +115,7 @@
         ```plaintext
         target\release\
         ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
+        ├── de-host-web-server.exe
         ├── op.exe
         └── web-bundle\
             ├── canvaskit\
@@ -123,7 +123,7 @@
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
+            ├── de_host_web.js
             ├── op_host_web_bg.wasm
             └── op_host_web_bg.wasm.d.ts
         ```
@@ -147,11 +147,11 @@
     # ウィンドウが一瞬表示されて閉じます — バックグラウンドで3100ポートをリッスンします
     ```
 
-2. op-host-web-server.exe  <i>`（dsh プラグインでは不要）`</i>
+2. de-host-web-server.exe  <i>`（dsh プラグインでは不要）`</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
+    ./de-host-web-server.exe --serve-web 3100
     # PowerShell で「openpencil-desktop --serve-web:」が2行表示され、3100ポートをリッスンします
     ```
 
@@ -162,7 +162,7 @@
 1. WASM ビルド時の `--features` パラメータに注意
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > `--features "web"` ではなく `--features "web canvaskit"` を使用してください。
@@ -173,8 +173,8 @@
 
 2. サーバーは `web-bundle` ディレクトリ全体を HTTP の `/pkg/` ルートにマッピングします
 
-    > ディスクパス `web-bundle/op_host_web.js` → ブラウザ URL `/pkg/op_host_web.js`
+    > ディスクパス `web-bundle/de_host_web.js` → ブラウザ URL `/pkg/de_host_web.js`
     > 
-    > ページに `/pkg/op_host_web.js` が見つからないと表示される場合は、`web-bundle/` にファイルがありません。
+    > ページに `/pkg/de_host_web.js` が見つからないと表示される場合は、`web-bundle/` にファイルがありません。
 
 3. 本ドキュメントは `openpencil 0.8.4` バージョンで作成されています。rustup ツールチェーンバージョン `1.94`、wasm-bindgen-cli バージョン `0.2.117`、skia-bindings バージョン `0.97.2` はこのバージョンに合わせたものです。他のバージョンでは異なる場合があります。

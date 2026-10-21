@@ -17,30 +17,30 @@ failures=()
 # editor, keyboard, save, widget, and locale modules. Scanning only paths whose
 # names contain "collab" would miss those integration boundaries.
 collab_scan_roots=(
-    crates/op-collab
-    crates/op-collab-transport
-    crates/op-collab-relay-protocol
-    crates/op-collab-relay-client
-    crates/op-collab-relay-server
-    crates/op-collab-relay-control-plane
-    crates/op-collab-policy-file
-    crates/op-collab-relay-locator-hsm
-    crates/op-collab-relay-locator-server
-    crates/op-collab-smoke
-    crates/op-auth-bridge
-    crates/op-util/src
-    crates/op-editor-core/src
-    crates/op-editor-host-core/src
-    crates/op-editor-ui/src
-    crates/op-collab-host/src
-    crates/op-host-native/src
-    crates/op-host-desktop/src
-    crates/op-chat-agent/src/provider_dial.rs
-    crates/op-host-services/src/profile_avatar_fetch.rs
-    crates/op-host-services/src/public_https_client.rs
-    crates/op-host-services/src/provider_dial.rs
-    crates/op-host-services/src/web_credentials.rs
-    crates/op-i18n/src
+    crates/de-collab
+    crates/de-collab-transport
+    crates/de-collab-relay-protocol
+    crates/de-collab-relay-client
+    crates/de-collab-relay-server
+    crates/de-collab-relay-control-plane
+    crates/de-collab-policy-file
+    crates/de-collab-relay-locator-hsm
+    crates/de-collab-relay-locator-server
+    crates/de-collab-smoke
+    crates/de-auth-bridge
+    crates/de-util/src
+    crates/de-editor-core/src
+    crates/de-editor-host-core/src
+    crates/de-editor-ui/src
+    crates/de-collab-host/src
+    crates/de-host-native/src
+    crates/de-host-desktop/src
+    crates/de-chat-agent/src/provider_dial.rs
+    crates/de-host-services/src/profile_avatar_fetch.rs
+    crates/de-host-services/src/public_https_client.rs
+    crates/de-host-services/src/provider_dial.rs
+    crates/de-host-services/src/web_credentials.rs
+    crates/de-i18n/src
     deploy/collab-relay
     deploy/collab-relay-edge
     deploy/collab-relay-locator
@@ -234,7 +234,7 @@ source "$script_dir/check-collab-deployment-boundaries.sh"
 # transport, authentication, key generation, and HTTP/TLS stacks are not.
 wasm_tree=
 if ! wasm_tree=$(cargo tree \
-    -p op-collab \
+    -p de-collab \
     --target wasm32-unknown-unknown \
     --no-default-features \
     --edges normal,build \
@@ -243,7 +243,7 @@ if ! wasm_tree=$(cargo tree \
     record_failure "WASM dependency closure could not be resolved: $wasm_tree"
 fi
 
-forbidden_wasm_pattern='(^|[[:space:]])(op-collab-transport|op-auth-bridge|tokio|mio|socket2|snow|mdns-sd|x25519-dalek|getrandom|reqwest|ureq|native-tls|openssl|rustls|ring|libc)([[:space:]]|$)'
+forbidden_wasm_pattern='(^|[[:space:]])(de-collab-transport|de-auth-bridge|tokio|mio|socket2|snow|mdns-sd|x25519-dalek|getrandom|reqwest|ureq|native-tls|openssl|rustls|ring|libc)([[:space:]]|$)'
 forbidden_wasm=$(printf '%s\n' "$wasm_tree" \
     | grep -E "$forbidden_wasm_pattern" \
     | LC_ALL=C sort -u || true)
@@ -252,7 +252,7 @@ if [[ -n "$forbidden_wasm" ]]; then
 $forbidden_wasm"
 fi
 
-# Collaboration crates are open MIT code. Future op-collab-* crates are picked
+# Collaboration crates are open MIT code. Future de-collab-* crates are picked
 # up automatically instead of relying on a hand-maintained allowlist.
 if ! grep -Eq '^[[:space:]]*license[[:space:]]*=[[:space:]]*"MIT"[[:space:]]*$' Cargo.toml; then
     record_failure "workspace.package license must remain exactly MIT"
@@ -274,13 +274,13 @@ while IFS= read -r manifest; do
         }
     ' "$manifest")
     case "$package_name" in
-        op-collab)
+        de-collab)
             found_collab=1
             ;;
-        op-collab-*)
+        de-collab-*)
             found_transport=1
             ;;
-        op-auth-bridge)
+        de-auth-bridge)
             found_auth=1
             ;;
         *)
@@ -296,11 +296,11 @@ while IFS= read -r manifest; do
 done < <(find crates -mindepth 2 -maxdepth 2 -name Cargo.toml -print | LC_ALL=C sort)
 
 [[ "$found_collab" -eq 1 ]] \
-    || record_failure "op-collab was not found by the collaboration license gate"
+    || record_failure "de-collab was not found by the collaboration license gate"
 [[ "$found_transport" -eq 1 ]] \
-    || record_failure "no op-collab-* transport/integration crate was found"
+    || record_failure "no de-collab-* transport/integration crate was found"
 [[ "$found_auth" -eq 1 ]] \
-    || record_failure "op-auth-bridge was not found by the collaboration license gate"
+    || record_failure "de-auth-bridge was not found by the collaboration license gate"
 
 # Committed security artifacts remain inspectable client inputs, but silent
 # corruption or substitution must fail both CI and the build-script check.
@@ -323,57 +323,57 @@ while IFS= read -r auth_artifact; do
         record_failure "authentication artifact checksum mismatch: $auth_artifact"
     fi
 done < <(
-    find crates/op-auth-bridge/prebuilt \
+    find crates/de-auth-bridge/prebuilt \
         -type f \( -name '*.a' -o -name '*.lib' \) \
         -print 2>/dev/null | LC_ALL=C sort
 )
 
 # Required typed resource contracts. These anchors deliberately name public
 # types and hard caps rather than attempting to infer semantics from numbers.
-require_literal crates/op-collab/src/protocol.rs \
+require_literal crates/de-collab/src/protocol.rs \
     "pub struct WireLimits" "protocol typed limits"
-require_literal crates/op-collab/src/apply_context.rs \
+require_literal crates/de-collab/src/apply_context.rs \
     "pub struct ApplyLimits" "apply typed limits"
-require_literal crates/op-collab/src/codec.rs \
+require_literal crates/de-collab/src/codec.rs \
     "to_json_vec_with_limits" "bounded outbound protocol encoding"
-require_literal crates/op-collab/src/codec.rs \
+require_literal crates/de-collab/src/codec.rs \
     "from_json_slice_with_limits" "bounded inbound protocol decoding"
-require_literal crates/op-collab/src/codec.rs \
+require_literal crates/de-collab/src/codec.rs \
     "pub struct SensitiveFrameJson" "redacted zeroizing credential JSON wrapper"
-require_literal crates/op-collab/src/codec.rs \
+require_literal crates/de-collab/src/codec.rs \
     "serde_json::to_writer(&mut *encoded, &raw)" "direct credential JSON serializer"
-require_literal crates/op-collab/src/codec.rs \
+require_literal crates/de-collab/src/codec.rs \
     "serializer.serialize_str(self.0.expose())" \
     "dedicated opaque-ticket serializer wrapper"
-require_literal crates/op-collab/src/codec.rs \
+require_literal crates/de-collab/src/codec.rs \
     "enum RawNonSensitiveMessage" "credential-free generic wire enum"
-require_literal crates/op-collab/src/codec.rs \
+require_literal crates/de-collab/src/codec.rs \
     "body: RawNonSensitiveMessage" "credential-free generic frame body"
-require_literal crates/op-collab/src/ticket_json.rs \
+require_literal crates/de-collab/src/ticket_json.rs \
     "serde_json::value::RawValue" "borrowed inbound credential discriminator"
-require_literal crates/op-collab/src/ticket_json.rs \
+require_literal crates/de-collab/src/ticket_json.rs \
     "opaque_ticket: &'a RawValue" "borrowed raw opaque-ticket payload"
-require_literal crates/op-collab/src/ticket_json.rs \
+require_literal crates/de-collab/src/ticket_json.rs \
     "Zeroizing::new(String::with_capacity" "direct zeroizing ticket string decoder"
-require_literal crates/op-collab/src/ticket_json.rs \
+require_literal crates/de-collab/src/ticket_json.rs \
     "OpaqueTicket::from_zeroizing(decoded)" "zeroizing opaque-ticket construction"
-require_literal crates/op-collab/src/protocol.rs \
+require_literal crates/de-collab/src/protocol.rs \
     "opaque tickets require the dedicated renewal encoder" \
     "fail-closed generic opaque-ticket serialization"
 if grep -qF '#[derive(PartialEq, Serialize, Deserialize)]' \
-    crates/op-collab/src/protocol.rs; then
+    crates/de-collab/src/protocol.rs; then
     record_failure \
         "CollabMessage must not use derived Deserialize because adjacent payloads can buffer credentials"
 fi
 ordinary_opaque_ticket_deserializer=$(grep -nF \
-    'String::deserialize' crates/op-collab/src/protocol.rs 2>/dev/null || true)
+    'String::deserialize' crates/de-collab/src/protocol.rs 2>/dev/null || true)
 if [[ -n "$ordinary_opaque_ticket_deserializer" ]]; then
     record_failure "OpaqueTicket must not deserialize through an ordinary String:
 $ordinary_opaque_ticket_deserializer"
 fi
 ordinary_ticket_deserializer=$(grep -nE \
     'String::deserialize|serde_json::from_value|serde_json::from_(str|slice)[[:space:]]*::<[[:space:]]*String' \
-    crates/op-collab/src/ticket_json.rs 2>/dev/null || true)
+    crates/de-collab/src/ticket_json.rs 2>/dev/null || true)
 if [[ -n "$ordinary_ticket_deserializer" ]]; then
     record_failure "dedicated ticket decoder must not materialize ordinary strings or Values:
 $ordinary_ticket_deserializer"
@@ -383,10 +383,10 @@ fi
 # leaving the captured line number empty on a covered anchor.
 credential_probe_line=$(grep -m1 -nE \
     '^[[:space:]]*declared_kind_rejecting_renew_ticket\(bytes\)\?;' \
-    crates/op-collab/src/codec.rs | cut -d: -f1 || true)
+    crates/de-collab/src/codec.rs | cut -d: -f1 || true)
 generic_value_decode_line=$(grep -m1 -nF \
     'let mut value = decode_json_value(bytes, limits)?;' \
-    crates/op-collab/src/codec.rs | cut -d: -f1 || true)
+    crates/de-collab/src/codec.rs | cut -d: -f1 || true)
 if [[ -z "$credential_probe_line" || -z "$generic_value_decode_line" ]] \
     || [[ "$credential_probe_line" -ge "$generic_value_decode_line" ]]; then
     record_failure \
@@ -397,7 +397,7 @@ fi
 # An attacker-declared Snapshot kind must never select the 64 MiB owner budget.
 inbound_direction_limit_line=$(grep -m1 -nE \
     '^[[:space:]]*enforce_inbound_envelope_limit\(inbound_direction, bytes\.len\(\), limits\)\?;' \
-    crates/op-collab/src/codec.rs | cut -d: -f1 || true)
+    crates/de-collab/src/codec.rs | cut -d: -f1 || true)
 if [[ -z "$inbound_direction_limit_line" || -z "$credential_probe_line" \
         || -z "$generic_value_decode_line" ]] \
     || [[ "$inbound_direction_limit_line" -ge "$credential_probe_line" ]] \
@@ -405,28 +405,28 @@ if [[ -z "$inbound_direction_limit_line" || -z "$credential_probe_line" \
     record_failure \
         "trusted per-direction inbound envelope limit must run before discriminator and JSON Value decoding"
 fi
-require_literal crates/op-collab/src/frame_direction.rs \
+require_literal crates/de-collab/src/frame_direction.rs \
     "direction: InboundFrameDirection" \
     "trusted inbound frame direction resource boundary"
-require_literal crates/op-collab/src/error.rs \
+require_literal crates/de-collab/src/error.rs \
     "SensitiveCredentialRequiresDedicatedCodec" "dedicated credential codec failure"
-require_literal crates/op-collab/tests/credential_ownership.rs \
+require_literal crates/de-collab/tests/credential_ownership.rs \
     "generic_raw_codecs_reject_credential_frames" "generic credential encoder rejection test"
 for non_deserializable_type in OpaqueTicket RenewTicket CollabMessage; do
-    require_literal crates/op-collab/tests/credential_ownership.rs \
+    require_literal crates/de-collab/tests/credential_ownership.rs \
         "assert_not_impl_any!($non_deserializable_type: serde::de::DeserializeOwned);" \
         "credential-bearing protocol type must not implement generic Deserialize"
 done
-require_literal crates/op-collab/tests/credential_ownership.rs \
+require_literal crates/de-collab/tests/credential_ownership.rs \
     "direct_serde_renewal_serialization_is_fail_closed" \
     "direct serde credential serialization rejection test"
-require_literal crates/op-collab/tests/credential_ownership.rs \
+require_literal crates/de-collab/tests/credential_ownership.rs \
     "generic_decoder_rejects_renewal_before_payload_deserialization" \
     "generic credential pre-deserialization rejection test"
-require_literal crates/op-collab/tests/credential_ownership.rs \
+require_literal crates/de-collab/tests/credential_ownership.rs \
     "sensitive_discriminator_rejects_duplicate_message_fields" \
     "credential discriminator duplicate-field regression test"
-require_literal crates/op-collab/tests/credential_ownership.rs \
+require_literal crates/de-collab/tests/credential_ownership.rs \
     "dedicated_codec_round_trips_and_debug_redacts_the_secret" \
     "dedicated credential codec roundtrip test"
 for dedicated_ticket_test in \
@@ -434,31 +434,31 @@ for dedicated_ticket_test in \
     dedicated_decoder_rejects_malformed_escapes_and_surrogates \
     dedicated_decoder_rejects_duplicate_and_unknown_ticket_fields \
     dedicated_decoder_enforces_decoded_ticket_bounds; do
-    require_literal crates/op-collab/tests/credential_ownership.rs \
+    require_literal crates/de-collab/tests/credential_ownership.rs \
         "$dedicated_ticket_test" "dedicated credential raw-decoder regression test"
 done
-require_literal crates/op-collab-transport/src/frame.rs \
+require_literal crates/de-collab-transport/src/frame.rs \
     "mislabeled_renewal_never_reaches_generic_payload_deserialization" \
     "mislabeled credential transport regression test"
 require_literal .github/workflows/collab-security.yml \
-    "cargo test --locked -p op-collab-transport frame::tests" \
+    "cargo test --locked -p de-collab-transport frame::tests" \
     "credential transport codec workflow test"
 require_literal_count .github/workflows/collab-security.yml \
-    "cargo test --locked -p op-collab-transport" 3 \
+    "cargo test --locked -p de-collab-transport" 3 \
     "complete transport resource-limit workflow test"
-require_literal crates/op-collab/tests/outbound_limits.rs \
+require_literal crates/de-collab/tests/outbound_limits.rs \
     "oversized_snapshot_kind_cannot_raise_the_owner_inbound_ceiling" \
     "attacker-declared frame direction regression test"
-require_literal crates/op-collab-transport/src/connection_limit_tests.rs \
+require_literal crates/de-collab-transport/src/connection_limit_tests.rs \
     "live_silent_guards_stay_charged_until_the_socket_worker_drops_them" \
     "live socket pending-seat regression test"
-require_literal crates/op-collab-transport/src/tcp.rs \
+require_literal crates/de-collab-transport/src/tcp.rs \
     "silent_guarded_accept_exits_at_first_message_deadline_before_releasing_its_seat" \
     "real first-message socket deadline regression test"
-require_literal crates/op-collab-transport/src/chunk_tests.rs \
+require_literal crates/de-collab-transport/src/chunk_tests.rs \
     "completed_transfer_holds_the_declared_reservation_until_drop" \
     "completed transfer aggregate-reservation regression test"
-require_literal crates/op-collab-host/src/runtime/relay_bootstrap_tests.rs \
+require_literal crates/de-collab-host/src/runtime/relay_bootstrap_tests.rs \
     "payload_rejects_exact_cross_region_key_reuse" \
     "cross-region exact key-reuse regression test"
 # Cross-account collaboration replaced the subject-equality check with an
@@ -468,13 +468,13 @@ require_literal crates/op-collab-host/src/runtime/relay_bootstrap_tests.rs \
 # guest admits one only when the owner's key was pinned out of band. Losing
 # that asymmetry — by having the account check relax wherever nothing else
 # authenticates the peer — is silent, so pin both halves here.
-require_literal crates/op-collab-transport/src/admission.rs \
+require_literal crates/de-collab-transport/src/admission.rs \
     "pub enum PeerIdentityPolicy" \
     "explicit peer account admission policy"
-require_literal crates/op-collab-transport/src/admission_tests.rs \
+require_literal crates/de-collab-transport/src/admission_tests.rs \
     "any_issued_account_admits_a_foreign_subject_but_keeps_every_other_check" \
     "cross-account admission keeps issuer, expiry, and key binding"
-require_literal crates/op-collab-host/src/runtime/network/owner.rs \
+require_literal crates/de-collab-host/src/runtime/network/owner.rs \
     "PeerIdentityPolicy::AnyIssuedAccount" \
     "owner admits any issued account behind its approval gate"
 # The guest half of that asymmetry. A guest has no approval prompt of its own,
@@ -488,11 +488,11 @@ require_cfg_test_literal \
 require_cfg_test_literal \
     "an_unpinned_join_admits_a_foreign_account_only_behind_the_confirmation_gate" \
     "guest cross-account admission stays behind the confirmation gate"
-require_literal crates/op-auth-bridge/src/collab_relay_token.rs \
+require_literal crates/de-auth-bridge/src/collab_relay_token.rs \
     "VerifiedRelayTokenClaims" \
     "claim-minimized relay bearer"
 for non_clone_type in OpaqueTicket RenewTicket CollabMessage FrameEnvelope; do
-    require_literal crates/op-collab/tests/credential_ownership.rs \
+    require_literal crates/de-collab/tests/credential_ownership.rs \
         "assert_not_impl_any!($non_clone_type: Clone);" \
         "credential-bearing protocol type must remain non-Clone"
 done
@@ -506,7 +506,7 @@ for limit in \
     MAX_IDENTIFIER_BYTES \
     MAX_OPAQUE_TICKET_BYTES \
     MAX_VALIDATION_NODE_VISITS_PER_TXN; do
-    require_literal crates/op-collab/src/protocol.rs "$limit" "protocol hard limit"
+    require_literal crates/de-collab/src/protocol.rs "$limit" "protocol hard limit"
 done
 
 for typed_config in \
@@ -515,7 +515,7 @@ for typed_config in \
     "pub struct RateLimitConfig" \
     "pub struct TransportConfig" \
     "pub fn validate(self) -> Result<Self, ConfigError>"; do
-    require_literal crates/op-collab-transport/src/config.rs \
+    require_literal crates/de-collab-transport/src/config.rs \
         "$typed_config" "transport typed configuration"
 done
 
@@ -524,7 +524,7 @@ for transfer_limit in \
     MAX_TICKET_BYTES \
     MAX_TXN_TRANSFER_BYTES \
     MAX_SNAPSHOT_TRANSFER_BYTES; do
-    require_literal crates/op-collab-transport/src/config.rs \
+    require_literal crates/de-collab-transport/src/config.rs \
         "$transfer_limit" "transport hard limit"
 done
 
@@ -533,50 +533,50 @@ for queue_type in \
     "pub(crate) struct BoundedTransferQueue" \
     "pub struct SharedQueueBudget" \
     "pub struct TokenBucket"; do
-    require_literal crates/op-collab-transport/src/queue.rs \
+    require_literal crates/de-collab-transport/src/queue.rs \
         "$queue_type" "bounded queue/rate type"
 done
-require_literal crates/op-collab-transport/src/queue.rs \
+require_literal crates/de-collab-transport/src/queue.rs \
     "pub(crate) fn sensitive_ticket_frame" "unique sensitive Ticket frame queue path"
-require_literal crates/op-collab-transport/src/queue.rs \
+require_literal crates/de-collab-transport/src/queue.rs \
     "pub(crate) fn sensitive_admission" "unique sensitive admission queue path"
-require_literal_count crates/op-collab-transport/src/queue.rs \
+require_literal_count crates/de-collab-transport/src/queue.rs \
     "if class == TransferClass::Ticket" 2 \
     "ordinary queue constructors reject Ticket storage"
 
-require_literal crates/op-auth-bridge/src/collab_jwks_cache.rs \
+require_literal crates/de-auth-bridge/src/collab_jwks_cache.rs \
     "pub struct CollabJwksCacheLimits" "JWKS cache typed limits"
-require_literal crates/op-auth-bridge/src/collab_ticket.rs \
+require_literal crates/de-auth-bridge/src/collab_ticket.rs \
     "MAX_COLLAB_TICKET_BYTES" "opaque ticket hard limit"
-require_literal crates/op-auth-bridge/build.rs \
+require_literal crates/de-auth-bridge/build.rs \
     "prebuilt_provenance::validate_prebuilt" "authentication artifact integrity gate"
-require_literal crates/op-auth-bridge/prebuilt_provenance.rs \
+require_literal crates/de-auth-bridge/prebuilt_provenance.rs \
     "Sha256::digest" "authentication artifact SHA-256 verification"
-require_literal crates/op-auth-bridge/prebuilt_provenance.rs \
+require_literal crates/de-auth-bridge/prebuilt_provenance.rs \
     "verify_strict" "authentication artifact signature verification"
-require_literal crates/op-auth-bridge/prebuilt_provenance.rs \
+require_literal crates/de-auth-bridge/prebuilt_provenance.rs \
     "HARDENING_PROFILE_V1" "authentication artifact hardening profile"
 require_literal .github/workflows/collab-security.yml \
-    "cargo test --locked -p op-auth-bridge --test prebuilt_provenance" \
+    "cargo test --locked -p de-auth-bridge --test prebuilt_provenance" \
     "committed authentication matrix test"
-require_literal crates/op-collab/tests/outbound_limits.rs \
+require_literal crates/de-collab/tests/outbound_limits.rs \
     "presence_payload_limit_applies_to_encode_and_decode" \
     "outbound/inbound limit regression test"
-require_literal crates/op-collab-transport/src/config.rs \
+require_literal crates/de-collab-transport/src/config.rs \
     "invalid_resource_limits_fail_closed" \
     "transport invalid-limit regression test"
 
 for command_type in OwnerNetworkCommand GuestNetworkCommand PeerNetworkCommand; do
-    require_literal crates/op-collab-host/src/runtime/types.rs \
+    require_literal crates/de-collab-host/src/runtime/types.rs \
         "assert_not_impl_any!($command_type: Clone);" \
         "renewal verification command must remain non-Clone"
 done
-require_literal crates/op-collab-host/src/runtime/types.rs \
+require_literal crates/de-collab-host/src/runtime/types.rs \
     "verification_commands_move_the_original_ticket_allocation" \
     "renewal command ownership regression test"
 credential_vec_copies=$(grep -RInF \
     '.expose().as_bytes().to_vec()' \
-    crates/op-collab-host/src/runtime 2>/dev/null || true)
+    crates/de-collab-host/src/runtime 2>/dev/null || true)
 if [[ -n "$credential_vec_copies" ]]; then
     record_failure "desktop renewal commands must move OpaqueTicket instead of copying into Vec:
 $credential_vec_copies"
@@ -590,37 +590,37 @@ for avatar_anchor in \
     "MAX_AVATAR_ENCODED_BYTES" \
     "public_https_client" \
     "REQUEST_TIMEOUT"; do
-    require_literal crates/op-host-services/src/profile_avatar_fetch.rs \
+    require_literal crates/de-host-services/src/profile_avatar_fetch.rs \
         "$avatar_anchor" "bounded collaboration avatar fetch"
 done
 for desktop_avatar_anchor in \
     "request.is_current_account()" \
     "fetch_account_avatar_blocking(request.url())" \
     "fetch_profile_avatar_blocking(request.url())"; do
-    require_literal crates/op-host-desktop/src/collab_avatar_host.rs \
+    require_literal crates/de-host-desktop/src/collab_avatar_host.rs \
         "$desktop_avatar_anchor" "desktop avatar security-policy delegation"
 done
-require_literal crates/op-chat-agent/src/provider_dial.rs \
+require_literal crates/de-chat-agent/src/provider_dial.rs \
     ".no_proxy()" "public HTTPS proxy bypass prevention"
-require_literal crates/op-chat-agent/src/provider_dial.rs \
+require_literal crates/de-chat-agent/src/provider_dial.rs \
     ".resolve_to_addrs" "public HTTPS DNS pinning"
-require_literal crates/op-editor-ui/src/collab_avatar_runtime.rs \
+require_literal crates/de-editor-ui/src/collab_avatar_runtime.rs \
     "MAX_AVATAR_SOURCE_PIXELS" "decoded avatar pixel limit"
 
 # Public boundary failures must use domain errors, not caller-visible strings.
 untyped_errors=$(grep -RInE \
     --include='*.rs' \
     'Result<[^>]*,[[:space:]]*(String|&[[:space:]]*str)[[:space:]]*>' \
-    crates/op-collab/src \
-    crates/op-collab-transport/src \
-    crates/op-collab-relay-protocol/src \
-    crates/op-collab-relay-client/src \
-    crates/op-collab-relay-server/src \
-    crates/op-collab-relay-control-plane/src \
-    crates/op-collab-policy-file/src \
-    crates/op-collab-relay-locator-hsm/src \
-    crates/op-collab-relay-locator-server/src \
-    crates/op-auth-bridge/src 2>/dev/null || true)
+    crates/de-collab/src \
+    crates/de-collab-transport/src \
+    crates/de-collab-relay-protocol/src \
+    crates/de-collab-relay-client/src \
+    crates/de-collab-relay-server/src \
+    crates/de-collab-relay-control-plane/src \
+    crates/de-collab-policy-file/src \
+    crates/de-collab-relay-locator-hsm/src \
+    crates/de-collab-relay-locator-server/src \
+    crates/de-auth-bridge/src 2>/dev/null || true)
 if [[ -n "$untyped_errors" ]]; then
     record_failure "untyped Result<_, String/&str> at collaboration boundaries:
 $untyped_errors"
@@ -629,21 +629,21 @@ fi
 # Test signing material is permitted only in the explicitly gated issuer or
 # behind an outer/inner cfg(test) boundary. Integration fixtures must opt into
 # the test-issuer feature at the crate root.
-require_literal crates/op-auth-bridge/Cargo.toml \
+require_literal crates/de-auth-bridge/Cargo.toml \
     "test-issuer = []" "test issuer feature"
 if ! awk '
     previous == "#[cfg(any(test, feature = \"test-issuer\"))]" \
         && $0 == "mod collab_test_issuer;" { found = 1 }
     { previous = $0 }
     END { exit(found ? 0 : 1) }
-' crates/op-auth-bridge/src/lib.rs; then
+' crates/de-auth-bridge/src/lib.rs; then
     record_failure "collab_test_issuer module must remain behind test/test-issuer cfg"
 fi
-require_literal crates/op-auth-bridge/src/collab_test_issuer.rs \
+require_literal crates/de-auth-bridge/src/collab_test_issuer.rs \
     "public test material" "public fixture warning"
-require_literal crates/op-auth-bridge/src/collab_test_issuer.rs \
+require_literal crates/de-auth-bridge/src/collab_test_issuer.rs \
     "https://collab.test.invalid" "non-production fixture issuer"
-if grep -Fq "https://sso.zseven.cn" crates/op-auth-bridge/src/collab_test_issuer.rs; then
+if grep -Fq "https://sso.zseven.cn" crates/de-auth-bridge/src/collab_test_issuer.rs; then
     record_failure "test issuer fixture must not contain the production issuer"
 fi
 # Production trust isolation is deliberately split across the signed-policy
@@ -661,8 +661,8 @@ require_cfg_test_literal \
 # exit under pipefail — grep can match and exit while sed is still writing,
 # sed dies of SIGPIPE (exit 141), and pipefail turns a passing fixture into a
 # spurious failure.
-if [[ -f crates/op-auth-bridge/tests/collab_verifier.rs ]]; then
-    collab_verifier_header=$(sed -n '1,5p' crates/op-auth-bridge/tests/collab_verifier.rs)
+if [[ -f crates/de-auth-bridge/tests/collab_verifier.rs ]]; then
+    collab_verifier_header=$(sed -n '1,5p' crates/de-auth-bridge/tests/collab_verifier.rs)
     if [[ "$collab_verifier_header" != *'#![cfg(feature = "test-issuer")]'* ]]; then
         record_failure "auth integration fixtures must require feature = \"test-issuer\""
     fi

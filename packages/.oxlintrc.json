@@ -11,7 +11,7 @@
     "dist",
     "**/routeTree.gen.ts",
     "**/*.gen.*",
-    "op-chrome-extension/vendor/**",
-    "op-chrome-extension/wasm/**"
+    "de-chrome-extension/vendor/**",
+    "de-chrome-extension/wasm/**"
   ]
 }
