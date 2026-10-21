@@ -22,19 +22,19 @@ use crate::{
     RelayConfig, RelayServerError, RelayServerX25519ProofBoundary,
 };
 
-pub const HOME_REGION_ENV: &str = "OPENPENCIL_COLLAB_RELAY_HOME_REGION";
-pub const TICKET_POLICY_FILE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_TICKET_POLICY_FILE";
-pub const LOCATOR_KEYS_FILE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_LOCATOR_KEYS_FILE";
-pub const RELAY_X25519_KEYS_FILE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_X25519_KEYS_FILE";
-pub const POLICY_MAX_AGE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_POLICY_MAX_AGE_SECONDS";
-pub const EXPECTED_POLICY_SHA256_ENV: &str = "OPENPENCIL_COLLAB_EXPECTED_POLICY_SHA256";
+pub const HOME_REGION_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_HOME_REGION";
+pub const TICKET_POLICY_FILE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_TICKET_POLICY_FILE";
+pub const LOCATOR_KEYS_FILE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_LOCATOR_KEYS_FILE";
+pub const RELAY_X25519_KEYS_FILE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_X25519_KEYS_FILE";
+pub const POLICY_MAX_AGE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_POLICY_MAX_AGE_SECONDS";
+pub const EXPECTED_POLICY_SHA256_ENV: &str = "DESIGN_EDITOR_COLLAB_EXPECTED_POLICY_SHA256";
 /// Migration switch for the legacy full-collaboration-ticket relay bearer.
 ///
 /// `accept` (the default) dual-accepts the claim-minimized relay token and the
 /// legacy ticket so pre-migration clients keep connecting. `reject` narrows the
 /// relay to the minimized token only. Any other value fails closed at startup
 /// rather than silently picking a policy.
-pub const LEGACY_TICKET_BEARER_ENV: &str = "OPENPENCIL_COLLAB_RELAY_LEGACY_TICKET_BEARER";
+pub const LEGACY_TICKET_BEARER_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_LEGACY_TICKET_BEARER";
 
 const DEFAULT_POLICY_MAX_AGE_SECONDS: u64 = 60;
 const MAX_POLICY_MAX_AGE_SECONDS: u64 = 60 * 60;

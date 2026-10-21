@@ -100,7 +100,7 @@ impl CodexHelpStub {
 
         static SEQ: AtomicU64 = AtomicU64::new(0);
         let dir = std::env::temp_dir().join(format!(
-            "openpencil-codex-help-{}-{}",
+            "design-editor-codex-help-{}-{}",
             std::process::id(),
             SEQ.fetch_add(1, Ordering::Relaxed)
         ));
@@ -277,14 +277,14 @@ fn subprocess_providers_advertise_cooperative_cancellation() {
 fn terminal_reap_obeys_its_deadline() {
     crate::chat_runtime::block_on_anywhere(async {
         let pid_file = std::env::temp_dir().join(format!(
-            "openpencil-terminal-descendant-{}.pid",
+            "design-editor-terminal-descendant-{}.pid",
             std::process::id()
         ));
         let _ = std::fs::remove_file(&pid_file);
         let args = vec![
             "-c".to_string(),
             "sleep 30 & echo $! > \"$1\"; wait".to_string(),
-            "openpencil-test".to_string(),
+            "design-editor-test".to_string(),
             pid_file.to_string_lossy().into_owned(),
         ];
         let mut child =

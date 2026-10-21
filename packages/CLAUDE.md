@@ -14,23 +14,23 @@ Run these from `packages/`:
 
 ## de-web-sdk (`de-web-sdk/`)
 
-Read-only OpenPencil `.op` **viewer** SDK for the web, wasm-backed. Wraps the `de-host-web` CanvasKit wasm bundle behind a small JS/TS embedding API (mount / load `.op` / viewport control / zoom-to-fit). Replaces the public role of the retired `pen-react` (viewing only — editing is not a goal of the public SDK).
+Read-only Design Editor `.op` **viewer** SDK for the web, wasm-backed. Wraps the `de-host-web` CanvasKit wasm bundle behind a small JS/TS embedding API (mount / load `.op` / viewport control / zoom-to-fit). Replaces the public role of the retired `pen-react` (viewing only — editing is not a goal of the public SDK).
 
 - Zero runtime dependencies; ships its own wasm under `wasm/`.
 - Build: `tsup` (`bun run build` inside the package). Tests: `vitest`.
 
 ## de-web-sdk-react (`de-web-sdk-react/`)
 
-React 19 adapter for `de-web-sdk` (component + hooks wrapper). Depends only on `@zseven-w/de-web-sdk` (+ peer `react` / `react-dom`).
+React 19 adapter for `de-web-sdk` (component + hooks wrapper). Depends only on `@kemalcalak/de-web-sdk` (+ peer `react` / `react-dom`).
 
 ## de-web-sdk-vue (`de-web-sdk-vue/`)
 
-Vue 3 adapter for `de-web-sdk`. Depends only on `@zseven-w/de-web-sdk` (+ peer `vue`).
+Vue 3 adapter for `de-web-sdk`. Depends only on `@kemalcalak/de-web-sdk` (+ peer `vue`).
 
 ## de-chrome-extension (`de-chrome-extension/`)
 
 Manifest V3 Chrome extension that captures the **rendered** active tab and
-imports it into a running OpenPencil. No dependencies, not a Bun workspace
+imports it into a running Design Editor. No dependencies, not a Bun workspace
 member — load it unpacked from `chrome://extensions`.
 
 - **The logic is Rust.** `crates/de-chrome-extension-core` (endpoint rules,
@@ -58,7 +58,7 @@ member — load it unpacked from `chrome://extensions`.
   `--serve-web`. Intelligent `design.md` extraction uses a stricter asynchronous
   `POST /api/generate/design-md` + GET/DELETE job flow: it accepts only bounded
   style evidence and queues model work only for an extension id explicitly
-  paired through `OPENPENCIL_EXTENSION_ALLOWED_IDS` and a cancellable,
+  paired through `DESIGN_EDITOR_EXTENSION_ALLOWED_IDS` and a cancellable,
   evidence-only built-in API provider; tool-capable CLI/ACP adapters are not
   eligible. The extension generates a deterministic local guide when pairing
   or compatible model generation is unavailable.

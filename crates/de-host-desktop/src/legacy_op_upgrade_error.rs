@@ -77,7 +77,7 @@ impl fmt::Display for LegacyUpgradeError {
             | LegacyUpgradeError::CommitOverOriginal(message) => f.write_str(message),
             LegacyUpgradeError::PublishNumbered { path, message } => write!(
                 f,
-                "could not publish numbered OpenPencil file {}: {message}",
+                "could not publish numbered Design Editor file {}: {message}",
                 path.display()
             ),
             LegacyUpgradeError::OutputNamesExhausted { source_path } => write!(

@@ -172,7 +172,7 @@ pub fn validate_prebuilt(
     require_field(&manifest, "artifact", artifact_name)?;
     // VERSION identifies this signed private artifact matrix. ABI compatibility,
     // rather than the public application's package version, decides whether the
-    // archive can be consumed by a later OpenPencil source revision.
+    // archive can be consumed by a later Design Editor source revision.
     require_field(&manifest, "version", &version)?;
     require_field(&manifest, "abi", &abi_version.to_string())?;
     require_field(&manifest, "sha256", &actual_sha256.to_ascii_lowercase())?;

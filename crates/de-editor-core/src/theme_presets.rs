@@ -4,8 +4,8 @@
 //! TS sources mirrored:
 //! - `apps/web/src/stores/theme-preset-store.ts` — preset list +
 //!   save/delete/rename ops, persisted app-level (localStorage key
-//!   `openpencil-theme-presets`; the Rust desktop host persists the
-//!   same JSON array in `<config>/openpencil/theme-presets.json`,
+//!   `design-editor-theme-presets`; the Rust desktop host persists the
+//!   same JSON array in `<config>/design-editor/theme-presets.json`,
 //!   see de-host-desktop `theme_preset_host.rs`).
 //! - `apps/web/src/utils/theme-preset-io.ts` — `.optheme` file
 //!   build / validate for import/export.
@@ -41,7 +41,7 @@ use serde_json::{json, Value};
 use crate::EditorState;
 
 /// `ThemePresetFile.type` discriminator (`theme-preset-io.ts:23`).
-pub const THEME_PRESET_FILE_TYPE: &str = "openpencil-theme-preset";
+pub const THEME_PRESET_FILE_TYPE: &str = "design-editor-theme-preset";
 /// `ThemePresetFile.version` literal (`pen-types/theme-preset.ts:13`).
 pub const THEME_PRESET_FILE_VERSION: &str = "1.0.0";
 /// Fixed export name (`variable-theme-manager.tsx:162`).
@@ -199,7 +199,7 @@ fn preset_from_value(value: &Value) -> Option<ThemePreset> {
 }
 
 /// Serialize the preset list — the exact JSON array TS `persist()`
-/// writes under `openpencil-theme-presets`.
+/// writes under `design-editor-theme-presets`.
 pub fn presets_to_json(presets: &[ThemePreset]) -> String {
     Value::Array(presets.iter().filter_map(preset_to_value).collect()).to_string()
 }
@@ -399,7 +399,7 @@ mod tests {
             state.doc.themes.as_ref().unwrap(),
             state.doc.variables.as_ref().unwrap(),
         );
-        assert!(raw.contains("\"type\": \"openpencil-theme-preset\""));
+        assert!(raw.contains("\"type\": \"design-editor-theme-preset\""));
         assert!(raw.contains("\"version\": \"1.0.0\""));
         let (name, themes, variables) = parse_preset_file(&raw).expect("valid file");
         assert_eq!(name, "theme-preset");
@@ -413,7 +413,7 @@ mod tests {
         )
         .is_none());
         assert!(parse_preset_file(
-            "{\"type\":\"openpencil-theme-preset\",\"themes\":{},\"variables\":{}}"
+            "{\"type\":\"design-editor-theme-preset\",\"themes\":{},\"variables\":{}}"
         )
         .is_none());
     }

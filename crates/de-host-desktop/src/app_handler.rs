@@ -355,7 +355,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
             de_host_services::settings_io::save(self.host.editor_state());
         }
         // Publish (or clean up) the live MCP discovery file now that the
-        // launch-time server state is settled, so `op` can find this canvas.
+        // launch-time server state is settled, so `de` can find this canvas.
         self.publish_live_mcp_port();
 
         if self.try_init_render_context(event_loop) {

@@ -20,7 +20,7 @@ fn temp_home(name: &str) -> PathBuf {
         })
         .collect();
     let path = std::env::temp_dir().join(format!(
-        "openpencil-mcp-{name}-{}-{}",
+        "design-editor-mcp-{name}-{}-{}",
         std::process::id(),
         safe_thread_name
     ));
@@ -60,7 +60,7 @@ fn mcp_json_config_install_and_uninstall_preserves_other_servers() {
 
     set_cli_enabled_at_home(McpCli::ClaudeCode, true, 3101, &home).expect("install");
     let text = fs::read_to_string(&path).expect("read installed");
-    assert!(text.contains(r#""openpencil""#), "{text}");
+    assert!(text.contains(r#""design-editor""#), "{text}");
     assert!(
         text.contains(r#""url": "http://127.0.0.1:3101/mcp""#),
         "{text}"
@@ -69,27 +69,27 @@ fn mcp_json_config_install_and_uninstall_preserves_other_servers() {
 
     set_cli_enabled_at_home(McpCli::ClaudeCode, false, 3101, &home).expect("uninstall");
     let text = fs::read_to_string(&path).expect("read uninstalled");
-    assert!(!text.contains(r#""openpencil""#), "{text}");
+    assert!(!text.contains(r#""design-editor""#), "{text}");
     assert!(text.contains(r#""other""#), "{text}");
 
     let _ = fs::remove_dir_all(home);
 }
 
 #[test]
-fn mcp_codex_config_replaces_existing_openpencil_block() {
+fn mcp_codex_config_replaces_existing_design_editor_block() {
     let home = temp_home("codex");
     let path = home.join(".codex").join("config.toml");
     fs::create_dir_all(path.parent().expect("parent")).expect("create codex dir");
     fs::write(
         &path,
-        "model = \"gpt-5\"\n\n[mcp_servers.openpencil]\nurl = \"http://old\"\n\n[profiles.dev]\nmodel = \"gpt-5-codex\"\n",
+        "model = \"gpt-5\"\n\n[mcp_servers.design-editor]\nurl = \"http://old\"\n\n[profiles.dev]\nmodel = \"gpt-5-codex\"\n",
     )
     .expect("seed config");
 
     set_cli_enabled_at_home(McpCli::Codex, true, 3200, &home).expect("install");
     let text = fs::read_to_string(&path).expect("read installed");
     assert_eq!(
-        text.matches("[mcp_servers.openpencil]").count(),
+        text.matches("[mcp_servers.design-editor]").count(),
         1,
         "{text}"
     );
@@ -101,7 +101,7 @@ fn mcp_codex_config_replaces_existing_openpencil_block() {
 
     set_cli_enabled_at_home(McpCli::Codex, false, 3200, &home).expect("uninstall");
     let text = fs::read_to_string(&path).expect("read uninstalled");
-    assert!(!text.contains("[mcp_servers.openpencil]"), "{text}");
+    assert!(!text.contains("[mcp_servers.design-editor]"), "{text}");
     assert!(text.contains("model = \"gpt-5\""), "{text}");
     assert!(text.contains("[profiles.dev]"), "{text}");
 
@@ -126,16 +126,16 @@ fn mcp_antigravity_config_uses_current_schema_and_preserves_other_servers() {
         .get("mcpServers")
         .and_then(Value::as_object)
         .expect("mcpServers");
-    let openpencil = servers
+    let design_editor = servers
         .get(SERVER_NAME)
         .and_then(Value::as_object)
-        .expect("openpencil server");
+        .expect("design-editor server");
     assert_eq!(
-        openpencil.get("serverUrl").and_then(Value::as_str),
+        design_editor.get("serverUrl").and_then(Value::as_str),
         Some("http://127.0.0.1:3300/mcp")
     );
-    assert!(!openpencil.contains_key("serverURL"));
-    assert!(!openpencil.contains_key("url"));
+    assert!(!design_editor.contains_key("serverURL"));
+    assert!(!design_editor.contains_key("url"));
     assert!(servers.contains_key("other"));
     assert_eq!(
         root.get("permissionMode").and_then(Value::as_str),
@@ -170,7 +170,7 @@ fn mcp_antigravity_permission_is_narrow_idempotent_and_removable() {
             "colorScheme":"dark",
             "permissions":{
                 "allow":["shell(git status)","mcp(other/*)"],
-                "deny":["shell(rm -rf *)","mcp(openpencil/*)"]
+                "deny":["shell(rm -rf *)","mcp(design-editor/*)"]
             }
         }"#,
     )
@@ -254,19 +254,19 @@ fn mcp_antigravity_rolls_back_config_when_permission_update_fails() {
 }
 
 #[test]
-fn mcp_grok_config_replaces_only_openpencil_tables() {
+fn mcp_grok_config_replaces_only_design_editor_tables() {
     let home = temp_home("grok");
     let path = home.join(".grok").join("config.toml");
     fs::create_dir_all(path.parent().expect("parent")).expect("create grok dir");
     fs::write(
         &path,
-        "[cli]\ninstaller = \"internal\"\n\n[mcp_servers.other]\nurl = \"https://example.com/mcp\"\n\n[mcp_servers.openpencil]\nurl = \"http://old/mcp\"\n\n[mcp_servers.openpencil.headers]\nAuthorization = \"Bearer stale\"\n\n[model.custom]\nmodel = \"custom-id\"\n",
+        "[cli]\ninstaller = \"internal\"\n\n[mcp_servers.other]\nurl = \"https://example.com/mcp\"\n\n[mcp_servers.design-editor]\nurl = \"http://old/mcp\"\n\n[mcp_servers.design-editor.headers]\nAuthorization = \"Bearer stale\"\n\n[model.custom]\nmodel = \"custom-id\"\n",
     )
     .expect("seed config");
     set_cli_enabled_at_home(McpCli::GrokBuild, true, 3400, &home).expect("install");
     let text = fs::read_to_string(&path).expect("read installed");
     assert_eq!(
-        text.matches("[mcp_servers.openpencil]").count(),
+        text.matches("[mcp_servers.design-editor]").count(),
         1,
         "{text}"
     );
@@ -280,7 +280,7 @@ fn mcp_grok_config_replaces_only_openpencil_tables() {
 
     set_cli_enabled_at_home(McpCli::GrokBuild, false, 3400, &home).expect("uninstall");
     let text = fs::read_to_string(&path).expect("read uninstalled");
-    assert!(!text.contains("mcp_servers.openpencil"), "{text}");
+    assert!(!text.contains("mcp_servers.design-editor"), "{text}");
     assert!(text.contains("[mcp_servers.other]"), "{text}");
     assert!(text.contains("[model.custom]"), "{text}");
 
@@ -288,13 +288,13 @@ fn mcp_grok_config_replaces_only_openpencil_tables() {
 }
 
 #[test]
-fn detects_antigravity_and_grok_openpencil_servers() {
+fn detects_antigravity_and_grok_design_editor_servers() {
     let home = temp_home("new-cli-detect");
     let antigravity = home.join(".gemini").join("config").join("mcp_config.json");
     fs::create_dir_all(antigravity.parent().expect("parent")).expect("create agy dir");
     fs::write(
         antigravity,
-        r#"{"mcpServers":{"openpencil":{"serverUrl":"http://127.0.0.1:3000/mcp"}}}"#,
+        r#"{"mcpServers":{"design-editor":{"serverUrl":"http://127.0.0.1:3000/mcp"}}}"#,
     )
     .expect("seed Antigravity config");
     seed_antigravity_permission(&home);
@@ -302,7 +302,7 @@ fn detects_antigravity_and_grok_openpencil_servers() {
     fs::create_dir_all(grok.parent().expect("parent")).expect("create Grok dir");
     fs::write(
         grok,
-        "[mcp_servers.openpencil]\nurl = \"http://127.0.0.1:3000/mcp\"\n",
+        "[mcp_servers.design-editor]\nurl = \"http://127.0.0.1:3000/mcp\"\n",
     )
     .expect("seed Grok config");
 
@@ -334,10 +334,10 @@ fn antigravity_detection_requires_a_valid_server_url() {
     seed_antigravity_permission(&home);
 
     for config in [
-        r#"{"mcpServers":{"openpencil":{"serverURL":"http://127.0.0.1:3000/mcp"}}}"#,
-        r#"{"mcpServers":{"openpencil":{"url":"http://127.0.0.1:3000/mcp"}}}"#,
-        r#"{"mcpServers":{"openpencil":{"serverUrl":"not-a-url"}}}"#,
-        r#"{"mcpServers":{"openpencil":{"serverUrl":"http://127.0.0.1:3000/mcp","disabled":true}}}"#,
+        r#"{"mcpServers":{"design-editor":{"serverURL":"http://127.0.0.1:3000/mcp"}}}"#,
+        r#"{"mcpServers":{"design-editor":{"url":"http://127.0.0.1:3000/mcp"}}}"#,
+        r#"{"mcpServers":{"design-editor":{"serverUrl":"not-a-url"}}}"#,
+        r#"{"mcpServers":{"design-editor":{"serverUrl":"http://127.0.0.1:3000/mcp","disabled":true}}}"#,
     ] {
         fs::write(&path, config).expect("write invalid config");
         assert!(!detect_enabled_clis_at_home(&home)[antigravity_idx]);
@@ -345,7 +345,7 @@ fn antigravity_detection_requires_a_valid_server_url() {
 
     fs::write(
         &path,
-        r#"{"mcpServers":{"openpencil":{"serverUrl":"http://127.0.0.1:3000/mcp"}}}"#,
+        r#"{"mcpServers":{"design-editor":{"serverUrl":"http://127.0.0.1:3000/mcp"}}}"#,
     )
     .expect("write valid config");
     assert!(detect_enabled_clis_at_home(&home)[antigravity_idx]);
@@ -364,13 +364,13 @@ fn antigravity_detection_requires_a_valid_server_url() {
 }
 
 #[test]
-fn detects_legacy_codex_openpencil_server_config() {
+fn detects_legacy_codex_design_editor_server_config() {
     let home = temp_home("codex-detect");
     let path = home.join(".codex").join("config.toml");
     fs::create_dir_all(path.parent().expect("parent")).expect("create codex dir");
     fs::write(
         &path,
-        "model = \"gpt-5\"\n\n[mcp_servers.openpencil]\ncommand = \"/usr/local/bin/node\"\nargs = [\"/Applications/OpenPencil.app/Contents/Resources/mcp-server.cjs\"]\n",
+        "model = \"gpt-5\"\n\n[mcp_servers.design-editor]\ncommand = \"/usr/local/bin/node\"\nargs = [\"/Applications/Design Editor.app/Contents/Resources/mcp-server.cjs\"]\n",
     )
     .expect("seed legacy config");
 
@@ -423,7 +423,7 @@ fn server_entry_for(cli: McpCli, path: &Path) -> Map<String, Value> {
         .get(SERVER_NAME)
         .and_then(Value::as_object)
         .cloned()
-        .expect("openpencil server entry")
+        .expect("design-editor server entry")
 }
 
 #[test]
@@ -521,7 +521,7 @@ fn mcp_qwen_config_uses_http_url_key_and_preserves_other_servers() {
 
     set_cli_enabled_at_home(McpCli::QwenCode, false, 3600, &home).expect("uninstall");
     let text = fs::read_to_string(&path).expect("read uninstalled");
-    assert!(!text.contains(r#""openpencil""#), "{text}");
+    assert!(!text.contains(r#""design-editor""#), "{text}");
     assert!(text.contains(r#""other""#), "{text}");
 
     let _ = fs::remove_dir_all(home);
@@ -552,7 +552,7 @@ fn mcp_cursor_config_install_and_uninstall_preserves_other_servers() {
 
     set_cli_enabled_at_home(McpCli::Cursor, false, 3700, &home).expect("uninstall");
     let text = fs::read_to_string(&path).expect("read uninstalled");
-    assert!(!text.contains(r#""openpencil""#), "{text}");
+    assert!(!text.contains(r#""design-editor""#), "{text}");
     assert!(text.contains(r#""other""#), "{text}");
 
     let _ = fs::remove_dir_all(home);
@@ -602,7 +602,7 @@ fn mcp_kimi_config_uses_transport_key_and_preserves_other_servers() {
 
     set_cli_enabled_at_home(McpCli::Kimi, false, 3800, &home).expect("uninstall");
     let text = fs::read_to_string(&path).expect("read uninstalled");
-    assert!(!text.contains(r#""openpencil""#), "{text}");
+    assert!(!text.contains(r#""design-editor""#), "{text}");
     assert!(text.contains(r#""other""#), "{text}");
 
     let _ = fs::remove_dir_all(home);
@@ -734,7 +734,7 @@ fn zcode_detection_ignores_a_top_level_mcp_servers_key() {
     fs::create_dir_all(path.parent().expect("parent")).expect("create zcode dir");
     fs::write(
         &path,
-        r#"{"mcpServers":{"openpencil":{"type":"http","url":"http://127.0.0.1:3100/mcp"}}}"#,
+        r#"{"mcpServers":{"design-editor":{"type":"http","url":"http://127.0.0.1:3100/mcp"}}}"#,
     )
     .expect("seed config");
 

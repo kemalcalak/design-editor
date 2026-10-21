@@ -105,7 +105,7 @@ elif str(mode) == "vcredist-toolset-gate":
     old = "& tools/stage-pinned-vcredist.ps1 -ValidateBuildToolset"
     new = "& tools/stage-pinned-vcredist.ps1 -SkipBuildToolsetValidation"
 elif str(mode) == "vcredist-scoop-cli-bypass":
-    marker = "scoop-bucket/bucket/op.json"
+    marker = "scoop-bucket/bucket/de.json"
     marker_index = text.index(marker)
     call_index = text.rindex("write_scoop_manifest \\", 0, marker_index)
     text = text[:call_index] + text[call_index:].replace(
@@ -156,65 +156,65 @@ case ${1-} in
             vcredist-scoop-cli-bypass vcredist-scoop-skip-postcheck; do
             fixture=$temporary/rust-$mutation.yml
             mutate "$repo_root/.github/workflows/rust-release.yml" "$fixture" "$mutation"
-            expect_rejected "$mutation" OPENPENCIL_RUST_RELEASE_WORKFLOW \
+            expect_rejected "$mutation" DESIGN_EDITOR_RUST_RELEASE_WORKFLOW \
                 "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
         done
         fixture=$temporary/build-rust-release-host.sh
         mutate "$repo_root/scripts/build-rust-release-host.sh" "$fixture" rust-skia-force
-        expect_rejected rust-skia-force OPENPENCIL_RUST_RELEASE_BUILDER \
+        expect_rejected rust-skia-force DESIGN_EDITOR_RUST_RELEASE_BUILDER \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
         fixture=$temporary/pinned-release-tools.sh
         mutate "$repo_root/tools/pinned-release-tools.sh" "$fixture" cargo-cli-digest
-        expect_rejected cargo-cli-digest OPENPENCIL_PINNED_RELEASE_TOOLS \
+        expect_rejected cargo-cli-digest DESIGN_EDITOR_PINNED_RELEASE_TOOLS \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
         fixture=$temporary/pinned-release-tools-ripgrep.sh
         mutate "$repo_root/tools/pinned-release-tools.sh" "$fixture" ripgrep-digest
-        expect_rejected ripgrep-digest OPENPENCIL_PINNED_RELEASE_TOOLS \
+        expect_rejected ripgrep-digest DESIGN_EDITOR_PINNED_RELEASE_TOOLS \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
         fixture=$temporary/version-sync-direct-ripgrep.yml
         mutate "$repo_root/.github/workflows/version-sync.yml" "$fixture" \
             version-sync-direct-ripgrep
-        expect_rejected version-sync-direct-ripgrep OPENPENCIL_VERSION_SYNC_WORKFLOW \
+        expect_rejected version-sync-direct-ripgrep DESIGN_EDITOR_VERSION_SYNC_WORKFLOW \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
         fixture=$temporary/Dockerfile.web-rust
         mutate "$repo_root/Dockerfile.web-rust" "$fixture" docker-direct-cargo-cli
-        expect_rejected docker-direct-cargo-cli OPENPENCIL_WEB_DOCKERFILE \
+        expect_rejected docker-direct-cargo-cli DESIGN_EDITOR_WEB_DOCKERFILE \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
         fixture=$temporary/stage-pinned-vcredist.ps1
         mutate "$repo_root/tools/stage-pinned-vcredist.ps1" "$fixture" \
             vcredist-stager-digest
-        expect_rejected vcredist-stager-digest OPENPENCIL_VC_REDIST_STAGER \
+        expect_rejected vcredist-stager-digest DESIGN_EDITOR_VC_REDIST_STAGER \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
         fixture=$temporary/package-windows.nsi
         mutate "$repo_root/scripts/package-windows.nsi" "$fixture" \
             vcredist-nsis-soft-fail
-        expect_rejected vcredist-nsis-soft-fail OPENPENCIL_WINDOWS_NSIS_INSTALLER \
+        expect_rejected vcredist-nsis-soft-fail DESIGN_EDITOR_WINDOWS_NSIS_INSTALLER \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
         fixture=$temporary/install-de.ps1
         mutate "$repo_root/scripts/install-de.ps1" "$fixture" \
             vcredist-cli-skip-postcheck
-        expect_rejected vcredist-cli-skip-postcheck OPENPENCIL_WINDOWS_CLI_INSTALLER \
+        expect_rejected vcredist-cli-skip-postcheck DESIGN_EDITOR_WINDOWS_CLI_INSTALLER \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
         ;;
     ios)
         fixture=$temporary/ios-skia-profile.yml
         mutate "$repo_root/.github/workflows/ios-app-store.yml" "$fixture" ios-skia-profile
-        expect_rejected ios-skia-profile OPENPENCIL_IOS_APP_STORE_WORKFLOW \
+        expect_rejected ios-skia-profile DESIGN_EDITOR_IOS_APP_STORE_WORKFLOW \
             "$repo_root/tools/check-ios-app-store-workflow.sh" "$fixture"
         fixture=$temporary/publish-ios-testflight.sh
         mutate "$repo_root/scripts/publish-ios-testflight.sh" "$fixture" ios-skia-digest
-        expect_rejected ios-skia-digest OPENPENCIL_IOS_TESTFLIGHT_PUBLISHER \
+        expect_rejected ios-skia-digest DESIGN_EDITOR_IOS_TESTFLIGHT_PUBLISHER \
             "$repo_root/tools/check-ios-app-store-workflow.sh" "$fixture"
         for mutation in ios-encryption-yes ios-encryption-code; do
             fixture=$temporary/$mutation-publisher.sh
             mutate "$repo_root/scripts/publish-ios-testflight.sh" "$fixture" "$mutation"
-            expect_rejected "$mutation" OPENPENCIL_IOS_TESTFLIGHT_PUBLISHER \
+            expect_rejected "$mutation" DESIGN_EDITOR_IOS_TESTFLIGHT_PUBLISHER \
                 "$repo_root/tools/check-ios-app-store-workflow.sh" "$fixture"
         done
         fixture=$temporary/ios-encryption-env-override.yml
         mutate "$repo_root/.github/workflows/ios-app-store.yml" "$fixture" \
             ios-encryption-env-override
-        expect_rejected ios-encryption-env-override OPENPENCIL_IOS_APP_STORE_WORKFLOW \
+        expect_rejected ios-encryption-env-override DESIGN_EDITOR_IOS_APP_STORE_WORKFLOW \
             "$repo_root/tools/check-ios-app-store-workflow.sh" "$fixture"
         ;;
     *)

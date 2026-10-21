@@ -4,7 +4,7 @@ import Foundation
 ///
 /// `UIFileSharingEnabled` + `LSSupportsOpeningDocumentsInPlace` (both in
 /// Info.plist) publish exactly this directory to the Files app under
-/// "On My iPhone ▸ OpenPencil", so anything the engine writes here is
+/// "On My iPhone ▸ Design Editor", so anything the engine writes here is
 /// browsable, sharable, and openable outside the app. The private
 /// Application Support root `AuthStorage.prepare()` returns stays what it
 /// was built for — tokens and config — and stays excluded from backup.
@@ -24,7 +24,7 @@ enum DocumentStorage {
                 create: true
             )
         } catch {
-            NSLog("OpenPencil could not prepare its documents directory: %@", error.localizedDescription)
+            NSLog("Design Editor could not prepare its documents directory: %@", error.localizedDescription)
             return nil
         }
     }

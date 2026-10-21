@@ -242,7 +242,7 @@ export class PenSession {
       if (this.initTries >= INIT_MAX_TRIES) {
         this.initCancel?.();
         this.initCancel = undefined;
-        this.host.warn("OpenPencil editor did not become ready");
+        this.host.warn("Design Editor editor did not become ready");
         return;
       }
       this.postInit();

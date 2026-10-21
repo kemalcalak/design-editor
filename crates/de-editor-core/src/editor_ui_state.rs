@@ -63,7 +63,7 @@ pub struct EditorUiState {
     pub mobile_sheet: Option<crate::size_class::MobileSheetKind>,
 
     // --- Theme + locale --------------------------------------------
-    /// User's OpenPencil theme preference — TopBar Sun icon flips it.
+    /// User's Design Editor theme preference — TopBar Sun icon flips it.
     pub theme_mode: ThemeMode,
     /// Page-lifetime color scheme imposed by an embedding host. Paint-only;
     /// separate from `theme_mode`, so host theme changes never persist.

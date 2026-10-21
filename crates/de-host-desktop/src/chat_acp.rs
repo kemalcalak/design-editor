@@ -2,7 +2,7 @@
 //! [`ChatProvider`] trait.
 //!
 //! `ChatProviderKind::Acp` is the catch-all for third-party agents
-//! OpenPencil ships no dedicated adapter for. An [`AcpProvider`] is
+//! Design Editor ships no dedicated adapter for. An [`AcpProvider`] is
 //! built from a persisted [`AcpAgentConfig`]; each `send` connects,
 //! opens a session, drives one prompt turn, and streams the agent's
 //! `session/update` notifications back as `ChatDelta`s.
@@ -13,7 +13,7 @@
 //! (`apps/web/server/api/ai/agent.ts:503-580`): `session/new` carries
 //! the live in-process MCP server's HTTP endpoint in `mcpServers`, so
 //! the agent connects to `http://127.0.0.1:<port>/mcp` itself and
-//! sees the FULL first-party tool catalog (`mcp__openpencil__*`) —
+//! sees the FULL first-party tool catalog (`mcp__design-editor__*`) —
 //! not the 7-tool chat subset the builtin agent loop advertises
 //! (`chat_canvas_tools.rs`; that subset exists for API-key wires that
 //! cannot reach an MCP server). `session/update` `tool_call` /
@@ -26,7 +26,7 @@
 //! here", agent.ts:497-512): the provider refuses with the TS error
 //! message when it is stopped. A remote agent never receives the
 //! desktop's loopback URL — `127.0.0.1` would name the remote host,
-//! not this OpenPencil process — and therefore also does not receive
+//! not this Design Editor process — and therefore also does not receive
 //! the tool-specific system prompt.
 //!
 //! Documented divergences from TS:
@@ -61,26 +61,26 @@ use de_host_services::chat_runtime::{shared_runtime, BlockingRecvIter};
 /// TS error surfaced when ACP is used with the MCP server stopped —
 /// ported verbatim from `apps/web/server/api/ai/agent.ts:506-511`.
 const MCP_NOT_RUNNING_ERROR: &str = "MCP server is not running. Open Settings → MCP and click \
-     \"Start\" to enable ACP agents to access OpenPencil design tools.";
+     \"Start\" to enable ACP agents to access Design Editor design tools.";
 
 /// Dedicated ACP system prompt sent via `_meta.systemPrompt` —
 /// verbatim port of `apps/web/server/api/ai/agent.ts:529-574`
 /// (`acpSystemPrompt`). It overrides the agent's default so it drives
 /// the canvas through MCP tools instead of CLI/skill workflows.
-const ACP_SYSTEM_PROMPT: &str = r##"You are an AI design assistant integrated inside the OpenPencil vector design tool.
+const ACP_SYSTEM_PROMPT: &str = r##"You are an AI design assistant integrated inside the Design Editor vector design tool.
 The user sees a live canvas; your job is to produce polished, visually refined UI designs on it.
-You have direct access to OpenPencil's document via the "openpencil" MCP server.
+You have direct access to Design Editor's document via the "design-editor" MCP server.
 
 ## Tool Usage Rules
-- NEVER use Bash/Terminal to run `op` CLI commands. The CLI is not available here.
-- NEVER use the openpencil-skill or Skill tool. They are for a different context.
-- DO use the `mcp__openpencil__*` tools to operate on the canvas.
+- NEVER use Bash/Terminal to run `de` CLI commands. The CLI is not available here.
+- NEVER use the design-editor-skill or Skill tool. They are for a different context.
+- DO use the `mcp__design-editor__*` tools to operate on the canvas.
 - After finishing, provide a brief one-sentence summary of what was done.
 
 ## REQUIRED Workflow for Creating New Designs
 Always follow this three-phase pipeline (it produces higher quality than ad-hoc insert calls):
 
-1. **Load the design guide (ONCE)**: Call `get_design_prompt` to receive OpenPencil's design principles, node schema details, role system, color/typography tokens, and layout patterns. Read it carefully — it defines the canonical shapes and defaults.
+1. **Load the design guide (ONCE)**: Call `get_design_prompt` to receive Design Editor's design principles, node schema details, role system, color/typography tokens, and layout patterns. Read it carefully — it defines the canonical shapes and defaults.
 2. **Build skeleton**: Call `design_skeleton` with a high-level description. This creates the structural frames (sections, layout containers) with correct auto-layout.
 3. **Fill content**: Call `design_content` once per section from step 2, adding the concrete children (buttons, inputs, text, icons).
 4. **Refine**: ALWAYS call `design_refine` on the root after all sections are populated. This is mandatory for AI chat output because it applies final polish, consistent spacing, role-based styling, icon cleanup, and layout safety.
@@ -119,12 +119,12 @@ When emitting node JSON inside tool arguments, produce strictly valid JSON:
 - Before calling the tool, mentally verify the JSON is valid. Every key has a value; every value has a key."##;
 
 /// Build the `session/new` options for one local ACP turn against the live
-/// MCP server: the `openpencil` HTTP endpoint (TS agent.ts:513-521)
+/// MCP server: the `design-editor` HTTP endpoint (TS agent.ts:513-521)
 /// plus the dedicated ACP system prompt via `_meta` (agent.ts:576-580).
 fn session_options_for_port(port: u16) -> NewSessionOptions {
     NewSessionOptions {
         mcp_servers: vec![McpHttpServer {
-            name: "openpencil".into(),
+            name: "design-editor".into(),
             url: format!("http://127.0.0.1:{port}/mcp"),
         }],
         system_prompt_meta: Some(ACP_SYSTEM_PROMPT.to_string()),

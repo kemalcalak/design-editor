@@ -1,4 +1,4 @@
-//! `~/.openpencil/styles/` — the desktop's home for imported style guides.
+//! `~/.design-editor/styles/` — the desktop's home for imported style guides.
 //!
 //! The runtime catalogue (`de_ai_skills::style_guide::user_registry`) is pure
 //! memory so it can also serve the browser, which has no disk. This is the
@@ -27,13 +27,13 @@ use de_ai_skills::style_guide::{
     USER_STYLE_ID_PREFIX,
 };
 
-/// Directory under `~/.openpencil` holding imported style guides.
+/// Directory under `~/.design-editor` holding imported style guides.
 const STYLES_DIR: &str = "styles";
 
 /// Resolve the styles directory, creating it if this is the first import.
 fn styles_dir() -> std::io::Result<PathBuf> {
     crate::test_config_root::guard_user_config();
-    let dir = de_config_store::openpencil_dir()?.join(STYLES_DIR);
+    let dir = de_config_store::design_editor_dir()?.join(STYLES_DIR);
     std::fs::create_dir_all(&dir)?;
     Ok(dir)
 }

@@ -1,7 +1,7 @@
 //! [`EditorState::apply`] — apply one [`EditorCommand`] against the
 //! editor state.
 //!
-//! Ported from `openpencil-shell-core::document::apply_mcp_command`.
+//! Ported from `design-editor-shell-core::document::apply_mcp_command`.
 //! Preserves the two shell-core invariants:
 //!
 //!   - **Pre-validate-then-mutate.** Every argument (id space, target

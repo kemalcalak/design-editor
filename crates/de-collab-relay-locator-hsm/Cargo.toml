@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license = "MIT"
 repository.workspace = true
-description = "PKCS#11-backed OPLS signer for OpenPencil relay locators"
+description = "PKCS#11-backed OPLS signer for Design Editor relay locators"
 publish = false
 
 # Every dependency is Unix-gated because the crate itself is: on other platforms

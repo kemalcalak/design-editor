@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """ab-v9 — element-manifest arm matrix over the ab-v3 corpus (Rust pipeline).
 
-Spec: openpencil-docs/superpowers/specs/2026-06-10-element-manifest-v2.md §2.
-Runs the FULL Rust orchestrator (de-smoke headless, `OPENPENCIL_MANIFEST=1`)
+Spec: design-editor-docs/superpowers/specs/2026-06-10-element-manifest-v2.md §2.
+Runs the FULL Rust orchestrator (de-smoke headless, `DESIGN_EDITOR_MANIFEST=1`)
 for every corpus prompt × provider, then scores M3 (expected-shape: required
 roles present in the saved .op tree) + M5 (semantic element selection,
 version-suffix-stripped) like the TS harness's score-run.ts.
@@ -62,7 +62,7 @@ PROVIDERS = {
         "base": "https://api.minimaxi.com/v1",
         "model": "MiniMax-M3",
         "key_env": "MM_KEY",
-        "extra_env": {"OPENPENCIL_SMOKE_KEEP_THINKING": "1"},
+        "extra_env": {"DESIGN_EDITOR_SMOKE_KEEP_THINKING": "1"},
     },
     "deepseek-v4-pro": {
         "base": "https://api.deepseek.com/v1",
@@ -264,14 +264,14 @@ def run_cell(entry, provider_id, cfg, out_dir, write_row):
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     env = dict(
         os.environ,
-        OPENPENCIL_MANIFEST="1",
-        OPENPENCIL_SMOKE_DIRECT="1",
-        OPENPENCIL_SMOKE_DUMP="1",
-        OPENPENCIL_LLM_PROVIDER="openai-compat",
-        OPENPENCIL_LLM_API_KEY=os.environ[cfg["key_env"]],
-        OPENPENCIL_LLM_BASE_URL=cfg["base"],
-        OPENPENCIL_ORCHESTRATOR_MODEL=cfg["model"],
-        OPENPENCIL_SMOKE_OUT=op_path,
+        DESIGN_EDITOR_MANIFEST="1",
+        DESIGN_EDITOR_SMOKE_DIRECT="1",
+        DESIGN_EDITOR_SMOKE_DUMP="1",
+        DESIGN_EDITOR_LLM_PROVIDER="openai-compat",
+        DESIGN_EDITOR_LLM_API_KEY=os.environ[cfg["key_env"]],
+        DESIGN_EDITOR_LLM_BASE_URL=cfg["base"],
+        DESIGN_EDITOR_ORCHESTRATOR_MODEL=cfg["model"],
+        DESIGN_EDITOR_SMOKE_OUT=op_path,
         **cfg.get("extra_env", {}),
     )
     start = time.time()

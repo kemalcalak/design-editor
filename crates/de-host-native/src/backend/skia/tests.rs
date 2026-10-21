@@ -88,7 +88,7 @@ fn system_font_resolver_accepts_enumerated_names_and_rejects_unknown_ones() {
     let Some(installed) = enumerate_system_font_families().into_iter().next() else {
         return;
     };
-    let unknown = "OpenPencil Definitely Missing Font 4E8A1B27".to_string();
+    let unknown = "Design Editor Definitely Missing Font 4E8A1B27".to_string();
     let candidates = vec![installed.clone(), unknown, "bad\0family".to_string()];
 
     assert_eq!(

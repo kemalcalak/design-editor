@@ -1,7 +1,7 @@
-//! OpenPencil AI chat layer.
+//! Design Editor AI chat layer.
 //!
 //! This crate carries the transport-free data shapes for the editor's
-//! chat / agent integration — extracted out of `openpencil-shell-core`
+//! chat / agent integration — extracted out of `design-editor-shell-core`
 //! in the Phase 7 strangler reorg:
 //!
 //! - [`chat_provider`] — the `ChatProvider` trait + provider-category

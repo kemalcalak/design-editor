@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "OpenPencil",
+    "message": "Design Editor",
     "description": "Extension name shown in Chrome."
   },
   "extDescription": {
-    "message": "จับภาพหน้าเว็บตามที่แสดงผลจริง นำเข้าสู่ OpenPencil เป็นโหนดออกแบบที่แก้ไขได้ และแยกคู่มือระบบออกแบบ design.md ได้ในคลิกเดียว",
+    "message": "จับภาพหน้าเว็บตามที่แสดงผลจริง นำเข้าสู่ Design Editor เป็นโหนดออกแบบที่แก้ไขได้ และแยกคู่มือระบบออกแบบ design.md ได้ในคลิกเดียว",
     "description": "Extension description shown in Chrome."
   },
   "captureButton": {
@@ -20,7 +20,7 @@
     "message": "แยก design.md"
   },
   "statusDesignWorking": {
-    "message": "กำลังรวบรวมหลักฐานด้านสไตล์ของหน้าเว็บที่ลบข้อมูลระบุตัวตนแล้ว และส่งคำขอไปยัง OpenPencil AI…"
+    "message": "กำลังรวบรวมหลักฐานด้านสไตล์ของหน้าเว็บที่ลบข้อมูลระบุตัวตนแล้ว และส่งคำขอไปยัง Design Editor AI…"
   },
   "statusDesignSmartSuccess": {
     "message": "สร้างและดาวน์โหลด design.md ด้วย AI ที่กำหนดค่าไว้แล้ว"
@@ -29,13 +29,13 @@
     "message": "AI ไม่พร้อมใช้งาน จึงสร้างและดาวน์โหลด design.md ด้วยวิธีสำรองภายในเครื่องแบบให้ผลลัพธ์คงที่: $1"
   },
   "designFallbackPairing": {
-    "message": "OpenPencil ยังไม่ได้อนุญาตให้ส่วนขยายนี้ใช้การสร้างด้วย AI จึงใช้วิธีสำรองภายในเครื่อง"
+    "message": "Design Editor ยังไม่ได้อนุญาตให้ส่วนขยายนี้ใช้การสร้างด้วย AI จึงใช้วิธีสำรองภายในเครื่อง"
   },
   "designFallbackOffline": {
-    "message": "ไม่สามารถเข้าถึง OpenPencil ที่ $1 ได้"
+    "message": "ไม่สามารถเข้าถึง Design Editor ที่ $1 ได้"
   },
   "designFallbackUnsupported": {
-    "message": "OpenPencil เวอร์ชันนี้ไม่รองรับการสร้าง design.md แบบอัจฉริยะ"
+    "message": "Design Editor เวอร์ชันนี้ไม่รองรับการสร้าง design.md แบบอัจฉริยะ"
   },
   "designFallbackError": {
     "message": "การสร้างแบบอัจฉริยะล้มเหลว: $1"
@@ -62,7 +62,7 @@
     "message": "กด Esc เพื่อยกเลิก"
   },
   "endpointLabel": {
-    "message": "ที่อยู่ OpenPencil"
+    "message": "ที่อยู่ Design Editor"
   },
   "endpointHint": {
     "message": "แอปเดสก์ท็อป: การตั้งค่า → MCP → เริ่มเซิร์ฟเวอร์ (พอร์ตเริ่มต้น 3100)"
@@ -80,19 +80,19 @@
     "message": "กำลังส่งสแนปช็อต ($1)…"
   },
   "statusSending": {
-    "message": "กำลังส่งไปยัง OpenPencil…"
+    "message": "กำลังส่งไปยัง Design Editor…"
   },
   "statusImported": {
-    "message": "นำเข้า $1 โหนดไปยัง OpenPencil แล้ว"
+    "message": "นำเข้า $1 โหนดไปยัง Design Editor แล้ว"
   },
   "statusSendingAccount": {
-    "message": "กำลังส่งไปยังบัญชี OpenPencil ของคุณ…"
+    "message": "กำลังส่งไปยังบัญชี Design Editor ของคุณ…"
   },
   "statusSentToAccount": {
-    "message": "ส่งไปยังบัญชี OpenPencil ของคุณแล้ว: $1"
+    "message": "ส่งไปยังบัญชี Design Editor ของคุณแล้ว: $1"
   },
   "statusSentLocalFallback": {
-    "message": "เซสชันบัญชีของคุณหมดอายุ จึงส่งไปยัง OpenPencil บนเครื่องนี้แทน: นำเข้า $1 โหนด"
+    "message": "เซสชันบัญชีของคุณหมดอายุ จึงส่งไปยัง Design Editor บนเครื่องนี้แทน: นำเข้า $1 โหนด"
   },
   "statusDownloaded": {
     "message": "บันทึก $1 แล้ว"
@@ -125,22 +125,22 @@
     "message": "ที่อยู่ต้องเป็นลูปแบ็กพร้อมพอร์ต — 127.0.0.1:3100 หรือ localhost:3100"
   },
   "errorOffline": {
-    "message": "เชื่อมต่อ OpenPencil ที่ $1 ไม่ได้ กรุณาเปิดแอปเดสก์ท็อปแล้วเริ่ม การตั้งค่า → MCP → เซิร์ฟเวอร์ หรือรันคำสั่ง: design-editor --serve-web 3100"
+    "message": "เชื่อมต่อ Design Editor ที่ $1 ไม่ได้ กรุณาเปิดแอปเดสก์ท็อปแล้วเริ่ม การตั้งค่า → MCP → เซิร์ฟเวอร์ หรือรันคำสั่ง: design-editor --serve-web 3100"
   },
   "errorTimeout": {
-    "message": "OpenPencil ที่ $1 รับการเชื่อมต่อแล้ว แต่ไม่ตอบกลับภายใน $2 วินาที แอปอาจกำลังทำงานหนักหรือค้างอยู่ — กรุณาตรวจสอบแล้วลองใหม่"
+    "message": "Design Editor ที่ $1 รับการเชื่อมต่อแล้ว แต่ไม่ตอบกลับภายใน $2 วินาที แอปอาจกำลังทำงานหนักหรือค้างอยู่ — กรุณาตรวจสอบแล้วลองใหม่"
   },
   "errorNoIngress": {
-    "message": "OpenPencil รุ่นนี้ไม่มีช่องทางรับข้อมูลจากส่วนขยาย ($1) กรุณาอัปเดตแอป หรือใช้ “ดาวน์โหลด .op” แล้วเปิดไฟล์ใน OpenPencil"
+    "message": "Design Editor รุ่นนี้ไม่มีช่องทางรับข้อมูลจากส่วนขยาย ($1) กรุณาอัปเดตแอป หรือใช้ “ดาวน์โหลด .op” แล้วเปิดไฟล์ใน Design Editor"
   },
   "errorTooLarge": {
-    "message": "การจับภาพครั้งนี้ใหญ่กว่า $1 MB ซึ่งเส้นทางสแนปช็อตของ OpenPencil ปฏิเสธ กรุณาใช้ “ดาวน์โหลด .op” แล้วเปิดไฟล์ใน OpenPencil"
+    "message": "การจับภาพครั้งนี้ใหญ่กว่า $1 MB ซึ่งเส้นทางสแนปช็อตของ Design Editor ปฏิเสธ กรุณาใช้ “ดาวน์โหลด .op” แล้วเปิดไฟล์ใน Design Editor"
   },
   "errorAccountTooLarge": {
     "message": "การจับภาพครั้งนี้ใหญ่กว่า $1 MB ซึ่งกล่องขาเข้าของบัญชีปฏิเสธ กรุณาส่งไปยังอุปกรณ์นี้แทน"
   },
   "errorImport": {
-    "message": "OpenPencil ปฏิเสธสแนปช็อตนี้: $1"
+    "message": "Design Editor ปฏิเสธสแนปช็อตนี้: $1"
   },
   "errorDownload": {
     "message": "ดาวน์โหลดไม่สำเร็จ: $1"
@@ -164,16 +164,16 @@
     "message": "ทำการเข้าสู่ระบบให้เสร็จในหน้าที่เพิ่งเปิด แล้วเปิดหน้าต่างนี้อีกครั้ง"
   },
   "accountSignedOut": {
-    "message": "ออกจากระบบบัญชี OpenPencil แล้ว"
+    "message": "ออกจากระบบบัญชี Design Editor แล้ว"
   },
   "accountSignOutManual": {
     "message": "ทำการออกจากระบบให้เสร็จในหน้าบัญชีที่เพิ่งเปิด"
   },
   "accountUnavailable": {
-    "message": "ไม่สามารถเชื่อมต่อบัญชี OpenPencil ของคุณ: $1"
+    "message": "ไม่สามารถเชื่อมต่อบัญชี Design Editor ของคุณ: $1"
   },
   "errorAccountSignedOut": {
-    "message": "เซสชันบัญชี OpenPencil ของคุณหมดอายุแล้ว กรุณาลงชื่อเข้าใช้อีกครั้งแล้วลองใหม่"
+    "message": "เซสชันบัญชี Design Editor ของคุณหมดอายุแล้ว กรุณาลงชื่อเข้าใช้อีกครั้งแล้วลองใหม่"
   },
   "errorAccountForbidden": {
     "message": "ฮับปฏิเสธต้นทางหรือโทเค็นเซสชันของการอัปโหลดนี้ กรุณาลงชื่อเข้าใช้อีกครั้งแล้วลองใหม่ ($1)"
@@ -191,10 +191,10 @@
     "message": "อัปโหลดไปยังบัญชีบ่อยเกินไป กรุณาลองใหม่ในอีกประมาณ $1 วินาที"
   },
   "errorAccountRejected": {
-    "message": "บัญชี OpenPencil ของคุณปฏิเสธสแนปช็อตนี้: $1"
+    "message": "บัญชี Design Editor ของคุณปฏิเสธสแนปช็อตนี้: $1"
   },
   "errorAccountUnavailable": {
-    "message": "บัญชี OpenPencil ของคุณรับการจับภาพไม่ได้ในขณะนี้ ($1) กรุณาลองใหม่ภายหลัง หรือส่งไปยัง OpenPencil บนเครื่องนี้"
+    "message": "บัญชี Design Editor ของคุณรับการจับภาพไม่ได้ในขณะนี้ ($1) กรุณาลองใหม่ภายหลัง หรือส่งไปยัง Design Editor บนเครื่องนี้"
   },
   "regionLabel": {
     "message": "ภูมิภาค"
@@ -209,9 +209,9 @@
     "message": "ส่งไปยัง"
   },
   "deliveryLocal": {
-    "message": "OpenPencil บนคอมพิวเตอร์เครื่องนี้"
+    "message": "Design Editor บนคอมพิวเตอร์เครื่องนี้"
   },
   "deliveryAccount": {
-    "message": "บัญชี OpenPencil ของฉัน"
+    "message": "บัญชี Design Editor ของฉัน"
   }
 }

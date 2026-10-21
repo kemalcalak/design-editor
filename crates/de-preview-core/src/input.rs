@@ -600,7 +600,7 @@ impl PreviewSession {
     /// into every rect under it (see `de-pen-loader`'s `compute_layout`
     /// for the full mechanism) — jian's own convention calls this
     /// "absolute scene coordinates" and its own runtimes hit-test
-    /// directly against it. OpenPencil's PreviewSession keeps a SECOND,
+    /// directly against it. Design Editor's PreviewSession keeps a SECOND,
     /// separate coordinate frame ("runtime space", root-relative) for
     /// `Runtime::dispatch_pointer` and friends, which `scene_to_runtime`
     /// above maps into via this function. Subtract the root's authored

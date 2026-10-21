@@ -18,7 +18,7 @@ use de_editor_core::{ChatMessage, EditorState};
 use de_orchestrator::build_design_md_style_policy;
 
 /// TS `CHAT_CORE_PROMPT` — verbatim port (BLOCK = ``` expanded).
-const CHAT_CORE_PROMPT: &str = r#"You are a design assistant for OpenPencil, a vector design tool that renders PenNode JSON on a canvas.
+const CHAT_CORE_PROMPT: &str = r#"You are a design assistant for Design Editor, a vector design tool that renders PenNode JSON on a canvas.
 
 ABSOLUTE REQUIREMENT — When a user asks to create/generate/design/make ANY visual element or UI:
 You MUST output a ```json code block containing a valid PenNode JSON array. This is NON-NEGOTIABLE.
@@ -26,7 +26,7 @@ Add a 1-2 sentence description AFTER the JSON block, not before.
 NEVER describe what you "would" create — ALWAYS output the actual JSON immediately.
 NEVER output HTML, CSS, or React code — ONLY PenNode JSON.
 NEVER say "I will create..." — START DIRECTLY WITH <step>.
-NEVER use "OpenPencil", "Pencil", or the tool name as brand/app name in designs. Use generic placeholders like "AppName", "Acme", or contextually relevant names.
+NEVER use "Design Editor", "Pencil", or the tool name as brand/app name in designs. Use generic placeholders like "AppName", "Acme", or contextually relevant names.
 
 You may include 1-2 brief <step> tags before the JSON (optional, keep them SHORT).
 When a user asks non-design questions (explain, suggest colors, give advice), respond in text."#;
@@ -245,7 +245,7 @@ mod tests {
     fn chat_system_prompt_carries_core_prompt_and_skills() {
         let state = EditorState::new();
         let prompt = build_chat_system_prompt(&state, "design a login form");
-        assert!(prompt.starts_with("You are a design assistant for OpenPencil"));
+        assert!(prompt.starts_with("You are a design assistant for Design Editor"));
         // Generation-phase skills resolve for a design message, so the
         // prompt must be longer than the bare core prompt.
         assert!(prompt.len() > CHAT_CORE_PROMPT.len() + 100);

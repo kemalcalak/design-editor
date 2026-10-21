@@ -1,17 +1,17 @@
-# OpenPencil Web Capture (Chrome extension)
+# Design Editor Web Capture (Chrome extension)
 
-Capture the **rendered** state of any web page and import it into OpenPencil as
+Capture the **rendered** state of any web page and import it into Design Editor as
 editable design nodes, or extract a reusable `design.md` design-system summary.
 
-The extension is deliberately thin: it runs the canonical OpenPencil DOM
+The extension is deliberately thin: it runs the canonical Design Editor DOM
 extractor — `crates/de-html/assets/snapshot-extractor.js`, the same script the
-`op` CLI and the MCP `import_web_snapshot` tool consume — inside the active tab
-and hands the resulting JSON to a running OpenPencil. Because the extractor
+`de` CLI and the MCP `import_web_snapshot` tool consume — inside the active tab
+and hands the resulting JSON to a running Design Editor. Because the extractor
 reads `getComputedStyle` + `getBoundingClientRect`, JS-heavy pages capture the
 way they actually look, not the way their HTML source reads.
 
 Manifest V3, no dependencies. The extension's design analysis only talks to
-the loopback OpenPencil endpoint; OpenPencil may then use a compatible
+the loopback Design Editor endpoint; Design Editor may then use a compatible
 cancellable, evidence-only built-in API provider configured there. The
 extension never receives provider credentials or contacts that provider
 directly. Its logic is **Rust compiled to WebAssembly**; the JavaScript is a
@@ -53,7 +53,7 @@ cargo test -p de-chrome-extension-core
 | `transfer.rs` — chunk planning, slice integrity, `truncated` detection, size cap | The rules that decide whether a capture is intact.                                                                            |
 | `ingress.rs` — the `/mcp` `tools/call` envelope template + reply classification  | The wire shape (and its key order) is pinned by a test; reply shapes are parsed once, in one place.                           |
 | `filename.rs` — download-name sanitisation                                       | The page title is attacker-controlled.                                                                                        |
-| `account.rs` — regions, hub origins, hub URLs, session-reply parsing             | The reachable host set and everything rendered from another user's profile. See [Account](#your-openpencil-account-optional). |
+| `account.rs` — regions, hub origins, hub URLs, session-reply parsing             | The reachable host set and everything rendered from another user's profile. See [Account](#your-design-editor-account-optional). |
 | `delivery.rs` — where a capture is allowed to go                                 | One rule, one place: an expired session or a target the hub does not answer collapses to the local editor.                    |
 | `hub.rs` — the account inbox's create envelope, name, size ceiling               | The Hub's contract, field for field, including the ceilings that decide whether a request is worth sending at all.            |
 | `hub_reply.rs` — what each inbox status means                                    | Nine statuses, nine pieces of advice. Classified once, against fixtures copied from op-hub's own tests.                       |
@@ -118,7 +118,7 @@ wasm also keeps a capture of tens of MB from being copied into and back out of t
 wasm heap.
 
 `wasm/` holds the build product (`de_chrome_extension_core.js` +
-`op_chrome_extension_core_bg.wasm`) and is **gitignored**, matching how the
+`de_chrome_extension_core_bg.wasm`) and is **gitignored**, matching how the
 repo treats every other wasm-bindgen output (`crates/de-host-web/pkg/`,
 `packages/de-web-sdk/wasm/`).
 
@@ -146,14 +146,14 @@ would be a remote request)". A `data:` URI cannot execute under this policy;
 
 | Action                | What it does                                                                                                                                                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Capture full page** | Captures the whole page and sends it to the OpenPencil instance at the endpoint under **OpenPencil endpoint** (default `127.0.0.1:3100`).                                                                                       |
-| **Extract design.md** | Aggregates de-identified design-style evidence and downloads a reusable `design.md`. OpenPencil uses a compatible evidence-only built-in API model when available; otherwise the extension uses a deterministic local fallback. |
+| **Capture full page** | Captures the whole page and sends it to the Design Editor instance at the endpoint under **Design Editor endpoint** (default `127.0.0.1:3100`).                                                                                       |
+| **Extract design.md** | Aggregates de-identified design-style evidence and downloads a reusable `design.md`. Design Editor uses a compatible evidence-only built-in API model when available; otherwise the extension uses a deterministic local fallback. |
 | **Capture element**   | Lets you point at one element and captures only its subtree. See below.                                                                                                                                                         |
-| **Download .op**      | Captures and saves a ready-to-open `<page-title>.op` document instead of sending it — double-click it to open in OpenPencil.                                                                                                    |
+| **Download .op**      | Captures and saves a ready-to-open `<page-title>.op` document instead of sending it — double-click it to open in Design Editor.                                                                                                    |
 
 The status area reports node counts, importer warnings, design evidence counts,
 and whether either bounded collector stopped at its safety cap. The endpoint
-setting is collapsed by default — open it only if OpenPencil is not on
+setting is collapsed by default — open it only if Design Editor is not on
 `127.0.0.1:3100`.
 
 ### Extract design.md
@@ -165,7 +165,7 @@ component kinds with de-identified style samples, safe CSS variables and
 readable media queries. The JSON evidence is stably ordered and hard-capped at
 256 KiB UTF-8.
 
-The evidence sent to OpenPencil and the configured model contains **no page
+The evidence sent to Design Editor and the configured model contains **no page
 text or title, URL/href/src, HTML, image bytes, class or id**. A second allowlist
 reconstruction runs after the isolated-page collector. The collector retains a
 sanitised title capped at 120 characters only inside the extension so the local
@@ -173,16 +173,16 @@ deterministic fallback can name its heading; a network copy explicitly blanks
 that field before the loopback request.
 
 The extension sends that evidence only to
-`POST /api/generate/design-md` on the configured loopback OpenPencil endpoint.
+`POST /api/generate/design-md` on the configured loopback Design Editor endpoint.
 The POST quickly returns an opaque job id; short GET polls (each capped at ten
 seconds) retrieve the final Markdown, and an abandoned job is cancelled with a
 best-effort DELETE. This avoids Manifest V3's independent 30-second
-fetch-response limit while keeping a 120-second total budget. OpenPencil may
+fetch-response limit while keeping a 120-second total budget. Design Editor may
 pass the evidence to a configured built-in API model whose transport is both
-cancellable and evidence-only; model credentials remain in OpenPencil. CLI,
+cancellable and evidence-only; model credentials remain in Design Editor. CLI,
 ACP, Claude Code, Copilot and OpenCode adapters currently use the deterministic
 fallback for this action rather than exposing their tool or local-workspace
-context to an extension-triggered request. If OpenPencil is not paired, has no
+context to an extension-triggered request. If Design Editor is not paired, has no
 compatible model, is busy, or generation fails, the bundled wasm core creates
 the same documented sections deterministically instead. Either route downloads
 the fixed filename `design.md`.
@@ -220,7 +220,7 @@ The capture is delivered the same way as **whichever of "Capture full page" or
 extra delivery prompt: the element pick reuses a decision you have already
 made.
 
-The subtree lands in OpenPencil as one frame at the document origin, with its
+The subtree lands in Design Editor as one frame at the document origin, with its
 descendants positioned relative to it — the same shape a full-page capture
 produces, so nothing downstream has to know which button you pressed. If the
 element you click is itself an `<img>` / `<svg>` / `<canvas>` / `<video>`, the
@@ -281,7 +281,7 @@ Which one the **Capture** button uses is decided by the `delivery.rs` rule:
 path 1 unless you are signed in AND have chosen your account under **Send to**,
 in which case path 3. `Download .op` is always path 2.
 
-### 1. Send to a running OpenPencil (the button)
+### 1. Send to a running Design Editor (the button)
 
 The extension POSTs the snapshot to the local editor. It tries, in order:
 
@@ -303,7 +303,7 @@ reports "no extension ingress" rather than retrying.
 
 **The desktop app does not listen by default.** Turn the server on in
 `Settings → MCP → server` (default port `3100`), or launch via `de start`, which
-forces it on for that run. `~/.openpencil/.op-mcp-port` records the port the
+forces it on for that run. `~/.design-editor/.de-mcp-port` records the port the
 editor actually bound if you changed it.
 
 The endpoint box accepts `127.0.0.1:<port>` or `localhost:<port>`, which is
@@ -322,8 +322,8 @@ accepted origin buys the insert-only snapshot route, and the reply's
 extension can read the answer.
 
 The intelligent design route is deliberately stricter because it can spend
-configured model capacity. `OPENPENCIL_EXTENSION_ALLOWED_IDS` must be explicitly
-non-empty and contain this extension's id before OpenPencil queues model work.
+configured model capacity. `DESIGN_EDITOR_EXTENSION_ALLOWED_IDS` must be explicitly
+non-empty and contain this extension's id before Design Editor queues model work.
 With the variable absent, empty, or not matching, the route returns a readable
 `extensionNotPaired` result and the extension downloads the deterministic local
 fallback. This does not change snapshot ingest's open development default.
@@ -331,7 +331,7 @@ fallback. This does not change snapshot ingest's open development default.
 To lock the route to specific ids, start the editor with:
 
 ```bash
-OPENPENCIL_EXTENSION_ALLOWED_IDS=abcdefghijklmnopabcdefghijklmnop design-editor
+DESIGN_EDITOR_EXTENSION_ALLOWED_IDS=abcdefghijklmnopabcdefghijklmnop design-editor
 ```
 
 (comma-separated, ids only, no `chrome-extension://` prefix). With it set, every
@@ -340,7 +340,7 @@ in `chrome://extensions`.
 
 ### 2. Download and open by hand
 
-`Download .op` writes a ready-to-open `.op` document (OpenPencil's `PenDocument`
+`Download .op` writes a ready-to-open `.op` document (Design Editor's `PenDocument`
 format — the same conversion `de import:snapshot` performs, run in the browser).
 Open it directly:
 
@@ -350,13 +350,13 @@ Open it directly:
 
 No CLI conversion step is needed — the file is already a `.op` document.
 
-### 3. Send to your OpenPencil account
+### 3. Send to your Design Editor account
 
 `POST <hub>/api/v1/snapshots`, with the hub's session cookie and the session's
 `X-CSRF-Token`. See [Delivering to your account](#delivering-to-your-account)
 below for what that costs, what it refuses, and how long it keeps a capture.
 
-## Your OpenPencil account (optional)
+## Your Design Editor account (optional)
 
 **Everything above works signed out, and always will.** Signing in adds an
 identity to the popup's header and — once the hub grows a snapshot inbox — a
@@ -366,7 +366,7 @@ about the local import path.
 ### Signing in
 
 Press **Sign in** in the popup header. A normal browser tab opens on the
-OpenPencil Hub's own sign-in page (`GET /api/v1/auth/login?return_to=/account`)
+Design Editor Hub's own sign-in page (`GET /api/v1/auth/login?return_to=/account`)
 and the whole SSO handshake happens there, between your browser and the hub.
 Finish it, then reopen the popup: the header now shows your avatar, your
 display name, a region badge, and **Sign out**.
@@ -410,7 +410,7 @@ cookie-bearing request at a host of someone else's choosing.
 ### Delivering to your account
 
 When you are signed in, a **Send to** row appears in the settings with two
-options: this computer's OpenPencil (the default), and your account. Choosing
+options: this computer's Design Editor (the default), and your account. Choosing
 your account makes the **Capture** button — and the next element pick — upload
 to the hub's per-user snapshot inbox instead of to loopback. The choice is
 remembered.
@@ -492,7 +492,7 @@ required. It is the same mechanism the loopback import path relies on.)
 | `scripting`                                  | Inject the snapshot extractor, de-identified style collector, transfer harness and picker overlay.  |
 | `downloads`                                  | Save a ready-to-open `.op` document or generated `design.md`.                                       |
 | `storage`                                    | Remember settings plus one pending pick result and one pending design result.                       |
-| `host_permissions: http://127.0.0.1/*`       | POST a snapshot or bounded design evidence to your local OpenPencil.                                |
+| `host_permissions: http://127.0.0.1/*`       | POST a snapshot or bounded design evidence to your local Design Editor.                                |
 | `host_permissions: https://op.zseven.cn/*`   | Ask the China hub who is signed in, and open its sign-in page. Used only if you sign in.            |
 | `host_permissions: https://op.zseven.tech/*` | The same, for the Global hub.                                                                       |
 
@@ -539,7 +539,7 @@ is never edited or wrapped from this side — changes go to the Rust asset, and
 the copy is refreshed with `--fix`.
 
 Its IIFE takes one optional argument, read off
-`globalThis.openpencilSnapshotOptions`: `{ root: <element> }` narrows the
+`globalThis.designEditorSnapshotOptions`: `{ root: <element> }` narrows the
 capture to that element's subtree. With the global unset — which is how the
 script behaves when pasted into a devtools console, and how `capture.js` leaves
 it for a full-page capture — it captures `document.body` and emits byte-for-byte
@@ -647,13 +647,13 @@ either police three identical files or exempt them. The switcher still offers
 | Name / description        | Come from `_locales/*/messages.json` (`extName`, `extDescription`) — do not retype them.                                                                                                                                  |
 | Category                  | Developer Tools.                                                                                                                                                                                                          |
 | Privacy policy URL        | Publish [`docs/privacy-policy.md`](docs/privacy-policy.md) and link it. It is written to be published verbatim.                                                                                                           |
-| Single purpose            | "Turn the rendered page the user chooses into editable OpenPencil design nodes or a reusable design-system guide."                                                                                                        |
+| Single purpose            | "Turn the rendered page the user chooses into editable Design Editor design nodes or a reusable design-system guide."                                                                                                        |
 | `activeTab` + `scripting` | "Runs the snapshot or de-identified style collector only in the tab where the user presses an action."                                                                                                                    |
 | `downloads`               | "Saves a ready-to-open .op document or the generated design.md guide."                                                                                                                                                    |
 | `storage`                 | "Stores settings and the most recent background-action result locally."                                                                                                                                                   |
-| `http://127.0.0.1/*`      | "Delivers a capture or bounded de-identified style evidence with its title removed to OpenPencil on the user's computer."                                                                                                 |
-| The two `op.zseven.*`     | "Reads the signed-in user's own account profile from the OpenPencil Hub, and uploads a capture to that same account when the user selects it as the destination. Optional; the extension is fully functional signed out." |
-| Data usage disclosures    | No analytics, advertising or sale. Snapshot content goes only to the chosen destination; bounded style evidence with no page text/title goes to local OpenPencil and may be processed by its configured AI provider.      |
+| `http://127.0.0.1/*`      | "Delivers a capture or bounded de-identified style evidence with its title removed to Design Editor on the user's computer."                                                                                                 |
+| The two `op.zseven.*`     | "Reads the signed-in user's own account profile from the Design Editor Hub, and uploads a capture to that same account when the user selects it as the destination. Optional; the extension is fully functional signed out." |
+| Data usage disclosures    | No analytics, advertising or sale. Snapshot content goes only to the chosen destination; bounded style evidence with no page text/title goes to local Design Editor and may be processed by its configured AI provider.      |
 
 Expect review to ask about the host permissions. The answer is in
 [Permissions](#permissions-and-why-each-is-needed): no `<all_urls>`, no
@@ -666,11 +666,11 @@ derives it from the directory path, so it differs on every machine). Once the
 store assigns one:
 
 1. Copy the id from the store listing or from `chrome://extensions`.
-2. Set it on every OpenPencil that should accept captures and intelligent
+2. Set it on every Design Editor that should accept captures and intelligent
    design generation from it:
 
    ```bash
-   OPENPENCIL_EXTENSION_ALLOWED_IDS=<id> design-editor
+   DESIGN_EDITOR_EXTENSION_ALLOWED_IDS=<id> design-editor
    ```
 
    The editor's snapshot ingest route admits any `chrome-extension://` origin
@@ -687,22 +687,22 @@ passes the hub's `Origin` check.
 
 ## Troubleshooting
 
-**"OpenPencil is not reachable at 127.0.0.1:3100"** — nothing is listening.
+**"Design Editor is not reachable at 127.0.0.1:3100"** — nothing is listening.
 Start the desktop app and switch on `Settings → MCP → server`, run `de start`,
 or run `design-editor --serve-web 3100`. Check the port with
-`cat ~/.openpencil/.op-mcp-port`.
+`cat ~/.design-editor/.de-mcp-port`.
 
-**"This OpenPencil build has no extension ingress"** — the app is listening but
+**"This Design Editor build has no extension ingress"** — the app is listening but
 predates `POST /api/import/web-snapshot`, and its general `/mcp` surface refuses
 browser-extension origins by design. Update the app, or use `Download .op` and
-open the file in OpenPencil. You will also see this if the editor was started with
-`OPENPENCIL_EXTENSION_ALLOWED_IDS` set to a list that does not include this
+open the file in Design Editor. You will also see this if the editor was started with
+`DESIGN_EDITOR_EXTENSION_ALLOWED_IDS` set to a list that does not include this
 extension's id.
 
 **The design guide says the extension was not authorized for AI generation** —
 the deterministic local file was still produced. To enable the configured
-model path, add this extension's id to `OPENPENCIL_EXTENSION_ALLOWED_IDS` and
-restart OpenPencil; there is currently no settings UI for this administrator
+model path, add this extension's id to `DESIGN_EDITOR_EXTENSION_ALLOWED_IDS` and
+restart Design Editor; there is currently no settings UI for this administrator
 allowlist.
 
 **The design guide used the local fallback even though a model is selected** —
@@ -714,7 +714,7 @@ same isolation contract.
 **"This capture is larger than 48 MB"** — the snapshot route caps its body at
 48 MB (it is the one ingress that needs no token, so it does not get to make the
 editor buffer an arbitrary amount). Use `Download .op` and open the file in
-OpenPencil, which has no such limit. Delivery to the account has its own,
+Design Editor, which has no such limit. Delivery to the account has its own,
 smaller 32 MB ceiling — the hub's, not this route's — and its message suggests
 delivering to this device instead.
 
@@ -735,7 +735,7 @@ every extension. Open a normal `http(s)` page.
 
 **Images look grey / placeholder-ish** — cross-origin images taint the canvas,
 so the extractor cannot rasterize them and falls back to the remote URL or a
-grey placeholder. That is a browser rule, not an OpenPencil limitation.
+grey placeholder. That is a browser rule, not a Design Editor limitation.
 
 **Nothing happens after a long wait on a huge page** — keep the popup open;
 closing it cancels the capture in flight. (The element pick is the exception:

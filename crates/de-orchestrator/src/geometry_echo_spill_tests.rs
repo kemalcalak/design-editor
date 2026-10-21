@@ -132,7 +132,7 @@ fn image_much_taller_than_its_parent_is_echoed_vertically() {
 }
 
 /// The bottom-breathing cleanup adds numeric root padding without changing
-/// business children. OpenPencil's post-layout reconciliation includes that
+/// business children. Design Editor's post-layout reconciliation includes that
 /// padding in the resolved root extent; it is not evidence of a tall child.
 #[test]
 fn numeric_root_padding_alone_is_not_echoed_as_vertical_spill() {

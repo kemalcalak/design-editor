@@ -190,7 +190,7 @@ fn launch_populates_system_prompt_and_history() {
     assert_eq!(history[1].1, "first answer");
 
     let system = build_chat_system_prompt(host.editor_state(), "make it red");
-    assert!(system.starts_with("You are a design assistant for OpenPencil"));
+    assert!(system.starts_with("You are a design assistant for Design Editor"));
 }
 
 #[test]

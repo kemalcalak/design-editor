@@ -3,7 +3,7 @@ import { common } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 const PREFS = 'engine-locale';
 const KEY = 'tag';
 

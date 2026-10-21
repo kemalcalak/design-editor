@@ -1,6 +1,6 @@
 # de-collab-transport
 
-Native, open-source transport for OpenPencil peer-to-peer collaboration.
+Native, open-source transport for Design Editor peer-to-peer collaboration.
 
 The crate owns the M1 TCP record framing, Noise XX handshake, authenticated
 transfer chunking, admission boundary, connection resource limits, device
@@ -144,7 +144,7 @@ platform store is known to be unavailable, not when it is merely locked, so a
 temporary access failure cannot create a second device identity.
 
 For local diagnosis, a debug-assertions `design-editor` build can set
-`OPENPENCIL_COLLAB_DEV_FILE_KEYSTORE=1` to bypass the OS credential store and
+`DESIGN_EDITOR_COLLAB_DEV_FILE_KEYSTORE=1` to bypass the OS credential store and
 use that same hardened `FileKeyStore` directly. The opt-in is exact, ignored by
 release builds, and must not be enabled in packaged applications. Without it,
 the desktop still tries `OsKeyStore` first and falls back only for

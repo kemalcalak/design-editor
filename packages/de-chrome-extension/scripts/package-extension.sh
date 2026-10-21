@@ -96,7 +96,7 @@ RUNTIME_FILES=(
   wasm-core.js
   vendor/snapshot-extractor.js
   wasm/de_chrome_extension_core.js
-  wasm/op_chrome_extension_core_bg.wasm
+  wasm/de_chrome_extension_core_bg.wasm
   icons/icon-16.png
   icons/icon-48.png
   icons/icon-128.png

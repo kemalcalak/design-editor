@@ -8,7 +8,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const wasmStubPath = path.resolve(__dirname, 'test/wasm-stub.ts');
 
 // The virtual module specifier used in src/wasm.ts and test files.
-const VIRTUAL_WASM_ID = 'virtual:op_web_sdk_wasm';
+const VIRTUAL_WASM_ID = 'virtual:de_web_sdk_wasm';
 
 /**
  * Vite plugin that resolves the virtual wasm specifier to the committed test

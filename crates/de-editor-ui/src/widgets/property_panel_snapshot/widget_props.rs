@@ -3,7 +3,7 @@
 //! prop summary and the Text section's typography summary.
 //!
 //! Split out of `property_panel_snapshot.rs` to keep both files under
-//! the openpencil 800-line cap.
+//! the design-editor 800-line cap.
 
 use super::{TextSummary, WidgetKind, WidgetSummary};
 use crate::widgets::property_panel_action::{

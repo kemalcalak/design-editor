@@ -6,22 +6,22 @@ services:
     restart: unless-stopped
     network_mode: none
     environment:
-      OPENPENCIL_LOCATOR_HSM_LOG: ${OPENPENCIL_LOCATOR_HSM_LOG:-info}
+      DESIGN_EDITOR_LOCATOR_HSM_LOG: ${DESIGN_EDITOR_LOCATOR_HSM_LOG:-info}
     volumes:
       - type: bind
-        source: ${OPENPENCIL_COLLAB_HSM_CONFIG_HOST_FILE:?set absolute public signer config file}
-        target: /run/openpencil-config/locator-hsm.json
+        source: ${DESIGN_EDITOR_COLLAB_HSM_CONFIG_HOST_FILE:?set absolute public signer config file}
+        target: /run/design-editor-config/locator-hsm.json
         read_only: true
       - type: bind
-        source: ${OPENPENCIL_COLLAB_HSM_PIN_HOST_FILE:?set absolute signer PIN file}
+        source: ${DESIGN_EDITOR_COLLAB_HSM_PIN_HOST_FILE:?set absolute signer PIN file}
         target: /run/secrets/locator-hsm-pin
         read_only: true
       - type: bind
-        source: ${OPENPENCIL_COLLAB_HSM_TOKEN_HOST_DIR:?set absolute SoftHSM token directory}
-        target: /var/lib/openpencil-softhsm/tokens
+        source: ${DESIGN_EDITOR_COLLAB_HSM_TOKEN_HOST_DIR:?set absolute SoftHSM token directory}
+        target: /var/lib/design-editor-softhsm/tokens
       - type: bind
-        source: ${OPENPENCIL_COLLAB_HSM_SOCKET_HOST_DIR:?set absolute HSM socket directory}
-        target: /run/openpencil-hsm
+        source: ${DESIGN_EDITOR_COLLAB_HSM_SOCKET_HOST_DIR:?set absolute HSM socket directory}
+        target: /run/design-editor-hsm
     read_only: true
     cap_drop:
       - ALL

@@ -1,7 +1,7 @@
 #!/bin/sh
-# Wrap the built desktop binary in `OpenPencil.app` and code-sign it
+# Wrap the built desktop binary in `Design Editor.app` and code-sign it
 # with the project's Developer ID so it carries the SAME signing
-# identity as the shipped TS app (`dev.openpencil.app`, Team
+# identity as the shipped TS app (`com.kemalcalak.design-editor`, Team
 # CYHUA8SZF6).
 #
 # Why the identity matters: macOS TCC keys folder-access grants
@@ -14,11 +14,11 @@
 #
 # Usage: tools/bundle-macos.sh   (after `cargo build -p de-host-desktop --release`)
 # Then launch via LaunchServices so the app is its own TCC responsible
-# process:   open target/release/OpenPencil.app
+# process:   open target/release/Design Editor.app
 #
 # Signing identity is configurable:
-#   OPENPENCIL_SIGN_ID="Developer ID Application: ... (TEAMID)"  (default below)
-#   OPENPENCIL_SIGN_ID=-      ad-hoc sign (no durable identity / no grant)
+#   DESIGN_EDITOR_SIGN_ID="Developer ID Application: ... (TEAMID)"  (default below)
+#   DESIGN_EDITOR_SIGN_ID=-      ad-hoc sign (no durable identity / no grant)
 # When the identity is not in the keychain the script warns and leaves
 # the bundle linker-signed so it still runs locally.
 set -e
@@ -27,24 +27,24 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=macos-local-network-plist.sh
 . "$ROOT/tools/macos-local-network-plist.sh"
 CANONICAL_VERSION="$("$ROOT/scripts/workspace-version.sh")"
-APP_VERSION="${OPENPENCIL_VERSION:-$CANONICAL_VERSION}"
+APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [ "$APP_VERSION" != "$CANONICAL_VERSION" ]; then
-  printf 'bundle-macos: error: OPENPENCIL_VERSION (%s) must match Cargo workspace version (%s)\n' \
+  printf 'bundle-macos: error: DESIGN_EDITOR_VERSION (%s) must match Cargo workspace version (%s)\n' \
     "$APP_VERSION" "$CANONICAL_VERSION" >&2
   exit 1
 fi
-if [ "${OPENPENCIL_VALIDATE_VERSION_ONLY:-}" = 1 ]; then
+if [ "${DESIGN_EDITOR_VALIDATE_VERSION_ONLY:-}" = 1 ]; then
   printf '%s\n' "$APP_VERSION"
   exit 0
 fi
 BIN="$ROOT/target/release/design-editor"
 ICON="$ROOT/crates/de-host-desktop/assets/icon.icns"
 ENTITLEMENTS="$ROOT/crates/de-host-desktop/entitlements.plist"
-APP="$ROOT/target/release/OpenPencil.app"
+APP="$ROOT/target/release/Design Editor.app"
 
 # Match the TS app exactly so the two share one TCC designated requirement.
-BUNDLE_ID="dev.openpencil.app"
-SIGN_ID="${OPENPENCIL_SIGN_ID:-Developer ID Application: Shanghai Yixing Intelligence Technology Co., Ltd. (CYHUA8SZF6)}"
+BUNDLE_ID="com.kemalcalak.design-editor"
+SIGN_ID="${DESIGN_EDITOR_SIGN_ID:-Developer ID Application: Shanghai Yixing Intelligence Technology Co., Ltd. (CYHUA8SZF6)}"
 
 if [ ! -x "$BIN" ]; then
   echo "bundle-macos: $BIN not found — run 'cargo build -p de-host-desktop --release' first" >&2
@@ -61,8 +61,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleName</key><string>OpenPencil</string>
-  <key>CFBundleDisplayName</key><string>OpenPencil</string>
+  <key>CFBundleName</key><string>Design Editor</string>
+  <key>CFBundleDisplayName</key><string>Design Editor</string>
   <key>CFBundleExecutable</key><string>design-editor</string>
   <key>CFBundleIdentifier</key><string>${BUNDLE_ID}</string>
   <key>CFBundleAllowMixedLocalizations</key><true/>
@@ -95,14 +95,14 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 
 PLIST="$APP/Contents/Info.plist"
-openpencil_apply_macos_local_network_plist "$PLIST"
+design_editor_apply_macos_local_network_plist "$PLIST"
 bash "$ROOT/tools/check-macos-bundle-plist.sh" "$PLIST"
 
 echo "bundle-macos: assembled $APP (bundle id $BUNDLE_ID)"
 
 # --- Code-sign so the bundle's identity matches the TS app -----------
 if [ "$SIGN_ID" = "-" ]; then
-  echo "bundle-macos: ad-hoc signing (OPENPENCIL_SIGN_ID=-) — no TCC grant inheritance"
+  echo "bundle-macos: ad-hoc signing (DESIGN_EDITOR_SIGN_ID=-) — no TCC grant inheritance"
   codesign --force --options runtime --entitlements "$ENTITLEMENTS" --sign - "$APP"
 elif security find-identity -v -p codesigning | grep -qF "$SIGN_ID"; then
   echo "bundle-macos: signing with \"$SIGN_ID\""

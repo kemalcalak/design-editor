@@ -5,7 +5,7 @@
 //! warnings, and a top-of-tree variant tally so the import behaves
 //! visibly even without a GUI.
 //!
-//! Usage: `cargo run -p de-figma --example probe_fig -- <path.fig> [preserve|openpencil]`
+//! Usage: `cargo run -p de-figma --example probe_fig -- <path.fig> [preserve|design-editor]`
 
 use de_figma::{parse_fig_binary, FigLayoutMode};
 use jian_ops_schema::node::PenNode;
@@ -50,8 +50,8 @@ fn main() {
     let path = args.next().expect("usage: probe_fig <path.fig>");
     let layout_mode = match args.next().as_deref() {
         Some("preserve") => FigLayoutMode::Preserve,
-        Some("openpencil") | None => FigLayoutMode::OpenPencil,
-        Some(other) => panic!("unknown layout mode {other:?}; use preserve or openpencil"),
+        Some("design-editor") | None => FigLayoutMode::DesignEditor,
+        Some(other) => panic!("unknown layout mode {other:?}; use preserve or design-editor"),
     };
     let bytes = std::fs::read(&path).expect("read file");
     let file_name = std::path::Path::new(&path)

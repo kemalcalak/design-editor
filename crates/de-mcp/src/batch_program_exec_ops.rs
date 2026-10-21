@@ -98,7 +98,7 @@ pub(crate) fn execute_copy(binding: &str, args: &str, ctx: &mut ProgramCtx) -> R
 
 /// `binding=K("kit/component", parent[, overrides])` — instantiate a
 /// built-in UI-kit component. Model-facing ids are compact aliases:
-/// `starter/<component-id>` maps to kit `openpencil-starter`, and
+/// `starter/<component-id>` maps to kit `design-editor-starter`, and
 /// `shadcn/<short-id>` maps to kit `shadcn-ui` with component
 /// `shadcn-<short-id>` (for example `shadcn/btn-primary` →
 /// `shadcn-ui` / `shadcn-btn-primary`). Exact `<kit-id>/<component-id>`

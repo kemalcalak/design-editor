@@ -9,7 +9,7 @@ use super::*;
 #[test]
 fn grok_prompt_file_is_private_and_removed_with_workspace() {
     let source_dir = std::env::temp_dir().join(format!(
-        "openpencil-cli-source-{}-{}",
+        "design-editor-cli-source-{}-{}",
         std::process::id(),
         TURN_SEQ.fetch_add(1, Ordering::Relaxed)
     ));
@@ -55,7 +55,7 @@ fn grok_prompt_file_is_private_and_removed_with_workspace() {
             0o600
         );
     }
-    assert!(turn.prompt().contains("OPENPENCIL AUTOMATION SAFETY"));
+    assert!(turn.prompt().contains("DESIGN EDITOR AUTOMATION SAFETY"));
     assert!(!turn.prompt().contains(&source_dir.to_string_lossy()[..]));
     assert!(turn.prompt().contains("attachment-0-reference.png"));
     drop(turn);
@@ -148,7 +148,10 @@ fn guarded_child_env_excludes_host_token_and_unrelated_secrets() {
     let vars = vec![
         ("HOME".to_string(), "/tmp/home".to_string()),
         ("HTTPS_PROXY".to_string(), "http://proxy".to_string()),
-        ("OPENPENCIL_MCP_TOKEN".to_string(), "shutdown".to_string()),
+        (
+            "DESIGN_EDITOR_MCP_TOKEN".to_string(),
+            "shutdown".to_string(),
+        ),
         ("DATABASE_URL".to_string(), "secret".to_string()),
         ("XAI_API_KEY".to_string(), "xai".to_string()),
         ("GOOGLE_API_KEY".to_string(), "google".to_string()),
@@ -159,7 +162,7 @@ fn guarded_child_env_excludes_host_token_and_unrelated_secrets() {
     assert!(grok.iter().any(|(key, _)| key == "HTTPS_PROXY"));
     assert!(grok.iter().any(|(key, _)| key == "XAI_API_KEY"));
     assert!(!grok.iter().any(|(key, _)| key == "GOOGLE_API_KEY"));
-    assert!(!grok.iter().any(|(key, _)| key == "OPENPENCIL_MCP_TOKEN"));
+    assert!(!grok.iter().any(|(key, _)| key == "DESIGN_EDITOR_MCP_TOKEN"));
     assert!(!grok.iter().any(|(key, _)| key == "DATABASE_URL"));
 
     let antigravity = filtered_env(CliName::Antigravity, vars);
@@ -167,7 +170,7 @@ fn guarded_child_env_excludes_host_token_and_unrelated_secrets() {
     assert!(!antigravity.iter().any(|(key, _)| key == "XAI_API_KEY"));
     assert!(!antigravity
         .iter()
-        .any(|(key, _)| key == "OPENPENCIL_MCP_TOKEN"));
+        .any(|(key, _)| key == "DESIGN_EDITOR_MCP_TOKEN"));
 }
 
 #[test]

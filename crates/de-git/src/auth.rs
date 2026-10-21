@@ -56,9 +56,9 @@ struct AuthFile {
 
 impl AuthStore {
     /// The per-user credential store
-    /// (`~/.openpencil/git-auth.json`).
+    /// (`~/.design-editor/git-auth.json`).
     pub fn user() -> Result<AuthStore, GitError> {
-        let base = de_config_store::openpencil_dir().map_err(io_error)?;
+        let base = de_config_store::design_editor_dir().map_err(io_error)?;
         Ok(AuthStore {
             path: base.join(de_config_store::well_known::GIT_AUTH),
         })

@@ -17,7 +17,7 @@ pub(super) const BUILTIN_ROOTS: [(&str, &str); 2] = [
 ];
 
 #[cfg(any(test, debug_assertions))]
-const BOOTSTRAP_DEV_ROOT_KEYS_ENV: &str = "OPENPENCIL_COLLAB_BOOTSTRAP_DEV_ROOT_KEYS";
+const BOOTSTRAP_DEV_ROOT_KEYS_ENV: &str = "DESIGN_EDITOR_COLLAB_BOOTSTRAP_DEV_ROOT_KEYS";
 const MAX_ENV_BYTES: usize = 8 * 1024;
 const MAX_ROOT_KEYS: usize = 8;
 

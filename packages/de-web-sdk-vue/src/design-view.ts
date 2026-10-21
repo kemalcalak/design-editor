@@ -1,5 +1,5 @@
 import { defineComponent, Fragment, h, onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { createViewer, type OpViewer } from '@zseven-w/de-web-sdk';
+import { createViewer, type OpViewer } from '@kemalcalak/de-web-sdk';
 import { provideViewerRef } from './use-viewer.js';
 
 export const DesignView = defineComponent({

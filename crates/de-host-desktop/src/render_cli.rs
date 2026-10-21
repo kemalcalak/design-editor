@@ -40,9 +40,9 @@ pub fn run_cli_if_requested() -> bool {
     // Transparent border (doc px) around each node. Defaults to a tight
     // crop, the same as the editor's own raster export (its frame was
     // removed; `de_render_export::MARGIN` is 0): a 375-wide phone screen
-    // must come out 375 px wide, not 407. `OPENPENCIL_RENDER_MARGIN=<px>`
+    // must come out 375 px wide, not 407. `DESIGN_EDITOR_RENDER_MARGIN=<px>`
     // opts back into a frame for eyeballing.
-    let margin: f32 = std::env::var("OPENPENCIL_RENDER_MARGIN")
+    let margin: f32 = std::env::var("DESIGN_EDITOR_RENDER_MARGIN")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
@@ -83,7 +83,7 @@ pub fn run_cli_if_requested() -> bool {
     // Diagnostic: dump every node's computed rect as JSONL so we can diff our
     // layout against Pencil's `snapshot_layout` element-for-element (pins down
     // exactly which element heights / gaps drift, vs inferring from pixels).
-    if std::env::var("OPENPENCIL_DUMP_LAYOUT").is_ok() {
+    if std::env::var("DESIGN_EDITOR_DUMP_LAYOUT").is_ok() {
         for node in &page.children {
             dump_layout_node(node);
         }
@@ -147,7 +147,7 @@ fn sanitize(id: &str) -> String {
 }
 
 /// Recursively print a scene node's computed rect as one JSON line, for the
-/// `OPENPENCIL_DUMP_LAYOUT` diagnostic (diff vs Pencil `snapshot_layout`).
+/// `DESIGN_EDITOR_DUMP_LAYOUT` diagnostic (diff vs Pencil `snapshot_layout`).
 fn dump_layout_node(node: &de_editor_ui::layout_scene::SceneNode) {
     let b = node.bounds;
     println!(
@@ -173,9 +173,9 @@ const REMOTE_IMAGE_WARMUP: Duration = Duration::from_secs(45);
 /// resolved came out as a grey box in the shot. Records the misses the
 /// way paint would (same stable id), pumps the same fetcher until the
 /// queue drains or the deadline passes, then lets the export proceed.
-/// `OPENPENCIL_RENDER_NO_FETCH=1` skips it for offline renders.
+/// `DESIGN_EDITOR_RENDER_NO_FETCH=1` skips it for offline renders.
 fn prefetch_remote_images(nodes: &[SceneNode]) {
-    if std::env::var("OPENPENCIL_RENDER_NO_FETCH").is_ok() {
+    if std::env::var("DESIGN_EDITOR_RENDER_NO_FETCH").is_ok() {
         return;
     }
     fn collect(node: &SceneNode, out: &mut Vec<(u64, String)>) {
@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn load_render_state_accepts_future_version_and_restores_editor_meta() {
         let path = std::env::temp_dir().join(format!(
-            "openpencil-render-shots-future-version-{}.op",
+            "design-editor-render-shots-future-version-{}.op",
             std::process::id()
         ));
         std::fs::write(

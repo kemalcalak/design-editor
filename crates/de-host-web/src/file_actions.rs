@@ -142,7 +142,7 @@ pub fn parse_pdf_download_response(response: &str) -> Result<PdfDownload, Docume
         .get("fileName")
         .and_then(|v| v.as_str())
         .filter(|s| !s.trim().is_empty())
-        .unwrap_or("openpencil-export.pdf")
+        .unwrap_or("design-editor-export.pdf")
         .to_string();
     let mime = parsed
         .get("mime")

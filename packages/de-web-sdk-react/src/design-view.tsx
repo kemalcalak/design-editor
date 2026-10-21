@@ -1,5 +1,5 @@
 import { createElement, useEffect, useRef, useState, type ReactNode } from 'react';
-import { createViewer, type OpViewer } from '@zseven-w/de-web-sdk';
+import { createViewer, type OpViewer } from '@kemalcalak/de-web-sdk';
 import { DesignProvider } from './use-viewer.js';
 
 export interface DesignViewProps {

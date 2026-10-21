@@ -1,15 +1,15 @@
-# @zseven-w/de-web-sdk-react
+# @kemalcalak/de-web-sdk-react
 
-React adapter for the OpenPencil read-only web viewer SDK. Embed a live OpenPencil design canvas in any React 19 application.
+React adapter for the Design Editor read-only web viewer SDK. Embed a live Design Editor design canvas in any React 19 application.
 
-> **Read-only boundary:** This package provides a viewer only — no editing. For the full editor experience, use the OpenPencil desktop or web app directly.
+> **Read-only boundary:** This package provides a viewer only — no editing. For the full editor experience, use the Design Editor desktop or web app directly.
 
 ## Install
 
 ```bash
-npm install @zseven-w/de-web-sdk @zseven-w/de-web-sdk-react
+npm install @kemalcalak/de-web-sdk @kemalcalak/de-web-sdk-react
 # or
-bun add @zseven-w/de-web-sdk @zseven-w/de-web-sdk-react
+bun add @kemalcalak/de-web-sdk @kemalcalak/de-web-sdk-react
 ```
 
 ## Peer dependencies
@@ -21,11 +21,11 @@ bun add @zseven-w/de-web-sdk @zseven-w/de-web-sdk-react
 
 ## WASM note
 
-The core SDK (`@zseven-w/de-web-sdk`) loads a WebAssembly binary at runtime. You must either:
+The core SDK (`@kemalcalak/de-web-sdk`) loads a WebAssembly binary at runtime. You must either:
 - Pass the wasm URL explicitly via the `wasmUrl` prop, or
 - Serve the wasm file from your own static assets and ensure it is reachable.
 
-The wasm file ships alongside the core package at `@zseven-w/de-web-sdk/dist/op_web_sdk_bg.wasm`.
+The wasm file ships alongside the core package at `@kemalcalak/de-web-sdk/dist/de_web_sdk_bg.wasm`.
 
 ## Usage
 
@@ -34,8 +34,8 @@ The wasm file ships alongside the core package at `@zseven-w/de-web-sdk/dist/op_
 The simplest way to embed a design viewer:
 
 ```tsx
-import { DesignView } from '@zseven-w/de-web-sdk-react';
-import type { OpViewer } from '@zseven-w/de-web-sdk';
+import { DesignView } from '@kemalcalak/de-web-sdk-react';
+import type { OpViewer } from '@kemalcalak/de-web-sdk';
 
 export function MyPage() {
   function handleLoad(viewer: OpViewer) {
@@ -45,7 +45,7 @@ export function MyPage() {
   return (
     <DesignView
       doc={docStringOrBytes}
-      wasmUrl="/assets/op_web_sdk_bg.wasm"
+      wasmUrl="/assets/de_web_sdk_bg.wasm"
       onLoad={handleLoad}
       style={{ width: 800, height: 600 }}
     />
@@ -54,7 +54,7 @@ export function MyPage() {
 ```
 
 **Props (`DesignViewProps`):**
-- `doc?: string | Uint8Array` — serialized OpenPencil document (JSON string or binary bytes). Omit to start with an empty document.
+- `doc?: string | Uint8Array` — serialized Design Editor document (JSON string or binary bytes). Omit to start with an empty document.
 - `wasmUrl?: string` — URL to the core WASM binary.
 - `onLoad?: (viewer: OpViewer) => void` — called once the viewer is ready.
 - `className?: string` — CSS class applied to the wrapper div.
@@ -66,8 +66,8 @@ For advanced layouts, wrap your subtree with `DesignProvider` and use `useViewer
 
 ```tsx
 import { useState, useEffect, useRef } from 'react';
-import { createViewer } from '@zseven-w/de-web-sdk';
-import { DesignProvider } from '@zseven-w/de-web-sdk-react';
+import { createViewer } from '@kemalcalak/de-web-sdk';
+import { DesignProvider } from '@kemalcalak/de-web-sdk-react';
 
 export function MyLayout() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,7 +109,7 @@ These hooks must be called inside a component that is a descendant of `DesignPro
 Each hook uses `useSyncExternalStore` internally and re-renders only when the relevant viewer event fires.
 
 ```tsx
-import { useViewport, useDocument } from '@zseven-w/de-web-sdk-react';
+import { useViewport, useDocument } from '@kemalcalak/de-web-sdk-react';
 
 export function ZoomDisplay() {
   const viewport = useViewport();  // { panX, panY, zoom }

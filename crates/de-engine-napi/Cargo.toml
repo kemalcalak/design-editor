@@ -5,14 +5,14 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish    = false
-description = "OpenHarmony (OHOS) NAPI marshalling layer for the OpenPencil engine player (de-engine-ffi)"
+description = "OpenHarmony (OHOS) NAPI marshalling layer for the Design Editor engine player (de-engine-ffi)"
 
 [lib]
 # The ArkTS import specifier IS the library file name
-# (`import native from 'libopenpencil.so'`), so the lib name is part of the
+# (`import native from 'libdesign_editor.so'`), so the lib name is part of the
 # ABI contract with `packaging/harmony`. rlib so the host-triple contract
 # tests link the same code.
-name       = "openpencil"
+name       = "design_editor"
 crate-type = ["cdylib", "rlib"]
 
 [features]

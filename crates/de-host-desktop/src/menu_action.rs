@@ -270,7 +270,7 @@ impl DesktopApp {
                 true
             }
             A::OpenGithub => {
-                update_check::open_url("https://github.com/ZSeven-W/openpencil");
+                update_check::open_url("https://github.com/kemalcalak/design-editor");
                 false
             }
         };

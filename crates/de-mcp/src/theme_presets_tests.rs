@@ -36,7 +36,7 @@ fn save_theme_preset_writes_ts_preset_shape() {
             let saved: serde_json::Value =
                 serde_json::from_str(&std::fs::read_to_string(&preset_path).expect("preset"))
                     .expect("preset json");
-            assert_eq!(saved["type"], "openpencil-theme-preset");
+            assert_eq!(saved["type"], "design-editor-theme-preset");
             assert_eq!(saved["version"], "1.0.0");
             assert_eq!(saved["name"], "Acme");
             assert_eq!(saved["themes"]["Mode"][1], "Dark");
@@ -55,7 +55,7 @@ fn load_theme_preset_emits_merge_command() {
     let preset_path = dir.join("dark.optheme");
     std::fs::write(
         &preset_path,
-        r##"{"type":"openpencil-theme-preset","version":"1.0.0","name":"Dark","themes":{"Mode":["Light","Dark"]},"variables":{"brand":{"type":"color","value":"#101010"}}}"##,
+        r##"{"type":"design-editor-theme-preset","version":"1.0.0","name":"Dark","themes":{"Mode":["Light","Dark"]},"variables":{"brand":{"type":"color","value":"#101010"}}}"##,
     )
     .expect("preset file");
 
@@ -85,7 +85,7 @@ fn list_theme_presets_skips_invalid_files() {
     std::fs::create_dir_all(&dir).expect("temp dir");
     std::fs::write(
         dir.join("valid.optheme"),
-        r#"{"type":"openpencil-theme-preset","version":"1.0.0","name":"Valid","themes":{},"variables":{}}"#,
+        r#"{"type":"design-editor-theme-preset","version":"1.0.0","name":"Valid","themes":{},"variables":{}}"#,
     )
     .expect("valid preset");
     std::fs::write(dir.join("invalid.optheme"), r#"{"type":"other"}"#).expect("invalid preset");
@@ -114,7 +114,7 @@ fn temp_dir(label: &str) -> PathBuf {
         .expect("clock")
         .as_nanos();
     std::env::temp_dir().join(format!(
-        "openpencil-theme-presets-{label}-{}-{nanos}",
+        "design-editor-theme-presets-{label}-{}-{nanos}",
         std::process::id()
     ))
 }

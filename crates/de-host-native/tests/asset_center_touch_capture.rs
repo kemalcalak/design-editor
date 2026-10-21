@@ -1,6 +1,6 @@
 //! Raster capture coverage for the Asset Center's phone and tablet layouts.
 //!
-//! Set `OPENPENCIL_ASSET_CENTER_SHOT_DIR` to keep the rendered PNGs. Without
+//! Set `DESIGN_EDITOR_ASSET_CENTER_SHOT_DIR` to keep the rendered PNGs. Without
 //! it, the test still paints each viewport and verifies non-empty output.
 
 #![cfg(all(feature = "gl-host", not(target_os = "windows")))]
@@ -31,7 +31,7 @@ const VIEWPORTS: [(&str, i32, i32, EditorSizeClass, AssetCenterTab); 2] = [
 
 #[test]
 fn asset_center_paints_non_empty_touch_frames() {
-    let shot_dir = std::env::var_os("OPENPENCIL_ASSET_CENTER_SHOT_DIR")
+    let shot_dir = std::env::var_os("DESIGN_EDITOR_ASSET_CENTER_SHOT_DIR")
         .filter(|value| !value.is_empty())
         .map(PathBuf::from);
     if let Some(dir) = shot_dir.as_deref() {

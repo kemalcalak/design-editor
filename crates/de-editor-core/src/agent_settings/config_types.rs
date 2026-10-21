@@ -48,7 +48,7 @@ where
     normalized
 }
 
-/// Built-in provider backend configured directly in OpenPencil.
+/// Built-in provider backend configured directly in Design Editor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BuiltinAgentKind {
     Anthropic,

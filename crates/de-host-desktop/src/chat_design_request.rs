@@ -13,7 +13,7 @@ use de_orchestrator::{AppendContext, ContinuationContext, DesignRequest};
 /// instead). The returned id feeds model-aware orchestrator policy —
 /// tier-gated skill filtering, the element-manifest routing gate, and the M3
 /// thinking policy — and matches the configuration the ab-v9 benchmarks ran
-/// with (de-smoke has always passed `OPENPENCIL_ORCHESTRATOR_MODEL` through).
+/// with (de-smoke has always passed `DESIGN_EDITOR_ORCHESTRATOR_MODEL` through).
 fn selected_orchestrator_model(state: &EditorState) -> Option<String> {
     let entry = state.chat.selected_model_entry()?;
     if entry.acp_agent_id().is_some() {

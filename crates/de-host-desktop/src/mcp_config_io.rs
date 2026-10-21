@@ -8,7 +8,7 @@ use toml_edit::{value, DocumentMut, InlineTable, Item, Table, Value};
 
 use crate::mcp_config_error::McpConfigError;
 
-const SERVER_NAME: &str = "openpencil";
+const SERVER_NAME: &str = "design-editor";
 
 #[derive(Debug)]
 pub(crate) struct FileSnapshot {
@@ -154,7 +154,7 @@ pub(crate) fn update_grok_config(
     atomic_write(path, document.to_string().as_bytes())
 }
 
-pub(crate) fn grok_config_has_openpencil(input: &str) -> bool {
+pub(crate) fn grok_config_has_design_editor(input: &str) -> bool {
     let Ok(document) = input.parse::<DocumentMut>() else {
         return false;
     };
@@ -232,7 +232,7 @@ mod tests {
 
     fn temp_path(name: &str) -> PathBuf {
         let path = std::env::temp_dir().join(format!(
-            "openpencil-mcp-io-{name}-{}-{}",
+            "design-editor-mcp-io-{name}-{}-{}",
             std::process::id(),
             TEMP_FILE_SEQUENCE.fetch_add(1, Ordering::Relaxed)
         ));
@@ -244,12 +244,12 @@ mod tests {
     #[test]
     fn grok_inline_table_round_trip_preserves_comments_and_other_servers() {
         let path = temp_path("inline");
-        let input = "# keep this comment\nmcp_servers = { openpencil = { url = \"http://old/mcp\", headers = { Authorization = \"stale\" } }, other = { url = \"https://example.com/mcp\" } } # keep tail\n";
+        let input = "# keep this comment\nmcp_servers = { design-editor = { url = \"http://old/mcp\", headers = { Authorization = \"stale\" } }, other = { url = \"https://example.com/mcp\" } } # keep tail\n";
         fs::write(&path, input).expect("seed config");
 
         update_grok_config(&path, true, "http://127.0.0.1:3400/mcp").expect("enable");
         let enabled = fs::read_to_string(&path).expect("read enabled config");
-        assert!(grok_config_has_openpencil(&enabled), "{enabled}");
+        assert!(grok_config_has_design_editor(&enabled), "{enabled}");
         assert!(enabled.contains("# keep this comment"), "{enabled}");
         assert!(enabled.contains("# keep tail"), "{enabled}");
         assert!(enabled.contains("other"), "{enabled}");
@@ -257,7 +257,7 @@ mod tests {
 
         update_grok_config(&path, false, "http://unused").expect("disable");
         let disabled = fs::read_to_string(&path).expect("read disabled config");
-        assert!(!grok_config_has_openpencil(&disabled), "{disabled}");
+        assert!(!grok_config_has_design_editor(&disabled), "{disabled}");
         assert!(disabled.contains("other"), "{disabled}");
         assert!(disabled.contains("# keep this comment"), "{disabled}");
         let _ = fs::remove_dir_all(path.parent().expect("parent"));
@@ -296,11 +296,11 @@ mod tests {
         for (name, input) in [
             (
                 "dotted",
-                "mcp_servers.openpencil.url = \"http://old/mcp\"\nmcp_servers.other.url = \"https://example.com/mcp\"\n",
+                "mcp_servers.design-editor.url = \"http://old/mcp\"\nmcp_servers.other.url = \"https://example.com/mcp\"\n",
             ),
             (
                 "normal",
-                "[mcp_servers.openpencil]\nurl = \"http://old/mcp\"\n\n[mcp_servers.other]\nurl = \"https://example.com/mcp\"\n",
+                "[mcp_servers.design-editor]\nurl = \"http://old/mcp\"\n\n[mcp_servers.other]\nurl = \"https://example.com/mcp\"\n",
             ),
         ] {
             let path = temp_path(name);
@@ -308,7 +308,7 @@ mod tests {
             update_grok_config(&path, true, "http://127.0.0.1:3401/mcp").expect("enable");
             let text = fs::read_to_string(&path).expect("read config");
             text.parse::<DocumentMut>().expect("valid TOML");
-            assert!(grok_config_has_openpencil(&text), "{text}");
+            assert!(grok_config_has_design_editor(&text), "{text}");
             assert!(text.contains("other"), "{text}");
             let _ = fs::remove_dir_all(path.parent().expect("parent"));
         }
@@ -317,15 +317,15 @@ mod tests {
     #[test]
     fn grok_detection_rejects_missing_or_invalid_urls() {
         for input in [
-            "[mcp_servers.openpencil]\nurl = \"not-a-url\"\n",
-            "mcp_servers = { openpencil = { url = \"file:///tmp/mcp\" } }\n",
-            "[mcp_servers.openpencil]\ncommand = \"mcp-server\"\n",
-            "[mcp_servers.openpencil]\nurl = \"https://example.com/mcp\"\nenabled = false\n",
+            "[mcp_servers.design-editor]\nurl = \"not-a-url\"\n",
+            "mcp_servers = { design-editor = { url = \"file:///tmp/mcp\" } }\n",
+            "[mcp_servers.design-editor]\ncommand = \"mcp-server\"\n",
+            "[mcp_servers.design-editor]\nurl = \"https://example.com/mcp\"\nenabled = false\n",
         ] {
-            assert!(!grok_config_has_openpencil(input), "{input}");
+            assert!(!grok_config_has_design_editor(input), "{input}");
         }
-        assert!(grok_config_has_openpencil(
-            "mcp_servers = { openpencil = { url = \"https://example.com/mcp\" } }\n"
+        assert!(grok_config_has_design_editor(
+            "mcp_servers = { design-editor = { url = \"https://example.com/mcp\" } }\n"
         ));
     }
 }

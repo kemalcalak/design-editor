@@ -11,7 +11,7 @@ use crate::bindings_media::guard_jint;
 use crate::STATUS_CLOSING;
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextBegin<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeTextBegin<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -26,7 +26,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextBegin<'loc
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextEnd<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeTextEnd<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -35,7 +35,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextEnd<'local
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextInsert<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeTextInsert<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -50,7 +50,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextInsert<'lo
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextBackspace<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeTextBackspace<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -61,7 +61,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextBackspace<
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextDeleteForward<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeTextDeleteForward<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -72,7 +72,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextDeleteForw
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextSetCaret<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeTextSetCaret<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -85,7 +85,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextSetCaret<'
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextSelectRange<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeTextSelectRange<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -98,7 +98,9 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextSelectRang
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeImeSetComposingText<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeImeSetComposingText<
+    'local,
+>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -121,7 +123,9 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeImeSetComposin
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeImeCommitComposition<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeImeCommitComposition<
+    'local,
+>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -132,7 +136,9 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeImeCommitCompo
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeImeCancelComposition<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeImeCancelComposition<
+    'local,
+>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -156,7 +162,7 @@ struct OwnedTextState {
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextGetState<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeTextGetState<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -253,7 +259,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextGetState<'
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeTextCaretRect<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeTextCaretRect<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,

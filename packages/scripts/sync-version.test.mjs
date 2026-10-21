@@ -29,7 +29,7 @@ function fixtureLockfile(version) {
   return `{
   "lockfileVersion": 1,
   "workspaces": {
-    "": { "name": "@zseven-w/openpencil-packages" },
+    "": { "name": "@kemalcalak/design-editor-packages" },
     "de-web-sdk": { "version": "${version}" },
     "de-web-sdk-react": { "version": "${version}" },
     "de-web-sdk-vue": { "version": "${version}" },
@@ -372,19 +372,19 @@ test('Bun lock inspection finds every versioned SDK workspace and ignores the ro
   const lockfile = `{
     "workspaces": {
       "": {
-        "name": "@zseven-w/openpencil-packages",
+        "name": "@kemalcalak/design-editor-packages",
       },
       "de-web-sdk": {
-        "name": "@zseven-w/de-web-sdk",
+        "name": "@kemalcalak/de-web-sdk",
         "version": "1.0.0",
         "devDependencies": { "fixture": "1.2.3" },
       },
       "de-web-sdk-react": {
-        "name": "@zseven-w/de-web-sdk-react",
+        "name": "@kemalcalak/de-web-sdk-react",
         "version": "1.0.1",
       },
       "de-web-sdk-vue": {
-        "name": "@zseven-w/de-web-sdk-vue",
+        "name": "@kemalcalak/de-web-sdk-vue",
         "version": "1.0.2",
       },
     },
@@ -436,7 +436,7 @@ test('Bun lock inspection still rejects unterminated block comments after primit
 test('Bun lock rendering updates only managed workspace version literals', () => {
   const lockfile = `{
     "workspaces": {
-      "": { "name": "@zseven-w/openpencil-packages" },
+      "": { "name": "@kemalcalak/design-editor-packages" },
       "de-web-sdk": { "version": "1.0.0", "fixture": "1.0.0" },
       "de-web-sdk-react": { "version": "1.0.1" },
       "de-web-sdk-vue": { "version": "1.0.2" },

@@ -6,8 +6,8 @@ set -euo pipefail
 
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd)
-workflow=${OPENPENCIL_IOS_APP_STORE_WORKFLOW:-$repo_root/.github/workflows/ios-app-store.yml}
-publisher=${OPENPENCIL_IOS_TESTFLIGHT_PUBLISHER:-$repo_root/scripts/publish-ios-testflight.sh}
+workflow=${DESIGN_EDITOR_IOS_APP_STORE_WORKFLOW:-$repo_root/.github/workflows/ios-app-store.yml}
+publisher=${DESIGN_EDITOR_IOS_TESTFLIGHT_PUBLISHER:-$repo_root/scripts/publish-ios-testflight.sh}
 matrix_verifier=$repo_root/tools/check-op-auth-release-matrix.sh
 remote_ref_gate=$repo_root/tools/check-op-auth-remote-ref.sh
 ios_build_number=$repo_root/tools/ios-build-number.sh
@@ -68,8 +68,8 @@ end
 call_secrets = triggers.fetch("workflow_call").fetch("secrets")
 required_call_secrets = %w[
   APPLE_TEAM_ID
-  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN
-  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
+  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN
+  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
 ]
 environment_call_secrets = %w[
   APP_STORE_CONNECT_API_KEY_BASE64
@@ -95,7 +95,7 @@ jobs = document.fetch("jobs")
 verify = jobs.fetch("verify")
 publish = jobs.fetch("publish")
 unless document.fetch("concurrency") == {
-    "group" => "ios-app-store-tech-zseven-openpencil",
+    "group" => "ios-app-store-com-kemalcalak-designeditor",
     "cancel-in-progress" => false,
   }
   raise "all App Store uploads must share one non-canceling global queue"
@@ -133,14 +133,14 @@ release_step = verify.fetch("steps").find do |step|
 end
 raise "missing exact release source gate" unless release_step
 release_env = release_step.fetch("env")
-unless release_env.fetch("OPENPENCIL_RELEASE_SHA") == "${{ inputs.release_sha }}"
+unless release_env.fetch("DESIGN_EDITOR_RELEASE_SHA") == "${{ inputs.release_sha }}"
   raise "release source must come from the explicit full-SHA input"
 end
-unless release_env.fetch("OPENPENCIL_RELEASE_REF") == "${{ inputs.release_ref }}"
+unless release_env.fetch("DESIGN_EDITOR_RELEASE_REF") == "${{ inputs.release_ref }}"
   raise "source gate must validate the explicit release ref"
 end
-unless release_env.fetch("OPENPENCIL_CANONICAL_REMOTE") ==
-    "https://github.com/ZSeven-W/openpencil.git"
+unless release_env.fetch("DESIGN_EDITOR_CANONICAL_REMOTE") ==
+    "https://github.com/kemalcalak/design-editor.git"
   raise "release ref must be resolved against the canonical public repository"
 end
 release_script = release_step.fetch("run")
@@ -148,8 +148,8 @@ unless release_script.scan("tools/check-op-auth-remote-ref.sh").length == 2 &&
     release_script.include?("tools/check-op-auth-remote-ref.sh --self-test") &&
     release_script.scan("tools/ios-build-number.sh").length == 2 &&
     release_script.include?("tools/ios-build-number.sh --self-test") &&
-    release_script.include?('"$(git rev-parse HEAD)" == "$OPENPENCIL_RELEASE_SHA"') &&
-    release_script.include?('"$OPENPENCIL_RELEASE_REF"')
+    release_script.include?('"$(git rev-parse HEAD)" == "$DESIGN_EDITOR_RELEASE_SHA"') &&
+    release_script.include?('"$DESIGN_EDITOR_RELEASE_REF"')
   raise "exact release gate must validate the canonical source and version"
 end
 checkout = verify.fetch("steps").find do |step|
@@ -205,7 +205,7 @@ raise "verified iOS Skia cache must be staged before protected configuration" un
   skia_index && config_index && publish_index && skia_index < config_index && config_index < publish_index
 skia_step = steps.fetch(skia_index)
 unless skia_step.fetch("run") ==
-    'tools/pinned-release-tools.sh skia ios aarch64-apple-ios "$RUNNER_TEMP/openpencil-skia-aarch64-apple-ios"'
+    'tools/pinned-release-tools.sh skia ios aarch64-apple-ios "$RUNNER_TEMP/design-editor-skia-aarch64-apple-ios"'
   raise "iOS Skia cache must use the reviewed repository downloader"
 end
 
@@ -242,9 +242,9 @@ require_literal 'ITSAppUsesNonExemptEncryption=NO' "$workflow"
 require_literal 'deliberately carries no compliance code' "$workflow"
 reject_literal 'IOS_USES_NON_EXEMPT_ENCRYPTION' "$workflow"
 reject_literal 'IOS_ENCRYPTION_EXPORT_COMPLIANCE_CODE' "$workflow"
-require_literal 'OPENPENCIL_RELEASE_SHA: ${{ inputs.release_sha }}' "$workflow"
-require_literal 'OPENPENCIL_RELEASE_REF: ${{ inputs.release_ref }}' "$workflow"
-require_literal 'OPENPENCIL_CANONICAL_REMOTE: https://github.com/ZSeven-W/openpencil.git' "$workflow"
+require_literal 'DESIGN_EDITOR_RELEASE_SHA: ${{ inputs.release_sha }}' "$workflow"
+require_literal 'DESIGN_EDITOR_RELEASE_REF: ${{ inputs.release_ref }}' "$workflow"
+require_literal 'DESIGN_EDITOR_CANONICAL_REMOTE: https://github.com/kemalcalak/design-editor.git' "$workflow"
 require_literal 'tools/check-op-auth-remote-ref.sh --self-test' "$workflow"
 require_literal 'tools/ios-build-number.sh --self-test' "$workflow"
 require_literal 'build_number=$(tools/ios-build-number.sh)' "$workflow"
@@ -255,7 +255,7 @@ reject_literal "tags: ['v*']" "$workflow"
 reject_literal 'auth_artifact_sha:' "$workflow"
 reject_literal 'OP_AUTH_ARTIFACT_COMMIT:' "$workflow"
 require_literal 'environment: testflight' "$workflow"
-require_literal 'group: ios-app-store-tech-zseven-openpencil' "$workflow"
+require_literal 'group: ios-app-store-com-kemalcalak-designeditor' "$workflow"
 require_literal 'cancel-in-progress: false' "$workflow"
 require_literal 'tools/check-op-auth-release-matrix.test.sh' "$workflow"
 require_literal 'tools/check-op-auth-release-matrix.sh' "$workflow"
@@ -267,10 +267,10 @@ reject_literal 'OP_AUTH_RELEASE_WORKSPACE_VERSION:' "$workflow"
 reject_literal '.op-auth-artifact' "$workflow"
 require_literal 'IOS_BUILD_NUMBER: ${{ needs.verify.outputs.build_number }}' "$workflow"
 require_literal 'IOS_MARKETING_VERSION: ${{ needs.verify.outputs.version }}' "$workflow"
-require_literal 'OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}' "$workflow"
-require_literal 'OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}' "$workflow"
-reject_literal 'OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ vars.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}' "$workflow"
-reject_literal 'OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ vars.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}' "$workflow"
+require_literal 'DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}' "$workflow"
+require_literal 'DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}' "$workflow"
+reject_literal 'DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ vars.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}' "$workflow"
+reject_literal 'DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ vars.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}' "$workflow"
 require_literal 'XCODEGEN_SHA256: 090ec29491aad50aec10631bf6e62253fed733c50f3aab0f5ffc86bc170bdbef' "$workflow"
 require_literal "python3 tools/check-collab-bootstrap-urls.py" "$workflow"
 require_literal 'tools/pinned-release-tools.sh skia ios aarch64-apple-ios' "$workflow"
@@ -294,14 +294,14 @@ capture_line=$(grep -n '^certificate_base64=' "$publisher" | head -n 1 | cut -d:
 relay_capture_line=$(grep -n '^relay_bootstrap_cn=' "$publisher" | head -n 1 | cut -d: -f1)
 path_line=$(grep -n '^script_dir=' "$publisher" | cut -d: -f1)
 unset_line=$(grep -n '^unset IOS_DISTRIBUTION_CERTIFICATE_BASE64' "$publisher" | cut -d: -f1)
-relay_unset_line=$(grep -n '^unset OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN' "$publisher" | cut -d: -f1)
+relay_unset_line=$(grep -n '^unset DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN' "$publisher" | cut -d: -f1)
 [[ "$capture_line" -lt "$path_line" && "$unset_line" -lt "$path_line" \
     && "$relay_capture_line" -lt "$path_line" \
     && "$relay_unset_line" -lt "$path_line" ]] || {
     printf 'error: protected release values must be captured and unset before child processes\n' >&2
     exit 1
 }
-require_literal "bundle_id=tech.zseven.openpencil" "$publisher"
+require_literal "bundle_id=com.kemalcalak.designeditor" "$publisher"
 require_literal 'umask 077' "$publisher"
 require_literal 'export -n' "$publisher"
 require_literal 'iOS build number must use conservative 4.2.2 numeric components' "$publisher"
@@ -352,7 +352,7 @@ require_literal 'epoch_minutes=$((10#$epoch_seconds / 60))' "$ios_build_number"
 require_literal '10000000 1000.0.0' "$ios_build_number"
 require_literal '99999999 9999.99.99' "$ios_build_number"
 
-require_literal 'PRODUCT_BUNDLE_IDENTIFIER: tech.zseven.openpencil' "$project"
+require_literal 'PRODUCT_BUNDLE_IDENTIFIER: com.kemalcalak.designeditor' "$project"
 require_literal 'INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"' "$project"
 reject_literal 'INFOPLIST_KEY_ITSEncryptionExportComplianceCode' "$project"
 require_literal 'INFOPLIST_KEY_NSLocalNetworkUsageDescription:' "$project"

@@ -33,7 +33,7 @@ const LOG_INFO: c_int = 4;
 const LOG_ERROR: c_int = 6;
 
 /// Service domain for every line this crate emits. Third-party app domains
-/// are 16-bit values chosen by the app; `0xF000` keeps OpenPencil's lines
+/// are 16-bit values chosen by the app; `0xF000` keeps Design Editor's lines
 /// filterable with `hdc hilog | grep 0xF000`.
 const DOMAIN: c_uint = 0xF000;
 

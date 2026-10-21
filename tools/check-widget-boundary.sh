@@ -3,7 +3,7 @@
 #
 # Per spec §1.4: widget logic (Widget impls, layout/paint/access_node)
 # lives in `crates/de-editor-ui/src/widgets/` (Phase 7 reorg moved it
-# out of the old openpencil-shell-core). The de-host-web crate's
+# out of the old design-editor-shell-core). The de-host-web crate's
 # widget glue is scoped to a single module — `widget_host.rs` plus
 # its sibling submodules under `widget_host/` (spec amendment
 # 2026-05-11: the original "one file" constraint conflicted with
@@ -20,7 +20,7 @@
 # OP-owned primitive impl files (tree, prop_row, text_input) AND each file must
 # carry a real `impl Widget for X` — a stale file with the impl
 # removed must not silently pass. (Phase 7.3 reorg: the
-# openpencil-shell-core re-export shim was dissolved; de-host-web
+# design-editor-shell-core re-export shim was dissolved; de-host-web
 # now pulls `de_editor_ui::widgets` directly from the real source
 # crate, so the forward F4 path is unchanged.)
 #

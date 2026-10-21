@@ -32,9 +32,9 @@ impl TurnPurpose {
 }
 
 pub const GROK_READ_TOOLS: &str = "read_file,grep,list_dir";
-pub const GROK_MCP_ALLOW: &str = "MCPTool(openpencil__*)";
+pub const GROK_MCP_ALLOW: &str = "MCPTool(design_editor__*)";
 
-const ANTIGRAVITY_MCP_PERMISSION: &str = "mcp(openpencil/*)";
+const ANTIGRAVITY_MCP_PERMISSION: &str = "mcp(design-editor/*)";
 const ANTIGRAVITY_DENY_RULES: &[&str] = &[
     "command(*)",
     "unsandboxed(*)",
@@ -61,7 +61,7 @@ pub fn antigravity_args(purpose: TurnPurpose) -> Vec<String> {
 /// transcript the parser understands. A generation turn is text-only —
 /// the orchestrator parses the reply itself — so every tool is disallowed
 /// and no MCP server is loaded; the canvas-agent turn keeps the CLI's own
-/// tool policy because it is expected to drive the OpenPencil MCP server.
+/// tool policy because it is expected to drive the Design Editor MCP server.
 pub fn claude_code_args(purpose: TurnPurpose) -> Vec<String> {
     let mut args: Vec<String> = Vec::new();
     if purpose == TurnPurpose::Generation {
@@ -114,10 +114,10 @@ pub fn grok_args(purpose: TurnPurpose) -> Vec<String> {
     args
 }
 
-const AUTOMATION_GUARD: &str = "OPENPENCIL AUTOMATION SAFETY:\n\
-Use the OpenPencil MCP server only (`mcp__openpencil__*` / `openpencil/*`) to inspect or modify the canvas. \
+const AUTOMATION_GUARD: &str = "DESIGN EDITOR AUTOMATION SAFETY:\n\
+Use the Design Editor MCP server only (`mcp__design-editor__*` / `design-editor/*`) to inspect or modify the canvas. \
 Do not run terminal commands, write local files, browse the web, spawn subagents, or call any other MCP server. \
-Never request interactive approval. If the OpenPencil MCP tools are unavailable or denied, report that failure and stop.";
+Never request interactive approval. If the Design Editor MCP tools are unavailable or denied, report that failure and stop.";
 const GROK_COMPAT_SETTINGS: &[u8] = br#"{"permissions":{"defaultMode":"dontAsk"}}"#;
 
 pub struct IsolatedTurn {
@@ -375,25 +375,25 @@ fn prepare_antigravity_home(
         let source_path = host_home.join(".gemini/config/mcp_config.json");
         let source: serde_json::Value = serde_json::from_slice(&fs::read(source_path)?)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-        let server = source["mcpServers"]["openpencil"]
+        let server = source["mcpServers"]["design-editor"]
             .as_object()
             .ok_or_else(|| {
                 io::Error::new(
                     io::ErrorKind::NotFound,
-                    "Antigravity requires OpenPencil MCP to be enabled in Settings",
+                    "Antigravity requires Design Editor MCP to be enabled in Settings",
                 )
             })?;
         if server.get("disabled").and_then(serde_json::Value::as_bool) == Some(true) {
             return Err(io::Error::new(
                 io::ErrorKind::PermissionDenied,
-                "Antigravity OpenPencil MCP connection is disabled",
+                "Antigravity Design Editor MCP connection is disabled",
             ));
         }
         let url = server
             .get("serverUrl")
             .and_then(serde_json::Value::as_str)
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing serverUrl"))?;
-        validate_live_mcp_record(host_home, validate_openpencil_url(url)?)?;
+        validate_live_mcp_record(host_home, validate_design_editor_url(url)?)?;
         Some(url.to_owned())
     } else {
         None
@@ -418,7 +418,7 @@ fn prepare_antigravity_home(
 
     let mcp_config = server_url.as_deref().map_or_else(
         || serde_json::json!({"mcpServers": {}}),
-        |url| serde_json::json!({"mcpServers": {"openpencil": {"serverUrl": url}}}),
+        |url| serde_json::json!({"mcpServers": {"design-editor": {"serverUrl": url}}}),
     );
     let allow = if server_url.is_some() {
         serde_json::json!([ANTIGRAVITY_MCP_PERMISSION])
@@ -440,11 +440,11 @@ fn prepare_antigravity_home(
     Ok(home)
 }
 
-fn validate_openpencil_url(input: &str) -> io::Result<u16> {
+fn validate_design_editor_url(input: &str) -> io::Result<u16> {
     let url = reqwest::Url::parse(input).map_err(|_| {
         io::Error::new(
             io::ErrorKind::InvalidData,
-            "Antigravity OpenPencil MCP URL is invalid",
+            "Antigravity Design Editor MCP URL is invalid",
         )
     })?;
     let loopback = url
@@ -468,7 +468,7 @@ fn validate_openpencil_url(input: &str) -> io::Result<u16> {
     } else {
         Err(io::Error::new(
             io::ErrorKind::PermissionDenied,
-            "Antigravity OpenPencil MCP must use a local http://loopback:port/mcp URL",
+            "Antigravity Design Editor MCP must use a local http://loopback:port/mcp URL",
         ))
     }
 }
@@ -478,12 +478,12 @@ fn validate_openpencil_url(input: &str) -> io::Result<u16> {
 /// process. We intentionally do not copy its shutdown token into the child.
 fn validate_live_mcp_record(host_home: &Path, expected_port: u16) -> io::Result<()> {
     let path = host_home
-        .join(de_config_store::OPENPENCIL_DIR_NAME)
+        .join(de_config_store::DESIGN_EDITOR_DIR_NAME)
         .join(de_config_store::well_known::LIVE_MCP_PORT);
     let record: serde_json::Value = serde_json::from_slice(&fs::read(path)?).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
-            format!("invalid OpenPencil MCP discovery record: {e}"),
+            format!("invalid Design Editor MCP discovery record: {e}"),
         )
     })?;
     let same_process = record.get("writerPid").and_then(serde_json::Value::as_u64)
@@ -496,7 +496,7 @@ fn validate_live_mcp_record(host_home: &Path, expected_port: u16) -> io::Result<
     } else {
         Err(io::Error::new(
             io::ErrorKind::PermissionDenied,
-            "Antigravity OpenPencil MCP endpoint is not owned by this editor process",
+            "Antigravity Design Editor MCP endpoint is not owned by this editor process",
         ))
     }
 }
@@ -514,7 +514,7 @@ fn create_turn_dir(cli: CliName) -> io::Result<PathBuf> {
     for _ in 0..16 {
         let seq = TURN_SEQ.fetch_add(1, Ordering::Relaxed);
         let dir = std::env::temp_dir().join(format!(
-            "openpencil-cli-turn-{}-{}-{stamp}-{seq}",
+            "design-editor-cli-turn-{}-{}-{stamp}-{seq}",
             std::process::id(),
             cli.default_binary()
         ));

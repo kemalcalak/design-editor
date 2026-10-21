@@ -201,7 +201,7 @@ fn smoke_directory() -> Result<PathBuf> {
         .context("system time is before Unix epoch")?
         .as_nanos();
     Ok(std::env::temp_dir().join(format!(
-        "openpencil-collab-smoke-{}-{timestamp}",
+        "design-editor-collab-smoke-{}-{timestamp}",
         std::process::id()
     )))
 }
@@ -210,7 +210,7 @@ fn cleanup(directory: &Path) {
     if directory
         .file_name()
         .and_then(OsStr::to_str)
-        .is_some_and(|name| name.starts_with("openpencil-collab-smoke-"))
+        .is_some_and(|name| name.starts_with("design-editor-collab-smoke-"))
     {
         let _ = std::fs::remove_dir_all(directory);
     }

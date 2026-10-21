@@ -1,5 +1,5 @@
 //! Minimal scaffold seed for the headless agentic loop
-//! (`OPENPENCIL_SMOKE_LOOP=1` + `OPENPENCIL_SMOKE_LOOP_SEED=1`).
+//! (`DESIGN_EDITOR_SMOKE_LOOP=1` + `DESIGN_EDITOR_SMOKE_LOOP_SEED=1`).
 //!
 //! This is the SIMPLIFIED generation path that copies Pencil's single
 //! agentic loop while keeping a tiny weak-model safety net. Instead of the

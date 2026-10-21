@@ -1,4 +1,4 @@
-//! `~/.openpencil/templates/` — the desktop's home for saved scene templates.
+//! `~/.design-editor/templates/` — the desktop's home for saved scene templates.
 //!
 //! The runtime registry (`de_editor_core::user_scene_templates`) is pure
 //! memory. Native directory scanning is shared with headless MCP/web hosts in

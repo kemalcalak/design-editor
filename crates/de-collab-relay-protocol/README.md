@@ -1,6 +1,6 @@
 # de-collab-relay-protocol
 
-Open, transport-independent wire types for OpenPencil's public collaboration
+Open, transport-independent wire types for Design Editor's public collaboration
 relay. The relay is a rendezvous and byte-forwarding service: application
 traffic remains protected by the existing end-to-end Noise session.
 
@@ -33,7 +33,7 @@ China relay when policy and network reachability permit it.
 
 Short pairing codes store an opaque sealed invite in the control plane. The
 storage handle deliberately retains the v0.8.4 derivation: the first 16 bytes
-of BLAKE3 `derive_key("openpencil/de-collab-relay-protocol/pairing-code-id/v1",
+of BLAKE3 `derive_key("openpencil/op-collab-relay-protocol/pairing-code-id/v1",
 canonical_code)`. It remains separate from the HKDF sealing key.
 
 The sealed binary format has its own version, independent from the locator
@@ -45,9 +45,9 @@ protocol version:
 
 The 32-byte AEAD key is HKDF-SHA256 with the canonical pairing-code bytes as
 IKM, the 12-byte nonce as salt, and
-`"openpencil/de-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-key/v2\0"`
+`"openpencil/op-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-key/v2\0"`
 as info. The AAD is
-`"openpencil/de-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-aad/v2\0" || sealed_version || nonce`.
+`"openpencil/op-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-aad/v2\0" || sealed_version || nonce`.
 The nonce must be nonzero and unique for a pairing code; production sealing
 uses a fresh CSPRNG value. The full 16-byte RFC 8439 tag is always carried.
 The v2 parser ceiling is 541 bytes. The public opaque transport/storage ceiling
@@ -55,14 +55,14 @@ remains the v0.8.4 value of 569 bytes so a rolling control-plane upgrade can
 continue storing and forwarding legacy blobs without understanding them.
 
 The outer opaque transport media type remains
-`application/vnd.openpencil.relay-sealed-invite-v1`; its schema is only a
+`application/vnd.design-editor.relay-sealed-invite-v1`; its schema is only a
 bounded byte string, while the first byte inside that string selects this
 independently versioned cryptographic envelope. Existing control planes and
 edges can forward v2 without learning or deploying its cipher.
 
 Client compatibility is two-phase (readers first, writers later): `open`
 accepts both the legacy BLAKE3-XOF/XOR/MAC v1 envelope published in
-OpenPencil v0.8.4 and the v2 AEAD envelope, while owners continue to *seal*
+Design Editor v0.8.4 and the v2 AEAD envelope, while owners continue to *seal*
 v1 (`seal_legacy_compat`) because fielded v0.8.4 guests reject any other
 version byte at claim time — a v2-sealed publish would mint codes such a
 guest can claim but never open, surfacing as the generic invalid-invite UI
@@ -75,7 +75,7 @@ invalid-invite UI error rather than surfacing a version-specific message.
 
 Authentication mode `2` replaces the reusable v1 possession attestation with a
 relay challenge bound to the caller's X25519 shared secret. The HTTP response
-header name is `openpencil-relay-challenge`. Its canonical value is `oprc1_`
+header name is `design-editor-relay-challenge`. Its canonical value is `oprc1_`
 followed by unpadded base64url of:
 
 ```text
@@ -95,14 +95,14 @@ The interoperable derivation is:
 bearer_hash = SHA256(exact bearer-token bytes)
 normalized_hello = fixed 501-byte hello with byte [68] and range [69,165) zeroed
 binding = SHA256(
-  "openpencil/de-collab-relay-protocol/challenge-proof-binding/v2\x00" ||
+  "openpencil/op-collab-relay-protocol/challenge-proof-binding/v2\x00" ||
   u16be(challenge_binary_length) ||
   challenge_binary ||
   bearer_hash ||
   normalized_hello
 )
 info =
-  "openpencil/de-collab-relay-protocol/challenge-proof-key/v2\x00" ||
+  "openpencil/op-collab-relay-protocol/challenge-proof-key/v2\x00" ||
   0x01 || key_id_length || key_id
 okm = HKDF-SHA256(
   ikm = X25519_shared_secret,

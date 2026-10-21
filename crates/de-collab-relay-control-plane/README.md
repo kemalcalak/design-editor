@@ -1,4 +1,4 @@
-# OpenPencil relay locator control plane
+# Design Editor relay locator control plane
 
 This MIT-licensed crate implements the production locator-issuance core without
 shipping a production private key.

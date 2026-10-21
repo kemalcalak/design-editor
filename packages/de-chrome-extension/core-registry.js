@@ -44,7 +44,7 @@ let core = null;
  */
 export function coreError(code, cause) {
   const detail = cause && cause.message ? cause.message : cause;
-  const error = new Error(`the OpenPencil logic core could not be loaded: ${detail}`);
+  const error = new Error(`the Design Editor logic core could not be loaded: ${detail}`);
   error.code = code;
   return error;
 }

@@ -33,7 +33,7 @@ pub(super) fn collect_vertical_spill_diagnostics(
     else {
         return;
     };
-    // Taffy treats a numeric size as the border box, but OpenPencil's
+    // Taffy treats a numeric size as the border box, but Design Editor's
     // post-layout repair reconciles an open container to its children's
     // measured extent plus authored padding. A generated container whose
     // children already consume the declared height can therefore resolve

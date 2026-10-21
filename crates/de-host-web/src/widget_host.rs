@@ -6,7 +6,7 @@
 //!
 //! ### State model — `EditorState` is the source of truth
 //!
-//! Like the native host (`openpencil-shell-native/src/widget_host.rs`),
+//! Like the native host (`design-editor-shell-native/src/widget_host.rs`),
 //! the web `WidgetHost` holds an `de_editor_core::EditorState` as its
 //! single source of truth. shell-core's ~30 widgets read `EditorState`
 //! directly; the canvas paint + the input hit-test read a derived

@@ -13,7 +13,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil builtin-provider agent tool loop + canvas/design tool surface (shared by desktop, daemon, and mobile hosts)"
+description = "Design Editor builtin-provider agent tool loop + canvas/design tool surface (shared by desktop, daemon, and mobile hosts)"
 
 [lib]
 name = "de_chat_agent"

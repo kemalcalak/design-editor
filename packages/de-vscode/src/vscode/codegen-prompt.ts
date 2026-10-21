@@ -21,7 +21,7 @@ const MAX_TOTAL_BYTES = 10 * 1024 * 1024; // 10 MiB total
  *  rather than free-form prose. */
 export function buildCodegenPrompt(docJson: string, framework: Framework): string {
   return [
-    `You are generating ${framework} component code from an OpenPencil design document.`,
+    `You are generating ${framework} component code from a Design Editor design document.`,
     "Respond with ONLY a JSON object of this exact shape, no prose, no markdown:",
     '{"files":[{"path":"relative/Component.tsx","content":"<file contents>"}]}',
     "Rules: paths are RELATIVE (no leading slash, no ..), unique, and reasonably small.",

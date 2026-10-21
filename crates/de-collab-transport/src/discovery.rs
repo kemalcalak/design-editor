@@ -28,7 +28,7 @@ use bonjour::BonjourPublisherBackend;
 #[cfg(target_os = "macos")]
 use bonjour_browser::{BonjourBrowserBackend, BonjourEvent, BonjourResolved};
 
-pub const DISCOVERY_SERVICE_TYPE: &str = "_openpencil-collab._tcp.local.";
+pub const DISCOVERY_SERVICE_TYPE: &str = "_design-editor-collab._tcp.local.";
 pub const MAX_DISCOVERY_ADDRESSES: usize = 16;
 
 const DISCOVERY_ID_BYTES: usize = 16;
@@ -148,7 +148,7 @@ impl DiscoveryPublisher {
         mut backend: Box<dyn PublisherBackend>,
     ) -> Result<Self, DiscoveryError> {
         let discovery_id = random_hex(DISCOVERY_ID_BYTES)?;
-        let instance_name = format!("openpencil-{}", random_hex(RANDOM_LABEL_BYTES)?);
+        let instance_name = format!("design-editor-{}", random_hex(RANDOM_LABEL_BYTES)?);
         let hostname = format!("op-{}.local.", random_hex(RANDOM_LABEL_BYTES)?);
         let service =
             build_service_info(&discovery_id, port, addresses, &instance_name, &hostname)?;
@@ -188,7 +188,7 @@ impl DiscoveryPublisher {
         };
 
         let next_id = random_hex(DISCOVERY_ID_BYTES)?;
-        let instance_name = format!("openpencil-{}", random_hex(RANDOM_LABEL_BYTES)?);
+        let instance_name = format!("design-editor-{}", random_hex(RANDOM_LABEL_BYTES)?);
         let hostname = format!("op-{}.local.", random_hex(RANDOM_LABEL_BYTES)?);
         let addresses: Vec<_> = self.service.get_addresses().iter().copied().collect();
         let next_service = build_service_info(

@@ -10,7 +10,7 @@
 //! (`is_nav_surface` / nav-surface repair, section logic in `cleanup.rs`) key
 //! off `node.role`, so an inferred `navbar` / `footer` now gets repaired the
 //! same way an explicitly-tagged one does. See the porting spec
-//! `openpencil-docs/superpowers/specs/2026-06-06-role-resolver-rust-port.md`.
+//! `design-editor-docs/superpowers/specs/2026-06-06-role-resolver-rust-port.md`.
 
 use std::sync::LazyLock;
 

@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "OpenPencil",
+    "message": "Design Editor",
     "description": "Extension name shown in Chrome."
   },
   "extDescription": {
-    "message": "擷取網頁算繪後的實際樣貌，以可編輯的設計節點匯入 OpenPencil，並一鍵擷取 design.md 設計系統指南。",
+    "message": "擷取網頁算繪後的實際樣貌，以可編輯的設計節點匯入 Design Editor，並一鍵擷取 design.md 設計系統指南。",
     "description": "Extension description shown in Chrome."
   },
   "captureButton": {
@@ -20,7 +20,7 @@
     "message": "擷取 design.md"
   },
   "statusDesignWorking": {
-    "message": "正在收集去識別化的頁面樣式證據並請求 OpenPencil AI…"
+    "message": "正在收集去識別化的頁面樣式證據並請求 Design Editor AI…"
   },
   "statusDesignSmartSuccess": {
     "message": "已使用設定的 AI 產生並下載 design.md。"
@@ -29,13 +29,13 @@
     "message": "AI 無法使用，已透過本機確定性備援產生並下載 design.md：$1"
   },
   "designFallbackPairing": {
-    "message": "OpenPencil 尚未授權此擴充功能使用 AI 產生；已使用本機備援。"
+    "message": "Design Editor 尚未授權此擴充功能使用 AI 產生；已使用本機備援。"
   },
   "designFallbackOffline": {
-    "message": "無法存取位於 $1 的 OpenPencil。"
+    "message": "無法存取位於 $1 的 Design Editor。"
   },
   "designFallbackUnsupported": {
-    "message": "目前的 OpenPencil 版本不支援智慧產生 design.md。"
+    "message": "目前的 Design Editor 版本不支援智慧產生 design.md。"
   },
   "designFallbackError": {
     "message": "智慧產生失敗：$1"
@@ -62,7 +62,7 @@
     "message": "按 Esc 取消"
   },
   "endpointLabel": {
-    "message": "OpenPencil 位址"
+    "message": "Design Editor 位址"
   },
   "endpointHint": {
     "message": "桌面版：設定 → MCP → 啟動伺服器（預設連接埠 3100）。"
@@ -80,10 +80,10 @@
     "message": "正在傳輸快照（$1）…"
   },
   "statusSending": {
-    "message": "正在傳送到 OpenPencil…"
+    "message": "正在傳送到 Design Editor…"
   },
   "statusImported": {
-    "message": "已將 $1 個節點匯入 OpenPencil。"
+    "message": "已將 $1 個節點匯入 Design Editor。"
   },
   "statusSendingAccount": {
     "message": "正在傳送到我的帳號…"
@@ -92,7 +92,7 @@
     "message": "已傳送到我的帳號：$1"
   },
   "statusSentLocalFallback": {
-    "message": "帳號工作階段已過期，已改為傳送到本機的 OpenPencil：匯入 $1 個節點。"
+    "message": "帳號工作階段已過期，已改為傳送到本機的 Design Editor：匯入 $1 個節點。"
   },
   "statusDownloaded": {
     "message": "已儲存 $1。"
@@ -125,22 +125,22 @@
     "message": "位址必須是本機回送位址加連接埠——127.0.0.1:3100 或 localhost:3100。"
   },
   "errorOffline": {
-    "message": "無法連線到 $1。請啟動 OpenPencil 桌面版並在 設定 → MCP 中啟動伺服器，或執行：design-editor --serve-web 3100"
+    "message": "無法連線到 $1。請啟動 Design Editor 桌面版並在 設定 → MCP 中啟動伺服器，或執行：design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "$1 已接受連線，但 $2 秒內沒有回應。應用程式可能正忙或已卡住，請檢查後再試一次。"
   },
   "errorNoIngress": {
-    "message": "此 OpenPencil 版本沒有擴充功能入口（$1）。請更新應用程式，或使用「下載 .op」後在 OpenPencil 中開啟該檔案"
+    "message": "此 Design Editor 版本沒有擴充功能入口（$1）。請更新應用程式，或使用「下載 .op」後在 Design Editor 中開啟該檔案"
   },
   "errorTooLarge": {
-    "message": "本次擷取超過 $1 MB，超出 OpenPencil 快照入口的上限。請使用「下載 .op」，然後在 OpenPencil 中開啟該檔案"
+    "message": "本次擷取超過 $1 MB，超出 Design Editor 快照入口的上限。請使用「下載 .op」，然後在 Design Editor 中開啟該檔案"
   },
   "errorAccountTooLarge": {
     "message": "本次擷取超過 $1 MB，超出帳號收件匣的上限。請改為傳送到本裝置。"
   },
   "errorImport": {
-    "message": "OpenPencil 拒絕了這份快照：$1"
+    "message": "Design Editor 拒絕了這份快照：$1"
   },
   "errorDownload": {
     "message": "下載失敗：$1"
@@ -164,16 +164,16 @@
     "message": "請在剛開啟的頁面中完成登入，然後重新開啟此彈出視窗。"
   },
   "accountSignedOut": {
-    "message": "已登出 OpenPencil 帳號。"
+    "message": "已登出 Design Editor 帳號。"
   },
   "accountSignOutManual": {
     "message": "請在剛開啟的帳號頁面中完成登出。"
   },
   "accountUnavailable": {
-    "message": "無法連線到你的 OpenPencil 帳號：$1"
+    "message": "無法連線到你的 Design Editor 帳號：$1"
   },
   "errorAccountSignedOut": {
-    "message": "OpenPencil 帳號工作階段已過期。請重新登入後再試一次。"
+    "message": "Design Editor 帳號工作階段已過期。請重新登入後再試一次。"
   },
   "errorAccountForbidden": {
     "message": "Hub 拒絕了這次上傳的來源或工作階段權杖。請重新登入後再試一次。($1)"
@@ -191,10 +191,10 @@
     "message": "上傳到帳號的次數過多，請約 $1 秒後再試。"
   },
   "errorAccountRejected": {
-    "message": "OpenPencil 帳號拒絕了這份快照：$1"
+    "message": "Design Editor 帳號拒絕了這份快照：$1"
   },
   "errorAccountUnavailable": {
-    "message": "OpenPencil 帳號目前無法接收擷取（$1）。請稍後再試，或改傳到本機的 OpenPencil。"
+    "message": "Design Editor 帳號目前無法接收擷取（$1）。請稍後再試，或改傳到本機的 Design Editor。"
   },
   "regionLabel": {
     "message": "區域"
@@ -209,9 +209,9 @@
     "message": "傳送至"
   },
   "deliveryLocal": {
-    "message": "本機的 OpenPencil"
+    "message": "本機的 Design Editor"
   },
   "deliveryAccount": {
-    "message": "我的 OpenPencil 帳號"
+    "message": "我的 Design Editor 帳號"
   }
 }

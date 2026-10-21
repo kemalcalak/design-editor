@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description  = "Stable C ABI for embedding the OpenPencil engine in iOS / Android player shells"
+description  = "Stable C ABI for embedding the Design Editor engine in iOS / Android player shells"
 
 [lib]
 # cdylib for the Android player, staticlib for the iOS player, rlib so

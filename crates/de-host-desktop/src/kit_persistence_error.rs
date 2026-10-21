@@ -1,5 +1,5 @@
 //! Typed failure for imported-UIKit persistence (`kit_persistence.rs`) —
-//! `<config>/openpencil/uikits.json`.
+//! `<config>/design-editor/uikits.json`.
 //!
 //! Style follows `de_orchestrator::OrchestratorError`: a plain enum plus a
 //! hand-written `Display`, no `thiserror` and no new dependency. `Display` is

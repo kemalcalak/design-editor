@@ -1083,11 +1083,11 @@
   function buildElement(element) {
     var tag = tagOf(element);
     if (SKIP_TAGS[tag]) return null;
-    // Capture chrome injected by the OpenPencil extension (the element-picker
+    // Capture chrome injected by the Design Editor extension (the element-picker
     // overlay, its highlight box and labels) marks itself with this
     // attribute. It is never page content, however it ends up still mounted
     // at capture time.
-    if (element.hasAttribute && element.hasAttribute("data-openpencil-ui")) {
+    if (element.hasAttribute && element.hasAttribute("data-design-editor-ui")) {
       return null;
     }
     var computed = window.getComputedStyle(element);
@@ -1176,15 +1176,15 @@
 
   var target = requestedRoot || document.body;
   if (!target) {
-    console.error("OpenPencil snapshot: document.body is not available");
+    console.error("Design Editor snapshot: document.body is not available");
     return;
   }
   var root = buildRoot(target);
   if (!root) {
     console.error(
       requestedRoot
-        ? "OpenPencil snapshot: the selected element is not visible"
-        : "OpenPencil snapshot: the page has no visible body",
+        ? "Design Editor snapshot: the selected element is not visible"
+        : "Design Editor snapshot: the page has no visible body",
     );
     return;
   }
@@ -1218,7 +1218,7 @@
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(output).catch(function (error) {
-      console.warn("OpenPencil snapshot: clipboard copy failed", error);
+      console.warn("Design Editor snapshot: clipboard copy failed", error);
     });
   }
   var blobUrl = URL.createObjectURL(
@@ -1231,7 +1231,7 @@
   setTimeout(function () {
     URL.revokeObjectURL(blobUrl);
   }, 0);
-  console.log("OpenPencil snapshot ready", {
+  console.log("Design Editor snapshot ready", {
     nodes: nodeCount,
     bytes: output.length,
     embeddedImageBytes: embeddedImageBytes,
@@ -1242,4 +1242,4 @@
   // global is undefined and this captures the whole page, exactly as before;
   // a host that wants a subtree sets `{ root: <element> }` on the global
   // first (the Chrome extension does, in its own isolated world).
-})(typeof globalThis === "undefined" ? null : globalThis.openpencilSnapshotOptions);
+})(typeof globalThis === "undefined" ? null : globalThis.designEditorSnapshotOptions);

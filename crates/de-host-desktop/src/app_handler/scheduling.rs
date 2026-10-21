@@ -26,7 +26,7 @@ fn render_surface_not_ready(err: &SharedSkiaError) -> bool {
 /// driver or a software-only OpenGL renderer).
 fn show_gpu_init_error_dialog(err: &SharedSkiaError) {
     let body = format!(
-        "OpenPencil could not initialize the graphics (OpenGL) backend and has to close.\n\
+        "Design Editor could not initialize the graphics (OpenGL) backend and has to close.\n\
          无法初始化图形 (OpenGL) 渲染引擎，程序即将退出。\n\n\
          This usually means the GPU driver is missing or too old, or the machine only \
          has a software renderer (common on virtual machines / remote desktop).\n\
@@ -36,7 +36,7 @@ fn show_gpu_init_error_dialog(err: &SharedSkiaError) {
          Details: {err}"
     );
     crate::message_dialog::alert(
-        "OpenPencil — Graphics initialization failed / 图形初始化失败",
+        "Design Editor — Graphics initialization failed / 图形初始化失败",
         &body,
         rfd::MessageLevel::Error,
     );

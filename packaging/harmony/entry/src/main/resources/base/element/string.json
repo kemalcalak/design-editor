@@ -2,11 +2,11 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "OpenPencil player entry module."
+      "value": "Design Editor player entry module."
     },
     {
       "name": "EntryAbility_desc",
-      "value": "OpenPencil"
+      "value": "Design Editor"
     },
     {
       "name": "permission_internet_reason",
@@ -38,11 +38,11 @@
     },
     {
       "name": "engine_start_failed",
-      "value": "Couldn't start the OpenPencil engine."
+      "value": "Couldn't start the Design Editor engine."
     },
     {
       "name": "background_generation_paused",
-      "value": "Background time ended. Generation paused and is continuing now that OpenPencil is open."
+      "value": "Background time ended. Generation paused and is continuing now that Design Editor is open."
     },
     {
       "name": "native_login_unavailable",
@@ -166,7 +166,7 @@
     },
     {
       "name": "account_center_sign_out_confirm",
-      "value": "Sign out of OpenPencil?"
+      "value": "Sign out of Design Editor?"
     },
     {
       "name": "sso_region_china",
@@ -178,7 +178,7 @@
     },
     {
       "name": "sso_region_restart_note",
-      "value": "A region change takes effect after you restart OpenPencil."
+      "value": "A region change takes effect after you restart Design Editor."
     },
     {
       "name": "sso_region_switched_title",

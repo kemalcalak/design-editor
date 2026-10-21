@@ -272,7 +272,10 @@ async fn run_search(
     let Ok(client) = reqwest::Client::builder()
         .use_rustls_tls()
         .timeout(Duration::from_secs(8))
-        .user_agent(concat!("openpencil-web-daemon/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!(
+            "design-editor-web-daemon/",
+            env!("CARGO_PKG_VERSION")
+        ))
         .build()
     else {
         return WebImageSearchOutcome {
@@ -298,7 +301,10 @@ async fn run_first_search(
     let Ok(client) = reqwest::Client::builder()
         .use_rustls_tls()
         .timeout(Duration::from_secs(8))
-        .user_agent(concat!("openpencil-web-daemon/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!(
+            "design-editor-web-daemon/",
+            env!("CARGO_PKG_VERSION")
+        ))
         .build()
     else {
         return empty_search_outcome();
@@ -319,7 +325,10 @@ async fn run_first_search_with_judge(
     let Ok(client) = reqwest::Client::builder()
         .use_rustls_tls()
         .timeout(Duration::from_secs(8))
-        .user_agent(concat!("openpencil-web-daemon/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!(
+            "design-editor-web-daemon/",
+            env!("CARGO_PKG_VERSION")
+        ))
         .build()
     else {
         return empty_search_outcome();

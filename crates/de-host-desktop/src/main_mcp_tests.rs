@@ -34,7 +34,7 @@ fn live_mcp_http_server_applies_write_requests_to_editor_state() {
     fn post_json(port: u16, token: &str, body: &str) -> String {
         let mut stream = TcpStream::connect(("127.0.0.1", port)).expect("connect MCP server");
         let req = format!(
-            "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\nX-OpenPencil-Token: {token}\r\nContent-Length: {}\r\n\r\n{}",
+            "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Design-Editor-Token: {token}\r\nContent-Length: {}\r\n\r\n{}",
             body.len(),
             body
         );
@@ -171,7 +171,7 @@ fn live_mcp_http_server_routes_file_path_requests_to_target_file() {
     fn post_json(port: u16, token: &str, body: &str) -> String {
         let mut stream = TcpStream::connect(("127.0.0.1", port)).expect("connect MCP server");
         let req = format!(
-            "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\nX-OpenPencil-Token: {token}\r\nContent-Length: {}\r\n\r\n{}",
+            "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Design-Editor-Token: {token}\r\nContent-Length: {}\r\n\r\n{}",
             body.len(),
             body
         );
@@ -208,7 +208,7 @@ fn live_mcp_http_server_routes_file_path_requests_to_target_file() {
     let (mut server, port) = start_live_server();
     let mut state = de_editor_core::EditorState::new();
     let dir = std::env::temp_dir().join(format!(
-        "openpencil-live-mcp-filepath-{}",
+        "design-editor-live-mcp-filepath-{}",
         std::process::id()
     ));
     std::fs::create_dir_all(&dir).expect("temp dir");
@@ -267,7 +267,7 @@ fn live_mcp_http_server_replaces_document_via_rest_document_sync() {
     fn post(port: u16, token: &str, path: &str, body: &str) -> String {
         let mut stream = TcpStream::connect(("127.0.0.1", port)).expect("connect MCP server");
         let req = format!(
-            "POST {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nX-OpenPencil-Token: {token}\r\nContent-Length: {}\r\n\r\n{}",
+            "POST {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Design-Editor-Token: {token}\r\nContent-Length: {}\r\n\r\n{}",
             body.len(),
             body
         );
@@ -327,7 +327,7 @@ fn startup_mcp_bootstrap_starts_live_server_for_enabled_cli() {
     // Env-free CLI-integration home (bootstrap's detect/write target it,
     // never the real home / `CODEX_HOME`).
     let home = std::env::temp_dir().join(format!(
-        "openpencil-mcp-bootstrap-start-{}",
+        "design-editor-mcp-bootstrap-start-{}",
         std::process::id()
     ));
     let _ = std::fs::remove_dir_all(&home);
@@ -388,7 +388,7 @@ fn startup_mcp_bootstrap_updates_cli_config_after_port_fallback() {
     // — no process-global `CODEX_HOME`/`HOME` mutation, so this test never
     // races another test's env access.
     let home = std::env::temp_dir().join(format!(
-        "openpencil-mcp-bootstrap-home-{}",
+        "design-editor-mcp-bootstrap-home-{}",
         std::process::id()
     ));
     let _ = std::fs::remove_dir_all(&home);

@@ -35,12 +35,12 @@ fn serve_one_get_root_serves_html_not_jsonrpc() {
 
 #[test]
 fn serve_one_token_authed_shutdown_signals_caller() {
-    std::env::set_var("OPENPENCIL_MCP_TOKEN", "serve-web-shutdown-test");
+    std::env::set_var("DESIGN_EDITOR_MCP_TOKEN", "serve-web-shutdown-test");
     let state = Mutex::new(fresh_state());
     let hub = SseHub::default();
     // Wrong token → NOT a shutdown (falls through to JSON-RPC dispatch).
     let bad =
-        r#"{"jsonrpc":"2.0","id":1,"method":"openpencil/shutdown","params":{"token":"nope"}}"#;
+        r#"{"jsonrpc":"2.0","id":1,"method":"design-editor/shutdown","params":{"token":"nope"}}"#;
     let mut stream = mock_stream(&format!(
         "POST /mcp HTTP/1.1\r\nHost: x\r\nContent-Length: {}\r\n\r\n{bad}",
         bad.len()
@@ -48,7 +48,7 @@ fn serve_one_token_authed_shutdown_signals_caller() {
     let wants_shutdown = serve_one(&mut stream, &state, &hub).expect("serve_one");
     assert!(!wants_shutdown, "a mismatched token must not shut down");
     // Matching token → ack + shutdown signal for the accept loop.
-    let good = r#"{"jsonrpc":"2.0","id":2,"method":"openpencil/shutdown","params":{"token":"serve-web-shutdown-test"}}"#;
+    let good = r#"{"jsonrpc":"2.0","id":2,"method":"design-editor/shutdown","params":{"token":"serve-web-shutdown-test"}}"#;
     let mut stream = mock_stream(&format!(
         "POST /mcp HTTP/1.1\r\nHost: x\r\nContent-Length: {}\r\n\r\n{good}",
         good.len()
@@ -69,7 +69,7 @@ fn managed_handshake_token_is_lifecycle_only_and_authenticates_shutdown_body() {
     let hub = SseHub::default();
 
     let body = format!(
-        r#"{{"jsonrpc":"2.0","id":7,"method":"openpencil/shutdown","params":{{"token":"{lifecycle_token}"}}}}"#
+        r#"{{"jsonrpc":"2.0","id":7,"method":"design-editor/shutdown","params":{{"token":"{lifecycle_token}"}}}}"#
     );
     let mut stream = mock_stream(&format!(
         "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:3100\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{body}",

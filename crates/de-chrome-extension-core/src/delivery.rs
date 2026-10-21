@@ -37,10 +37,10 @@ pub const ACCOUNT_AVAILABLE: bool = true;
 /// A delivery destination.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Target {
-    /// The OpenPencil listening on the configured loopback endpoint.
+    /// The Design Editor listening on the configured loopback endpoint.
     #[default]
     Local,
-    /// The signed-in user's OpenPencil account.
+    /// The signed-in user's Design Editor account.
     Account,
 }
 

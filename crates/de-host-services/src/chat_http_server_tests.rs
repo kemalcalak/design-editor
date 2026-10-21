@@ -245,7 +245,7 @@ fn opencode_turn_streams_text_thinking_and_done() {
         .iter()
         .find(|(m, p, _)| m == "POST" && p == "/session")
         .expect("session created");
-    assert!(session_create.2.contains("OpenPencil Chat"));
+    assert!(session_create.2.contains("Design Editor Chat"));
     let sys_inject = requests
         .iter()
         .find(|(m, p, _)| m == "POST" && p == "/session/ses_mock/message")
@@ -423,7 +423,7 @@ fn dropping_receiver_aborts_and_deletes_session_on_reused_server() {
 
     assert!(
         wait_for_request(&server, "POST", "/session/ses_mock/abort"),
-        "receiver drop must abort work even when OpenPencil did not spawn the server"
+        "receiver drop must abort work even when Design Editor did not spawn the server"
     );
     assert!(
         wait_for_request(&server, "DELETE", "/session/ses_mock"),

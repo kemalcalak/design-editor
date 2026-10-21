@@ -15,9 +15,9 @@ use crate::RelayLocatorIssueError;
 pub const PAIRING_PUBLISH_PATH: &str = "/v1/pairing-code";
 pub const PAIRING_CLAIM_PATH: &str = "/v1/pairing-code/claim";
 pub const PAIRING_PUBLISH_CONTENT_TYPE: &str =
-    "application/vnd.openpencil.relay-pairing-publish-v1";
-pub const PAIRING_CLAIM_CONTENT_TYPE: &str = "application/vnd.openpencil.relay-pairing-claim-v1";
-pub const SEALED_INVITE_CONTENT_TYPE: &str = "application/vnd.openpencil.relay-sealed-invite-v1";
+    "application/vnd.design-editor.relay-pairing-publish-v1";
+pub const PAIRING_CLAIM_CONTENT_TYPE: &str = "application/vnd.design-editor.relay-pairing-claim-v1";
+pub const SEALED_INVITE_CONTENT_TYPE: &str = "application/vnd.design-editor.relay-sealed-invite-v1";
 
 /// Server-side ceiling for a stored code's lifetime. Mirrors the locator
 /// pairing window: a code must never outlive the invite it seals.

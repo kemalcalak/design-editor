@@ -50,7 +50,7 @@ pub(super) fn fresh_ctx<'tree>() -> ConversionContext<'tree> {
         warnings: Vec::new(),
         id_counter: 1,
         blobs: Vec::new(),
-        layout_mode: FigLayoutMode::OpenPencil,
+        layout_mode: FigLayoutMode::DesignEditor,
         instance_assignments: HashMap::new(),
         instance_expansions: Default::default(),
     }
@@ -554,9 +554,9 @@ fn child_names(node: &PenNode) -> Vec<String> {
 }
 
 #[test]
-fn openpencil_mode_orders_auto_layout_children_in_flow_order() {
+fn design_editor_mode_orders_auto_layout_children_in_flow_order() {
     // Flow (layout) order is A then B; the tree builder hands the
-    // converter [B, A] (descending z). OpenPencil mode feeds a flex
+    // converter [B, A] (descending z). Design Editor mode feeds a flex
     // solver, so the emitted children MUST be flow order [A, B].
     let tree = auto_layout_frame(vec![rect_child("B", 2, "\""), rect_child("A", 1, "!")]);
     let mut ctx = fresh_ctx();
@@ -605,7 +605,7 @@ fn preserve_mode_keeps_library_updater_content_above_background_vector() {
 }
 
 #[test]
-fn openpencil_mode_separates_flow_and_absolute_stack_children() {
+fn design_editor_mode_separates_flow_and_absolute_stack_children() {
     let mut overlay = rect_child("Overlay", 2, "\"");
     add_fields(
         &mut overlay,

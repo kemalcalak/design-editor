@@ -226,7 +226,7 @@ fn build_fig(schema: &[u8], data: &[u8]) -> Vec<u8> {
 #[test]
 fn parses_a_full_binary_fig_into_a_document() {
     let fig = build_fig(&build_schema(), &build_data());
-    let import = parse_fig_binary(&fig, "Test", FigLayoutMode::OpenPencil)
+    let import = parse_fig_binary(&fig, "Test", FigLayoutMode::DesignEditor)
         .expect("binary .fig parses end-to-end");
 
     let pages = import.document.pages.expect("document has pages");
@@ -331,7 +331,7 @@ fn parses_a_zip_wrapped_fig() {
     let bare = build_fig(&build_schema(), &build_data());
     let zipped = wrap_in_zip(&bare);
     // The ZIP form must be recognised + routed through the parser.
-    let import = parse_fig_binary(&zipped, "Zipped", FigLayoutMode::OpenPencil)
+    let import = parse_fig_binary(&zipped, "Zipped", FigLayoutMode::DesignEditor)
         .expect("zip-wrapped .fig parses");
     let pages = import.document.pages.expect("has pages");
     assert_eq!(pages[0].name, "Page 1");
@@ -341,7 +341,7 @@ fn parses_a_zip_wrapped_fig() {
 #[test]
 fn document_serializes_to_canonical_json() {
     let fig = build_fig(&build_schema(), &build_data());
-    let import = parse_fig_binary(&fig, "Test", FigLayoutMode::OpenPencil).unwrap();
+    let import = parse_fig_binary(&fig, "Test", FigLayoutMode::DesignEditor).unwrap();
     // The converted document must round-trip through the canonical
     // schema's serde representation.
     let json = serde_json::to_string(&import.document).expect("serializes");

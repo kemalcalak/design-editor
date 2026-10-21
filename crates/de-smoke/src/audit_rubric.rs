@@ -1,4 +1,4 @@
-//! Rubric metrics for the `OPENPENCIL_SMOKE_AUDIT` gate — the dimensions the
+//! Rubric metrics for the `DESIGN_EDITOR_SMOKE_AUDIT` gate — the dimensions the
 //! 07-04 G3 A/B missed. Geometry issues alone declared the loop the winner
 //! while its real output shipped without mobile chrome and with a degraded
 //! node vocabulary; these deterministic metrics make "chrome completeness",
@@ -45,7 +45,7 @@ const MOBILE_WIDTH_RANGE: std::ops::RangeInclusive<f64> = 320.0..=480.0;
 /// only when this audit is running right after a generation this same
 /// process drove (it has a live `RunSummary` to report against); a
 /// pure-render audit that just loaded an existing `.op` off disk
-/// (`OPENPENCIL_SMOKE_AUDIT`'s standalone path) never had an orchestrator
+/// (`DESIGN_EDITOR_SMOKE_AUDIT`'s standalone path) never had an orchestrator
 /// run to begin with, so it passes `None` and the `completeness` section is
 /// omitted entirely — reporting a fabricated 0/0 would be worse than saying
 /// nothing.
@@ -559,7 +559,7 @@ mod tests {
 
     #[test]
     fn completeness_section_is_absent_without_a_run_summary() {
-        // A pure-render audit (`OPENPENCIL_SMOKE_AUDIT` loading an existing
+        // A pure-render audit (`DESIGN_EDITOR_SMOKE_AUDIT` loading an existing
         // `.op` off disk) never drove the orchestrator, so it has no
         // `RunSummary` — the section must be missing entirely, not a
         // fabricated `{"plannedSubtasks":0,"deliveredSubtasks":0,...}` that

@@ -332,7 +332,7 @@ fn badge() -> PenNode {
     )
 }
 
-/// The built-in OpenPencil starter kit — one component per major
+/// The built-in Design Editor starter kit — one component per major
 /// category so every browser pill has something to show.
 pub fn builtin_starter_kit() -> UIKit {
     fn comp(
@@ -355,8 +355,8 @@ pub fn builtin_starter_kit() -> UIKit {
         }
     }
     UIKit {
-        id: "openpencil-starter".to_string(),
-        name: "OpenPencil Starter".to_string(),
+        id: "design-editor-starter".to_string(),
+        name: "Design Editor Starter".to_string(),
         version: "1.0.0".to_string(),
         built_in: true,
         variables: None,
@@ -522,7 +522,7 @@ mod tests {
     #[test]
     fn starter_kit_covers_six_categories() {
         let kit = builtin_starter_kit();
-        assert_eq!(kit.id, "openpencil-starter");
+        assert_eq!(kit.id, "design-editor-starter");
         assert!(kit.built_in);
         assert_eq!(kit.components.len(), 6);
         // Every category we ship at least one of must be distinct.
@@ -536,7 +536,7 @@ mod tests {
         let mut state = EditorState::new();
         let before = state.active_children_mut().len();
         let id = state
-            .instantiate_kit_component("openpencil-starter", "btn-primary", 100.0, 200.0)
+            .instantiate_kit_component("design-editor-starter", "btn-primary", 100.0, 200.0)
             .expect("instantiated");
         assert_eq!(state.active_children_mut().len(), before + 1);
         let inserted = state.active_children_mut().last().unwrap();
@@ -564,7 +564,7 @@ mod tests {
         // absolute coords would double-shift it at layout time.
         let mut state = EditorState::new();
         let _ = state
-            .instantiate_kit_component("openpencil-starter", "btn-primary", 200.0, 300.0)
+            .instantiate_kit_component("design-editor-starter", "btn-primary", 200.0, 300.0)
             .expect("instantiated");
         let root = state.active_children_mut().last().expect("root").clone();
         assert_eq!(root.base().x, Some(200.0));
@@ -593,7 +593,7 @@ mod tests {
         state.doc.pages = Some(Vec::new());
         let before = state.active_children().len();
         let id = state
-            .instantiate_kit_component("openpencil-starter", "badge", 0.0, 0.0)
+            .instantiate_kit_component("design-editor-starter", "badge", 0.0, 0.0)
             .expect("instantiated");
         let after = state.active_children();
         assert_eq!(after.len(), before + 1, "insert must be visible");
@@ -610,7 +610,7 @@ mod tests {
         let mut state = EditorState::new();
         state.doc.pages = Some(Vec::new());
         let _ = state
-            .instantiate_kit_component("openpencil-starter", "badge", 0.0, 0.0)
+            .instantiate_kit_component("design-editor-starter", "badge", 0.0, 0.0)
             .expect("instantiated");
         let new_idx = state.add_page().expect("added page");
         // add_page switches to the new page; flip back to Page 1.

@@ -1,4 +1,4 @@
-//! The bridge's early receive-and-buffer phase (dsh-openpencil #2).
+//! The bridge's early receive-and-buffer phase (dsh-design-editor #2).
 //!
 //! The host starts sending `op-bridge/init` the moment the iframe is created
 //! and retries only ~20x over ~10 s, while `mount_ck` spends those first

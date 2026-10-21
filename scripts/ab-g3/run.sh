@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Run the G3 A/B matrix for OpenPencil design generation:
+# Run the G3 A/B matrix for Design Editor design generation:
 # built-in agent loop vs single-shot orchestrator, with identical prompts/models.
 
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-OUT="${OPENPENCIL_AB_G3_OUT:-/tmp/ab-g3}"
-LIMIT="${OPENPENCIL_AB_G3_LIMIT:-0}"
-MODELS_ARG="${OPENPENCIL_AB_G3_MODELS:-}"
-TIMEOUT_S="${OPENPENCIL_AB_G3_TIMEOUT_SECONDS:-900}"
-AUDIT_TIMEOUT_S="${OPENPENCIL_AB_G3_AUDIT_TIMEOUT_SECONDS:-120}"
-RENDER_TIMEOUT_S="${OPENPENCIL_AB_G3_RENDER_TIMEOUT_SECONDS:-120}"
-SMOKE="${OPENPENCIL_AB_G3_SMOKE_BIN:-$REPO/target/release/de-smoke}"
-DESKTOP="${OPENPENCIL_AB_G3_DESKTOP_BIN:-$REPO/target/release/design-editor}"
-DRY_RUN="${OPENPENCIL_AB_G3_DRY_RUN:-0}"
+OUT="${DESIGN_EDITOR_AB_G3_OUT:-/tmp/ab-g3}"
+LIMIT="${DESIGN_EDITOR_AB_G3_LIMIT:-0}"
+MODELS_ARG="${DESIGN_EDITOR_AB_G3_MODELS:-}"
+TIMEOUT_S="${DESIGN_EDITOR_AB_G3_TIMEOUT_SECONDS:-900}"
+AUDIT_TIMEOUT_S="${DESIGN_EDITOR_AB_G3_AUDIT_TIMEOUT_SECONDS:-120}"
+RENDER_TIMEOUT_S="${DESIGN_EDITOR_AB_G3_RENDER_TIMEOUT_SECONDS:-120}"
+SMOKE="${DESIGN_EDITOR_AB_G3_SMOKE_BIN:-$REPO/target/release/de-smoke}"
+DESKTOP="${DESIGN_EDITOR_AB_G3_DESKTOP_BIN:-$REPO/target/release/design-editor}"
+DRY_RUN="${DESIGN_EDITOR_AB_G3_DRY_RUN:-0}"
 SUMMARY_PATH=""
 GLM_BASE="https://open.bigmodel.cn/api/coding/paas/v4"
 CUSTOM_STRONG_LABEL="custom-strong"
@@ -26,21 +26,21 @@ Usage:
 
 Examples:
   GLM_KEY=... scripts/ab-g3/run.sh --out /tmp/ab-g3 --limit 2 --models glm-5.2
-  OPENPENCIL_AB_G3_DRY_RUN=1 scripts/ab-g3/run.sh --out /tmp/ab-g3-dry --limit 2
+  DESIGN_EDITOR_AB_G3_DRY_RUN=1 scripts/ab-g3/run.sh --out /tmp/ab-g3-dry --limit 2
 
 Environment:
   GLM_KEY                              Required for glm-5.2 real runs.
-  OPENPENCIL_STRONG_API_KEY            Optional OpenAI-compatible strong-model key.
-  OPENPENCIL_STRONG_BASE_URL           Optional OpenAI-compatible strong-model base URL.
-  OPENPENCIL_STRONG_MODEL              Optional OpenAI-compatible strong-model name.
+  DESIGN_EDITOR_STRONG_API_KEY            Optional OpenAI-compatible strong-model key.
+  DESIGN_EDITOR_STRONG_BASE_URL           Optional OpenAI-compatible strong-model base URL.
+  DESIGN_EDITOR_STRONG_MODEL              Optional OpenAI-compatible strong-model name.
   OPENAI_API_KEY                       Optional fallback strong key, model defaults to gpt-4.1.
-  OPENPENCIL_OPENAI_API_KEY            Same as OPENAI_API_KEY.
-  OPENPENCIL_OPENAI_STRONG_MODEL       Optional OpenAI strong model override.
-  OPENPENCIL_AB_G3_OUT                 Output directory, default /tmp/ab-g3.
-  OPENPENCIL_AB_G3_LIMIT               Prompt limit, default 0 (all 15).
-  OPENPENCIL_AB_G3_MODELS              Comma-separated models, default auto.
-  OPENPENCIL_AB_G3_TIMEOUT_SECONDS     Generation timeout, default 900.
-  OPENPENCIL_AB_G3_DRY_RUN             If truthy, write plan/result metadata without LLM calls.
+  DESIGN_EDITOR_OPENAI_API_KEY            Same as OPENAI_API_KEY.
+  DESIGN_EDITOR_OPENAI_STRONG_MODEL       Optional OpenAI strong model override.
+  DESIGN_EDITOR_AB_G3_OUT                 Output directory, default /tmp/ab-g3.
+  DESIGN_EDITOR_AB_G3_LIMIT               Prompt limit, default 0 (all 15).
+  DESIGN_EDITOR_AB_G3_MODELS              Comma-separated models, default auto.
+  DESIGN_EDITOR_AB_G3_TIMEOUT_SECONDS     Generation timeout, default 900.
+  DESIGN_EDITOR_AB_G3_DRY_RUN             If truthy, write plan/result metadata without LLM calls.
 USAGE
 }
 
@@ -148,14 +148,14 @@ PROMPTS
 
 default_models() {
   local models="glm-5.2"
-  if [ -n "${OPENPENCIL_STRONG_API_KEY:-}" ] &&
-    [ -n "${OPENPENCIL_STRONG_BASE_URL:-}" ] &&
-    [ -n "${OPENPENCIL_STRONG_MODEL:-}" ]; then
+  if [ -n "${DESIGN_EDITOR_STRONG_API_KEY:-}" ] &&
+    [ -n "${DESIGN_EDITOR_STRONG_BASE_URL:-}" ] &&
+    [ -n "${DESIGN_EDITOR_STRONG_MODEL:-}" ]; then
     models="$models,$CUSTOM_STRONG_LABEL"
-  elif [ -n "${OPENAI_API_KEY:-${OPENPENCIL_OPENAI_API_KEY:-}}" ]; then
+  elif [ -n "${OPENAI_API_KEY:-${DESIGN_EDITOR_OPENAI_API_KEY:-}}" ]; then
     models="$models,$OPENAI_STRONG_LABEL"
-  elif [ -n "${ANTHROPIC_API_KEY:-${OPENPENCIL_ANTHROPIC_API_KEY:-}}" ]; then
-    record_gap "ANTHROPIC_API_KEY is present but was not auto-added as a strong model because current de-smoke loop mode only supports OpenAI-compatible OPENPENCIL_LLM_* wiring."
+  elif [ -n "${ANTHROPIC_API_KEY:-${DESIGN_EDITOR_ANTHROPIC_API_KEY:-}}" ]; then
+    record_gap "ANTHROPIC_API_KEY is present but was not auto-added as a strong model because current de-smoke loop mode only supports OpenAI-compatible DESIGN_EDITOR_LLM_* wiring."
   fi
   printf '%s' "$models"
 }
@@ -181,17 +181,17 @@ configure_model() {
       MODEL_KEY="${GLM_KEY:-}"
       ;;
     "$CUSTOM_STRONG_LABEL")
-      MODEL_NAME="${OPENPENCIL_STRONG_MODEL:-}"
-      MODEL_BASE="${OPENPENCIL_STRONG_BASE_URL:-}"
-      MODEL_KEY_ENV="OPENPENCIL_STRONG_API_KEY"
-      MODEL_KEY="${OPENPENCIL_STRONG_API_KEY:-}"
+      MODEL_NAME="${DESIGN_EDITOR_STRONG_MODEL:-}"
+      MODEL_BASE="${DESIGN_EDITOR_STRONG_BASE_URL:-}"
+      MODEL_KEY_ENV="DESIGN_EDITOR_STRONG_API_KEY"
+      MODEL_KEY="${DESIGN_EDITOR_STRONG_API_KEY:-}"
       ;;
     "$OPENAI_STRONG_LABEL")
-      MODEL_NAME="${OPENPENCIL_OPENAI_STRONG_MODEL:-gpt-4.1}"
+      MODEL_NAME="${DESIGN_EDITOR_OPENAI_STRONG_MODEL:-gpt-4.1}"
       MODEL_BASE="https://api.openai.com/v1"
-      if [ -n "${OPENPENCIL_OPENAI_API_KEY:-}" ]; then
-        MODEL_KEY_ENV="OPENPENCIL_OPENAI_API_KEY"
-        MODEL_KEY="$OPENPENCIL_OPENAI_API_KEY"
+      if [ -n "${DESIGN_EDITOR_OPENAI_API_KEY:-}" ]; then
+        MODEL_KEY_ENV="DESIGN_EDITOR_OPENAI_API_KEY"
+        MODEL_KEY="$DESIGN_EDITOR_OPENAI_API_KEY"
       else
         MODEL_KEY_ENV="OPENAI_API_KEY"
         MODEL_KEY="${OPENAI_API_KEY:-}"
@@ -549,22 +549,22 @@ run_cell() {
   if [ "$mode" = "loop" ]; then
     run_logged_timeout "$TIMEOUT_S" "$gen_log" \
       env \
-      OPENPENCIL_SMOKE_LOOP=1 \
-      OPENPENCIL_SMOKE_OUT="$op_path" \
-      OPENPENCIL_LLM_PROVIDER=openai-compat \
-      OPENPENCIL_LLM_API_KEY="$model_key" \
-      OPENPENCIL_LLM_BASE_URL="$model_base" \
-      OPENPENCIL_ORCHESTRATOR_MODEL="$model_name" \
+      DESIGN_EDITOR_SMOKE_LOOP=1 \
+      DESIGN_EDITOR_SMOKE_OUT="$op_path" \
+      DESIGN_EDITOR_LLM_PROVIDER=openai-compat \
+      DESIGN_EDITOR_LLM_API_KEY="$model_key" \
+      DESIGN_EDITOR_LLM_BASE_URL="$model_base" \
+      DESIGN_EDITOR_ORCHESTRATOR_MODEL="$model_name" \
       "$SMOKE" "$prompt" || gen_rc=$?
   else
     run_logged_timeout "$TIMEOUT_S" "$gen_log" \
       env \
-      OPENPENCIL_SMOKE_DIRECT=1 \
-      OPENPENCIL_SMOKE_OUT="$op_path" \
-      OPENPENCIL_LLM_PROVIDER=openai-compat \
-      OPENPENCIL_LLM_API_KEY="$model_key" \
-      OPENPENCIL_LLM_BASE_URL="$model_base" \
-      OPENPENCIL_ORCHESTRATOR_MODEL="$model_name" \
+      DESIGN_EDITOR_SMOKE_DIRECT=1 \
+      DESIGN_EDITOR_SMOKE_OUT="$op_path" \
+      DESIGN_EDITOR_LLM_PROVIDER=openai-compat \
+      DESIGN_EDITOR_LLM_API_KEY="$model_key" \
+      DESIGN_EDITOR_LLM_BASE_URL="$model_base" \
+      DESIGN_EDITOR_ORCHESTRATOR_MODEL="$model_name" \
       "$SMOKE" "$prompt" || gen_rc=$?
   fi
   if [ "$gen_rc" -eq -1 ]; then
@@ -581,11 +581,11 @@ run_cell() {
   else
     run_split_timeout "$AUDIT_TIMEOUT_S" "$audit_path" "$audit_log" \
       env \
-      OPENPENCIL_SMOKE_AUDIT="$op_path" \
-      OPENPENCIL_LLM_PROVIDER=openai-compat \
-      OPENPENCIL_LLM_API_KEY="$model_key" \
-      OPENPENCIL_LLM_BASE_URL="$model_base" \
-      OPENPENCIL_ORCHESTRATOR_MODEL="$model_name" \
+      DESIGN_EDITOR_SMOKE_AUDIT="$op_path" \
+      DESIGN_EDITOR_LLM_PROVIDER=openai-compat \
+      DESIGN_EDITOR_LLM_API_KEY="$model_key" \
+      DESIGN_EDITOR_LLM_BASE_URL="$model_base" \
+      DESIGN_EDITOR_ORCHESTRATOR_MODEL="$model_name" \
       "$SMOKE" audit || audit_rc=$?
     if [ "$audit_rc" -eq -1 ]; then
       audit_rc=0
@@ -695,10 +695,10 @@ lines.append(f"- Resume marker: each completed cell has `result.json` under `<ou
 lines.append("")
 lines.append("## de-smoke Env Contract")
 lines.append("")
-lines.append("- `glm-5.2`: `GLM_KEY` is mapped to `OPENPENCIL_LLM_API_KEY`; base URL is `https://open.bigmodel.cn/api/coding/paas/v4`; model is `OPENPENCIL_ORCHESTRATOR_MODEL=glm-5.2`.")
-lines.append("- Both modes use `OPENPENCIL_LLM_PROVIDER=openai-compat`, `OPENPENCIL_LLM_BASE_URL`, `OPENPENCIL_LLM_API_KEY`, `OPENPENCIL_ORCHESTRATOR_MODEL`, and `OPENPENCIL_SMOKE_OUT`.")
-lines.append("- Orchestrator mode adds `OPENPENCIL_SMOKE_DIRECT=1`; loop mode adds `OPENPENCIL_SMOKE_LOOP=1` and currently requires OpenAI-compatible provider wiring.")
-lines.append("- Audit runs `OPENPENCIL_SMOKE_AUDIT=<file.op> de-smoke audit`; current `de-smoke` still constructs the provider before the audit branch, so the harness passes the same `OPENPENCIL_LLM_*` env into audit. Audit output has `issueCount` plus string `issues`, not structured categories.")
+lines.append("- `glm-5.2`: `GLM_KEY` is mapped to `DESIGN_EDITOR_LLM_API_KEY`; base URL is `https://open.bigmodel.cn/api/coding/paas/v4`; model is `DESIGN_EDITOR_ORCHESTRATOR_MODEL=glm-5.2`.")
+lines.append("- Both modes use `DESIGN_EDITOR_LLM_PROVIDER=openai-compat`, `DESIGN_EDITOR_LLM_BASE_URL`, `DESIGN_EDITOR_LLM_API_KEY`, `DESIGN_EDITOR_ORCHESTRATOR_MODEL`, and `DESIGN_EDITOR_SMOKE_OUT`.")
+lines.append("- Orchestrator mode adds `DESIGN_EDITOR_SMOKE_DIRECT=1`; loop mode adds `DESIGN_EDITOR_SMOKE_LOOP=1` and currently requires OpenAI-compatible provider wiring.")
+lines.append("- Audit runs `DESIGN_EDITOR_SMOKE_AUDIT=<file.op> de-smoke audit`; current `de-smoke` still constructs the provider before the audit branch, so the harness passes the same `DESIGN_EDITOR_LLM_*` env into audit. Audit output has `issueCount` plus string `issues`, not structured categories.")
 lines.append("- Render shots run `design-editor --render-shots <file.op> <outdir>`.")
 lines.append("")
 lines.append("## Models")
@@ -759,7 +759,7 @@ PY
 
 main() {
   require_tools
-  record_gap "OPENPENCIL_SMOKE_AUDIT has no structured issue category field; auditKinds is a best-effort histogram derived from issue strings."
+  record_gap "DESIGN_EDITOR_SMOKE_AUDIT has no structured issue category field; auditKinds is a best-effort histogram derived from issue strings."
   write_selected_prompts
   write_selected_models
 

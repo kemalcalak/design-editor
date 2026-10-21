@@ -3,7 +3,7 @@ use super::super::*;
 fn checked_settings_test_path(case: &str) -> std::path::PathBuf {
     let sequence = SETTINGS_TEMP_SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     std::env::temp_dir().join(format!(
-        "openpencil-settings-checked-{}-{sequence}-{case}",
+        "design-editor-settings-checked-{}-{sequence}-{case}",
         std::process::id()
     ))
 }

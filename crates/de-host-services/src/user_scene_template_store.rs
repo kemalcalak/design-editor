@@ -1,6 +1,6 @@
 //! Native loading for the process-wide saved scene-template registry.
 //!
-//! Saved templates live under `~/.openpencil/templates/<slug>/` as a
+//! Saved templates live under `~/.design-editor/templates/<slug>/` as a
 //! canonical `document.op`, a `meta.json`, and an optional `preview.jpg`.
 //! The registry itself belongs to `de-editor-core` so every host can resolve
 //! a `user:` id, but reading the native user's directory belongs here: this
@@ -35,7 +35,7 @@ pub fn user_scene_templates_dir() -> std::io::Result<PathBuf> {
     // own redirect before calling across the crate boundary; service tests use
     // this equivalent process-level guard.
     guard_user_config();
-    let dir = de_config_store::openpencil_dir()?.join(TEMPLATES_DIR);
+    let dir = de_config_store::design_editor_dir()?.join(TEMPLATES_DIR);
     std::fs::create_dir_all(&dir)?;
     Ok(dir)
 }

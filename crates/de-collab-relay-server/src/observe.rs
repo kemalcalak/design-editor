@@ -6,7 +6,7 @@
 //!
 //! * **debug** — one line per connection lifecycle transition (registered /
 //!   paired / rejected / closed). An operator flips
-//!   `OPENPENCIL_COLLAB_RELAY_LOG_LEVEL=debug` to get the full per-connection
+//!   `DESIGN_EDITOR_COLLAB_RELAY_LOG_LEVEL=debug` to get the full per-connection
 //!   trail; at the default level it costs nothing.
 //! * **info** — a periodic census of what happened in the last window plus the
 //!   current waiting-queue depth. One line per minute at most, and none at all
@@ -33,7 +33,7 @@ use crate::close::RelayCloseReason;
 /// secret-derived material and must never be logged. Re-deriving under a
 /// distinct context yields a stable correlation handle that cannot be walked
 /// back to the capability.
-const ROUTE_LOG_REF_CONTEXT: &str = "openpencil/de-collab-relay-server/route-log-ref/v1";
+const ROUTE_LOG_REF_CONTEXT: &str = "openpencil/op-collab-relay-server/route-log-ref/v1";
 
 /// Bytes of digest kept for a route reference: 12 bytes rendered as 24 hex
 /// characters, matching the SSO audit reference width.

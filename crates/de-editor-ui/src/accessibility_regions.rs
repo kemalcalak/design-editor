@@ -3,7 +3,7 @@
 //!
 //! [`accessibility`](crate::accessibility) is the generic assembler
 //! (widget + rect → `accesskit::TreeUpdate`). This module is the
-//! OpenPencil-specific layer above it: it pairs each always-present
+//! Design Editor-specific layer above it: it pairs each always-present
 //! editor region with the rect the paint pass places it at, in reading
 //! order, and resolves the default focus target. The native
 //! (`widget_host/a11y.rs`) and web (`widget_host/a11y_bridge.rs`) hosts

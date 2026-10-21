@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license = "MIT"
 repository.workspace = true
-description = "Open, HSM-ready locator issuance core for OpenPencil collaboration relay"
+description = "Open, HSM-ready locator issuance core for Design Editor collaboration relay"
 
 [dependencies]
 getrandom = "0.3"

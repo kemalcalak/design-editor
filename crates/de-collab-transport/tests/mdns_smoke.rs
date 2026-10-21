@@ -67,8 +67,8 @@ fn browser_interoperates_with_system_dns_sd_publisher() {
     let child = Command::new("dns-sd")
         .args([
             "-R",
-            "openpencil-system-diagnostic",
-            "_openpencil-collab._tcp",
+            "design-editor-system-diagnostic",
+            "_design-editor-collab._tcp",
             "local.",
             "45124",
             id_property.as_str(),

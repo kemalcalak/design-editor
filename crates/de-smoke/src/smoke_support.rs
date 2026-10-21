@@ -138,7 +138,7 @@ pub(crate) fn describe_cmd(cmd: &EditorCommand) -> String {
     }
 }
 
-/// Honor `OPENPENCIL_SMOKE_LIBRARY=<path>` by merging a harvested component
+/// Honor `DESIGN_EDITOR_SMOKE_LIBRARY=<path>` by merging a harvested component
 /// library (`.lib.op`) into `state` before generation. Unset ⇒ no-op (`Ok`),
 /// preserving today's byte-for-byte behavior. On a load/parse error returns
 /// `Err(ExitCode)` so the caller aborts — a benchmark that asked for a library
@@ -147,7 +147,7 @@ pub(crate) fn describe_cmd(cmd: &EditorCommand) -> String {
 pub(crate) fn maybe_merge_smoke_library(
     state: &mut EditorState,
 ) -> Result<(), std::process::ExitCode> {
-    let path = match std::env::var("OPENPENCIL_SMOKE_LIBRARY") {
+    let path = match std::env::var("DESIGN_EDITOR_SMOKE_LIBRARY") {
         Ok(p) if !p.is_empty() => p,
         _ => return Ok(()),
     };
@@ -170,13 +170,13 @@ pub(crate) fn maybe_merge_smoke_library(
     }
 }
 
-/// Map the chat `OPENPENCIL_SMOKE_*` thinking knobs onto a `ThinkingMode`.
+/// Map the chat `DESIGN_EDITOR_SMOKE_*` thinking knobs onto a `ThinkingMode`.
 /// Default `Disabled` for ab-v9 parity with the orchestrator DIRECT path
 /// (reasoning models burn their output budget on `<think>` otherwise);
-/// `OPENPENCIL_SMOKE_KEEP_THINKING=1` keeps reasoning on.
+/// `DESIGN_EDITOR_SMOKE_KEEP_THINKING=1` keeps reasoning on.
 pub(crate) fn loop_thinking_mode() -> de_ai::chat_provider::ThinkingMode {
     use de_ai::chat_provider::ThinkingMode;
-    if std::env::var("OPENPENCIL_SMOKE_KEEP_THINKING").is_ok() {
+    if std::env::var("DESIGN_EDITOR_SMOKE_KEEP_THINKING").is_ok() {
         ThinkingMode::Enabled
     } else {
         ThinkingMode::Disabled

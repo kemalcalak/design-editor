@@ -32,7 +32,7 @@ pub(crate) fn build_resolved_style_instruction_for_plan(plan: &OrchestratorPlan)
     )
 }
 
-/// Build the concrete-token style reference block for the new OpenPencil
+/// Build the concrete-token style reference block for the new Design Editor
 /// style catalog. This is prompt text only: v1 bakes values into authored
 /// nodes and never creates document variables.
 pub fn build_resolved_style_instruction(name: &str, params: &StyleParams) -> Option<String> {

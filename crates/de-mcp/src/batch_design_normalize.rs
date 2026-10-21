@@ -74,7 +74,7 @@ fn normalize_node_shape_inner(value: &mut serde_json::Value) {
     }
 }
 
-/// Rename Figma / Pencil auto-layout keys onto OpenPencil's schema so a model
+/// Rename Figma / Pencil auto-layout keys onto Design Editor's schema so a model
 /// trained on the Pencil dialect (MiniMax-M3) keeps its layout. Each rename is
 /// applied ONLY when the canonical key is absent, so a node that already uses
 /// our names is untouched. Axis-align values are lifted from Figma's

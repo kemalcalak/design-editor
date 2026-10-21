@@ -3,7 +3,7 @@
 //! section's gap-mode column not colliding with the padding rows.
 //!
 //! Split out of `property_panel_tests.rs` to keep both files under
-//! the openpencil 800-line cap.
+//! the design-editor 800-line cap.
 
 use crate::widgets::property_panel::{PropertyPanel, PropertyPanelAction};
 use crate::widgets::property_panel_sections as sections;

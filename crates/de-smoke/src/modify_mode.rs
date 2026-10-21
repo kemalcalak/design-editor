@@ -1,9 +1,9 @@
 //! Fixed-input DESIGN_MODIFY mode for prompt-thumbnail generation.
 //!
-//! `OPENPENCIL_SMOKE_MODIFY_INPUT=<baseline.op>` takes a real document through
+//! `DESIGN_EDITOR_SMOKE_MODIFY_INPUT=<baseline.op>` takes a real document through
 //! the same `build_modify_plan` -> `run_modify_turn` -> scoped host apply path
 //! as the desktop. The baseline is never overwritten: output must use a
-//! distinct `OPENPENCIL_SMOKE_OUT` path, and both files are SHA-256 addressed
+//! distinct `DESIGN_EDITOR_SMOKE_OUT` path, and both files are SHA-256 addressed
 //! in the terminal summary.
 
 use std::path::{Path, PathBuf};
@@ -25,10 +25,10 @@ use de_host_services::chat_intent::{build_modify_plan, run_modify_turn, APPLY_MO
 use de_host_services::chat_subprocess::SubprocessProvider;
 use sha2::{Digest as _, Sha256};
 
-const MODIFY_INPUT_ENV: &str = "OPENPENCIL_SMOKE_MODIFY_INPUT";
-const MODIFY_TARGET_ENV: &str = "OPENPENCIL_SMOKE_MODIFY_TARGET";
-const KEEP_THINKING_ENV: &str = "OPENPENCIL_SMOKE_KEEP_THINKING";
-const OUTPUT_ENV: &str = "OPENPENCIL_SMOKE_OUT";
+const MODIFY_INPUT_ENV: &str = "DESIGN_EDITOR_SMOKE_MODIFY_INPUT";
+const MODIFY_TARGET_ENV: &str = "DESIGN_EDITOR_SMOKE_MODIFY_TARGET";
+const KEEP_THINKING_ENV: &str = "DESIGN_EDITOR_SMOKE_KEEP_THINKING";
+const OUTPUT_ENV: &str = "DESIGN_EDITOR_SMOKE_OUT";
 
 pub async fn run_if_requested(instruction: String) -> Option<ExitCode> {
     let input = std::env::var(MODIFY_INPUT_ENV)
@@ -53,9 +53,9 @@ fn run_from_env(instruction: &str, input: &Path) -> Result<(), String> {
     let output = required_env_path(OUTPUT_ENV)?;
     reject_input_overwrite(input, &output)?;
     let provider_kind_raw =
-        std::env::var("OPENPENCIL_LLM_PROVIDER").unwrap_or_else(|_| "openai-compat".into());
+        std::env::var("DESIGN_EDITOR_LLM_PROVIDER").unwrap_or_else(|_| "openai-compat".into());
     let provider_kind = ModifyProviderKind::parse(&provider_kind_raw)?;
-    let model = required_env("OPENPENCIL_ORCHESTRATOR_MODEL")?;
+    let model = required_env("DESIGN_EDITOR_ORCHESTRATOR_MODEL")?;
     let thinking = modify_thinking(
         std::env::var(KEEP_THINKING_ENV)
             .ok()
@@ -73,8 +73,8 @@ fn run_from_env(instruction: &str, input: &Path) -> Result<(), String> {
     let provider = build_provider(
         provider_kind,
         &model,
-        std::env::var("OPENPENCIL_LLM_BASE_URL").ok(),
-        std::env::var("OPENPENCIL_LLM_API_KEY").ok(),
+        std::env::var("DESIGN_EDITOR_LLM_BASE_URL").ok(),
+        std::env::var("DESIGN_EDITOR_LLM_API_KEY").ok(),
     )?;
     let execution = run_loaded_modify(
         state,
@@ -154,7 +154,7 @@ impl ModifyProviderKind {
             "openai" | "openai-compat" => Ok(Self::OpenAiCompat),
             "antigravity" | "agy" => Ok(Self::Antigravity),
             _ => Err(format!(
-                "unknown OPENPENCIL_LLM_PROVIDER={value:?} for modify-input mode \
+                "unknown DESIGN_EDITOR_LLM_PROVIDER={value:?} for modify-input mode \
                  (want openai-compat|antigravity|agy)"
             )),
         }
@@ -205,8 +205,8 @@ fn build_provider(
 ) -> Result<Box<dyn ChatProvider>, String> {
     match kind {
         ModifyProviderKind::OpenAiCompat => {
-            let base_url = required_provider_value("OPENPENCIL_LLM_BASE_URL", base_url)?;
-            let api_key = required_provider_value("OPENPENCIL_LLM_API_KEY", api_key)?;
+            let base_url = required_provider_value("DESIGN_EDITOR_LLM_BASE_URL", base_url)?;
+            let api_key = required_provider_value("DESIGN_EDITOR_LLM_API_KEY", api_key)?;
             build_openai_compat_provider(base_url, api_key, model.to_string())
                 .map(|provider| Box::new(provider) as Box<dyn ChatProvider>)
         }

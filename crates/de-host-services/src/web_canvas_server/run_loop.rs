@@ -22,7 +22,7 @@ use super::*;
 /// lifecycle token retained for handshake/shutdown compatibility; ordinary
 /// requests do not send it. A background thread then reads stdin to EOF/error
 /// and raises the same `shutdown` flag the body-token-authenticated
-/// `openpencil/shutdown` path uses, waking the accept loop by connecting back
+/// `design-editor/shutdown` path uses, waking the accept loop by connecting back
 /// to the bound address. Non-managed mode is untouched: no token, no handshake
 /// output, no stdin thread.
 pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
@@ -70,7 +70,7 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         ),
         None => eprintln!(
             "design-editor --serve-web: no web bundle found — `/` serves build \
-             instructions (tools/check-wasm-bundle.sh, or set OPENPENCIL_WEB_BUNDLE_DIR)"
+             instructions (tools/check-wasm-bundle.sh, or set DESIGN_EDITOR_WEB_BUNDLE_DIR)"
         ),
     }
     // Shared across connection threads: the document authority (one writer at a
@@ -85,13 +85,13 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
     let hub = Arc::new(SseHub::default());
     let conn_count = Arc::new(AtomicUsize::new(0));
     // Raised by a connection thread that accepted a token-authenticated
-    // `openpencil/shutdown`; the accept loop checks it per iteration. The
+    // `design-editor/shutdown`; the accept loop checks it per iteration. The
     // raiser also pokes the listener with a throwaway connection so a blocked
     // `accept` wakes up and observes the flag.
     let shutdown = Arc::new(std::sync::atomic::AtomicBool::new(false));
     // Managed mode only: lifecycle token + handshake + parent-death
     // lease (stdin-EOF watcher). Non-managed mode never touches this branch
-    // — it keeps the existing `OPENPENCIL_MCP_TOKEN` shutdown contract as
+    // — it keeps the existing `DESIGN_EDITOR_MCP_TOKEN` shutdown contract as
     // the only lifecycle signal, byte-for-byte as before.
     let managed_token = managed.then(random_token);
     if let Some(token) = &managed_token {
@@ -134,7 +134,7 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
     // Stash the managed lifecycle token + allow-origins on the shared state.
     // `serve_one` uses the token only for a body-authenticated shutdown and
     // uses the allowlist as the browser request boundary. Ordinary native
-    // requests carry neither X-OpenPencil-Token nor Authorization.
+    // requests carry neither X-Design-Editor-Token nor Authorization.
     {
         let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
         guard.mode = mode;

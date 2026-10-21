@@ -7,7 +7,7 @@
 //! user left it.
 //!
 //! Window size is stored in logical pixels next to the settings file
-//! (`<config>/openpencil/window.json`) to match Electron's
+//! (`<config>/design-editor/window.json`) to match Electron's
 //! `BrowserWindow` contract. Position remains physical because winit's
 //! outer-position APIs are physical and the OS clamps stale monitor
 //! coordinates.
@@ -16,7 +16,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-const APP_DIR: &str = "openpencil";
+const APP_DIR: &str = "design-editor";
 const FILE_NAME: &str = "window.json";
 const STATE_VERSION: u32 = 1;
 
@@ -46,10 +46,13 @@ pub struct WindowState {
     maximized: bool,
 }
 
-/// Resolve `<config>/openpencil/window.json`. `None` when no usable
+/// Resolve `<config>/design-editor/window.json`. `None` when no usable
 /// config base exists — load / save become silent no-ops.
 fn state_path() -> Option<PathBuf> {
     let base = dirs::config_dir()?;
+    // One-time rebrand migration: copy the pre-rename file when the new one is missing.
+    #[cfg(not(test))]
+    let _ = de_config_store::migrate_legacy_config_file(&base, APP_DIR, FILE_NAME);
     Some(base.join(APP_DIR).join(FILE_NAME))
 }
 

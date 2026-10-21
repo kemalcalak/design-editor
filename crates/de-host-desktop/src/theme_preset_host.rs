@@ -3,8 +3,8 @@
 //!
 //! TS parity:
 //! - `apps/web/src/stores/theme-preset-store.ts` `persist()` /
-//!   `hydrate()` (localStorage key `openpencil-theme-presets`) →
-//!   `<config>/openpencil/theme-presets.json` holding the SAME JSON
+//!   `hydrate()` (localStorage key `design-editor-theme-presets`) →
+//!   `<config>/design-editor/theme-presets.json` holding the SAME JSON
 //!   array value (kit_persistence.rs pattern: a payload moved between
 //!   the TS and Rust apps hydrates on either side).
 //! - `apps/web/src/utils/theme-preset-io.ts` `exportThemePreset` /
@@ -27,7 +27,7 @@ use de_editor_core::theme_presets::{
 use de_editor_core::EditorState;
 use de_host_native::WidgetHostNative;
 
-const APP_DIR: &str = "openpencil";
+const APP_DIR: &str = "design-editor";
 const FILE_NAME: &str = "theme-presets.json";
 
 /// Resolve the platform-specific store path. `None` when no usable
@@ -35,6 +35,9 @@ const FILE_NAME: &str = "theme-presets.json";
 /// contract as kit_persistence.rs).
 fn store_path() -> Option<PathBuf> {
     let base = dirs::config_dir()?;
+    // One-time rebrand migration: copy the pre-rename file when the new one is missing.
+    #[cfg(not(test))]
+    let _ = de_config_store::migrate_legacy_config_file(&base, APP_DIR, FILE_NAME);
     Some(base.join(APP_DIR).join(FILE_NAME))
 }
 
@@ -108,7 +111,7 @@ fn export_preset_dialog(state: &EditorState) {
         sanitize_preset_file_stem(THEME_PRESET_EXPORT_NAME)
     );
     let Some(path) = rfd::FileDialog::new()
-        .add_filter("OpenPencil Theme Preset", &["optheme"])
+        .add_filter("Design Editor Theme Preset", &["optheme"])
         .set_file_name(&file_name)
         .save_file()
     else {
@@ -134,7 +137,7 @@ fn export_preset_dialog(state: &EditorState) {
 /// `null`); the Rust host logs it. One undo step per import.
 fn import_preset_dialog(host: &mut WidgetHostNative) {
     let Some(path) = rfd::FileDialog::new()
-        .add_filter("OpenPencil Theme Preset", &["optheme"])
+        .add_filter("Design Editor Theme Preset", &["optheme"])
         .pick_file()
     else {
         return;

@@ -20,7 +20,7 @@
 //! .replace(/[\s.]+$/, '')
 //! ```
 //!
-//! The offline download is a ready-to-open `.op` document (OpenPencil's
+//! The offline download is a ready-to-open `.op` document (Design Editor's
 //! `PenDocument` format), so the sanitised stem carries the `.op` suffix and
 //! the file opens by double-click without any CLI step.
 

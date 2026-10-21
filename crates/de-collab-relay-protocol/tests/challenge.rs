@@ -67,7 +67,7 @@ fn encode_raw_challenge(raw: &[u8]) -> String {
 
 #[test]
 fn challenge_header_is_canonical_bounded_and_round_trips() {
-    assert_eq!(RELAY_CHALLENGE_HEADER_NAME, "openpencil-relay-challenge");
+    assert_eq!(RELAY_CHALLENGE_HEADER_NAME, "design-editor-relay-challenge");
     for key_id in ["k", &"x".repeat(MAX_RELAY_CHALLENGE_KEY_ID_BYTES)] {
         let challenge = challenge(key_id, 0x31);
         let header = challenge.encode_header();

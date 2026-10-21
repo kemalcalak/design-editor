@@ -21,7 +21,7 @@ fn temp_home(name: &str) -> PathBuf {
         })
         .collect();
     let path = std::env::temp_dir().join(format!(
-        "openpencil-mcp-{name}-{}-{}",
+        "design-editor-mcp-{name}-{}-{}",
         std::process::id(),
         safe_thread_name
     ));
@@ -60,14 +60,14 @@ fn dsh_enable_creates_patch_file_with_managed_block() {
     set_cli_enabled_at_home(McpCli::Dsh, true, 4100, &home).expect("install");
 
     let text = fs::read_to_string(&path).expect("file created");
-    assert!(text.contains("# openpencil-mcp-begin"), "{text}");
-    assert!(text.contains("# openpencil-mcp-end"), "{text}");
-    assert!(text.contains("id: mcp-openpencil"), "{text}");
+    assert!(text.contains("# design-editor-mcp-begin"), "{text}");
+    assert!(text.contains("# design-editor-mcp-end"), "{text}");
+    assert!(text.contains("id: mcp-design-editor"), "{text}");
     assert!(
         text.contains("name: '@deepseek-ai/dsh-mcp-client'"),
         "{text}"
     );
-    assert!(text.contains("serverName: openpencil"), "{text}");
+    assert!(text.contains("serverName: design-editor"), "{text}");
     assert!(text.contains("transport: streamable-http"), "{text}");
     assert!(text.contains("url: http://127.0.0.1:4100/mcp"), "{text}");
     assert!(
@@ -98,7 +98,7 @@ fn dsh_enable_replaces_empty_array_line_and_keeps_comments() {
         "the empty array placeholder must be replaced: {text}"
     );
     assert!(text.contains("url: http://127.0.0.1:4200/mcp"), "{text}");
-    assert!(dsh_config_has_openpencil(&path));
+    assert!(dsh_config_has_design_editor(&path));
 
     let _ = fs::remove_dir_all(home);
 }
@@ -119,7 +119,7 @@ fn dsh_enable_appends_after_user_entries_verbatim() {
         "user entries must stay byte-identical: {text}"
     );
     assert!(
-        text.contains("\n\n# openpencil-mcp-begin"),
+        text.contains("\n\n# design-editor-mcp-begin"),
         "the managed block must be separated by a blank line: {text}"
     );
     assert!(text.contains("url: http://127.0.0.1:4300/mcp"), "{text}");
@@ -133,15 +133,15 @@ fn dsh_disable_removes_only_the_managed_block() {
     let path = dsh_patch_path(&home);
     fs::create_dir_all(path.parent().expect("parent")).expect("create dsh dir");
     let before = "- insert:\n    - id: user-plugin\n      name: '@example/some-plugin'\n      config:\n        key: value\n";
-    let managed = "# openpencil-mcp-begin (managed by OpenPencil; do not edit)\n- insert:\n    - id: mcp-openpencil\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: openpencil\n        transport: streamable-http\n        url: http://127.0.0.1:4400/mcp\n# openpencil-mcp-end\n";
+    let managed = "# design-editor-mcp-begin (managed by Design Editor; do not edit)\n- insert:\n    - id: mcp-design-editor\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: design-editor\n        transport: streamable-http\n        url: http://127.0.0.1:4400/mcp\n# design-editor-mcp-end\n";
     fs::write(&path, format!("{before}\n{managed}")).expect("seed installed config");
 
     set_cli_enabled_at_home(McpCli::Dsh, false, 4400, &home).expect("uninstall");
 
     let text = fs::read_to_string(&path).expect("read uninstalled");
-    assert!(!text.contains("mcp-openpencil"), "{text}");
-    assert!(!text.contains("openpencil-mcp-begin"), "{text}");
-    assert!(!text.contains("openpencil-mcp-end"), "{text}");
+    assert!(!text.contains("mcp-design-editor"), "{text}");
+    assert!(!text.contains("design-editor-mcp-begin"), "{text}");
+    assert!(!text.contains("design-editor-mcp-end"), "{text}");
     assert!(
         text.starts_with(before),
         "user entries must stay byte-identical: {text}"
@@ -156,11 +156,11 @@ fn dsh_disable_refuses_hand_written_entries_and_keeps_detection() {
     for (name, manual) in [
         (
             "with-id",
-            "- insert:\n    - id: mcp-openpencil\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: openpencil\n        transport: streamable-http\n        url: http://127.0.0.1:3000/mcp\n",
+            "- insert:\n    - id: mcp-design-editor\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: design-editor\n        transport: streamable-http\n        url: http://127.0.0.1:3000/mcp\n",
         ),
         (
             "server-name-only",
-            "- insert:\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: openpencil\n        transport: streamable-http\n        url: http://127.0.0.1:3000/mcp\n",
+            "- insert:\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: design-editor\n        transport: streamable-http\n        url: http://127.0.0.1:3000/mcp\n",
         ),
     ] {
         let home = temp_home(&format!("dsh-manual-{name}"));
@@ -196,7 +196,7 @@ fn dsh_lone_marker_is_refused_not_rewritten() {
     let home = temp_home("dsh-lone-marker");
     let path = dsh_patch_path(&home);
     fs::create_dir_all(path.parent().expect("parent")).expect("create dsh dir");
-    let input = "# openpencil-mcp-begin (managed by OpenPencil; do not edit)\n- insert:\n    - id: mcp-openpencil\n";
+    let input = "# design-editor-mcp-begin (managed by Design Editor; do not edit)\n- insert:\n    - id: mcp-design-editor\n";
     fs::write(&path, input).expect("seed lone-marker file");
 
     let error = set_cli_enabled_at_home(McpCli::Dsh, true, 4700, &home)
@@ -220,7 +220,7 @@ fn dsh_reenable_rewrites_url_without_duplicating_the_block() {
 
     let text = fs::read_to_string(&path).expect("read re-enabled");
     assert_eq!(text.matches("- insert:").count(), 1, "{text}");
-    assert_eq!(text.matches("id: mcp-openpencil").count(), 1, "{text}");
+    assert_eq!(text.matches("id: mcp-design-editor").count(), 1, "{text}");
     assert_eq!(
         text.matches("url: http://127.0.0.1:4600/mcp").count(),
         1,

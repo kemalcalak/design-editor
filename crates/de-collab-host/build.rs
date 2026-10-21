@@ -22,8 +22,8 @@
 use std::env;
 
 const BOOTSTRAP_URL_ENVS: [&str; 2] = [
-    "OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN",
-    "OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL",
+    "DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN",
+    "DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL",
 ];
 
 /// Mirrors the runtime endpoint policy in `relay_bootstrap.rs`.

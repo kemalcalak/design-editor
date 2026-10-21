@@ -1,4 +1,4 @@
-//! Tests for the minimal scaffold seed (`OPENPENCIL_SMOKE_LOOP_SEED=1`).
+//! Tests for the minimal scaffold seed (`DESIGN_EDITOR_SMOKE_LOOP_SEED=1`).
 //!
 //! The seed is the structure-providing step that runs BEFORE the agentic
 //! loop. These tests prove that — independent of any network / LLM — a

@@ -136,7 +136,7 @@ fn main() {
         .expect("tokio runtime");
     let _ = install_blocking_executor(std::sync::Arc::new(Executor(runtime)));
 
-    let dir = de_config_store::openpencil_dir().expect("openpencil dir");
+    let dir = de_config_store::design_editor_dir().expect("design-editor dir");
     println!("[{}] config dir = {}", stamp(started), dir.display());
     assert!(
         de_auth_bridge::available(),

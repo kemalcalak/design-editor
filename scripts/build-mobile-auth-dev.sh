@@ -64,8 +64,8 @@ if [[ -L "$archive" || ! -f "$archive" || "$(basename "$archive")" != libop_auth
 fi
 archive=$(cd "$(dirname "$archive")" && pwd -P)/libop_auth.a
 
-export OPENPENCIL_DEV_OP_AUTH_ARCHIVE="$archive"
-export OPENPENCIL_DEV_OP_AUTH_ABI_VERSION="$abi"
+export DESIGN_EDITOR_DEV_OP_AUTH_ARCHIVE="$archive"
+export DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION="$abi"
 cd "$repo_root"
 
 case "$platform" in

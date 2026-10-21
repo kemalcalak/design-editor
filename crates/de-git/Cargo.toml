@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Git-backed version control for OpenPencil documents"
+description = "Git-backed version control for Design Editor documents"
 
 # Native-only: in-process version control via libgit2 (`git2`),
 # vendored so no system `git` binary is required at runtime. Replaces

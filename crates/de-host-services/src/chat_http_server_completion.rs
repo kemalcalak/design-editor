@@ -25,7 +25,7 @@ pub(super) fn latest_assistant_text(messages: &serde_json::Value) -> Option<Stri
 }
 
 /// Abort an unfinished turn when requested, then delete the temporary session
-/// OpenPencil created for it. Cleanup failures are diagnostics only: they must
+/// Design Editor created for it. Cleanup failures are diagnostics only: they must
 /// not replace the provider error (or successful answer) already produced.
 pub(super) async fn cleanup_session(
     client: &reqwest::Client,

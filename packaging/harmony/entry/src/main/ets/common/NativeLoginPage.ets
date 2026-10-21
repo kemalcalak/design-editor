@@ -13,7 +13,7 @@ import { SsoProviderEntry, SsoProviderList } from './SsoProviderList';
 import { SsoRegion, SsoRegionStore } from './SsoRegion';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /**
  * Full-window, platform-native sign-in for one engine device-login flow,

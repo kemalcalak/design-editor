@@ -171,7 +171,7 @@ fn contains_folded(value: &str, needle: &str) -> bool {
 
 fn script_ref(kit: &UIKit, component_id: &str) -> String {
     match kit.id.as_str() {
-        "openpencil-starter" => format!("starter/{component_id}"),
+        "design-editor-starter" => format!("starter/{component_id}"),
         "shadcn-ui" => format!(
             "shadcn/{}",
             component_id.strip_prefix("shadcn-").unwrap_or(component_id)
@@ -197,7 +197,7 @@ mod tests {
     fn exposes_canonical_script_refs_and_metadata() {
         let starter = call(BTreeMap::from([(
             "kitId".to_string(),
-            "openpencil-starter".to_string(),
+            "design-editor-starter".to_string(),
         )]));
         assert_eq!(starter["kits"][0]["builtIn"], true);
         assert_eq!(starter["kits"][0]["version"], "1.0.0");

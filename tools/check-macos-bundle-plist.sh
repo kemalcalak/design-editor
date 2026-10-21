@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validate OpenPencil's macOS local-network privacy metadata.
+# Validate Design Editor's macOS local-network privacy metadata.
 #
 # With plist arguments, this checks the exact files. With no arguments, it
 # checks the cargo-bundle extension metadata and all repository packaging /
@@ -25,16 +25,16 @@ require_regex() {
 }
 
 check_plists() {
-  OPENPENCIL_EXPECTED_LOCAL_NETWORK_DESCRIPTION="$OPENPENCIL_LOCAL_NETWORK_USAGE_DESCRIPTION" \
-    OPENPENCIL_EXPECTED_BONJOUR_SERVICE="$OPENPENCIL_BONJOUR_SERVICE" \
+  DESIGN_EDITOR_EXPECTED_LOCAL_NETWORK_DESCRIPTION="$DESIGN_EDITOR_LOCAL_NETWORK_USAGE_DESCRIPTION" \
+    DESIGN_EDITOR_EXPECTED_BONJOUR_SERVICE="$DESIGN_EDITOR_BONJOUR_SERVICE" \
     python3 - "$@" <<'PY'
 import os
 import plistlib
 import sys
 from pathlib import Path
 
-expected_description = os.environ["OPENPENCIL_EXPECTED_LOCAL_NETWORK_DESCRIPTION"]
-expected_service = os.environ["OPENPENCIL_EXPECTED_BONJOUR_SERVICE"]
+expected_description = os.environ["DESIGN_EDITOR_EXPECTED_LOCAL_NETWORK_DESCRIPTION"]
+expected_service = os.environ["DESIGN_EDITOR_EXPECTED_BONJOUR_SERVICE"]
 failed = False
 
 for raw_path in sys.argv[1:]:
@@ -87,7 +87,7 @@ for bundle_script in scripts/bundle-macos.sh tools/bundle-macos.sh; do
     'must source the canonical local-network metadata'
   require_regex \
     "$ROOT/$bundle_script" \
-    '^[[:space:]]*openpencil_apply_macos_local_network_plist[[:space:]]+"\$PLIST"[[:space:]]*$' \
+    '^[[:space:]]*design_editor_apply_macos_local_network_plist[[:space:]]+"\$PLIST"[[:space:]]*$' \
     'must patch the final bundle Info.plist through the canonical helper'
   require_regex \
     "$ROOT/$bundle_script" \
@@ -106,7 +106,7 @@ require_regex \
   'release workflow must validate the assembled app Info.plist before notarization'
 require_regex \
   "$release_workflow" \
-  '^[[:space:]]*"target/\$\{\{ matrix[.]target \}\}/release/bundle/osx/OpenPencil[.]app/Contents/Info[.]plist"[[:space:]]*$' \
+  '^[[:space:]]*"target/\$\{\{ matrix[.]target \}\}/release/bundle/osx/Design Editor[.]app/Contents/Info[.]plist"[[:space:]]*$' \
   'release workflow must validate the exact app path it notarizes'
 
 printf 'macos-bundle-plist: PASS (source metadata and release integration)\n'

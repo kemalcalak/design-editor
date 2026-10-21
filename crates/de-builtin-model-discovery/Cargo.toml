@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "Portable bounded model-list discovery for OpenPencil API providers"
+description = "Portable bounded model-list discovery for Design Editor API providers"
 
 [dependencies]
 de-editor-core = { path = "../de-editor-core" }

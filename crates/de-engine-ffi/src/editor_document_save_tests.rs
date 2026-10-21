@@ -28,7 +28,7 @@ fn exclusive() -> MutexGuard<'static, ()> {
 /// documents root (iOS `NSDocumentDirectory`).
 fn visible_root(label: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!(
-        "openpencil-ffi-visible-{}-{label}",
+        "design-editor-ffi-visible-{}-{label}",
         std::process::id()
     ));
     let _ = std::fs::remove_dir_all(&dir);
@@ -41,8 +41,9 @@ const SAMPLE_DOC: &str =
 
 fn scratch_root() -> PathBuf {
     // First redirect wins process-wide; every test installs the same
-    // scratch directory so no case can ever write ~/.openpencil.
-    let root = std::env::temp_dir().join(format!("openpencil-ffi-doc-save-{}", std::process::id()));
+    // scratch directory so no case can ever write ~/.design-editor.
+    let root =
+        std::env::temp_dir().join(format!("design-editor-ffi-doc-save-{}", std::process::id()));
     std::fs::create_dir_all(&root).expect("scratch root");
     de_config_store::redirect_user_root_for_tests(&root).to_path_buf()
 }

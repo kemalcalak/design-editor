@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "OpenPencil",
+    "message": "Design Editor",
     "description": "Extension name shown in Chrome."
   },
   "extDescription": {
-    "message": "レンダリングされたページをキャプチャし、編集可能なデザインノードとして OpenPencil にインポートして、design.md のデザインシステムガイドをワンクリックで抽出します。",
+    "message": "レンダリングされたページをキャプチャし、編集可能なデザインノードとして Design Editor にインポートして、design.md のデザインシステムガイドをワンクリックで抽出します。",
     "description": "Extension description shown in Chrome."
   },
   "captureButton": {
@@ -20,7 +20,7 @@
     "message": "design.md を抽出"
   },
   "statusDesignWorking": {
-    "message": "ページから個人を特定できないよう処理したスタイル情報を収集し、OpenPencil AI に問い合わせています…"
+    "message": "ページから個人を特定できないよう処理したスタイル情報を収集し、Design Editor AI に問い合わせています…"
   },
   "statusDesignSmartSuccess": {
     "message": "設定済みの AI で design.md を生成し、ダウンロードしました。"
@@ -29,13 +29,13 @@
     "message": "AI を利用できないため、決定論的なローカルフォールバックで design.md を生成し、ダウンロードしました：$1"
   },
   "designFallbackPairing": {
-    "message": "OpenPencil がこの拡張機能による AI 生成を承認していないため、ローカルフォールバックを使用しました。"
+    "message": "Design Editor がこの拡張機能による AI 生成を承認していないため、ローカルフォールバックを使用しました。"
   },
   "designFallbackOffline": {
-    "message": "$1 の OpenPencil に接続できません。"
+    "message": "$1 の Design Editor に接続できません。"
   },
   "designFallbackUnsupported": {
-    "message": "このバージョンの OpenPencil は design.md のスマート生成に対応していません。"
+    "message": "このバージョンの Design Editor は design.md のスマート生成に対応していません。"
   },
   "designFallbackError": {
     "message": "スマート生成に失敗しました：$1"
@@ -62,7 +62,7 @@
     "message": "Esc でキャンセル"
   },
   "endpointLabel": {
-    "message": "OpenPencil の接続先"
+    "message": "Design Editor の接続先"
   },
   "endpointHint": {
     "message": "デスクトップアプリ: 設定 → MCP → サーバーを起動（既定のポートは 3100）。"
@@ -80,10 +80,10 @@
     "message": "スナップショットを転送しています（$1）…"
   },
   "statusSending": {
-    "message": "OpenPencil に送信しています…"
+    "message": "Design Editor に送信しています…"
   },
   "statusImported": {
-    "message": "$1 個のノードを OpenPencil にインポートしました。"
+    "message": "$1 個のノードを Design Editor にインポートしました。"
   },
   "statusSendingAccount": {
     "message": "アカウントに送信しています…"
@@ -92,7 +92,7 @@
     "message": "アカウントに送信しました: $1"
   },
   "statusSentLocalFallback": {
-    "message": "アカウントのセッションが期限切れだったため、このパソコンの OpenPencil に送信しました: $1 個のノードをインポートしました。"
+    "message": "アカウントのセッションが期限切れだったため、このパソコンの Design Editor に送信しました: $1 個のノードをインポートしました。"
   },
   "statusDownloaded": {
     "message": "$1 を保存しました。"
@@ -125,22 +125,22 @@
     "message": "接続先はポート付きのループバックアドレスである必要があります — 127.0.0.1:3100 または localhost:3100。"
   },
   "errorOffline": {
-    "message": "$1 に接続できません。OpenPencil デスクトップアプリを起動して 設定 → MCP → サーバー を開始するか、次を実行してください: design-editor --serve-web 3100"
+    "message": "$1 に接続できません。Design Editor デスクトップアプリを起動して 設定 → MCP → サーバー を開始するか、次を実行してください: design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "$1 は接続を受け付けましたが、$2 秒以内に応答しませんでした。処理中か停止している可能性があります。アプリを確認してからもう一度お試しください。"
   },
   "errorNoIngress": {
-    "message": "この OpenPencil ビルドには拡張機能用の受け口がありません（$1）。アプリを更新するか、「.op をダウンロード」してそのファイルを OpenPencil で開いてください"
+    "message": "この Design Editor ビルドには拡張機能用の受け口がありません（$1）。アプリを更新するか、「.op をダウンロード」してそのファイルを Design Editor で開いてください"
   },
   "errorTooLarge": {
-    "message": "このキャプチャは $1 MB を超えており、OpenPencil のスナップショット受け口が受け付けません。「.op をダウンロード」してから、そのファイルを OpenPencil で開いてください"
+    "message": "このキャプチャは $1 MB を超えており、Design Editor のスナップショット受け口が受け付けません。「.op をダウンロード」してから、そのファイルを Design Editor で開いてください"
   },
   "errorAccountTooLarge": {
     "message": "このキャプチャは $1 MB を超えており、アカウントの受信箱が受け付けません。代わりにこのデバイスへ送信してください。"
   },
   "errorImport": {
-    "message": "OpenPencil がスナップショットを拒否しました: $1"
+    "message": "Design Editor がスナップショットを拒否しました: $1"
   },
   "errorDownload": {
     "message": "ダウンロードに失敗しました: $1"
@@ -164,16 +164,16 @@
     "message": "開いたページでログインを完了してから、このポップアップを開き直してください。"
   },
   "accountSignedOut": {
-    "message": "OpenPencil アカウントからログアウトしました。"
+    "message": "Design Editor アカウントからログアウトしました。"
   },
   "accountSignOutManual": {
     "message": "開いたアカウントページでログアウトを完了してください。"
   },
   "accountUnavailable": {
-    "message": "OpenPencil アカウントに接続できませんでした: $1"
+    "message": "Design Editor アカウントに接続できませんでした: $1"
   },
   "errorAccountSignedOut": {
-    "message": "OpenPencil アカウントのセッションが期限切れです。もう一度サインインしてからお試しください。"
+    "message": "Design Editor アカウントのセッションが期限切れです。もう一度サインインしてからお試しください。"
   },
   "errorAccountForbidden": {
     "message": "ハブがこのアップロードの送信元またはセッショントークンを拒否しました。もう一度サインインしてからお試しください。($1)"
@@ -191,10 +191,10 @@
     "message": "アカウントへのアップロードが多すぎます。約 $1 秒後にお試しください。"
   },
   "errorAccountRejected": {
-    "message": "OpenPencil アカウントがスナップショットを拒否しました: $1"
+    "message": "Design Editor アカウントがスナップショットを拒否しました: $1"
   },
   "errorAccountUnavailable": {
-    "message": "OpenPencil アカウントは現在キャプチャを受け取れません ($1)。しばらくしてから、またはこのパソコンの OpenPencil に送信してください。"
+    "message": "Design Editor アカウントは現在キャプチャを受け取れません ($1)。しばらくしてから、またはこのパソコンの Design Editor に送信してください。"
   },
   "regionLabel": {
     "message": "リージョン"
@@ -209,9 +209,9 @@
     "message": "送信先"
   },
   "deliveryLocal": {
-    "message": "このパソコンの OpenPencil"
+    "message": "このパソコンの Design Editor"
   },
   "deliveryAccount": {
-    "message": "自分の OpenPencil アカウント"
+    "message": "自分の Design Editor アカウント"
   }
 }

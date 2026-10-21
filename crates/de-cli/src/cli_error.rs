@@ -1,4 +1,4 @@
-//! The one error type every `op` subcommand fails with.
+//! The one error type every `de` subcommand fails with.
 //!
 //! Style mirrors `de_orchestrator::OrchestratorError`: a plain enum plus a
 //! hand-written `Display` — no `thiserror`, no extra dependency. The
@@ -6,7 +6,7 @@
 //! malformed payload, filesystem trouble, a daemon that will not come up, a
 //! transport failure, a tool that reported an error, a document that will not
 //! load). Each variant's payload is the exact user-facing sentence, so
-//! `Display` is transparent: `main` still prints `op: {e}` byte-for-byte as
+//! `Display` is transparent: `main` still prints `de: {e}` byte-for-byte as
 //! before and the message-shape tests keep passing.
 //!
 //! The classification is what's new and load-bearing — a caller (or a future
@@ -24,14 +24,14 @@ pub(crate) enum CliError {
     Payload(String),
     /// A filesystem read / write / create failed.
     Io(String),
-    /// Locating, spawning, or waiting for the OpenPencil desktop / daemon
+    /// Locating, spawning, or waiting for the Design Editor desktop / daemon
     /// process failed, or a conflicting server already owns the port.
     Daemon(String),
     /// Talking to a running MCP server over HTTP failed (connect, timeout,
     /// or a non-2xx status).
     Transport(String),
     /// The remote MCP tool ran and reported its own failure. The payload is
-    /// the tool's verbatim text — never reworded, so agents parsing `op`
+    /// the tool's verbatim text — never reworded, so agents parsing `de`
     /// output see exactly what the server said.
     Tool(String),
     /// A document could not be read, validated, converted, or imported.

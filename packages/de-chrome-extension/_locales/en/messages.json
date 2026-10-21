@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "OpenPencil",
+    "message": "Design Editor",
     "description": "Extension name shown in Chrome."
   },
   "extDescription": {
-    "message": "Capture pages as editable OpenPencil design nodes and extract a design.md design-system guide in one click.",
+    "message": "Capture pages as editable Design Editor design nodes and extract a design.md design-system guide in one click.",
     "description": "Extension description shown in Chrome."
   },
   "captureButton": {
@@ -20,7 +20,7 @@
     "message": "Extract design.md"
   },
   "statusDesignWorking": {
-    "message": "Collecting de-identified page style evidence and asking OpenPencil AI…"
+    "message": "Collecting de-identified page style evidence and asking Design Editor AI…"
   },
   "statusDesignSmartSuccess": {
     "message": "Generated and downloaded design.md with the configured AI."
@@ -29,13 +29,13 @@
     "message": "AI unavailable; generated and downloaded design.md with the deterministic local fallback: $1"
   },
   "designFallbackPairing": {
-    "message": "OpenPencil has not authorized this extension for AI generation; the local fallback was used."
+    "message": "Design Editor has not authorized this extension for AI generation; the local fallback was used."
   },
   "designFallbackOffline": {
-    "message": "OpenPencil at $1 is unreachable."
+    "message": "Design Editor at $1 is unreachable."
   },
   "designFallbackUnsupported": {
-    "message": "This OpenPencil version does not support smart design.md generation."
+    "message": "This Design Editor version does not support smart design.md generation."
   },
   "designFallbackError": {
     "message": "Smart generation failed: $1"
@@ -62,7 +62,7 @@
     "message": "Esc to cancel"
   },
   "endpointLabel": {
-    "message": "OpenPencil endpoint"
+    "message": "Design Editor endpoint"
   },
   "endpointHint": {
     "message": "Desktop app: Settings → MCP → start the server (default port 3100)."
@@ -80,19 +80,19 @@
     "message": "Transferring snapshot ($1)…"
   },
   "statusSending": {
-    "message": "Sending to OpenPencil…"
+    "message": "Sending to Design Editor…"
   },
   "statusImported": {
-    "message": "Imported $1 nodes into OpenPencil."
+    "message": "Imported $1 nodes into Design Editor."
   },
   "statusSendingAccount": {
-    "message": "Sending to your OpenPencil account…"
+    "message": "Sending to your Design Editor account…"
   },
   "statusSentToAccount": {
-    "message": "Sent to your OpenPencil account: $1"
+    "message": "Sent to your Design Editor account: $1"
   },
   "statusSentLocalFallback": {
-    "message": "Your account session had expired, so this went to the OpenPencil on this computer: $1 nodes imported."
+    "message": "Your account session had expired, so this went to the Design Editor on this computer: $1 nodes imported."
   },
   "statusDownloaded": {
     "message": "Saved $1."
@@ -125,22 +125,22 @@
     "message": "Endpoint must be loopback with a port — 127.0.0.1:3100 or localhost:3100."
   },
   "errorOffline": {
-    "message": "OpenPencil is not reachable at $1. Launch the desktop app and start Settings → MCP → server, or run: design-editor --serve-web 3100"
+    "message": "Design Editor is not reachable at $1. Launch the desktop app and start Settings → MCP → server, or run: design-editor --serve-web 3100"
   },
   "errorTimeout": {
-    "message": "OpenPencil at $1 accepted the connection but did not answer within $2s. It may be busy or stuck — check the app, then try again."
+    "message": "Design Editor at $1 accepted the connection but did not answer within $2s. It may be busy or stuck — check the app, then try again."
   },
   "errorNoIngress": {
-    "message": "This OpenPencil build has no extension ingress ($1). Update the app, or use Download .op and open the file in OpenPencil."
+    "message": "This Design Editor build has no extension ingress ($1). Update the app, or use Download .op and open the file in Design Editor."
   },
   "errorTooLarge": {
-    "message": "This capture is larger than $1 MB, which OpenPencil's snapshot route refuses. Use Download .op, then open the file in OpenPencil."
+    "message": "This capture is larger than $1 MB, which Design Editor's snapshot route refuses. Use Download .op, then open the file in Design Editor."
   },
   "errorAccountTooLarge": {
     "message": "This capture is larger than $1 MB, which the account inbox refuses. Deliver it to this device instead."
   },
   "errorImport": {
-    "message": "OpenPencil refused the snapshot: $1"
+    "message": "Design Editor refused the snapshot: $1"
   },
   "errorDownload": {
     "message": "Download failed: $1"
@@ -164,16 +164,16 @@
     "message": "Finish signing in on the page that just opened, then reopen this popup."
   },
   "accountSignedOut": {
-    "message": "Signed out of your OpenPencil account."
+    "message": "Signed out of your Design Editor account."
   },
   "accountSignOutManual": {
     "message": "Finish signing out on the account page that just opened."
   },
   "accountUnavailable": {
-    "message": "Your OpenPencil account could not be reached: $1"
+    "message": "Your Design Editor account could not be reached: $1"
   },
   "errorAccountSignedOut": {
-    "message": "Your OpenPencil account session has expired. Sign in again, then try once more."
+    "message": "Your Design Editor account session has expired. Sign in again, then try once more."
   },
   "errorAccountForbidden": {
     "message": "The hub refused this upload's origin or session token. Sign in again, then try once more. ($1)"
@@ -191,10 +191,10 @@
     "message": "Too many uploads to your account. Try again in about $1 seconds."
   },
   "errorAccountRejected": {
-    "message": "Your OpenPencil account refused the snapshot: $1"
+    "message": "Your Design Editor account refused the snapshot: $1"
   },
   "errorAccountUnavailable": {
-    "message": "Your OpenPencil account cannot accept captures right now ($1). Try again later, or send to the OpenPencil on this computer."
+    "message": "Your Design Editor account cannot accept captures right now ($1). Try again later, or send to the Design Editor on this computer."
   },
   "regionLabel": {
     "message": "Region"
@@ -209,9 +209,9 @@
     "message": "Send to"
   },
   "deliveryLocal": {
-    "message": "OpenPencil on this computer"
+    "message": "Design Editor on this computer"
   },
   "deliveryAccount": {
-    "message": "My OpenPencil account"
+    "message": "My Design Editor account"
   }
 }

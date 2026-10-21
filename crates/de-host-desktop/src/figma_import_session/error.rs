@@ -110,12 +110,12 @@ impl fmt::Display for FigmaImportError {
                 message,
             } => write!(
                 f,
-                "could not write converted OpenPencil document beside {}: {message}",
+                "could not write converted Design Editor document beside {}: {message}",
                 source_path.display()
             ),
             FigmaImportError::Publish { path, message } => write!(
                 f,
-                "could not publish converted OpenPencil document {}: {message}",
+                "could not publish converted Design Editor document {}: {message}",
                 path.display()
             ),
             FigmaImportError::OutputNamesExhausted { source_path } => write!(

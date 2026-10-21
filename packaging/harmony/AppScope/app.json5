@@ -1,6 +1,6 @@
 {
   "app": {
-    "bundleName": "tech.zseven.openpencil",
+    "bundleName": "com.kemalcalak.designeditor",
     "vendor": "ZSeven",
     "versionCode": 1,
     "versionName": "1.0.0",

@@ -4,7 +4,7 @@
 //! [`NodeSnapshot`] shape itself. The per-section summary types, the
 //! `impl NodeSnapshot` constructors, and the `PenNode` field
 //! extractors live in the sibling `property_panel_snapshot/`
-//! submodules so every file stays under the openpencil 800-line cap.
+//! submodules so every file stays under the design-editor 800-line cap.
 
 use crate::layout_scene::{NodeKind, SceneStroke};
 use crate::widgets::property_panel_action::{LayoutAlignValue, LayoutJustifyValue};

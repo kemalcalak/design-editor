@@ -165,7 +165,7 @@ fn upgrade_staging_path(source_path: &Path) -> Result<PathBuf, LegacyUpgradeErro
     let name = source_path
         .file_name()
         .map(|name| name.to_string_lossy())
-        .unwrap_or_else(|| "OpenPencil.op".into());
+        .unwrap_or_else(|| "Design Editor.op".into());
     for _ in 0..100 {
         let sequence = UPGRADE_SEQUENCE.fetch_add(1, Ordering::Relaxed);
         let candidate = parent.join(format!(
@@ -214,7 +214,7 @@ mod tests {
 
     fn temp_dir(tag: &str) -> PathBuf {
         std::env::temp_dir().join(format!(
-            "openpencil-legacy-upgrade-{tag}-{}-{}",
+            "design-editor-legacy-upgrade-{tag}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

@@ -10,7 +10,7 @@ use crate::locator::require_exact;
 use crate::{RelayClientHello, RelayHelloAuthMode, RelayProtocolError};
 
 /// HTTP response header carrying a canonical [`RelayServerChallengeV1`].
-pub const RELAY_CHALLENGE_HEADER_NAME: &str = "openpencil-relay-challenge";
+pub const RELAY_CHALLENGE_HEADER_NAME: &str = "design-editor-relay-challenge";
 pub const RELAY_CHALLENGE_PREFIX: &str = "oprc1_";
 pub const RELAY_CHALLENGE_VERSION: u8 = 1;
 pub const MAX_RELAY_CHALLENGE_KEY_ID_BYTES: usize = 30;
@@ -22,9 +22,9 @@ pub const RELAY_CHALLENGE_PROOF_VERSION: u8 = 2;
 const CHALLENGE_FIXED_BYTES: usize = 2 + RELAY_CHALLENGE_NONCE_BYTES;
 const PROOF_TAG_BYTES: usize = 32;
 const PROOF_BINDING_DOMAIN: &[u8] =
-    b"openpencil/de-collab-relay-protocol/challenge-proof-binding/v2\0";
+    b"openpencil/op-collab-relay-protocol/challenge-proof-binding/v2\0";
 const PROOF_KEY_INFO_DOMAIN: &[u8] =
-    b"openpencil/de-collab-relay-protocol/challenge-proof-key/v2\0";
+    b"openpencil/op-collab-relay-protocol/challenge-proof-key/v2\0";
 
 type HmacSha256 = Hmac<Sha256>;
 

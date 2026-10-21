@@ -1,7 +1,7 @@
-# OpenPencilPlayer (Android)
+# DesignEditorPlayer (Android)
 
-A thin Android host for the OpenPencil engine, consuming `crates/de-engine-jni`'s
-`tech.zseven.openpencil.OpNative` C-ABI surface. The engine renders through
+A thin Android host for the Design Editor engine, consuming `crates/de-engine-jni`'s
+`com.kemalcalak.designeditor.OpNative` C-ABI surface. The engine renders through
 EGL/GLES onto a `SurfaceView`; the shell owns lifecycle, insets, touch, and
 the frame pump. Gestures are interpreted by the engine: single-finger tap
 selects the topmost node under the finger, single-finger drag pans, two-finger
@@ -56,7 +56,7 @@ Debug auth library cannot leak into Release. Production consumes the adopted
 ten-target ABI-v3 matrix under `crates/de-auth-bridge/prebuilt/`. Its signatures
 and source-owned `AUTH-RELEASE-POLICY` pin the exact matrix and private build
 identity; the matrix's signed version and public revision are provenance, not
-requirements that every consuming OpenPencil commit must match.
+requirements that every consuming Design Editor commit must match.
 
 Private release CI rebuilds, audits, and signs all ten immutable ABI-v3
 candidates together: both Android targets, both iOS targets, and all six
@@ -67,7 +67,7 @@ signed matrix, then builds both JNI ABIs in Cargo's release profile into
 the resulting `libde_engine_jni.so` files enter the APK; the `.a` archives are
 never packaged as assets. Any policy, matrix, provenance, ABI, hardening,
 signature, or digest failure stops the release instead of falling back to
-unsigned code. OpenPencil-only commits and version bumps reuse the adopted
+unsigned code. Design Editor-only commits and version bumps reuse the adopted
 matrix; private implementation or ABI changes require a new signed matrix and
 reviewed policy adoption.
 
@@ -79,8 +79,8 @@ does not have a separate dispatch trigger and CI does not upload to Google Play.
 The lane publishes these formally signed files into the same GitHub Release as
 the desktop artifacts:
 
-- `OpenPencil-<version>-android.apk` for direct installation and testing;
-- `OpenPencil-<version>-android.aab` for a later manual Play Console upload;
+- `Design-Editor-<version>-android.apk` for direct installation and testing;
+- `Design-Editor-<version>-android.aab` for a later manual Play Console upload;
 - `SHA256SUMS.android.txt`, which is also covered by the release's unified
   checksums and provenance.
 
@@ -133,14 +133,14 @@ and the monotonic mapping. To inspect the resolved values directly:
 
 ```bash
 cd packaging/android
-./gradlew -q :app:printOpenPencilVersion
+./gradlew -q :app:printDesignEditorVersion
 ```
 
 ## Run
 
 ```bash
-adb shell am start -n tech.zseven.openpencil/.MainActivity
-adb logcat -s OpenPencilPlayer:V OpJni:V AndroidRuntime:E libEGL:W
+adb shell am start -n com.kemalcalak.designeditor/.MainActivity
+adb logcat -s DesignEditorPlayer:V OpJni:V AndroidRuntime:E libEGL:W
 ```
 
 ## Background generation
@@ -160,7 +160,7 @@ permission, although the foreground service remains visible in Task Manager.
 This keeps ordinary Home/app-switcher and lock-screen transitions running, but
 it cannot override Android or vendor power policy. A force-stop, process death,
 device shutdown, OEM task killer, or the Android 15+ `dataSync` quota can still
-end background execution; OpenPencil never claims guaranteed execution across
+end background execution; Design Editor never claims guaranteed execution across
 those terminal OS events.
 
 The full editor starts with a new untitled `.op` document instead of loading
@@ -169,7 +169,7 @@ demo content. Pass an asset name without the `.op` suffix in the existing
 16:9 PowerPoint demo at `assets/ppt-demo.op` with:
 
 ```bash
-adb shell am start -n tech.zseven.openpencil/.MainActivity --es doc ppt-demo
+adb shell am start -n com.kemalcalak.designeditor/.MainActivity --es doc ppt-demo
 ```
 
 The demo is derived from

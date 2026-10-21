@@ -1,4 +1,4 @@
-//! Transport-free collaboration primitives for OpenPencil.
+//! Transport-free collaboration primitives for Design Editor.
 //!
 //! The crate is intentionally platform-neutral and safe to include in the
 //! wasm dependency graph. It defines only versioned wire data, deterministic

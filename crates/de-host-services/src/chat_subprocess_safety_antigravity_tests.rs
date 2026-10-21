@@ -2,7 +2,7 @@ use super::*;
 
 fn test_dir(label: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!(
-        "openpencil-{label}-{}-{}",
+        "design-editor-{label}-{}-{}",
         std::process::id(),
         TURN_SEQ.fetch_add(1, Ordering::Relaxed)
     ));
@@ -14,7 +14,7 @@ fn seed_antigravity_mcp(home: &Path, value: serde_json::Value) {
     let path = home.join(".gemini/config/mcp_config.json");
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, serde_json::to_vec(&value).unwrap()).unwrap();
-    let record_path = home.join(".openpencil/.op-mcp-port");
+    let record_path = home.join(".design-editor/.de-mcp-port");
     fs::create_dir_all(record_path.parent().unwrap()).unwrap();
     fs::write(
         record_path,
@@ -36,7 +36,7 @@ fn agent_turn_uses_private_home_and_minimal_mcp_policy() {
         &host_home,
         serde_json::json!({
             "mcpServers": {
-                "openpencil": {
+                "design-editor": {
                     "serverUrl": "http://127.0.0.1:3100/mcp",
                     "headers": {"Authorization": "must-not-copy"}
                 },
@@ -86,7 +86,7 @@ fn agent_turn_uses_private_home_and_minimal_mcp_policy() {
     .unwrap();
     assert_eq!(
         mcp,
-        serde_json::json!({"mcpServers": {"openpencil": {
+        serde_json::json!({"mcpServers": {"design-editor": {
             "serverUrl": "http://127.0.0.1:3100/mcp"
         }}})
     );
@@ -144,7 +144,7 @@ fn agent_turn_rejects_non_loopback_or_disabled_mcp() {
         let host_home = test_dir("agy-unsafe-home");
         seed_antigravity_mcp(
             &host_home,
-            serde_json::json!({"mcpServers": {"openpencil": server}}),
+            serde_json::json!({"mcpServers": {"design-editor": server}}),
         );
         let error = IsolatedTurn::prepare_with_host_home(
             Some(CliName::Antigravity),

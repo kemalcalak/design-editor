@@ -1,6 +1,6 @@
 //! Geometry mutator tests — translate / bounds / rotation /
 //! property edits + the locked / hidden editability gates. Ported
-//! from `openpencil-shell-core::document::tests_geometry`.
+//! from `design-editor-shell-core::document::tests_geometry`.
 
 #![cfg(test)]
 

@@ -12,7 +12,7 @@ use super::{
     MAX_DISCOVERY_ADDRESSES,
 };
 
-const REGISTRATION_TYPE: &[u8] = b"_openpencil-collab._tcp\0";
+const REGISTRATION_TYPE: &[u8] = b"_design-editor-collab._tcp\0";
 const LOCAL_DOMAIN: &[u8] = b"local.\0";
 const START_TIMEOUT: Duration = Duration::from_secs(5);
 const RESOLVE_TIMEOUT: Duration = Duration::from_secs(5);
@@ -611,7 +611,7 @@ fn valid_service_key(key: &ServiceKey) -> bool {
         && key
             .registration_type
             .trim_end_matches('.')
-            .eq_ignore_ascii_case("_openpencil-collab._tcp")
+            .eq_ignore_ascii_case("_design-editor-collab._tcp")
         && key
             .domain
             .trim_end_matches('.')

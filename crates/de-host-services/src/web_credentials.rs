@@ -26,7 +26,7 @@ const MAX_TOTAL_ENTRIES: usize = 256;
 const PAYLOAD_VERSION: u32 = 2;
 const WEB_CREDENTIAL_PREFIX: &str = "web-credential:";
 const WEB_CREDENTIAL_OWNER: &str = "browser";
-pub const WEB_AI_ENDPOINT_ALLOWLIST_ENV: &str = "OPENPENCIL_WEB_AI_ENDPOINT_ALLOWLIST";
+pub const WEB_AI_ENDPOINT_ALLOWLIST_ENV: &str = "DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST";
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -128,7 +128,7 @@ pub(crate) fn parse_transient_builtin_for_discovery(
 
 /// Whether a browser-supplied provider endpoint may be dialed. Any public
 /// HTTPS origin passes; private/loopback/metadata targets need an explicit
-/// `OPENPENCIL_WEB_AI_ENDPOINT_ALLOWLIST` entry. Connect-time DNS pinning
+/// `DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST` entry. Connect-time DNS pinning
 /// (`chat_builtin_http`) closes the rebinding gap this hostname check leaves.
 pub(crate) fn public_demo_transient_endpoint_allowed(agent: &BuiltinAgentConfig) -> bool {
     validate_web_provider_base_url_with_env_allowlist(agent.base_url.trim()).is_ok()
@@ -184,7 +184,7 @@ fn validate_web_provider_base_url_with_env_allowlist(base_url: &str) -> Result<r
 }
 
 /// Whether a raw base URL is an exact scheme/host/port match for an
-/// `OPENPENCIL_WEB_AI_ENDPOINT_ALLOWLIST` entry. Unparseable URLs are not.
+/// `DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST` entry. Unparseable URLs are not.
 pub(crate) fn base_url_is_explicitly_allowlisted(base_url: &str, allowlist: Option<&str>) -> bool {
     reqwest::Url::parse(base_url.trim())
         .is_ok_and(|url| endpoint_is_explicitly_allowlisted(&url, allowlist))

@@ -8,7 +8,7 @@ use crate::{ProductionRelayAuthConfig, ProductionRelayAuthConfigError};
 
 #[test]
 fn production_config_requires_x25519_or_explicit_reduced_mode() {
-    let root = std::env::temp_dir().join("openpencil-production-config-test");
+    let root = std::env::temp_dir().join("design-editor-production-config-test");
     let policy = root.join("private-policy.json");
     let locator = root.join("private-locator-keys.json");
     let x25519 = root.join("private-relay-x25519.json");

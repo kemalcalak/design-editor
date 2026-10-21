@@ -1,8 +1,8 @@
-# OpenPencil iOS Player
+# Design Editor iOS Player
 
 This directory is a source-only SwiftUI/UIKit shell for `de-engine-ffi`. XcodeGen creates the project; the Rust archive remains an external build input and is not copied into this directory.
 
-The full editor starts with a new untitled `.op` document instead of loading demo content. Pass `-doc ppt-demo` to load the bundled six-slide, 16:9 presentation deck, or `-doc sample` to load `Resources/sample.op` (a byte-for-byte copy of `crates/de-editor-core/assets/scene_templates/daily-sign-card.op`); more generally, `-doc <name>` selects any bundled `<name>.op` document. A viewer-only build still falls back to `Resources/ppt-demo.op` when no override is supplied. `OpPlayerView` owns its `CAMetalLayer`; the pointer passed to OpenPencil is borrowed and is valid until `op_suspend`/`op_destroy` returns. UIKit, CADisplayLink, all engine calls, and all callback reactions run on the main thread. A collaboration worker may enter only the redraw callback to restart a paused pump; that callback immediately dispatches its reaction to the main queue. Other callback payloads are copied synchronously, then their reactions are also dispatched asynchronously so callbacks never re-enter the ABI.
+The full editor starts with a new untitled `.op` document instead of loading demo content. Pass `-doc ppt-demo` to load the bundled six-slide, 16:9 presentation deck, or `-doc sample` to load `Resources/sample.op` (a byte-for-byte copy of `crates/de-editor-core/assets/scene_templates/daily-sign-card.op`); more generally, `-doc <name>` selects any bundled `<name>.op` document. A viewer-only build still falls back to `Resources/ppt-demo.op` when no override is supplied. `OpPlayerView` owns its `CAMetalLayer`; the pointer passed to Design Editor is borrowed and is valid until `op_suspend`/`op_destroy` returns. UIKit, CADisplayLink, all engine calls, and all callback reactions run on the main thread. A collaboration worker may enter only the redraw callback to restart a paused pump; that callback immediately dispatches its reaction to the main queue. Other callback payloads are copied synchronously, then their reactions are also dispatched asynchronously so callbacks never re-enter the ABI.
 
 User-started AI generation submits a uniquely identified iOS 26 continued-processing task while the app is still in the foreground. A short `beginBackgroundTask` handoff covers the gap until that task's handler starts; iOS 15–25 uses the same API as its time-limited fallback. In the background the host detaches Metal with `op_suspend` and advances only the render-free generation pump on the engine's main-thread owner. Returning to the foreground stops that pump before Metal reattaches. System expiration or user cancellation stops the current generation before releasing the allowance; force-quitting ends the process outright.
 
@@ -38,13 +38,13 @@ scripts/build-mobile-auth-dev.sh \
 ```
 
 Then pass that exact archive to Xcode as `OP_AUTH_ARCHIVE` and repeat the ABI
-with `OPENPENCIL_DEV_OP_AUTH_ABI_VERSION`. The project pre-build gate accepts
+with `DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION`. The project pre-build gate accepts
 an unsigned archive only for `CONFIGURATION=Debug`. Release linking accepts
 only the adopted ABI-v3 matrix under `crates/de-auth-bridge/prebuilt/`: every
 target is SHA-pinned and Ed25519-signed, while the source-owned
 `AUTH-RELEASE-POLICY` pins the exact complete matrix and private build identity.
 The matrix's signed `VERSION` and `openpencil_revision` record its own release
-provenance; they do not have to equal the consuming OpenPencil version or
+provenance; they do not have to equal the consuming Design Editor version or
 commit. Never copy a local private archive into this source tree or into an
 Xcode resource phase.
 
@@ -55,7 +55,7 @@ App Store/TestFlight builds verify the adopted policy, the complete signed
 matrix, and Cargo's actual ABI-v3 link selection before staging the exact
 device archive for the final Xcode link. A missing target, policy, digest,
 signature, or hardening mismatch, incomplete matrix, ABI downgrade, or stub
-fallback stops the release before upload. OpenPencil-only source changes and
+fallback stops the release before upload. Design Editor-only source changes and
 version bumps may reuse the adopted matrix; an op-platform, ABI, toolchain, or
 hardening change requires a newly signed matrix and reviewed policy adoption.
 
@@ -100,8 +100,8 @@ On this host, pass the SDK, destination, Rust archive, and linker flags explicit
 ```bash
 cd packaging/ios
 xcodebuild \
-  -project OpenPencilPlayer.xcodeproj \
-  -scheme OpenPencilPlayer \
+  -project DesignEditorPlayer.xcodeproj \
+  -scheme DesignEditorPlayer \
   -configuration Release \
   -sdk iphonesimulator26.4 \
   -destination 'platform=iOS Simulator,id=<sim-id>' \
@@ -110,8 +110,8 @@ xcodebuild \
   OTHER_LDFLAGS="$PWD/../../target/aarch64-apple-ios-sim/release/libde_engine_ffi.a -lc++ -framework BackgroundTasks -framework CoreFoundation -framework CoreGraphics -framework CoreText -framework ImageIO -framework MobileCoreServices -framework UIKit -framework Foundation -framework Metal -framework QuartzCore -framework Security" \
   build
 
-xcrun simctl install <sim-id> "$PWD/.derived-data/Build/Products/Release-iphonesimulator/OpenPencilPlayer.app"
-xcrun simctl launch <sim-id> tech.zseven.openpencil
+xcrun simctl install <sim-id> "$PWD/.derived-data/Build/Products/Release-iphonesimulator/DesignEditorPlayer.app"
+xcrun simctl launch <sim-id> com.kemalcalak.designeditor
 ```
 
 ## Real-device build
@@ -124,8 +124,8 @@ Device builds link the vendored native sign-in SDKs (Douyin OpenSDK + Alipay AFS
 cd packaging/ios
 bash scripts/fetch-vendor-sdks.sh
 xcodebuild \
-  -project OpenPencilPlayer.xcodeproj \
-  -scheme OpenPencilPlayer \
+  -project DesignEditorPlayer.xcodeproj \
+  -scheme DesignEditorPlayer \
   -configuration Release \
   -sdk iphoneos26.4 \
   -destination 'platform=iOS,id=<device-id>' \
@@ -141,7 +141,7 @@ For an authenticated local simulator build, use the Debug engine path and add:
 ```text
 -configuration Debug
 OP_AUTH_ARCHIVE=/absolute/path/to/libop_auth.a
-OPENPENCIL_DEV_OP_AUTH_ABI_VERSION=3
+DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION=3
 ```
 
 Do not add those development settings to a Release build; the gate rejects

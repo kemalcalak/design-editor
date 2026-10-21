@@ -96,7 +96,7 @@ fn play(state: &mut EditorState, path: &Path) {
 #[test]
 fn scripted_conversion_is_idempotent() {
     let path = std::env::temp_dir().join(format!(
-        "openpencil-conversion-flow-{}.op",
+        "design-editor-conversion-flow-{}.op",
         std::process::id()
     ));
     std::fs::write(&path, r#"{"version":"1","children":[]}"#).expect("seed doc");

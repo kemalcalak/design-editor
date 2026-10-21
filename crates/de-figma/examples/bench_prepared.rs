@@ -9,7 +9,7 @@
 //! been summarized and dropped.
 //!
 //! Usage:
-//! `cargo run --release -p de-figma --example bench_prepared -- <file.fig> [--page INDEX] [--layout preserve|openpencil]`
+//! `cargo run --release -p de-figma --example bench_prepared -- <file.fig> [--page INDEX] [--layout preserve|design-editor]`
 
 use de_figma::{prepare_fig_binary, FigLayoutMode};
 use jian_ops_schema::node::PenNode;
@@ -21,11 +21,11 @@ Benchmark PreparedFig stages on a real binary .fig file.
 
 Usage:
   cargo run --release -p de-figma --example bench_prepared -- \
-    <file.fig> [--page INDEX] [--layout preserve|openpencil]
+    <file.fig> [--page INDEX] [--layout preserve|design-editor]
 
 Options:
   --page INDEX       Page converted by the single-page run (default: 0)
-  --layout MODE      preserve (default) or openpencil
+  --layout MODE      preserve (default) or design-editor
   -h, --help         Show this help
 
 The input is read before timing starts. Conversion includes image resolution.
@@ -55,7 +55,7 @@ enum OptionsError {
     InvalidPageIndex(String),
     /// `--layout` given without its mode argument.
     MissingLayoutMode,
-    /// `--layout` given a mode outside `preserve` / `openpencil`.
+    /// `--layout` given a mode outside `preserve` / `design-editor`.
     InvalidLayoutMode(String),
     /// An unrecognised `-…` flag.
     UnknownOption(String),
@@ -159,7 +159,7 @@ fn parse_options(args: impl IntoIterator<Item = String>) -> Result<Option<Option
                 let value = args.next().ok_or(OptionsError::MissingLayoutMode)?;
                 layout_mode = match value.as_str() {
                     "preserve" => FigLayoutMode::Preserve,
-                    "openpencil" => FigLayoutMode::OpenPencil,
+                    "design-editor" => FigLayoutMode::DesignEditor,
                     _ => return Err(OptionsError::InvalidLayoutMode(value)),
                 };
             }
@@ -302,6 +302,6 @@ fn elapsed(duration: Duration) -> String {
 fn layout_name(mode: FigLayoutMode) -> &'static str {
     match mode {
         FigLayoutMode::Preserve => "preserve",
-        FigLayoutMode::OpenPencil => "openpencil",
+        FigLayoutMode::DesignEditor => "design-editor",
     }
 }

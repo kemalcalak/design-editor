@@ -59,7 +59,7 @@ fn no_thumbs_path(path: &Path) -> PathBuf {
     let stem = path
         .file_stem()
         .and_then(|name| name.to_str())
-        .unwrap_or("openpencil-tesla-blurup");
+        .unwrap_or("design-editor-tesla-blurup");
     path.with_file_name(format!("{stem}-no-thumbs.op"))
 }
 
@@ -150,7 +150,7 @@ fn run_zoomed_out_decode_probe(mut state: EditorState, mut host: WidgetHostNativ
         first_frame.sharp_raster_hits, 0,
         "the reopened first frame starts before full rasters are installed"
     );
-    let blur_capture = Path::new("/private/tmp/openpencil-tesla-blur-first.png");
+    let blur_capture = Path::new("/private/tmp/design-editor-tesla-blur-first.png");
     write_surface_png(&mut surface, blur_capture);
 
     while started.elapsed() < SETTLE_DEADLINE {
@@ -203,7 +203,7 @@ fn run_zoomed_out_decode_probe(mut state: EditorState, mut host: WidgetHostNativ
         .expect("decode telemetry remains active");
     let queue_pending = pending_decode_count();
     let diagnostics = de_host_native::end_image_paint_diagnostics();
-    let sharp_capture = Path::new("/private/tmp/openpencil-tesla-sharp-terminal.png");
+    let sharp_capture = Path::new("/private/tmp/design-editor-tesla-sharp-terminal.png");
     write_surface_png(&mut surface, sharp_capture);
     let idle_installs = after_idle.0.saturating_sub(before_idle.0);
     let idle_reinstalls = after_idle.1.saturating_sub(before_idle.1);
@@ -693,7 +693,7 @@ fn fig_import_bench() {
         .map(PathBuf::from)
         .unwrap_or_else(|| {
             PathBuf::from(format!(
-                "/private/tmp/openpencil-tesla-blurup-{}.op",
+                "/private/tmp/design-editor-tesla-blurup-{}.op",
                 std::process::id()
             ))
         });

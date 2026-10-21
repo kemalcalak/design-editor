@@ -1,4 +1,4 @@
-# Logic core of the OpenPencil Chrome extension (`packages/de-chrome-extension`).
+# Logic core of the Design Editor Chrome extension (`packages/de-chrome-extension`).
 #
 # Everything here is pure, host-agnostic logic: it never touches `chrome.*`,
 # the DOM, or the network. The extension's JS is reduced to a glue layer that
@@ -14,7 +14,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil Chrome extension logic core — endpoint rules, chunked-transfer integrity, ingress envelopes and reply classification (wasm)"
+description = "Design Editor Chrome extension logic core — endpoint rules, chunked-transfer integrity, ingress envelopes and reply classification (wasm)"
 
 [lib]
 name = "de_chrome_extension_core"
@@ -26,7 +26,7 @@ crate-type = ["cdylib", "rlib"]
 # Canonical JSON string escaping, shared with de-mcp's hand-rolled JSON-RPC
 # serializer. Dependency-free leaf crate, wasm32-clean by contract.
 de-util = { path = "../de-util" }
-# The snapshot → `.op` (PenDocument) conversion, shared with the `op` CLI's
+# The snapshot → `.op` (PenDocument) conversion, shared with the `de` CLI's
 # `import:snapshot` command. wasm32-clean by contract (de-host-web depends on
 # it and builds to wasm32), so the offline download can produce a ready-to-open
 # `.op` document in the browser instead of the raw snapshot JSON.

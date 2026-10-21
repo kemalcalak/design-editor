@@ -7,7 +7,7 @@
 /// Maximum invite size accepted by editor state before protocol parsing.
 pub const MAX_COLLAB_INVITE_CODE_CHARS: usize = 1_024;
 
-/// A bounded, redacted OpenPencil collaboration invite.
+/// A bounded, redacted Design Editor collaboration invite.
 #[derive(Clone, PartialEq, Eq)]
 pub struct CollabInviteCode(String);
 
@@ -182,7 +182,7 @@ mod tests {
         let debug = format!("{invite:?}");
         assert!(!debug.contains("super-secret"));
         assert!(debug.contains("[REDACTED]"));
-        assert!(CollabInviteCode::new("not-an-openpencil-invite").is_none());
+        assert!(CollabInviteCode::new("not-an-design-editor-invite").is_none());
         // 10-char short pairing codes are displayable invites too.
         assert!(CollabInviteCode::new("A2C4E6G8J0").is_some());
         assert!(

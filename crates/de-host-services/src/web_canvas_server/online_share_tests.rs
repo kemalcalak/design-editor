@@ -489,8 +489,14 @@ fn a_deployment_that_evicts_but_persists_nothing_refuses_to_start() {
     // means every idle account's document is destroyed on its first timer.
     let refused = check_persistence_configured(false, false, 1800).unwrap_err();
     let message = refused.to_string();
-    assert!(message.contains("OPENPENCIL_ONLINE_DATA_DIR"), "{message}");
-    assert!(message.contains("OPENPENCIL_ONLINE_EPHEMERAL"), "{message}");
+    assert!(
+        message.contains("DESIGN_EDITOR_ONLINE_DATA_DIR"),
+        "{message}"
+    );
+    assert!(
+        message.contains("DESIGN_EDITOR_ONLINE_EPHEMERAL"),
+        "{message}"
+    );
 
     // Configured persistence is the normal deployment.
     assert!(check_persistence_configured(true, false, 1800).is_ok());

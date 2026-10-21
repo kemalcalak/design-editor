@@ -103,7 +103,7 @@ fn drain_write_barrier(barrier: &Arc<super::tenant::WriteBarrier>) {
                 "warning"
             };
             eprintln!(
-                "openpencil --serve-web --online: {level} still waiting on {} in-flight \
+                "design-editor --serve-web --online: {level} still waiting on {} in-flight \
                  write(s) after {}s; the flush cannot run until they finish",
                 barrier.active(),
                 waited.as_secs()
@@ -118,7 +118,7 @@ fn drain_write_barrier(barrier: &Arc<super::tenant::WriteBarrier>) {
 const MAX_SWEEP_INTERVAL_SECS: u64 = 300;
 
 /// Opt-in to running with no persistence at all. Demo use only.
-pub const EPHEMERAL_ENV: &str = "OPENPENCIL_ONLINE_EPHEMERAL";
+pub const EPHEMERAL_ENV: &str = "DESIGN_EDITOR_ONLINE_EPHEMERAL";
 
 /// Run the multi-account web-canvas daemon.
 ///
@@ -131,7 +131,7 @@ pub fn run_online_web_canvas(options: ServeWebOptions) -> Result<()> {
     } = options;
     if path.is_some() {
         eprintln!(
-            "openpencil --serve-web --online: ignoring the start-up document — every account \
+            "design-editor --serve-web --online: ignoring the start-up document — every account \
              starts from the starter document"
         );
     }
@@ -154,7 +154,7 @@ pub fn run_online_web_canvas(options: ServeWebOptions) -> Result<()> {
     )?;
     if !store.is_enabled() {
         eprintln!(
-            "openpencil --serve-web --online: {EPHEMERAL_ENV} is set — evicted accounts lose \
+            "design-editor --serve-web --online: {EPHEMERAL_ENV} is set — evicted accounts lose \
              their documents. Never use this for a deployment."
         );
     }
@@ -165,7 +165,7 @@ pub fn run_online_web_canvas(options: ServeWebOptions) -> Result<()> {
         // which have no other CSRF boundary — so say so rather than letting
         // the first failed save be the discovery.
         eprintln!(
-            "openpencil --serve-web --online: no public origin configured (set {}); \
+            "design-editor --serve-web --online: no public origin configured (set {}); \
              cookie-authenticated writes will be refused",
             super::origin_guard::WEB_ALLOWED_ORIGINS_ENV
         );
@@ -178,20 +178,20 @@ pub fn run_online_web_canvas(options: ServeWebOptions) -> Result<()> {
         .local_addr()
         .map_err(|e| WebCanvasError::Config(e.to_string()))?;
     let bound = local_addr.port();
-    eprintln!("openpencil --serve-web --online: listening on {host}:{bound}");
+    eprintln!("design-editor --serve-web --online: listening on {host}:{bound}");
     eprintln!(
-        "openpencil --serve-web --online: limits — {} conns, {} per account, {} accounts, \
+        "design-editor --serve-web --online: limits — {} conns, {} per account, {} accounts, \
          {}s idle eviction",
         limits.max_conns, limits.max_conns_per_tenant, limits.max_tenants, limits.idle_evict_secs
     );
     match crate::web_static::resolve_bundle_dir() {
         Some(dir) => eprintln!(
-            "openpencil --serve-web --online: serving web bundle from {}",
+            "design-editor --serve-web --online: serving web bundle from {}",
             dir.display()
         ),
         None => eprintln!(
-            "openpencil --serve-web --online: no web bundle found — `/` serves build \
-             instructions (tools/check-wasm-bundle.sh, or set OPENPENCIL_WEB_BUNDLE_DIR)"
+            "design-editor --serve-web --online: no web bundle found — `/` serves build \
+             instructions (tools/check-wasm-bundle.sh, or set DESIGN_EDITOR_WEB_BUNDLE_DIR)"
         ),
     }
 
@@ -218,7 +218,7 @@ pub fn run_online_web_canvas(options: ServeWebOptions) -> Result<()> {
         let mut s = match stream {
             Ok(s) => s,
             Err(e) => {
-                eprintln!("openpencil --serve-web --online: accept: {e}");
+                eprintln!("design-editor --serve-web --online: accept: {e}");
                 continue;
             }
         };
@@ -254,7 +254,7 @@ pub fn run_online_web_canvas(options: ServeWebOptions) -> Result<()> {
                         let _ = std::net::TcpStream::connect(("127.0.0.1", bound));
                     }
                     Ok(false) => {}
-                    Err(e) => eprintln!("openpencil --serve-web --online: {e}"),
+                    Err(e) => eprintln!("design-editor --serve-web --online: {e}"),
                 }
             });
         if spawned.is_err() {
@@ -281,7 +281,7 @@ pub fn run_online_web_canvas(options: ServeWebOptions) -> Result<()> {
     let flushed = registry.flush_all();
     if !drained {
         eprintln!(
-            "openpencil --serve-web --online: {} connection(s) still active after {}s",
+            "design-editor --serve-web --online: {} connection(s) still active after {}s",
             conn_count.load(Ordering::Acquire),
             SHUTDOWN_DRAIN_SECS
         );
@@ -289,7 +289,7 @@ pub fn run_online_web_canvas(options: ServeWebOptions) -> Result<()> {
     // The duration is logged because a slow volume is what makes
     // `stop_grace_period` too short, and there is no other way to size it.
     eprintln!(
-        "openpencil --serve-web --online: shutdown requested; flushed {flushed} account(s) in \
+        "design-editor --serve-web --online: shutdown requested; flushed {flushed} account(s) in \
          {} ms; exiting",
         flush_started.elapsed().as_millis()
     );
@@ -418,7 +418,7 @@ fn spawn_sweeper(registry: &Arc<TenantRegistry>, shutdown: &Arc<AtomicBool>) -> 
                 let evicted = registry.evict_idle(now_unix());
                 if evicted > 0 {
                     eprintln!(
-                        "openpencil --serve-web --online: reclaimed {evicted} idle account(s)"
+                        "design-editor --serve-web --online: reclaimed {evicted} idle account(s)"
                     );
                 }
             }
@@ -457,12 +457,12 @@ fn resolve_verifier() -> Arc<dyn IdentityVerifier> {
     match super::hub_verifier::HubVerifier::from_env() {
         Ok(Some(verifier)) => {
             eprintln!(
-                "openpencil --serve-web --online: verifying identities against the hub at {}",
+                "design-editor --serve-web --online: verifying identities against the hub at {}",
                 std::env::var(crate::hub_auth_client::HUB_BASE_URL_ENV).unwrap_or_default()
             );
             if crate::hub_auth_client::internal_auth_from_env().is_none() {
                 eprintln!(
-                    "openpencil --serve-web --online: no {} configured; API-token \
+                    "design-editor --serve-web --online: no {} configured; API-token \
                      introspection will be refused and only browser sessions will work",
                     crate::hub_auth_client::HUB_INTERNAL_AUTH_FILE_ENV
                 );
@@ -475,7 +475,7 @@ fn resolve_verifier() -> Arc<dyn IdentityVerifier> {
             // here would mean a production deployment quietly accepting an
             // env token table instead of real accounts.
             eprintln!(
-                "openpencil --serve-web --online: {} is set but unusable ({error}); every \
+                "design-editor --serve-web --online: {} is set but unusable ({error}); every \
                  authenticated route will answer 503",
                 crate::hub_auth_client::HUB_BASE_URL_ENV
             );
@@ -488,14 +488,14 @@ fn resolve_verifier() -> Arc<dyn IdentityVerifier> {
         // `verifier-unavailable`, which is a diagnosable state. Serving
         // requests with NO verifier would be the unsafe alternative.
         eprintln!(
-            "openpencil --serve-web --online: no identity verifier configured (set {} for a \
+            "design-editor --serve-web --online: no identity verifier configured (set {} for a \
              hub deployment, or {} for development); every authenticated route will answer 503",
             crate::hub_auth_client::HUB_BASE_URL_ENV,
             super::tenant_auth::STATIC_IDENTITIES_ENV
         );
     } else {
         eprintln!(
-            "openpencil --serve-web --online: using the DEVELOPMENT static identity table; \
+            "design-editor --serve-web --online: using the DEVELOPMENT static identity table; \
              set {} for a real deployment",
             crate::hub_auth_client::HUB_BASE_URL_ENV
         );

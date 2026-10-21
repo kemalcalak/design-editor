@@ -531,7 +531,7 @@ fn probe_until_captured(
 fn write_fake_cli(label: &str, script_body: &str) -> std::path::PathBuf {
     use std::os::unix::fs::PermissionsExt;
     let path = std::env::temp_dir().join(format!(
-        "openpencil-cli-model-discovery-{label}-{}-{}",
+        "design-editor-cli-model-discovery-{label}-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -566,7 +566,7 @@ fn write_fake_cli(label: &str, script_body: &str) -> std::path::PathBuf {
 fn warm_up_spawn_path() {
     use std::os::unix::fs::PermissionsExt;
     let path = std::env::temp_dir().join(format!(
-        "openpencil-cli-model-discovery-warmup-{}",
+        "design-editor-cli-model-discovery-warmup-{}",
         std::process::id()
     ));
     if std::fs::write(&path, "#!/bin/sh\nexit 0\n").is_ok()

@@ -8,7 +8,7 @@
 player_dir = File.expand_path("..", __dir__)
 repo_dir = File.expand_path("../..", player_dir)
 ets_dir = File.join(player_dir, "entry/src/main/ets")
-android_dir = File.join(repo_dir, "packaging/android/app/src/main/kotlin/tech/zseven/openpencil")
+android_dir = File.join(repo_dir, "packaging/android/app/src/main/kotlin/com/kemalcalak/designeditor")
 
 def read(*parts)
   File.read(File.join(*parts))
@@ -24,7 +24,7 @@ index = read(ets_dir, "pages/Index.ets")
 export_support = read(ets_dir, "common/DocumentExportSupport.ets")
 document_shell = read(ets_dir, "common/DocumentShell.ets")
 language = read(ets_dir, "common/EngineLanguage.ets")
-declaration = read(player_dir, "entry/src/main/cpp/types/libopenpencil/index.d.ts")
+declaration = read(player_dir, "entry/src/main/cpp/types/libdesign_editor/index.d.ts")
 napi_readme = read(repo_dir, "crates/de-engine-napi/README.md")
 header = read(repo_dir, "crates/de-engine-ffi/include/op_engine.h")
 background = read(ets_dir, "common/BackgroundGenerationCoordinator.ets")
@@ -33,7 +33,7 @@ background = read(ets_dir, "common/BackgroundGenerationCoordinator.ets")
 
 exported = declaration.scan(/^export const ([A-Za-z0-9_]+):/).flatten.sort
 raise "the NAPI declaration exports nothing" if exported.empty?
-raise "the surface must be bound as libopenpencil.so" unless op_native.include?("from 'libopenpencil.so'")
+raise "the surface must be bound as libdesign_editor.so" unless op_native.include?("from 'libdesign_editor.so'")
 
 if File.exist?(File.join(android_dir, "OpNative.kt"))
   kotlin = read(android_dir, "OpNative.kt")
@@ -473,7 +473,7 @@ code_form = read(ets_dir, "common/AuthCodeForm.ets")
 # Everywhere else an origin arrives at runtime (the region store, or the
 # engine's own verification URL).
 origin_owner = File.join(ets_dir, "common/SsoRegion.ets")
-ets_sources.push(File.join(player_dir, "entry/src/main/cpp/types/libopenpencil/index.d.ts")).each do |source|
+ets_sources.push(File.join(player_dir, "entry/src/main/cpp/types/libdesign_editor/index.d.ts")).each do |source|
   next if source == origin_owner
 
   body = File.read(source)

@@ -1,6 +1,6 @@
 ---
 name: code-to-design
-description: Convert an existing frontend codebase into OpenPencil designs - tokens, unified component library, screens - via idempotent MCP tools
+description: Convert an existing frontend codebase into Design Editor designs - tokens, unified component library, screens - via idempotent MCP tools
 phase: [planning]
 trigger:
   keywords: [code-to-design, convert codebase, reverse engineer, import code]
@@ -9,12 +9,12 @@ budget: 3000
 category: knowledge
 ---
 
-# Converting Code to OpenPencil Designs
+# Converting Code to Design Editor Designs
 
-You are an agent working inside the user's codebase. OpenPencil will not parse
+You are an agent working inside the user's codebase. Design Editor will not parse
 the code for you. You inspect the source, infer the design system and screens,
 and emit design through idempotent MCP tools. Every tool below is safe to
-re-run: identical calls should produce identical OpenPencil documents.
+re-run: identical calls should produce identical Design Editor documents.
 
 ## The Five-step Method
 
@@ -49,7 +49,7 @@ axes.
 3. Components bottom-up
 
 Call `upsert_component` once per source component, leaf components before
-composites. Use `key = "<file>#<ExportName>"`. Map flexbox to OpenPencil
+composites. Use `key = "<file>#<ExportName>"`. Map flexbox to Design Editor
 auto-layout; map real controls to widget nodes (`text_input`, `select`,
 `checkbox`, `switch`, `slider`, etc.) instead of drawing rectangles. Convert
 enum variants into separate component masters (`Button/Primary`) or instance
@@ -109,7 +109,7 @@ Get master ids from `conversion_status` after components have been upserted.
 5. Verify and converge
 
 After each unit, call `lint_document` and fix reported issues. Use
-`get_screenshot` to compare the OpenPencil result against the running app or
+`get_screenshot` to compare the Design Editor result against the running app or
 storybook page. The goal is structural, semantic, and token correctness, not
 pixel-perfect equality.
 

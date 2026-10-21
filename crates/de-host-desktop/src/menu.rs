@@ -188,7 +188,7 @@ mod backend {
             // name. Quit is custom-id'd so the runner drives the same
             // clean-shutdown path as the window-close button.
             {
-                let app_menu = Submenu::new("OpenPencil", true);
+                let app_menu = Submenu::new("Design Editor", true);
                 let _ = app_menu.append_items(&[
                     &PredefinedMenuItem::about(None, Some(about_metadata())),
                     &PredefinedMenuItem::separator(),
@@ -340,7 +340,7 @@ mod backend {
 
     fn about_metadata() -> muda::AboutMetadata {
         muda::AboutMetadata {
-            name: Some("OpenPencil".to_string()),
+            name: Some("Design Editor".to_string()),
             version: Some(env!("CARGO_PKG_VERSION").to_string()),
             ..Default::default()
         }

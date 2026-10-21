@@ -200,7 +200,7 @@ fn apply_op(
 }
 
 fn wire_index(index: u32) -> usize {
-    usize::try_from(index).expect("u32 indices fit every supported OpenPencil target")
+    usize::try_from(index).expect("u32 indices fit every supported Design Editor target")
 }
 
 #[allow(clippy::too_many_arguments)]

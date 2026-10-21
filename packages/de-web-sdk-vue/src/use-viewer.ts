@@ -1,5 +1,5 @@
 import { inject, provide, shallowRef, type ShallowRef } from 'vue';
-import type { OpViewer } from '@zseven-w/de-web-sdk';
+import type { OpViewer } from '@kemalcalak/de-web-sdk';
 import { viewerKey } from './injection.js';
 
 /** Provide a viewer synchronously (manual / test use). */

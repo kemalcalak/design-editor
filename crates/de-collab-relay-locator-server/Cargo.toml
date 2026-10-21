@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license = "MIT"
 repository.workspace = true
-description = "Deployable, HSM-backed relay locator issuance service for OpenPencil"
+description = "Deployable, HSM-backed relay locator issuance service for Design Editor"
 publish = false
 
 [dependencies]

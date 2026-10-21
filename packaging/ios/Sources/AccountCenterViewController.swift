@@ -198,7 +198,7 @@ final class AccountCenterViewController: UITableViewController {
             ),
             message: NSLocalizedString(
                 "sso.region.restartNote",
-                value: "A region change takes effect after you restart OpenPencil.",
+                value: "A region change takes effect after you restart Design Editor.",
                 comment: "Region restart note"
             ),
             preferredStyle: .actionSheet
@@ -222,7 +222,7 @@ final class AccountCenterViewController: UITableViewController {
         let alert = UIAlertController(
             title: NSLocalizedString(
                 "accountCenter.signOutConfirmTitle",
-                value: "Sign out of OpenPencil?",
+                value: "Sign out of Design Editor?",
                 comment: "Sign-out confirmation"
             ),
             message: nil,

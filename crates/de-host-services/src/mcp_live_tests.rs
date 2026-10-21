@@ -7,7 +7,7 @@ use super::*;
 #[test]
 fn live_ping_response_carries_identity_mode_and_token() {
     let resp = live_ping_response("3", "abc-123");
-    assert!(resp.contains(r#""server":"openpencil-mcp""#), "{resp}");
+    assert!(resp.contains(r#""server":"design-editor-mcp""#), "{resp}");
     assert!(resp.contains(r#""mode":"live""#), "{resp}");
     assert!(resp.contains(r#""token":"abc-123""#), "{resp}");
     assert!(resp.contains(r#""id":3"#), "{resp}");

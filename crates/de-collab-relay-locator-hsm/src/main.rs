@@ -138,7 +138,7 @@ fn usage() -> SignerError {
 
 #[cfg(unix)]
 fn init_tracing() {
-    let filter = env::var("OPENPENCIL_LOCATOR_HSM_LOG")
+    let filter = env::var("DESIGN_EDITOR_LOCATOR_HSM_LOG")
         .ok()
         .and_then(|value| EnvFilter::try_new(value).ok())
         .unwrap_or_else(|| EnvFilter::new("info"));

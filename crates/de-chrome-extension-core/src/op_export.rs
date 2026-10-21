@@ -2,7 +2,7 @@
 //!
 //! The offline download path no longer hands the user the raw extractor
 //! snapshot (which then had to be converted with `de import:snapshot`). It
-//! produces a `.op` document — OpenPencil's canonical `PenDocument` format —
+//! produces a `.op` document — Design Editor's canonical `PenDocument` format —
 //! that opens directly by double-click or drag-into-app, still fully offline.
 //!
 //! This mirrors `de-cli`'s `run_import_snapshot` (`html_cli.rs`) step for step:

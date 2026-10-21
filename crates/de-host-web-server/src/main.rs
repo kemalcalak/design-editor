@@ -1,4 +1,4 @@
-//! Headless OpenPencil web / MCP server binary.
+//! Headless Design Editor web / MCP server binary.
 //!
 //! Links only `de-host-services` (the extracted headless daemon) — no
 //! winit / glutin / muda / accesskit adapters / skia-GL — so the

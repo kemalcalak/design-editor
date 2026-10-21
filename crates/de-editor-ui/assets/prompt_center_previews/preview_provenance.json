@@ -1072,7 +1072,7 @@
     },
     "web-kilnform": {
       "generationRoute": "scene-template-render",
-      "provider": "openpencil",
+      "provider": "design-editor",
       "model": "design-editor --render-shots",
       "sourceLocale": "zh-CN",
       "status": "accepted",
@@ -1092,7 +1092,7 @@
     },
     "web-reefwright": {
       "generationRoute": "scene-template-render",
-      "provider": "openpencil",
+      "provider": "design-editor",
       "model": "design-editor --render-shots",
       "sourceLocale": "zh-CN",
       "status": "accepted",

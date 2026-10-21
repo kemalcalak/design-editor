@@ -75,7 +75,7 @@ if ([string]::IsNullOrWhiteSpace($env:RUNNER_TEMP) -or
 
 $version = 'v33.0.0'
 $url = "https://github.com/electron/electron/releases/download/$version/electron-$version-win32-$Architecture.zip"
-$temporary = Join-Path $env:RUNNER_TEMP ("openpencil-angle-" + [Guid]::NewGuid().ToString('N'))
+$temporary = Join-Path $env:RUNNER_TEMP ("design-editor-angle-" + [Guid]::NewGuid().ToString('N'))
 $zipPath = Join-Path $temporary 'electron.zip'
 $destinationRoot = Join-Path $env:GITHUB_WORKSPACE "target\$Target\release"
 if (-not (Test-Path -LiteralPath $destinationRoot -PathType Container)) {

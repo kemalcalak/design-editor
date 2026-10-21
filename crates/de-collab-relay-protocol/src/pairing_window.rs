@@ -61,7 +61,7 @@ const _: () = assert!(DEFAULT_RELAY_WAITING_TIMEOUT_SECS <= MAX_RELAY_WAITING_TI
 /// [`crate::RelayServerStatus`] wire format. A client that does not know the
 /// header ignores it; a relay that does not send it leaves the client on its
 /// compiled-in fallback. Neither end may treat it as required.
-pub const RELAY_WAITING_HEADER_NAME: &str = "openpencil-relay-waiting";
+pub const RELAY_WAITING_HEADER_NAME: &str = "design-editor-relay-waiting";
 
 /// Canonical version tag of the waiting advertisement.
 pub const RELAY_WAITING_HEADER_PREFIX: &str = "oprw1 ";

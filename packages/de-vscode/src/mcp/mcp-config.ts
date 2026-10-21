@@ -38,10 +38,10 @@ export function detectIde(probe: IdeProbe): IdeKind {
 export interface McpAdapter {
   kind: IdeKind;
   configPath(workspaceRoot: string): string;
-  /** Upsert the "openpencil" server entry, preserving everything else. Throws
+  /** Upsert the "design-editor" server entry, preserving everything else. Throws
    *  McpConfigParseError if existingText is present but not valid JSONC. */
   upsert(existingText: string | null, proxyUrl: string): string;
-  /** Remove the "openpencil" server entry, preserving everything else. Returns
+  /** Remove the "design-editor" server entry, preserving everything else. Returns
    *  null if there was nothing to change (no file / entry absent). */
   remove(existingText: string | null): string | null;
   needsReload: boolean;
@@ -53,7 +53,7 @@ const MODIFY_OPTS = {
 
 /** vscode uses `servers` with a typed http entry; the forks use `mcpServers`
  *  with a bare url entry. Fields are set individually so an existing
- *  openpencil entry's other keys are preserved (only url/type are overwritten). */
+ *  design-editor entry's other keys are preserved (only url/type are overwritten). */
 function makeAdapter(
   kind: IdeKind,
   dir: string,
@@ -61,7 +61,7 @@ function makeAdapter(
   fields: (url: string) => Array<[string, unknown]>,
   needsReload: boolean,
 ): McpAdapter {
-  const path = [rootKey, "openpencil"];
+  const path = [rootKey, "design-editor"];
   return {
     kind,
     needsReload,
@@ -81,7 +81,7 @@ function makeAdapter(
       assertValidJsonc(existingText);
       const current = parse(existingText) as Record<string, unknown> | undefined;
       const root = current?.[rootKey] as Record<string, unknown> | undefined;
-      if (!root || !("openpencil" in root)) return null; // nothing to remove
+      if (!root || !("design-editor" in root)) return null; // nothing to remove
       const edits = modify(existingText, path, undefined, MODIFY_OPTS);
       return applyEdits(existingText, edits);
     },

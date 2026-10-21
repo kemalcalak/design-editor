@@ -41,7 +41,7 @@ const BACKOFF_MAX: Duration = Duration::from_secs(8);
 static BUILTIN_HTTP_LAST_REQUEST: OnceLock<Mutex<Option<Instant>>> = OnceLock::new();
 
 pub fn builtin_http_min_gap() -> Duration {
-    std::env::var("OPENPENCIL_BUILTIN_HTTP_MIN_GAP_MS")
+    std::env::var("DESIGN_EDITOR_BUILTIN_HTTP_MIN_GAP_MS")
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
         .map(Duration::from_millis)
@@ -122,7 +122,7 @@ pub fn default_backoff_knobs() -> (u32, Duration) {
 }
 
 /// Append a rejected response's status and body to the file named by
-/// `OPENPENCIL_DEBUG_HTTP_ERROR_BODY`, when it is set.
+/// `DESIGN_EDITOR_DEBUG_HTTP_ERROR_BODY`, when it is set.
 ///
 /// Off by default and never wired into chat, SSE, or stdout: a provider
 /// error body is untrusted and can echo the request's own headers, so it
@@ -132,7 +132,7 @@ pub fn default_backoff_knobs() -> (u32, Duration) {
 /// (measured 2026-09-13: a modify turn died on a 400 whose reason was
 /// unreachable from inside the app).
 async fn dump_error_body(label: &str, status: reqwest::StatusCode, resp: reqwest::Response) {
-    let Ok(path) = std::env::var("OPENPENCIL_DEBUG_HTTP_ERROR_BODY") else {
+    let Ok(path) = std::env::var("DESIGN_EDITOR_DEBUG_HTTP_ERROR_BODY") else {
         return;
     };
     if path.is_empty() {
@@ -346,8 +346,8 @@ mod http_error_dump_tests {
     #[test]
     fn the_dump_is_off_unless_the_env_var_names_a_file() {
         unsafe {
-            std::env::remove_var("OPENPENCIL_DEBUG_HTTP_ERROR_BODY");
+            std::env::remove_var("DESIGN_EDITOR_DEBUG_HTTP_ERROR_BODY");
         }
-        assert!(std::env::var("OPENPENCIL_DEBUG_HTTP_ERROR_BODY").is_err());
+        assert!(std::env::var("DESIGN_EDITOR_DEBUG_HTTP_ERROR_BODY").is_err());
     }
 }

@@ -72,7 +72,7 @@ const DEFAULT_PROFILE: ModelProfile = ModelProfile {
     label: "Unknown model",
 };
 
-/// ACP agents do not expose their backing model to OpenPencil. Treat their
+/// ACP agents do not expose their backing model to Design Editor. Treat their
 /// catalog identity conservatively instead of promoting a missing model id to
 /// the Full-tier default.
 const ACP_PROFILE: ModelProfile = ModelProfile {

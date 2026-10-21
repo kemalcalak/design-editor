@@ -33,7 +33,7 @@ impl NativeCollabJwksFetcher {
             .redirect(redirect::Policy::none())
             .connect_timeout(JWKS_HTTP_TIMEOUT)
             .timeout(JWKS_HTTP_TIMEOUT)
-            .user_agent(concat!("OpenPencil/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("Design Editor/", env!("CARGO_PKG_VERSION")))
             .build()
             .map_err(|_| CollabJwksFetchError::Unavailable)?;
         Ok(Self { client })

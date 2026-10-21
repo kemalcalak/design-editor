@@ -8,7 +8,7 @@
 //!
 //! ## Chat-loop driver — [`pump_indicator`]
 //!
-//! When `OPENPENCIL_DESIGN_AGENT_LOOP` is active and a design turn is
+//! When `DESIGN_EDITOR_DESIGN_AGENT_LOOP` is active and a design turn is
 //! running, this module:
 //! 1. Calls `de_editor_core::agent_indicators::begin()` to start an epoch.
 //! 2. Assigns the single-agent identity via
@@ -208,7 +208,7 @@ pub(super) fn pump_indicator(
 /// `DesignSession` up front while an async classifier picks the route, but
 /// it never sets `state.chat.agents_running`, so [`pump_indicator`]'s lazy
 /// creation gate (`agents_running.0 > 0`) stays closed for that path —
-/// only a `OPENPENCIL_DESIGN_AGENT_LOOP` turn sets `agents_running`, and
+/// only a `DESIGN_EDITOR_DESIGN_AGENT_LOOP` turn sets `agents_running`, and
 /// that turn never populates `current_design`.
 pub(super) fn pump_design_session_indicator(
     indicator: &mut Option<DesignLoopIndicator>,

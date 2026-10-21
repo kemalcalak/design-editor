@@ -1,6 +1,6 @@
 //! Agent-settings modal state for `EditorState`.
 //!
-//! Faithful copy of `openpencil-shell-core::agent_settings_state` —
+//! Faithful copy of `design-editor-shell-core::agent_settings_state` —
 //! the state types for the multi-section settings modal opened by
 //! `Cmd+,`. These are plain data types (enums + a `Copy` struct of
 //! primitives), no widget or platform coupling, so they move cleanly
@@ -288,7 +288,7 @@ pub struct AgentSettings {
     /// CLI config (e.g. Zode's `~/.zode/config.json`). Runtime-only —
     /// NOT persisted. These agents are re-derived from their source file
     /// on every launch, so persisting them would silently duplicate the
-    /// source's API keys into OpenPencil's own settings.json; the host's
+    /// source's API keys into Design Editor's own settings.json; the host's
     /// save path skips any agent whose id is in this set.
     pub imported_agent_ids: BTreeSet<String>,
     pub acp_agents: Vec<AcpAgentConfig>,

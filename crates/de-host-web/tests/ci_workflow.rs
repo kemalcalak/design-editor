@@ -83,7 +83,7 @@ fn release_workflow_notarizes_macos_app_before_packaging_dmg() {
         .expect("release workflow should notarize the final DMG artifact");
     assert!(
         notarize < package,
-        "release workflow should notarize and staple OpenPencil.app before creating the DMG"
+        "release workflow should notarize and staple Design Editor.app before creating the DMG"
     );
     assert!(
         package < notarize_dmg,
@@ -94,11 +94,11 @@ fn release_workflow_notarizes_macos_app_before_packaging_dmg() {
         "release workflow should submit a zipped .app bundle to Apple notarytool"
     );
     assert!(
-        workflow.contains("ditto \"$APP\" \"$STAGE/OpenPencil.app\""),
+        workflow.contains("ditto \"$APP\" \"$STAGE/Design Editor.app\""),
         "release workflow should preserve stapled app metadata when staging the DMG"
     );
     assert!(
-        workflow.contains("xcrun stapler validate \"$STAGE/OpenPencil.app\""),
+        workflow.contains("xcrun stapler validate \"$STAGE/Design Editor.app\""),
         "release workflow should validate the staged app before creating the DMG"
     );
     assert!(
@@ -134,7 +134,7 @@ fn release_workflow_notarizes_macos_app_before_packaging_dmg() {
         "final DMG notarization failures should block the release"
     );
     assert!(
-        !workflow.contains("cp -R \"$APP\" \"$STAGE/OpenPencil.app\""),
+        !workflow.contains("cp -R \"$APP\" \"$STAGE/Design Editor.app\""),
         "workflow should not use cp -R for the stapled app bundle because it can lose notarization metadata"
     );
     assert!(
@@ -157,7 +157,7 @@ fn release_workflow_does_not_publish_unsigned_macos_desktop_tarball() {
     );
     assert!(
         workflow.contains("tar czf ../../../de-cli-${{ matrix.label }}.tar.gz op"),
-        "macOS and Linux release artifacts should keep publishing standalone op CLI archives"
+        "macOS and Linux release artifacts should keep publishing standalone de CLI archives"
     );
 
     let macos_block_start = workflow
@@ -195,12 +195,12 @@ fn macos_bundle_signing_uses_hardened_runtime_for_developer_id() {
     );
     assert!(
         script.contains("sign_macos_code \"$APP/Contents/MacOS/op\""),
-        "bundle script should sign the embedded op CLI before signing the bundle"
+        "bundle script should sign the embedded de CLI before signing the bundle"
     );
 
     let sign_cli = script
         .find("sign_macos_code \"$APP/Contents/MacOS/op\"")
-        .expect("bundle script signs embedded op CLI");
+        .expect("bundle script signs embedded de CLI");
     let sign_main = script
         .find("sign_macos_code \"$APP/Contents/MacOS/design-editor\"")
         .expect("bundle script signs the main app executable");
@@ -352,7 +352,7 @@ fn windows_nsis_installer_services_vc_runtime_fail_closed() {
     assert!(
         installer.contains("ExecWait")
             && installer.contains("/install /passive /norestart")
-            && installer.contains("OpenPencil-vc-redist-${ARCH}.log"),
+            && installer.contains("Design-Editor-vc-redist-${ARCH}.log"),
         "NSIS must invoke the Microsoft Runtime installer non-interactively and retain its log"
     );
     assert!(
@@ -367,7 +367,7 @@ fn windows_nsis_installer_services_vc_runtime_fail_closed() {
                 .matches("Abort \"Microsoft Visual C++ Redistributable")
                 .count()
                 == 3,
-        "a failed Runtime install or post-install version check must abort OpenPencil installation"
+        "a failed Runtime install or post-install version check must abort Design Editor installation"
     );
 }
 
@@ -476,7 +476,7 @@ fn release_workflow_distinguishes_published_npm_packages_from_check_failures() {
 }
 
 #[test]
-fn release_workflow_downloads_only_openpencil_release_artifacts() {
+fn release_workflow_downloads_only_design_editor_release_artifacts() {
     let workflow = std::fs::read_to_string(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../.github/workflows/rust-release.yml"
@@ -484,7 +484,7 @@ fn release_workflow_downloads_only_openpencil_release_artifacts() {
     .expect("rust-release workflow is readable");
 
     assert!(
-        workflow.contains("pattern: openpencil-*"),
+        workflow.contains("pattern: design-editor-*"),
         "release workflow should not download Docker build metadata artifacts into release assets"
     );
 }
@@ -607,7 +607,7 @@ fn web_rust_publish_has_docker_and_start_script_entrypoints() {
         "start script should publish through de-host-web-server --serve-web"
     );
     assert!(
-        start_script.contains("OPENPENCIL_WEB_BUNDLE_DIR"),
+        start_script.contains("DESIGN_EDITOR_WEB_BUNDLE_DIR"),
         "start script should point the daemon at the built web bundle explicitly"
     );
 }
@@ -658,8 +658,8 @@ fn ios_app_store_workflow_is_reusable_and_supports_exact_source_retries() {
     assert!(
         workflow.contains(
             "      APPLE_TEAM_ID:\n        description: Apple Developer team identifier\n        required: true",
-        ) && workflow.contains("      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN:")
-            && workflow.contains("      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:")
+        ) && workflow.contains("      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN:")
+            && workflow.contains("      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:")
             && workflow.contains(
                 "      IOS_DISTRIBUTION_CERTIFICATE_BASE64:\n        description: Apple Distribution PKCS12 certificate\n        required: false",
             )
@@ -668,8 +668,8 @@ fn ios_app_store_workflow_is_reusable_and_supports_exact_source_retries() {
     );
     assert!(
         workflow.contains("ref: ${{ inputs.release_sha }}")
-            && workflow.contains("OPENPENCIL_RELEASE_SHA: ${{ inputs.release_sha }}")
-            && workflow.contains("OPENPENCIL_RELEASE_REF: ${{ inputs.release_ref }}")
+            && workflow.contains("DESIGN_EDITOR_RELEASE_SHA: ${{ inputs.release_sha }}")
+            && workflow.contains("DESIGN_EDITOR_RELEASE_REF: ${{ inputs.release_ref }}")
             && !workflow.contains("auth_artifact_sha")
             && !workflow.contains(".op-auth-artifact"),
         "called and manual runs must build the explicit exact source without an Auth overlay"
@@ -689,7 +689,7 @@ fn ios_app_store_workflow_is_reusable_and_supports_exact_source_retries() {
     );
     assert!(
         workflow
-            .contains("OPENPENCIL_CANONICAL_REMOTE: https://github.com/ZSeven-W/openpencil.git")
+            .contains("DESIGN_EDITOR_CANONICAL_REMOTE: https://github.com/kemalcalak/design-editor.git")
             && workflow.contains("tools/check-op-auth-remote-ref.sh --self-test")
             && remote_ref_gate.contains("$release_ref^{}")
             && remote_ref_gate
@@ -709,7 +709,7 @@ fn ios_app_store_workflow_is_reusable_and_supports_exact_source_retries() {
             && publisher.contains("^[1-9][0-9]{0,3}\\.([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$",)
             && publisher
                 .contains("iOS build number must use conservative 4.2.2 numeric components")
-            && workflow.contains("group: ios-app-store-tech-zseven-openpencil")
+            && workflow.contains("group: ios-app-store-com-kemalcalak-designeditor")
             && workflow.contains("cancel-in-progress: false")
             && !workflow.contains("GITHUB_RUN_NUMBER")
             && !workflow.contains("GITHUB_RUN_ID"),
@@ -778,8 +778,8 @@ fn formal_release_calls_mobile_distribution_lanes_without_coupling_ios_failure()
     assert!(
         release
             .contains("run: tools/flatten-release-artifacts.sh dist release-files \"$OP_VERSION\"",)
-            && flattener.contains("expected_apk=\"OpenPencil-${version}-android.apk\"")
-            && flattener.contains("expected_aab=\"OpenPencil-${version}-android.aab\"")
+            && flattener.contains("expected_apk=\"Design-Editor-${version}-android.apk\"")
+            && flattener.contains("expected_aab=\"Design-Editor-${version}-android.aab\"")
             && flattener.contains("sha256sum --check SHA256SUMS.android.txt"),
         "GitHub Release must flatten and verify the exact signed Android APK/AAB handoff"
     );
@@ -788,7 +788,7 @@ fn formal_release_calls_mobile_distribution_lanes_without_coupling_ios_failure()
             && !android.contains("workflow_dispatch:")
             && !android.contains("push:\n    tags:")
             && android.contains("environment: release-production")
-            && android.contains("name: openpencil-android-${{ needs.verify.outputs.version }}")
+            && android.contains("name: design-editor-android-${{ needs.verify.outputs.version }}")
             && android.contains("*.apk")
             && android.contains("*.aab")
             && android.contains("does not upload to an app store")

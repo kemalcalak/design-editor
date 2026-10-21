@@ -1,7 +1,7 @@
 //! Native persistence for user-saved Prompt Center entries.
 //!
 //! The editor core owns the in-memory state and dirty bit. This module is
-//! the desktop-only bridge to `~/.openpencil`, keeping filesystem access out
+//! the desktop-only bridge to `~/.design-editor`, keeping filesystem access out
 //! of the wasm-clean editor crates.
 
 use de_config_store::ConfigStore;
@@ -97,7 +97,7 @@ mod tests {
         fn new(label: &str) -> Self {
             let serial = NEXT_SCRATCH.fetch_add(1, Ordering::Relaxed);
             let root = std::env::temp_dir().join(format!(
-                "openpencil-prompt-center-{label}-{}-{serial}",
+                "design-editor-prompt-center-{label}-{}-{serial}",
                 std::process::id()
             ));
             Self {

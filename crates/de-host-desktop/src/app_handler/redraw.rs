@@ -132,7 +132,7 @@ impl DesktopApp {
             self.redraw_dirty = true;
         }
         // Update design-loop canvas indicators (frame glows + N/M
-        // header) while an OPENPENCIL_DESIGN_AGENT_LOOP turn runs.
+        // header) while an DESIGN_EDITOR_DESIGN_AGENT_LOOP turn runs.
         crate::design_loop_indicator::pump_indicator(
             &mut self.design_loop_indicator,
             &self.current_chat,

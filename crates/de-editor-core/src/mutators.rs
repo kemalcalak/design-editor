@@ -1,5 +1,5 @@
 //! `impl EditorState` editor mutators — ported from
-//! `openpencil-shell-core::document`'s `impl Document`, retargeted
+//! `design-editor-shell-core::document`'s `impl Document`, retargeted
 //! onto the canonical `jian_ops_schema::PenDocument`.
 //!
 //! ## Page model

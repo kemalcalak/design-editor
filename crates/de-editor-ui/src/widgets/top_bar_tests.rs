@@ -18,7 +18,7 @@ fn title_test_width(text: &str, size: f32) -> f32 {
 
 #[test]
 fn long_file_name_middle_elides_and_preserves_extension() {
-    let input = "openpencil-memory-repro (1).op";
+    let input = "design-editor-memory-repro (1).op";
     let output = elide_filename_to_width(input, 92.0, |text| title_test_width(text, 13.0));
 
     assert_ne!(output, input);
@@ -32,7 +32,7 @@ fn long_file_name_middle_elides_and_preserves_extension() {
 
 #[test]
 fn long_dirty_title_stays_between_left_and_right_controls() {
-    let mut bar = TopBar::new("openpencil-memory-repro (1).op");
+    let mut bar = TopBar::new("design-editor-memory-repro (1).op");
     bar.edited = true;
     bar.label_edited = "— 已编辑";
     bar.agent_count = 0;
@@ -91,7 +91,8 @@ fn title_group_stays_at_window_center_for_short_and_long_names() {
         bar
     };
     let short = make_bar("test.op");
-    let long = make_bar("openpencil-super-long-project-file-name-for-title-overflow-check (1).op");
+    let long =
+        make_bar("design-editor-super-long-project-file-name-for-title-overflow-check (1).op");
     let rect = Rect {
         origin: Point2D::new(37.0, 0.0),
         size: Point2D::new(1_400.0, TOP_BAR_HEIGHT),
@@ -175,7 +176,7 @@ fn measured_git_hit_tracks_the_painted_centered_group() {
 
 #[test]
 fn narrow_dirty_title_drops_git_before_filename_extension_or_status() {
-    let mut bar = TopBar::new("openpencil-memory-repro (1).op");
+    let mut bar = TopBar::new("design-editor-memory-repro (1).op");
     bar.edited = true;
     bar.label_edited = "— 已编辑";
     bar.agent_count = 0;

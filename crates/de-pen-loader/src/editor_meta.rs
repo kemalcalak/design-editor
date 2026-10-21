@@ -1,4 +1,4 @@
-//! Allocation-bounded reader for OpenPencil's top-level `editorMeta` extension.
+//! Allocation-bounded reader for Design Editor's top-level `editorMeta` extension.
 //!
 //! The canonical schema intentionally ignores this editor-only object, so
 //! hosts must read it before constructing an [`de_editor_core::EditorState`].

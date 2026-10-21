@@ -12,7 +12,7 @@ use zeroize::{Zeroize, Zeroizing};
 use crate::os_key_store::CredentialEntry;
 use crate::KeyStoreError;
 
-const TARGET_NAME: &str = "OpenPencil.Collaboration.device-noise-x25519-v1";
+const TARGET_NAME: &str = "Design Editor.Collaboration.device-noise-x25519-v1";
 const USER_NAME: &str = "device-noise-x25519-v1";
 
 pub(crate) struct WindowsCredentialEntry;

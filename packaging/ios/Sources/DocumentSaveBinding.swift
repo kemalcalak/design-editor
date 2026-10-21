@@ -45,12 +45,12 @@ enum DocumentSaveBinding {
                 relativeTo: nil
             )
             guard data.count <= maximumHandleBytes else {
-                NSLog("OpenPencil save bookmark is too large (%d bytes)", data.count)
+                NSLog("Design Editor save bookmark is too large (%d bytes)", data.count)
                 return nil
             }
             return data.base64EncodedString()
         } catch {
-            NSLog("OpenPencil could not bookmark the save destination: %@", error.localizedDescription)
+            NSLog("Design Editor could not bookmark the save destination: %@", error.localizedDescription)
             return nil
         }
     }
@@ -74,7 +74,7 @@ enum DocumentSaveBinding {
             )
         } catch {
             NSLog(
-                "OpenPencil could not resolve the bound save destination: %@",
+                "Design Editor could not resolve the bound save destination: %@",
                 error.localizedDescription
             )
             return nil

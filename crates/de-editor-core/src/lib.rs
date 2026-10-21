@@ -1,4 +1,4 @@
-//! OpenPencil editor core.
+//! Design Editor editor core.
 //!
 //! Owns the editor's runtime state — `EditorState` — built on the
 //! canonical `.op` document model (`jian_ops_schema::PenDocument`).

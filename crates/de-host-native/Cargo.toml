@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil native host — winit + skia-safe + accesskit backend, integrating jian-skia + jian-host-desktop sub-pieces (spec v19 §3 / §5.2.1)"
+description = "Design Editor native host — winit + skia-safe + accesskit backend, integrating jian-skia + jian-host-desktop sub-pieces (spec v19 §3 / §5.2.1)"
 
 [lib]
 name = "de_host_native"
@@ -74,7 +74,7 @@ required-features = ["gl-host"]
 # Feature flag: gl-host enables auto-wire via de-orchestrator (desktop-only).
 de-preview-core = { path = "../de-preview-core" }
 
-# Phase 7.3 reorg: openpencil-shell-core dissolved — widget facade /
+# Phase 7.3 reorg: design-editor-shell-core dissolved — widget facade /
 # theme / layout scene / scene vars / render-backend / gesture types
 # all resolve through the de-editor-ui crate.
 de-editor-ui = { path = "../de-editor-ui" }

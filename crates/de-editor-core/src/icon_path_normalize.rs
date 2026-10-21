@@ -16,7 +16,7 @@ const MAX_ICON_DIMENSION: f64 = 40.0;
 /// A path filling at least this fraction of its own box on both axes is
 /// already in local px and is left alone.
 const ALREADY_FITS_RATIO: f64 = 0.85;
-const REFIT_MARKER: &str = "openpencil:icon-path-refit";
+const REFIT_MARKER: &str = "design-editor:icon-path-refit";
 
 /// Counts the two possible normalizations made by [`normalize_icon_paths`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

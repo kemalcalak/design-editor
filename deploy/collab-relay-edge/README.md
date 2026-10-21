@@ -1,4 +1,4 @@
-# OpenPencil Global ingress to CN home relay
+# Design Editor Global ingress to CN home relay
 
 This directory provides a production-oriented, nested-TLS deployment scaffold
 for overseas users connecting to a China home collaboration relay.
@@ -46,7 +46,7 @@ Independent relay replicas do not share pairing state; arbitrary fallback can
 send owner and guest to different tables.
 
 The CN federation port is not a public WSS endpoint. Bind it to a private
-address with `OPENPENCIL_RELAY_CN_FEDERATION_BIND_IP`, firewall it to approved
+address with `DESIGN_EDITOR_RELAY_CN_FEDERATION_BIND_IP`, firewall it to approved
 Global egress addresses, and require the dedicated Global edge client CA plus
 its current CRL. Outer mTLS authenticates the backhaul hop but never replaces
 the signed locator, bearer ticket, ticket-to-DH binding, per-connection
@@ -103,21 +103,21 @@ exists. Before starting the edge, install and independently verify the exact
 per-source initial-SYN meter:
 
 ```sh
-export OPENPENCIL_RELAY_EDGE_PUBLIC_BIND_IP='<real-dedicated-public-ipv4>'
+export DESIGN_EDITOR_RELAY_EDGE_PUBLIC_BIND_IP='<real-dedicated-public-ipv4>'
 sudo deploy/collab-relay-edge/install-global-new-connection-rate.sh \
-  "$OPENPENCIL_RELAY_EDGE_PUBLIC_BIND_IP"
+  "$DESIGN_EDITOR_RELAY_EDGE_PUBLIC_BIND_IP"
 sudo deploy/collab-relay-edge/verify-global-new-connection-rate.sh \
-  "$OPENPENCIL_RELAY_EDGE_PUBLIC_BIND_IP"
+  "$DESIGN_EDITOR_RELAY_EDGE_PUBLIC_BIND_IP"
 ```
 
 The installer accepts only a canonical globally routable IPv4, generates one
 fixed nftables transaction in a root-owned temporary file, and verifies the
 kernel JSON model. It never executes caller-supplied rules. The data relay
-uses `openpencil_relay_edge_rate`; the locator uses a separate table.
+uses `design_editor_relay_edge_rate`; the locator uses a separate table.
 
 Persist the table through the host nftables service and restore it before
 Docker. Global Compose deliberately has `restart: "no"`. Install the reviewed
-`openpencil-collab-relay-global.service.example` after replacing its immutable
+`design-editor-collab-relay-global.service.example` after replacing its immutable
 release path; it orders nftables before Docker, then reinstalls and verifies
 the table before every initial start or crash restart. Direct
 `docker compose up` for Global is not a production path.
@@ -125,15 +125,15 @@ the table before every initial start or crash restart. Direct
 ## Deploy Global
 
 ```sh
-export OPENPENCIL_RELAY_EDGE_IMAGE_REPOSITORY='registry.example/nginx-unprivileged'
-export OPENPENCIL_RELAY_EDGE_IMAGE_SHA256='<reviewed-64-lowercase-hex-digest>'
-export OPENPENCIL_RELAY_EDGE_PUBLIC_BIND_IP='<real-dedicated-public-ipv4>'
-export OPENPENCIL_RELAY_EDGE_CLIENT_CERT=/secure/global/cn-client.pem
-export OPENPENCIL_RELAY_EDGE_CLIENT_KEY=/secure/global/cn-client-key.pem
-export OPENPENCIL_RELAY_CN_FEDERATION_CA=/secure/global/cn-federation-ca.pem
-export OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM=10.0.8.12:9443
-export OPENPENCIL_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM=10.0.8.13:8444
-export OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME=relay-federation.collab.your-company.cn
+export DESIGN_EDITOR_RELAY_EDGE_IMAGE_REPOSITORY='registry.example/nginx-unprivileged'
+export DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256='<reviewed-64-lowercase-hex-digest>'
+export DESIGN_EDITOR_RELAY_EDGE_PUBLIC_BIND_IP='<real-dedicated-public-ipv4>'
+export DESIGN_EDITOR_RELAY_EDGE_CLIENT_CERT=/secure/global/cn-client.pem
+export DESIGN_EDITOR_RELAY_EDGE_CLIENT_KEY=/secure/global/cn-client-key.pem
+export DESIGN_EDITOR_RELAY_CN_FEDERATION_CA=/secure/global/cn-federation-ca.pem
+export DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM=10.0.8.12:9443
+export DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM=10.0.8.13:8444
+export DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME=relay-federation.collab.your-company.cn
 
 deploy/collab-relay-edge/deploy-global.sh
 ```
@@ -144,13 +144,13 @@ the foreground for supervision.
 ## Deploy the private CN federation listener
 
 ```sh
-export OPENPENCIL_RELAY_EDGE_IMAGE_REPOSITORY='registry.example/nginx-unprivileged'
-export OPENPENCIL_RELAY_EDGE_IMAGE_SHA256='<reviewed-64-lowercase-hex-digest>'
-export OPENPENCIL_RELAY_CN_FEDERATION_BIND_IP=10.0.8.12
-export OPENPENCIL_RELAY_CN_FEDERATION_CERT=/secure/cn/federation-server.pem
-export OPENPENCIL_RELAY_CN_FEDERATION_KEY=/secure/cn/federation-server-key.pem
-export OPENPENCIL_RELAY_EDGE_CLIENT_CA=/secure/cn/global-edge-client-ca.pem
-export OPENPENCIL_RELAY_EDGE_CLIENT_CRL=/secure/cn/global-edge-client-crl.pem
+export DESIGN_EDITOR_RELAY_EDGE_IMAGE_REPOSITORY='registry.example/nginx-unprivileged'
+export DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256='<reviewed-64-lowercase-hex-digest>'
+export DESIGN_EDITOR_RELAY_CN_FEDERATION_BIND_IP=10.0.8.12
+export DESIGN_EDITOR_RELAY_CN_FEDERATION_CERT=/secure/cn/federation-server.pem
+export DESIGN_EDITOR_RELAY_CN_FEDERATION_KEY=/secure/cn/federation-server-key.pem
+export DESIGN_EDITOR_RELAY_EDGE_CLIENT_CA=/secure/cn/global-edge-client-ca.pem
+export DESIGN_EDITOR_RELAY_EDGE_CLIENT_CRL=/secure/cn/global-edge-client-crl.pem
 
 docker compose \
   -f deploy/collab-relay-edge/compose.cn.yaml \
@@ -173,16 +173,16 @@ certificate serial. Load the same deployment environment used for the CN
 federation service (or its protected `.env` file), including:
 
 ```sh
-export OPENPENCIL_RELAY_EDGE_IMAGE_REPOSITORY='registry.example/nginx-unprivileged'
-export OPENPENCIL_RELAY_EDGE_IMAGE_SHA256='<reviewed-64-lowercase-hex-digest>'
-export OPENPENCIL_RELAY_CN_FEDERATION_BIND_IP=10.0.8.12
-export OPENPENCIL_RELAY_CN_FEDERATION_CERT=/secure/cn/federation-server.pem
-export OPENPENCIL_RELAY_CN_FEDERATION_KEY=/secure/cn/federation-server-key.pem
-export OPENPENCIL_RELAY_EDGE_CLIENT_CRL=/secure/cn/global-edge-client-crl.pem
-export OPENPENCIL_RELAY_EDGE_CLIENT_CA=/secure/cn/global-edge-client-ca.pem
-export OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM=10.0.8.12:9443
-export OPENPENCIL_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM=10.0.8.13:8444
-export OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME=relay-federation.collab.your-company.cn
+export DESIGN_EDITOR_RELAY_EDGE_IMAGE_REPOSITORY='registry.example/nginx-unprivileged'
+export DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256='<reviewed-64-lowercase-hex-digest>'
+export DESIGN_EDITOR_RELAY_CN_FEDERATION_BIND_IP=10.0.8.12
+export DESIGN_EDITOR_RELAY_CN_FEDERATION_CERT=/secure/cn/federation-server.pem
+export DESIGN_EDITOR_RELAY_CN_FEDERATION_KEY=/secure/cn/federation-server-key.pem
+export DESIGN_EDITOR_RELAY_EDGE_CLIENT_CRL=/secure/cn/global-edge-client-crl.pem
+export DESIGN_EDITOR_RELAY_EDGE_CLIENT_CA=/secure/cn/global-edge-client-ca.pem
+export DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM=10.0.8.12:9443
+export DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM=10.0.8.13:8444
+export DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME=relay-federation.collab.your-company.cn
 bash deploy/collab-relay-edge/rotate-cn-crl.sh \
   /secure/cn/global-edge-client-crl.next.pem \
   /secure/cn/revoked-global-edge-client-cert.pem
@@ -231,8 +231,8 @@ or untrusted clients can spoof source addresses.
 ## Acceptance checks
 
 1. Run the scaffold validator, then replace the static targets/name, set the
-   three `OPENPENCIL_RELAY_EDGE_EXPECTED_*` values, and rerun with
-   `OPENPENCIL_RELAY_EDGE_VALIDATION_MODE=production`.
+   three `DESIGN_EDITOR_RELAY_EDGE_EXPECTED_*` values, and rerun with
+   `DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE=production`.
 2. The exact nftables table names the Compose IPv4, rejects a single-source
    connection churn test, and is active before the supervised service after a
    reboot.

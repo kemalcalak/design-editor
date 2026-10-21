@@ -25,8 +25,8 @@ use de_editor_core::UpdateStatus;
 /// GitHub publish target — mirrors the TS app's `constants.ts`
 /// (`GITHUB_OWNER` / `GITHUB_REPO`), the same repo `electron-updater`
 /// reads releases from.
-const GITHUB_OWNER: &str = "ZSeven-W";
-const GITHUB_REPO: &str = "openpencil";
+const GITHUB_OWNER: &str = "kemalcalak";
+const GITHUB_REPO: &str = "design-editor";
 
 /// Releases page a found-update notice opens in the browser.
 pub fn releases_url() -> String {
@@ -252,9 +252,9 @@ fn asset_name_for(os: &str, arch: &str, version: &str) -> Option<String> {
         _ => return None,
     };
     Some(match os {
-        "macos" => format!("OpenPencil-{version}-{arch}-mac.dmg"),
-        "windows" => format!("OpenPencil-{version}-{arch}-win-setup.exe"),
-        "linux" => format!("OpenPencil-{version}-{arch}-linux.AppImage"),
+        "macos" => format!("Design-Editor-{version}-{arch}-mac.dmg"),
+        "windows" => format!("Design-Editor-{version}-{arch}-win-setup.exe"),
+        "linux" => format!("Design-Editor-{version}-{arch}-linux.AppImage"),
         _ => return None,
     })
 }
@@ -384,7 +384,7 @@ mod tests {
     /// Shaped like the live feed: a repository-level `<id>` comes first and
     /// must not be mistaken for a release.
     const ATOM_FEED: &str = concat!(
-        "<feed><id>tag:github.com,2008:https://github.com/ZSeven-W/openpencil/releases</id>",
+        "<feed><id>tag:github.com,2008:https://github.com/kemalcalak/design-editor/releases</id>",
         "<entry><id>tag:github.com,2008:Repository/1159938129/v0.8.3</id></entry>",
         "<entry><id>tag:github.com,2008:Repository/1159938129/v0.8.2</id></entry></feed>",
     );
@@ -458,7 +458,7 @@ mod tests {
     fn releases_api_uses_list_endpoint_so_prereleases_are_visible() {
         assert_eq!(
             latest_release_api(),
-            "https://api.github.com/repos/ZSeven-W/openpencil/releases?per_page=20"
+            "https://api.github.com/repos/kemalcalak/design-editor/releases?per_page=20"
         );
     }
 
@@ -489,7 +489,7 @@ mod tests {
     fn releases_url_points_at_the_publish_repo() {
         assert_eq!(
             releases_url(),
-            "https://github.com/ZSeven-W/openpencil/releases"
+            "https://github.com/kemalcalak/design-editor/releases"
         );
     }
 
@@ -519,15 +519,15 @@ mod installer_asset_tests {
     fn asset_names_cover_the_release_matrix() {
         assert_eq!(
             asset_name_for("macos", "aarch64", "0.9.0").as_deref(),
-            Some("OpenPencil-0.9.0-arm64-mac.dmg")
+            Some("Design-Editor-0.9.0-arm64-mac.dmg")
         );
         assert_eq!(
             asset_name_for("windows", "x86_64", "0.9.0").as_deref(),
-            Some("OpenPencil-0.9.0-x64-win-setup.exe")
+            Some("Design-Editor-0.9.0-x64-win-setup.exe")
         );
         assert_eq!(
             asset_name_for("linux", "aarch64", "0.9.0").as_deref(),
-            Some("OpenPencil-0.9.0-arm64-linux.AppImage")
+            Some("Design-Editor-0.9.0-arm64-linux.AppImage")
         );
         assert_eq!(asset_name_for("freebsd", "x86_64", "0.9.0"), None);
         assert_eq!(asset_name_for("macos", "riscv64", "0.9.0"), None);

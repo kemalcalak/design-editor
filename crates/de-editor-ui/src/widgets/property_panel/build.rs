@@ -2,7 +2,7 @@
 //! extraction wiring, and the `EditorState` → panel-field copy.
 //!
 //! Split out of `property_panel.rs` to keep both files under the
-//! openpencil 800-line cap.
+//! design-editor 800-line cap.
 
 use super::{NodeSnapshot, PropertyPanel};
 use crate::layout_scene::{SceneStroke, SceneStrokeAlign};

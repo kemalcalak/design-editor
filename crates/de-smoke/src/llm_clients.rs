@@ -5,7 +5,7 @@
 //!
 //! - [`SmokeLlmClient`] — the default path, `agent`'s `QueryEngine` over an
 //!   `AnthropicProvider` / `OpenAiCompatProvider`.
-//! - [`DirectOpenAiClient`] — `OPENPENCIL_SMOKE_DIRECT=1`, a plain
+//! - [`DirectOpenAiClient`] — `DESIGN_EDITOR_SMOKE_DIRECT=1`, a plain
 //!   non-streaming openai-compat POST that can send the provider-specific
 //!   reasoning controls the QueryEngine cannot.
 
@@ -30,16 +30,16 @@ use futures::StreamExt;
 /// arms on the same flag — they never pick a wire shape themselves, so a model
 /// that rejects the `thinking` field cannot be sent one by way of an override.
 ///
-/// - `OPENPENCIL_SMOKE_DISABLE_THINKING=1` asks for reduction even when the
+/// - `DESIGN_EDITOR_SMOKE_DISABLE_THINKING=1` asks for reduction even when the
 ///   profile does not (benchmarking a 方舟-hosted reasoning model clean).
-/// - `OPENPENCIL_SMOKE_KEEP_THINKING=1` wins over both: ab-v9 showed
+/// - `DESIGN_EDITOR_SMOKE_KEEP_THINKING=1` wins over both: ab-v9 showed
 ///   M3-nothink emits lazy minimal manifests, so the with-think arm has to be
 ///   benchmarkable (`strip_reasoning` handles the `<think>` blocks).
 pub(crate) fn reduce_reasoning_for_smoke(model: &str) -> bool {
     reduce_reasoning(
         model,
-        std::env::var("OPENPENCIL_SMOKE_DISABLE_THINKING").is_ok(),
-        std::env::var("OPENPENCIL_SMOKE_KEEP_THINKING").is_ok(),
+        std::env::var("DESIGN_EDITOR_SMOKE_DISABLE_THINKING").is_ok(),
+        std::env::var("DESIGN_EDITOR_SMOKE_KEEP_THINKING").is_ok(),
     )
 }
 
@@ -93,8 +93,8 @@ impl LlmClient for SmokeLlmClient {
             // ——它先吐 <think>(常 ~3.5k token)再给 JSON,4096 会在答案前截断。
             // 生产路径(chat_provider_llm)用 8192 且关思考;benchmark 走 QueryEngine
             // 无法关思考,故给更宽预算让其 think 完还能产出 JSON。可用
-            // OPENPENCIL_SMOKE_MAX_TOKENS 覆盖。
-            let max_tokens = std::env::var("OPENPENCIL_SMOKE_MAX_TOKENS")
+            // DESIGN_EDITOR_SMOKE_MAX_TOKENS 覆盖。
+            let max_tokens = std::env::var("DESIGN_EDITOR_SMOKE_MAX_TOKENS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(16384);
@@ -115,8 +115,8 @@ impl LlmClient for SmokeLlmClient {
             };
             let mut stream = stream;
             // Optional raw-response capture for diagnosing weak-model
-            // JSON malformations (set OPENPENCIL_SMOKE_DUMP=1).
-            let dump = std::env::var("OPENPENCIL_SMOKE_DUMP").is_ok();
+            // JSON malformations (set DESIGN_EDITOR_SMOKE_DUMP=1).
+            let dump = std::env::var("DESIGN_EDITOR_SMOKE_DUMP").is_ok();
             let mut full = String::new();
             while let Some(item) = stream.next().await {
                 let sent = match item {
@@ -162,7 +162,7 @@ impl LlmClient for SmokeLlmClient {
     }
 }
 
-/// Direct openai-compat `LlmClient` for the harness (OPENPENCIL_SMOKE_DIRECT=1).
+/// Direct openai-compat `LlmClient` for the harness (DESIGN_EDITOR_SMOKE_DIRECT=1).
 ///
 /// The default [`SmokeLlmClient`] goes through the vendored `agent` QueryEngine,
 /// which can't send the provider-specific reasoning controls — so a reasoning
@@ -198,11 +198,11 @@ impl LlmClient for DirectOpenAiClient {
             .unwrap_or_else(|| self.default_model.clone());
         let system = req.system_prompt.clone();
         let user = req.user_prompt.clone();
-        let max_tokens: u32 = std::env::var("OPENPENCIL_SMOKE_MAX_TOKENS")
+        let max_tokens: u32 = std::env::var("DESIGN_EDITOR_SMOKE_MAX_TOKENS")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(16384);
-        let dump = std::env::var("OPENPENCIL_SMOKE_DUMP").is_ok();
+        let dump = std::env::var("DESIGN_EDITOR_SMOKE_DUMP").is_ok();
         eprintln!(
             "[LLM] direct call: model={model} system_len={} user_len={}",
             system.len(),
@@ -218,10 +218,10 @@ impl LlmClient for DirectOpenAiClient {
                     { "role": "user", "content": user },
                 ],
             });
-            // Optional temperature override: read OPENPENCIL_LLM_TEMPERATURE
+            // Optional temperature override: read DESIGN_EDITOR_LLM_TEMPERATURE
             // (f32 in range 0.0..=2.0). If set and valid, add to body; else
             // omit (preserve provider default).
-            if let Ok(temp_str) = std::env::var("OPENPENCIL_LLM_TEMPERATURE") {
+            if let Ok(temp_str) = std::env::var("DESIGN_EDITOR_LLM_TEMPERATURE") {
                 if let Ok(temp) = temp_str.parse::<f32>() {
                     if (0.0..=2.0).contains(&temp) {
                         body["temperature"] = serde_json::json!(temp);
@@ -275,7 +275,7 @@ impl LlmClient for DirectOpenAiClient {
             // production's own ladder (same throttle, same adaptive gap, same
             // Retry-After handling); the harness differs only in that the
             // provider's error body stays reachable via the opt-in
-            // `OPENPENCIL_DEBUG_HTTP_ERROR_BODY` file.
+            // `DESIGN_EDITOR_DEBUG_HTTP_ERROR_BODY` file.
             let call = async {
                 let resp = send_with_backoff(
                     "smoke direct",
@@ -349,9 +349,9 @@ impl LlmClient for DirectOpenAiClient {
 ///
 /// Defaults to production's ladder ([`BUILTIN_HTTP_MAX_RETRIES`]); a batch
 /// against a heavily shared free pool raises it with
-/// `OPENPENCIL_SMOKE_HTTP_MAX_RETRIES`.
+/// `DESIGN_EDITOR_SMOKE_HTTP_MAX_RETRIES`.
 fn smoke_http_max_retries() -> u32 {
-    std::env::var("OPENPENCIL_SMOKE_HTTP_MAX_RETRIES")
+    std::env::var("DESIGN_EDITOR_SMOKE_HTTP_MAX_RETRIES")
         .ok()
         .and_then(|raw| raw.trim().parse::<u32>().ok())
         .unwrap_or(BUILTIN_HTTP_MAX_RETRIES)
@@ -367,10 +367,10 @@ fn retry_ladder_budget(max_retries: u32) -> std::time::Duration {
 }
 
 /// Whole-call budget for the non-streaming provider path: 15 min scaled by
-/// the model profile's timeout multiplier, or `OPENPENCIL_SMOKE_LLM_TOTAL_BUDGET_SECS`
+/// the model profile's timeout multiplier, or `DESIGN_EDITOR_SMOKE_LLM_TOTAL_BUDGET_SECS`
 /// when set (the harness tests use it to make the deadline observable).
 fn total_call_budget(timeout_multiplier: f64) -> std::time::Duration {
-    if let Some(secs) = std::env::var("OPENPENCIL_SMOKE_LLM_TOTAL_BUDGET_SECS")
+    if let Some(secs) = std::env::var("DESIGN_EDITOR_SMOKE_LLM_TOTAL_BUDGET_SECS")
         .ok()
         .and_then(|raw| raw.trim().parse::<u64>().ok())
         .filter(|secs| *secs > 0)
@@ -395,7 +395,7 @@ mod tests {
 
     #[test]
     fn total_call_budget_scales_with_the_profile_multiplier() {
-        std::env::remove_var("OPENPENCIL_SMOKE_LLM_TOTAL_BUDGET_SECS");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_LLM_TOTAL_BUDGET_SECS");
         assert_eq!(total_call_budget(1.0).as_secs(), 900);
         assert_eq!(total_call_budget(3.0).as_secs(), 2700);
         assert_eq!(total_call_budget(0.01).as_secs(), 60);
@@ -449,7 +449,7 @@ mod tests {
 
     /// Kimi K3 rejects `thinking` outright (`cannot specify both 'thinking'
     /// and 'reasoning_effort'`), so the harness must not be able to send it —
-    /// not even through `OPENPENCIL_SMOKE_DISABLE_THINKING=1`, which used to
+    /// not even through `DESIGN_EDITOR_SMOKE_DISABLE_THINKING=1`, which used to
     /// force that exact field for every model.
     #[test]
     fn forcing_reduction_never_sends_kimi_k3_the_field_it_rejects() {

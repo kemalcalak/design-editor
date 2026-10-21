@@ -55,7 +55,7 @@ impl AcpConnection {
 
     /// Retry-safe authentication for an `auth_required` session/new error.
     /// Stable v1 agent auth carries no credentials, but choosing between
-    /// multiple methods is a user decision and OpenPencil has no picker yet.
+    /// multiple methods is a user decision and Design Editor has no picker yet.
     pub(super) async fn authenticate_unambiguous(&self) -> Result<(), AcpError> {
         match self.auth_methods.as_slice() {
             [method] => self.authenticate(method.id().0.as_ref()).await,
@@ -63,7 +63,7 @@ impl AcpConnection {
                 "agent required authentication but advertised no authMethods".into(),
             )),
             methods => Err(AcpError::Config(format!(
-                "agent requires authentication and advertised {} methods; OpenPencil needs an authentication method picker before it can choose one",
+                "agent requires authentication and advertised {} methods; Design Editor needs an authentication method picker before it can choose one",
                 methods.len()
             ))),
         }

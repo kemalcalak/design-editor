@@ -1,9 +1,9 @@
-//! `~/.openpencil/templates/` round-trip tests.
+//! `~/.design-editor/templates/` round-trip tests.
 //!
 //! These touch two process-global things — the config root and the runtime
 //! template registry — so they run under one lock and rebuild both from
 //! scratch. The config root is redirected once per process by the test
-//! harness, which is what keeps them off the developer's real `~/.openpencil`.
+//! harness, which is what keeps them off the developer's real `~/.design-editor`.
 
 use super::*;
 use std::sync::{Mutex, MutexGuard};

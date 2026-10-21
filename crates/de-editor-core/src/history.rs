@@ -1,6 +1,6 @@
 //! Undo / redo stacks for the editor.
 //!
-//! Models `openpencil-shell-core::document`'s `History` +
+//! Models `design-editor-shell-core::document`'s `History` +
 //! `DocumentSnapshot` pair, retargeted onto the canonical document
 //! model: a snapshot is a deep copy of the editable subset —
 //! `PenDocument` (which now carries the node tree, pages, variables

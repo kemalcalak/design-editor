@@ -95,7 +95,7 @@ validate_macos_version_behavior() {
     fi
 
     validation_status=0
-    validation_output=$(env -u OPENPENCIL_VERSION OPENPENCIL_VALIDATE_VERSION_ONLY=1 \
+    validation_output=$(env -u DESIGN_EDITOR_VERSION DESIGN_EDITOR_VALIDATE_VERSION_ONLY=1 \
         "$interpreter" "$file" 2>&1) || validation_status=$?
     if [[ "$validation_status" -ne 0 || "$validation_output" != "$current_version" ]]; then
         report_missing "$file" \
@@ -103,8 +103,8 @@ validate_macos_version_behavior() {
     fi
 
     validation_status=0
-    validation_output=$(OPENPENCIL_VERSION="$current_version" \
-        OPENPENCIL_VALIDATE_VERSION_ONLY=1 "$interpreter" "$file" 2>&1) || \
+    validation_output=$(DESIGN_EDITOR_VERSION="$current_version" \
+        DESIGN_EDITOR_VALIDATE_VERSION_ONLY=1 "$interpreter" "$file" 2>&1) || \
         validation_status=$?
     if [[ "$validation_status" -ne 0 || "$validation_output" != "$current_version" ]]; then
         report_missing "$file" \
@@ -115,14 +115,14 @@ validate_macos_version_behavior() {
     if [[ "$current_version" == "$mismatch_version" ]]; then
         mismatch_version=0.0.0
     fi
-    expected_mismatch="bundle-macos: error: OPENPENCIL_VERSION (${mismatch_version}) must match Cargo workspace version (${current_version})"
+    expected_mismatch="bundle-macos: error: DESIGN_EDITOR_VERSION (${mismatch_version}) must match Cargo workspace version (${current_version})"
     validation_status=0
-    validation_output=$(OPENPENCIL_VERSION="$mismatch_version" \
-        OPENPENCIL_VALIDATE_VERSION_ONLY=1 "$interpreter" "$file" 2>&1) || \
+    validation_output=$(DESIGN_EDITOR_VERSION="$mismatch_version" \
+        DESIGN_EDITOR_VALIDATE_VERSION_ONLY=1 "$interpreter" "$file" 2>&1) || \
         validation_status=$?
     if [[ "$validation_status" -ne 1 || "$validation_output" != "$expected_mismatch" ]]; then
         report_missing "$file" \
-            'mismatched OPENPENCIL_VERSION must fail validation with actionable error'
+            'mismatched DESIGN_EDITOR_VERSION must fail validation with actionable error'
     fi
 }
 
@@ -242,7 +242,7 @@ validate_manifest_workspace_version() {
 
     if [[ ! -f "$manifest" ]]; then
         report_missing "$relative_manifest" \
-            'local op-* package manifest returned by cargo metadata does not exist'
+            'local de-* package manifest returned by cargo metadata does not exist'
         return
     fi
 
@@ -292,7 +292,7 @@ validate_manifest_workspace_version() {
     IFS=$'\t' read -r inheritance_count diagnostic_line <<< "$manifest_result"
 
     if [[ "$inheritance_count" != 1 ]]; then
-        printf '%s:%s: error: local op-* package must declare exactly one active version.workspace = true in [package] (found %s)\n' \
+        printf '%s:%s: error: local de-* package must declare exactly one active version.workspace = true in [package] (found %s)\n' \
             "$relative_manifest" "$diagnostic_line" "$inheritance_count" >&2
         errors=1
     fi
@@ -310,7 +310,7 @@ validate_workspace_package_versions() {
         --arg crates_prefix "$repo_root/crates/" \
         '
             .packages[]?
-            | select(.name | startswith("op-"))
+            | select(.name | startswith("de-"))
             | select(.manifest_path | startswith($crates_prefix))
             | [.manifest_path, .name, .version]
             | @tsv
@@ -323,7 +323,7 @@ validate_workspace_package_versions() {
 
     if [[ -z "$package_rows" ]]; then
         report_missing Cargo.toml \
-            'cargo metadata found no local op-* workspace packages under crates; verify workspace members and repository path resolution'
+            'cargo metadata found no local de-* workspace packages under crates; verify workspace members and repository path resolution'
         return
     fi
 
@@ -453,7 +453,7 @@ validate_release_tag() {
 
 validate_cli_bundle_version_template() {
     bundle=crates/de-cli/assets/skill-bundle.json
-    sentinel=__OPENPENCIL_VERSION__
+    sentinel=__DESIGN_EDITOR_VERSION__
     sentinel_count=$(rg --fixed-strings --count-matches -- "$sentinel" "$bundle" || true)
     if [[ "${sentinel_count:-0}" != 5 ]]; then
         report_missing "$bundle" \
@@ -471,7 +471,7 @@ validate_rust_product_version_producers() {
     host_support=crates/de-editor-core/src/host_support.rs
     read -r host_production_version_count host_test_version_count < <(
         awk \
-            -v needle='src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"))' \
+            -v needle='src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"))' \
             '
                 /^#[[:space:]]*\[cfg\(test\)\][[:space:]]*$/ { in_tests = 1 }
                 index($0, needle) {
@@ -555,10 +555,10 @@ for macos_script in scripts/bundle-macos.sh tools/bundle-macos.sh; do
             'CFBundleShortVersionString must use APP_VERSION'
         require_statement "$macos_script" \
             'if[[:space:]]+\[\[[[:space:]]*"\$APP_VERSION"[[:space:]]*!=[[:space:]]*"\$CANONICAL_VERSION"[[:space:]]*\]\][[:space:]]*;[[:space:]]*then' \
-            'OPENPENCIL_VERSION overrides must be rejected when they differ from Cargo'
-        validation_pattern='^[[:space:]]*if[[:space:]]+\[\[[[:space:]]*"\$\{OPENPENCIL_VALIDATE_VERSION_ONLY:-\}"[[:space:]]*==[[:space:]]*1[[:space:]]*\]\][[:space:]]*;[[:space:]]*then[[:space:]]*$'
+            'DESIGN_EDITOR_VERSION overrides must be rejected when they differ from Cargo'
+        validation_pattern='^[[:space:]]*if[[:space:]]+\[\[[[:space:]]*"\$\{DESIGN_EDITOR_VALIDATE_VERSION_ONLY:-\}"[[:space:]]*==[[:space:]]*1[[:space:]]*\]\][[:space:]]*;[[:space:]]*then[[:space:]]*$'
         require_regex "$macos_script" "$validation_pattern" \
-            'macOS packaging must support OPENPENCIL_VALIDATE_VERSION_ONLY immediately after version validation'
+            'macOS packaging must support DESIGN_EDITOR_VALIDATE_VERSION_ONLY immediately after version validation'
         validate_macos_version_behavior "$macos_script" bash "$validation_pattern"
     else
         require_statement "$macos_script" \
@@ -569,18 +569,18 @@ for macos_script in scripts/bundle-macos.sh tools/bundle-macos.sh; do
             'CFBundleShortVersionString must use APP_VERSION'
         require_statement "$macos_script" \
             'if[[:space:]]+\[[[:space:]]*"\$APP_VERSION"[[:space:]]*!=[[:space:]]*"\$CANONICAL_VERSION"[[:space:]]*\][[:space:]]*;[[:space:]]*then' \
-            'OPENPENCIL_VERSION overrides must be rejected when they differ from Cargo'
-        validation_pattern='^[[:space:]]*if[[:space:]]+\[[[:space:]]*"\$\{OPENPENCIL_VALIDATE_VERSION_ONLY:-\}"[[:space:]]*=[[:space:]]*1[[:space:]]*\][[:space:]]*;[[:space:]]*then[[:space:]]*$'
+            'DESIGN_EDITOR_VERSION overrides must be rejected when they differ from Cargo'
+        validation_pattern='^[[:space:]]*if[[:space:]]+\[[[:space:]]*"\$\{DESIGN_EDITOR_VALIDATE_VERSION_ONLY:-\}"[[:space:]]*=[[:space:]]*1[[:space:]]*\][[:space:]]*;[[:space:]]*then[[:space:]]*$'
         require_regex "$macos_script" "$validation_pattern" \
-            'macOS packaging must support OPENPENCIL_VALIDATE_VERSION_ONLY immediately after version validation'
+            'macOS packaging must support DESIGN_EDITOR_VALIDATE_VERSION_ONLY immediately after version validation'
         validate_macos_version_behavior "$macos_script" sh "$validation_pattern"
     fi
     require_statement "$macos_script" \
-        'APP_VERSION[[:space:]]*=[[:space:]]*"\$\{OPENPENCIL_VERSION:-\$CANONICAL_VERSION\}"' \
-        'OPENPENCIL_VERSION must default to the Cargo workspace version'
+        'APP_VERSION[[:space:]]*=[[:space:]]*"\$\{DESIGN_EDITOR_VERSION:-\$CANONICAL_VERSION\}"' \
+        'DESIGN_EDITOR_VERSION must default to the Cargo workspace version'
     reject_matches regex "$macos_script" \
-        'OPENPENCIL_VERSION:-[0-9]+[.][0-9]+[.][0-9]+' \
-        'OPENPENCIL_VERSION must fall back to the Cargo workspace version'
+        'DESIGN_EDITOR_VERSION:-[0-9]+[.][0-9]+[.][0-9]+' \
+        'DESIGN_EDITOR_VERSION must fall back to the Cargo workspace version'
     reject_matches regex "$macos_script" \
         'CFBundleShortVersionString[^[:cntrl:]]*[0-9]+[.][0-9]+[.][0-9]+' \
         'CFBundleShortVersionString must use the resolved Cargo workspace version'

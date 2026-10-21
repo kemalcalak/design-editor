@@ -213,7 +213,7 @@ fn component_conversion_uikit_and_refine_commands_use_the_namespace() {
     assert!(kit_state
         .apply_with_allocator(
             EditorCommand::InstantiateKitComponent {
-                kit_id: "openpencil-starter".to_string(),
+                kit_id: "design-editor-starter".to_string(),
                 component_id: "btn-primary".to_string(),
                 doc_x: Some(10.0),
                 doc_y: Some(20.0),

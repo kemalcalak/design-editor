@@ -627,7 +627,7 @@ fn run_cleanup_passes_with_summary_and_policy(
         // the tree-shape passes miss), then re-layout and repeat until clean —
         // the deterministic analogue of Pencil's per-batch snapshot_layout
         // feedback, catching what the tree-shape passes above cannot see.
-        if let Ok(path) = std::env::var("OPENPENCIL_DEBUG_CLEANUP_DUMP") {
+        if let Ok(path) = std::env::var("DESIGN_EDITOR_DEBUG_CLEANUP_DUMP") {
             if let Some(root) = sink
                 .state()
                 .active_children()

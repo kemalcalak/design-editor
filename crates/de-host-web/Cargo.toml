@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil web host — wasm32-unknown-unknown web bundle entry (Step 1b §1.2, C-hard pipeline)"
+description = "Design Editor web host — wasm32-unknown-unknown web bundle entry (Step 1b §1.2, C-hard pipeline)"
 
 [lib]
 name = "de_host_web"
@@ -17,7 +17,7 @@ crate-type = ["cdylib", "rlib"]
 # so an imported font's family is extracted here (wasm-safe, unit-testable)
 # rather than in JS. See `font_meta`.
 ttf-parser = "0.25"
-# Phase 7.3 reorg: openpencil-shell-core dissolved — widget facade /
+# Phase 7.3 reorg: design-editor-shell-core dissolved — widget facade /
 # theme / layout scene / scene vars / render-backend / gesture types
 # all resolve through the de-editor-ui crate.
 de-editor-ui = { path = "../de-editor-ui", features = ["runtime-icon-catalog", "runtime-locale-catalog", "slim-corpus"] }

@@ -103,7 +103,7 @@ impl ApplicationHandler for BasicWindowApp {
             return;
         }
         let attrs = Window::default_attributes()
-            .with_title("OpenPencil — basic_window (Step 1a §1.2 acceptance #1)")
+            .with_title("Design Editor — basic_window (Step 1a §1.2 acceptance #1)")
             .with_inner_size(winit::dpi::LogicalSize::new(800u32, 600u32));
         let window = match event_loop.create_window(attrs) {
             Ok(w) => w,

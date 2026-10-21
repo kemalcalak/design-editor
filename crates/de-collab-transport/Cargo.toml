@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Native Noise/TCP transport and LAN discovery for OpenPencil collaboration"
+description = "Native Noise/TCP transport and LAN discovery for Design Editor collaboration"
 
 [features]
 default = ["native"]

@@ -10,7 +10,7 @@ pub const DEFAULT_LOCATOR_LISTEN: &str = "127.0.0.1:8092";
 pub const MAX_CONFIGURED_TIMEOUT: Duration = Duration::from_secs(30);
 /// Environment override for the per-client publish rate ceiling.
 pub const LOCATOR_CLIENT_RATE_PER_SECOND_ENV: &str =
-    "OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND";
+    "DESIGN_EDITOR_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND";
 /// Largest per-client publish rate the environment override accepts.
 pub const MAX_CLIENT_RATE_PER_SECOND: u32 = 10_000;
 

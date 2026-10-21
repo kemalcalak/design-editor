@@ -238,7 +238,7 @@ fn export_pdf_request_body_carries_a_board_filter_when_one_is_given() {
 fn parse_pdf_download_response_decodes_daemon_payload() {
     let response = serde_json::json!({
         "ok": true,
-        "fileName": "openpencil-export.pdf",
+        "fileName": "design-editor-export.pdf",
         "mime": "application/pdf",
         "dataBase64": base64::engine::general_purpose::STANDARD.encode(b"%PDF-test%%EOF"),
     })
@@ -246,7 +246,7 @@ fn parse_pdf_download_response_decodes_daemon_payload() {
 
     let download = parse_pdf_download_response(&response).expect("pdf response");
 
-    assert_eq!(download.file_name, "openpencil-export.pdf");
+    assert_eq!(download.file_name, "design-editor-export.pdf");
     assert_eq!(download.mime, "application/pdf");
     assert_eq!(download.bytes, b"%PDF-test%%EOF");
 }
@@ -289,7 +289,7 @@ fn export_raster_request_body_embeds_format_scale_document_and_single_selection(
 fn parse_raster_download_response_decodes_daemon_payload() {
     let response = serde_json::json!({
         "ok": true,
-        "fileName": "openpencil-export.png",
+        "fileName": "design-editor-export.png",
         "mime": "image/png",
         "dataBase64": base64::engine::general_purpose::STANDARD.encode(b"\x89PNG\r\n\x1a\n"),
     })

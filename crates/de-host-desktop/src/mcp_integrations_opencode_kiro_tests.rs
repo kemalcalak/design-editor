@@ -4,7 +4,7 @@ use super::*;
 
 fn temp_home(name: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "openpencil-mcp-current-{name}-{}",
+        "design-editor-mcp-current-{name}-{}",
         std::process::id()
     ));
     let _ = fs::remove_dir_all(&path);
@@ -97,11 +97,11 @@ fn detection_respects_each_clients_disabled_flag() {
     for (cli, value) in [
         (
             McpCli::OpenCode,
-            serde_json::json!({"mcp":{"openpencil":{"enabled":false}}}),
+            serde_json::json!({"mcp":{"design-editor":{"enabled":false}}}),
         ),
         (
             McpCli::Kiro,
-            serde_json::json!({"mcpServers":{"openpencil":{"disabled":true}}}),
+            serde_json::json!({"mcpServers":{"design-editor":{"disabled":true}}}),
         ),
     ] {
         let path = config_path(cli, &home, false);

@@ -53,7 +53,7 @@ fn the_template_pins_the_exact_wire_shape() {
         concat!(
             r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","#,
             r#""params":{"name":"import_web_snapshot","#,
-            r#""arguments":{"snapshot":__OPENPENCIL_SNAPSHOT__}}}"#,
+            r#""arguments":{"snapshot":__DESIGN_EDITOR_SNAPSHOT__}}}"#,
         )
     );
 }

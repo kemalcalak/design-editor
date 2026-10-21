@@ -66,7 +66,7 @@ pub fn daemon_token_for(url: &str) -> Option<String> {
 /// Call AFTER `open` and BEFORE `send` (request headers require an open XHR).
 pub fn attach_daemon_headers(req: &web_sys::XmlHttpRequest, url: &str) {
     if let Some(token) = daemon_token_for(url) {
-        let _ = req.set_request_header("X-OpenPencil-Token", &token);
+        let _ = req.set_request_header("X-Design-Editor-Token", &token);
     }
 }
 

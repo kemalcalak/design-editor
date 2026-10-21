@@ -7,22 +7,22 @@ require "rexml/document"
 player_dir = File.expand_path("..", __dir__)
 repo_dir = File.expand_path("../..", player_dir)
 res_dir = File.join(player_dir, "app/src/main/res")
-canonical_package = "tech.zseven.openpencil"
+canonical_package = "com.kemalcalak.designeditor"
 
 gradle = File.read(File.join(player_dir, "app/build.gradle.kts"))
 raise "Android namespace must be #{canonical_package}" unless gradle.include?(%(namespace = "#{canonical_package}"))
 raise "Android applicationId must be #{canonical_package}" unless gradle.include?(%(applicationId = "#{canonical_package}"))
-raise "legacy Android package must not remain active" if gradle.include?("dev.openpencil.player")
+raise "legacy Android package must not remain active" if gradle.include?("dev.design-editor.player")
 
 kotlin_roots = %w[main test].map do |source_set|
-  File.join(player_dir, "app/src/#{source_set}/kotlin/tech/zseven/openpencil")
+  File.join(player_dir, "app/src/#{source_set}/kotlin/com/kemalcalak/designeditor")
 end
 kotlin_sources = kotlin_roots.flat_map { |root| Dir.glob(File.join(root, "*.kt")) }
 raise "canonical Android package sources are missing" if kotlin_sources.empty?
 kotlin_sources.each do |source|
   raise "#{source} must declare package #{canonical_package}" unless File.read(source).start_with?("package #{canonical_package}\n")
 end
-legacy_sources = Dir.glob(File.join(player_dir, "app/src/{main,test}/kotlin/dev/openpencil/player/*.kt"))
+legacy_sources = Dir.glob(File.join(player_dir, "app/src/{main,test}/kotlin/dev/design-editor/player/*.kt"))
 raise "legacy Android package source paths remain: #{legacy_sources.join(', ')}" unless legacy_sources.empty?
 
 expected_icons = {
@@ -35,12 +35,12 @@ expected_icons = {
 
 canonical_icon = File.join(repo_dir, "crates/de-host-desktop/assets/icon.png")
 canonical_hash = "d4dcfe16a1cdfc2f7caaf945f84582fb02404f67024ffd6294f1d138fab67941"
-raise "canonical OpenPencil icon changed without regenerating mobile assets" unless Digest::SHA256.file(canonical_icon).hexdigest == canonical_hash
+raise "canonical Design Editor icon changed without regenerating mobile assets" unless Digest::SHA256.file(canonical_icon).hexdigest == canonical_hash
 
 strings_path = File.join(res_dir, "values/strings.xml")
 strings = REXML::Document.new(File.read(strings_path))
 app_name = REXML::XPath.first(strings, "/resources/string[@name='app_name']")
-raise "app_name must be exactly OpenPencil" unless app_name&.text == "OpenPencil"
+raise "app_name must be exactly Design Editor" unless app_name&.text == "Design Editor"
 raise "app_name must remain locale-independent" unless app_name.attributes["translatable"] == "false"
 
 manifest_path = File.join(player_dir, "app/src/main/AndroidManifest.xml")
@@ -48,7 +48,7 @@ manifest = REXML::Document.new(File.read(manifest_path))
 application = REXML::XPath.first(manifest, "/manifest/application")
 raise "Android application element missing" unless application
 raise "application label must use app_name" unless application.attributes["android:label"] == "@string/app_name"
-raise "application icon must use the OpenPencil launcher resource" unless application.attributes["android:icon"] == "@mipmap/ic_launcher"
+raise "application icon must use the Design Editor launcher resource" unless application.attributes["android:icon"] == "@mipmap/ic_launcher"
 raise "rounded-square icon must not be declared as roundIcon" if application.attributes["android:roundIcon"]
 
 expected_icons.each do |density, (size, expected_hash)|
@@ -58,7 +58,7 @@ expected_icons.each do |density, (size, expected_hash)|
 
   width, height = png.byteslice(16, 8).unpack("NN")
   raise "#{density} launcher icon must be #{size}x#{size}" unless width == size && height == size
-  raise "#{density} launcher icon is not the canonical OpenPencil artwork" unless Digest::SHA256.hexdigest(png) == expected_hash
+  raise "#{density} launcher icon is not the canonical Design Editor artwork" unless Digest::SHA256.hexdigest(png) == expected_hash
 end
 
 apk_path, aapt_path = ARGV
@@ -67,7 +67,7 @@ exit 0 unless apk_path
 raise "expected path to aapt when validating an APK" unless aapt_path
 badging, error, status = Open3.capture3(aapt_path, "dump", "badging", apk_path)
 raise "aapt dump badging failed: #{error}" unless status.success?
-raise "packaged application label must be OpenPencil" unless badging.include?("application: label='OpenPencil'")
+raise "packaged application label must be Design Editor" unless badging.include?("application: label='Design Editor'")
 raise "packaged application icon must be ic_launcher" unless badging.include?("icon='res/mipmap-mdpi-v4/ic_launcher.png'")
 
 xmltree, tree_error, tree_status = Open3.capture3(aapt_path, "dump", "xmltree", apk_path, "AndroidManifest.xml")

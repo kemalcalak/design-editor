@@ -174,7 +174,7 @@ pub(super) fn serve_design_md<S: std::io::Read + std::io::Write>(
             stream,
             "403 Forbidden",
             "extensionNotPaired",
-            "This extension is not paired with OpenPencil.",
+            "This extension is not paired with Design Editor.",
             cors_origin,
         );
     }
@@ -231,7 +231,7 @@ fn start_design_md_job<S: std::io::Read + std::io::Write>(
                 stream,
                 "503 Service Unavailable",
                 "workerSpawn",
-                "OpenPencil could not create a design analysis job.",
+                "Design Editor could not create a design analysis job.",
                 cors_origin,
             )
         }
@@ -258,7 +258,7 @@ fn start_design_md_job<S: std::io::Read + std::io::Write>(
             stream,
             "503 Service Unavailable",
             "workerSpawn",
-            "OpenPencil could not start the design analysis watchdog.",
+            "Design Editor could not start the design analysis watchdog.",
             cors_origin,
         );
     }
@@ -280,7 +280,7 @@ fn start_design_md_job<S: std::io::Read + std::io::Write>(
             stream,
             "503 Service Unavailable",
             "workerSpawn",
-            "OpenPencil is not accepting design analysis requests.",
+            "Design Editor is not accepting design analysis requests.",
             cors_origin,
         );
     }

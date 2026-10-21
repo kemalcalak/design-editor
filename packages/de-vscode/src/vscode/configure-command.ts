@@ -28,7 +28,7 @@ function currentAdapter(root: string): McpAdapter {
 async function pickWorkspaceRoot(): Promise<string | undefined> {
   const folders = vscode.workspace.workspaceFolders ?? [];
   if (folders.length === 0) {
-    void vscode.window.showErrorMessage("OpenPencil: open a workspace folder first.");
+    void vscode.window.showErrorMessage("Design Editor: open a workspace folder first.");
     return undefined;
   }
   const active = vscode.window.activeTextEditor?.document.uri;
@@ -39,14 +39,14 @@ async function pickWorkspaceRoot(): Promise<string | undefined> {
   if (folders.length === 1) return folders[0].uri.fsPath;
   const pick = await vscode.window.showQuickPick(
     folders.map((f) => ({ label: f.name, description: f.uri.fsPath })),
-    { title: "Configure OpenPencil MCP in which folder?" },
+    { title: "Configure Design Editor MCP in which folder?" },
   );
   return pick?.description;
 }
 
 export async function configureMcpCommand(port: number): Promise<void> {
   if (!vscode.workspace.isTrusted) {
-    void vscode.window.showWarningMessage("OpenPencil: MCP config needs a trusted workspace.");
+    void vscode.window.showWarningMessage("Design Editor: MCP config needs a trusted workspace.");
     return;
   }
   const root = await pickWorkspaceRoot();
@@ -61,19 +61,19 @@ export async function configureMcpCommand(port: number): Promise<void> {
   } catch (err) {
     if (err instanceof McpConfigParseError) {
       void vscode.window.showErrorMessage(
-        `OpenPencil: ${target.fsPath} is not valid JSON — please fix it by hand.`,
+        `Design Editor: ${target.fsPath} is not valid JSON — please fix it by hand.`,
       );
       return;
     }
     throw err;
   }
   if (next === existing) {
-    void vscode.window.showInformationMessage("OpenPencil MCP is already configured.");
+    void vscode.window.showInformationMessage("Design Editor MCP is already configured.");
     return;
   }
 
   const choice = await vscode.window.showInformationMessage(
-    `Configure OpenPencil MCP in ${adapter.kind} (${target.fsPath})?`,
+    `Configure Design Editor MCP in ${adapter.kind} (${target.fsPath})?`,
     "Show diff",
     "Write",
   );
@@ -88,13 +88,13 @@ export async function configureMcpCommand(port: number): Promise<void> {
   await writeConfig(target, next);
   if (adapter.needsReload) {
     void vscode.window.showInformationMessage(
-      "OpenPencil MCP written. Reload the window for the AI agent to pick it up.",
+      "Design Editor MCP written. Reload the window for the AI agent to pick it up.",
       "Reload",
     ).then((r) => {
       if (r === "Reload") void vscode.commands.executeCommand("workbench.action.reloadWindow");
     });
   } else {
-    void vscode.window.showInformationMessage("OpenPencil MCP configured.");
+    void vscode.window.showInformationMessage("Design Editor MCP configured.");
   }
 }
 
@@ -109,22 +109,22 @@ export async function removeMcpCommand(): Promise<void> {
     next = adapter.remove(existing);
   } catch (err) {
     if (err instanceof McpConfigParseError) {
-      void vscode.window.showErrorMessage(`OpenPencil: ${target.fsPath} is not valid JSON.`);
+      void vscode.window.showErrorMessage(`Design Editor: ${target.fsPath} is not valid JSON.`);
       return;
     }
     throw err;
   }
   if (next === null) {
-    void vscode.window.showInformationMessage("OpenPencil MCP entry not present.");
+    void vscode.window.showInformationMessage("Design Editor MCP entry not present.");
     return;
   }
   const confirm = await vscode.window.showInformationMessage(
-    `Remove the OpenPencil MCP entry from ${target.fsPath}?`,
+    `Remove the Design Editor MCP entry from ${target.fsPath}?`,
     "Remove",
   );
   if (confirm !== "Remove") return;
   await writeConfig(target, next);
-  void vscode.window.showInformationMessage("OpenPencil MCP entry removed.");
+  void vscode.window.showInformationMessage("Design Editor MCP entry removed.");
 }
 
 // ---- helpers ----
@@ -142,7 +142,7 @@ async function writeConfig(uri: vscode.Uri, text: string): Promise<void> {
     await vscode.workspace.fs.createDirectory(vscode.Uri.file(fsPath.dirname(uri.fsPath)));
     await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(text));
   } catch (err) {
-    void vscode.window.showErrorMessage(`OpenPencil: failed to write ${uri.fsPath}: ${String(err)}`);
+    void vscode.window.showErrorMessage(`Design Editor: failed to write ${uri.fsPath}: ${String(err)}`);
     throw err;
   }
 }
@@ -152,7 +152,7 @@ async function showDiff(target: vscode.Uri, before: string, after: string): Prom
   const right = target.with({ scheme: "untitled", path: `${target.path}.proposed` });
   await vscode.workspace.openTextDocument(left).then((d) => applyText(d, before));
   await vscode.workspace.openTextDocument(right).then((d) => applyText(d, after));
-  await vscode.commands.executeCommand("vscode.diff", left, right, "OpenPencil MCP: current ↔ proposed");
+  await vscode.commands.executeCommand("vscode.diff", left, right, "Design Editor MCP: current ↔ proposed");
 }
 
 async function applyText(doc: vscode.TextDocument, text: string): Promise<void> {

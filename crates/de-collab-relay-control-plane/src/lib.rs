@@ -1,4 +1,4 @@
-//! Open locator issuance core for the OpenPencil public collaboration relay.
+//! Open locator issuance core for the Design Editor public collaboration relay.
 //!
 //! The owner generates the route id, generation, and bearer capability
 //! locally. Only the bounded [`OwnerPublishRequest`] is sent over authenticated

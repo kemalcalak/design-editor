@@ -588,8 +588,11 @@ mod tests {
     fn remove_kit_protects_builtins_and_resets_filter() {
         let mut state = EditorState::new();
         // Built-in kits never delete.
-        assert!(!state.remove_kit("openpencil-starter"));
-        assert!(state.ui_kits.iter().any(|k| k.id == "openpencil-starter"));
+        assert!(!state.remove_kit("design-editor-starter"));
+        assert!(state
+            .ui_kits
+            .iter()
+            .any(|k| k.id == "design-editor-starter"));
 
         let doc = doc_with(vec![reusable_frame("c1", "Button", None)]);
         let kit = import_kit_from_document(&doc, "imp-1".to_string()).expect("kit");

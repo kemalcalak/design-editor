@@ -143,8 +143,8 @@ impl WebSearchBackend {
             && settings.openverse_client_secret.trim().is_empty()
         {
             (
-                std::env::var("OPENPENCIL_OPENVERSE_CLIENT_ID").unwrap_or_default(),
-                std::env::var("OPENPENCIL_OPENVERSE_CLIENT_SECRET").unwrap_or_default(),
+                std::env::var("DESIGN_EDITOR_OPENVERSE_CLIENT_ID").unwrap_or_default(),
+                std::env::var("DESIGN_EDITOR_OPENVERSE_CLIENT_SECRET").unwrap_or_default(),
             )
         } else {
             (

@@ -8,11 +8,11 @@ use crate::skill_install_error::{BundleError, FsAction, SkillInstallError};
 type Result<T> = std::result::Result<T, SkillInstallError>;
 
 const BUNDLE_JSON: &str = include_str!("../assets/skill-bundle.json");
-pub(crate) const VERSION_SENTINEL: &str = "__OPENPENCIL_VERSION__";
+pub(crate) const VERSION_SENTINEL: &str = "__DESIGN_EDITOR_VERSION__";
 // Top-level bundle version plus four embedded plugin/package manifest versions.
 const EXPECTED_VERSION_SENTINEL_COUNT: usize = 5;
-const REPO: &str = "zseven-w/openpencil-skill";
-const SKILL_NAME: &str = "openpencil-skill";
+const REPO: &str = "kemalcalak/design-editor-skill";
+const SKILL_NAME: &str = "design-editor-skill";
 
 #[derive(Debug, Clone)]
 struct SkillBundle {
@@ -258,7 +258,7 @@ fn uninstall_opencode(home: &Path) -> Result<()> {
     prune_opencode_plugin_entry(home)
 }
 
-/// Remove the legacy `openpencil-skill@git+…` plugin entry (older installers
+/// Remove the legacy `design-editor-skill@git+…` plugin entry (older installers
 /// wrote it; opencode installs the package but never loads anything from it).
 fn prune_opencode_plugin_entry(home: &Path) -> Result<()> {
     let config_path = home.join(".config/opencode/opencode.json");

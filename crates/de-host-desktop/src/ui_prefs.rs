@@ -1,4 +1,4 @@
-//! Cross-launch UI preferences (`~/.openpencil/ui.json`) — small,
+//! Cross-launch UI preferences (`~/.design-editor/ui.json`) — small,
 //! non-secret editor chrome choices that should survive a restart.
 
 use de_editor_core::PencilCursorStyle;

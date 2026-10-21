@@ -84,7 +84,7 @@ pub enum WebCredentialError {
     /// A plain-HTTP endpoint that is not explicitly allowlisted.
     EndpointRequiresHttps,
     /// The endpoint passed the URL-shape screen but is not on the
-    /// `OPENPENCIL_WEB_AI_ENDPOINT_ALLOWLIST`, which persisted browser
+    /// `DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST`, which persisted browser
     /// credentials require on top of the shape check.
     EndpointNotExplicitlyAllowed,
 }

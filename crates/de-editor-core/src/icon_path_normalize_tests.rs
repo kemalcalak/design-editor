@@ -107,7 +107,10 @@ fn unknown_viewbox_path_is_refit_uniformly_and_marked_idempotent() {
     assert!((min_y - 6.0).abs() < 0.001);
     assert!((width - 8.0).abs() < 0.001);
     assert!((height - 8.0).abs() < 0.001);
-    assert_eq!(path.icon_id.as_deref(), Some("openpencil:icon-path-refit"));
+    assert_eq!(
+        path.icon_id.as_deref(),
+        Some("design-editor:icon-path-refit")
+    );
     assert_eq!(
         path.stroke.as_ref().and_then(|s| match s.thickness {
             jian_ops_schema::style::StrokeThickness::Uniform(value) => Some(value),

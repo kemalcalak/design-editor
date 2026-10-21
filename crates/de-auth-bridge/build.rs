@@ -14,8 +14,8 @@ mod prebuilt_link_compat;
 #[path = "prebuilt_provenance.rs"]
 mod prebuilt_provenance;
 
-const DEV_ARCHIVE_ENV: &str = "OPENPENCIL_DEV_OP_AUTH_ARCHIVE";
-const DEV_ABI_VERSION_ENV: &str = "OPENPENCIL_DEV_OP_AUTH_ABI_VERSION";
+const DEV_ARCHIVE_ENV: &str = "DESIGN_EDITOR_DEV_OP_AUTH_ARCHIVE";
+const DEV_ABI_VERSION_ENV: &str = "DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION";
 const DEV_FEATURE_ENV: &str = "CARGO_FEATURE_DEV_PREBUILT";
 
 fn main() {

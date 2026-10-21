@@ -1,24 +1,24 @@
-# @zseven-w/de-web-sdk
+# @kemalcalak/de-web-sdk
 
-Read-only OpenPencil `.op` file viewer SDK for the web, backed by a Rust/wasm renderer.
+Read-only Design Editor `.op` file viewer SDK for the web, backed by a Rust/wasm renderer.
 
 > **Editing is not supported.** This SDK provides a read-only view of `.op` documents.
-> For full editing capability use the [OpenPencil app](https://openpencil.app).
+> For full editing capability use the [Design Editor app](https://github.com/kemalcalak/design-editor).
 
 ---
 
 ## Installation
 
 ```bash
-bun add @zseven-w/de-web-sdk
+bun add @kemalcalak/de-web-sdk
 # or
-npm install @zseven-w/de-web-sdk
+npm install @kemalcalak/de-web-sdk
 ```
 
 After installing, copy the wasm assets into your project's public directory:
 
 ```bash
-cp -r node_modules/@zseven-w/de-web-sdk/wasm ./public/op-wasm
+cp -r node_modules/@kemalcalak/de-web-sdk/wasm ./public/op-wasm
 ```
 
 Or run the sync script from a monorepo checkout (requires the Rust wasm toolchain):
@@ -32,7 +32,7 @@ bun run sync-wasm
 ## Quick start
 
 ```ts
-import { createViewer } from '@zseven-w/de-web-sdk';
+import { createViewer } from '@kemalcalak/de-web-sdk';
 
 const canvas = document.getElementById('my-canvas') as HTMLCanvasElement;
 
@@ -41,7 +41,7 @@ const canvas = document.getElementById('my-canvas') as HTMLCanvasElement;
 const viewer = await createViewer({
   canvas,
   // Optional: override the default wasm asset URL.
-  wasmUrl: '/op-wasm/op_web_sdk_bg.wasm',
+  wasmUrl: '/op-wasm/de_web_sdk_bg.wasm',
 });
 
 // Load a .op document from a fetch response:
@@ -139,7 +139,7 @@ Initialises the wasm module and returns a bound `OpViewer`.
 ## Types
 
 ```ts
-import type { PenDocument, PenPage, Viewport, ViewerEvent } from '@zseven-w/de-web-sdk';
+import type { PenDocument, PenPage, Viewport, ViewerEvent } from '@kemalcalak/de-web-sdk';
 ```
 
 `PenDocument` and `PenPage` are generated from the canonical Rust schema
@@ -185,11 +185,11 @@ It does **not** support:
 - AI / MCP integrations
 
 For the full editing experience, including AI-powered design generation and
-the complete node editing surface, use the [OpenPencil app](https://openpencil.app)
-or the `@zseven-w/pen-sdk` package (internal monorepo SDK).
+the complete node editing surface, use the [Design Editor app](https://github.com/kemalcalak/design-editor)
+or the `@kemalcalak/pen-sdk` package (internal monorepo SDK).
 
-React and Vue adapter packages (`@zseven-w/de-web-sdk-react`,
-`@zseven-w/de-web-sdk-vue`) are planned for a future release.
+React and Vue adapter packages (`@kemalcalak/de-web-sdk-react`,
+`@kemalcalak/de-web-sdk-vue`) are planned for a future release.
 
 ---
 

@@ -35,7 +35,7 @@ use sha2::{Digest, Sha256};
 
 /// Root of the on-disk tenant store. Unset disables persistence entirely,
 /// which is what a demo or a test wants.
-pub const DATA_DIR_ENV: &str = "OPENPENCIL_ONLINE_DATA_DIR";
+pub const DATA_DIR_ENV: &str = "DESIGN_EDITOR_ONLINE_DATA_DIR";
 
 /// The document file inside a tenant directory.
 const DOCUMENT_FILE: &str = "current.op";
@@ -307,7 +307,7 @@ fn quarantine(path: &Path) {
         return;
     }
     eprintln!(
-        "openpencil --serve-web --online: kept an unreadable tenant file at {}",
+        "design-editor --serve-web --online: kept an unreadable tenant file at {}",
         target.display()
     );
 }

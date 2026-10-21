@@ -3,7 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import napi, { OpKey } from './OpNative';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /** What the conduit needs from the engine host. */
 export interface ImeConduitHost {

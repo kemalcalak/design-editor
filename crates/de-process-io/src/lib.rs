@@ -1,4 +1,4 @@
-//! Shared process IO primitives for OpenPencil native crates.
+//! Shared process IO primitives for Design Editor native crates.
 
 use std::ffi::OsStr;
 use std::io;
@@ -27,7 +27,7 @@ pub enum WaitOutcome<T> {
 }
 
 /// Apply the detached daemon stdio policy used by CLI-launched
-/// OpenPencil processes.
+/// Design Editor processes.
 pub fn null_stdio(command: &mut StdCommand) -> &mut StdCommand {
     command
         .stdin(Stdio::null())

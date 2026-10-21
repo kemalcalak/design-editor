@@ -47,7 +47,7 @@ const INSTANCE_PORT: u16 = 47823;
 
 /// Protocol header. A peer that doesn't open with this isn't our editor, so the
 /// secondary won't treat a stray listener as a forward target.
-const MAGIC: &str = "OPENPENCIL-OPEN";
+const MAGIC: &str = "DESIGN-EDITOR-OPEN";
 
 /// Shared queue of paths forwarded by secondary launches, drained on the UI
 /// thread once the proxy wakes the event loop.
@@ -69,14 +69,14 @@ pub struct PrimaryHandle {
 }
 
 /// Run the gate. `initial_file` is the document parsed from argv, if any.
-/// Resolve the guard port. Debug builds accept `OPENPENCIL_DEV_INSTANCE_PORT`
+/// Resolve the guard port. Debug builds accept `DESIGN_EDITOR_DEV_INSTANCE_PORT`
 /// so a second dev instance can run side-by-side (e.g. collaboration testing
 /// with two accounts via two `HOME` directories); release builds keep the
 /// fixed port so end users always get single-instance behaviour.
 fn instance_port() -> u16 {
     #[cfg(any(test, debug_assertions))]
     {
-        let configured = std::env::var("OPENPENCIL_DEV_INSTANCE_PORT").ok();
+        let configured = std::env::var("DESIGN_EDITOR_DEV_INSTANCE_PORT").ok();
         instance_port_from(configured.as_deref())
     }
     #[cfg(not(any(test, debug_assertions)))]
@@ -180,7 +180,7 @@ impl PrimaryHandle {
 
 /// Read one frame, validate the magic header, enqueue any non-empty path, and
 /// reply `OK` / `ERR` so the secondary can confirm it reached our editor.
-/// Returns true when the frame was a valid OpenPencil request (the caller
+/// Returns true when the frame was a valid Design Editor request (the caller
 /// should then wake the loop). Kept proxy-free so it is unit-testable without
 /// a winit event loop.
 fn accept_frame(mut stream: TcpStream, queue: &ForwardQueue) -> bool {

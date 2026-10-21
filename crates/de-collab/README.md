@@ -1,6 +1,6 @@
 # de-collab
 
-`de-collab` is OpenPencil's transport-free collaboration foundation. It owns
+`de-collab` is Design Editor's transport-free collaboration foundation. It owns
 the versioned wire DTOs, deterministic document hashing, and exact atomic
 operations over the canonical `PenDocument` schema.
 

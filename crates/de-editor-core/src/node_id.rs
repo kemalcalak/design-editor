@@ -4,7 +4,7 @@
 //! schema's `PenNodeBase.id` (and `PenPage.id`). The empty string is
 //! the `NONE` sentinel meaning "no node"; `NodeId::new` rejects it.
 //!
-//! This mirrors `openpencil-shell-core::document::NodeId` (the just-
+//! This mirrors `design-editor-shell-core::document::NodeId` (the just-
 //! completed Task 4.3 string-newtype migration) so the later facade
 //! swap (Task 4.7) is a straight re-export. The shell-core-specific
 //! `to_widget_id` helper is intentionally omitted here — it depends on

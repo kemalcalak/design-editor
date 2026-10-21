@@ -68,7 +68,7 @@ pub(super) fn serve_one<S: Read + Write>(
 /// every single-user mode.
 ///
 /// Returns `Ok(true)` when the client requested a token-authenticated graceful
-/// shutdown (same `openpencil/shutdown` body contract as `--mcp-http`) — the
+/// shutdown (same `design-editor/shutdown` body contract as `--mcp-http`) — the
 /// caller then stops the accept loop so `de stop` never signals a pid. In
 /// managed mode only this lifecycle request, not ordinary traffic, uses the
 /// token emitted in the startup handshake.
@@ -426,14 +426,14 @@ pub(super) fn dispatch<S: Read + Write>(
     // token contract as the `--mcp-http` server. Managed mode accepts the
     // startup-handshake token here for lifecycle compatibility, but never as
     // an ordinary request header; local/online operator shutdown continues to
-    // use only OPENPENCIL_MCP_TOKEN. A stale file, recycled pid, or random
+    // use only DESIGN_EDITOR_MCP_TOKEN. A stale file, recycled pid, or random
     // client therefore cannot shut the daemon down.
     //
     // Online keeps this branch ONLY because the token comes from the
     // operator's process environment and never from an account credential —
     // it is the operations channel, not a client-reachable route. The
     // env-token check below is what makes that true: with no
-    // `OPENPENCIL_MCP_TOKEN` set there is no token that satisfies it.
+    // `DESIGN_EDITOR_MCP_TOKEN` set there is no token that satisfies it.
     let operator_token = crate::mcp_serve::headless_token_from_env();
     if ctx.mode.allows_generic_shutdown() || operator_token.is_some() {
         let managed_shutdown = matches!(ctx.mode, ServeMode::Managed)

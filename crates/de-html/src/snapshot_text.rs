@@ -1,11 +1,11 @@
 //! Text-run mapping for browser snapshots.
 //!
 //! The capture records the browser's own text box: the rect a `Range` around
-//! the run reported, measured with the page's fonts. OpenPencil re-renders
+//! the run reported, measured with the page's fonts. Design Editor re-renders
 //! that run with whatever font it can resolve (usually a fallback), and a
 //! fallback is routinely a few percent wider per glyph. Pinning the node to
 //! the captured width therefore clipped the tail off every run that the
-//! browser had fitted exactly — "openpencil" rendered as "openpenci",
+//! browser had fitted exactly — "design-editor" rendered as "openpenci",
 //! ".vscode" as ".vscod".
 //!
 //! The fix keeps the captured box as a *floor*, not a ceiling, and uses the

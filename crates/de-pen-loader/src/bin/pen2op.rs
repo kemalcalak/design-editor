@@ -3,7 +3,7 @@
 //! `load_canonical` + `normalize_legacy_doc` path the desktop uses to open
 //! files. A naive rename does NOT work: the normalize step (version 2.x →
 //! rewrite, image nodes missing `src`, `fill`-as-string, etc.) is required for
-//! the file to load in current OpenPencil.
+//! the file to load in current Design Editor.
 //!
 //! Usage: `pen2op <in.pen> <out.op>`
 //!
@@ -44,7 +44,7 @@ fn main() -> ExitCode {
         );
     }
 
-    // Preserve OpenPencil's ignored top-level editor extension while the
+    // Preserve Design Editor's ignored top-level editor extension while the
     // typed canonical document is normalized. Older inputs without metadata
     // retain the historical document-only output shape.
     let editor_meta = de_pen_loader::extract_editor_meta(&src);

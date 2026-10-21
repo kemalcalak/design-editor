@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # gate.sh <file.op ...> — 模板终审双闸。
 #
-#   1. OPENPENCIL_SMOKE_AUDIT   几何 / 结构 / 对比度诊断
+#   1. DESIGN_EDITOR_SMOKE_AUDIT   几何 / 结构 / 对比度诊断
 #   2. cjkcheck + cjkreal 交叉   CJK 断行（audit 覆盖不到的那一类）
 #
 # stubcheck 已摘除：`is_empty_decorated_stub` 同一谓词双喂修复与诊断
@@ -14,12 +14,12 @@
 #   真实行数 == 硬换行数  ⇒  没发生自动折行  ⇒  该条报告作废。
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO=/Users/fini/workspace/openpencil
+REPO=/Users/fini/workspace/design-editor
 FAIL=0
 
 for f in "$@"; do
   name=$(basename "$f" .op)
-  issues=$(OPENPENCIL_ANTHROPIC_API_KEY=dummy OPENPENCIL_SMOKE_AUDIT="$f" \
+  issues=$(DESIGN_EDITOR_ANTHROPIC_API_KEY=dummy DESIGN_EDITOR_SMOKE_AUDIT="$f" \
     "$REPO/target/release/de-smoke" audit 2>/dev/null \
     | python3 -c "import sys,json;print(json.loads(sys.stdin.read())['issueCount'])")
   if [ "$issues" != "0" ]; then

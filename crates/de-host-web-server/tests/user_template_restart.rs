@@ -62,7 +62,7 @@ impl Drop for Daemon {
 
 fn write_template(home: &Path, name: &str, node_id: &str) {
     let dir = home
-        .join(".openpencil")
+        .join(".design-editor")
         .join("templates")
         .join("headless-deck");
     std::fs::create_dir_all(&dir).expect("create template directory");
@@ -113,7 +113,7 @@ fn spawn_managed(home: &Path) -> Daemon {
 fn post_mcp(daemon: &Daemon, body: &str) -> String {
     let mut stream = TcpStream::connect(("127.0.0.1", daemon.port)).expect("connect daemon");
     let request = format!(
-        "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nX-OpenPencil-Token: {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+        "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nX-Design-Editor-Token: {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
         daemon.port,
         daemon.token,
         body.len(),
@@ -132,7 +132,7 @@ fn post_mcp(daemon: &Daemon, body: &str) -> String {
 fn get_document(daemon: &Daemon) -> String {
     let mut stream = TcpStream::connect(("127.0.0.1", daemon.port)).expect("connect daemon");
     let request = format!(
-        "GET /api/mcp/document HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nX-OpenPencil-Token: {}\r\nConnection: close\r\n\r\n",
+        "GET /api/mcp/document HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nX-Design-Editor-Token: {}\r\nConnection: close\r\n\r\n",
         daemon.port, daemon.token
     );
     stream.write_all(request.as_bytes()).expect("write request");

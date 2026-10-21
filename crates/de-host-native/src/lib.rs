@@ -1,4 +1,4 @@
-//! OpenPencil shell — native (desktop) backend.
+//! Design Editor shell — native (desktop) backend.
 //!
 //! Per spec v19 §1.2 (FROZEN 2026-05-04): this crate must NOT be linked into
 //! the wasm32-unknown-unknown web bundle. Even though some deps (winit) compile

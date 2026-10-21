@@ -523,11 +523,11 @@ mod remembered_connection_tests {
         // refuse the real config directory on its own, whatever order the
         // harness runs its threads in. If a future change drops that
         // guard, this fails loudly instead of silently rewriting the
-        // developer's `~/.openpencil/agents.json` — the file that decides
+        // developer's `~/.design-editor/agents.json` — the file that decides
         // which providers auto-reconnect at launch.
         let real = de_config_store::home_dir()
             .expect("home directory")
-            .join(".openpencil");
+            .join(".design-editor");
 
         crate::agent_connect_store::save(&[true, false, false, false, false, false, false]);
 

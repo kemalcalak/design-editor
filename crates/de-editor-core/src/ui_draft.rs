@@ -2,7 +2,7 @@
 //! toggles that are rebuilt on load and never serialized.
 //!
 //! This models the *editor-state* subset of
-//! `openpencil-shell-core::document::UiState`. shell-core's `UiState`
+//! `design-editor-shell-core::document::UiState`. shell-core's `UiState`
 //! also carries a large amount of *widget-layer* state (hover targets
 //! typed as `crate::widgets::*`, export-dialog format enums, the
 //! agent-settings modal struct, etc.). Those are UI concerns that

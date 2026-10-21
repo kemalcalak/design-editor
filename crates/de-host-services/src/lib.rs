@@ -1,4 +1,4 @@
-//! OpenPencil headless host services — the GUI-free host backend.
+//! Design Editor headless host services — the GUI-free host backend.
 //!
 //! Everything the host does that doesn't need a window: the in-memory
 //! `.op` document daemon (whole-document REST sync + SSE for the browser
@@ -15,7 +15,7 @@
 //!
 //! Modules were migrated here out of `de-host-desktop` over Phases 2–5 of
 //! the extraction (plan:
-//! `openpencil-docs/superpowers/plans/2026-06-19-op-web-daemon-extraction.md`).
+//! `design-editor-docs/superpowers/plans/2026-06-19-op-web-daemon-extraction.md`).
 
 // Migrated headless modules (Phases 2-5), kept alphabetical.
 pub mod acp_agent_probe_host;

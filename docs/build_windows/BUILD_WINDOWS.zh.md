@@ -1,14 +1,14 @@
 
 > [English](./BUILD_WINDOWS.md) · **简体中文** · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · [한국어](./BUILD_WINDOWS.ko.md) · [Français](./BUILD_WINDOWS.fr.md) · [Español](./BUILD_WINDOWS.es.md) · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · [हिन्दी](./BUILD_WINDOWS.hi.md) · [Türkçe](./BUILD_WINDOWS.tr.md) · [ไทย](./BUILD_WINDOWS.th.md) · [Tiếng Việt](./BUILD_WINDOWS.vi.md) · [Bahasa Indonesia](./BUILD_WINDOWS.id.md)
 
-# OpenPencil 编译构建部署文档
+# Design Editor 编译构建部署文档
 
 ## 一、下载源码
 
 1. **方式一（推荐）：** 使用 git 克隆并自动拉取子模块：
 
     ```bash
-    git clone --recurse-submodules https://github.com/ZSeven-W/openpencil.git
+    git clone --recurse-submodules https://github.com/kemalcalak/design-editor.git
     ```
 
     > 如果已经克隆过但未拉取子模块，可以在仓库根目录执行：
@@ -66,14 +66,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 从 rustup\.rs 下载 `rustup-init.exe`，双击`rustup-init.exe`安装配置，PowerShell执行以下命令, **对应 `openpencil 0.8.4` 版本**
+    - 2.3 从 rustup\.rs 下载 `rustup-init.exe`，双击`rustup-init.exe`安装配置，PowerShell执行以下命令, **对应 `design-editor 0.8.4` 版本**
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 安装 wasm‑bindgen‑cli，用于处理 WASM 与 JS 的绑定生成，PowerShell 执行以下命令, **对应 `openpencil 0.8.4` 版本**
+    - 2.4 安装 wasm‑bindgen‑cli，用于处理 WASM 与 JS 的绑定生成，PowerShell 执行以下命令, **对应 `design-editor 0.8.4` 版本**
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -133,17 +133,17 @@
             ├── snippets\
             ├── op_host-web.d.ts
             ├── de_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 四、配置 dsh‑openpencil 插件需要的环境变量
+## 四、配置 dsh‑design-editor 插件需要的环境变量
 
-1. 以管理员身份运行 PowerShell，执行以下命令，**把 <i><u>openpencil‑main 根目录</u></i> 替换为实际仓库目录**：
+1. 以管理员身份运行 PowerShell，执行以下命令，**把 <i><u>design-editor‑main 根目录</u></i> 替换为实际仓库目录**：
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "openpencil-main根目录\target\release\design-editor.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "openpencil-main根目录\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "design-editor-main根目录\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "design-editor-main根目录\target\release\design-editor.exe", "User")
     ```
 
 ## 五、验证
@@ -186,5 +186,5 @@
     > 
     > 页面报找不到 `/pkg/de_host_web.js` 时，是文件夹没有 `web-bundle/de_host_web.js` 文件
 
-3. 本文档以 `openpencil 0.8.4` 版本编写，rustup 工具链版本 `1.94`、wasm-bindgen-cli 版本 `0.2.117`、skia-bindings 版本 `0.97.2` 均与该版本对齐，其他版本可能存在差异
+3. 本文档以 `design-editor 0.8.4` 版本编写，rustup 工具链版本 `1.94`、wasm-bindgen-cli 版本 `0.2.117`、skia-bindings 版本 `0.97.2` 均与该版本对齐，其他版本可能存在差异
 

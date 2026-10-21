@@ -143,7 +143,7 @@ pub struct HttpReply {
 ///
 /// Structured per socket stage instead of a pre-formatted sentence.
 /// `Display` reproduces the exact text [`TcpJsonRpc::send`] used to return as
-/// `String`, so `op`'s `op: cannot reach the editor on …` output is unchanged
+/// `String`, so `de`'s `de: cannot reach the editor on …` output is unchanged
 /// byte-for-byte.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HttpTransportError {
@@ -166,7 +166,7 @@ impl std::fmt::Display for HttpTransportError {
             HttpTransportError::Connect { addr, error } => write!(
                 f,
                 "cannot reach the editor on {addr}: {error}\n\
-                 start the OpenPencil MCP server and point clients at http://{addr}/mcp"
+                 start the Design Editor MCP server and point clients at http://{addr}/mcp"
             ),
             HttpTransportError::Write(error) => write!(f, "http write: {error}"),
             HttpTransportError::Read(error) => write!(f, "http read: {error}"),
@@ -189,7 +189,7 @@ pub struct TcpJsonRpc {
     addr: SocketAddr,
     path: String,
     /// Per-instance token for the live MCP endpoint, sent as
-    /// `X-OpenPencil-Token`. Empty means "send no header", which is what the
+    /// `X-Design-Editor-Token`. Empty means "send no header", which is what the
     /// endpoint's tokenless probes (`initialize`, `ping`) still accept.
     token: String,
 }
@@ -221,7 +221,7 @@ impl TcpJsonRpc {
         let authorization = if self.token.is_empty() {
             String::new()
         } else {
-            format!("X-OpenPencil-Token: {}\r\n", self.token)
+            format!("X-Design-Editor-Token: {}\r\n", self.token)
         };
         format!(
             "POST {} HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\n\

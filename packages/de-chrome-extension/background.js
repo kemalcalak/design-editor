@@ -74,7 +74,7 @@ const PICK_RESULT_KEY = 'pickResult';
 const DESIGN_RESULT_KEY = 'designResult';
 
 /** The `.wasm` beside the shim, addressed absolutely for the worker. */
-const CORE_WASM = 'wasm/op_chrome_extension_core_bg.wasm';
+const CORE_WASM = 'wasm/de_chrome_extension_core_bg.wasm';
 
 /** In-flight initialization, so concurrent wakes share one instantiation. */
 let initializing = null;

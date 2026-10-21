@@ -3,7 +3,7 @@
 //! Figma omits `stackPositioning` for the default `AUTO` value and
 //! writes `ABSOLUTE` only for children that must stay out of their
 //! parent's auto-layout flow. Jian uses authored `x` / `y` as its
-//! absolute-position signal, so OpenPencil layout mode must clear
+//! absolute-position signal, so Design Editor layout mode must clear
 //! those coordinates from ordinary flow children while retaining
 //! them (plus constraints) for absolute children.
 
@@ -32,8 +32,8 @@ pub(crate) fn sizing_parent_stack_mode<'a>(
         // Preserve promises fixed authored geometry; never expose a
         // parent layout mode to grow/stretch sizing resolution.
         FigLayoutMode::Preserve => None,
-        FigLayoutMode::OpenPencil if is_absolute_child(figma, parent_stack_mode) => None,
-        FigLayoutMode::OpenPencil => parent_stack_mode,
+        FigLayoutMode::DesignEditor if is_absolute_child(figma, parent_stack_mode) => None,
+        FigLayoutMode::DesignEditor => parent_stack_mode,
     }
 }
 
@@ -42,7 +42,7 @@ pub(crate) fn sizing_parent_stack_mode<'a>(
 /// Preserve mode keeps every authored coordinate because its canvas
 /// path bypasses flex layout. It still records constraints for an
 /// explicit absolute child so that intent survives a later switch to
-/// layout-resolved editing. OpenPencil mode clears coordinates from
+/// layout-resolved editing. Design Editor mode clears coordinates from
 /// default/AUTO children so they participate in flex, and retains
 /// coordinates plus constraints only for ABSOLUTE children.
 pub(crate) fn apply_layout_positioning(
@@ -57,7 +57,7 @@ pub(crate) fn apply_layout_positioning(
 
     let absolute = is_absolute_child(figma, parent_stack_mode);
     let base = base_mut(node);
-    if layout_mode == FigLayoutMode::OpenPencil && !absolute {
+    if layout_mode == FigLayoutMode::DesignEditor && !absolute {
         base.x = None;
         base.y = None;
         base.constraints = None;
@@ -67,7 +67,7 @@ pub(crate) fn apply_layout_positioning(
 }
 
 /// Auto-layout flow order is ascending while the tree builder stores
-/// descending paint order (topmost first). OpenPencil mode clears authored
+/// descending paint order (topmost first). Design Editor mode clears authored
 /// coordinates and feeds children to flex layout, so it must emit flow order.
 /// Preserve mode keeps authored coordinates and bypasses flex layout; retaining
 /// topmost-first order is therefore required for canonical canvas z-order.
@@ -76,7 +76,7 @@ pub(crate) fn order_children(
     has_auto_layout: bool,
     layout_mode: FigLayoutMode,
 ) -> Vec<PenNode> {
-    if layout_mode == FigLayoutMode::OpenPencil && has_auto_layout && children.len() > 1 {
+    if layout_mode == FigLayoutMode::DesignEditor && has_auto_layout && children.len() > 1 {
         children.into_iter().rev().collect()
     } else {
         children
@@ -183,11 +183,11 @@ mod tests {
             None
         );
         assert_eq!(
-            sizing_parent_stack_mode(&flow, Some("VERTICAL"), FigLayoutMode::OpenPencil),
+            sizing_parent_stack_mode(&flow, Some("VERTICAL"), FigLayoutMode::DesignEditor),
             Some("VERTICAL")
         );
         assert_eq!(
-            sizing_parent_stack_mode(&absolute, Some("VERTICAL"), FigLayoutMode::OpenPencil),
+            sizing_parent_stack_mode(&absolute, Some("VERTICAL"), FigLayoutMode::DesignEditor),
             None
         );
     }

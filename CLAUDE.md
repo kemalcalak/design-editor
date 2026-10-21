@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **The TypeScript OpenPencil has been retired.** `apps/web`, `apps/desktop`, `apps/cli`, and the `pen-*` packages (pen-types/core/engine/renderer/figma/mcp/ai-skills/sdk/react/acp) are gone. The product is now implemented in **Rust** (`crates/`) with a thin **wasm-backed web SDK** (`packages/de-web-sdk*`). Historical `// ported from pen-*` comments in the Rust sources name the retired TS as their origin — that code no longer exists in-tree; consult git history (last TS tag `v0.7.5`) if you need it.
+> **The TypeScript Design Editor has been retired.** `apps/web`, `apps/desktop`, `apps/cli`, and the `pen-*` packages (pen-types/core/engine/renderer/figma/mcp/ai-skills/sdk/react/acp) are gone. The product is now implemented in **Rust** (`crates/`) with a thin **wasm-backed web SDK** (`packages/de-web-sdk*`). Historical `// ported from pen-*` comments in the Rust sources name the retired TS as their origin — that code no longer exists in-tree; consult git history (last TS tag `v0.7.5`) if you need it.
 
 Detailed module docs load automatically in subdirectories:
 
@@ -20,14 +20,14 @@ Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**;
 - **Lint / format (Rust):** `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --all`
 - **Lint / format (remaining TS SDK):** from `packages/`: `bun run lint` (oxlint) / `bun run format` (oxfmt)
 - **Desktop app:** `cargo build -p de-host-desktop` → binary `design-editor` (live MCP on `127.0.0.1:<port>/mcp`)
-- **CLI:** `cargo build -p de-cli` → binary `op`
+- **CLI:** `cargo build -p de-cli` → binary `de`
 - **MCP server:** built into the desktop/web host (`--mcp <path>`); crate `de-mcp`
 - **Iconify catalog (Rust assets):** from `packages/`: `bun run generate-iconify-catalog`
 - **Sync all managed versions:** `scripts/sync-version.sh` reads the canonical version from root `Cargo.toml`; verify without writing via `tools/check-version-sync.sh`
 
 ## Architecture
 
-OpenPencil is an open-source, AI-native vector design tool (Design-as-Code). The editor — canvas engine, chrome, stores, MCP, AI — is Rust, built on the vendored **jian** skia/widget/render/event toolkit (`vendor/jian`) and **casement** winit fork (`vendor/casement`). See **`crates/CLAUDE.md`** for the authoritative crate map; the essentials:
+Design Editor is an open-source, AI-native vector design tool (Design-as-Code). The editor — canvas engine, chrome, stores, MCP, AI — is Rust, built on the vendored **jian** skia/widget/render/event toolkit (`vendor/jian`) and **casement** winit fork (`vendor/casement`). See **`crates/CLAUDE.md`** for the authoritative crate map; the essentials:
 
 ```text
 crates/
@@ -39,7 +39,7 @@ crates/
 ├── de-host-desktop/      Desktop binary `design-editor`; also the `--serve-web` daemon
 ├── de-host-services/     Headless serve-web / MCP daemon lib (shared by desktop + web-server)
 ├── de-host-web-server/   Thin GL-free web-server binary
-├── de-cli/               `op` command-line tool
+├── de-cli/               `de` command-line tool
 ├── de-util/              Dependency-free leaf: hex-colour parsing + JSON / XML escaping
 └── de-mcp / de-ai / de-ai-skills / de-codegen / de-orchestrator / de-figma /
    de-git / de-opmerge / de-pen-loader / de-design-lint / de-i18n / de-html /

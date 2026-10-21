@@ -1,7 +1,7 @@
 {
-  "name": "@zseven-w/de-web-sdk",
+  "name": "@kemalcalak/de-web-sdk",
   "version": "0.1.0",
-  "description": "Read-only OpenPencil .op viewer SDK for the web (wasm-backed)",
+  "description": "Read-only Design Editor .op viewer SDK for the web (wasm-backed)",
   "license": "MIT",
   "type": "module",
   "files": [

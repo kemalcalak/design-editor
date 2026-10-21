@@ -72,12 +72,12 @@ fn request_with_method(method: &str, path: &str, headers: &str, body: &str) -> S
 /// Headers a token-carrying non-browser client sends (VS Code MCP proxy
 /// shape: explicit port, no `Origin`).
 fn authed_headers() -> String {
-    format!("Host: 127.0.0.1:{PORT}\r\nX-OpenPencil-Token: {TOKEN}\r\n")
+    format!("Host: 127.0.0.1:{PORT}\r\nX-Design-Editor-Token: {TOKEN}\r\n")
 }
 
 #[test]
 fn a_tokenless_tool_call_is_served() {
-    // No X-OpenPencil-Token header: the local endpoint admits every caller
+    // No X-Design-Editor-Token header: the local endpoint admits every caller
     // that clears the Host/Origin boundary, so a bare MCP client (only a
     // URL, no discovered token) reaches the UI thread and is served.
     let (req_tx, req_rx) = mpsc::channel();
@@ -146,7 +146,7 @@ fn cli_request_without_origin_or_host_port_is_served() {
             .is_ok(),
         _ => false,
     });
-    let headers = format!("Host: 127.0.0.1\r\nX-OpenPencil-Token: {TOKEN}\r\n");
+    let headers = format!("Host: 127.0.0.1\r\nX-Design-Editor-Token: {TOKEN}\r\n");
     let response = drive(&request("/mcp", &headers, LIST_PAGES_CALL), &req_tx);
 
     assert!(
@@ -162,7 +162,7 @@ fn foreign_origin_tool_call_is_refused() {
     // Even WITH the right token: a browser page that somehow learned the
     // token is still not an allowed caller.
     let headers = format!(
-        "Host: 127.0.0.1:{PORT}\r\nOrigin: http://evil.example\r\nX-OpenPencil-Token: {TOKEN}\r\n"
+        "Host: 127.0.0.1:{PORT}\r\nOrigin: http://evil.example\r\nX-Design-Editor-Token: {TOKEN}\r\n"
     );
     let response = drive(&request("/mcp", &headers, LIST_PAGES_CALL), &req_tx);
 
@@ -191,14 +191,14 @@ fn non_loopback_or_wrong_port_host_is_refused() {
     // The DNS-rebinding shape: the browser resolved `evil.example` to
     // 127.0.0.1 but still writes the NAME into `Host`.
     let headers =
-        format!("Host: evil.example:{PORT}\r\nX-OpenPencil-Token: {TOKEN}\r\nOrigin: http://evil.example\r\n");
+        format!("Host: evil.example:{PORT}\r\nX-Design-Editor-Token: {TOKEN}\r\nOrigin: http://evil.example\r\n");
     let response = drive(&request("/mcp", &headers, LIST_PAGES_CALL), &req_tx);
     assert!(response.starts_with("HTTP/1.1 403 Forbidden"), "{response}");
     assert!(req_rx.try_recv().is_err(), "refused before the UI thread");
 
     // A loopback literal, but a port this server never bound.
     let headers = format!(
-        "Host: 127.0.0.1:{}\r\nX-OpenPencil-Token: {TOKEN}\r\n",
+        "Host: 127.0.0.1:{}\r\nX-Design-Editor-Token: {TOKEN}\r\n",
         PORT + 1
     );
     let response = drive(&request("/mcp", &headers, LIST_PAGES_CALL), &req_tx);
@@ -259,7 +259,7 @@ fn extension_headers() -> String {
 fn extension_origin_is_refused_outside_the_snapshot_ingress() {
     let (req_tx, req_rx) = mpsc::channel();
     let headers = format!(
-        "Host: 127.0.0.1:{PORT}\r\nOrigin: {EXTENSION_ORIGIN}\r\nX-OpenPencil-Token: {TOKEN}\r\n"
+        "Host: 127.0.0.1:{PORT}\r\nOrigin: {EXTENSION_ORIGIN}\r\nX-Design-Editor-Token: {TOKEN}\r\n"
     );
     let response = drive(&request("/mcp", &headers, LIST_PAGES_CALL), &req_tx);
 
@@ -564,7 +564,7 @@ fn foreign_host_is_refused_even_with_an_accepted_extension_origin() {
     assert!(req_rx.try_recv().is_err(), "refused before the UI thread");
 }
 
-/// Extension-id pinning (`OPENPENCIL_EXTENSION_ALLOWED_IDS`). Driven against
+/// Extension-id pinning (`DESIGN_EDITOR_EXTENSION_ALLOWED_IDS`). Driven against
 /// the predicate rather than the process environment so both modes are
 /// covered without a global-state race between tests.
 #[test]

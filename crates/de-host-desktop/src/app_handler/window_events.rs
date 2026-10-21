@@ -166,9 +166,9 @@ impl DesktopApp {
             }
         } else {
             eprintln!(
-                        "design-editor: ignored dropped file (not .op / .pen / .fig / .html / .zip): {}",
-                        path.display()
-                    );
+                "design-editor: ignored dropped file (not .op / .pen / .fig / .html / .zip): {}",
+                path.display()
+            );
         }
     }
 

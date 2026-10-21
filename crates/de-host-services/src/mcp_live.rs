@@ -57,11 +57,11 @@ const MCP_CLIENT_COLOR: &str = "#8A8F98";
 pub struct McpLiveServer {
     port: u16,
     /// Per-instance identity token, reported in the live `ping` reply and
-    /// written into `~/.openpencil/.op-mcp-port`. Lets the `op` CLI confirm
+    /// written into `~/.design-editor/.de-mcp-port`. Lets the `op` CLI confirm
     /// the server it pings is the exact instance that wrote the discovery
     /// file (defeats stale-file / port-reuse / pid-recycle confusion).
     token: String,
-    /// Set by a connection thread when a token-authed `openpencil/shutdown`
+    /// Set by a connection thread when a token-authed `design-editor/shutdown`
     /// arrives; the UI thread polls it (`shutdown_requested`) and exits the
     /// event loop, so `de stop` quits the editor cleanly without a signal.
     quit_flag: Arc<AtomicBool>,
@@ -230,7 +230,7 @@ impl McpLiveServer {
         &self.token
     }
 
-    /// Whether a token-authed `openpencil/shutdown` was received — the UI
+    /// Whether a token-authed `design-editor/shutdown` was received — the UI
     /// thread should exit the event loop.
     pub fn shutdown_requested(&self) -> bool {
         self.quit_flag.load(Ordering::Acquire)

@@ -22,9 +22,9 @@ use crate::mcp_config_io::atomic_write;
 
 /// Managed-block begin marker (a YAML comment line).
 pub(crate) const DSH_PATCH_BEGIN: &str =
-    "# openpencil-mcp-begin (managed by OpenPencil; do not edit)";
+    "# design-editor-mcp-begin (managed by Design Editor; do not edit)";
 /// Managed-block end marker (a YAML comment line).
-pub(crate) const DSH_PATCH_END: &str = "# openpencil-mcp-end";
+pub(crate) const DSH_PATCH_END: &str = "# design-editor-mcp-end";
 
 /// The endpoint the settings panel's live server exposes over
 /// streamable HTTP. Same shape as `mcp_integrations::endpoint`; duplicated
@@ -37,7 +37,7 @@ fn endpoint(port: u16) -> String {
 /// top-level-array context this is valid YAML on its own.
 fn dsh_patch_block(port: u16) -> String {
     format!(
-        "{DSH_PATCH_BEGIN}\n- insert:\n    - id: mcp-openpencil\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: openpencil\n        transport: streamable-http\n        url: {}\n{DSH_PATCH_END}\n",
+        "{DSH_PATCH_BEGIN}\n- insert:\n    - id: mcp-design-editor\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: design-editor\n        transport: streamable-http\n        url: {}\n{DSH_PATCH_END}\n",
         endpoint(port)
     )
 }
@@ -64,23 +64,23 @@ fn lone_marker(lines: &[&str]) -> bool {
     begin ^ end
 }
 
-fn dsh_text_has_openpencil(text: &str) -> bool {
+fn dsh_text_has_design_editor(text: &str) -> bool {
     text.lines().any(|line| {
         let trimmed = line.trim();
-        trimmed.contains("id: mcp-openpencil") || trimmed.contains("serverName: openpencil")
+        trimmed.contains("id: mcp-design-editor") || trimmed.contains("serverName: design-editor")
     })
 }
 
-/// Whether the dsh patch layer already points at an OpenPencil server —
+/// Whether the dsh patch layer already points at a Design Editor server —
 /// either our managed block or a hand-written entry (detection covers both
 /// so a hand-wired dsh still lights the toggle up).
-pub(crate) fn dsh_config_has_openpencil(path: &Path) -> bool {
+pub(crate) fn dsh_config_has_design_editor(path: &Path) -> bool {
     fs::read_to_string(path)
-        .map(|text| dsh_text_has_openpencil(&text))
+        .map(|text| dsh_text_has_design_editor(&text))
         .unwrap_or(false)
 }
 
-/// Install / update / remove the OpenPencil managed block in a dsh
+/// Install / update / remove the Design Editor managed block in a dsh
 /// `cordis.patch.yml`.
 ///
 /// Enable:
@@ -97,11 +97,11 @@ pub(crate) fn dsh_config_has_openpencil(path: &Path) -> bool {
 /// Disable:
 /// - managed block present → remove the block including both markers,
 ///   leaving everything else byte-identical;
-/// - lone marker or a marker-less `mcp-openpencil` / `serverName: openpencil`
+/// - lone marker or a marker-less `mcp-design-editor` / `serverName: design-editor`
 ///   entry → error ([`McpConfigError::DshPatchMarkersMismatched`] /
 ///   [`McpConfigError::DshManualEntry`]) — never delete hand-written or
 ///   hand-edited content silently;
-/// - nothing OpenPencil-related → no-op.
+/// - nothing Design Editor-related → no-op.
 pub(crate) fn update_dsh_patch_config(
     path: &Path,
     enabled: bool,
@@ -139,7 +139,7 @@ pub(crate) fn update_dsh_patch_config(
                         path: path.to_path_buf(),
                     });
                 }
-                if dsh_text_has_openpencil(&existing) {
+                if dsh_text_has_design_editor(&existing) {
                     return Err(McpConfigError::DshManualEntry {
                         path: path.to_path_buf(),
                     });

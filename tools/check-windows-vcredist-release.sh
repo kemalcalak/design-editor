@@ -6,9 +6,9 @@ set -euo pipefail
 
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd)
-vcredist_stager=${OPENPENCIL_VC_REDIST_STAGER:-$repo_root/tools/stage-pinned-vcredist.ps1}
-windows_installer=${OPENPENCIL_WINDOWS_NSIS_INSTALLER:-$repo_root/scripts/package-windows.nsi}
-cli_installer=${OPENPENCIL_WINDOWS_CLI_INSTALLER:-$repo_root/scripts/install-de.ps1}
+vcredist_stager=${DESIGN_EDITOR_VC_REDIST_STAGER:-$repo_root/tools/stage-pinned-vcredist.ps1}
+windows_installer=${DESIGN_EDITOR_WINDOWS_NSIS_INSTALLER:-$repo_root/scripts/package-windows.nsi}
+cli_installer=${DESIGN_EDITOR_WINDOWS_CLI_INSTALLER:-$repo_root/scripts/install-de.ps1}
 
 for file in "$vcredist_stager" "$windows_installer" "$cli_installer"; do
     [[ -f "$file" && ! -L "$file" ]] || {
@@ -128,7 +128,7 @@ require_literal '$null -eq $InstalledVersion -or $InstalledVersion -lt $VcRedist
 require_literal '$RebootRequired = $Process.ExitCode -eq 3010' "$cli_installer"
 require_literal '$VcRedistRebootRequired = Install-VcRedistIfRequired' "$cli_installer"
 require_literal 'if ($VcRedistRebootRequired)' "$cli_installer"
-require_literal 'restart Windows before running op' "$cli_installer"
+require_literal 'restart Windows before running de' "$cli_installer"
 require_count 3 'Get-InstalledVcRedistVersion' "$cli_installer"
 
 ruby - "$cli_installer" "$vcredist_stager" <<'RUBY'
@@ -151,7 +151,7 @@ reboot_branch = source.rindex('if ($VcRedistRebootRequired)')
 otherwise = source.index("} else {", reboot_branch)
 immediate_verify = source.index('& $Target --version', reboot_branch)
 unless reboot_branch && otherwise && immediate_verify && otherwise < immediate_verify
-  raise "CLI must not execute op immediately when the VC++ Runtime requires a reboot"
+  raise "CLI must not execute de immediately when the VC++ Runtime requires a reboot"
 end
 
 stager = File.read(ARGV.fetch(1))

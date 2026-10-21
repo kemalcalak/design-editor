@@ -21,4 +21,4 @@ export function makeMockViewer() {
   const emit = (e: 'load' | 'viewportchange') => listeners[e].forEach((cb) => cb());
   return { viewer, emit };
 }
-// Shared vi.mock factory: tests call vi.mock('@zseven-w/de-web-sdk', () => coreMock(current))
+// Shared vi.mock factory: tests call vi.mock('@kemalcalak/de-web-sdk', () => coreMock(current))

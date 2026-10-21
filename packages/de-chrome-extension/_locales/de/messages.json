@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "OpenPencil",
+    "message": "Design Editor",
     "description": "Extension name shown in Chrome."
   },
   "extDescription": {
-    "message": "Erfasst Seiten als bearbeitbare Designknoten in OpenPencil und extrahiert mit einem Klick einen design.md-Designsystem-Leitfaden.",
+    "message": "Erfasst Seiten als bearbeitbare Designknoten in Design Editor und extrahiert mit einem Klick einen design.md-Designsystem-Leitfaden.",
     "description": "Extension description shown in Chrome."
   },
   "captureButton": {
@@ -20,7 +20,7 @@
     "message": "design.md extrahieren"
   },
   "statusDesignWorking": {
-    "message": "De-identifizierte Stilmerkmale der Seite werden erfasst und an OpenPencil AI gesendet…"
+    "message": "De-identifizierte Stilmerkmale der Seite werden erfasst und a Design Editor AI gesendet…"
   },
   "statusDesignSmartSuccess": {
     "message": "design.md wurde mit der konfigurierten KI erstellt und heruntergeladen."
@@ -29,13 +29,13 @@
     "message": "KI nicht verfügbar. design.md wurde mit dem deterministischen lokalen Fallback erstellt und heruntergeladen: $1"
   },
   "designFallbackPairing": {
-    "message": "OpenPencil hat diese Erweiterung nicht für die KI-Generierung autorisiert; der lokale Fallback wurde verwendet."
+    "message": "Design Editor hat diese Erweiterung nicht für die KI-Generierung autorisiert; der lokale Fallback wurde verwendet."
   },
   "designFallbackOffline": {
-    "message": "OpenPencil unter $1 ist nicht erreichbar."
+    "message": "Design Editor unter $1 ist nicht erreichbar."
   },
   "designFallbackUnsupported": {
-    "message": "Diese OpenPencil-Version unterstützt die intelligente Generierung von design.md nicht."
+    "message": "Diese Design Editor-Version unterstützt die intelligente Generierung von design.md nicht."
   },
   "designFallbackError": {
     "message": "Intelligente Generierung fehlgeschlagen: $1"
@@ -62,7 +62,7 @@
     "message": "Esc zum Abbrechen"
   },
   "endpointLabel": {
-    "message": "OpenPencil-Adresse"
+    "message": "Design Editor-Adresse"
   },
   "endpointHint": {
     "message": "Desktop-App: Einstellungen → MCP → Server starten (Standardport 3100)."
@@ -80,19 +80,19 @@
     "message": "Momentaufnahme wird übertragen ($1)…"
   },
   "statusSending": {
-    "message": "Wird an OpenPencil gesendet…"
+    "message": "Wird a Design Editor gesendet…"
   },
   "statusImported": {
-    "message": "$1 Knoten in OpenPencil importiert."
+    "message": "$1 Knoten in Design Editor importiert."
   },
   "statusSendingAccount": {
-    "message": "Wird an dein OpenPencil-Konto gesendet…"
+    "message": "Wird an dein Design Editor-Konto gesendet…"
   },
   "statusSentToAccount": {
-    "message": "An dein OpenPencil-Konto gesendet: $1"
+    "message": "An dein Design Editor-Konto gesendet: $1"
   },
   "statusSentLocalFallback": {
-    "message": "Deine Kontositzung war abgelaufen, daher ging die Aufnahme an das OpenPencil auf diesem Computer: $1 Knoten importiert."
+    "message": "Deine Kontositzung war abgelaufen, daher ging die Aufnahme an das Design Editor auf diesem Computer: $1 Knoten importiert."
   },
   "statusDownloaded": {
     "message": "$1 gespeichert."
@@ -125,22 +125,22 @@
     "message": "Die Adresse muss eine Loopback-Adresse mit Port sein — 127.0.0.1:3100 oder localhost:3100."
   },
   "errorOffline": {
-    "message": "OpenPencil ist unter $1 nicht erreichbar. Starte die Desktop-App und schalte Einstellungen → MCP → Server ein, oder führe aus: design-editor --serve-web 3100"
+    "message": "Design Editor ist unter $1 nicht erreichbar. Starte die Desktop-App und schalte Einstellungen → MCP → Server ein, oder führe aus: design-editor --serve-web 3100"
   },
   "errorTimeout": {
-    "message": "OpenPencil unter $1 hat die Verbindung angenommen, aber innerhalb von $2 s nicht geantwortet. Die App ist möglicherweise beschäftigt oder hängt — prüfe sie und versuche es erneut."
+    "message": "Design Editor unter $1 hat die Verbindung angenommen, aber innerhalb von $2 s nicht geantwortet. Die App ist möglicherweise beschäftigt oder hängt — prüfe sie und versuche es erneut."
   },
   "errorNoIngress": {
-    "message": "Dieser OpenPencil-Build hat keinen Eingang für Erweiterungen ($1). Aktualisiere die App oder nutze „.op herunterladen“ und öffne die Datei in OpenPencil"
+    "message": "Dieser Design Editor-Build hat keinen Eingang für Erweiterungen ($1). Aktualisiere die App oder nutze „.op herunterladen“ und öffne die Datei in Design Editor"
   },
   "errorTooLarge": {
-    "message": "Diese Erfassung ist größer als $1 MB und wird von OpenPencils Momentaufnahme-Route abgelehnt. Nutze „.op herunterladen“ und öffne dann die Datei in OpenPencil"
+    "message": "Diese Erfassung ist größer als $1 MB und wird von Design Editors Momentaufnahme-Route abgelehnt. Nutze „.op herunterladen“ und öffne dann die Datei in Design Editor"
   },
   "errorAccountTooLarge": {
     "message": "Diese Erfassung ist größer als $1 MB und wird vom Konto-Posteingang abgelehnt. Sende sie stattdessen an dieses Gerät."
   },
   "errorImport": {
-    "message": "OpenPencil hat die Momentaufnahme abgelehnt: $1"
+    "message": "Design Editor hat die Momentaufnahme abgelehnt: $1"
   },
   "errorDownload": {
     "message": "Download fehlgeschlagen: $1"
@@ -164,16 +164,16 @@
     "message": "Schließe die Anmeldung auf der soeben geöffneten Seite ab und öffne dieses Fenster erneut."
   },
   "accountSignedOut": {
-    "message": "Von deinem OpenPencil-Konto abgemeldet."
+    "message": "Von deinem Design Editor-Konto abgemeldet."
   },
   "accountSignOutManual": {
     "message": "Schließe die Abmeldung auf der soeben geöffneten Kontoseite ab."
   },
   "accountUnavailable": {
-    "message": "Dein OpenPencil-Konto ist nicht erreichbar: $1"
+    "message": "Dein Design Editor-Konto ist nicht erreichbar: $1"
   },
   "errorAccountSignedOut": {
-    "message": "Die Sitzung deines OpenPencil-Kontos ist abgelaufen. Melde dich erneut an und versuche es noch einmal."
+    "message": "Die Sitzung deines Design Editor-Kontos ist abgelaufen. Melde dich erneut an und versuche es noch einmal."
   },
   "errorAccountForbidden": {
     "message": "Der Hub hat den Ursprung oder das Sitzungs-Token dieses Uploads abgelehnt. Melde dich erneut an und versuche es noch einmal. ($1)"
@@ -191,10 +191,10 @@
     "message": "Zu viele Uploads in dein Konto. Versuche es in etwa $1 Sekunden erneut."
   },
   "errorAccountRejected": {
-    "message": "Dein OpenPencil-Konto hat die Aufnahme abgelehnt: $1"
+    "message": "Dein Design Editor-Konto hat die Aufnahme abgelehnt: $1"
   },
   "errorAccountUnavailable": {
-    "message": "Dein OpenPencil-Konto kann derzeit keine Aufnahmen annehmen ($1). Versuche es später erneut oder sende an das OpenPencil auf diesem Computer."
+    "message": "Dein Design Editor-Konto kann derzeit keine Aufnahmen annehmen ($1). Versuche es später erneut oder sende an das Design Editor auf diesem Computer."
   },
   "regionLabel": {
     "message": "Region"
@@ -209,9 +209,9 @@
     "message": "Senden an"
   },
   "deliveryLocal": {
-    "message": "OpenPencil auf diesem Computer"
+    "message": "Design Editor auf diesem Computer"
   },
   "deliveryAccount": {
-    "message": "Mein OpenPencil-Konto"
+    "message": "Mein Design Editor-Konto"
   }
 }

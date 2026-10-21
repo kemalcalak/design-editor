@@ -1,5 +1,5 @@
 /**
- * OpenPencil delivery client — the `fetch` arm of both import paths.
+ * Design Editor delivery client — the `fetch` arm of both import paths.
  *
  * Every decision this file used to make now lives in Rust
  * (`crates/de-chrome-extension-core/src/{endpoint,ingress,transfer}.rs`):
@@ -99,7 +99,7 @@ async function postJson(url, body) {
       throw requestError('timeout', String(timeoutMs / 1000));
     }
     // A refused connection, a closed app, or a wrong port all land here as a
-    // bare TypeError; the caller turns it into the "launch OpenPencil" hint.
+    // bare TypeError; the caller turns it into the "launch Design Editor" hint.
     throw requestError('offline', String(cause && cause.message ? cause.message : cause));
   } finally {
     clearTimeout(timer);
@@ -141,7 +141,7 @@ async function sendVia(url, body, classify) {
 }
 
 /**
- * Import `snapshot` (the extractor's JSON text) into the OpenPencil instance
+ * Import `snapshot` (the extractor's JSON text) into the Design Editor instance
  * listening on `endpoint` (`host:port`).
  *
  * @returns {Promise<{ nodeCount: number, warnings: string[] }>}
@@ -276,8 +276,8 @@ async function cancelDesignJob(url, timeoutMs) {
 }
 
 /**
- * Ask the user's local OpenPencil to synthesize design.md from bounded style
- * evidence. OpenPencil, not the extension, owns the configured AI provider and
+ * Ask the user's local Design Editor to synthesize design.md from bounded style
+ * evidence. Design Editor, not the extension, owns the configured AI provider and
  * credentials; this request never addresses a provider directly.
  *
  * @param {string} endpoint normalized loopback host:port.
@@ -316,10 +316,10 @@ export async function generateDesignMd(endpoint, evidence) {
       throw requestError(String(started.code || 'generationFailed'), String(started.detail || ''));
     }
     if (started.outcome !== 'pending') {
-      throw requestError('generationFailed', 'OpenPencil returned an invalid design job');
+      throw requestError('generationFailed', 'Design Editor returned an invalid design job');
     }
     jobUrl = core.designMdPollUrl(endpoint, String(started.jobId || '')) ?? null;
-    if (!jobUrl) throw requestError('generationFailed', 'OpenPencil returned an invalid job id');
+    if (!jobUrl) throw requestError('generationFailed', 'Design Editor returned an invalid job id');
 
     let retryAfterMs = started.retryAfterMs ?? core.designMdPollIntervalMs();
     let pollAttempts = 0;
@@ -359,7 +359,7 @@ export async function generateDesignMd(endpoint, evidence) {
         );
       }
       if (outcome.outcome !== 'ok') {
-        throw requestError('generationFailed', 'OpenPencil returned an invalid job result');
+        throw requestError('generationFailed', 'Design Editor returned an invalid job result');
       }
       completed = true;
       return { markdown: String(outcome.markdown), intelligent: true };
@@ -464,7 +464,7 @@ async function postHubJson(url, body, csrfToken) {
 }
 
 /**
- * File `snapshot` in the signed-in user's OpenPencil Hub inbox.
+ * File `snapshot` in the signed-in user's Design Editor Hub inbox.
  *
  * @param {string} hubOrigin the region's hub origin, from the core.
  * @param {string} csrfToken the live session's token — never a stored one.

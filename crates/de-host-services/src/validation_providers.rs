@@ -52,10 +52,10 @@ use crate::export::screenshot::{capture_scene, CaptureSpec};
 /// so it stays a no-op; the real loop only activates when BOTH are on. The
 /// flag default is NOT changed — see `default_validation_enabled` in
 /// `de_orchestrator::types`.
-const VISION_VALIDATION_ENV: &str = "OPENPENCIL_VISION_VALIDATION";
+const VISION_VALIDATION_ENV: &str = "DESIGN_EDITOR_VISION_VALIDATION";
 
 /// Whether the host should inject the REAL vision providers
-/// (`OPENPENCIL_VISION_VALIDATION=1`). Defaults `false`.
+/// (`DESIGN_EDITOR_VISION_VALIDATION=1`). Defaults `false`.
 pub fn vision_validation_enabled() -> bool {
     std::env::var(VISION_VALIDATION_ENV).is_ok_and(|v| v == "1")
 }
@@ -679,7 +679,7 @@ mod tests {
     }
 
     /// Default-off proof: the STUB providers (selected when
-    /// `OPENPENCIL_VISION_VALIDATION` is unset) keep the loop a no-op even at
+    /// `DESIGN_EDITOR_VISION_VALIDATION` is unset) keep the loop a no-op even at
     /// node_count >= 30 with validation_enabled=true — zero rounds, document
     /// untouched. This is the byte-for-byte default path.
     #[test]

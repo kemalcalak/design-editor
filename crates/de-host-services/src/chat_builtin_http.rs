@@ -451,10 +451,10 @@ async fn run_openai_chat(
         "max_tokens": max_output_tokens,
         "messages": messages,
     });
-    // Optional temperature override: read OPENPENCIL_LLM_TEMPERATURE
+    // Optional temperature override: read DESIGN_EDITOR_LLM_TEMPERATURE
     // (f32 in range 0.0..=2.0). If set and valid, add to body; else
     // omit (preserve provider default).
-    if let Ok(temp_str) = std::env::var("OPENPENCIL_LLM_TEMPERATURE") {
+    if let Ok(temp_str) = std::env::var("DESIGN_EDITOR_LLM_TEMPERATURE") {
         if let Ok(temp) = temp_str.parse::<f32>() {
             if (0.0..=2.0).contains(&temp) {
                 body["temperature"] = json!(temp);

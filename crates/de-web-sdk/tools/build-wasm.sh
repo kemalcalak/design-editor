@@ -10,7 +10,7 @@
 #      default is empty (default = []), so there are no default features to
 #      suppress.
 #   3. wasm-bindgen --target web → crates/de-web-sdk/pkg/
-#      Output: pkg/op_web_sdk_bg.wasm + pkg/de_web_sdk.js + pkg/*.d.ts.
+#      Output: pkg/de_web_sdk_bg.wasm + pkg/de_web_sdk.js + pkg/*.d.ts.
 #      The artifact is the raw wasm-bindgen pkg/ directory — no separate
 #      CanvasKit sub-asset assembly is needed because de-web-sdk is pure
 #      document logic; CanvasKit itself is loaded externally by the host page.
@@ -42,8 +42,8 @@ WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 CRATE_DIR="${WORKSPACE_ROOT}/crates/de-web-sdk"
 PKG_DIR="${CRATE_DIR}/pkg"
 # wasm-bindgen names the .wasm after the lib.name in Cargo.toml ("de_web_sdk").
-WASM_RAW="${PKG_DIR}/op_web_sdk_bg.wasm"
-WASM_OPT="${PKG_DIR}/op_web_sdk_bg.opt.wasm"
+WASM_RAW="${PKG_DIR}/de_web_sdk_bg.wasm"
+WASM_OPT="${PKG_DIR}/de_web_sdk_bg.opt.wasm"
 # cargo places the raw cdylib here before wasm-bindgen post-processes it.
 TARGET_WASM="${WORKSPACE_ROOT}/target/wasm32-unknown-unknown/release/de_web_sdk.wasm"
 

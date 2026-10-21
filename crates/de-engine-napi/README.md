@@ -1,11 +1,11 @@
 # de-engine-napi
 
-The OpenHarmony (OHOS) binding for the OpenPencil engine — built as
-**`libopenpencil.so`**, the native module the ArkTS app in `packaging/harmony`
+The OpenHarmony (OHOS) binding for the Design Editor engine — built as
+**`libdesign_editor.so`**, the native module the ArkTS app in `packaging/harmony`
 loads:
 
 ```ts
-import native from 'libopenpencil.so';
+import native from 'libdesign_editor.so';
 ```
 
 It is the OHOS twin of `crates/de-engine-jni` (Android): the same
@@ -18,7 +18,7 @@ tombstoning handle table — reached through Node-API instead of JNI.
 
 ```text
 ArkTS shell (packaging/harmony)
-   │  import native from 'libopenpencil.so'
+   │  import native from 'libdesign_editor.so'
    ▼
 de-engine-napi                        ← this crate
    ├── module.rs        Node-API module surface + XComponent adoption at load
@@ -288,7 +288,7 @@ scripts/build-ohos.sh          # aarch64, release, --features gl,editor
 
 After a successful build, the script validates the mobile import/background
 NAPI markers and atomically installs the ABI payload at
-`packaging/harmony/entry/libs/arm64-v8a/libopenpencil.so`. The HarmonyOS
+`packaging/harmony/entry/libs/arm64-v8a/libdesign_editor.so`. The HarmonyOS
 project contract fails closed if that packaged ELF is missing or stale.
 
 Features: `gl` (EGL/GLES rendering), `editor` (full editor mode),

@@ -1,7 +1,7 @@
-//! Writes `~/.openpencil/.op-mcp-port` so the Rust `op` CLI can discover
+//! Writes `~/.design-editor/.de-mcp-port` so the Rust `op` CLI can discover
 //! this running editor's live MCP server.
 //!
-//! This is a SEPARATE file from the TS app's `~/.openpencil/.port` because
+//! This is a SEPARATE file from the TS app's `~/.design-editor/.port` because
 //! the two hosts speak different wire protocols: the Rust editor serves
 //! JSON-RPC at `/mcp`, while the TS app serves REST at `/api/mcp/*`. To make
 //! the two cross-discoverable (transport-unification, step 4 of that plan),
@@ -33,7 +33,7 @@ fn now_millis() -> u64 {
 }
 
 /// Publish the live MCP server on `port` (with identity `token`) under
-/// `~/.openpencil/.op-mcp-port`. Best-effort: failures are non-fatal
+/// `~/.design-editor/.de-mcp-port`. Best-effort: failures are non-fatal
 /// (discovery falls back to the fixed default port on the CLI side).
 pub(crate) fn write(port: u16, token: &str) {
     let Some(path) = port_file_path() else {
@@ -64,7 +64,7 @@ pub(crate) fn port_record_json(port: u16, pid: u32, token: &str, timestamp: u64)
     .to_string()
 }
 
-/// Remove `~/.openpencil/.op-mcp-port`, but only if we wrote it (matching
+/// Remove `~/.design-editor/.de-mcp-port`, but only if we wrote it (matching
 /// `writerPid`). A missing or foreign file is left untouched.
 pub(crate) fn remove() {
     let Some(path) = port_file_path() else {

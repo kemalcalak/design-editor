@@ -5,7 +5,7 @@ use de_collab_relay_server::{
 };
 use tracing_subscriber::EnvFilter;
 
-const LOG_LEVEL_ENV: &str = "OPENPENCIL_COLLAB_RELAY_LOG_LEVEL";
+const LOG_LEVEL_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_LOG_LEVEL";
 
 #[tokio::main]
 async fn main() {
@@ -148,7 +148,7 @@ where
                      --check-production]\n\
                      \n\
                      --production loads pinned ticket-policy, locator, region, and relay X25519\n\
-                     verifier configuration from OPENPENCIL_COLLAB_RELAY_* environment variables.\n\
+                     verifier configuration from DESIGN_EDITOR_COLLAB_RELAY_* environment variables.\n\
                      --allow-ticket-binding-only explicitly selects reduced assurance when no\n\
                      challenge-proof key is configured.\n\
                      --check-production verifies the mounted production trust inputs and exits.\n\
@@ -192,7 +192,7 @@ enum CliError {
     BindingOnlyRequiresProduction,
     #[error("--check-production cannot be combined with a server launch mode")]
     ConflictingCheckMode,
-    #[error("OPENPENCIL_COLLAB_RELAY_LOG_LEVEL must be one of error, warn, info, or debug")]
+    #[error("DESIGN_EDITOR_COLLAB_RELAY_LOG_LEVEL must be one of error, warn, info, or debug")]
     InvalidLogLevel,
 }
 

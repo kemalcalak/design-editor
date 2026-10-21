@@ -17,7 +17,7 @@
 //! Borrow discipline: a `SharedSync`/`inner` borrow is held only for the span
 //! of one synchronous decision, never across an XHR callback.
 //!
-//! Startup handoff (dsh-openpencil #2): [`early_listener`] installs a
+//! Startup handoff (dsh-design-editor #2): [`early_listener`] installs a
 //! minimal `message` listener at the very start of the mount — before the
 //! ~24 MB wasm download — buffers inbound messages and announces
 //! `op-bridge/listening`; [`install`] then replays the buffer through this
@@ -234,7 +234,7 @@ fn route_message<C: RepaintContext + 'static>(
 }
 
 /// `locale`: apply the embedding host's locale as a page-lifetime override
-/// without replacing the user's OpenPencil locale preference.
+/// without replacing the user's Design Editor locale preference.
 fn handle_locale<C: RepaintContext + 'static>(
     inner: &Rc<RefCell<C>>,
     locale: de_editor_core::Locale,
@@ -253,7 +253,7 @@ fn handle_locale<C: RepaintContext + 'static>(
 
 /// `theme`: apply the embedding host's color scheme as a page-lifetime
 /// override and repaint immediately. `web_settings::theme` retains the user's
-/// prior OpenPencil preference underneath this override, so neither the device
+/// prior Design Editor preference underneath this override, so neither the device
 /// key nor the compatibility settings payload adopts the host scheme.
 fn handle_theme<C: RepaintContext + 'static>(
     inner: &Rc<RefCell<C>>,

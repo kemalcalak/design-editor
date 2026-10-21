@@ -1,13 +1,13 @@
 
 > [English](./BUILD_WINDOWS.md) · [简体中文](./BUILD_WINDOWS.zh.md) · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · [한국어](./BUILD_WINDOWS.ko.md) · [Français](./BUILD_WINDOWS.fr.md) · [Español](./BUILD_WINDOWS.es.md) · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · **हिन्दी** · [Türkçe](./BUILD_WINDOWS.tr.md) · [ไทย](./BUILD_WINDOWS.th.md) · [Tiếng Việt](./BUILD_WINDOWS.vi.md) · [Bahasa Indonesia](./BUILD_WINDOWS.id.md)
 
-# OpenPencil Windows बिल्ड गाइड
+# Design Editor Windows बिल्ड गाइड
 
 ## 1. स्रोत कोड डाउनलोड करें
 
-1. openpencil रिपॉज़िटरी का स्रोत कोड डाउनलोड करें
+1. design-editor रिपॉज़िटरी का स्रोत कोड डाउनलोड करें
 
-2. openpencil के `vendor` निर्देशिका में 3 निर्भरता सबमॉड्यूल हैं (jian, casement, agent) जिन्हें अलग से डाउनलोड करना होगा
+2. design-editor के `vendor` निर्देशिका में 3 निर्भरता सबमॉड्यूल हैं (jian, casement, agent) जिन्हें अलग से डाउनलोड करना होगा
 
     - 2.1 jian (UI फ्रेमवर्क): [https://github.com/ZSeven-W/jian](https://github.com/ZSeven-W/jian) → `vendor\jian` में निकालें
 
@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 rustup.rs से `rustup-init.exe` डाउनलोड करें और इसे चलाएं। PowerShell में निम्नलिखित कमांड चलाएं। **`openpencil 0.8.4` से मेल खाता है**:
+    - 2.3 rustup.rs से `rustup-init.exe` डाउनलोड करें और इसे चलाएं। PowerShell में निम्नलिखित कमांड चलाएं। **`design-editor 0.8.4` से मेल खाता है**:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 WASM-JS बाइंडिंग जनरेशन के लिए wasm-bindgen-cli इंस्टॉल करें। PowerShell में निम्नलिखित कमांड चलाएं। **`openpencil 0.8.4` से मेल खाता है**:
+    - 2.4 WASM-JS बाइंडिंग जनरेशन के लिए wasm-bindgen-cli इंस्टॉल करें। PowerShell में निम्नलिखित कमांड चलाएं। **`design-editor 0.8.4` से मेल खाता है**:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -124,17 +124,17 @@
             ├── snippets\
             ├── op_host-web.d.ts
             ├── de_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 4. dsh-openpencil प्लगइन के लिए एनवायरनमेंट वेरिएबल कॉन्फ़िगर करें
+## 4. dsh-design-editor प्लगइन के लिए एनवायरनमेंट वेरिएबल कॉन्फ़िगर करें
 
 1. एडमिनिस्ट्रेटर के रूप में PowerShell चलाएं और निम्नलिखित कमांड चलाएं (पथ को वास्तविक रिपॉज़िटरी रूट से बदलें):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. सत्यापन
@@ -177,4 +177,4 @@
     > 
     > यदि पेज बताता है कि `/pkg/de_host_web.js` नहीं मिला, तो `web-bundle/` में फ़ाइल गायब है।
 
-3. यह दस्तावेज़ `openpencil 0.8.4` संस्करण के लिए लिखा गया है। rustup टूलचेन संस्करण `1.94`、wasm-bindgen-cli संस्करण `0.2.117` और skia-bindings संस्करण `0.97.2` इस संस्करण के अनुरूप हैं — अन्य संस्करण भिन्न हो सकते हैं।
+3. यह दस्तावेज़ `design-editor 0.8.4` संस्करण के लिए लिखा गया है। rustup टूलचेन संस्करण `1.94`、wasm-bindgen-cli संस्करण `0.2.117` और skia-bindings संस्करण `0.97.2` इस संस्करण के अनुरूप हैं — अन्य संस्करण भिन्न हो सकते हैं।

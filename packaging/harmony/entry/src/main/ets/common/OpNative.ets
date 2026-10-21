@@ -1,4 +1,4 @@
-import napi from 'libopenpencil.so';
+import napi from 'libdesign_editor.so';
 
 /**
  * The C-ABI engine surface, marshalled by `crates/de-engine-napi`. Every
@@ -8,7 +8,7 @@ import napi from 'libopenpencil.so';
  * The names mirror `OpNative.kt` with the `native` prefix removed
  * (nativeCreate -> create, nativeEditorTakeShellAction ->
  * editorTakeShellAction, ...). The engine handle is a `number` (see
- * `cpp/types/libopenpencil/index.d.ts` for why that is lossless).
+ * `cpp/types/libdesign_editor/index.d.ts` for why that is lossless).
  */
 export default napi;
 

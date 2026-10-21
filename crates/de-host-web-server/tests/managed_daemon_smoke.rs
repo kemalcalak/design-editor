@@ -55,7 +55,7 @@ fn http(
     let mut s = TcpStream::connect(("127.0.0.1", port)).expect("connect");
     let body = body.unwrap_or("");
     let token_header = token
-        .map(|t| format!("X-OpenPencil-Token: {t}\r\n"))
+        .map(|t| format!("X-Design-Editor-Token: {t}\r\n"))
         .unwrap_or_default();
     let req = format!(
         "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n{token_header}Content-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
@@ -240,7 +240,7 @@ fn http_with_origin(
     let mut s = TcpStream::connect(("127.0.0.1", port)).expect("connect");
     let body = body.unwrap_or("");
     let token_h = token
-        .map(|t| format!("X-OpenPencil-Token: {t}\r\n"))
+        .map(|t| format!("X-Design-Editor-Token: {t}\r\n"))
         .unwrap_or_default();
     let origin_h = origin
         .map(|o| format!("Origin: {o}\r\n"))
@@ -308,7 +308,7 @@ fn cors_allowlist_and_preflight_contract() {
     );
     assert_ne!(code, 401, "preflight must not require the token");
     assert!(
-        head.to_ascii_lowercase().contains("x-openpencil-token"),
+        head.to_ascii_lowercase().contains("x-design-editor-token"),
         "preflight must allow the token header: {head}"
     );
 

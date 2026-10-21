@@ -72,7 +72,7 @@ export function bundledDaemonEnv(
   const canvaskit = `${extensionRoot}/web/canvaskit`;
   if (!existsSync(pkg) || !existsSync(canvaskit)) return undefined;
   return {
-    OPENPENCIL_WEB_BUNDLE_DIR: pkg,
-    OPENPENCIL_CANVASKIT_DIR: canvaskit,
+    DESIGN_EDITOR_WEB_BUNDLE_DIR: pkg,
+    DESIGN_EDITOR_CANVASKIT_DIR: canvaskit,
   };
 }

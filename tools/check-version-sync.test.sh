@@ -83,7 +83,7 @@ cargo() {
     if [[ -e "$repo_root/.fake-cargo-warning" ]]; then
         printf 'warning: fake Cargo metadata warning\n' >&2
     fi
-    printf '{"packages":[{"name":"op-example","version":"%s","manifest_path":"%s/crates/example/Cargo.toml"}]}\n' \
+    printf '{"packages":[{"name":"de-example","version":"%s","manifest_path":"%s/crates/example/Cargo.toml"}]}\n' \
         "$package_version" "$repo_root"
 }
 
@@ -246,17 +246,17 @@ android {
 }
 KOTLIN
     cat > "$repo/crates/de-cli/assets/skill-bundle.json" <<'JSON'
-{"one":"__OPENPENCIL_VERSION__","two":"__OPENPENCIL_VERSION__","three":"__OPENPENCIL_VERSION__","four":"__OPENPENCIL_VERSION__","five":"__OPENPENCIL_VERSION__"}
+{"one":"__DESIGN_EDITOR_VERSION__","two":"__DESIGN_EDITOR_VERSION__","three":"__DESIGN_EDITOR_VERSION__","four":"__DESIGN_EDITOR_VERSION__","five":"__DESIGN_EDITOR_VERSION__"}
 JSON
     cat > "$repo/crates/de-editor-core/src/state.rs" <<'RUST'
 version: env!("CARGO_PKG_VERSION").to_owned(),
 RUST
     cat > "$repo/crates/de-editor-core/src/host_support.rs" <<'RUST'
 pub fn sample() {
-let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
+let src = src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"));
 }
 pub fn starter() {
-let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
+let src = src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"));
 }
 #[cfg(test)]
 mod tests {
@@ -270,7 +270,7 @@ de-host-native = { path = "../de-host-native", features = ["gl-host"] }
 TOML
     cat > "$repo/crates/example/Cargo.toml" <<'TOML'
 [package]
-name = "op-example"
+name = "de-example"
 version.workspace = true
 edition.workspace = true
 TOML
@@ -278,11 +278,11 @@ TOML
     cat > "$repo/README.md" <<'MARKDOWN'
 | Image | Includes |
 | --- | --- |
-| `ghcr.io/zseven-w/openpencil-web:vX.Y.Z` | Rust web host |
+| `ghcr.io/kemalcalak/design-editor-web:vX.Y.Z` | Rust web host |
 
 ```bash
 VERSION="$(scripts/workspace-version.sh)"
-docker run -d -p 3100:3100 "ghcr.io/zseven-w/openpencil-web:v${VERSION}"
+docker run -d -p 3100:3100 "ghcr.io/kemalcalak/design-editor-web:v${VERSION}"
 ```
 
 The TypeScript editor was retired at `v0.7.5`.
@@ -303,13 +303,13 @@ YAML
 #!/usr/bin/env bash
 WS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CANONICAL_VERSION="$("$WS_ROOT/scripts/workspace-version.sh")"
-APP_VERSION="${OPENPENCIL_VERSION:-$CANONICAL_VERSION}"
+APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [[ "$APP_VERSION" != "$CANONICAL_VERSION" ]]; then
-    printf 'bundle-macos: error: OPENPENCIL_VERSION (%s) must match Cargo workspace version (%s)\n' \
+    printf 'bundle-macos: error: DESIGN_EDITOR_VERSION (%s) must match Cargo workspace version (%s)\n' \
         "$APP_VERSION" "$CANONICAL_VERSION" >&2
     exit 1
 fi
-if [[ "${OPENPENCIL_VALIDATE_VERSION_ONLY:-}" == 1 ]]; then
+if [[ "${DESIGN_EDITOR_VALIDATE_VERSION_ONLY:-}" == 1 ]]; then
     printf '%s\n' "$APP_VERSION"
     exit 0
 fi
@@ -321,13 +321,13 @@ SCRIPT
 #!/bin/sh
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CANONICAL_VERSION="$("$ROOT/scripts/workspace-version.sh")"
-APP_VERSION="${OPENPENCIL_VERSION:-$CANONICAL_VERSION}"
+APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [ "$APP_VERSION" != "$CANONICAL_VERSION" ]; then
-    printf 'bundle-macos: error: OPENPENCIL_VERSION (%s) must match Cargo workspace version (%s)\n' \
+    printf 'bundle-macos: error: DESIGN_EDITOR_VERSION (%s) must match Cargo workspace version (%s)\n' \
         "$APP_VERSION" "$CANONICAL_VERSION" >&2
     exit 1
 fi
-if [ "${OPENPENCIL_VALIDATE_VERSION_ONLY:-}" = 1 ]; then
+if [ "${DESIGN_EDITOR_VALIDATE_VERSION_ONLY:-}" = 1 ]; then
     printf '%s\n' "$APP_VERSION"
     exit 0
 fi
@@ -336,7 +336,7 @@ touch "$ROOT/packaging-side-effect"
 SCRIPT
 
     cat > "$repo/scripts/package-windows.nsi" <<'SCRIPT'
-; makensis "/DVERSION=X.Y.Z" "/DOUT_FILE=OpenPencil-X.Y.Z-x64-win-setup.exe"
+; makensis "/DVERSION=X.Y.Z" "/DOUT_FILE=Design-Editor-X.Y.Z-x64-win-setup.exe"
 !ifndef VERSION
   !define VERSION "0.0.0"
 !endif
@@ -460,12 +460,12 @@ assert_not_contains 'no ordinary Rust fixtures copy current product version' \
 pass 'fixture-version collision is documented and skipped'
 
 repo=$(new_repo hardcoded_macos_version 0.8.1)
-printf '%s\n' 'APP_VERSION="${OPENPENCIL_VERSION:-0.8.1}"' \
+printf '%s\n' 'APP_VERSION="${DESIGN_EDITOR_VERSION:-0.8.1}"' \
     >> "$repo/scripts/bundle-macos.sh"
 run_guard "$repo"
 assert_status 1 'hardcoded macOS version'
 assert_contains 'scripts/bundle-macos.sh:' 'hardcoded macOS version'
-assert_contains 'error: OPENPENCIL_VERSION must fall back to the Cargo workspace version' \
+assert_contains 'error: DESIGN_EDITOR_VERSION must fall back to the Cargo workspace version' \
     'hardcoded macOS version'
 assert_no_success_output 'hardcoded macOS version'
 pass 'hardcoded macOS package version is rejected with file and line guidance'
@@ -474,7 +474,7 @@ repo=$(new_repo macos_reader_comment_only 0.8.1)
 cat > "$repo/scripts/bundle-macos.sh" <<'SCRIPT'
 #!/usr/bin/env bash
 # scripts/workspace-version.sh
-APP_VERSION="${OPENPENCIL_VERSION:-$CANONICAL_VERSION}"
+APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [[ "$APP_VERSION" != "$CANONICAL_VERSION" ]]; then
     exit 1
 fi
@@ -515,7 +515,7 @@ cat > "$repo/scripts/bundle-macos.sh" <<'SCRIPT'
 WS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CANONICAL_VERSION="0.0.0"
 # CANONICAL_VERSION="$("$WS_ROOT/scripts/workspace-version.sh")"
-APP_VERSION="${OPENPENCIL_VERSION:-$CANONICAL_VERSION}"
+APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [[ "$APP_VERSION" != "$CANONICAL_VERSION" ]]; then
     exit 1
 fi
@@ -526,7 +526,7 @@ cat > "$repo/tools/bundle-macos.sh" <<'SCRIPT'
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CANONICAL_VERSION="0.0.0"
 # CANONICAL_VERSION="$("$ROOT/scripts/workspace-version.sh")"
-APP_VERSION="${OPENPENCIL_VERSION:-$CANONICAL_VERSION}"
+APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [ "$APP_VERSION" != "$CANONICAL_VERSION" ]; then
     exit 1
 fi
@@ -569,11 +569,11 @@ cat > "$repo/scripts/bundle-macos.sh" <<'SCRIPT'
 #!/usr/bin/env bash
 WS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CANONICAL_VERSION="$("$WS_ROOT/scripts/workspace-version.sh")"
-APP_VERSION="${OPENPENCIL_VERSION:-$CANONICAL_VERSION}"
+APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [[ "$APP_VERSION" != "$CANONICAL_VERSION" ]]; then
     :
 fi
-if [[ "${OPENPENCIL_VALIDATE_VERSION_ONLY:-}" == 1 ]]; then
+if [[ "${DESIGN_EDITOR_VALIDATE_VERSION_ONLY:-}" == 1 ]]; then
     printf '%s\n' "$APP_VERSION"
     exit 0
 fi
@@ -586,7 +586,7 @@ assert_status 1 'macOS no-op mismatch and reassignment'
 assert_contains 'scripts/bundle-macos.sh:1:' 'macOS no-op mismatch and reassignment'
 assert_contains 'error: expected exactly one active APP_VERSION assignment' \
     'macOS no-op mismatch and reassignment'
-assert_contains 'error: mismatched OPENPENCIL_VERSION must fail validation with actionable error' \
+assert_contains 'error: mismatched DESIGN_EDITOR_VERSION must fail validation with actionable error' \
     'macOS no-op mismatch and reassignment'
 if [[ -e "$repo/packaging-side-effect" ]]; then
     fail 'macOS no-op mismatch and reassignment: validation executed packaging side effects'
@@ -644,14 +644,14 @@ assert_no_success_output 'independent publish tag versions'
 pass 'publish paths cannot derive independent versions from the tag'
 
 repo=$(new_repo collision_still_checks_packaging 1.0.0)
-printf '%s\n' 'APP_VERSION="${OPENPENCIL_VERSION:-0.8.1}"' \
+printf '%s\n' 'APP_VERSION="${DESIGN_EDITOR_VERSION:-0.8.1}"' \
     >> "$repo/tools/bundle-macos.sh"
 run_guard "$repo"
 assert_status 1 'fixture-version collision packaging check'
 assert_contains 'skipping literal fixture drift scan' \
     'fixture-version collision packaging check'
 assert_contains 'tools/bundle-macos.sh:' 'fixture-version collision packaging check'
-assert_contains 'error: OPENPENCIL_VERSION must fall back to the Cargo workspace version' \
+assert_contains 'error: DESIGN_EDITOR_VERSION must fall back to the Cargo workspace version' \
     'fixture-version collision packaging check'
 assert_not_contains 'no ordinary Rust fixtures copy current product version' \
     'fixture-version collision packaging check'
@@ -661,19 +661,19 @@ repo=$(new_repo cargo_metadata_version_mismatch 0.8.1)
 printf '%s\n' '0.8.0' > "$repo/.fake-cargo-version"
 run_guard "$repo"
 assert_status 1 'Cargo metadata version mismatch'
-assert_contains 'crates/example/Cargo.toml:1: error: workspace package op-example has version 0.8.0; expected 0.8.1' \
+assert_contains 'crates/example/Cargo.toml:1: error: workspace package de-example has version 0.8.0; expected 0.8.1' \
     'Cargo metadata version mismatch'
 assert_no_success_output 'Cargo metadata version mismatch'
-pass 'workspace op-* packages under crates must match the canonical Cargo version'
+pass 'workspace de-* packages under crates must match the canonical Cargo version'
 
 repo=$(new_repo cargo_metadata_without_local_packages 0.8.1)
 touch "$repo/.fake-cargo-empty"
 run_guard "$repo"
 assert_status 1 'Cargo metadata without local packages'
-assert_contains 'Cargo.toml:1: error: cargo metadata found no local op-* workspace packages under crates' \
+assert_contains 'Cargo.toml:1: error: cargo metadata found no local de-* workspace packages under crates' \
     'Cargo metadata without local packages'
 assert_no_success_output 'Cargo metadata without local packages'
-pass 'zero local op-* packages is an actionable metadata failure'
+pass 'zero local de-* packages is an actionable metadata failure'
 
 repo=$(new_repo symlinked_repo_package_mismatch 0.8.1)
 printf '%s\n' '0.8.0' > "$repo/.fake-cargo-version"
@@ -681,7 +681,7 @@ logical_repo="$temp_root/symlinked_repo_package_mismatch_logical"
 ln -s "$repo" "$logical_repo"
 run_guard "$logical_repo"
 assert_status 1 'symlinked repository package mismatch'
-assert_contains 'crates/example/Cargo.toml:1: error: workspace package op-example has version 0.8.0; expected 0.8.1' \
+assert_contains 'crates/example/Cargo.toml:1: error: workspace package de-example has version 0.8.0; expected 0.8.1' \
     'symlinked repository package mismatch'
 assert_no_success_output 'symlinked repository package mismatch'
 pass 'symlinked repository invocation still validates physical Cargo manifest paths'
@@ -715,7 +715,7 @@ assert_no_success_output 'mismatched release tag'
 pass 'mismatched v* release tags are rejected outside the release workflow too'
 
 repo=$(new_repo cli_bundle_wrong_sentinel_count 0.8.1)
-sed -i.bak 's/,"five":"__OPENPENCIL_VERSION__"//' \
+sed -i.bak 's/,"five":"__DESIGN_EDITOR_VERSION__"//' \
     "$repo/crates/de-cli/assets/skill-bundle.json"
 rm "$repo/crates/de-cli/assets/skill-bundle.json.bak"
 run_guard "$repo"
@@ -726,7 +726,7 @@ assert_no_success_output 'CLI bundle sentinel count'
 pass 'embedded CLI bundle retains exactly five version sentinels'
 
 repo=$(new_repo cli_bundle_without_sentinels 0.8.1)
-sed -i.bak 's/__OPENPENCIL_VERSION__/__MISSING_VERSION__/g' \
+sed -i.bak 's/__DESIGN_EDITOR_VERSION__/__MISSING_VERSION__/g' \
     "$repo/crates/de-cli/assets/skill-bundle.json"
 rm "$repo/crates/de-cli/assets/skill-bundle.json.bak"
 run_guard "$repo"

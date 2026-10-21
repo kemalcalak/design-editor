@@ -1,4 +1,4 @@
-//! Dependency-free leaf utilities shared across the OpenPencil workspace.
+//! Dependency-free leaf utilities shared across the Design Editor workspace.
 //!
 //! This crate exists to single-source tiny helpers that were previously
 //! copy-pasted across many crates (hex-color parsing had nine divergent

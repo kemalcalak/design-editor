@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil AI skill engine — phase-driven prompt-skill resolution, ported from the TS pen-ai-skills package"
+description = "Design Editor AI skill engine — phase-driven prompt-skill resolution, ported from the TS pen-ai-skills package"
 
 [dependencies]
 serde_json = { workspace = true }

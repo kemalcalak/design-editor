@@ -10,7 +10,7 @@ impl TestDir {
     fn new() -> Self {
         let serial = NEXT_TEMP_DIR.fetch_add(1, Ordering::Relaxed);
         let path = std::env::temp_dir().join(format!(
-            "openpencil-chat-spawn-resolver-{}-{serial}",
+            "design-editor-chat-spawn-resolver-{}-{serial}",
             std::process::id()
         ));
         fs::create_dir_all(&path).expect("create resolver test directory");
@@ -95,7 +95,7 @@ fn resolver_keeps_the_full_unix_fallback_set() {
 
 #[test]
 fn runtime_path_leads_with_selected_parent_and_keeps_other_order() {
-    let root = std::env::temp_dir().join("openpencil-runtime-path-test");
+    let root = std::env::temp_dir().join("design-editor-runtime-path-test");
     let wrong_node = root.join("wrong-node");
     let selected = root.join("selected");
     let tail = root.join("tail");

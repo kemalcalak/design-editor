@@ -196,7 +196,7 @@ fn single_line_text_can_outgrow_the_captured_box() {
         "styles": {},
         "children": [
           { "kind": "text", "rect": { "x": 8, "y": 8, "w": 96, "h": 20 },
-            "text": "openpencil", "lines": 1,
+            "text": "design-editor", "lines": 1,
             "styles": { "font-size": "14px" } }
         ]
       }

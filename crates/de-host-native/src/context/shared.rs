@@ -70,7 +70,7 @@ pub struct SharedSkiaContext {
     direct_context: Option<skia_safe::gpu::DirectContext>,
     surface: Option<skia_safe::Surface>,
     /// glow handle. v19.1 mini-patch landed (spec frozen at
-    /// openpencil-docs commit 526791f, §3.2): `Option<Arc<...>>` so
+    /// design-editor-docs commit 526791f, §3.2): `Option<Arc<...>>` so
     /// `teardown`, `inert_for_lifecycle_test`, and mobile `on_pause`
     /// can drop the loader function table alongside the surface.
     glow_handle: Option<Arc<glow::Context>>,

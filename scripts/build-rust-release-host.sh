@@ -4,22 +4,22 @@
 
 set -euo pipefail
 
-relay_cn=${OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN:-}
-relay_global=${OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:-}
-release_target=${OPENPENCIL_RELEASE_TARGET:-}
+relay_cn=${DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN:-}
+relay_global=${DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:-}
+release_target=${DESIGN_EDITOR_RELEASE_TARGET:-}
 export -n relay_cn relay_global release_target
-unset OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN
-unset OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
+unset DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN
+unset DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
 
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd)
 
 if [[ "$#" -ne 0 ]]; then
-    printf 'usage: OPENPENCIL_RELEASE_TARGET=<triple> %s\n' "$0" >&2
+    printf 'usage: DESIGN_EDITOR_RELEASE_TARGET=<triple> %s\n' "$0" >&2
     exit 2
 fi
 [[ -n "$release_target" ]] || {
-    printf 'error: OPENPENCIL_RELEASE_TARGET is required\n' >&2
+    printf 'error: DESIGN_EDITOR_RELEASE_TARGET is required\n' >&2
     exit 2
 }
 [[ -z ${FORCE_SKIA_BINARIES_DOWNLOAD:-} && ${SKIA_BINARIES_URL:-} == file://* ]] || {
@@ -48,8 +48,8 @@ cargo clean -p de-auth-bridge --target "$release_target" --release
 cargo clean -p skia-bindings --target "$release_target" --release
 "$repo_root/tools/pinned-release-tools.sh" verify-skia \
     desktop "$release_target" "$SKIA_BINARIES_URL"
-OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN=$relay_cn \
-OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL=$relay_global \
+DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN=$relay_cn \
+DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL=$relay_global \
     cargo build \
         -p de-host-desktop -p de-cli -p de-host-web-server \
         --target "$release_target" --release --locked \

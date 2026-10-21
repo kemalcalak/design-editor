@@ -7,7 +7,7 @@ use super::*;
 
 fn temp_doc_paths(test_name: &str) -> (std::path::PathBuf, std::path::PathBuf, std::path::PathBuf) {
     let dir = std::env::temp_dir().join(format!(
-        "openpencil-mcp-filepath-{test_name}-{}",
+        "design-editor-mcp-filepath-{test_name}-{}",
         std::process::id()
     ));
     std::fs::create_dir_all(&dir).expect("temp dir");
@@ -651,7 +651,7 @@ fn http_transport_serves_initialize() {
     let resp = String::from_utf8(stream.output).unwrap();
     assert!(resp.starts_with("HTTP/1.1 200 OK"), "status line: {resp}");
     assert!(resp.contains("Content-Type: application/json"));
-    assert!(resp.contains("mcp-session-id: openpencil"));
+    assert!(resp.contains("mcp-session-id: design-editor"));
     assert!(resp.contains("Access-Control-Allow-Origin: *"));
     assert!(resp.contains("Cache-Control: no-store"));
     // The JSON-RPC initialize reply carries the protocol handshake +

@@ -4,8 +4,8 @@
     "strict": true, "skipLibCheck": true, "noEmit": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"], "types": ["vitest/globals"],
     "paths": {
-      "@zseven-w/de-web-sdk": ["../de-web-sdk/src/index.ts"],
-      "virtual:op_web_sdk_wasm": ["../de-web-sdk/test/wasm-stub.ts"]
+      "@kemalcalak/de-web-sdk": ["../de-web-sdk/src/index.ts"],
+      "virtual:de_web_sdk_wasm": ["../de-web-sdk/test/wasm-stub.ts"]
     }
   },
   "include": ["src", "test"]

@@ -521,7 +521,7 @@ expect_failure "requires revocation checking for Global edge client certificates
     "CN outer-mTLS federation boundary"
 
 new_fixture relay-edge-crl-production-validation-removed
-sed '/OPENPENCIL_RELAY_EDGE_VALIDATION_MODE=production/d' \
+sed '/DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE=production/d' \
     "$fixture_root/deploy/collab-relay-edge/rotate-cn-crl.sh" \
     > "$fixture_root/deploy/collab-relay-edge/rotate-cn-crl.sh.next"
 mv \
@@ -582,7 +582,7 @@ expect_failure "keeps the trusted federation backhaul off the public per-IP ceil
     "CN WSS/federation ingress boundary"
 
 new_fixture locator-hsm-boundary-removed
-sed '/OPENPENCIL_COLLAB_LOCATOR_HSM_SOCKET:/d' \
+sed '/DESIGN_EDITOR_COLLAB_LOCATOR_HSM_SOCKET:/d' \
     "$fixture_root/deploy/collab-relay-locator/compose.yaml" \
     > "$fixture_root/deploy/collab-relay-locator/compose.yaml.next"
 mv \
@@ -592,7 +592,7 @@ expect_failure "requires the external locator HSM socket boundary" \
     "locator production container boundary"
 
 new_fixture locator-per-source-limit-removed
-sed '/limit_req_zone.*openpencil_locator_per_source/d' \
+sed '/limit_req_zone.*design_editor_locator_per_source/d' \
     "$fixture_root/deploy/collab-relay-locator/nginx-http-limits.conf" \
     > "$fixture_root/deploy/collab-relay-locator/nginx-http-limits.conf.next"
 mv \

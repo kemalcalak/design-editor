@@ -313,7 +313,7 @@ impl<'a> SnapshotCtx<'a> {
             // (`overflow: hidden` + `text-overflow: ellipsis`) sitting exactly
             // around text that fit. Keeping it means the one thing that does
             // differ here — a fallback font a few percent wider — gets its
-            // tail cut off, which is how "openpencil" imported as
+            // tail cut off, which is how "design-editor" imported as
             // "openpenci". A box the capture *did* overflow keeps its clip:
             // there the browser truncated too, and a scroll container must
             // not spill its contents.

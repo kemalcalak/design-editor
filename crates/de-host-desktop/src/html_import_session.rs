@@ -21,7 +21,7 @@ use de_host_services::doc_io::ErrorKind;
 
 /// Synthetic origin for resolving a file-import's relative resource
 /// references — same convention as `de-cli`'s `html_cli.rs`.
-const LOCAL_RESOURCE_ORIGIN: &str = "https://openpencil.local/";
+const LOCAL_RESOURCE_ORIGIN: &str = "https://design-editor.local/";
 
 /// A finished parse: the shared `PreparedImport` the install path wants,
 /// plus the typed degradations the post-import diagnostics overlay shows.
@@ -296,7 +296,7 @@ pub fn cancel(host: &mut WidgetHostNative, session: &mut Option<HtmlImportSessio
 
 fn refresh_title(window: Option<&winit::window::Window>) {
     let Some(window) = window else { return };
-    window.set_title("OpenPencil");
+    window.set_title("Design Editor");
 }
 
 #[cfg(test)]

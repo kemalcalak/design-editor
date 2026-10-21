@@ -1,22 +1,22 @@
 //! Auto-import Zode (`~/.zode/config.json`) provider configs as
-//! OpenPencil built-in ("custom model") agents.
+//! Design Editor built-in ("custom model") agents.
 //!
 //! The Zode CLI stores its LLM providers in `~/.zode/config.json`, each
 //! carrying a protocol `type`, an API key, a base URL, and a set of
 //! models. On startup we merge every provider and its saved model list into
 //! `agent_settings.builtin_agents` so a user who already configured
-//! providers in Zode gets the same custom models in OpenPencil without
+//! providers in Zode gets the same custom models in Design Editor without
 //! re-entering keys.
 //!
 //! Best-effort and idempotent: a missing / malformed file is a silent
 //! no-op, and re-running each launch dedupes against existing agents by
 //! backend (`preset` + `kind` + `api_key` + `base_url`) so no duplicates
 //! accumulate. New Zode providers appear automatically; the trade-off is
-//! that an imported agent deleted inside OpenPencil reappears next launch
+//! that an imported agent deleted inside Design Editor reappears next launch
 //! because Zode still lists it.
 //!
 //! Imported agents are recorded in `agent_settings.imported_agent_ids`
-//! and are NOT written to OpenPencil's own `settings.json`: Zode's config
+//! and are NOT written to Design Editor's own `settings.json`: Zode's config
 //! stays the single source of truth for those keys (they're re-imported
 //! every launch), so we never silently duplicate a Zode API key onto a
 //! second on-disk location.
@@ -47,7 +47,7 @@ struct ZodeProvider {
     #[serde(default)]
     base_url: String,
     /// Keyed by model id; the values (contextWindow / prices) carry
-    /// metadata OpenPencil doesn't model, so they're discarded.
+    /// metadata Design Editor doesn't model, so they're discarded.
     #[serde(default)]
     models: BTreeMap<String, serde::de::IgnoredAny>,
 }

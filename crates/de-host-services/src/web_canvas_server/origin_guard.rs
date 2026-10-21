@@ -1,9 +1,9 @@
 //! Browser-origin screening for the daemon's sensitive POST routes
 //! (credentials / AI / auth / figma): same-origin by default, widened only
-//! by the explicit `OPENPENCIL_WEB_ALLOWED_ORIGINS` allowlist. Split out of
+//! by the explicit `DESIGN_EDITOR_WEB_ALLOWED_ORIGINS` allowlist. Split out of
 //! `web_canvas_server.rs` to keep the spine under the 800-line cap.
 
-pub(crate) const WEB_ALLOWED_ORIGINS_ENV: &str = "OPENPENCIL_WEB_ALLOWED_ORIGINS";
+pub(crate) const WEB_ALLOWED_ORIGINS_ENV: &str = "DESIGN_EDITOR_WEB_ALLOWED_ORIGINS";
 
 pub(super) fn is_sensitive_browser_post(request: &crate::mcp_serve::HttpRequest) -> bool {
     request.method == "POST"

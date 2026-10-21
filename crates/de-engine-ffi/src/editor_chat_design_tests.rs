@@ -475,22 +475,22 @@ fn design_loop_provider_error_lands_in_bubble_and_clears_designing_header() {
 }
 
 /// Real end-to-end run against DeepSeek. Ignored by default; run with
-/// `OPENPENCIL_TEST_DEEPSEEK_KEY=sk-… cargo test -p de-engine-ffi \
+/// `DESIGN_EDITOR_TEST_DEEPSEEK_KEY=sk-… cargo test -p de-engine-ffi \
 /// --features editor real_deepseek -- --ignored --nocapture`.
 #[test]
 #[ignore = "needs a real DeepSeek API key + network"]
 fn real_deepseek_design_turn_inserts_nodes() {
-    let Ok(key) = std::env::var("OPENPENCIL_TEST_DEEPSEEK_KEY") else {
-        panic!("set OPENPENCIL_TEST_DEEPSEEK_KEY to run this test");
+    let Ok(key) = std::env::var("DESIGN_EDITOR_TEST_DEEPSEEK_KEY") else {
+        panic!("set DESIGN_EDITOR_TEST_DEEPSEEK_KEY to run this test");
     };
     // Model override so the same run covers the weaker variants the real
     // app selects (e.g. deepseek-v4-flash).
-    let model = std::env::var("OPENPENCIL_TEST_DEEPSEEK_MODEL")
+    let model = std::env::var("DESIGN_EDITOR_TEST_DEEPSEEK_MODEL")
         .unwrap_or_else(|_| "deepseek-chat".to_string());
-    // OPENPENCIL_TEST_DEEPSEEK_WIRE=anthropic drives DeepSeek's
+    // DESIGN_EDITOR_TEST_DEEPSEEK_WIRE=anthropic drives DeepSeek's
     // Anthropic-compatible endpoint — the preset's alternate API format the
     // real device config selected in the empty-canvas incident.
-    let anthropic_wire = std::env::var("OPENPENCIL_TEST_DEEPSEEK_WIRE")
+    let anthropic_wire = std::env::var("DESIGN_EDITOR_TEST_DEEPSEEK_WIRE")
         .is_ok_and(|wire| wire.eq_ignore_ascii_case("anthropic"));
     let (kind, base_url) = if anthropic_wire {
         (

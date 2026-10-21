@@ -494,7 +494,7 @@ mod tests {
         assert_eq!(session.attempts.get("photo"), Some(&3));
 
         let directory =
-            std::env::temp_dir().join(format!("openpencil-enrich-retry-{}", std::process::id()));
+            std::env::temp_dir().join(format!("design-editor-enrich-retry-{}", std::process::id()));
         std::fs::create_dir_all(&directory).expect("create fixture directory");
         let output = directory.join("output.op");
         std::fs::write(&output, b"keep-existing-output").expect("seed output");

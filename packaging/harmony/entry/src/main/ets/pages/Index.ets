@@ -23,10 +23,10 @@ import { SsoRegion, SsoRegionStore } from '../common/SsoRegion';
 import { ViewportBands, WindowBridge } from '../common/WindowBridge';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /** Must match the id handed to `attachSurface`; the native side resolves it. */
-const SURFACE_ID = 'openpencil_surface';
+const SURFACE_ID = 'design_editor_surface';
 
 /**
  * The whole application UI.
@@ -122,7 +122,7 @@ struct Index {
       XComponent({
         id: SURFACE_ID,
         type: XComponentType.SURFACE,
-        libraryname: 'openpencil',
+        libraryname: 'design-editor',
       })
         .width('100%')
         .height('100%')

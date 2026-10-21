@@ -7,15 +7,15 @@ use super::*;
 
 fn service_key() -> ServiceKey {
     ServiceKey {
-        name: "openpencil-aabbccddeeff".to_owned(),
-        registration_type: "_openpencil-collab._tcp.".to_owned(),
+        name: "design-editor-aabbccddeeff".to_owned(),
+        registration_type: "_design-editor-collab._tcp.".to_owned(),
         domain: "local.".to_owned(),
     }
 }
 
 fn metadata() -> ResolvedMetadata {
     ResolvedMetadata {
-        fullname: "openpencil-aabbccddeeff._openpencil-collab._tcp.local.".to_owned(),
+        fullname: "design-editor-aabbccddeeff._design-editor-collab._tcp.local.".to_owned(),
         hostname: "op-aabbccddeeff.local.".to_owned(),
         port: 45_123,
         txt: vec![
@@ -167,7 +167,7 @@ fn full_event_lane_drops_a_burst_but_heartbeat_recovers() {
     let (sender, receiver) = mpsc::sync_channel(1);
     sender
         .try_send(BonjourEvent::Removed {
-            fullname: "occupied._openpencil-collab._tcp.local.".to_owned(),
+            fullname: "occupied._design-editor-collab._tcp.local.".to_owned(),
         })
         .unwrap();
 

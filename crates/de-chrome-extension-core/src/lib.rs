@@ -1,4 +1,4 @@
-//! Logic core of the OpenPencil Chrome extension.
+//! Logic core of the Design Editor Chrome extension.
 //!
 //! Everything the extension decides without asking the browser lives here:
 //! which endpoints may be talked to, how a chunked snapshot readback is

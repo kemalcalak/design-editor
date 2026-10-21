@@ -51,7 +51,7 @@ pub const PAIRING_CODE_ID_BYTES: usize = 16;
 /// Version of the sealed pairing-invite envelope. This is intentionally
 /// independent from [`crate::RELAY_PROTOCOL_VERSION`].
 pub const SEALED_PAIRING_INVITE_VERSION: u8 = 2;
-/// Version byte of the legacy sealed envelope published by OpenPencil
+/// Version byte of the legacy sealed envelope published by Design Editor
 /// v0.8.4 (BLAKE3-XOF/XOR stream + keyed-BLAKE3 encrypt-then-MAC).
 pub const SEALED_PAIRING_INVITE_V1_VERSION: u8 = 1;
 /// RFC 8439 ChaCha20-Poly1305 nonce length (96 bits).
@@ -73,13 +73,13 @@ pub const MAX_SEALED_PAIRING_INVITE_V2_BYTES: usize =
 const SEALED_INVITE_HEADER_BYTES: usize = 1 + SEALED_INVITE_NONCE_BYTES;
 const SEALED_INVITE_V1_HEADER_BYTES: usize = 1 + SEALED_INVITE_V1_NONCE_BYTES;
 const SEALED_INVITE_KEY_BYTES: usize = 32;
-const CODE_ID_CONTEXT: &str = "openpencil/de-collab-relay-protocol/pairing-code-id/v1";
-const V1_ENC_KEY_CONTEXT: &str = "openpencil/de-collab-relay-protocol/pairing-code-enc-key/v1";
-const V1_MAC_KEY_CONTEXT: &str = "openpencil/de-collab-relay-protocol/pairing-code-mac-key/v1";
+const CODE_ID_CONTEXT: &str = "openpencil/op-collab-relay-protocol/pairing-code-id/v1";
+const V1_ENC_KEY_CONTEXT: &str = "openpencil/op-collab-relay-protocol/pairing-code-enc-key/v1";
+const V1_MAC_KEY_CONTEXT: &str = "openpencil/op-collab-relay-protocol/pairing-code-mac-key/v1";
 const SEALED_INVITE_KEY_INFO: &[u8] =
-    b"openpencil/de-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-key/v2\0";
+    b"openpencil/op-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-key/v2\0";
 const SEALED_INVITE_AAD_DOMAIN: &[u8] =
-    b"openpencil/de-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-aad/v2\0";
+    b"openpencil/op-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-aad/v2\0";
 
 /// A canonical (uppercase, exact-length) short pairing code.
 ///
@@ -263,7 +263,7 @@ impl SealedPairingInvite {
 
     /// Seal in the legacy v1 envelope that every fielded client can open.
     ///
-    /// Fleet-transition writer: OpenPencil v0.8.4 desktops reject any other
+    /// Fleet-transition writer: Design Editor v0.8.4 desktops reject any other
     /// envelope version at claim time, so an owner that seals v2 mints codes
     /// those guests can claim but never open ("invalid code"). Publish v1
     /// until the fielded readers understand v2, then switch the owner back
@@ -342,7 +342,7 @@ impl SealedPairingInvite {
 
     /// Legacy v1 open: keyed-BLAKE3 encrypt-then-MAC over
     /// `[version=1][nonce:24][ciphertext]`, byte-compatible with the sealed
-    /// envelope shipped in OpenPencil v0.8.4.
+    /// envelope shipped in Design Editor v0.8.4.
     fn open_v1(&self, code: &PairingCode) -> Result<RelayInviteV1, RelayProtocolError> {
         let raw = &self.0;
         let tag_offset = raw.len() - SEALED_INVITE_V1_TAG_BYTES;

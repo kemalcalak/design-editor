@@ -1,15 +1,15 @@
-# @zseven-w/de-web-sdk-vue
+# @kemalcalak/de-web-sdk-vue
 
-Vue 3 adapter for the OpenPencil read-only web viewer SDK. Embed a live OpenPencil design canvas in any Vue 3 application.
+Vue 3 adapter for the Design Editor read-only web viewer SDK. Embed a live Design Editor design canvas in any Vue 3 application.
 
-> **Read-only boundary:** This package provides a viewer only — no editing. For the full editor experience, use the OpenPencil desktop or web app directly.
+> **Read-only boundary:** This package provides a viewer only — no editing. For the full editor experience, use the Design Editor desktop or web app directly.
 
 ## Install
 
 ```bash
-npm install @zseven-w/de-web-sdk @zseven-w/de-web-sdk-vue
+npm install @kemalcalak/de-web-sdk @kemalcalak/de-web-sdk-vue
 # or
-bun add @zseven-w/de-web-sdk @zseven-w/de-web-sdk-vue
+bun add @kemalcalak/de-web-sdk @kemalcalak/de-web-sdk-vue
 ```
 
 ## Peer dependencies
@@ -20,11 +20,11 @@ bun add @zseven-w/de-web-sdk @zseven-w/de-web-sdk-vue
 
 ## WASM note
 
-The core SDK (`@zseven-w/de-web-sdk`) loads a WebAssembly binary at runtime. You must either:
+The core SDK (`@kemalcalak/de-web-sdk`) loads a WebAssembly binary at runtime. You must either:
 - Pass the wasm URL explicitly via the `wasmUrl` prop, or
 - Serve the wasm file from your own static assets and ensure it is reachable.
 
-The wasm file ships alongside the core package at `@zseven-w/de-web-sdk/dist/op_web_sdk_bg.wasm`.
+The wasm file ships alongside the core package at `@kemalcalak/de-web-sdk/dist/de_web_sdk_bg.wasm`.
 
 ## Usage
 
@@ -34,8 +34,8 @@ The simplest way to embed a design viewer:
 
 ```vue
 <script setup lang="ts">
-import { DesignView } from '@zseven-w/de-web-sdk-vue';
-import type { OpViewer } from '@zseven-w/de-web-sdk';
+import { DesignView } from '@kemalcalak/de-web-sdk-vue';
+import type { OpViewer } from '@kemalcalak/de-web-sdk';
 
 function onLoad(viewer: OpViewer) {
   console.log('viewer ready', viewer.document);
@@ -45,7 +45,7 @@ function onLoad(viewer: OpViewer) {
 <template>
   <DesignView
     :doc="docStringOrBytes"
-    wasmUrl="/assets/op_web_sdk_bg.wasm"
+    wasmUrl="/assets/de_web_sdk_bg.wasm"
     style="width: 800px; height: 600px"
     @load="onLoad"
   />
@@ -53,8 +53,8 @@ function onLoad(viewer: OpViewer) {
 ```
 
 **Props:**
-- `doc?: string | Uint8Array` — serialized OpenPencil document (JSON string or binary bytes). Omit to start with an empty document.
-- `wasmUrl?: string` — URL to the core WASM binary. Required unless your bundler resolves the virtual `virtual:op_web_sdk_wasm` module.
+- `doc?: string | Uint8Array` — serialized Design Editor document (JSON string or binary bytes). Omit to start with an empty document.
+- `wasmUrl?: string` — URL to the core WASM binary. Required unless your bundler resolves the virtual `virtual:de_web_sdk_wasm` module.
 
 **Events:**
 - `load(viewer: OpViewer)` — fired once the viewer is ready.
@@ -67,8 +67,8 @@ For advanced layouts where you need the viewer in child components, call `provid
 <!-- parent.vue -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { createViewer } from '@zseven-w/de-web-sdk';
-import { provideViewer } from '@zseven-w/de-web-sdk-vue';
+import { createViewer } from '@kemalcalak/de-web-sdk';
+import { provideViewer } from '@kemalcalak/de-web-sdk-vue';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 onMounted(async () => {
@@ -81,7 +81,7 @@ onMounted(async () => {
 ```vue
 <!-- child.vue -->
 <script setup lang="ts">
-import { useViewer } from '@zseven-w/de-web-sdk-vue';
+import { useViewer } from '@kemalcalak/de-web-sdk-vue';
 const viewer = useViewer(); // throws if no provider above
 </script>
 ```
@@ -103,7 +103,7 @@ Each composable subscribes to the relevant viewer event and automatically unsubs
 
 ```vue
 <script setup lang="ts">
-import { useViewport, useDocument } from '@zseven-w/de-web-sdk-vue';
+import { useViewport, useDocument } from '@kemalcalak/de-web-sdk-vue';
 
 const viewport = useViewport();  // ShallowRef<{panX, panY, zoom}>
 const doc = useDocument();        // ShallowRef<PenDocument>

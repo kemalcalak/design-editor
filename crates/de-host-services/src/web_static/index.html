@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>OpenPencil</title>
+    <title>Design Editor</title>
     <style>
       html,
       body {
@@ -100,12 +100,12 @@
       } catch (e) {
         showError(
           [
-            'OpenPencil web shell failed to load.',
+            'Design Editor web shell failed to load.',
             '',
             'Expected the wasm-bindgen bundle at /pkg/de_host_web.js.',
             'Rebuild it with tools/check-wasm-bundle.sh, or',
             'point the daemon at an existing bundle directory via the',
-            'OPENPENCIL_WEB_BUNDLE_DIR environment variable.',
+            'DESIGN_EDITOR_WEB_BUNDLE_DIR environment variable.',
             '',
             'Underlying error: ' + (e && e.message ? e.message : String(e)),
           ].join('\n'),

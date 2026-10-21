@@ -4,7 +4,7 @@
 //! and the icon summary.
 //!
 //! Split out of `property_panel_snapshot.rs` to keep both files under
-//! the openpencil 800-line cap.
+//! the design-editor 800-line cap.
 
 use super::{EllipseArcSummary, IconSummary, LayoutPaddingSummary, VideoSummary};
 use crate::widgets::property_panel_action::{LayoutAlignValue, LayoutJustifyValue};

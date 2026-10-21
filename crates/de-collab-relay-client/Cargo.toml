@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Bounded TCP-to-WebSocket relay bridge for OpenPencil collaboration"
+description = "Bounded TCP-to-WebSocket relay bridge for Design Editor collaboration"
 
 [dependencies]
 de-collab-relay-protocol = { path = "../de-collab-relay-protocol" }

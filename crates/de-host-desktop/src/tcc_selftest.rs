@@ -10,7 +10,7 @@
 //! `design-editor --tcc-selftest <dir> [outfile]` probes whether
 //! THIS process can read `<dir>` — via `read_dir`, the exact syscall
 //! git's working-tree scan makes — and writes an `OK …` / `ERR …`
-//! line to `outfile` (default `$TMPDIR/openpencil-tcc-selftest.txt`)
+//! line to `outfile` (default `$TMPDIR/design-editor-tcc-selftest.txt`)
 //! and to stderr, then asks `main` to exit. Launching the bundle with
 //! `open(1)` routes through LaunchServices, so the app becomes its own
 //! TCC responsible process; this confirms the signed bundle's folder
@@ -34,7 +34,7 @@ pub fn run_cli_if_requested() -> bool {
     let out: PathBuf = args
         .get(pos + 2)
         .map(PathBuf::from)
-        .unwrap_or_else(|| std::env::temp_dir().join("openpencil-tcc-selftest.txt"));
+        .unwrap_or_else(|| std::env::temp_dir().join("design-editor-tcc-selftest.txt"));
 
     let report = match std::fs::read_dir(&dir) {
         // `read_dir` returns a lazy iterator; pull one entry so the

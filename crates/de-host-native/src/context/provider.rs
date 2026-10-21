@@ -82,7 +82,7 @@ pub trait GlContextProvider {
     /// Resize the underlying surface (window / pbuffer). Called from
     /// `SharedSkiaContext::resize` before the Skia surface is rebuilt.
     ///
-    /// v19.1 mini-patch landed (spec frozen at openpencil-docs
+    /// v19.1 mini-patch landed (spec frozen at design-editor-docs
     /// commit 526791f, §3.1): mobile surface-recreate (Step 1f Android
     /// `on_resume`) and desktop window resize both require the GL
     /// surface to be rebuilt before Skia rewraps the FBO.
@@ -92,7 +92,7 @@ pub trait GlContextProvider {
     /// `0` = the GL window default FBO; non-zero = an FBO that Skia
     /// must wrap when constructing its `BackendRenderTarget`.
     ///
-    /// v19.1 mini-patch landed (spec frozen at openpencil-docs
+    /// v19.1 mini-patch landed (spec frozen at design-editor-docs
     /// commit 526791f, §3.1). **Required method, no default body**
     /// (Phase A Gate round 2 CONCERN 1 fix): Step 1f mobile
     /// implementations must explicitly specify — iOS EAGL needs the

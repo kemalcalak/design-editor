@@ -67,17 +67,17 @@ pub fn lookup_icon_by_name(name: &str) -> Option<IconLookupResult> {
     f(name)
 }
 
-/// Whether OpenPencil layout semantics or verbatim Figma geometry is
+/// Whether Design Editor layout semantics or verbatim Figma geometry is
 /// produced.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FigLayoutMode {
     /// Keep Figma's fixed pixel sizes.
     Preserve,
-    /// Resolve auto-layout into OpenPencil sizing keywords.
-    OpenPencil,
+    /// Resolve auto-layout into Design Editor sizing keywords.
+    DesignEditor,
 }
 
-/// Node types Figma emits that have no OpenPencil equivalent.
+/// Node types Figma emits that have no Design Editor equivalent.
 pub const SKIPPED_TYPES: &[&str] = &[
     "SLICE",
     "CONNECTOR",
@@ -293,7 +293,7 @@ pub fn resolve_width(
                 .and_then(|s| s.get_f64("x"))
                 .unwrap_or(100.0),
         ),
-        FigLayoutMode::OpenPencil => map_width_sizing(figma, parent_stack_mode),
+        FigLayoutMode::DesignEditor => map_width_sizing(figma, parent_stack_mode),
     }
 }
 
@@ -310,7 +310,7 @@ pub fn resolve_height(
                 .and_then(|s| s.get_f64("y"))
                 .unwrap_or(100.0),
         ),
-        FigLayoutMode::OpenPencil => map_height_sizing(figma, parent_stack_mode),
+        FigLayoutMode::DesignEditor => map_height_sizing(figma, parent_stack_mode),
     }
 }
 

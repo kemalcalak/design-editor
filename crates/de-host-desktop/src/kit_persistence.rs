@@ -1,7 +1,7 @@
-//! Imported-UIKit persistence — `<config>/openpencil/uikits.json`.
+//! Imported-UIKit persistence — `<config>/design-editor/uikits.json`.
 //!
 //! The desktop counterpart of the TS `uikit-store.ts` persist /
-//! hydrate pair (localStorage key `openpencil-uikits`). The JSON
+//! hydrate pair (localStorage key `design-editor-uikits`). The JSON
 //! shape mirrors the TS `PersistedState` exactly — `importedKits`
 //! carries full TS-shaped `UIKit` objects (`id` / `name` / `version`
 //! / `builtIn` / `document` / `components`) so a payload moved
@@ -30,7 +30,7 @@ use de_editor_core::{ComponentCategory, EditorState};
 use crate::kit_persistence_error::KitStoreError;
 use serde::{Deserialize, Serialize};
 
-const APP_DIR: &str = "openpencil";
+const APP_DIR: &str = "design-editor";
 const FILE_NAME: &str = "uikits.json";
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,6 +70,9 @@ struct PersistedComponent {
 /// config base exists — load/save become silent no-ops.
 fn store_path() -> Option<PathBuf> {
     let base = dirs::config_dir()?;
+    // One-time rebrand migration: copy the pre-rename file when the new one is missing.
+    #[cfg(not(test))]
+    let _ = de_config_store::migrate_legacy_config_file(&base, APP_DIR, FILE_NAME);
     Some(base.join(APP_DIR).join(FILE_NAME))
 }
 
@@ -334,7 +337,7 @@ mod tests {
         let path = temp_path("clash");
         let mut state = EditorState::new();
         let mut clashing = imported_kit_fixture();
-        clashing.id = "openpencil-starter".to_string();
+        clashing.id = "design-editor-starter".to_string();
         state.ui_kits.push(clashing);
         state.import_kit(imported_kit_fixture());
         save_to(&state, &path).expect("save");

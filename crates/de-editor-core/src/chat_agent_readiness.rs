@@ -2,10 +2,10 @@
 //!
 //! Some CLI agents cannot run a canvas turn at all until a matching MCP
 //! integration is switched on in Settings. Antigravity is the measured case:
-//! every canvas turn reads `mcpServers.openpencil` out of the user's
+//! every canvas turn reads `mcpServers.design-editor` out of the user's
 //! `~/.gemini/config/mcp_config.json`, and that entry only exists while the
 //! Antigravity row on the Settings MCP tab is enabled. Without the toggle the
-//! turn dies with "Antigravity requires OpenPencil MCP to be enabled in
+//! turn dies with "Antigravity requires Design Editor MCP to be enabled in
 //! Settings" — but only AFTER the user has written and sent a whole prompt.
 //!
 //! This module answers the same question BEFORE the send, so the panel can
@@ -36,7 +36,7 @@ impl EditorUiState {
 ///
 /// Antigravity is the only one today: `prepare_antigravity_home` in
 /// `de-host-services` refuses the turn outright when the entry is missing.
-/// Grok Build also talks to OpenPencil over MCP but degrades to a tool-free
+/// Grok Build also talks to Design Editor over MCP but degrades to a tool-free
 /// turn instead of failing, so it is deliberately not listed.
 fn required_mcp_cli(provider: AgentProvider) -> Option<McpCli> {
     match provider {

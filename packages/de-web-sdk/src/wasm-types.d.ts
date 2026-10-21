@@ -1,8 +1,8 @@
 // Type declarations for the virtual wasm glue module.
-// The virtual specifier 'virtual:op_web_sdk_wasm' is resolved by the Vite plugin
+// The virtual specifier 'virtual:de_web_sdk_wasm' is resolved by the Vite plugin
 // in vitest.config.ts (to the test stub) and in tsup.config.ts (to the real bundle).
 // Using a virtual specifier avoids requiring a physical wasm/ file for tsc or Vitest.
-declare module 'virtual:op_web_sdk_wasm' {
+declare module 'virtual:de_web_sdk_wasm' {
   export class Viewer {
     constructor();
     free(): void;

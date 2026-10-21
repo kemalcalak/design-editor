@@ -75,19 +75,19 @@ pub(super) fn raster_format_from_export_body(
     match format {
         "png" => Ok((
             crate::export::RasterFormat::Png,
-            "openpencil-export.png",
+            "design-editor-export.png",
             "image/png",
             "png",
         )),
         "jpeg" | "jpg" => Ok((
             crate::export::RasterFormat::Jpeg,
-            "openpencil-export.jpg",
+            "design-editor-export.jpg",
             "image/jpeg",
             "jpg",
         )),
         "webp" => Ok((
             crate::export::RasterFormat::Webp,
-            "openpencil-export.webp",
+            "design-editor-export.webp",
             "image/webp",
             "webp",
         )),
@@ -140,7 +140,7 @@ pub(super) fn export_pdf_download(body: &str, state: &WebCanvasState) -> WebRepl
             status: "200 OK",
             body: serde_json::json!({
                 "ok": true,
-                "fileName": "openpencil-export.pdf",
+                "fileName": "design-editor-export.pdf",
                 "mime": "application/pdf",
                 "dataBase64": base64::engine::general_purpose::STANDARD.encode(bytes),
             })
@@ -233,7 +233,7 @@ pub(super) fn parse_export_body(body: &str) -> Result<Option<serde_json::Value>>
 
 pub(super) fn tmp_export_path(ext: &str) -> PathBuf {
     std::env::temp_dir().join(format!(
-        "openpencil-web-export-{}-{:?}.{ext}",
+        "design-editor-web-export-{}-{:?}.{ext}",
         std::process::id(),
         std::thread::current().id()
     ))

@@ -100,7 +100,7 @@ impl WidgetHostNative {
     }
 }
 
-/// Dev/demo fast path: `OPENPENCIL_DEV_FAKE_LOGIN=1` makes the sign-in
+/// Dev/demo fast path: `DESIGN_EDITOR_DEV_FAKE_LOGIN=1` makes the sign-in
 /// modal's primary button set `AccountState::SignedIn` immediately
 /// instead of showing the honest "coming soon" stub. Lets the topbar
 /// avatar, its dropdown, and the settings Account tab be exercised

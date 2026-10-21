@@ -1,12 +1,12 @@
 //! Sign-in modal — opened from the TopBar avatar button while signed
 //! out, or from the settings modal's Account tab. The surface keeps
-//! authentication focused: OpenPencil identity, one browser action,
+//! authentication focused: Design Editor identity, one browser action,
 //! and a concise security/status note.
 //!
 //! Touch builds without an auth runtime show a disabled "coming soon"
 //! action instead of pretending to sign in. `AccountState::
 //! dev_fake_signed_in` is the dev/demo fast path (gated host-side by
-//! `OPENPENCIL_DEV_FAKE_LOGIN=1`), never reachable from this widget on
+//! `DESIGN_EDITOR_DEV_FAKE_LOGIN=1`), never reachable from this widget on
 //! its own.
 
 use crate::theme::Theme;
@@ -220,7 +220,7 @@ fn paint_brand_badge(backend: &mut dyn RenderBackend, theme: &Theme, panel: Rect
     }
 }
 
-/// Draw the official OpenPencil mark (`brand-logo-128.png`) into `rect`.
+/// Draw the official Design Editor mark (`brand-logo-128.png`) into `rect`.
 /// Returns `false` for the one frame the raster is still decoding, so the
 /// caller can paint its own placeholder; the Home wordmark and the sign-in
 /// badge share this so the product never shows two different logos.
@@ -591,7 +591,7 @@ mod tests {
         assert!(!paint
             .texts
             .iter()
-            .any(|text| text == "使用 OpenPencil 账户继续"));
+            .any(|text| text == "使用 Design Editor 账户继续"));
         assert!(paint.images.iter().any(|(_, image_id, byte_len)| {
             *image_id == BRAND_LOGO_IMAGE_ID && *byte_len == BRAND_LOGO_PNG.len()
         }));

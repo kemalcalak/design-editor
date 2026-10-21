@@ -108,7 +108,7 @@ raise "alipay must use the unsigned PURE_OAUTH_SDK flow" unless alipay_source.in
   "https://authweb.alipay.com/auth?auth_type=PURE_OAUTH_SDK"
 )
 raise "alipay callback scheme drifted" unless alipay_source.include?(
-  'callbackScheme = "openpencilalipay"'
+  'callbackScheme = "designeditoralipay"'
 )
 wechat_source = File.read(File.expand_path("../Sources/WechatNativeSignIn.swift", __dir__))
 raise "wechat mobile AppID drifted" unless wechat_source.include?(

@@ -40,9 +40,9 @@ use bootstrap_cache::{endpoint_cache_file, read_cache, write_cache, BootstrapCac
 use bootstrap_roots::{add_development_roots, builtin_roots, root_authorizes_generation};
 pub(super) use bootstrap_select::bootstrap_provider;
 
-pub(super) const BOOTSTRAP_URL_ENV: &str = "OPENPENCIL_COLLAB_BOOTSTRAP_URL";
+pub(super) const BOOTSTRAP_URL_ENV: &str = "DESIGN_EDITOR_COLLAB_BOOTSTRAP_URL";
 #[cfg(any(test, debug_assertions))]
-const BOOTSTRAP_DEV_HTTP_ENV: &str = "OPENPENCIL_COLLAB_BOOTSTRAP_DEV_HTTP";
+const BOOTSTRAP_DEV_HTTP_ENV: &str = "DESIGN_EDITOR_COLLAB_BOOTSTRAP_DEV_HTTP";
 
 const BOOTSTRAP_PATH: &str = "/api/v1/collaboration/bootstrap";
 const BOOTSTRAP_CONTEXT: &[u8] = b"openpencil/op-hub/collaboration-bootstrap/v1\0";

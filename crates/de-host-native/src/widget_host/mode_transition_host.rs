@@ -318,7 +318,11 @@ impl WidgetHostNative {
 }
 
 fn host_motion_preference() -> jian_ops_schema::motion::MotionPreference {
-    if std::env::var("OPENPENCIL_REDUCED_MOTION").ok().as_deref() == Some("1") {
+    if std::env::var("DESIGN_EDITOR_REDUCED_MOTION")
+        .ok()
+        .as_deref()
+        == Some("1")
+    {
         jian_ops_schema::motion::MotionPreference::Reduced
     } else {
         jian_ops_schema::motion::MotionPreference::Full

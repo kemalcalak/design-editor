@@ -1,4 +1,4 @@
-/* @ts-self-types="./de_host_web.d.ts" */
+/* @ts-self-types="./op_host_web.d.ts" */
 
 /**
  * Long-lived shell handle. The smoke HTML must keep this alive (e.g.

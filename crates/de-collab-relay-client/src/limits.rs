@@ -17,7 +17,7 @@ pub(crate) struct RelayLimits {
     ///
     /// The relay hard-closes an unpaired peer after its own waiting window
     /// (`de_collab_relay_server::RelayConfig::waiting_timeout`, which operators
-    /// tune with `OPENPENCIL_COLLAB_RELAY_WAITING_TIMEOUT_SECS`), so an owner
+    /// tune with `DESIGN_EDITOR_COLLAB_RELAY_WAITING_TIMEOUT_SECS`), so an owner
     /// lane parked on the long [`RelayLimits::pair`] budget never recycles on
     /// its own schedule: it either learns about the close late or, behind a NAT
     /// that silently reaps the idle flow, not at all. Either way the owner is

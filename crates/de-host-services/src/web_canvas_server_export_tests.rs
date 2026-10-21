@@ -26,7 +26,7 @@ fn post_export_pdf_returns_base64_pdf_without_replacing_daemon_document() {
     let parsed: serde_json::Value = serde_json::from_str(&r.body).expect("json body");
     assert_eq!(parsed["ok"], true);
     assert_eq!(parsed["mime"], "application/pdf");
-    assert_eq!(parsed["fileName"], "openpencil-export.pdf");
+    assert_eq!(parsed["fileName"], "design-editor-export.pdf");
     let data = parsed["dataBase64"].as_str().expect("dataBase64 string");
     let pdf = base64::engine::general_purpose::STANDARD
         .decode(data)
@@ -187,7 +187,7 @@ fn post_export_raster_returns_base64_png_without_replacing_daemon_document() {
     let parsed: serde_json::Value = serde_json::from_str(&r.body).expect("json body");
     assert_eq!(parsed["ok"], true);
     assert_eq!(parsed["mime"], "image/png");
-    assert_eq!(parsed["fileName"], "openpencil-export.png");
+    assert_eq!(parsed["fileName"], "design-editor-export.png");
     let data = parsed["dataBase64"].as_str().expect("dataBase64 string");
     let png = base64::engine::general_purpose::STANDARD
         .decode(data)
@@ -329,7 +329,7 @@ fn post_open_recent_prunes_stale_recent_path_without_replacing_doc() {
     use de_editor_core::PenNodeExt;
 
     let missing = std::env::temp_dir().join(format!(
-        "openpencil-web-canvas-missing-{}.op",
+        "design-editor-web-canvas-missing-{}.op",
         std::process::id()
     ));
     let mut s = fresh_state();

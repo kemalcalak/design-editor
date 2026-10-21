@@ -1,6 +1,6 @@
 //! Raster capture coverage for a selected Frame's Property Panel.
 //!
-//! Set `OPENPENCIL_PROPERTY_PANEL_SHOT_DIR` to keep the rendered PNGs. Without
+//! Set `DESIGN_EDITOR_PROPERTY_PANEL_SHOT_DIR` to keep the rendered PNGs. Without
 //! it, the test still paints every viewport and verifies that Skia produced
 //! non-empty pixels.
 
@@ -24,7 +24,7 @@ const VIEWPORTS: [(&str, i32, i32, bool); 6] = [
 
 #[test]
 fn selected_frame_property_panel_paints_at_every_touch_size_class() {
-    let shot_dir = std::env::var_os("OPENPENCIL_PROPERTY_PANEL_SHOT_DIR")
+    let shot_dir = std::env::var_os("DESIGN_EDITOR_PROPERTY_PANEL_SHOT_DIR")
         .filter(|value| !value.is_empty())
         .map(PathBuf::from);
     if let Some(dir) = shot_dir.as_deref() {

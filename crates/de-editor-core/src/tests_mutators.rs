@@ -1,5 +1,5 @@
 //! Mutator tests — selection / tree-ops / grouping / history.
-//! Ported from `openpencil-shell-core::document::tests_mutators`,
+//! Ported from `design-editor-shell-core::document::tests_mutators`,
 //! retargeted onto `EditorState` + the canonical `PenNode` tree.
 //!
 //! Slim spine; the cases live in sibling modules under

@@ -69,7 +69,7 @@ impl DesktopApp {
         let locale = self.host.editor_state().editor_ui.locale;
         let picked = rfd::FileDialog::new()
             .set_title(de_i18n::translate(locale, "componentBrowser.importKit"))
-            .add_filter("OpenPencil File", &["op", "pen", "json"])
+            .add_filter("Design Editor File", &["op", "pen", "json"])
             .pick_file();
         let Some(path) = picked else {
             return;

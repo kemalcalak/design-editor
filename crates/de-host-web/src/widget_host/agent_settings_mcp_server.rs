@@ -64,7 +64,7 @@ pub(in crate::widget_host) fn request_mcp_server_update(request: McpServerReques
     if let Some(token) = crate::live_sync::daemon_token_for(&url) {
         let _ = Reflect::set(
             &headers,
-            &JsValue::from_str("X-OpenPencil-Token"),
+            &JsValue::from_str("X-Design-Editor-Token"),
             &JsValue::from_str(&token),
         );
     }

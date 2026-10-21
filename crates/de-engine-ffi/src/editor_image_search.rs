@@ -165,7 +165,7 @@ impl MobileImageSearch {
                 let state = host.editor_state_mut();
                 changed |= apply_result(state, &target.node_id, SEARCH_FAILED_PLACEHOLDER_SRC);
                 eprintln!(
-                    "openpencil-mobile: image slot {} needs generation (unavailable on this device)",
+                    "design-editor-mobile: image slot {} needs generation (unavailable on this device)",
                     target.node_id.as_str()
                 );
                 continue;
@@ -181,7 +181,7 @@ impl MobileImageSearch {
                 let _ = tx.send(url);
             });
             eprintln!(
-                "openpencil-mobile: image search start ({} -> {:?})",
+                "design-editor-mobile: image search start ({} -> {:?})",
                 target.node_id.as_str(),
                 query
             );
@@ -210,7 +210,7 @@ impl MobileImageSearch {
                             url.unwrap_or_else(|| SEARCH_FAILED_PLACEHOLDER_SRC.to_string());
                         let applied = apply_result(state, &job.node_id, &resolved);
                         eprintln!(
-                            "openpencil-mobile: image search done ({} applied={} failed={})",
+                            "design-editor-mobile: image search done ({} applied={} failed={})",
                             job.node_id.as_str(),
                             applied,
                             resolved == SEARCH_FAILED_PLACEHOLDER_SRC

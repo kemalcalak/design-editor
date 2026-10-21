@@ -1,10 +1,10 @@
 # de-auth-bridge
 
-`de-auth-bridge` exposes OpenPencil's authentication bridge and collaboration
+`de-auth-bridge` exposes Design Editor's authentication bridge and collaboration
 ticket verification boundary.
 
 The Rust claim types, provider trait, JWKS cache, verifier, deterministic test
-fixture, and source-only fallback are public OpenPencil code licensed under the
+fixture, and source-only fallback are public Design Editor code licensed under the
 workspace [MIT License](../../LICENSE).
 
 Production authentication and ticket issuance are supplied by private security
@@ -18,7 +18,7 @@ The committed production input is a complete ten-target ABI-v3 matrix covering
 desktop, iOS device and simulator, and Android arm64 and x86_64. Its signed
 `VERSION` and `openpencil_revision` values identify the artifact release and
 record its original public build context; neither value is a compatibility lock
-to the consuming OpenPencil checkout. Compatibility is instead gated by the
+to the consuming Design Editor checkout. Compatibility is instead gated by the
 signed ABI and runtime handshake.
 
 Private release CI rebuilds an immutable candidate for every supported target,
@@ -30,7 +30,7 @@ canonical targets, signed private provenance, and signed hardening digests.
 The source-owned `AUTH-RELEASE-POLICY` additionally pins the exact adopted
 matrix digest and private identity, so another older matrix signed by the same
 key cannot be replayed.
-OpenPencil-only changes and package version bumps reuse that matrix without a
+Design Editor-only changes and package version bumps reuse that matrix without a
 private rebuild; op-platform implementation, ABI, toolchain, or hardening
 changes require a new private matrix. See [`prebuilt/README.md`](prebuilt/README.md)
 for the target list and promotion boundary.
@@ -68,8 +68,8 @@ Developers can exercise login and collaboration against a private ABI-v2 or
 ABI-v3 archive without replacing a committed production artifact:
 
 ```sh
-OPENPENCIL_DEV_OP_AUTH_ARCHIVE=/absolute/path/to/libop_auth.a \
-OPENPENCIL_DEV_OP_AUTH_ABI_VERSION=3 \
+DESIGN_EDITOR_DEV_OP_AUTH_ARCHIVE=/absolute/path/to/libop_auth.a \
+DESIGN_EDITOR_DEV_OP_AUTH_ABI_VERSION=3 \
 cargo build -p de-host-desktop --features dev-op-auth-abi-v2
 ```
 
@@ -93,24 +93,24 @@ which has no release mode and isolates Android output in the Debug source set.
 The credential-bearing login/ticket origin and the public collaboration trust
 root are separate startup inputs:
 
-- `OPENPENCIL_SSO_URL` selects the regional SSO used for device login,
+- `DESIGN_EDITOR_SSO_URL` selects the regional SSO used for device login,
   account calls, sign-out, and `POST /api/v1/collab/tickets`;
-- `OPENPENCIL_COLLAB_ISSUER` pins the exact logical `iss` accepted from every
+- `DESIGN_EDITOR_COLLAB_ISSUER` pins the exact logical `iss` accepted from every
   collaborating region;
-- `OPENPENCIL_COLLAB_POLICY_ENDPOINT` optionally pins a regional HTTPS mirror
+- `DESIGN_EDITOR_COLLAB_POLICY_ENDPOINT` optionally pins a regional HTTPS mirror
   of the offline-signed union policy;
-- `OPENPENCIL_COLLAB_JWKS_ENDPOINT` selects only the explicit legacy raw-JWKS
+- `DESIGN_EDITOR_COLLAB_JWKS_ENDPOINT` selects only the explicit legacy raw-JWKS
   compatibility path for self-hosted deployments.
 
 With an issuer but no endpoint override, the bridge derives
 `/api/v1/collab/policy` on that issuer. With no overrides, production also uses
-the signed policy endpoint. An explicit `OPENPENCIL_SSO_URL`-only self-hosted
+the signed policy endpoint. An explicit `DESIGN_EDITOR_SSO_URL`-only self-hosted
 configuration retains its legacy same-origin JWKS behavior. Either endpoint
 override requires an explicit issuer, the two endpoint variables are mutually
 exclusive, and a policy parse, signature, time, or generation failure never
 falls back to raw JWKS.
 
-Domestic and overseas sites may use different `OPENPENCIL_SSO_URL` values only
+Domestic and overseas sites may use different `DESIGN_EDITOR_SSO_URL` values only
 when both issuers produce the same logical `iss` and globally stable account
 `sub`. Each region keeps its own HSM private keys. Every regional policy mirror
 must publish the same canonical envelope signed by the offline root pinned in

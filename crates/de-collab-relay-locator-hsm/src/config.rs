@@ -181,11 +181,11 @@ mod tests {
         SignerConfig {
             version: 1,
             region: Region::Global,
-            socket_path: "/run/openpencil-hsm/signer.sock".into(),
+            socket_path: "/run/design-editor-hsm/signer.sock".into(),
             expected_client_uid: 65532,
             expected_client_gid: 65532,
             pkcs11_module_path: "/usr/lib/softhsm/libsofthsm2.so".into(),
-            token_label: "openpencil-locator-global".into(),
+            token_label: "design-editor-locator-global".into(),
             pin_file: "/run/secrets/locator-hsm-pin".into(),
             active_kid: "locator-global-2026-a".into(),
             keys: vec![

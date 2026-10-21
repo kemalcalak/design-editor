@@ -1,4 +1,4 @@
-//! OpenPencil read-only web embedding SDK. Parses a `.op` document and
+//! Design Editor read-only web embedding SDK. Parses a `.op` document and
 //! renders it to a `<canvas>` via CanvasKit, with pan/zoom navigation,
 //! read-only snapshots, and SVG export. No editing.
 // `dirty_state` is compiled unconditionally (not gated behind the

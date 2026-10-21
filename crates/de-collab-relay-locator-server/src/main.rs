@@ -4,7 +4,7 @@ use de_collab_relay_locator_server::{
 };
 use tracing_subscriber::EnvFilter;
 
-const LOG_LEVEL_ENV: &str = "OPENPENCIL_COLLAB_LOCATOR_LOG_LEVEL";
+const LOG_LEVEL_ENV: &str = "DESIGN_EDITOR_COLLAB_LOCATOR_LOG_LEVEL";
 
 #[tokio::main]
 async fn main() {

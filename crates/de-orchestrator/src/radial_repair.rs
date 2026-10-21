@@ -269,7 +269,7 @@ fn apply_authored_radial_patch(v: &mut Value, patch: AuthoredRadialPatch) -> boo
     true
 }
 
-/// Canonical painter order for a radial visual. In OpenPencil lower
+/// Canonical painter order for a radial visual. In Design Editor lower
 /// child indexes paint on top, so centre content comes first, partial progress
 /// or pie-segment arcs next, and the full track last. A track/progress pair or
 /// explicit-angle segmented donut excludes rows of independent gauges.

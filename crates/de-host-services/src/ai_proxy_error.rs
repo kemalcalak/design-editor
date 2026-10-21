@@ -14,7 +14,7 @@
 //! The first pair means "this request contradicts itself"; the second pair
 //! means "this endpoint is not one the deployment will dial". Only the second
 //! is a deployment-policy decision an operator can change (via
-//! `OPENPENCIL_WEB_AI_ENDPOINT_ALLOWLIST`), which is exactly the difference an
+//! `DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST`), which is exactly the difference an
 //! operator reading a log needs.
 
 use std::fmt;
@@ -51,7 +51,7 @@ impl fmt::Display for ProxyProviderError {
             ProxyProviderError::EndpointRejected(error) => error.fmt(f),
             ProxyProviderError::EndpointNotPermittedByDeployment => f.write_str(
                 "provider endpoint is not allowed: private, loopback, and reserved addresses \
-                 require an OPENPENCIL_WEB_AI_ENDPOINT_ALLOWLIST entry",
+                 require an DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST entry",
             ),
         }
     }

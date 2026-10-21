@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Node-level three-way merge for OpenPencil .op documents"
+description = "Node-level three-way merge for Design Editor .op documents"
 
 # Pure, platform-free: a structured 3-way merge over the `.op`
 # document JSON, keyed by node `id`. Used by the in-app Git merge

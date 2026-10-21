@@ -578,8 +578,7 @@ mod tests {
 
     #[test]
     fn gpu_and_cpu_frames_both_pump_collaboration_before_paint() {
-        let root =
-            std::env::temp_dir().join(format!("openpencil-ffi-collab-pump-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("de-ffi-collab-pump-{}", std::process::id()));
         std::fs::create_dir_all(&root).unwrap();
         de_config_store::redirect_user_root_for_tests(root);
 

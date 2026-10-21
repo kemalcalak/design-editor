@@ -93,7 +93,7 @@ const MOBILE_SCREEN_WIDTH: std::ops::RangeInclusive<f64> = 320.0..=480.0;
 /// ASCII mobile keyword `root_seed_prompt_is_mobile` can match, so without
 /// this canvas signal a mobile multi-screen continuation silently misroutes
 /// to the classic orchestrator (see the multi-screen fan-out break plan in
-/// openpencil-docs).
+/// design-editor-docs).
 fn canvas_has_mobile_screen_root(state: &de_editor_core::EditorState) -> bool {
     use de_editor_core::PenNodeExt;
     state.active_children().iter().any(|node| {
@@ -127,7 +127,7 @@ fn root_seed_mobile_for_turn(state: &de_editor_core::EditorState, prompt: &str) 
 /// product is mobile — that fact must win regardless of what THIS prompt
 /// says.
 ///
-/// The A/B evidence summarized in the openpencil-docs sonar plan validated the
+/// The A/B evidence summarized in the design-editor-docs sonar plan validated the
 /// loop as better for mobile/landing work and worse for desktop dashboard work.
 ///
 /// Kept free of I/O so it is unit-testable without env-var flakiness.
@@ -155,7 +155,7 @@ pub fn loop_enabled(
 pub(super) fn design_agent_loop_enabled(state: &de_editor_core::EditorState, prompt: &str) -> bool {
     loop_enabled(
         state.editor_ui.agent_settings.experimental_features_enabled,
-        std::env::var("OPENPENCIL_DESIGN_AGENT_LOOP")
+        std::env::var("DESIGN_EDITOR_DESIGN_AGENT_LOOP")
             .ok()
             .as_deref(),
         prompt,

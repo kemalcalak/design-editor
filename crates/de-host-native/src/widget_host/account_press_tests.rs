@@ -21,7 +21,7 @@ fn top_bar_rect() -> Rect {
 
 /// `cargo test` runs a crate's tests on multiple threads by default, but
 /// `std::env` is process-global — two tests racing to set/unset
-/// `OPENPENCIL_DEV_FAKE_LOGIN` concurrently can observe each other's
+/// `DESIGN_EDITOR_DEV_FAKE_LOGIN` concurrently can observe each other's
 /// writes mid-test. Every test that touches this env var takes this
 /// lock first (mirrors `font_registry_test_support::lock` in
 /// `de-host-native/src/lib.rs`, same rationale for a different global).
@@ -33,7 +33,7 @@ fn env_lock() -> MutexGuard<'static, ()> {
 }
 
 /// Restores an env var to its pre-test value on drop, so
-/// `OPENPENCIL_DEV_FAKE_LOGIN` can't leak into other tests running in
+/// `DESIGN_EDITOR_DEV_FAKE_LOGIN` can't leak into other tests running in
 /// the same process (mirrors `de-host-services`' `EnvVarGuard`).
 struct EnvVarGuard {
     key: &'static str,
@@ -157,7 +157,7 @@ fn stale_account_menu_state_does_not_dispatch_while_release_gate_is_hidden() {
 #[test]
 fn login_modal_sign_in_without_dev_flag_shows_honest_stub_hint() {
     let _lock = env_lock();
-    let _guard = EnvVarGuard::unset("OPENPENCIL_DEV_FAKE_LOGIN");
+    let _guard = EnvVarGuard::unset("DESIGN_EDITOR_DEV_FAKE_LOGIN");
     let mut host = WidgetHostNative::new();
     host.editor_state_mut().editor_ui.login_modal_open = true;
 
@@ -203,7 +203,7 @@ fn login_modal_sign_in_without_dev_flag_shows_honest_stub_hint() {
 #[test]
 fn login_modal_sign_in_with_dev_flag_signs_in_and_closes() {
     let _lock = env_lock();
-    let _guard = EnvVarGuard::set("OPENPENCIL_DEV_FAKE_LOGIN", "1");
+    let _guard = EnvVarGuard::set("DESIGN_EDITOR_DEV_FAKE_LOGIN", "1");
     let mut host = WidgetHostNative::new();
     host.editor_state_mut().editor_ui.login_modal_open = true;
 

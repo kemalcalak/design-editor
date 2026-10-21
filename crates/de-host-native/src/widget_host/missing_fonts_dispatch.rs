@@ -337,7 +337,7 @@ mod tests {
         let mut host = WidgetHostNative::new();
         assert!(!host.editor_state().editor_ui.system_fonts_loaded);
 
-        host.install_imported_state(state_with_text("__OpenPencilMissingFontTest__"));
+        host.install_imported_state(state_with_text("__DesignEditorMissingFontTest__"));
 
         let ui = &host.editor_state().editor_ui;
         assert!(ui.system_fonts_loaded);
@@ -345,14 +345,14 @@ mod tests {
         assert!(ui.missing_fonts_modal_open);
         assert_eq!(
             ui.missing_fonts_prompt.as_ref().unwrap().entries[0].family,
-            "__OpenPencilMissingFontTest__"
+            "__DesignEditorMissingFontTest__"
         );
     }
 
     #[test]
     fn settings_refresh_recomputes_data_without_opening_modal() {
         let mut host = WidgetHostNative::new();
-        *host.editor_state_mut() = state_with_text("__OpenPencilSettingsMissingFontTest__");
+        *host.editor_state_mut() = state_with_text("__DesignEditorSettingsMissingFontTest__");
         host.editor_state_mut().editor_ui.system_fonts_loaded = true;
 
         host.refresh_missing_fonts_for_settings();
@@ -422,7 +422,7 @@ mod tests {
 
     #[test]
     fn choosing_system_font_rewrites_document_and_is_undoable() {
-        let mut state = state_with_text("__OpenPencilMissingReplacementTest__");
+        let mut state = state_with_text("__DesignEditorMissingReplacementTest__");
         state.editor_ui.system_fonts_loaded = true;
         state.editor_ui.system_font_families = std::sync::Arc::new(vec!["Arial".to_string()]);
         state.editor_ui.font_import_supported = true;
@@ -463,7 +463,7 @@ mod tests {
         let plan = jian_ops_schema::font_plan::FontPlan::scan(&host.editor_state().doc);
         assert!(plan
             .families()
-            .any(|(family, _)| family == "__OpenPencilMissingReplacementTest__"));
+            .any(|(family, _)| family == "__DesignEditorMissingReplacementTest__"));
         assert!(
             !host.editor_state().editor_ui.missing_fonts_modal_open,
             "undo must refresh missing-font data without reopening the dismissed prompt"
@@ -475,7 +475,7 @@ mod tests {
                 .as_ref()
                 .and_then(|prompt| prompt.entries.first())
                 .map(|entry| entry.family.as_str()),
-            Some("__OpenPencilMissingReplacementTest__")
+            Some("__DesignEditorMissingReplacementTest__")
         );
 
         assert!(host.apply_redo());
@@ -487,7 +487,7 @@ mod tests {
 
     #[test]
     fn toolbar_history_navigation_refreshes_missing_fonts_without_reopening_prompt() {
-        const MISSING: &str = "__OpenPencilToolbarUndoMissingFont__";
+        const MISSING: &str = "__DesignEditorToolbarUndoMissingFont__";
         let mut host = host_after_resolving_missing_font(MISSING);
 
         assert!(host.dispatch_toolbar_action(de_editor_ui::widgets::ToolbarAction::Undo));

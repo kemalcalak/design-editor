@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Transport-free collaboration protocol and exact document operations for OpenPencil"
+description = "Transport-free collaboration protocol and exact document operations for Design Editor"
 
 [dependencies]
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }

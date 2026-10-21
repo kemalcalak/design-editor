@@ -12,8 +12,8 @@ const SO_PIN: &[u8] = b"integration-so-pin-73";
 
 #[test]
 fn provisions_non_extractable_rotation_pair_and_signs() {
-    let Ok(module) = env::var("OPENPENCIL_SOFTHSM2_MODULE") else {
-        eprintln!("skipped: OPENPENCIL_SOFTHSM2_MODULE is not set");
+    let Ok(module) = env::var("DESIGN_EDITOR_SOFTHSM2_MODULE") else {
+        eprintln!("skipped: DESIGN_EDITOR_SOFTHSM2_MODULE is not set");
         return;
     };
     let directory = tempdir().unwrap();
@@ -73,7 +73,7 @@ fn signer_config(module: PathBuf, socket_path: PathBuf) -> SignerConfig {
         expected_client_uid: 65532,
         expected_client_gid: 65532,
         pkcs11_module_path: module,
-        token_label: "openpencil-test-locator".into(),
+        token_label: "design-editor-test-locator".into(),
         pin_file: "/run/secrets/not-used-by-library-test".into(),
         active_kid: "locator-test-active".into(),
         keys: vec![

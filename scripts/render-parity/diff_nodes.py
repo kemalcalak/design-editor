@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Per-node render-parity diff: Pencil baseline render vs OpenPencil Rust render.
+"""Per-node render-parity diff: Pencil baseline render vs Design Editor Rust render.
 
 Both sides export one PNG per node id (filename stem = node id):
   baseline/  <- Pencil export_nodes(png@2x)

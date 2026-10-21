@@ -10,7 +10,7 @@
 //!   `Toolbar` — view models built from an `de_editor_core::EditorState`
 //!   that compose the primitives into the actual editor UI surface.
 //!   These were briefly housed in a `chrome/` submodule; the name
-//!   collided with the higher-level "OP chrome = openpencil-shell"
+//!   collided with the higher-level "OP chrome = design-editor-shell"
 //!   architectural term, so they live alongside the primitives now
 //!   (every entry here `impl Widget`, primitives + compositions
 //!   alike).
@@ -20,8 +20,8 @@ use crate::{Point2D, Rect, RenderBackend};
 /// Minimum width (in CSS / physical px) below which the editor-UI
 /// host paints the Toolbar only and skips the LayerPanel /
 /// CanvasViewport / PropertyPanel rails. Single canonical
-/// definition consumed by both `openpencil-shell-web::WidgetHost`
-/// and `openpencil-shell-native::WidgetHostNative` so they stay in
+/// definition consumed by both `design-editor-shell-web::WidgetHost`
+/// and `design-editor-shell-native::WidgetHostNative` so they stay in
 /// lock-step (codex Step 3 R1 BLOCK fix — was duplicated as
 /// `const MIN_RAIL_WIDTH` in each host).
 pub const MIN_RAIL_WIDTH: f32 = 80.0;

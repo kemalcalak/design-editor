@@ -12,7 +12,7 @@ use crate::bindings::{call_status, with_engine};
 use crate::engine_thread::STATUS_CLOSING;
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeRemoteImageResult<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeRemoteImageResult<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -33,7 +33,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeRemoteImageRes
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeRegisterFont<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeRegisterFont<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -49,7 +49,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeRegisterFont<'
 
 /// `OpNative.nativeGetPageCount` — the page count, or `STATUS_CLOSING`.
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeGetPageCount<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeGetPageCount<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -67,7 +67,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeGetPageCount<'
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeSetActivePage<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeSetActivePage<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,

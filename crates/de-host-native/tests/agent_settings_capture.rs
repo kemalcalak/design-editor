@@ -1,6 +1,6 @@
 //! Raster capture coverage for Agent Settings across the three touch layouts.
 //!
-//! Set `OPENPENCIL_AGENT_SETTINGS_SHOT_DIR` to keep the rendered PNGs. Without
+//! Set `DESIGN_EDITOR_AGENT_SETTINGS_SHOT_DIR` to keep the rendered PNGs. Without
 //! it, the test still paints every viewport and verifies that Skia produced
 //! non-empty pixels.
 
@@ -27,7 +27,7 @@ const CAPTURES: [(&str, i32, i32, AgentSettingsTab); 7] = [
 
 #[test]
 fn agent_settings_paints_non_empty_frames_for_every_touch_size_class() {
-    let shot_dir = std::env::var_os("OPENPENCIL_AGENT_SETTINGS_SHOT_DIR")
+    let shot_dir = std::env::var_os("DESIGN_EDITOR_AGENT_SETTINGS_SHOT_DIR")
         .filter(|value| !value.is_empty())
         .map(PathBuf::from);
     if let Some(dir) = shot_dir.as_deref() {

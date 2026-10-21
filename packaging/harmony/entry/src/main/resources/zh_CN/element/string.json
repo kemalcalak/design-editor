@@ -2,11 +2,11 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "OpenPencil 播放器入口模块。"
+      "value": "Design Editor 播放器入口模块。"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "OpenPencil"
+      "value": "Design Editor"
     },
     {
       "name": "permission_internet_reason",
@@ -38,11 +38,11 @@
     },
     {
       "name": "engine_start_failed",
-      "value": "无法启动 OpenPencil 引擎。"
+      "value": "无法启动 Design Editor 引擎。"
     },
     {
       "name": "background_generation_paused",
-      "value": "系统后台运行时限已结束，生成已暂停；现在已回到 OpenPencil，将继续生成。"
+      "value": "系统后台运行时限已结束，生成已暂停；现在已回到 Design Editor，将继续生成。"
     },
     {
       "name": "native_login_unavailable",
@@ -166,7 +166,7 @@
     },
     {
       "name": "account_center_sign_out_confirm",
-      "value": "退出 OpenPencil 登录？"
+      "value": "退出 Design Editor 登录？"
     },
     {
       "name": "sso_region_china",
@@ -178,7 +178,7 @@
     },
     {
       "name": "sso_region_restart_note",
-      "value": "切换区域将在重启 OpenPencil 后生效。"
+      "value": "切换区域将在重启 Design Editor 后生效。"
     },
     {
       "name": "sso_region_switched_title",

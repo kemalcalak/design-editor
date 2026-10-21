@@ -1,4 +1,4 @@
-//! OpenPencil design diagnostics.
+//! Design Editor design diagnostics.
 //!
 //! Pure, wasm-clean detectors + fixes over the jian `PenDocument`. No I/O,
 //! no editor state, no LLM. Ported from the TS `pen-ai-skills` diagnostics

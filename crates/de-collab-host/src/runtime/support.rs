@@ -8,7 +8,7 @@ use de_collab_transport::{
 use super::{CollabRuntimeError, CollabRuntimeFailure};
 
 #[cfg(debug_assertions)]
-const DEV_FILE_KEY_STORE_ENV: &str = "OPENPENCIL_COLLAB_DEV_FILE_KEYSTORE";
+const DEV_FILE_KEY_STORE_ENV: &str = "DESIGN_EDITOR_COLLAB_DEV_FILE_KEYSTORE";
 
 struct ProductionKeyStore;
 
@@ -33,7 +33,7 @@ fn allows_file_fallback(error: &KeyStoreError) -> bool {
 }
 
 fn load_or_generate_file_key() -> Result<DeviceStaticKey, KeyStoreError> {
-    let root = de_config_store::openpencil_dir()?;
+    let root = de_config_store::design_editor_dir()?;
     FileKeyStore::new(root.join("collaboration")).load_or_generate()
 }
 

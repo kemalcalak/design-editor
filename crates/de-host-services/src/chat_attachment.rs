@@ -97,7 +97,7 @@ pub fn write_temp_attachments(attachments: &[ChatAttachment]) -> io::Result<Temp
     let seq = TEMP_SEQ.fetch_add(1, Ordering::Relaxed);
     // Unique directory per turn — no collisions between concurrent
     // turns, and no leftover files visible to other processes.
-    let dir = std::env::temp_dir().join(format!("openpencil-chat-{stamp}-{seq}"));
+    let dir = std::env::temp_dir().join(format!("design-editor-chat-{stamp}-{seq}"));
     fs::create_dir_all(&dir)?;
     #[cfg(unix)]
     {

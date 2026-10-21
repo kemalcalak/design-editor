@@ -1,4 +1,4 @@
-// "Generate Code from Design" command + the @openpencil chat participant. Both
+// "Generate Code from Design" command + the @design-editor chat participant. Both
 // use vscode.lm; when it is unavailable, generateCode guides the user to their
 // IDE's own chat with a pre-filled prompt. The prompt assembly and output
 // validation live in the tested, vscode-free codegen-prompt module.
@@ -20,14 +20,14 @@ function lm(): LmApi | undefined {
 }
 
 function framework(): Framework {
-  const v = vscode.workspace.getConfiguration("openpencil").get<string>("codegen.framework", "react");
+  const v = vscode.workspace.getConfiguration("design-editor").get<string>("codegen.framework", "react");
   return v === "vue" ? "vue" : "react";
 }
 
 async function activeDocJson(registry: SessionRegistry): Promise<string | undefined> {
   const session = registry.activeSession();
   if (!session) {
-    void vscode.window.showWarningMessage("OpenPencil: open and focus a .op design first.");
+    void vscode.window.showWarningMessage("Design Editor: open and focus a .op design first.");
     return undefined;
   }
   const bytes = await session.backup();
@@ -44,7 +44,7 @@ export async function generateCodeCommand(registry: SessionRegistry): Promise<vo
     // No language-model API: hand the prompt to the IDE's own chat.
     await vscode.env.clipboard.writeText(prompt);
     void vscode.window.showInformationMessage(
-      "OpenPencil: this IDE has no language-model API. The codegen prompt is on your clipboard — paste it into your AI chat.",
+      "Design Editor: this IDE has no language-model API. The codegen prompt is on your clipboard — paste it into your AI chat.",
     );
     return;
   }
@@ -53,13 +53,13 @@ export async function generateCodeCommand(registry: SessionRegistry): Promise<vo
     sendRequest(messages: unknown[], options?: unknown, token?: unknown): Thenable<{ text: AsyncIterable<string> }>;
   }>;
   if (models.length === 0) {
-    void vscode.window.showWarningMessage("OpenPencil: no language model available.");
+    void vscode.window.showWarningMessage("Design Editor: no language model available.");
     return;
   }
   const model = models[0];
 
   const text = await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: "OpenPencil: generating code…", cancellable: true },
+    { location: vscode.ProgressLocation.Notification, title: "Design Editor: generating code…", cancellable: true },
     async (_progress, token) => {
       const LanguageModelChatMessage = (
         vscode as unknown as { LanguageModelChatMessage: { User(text: string): unknown } }
@@ -76,7 +76,7 @@ export async function generateCodeCommand(registry: SessionRegistry): Promise<vo
     const doc = await vscode.workspace.openTextDocument({ content: text, language: "markdown" });
     await vscode.window.showTextDocument(doc);
     void vscode.window.showWarningMessage(
-      `OpenPencil: could not parse generated files (${parsed.errors[0]}). Raw output opened for you.`,
+      `Design Editor: could not parse generated files (${parsed.errors[0]}). Raw output opened for you.`,
     );
     return;
   }
@@ -102,10 +102,10 @@ export async function generateCodeCommand(registry: SessionRegistry): Promise<vo
     await vscode.workspace.fs.createDirectory(vscode.Uri.file(fsPath.dirname(target.fsPath)));
     await vscode.workspace.fs.writeFile(target, new TextEncoder().encode(file.content));
   }
-  void vscode.window.showInformationMessage(`OpenPencil: wrote ${parsed.files.length} file(s).`);
+  void vscode.window.showInformationMessage(`Design Editor: wrote ${parsed.files.length} file(s).`);
 }
 
-/** Register @openpencil as a read-only design advisor when the chat + lm APIs
+/** Register @design-editor as a read-only design advisor when the chat + lm APIs
  *  exist. Returns a disposable, or undefined when the APIs are absent. */
 export function registerChatParticipant(
   registry: SessionRegistry,
@@ -137,13 +137,13 @@ export function registerChatParticipant(
     const LanguageModelChatMessage = (
       vscode as unknown as { LanguageModelChatMessage: { User(text: string): unknown } }
     ).LanguageModelChatMessage;
-    const prompt = `You are a read-only advisor for this OpenPencil design. Answer the question; do not attempt to modify the design.\n\nDesign:\n${docJson}\n\nQuestion: ${request.prompt}`;
+    const prompt = `You are a read-only advisor for this Design Editor design. Answer the question; do not attempt to modify the design.\n\nDesign:\n${docJson}\n\nQuestion: ${request.prompt}`;
     const res = await models[0].sendRequest([LanguageModelChatMessage.User(prompt)], {}, token);
     for await (const chunk of res.text) response.markdown(chunk);
   };
 
   const create = chat.createChatParticipant as (id: string, h: ChatHandler) => vscode.Disposable;
-  return create("openpencil.assistant", handler);
+  return create("design-editor.assistant", handler);
 }
 
 async function existsFs(uri: vscode.Uri): Promise<boolean> {

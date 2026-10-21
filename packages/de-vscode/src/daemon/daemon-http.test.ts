@@ -27,7 +27,7 @@ const TOKEN = "tok-123";
 test("attaches the token header to every request", async () => {
   let seenToken: string | undefined;
   const base = await stub((req, res) => {
-    seenToken = req.headers["x-openpencil-token"] as string | undefined;
+    seenToken = req.headers["x-design-editor-token"] as string | undefined;
     res.writeHead(200, { "content-type": "application/json" });
     res.end('{"version":1}');
   });
@@ -138,7 +138,7 @@ test("figmaConvert sends the token header and application/json content-type", as
   let seenContentType: string | undefined;
   let receivedBody = "";
   const base = await stub((req, res) => {
-    seenToken = req.headers["x-openpencil-token"] as string | undefined;
+    seenToken = req.headers["x-design-editor-token"] as string | undefined;
     seenContentType = req.headers["content-type"] as string | undefined;
     const chunks: Buffer[] = [];
     req.on("data", (c) => chunks.push(c as Buffer));

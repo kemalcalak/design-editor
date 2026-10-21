@@ -39,7 +39,7 @@ const PROMPT_SECTIONS: &[&str] = &[
     "codegen-react-native",
 ];
 
-const INTRO: &str = r#"You are working with OpenPencil, a vector design tool.
+const INTRO: &str = r#"You are working with Design Editor, a vector design tool.
 
 TOOL SELECTION - match the user's intent:
 - READ/INSPECT the canvas: read_nodes, snapshot_layout, get_selection, get_node

@@ -1,13 +1,13 @@
 
 > [English](./BUILD_WINDOWS.md) · [简体中文](./BUILD_WINDOWS.zh.md) · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · **한국어** · [Français](./BUILD_WINDOWS.fr.md) · [Español](./BUILD_WINDOWS.es.md) · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · [हिन्दी](./BUILD_WINDOWS.hi.md) · [Türkçe](./BUILD_WINDOWS.tr.md) · [ไทย](./BUILD_WINDOWS.th.md) · [Tiếng Việt](./BUILD_WINDOWS.vi.md) · [Bahasa Indonesia](./BUILD_WINDOWS.id.md)
 
-# OpenPencil Windows 빌드 가이드
+# Design Editor Windows 빌드 가이드
 
 ## 1. 소스 코드 다운로드
 
-1. openpencil 저장소 소스 코드를 다운로드합니다
+1. design-editor 저장소 소스 코드를 다운로드합니다
 
-2. openpencil에는 `vendor` 디렉토리에 3개의 의존성 서브모듈(jian, casement, agent)이 있어 각각 별도로 다운로드해야 합니다
+2. design-editor에는 `vendor` 디렉토리에 3개의 의존성 서브모듈(jian, casement, agent)이 있어 각각 별도로 다운로드해야 합니다
 
     - 2.1 jian (UI 프레임워크): [https://github.com/ZSeven-W/jian](https://github.com/ZSeven-W/jian) → `vendor\jian`에 압축 해제
 
@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 rustup.rs에서 `rustup-init.exe`를 다운로드하고 더블클릭하여 설치. PowerShell에서 다음을 실행. **`openpencil 0.8.4` 버전 대응**:
+    - 2.3 rustup.rs에서 `rustup-init.exe`를 다운로드하고 더블클릭하여 설치. PowerShell에서 다음을 실행. **`design-editor 0.8.4` 버전 대응**:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 wasm-bindgen-cli 설치 (WASM와 JS 바인딩 생성용). PowerShell에서 다음을 실행. **`openpencil 0.8.4` 버전 대응**:
+    - 2.4 wasm-bindgen-cli 설치 (WASM와 JS 바인딩 생성용). PowerShell에서 다음을 실행. **`design-editor 0.8.4` 버전 대응**:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -124,17 +124,17 @@
             ├── snippets\
             ├── op_host-web.d.ts
             ├── de_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 4. dsh-openpencil 플러그인 환경 변수 설정
+## 4. dsh-design-editor 플러그인 환경 변수 설정
 
 1. 관리자 권한으로 PowerShell을 실행하고 다음을 실행 (경로를 실제 저장소 루트로 대체):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. 검증
@@ -177,4 +177,4 @@
     > 
     > 페이지에서 `/pkg/de_host_web.js`를 찾을 수 없다고 표시되면 `web-bundle/`에 파일이 없는 것입니다.
 
-3. 이 문서는 `openpencil 0.8.4` 버전을 기준으로 작성되었습니다. rustup 툴체인 버전 `1.94`、wasm-bindgen-cli 버전 `0.2.117`、skia-bindings 버전 `0.97.2`는 이 버전에 맞춰진 것이며, 다른 버전은 다를 수 있습니다.
+3. 이 문서는 `design-editor 0.8.4` 버전을 기준으로 작성되었습니다. rustup 툴체인 버전 `1.94`、wasm-bindgen-cli 버전 `0.2.117`、skia-bindings 버전 `0.97.2`는 이 버전에 맞춰진 것이며, 다른 버전은 다를 수 있습니다.

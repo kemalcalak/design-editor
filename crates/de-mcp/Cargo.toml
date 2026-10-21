@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil MCP server — JSON-RPC tool registry over de-editor-core EditorState / EditorCommand"
+description = "Design Editor MCP server — JSON-RPC tool registry over de-editor-core EditorState / EditorCommand"
 
 [lib]
 name = "de_mcp"
@@ -22,7 +22,7 @@ de-codegen = { path = "../de-codegen" }
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 jian-scene = { path = "../../vendor/jian/crates/jian-scene" }
 de-ai-skills = { path = "../de-ai-skills" }
-# `~/.openpencil` resolution for the debug-tools log reader (single source
+# `~/.design-editor` resolution for the debug-tools log reader (single source
 # of truth for the config-dir path; tiny serde-only crate).
 de-config-store = { path = "../de-config-store" }
 de-design-lint = { path = "../de-design-lint" }

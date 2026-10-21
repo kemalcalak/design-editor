@@ -15,7 +15,7 @@ pub const RELAY_INVITE_BINARY_BYTES: usize = 373;
 const LOCATOR_OFFSET: usize = 1;
 const CAPABILITY_OFFSET: usize = LOCATOR_OFFSET + RELAY_LOCATOR_BINARY_BYTES;
 const CHECKSUM_OFFSET: usize = CAPABILITY_OFFSET + 32;
-const CHECKSUM_CONTEXT: &str = "openpencil/de-collab-relay-protocol/invite-corruption-checksum/v1";
+const CHECKSUM_CONTEXT: &str = "openpencil/op-collab-relay-protocol/invite-corruption-checksum/v1";
 
 /// A single pasteable invite containing a signed locator and bearer capability.
 ///

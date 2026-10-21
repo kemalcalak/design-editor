@@ -1,13 +1,13 @@
 
 > [English](./BUILD_WINDOWS.md) · [简体中文](./BUILD_WINDOWS.zh.md) · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · [한국어](./BUILD_WINDOWS.ko.md) · [Français](./BUILD_WINDOWS.fr.md) · **Español** · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · [हिन्दी](./BUILD_WINDOWS.hi.md) · [Türkçe](./BUILD_WINDOWS.tr.md) · [ไทย](./BUILD_WINDOWS.th.md) · [Tiếng Việt](./BUILD_WINDOWS.vi.md) · [Bahasa Indonesia](./BUILD_WINDOWS.id.md)
 
-# Guía de compilación de OpenPencil para Windows
+# Guía de compilación de Design Editor para Windows
 
 ## 1. Descargar el código fuente
 
-1. Descargue el código fuente del repositorio openpencil
+1. Descargue el código fuente del repositorio design-editor
 
-2. openpencil tiene 3 submódulos de dependencias en el directorio `vendor` (jian, casement, agent) que deben descargarse por separado
+2. design-editor tiene 3 submódulos de dependencias en el directorio `vendor` (jian, casement, agent) que deben descargarse por separado
 
     - 2.1 jian (framework UI): [https://github.com/ZSeven-W/jian](https://github.com/ZSeven-W/jian) → extraer en `vendor\jian`
 
@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 Descargue `rustup-init.exe` desde rustup.rs y ejecútelo. En PowerShell ejecute los siguientes comandos. **Corresponde a `openpencil 0.8.4`**:
+    - 2.3 Descargue `rustup-init.exe` desde rustup.rs y ejecútelo. En PowerShell ejecute los siguientes comandos. **Corresponde a `design-editor 0.8.4`**:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Instale wasm-bindgen-cli para la generación de enlaces WASM-JS. En PowerShell ejecute el siguiente comando. **Corresponde a `openpencil 0.8.4`**:
+    - 2.4 Instale wasm-bindgen-cli para la generación de enlaces WASM-JS. En PowerShell ejecute el siguiente comando. **Corresponde a `design-editor 0.8.4`**:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -124,17 +124,17 @@
             ├── snippets\
             ├── op_host-web.d.ts
             ├── de_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 4. Configurar variables de entorno para el plugin dsh-openpencil
+## 4. Configurar variables de entorno para el plugin dsh-design-editor
 
 1. Ejecute PowerShell como administrador y ejecute los siguientes comandos (reemplace la ruta con la raíz real del repositorio):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. Verificación
@@ -177,4 +177,4 @@
     > 
     > Si la página indica que no se encuentra `/pkg/de_host_web.js`, falta el archivo en `web-bundle/`.
 
-3. Este documento está escrito para la versión `openpencil 0.8.4`. La versión de la cadena de herramientas rustup `1.94`, wasm-bindgen-cli `0.2.117` y skia-bindings `0.97.2` están alineadas con esta versión — otras versiones pueden diferir.
+3. Este documento está escrito para la versión `design-editor 0.8.4`. La versión de la cadena de herramientas rustup `1.94`, wasm-bindgen-cli `0.2.117` y skia-bindings `0.97.2` están alineadas con esta versión — otras versiones pueden diferir.

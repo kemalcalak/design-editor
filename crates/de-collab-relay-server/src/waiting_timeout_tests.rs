@@ -15,7 +15,7 @@ use de_collab_relay_protocol::{
 
 use crate::{ConfigError, RelayConfig};
 
-const WAITING_TIMEOUT_SECS_ENV: &str = "OPENPENCIL_COLLAB_RELAY_WAITING_TIMEOUT_SECS";
+const WAITING_TIMEOUT_SECS_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_WAITING_TIMEOUT_SECS";
 
 /// Serialises the tests that mutate the process environment.
 fn env_guard() -> MutexGuard<'static, ()> {
@@ -133,7 +133,7 @@ fn the_refusal_names_both_ends_of_the_contract() {
 #[test]
 fn the_lease_is_on_by_default_and_has_a_strict_operator_switch() {
     let _guard = env_guard();
-    const LEASE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_WAITING_LEASE";
+    const LEASE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_WAITING_LEASE";
 
     std::env::remove_var(LEASE_ENV);
     assert!(RelayConfig::default().waiting_lease);

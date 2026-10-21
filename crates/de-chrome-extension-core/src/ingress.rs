@@ -72,7 +72,7 @@ impl FailureCode {
 /// It is never adjacent to anything a splice could confuse it with: the
 /// template is generated entirely here, and the only run of `_` characters in
 /// it is this one.
-pub const SNAPSHOT_PLACEHOLDER: &str = "__OPENPENCIL_SNAPSHOT__";
+pub const SNAPSHOT_PLACEHOLDER: &str = "__DESIGN_EDITOR_SNAPSHOT__";
 
 /// The JSON-RPC `tools/call` envelope, with [`SNAPSHOT_PLACEHOLDER`] where
 /// the snapshot's JSON string literal (quotes included) goes.

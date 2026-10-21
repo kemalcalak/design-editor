@@ -1,4 +1,4 @@
-//! Node-level three-way merge for OpenPencil `.op` documents.
+//! Node-level three-way merge for Design Editor `.op` documents.
 //!
 //! A `.op` file is JSON; a textual git merge of it produces broken
 //! JSON the moment two branches touch nearby lines. This crate

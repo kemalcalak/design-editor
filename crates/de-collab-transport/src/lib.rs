@@ -1,4 +1,4 @@
-//! Native Noise/TCP transport for OpenPencil collaboration.
+//! Native Noise/TCP transport for Design Editor collaboration.
 //!
 //! The protocol, framing, admission rules, resource limits, key-store fallback,
 //! and discovery metadata are public. Production credentials and ticket signing

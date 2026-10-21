@@ -3,7 +3,7 @@
 require "rexml/document"
 
 player_dir = File.expand_path("..", __dir__)
-source_dir = File.join(player_dir, "app/src/main/kotlin/tech/zseven/openpencil")
+source_dir = File.join(player_dir, "app/src/main/kotlin/com/kemalcalak/designeditor")
 manifest = REXML::Document.new(
   File.read(File.join(player_dir, "app/src/main/AndroidManifest.xml")),
 )
@@ -17,7 +17,7 @@ service = File.read(File.join(source_dir, "BackgroundGenerationService.kt"))
 state = File.read(File.join(source_dir, "BackgroundWorkState.kt"))
 notifications = File.read(File.join(source_dir, "BackgroundGenerationNotifications.kt"))
 state_tests = File.read(
-  File.join(player_dir, "app/src/test/kotlin/tech/zseven/openpencil/BackgroundWorkStateTest.kt"),
+  File.join(player_dir, "app/src/test/kotlin/com/kemalcalak/designeditor/BackgroundWorkStateTest.kt"),
 )
 
 permissions = REXML::XPath.match(manifest, "/manifest/uses-permission").map do |permission|
@@ -78,7 +78,7 @@ raise "destroy must release through the process owner" unless surface.include?("
 
 raise "native callback receiver must not strongly own a View" unless callbacks.include?("WeakReference<OpSurfaceView>")
 raise "callback receiver must support View adoption" unless callbacks.include?("fun attach(view: OpSurfaceView)") && callbacks.include?("fun detach(view: OpSurfaceView)")
-raise "remote image fetch must survive View recreation" unless callbacks.include?("OpenPencilRemoteImage") && callbacks.include?("nativeRemoteImageResult")
+raise "remote image fetch must survive View recreation" unless callbacks.include?("DesignEditorRemoteImage") && callbacks.include?("nativeRemoteImageResult")
 raise "controller must retain the stable callback with the engine" unless controller.include?("BackgroundEngineLease") && controller.include?("receiver.attach(view)")
 raise "resume/tick ownership must share one monitor" unless controller.match?(/markSurfaceResuming.*?synchronized\(monitor\)/m) && controller.match?(/pumpBackground.*?synchronized\(monitor\)/m)
 raise "detached completion must have bounded cleanup" unless controller.include?("RETAINED_RESULT_TIMEOUT_MINUTES") && controller.include?("expireRetainedEngine")
@@ -86,7 +86,7 @@ raise "generation state must mint process-monotonic epochs" unless state.include
 raise "stale timeout must compare its service epoch" unless state.match?(/serviceTimedOut\(epoch: Long\).*?epoch != serviceEpoch/m)
 
 raise "service must not restart around a stale native handle" unless service.include?("return START_NOT_STICKY")
-raise "background JNI must run off the Service main thread" unless service.include?("newSingleThreadScheduledExecutor") && service.include?("OpenPencilBackgroundGeneration")
+raise "background JNI must run off the Service main thread" unless service.include?("newSingleThreadScheduledExecutor") && service.include?("DesignEditorBackgroundGeneration")
 raise "service background path must use render-free tick" unless controller.include?("OpNative.nativeBackgroundTick")
 raise "service background path must not render frames" if service.include?("nativeFrame") || controller.include?("nativeFrame")
 raise "worker cadence must remain low" unless service.include?("BACKGROUND_TICK_INTERVAL_MS = 500L")

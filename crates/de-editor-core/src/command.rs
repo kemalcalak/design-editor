@@ -8,7 +8,7 @@
 //! path, and so a future `de-mcp` crate can depend on `de-editor-core`
 //! one-way (no dependency cycle).
 //!
-//! Ported from `openpencil-shell-core::mcp::McpCommand`. Two adaptations
+//! Ported from `design-editor-shell-core::mcp::McpCommand`. Two adaptations
 //! to the `de-editor-core` model:
 //!
 //!   - Node targets are [`NodeId`] (the string newtype) rather than the

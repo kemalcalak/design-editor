@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "OpenPencil",
+    "message": "Design Editor",
     "description": "Extension name shown in Chrome."
   },
   "extDescription": {
-    "message": "Captura páginas como nodos de diseño editables en OpenPencil y extrae con un clic una guía del sistema de diseño design.md.",
+    "message": "Captura páginas como nodos de diseño editables en Design Editor y extrae con un clic una guía del sistema de diseño design.md.",
     "description": "Extension description shown in Chrome."
   },
   "captureButton": {
@@ -20,7 +20,7 @@
     "message": "Extraer design.md"
   },
   "statusDesignWorking": {
-    "message": "Recopilando evidencias de estilo desidentificadas de la página y consultando a OpenPencil AI…"
+    "message": "Recopilando evidencias de estilo desidentificadas de la página y consultando a Design Editor AI…"
   },
   "statusDesignSmartSuccess": {
     "message": "design.md se generó y descargó con la IA configurada."
@@ -29,13 +29,13 @@
     "message": "La IA no está disponible; design.md se generó y descargó con el método alternativo local determinista: $1"
   },
   "designFallbackPairing": {
-    "message": "OpenPencil no ha autorizado esta extensión para la generación con IA; se utilizó el método alternativo local."
+    "message": "Design Editor no ha autorizado esta extensión para la generación con IA; se utilizó el método alternativo local."
   },
   "designFallbackOffline": {
-    "message": "No se puede acceder a OpenPencil en $1."
+    "message": "No se puede acceder a Design Editor en $1."
   },
   "designFallbackUnsupported": {
-    "message": "Esta versión de OpenPencil no admite la generación inteligente de design.md."
+    "message": "Esta versión de Design Editor no admite la generación inteligente de design.md."
   },
   "designFallbackError": {
     "message": "La generación inteligente falló: $1"
@@ -62,7 +62,7 @@
     "message": "Esc para cancelar"
   },
   "endpointLabel": {
-    "message": "Dirección de OpenPencil"
+    "message": "Dirección de Design Editor"
   },
   "endpointHint": {
     "message": "Aplicación de escritorio: Configuración → MCP → inicia el servidor (puerto 3100 por defecto)."
@@ -80,19 +80,19 @@
     "message": "Transfiriendo la captura ($1)…"
   },
   "statusSending": {
-    "message": "Enviando a OpenPencil…"
+    "message": "Enviando a Design Editor…"
   },
   "statusImported": {
-    "message": "Se importaron $1 nodos en OpenPencil."
+    "message": "Se importaron $1 nodos en Design Editor."
   },
   "statusSendingAccount": {
-    "message": "Enviando a tu cuenta de OpenPencil…"
+    "message": "Enviando a tu cuenta de Design Editor…"
   },
   "statusSentToAccount": {
-    "message": "Enviado a tu cuenta de OpenPencil: $1"
+    "message": "Enviado a tu cuenta de Design Editor: $1"
   },
   "statusSentLocalFallback": {
-    "message": "Tu sesión de la cuenta había caducado, así que se envió al OpenPencil de este equipo: $1 nodos importados."
+    "message": "Tu sesión de la cuenta había caducado, así que se envió al Design Editor de este equipo: $1 nodos importados."
   },
   "statusDownloaded": {
     "message": "Se guardó $1."
@@ -125,22 +125,22 @@
     "message": "La dirección debe ser de bucle invertido con un puerto: 127.0.0.1:3100 o localhost:3100."
   },
   "errorOffline": {
-    "message": "No se puede conectar con OpenPencil en $1. Abre la aplicación de escritorio e inicia Configuración → MCP → servidor, o ejecuta: design-editor --serve-web 3100"
+    "message": "No se puede conectar con Design Editor en $1. Abre la aplicación de escritorio e inicia Configuración → MCP → servidor, o ejecuta: design-editor --serve-web 3100"
   },
   "errorTimeout": {
-    "message": "OpenPencil en $1 aceptó la conexión pero no respondió en $2 s. Puede estar ocupado o bloqueado: revisa la aplicación y vuelve a intentarlo."
+    "message": "Design Editor en $1 aceptó la conexión pero no respondió en $2 s. Puede estar ocupado o bloqueado: revisa la aplicación y vuelve a intentarlo."
   },
   "errorNoIngress": {
-    "message": "Esta versión de OpenPencil no tiene entrada para extensiones ($1). Actualiza la aplicación o usa «Descargar .op» y abre el archivo en OpenPencil"
+    "message": "Esta versión de Design Editor no tiene entrada para extensiones ($1). Actualiza la aplicación o usa «Descargar .op» y abre el archivo en Design Editor"
   },
   "errorTooLarge": {
-    "message": "Esta captura supera $1 MB, y la ruta de capturas de OpenPencil la rechaza. Usa «Descargar .op» y luego abre el archivo en OpenPencil"
+    "message": "Esta captura supera $1 MB, y la ruta de capturas de Design Editor la rechaza. Usa «Descargar .op» y luego abre el archivo en Design Editor"
   },
   "errorAccountTooLarge": {
     "message": "Esta captura supera $1 MB, y la bandeja de entrada de la cuenta la rechaza. Envíala a este dispositivo en su lugar."
   },
   "errorImport": {
-    "message": "OpenPencil rechazó la captura: $1"
+    "message": "Design Editor rechazó la captura: $1"
   },
   "errorDownload": {
     "message": "Error al descargar: $1"
@@ -164,16 +164,16 @@
     "message": "Termina de iniciar sesión en la página que se acaba de abrir y vuelve a abrir esta ventana."
   },
   "accountSignedOut": {
-    "message": "Has cerrado la sesión de tu cuenta de OpenPencil."
+    "message": "Has cerrado la sesión de tu cuenta de Design Editor."
   },
   "accountSignOutManual": {
     "message": "Termina de cerrar sesión en la página de cuenta que se acaba de abrir."
   },
   "accountUnavailable": {
-    "message": "No se pudo conectar con tu cuenta de OpenPencil: $1"
+    "message": "No se pudo conectar con tu cuenta de Design Editor: $1"
   },
   "errorAccountSignedOut": {
-    "message": "Tu sesión de la cuenta de OpenPencil ha caducado. Vuelve a iniciar sesión e inténtalo de nuevo."
+    "message": "Tu sesión de la cuenta de Design Editor ha caducado. Vuelve a iniciar sesión e inténtalo de nuevo."
   },
   "errorAccountForbidden": {
     "message": "El hub rechazó el origen o el token de sesión de este envío. Vuelve a iniciar sesión e inténtalo de nuevo. ($1)"
@@ -191,10 +191,10 @@
     "message": "Demasiados envíos a tu cuenta. Inténtalo dentro de unos $1 segundos."
   },
   "errorAccountRejected": {
-    "message": "Tu cuenta de OpenPencil rechazó la captura: $1"
+    "message": "Tu cuenta de Design Editor rechazó la captura: $1"
   },
   "errorAccountUnavailable": {
-    "message": "Tu cuenta de OpenPencil no puede recibir capturas ahora mismo ($1). Inténtalo más tarde o envíala al OpenPencil de este equipo."
+    "message": "Tu cuenta de Design Editor no puede recibir capturas ahora mismo ($1). Inténtalo más tarde o envíala al Design Editor de este equipo."
   },
   "regionLabel": {
     "message": "Región"
@@ -209,9 +209,9 @@
     "message": "Enviar a"
   },
   "deliveryLocal": {
-    "message": "OpenPencil en este equipo"
+    "message": "Design Editor en este equipo"
   },
   "deliveryAccount": {
-    "message": "Mi cuenta de OpenPencil"
+    "message": "Mi cuenta de Design Editor"
   }
 }

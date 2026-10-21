@@ -23,7 +23,7 @@
 //!    available-components manifest see the new masters immediately.
 //!
 //! This is intentionally additive and gated: nothing calls it on the default
-//! path. The smoke runner wires it behind `OPENPENCIL_SMOKE_LIBRARY`, and the
+//! path. The smoke runner wires it behind `DESIGN_EDITOR_SMOKE_LIBRARY`, and the
 //! desktop host can call it when a user imports a kit.
 
 use de_editor_core::{ComponentLibrary, EditorState};

@@ -63,7 +63,7 @@ use startup::{resolve_opencode_server, ServerResolution};
 /// port before spawning its own.
 const DEFAULT_SERVER_URL: &str = "http://127.0.0.1:4096";
 /// TS `chat.ts:617` — every turn opens a fresh session of this title.
-const SESSION_TITLE: &str = "OpenPencil Chat";
+const SESSION_TITLE: &str = "Design Editor Chat";
 /// TS `STREAM_TIMEOUT_MS` (chat.ts:675) — total SSE budget per turn.
 const STREAM_TIMEOUT: Duration = Duration::from_secs(180);
 /// TS chat.ts:708 — settle delay between SSE subscribe and prompt.
@@ -335,7 +335,7 @@ async fn run_opencode_turn(
 
     // Every branch after session creation must delete this integration-owned
     // session. Failed/canceled turns abort first so work cannot continue on a
-    // reused port-4096 server after the OpenPencil receiver is gone.
+    // reused port-4096 server after the Design Editor receiver is gone.
     macro_rules! finish_session {
         ($abort_first:expr) => {{
             cleanup_session(&ops, &base, &session_id, $abort_first).await;

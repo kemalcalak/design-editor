@@ -15,8 +15,8 @@ use de_orchestrator::repair_summary::RepairSummary;
 
 use super::*;
 
-const AUTO_FINALIZE_ENV: &str = "OPENPENCIL_MCP_AUTO_FINALIZE";
-const AUTO_FINALIZE_IDLE_SECS_ENV: &str = "OPENPENCIL_MCP_AUTO_FINALIZE_IDLE_SECS";
+const AUTO_FINALIZE_ENV: &str = "DESIGN_EDITOR_MCP_AUTO_FINALIZE";
+const AUTO_FINALIZE_IDLE_SECS_ENV: &str = "DESIGN_EDITOR_MCP_AUTO_FINALIZE_IDLE_SECS";
 const DEFAULT_IDLE_AFTER: Duration = Duration::from_secs(45);
 
 /// Tracks the last file-backed MCP write and prevents repeated finalization
@@ -38,7 +38,7 @@ impl AutoFinalize {
     }
 
     /// Read the file-mode auto-finalize switch and idle threshold.
-    /// `OPENPENCIL_MCP_AUTO_FINALIZE=0` disables the feature. Invalid or
+    /// `DESIGN_EDITOR_MCP_AUTO_FINALIZE=0` disables the feature. Invalid or
     /// missing threshold values use the 45-second default.
     pub fn from_env() -> Self {
         let disabled = std::env::var(AUTO_FINALIZE_ENV)

@@ -100,7 +100,7 @@ fn required_address(value: Option<std::ffi::OsString>, message: &str) -> Result<
 
 fn lan_evidence(role: &str, owner_endpoint: SocketAddr, canonical_hash: &str) -> serde_json::Value {
     serde_json::json!({
-        "schema": "openpencil-p2p-lan-smoke/v1",
+        "schema": "design-editor-p2p-lan-smoke/v1",
         "implementation_version": env!("CARGO_PKG_VERSION"),
         "transport_protocol_version": de_collab_transport::TRANSPORT_PROTOCOL_VERSION,
         "role": role,
@@ -138,7 +138,7 @@ mod tests {
         );
         assert_eq!(
             evidence["schema"],
-            serde_json::json!("openpencil-p2p-lan-smoke/v1")
+            serde_json::json!("design-editor-p2p-lan-smoke/v1")
         );
         assert_eq!(evidence["role"], serde_json::json!("owner"));
         assert_eq!(

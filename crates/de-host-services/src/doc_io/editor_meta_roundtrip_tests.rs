@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 fn temp_op_path() -> PathBuf {
     std::env::temp_dir().join(format!(
-        "openpencil-preserve-geometry-{}-{}.op",
+        "design-editor-preserve-geometry-{}-{}.op",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

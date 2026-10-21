@@ -182,7 +182,7 @@ impl AcpConnection {
         let params = serde_json::json!({
             "protocolVersion": PROTOCOL_VERSION,
             "clientCapabilities": {},
-            "clientInfo": { "name": "openpencil", "version": env!("CARGO_PKG_VERSION") }
+            "clientInfo": { "name": "design-editor", "version": env!("CARGO_PKG_VERSION") }
         });
         let result = self
             .engine
@@ -192,7 +192,7 @@ impl AcpConnection {
             serde_json::from_value(result).map_err(|e| AcpError::Protocol(e.to_string()))?;
         if parsed.protocol_version != ProtocolVersion::V1 {
             return Err(AcpError::Protocol(format!(
-                "agent selected unsupported protocol version {}; OpenPencil supports stable v1",
+                "agent selected unsupported protocol version {}; Design Editor supports stable v1",
                 parsed.protocol_version.as_u16()
             )));
         }

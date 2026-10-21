@@ -1,6 +1,6 @@
-//! OpenHarmony (OHOS) NAPI marshalling layer for the OpenPencil engine
-//! player — the `libopenpencil.so` an ArkTS shell loads with
-//! `import native from 'libopenpencil.so'`.
+//! OpenHarmony (OHOS) NAPI marshalling layer for the Design Editor engine
+//! player — the `libdesign_editor.so` an ArkTS shell loads with
+//! `import native from 'libdesign_editor.so'`.
 //!
 //! This is the OHOS twin of `de-engine-jni`: the same `de-engine-ffi` C ABI,
 //! the same one-engine-thread marshalling discipline, the same tombstoning

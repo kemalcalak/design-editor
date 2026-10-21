@@ -102,7 +102,7 @@ fn blocked_and_oversized_urls_do_not_retain_unbounded_keys_or_warnings() {
     ] {
         embed_url(
             &url,
-            Some("https://openpencil.local/page.html"),
+            Some("https://design-editor.local/page.html"),
             Some(&fetcher),
             None,
             &mut budget,
@@ -121,7 +121,7 @@ fn blocked_and_oversized_urls_do_not_retain_unbounded_keys_or_warnings() {
     );
     embed_url(
         &oversized,
-        Some("https://openpencil.local/page.html"),
+        Some("https://design-editor.local/page.html"),
         Some(&fetcher),
         None,
         &mut budget,

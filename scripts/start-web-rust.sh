@@ -8,30 +8,30 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-PORT="${OPENPENCIL_SERVE_PORT:-3100}"
-HOST="${OPENPENCIL_SERVE_HOST:-127.0.0.1}"
+PORT="${DESIGN_EDITOR_SERVE_PORT:-3100}"
+HOST="${DESIGN_EDITOR_SERVE_HOST:-127.0.0.1}"
 DOC_PATH="${1:-}"
 
-if [ "${OPENPENCIL_SKIP_WASM_BUILD:-0}" != "1" ]; then
+if [ "${DESIGN_EDITOR_SKIP_WASM_BUILD:-0}" != "1" ]; then
   bash tools/check-wasm-bundle.sh
 fi
 
-if [ "${OPENPENCIL_SKIP_SERVER_BUILD:-0}" != "1" ]; then
+if [ "${DESIGN_EDITOR_SKIP_SERVER_BUILD:-0}" != "1" ]; then
   cargo build -p de-host-web-server --release
 fi
 
-SERVER_BIN="${OPENPENCIL_WEB_SERVER_BIN:-target/release/de-host-web-server}"
+SERVER_BIN="${DESIGN_EDITOR_WEB_SERVER_BIN:-target/release/de-host-web-server}"
 if [ ! -x "$SERVER_BIN" ]; then
   echo "error: server binary is not executable: $SERVER_BIN" >&2
   exit 1
 fi
 
-export OPENPENCIL_WEB_BUNDLE_DIR="${OPENPENCIL_WEB_BUNDLE_DIR:-$PWD/crates/de-host-web/pkg}"
-export OPENPENCIL_CANVASKIT_DIR="${OPENPENCIL_CANVASKIT_DIR:-$PWD/crates/de-host-web/assets/canvaskit}"
+export DESIGN_EDITOR_WEB_BUNDLE_DIR="${DESIGN_EDITOR_WEB_BUNDLE_DIR:-$PWD/crates/de-host-web/pkg}"
+export DESIGN_EDITOR_CANVASKIT_DIR="${DESIGN_EDITOR_CANVASKIT_DIR:-$PWD/crates/de-host-web/assets/canvaskit}"
 
-echo "OpenPencil Rust web editor: http://${HOST}:${PORT}/"
-echo "bundle: ${OPENPENCIL_WEB_BUNDLE_DIR}"
-echo "canvaskit: ${OPENPENCIL_CANVASKIT_DIR}"
+echo "Design Editor Rust web editor: http://${HOST}:${PORT}/"
+echo "bundle: ${DESIGN_EDITOR_WEB_BUNDLE_DIR}"
+echo "canvaskit: ${DESIGN_EDITOR_CANVASKIT_DIR}"
 
 if [ -n "$DOC_PATH" ]; then
   exec "$SERVER_BIN" --serve-web "$PORT" "$DOC_PATH" --host "$HOST"

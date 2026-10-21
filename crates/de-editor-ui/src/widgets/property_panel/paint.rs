@@ -3,7 +3,7 @@
 //! out-of-rail overlay pass hosts call late in composition.
 //!
 //! Split out of `property_panel.rs` to keep both files under the
-//! openpencil 800-line cap.
+//! design-editor 800-line cap.
 
 use super::{action_wash_rect, PropertyPanel, PropertyPanelAction};
 use crate::widgets::button::paint_button_feedback_wash;

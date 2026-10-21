@@ -13,7 +13,7 @@
 //! embedded corpus, and the two can never collide.
 //!
 //! This module holds no files. Persistence is a host capability (the desktop
-//! writes `~/.openpencil/templates/<slug>/`; the browser has no disk), so
+//! writes `~/.design-editor/templates/<slug>/`; the browser has no disk), so
 //! hosts call [`set_user_scene_templates`] on boot and
 //! [`load_user_scene_template`] on save, and this stays a pure in-memory
 //! catalogue that compiles for wasm32 unchanged.

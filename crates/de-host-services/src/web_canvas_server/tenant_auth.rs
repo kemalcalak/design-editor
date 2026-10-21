@@ -18,7 +18,7 @@ use crate::mcp_serve::HttpRequest;
 /// Development-only token table: `token1=user1,token2=user2`.
 ///
 /// See [`StaticVerifier`] for why this is not a production credential path.
-pub const STATIC_IDENTITIES_ENV: &str = "OPENPENCIL_ONLINE_STATIC_IDENTITIES";
+pub const STATIC_IDENTITIES_ENV: &str = "DESIGN_EDITOR_ONLINE_STATIC_IDENTITIES";
 
 /// Session cookie the hub sets on the shared origin (M2 consumes it).
 pub const SESSION_COOKIE_NAME: &str = "op_hub_session";

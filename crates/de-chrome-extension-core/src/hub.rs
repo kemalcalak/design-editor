@@ -63,7 +63,7 @@ const KIND: &str = "web-snapshot";
 /// Marker standing in for the snapshot document inside
 /// [`create_envelope_template`]. Distinct from [`crate::ingress`]'s marker so
 /// the two templates can never be spliced with each other's placeholder.
-pub const SNAPSHOT_PLACEHOLDER: &str = "__OPENPENCIL_HUB_SNAPSHOT__";
+pub const SNAPSHOT_PLACEHOLDER: &str = "__DESIGN_EDITOR_HUB_SNAPSHOT__";
 
 /// Longest display name the Hub accepts, in Unicode scalar values
 /// (`snapshots/validation.go::maxNameRunes`). Go counts runes, so this is

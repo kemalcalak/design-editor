@@ -3,7 +3,7 @@ use crate::plan::{OrchestratorPlan, Region, RootFrameSpec, Subtask};
 
 const APP11_BRIEF: &str = "日历 App 主页（375×812）：月视图网格、今日日程列表四条（时间+标题+地点+颜色条）、新建按钮、底部导航。";
 
-// The ten CJK suite briefs (openpencil-arena/prompts/web-app-v1, app-11 already above).
+// The ten CJK suite briefs (design-editor-arena/prompts/web-app-v1, app-11 already above).
 const APP01_BRIEF: &str = "外卖 App 首页（375×812）：顶部地址与搜索、分类九宫格、限时优惠横幅、商家列表五个（图+名称+评分+配送费+时长）、底部导航四个标签。";
 const APP02_BRIEF: &str = "健身 App 主页（375×812）：今日环形进度、本周条形图七天、训练计划三卡、最近记录列表四条、底部导航。";
 const APP04_BRIEF: &str = "音乐播放器播放页（375×812）：大专辑封面、歌名与歌手、进度条与时间、播放控制五按钮、歌词预览两行、底部操作行。";

@@ -1,4 +1,4 @@
-# OpenPencil locator SoftHSM signer
+# Design Editor locator SoftHSM signer
 
 This package is the production OPLS Unix-socket adapter for the relay locator.
 It is a separate non-root container with no network namespace. Only this
@@ -46,16 +46,16 @@ the checked-in images are locator UID/GID `65532:65532` and signer
 Prepare external host paths on each regional Linux host:
 
 ```sh
-sudo install -d -o 65533 -g 65532 -m 0700 /secure/openpencil/locator-hsm/tokens
-sudo install -o 65533 -g 65532 -m 0400 /dev/null /secure/openpencil/locator-hsm/user-pin
-sudo install -o 65533 -g 65532 -m 0400 /dev/null /secure/openpencil/locator-hsm/so-pin
+sudo install -d -o 65533 -g 65532 -m 0700 /secure/design-editor/locator-hsm/tokens
+sudo install -o 65533 -g 65532 -m 0400 /dev/null /secure/design-editor/locator-hsm/user-pin
+sudo install -o 65533 -g 65532 -m 0400 /dev/null /secure/design-editor/locator-hsm/so-pin
 sudo install -o root -g 65532 -m 0440 \
   deploy/collab-relay-locator-hsm/config.example.json \
-  /secure/openpencil/locator-hsm/config.json
+  /secure/design-editor/locator-hsm/config.json
 sudo install -o root -g root -m 0644 \
-  deploy/collab-relay-locator-hsm/openpencil-locator-hsm.conf \
-  /etc/tmpfiles.d/openpencil-locator-hsm.conf
-sudo systemd-tmpfiles --create /etc/tmpfiles.d/openpencil-locator-hsm.conf
+  deploy/collab-relay-locator-hsm/design-editor-locator-hsm.conf \
+  /etc/tmpfiles.d/design-editor-locator-hsm.conf
+sudo systemd-tmpfiles --create /etc/tmpfiles.d/design-editor-locator-hsm.conf
 ```
 
 Replace the example region, token label, active/next public key ids, and unique
@@ -70,10 +70,10 @@ let Docker auto-create a missing bind source as `root:root` mode `0755`.
 Set the Compose inputs:
 
 ```sh
-export OPENPENCIL_COLLAB_HSM_CONFIG_HOST_FILE=/secure/openpencil/locator-hsm/config.json
-export OPENPENCIL_COLLAB_HSM_PIN_HOST_FILE=/secure/openpencil/locator-hsm/user-pin
-export OPENPENCIL_COLLAB_HSM_TOKEN_HOST_DIR=/secure/openpencil/locator-hsm/tokens
-export OPENPENCIL_COLLAB_HSM_SOCKET_HOST_DIR=/run/openpencil/locator-hsm
+export DESIGN_EDITOR_COLLAB_HSM_CONFIG_HOST_FILE=/secure/design-editor/locator-hsm/config.json
+export DESIGN_EDITOR_COLLAB_HSM_PIN_HOST_FILE=/secure/design-editor/locator-hsm/user-pin
+export DESIGN_EDITOR_COLLAB_HSM_TOKEN_HOST_DIR=/secure/design-editor/locator-hsm/tokens
+export DESIGN_EDITOR_COLLAB_HSM_SOCKET_HOST_DIR=/run/design-editor/locator-hsm
 ```
 
 ## Initialize and provision
@@ -89,8 +89,8 @@ docker compose \
 docker compose \
   -f deploy/collab-relay-locator-hsm/compose.yaml \
   run --rm \
-  -v /secure/openpencil/locator-hsm/so-pin:/run/secrets/locator-hsm-so-pin:ro \
-  locator-hsm initialize --config /run/openpencil-config/locator-hsm.json \
+  -v /secure/design-editor/locator-hsm/so-pin:/run/secrets/locator-hsm-so-pin:ro \
+  locator-hsm initialize --config /run/design-editor-config/locator-hsm.json \
   --so-pin-file /run/secrets/locator-hsm-so-pin
 ```
 
@@ -100,11 +100,11 @@ failure explicit and never silently reuses or replaces an existing object:
 ```sh
 docker compose -f deploy/collab-relay-locator-hsm/compose.yaml \
   run --rm locator-hsm provision \
-  --config /run/openpencil-config/locator-hsm.json --kid replace-with-active-public-kid
+  --config /run/design-editor-config/locator-hsm.json --kid replace-with-active-public-kid
 
 docker compose -f deploy/collab-relay-locator-hsm/compose.yaml \
   run --rm locator-hsm provision \
-  --config /run/openpencil-config/locator-hsm.json --kid replace-with-next-public-kid
+  --config /run/design-editor-config/locator-hsm.json --kid replace-with-next-public-kid
 ```
 
 Export public records to a candidate file, validate it, then distribute that
@@ -114,7 +114,7 @@ issuance:
 ```sh
 docker compose -f deploy/collab-relay-locator-hsm/compose.yaml \
   run --rm locator-hsm public \
-  --config /run/openpencil-config/locator-hsm.json > /secure/public/locator-keys.candidate.json
+  --config /run/design-editor-config/locator-hsm.json > /secure/public/locator-keys.candidate.json
 ```
 
 Remove the SO PIN mount/file from routine operations after its recovery copy
@@ -126,10 +126,10 @@ Start the signer and locator together only after the public policy and key
 files are ready:
 
 ```sh
-export OPENPENCIL_COLLAB_POLICY_HOST_FILE=/secure/public/collab-policy.json
-export OPENPENCIL_COLLAB_LOCATOR_HSM_KEY_ID=replace-with-active-public-kid
-export OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_UID=65533
-export OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_GID=65532
+export DESIGN_EDITOR_COLLAB_POLICY_HOST_FILE=/secure/public/collab-policy.json
+export DESIGN_EDITOR_COLLAB_LOCATOR_HSM_KEY_ID=replace-with-active-public-kid
+export DESIGN_EDITOR_COLLAB_LOCATOR_HSM_PEER_UID=65533
+export DESIGN_EDITOR_COLLAB_LOCATOR_HSM_PEER_GID=65532
 docker compose \
   -f deploy/collab-relay-locator-hsm/compose.yaml \
   -f deploy/collab-relay-locator/compose.yaml \
@@ -169,7 +169,7 @@ key-destruction command; retirement is a separate audited token-admin
 operation.
 
 For every start or promotion,
-`OPENPENCIL_COLLAB_LOCATOR_HSM_KEY_ID` on the locator must exactly equal the
+`DESIGN_EDITOR_COLLAB_LOCATOR_HSM_KEY_ID` on the locator must exactly equal the
 signer config's `active_kid`. Exercise one authenticated locator issuance and
 verify the returned signature against the newly distributed public key before
 opening traffic.

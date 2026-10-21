@@ -3,7 +3,7 @@
 //! resolved stops.
 //!
 //! Split out of `property_panel_snapshot.rs` to keep both files under
-//! the openpencil 800-line cap.
+//! the design-editor 800-line cap.
 
 use super::{color_from_hex, FillSummary, GradientStopSummary};
 use crate::Color;

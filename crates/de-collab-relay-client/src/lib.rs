@@ -1,4 +1,4 @@
-//! Bounded TCP-to-WebSocket bridge for OpenPencil collaboration.
+//! Bounded TCP-to-WebSocket bridge for Design Editor collaboration.
 //!
 //! The relay forwards the bytes produced by the existing inner Noise/TCP
 //! transport. This crate does not parse, decrypt, log, or reinterpret them.

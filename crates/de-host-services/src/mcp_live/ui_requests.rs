@@ -155,7 +155,7 @@ pub(super) fn make_live_token() -> String {
     format!("{pid:x}-{nanos:x}")
 }
 
-/// Live `ping` reply: OpenPencil identity + `mode:"live"` + the instance
+/// Live `ping` reply: Design Editor identity + `mode:"live"` + the instance
 /// token, so `op` can distinguish this live canvas server from the
 /// headless file server and confirm it owns the discovery file. The
 /// identity rides in `_meta` — the MCP spec's extension point — because

@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 publish = false
-description = "Two-process authenticated collaboration smoke test for OpenPencil"
+description = "Two-process authenticated collaboration smoke test for Design Editor"
 
 [features]
 default = []

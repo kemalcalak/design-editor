@@ -1,4 +1,4 @@
-/* @ts-self-types="./de_host_web.d.ts" */
+/* @ts-self-types="./op_host_web.d.ts" */
 import { opCkInit } from './snippets/op-host-web-c0696e2efbd71421/src/op_ck_bridge.js';
 
 /**

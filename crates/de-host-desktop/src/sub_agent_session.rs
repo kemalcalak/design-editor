@@ -1,6 +1,6 @@
 //! Sub-agent design loops for `spawn_agents` (Task 3.1).
 //!
-//! When the top-level design-agent loop (`OPENPENCIL_DESIGN_AGENT_LOOP`)
+//! When the top-level design-agent loop (`DESIGN_EDITOR_DESIGN_AGENT_LOOP`)
 //! calls the `spawn_agents` tool, the host launches N scoped design
 //! `ChatSession`s — one per [`de_mcp::spawn_agents_tool::SpawnSpec`] — each
 //! with its own agent identity + canvas badge, scoped to its container

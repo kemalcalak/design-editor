@@ -1,4 +1,4 @@
-//! OpenPencil web host — web bundle entry.
+//! Design Editor web host — web bundle entry.
 //!
 //! Two build configurations:
 //! * `canvaskit` — the production web shell: renders the full editor through

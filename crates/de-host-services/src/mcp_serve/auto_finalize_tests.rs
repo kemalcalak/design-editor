@@ -83,7 +83,7 @@ fn disabled_env_keeps_stdio_eof_from_finalizing() {
     let _disable = EnvGuard::set(AUTO_FINALIZE_ENV, "0");
     let _idle = EnvGuard::set(AUTO_FINALIZE_IDLE_SECS_ENV, "0");
     let path = std::env::temp_dir().join(format!(
-        "openpencil-mcp-no-finalize-{}-{}.op",
+        "design-editor-mcp-no-finalize-{}-{}.op",
         std::process::id(),
         Instant::now().elapsed().as_nanos()
     ));

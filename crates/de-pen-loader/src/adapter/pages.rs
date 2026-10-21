@@ -73,7 +73,7 @@ pub(super) fn mark_root_frame_clips(roots: &[PenNode], children: &mut [NodePaylo
 
 /// Run jian-core's `LayoutEngine` on `root` and harvest absolute
 /// rects per schema id into `out`. Each page root gets its own
-/// `LayoutEngine` instance — OpenPencil's canvas is infinite, so
+/// `LayoutEngine` instance — Design Editor's canvas is infinite, so
 /// roots don't share a coordinate frame.
 ///
 /// Merge note (responsive-m1a into main): `LayoutEngine::node_rect`

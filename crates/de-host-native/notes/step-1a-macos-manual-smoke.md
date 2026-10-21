@@ -18,7 +18,7 @@ cargo run -p de-host-native --example basic_window
 
 ### Expected window contents
 
-- 800x600 window titled `OpenPencil — basic_window (Step 1a §1.2 acceptance #1)`.
+- 800x600 window titled `Design Editor — basic_window (Step 1a §1.2 acceptance #1)`.
 - White background.
 - Red filled rect at `(50, 50) — 100x100` (chrome).
 - Black `Hello 你好` text at `(50, 200)` (chrome via Jian skia

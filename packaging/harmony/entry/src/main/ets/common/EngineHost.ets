@@ -3,7 +3,7 @@ import { deviceInfo } from '@kit.BasicServicesKit';
 import { ClipboardBridge } from './ClipboardBridge';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { displaySync } from '@kit.ArkGraphics2D';
-import { OpCallbacks } from 'libopenpencil.so';
+import { OpCallbacks } from 'libdesign_editor.so';
 import napi, { OpEngineMode, OpShellAction, OpStatus } from './OpNative';
 import { ImeConduit, ImeConduitHost } from './ImeConduit';
 import { PointerRouter, PointerRouterHost } from './PointerRouter';
@@ -14,7 +14,7 @@ import { BackgroundGenerationCoordinator } from './BackgroundGenerationCoordinat
 import { MonotonicClock } from './MonotonicClock';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /** Cadence of the shell-action / IME / theme drain, in milliseconds. */
 const PUMP_INTERVAL_MS = 100;
@@ -738,7 +738,7 @@ export class EngineHost implements PointerRouterHost, ImeConduitHost {
         this.fetchRemoteImage(requestId, url);
       },
       // Collaboration credentials need a hardware-backed store. HarmonyOS
-      // has no OpenPencil credential store yet, so the engine is told the
+      // has no Design Editor credential store yet, so the engine is told the
       // device key does not exist and cannot be created (collaboration stays
       // unavailable rather than falling back to plaintext storage).
       onCredentialLoad: (): ArrayBuffer | null => null,

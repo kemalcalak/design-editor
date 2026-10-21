@@ -2,7 +2,7 @@ use super::*;
 
 fn temp_op_path(tag: &str) -> PathBuf {
     std::env::temp_dir().join(format!(
-        "openpencil-save-session-{tag}-{}-{}.op",
+        "design-editor-save-session-{tag}-{}-{}.op",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

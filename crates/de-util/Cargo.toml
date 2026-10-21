@@ -8,6 +8,6 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil dependency-free leaf utilities: ids, colors, escaping, and image metadata"
+description = "Design Editor dependency-free leaf utilities: ids, colors, escaping, and image metadata"
 
 [dependencies]

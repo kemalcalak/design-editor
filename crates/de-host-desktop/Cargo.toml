@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil desktop host — winit + skia-safe binary that drives the Rust editor on macOS / Linux / Windows"
+description = "Design Editor desktop host — winit + skia-safe binary that drives the Rust editor on macOS / Linux / Windows"
 
 # The shipped executable keeps the stable `design-editor` name so
 # release artifacts + external CLI integrations are unaffected by the
@@ -36,25 +36,25 @@ dev-op-auth-abi-v2 = [
 ]
 
 # File-association metadata for `cargo-bundle` (`cargo bundle`). This
-# declares OpenPencil as the OS-level handler for `.op` / `.pen`
+# declares Design Editor as the OS-level handler for `.op` / `.pen`
 # documents: macOS writes `CFBundleDocumentTypes` into the `.app`
 # Info.plist, Windows registers the extensions, Linux emits a
 # `.desktop` MimeType entry. Once the association is registered the
 # OS launches this binary with the document path in argv, which
 # `main.rs` opens at startup (see `src/main.rs` argv handling).
 [package.metadata.bundle]
-name = "OpenPencil"
-identifier = "com.zseven-w.openpencil"
+name = "Design Editor"
+identifier = "com.kemalcalak.design-editor"
 icon = ["assets/icon.icns"]
 
 [[package.metadata.bundle.file_associations]]
 ext = "op"
-name = "OpenPencil Document"
+name = "Design Editor Document"
 role = "Editor"
 
 [[package.metadata.bundle.file_associations]]
 ext = "pen"
-name = "OpenPencil Document"
+name = "Design Editor Document"
 role = "Editor"
 
 # Figma `.fig` binary exports — routes through the desktop's
@@ -77,7 +77,7 @@ role = "Editor"
 # de-host-native's desktop dep set, so the whole crate is gated to
 # macos / linux / windows.
 [target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))'.dependencies]
-# Phase 7.3 reorg: openpencil-shell-core dissolved — widget facade /
+# Phase 7.3 reorg: design-editor-shell-core dissolved — widget facade /
 # render-backend / layout scene paths resolve through de-editor-ui.
 de-editor-ui = { path = "../de-editor-ui" }
 de-host-native = { path = "../de-host-native", features = ["gl-host"] }
@@ -98,7 +98,7 @@ accesskit = "0.24"
 de-editor-core = { path = "../de-editor-core" }
 # Transport-free host state machines shared with web/native hosts.
 de-editor-host-core = { path = "../de-editor-host-core" }
-# Shared `~/.openpencil` well-known paths used by CLI and desktop discovery.
+# Shared `~/.design-editor` well-known paths used by CLI and desktop discovery.
 de-config-store = { path = "../de-config-store" }
 # Device-login bridge (prebuilt proprietary library or inert stub).
 de-auth-bridge = { path = "../de-auth-bridge" }
@@ -239,9 +239,9 @@ zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
 glam = { version = "0.29", default-features = false, features = ["std"] }
 # Resolves the platform-specific user-config dir for the auto-saved
 # settings file (TS parity with `agent-settings-store` localStorage):
-# macOS  → ~/Library/Application Support/openpencil/settings.json
-# Linux  → ~/.config/openpencil/settings.json
-# Windows → %APPDATA%/openpencil/settings.json
+# macOS  → ~/Library/Application Support/design-editor/settings.json
+# Linux  → ~/.config/design-editor/settings.json
+# Windows → %APPDATA%/design-editor/settings.json
 dirs = "5"
 # Cross-product Rust agent runtime — provides `QueryEngine` + the
 # generic `Provider` trait + streaming `Event`s. Vendored as the
@@ -251,7 +251,7 @@ dirs = "5"
 #
 # Compiled with NO default features: the BuiltIn bridge uses the trait,
 # engine wiring, and `from_provider`; concrete provider transports are
-# selected explicitly by OpenPencil rather than inherited from agent defaults.
+# selected explicitly by Design Editor rather than inherited from agent defaults.
 agent = { path = "../../vendor/agent/crates/agent", default-features = false }
 # Forked from bartolli/anthropic-agent-sdk — lives under
 # `vendor/anthropic-agent-sdk/` so OP owns the source and can diverge
@@ -299,7 +299,7 @@ if-addrs = "0.13"
 # drops the Linux-only `gtk` / `libxdo` feature deps.
 #
 # macOS-only — set the running app's Dock icon + process name at
-# startup so the dev (non-bundled) binary shows "OpenPencil" + the
+# startup so the dev (non-bundled) binary shows "Design Editor" + the
 # brand icon instead of the bare executable name. Pinned to the
 # objc2 0.2 line winit / casement already use.
 [target.'cfg(target_os = "macos")'.dependencies]

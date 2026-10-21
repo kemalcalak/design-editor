@@ -44,7 +44,7 @@ cargo run -p de-collab-smoke --features test-issuer -- \
   lan-guest 192.168.1.20:45123
 ```
 
-Each process prints one `openpencil-p2p-lan-smoke/v1` JSON record after the
+Each process prints one `design-editor-p2p-lan-smoke/v1` JSON record after the
 exchange. The acceptance evidence is valid only when the two records come from
 different physical devices, both commands exit successfully, and their
 `canonical_hash` values are identical. The owner rejects loopback, wildcard,

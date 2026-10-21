@@ -205,7 +205,7 @@ fn a_catalog_printed_by_a_real_cli_lands_in_the_picker() {
     use std::os::unix::fs::PermissionsExt;
 
     let script = std::env::temp_dir().join(format!(
-        "openpencil-model-catalog-refresh-{}-{}",
+        "design-editor-model-catalog-refresh-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

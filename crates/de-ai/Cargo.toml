@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil AI chat layer — transport-free ChatProvider trait + model catalog + agent-settings state"
+description = "Design Editor AI chat layer — transport-free ChatProvider trait + model catalog + agent-settings state"
 
 [lib]
 name = "de_ai"

@@ -1,8 +1,8 @@
-//! `EditorState` — OpenPencil's editor runtime state, built on the
+//! `EditorState` — Design Editor's editor runtime state, built on the
 //! canonical `.op` document model.
 //!
 //! This is the strangler-reorg replacement for
-//! `openpencil-shell-core::document::Document`. The crucial change
+//! `design-editor-shell-core::document::Document`. The crucial change
 //! (spec §5.2): the node tree is no longer a private `Vec<Page>` — it
 //! is `jian_ops_schema::PenDocument`, the one canonical document
 //! model. `PenDocument` already carries pages, the root `children`

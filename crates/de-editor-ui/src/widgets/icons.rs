@@ -624,7 +624,7 @@ pub fn draw_icon(
     }
 }
 
-/// Paint the filled import glyph supplied for OpenPencil's top-bar import
+/// Paint the filled import glyph supplied for Design Editor's top-bar import
 /// launcher. Its source SVG uses a non-square `1201 × 1024` viewBox, so the
 /// vertical offset keeps the original aspect ratio centred in the requested
 /// square without rewriting either authored path.

@@ -201,7 +201,7 @@ pub(crate) fn codex_models_from_app_server_with_exe(exe: &Path) -> Option<Vec<Mo
     // `model/list` (id 2). stdin is held open until the response
     // lands so the server doesn't shut down mid-refresh.
     let init = format!(
-        r#"{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{"clientInfo":{{"name":"openpencil","version":"{}"}},"capabilities":{{"experimentalApi":true}}}}}}"#,
+        r#"{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{"clientInfo":{{"name":"design-editor","version":"{}"}},"capabilities":{{"experimentalApi":true}}}}}}"#,
         env!("CARGO_PKG_VERSION")
     );
     let initialized = r#"{"jsonrpc":"2.0","method":"initialized"}"#;
@@ -490,7 +490,7 @@ mod tests {
         use std::os::unix::fs::PermissionsExt;
 
         let script = std::env::temp_dir().join(format!(
-            "openpencil-opencode-models-{}-{}",
+            "design-editor-opencode-models-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

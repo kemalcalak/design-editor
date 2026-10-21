@@ -163,7 +163,7 @@ pub fn resolve_url(base: Option<&str>, href: &str) -> Option<String> {
 /// Resolves a resource URL while keeping virtual HTML projects self-contained.
 ///
 /// Regular web imports may reference any HTTP(S) origin. The synthetic
-/// `openpencil.local` origin is different: it represents files supplied by the
+/// `design-editor.local` origin is different: it represents files supplied by the
 /// user, so an absolute `<base>`, stylesheet, import, or image URL must not turn
 /// that virtual file lookup into an external request.
 pub(crate) fn resolve_resource_url(base: Option<&str>, href: &str) -> Option<String> {
@@ -217,7 +217,7 @@ fn resource_url_allowed(base: Option<&str>, resolved: &str) -> bool {
 
 fn is_virtual_project_url(url: &Url) -> bool {
     url.scheme() == "https"
-        && url.host_str() == Some("openpencil.local")
+        && url.host_str() == Some("design-editor.local")
         && url.port().is_none()
         && url.username().is_empty()
         && url.password().is_none()
@@ -726,10 +726,10 @@ mod tests {
 
     #[test]
     fn virtual_project_resource_resolution_cannot_change_origin() {
-        let base = Some("https://openpencil.local/site/pages/index.html");
+        let base = Some("https://design-editor.local/site/pages/index.html");
         assert_eq!(
             resolve_resource_url(base, "../../assets/site.css").as_deref(),
-            Some("https://openpencil.local/assets/site.css")
+            Some("https://design-editor.local/assets/site.css")
         );
         assert!(resolve_resource_url(base, "https://example.test/site.css").is_none());
         assert!(resolve_resource_url(base, "//example.test/site.css").is_none());
@@ -739,7 +739,7 @@ mod tests {
     fn document_base_uses_first_valid_candidate_and_confines_projects() {
         let mut warnings = Vec::new();
         let selected = select_document_base(
-            Some("https://openpencil.local/site/index.html"),
+            Some("https://design-editor.local/site/index.html"),
             &[
                 "javascript:alert(1)".into(),
                 "https://example.test/".into(),
@@ -750,7 +750,7 @@ mod tests {
         );
         assert_eq!(
             selected.as_deref(),
-            Some("https://openpencil.local/site/assets/")
+            Some("https://design-editor.local/site/assets/")
         );
         assert_eq!(warnings.len(), 2);
     }

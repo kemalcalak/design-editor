@@ -3,7 +3,7 @@
 //! Export dropdown toggles, and the fill/stroke variable bindings.
 //!
 //! Split out of `property_panel_tests.rs` to keep both files under
-//! the openpencil 800-line cap.
+//! the design-editor 800-line cap.
 
 use super::{color_eq, RoundFillBackend};
 use crate::widgets::property_panel::{PropertyPanel, PropertyPanelAction};

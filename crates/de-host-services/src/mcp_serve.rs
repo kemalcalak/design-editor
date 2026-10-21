@@ -374,9 +374,9 @@ pub struct HttpRequest {
     pub body: String,
     pub host: Option<String>,
     pub origin: Option<String>,
-    /// Legacy `X-OpenPencil-Token` header value, when present. The local and
+    /// Legacy `X-Design-Editor-Token` header value, when present. The local and
     /// managed web-canvas daemons deliberately ignore it; managed lifecycle
-    /// authentication, when used, stays in the `openpencil/shutdown` body.
+    /// authentication, when used, stays in the `design-editor/shutdown` body.
     pub token: Option<String>,
     /// `Content-Type` header value, when present. Browser-facing JSON routes
     /// require `application/json` so cross-origin "simple requests" (which
@@ -554,7 +554,7 @@ pub fn read_http_request<S: std::io::Read>(stream: &mut S) -> Result<HttpRequest
     };
     let host = header_value("host");
     let origin = header_value("origin");
-    let token = header_value("x-openpencil-token");
+    let token = header_value("x-design-editor-token");
     let content_type = header_value("content-type");
     if method == "POST" && path == crate::mcp_live::design_md_route::DESIGN_MD_PATH {
         let content_type_count = headers
@@ -660,9 +660,9 @@ pub(crate) fn write_mcp_http_response_with_origin<S: std::io::Write>(
         "HTTP/1.1 {status}\r\n\
          {cors_line}\
          Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS\r\n\
-         Access-Control-Allow-Headers: Content-Type, mcp-session-id, X-OpenPencil-Token, Authorization\r\n\
+         Access-Control-Allow-Headers: Content-Type, mcp-session-id, X-Design-Editor-Token, Authorization\r\n\
          Access-Control-Expose-Headers: mcp-session-id\r\n\
-         mcp-session-id: openpencil\r\n\
+         mcp-session-id: design-editor\r\n\
          Cache-Control: no-store\r\n\
          Content-Type: application/json\r\n\
          Content-Length: {}\r\nConnection: close\r\n\r\n{}",

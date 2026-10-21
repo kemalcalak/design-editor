@@ -1,6 +1,6 @@
 # OpenHarmony cross-compilation
 
-Toolchain plumbing for `crates/de-engine-napi` → `libopenpencil.so`, the
+Toolchain plumbing for `crates/de-engine-napi` → `libdesign_editor.so`, the
 native module the ArkTS app in `packaging/harmony` loads.
 
 | File | Role |
@@ -21,9 +21,9 @@ directory, and atomically installs to the ABI-matched HAP payload:
 
 | Rust target | HAP payload |
 | --- | --- |
-| `aarch64-unknown-linux-ohos` | `packaging/harmony/entry/libs/arm64-v8a/libopenpencil.so` |
-| `x86_64-unknown-linux-ohos` | `packaging/harmony/entry/libs/x86_64/libopenpencil.so` |
-| `armv7-unknown-linux-ohos` | `packaging/harmony/entry/libs/armeabi-v7a/libopenpencil.so` |
+| `aarch64-unknown-linux-ohos` | `packaging/harmony/entry/libs/arm64-v8a/libdesign_editor.so` |
+| `x86_64-unknown-linux-ohos` | `packaging/harmony/entry/libs/x86_64/libdesign_editor.so` |
+| `armv7-unknown-linux-ohos` | `packaging/harmony/entry/libs/armeabi-v7a/libdesign_editor.so` |
 
 Build, marker, and copy failures leave the previous payload untouched. Before
 assembling a HAP, run `HarmonyProjectContractTests.rb`: it reads the packaged
@@ -122,7 +122,7 @@ The build was exercised on macOS with DevEco Studio's bundled OpenHarmony
 Native SDK at
 `/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony` (API 24,
 HarmonyOS 6.1.1, package `6.1.1.125`; clang 15.0.4). It reached rust-skia's
-source build but did not produce a new `libopenpencil.so`: Skia's GN command
+source build but did not produce a new `libdesign_editor.so`: Skia's GN command
 did not include the existing Homebrew Freetype headers under
 `/opt/homebrew/include/freetype2`, and a later archive rule selected the host
 `ar` with an incompatible response-file invocation. Therefore the local HAP

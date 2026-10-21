@@ -1,9 +1,9 @@
-//! OpenPencil editor UI — platform-agnostic widget facade.
+//! Design Editor editor UI — platform-agnostic widget facade.
 //!
-//! Extracted out of `openpencil-shell-core` in the Phase 7 strangler
+//! Extracted out of `design-editor-shell-core` in the Phase 7 strangler
 //! reorg. This crate must compile on wasm32-unknown-unknown — winit /
-//! accesskit_winit / skia-safe live in `openpencil-shell-native`;
-//! wasm-bindgen / web-sys / CanvasKit live in `openpencil-shell-web`.
+//! accesskit_winit / skia-safe live in `design-editor-shell-native`;
+//! wasm-bindgen / web-sys / CanvasKit live in `design-editor-shell-web`.
 //!
 //! Modules:
 //! - [`widgets`] — the `Widget` facade trait, render primitives, the
@@ -30,7 +30,7 @@ pub use de_i18n as i18n;
 
 /// User-visible product name — window titles, the accessibility root
 /// label, and the desktop file-dialog filter all read this one const.
-pub const PRODUCT_NAME: &str = "OpenPencil";
+pub const PRODUCT_NAME: &str = "Design Editor";
 
 // The wasm-clean RenderBackend trait + facade types live in
 // de-editor-core; re-exported as `render_backend` and at the crate root.

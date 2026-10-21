@@ -7,7 +7,7 @@
 //! This spine now holds only the local paint-recording backend + the
 //! colour comparator; the cases themselves live in the sibling
 //! `property_panel_tests/` submodules so every file stays under the
-//! openpencil 800-line cap. Shared fixtures (`state_from`,
+//! design-editor 800-line cap. Shared fixtures (`state_from`,
 //! `visible_for`, `CountingBackend`) still come from
 //! `property_panel_test_support`.
 

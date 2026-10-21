@@ -8,7 +8,7 @@ import json
 import subprocess
 import sys
 
-BIN = "/Users/fini/workspace/openpencil/target/release/design-editor"
+BIN = "/Users/fini/workspace/design-editor/target/release/design-editor"
 # 行首禁则：这些字符不允许出现在行首
 NO_LINE_START = "，。、；：？！）」』】》〉·…—"
 

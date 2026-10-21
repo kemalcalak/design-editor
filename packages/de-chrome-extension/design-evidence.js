@@ -257,7 +257,7 @@ export function sanitizeDesignEvidence(raw) {
 /**
  * Network evidence never carries the page title. The collector retains its
  * bounded title only so the wasm fallback can name a guide without inventing
- * one; OpenPencil and the configured provider receive no page text at all.
+ * one; Design Editor and the configured provider receive no page text at all.
  */
 export function designEvidenceForNetwork(evidence) {
   const network = { ...sanitizeDesignEvidence(evidence), title: '' };

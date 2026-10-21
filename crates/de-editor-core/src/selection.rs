@@ -1,6 +1,6 @@
 //! Editor selection state.
 //!
-//! Models `openpencil-shell-core::document::Document`'s selection
+//! Models `design-editor-shell-core::document::Document`'s selection
 //! fields (`selected` + `selected_set`) as a dedicated struct so the
 //! `EditorState` surface stays flat.
 //!

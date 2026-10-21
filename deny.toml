@@ -1,5 +1,5 @@
 # cargo-deny config — pinned to ≥ 0.16 schema
-# Validated via openpencil-docs/superpowers/notes/2026-05-02-cargo-deny-validation.md
+# Validated via design-editor-docs/superpowers/notes/2026-05-02-cargo-deny-validation.md
 
 [graph]
 all-features = false
@@ -111,7 +111,7 @@ name = "github-copilot-sdk"
 version = "=1.0.11"
 deny = ["default", "bundled-cli", "bundled-in-process"]
 exact = true
-reason = "OpenPencil must use the separately installed CLI without embedding SDK runtime artifacts"
+reason = "Design Editor must use the separately installed CLI without embedding SDK runtime artifacts"
 
 # tokio's process / rt-multi-thread features are no longer banned:
 # de-host-desktop's native (async) agent runtime legitimately needs them.

@@ -7,7 +7,7 @@
 //! fields, so `project_screens` finds nothing and preview degrades to a single
 //! scrolling page. This module fills the screen/nav gap deterministically,
 //! while cleanup-only interaction backfill owns strict back/card actions (see
-//! `openpencil-docs/openpencil/generation/preview-interactive-app-mode-0712.md`,
+//! `design-editor-docs/design-editor/generation/preview-interactive-app-mode-0712.md`,
 //! "Track A contract v2").
 //!
 //! Hard contract (violating any of these breaks the preview engine, not just

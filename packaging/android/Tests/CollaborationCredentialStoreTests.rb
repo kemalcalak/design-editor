@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-root = File.expand_path("../app/src/main/kotlin/tech/zseven/openpencil", __dir__)
+root = File.expand_path("../app/src/main/kotlin/com/kemalcalak/designeditor", __dir__)
 store = File.read(File.join(root, "AndroidCollaborationCredentialStore.kt"))
 envelope = File.read(File.join(root, "CollaborationCredentialEnvelope.kt"))
 callbacks = File.read(File.join(root, "OpCallbacks.kt"))
@@ -27,7 +27,7 @@ raise "surface must pass private storage before engine construction" unless crea
   /callbacks,\s*privateStorageRoot,\s*if \(editorMode\)/m,
 )
 raise "wrapping key alias must use the canonical app namespace" unless store.include?(
-  'tech.zseven.openpencil.collaboration.device-key-wrapping-v1',
+  'com.kemalcalak.designeditor.collaboration.device-key-wrapping-v1',
 )
 raise "wrapping key must be owned by AndroidKeyStore" unless store.include?(
   'private const val ANDROID_KEY_STORE = "AndroidKeyStore"',

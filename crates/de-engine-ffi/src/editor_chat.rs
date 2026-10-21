@@ -164,7 +164,7 @@ impl MobileChatHost {
         let mut changed = false;
         if job.session.is_design_loop() {
             eprintln!(
-                "openpencil-mobile: design turn retired (finalized={})",
+                "design-editor-mobile: design turn retired (finalized={})",
                 job.session.loop_finalized()
             );
             if !job.session.loop_finalized() && allow_ai_bulk_write(host) {
@@ -483,7 +483,7 @@ fn execute_tool_requests(
         // executed design tool names the call, its outcome, and whether the
         // document changed.
         eprintln!(
-            "openpencil-mobile: design tool {} -> {} (mutated={})",
+            "design-editor-mobile: design tool {} -> {} (mutated={})",
             req.name,
             if result.is_error { "ERROR" } else { "ok" },
             mutated
@@ -570,7 +570,7 @@ fn start_design_turn(
     // makes "did the loop even start, on which wire" answerable from the
     // device console.
     eprintln!(
-        "openpencil-mobile: design turn start (model={}, wire={:?}, disable_thinking={})",
+        "design-editor-mobile: design turn start (model={}, wire={:?}, disable_thinking={})",
         cfg.model, kind, disable_thinking
     );
     // Indicator epoch BEFORE the worker can apply its first batch (desktop

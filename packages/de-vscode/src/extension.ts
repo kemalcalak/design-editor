@@ -17,7 +17,7 @@ import { configureMcpCommand, removeMcpCommand } from "./vscode/configure-comman
 import { installSkillCommand, removeSkillCommand } from "./vscode/skill-command";
 import { generateCodeCommand, registerChatParticipant } from "./vscode/codegen-command";
 
-const PROXY_PORT_KEY = "openpencil.proxyPort";
+const PROXY_PORT_KEY = "design-editor.proxyPort";
 
 interface Assembled {
   pool: DaemonPool;
@@ -39,18 +39,18 @@ let output: vscode.OutputChannel | undefined;
 const placeholderUris: vscode.Uri[] = [];
 
 export function activate(context: vscode.ExtensionContext): void {
-  output = vscode.window.createOutputChannel("OpenPencil");
+  output = vscode.window.createOutputChannel("Design Editor");
   // Mirror to the dev-tools console (console.log shows in the Extension
-  // Development Host debug console) AND the "OpenPencil" Output channel, so the
+  // Development Host debug console) AND the "Design Editor" Output channel, so the
   // manual test matrix is observable from either surface.
   const logger: DaemonLogger = {
     info: (l) => {
       output?.appendLine(l);
-      console.log(`[OpenPencil] ${l}`);
+      console.log(`[Design Editor] ${l}`);
     },
     error: (l) => {
       output?.appendLine(`[error] ${l}`);
-      console.error(`[OpenPencil] ${l}`);
+      console.error(`[Design Editor] ${l}`);
     },
   };
   const state: AppState = { trusted: vscode.workspace.isTrusted };
@@ -63,7 +63,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // The editor provider is registered ONCE; it branches on state.trusted.
   const provider = new UnifiedPenProvider(context, state, logger);
   context.subscriptions.push(
-    vscode.window.registerCustomEditorProvider("openpencil.penEditor", provider, {
+    vscode.window.registerCustomEditorProvider("design-editor.penEditor", provider, {
       supportsMultipleEditorsPerDocument: false,
       webviewOptions: { retainContextWhenHidden: true },
     }),
@@ -108,14 +108,14 @@ async function assemble(
 
   const preferred =
     context.workspaceState.get<number>(PROXY_PORT_KEY) ??
-    vscode.workspace.getConfiguration("openpencil").get<number>("proxy.port", 0);
+    vscode.workspace.getConfiguration("design-editor").get<number>("proxy.port", 0);
   let proxyPort: number;
   try {
     proxyPort = await proxy.listen(preferred);
   } catch {
     proxyPort = await proxy.listen(0); // preferred taken → OS-assign
     void vscode.window.showInformationMessage(
-      "OpenPencil: the saved MCP port was busy; re-run 'Configure AI (MCP)' to update your config.",
+      "Design Editor: the saved MCP port was busy; re-run 'Configure AI (MCP)' to update your config.",
     );
   }
   await context.workspaceState.update(PROXY_PORT_KEY, proxyPort);
@@ -144,7 +144,7 @@ async function onTrustGranted(
   // placeholder tabs to pick up the now-trusted provider branch.
   for (const uri of placeholderUris.splice(0)) {
     await closeTabFor(uri);
-    await vscode.commands.executeCommand("vscode.openWith", uri, "openpencil.penEditor");
+    await vscode.commands.executeCommand("vscode.openWith", uri, "design-editor.penEditor");
   }
 }
 
@@ -155,9 +155,9 @@ function makeSpawn(logger: DaemonLogger, extensionRoot: string) {
   return async (filePath: string, allowOrigin: string) => {
     const uri = vscode.Uri.file(filePath);
     const folder = vscode.workspace.getWorkspaceFolder(uri) ?? vscode.workspace.workspaceFolders?.[0];
-    const configured = vscode.workspace.getConfiguration("openpencil").get<string>("dev.daemonPath");
+    const configured = vscode.workspace.getConfiguration("design-editor").get<string>("dev.daemonPath");
     const binary = resolveDaemonBinary(configured, folder?.uri.fsPath, extensionRoot);
-    if (!binary) throw new Error("de-host-web-server binary not found; set openpencil.dev.daemonPath");
+    if (!binary) throw new Error("de-host-web-server binary not found; set design-editor.dev.daemonPath");
     return DaemonClient.spawn({
       command: [binary],
       // The daemon's --file flag only understands .op JSON; a .fig source is
@@ -266,17 +266,17 @@ class UnifiedPenProvider implements vscode.CustomEditorProvider<vscode.CustomDoc
 function registerCommands(context: vscode.ExtensionContext, state: AppState): void {
   const guard = (fn: (a: Assembled) => Promise<void> | void) => async () => {
     if (!state.trusted || !state.assembled) {
-      void vscode.window.showWarningMessage("OpenPencil: trust this workspace to use this command.");
+      void vscode.window.showWarningMessage("Design Editor: trust this workspace to use this command.");
       return;
     }
     await fn(state.assembled);
   };
   context.subscriptions.push(
-    vscode.commands.registerCommand("openpencil.configureMcp", guard((a) => configureMcpCommand(a.proxyPort))),
-    vscode.commands.registerCommand("openpencil.removeMcp", guard(() => removeMcpCommand())),
-    vscode.commands.registerCommand("openpencil.installSkill", guard(() => installSkillCommand(context))),
-    vscode.commands.registerCommand("openpencil.removeSkill", guard(() => removeSkillCommand())),
-    vscode.commands.registerCommand("openpencil.generateCode", guard((a) => generateCodeCommand(a.registry))),
+    vscode.commands.registerCommand("design-editor.configureMcp", guard((a) => configureMcpCommand(a.proxyPort))),
+    vscode.commands.registerCommand("design-editor.removeMcp", guard(() => removeMcpCommand())),
+    vscode.commands.registerCommand("design-editor.installSkill", guard(() => installSkillCommand(context))),
+    vscode.commands.registerCommand("design-editor.removeSkill", guard(() => removeSkillCommand())),
+    vscode.commands.registerCommand("design-editor.generateCode", guard((a) => generateCodeCommand(a.registry))),
   );
 }
 
@@ -295,8 +295,8 @@ async function closeTabFor(uri: vscode.Uri): Promise<void> {
 
 function restrictedPage(): string {
   return `<!doctype html><html><body style="font-family:sans-serif;padding:2rem;color:var(--vscode-foreground)">
-<h3>OpenPencil is in Restricted Mode</h3>
-<p>This workspace isn't trusted, so OpenPencil won't start a local design daemon or write MCP config.</p>
+<h3>Design Editor is in Restricted Mode</h3>
+<p>This workspace isn't trusted, so Design Editor won't start a local design daemon or write MCP config.</p>
 <button onclick="acquireVsCodeApi().postMessage('trust')">Manage Workspace Trust…</button>
 </body></html>`;
 }

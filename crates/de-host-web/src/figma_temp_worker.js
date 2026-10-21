@@ -9,7 +9,7 @@
 // a later host-level change because history and document-wide commands require
 // a stronger backing-store contract.
 
-const DB_NAME = 'openpencil-figma-temp';
+const DB_NAME = 'design-editor-figma-temp';
 const DB_VERSION = 1;
 const RECORDS_STORE = 'records';
 const MANIFESTS_STORE = 'manifests';
@@ -384,7 +384,7 @@ export function opStartFigmaTempImport(file, fileName, sessionId, done) {
   try {
     const blob = new Blob([workerSource()], { type: 'text/javascript' });
     objectUrl = URL.createObjectURL(blob);
-    worker = new Worker(objectUrl, { type: 'module', name: 'openpencil-figma-import' });
+    worker = new Worker(objectUrl, { type: 'module', name: 'design-editor-figma-import' });
     worker.onmessage = async (event) => {
       const receipt = event.data;
       if (!receipt || receipt.ok !== true) {

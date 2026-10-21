@@ -631,9 +631,9 @@ function collectDesignEvidenceInPage() {
 
 /** Remove an abandoned picker before design statistics inspect page styles. */
 function clearPickerForDesign() {
-  const pick = globalThis.openpencilPick;
+  const pick = globalThis.designEditorPick;
   if (pick && typeof pick.teardown === 'function') pick.teardown();
-  delete globalThis.openpencilSnapshotOptions;
+  delete globalThis.designEditorSnapshotOptions;
   return true;
 }
 

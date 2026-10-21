@@ -40,10 +40,10 @@ impl Orchestrator {
         let append_result =
             apply_append_context_to_plan(&mut plan, request.append_context.as_ref());
 
-        // `OPENPENCIL_DEBUG_PLAN=1` prints what the planner decided beyond the
+        // `DESIGN_EDITOR_DEBUG_PLAN=1` prints what the planner decided beyond the
         // subtask list: headless runs (de-smoke, the arena) otherwise cannot
         // tell whether a style guide was picked or a phone root was planned.
-        if std::env::var_os("OPENPENCIL_DEBUG_PLAN").is_some() {
+        if std::env::var_os("DESIGN_EDITOR_DEBUG_PLAN").is_some() {
             eprintln!(
                 "[PLAN] root={}x{} styleGuideName={:?} subtasks={}",
                 plan.root_frame.width,
@@ -74,7 +74,7 @@ impl Orchestrator {
 
         // Run-wide `geometry_echo` budget (`concurrent::run_subtask_retry_ladder`'s
         // tail step) — `min(subtask_count, 6)` unless the
-        // `OPENPENCIL_GEOMETRY_ECHO=0` rollback valve is set. Constructed
+        // `DESIGN_EDITOR_GEOMETRY_ECHO=0` rollback valve is set. Constructed
         // ONCE per run and shared (by reference) across BOTH the sequential
         // loop and every screen-group worker below, so the cap is a
         // genuine run-wide total, not per-path. See `geometry_echo_cap`'s
@@ -82,7 +82,7 @@ impl Orchestrator {
         let geometry_echo_budget =
             crate::types::GeometryEchoBudget::new(crate::types::geometry_echo_cap(
                 plan.subtasks.len(),
-                std::env::var("OPENPENCIL_GEOMETRY_ECHO").ok().as_deref(),
+                std::env::var("DESIGN_EDITOR_GEOMETRY_ECHO").ok().as_deref(),
             ));
 
         // Dashboards (formerly a bespoke sidebar+main scaffold) flow through

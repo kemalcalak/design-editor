@@ -30,7 +30,7 @@
  */
 
 /** Global the picker parks its state on, in the isolated world. */
-const PICK_STATE = 'openpencilPick';
+const PICK_STATE = 'designEditorPick';
 
 /* -------------------------------------------------------------------------
  * Injected into the tab. Self-contained by requirement.
@@ -53,7 +53,7 @@ function startPick(stateKey, labels) {
   // capture chrome, never page content. Belt to `beginCapture`'s braces — a
   // full-page capture can start while the picker is still armed (popup
   // reopened without picking), and the overlay must not import as content.
-  host.setAttribute('data-openpencil-ui', '');
+  host.setAttribute('data-design-editor-ui', '');
   // A max z-index and `position: fixed` put the overlay above page content
   // without touching any page element. `pointer-events: none` keeps
   // `elementFromPoint` and the page's own hover states honest — the overlay
@@ -198,7 +198,7 @@ function startPick(stateKey, labels) {
     // Park the chosen element where the extractor reads its root from. The
     // capture runs as a separate injection, so it cannot be passed a live
     // reference any other way.
-    globalThis.openpencilSnapshotOptions = { root: element };
+    globalThis.designEditorSnapshotOptions = { root: element };
     finish({
       ok: true,
       tag: element.tagName.toLowerCase(),
@@ -282,7 +282,7 @@ function awaitPick(stateKey, timeoutMs) {
 function cancelPick(stateKey) {
   const state = globalThis[stateKey];
   if (state && typeof state.teardown === 'function') state.teardown();
-  delete globalThis.openpencilSnapshotOptions;
+  delete globalThis.designEditorSnapshotOptions;
   return true;
 }
 
@@ -303,7 +303,7 @@ async function runInTab(tabId, injection) {
  * Run one pick in `tabId`.
  *
  * On success the chosen element is left parked on
- * `globalThis.openpencilSnapshotOptions` in the tab's isolated world, which
+ * `globalThis.designEditorSnapshotOptions` in the tab's isolated world, which
  * is where the extractor reads its root from — so the caller's next step is
  * `capturePage`, with no argument threading in between.
  *

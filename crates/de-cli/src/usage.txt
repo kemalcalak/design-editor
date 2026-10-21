@@ -16,8 +16,8 @@ COMMON COMMANDS:
   de start --headless [--file path.op]     run the windowless file-backed MCP server
                                            (CI / display-less agents)
   de stop                                  stop the running editor / MCP server
-  de install [--target T]                  install openpencil-skill for AI agents
-  de uninstall [--target T]                uninstall openpencil-skill
+  de install [--target T]                  install design-editor-skill for AI agents
+  de uninstall [--target T]                uninstall design-editor-skill
   de skill:export <skill> [--out DIR]       export embedded skill as DIR/<skill>/SKILL.md
   de status                               check whether MCP HTTP is reachable
   de export [--item ID|--selection] --output PATH [--format png] [--scale N]
@@ -82,7 +82,7 @@ COMMON COMMANDS:
 GLOBAL FLAGS:
   --port <n>      MCP HTTP port (default: 3100). When omitted, server-bound
                   commands auto-discover the live editor via
-                  ~/.openpencil/.op-mcp-port (verified with a JSON-RPC ping)
+                  ~/.design-editor/.de-mcp-port (verified with a JSON-RPC ping)
   --pretty        pretty-print JSON replies
   --file <path>   `de start` document path; otherwise target .op file for
                   tools that accept filePath (omit for the live canvas)

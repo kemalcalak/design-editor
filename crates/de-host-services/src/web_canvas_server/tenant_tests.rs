@@ -133,7 +133,7 @@ fn an_idle_unleased_tenant_is_reclaimed_and_comes_back_as_a_fresh_document() {
 
     // M1 does not persist, so the reclaimed document is gone on purpose —
     // the account is served a new starter document. M4 replaces this with a
-    // load from `$OPENPENCIL_ONLINE_DATA_DIR`.
+    // load from `$DESIGN_EDITOR_ONLINE_DATA_DIR`.
     let again = registry.lease_for(&identity("userA")).expect("lease again");
     assert_eq!(
         again

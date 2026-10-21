@@ -7,7 +7,7 @@ import { OpStatus } from './OpNative';
 import { SsoRegion, SsoRegionStore } from './SsoRegion';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /** `OpStatus::NotReady` — this build has no `op-auth` backend linked in. */
 export const STATUS_NOT_READY = 10;

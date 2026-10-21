@@ -1,6 +1,6 @@
 # de-collab-relay-client
 
-`de-collab-relay-client` is OpenPencil's open-source, native relay data-plane
+`de-collab-relay-client` is Design Editor's open-source, native relay data-plane
 client. It adapts the existing loopback TCP collaboration transport to a
 public WebSocket relay without terminating or inspecting the inner Noise
 session.

@@ -7,11 +7,11 @@
 //!    geometry + style. All 12 schema variants are routed.
 //! 2. Defer flex layout to `jian-core::LayoutEngine` — the same
 //!    taffy-backed solver that drives the (read-only) jian runtime
-//!    against the same schema. Reusing it keeps OpenPencil's
+//!    against the same schema. Reusing it keeps Design Editor's
 //!    rendering bit-identical with what the TS editor and the
 //!    canonical jian renderer produce.
 //!
-//! OpenPencil's canvas is infinite + unrouted, so each page-root
+//! Design Editor's canvas is infinite + unrouted, so each page-root
 //! gets its own `LayoutEngine::compute` pass with `available =
 //! (root_w, root_h)` (or a generous default when the root is
 //! `fit_content`). Computed absolute scene-coord rects are baked

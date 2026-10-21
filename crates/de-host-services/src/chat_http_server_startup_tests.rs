@@ -165,7 +165,7 @@ mod unix {
     fn temp_path(label: &str) -> PathBuf {
         let id = TEMP_ID.fetch_add(1, Ordering::Relaxed);
         std::env::temp_dir().join(format!(
-            "openpencil-opencode-{label}-{}-{id}",
+            "design-editor-opencode-{label}-{}-{id}",
             std::process::id()
         ))
     }

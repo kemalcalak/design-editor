@@ -1,4 +1,4 @@
-//! OpenPencil editor theme tokens — Step 4 visual lift.
+//! Design Editor editor theme tokens — Step 4 visual lift.
 //!
 //! Mirrors the TS app's shadcn-dark palette (apps/web/src/styles.css) so
 //! the Rust shell renders the same color semantics without literal hex

@@ -85,7 +85,7 @@ pub struct McpServer {
 }
 
 /// Default HTTP MCP / serve-web daemon port, mirroring the retired TS
-/// `@zseven-w/pen-mcp` default. Single source of truth for the CLI,
+/// `@kemalcalak/pen-mcp` default. Single source of truth for the CLI,
 /// the settings modal, and the web shell's daemon fallback.
 pub const DEFAULT_MCP_PORT: u16 = 3100;
 

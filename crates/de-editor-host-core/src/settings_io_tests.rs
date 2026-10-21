@@ -106,7 +106,7 @@ fn host_locale_seed_respects_process_environment_precedence() {
             .env_remove("LC_ALL")
             .env_remove("LC_MESSAGES")
             .env_remove("LANG")
-            .env("OPENPENCIL_EXPECTED_SYSTEM_LOCALE", expected.code());
+            .env("DESIGN_EDITOR_EXPECTED_SYSTEM_LOCALE", expected.code());
         if let Some(value) = lc_all {
             command.env("LC_ALL", value);
         }
@@ -130,7 +130,7 @@ fn host_locale_seed_respects_process_environment_precedence() {
 #[test]
 #[ignore = "executed in isolated subprocesses by host_locale_seed_respects_process_environment_precedence"]
 fn system_locale_environment_probe() {
-    let Ok(expected) = std::env::var("OPENPENCIL_EXPECTED_SYSTEM_LOCALE") else {
+    let Ok(expected) = std::env::var("DESIGN_EDITOR_EXPECTED_SYSTEM_LOCALE") else {
         return;
     };
     let mut state = EditorState::new();

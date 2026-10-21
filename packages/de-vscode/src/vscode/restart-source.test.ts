@@ -70,8 +70,8 @@ describe("bundled runtime resolution", () => {
       expect(bundledDaemonEnv(root)).toBeUndefined();
       mkdirSync(join(root, "web/canvaskit"), { recursive: true });
       expect(bundledDaemonEnv(root)).toEqual({
-        OPENPENCIL_WEB_BUNDLE_DIR: `${root}/web/pkg`,
-        OPENPENCIL_CANVASKIT_DIR: `${root}/web/canvaskit`,
+        DESIGN_EDITOR_WEB_BUNDLE_DIR: `${root}/web/pkg`,
+        DESIGN_EDITOR_CANVASKIT_DIR: `${root}/web/canvaskit`,
       });
       expect(bundledDaemonEnv(undefined)).toBeUndefined();
     } finally {

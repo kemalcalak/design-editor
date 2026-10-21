@@ -21,10 +21,10 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
 
     let window = web_sys::window().ok_or_else(|| JsValue::from_str("mount_ck: no window"))?;
-    // dsh-openpencil #2: the host starts sending `op-bridge/init` the moment
+    // dsh-design-editor #2: the host starts sending `op-bridge/init` the moment
     // this iframe is created and retries only ~20x over ~10 s, while
     // `init_backend` below downloads + instantiates ~24 MB of wasm
-    // (op_host_web_bg + CanvasKit) and paints the first frame. `postMessage`
+    // (de_host_web_bg + CanvasKit) and paints the first frame. `postMessage`
     // to a window without a listener is silently DROPPED — never queued — so
     // install the bridge's receive-and-buffer phase NOW: it announces
     // `op-bridge/listening` (the host responds by resending init) and buffers

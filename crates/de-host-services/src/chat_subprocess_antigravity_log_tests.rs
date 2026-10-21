@@ -17,7 +17,7 @@ fn write_log(label: &str, body: &str) -> std::path::PathBuf {
     use std::sync::atomic::{AtomicU64, Ordering};
     static SEQ: AtomicU64 = AtomicU64::new(0);
     let dir = std::env::temp_dir().join(format!(
-        "openpencil-agylog-{label}-{}-{}",
+        "design-editor-agylog-{label}-{}-{}",
         std::process::id(),
         SEQ.fetch_add(1, Ordering::Relaxed)
     ));

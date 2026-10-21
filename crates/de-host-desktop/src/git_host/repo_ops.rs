@@ -175,7 +175,7 @@ impl DesktopApp {
                 Ok(key) => key,
                 // `de-git` is not ours to type; carry its message.
                 Err(_) => ssh
-                    .generate(&key_name, &format!("openpencil@{host}"))
+                    .generate(&key_name, &format!("design-editor@{host}"))
                     .map_err(|e| GitAuthError::KeyGeneration(e.to_string()))?,
             };
             auth.set(&host, Credential::Ssh { key_name })

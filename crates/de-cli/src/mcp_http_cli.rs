@@ -4,16 +4,16 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use crate::cli_error::CliError;
 use de_rpc_transport::{JsonRpcRequest, TcpJsonRpc, PING_TIMEOUT, POST_TIMEOUT, SHUTDOWN_TIMEOUT};
 
-/// OpenPencil MCP identity marker reported in the `ping` reply's `result`
+/// Design Editor MCP identity marker reported in the `ping` reply's `result`
 /// (mirrors `de-host-desktop` `MCP_SERVER_NAME`). Used to confirm a port
 /// is really our server before routing tool calls / killing a pid.
-const MCP_SERVER_NAME: &str = "openpencil-mcp";
+const MCP_SERVER_NAME: &str = "design-editor-mcp";
 
 pub(crate) fn status_json(port: u16) -> String {
-    // Verify it's genuinely an OpenPencil MCP server (identity ping —
-    // `result.server == "openpencil-mcp"`), not merely any TCP listener on
+    // Verify it's genuinely a Design Editor MCP server (identity ping —
+    // `result.server == "design-editor-mcp"`), not merely any TCP listener on
     // the port. Mirrors TS `de status`, which reports running only when the
-    // OpenPencil endpoint actually responds. A stale/foreign listener now
+    // Design Editor endpoint actually responds. A stale/foreign listener now
     // correctly reports `running:false`.
     let running = ping_result(port).is_some();
     // TS `de status` returns {running, port, pid, url, uptime}. When the live
@@ -191,7 +191,7 @@ pub(crate) fn web_daemon_running(port: u16) -> bool {
 }
 
 /// Pure predicate over the `/api/mcp/server` health body (testable without
-/// a socket): the OpenPencil identity marker plus the web-canvas mode.
+/// a socket): the Design Editor identity marker plus the web-canvas mode.
 fn is_web_canvas_health(body: &str) -> bool {
     serde_json::from_str::<Value>(body).is_ok_and(|v| {
         v.get("server").and_then(Value::as_str) == Some(MCP_SERVER_NAME)
@@ -200,7 +200,7 @@ fn is_web_canvas_health(body: &str) -> bool {
 }
 
 /// Send a JSON-RPC `ping` and return the parsed `result` object when the
-/// reply is an OpenPencil MCP server (`result.server == "openpencil-mcp"`).
+/// reply is a Design Editor MCP server (`result.server == "design-editor-mcp"`).
 /// This distinguishes our `/mcp` JSON-RPC server from a stale TCP listener,
 /// a third-party JSON-RPC server, or a TS editor (which serves REST at
 /// `/api/mcp/*`, not `/mcp`) — so discovery never mis-routes tool calls.
@@ -213,8 +213,8 @@ fn ping_result(port: u16) -> Option<Value> {
     ping_reply_identity(&body)
 }
 
-/// Extract the OpenPencil identity object from a raw `ping` reply, or
-/// `None` for a non-OpenPencil responder. Current servers nest the
+/// Extract the Design Editor identity object from a raw `ping` reply, or
+/// `None` for a non-Design Editor responder. Current servers nest the
 /// identity under `result._meta` (a spec-compliant ping result is empty
 /// apart from `_meta` — strict clients reject top-level extras, issue
 /// #199); servers from before that fix reported it at the `result` top
@@ -230,7 +230,7 @@ fn ping_reply_identity(body: &str) -> Option<Value> {
     }
 }
 
-/// True when `127.0.0.1:port` is the *live* OpenPencil editor that
+/// True when `127.0.0.1:port` is the *live* Design Editor editor that
 /// published `token` (`result.mode == "live"` and `result.token` matches).
 /// Distinguishes the live canvas from a headless server squatting on a
 /// reused port, and proves the server owns the discovery file we read.
@@ -265,7 +265,7 @@ pub(crate) fn request_shutdown(port: u16, token: &str) -> bool {
     }
     let body = serde_json::to_string(&JsonRpcRequest::new(
         0,
-        "openpencil/shutdown",
+        "design-editor/shutdown",
         serde_json::json!({ "token": token }),
     ))
     .expect("shutdown JSON-RPC request serializes");
@@ -325,12 +325,12 @@ mod tests {
     fn web_canvas_health_requires_identity_and_web_mode() {
         // The `--serve-web` daemon's health shape (extra fields tolerated).
         assert!(is_web_canvas_health(
-            r#"{"running":true,"port":3100,"localIp":"127.0.0.1","server":"openpencil-mcp","mode":"web-canvas"}"#
+            r#"{"running":true,"port":3100,"localIp":"127.0.0.1","server":"design-editor-mcp","mode":"web-canvas"}"#
         ));
         // A plain `--mcp-http` server (no health route → would 404 anyway),
         // a foreign service, or a missing mode must all be rejected.
         assert!(!is_web_canvas_health(
-            r#"{"running":true,"port":3100,"server":"openpencil-mcp"}"#
+            r#"{"running":true,"port":3100,"server":"design-editor-mcp"}"#
         ));
         assert!(!is_web_canvas_health(
             r#"{"server":"someone-else","mode":"web-canvas"}"#
@@ -343,19 +343,19 @@ mod tests {
         // Current servers nest the identity under `result._meta` (spec-empty
         // ping result, issue #199).
         let meta = ping_reply_identity(
-            r#"{"jsonrpc":"2.0","id":0,"result":{"_meta":{"server":"openpencil-mcp","mode":"live","token":"t-1"}}}"#,
+            r#"{"jsonrpc":"2.0","id":0,"result":{"_meta":{"server":"design-editor-mcp","mode":"live","token":"t-1"}}}"#,
         )
         .expect("meta identity accepted");
         assert_eq!(meta.get("token").and_then(Value::as_str), Some("t-1"));
         // A still-running editor from before that fix reports identity at the
         // result top level — discovery must keep working against it.
         let legacy = ping_reply_identity(
-            r#"{"jsonrpc":"2.0","id":0,"result":{"server":"openpencil-mcp","mode":"headless","token":"t-2"}}"#,
+            r#"{"jsonrpc":"2.0","id":0,"result":{"server":"design-editor-mcp","mode":"headless","token":"t-2"}}"#,
         )
         .expect("legacy identity accepted");
         assert_eq!(legacy.get("token").and_then(Value::as_str), Some("t-2"));
         // A foreign server (spec-compliant empty result, or another
-        // product's marker) is never treated as OpenPencil.
+        // product's marker) is never treated as Design Editor.
         assert!(ping_reply_identity(r#"{"jsonrpc":"2.0","id":0,"result":{}}"#).is_none());
         assert!(ping_reply_identity(
             r#"{"jsonrpc":"2.0","id":0,"result":{"_meta":{"server":"someone-else"}}}"#

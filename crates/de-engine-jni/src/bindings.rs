@@ -1,4 +1,4 @@
-//! JNI natives for `tech.zseven.openpencil.OpNative`.
+//! JNI natives for `com.kemalcalak.designeditor.OpNative`.
 //!
 //! Every native validates its `jlong` handle against the tombstoning
 //! [`registry`](crate::registry) first (a closed/unknown handle returns
@@ -101,7 +101,7 @@ pub extern "system" fn JNI_OnLoad(vm: *mut jni::sys::JavaVM, _reserved: *mut c_v
 /// is guarded: `EngineThread::spawn` can panic (OS refuses the thread), and
 /// that panic must never cross the non-unwinding `extern "system"` boundary.
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeCreate<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeCreate<'local>(
     env: JNIEnv<'local>,
     class: JClass<'local>,
     doc: JByteArray<'local>,
@@ -239,7 +239,7 @@ fn create_impl<'local>(
 /// `OpNative.nativeLastError` — the last error text for a handle (or the
 /// create-failure text for handle `0`); empty for an unknown handle.
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeLastError<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeLastError<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -260,7 +260,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeLastError<'loc
 /// callback frame) DEFERS via `close_deferred` per the no-re-entry rule;
 /// otherwise it blocks on `close`.
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeDestroy<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeDestroy<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -365,7 +365,7 @@ fn guard_jstring(f: impl FnOnce() -> jni::sys::jstring) -> jni::sys::jstring {
 // ---- Lifecycle natives ---------------------------------------------------
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeAttachSurface<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeAttachSurface<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -375,7 +375,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeAttachSurface<
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeResume<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeResume<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -436,7 +436,7 @@ fn attach_or_resume(env: &mut JNIEnv, engine: jlong, surface: JObject, resume: b
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeSuspend<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeSuspend<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -458,7 +458,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeSuspend<'local
 /// running user-started generation. Invalid/closing handles fail closed so the
 /// Android foreground service never spins forever around a dead engine.
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeHasBackgroundWork<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeHasBackgroundWork<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -477,7 +477,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeHasBackgroundW
 /// another tick is needed; any failed/closing engine maps to `false` so service
 /// teardown is bounded.
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeBackgroundTick<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeBackgroundTick<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -493,7 +493,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeBackgroundTick
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeResize<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeResize<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -505,7 +505,9 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeResize<'local>
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeResizeWithSafeArea<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeResizeWithSafeArea<
+    'local,
+>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -523,7 +525,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeResizeWithSafe
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeSetSafeArea<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeSetSafeArea<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -536,7 +538,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeSetSafeArea<'l
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeSetKeyboard<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeSetKeyboard<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -548,7 +550,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeSetKeyboard<'l
 /// `OpNative.nativePrefersLightSystemIcons` — whether platform bars should
 /// use light-colored icons. Any invalid/closing/failed engine returns false.
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativePrefersLightSystemIcons<
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativePrefersLightSystemIcons<
     'local,
 >(
     _env: JNIEnv<'local>,
@@ -565,7 +567,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativePrefersLightSy
 }
 
 #[no_mangle]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeFrame<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativeFrame<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,
@@ -576,7 +578,7 @@ pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativeFrame<'local>(
 
 #[no_mangle]
 #[allow(clippy::too_many_arguments)]
-pub extern "system" fn Java_tech_zseven_openpencil_OpNative_nativePointer<'local>(
+pub extern "system" fn Java_com_kemalcalak_designeditor_OpNative_nativePointer<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     engine: jlong,

@@ -1,7 +1,7 @@
-//! OpenPencil ACP client — a Rust port of the TS `pen-acp` package.
+//! Design Editor ACP client — a Rust port of the TS `pen-acp` package.
 //!
 //! ACP (Agent Client Protocol) lets third-party agents plug into
-//! OpenPencil over JSON-RPC 2.0 framed as newline-delimited JSON. An
+//! Design Editor over JSON-RPC 2.0 framed as newline-delimited JSON. An
 //! agent runs either as a local child process (stdio) or behind a
 //! remote WebSocket endpoint.
 //!

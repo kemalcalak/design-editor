@@ -7,7 +7,7 @@
 //! filesystem, so we persist the raw font bytes in IndexedDB instead and
 //! re-register them into the CanvasKit family registry on the next mount.
 //!
-//! DB `"openpencil"`, object store `"imported_fonts"` (out-of-line keys). Each
+//! DB `"design-editor"`, object store `"imported_fonts"` (out-of-line keys). Each
 //! record is `{ family: string, bytes: Uint8Array }` stored under the family
 //! key (see [`primary_key`]). Everything here is defensive: any IndexedDB error
 //! logs to the console and degrades to session-only persistence — a failed
@@ -17,7 +17,7 @@ use wasm_bindgen::closure::Closure;
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{IdbDatabase, IdbObjectStore, IdbOpenDbRequest, IdbTransactionMode};
 
-const DB_NAME: &str = "openpencil";
+const DB_NAME: &str = "design-editor";
 const STORE: &str = "imported_fonts";
 const DB_VERSION: u32 = 1;
 type FontLoadCallback = Box<dyn FnOnce(Vec<(String, Vec<u8>)>)>;

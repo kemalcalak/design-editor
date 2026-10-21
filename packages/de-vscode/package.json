@@ -1,15 +1,15 @@
 {
-  "name": "openpencil-vscode",
-  "displayName": "OpenPencil",
-  "description": "OpenPencil design-as-code integration for VS Code: .op file editing, MCP configuration, AI skills, and code generation.",
+  "name": "design-editor-vscode",
+  "displayName": "Design Editor",
+  "description": "Design Editor design-as-code integration for VS Code: .op file editing, MCP configuration, AI skills, and code generation.",
   "version": "0.8.3",
-  "publisher": "openpencil",
+  "publisher": "design-editor",
   "private": true,
   "license": "MIT",
   "icon": "icon.png",
-  "homepage": "https://github.com/ZSeven-W/openpencil",
+  "homepage": "https://github.com/kemalcalak/design-editor",
   "bugs": {
-    "url": "https://github.com/ZSeven-W/openpencil/issues"
+    "url": "https://github.com/kemalcalak/design-editor/issues"
   },
   "galleryBanner": {
     "color": "#1a1a1a",
@@ -31,7 +31,7 @@
     "AI",
     "vector",
     "canvas",
-    "openpencil"
+    "design-editor"
   ],
   "main": "./dist/extension.js",
   "capabilities": {
@@ -43,8 +43,8 @@
   "contributes": {
     "customEditors": [
       {
-        "viewType": "openpencil.penEditor",
-        "displayName": "OpenPencil",
+        "viewType": "design-editor.penEditor",
+        "displayName": "Design Editor",
         "selector": [
           {
             "filenamePattern": "*.op"
@@ -58,47 +58,47 @@
     ],
     "commands": [
       {
-        "command": "openpencil.configureMcp",
-        "title": "OpenPencil: Configure MCP"
+        "command": "design-editor.configureMcp",
+        "title": "Design Editor: Configure MCP"
       },
       {
-        "command": "openpencil.removeMcp",
-        "title": "OpenPencil: Remove MCP"
+        "command": "design-editor.removeMcp",
+        "title": "Design Editor: Remove MCP"
       },
       {
-        "command": "openpencil.installSkill",
-        "title": "OpenPencil: Install Skill"
+        "command": "design-editor.installSkill",
+        "title": "Design Editor: Install Skill"
       },
       {
-        "command": "openpencil.removeSkill",
-        "title": "OpenPencil: Remove Skill"
+        "command": "design-editor.removeSkill",
+        "title": "Design Editor: Remove Skill"
       },
       {
-        "command": "openpencil.generateCode",
-        "title": "OpenPencil: Generate Code"
+        "command": "design-editor.generateCode",
+        "title": "Design Editor: Generate Code"
       }
     ],
     "chatParticipants": [
       {
-        "id": "openpencil.assistant",
-        "name": "openpencil",
-        "description": "OpenPencil design assistant"
+        "id": "design-editor.assistant",
+        "name": "design-editor",
+        "description": "Design Editor design assistant"
       }
     ],
     "configuration": {
-      "title": "OpenPencil",
+      "title": "Design Editor",
       "properties": {
-        "openpencil.dev.daemonPath": {
+        "design-editor.dev.daemonPath": {
           "type": "string",
           "default": "",
           "description": "Optional path to a development de-host-web-server binary. When empty, uses the VSIX-bundled runtime first, then probes <workspace>/target/debug/de-host-web-server."
         },
-        "openpencil.proxy.port": {
+        "design-editor.proxy.port": {
           "type": "number",
           "default": 0,
           "description": "Port for the local MCP proxy. 0 selects a port automatically."
         },
-        "openpencil.codegen.framework": {
+        "design-editor.codegen.framework": {
           "type": "string",
           "enum": [
             "react",
@@ -131,7 +131,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ZSeven-W/openpencil.git",
+    "url": "https://github.com/kemalcalak/design-editor.git",
     "directory": "packages/de-vscode"
   }
 }

@@ -447,7 +447,8 @@ pub fn run_action(
             // rather than to the format.
             let boards =
                 de_editor_core::preview_slideshow::selected_page_boards(host.editor_state());
-            if let Some(path) = pick_export_path(host, "PDF", &["pdf"], "openpencil-slides.pdf") {
+            if let Some(path) = pick_export_path(host, "PDF", &["pdf"], "design-editor-slides.pdf")
+            {
                 let result = de_host_services::export_pdf::export_deck_pdf_boards(
                     host.editor_state(),
                     &path,

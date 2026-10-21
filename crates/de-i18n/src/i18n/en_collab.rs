@@ -17,7 +17,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.home.hint" => "Create a new session or join with an invite.",
         "home.connectMoreModels" => "Connect more models…",
         "home.connect.title" => "Connect a model first",
-        "home.connect.free" => "Use OpenPencil free credits",
+        "home.connect.free" => "Use Design Editor free credits",
         "home.connect.freeNote" => "20 turns a day after sign-in — start right away",
         "home.connect.apiKey" => "Use my own API key",
         "home.connect.apiKeyNote" => "Zhipu / DeepSeek / OpenAI-compatible",
@@ -74,7 +74,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.session.role.viewer" => "Viewer",
         "collab.session.pending" => "Waiting for the owner to confirm your edit…",
         "collab.status.disconnectedReadOnly" => {
-            "Connection lost. Editing is paused while OpenPencil reconnects."
+            "Connection lost. Editing is paused while Design Editor reconnects."
         }
         "collab.status.ticketExpired" => "Your collaboration sign-in expired. Sign in again.",
         "collab.status.ownerLeft" => {
@@ -221,7 +221,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "builtin.typeModelManually" => "Failed to fetch the model list. Enter model IDs manually, one per line.",
         "settings.provider.deepSeekHarness" => "DeepSeek Harness models",
         "settings.agents.deleteProvider" => "Delete provider",
-        "chat.mcpRequired" => "{cli} needs the OpenPencil MCP integration enabled in Settings",
+        "chat.mcpRequired" => "{cli} needs the Design Editor MCP integration enabled in Settings",
         "video.title" => "Video",
         "video.url" => "URL",
         "video.posterThisImage" => "poster is this image",
@@ -293,7 +293,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.task.presentation.summary" => "Multi-slide decks",
         "home.task.presentation.label" => "What is your deck about?",
         "home.task.presentation.placeholder" => "A product-intro deck: value, how it works, and use cases.",
-        "home.task.presentation.example" => "A 5-slide intro deck for OpenPencil aimed at creators and small teams.\nCover, value, workflow, use cases, and closing — clean style, blue with a neon-yellow accent.",
+        "home.task.presentation.example" => "A 5-slide intro deck for Design Editor aimed at creators and small teams.\nCover, value, workflow, use cases, and closing — clean style, blue with a neon-yellow accent.",
         "home.task.presentation.exampleTitle" => "Good ideas deserve to be seen",
         "home.task.presentation.exampleDesc" => "5 slides · editable design",
         "home.task.presentation.examplePages" => "Cover / Value / Flow / Cases / Closing",

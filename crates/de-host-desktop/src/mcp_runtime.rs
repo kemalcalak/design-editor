@@ -18,7 +18,7 @@ impl DesktopApp {
         let settings = &mut self.host.editor_state_mut().editor_ui.agent_settings;
         let mut changed = false;
         // Native CLI config is the source of truth at launch. In particular,
-        // do not let a persisted OpenPencil toggle silently overwrite an
+        // do not let a persisted Design Editor toggle silently overwrite an
         // explicit `enabled = false` (or equivalent) written by the CLI.
         if settings.mcp_cli_enabled != detected_flags {
             settings.mcp_cli_enabled = detected_flags;
@@ -105,17 +105,13 @@ impl DesktopApp {
                     ) {
                         Ok(server) => {
                             let bound_port = server.port();
-                            eprintln!(
-                                "design-editor mcp: fell back to 127.0.0.1:{bound_port}/mcp"
-                            );
+                            eprintln!("design-editor mcp: fell back to 127.0.0.1:{bound_port}/mcp");
                             self.mcp_server = Some(server);
                             self.note_bound_mcp_port(forced, setting_running, bound_port);
                             return true;
                         }
                         Err(fallback_err) => {
-                            eprintln!(
-                                "design-editor mcp: fallback start failed: {fallback_err}"
-                            );
+                            eprintln!("design-editor mcp: fallback start failed: {fallback_err}");
                         }
                     }
                 }
@@ -213,7 +209,7 @@ impl DesktopApp {
     }
 
     /// Whether the live MCP server received a token-authed `de stop`
-    /// (`openpencil/shutdown`) and the editor should quit.
+    /// (`design-editor/shutdown`) and the editor should quit.
     pub(crate) fn mcp_shutdown_requested(&self) -> bool {
         self.mcp_server
             .as_ref()
@@ -221,7 +217,7 @@ impl DesktopApp {
     }
 
     /// Publish (or retract) the live MCP server's port to the TS-compatible
-    /// discovery file `~/.openpencil/.op-mcp-port` so the `op` CLI can find this
+    /// discovery file `~/.design-editor/.de-mcp-port` so the `op` CLI can find this
     /// editor's on-screen canvas. Called from the app lifecycle (after the
     /// launch bootstrap and after a settings-driven reconcile), NOT from
     /// `reconcile_mcp_server_from_settings` itself — keeping reconcile free
@@ -314,14 +310,14 @@ mod tests {
     #[test]
     fn bootstrap_respects_native_disabled_state_over_persisted_toggle() {
         let home = std::env::temp_dir().join(format!(
-            "openpencil-mcp-native-disabled-{}",
+            "design-editor-mcp-native-disabled-{}",
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&home);
         std::fs::create_dir_all(home.join(".grok")).unwrap();
         std::fs::write(
             home.join(".grok/config.toml"),
-            "[mcp_servers.openpencil]\nurl = \"http://127.0.0.1:3100/mcp\"\nenabled = false\n",
+            "[mcp_servers.design-editor]\nurl = \"http://127.0.0.1:3100/mcp\"\nenabled = false\n",
         )
         .unwrap();
 

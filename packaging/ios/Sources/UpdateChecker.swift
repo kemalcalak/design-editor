@@ -9,9 +9,9 @@ enum UpdateChecker {
     /// Connect); an empty value falls back to the releases page.
     private static let appStoreID = ""
     private static let releasesAPI =
-        URL(string: "https://api.github.com/repos/ZSeven-W/openpencil/releases/latest")!
+        URL(string: "https://api.github.com/repos/kemalcalak/design-editor/releases/latest")!
     private static let releasesPage =
-        URL(string: "https://github.com/ZSeven-W/openpencil/releases/latest")!
+        URL(string: "https://github.com/kemalcalak/design-editor/releases/latest")!
     private static let lastCheckKey = "update.lastCheck"
     private static let checkInterval: TimeInterval = 24 * 60 * 60
 
@@ -83,7 +83,7 @@ enum UpdateChecker {
             ),
             message: NSLocalizedString(
                 "update.availableBody",
-                value: "A newer version of OpenPencil is available.",
+                value: "A newer version of Design Editor is available.",
                 comment: "Update prompt body"
             ),
             preferredStyle: .alert

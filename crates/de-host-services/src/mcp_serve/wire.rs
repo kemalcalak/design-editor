@@ -39,7 +39,7 @@ pub fn initialize_response(id_raw: &str) -> String {
 }
 
 pub fn ping_response(id_raw: &str, token: Option<&str>) -> String {
-    // Carry the OpenPencil identity marker so the `op` CLI can confirm a
+    // Carry the Design Editor identity marker so the `de` CLI can confirm a
     // port is really our MCP server (not a stale listener or a third-party
     // JSON-RPC server) before routing tool calls to it. A CLI-spawned
     // headless server also echoes its per-instance `token` so `de stop` can
@@ -67,7 +67,7 @@ pub fn ping_response(id_raw: &str, token: Option<&str>) -> String {
 }
 
 /// The CLI passes a per-instance token to a spawned `--mcp-http` server via
-/// `OPENPENCIL_MCP_TOKEN`; reporting it in `ping` lets the CLI confirm the
+/// `DESIGN_EDITOR_MCP_TOKEN`; reporting it in `ping` lets the CLI confirm the
 /// pid in its manager file belongs to the server actually serving the port
 /// (defeats stale-pid / port-reuse confusion on `de stop` / reuse).
 /// Restricted to safe chars so it embeds in the JSON reply without escaping;
@@ -87,13 +87,13 @@ pub fn sanitize_token(token: String) -> Option<String> {
     safe.then_some(token)
 }
 
-/// OpenPencil MCP `serverInfo.name` + ping identity marker.
-pub const MCP_SERVER_NAME: &str = "openpencil-mcp";
+/// Design Editor MCP `serverInfo.name` + ping identity marker.
+pub const MCP_SERVER_NAME: &str = "design-editor-mcp";
 
 /// A JSON-RPC method that needs no document state, so it can be answered
 /// without a UI-thread snapshot. Lets the live server (`mcp_live`) reply
 /// to handshake/liveness probes instantly instead of round-tripping the
-/// UI thread (which would make `op`'s `ping` slow / false-negative under
+/// UI thread (which would make `de`'s `ping` slow / false-negative under
 /// editor load).
 pub enum Stateless {
     /// Canned response ready to send (e.g. `initialize`).
@@ -107,9 +107,9 @@ pub enum Stateless {
     NeedsState,
 }
 
-/// If `line` is a token-authed `openpencil/shutdown` whose `params.token`
+/// If `line` is a token-authed `design-editor/shutdown` whose `params.token`
 /// matches `token` (non-empty), return its raw JSON-RPC id (for the ack).
-/// This lets the `op` CLI ask the server to quit ITSELF — no pid-kill, so
+/// This lets the `de` CLI ask the server to quit ITSELF — no pid-kill, so
 /// there's no signal-the-wrong-process race. An empty/mismatched token is
 /// rejected so a random client can't shut the server down.
 pub fn shutdown_request_id(line: &str, token: &str) -> Option<String> {
@@ -117,7 +117,7 @@ pub fn shutdown_request_id(line: &str, token: &str) -> Option<String> {
         return None;
     }
     let value: serde_json::Value = serde_json::from_str(line).ok()?;
-    if value.get("method").and_then(serde_json::Value::as_str) != Some("openpencil/shutdown") {
+    if value.get("method").and_then(serde_json::Value::as_str) != Some("design-editor/shutdown") {
         return None;
     }
     let req_token = value
@@ -136,7 +136,7 @@ pub fn shutdown_request_id(line: &str, token: &str) -> Option<String> {
     }
 }
 
-/// JSON-RPC ack for an accepted `openpencil/shutdown`.
+/// JSON-RPC ack for an accepted `design-editor/shutdown`.
 pub fn shutdown_ok_response(id_raw: &str) -> String {
     format!(r#"{{"jsonrpc":"2.0","id":{id_raw},"result":{{"ok":true,"shuttingDown":true}}}}"#)
 }

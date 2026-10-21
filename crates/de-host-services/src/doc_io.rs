@@ -509,7 +509,7 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_nanos())
             .unwrap_or(0);
-        p.push(format!("openpencil-test-{tag}-{pid}-{nanos}.op"));
+        p.push(format!("design-editor-test-{tag}-{pid}-{nanos}.op"));
         p
     }
 

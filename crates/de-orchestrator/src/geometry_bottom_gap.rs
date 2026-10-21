@@ -71,7 +71,7 @@ pub(super) fn push_mobile_bottom_gap_diagnostic(
 
 /// Repair a no-nav mobile screen to the shared 28px bottom-room contract.
 ///
-/// OpenPencil's post-layout reconciliation can grow an unclipped numeric root
+/// Design Editor's post-layout reconciliation can grow an unclipped numeric root
 /// to include its content plus padding. Increasing only the root's bottom
 /// padding therefore grows the resolved artboard without relocating any
 /// business child. Existing compliant gaps, navigation chrome, desktop roots,

@@ -1,6 +1,6 @@
 //! Raster capture coverage for the responsive touch Layers surface.
 //!
-//! Set `OPENPENCIL_LAYER_PANEL_SHOT_DIR` to keep the rendered PNGs. Without
+//! Set `DESIGN_EDITOR_LAYER_PANEL_SHOT_DIR` to keep the rendered PNGs. Without
 //! it, the test still paints every viewport and verifies non-empty output.
 
 #![cfg(all(feature = "gl-host", not(target_os = "windows")))]
@@ -19,7 +19,7 @@ const VIEWPORTS: [(&str, i32, i32); 3] = [
 
 #[test]
 fn touch_layers_surface_paints_at_every_size_class() {
-    let shot_dir = std::env::var_os("OPENPENCIL_LAYER_PANEL_SHOT_DIR")
+    let shot_dir = std::env::var_os("DESIGN_EDITOR_LAYER_PANEL_SHOT_DIR")
         .filter(|value| !value.is_empty())
         .map(PathBuf::from);
     if let Some(dir) = shot_dir.as_deref() {

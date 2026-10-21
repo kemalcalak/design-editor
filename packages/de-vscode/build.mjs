@@ -4,16 +4,16 @@ import { dirname } from "node:path";
 
 const watch = process.argv.includes("--watch");
 
-// Extract the bundled OpenPencil design skill markdown from the CLI's skill
+// Extract the bundled Design Editor design skill markdown from the CLI's skill
 // bundle into dist/assets so the "Install AI Skill" command can ship it. The
-// name openpencil-design lives only here, NOT in the de-ai-skills registry.
+// name design-editor-design lives only here, NOT in the de-ai-skills registry.
 function extractSkill() {
   const src = "../../crates/de-cli/assets/skill-bundle.json";
-  const out = "dist/assets/openpencil-skill.md";
+  const out = "dist/assets/design-editor-skill.md";
   try {
     const bundle = JSON.parse(readFileSync(src, "utf8"));
     // `files` is a flat map keyed by full relative path.
-    const md = bundle?.files?.["skills/openpencil-design/SKILL.md"];
+    const md = bundle?.files?.["skills/design-editor-design/SKILL.md"];
     if (typeof md !== "string") throw new Error("SKILL.md not found in skill-bundle.json");
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, md);

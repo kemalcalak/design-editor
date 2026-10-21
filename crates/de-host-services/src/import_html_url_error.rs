@@ -31,7 +31,7 @@ pub enum ImportHtmlUrlError {
     UrlInvalid,
     /// The URL parsed but is refused by the SSRF screen: a non-HTTP(S)
     /// scheme, embedded credentials, or — absent an explicit
-    /// `OPENPENCIL_WEB_AI_ENDPOINT_ALLOWLIST` entry — a private, loopback,
+    /// `DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST` entry — a private, loopback,
     /// link-local, or cloud-metadata target.
     UrlNotAllowed,
     /// Building a dialing client for the screened endpoint failed.

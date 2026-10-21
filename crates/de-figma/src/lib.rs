@@ -143,7 +143,7 @@ pub fn parse_fig_binary_with_images(
 pub fn parse_fig(bytes: &[u8]) -> Result<ParsedFigStub, FigParseError> {
     match detect_kind(bytes) {
         FigFileKind::Binary => {
-            let import = parse_fig_binary(bytes, "Figma Import", LayoutMode::OpenPencil)?;
+            let import = parse_fig_binary(bytes, "Figma Import", LayoutMode::DesignEditor)?;
             let top_level_children = import
                 .document
                 .pages

@@ -145,7 +145,7 @@ pub fn save_if_changed(state: &EditorState, before: Fingerprint) {
 }
 
 const SETTINGS_VERSION: u32 = 1;
-const APP_DIR: &str = "openpencil";
+const APP_DIR: &str = "design-editor";
 const FILE_NAME: &str = "settings.json";
 static SETTINGS_TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 /// Settings paths whose file existed but did not parse at startup. Every
@@ -227,6 +227,8 @@ fn settings_path() -> Option<PathBuf> {
         return Some(sandbox.join(FILE_NAME));
     }
     let base = dirs::config_dir()?;
+    // One-time rebrand migration: copy the pre-rename file when the new one is missing.
+    let _ = de_config_store::migrate_legacy_config_file(&base, APP_DIR, FILE_NAME);
     Some(base.join(APP_DIR).join(FILE_NAME))
 }
 
@@ -246,7 +248,10 @@ fn test_process_settings_dir() -> Option<PathBuf> {
         .components()
         .any(|component| component.as_os_str() == "target");
     (under_deps && under_target).then(|| {
-        std::env::temp_dir().join(format!("openpencil-test-settings-{}", std::process::id()))
+        std::env::temp_dir().join(format!(
+            "design-editor-test-settings-{}",
+            std::process::id()
+        ))
     })
 }
 
@@ -563,7 +568,7 @@ fn load_checked_from_path(state: &mut EditorState, path: &Path) -> Result<(), Se
 /// but an existing file must be readable and losslessly loadable so the daemon
 /// cannot later overwrite unknown settings or miss browser-owned credentials.
 /// External application configs are intentionally not imported here: the web
-/// model catalog must reflect web/OpenPencil settings only, rather than expose
+/// model catalog must reflect web/Design Editor settings only, rather than expose
 /// machine-local Zode providers that the browser settings UI cannot manage.
 pub fn load_checked(state: &mut EditorState) -> Result<(), SettingsIoError> {
     seed_system_locale(state);
@@ -572,7 +577,7 @@ pub fn load_checked(state: &mut EditorState) -> Result<(), SettingsIoError> {
     Ok(())
 }
 
-/// Best-effort OpenPencil settings load. Returns silently on missing file /
+/// Best-effort Design Editor settings load. Returns silently on missing file /
 /// parse error. Host-specific imports belong to the host startup path rather
 /// than this shared loader so the web daemon cannot inherit desktop-only
 /// configuration sources.

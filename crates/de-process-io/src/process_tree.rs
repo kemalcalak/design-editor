@@ -11,10 +11,10 @@ const TASKKILL_TIMEOUT: Duration = Duration::from_secs(2);
 
 /// A process-tree target captured while its leader is still alive.
 ///
-/// On Unix, OpenPencil's CLI launcher places every child in a process group
+/// On Unix, Design Editor's CLI launcher places every child in a process group
 /// whose id is the child pid. We verify that relationship before retaining a
 /// group target; otherwise signals are restricted to the exact child pid so a
-/// caller can never accidentally signal OpenPencil's own process group.
+/// caller can never accidentally signal Design Editor's own process group.
 #[derive(Clone, Copy, Debug)]
 pub struct ProcessTree {
     #[cfg(unix)]
@@ -119,7 +119,7 @@ impl ProcessTree {
         let signal = if force { libc::SIGKILL } else { libc::SIGTERM };
         // SAFETY: the target was captured from a positive child pid. Group
         // signaling is used only after verifying pgid == child pid and pgid !=
-        // OpenPencil's own group; otherwise we signal the exact child pid.
+        // Design Editor's own group; otherwise we signal the exact child pid.
         let result = unsafe {
             match self.target {
                 UnixTarget::Group(group) => libc::killpg(group, signal),

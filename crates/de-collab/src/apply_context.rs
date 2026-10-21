@@ -93,5 +93,5 @@ impl ApplyContext {
 }
 
 fn usize_from_u32(value: u32) -> usize {
-    usize::try_from(value).expect("u32 limits fit every supported OpenPencil target")
+    usize::try_from(value).expect("u32 limits fit every supported Design Editor target")
 }

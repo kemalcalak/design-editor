@@ -55,7 +55,7 @@ fn temp_dir(label: &str) -> PathBuf {
         .expect("clock")
         .as_nanos();
     std::env::temp_dir().join(format!(
-        "openpencil-document-save-{label}-{}-{nanos}",
+        "design-editor-document-save-{label}-{}-{nanos}",
         std::process::id()
     ))
 }

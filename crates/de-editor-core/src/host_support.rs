@@ -1,6 +1,6 @@
 //! Host-facing `EditorState` helpers for the native editor host.
 //!
-//! The native widget host (`openpencil-shell-native`) drives
+//! The native widget host (`design-editor-shell-native`) drives
 //! `EditorState` as its single source of truth. A handful of host
 //! operations have no 1:1 mutator on `EditorState` yet — node spawn
 //! for the active tool, a non-test sample document for the host
@@ -24,7 +24,7 @@ impl EditorState {
     /// [`EditorState::starter`] (a single empty Frame) instead.
     pub fn sample() -> Self {
         let src = r##"{
-            "version": "__OPENPENCIL_VERSION__",
+            "version": "__DESIGN_EDITOR_VERSION__",
             "children": [
               {"type":"frame","id":"n10","name":"Frame",
                "x":40,"y":40,"width":360,"height":240,
@@ -32,7 +32,7 @@ impl EditorState {
                "stroke":{"thickness":1,"fill":[{"type":"solid","color":"#000000"}]},
                "children":[
                  {"type":"text","id":"n11","name":"Title",
-                  "x":60,"y":60,"width":240,"height":28,"content":"Hello OpenPencil"},
+                  "x":60,"y":60,"width":240,"height":28,"content":"Hello Design Editor"},
                  {"type":"group","id":"n12","name":"Button",
                   "x":60,"y":130,"width":180,"height":36,
                   "children":[
@@ -45,7 +45,7 @@ impl EditorState {
                ]}
             ]
         }"##;
-        let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
+        let src = src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"));
         let doc = jian_ops_schema::load_str(&src)
             .expect("EditorState::sample() fixture parses")
             .value;
@@ -59,7 +59,7 @@ impl EditorState {
     /// document geometry. No default selection and no demo decoration.
     pub fn starter() -> Self {
         let src = r##"{
-            "version": "__OPENPENCIL_VERSION__",
+            "version": "__DESIGN_EDITOR_VERSION__",
             "children": [
               {"type":"frame","id":"n10","name":"Frame",
                "x":0,"y":0,"width":1200,"height":800,
@@ -67,7 +67,7 @@ impl EditorState {
                "children":[]}
             ]
         }"##;
-        let src = src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"));
+        let src = src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"));
         let doc = jian_ops_schema::load_str(&src)
             .expect("EditorState::starter() fixture parses")
             .value;

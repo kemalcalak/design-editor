@@ -70,7 +70,7 @@ impl fmt::Display for WebChatStandardError {
                 f.write_str("transient credential model does not match the request")
             }
             WebChatStandardError::EndpointNotAllowlisted => f.write_str(
-                "provider endpoint is not allowed: private, loopback, and reserved addresses require an OPENPENCIL_WEB_AI_ENDPOINT_ALLOWLIST entry",
+                "provider endpoint is not allowed: private, loopback, and reserved addresses require an DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST entry",
             ),
             WebChatStandardError::NoModelConfigured => f.write_str("no model configured"),
             WebChatStandardError::CollabRefused(refusal) => write!(f, "{refusal}"),

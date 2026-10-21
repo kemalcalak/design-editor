@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "OpenPencil",
+    "message": "Design Editor",
     "description": "Extension name shown in Chrome."
   },
   "extDescription": {
-    "message": "Chụp trang thành nút thiết kế OpenPencil có thể chỉnh sửa và trích xuất hướng dẫn hệ thống thiết kế design.md chỉ với một cú nhấp.",
+    "message": "Chụp trang thành nút thiết kế Design Editor có thể chỉnh sửa và trích xuất hướng dẫn hệ thống thiết kế design.md chỉ với một cú nhấp.",
     "description": "Extension description shown in Chrome."
   },
   "captureButton": {
@@ -20,7 +20,7 @@
     "message": "Trích xuất design.md"
   },
   "statusDesignWorking": {
-    "message": "Đang thu thập bằng chứng kiểu dáng đã loại bỏ thông tin nhận dạng của trang và yêu cầu OpenPencil AI…"
+    "message": "Đang thu thập bằng chứng kiểu dáng đã loại bỏ thông tin nhận dạng của trang và yêu cầu Design Editor AI…"
   },
   "statusDesignSmartSuccess": {
     "message": "Đã tạo và tải xuống design.md bằng AI đã cấu hình."
@@ -29,13 +29,13 @@
     "message": "AI không khả dụng; đã tạo và tải xuống design.md bằng phương án dự phòng cục bộ có tính xác định: $1"
   },
   "designFallbackPairing": {
-    "message": "OpenPencil chưa cấp quyền cho tiện ích này tạo bằng AI; phương án dự phòng cục bộ đã được sử dụng."
+    "message": "Design Editor chưa cấp quyền cho tiện ích này tạo bằng AI; phương án dự phòng cục bộ đã được sử dụng."
   },
   "designFallbackOffline": {
-    "message": "Không thể truy cập OpenPencil tại $1."
+    "message": "Không thể truy cập Design Editor tại $1."
   },
   "designFallbackUnsupported": {
-    "message": "Phiên bản OpenPencil này không hỗ trợ tạo design.md thông minh."
+    "message": "Phiên bản Design Editor này không hỗ trợ tạo design.md thông minh."
   },
   "designFallbackError": {
     "message": "Tạo thông minh không thành công: $1"
@@ -62,7 +62,7 @@
     "message": "Nhấn Esc để huỷ"
   },
   "endpointLabel": {
-    "message": "Địa chỉ OpenPencil"
+    "message": "Địa chỉ Design Editor"
   },
   "endpointHint": {
     "message": "Ứng dụng máy tính: Cài đặt → MCP → khởi động máy chủ (cổng mặc định 3100)."
@@ -80,19 +80,19 @@
     "message": "Đang truyền ảnh chụp ($1)…"
   },
   "statusSending": {
-    "message": "Đang gửi tới OpenPencil…"
+    "message": "Đang gửi tới Design Editor…"
   },
   "statusImported": {
-    "message": "Đã nhập $1 nút vào OpenPencil."
+    "message": "Đã nhập $1 nút vào Design Editor."
   },
   "statusSendingAccount": {
-    "message": "Đang gửi tới tài khoản OpenPencil của bạn…"
+    "message": "Đang gửi tới tài khoản Design Editor của bạn…"
   },
   "statusSentToAccount": {
-    "message": "Đã gửi tới tài khoản OpenPencil của bạn: $1"
+    "message": "Đã gửi tới tài khoản Design Editor của bạn: $1"
   },
   "statusSentLocalFallback": {
-    "message": "Phiên đăng nhập của tài khoản đã hết hạn nên ảnh chụp được gửi tới OpenPencil trên máy này: đã nhập $1 nút."
+    "message": "Phiên đăng nhập của tài khoản đã hết hạn nên ảnh chụp được gửi tới Design Editor trên máy này: đã nhập $1 nút."
   },
   "statusDownloaded": {
     "message": "Đã lưu $1."
@@ -125,22 +125,22 @@
     "message": "Địa chỉ phải là loopback kèm cổng — 127.0.0.1:3100 hoặc localhost:3100."
   },
   "errorOffline": {
-    "message": "Không kết nối được tới OpenPencil tại $1. Hãy mở ứng dụng máy tính và bật Cài đặt → MCP → máy chủ, hoặc chạy: design-editor --serve-web 3100"
+    "message": "Không kết nối được tới Design Editor tại $1. Hãy mở ứng dụng máy tính và bật Cài đặt → MCP → máy chủ, hoặc chạy: design-editor --serve-web 3100"
   },
   "errorTimeout": {
-    "message": "OpenPencil tại $1 đã chấp nhận kết nối nhưng không phản hồi trong $2 giây. Ứng dụng có thể đang bận hoặc bị treo — hãy kiểm tra rồi thử lại."
+    "message": "Design Editor tại $1 đã chấp nhận kết nối nhưng không phản hồi trong $2 giây. Ứng dụng có thể đang bận hoặc bị treo — hãy kiểm tra rồi thử lại."
   },
   "errorNoIngress": {
-    "message": "Bản dựng OpenPencil này không có lối vào cho tiện ích ($1). Hãy cập nhật ứng dụng, hoặc dùng “Tải .op” rồi mở tệp trong OpenPencil"
+    "message": "Bản dựng Design Editor này không có lối vào cho tiện ích ($1). Hãy cập nhật ứng dụng, hoặc dùng “Tải .op” rồi mở tệp trong Design Editor"
   },
   "errorTooLarge": {
-    "message": "Ảnh chụp này lớn hơn $1 MB, vượt mức mà tuyến ảnh chụp của OpenPencil chấp nhận. Hãy dùng “Tải .op”, rồi mở tệp trong OpenPencil"
+    "message": "Ảnh chụp này lớn hơn $1 MB, vượt mức mà tuyến ảnh chụp của Design Editor chấp nhận. Hãy dùng “Tải .op”, rồi mở tệp trong Design Editor"
   },
   "errorAccountTooLarge": {
     "message": "Ảnh chụp này lớn hơn $1 MB, vượt mức mà hộp thư tài khoản chấp nhận. Hãy gửi về thiết bị này thay thế."
   },
   "errorImport": {
-    "message": "OpenPencil đã từ chối ảnh chụp: $1"
+    "message": "Design Editor đã từ chối ảnh chụp: $1"
   },
   "errorDownload": {
     "message": "Tải xuống thất bại: $1"
@@ -164,16 +164,16 @@
     "message": "Hoàn tất đăng nhập ở trang vừa mở, sau đó mở lại cửa sổ này."
   },
   "accountSignedOut": {
-    "message": "Đã đăng xuất khỏi tài khoản OpenPencil."
+    "message": "Đã đăng xuất khỏi tài khoản Design Editor."
   },
   "accountSignOutManual": {
     "message": "Hoàn tất đăng xuất ở trang tài khoản vừa mở."
   },
   "accountUnavailable": {
-    "message": "Không kết nối được tới tài khoản OpenPencil của bạn: $1"
+    "message": "Không kết nối được tới tài khoản Design Editor của bạn: $1"
   },
   "errorAccountSignedOut": {
-    "message": "Phiên đăng nhập tài khoản OpenPencil đã hết hạn. Hãy đăng nhập lại rồi thử lại."
+    "message": "Phiên đăng nhập tài khoản Design Editor đã hết hạn. Hãy đăng nhập lại rồi thử lại."
   },
   "errorAccountForbidden": {
     "message": "Hub đã từ chối nguồn hoặc mã phiên của lần tải lên này. Hãy đăng nhập lại rồi thử lại. ($1)"
@@ -191,10 +191,10 @@
     "message": "Tải lên tài khoản quá nhiều lần. Hãy thử lại sau khoảng $1 giây."
   },
   "errorAccountRejected": {
-    "message": "Tài khoản OpenPencil của bạn đã từ chối ảnh chụp: $1"
+    "message": "Tài khoản Design Editor của bạn đã từ chối ảnh chụp: $1"
   },
   "errorAccountUnavailable": {
-    "message": "Tài khoản OpenPencil của bạn hiện không thể nhận ảnh chụp ($1). Hãy thử lại sau, hoặc gửi tới OpenPencil trên máy này."
+    "message": "Tài khoản Design Editor của bạn hiện không thể nhận ảnh chụp ($1). Hãy thử lại sau, hoặc gửi tới Design Editor trên máy này."
   },
   "regionLabel": {
     "message": "Khu vực"
@@ -209,9 +209,9 @@
     "message": "Gửi tới"
   },
   "deliveryLocal": {
-    "message": "OpenPencil trên máy này"
+    "message": "Design Editor trên máy này"
   },
   "deliveryAccount": {
-    "message": "Tài khoản OpenPencil của tôi"
+    "message": "Tài khoản Design Editor của tôi"
   }
 }

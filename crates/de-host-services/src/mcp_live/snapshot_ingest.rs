@@ -1,6 +1,6 @@
 //! Browser-extension snapshot ingress (`POST /api/import/web-snapshot`).
 //!
-//! The OpenPencil Chrome extension (`packages/de-chrome-extension`) runs
+//! The Design Editor Chrome extension (`packages/de-chrome-extension`) runs
 //! the canonical DOM extractor (`de-html/assets/snapshot-extractor.js`) in
 //! the active tab and has to hand the resulting JSON to the running
 //! editor. It cannot use the general `/mcp` surface:
@@ -38,7 +38,7 @@
 //!   `Content-Length` is refused with `411`.
 //!
 //! Which extension ids count as accepted has two modes — open by default,
-//! pinned via `OPENPENCIL_EXTENSION_ALLOWED_IDS`. See the
+//! pinned via `DESIGN_EDITOR_EXTENSION_ALLOWED_IDS`. See the
 //! "Browser-extension pinning" section of [`super::admission`].
 //!
 //! A local non-browser process (no `Origin` at all) also reaches this

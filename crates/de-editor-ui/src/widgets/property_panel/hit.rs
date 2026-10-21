@@ -3,7 +3,7 @@
 //! floating surfaces win over the scrolling panel body.
 //!
 //! Split out of `property_panel.rs` to keep both files under the
-//! openpencil 800-line cap.
+//! design-editor 800-line cap.
 
 use super::{EffectAddMenuHit, PropertyPanel, PropertyPanelAction};
 use crate::widgets::property_panel_interactions::InteractionMenuHit;

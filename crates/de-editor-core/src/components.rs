@@ -1,6 +1,6 @@
 //! Component library — reusable design-system subtrees.
 //!
-//! Faithful copy of `openpencil-shell-core::document::components`
+//! Faithful copy of `design-editor-shell-core::document::components`
 //! adapted to `de-editor-core`. The crucial difference: a `Component`'s
 //! `root` is a canonical `jian_ops_schema::node::PenNode` (the one
 //! document model `EditorState` is built on), not shell-core's private

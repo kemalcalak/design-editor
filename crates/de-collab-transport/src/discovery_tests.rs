@@ -70,7 +70,7 @@ fn publisher_metadata_has_only_the_allowlisted_fields() {
         ID,
         45123,
         &addresses,
-        "openpencil-aabbccddeeff",
+        "design-editor-aabbccddeeff",
         "op-ffeeddccbbaa.local.",
     )
     .unwrap();
@@ -108,7 +108,7 @@ fn parser_returns_sorted_socket_addresses_and_ttl() {
         IpAddr::V4(Ipv4Addr::new(192, 0, 2, 20)),
         IpAddr::V4(Ipv4Addr::new(192, 0, 2, 10)),
     ];
-    let info = service("openpencil-a", &valid_properties(), &addresses, 45123);
+    let info = service("design-editor-a", &valid_properties(), &addresses, 45123);
     let now = Instant::now();
     let parsed = parse_service_info(&info, now).unwrap();
 
@@ -136,7 +136,7 @@ fn parser_handles_versions_limits_and_unusable_addresses() {
         [("id", ID), ("v", "1"), ("p", "45124")],
         [("id", "not-a-random-id"), ("v", "1"), ("p", "45123")],
     ] {
-        let info = service("openpencil-invalid", &properties, &address, 45123);
+        let info = service("design-editor-invalid", &properties, &address, 45123);
         assert!(parse_service_info(&info, Instant::now()).is_err());
     }
     let extra = [("id", ID), ("v", "1"), ("p", "45123"), ("name", "private")];
@@ -156,20 +156,25 @@ fn parser_handles_versions_limits_and_unusable_addresses() {
         IpAddr::V4(Ipv4Addr::new(224, 0, 0, 251)),
         IpAddr::V6("fe80::1".parse().unwrap()),
     ];
-    let info = service("openpencil-unusable", &valid_properties(), &unusable, 45123);
+    let info = service(
+        "design-editor-unusable",
+        &valid_properties(),
+        &unusable,
+        45123,
+    );
     assert!(parse_service_info(&info, Instant::now()).is_err());
     assert!(matches!(
         build_service_info(ID, 45123, &unusable, "instance", "host.local."),
         Err(DiscoveryError::InvalidAddress)
     ));
     assert_eq!(
-        renamed_instance("instance (2)._openpencil-collab._tcp.local.").unwrap(),
+        renamed_instance("instance (2)._design-editor-collab._tcp.local.").unwrap(),
         "instance (2)"
     );
     assert!(is_tracked_rename(
-        "instance._openpencil-collab._tcp.local.",
-        "INSTANCE._openpencil-collab._tcp.local.",
-        "instance (2)._openpencil-collab._tcp.local."
+        "instance._design-editor-collab._tcp.local.",
+        "INSTANCE._design-editor-collab._tcp.local.",
+        "instance (2)._design-editor-collab._tcp.local."
     ));
 
     let many: Vec<_> = (1..=MAX_DISCOVERY_ADDRESSES + 1)
@@ -317,7 +322,7 @@ fn ipv4_link_local_advertisements_are_not_dialled() {
 
     // A mixed advertisement keeps only the routable address.
     let mixed = service(
-        "openpencil-mixed",
+        "design-editor-mixed",
         &valid_properties(),
         &[link_local, routable],
         45123,
@@ -330,7 +335,7 @@ fn ipv4_link_local_advertisements_are_not_dialled() {
 
     // A link-local-only advertisement leaves nothing to dial.
     let only = service(
-        "openpencil-link-local",
+        "design-editor-link-local",
         &valid_properties(),
         &[link_local],
         45123,

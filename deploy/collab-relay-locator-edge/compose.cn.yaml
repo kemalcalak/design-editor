@@ -1,8 +1,8 @@
-name: openpencil-collab-locator-cn-federation
+name: design-editor-collab-locator-cn-federation
 
 services:
   locator-cn-federation:
-    image: ${OPENPENCIL_LOCATOR_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
+    image: ${DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${DESIGN_EDITOR_LOCATOR_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
     user: "101:101"
     command:
       - nginx
@@ -10,8 +10,8 @@ services:
       - daemon off;
     ports:
       - target: 9543
-        published: ${OPENPENCIL_LOCATOR_CN_FEDERATION_PORT:-9543}
-        host_ip: ${OPENPENCIL_LOCATOR_CN_FEDERATION_BIND_IP:?set a private/firewalled CN IP}
+        published: ${DESIGN_EDITOR_LOCATOR_CN_FEDERATION_PORT:-9543}
+        host_ip: ${DESIGN_EDITOR_LOCATOR_CN_FEDERATION_BIND_IP:?set a private/firewalled CN IP}
         protocol: tcp
         mode: host
     volumes:
@@ -62,10 +62,10 @@ services:
 
 secrets:
   cn_locator_federation_server_cert:
-    file: ${OPENPENCIL_LOCATOR_CN_FEDERATION_CERT:?set an absolute outer-mTLS server certificate}
+    file: ${DESIGN_EDITOR_LOCATOR_CN_FEDERATION_CERT:?set an absolute outer-mTLS server certificate}
   cn_locator_federation_server_key:
-    file: ${OPENPENCIL_LOCATOR_CN_FEDERATION_KEY:?set an absolute outer-mTLS server key}
+    file: ${DESIGN_EDITOR_LOCATOR_CN_FEDERATION_KEY:?set an absolute outer-mTLS server key}
   global_locator_edge_client_ca:
-    file: ${OPENPENCIL_LOCATOR_EDGE_CLIENT_CA:?set the dedicated locator-edge client CA}
+    file: ${DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CA:?set the dedicated locator-edge client CA}
   global_locator_edge_client_crl:
-    file: ${OPENPENCIL_LOCATOR_EDGE_CLIENT_CRL:?set the current locator-edge client CRL}
+    file: ${DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CRL:?set the current locator-edge client CRL}

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useSyncExternalStore } from 'react';
-import type { OpViewer } from '@zseven-w/de-web-sdk';
+import type { OpViewer } from '@kemalcalak/de-web-sdk';
 import { useViewer } from './use-viewer.js';
 
 type ViewerEvent = 'load' | 'viewportchange';

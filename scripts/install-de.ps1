@@ -1,14 +1,14 @@
 param(
   [string]$OpVersion = $env:OP_VERSION,
   [switch]$PreRelease,
-  [string]$InstallDir = $(if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { Join-Path $env:USERPROFILE ".openpencil\bin" })
+  [string]$InstallDir = $(if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { Join-Path $env:USERPROFILE ".design-editor\bin" })
 )
 
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-$Owner = "ZSeven-W"
-$Repo = "openpencil"
+$Owner = "kemalcalak"
+$Repo = "design-editor"
 $DefaultOpVersion = ""
 $DefaultShaWindowsAarch64 = ""
 $DefaultShaWindowsX86_64 = ""
@@ -88,7 +88,7 @@ function Install-VcRedistIfRequired {
   }
 
   $Installer = Join-Path $WorkingDirectory "VC_redist.x64.exe"
-  $LogPath = Join-Path ([System.IO.Path]::GetTempPath()) ("openpencil-vc-redist-" + [System.Guid]::NewGuid().ToString("N") + ".log")
+  $LogPath = Join-Path ([System.IO.Path]::GetTempPath()) ("design-editor-vc-redist-" + [System.Guid]::NewGuid().ToString("N") + ".log")
   Invoke-WebRequest -Uri $VcRedistUrl -OutFile $Installer -UseBasicParsing
 
   $InstallerItem = Get-Item -LiteralPath $Installer -Force -ErrorAction Stop
@@ -146,7 +146,7 @@ function Install-VcRedistIfRequired {
 
   Remove-Item -LiteralPath $LogPath -Force -ErrorAction SilentlyContinue
   if ($RebootRequired) {
-    Write-Warning "Microsoft Visual C++ runtime $InstalledVersion was installed; restart Windows before running op."
+    Write-Warning "Microsoft Visual C++ runtime $InstalledVersion was installed; restart Windows before running de."
     return $true
   }
   Write-Host "==> Microsoft Visual C++ runtime $InstalledVersion is ready."
@@ -206,7 +206,7 @@ $Url = "https://github.com/$Owner/$Repo/releases/download/v$Version/$Asset"
 Write-Host "==> Installing de $Version ($Label)"
 Write-Host "    from $Url"
 
-$Temp = Join-Path ([System.IO.Path]::GetTempPath()) ("openpencil-op-install-" + [System.Guid]::NewGuid().ToString("N"))
+$Temp = Join-Path ([System.IO.Path]::GetTempPath()) ("design-editor-op-install-" + [System.Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $Temp | Out-Null
 try {
   $VcRedistRebootRequired = Install-VcRedistIfRequired `

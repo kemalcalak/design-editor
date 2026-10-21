@@ -65,7 +65,7 @@ pub async fn ck_smoke(canvas_id: String) -> Result<(), JsValue> {
         },
     );
     be.ck.draw_text(
-        "OpenPencil Rust -> CanvasKit GPU",
+        "Design Editor Rust -> CanvasKit GPU",
         "",
         20.0,
         40.0,

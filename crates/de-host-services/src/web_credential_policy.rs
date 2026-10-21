@@ -1,6 +1,6 @@
 /// Deployment switch for allowing browser credentials to be copied into the
 /// daemon's platform settings file.
-pub const ENV_NAME: &str = "OPENPENCIL_PERSIST_WEB_CREDENTIALS_SERVER";
+pub const ENV_NAME: &str = "DESIGN_EDITOR_PERSIST_WEB_CREDENTIALS_SERVER";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WebCredentialPersistence {
@@ -37,7 +37,7 @@ pub fn from_env() -> WebCredentialPersistence {
                 .iter()
                 .any(|known| value.eq_ignore_ascii_case(known))
     }) {
-        eprintln!("openpencil --serve-web: invalid {ENV_NAME}; using browser-only credentials");
+        eprintln!("design-editor --serve-web: invalid {ENV_NAME}; using browser-only credentials");
     }
     policy
 }

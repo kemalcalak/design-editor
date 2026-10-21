@@ -1,11 +1,11 @@
 {
   "version": 1,
   "region": "global",
-  "socket_path": "/run/openpencil-hsm/signer.sock",
+  "socket_path": "/run/design-editor-hsm/signer.sock",
   "expected_client_uid": 65532,
   "expected_client_gid": 65532,
   "pkcs11_module_path": "/usr/lib/softhsm/libsofthsm2.so",
-  "token_label": "openpencil-locator-global",
+  "token_label": "design-editor-locator-global",
   "pin_file": "/run/secrets/locator-hsm-pin",
   "active_kid": "replace-with-active-public-kid",
   "keys": [

@@ -11,36 +11,36 @@
 //! page-forgeable, which is what actually closes DNS rebinding: a rebound
 //! `evil.com` page still sends `Host: evil.com:<port>` and
 //! `Origin: http://evil.com`. Requests with no `Origin` at all are normal
-//! non-browser clients (the `op` CLI, the VS Code MCP proxy, a local agent
+//! non-browser clients (the `de` CLI, the VS Code MCP proxy, a local agent
 //! runner) and pass.
 //!
-//! No per-instance `X-OpenPencil-Token` is demanded: the local desktop and
+//! No per-instance `X-Design-Editor-Token` is demanded: the local desktop and
 //! a self-hosted serve-web daemon trust every local process that clears the
-//! boundary — the token it published in `~/.openpencil/.op-mcp-port` and the
+//! boundary — the token it published in `~/.design-editor/.de-mcp-port` and the
 //! `ping` reply was readable by any such process anyway, so it only added
 //! friction for a caller that had only the URL (a bare MCP client). The
 //! online multi-tenant daemon is a SEPARATE request loop that authenticates
 //! per account (`web_canvas_server::RequestAuth`, a `Bearer` token the hub
 //! introspects), so relaxing this endpoint does not touch online auth.
 //! `CollabGatePolicy` still runs on the UI thread for each apply and decides
-//! what a session permits. `openpencil/shutdown` keeps its own body-carried
+//! what a session permits. `design-editor/shutdown` keeps its own body-carried
 //! token check (`mcp_serve::shutdown_request_id`), unchanged.
 //!
 //! Deliberately still tokenless too: `OPTIONS` preflight, and the stateless
 //! `initialize` / `notifications/initialized` / `ping` probes, which carry
 //! no document data and are how a client discovers this instance.
 //!
-//! # Browser-extension pinning (`OPENPENCIL_EXTENSION_ALLOWED_IDS`)
+//! # Browser-extension pinning (`DESIGN_EDITOR_EXTENSION_ALLOWED_IDS`)
 //!
 //! The insert-only snapshot ingress ([`super::snapshot_ingest`]) is the open
 //! extension capability. Which ids it accepts has two modes:
 //!
 //! * **Open (default).** Any well-formed extension origin passes. The
-//!   OpenPencil extension is unpublished, so it has no stable Chrome Web
+//!   Design Editor extension is unpublished, so it has no stable Chrome Web
 //!   Store id yet — an unpacked load derives a different id per machine and
 //!   pinning a literal here would refuse the extension on every developer's
 //!   box. What this mode grants is still only the insert-only route.
-//! * **Pinned.** Set `OPENPENCIL_EXTENSION_ALLOWED_IDS` to a
+//! * **Pinned.** Set `DESIGN_EDITOR_EXTENSION_ALLOWED_IDS` to a
 //!   comma-separated list of extension ids (the 32-character `a`–`p`
 //!   value, without the `chrome-extension://` prefix) and ONLY those ids
 //!   pass; every other extension origin is refused as `ForeignOrigin`.
@@ -64,7 +64,7 @@ use std::sync::OnceLock;
 /// Env var pinning which browser-extension ids may reach the snapshot
 /// ingress. Unset (or empty) means "any well-formed extension origin" —
 /// see the module doc for why that is the default.
-pub(super) const EXTENSION_ALLOWLIST_ENV: &str = "OPENPENCIL_EXTENSION_ALLOWED_IDS";
+pub(super) const EXTENSION_ALLOWLIST_ENV: &str = "DESIGN_EDITOR_EXTENSION_ALLOWED_IDS";
 
 /// JSON-RPC error code for a refused request. Server-defined range
 /// (-32000..=-32099), one step away from the -32000 this endpoint already
@@ -85,7 +85,7 @@ impl LiveAdmission {
     }
 
     /// The per-instance identity token — also what the `ping` reply and
-    /// the `openpencil/shutdown` check use, so the wire contract the CLI
+    /// the `design-editor/shutdown` check use, so the wire contract the CLI
     /// already knows is preserved verbatim.
     pub(super) fn token(&self) -> &str {
         &self.token
@@ -143,7 +143,7 @@ impl fmt::Display for AdmissionDenial {
 /// Gate 1 — browser screening, applied to EVERY request (including the
 /// stateless probes and the REST document-sync route) before any routing.
 ///
-/// Two narrow paths widen the `Origin` rule because the OpenPencil Chrome
+/// Two narrow paths widen the `Origin` rule because the Design Editor Chrome
 /// extension cannot present this instance's loopback origin. Snapshot ingress
 /// accepts a well-formed extension origin for insert-only capture. The paid
 /// design route admits the same origin shape only to return a readable pairing
@@ -197,7 +197,7 @@ fn request_id_raw(request_body: &str) -> String {
 /// a name at 127.0.0.1, and a browser writes the name it was given into
 /// `Host`, so accepting names would leave the hole open.
 ///
-/// The port is checked when present. It may be absent: `op`'s own
+/// The port is checked when present. It may be absent: `de`'s own
 /// transport sends a bare `Host: 127.0.0.1`
 /// (`de_rpc_transport::TcpJsonRpc::http_post_request`), and a browser can
 /// never produce that against a non-80 port — it always writes the target
@@ -321,7 +321,7 @@ fn is_unpaired_extension_origin_with_allowlist(
 /// Never `*`. A permissive wildcard on a loopback endpoint lets ANY browser
 /// context that can reach the socket read the reply, which for the untokened
 /// ingress would mean any installed extension, not just the accepted one.
-/// `None` covers the non-browser callers (`op`, the MCP proxy), which send no
+/// `None` covers the non-browser callers (`de`, the MCP proxy), which send no
 /// `Origin` and never look at CORS headers.
 pub(super) fn cors_origin_for<'a>(
     req: &'a crate::mcp_serve::HttpRequest,

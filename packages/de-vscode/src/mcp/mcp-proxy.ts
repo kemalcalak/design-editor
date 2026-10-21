@@ -16,7 +16,7 @@ interface ActivePool {
   onActiveChanged(cb: () => void): void;
 }
 
-const NO_ACTIVE_MESSAGE = "No active OpenPencil document. Open a .op file in the editor first.";
+const NO_ACTIVE_MESSAGE = "No active Design Editor document. Open a .op file in the editor first.";
 
 export class McpProxy {
   private readonly pool: ActivePool;
@@ -101,7 +101,7 @@ export class McpProxy {
     try {
       const forwardHeaders: Record<string, string> = {
         "content-type": "application/json",
-        "X-OpenPencil-Token": active.client.handshake.token,
+        "X-Design-Editor-Token": active.client.handshake.token,
       };
       const sessionId = req.headers["mcp-session-id"];
       if (typeof sessionId === "string") forwardHeaders["mcp-session-id"] = sessionId;

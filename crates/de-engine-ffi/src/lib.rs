@@ -1,4 +1,4 @@
-//! C ABI boundary for native OpenPencil player shells (iOS / Android).
+//! C ABI boundary for native Design Editor player shells (iOS / Android).
 //!
 //! The engine renders a canonical `.op` document with the exact painter
 //! the desktop editor canvas uses ([`de_editor_ui::widgets::canvas_viewport_paint`]
@@ -164,7 +164,7 @@ use lifecycle::{call_session, destroy_engine, Session};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::ptr;
 
-/// Stable status values returned by every OpenPencil C ABI call.
+/// Stable status values returned by every Design Editor C ABI call.
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum OpStatus {
@@ -210,7 +210,7 @@ pub unsafe extern "C" fn op_create(desc: *const OpCreateDesc, out: *mut *mut OpE
             error.status
         }
         Err(_) => {
-            set_create_error("panic while creating the OpenPencil engine");
+            set_create_error("panic while creating the Design Editor engine");
             OpStatus::Poisoned
         }
     }

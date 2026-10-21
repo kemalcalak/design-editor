@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil read-only web embedding SDK — wasm Viewer (parse + render + navigate + export)"
+description = "Design Editor read-only web embedding SDK — wasm Viewer (parse + render + navigate + export)"
 
 [lib]
 name = "de_web_sdk"

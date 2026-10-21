@@ -8,8 +8,8 @@
 use serde_json::{json, Value};
 use std::io::{self, BufRead, Write};
 
-const FIXTURE_ENV: &str = "OPENPENCIL_LOCAL_ACP_E2E_FIXTURE";
-const FIXTURE_AGENT_NAME: &str = "OpenPencil Local ACP Fixture";
+const FIXTURE_ENV: &str = "DESIGN_EDITOR_LOCAL_ACP_E2E_FIXTURE";
+const FIXTURE_AGENT_NAME: &str = "Design Editor Local ACP Fixture";
 const FIXTURE_AGENT_VERSION: &str = "1.0";
 const FIXTURE_SESSION_ID: &str = "fixture-session";
 const FIXTURE_PROMPT: &str = "LOCAL_ACP_E2E_7C1: reply with the fixture greeting.";
@@ -43,7 +43,7 @@ fn main() {
             "initialize" => {
                 let valid = params.get("protocolVersion").and_then(Value::as_u64) == Some(1)
                     && params.pointer("/clientInfo/name").and_then(Value::as_str)
-                        == Some("openpencil");
+                        == Some("design-editor");
                 if !valid {
                     write_rpc_error(&mut stdout, id, "invalid initialize payload");
                     continue;
@@ -143,7 +143,7 @@ fn valid_canvas_session(params: &Value, servers: &[Value]) -> bool {
     let Some(server) = servers.first() else {
         return false;
     };
-    server.get("name").and_then(Value::as_str) == Some("openpencil")
+    server.get("name").and_then(Value::as_str) == Some("design-editor")
         && server.get("type").and_then(Value::as_str) == Some("http")
         && server.get("url").and_then(Value::as_str) == Some("http://127.0.0.1:4123/mcp")
         && server
@@ -153,7 +153,7 @@ fn valid_canvas_session(params: &Value, servers: &[Value]) -> bool {
         && params
             .pointer("/_meta/systemPrompt")
             .and_then(Value::as_str)
-            .is_some_and(|prompt| prompt.contains("mcp__openpencil__"))
+            .is_some_and(|prompt| prompt.contains("mcp__design-editor__"))
 }
 
 fn write_rpc_error(stdout: &mut dyn Write, id: Value, message: &str) {

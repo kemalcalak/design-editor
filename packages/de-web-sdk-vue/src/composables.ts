@@ -1,5 +1,5 @@
 import { onScopeDispose, shallowRef, triggerRef, watch, type ShallowRef } from 'vue';
-import type { OpViewer, PenDocument } from '@zseven-w/de-web-sdk';
+import type { OpViewer, PenDocument } from '@kemalcalak/de-web-sdk';
 import { useViewer } from './use-viewer.js';
 
 type ViewerEvent = 'load' | 'viewportchange';

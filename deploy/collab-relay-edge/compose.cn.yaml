@@ -1,10 +1,10 @@
-name: openpencil-collab-relay-cn-federation
+name: design-editor-collab-relay-cn-federation
 
 services:
   cn-federation:
     # Keep repository and reviewed digest separate so a mutable tag cannot be
     # substituted for the deployment identity.
-    image: ${OPENPENCIL_RELAY_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${OPENPENCIL_RELAY_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
+    image: ${DESIGN_EDITOR_RELAY_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
     user: "101:101"
     command:
       - nginx
@@ -12,8 +12,8 @@ services:
       - daemon off;
     ports:
       - target: 9443
-        published: ${OPENPENCIL_RELAY_CN_FEDERATION_PORT:-9443}
-        host_ip: ${OPENPENCIL_RELAY_CN_FEDERATION_BIND_IP:?set a private/firewalled bind IP}
+        published: ${DESIGN_EDITOR_RELAY_CN_FEDERATION_PORT:-9443}
+        host_ip: ${DESIGN_EDITOR_RELAY_CN_FEDERATION_BIND_IP:?set a private/firewalled bind IP}
         protocol: tcp
         mode: host
     volumes:
@@ -64,10 +64,10 @@ services:
 
 secrets:
   cn_federation_server_cert:
-    file: ${OPENPENCIL_RELAY_CN_FEDERATION_CERT:?set an absolute outer-mTLS server-certificate path}
+    file: ${DESIGN_EDITOR_RELAY_CN_FEDERATION_CERT:?set an absolute outer-mTLS server-certificate path}
   cn_federation_server_key:
-    file: ${OPENPENCIL_RELAY_CN_FEDERATION_KEY:?set an absolute outer-mTLS server-key path}
+    file: ${DESIGN_EDITOR_RELAY_CN_FEDERATION_KEY:?set an absolute outer-mTLS server-key path}
   global_edge_client_ca:
-    file: ${OPENPENCIL_RELAY_EDGE_CLIENT_CA:?set an absolute trusted Global edge client CA path}
+    file: ${DESIGN_EDITOR_RELAY_EDGE_CLIENT_CA:?set an absolute trusted Global edge client CA path}
   global_edge_client_crl:
-    file: ${OPENPENCIL_RELAY_EDGE_CLIENT_CRL:?set an absolute current Global edge client CRL path}
+    file: ${DESIGN_EDITOR_RELAY_EDGE_CLIENT_CRL:?set an absolute current Global edge client CRL path}

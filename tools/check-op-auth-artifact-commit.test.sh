@@ -43,8 +43,8 @@ printf '%s\n' \
 chmod +x "$fixture/tools/"*.sh "$fixture/scripts/workspace-version.sh"
 
 git -C "$fixture" init -q
-git -C "$fixture" config user.name 'OpenPencil fixture'
-git -C "$fixture" config user.email 'fixture@openpencil.invalid'
+git -C "$fixture" config user.name 'Design Editor fixture'
+git -C "$fixture" config user.email 'fixture@design-editor.invalid'
 printf 'trusted-key\n' \
     > "$fixture/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY"
 printf 'old source adoption policy\n' \

@@ -24,22 +24,22 @@ de-orchestrator = { path = "../de-orchestrator" }
 # `EditorState` + `EditorCommand` — the smoke's own `InlineDocSink` owns
 # one and applies commands on it.
 de-editor-core = { path = "../de-editor-core" }
-# `PenNode` — the minimal-seed loop mode (OPENPENCIL_SMOKE_LOOP_SEED=1) builds a
+# `PenNode` — the minimal-seed loop mode (DESIGN_EDITOR_SMOKE_LOOP_SEED=1) builds a
 # page-root + named section-stub subtree as canonical `PenNode`s (same JSON-build
 # → deserialize idiom de-orchestrator's `build_scaffold` uses) and applies it via
 # `EditorCommand::InsertSubtree`. de-orchestrator already pulls this same path dep.
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
-# `merge_library_into_state` — honors OPENPENCIL_SMOKE_LIBRARY by loading a
+# `merge_library_into_state` — honors DESIGN_EDITOR_SMOKE_LIBRARY by loading a
 # harvested component library (.lib.op) into the doc before generation so the
 # generator can instantiate its reusable masters.
 de-pen-loader = { path = "../de-pen-loader" }
 # `batch_design_snapshot` + `BatchDesign` MCP tool — the program-mode
-# (OPENPENCIL_SMOKE_PROGRAM=<file>) runs a Pencil-style batch_design DSL program
+# (DESIGN_EDITOR_SMOKE_PROGRAM=<file>) runs a Pencil-style batch_design DSL program
 # (binding=I(parent,{...}) tree-builder) against the doc, bypassing the
 # orchestrator, to test whether emitting a PROGRAM (parent-by-reference) instead
 # of flat JSONL cures weak-model row decomposition / missing rows.
 de-mcp = { path = "../de-mcp" }
-# Loop mode (OPENPENCIL_SMOKE_LOOP=1) — the headless agentic tool-loop reuses
+# Loop mode (DESIGN_EDITOR_SMOKE_LOOP=1) — the headless agentic tool-loop reuses
 # the production builtin provider + design-tool apply path from de-host-services
 # (`ConfiguredBuiltinProvider`, `design_tool_defs`, `execute_agent_tool`) and the
 # `ChatProvider` / `ChatRequest` / `ChatToolExecutor` traits from de-ai. The
@@ -62,13 +62,13 @@ futures = "0.3"
 # `rt-multi-thread` so the LLM HTTP client can spawn its own tasks.
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 # Persist the produced PenDocument to a `.op` (canonical serde_json,
-# same shape as `persistence::save_to_path`) when `OPENPENCIL_SMOKE_OUT`
+# same shape as `persistence::save_to_path`) when `DESIGN_EDITOR_SMOKE_OUT`
 # is set — lets the headless render / screenshot step pick up the result.
 serde_json = { workspace = true }
 # Content-address the immutable modify baseline and each output so prompt
 # thumbnail provenance can prove both modify prompts started from the same file.
 sha2 = "0.10"
-# Direct openai-compat HTTP client for the smoke harness (OPENPENCIL_SMOKE_DIRECT=1)
+# Direct openai-compat HTTP client for the smoke harness (DESIGN_EDITOR_SMOKE_DIRECT=1)
 # — lets it send the MiniMax `thinking:{type:disabled}` field the vendored agent
 # QueryEngine can't, so M3 (reasoning) can be validated headless. rustls-tls +
 # json mirror de-host-desktop so the workspace shares one TLS backend.

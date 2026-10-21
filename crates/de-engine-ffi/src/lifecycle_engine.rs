@@ -107,7 +107,7 @@ pub(crate) unsafe fn call_session(
         Err(_) => {
             engine.poisoned.set(true);
             *engine.last_error.borrow_mut() =
-                "panic crossed the OpenPencil ABI boundary".to_owned();
+                "panic crossed the Design Editor ABI boundary".to_owned();
             OpStatus::Poisoned
         }
     }

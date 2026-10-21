@@ -36,7 +36,7 @@ pub fn copy_clean_document_with_editor_meta_to_path(
         });
     }
     // SAFETY: The source mapping is read-only and remains alive until the
-    // sibling-temp write completes. OpenPencil replaces files atomically
+    // sibling-temp write completes. Design Editor replaces files atomically
     // instead of mutating mapped inodes in place.
     let source_bytes =
         unsafe { memmap2::MmapOptions::new().map(&source_file) }.map_err(|error| {
@@ -139,7 +139,7 @@ mod tests {
 
     fn temp_op_path(tag: &str) -> PathBuf {
         std::env::temp_dir().join(format!(
-            "openpencil-clean-copy-{tag}-{}-{}.op",
+            "design-editor-clean-copy-{tag}-{}-{}.op",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

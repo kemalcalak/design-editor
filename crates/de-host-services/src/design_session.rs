@@ -34,7 +34,7 @@ use crate::validation_providers::{
 
 /// Spawn a worker that runs `Orchestrator::run` against a `RemoteDocSink`.
 ///
-/// `vision_provider` (when `Some` AND `OPENPENCIL_VISION_VALIDATION=1`)
+/// `vision_provider` (when `Some` AND `DESIGN_EDITOR_VISION_VALIDATION=1`)
 /// drives the REAL Class-C vision-validation loop; `None` / flag-off keeps
 /// the no-op stubs so the default path is unchanged. Pass the same
 /// `Arc<dyn ChatProvider>` that backs the design `llm` so the vision call
@@ -114,7 +114,7 @@ pub fn run_design_worker<L: LlmClient + Send>(
 
     // ── Class-C vision-validation provider selection (Track-1 Step 3) ──────────
     // REAL providers only when a vision `ChatProvider` was supplied AND
-    // `OPENPENCIL_VISION_VALIDATION=1` (defaults OFF); otherwise the no-op
+    // `DESIGN_EDITOR_VISION_VALIDATION=1` (defaults OFF); otherwise the no-op
     // stubs keep `run_post_generation_validation` a guaranteed short-circuit
     // so the default path is byte-for-byte unchanged.
     let real = vision_provider

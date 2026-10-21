@@ -9,9 +9,9 @@ use de_ai::chat_provider::{ChatDelta, ChatRequest, StopReason};
 use de_image_enrich::net::RelevanceVerdict;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
-const BASE_URL_ENV: &str = "OPENPENCIL_IMAGE_JUDGE_BASE_URL";
-const API_KEY_ENV: &str = "OPENPENCIL_IMAGE_JUDGE_API_KEY";
-const MODEL_ENV: &str = "OPENPENCIL_IMAGE_JUDGE_MODEL";
+const BASE_URL_ENV: &str = "DESIGN_EDITOR_IMAGE_JUDGE_BASE_URL";
+const API_KEY_ENV: &str = "DESIGN_EDITOR_IMAGE_JUDGE_API_KEY";
+const MODEL_ENV: &str = "DESIGN_EDITOR_IMAGE_JUDGE_MODEL";
 
 fn env_lock() -> MutexGuard<'static, ()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();

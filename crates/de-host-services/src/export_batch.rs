@@ -92,7 +92,7 @@ mod tests {
             .map(|d| d.as_nanos())
             .unwrap_or(0);
         p.push(format!(
-            "openpencil-batch-export-{tag}-{}-{nanos}",
+            "design-editor-batch-export-{tag}-{}-{nanos}",
             std::process::id()
         ));
         std::fs::create_dir_all(&p).expect("temp dir");

@@ -2,7 +2,7 @@
 //!
 //! After the design loop completes and before the `.op` is persisted, optionally
 //! resolve pending image-search queries to real URLs from Openverse. Gated by
-//! `OPENPENCIL_SMOKE_FILL_IMAGES=1` (default off).
+//! `DESIGN_EDITOR_SMOKE_FILL_IMAGES=1` (default off).
 
 use std::collections::HashSet;
 use std::sync::Mutex;
@@ -14,25 +14,25 @@ use de_host_services::image_relevance_judge::OpenAiCompatVisionJudge;
 /// Parsed config for the image-fill post-loop step.
 #[derive(Debug, Clone)]
 pub struct ImageFillConfig {
-    /// Enable the step (OPENPENCIL_SMOKE_FILL_IMAGES=1).
+    /// Enable the step (DESIGN_EDITOR_SMOKE_FILL_IMAGES=1).
     pub enabled: bool,
-    /// Max images to fill (default 40; OPENPENCIL_SMOKE_IMAGE_LIMIT).
+    /// Max images to fill (default 40; DESIGN_EDITOR_SMOKE_IMAGE_LIMIT).
     pub limit: usize,
-    /// Milliseconds to wait between requests (default 250; OPENPENCIL_SMOKE_IMAGE_DELAY_MS).
+    /// Milliseconds to wait between requests (default 250; DESIGN_EDITOR_SMOKE_IMAGE_DELAY_MS).
     pub delay_ms: u64,
 }
 
 impl ImageFillConfig {
     /// Parse the config from environment variables.
     pub fn from_env() -> Self {
-        let enabled = std::env::var("OPENPENCIL_SMOKE_FILL_IMAGES")
+        let enabled = std::env::var("DESIGN_EDITOR_SMOKE_FILL_IMAGES")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true") || v.eq_ignore_ascii_case("on"))
             .unwrap_or(false);
-        let limit = std::env::var("OPENPENCIL_SMOKE_IMAGE_LIMIT")
+        let limit = std::env::var("DESIGN_EDITOR_SMOKE_IMAGE_LIMIT")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(40);
-        let delay_ms = std::env::var("OPENPENCIL_SMOKE_IMAGE_DELAY_MS")
+        let delay_ms = std::env::var("DESIGN_EDITOR_SMOKE_IMAGE_DELAY_MS")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(250);
@@ -45,7 +45,7 @@ impl ImageFillConfig {
 }
 
 /// Resolve the visual relevance judge for the fill step. The env-configured
-/// OpenAI-compatible judge (all three `OPENPENCIL_IMAGE_JUDGE_*` vars present)
+/// OpenAI-compatible judge (all three `DESIGN_EDITOR_IMAGE_JUDGE_*` vars present)
 /// wins; otherwise the fill keeps the legacy one-result ladder — which is the
 /// `NoJudge` behavior and stays byte-identical with the pre-judge output.
 fn resolve_judge() -> Option<OpenAiCompatVisionJudge> {
@@ -202,9 +202,9 @@ mod tests {
     #[test]
     fn config_defaults_are_correct() {
         let _guard = TEST_LOCK.lock();
-        std::env::remove_var("OPENPENCIL_SMOKE_FILL_IMAGES");
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_LIMIT");
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_DELAY_MS");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_FILL_IMAGES");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_LIMIT");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_DELAY_MS");
         let config = ImageFillConfig::from_env();
         assert_eq!(config.limit, 40);
         assert_eq!(config.delay_ms, 250);
@@ -214,9 +214,9 @@ mod tests {
     #[test]
     fn config_enabled_by_env() {
         let _guard = TEST_LOCK.lock();
-        std::env::set_var("OPENPENCIL_SMOKE_FILL_IMAGES", "1");
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_LIMIT");
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_DELAY_MS");
+        std::env::set_var("DESIGN_EDITOR_SMOKE_FILL_IMAGES", "1");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_LIMIT");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_DELAY_MS");
         let config = ImageFillConfig::from_env();
         assert!(config.enabled);
     }
@@ -224,9 +224,9 @@ mod tests {
     #[test]
     fn config_parses_limit_from_env() {
         let _guard = TEST_LOCK.lock();
-        std::env::remove_var("OPENPENCIL_SMOKE_FILL_IMAGES");
-        std::env::set_var("OPENPENCIL_SMOKE_IMAGE_LIMIT", "100");
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_DELAY_MS");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_FILL_IMAGES");
+        std::env::set_var("DESIGN_EDITOR_SMOKE_IMAGE_LIMIT", "100");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_DELAY_MS");
         let config = ImageFillConfig::from_env();
         assert_eq!(config.limit, 100);
     }
@@ -234,9 +234,9 @@ mod tests {
     #[test]
     fn config_parses_delay_from_env() {
         let _guard = TEST_LOCK.lock();
-        std::env::remove_var("OPENPENCIL_SMOKE_FILL_IMAGES");
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_LIMIT");
-        std::env::set_var("OPENPENCIL_SMOKE_IMAGE_DELAY_MS", "500");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_FILL_IMAGES");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_LIMIT");
+        std::env::set_var("DESIGN_EDITOR_SMOKE_IMAGE_DELAY_MS", "500");
         let config = ImageFillConfig::from_env();
         assert_eq!(config.delay_ms, 500);
     }
@@ -244,14 +244,14 @@ mod tests {
     #[test]
     fn config_parses_truthy_values() {
         let _guard = TEST_LOCK.lock();
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_LIMIT");
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_DELAY_MS");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_LIMIT");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_DELAY_MS");
 
-        std::env::set_var("OPENPENCIL_SMOKE_FILL_IMAGES", "true");
+        std::env::set_var("DESIGN_EDITOR_SMOKE_FILL_IMAGES", "true");
         let config = ImageFillConfig::from_env();
         assert!(config.enabled);
 
-        std::env::set_var("OPENPENCIL_SMOKE_FILL_IMAGES", "on");
+        std::env::set_var("DESIGN_EDITOR_SMOKE_FILL_IMAGES", "on");
         let config = ImageFillConfig::from_env();
         assert!(config.enabled);
     }
@@ -259,9 +259,9 @@ mod tests {
     #[test]
     fn config_ignores_invalid_limit() {
         let _guard = TEST_LOCK.lock();
-        std::env::remove_var("OPENPENCIL_SMOKE_FILL_IMAGES");
-        std::env::set_var("OPENPENCIL_SMOKE_IMAGE_LIMIT", "not_a_number");
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_DELAY_MS");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_FILL_IMAGES");
+        std::env::set_var("DESIGN_EDITOR_SMOKE_IMAGE_LIMIT", "not_a_number");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_DELAY_MS");
         let config = ImageFillConfig::from_env();
         assert_eq!(config.limit, 40);
     }
@@ -269,9 +269,9 @@ mod tests {
     #[test]
     fn config_ignores_invalid_delay() {
         let _guard = TEST_LOCK.lock();
-        std::env::remove_var("OPENPENCIL_SMOKE_FILL_IMAGES");
-        std::env::remove_var("OPENPENCIL_SMOKE_IMAGE_LIMIT");
-        std::env::set_var("OPENPENCIL_SMOKE_IMAGE_DELAY_MS", "xyz");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_FILL_IMAGES");
+        std::env::remove_var("DESIGN_EDITOR_SMOKE_IMAGE_LIMIT");
+        std::env::set_var("DESIGN_EDITOR_SMOKE_IMAGE_DELAY_MS", "xyz");
         let config = ImageFillConfig::from_env();
         assert_eq!(config.delay_ms, 250);
     }
@@ -282,9 +282,9 @@ mod tests {
     // What de-smoke owns is judge RESOLUTION, so these tests pin its tri-state.
 
     fn clear_judge_env() {
-        std::env::remove_var("OPENPENCIL_IMAGE_JUDGE_BASE_URL");
-        std::env::remove_var("OPENPENCIL_IMAGE_JUDGE_API_KEY");
-        std::env::remove_var("OPENPENCIL_IMAGE_JUDGE_MODEL");
+        std::env::remove_var("DESIGN_EDITOR_IMAGE_JUDGE_BASE_URL");
+        std::env::remove_var("DESIGN_EDITOR_IMAGE_JUDGE_API_KEY");
+        std::env::remove_var("DESIGN_EDITOR_IMAGE_JUDGE_MODEL");
     }
 
     #[test]
@@ -292,11 +292,11 @@ mod tests {
         let _guard = TEST_LOCK.lock();
         clear_judge_env();
         std::env::set_var(
-            "OPENPENCIL_IMAGE_JUDGE_BASE_URL",
+            "DESIGN_EDITOR_IMAGE_JUDGE_BASE_URL",
             "https://judge.example.com/v1",
         );
-        std::env::set_var("OPENPENCIL_IMAGE_JUDGE_API_KEY", "test-key");
-        std::env::set_var("OPENPENCIL_IMAGE_JUDGE_MODEL", "test-model");
+        std::env::set_var("DESIGN_EDITOR_IMAGE_JUDGE_API_KEY", "test-key");
+        std::env::set_var("DESIGN_EDITOR_IMAGE_JUDGE_MODEL", "test-model");
         let judge = resolve_judge();
         clear_judge_env();
         assert!(judge.is_some());
@@ -309,15 +309,15 @@ mod tests {
         assert!(resolve_judge().is_none());
 
         std::env::set_var(
-            "OPENPENCIL_IMAGE_JUDGE_BASE_URL",
+            "DESIGN_EDITOR_IMAGE_JUDGE_BASE_URL",
             "https://judge.example.com/v1",
         );
-        std::env::set_var("OPENPENCIL_IMAGE_JUDGE_MODEL", "test-model");
+        std::env::set_var("DESIGN_EDITOR_IMAGE_JUDGE_MODEL", "test-model");
         // API key missing.
         assert!(resolve_judge().is_none());
 
-        std::env::set_var("OPENPENCIL_IMAGE_JUDGE_API_KEY", "test-key");
-        std::env::remove_var("OPENPENCIL_IMAGE_JUDGE_MODEL");
+        std::env::set_var("DESIGN_EDITOR_IMAGE_JUDGE_API_KEY", "test-key");
+        std::env::remove_var("DESIGN_EDITOR_IMAGE_JUDGE_MODEL");
         // Model missing.
         assert!(resolve_judge().is_none());
 
@@ -328,9 +328,9 @@ mod tests {
     fn judge_ignores_blank_env_values() {
         let _guard = TEST_LOCK.lock();
         clear_judge_env();
-        std::env::set_var("OPENPENCIL_IMAGE_JUDGE_BASE_URL", "   ");
-        std::env::set_var("OPENPENCIL_IMAGE_JUDGE_API_KEY", "test-key");
-        std::env::set_var("OPENPENCIL_IMAGE_JUDGE_MODEL", "test-model");
+        std::env::set_var("DESIGN_EDITOR_IMAGE_JUDGE_BASE_URL", "   ");
+        std::env::set_var("DESIGN_EDITOR_IMAGE_JUDGE_API_KEY", "test-key");
+        std::env::set_var("DESIGN_EDITOR_IMAGE_JUDGE_MODEL", "test-model");
         let judge = resolve_judge();
         clear_judge_env();
         assert!(judge.is_none());

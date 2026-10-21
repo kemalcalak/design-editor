@@ -1,4 +1,4 @@
-//! OpenPencil desktop runner — winit + skia-safe + WidgetHostNative.
+//! Design Editor desktop runner — winit + skia-safe + WidgetHostNative.
 //! Owns the event loop, GL surface, DPI, animation timer + cursor input.
 
 #![cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
@@ -503,12 +503,12 @@ fn parse_live_mcp_port<I: Iterator<Item = String>>(args: I) -> Option<u16> {
 /// Initialize the device-login runtime (proprietary bridge library) and
 /// restore a persisted session, then set the runtime account gate. Stub
 /// builds (no prebuilt library for this target) leave the gate closed
-/// unless `OPENPENCIL_DEV_FAKE_LOGIN=1` re-opens it for UI work.
+/// unless `DESIGN_EDITOR_DEV_FAKE_LOGIN=1` re-opens it for UI work.
 fn init_auth_runtime(host: &mut WidgetHostNative) {
     let dev_fake = std::env::var(de_auth_bridge::ENV_DEV_FAKE_LOGIN).as_deref() == Ok("1");
     let mut backend_ready = false;
     if de_auth_bridge::available() {
-        if let Ok(dir) = de_config_store::openpencil_dir() {
+        if let Ok(dir) = de_config_store::design_editor_dir() {
             let config = de_auth_bridge::desktop_init_config(&dir, env!("CARGO_PKG_VERSION"));
             if de_auth_bridge::init(&config) {
                 backend_ready = true;

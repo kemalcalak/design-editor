@@ -79,7 +79,7 @@ test("real daemon: handshake → version → mcp-via-proxy → auth/origin defen
   expect(collabUnauth.status).toBe(401);
 
   const collabAuthed = await fetch(`${client.baseUrl}/api/collab/state`, {
-    headers: { "X-OpenPencil-Token": client.handshake.token },
+    headers: { "X-Design-Editor-Token": client.handshake.token },
   });
   expect(collabAuthed.status).toBe(200);
   const collabState = (await collabAuthed.json()) as Record<string, unknown>;

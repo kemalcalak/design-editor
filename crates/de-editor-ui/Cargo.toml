@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil editor UI — platform-agnostic widget facade + theme + layout-resolved render scene"
+description = "Design Editor editor UI — platform-agnostic widget facade + theme + layout-resolved render scene"
 
 [lib]
 name = "de_editor_ui"

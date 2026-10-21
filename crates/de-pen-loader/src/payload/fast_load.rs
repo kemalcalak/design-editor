@@ -1,7 +1,7 @@
 //! Streaming canonical loader for current Preserve-mode documents.
 //!
 //! The compatibility loader intentionally materializes one complete JSON
-//! `Value` so it can repair legacy wire shapes. OpenPencil's current Figma
+//! `Value` so it can repair legacy wire shapes. Design Editor's current Figma
 //! Preserve output is already canonical, so that DOM is pure peak-memory
 //! overhead. This module probes only the top-level header and image tables,
 //! then deserializes the typed document directly under the image-ref scope.

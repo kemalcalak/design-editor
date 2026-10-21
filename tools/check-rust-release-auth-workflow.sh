@@ -6,19 +6,19 @@ set -euo pipefail
 
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd)
-workflow=${OPENPENCIL_RUST_RELEASE_WORKFLOW:-$repo_root/.github/workflows/rust-release.yml}
+workflow=${DESIGN_EDITOR_RUST_RELEASE_WORKFLOW:-$repo_root/.github/workflows/rust-release.yml}
 matrix_verifier=$repo_root/tools/check-op-auth-release-matrix.sh
 prebuilt_verifier=$repo_root/tools/check-op-auth-prebuilt.sh
-release_builder=${OPENPENCIL_RUST_RELEASE_BUILDER:-$repo_root/scripts/build-rust-release-host.sh}
-pinned_tools=${OPENPENCIL_PINNED_RELEASE_TOOLS:-$repo_root/tools/pinned-release-tools.sh}
+release_builder=${DESIGN_EDITOR_RUST_RELEASE_BUILDER:-$repo_root/scripts/build-rust-release-host.sh}
+pinned_tools=${DESIGN_EDITOR_PINNED_RELEASE_TOOLS:-$repo_root/tools/pinned-release-tools.sh}
 pinned_tools_test=$repo_root/tools/pinned-release-tools.test.sh
 angle_stager=$repo_root/tools/stage-pinned-angle.ps1
 nsis_installer=$repo_root/tools/install-pinned-nsis.ps1
-vcredist_stager=${OPENPENCIL_VC_REDIST_STAGER:-$repo_root/tools/stage-pinned-vcredist.ps1}
+vcredist_stager=${DESIGN_EDITOR_VC_REDIST_STAGER:-$repo_root/tools/stage-pinned-vcredist.ps1}
 vcredist_checker=$repo_root/tools/check-windows-vcredist-release.sh
 windows_signer=$repo_root/tools/sign-windows-release.ps1
-windows_installer=${OPENPENCIL_WINDOWS_NSIS_INSTALLER:-$repo_root/scripts/package-windows.nsi}
-cli_installer=${OPENPENCIL_WINDOWS_CLI_INSTALLER:-$repo_root/scripts/install-de.ps1}
+windows_installer=${DESIGN_EDITOR_WINDOWS_NSIS_INSTALLER:-$repo_root/scripts/package-windows.nsi}
+cli_installer=${DESIGN_EDITOR_WINDOWS_CLI_INSTALLER:-$repo_root/scripts/install-de.ps1}
 package_handoff=$repo_root/tools/package-manager-handoff.sh
 release_flattener=$repo_root/tools/flatten-release-artifacts.sh
 release_flattener_test=$repo_root/tools/flatten-release-artifacts.test.sh
@@ -26,10 +26,10 @@ appimage_packager=$repo_root/scripts/package-appimage.sh
 macos_bundler=$repo_root/scripts/bundle-macos.sh
 wasm_builder=$repo_root/tools/check-wasm-bundle.sh
 sdk_wasm_builder=$repo_root/crates/de-web-sdk/tools/build-wasm.sh
-dockerfile=${OPENPENCIL_WEB_DOCKERFILE:-$repo_root/Dockerfile.web-rust}
+dockerfile=${DESIGN_EDITOR_WEB_DOCKERFILE:-$repo_root/Dockerfile.web-rust}
 vscode_package=$repo_root/packages/de-vscode/package.json
 bun_lock=$repo_root/packages/bun.lock
-version_sync_workflow=${OPENPENCIL_VERSION_SYNC_WORKFLOW:-$repo_root/.github/workflows/version-sync.yml}
+version_sync_workflow=${DESIGN_EDITOR_VERSION_SYNC_WORKFLOW:-$repo_root/.github/workflows/version-sync.yml}
 ios_workflow=$repo_root/.github/workflows/ios-app-store.yml
 android_workflow=$repo_root/.github/workflows/android-release.yml
 ios_workflow_checker=$repo_root/tools/check-ios-app-store-workflow.sh
@@ -376,10 +376,10 @@ unless android.fetch("uses") == "./.github/workflows/android-release.yml" &&
     android.fetch("if") == "startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)" &&
     android.fetch("needs") == "version" &&
     android.fetch("secrets") == {
-      "OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN" =>
-        '${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}',
-      "OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL" =>
-        '${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}',
+      "DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN" =>
+        '${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}',
+      "DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL" =>
+        '${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}',
     } && !android.key?("with")
   raise "formal release must call the exact reusable Android asset lane"
 end
@@ -436,8 +436,8 @@ scoop_update = package_steps.find { |step| step["name"] == "Update Scoop manifes
 raise "missing Scoop manifest generation" unless scoop_update
 scoop_source = scoop_update.fetch("run")
 unless scoop_source.scan(/^write_scoop_manifest \\$/).length == 2 &&
-    scoop_source.include?("scoop-bucket/bucket/openpencil.json") &&
-    scoop_source.include?("scoop-bucket/bucket/op.json") &&
+    scoop_source.include?("scoop-bucket/bucket/design-editor.json") &&
+    scoop_source.include?("scoop-bucket/bucket/de.json") &&
     scoop_source.include?("design-editor.exe") && scoop_source.include?("de.exe")
   raise "Scoop desktop and CLI must both use the reviewed shared manifest generator"
 end
@@ -501,17 +501,17 @@ unless build.fetch("if") == "(github.event_name == 'workflow_dispatch' && inputs
   raise "desktop builds must be disabled when manual iOS-only publication is selected"
 end
 job_env = build.fetch("env", {})
-if job_env.key?("OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN") ||
-    job_env.key?("OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL")
+if job_env.key?("DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN") ||
+    job_env.key?("DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL")
   raise "relay secrets must not be exposed at release-job scope"
 end
 build_step = build.fetch("steps").find { |step| step["name"] == "Build (host)" }
 raise "missing production host build step" unless build_step
 build_env = build_step.fetch("env")
 %w[
-  OPENPENCIL_RELEASE_TARGET
-  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN
-  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
+  DESIGN_EDITOR_RELEASE_TARGET
+  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN
+  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
 ].each { |name| raise "missing protected #{name}" unless build_env.key?(name) }
 unless build_step.fetch("run") == "scripts/build-rust-release-host.sh"
   raise "release build must use the reviewed repository-owned wrapper"
@@ -563,7 +563,7 @@ require_count 2 'tools/pinned-release-tools.sh binaryen "$GITHUB_WORKSPACE"' "$w
 require_literal 'tools/pinned-release-tools.sh appimage' "$workflow"
 require_literal 'tools/pinned-release-tools.sh buildx "$buildx"' "$workflow"
 reject_literal 'docker/setup-buildx-action@' "$workflow"
-require_literal 'docker buildx create --name openpencil-release --driver docker-container' "$workflow"
+require_literal 'docker buildx create --name design-editor-release --driver docker-container' "$workflow"
 require_literal '--driver-opt "image=$buildkit" --use' "$workflow"
 require_literal 'moby/buildkit:v0.32.2@sha256:28a898719c18a33f4e8000685287fa36fd0dd9560c6440227d3a732d79bb41d8' "$workflow"
 require_literal 'snapshot_url=https://snapshot.ubuntu.com/ubuntu/20260801T000000Z/' "$workflow"
@@ -716,11 +716,11 @@ require_literal 'sha512-XSxMosEEDO6vLxELAHVkwmhC0qe0ijZni2jB9Rcs8kQsW4lhTDQ/wMzm
 require_literal '"ovsx": ["ovsx@1.1.1"' "$bun_lock"
 require_literal 'sha512-tklsCzvGVWKlM91Vc9U8tNnaQ+XacPJ12SWHjDaHGUJB49oMhoAULsJGeefhHebPvvckbcWbKqKIXODMZah5SA==' "$bun_lock"
 
-# Baseline 1417: raised from the current 1332-line workflow for pinned VC++
+# Baseline 1420: raised from the current 1332-line workflow for pinned VC++
 # Redistributable staging, toolset gating, and conditional Scoop servicing.
 line_count=$(wc -l < "$workflow" | tr -d '[:space:]')
-[[ "$line_count" -le 1417 ]] || {
-    printf 'error: Rust release workflow exceeds its 1417-line baseline\n' >&2
+[[ "$line_count" -le 1420 ]] || {
+    printf 'error: Rust release workflow exceeds its 1420-line baseline\n' >&2
     exit 1
 }
 

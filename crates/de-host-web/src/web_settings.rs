@@ -27,8 +27,8 @@ use de_editor_core::{BuiltinAgentKind, ImageGenProvider};
 
 const SETTINGS_VERSION: u32 = 1;
 const CREDENTIAL_PAYLOAD_VERSION: u32 = 2;
-const STORAGE_KEY: &str = "openpencil-rust-web-settings";
-const CREDENTIAL_STORAGE_KEY: &str = "openpencil-rust-web-credentials";
+const STORAGE_KEY: &str = "design-editor-rust-web-settings";
+const CREDENTIAL_STORAGE_KEY: &str = "design-editor-rust-web-credentials";
 
 /// Parse a managed embedding host's locale bootstrap hint. URL decoding uses
 /// the browser-compatible form codec; the accepted values remain the strict

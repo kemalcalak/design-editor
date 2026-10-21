@@ -75,11 +75,11 @@ pub(crate) enum McpConfigError {
     GrokMcpServersMissing,
     /// `mcp_servers` exists in the Grok TOML but is not a table.
     GrokMcpServersNotATable,
-    /// The dsh patch file carries an `mcp-openpencil` entry the user wrote
-    /// by hand (no OpenPencil marker block). Disabling refuses to delete it
+    /// The dsh patch file carries an `mcp-design-editor` entry the user wrote
+    /// by hand (no Design Editor marker block). Disabling refuses to delete it
     /// rather than silently dropping user content.
     DshManualEntry { path: PathBuf },
-    /// The dsh patch file carries only one of the two OpenPencil markers —
+    /// The dsh patch file carries only one of the two Design Editor markers —
     /// the managed block was hand-edited. Refuse to touch it.
     DshPatchMarkersMismatched { path: PathBuf },
     /// The shared crash-safe file primitives refused. Carries their message.
@@ -144,14 +144,14 @@ impl fmt::Display for McpConfigError {
             McpConfigError::DshManualEntry { path } => {
                 write!(
                     f,
-                    "{} contains a manually added mcp-openpencil entry; remove it manually to disable this integration",
+                    "{} contains a manually added mcp-design-editor entry; remove it manually to disable this integration",
                     path.display()
                 )
             }
             McpConfigError::DshPatchMarkersMismatched { path } => {
                 write!(
                     f,
-                    "{} carries only one openpencil-mcp marker; repair or remove the marker block manually",
+                    "{} carries only one design-editor-mcp marker; repair or remove the marker block manually",
                     path.display()
                 )
             }

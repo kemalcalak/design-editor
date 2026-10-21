@@ -3,9 +3,9 @@ import { render, waitFor } from '@testing-library/react';
 import { makeMockViewer } from './mock-core.js';
 
 const mock = makeMockViewer();
-vi.mock('@zseven-w/de-web-sdk', () => ({ createViewer: vi.fn(async () => mock.viewer) }));
+vi.mock('@kemalcalak/de-web-sdk', () => ({ createViewer: vi.fn(async () => mock.viewer) }));
 import { DesignView } from '../src/index.js';
-import { createViewer } from '@zseven-w/de-web-sdk';
+import { createViewer } from '@kemalcalak/de-web-sdk';
 
 describe('DesignView', () => {
   beforeEach(() => vi.clearAllMocks());

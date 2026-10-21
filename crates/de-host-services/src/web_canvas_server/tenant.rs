@@ -54,13 +54,13 @@ pub struct AclUpdate {
 use super::{SseHub, WebCanvasState};
 
 /// Global connection ceiling for the online daemon.
-pub const MAX_CONNS_ENV: &str = "OPENPENCIL_ONLINE_MAX_CONNS";
+pub const MAX_CONNS_ENV: &str = "DESIGN_EDITOR_ONLINE_MAX_CONNS";
 /// Per-tenant connection ceiling — one account cannot starve the rest.
-pub const MAX_CONNS_PER_TENANT_ENV: &str = "OPENPENCIL_ONLINE_MAX_CONNS_PER_TENANT";
+pub const MAX_CONNS_PER_TENANT_ENV: &str = "DESIGN_EDITOR_ONLINE_MAX_CONNS_PER_TENANT";
 /// How many accounts may hold a live document at once.
-pub const MAX_TENANTS_ENV: &str = "OPENPENCIL_ONLINE_MAX_TENANTS";
+pub const MAX_TENANTS_ENV: &str = "DESIGN_EDITOR_ONLINE_MAX_TENANTS";
 /// Idle seconds after which a tenant with no connections is reclaimed.
-pub const IDLE_EVICT_SECS_ENV: &str = "OPENPENCIL_ONLINE_IDLE_EVICT_SECS";
+pub const IDLE_EVICT_SECS_ENV: &str = "DESIGN_EDITOR_ONLINE_IDLE_EVICT_SECS";
 
 pub const DEFAULT_MAX_CONNS: usize = 256;
 pub const DEFAULT_MAX_CONNS_PER_TENANT: usize = 8;
@@ -575,7 +575,7 @@ impl TenantRegistry {
             | Err(super::tenant_store::TenantStoreError::NotStored) => EditorState::starter(),
             Err(error) => {
                 eprintln!(
-                    "openpencil --serve-web --online: starting a fresh document for an \
+                    "design-editor --serve-web --online: starting a fresh document for an \
                      account whose stored one could not be loaded ({error})"
                 );
                 EditorState::starter()
@@ -608,7 +608,7 @@ impl TenantRegistry {
             match self.store.save(id, &guard.editor, &shared) {
                 Ok(()) => written += 1,
                 Err(error) => eprintln!(
-                    "openpencil --serve-web --online: could not flush a tenant on shutdown \
+                    "design-editor --serve-web --online: could not flush a tenant on shutdown \
                      ({error})"
                 ),
             }
@@ -705,7 +705,7 @@ impl TenantRegistry {
                     // it anyway would discard the document to reclaim memory,
                     // which is the wrong trade for the user whose work it is.
                     eprintln!(
-                        "openpencil --serve-web --online: keeping a tenant resident because \
+                        "design-editor --serve-web --online: keeping a tenant resident because \
                          it could not be persisted ({error})"
                     );
                     continue;

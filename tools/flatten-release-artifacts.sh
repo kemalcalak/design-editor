@@ -58,7 +58,7 @@ if [ "$copied" -eq 0 ]; then
 fi
 
 shopt -s nullglob
-native=("$temporary"/OpenPencil-* "$temporary"/design-editor-*)
+native=("$temporary"/Design-Editor-* "$temporary"/design-editor-*)
 cli=("$temporary"/de-cli-*)
 sdk=("$temporary"/*.tgz)
 vsix=("$temporary"/*.vsix)
@@ -90,8 +90,8 @@ if [ "${#vsix[@]}" -ne 6 ]; then
     exit 1
 fi
 
-expected_apk="OpenPencil-${version}-android.apk"
-expected_aab="OpenPencil-${version}-android.aab"
+expected_apk="Design-Editor-${version}-android.apk"
+expected_aab="Design-Editor-${version}-android.aab"
 if [ "${#android_apk[@]}" -ne 1 ] || [ "${android_apk[0]##*/}" != "$expected_apk" ]; then
     printf 'error: missing exact signed Android APK\n' >&2
     exit 1

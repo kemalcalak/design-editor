@@ -124,26 +124,26 @@ pub const COLLAB_RELAY_TOKEN_ABI_VERSION: u32 = 3;
 pub const SESSION_HANDLE: u64 = 0;
 
 /// Env var selecting the regional credential and ticket origin.
-pub const ENV_SSO_URL: &str = "OPENPENCIL_SSO_URL";
+pub const ENV_SSO_URL: &str = "DESIGN_EDITOR_SSO_URL";
 
 /// Env var pinning the collaboration-ticket issuer independently of login.
-pub const ENV_COLLAB_ISSUER: &str = "OPENPENCIL_COLLAB_ISSUER";
+pub const ENV_COLLAB_ISSUER: &str = "DESIGN_EDITOR_COLLAB_ISSUER";
 
 /// Env var pinning the regional offline-signed union-policy URL.
 ///
 /// This override is accepted only when [`ENV_COLLAB_ISSUER`] is also set.
-pub const ENV_COLLAB_POLICY_ENDPOINT: &str = "OPENPENCIL_COLLAB_POLICY_ENDPOINT";
+pub const ENV_COLLAB_POLICY_ENDPOINT: &str = "DESIGN_EDITOR_COLLAB_POLICY_ENDPOINT";
 
 /// Env var selecting the explicit legacy raw-JWKS compatibility path.
 ///
 /// This override is accepted only when [`ENV_COLLAB_ISSUER`] is also set, so
 /// operators cannot accidentally combine an explicit keyset with an implicit
 /// issuer. It cannot be combined with [`ENV_COLLAB_POLICY_ENDPOINT`].
-pub const ENV_COLLAB_JWKS_ENDPOINT: &str = "OPENPENCIL_COLLAB_JWKS_ENDPOINT";
+pub const ENV_COLLAB_JWKS_ENDPOINT: &str = "DESIGN_EDITOR_COLLAB_JWKS_ENDPOINT";
 
 /// Env var (`=1`) enabling the hosts' dev/demo fake-login fast path —
 /// declared here so every host gates on the same name.
-pub const ENV_DEV_FAKE_LOGIN: &str = "OPENPENCIL_DEV_FAKE_LOGIN";
+pub const ENV_DEV_FAKE_LOGIN: &str = "DESIGN_EDITOR_DEV_FAKE_LOGIN";
 
 /// Default production origin for device login and ticket requests.
 ///
@@ -307,7 +307,7 @@ pub fn mobile_init_config(
 
 /// Human-readable machine name shown on the SSO approval page and in the
 /// account device list. The page itself labels the product and platform,
-/// so this must be just the machine — never "OpenPencil …". Shared by the
+/// so this must be just the machine — never "Design Editor …". Shared by the
 /// desktop GUI and the serve-web daemon.
 pub fn device_display_name() -> String {
     #[cfg(target_os = "macos")]
@@ -341,16 +341,19 @@ pub fn device_display_name() -> String {
 }
 
 /// Standard [`AuthInitConfig`] shared by the desktop GUI and the serve-web
-/// daemon: sso base URL (override via `OPENPENCIL_SSO_URL`), credential
-/// store under `<openpencil_dir>/auth`, machine device name.
-pub fn desktop_init_config(openpencil_dir: &std::path::Path, app_version: &str) -> AuthInitConfig {
+/// daemon: sso base URL (override via `DESIGN_EDITOR_SSO_URL`), credential
+/// store under `<design_editor_dir>/auth`, machine device name.
+pub fn desktop_init_config(
+    design_editor_dir: &std::path::Path,
+    app_version: &str,
+) -> AuthInitConfig {
     // Preserve a present-but-non-UTF-8 override as an invalid empty origin so
     // backend URL validation fails instead of silently contacting production.
     let configured_sso_url =
         std::env::var_os(ENV_SSO_URL).map(|value| value.into_string().unwrap_or_default());
     AuthInitConfig {
         base_url: desktop_sso_origin(configured_sso_url.as_deref()).to_owned(),
-        storage_dir: openpencil_dir.join("auth"),
+        storage_dir: design_editor_dir.join("auth"),
         device_name: device_display_name(),
         app_version: app_version.to_string(),
     }
@@ -598,7 +601,7 @@ mod abi_tests {
             desktop_collab_verifier_config_from_startup(
                 Some(PRODUCTION_COLLAB_ISSUER),
                 Some("https://collab.example"),
-                Some("http://keys.example/openpencil/collab/policy"),
+                Some("http://keys.example/design-editor/collab/policy"),
                 None,
             ),
             Err(CollabVerifierConfigError::InvalidPolicyEndpoint)
@@ -608,7 +611,7 @@ mod abi_tests {
                 Some(PRODUCTION_COLLAB_ISSUER),
                 Some("https://collab.example"),
                 None,
-                Some("http://keys.example/openpencil/collab.jwks"),
+                Some("http://keys.example/design-editor/collab.jwks"),
             ),
             Err(CollabVerifierConfigError::InvalidJwksEndpoint)
         );

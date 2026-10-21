@@ -2,7 +2,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import napi, { OpStatus } from './OpNative';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /** Focus id of the hidden proxy input; `focusControl` addresses it by this. */
 export const IME_PROXY_ID = 'op_ime_proxy';

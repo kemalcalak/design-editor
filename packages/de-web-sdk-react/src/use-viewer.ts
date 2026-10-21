@@ -1,5 +1,5 @@
 import { createElement, useContext, type ReactNode } from 'react';
-import type { OpViewer } from '@zseven-w/de-web-sdk';
+import type { OpViewer } from '@kemalcalak/de-web-sdk';
 import { ViewerContext } from './context.js';
 
 // Provider component that injects an OpViewer into React context.

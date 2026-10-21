@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Verify one complete, signed op-auth production release matrix without
 # modifying it. The public key and this verifier always come from the trusted
-# OpenPencil checkout, never from the artifact commit being inspected.
+# Design Editor checkout, never from the artifact commit being inspected.
 
 set -euo pipefail
 
@@ -19,7 +19,7 @@ fi
 if [[ -n "$expected_version" && -z "$expected_openpencil_revision" \
     || -z "$expected_version" && -n "$expected_openpencil_revision" ]]; then
     printf '%s\n' \
-        'error: strict promotion requires both expected version and OpenPencil revision' \
+        'error: strict promotion requires both expected version and Design Editor revision' \
         >&2
     exit 2
 fi
@@ -30,7 +30,7 @@ fi
 
 if [[ -n "$expected_version" \
     && ! "$expected_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
-    printf 'error: invalid expected OpenPencil version\n' >&2
+    printf 'error: invalid expected Design Editor version\n' >&2
     exit 2
 fi
 if [[ -n "$expected_openpencil_revision" \
@@ -167,7 +167,7 @@ format_line=$(sed -n '1p' "$manifest")
 version_line=$(sed -n '2p' "$manifest")
 abi_line=$(sed -n '3p' "$manifest")
 source_line=$(sed -n '4p' "$manifest")
-openpencil_line=$(sed -n '5p' "$manifest")
+design_editor_line=$(sed -n '5p' "$manifest")
 build_line=$(sed -n '6p' "$manifest")
 count_line=$(sed -n '7p' "$manifest")
 
@@ -195,16 +195,16 @@ fi
 }
 
 source_revision=${source_line#source_revision=}
-openpencil_revision=${openpencil_line#openpencil_revision=}
+openpencil_revision=${design_editor_line#openpencil_revision=}
 build_id=${build_line#build_id=}
 [[ "$source_line" == "source_revision=$source_revision" \
     && "$source_revision" =~ ^[0-9a-f]{40}$ ]] || {
     printf 'error: invalid private source revision in release matrix\n' >&2
     exit 1
 }
-[[ "$openpencil_line" == "openpencil_revision=$openpencil_revision" \
+[[ "$design_editor_line" == "openpencil_revision=$openpencil_revision" \
     && "$openpencil_revision" =~ ^[0-9a-f]{40}$ ]] || {
-    printf 'error: invalid OpenPencil revision in release matrix\n' >&2
+    printf 'error: invalid Design Editor revision in release matrix\n' >&2
     exit 1
 }
 [[ "$build_line" == "build_id=$build_id" \

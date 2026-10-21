@@ -1,5 +1,5 @@
 /**
- * The account arm: talking to the OpenPencil Hub about who is signed in.
+ * The account arm: talking to the Design Editor Hub about who is signed in.
  *
  * This file is the browser half of `crates/de-chrome-extension-core`'s
  * `account` module. Every rule — which origin a region resolves to, whether a

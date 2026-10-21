@@ -33,7 +33,7 @@ struct Staging(PathBuf);
 impl Staging {
     fn new() -> Self {
         let dir = std::env::temp_dir().join(format!(
-            "openpencil-ffi-save-staging-{}-{}",
+            "design-editor-ffi-save-staging-{}-{}",
             std::process::id(),
             TEMP_ID.fetch_add(1, Ordering::Relaxed)
         ));
@@ -55,9 +55,10 @@ impl Drop for Staging {
 /// Redirect the private storage root, which is a process-wide
 /// first-write-wins setting. Same scratch directory the path-based save
 /// tests install, so whichever file wins the race both stay out of
-/// `~/.openpencil`.
+/// `~/.design-editor`.
 fn scratch_root() {
-    let root = std::env::temp_dir().join(format!("openpencil-ffi-doc-save-{}", std::process::id()));
+    let root =
+        std::env::temp_dir().join(format!("design-editor-ffi-doc-save-{}", std::process::id()));
     std::fs::create_dir_all(&root).expect("scratch root");
     de_config_store::redirect_user_root_for_tests(&root);
 }
@@ -417,7 +418,7 @@ fn suspend_shadows_a_shell_bound_document_and_reconciles_on_the_next_drain() {
     // at a private temp dir so the case cannot collide with the migration
     // cases that drain the shared private fallback.
     let documents = std::env::temp_dir().join(format!(
-        "openpencil-ffi-save-shadow-{}-{}",
+        "design-editor-ffi-save-shadow-{}-{}",
         std::process::id(),
         TEMP_ID.fetch_add(1, Ordering::Relaxed)
     ));

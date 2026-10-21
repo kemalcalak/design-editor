@@ -1,4 +1,4 @@
-/// Skillnet manifest shipped in the immutable OpenPencil skills bundle.
+/// Skillnet manifest shipped in the immutable Design Editor skills bundle.
 
 class Skill {
   role: String = "entrypoint"
@@ -8,8 +8,8 @@ class Skill {
 
 schemaVersion = 1
 skills: Mapping<String, Skill> = new {
-  ["openpencil-design"] = new Skill {
+  ["design-editor-design"] = new Skill {
     role = "entrypoint"
-    source = "skills/openpencil-design"
+    source = "skills/design-editor-design"
   }
 }

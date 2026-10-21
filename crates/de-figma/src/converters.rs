@@ -145,7 +145,7 @@ fn build_container(
                 })
             }
         }
-        FigLayoutMode::OpenPencil => Some(map_figma_layout(figma)),
+        FigLayoutMode::DesignEditor => Some(map_figma_layout(figma)),
     };
     if let Some(l) = layout {
         apply_layout(l, &mut container);

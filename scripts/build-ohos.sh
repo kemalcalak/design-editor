@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the OpenHarmony engine module (`libopenpencil.so`) from de-engine-napi.
+# Build the OpenHarmony engine module (`libdesign_editor.so`) from de-engine-napi.
 #
 # Usage:
 #   OHOS_NDK_HOME=/path/to/openharmony scripts/build-ohos.sh [extra cargo args]
@@ -156,7 +156,7 @@ export ohos_sdk_native="$ndk_root"
 # Built as one never-empty array: macOS still ships bash 3.2, where expanding
 # an EMPTY array under `set -u` aborts the script.
 # A dev op-auth archive additionally needs the bridge's dev-prebuilt feature.
-if [ -n "${OPENPENCIL_DEV_OP_AUTH_ARCHIVE:-}" ]; then
+if [ -n "${DESIGN_EDITOR_DEV_OP_AUTH_ARCHIVE:-}" ]; then
   features="$features,mobile-auth-dev"
 fi
 cargo_args=(build -p de-engine-napi --target "$target" --features "$features")
@@ -168,7 +168,7 @@ set -x
 cargo "${cargo_args[@]}" "$@"
 set +x
 
-artifact="target/$target/$profile/libopenpencil.so"
+artifact="target/$target/$profile/libdesign_editor.so"
 if [[ ! -s "$artifact" ]]; then
   echo "build-ohos.sh: expected $artifact but it is missing" >&2
   exit 1
@@ -191,9 +191,9 @@ done
 # previously packaged library untouched, while the final rename is atomic on
 # the destination filesystem.
 install_dir="$repo_root/packaging/harmony/entry/libs/$hap_abi"
-install_path="$install_dir/libopenpencil.so"
+install_path="$install_dir/libdesign_editor.so"
 mkdir -p "$install_dir"
-install_tmp="$(mktemp "$install_dir/.libopenpencil.so.tmp.XXXXXX")"
+install_tmp="$(mktemp "$install_dir/.libdesign_editor.so.tmp.XXXXXX")"
 cleanup_install() {
   rm -f "$install_tmp"
 }

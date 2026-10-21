@@ -1,4 +1,4 @@
-//! Versioned descriptor structs + parsing for the OpenPencil C ABI.
+//! Versioned descriptor structs + parsing for the Design Editor C ABI.
 //!
 //! Every descriptor is tail-growable: the caller sets `size` to the
 //! number of bytes it wrote; missing trailing fields read as zero/null

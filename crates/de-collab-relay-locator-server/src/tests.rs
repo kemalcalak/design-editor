@@ -113,7 +113,9 @@ async fn real_http_route_accepts_exact_publish_and_health_is_non_sensitive() {
     let body = publish_request();
     let response = server.request(exact_publish_request(&body)).await;
     assert!(response.starts_with("HTTP/1.1 200 OK\r\n"));
-    assert!(response.contains("\r\ncontent-type: application/vnd.openpencil.relay-locator-v1\r\n"));
+    assert!(
+        response.contains("\r\ncontent-type: application/vnd.design-editor.relay-locator-v1\r\n")
+    );
     let response_body = http_body(&response);
     let locator = SignedLocatorResponse::decode(response_body).expect("signed locator");
     assert_eq!(locator.locator().claims().home_region(), RelayRegion::Cn);
@@ -645,13 +647,13 @@ fn exact_publish_request(body: &[u8]) -> Vec<u8> {
 
 fn publish_wire(path: &str, body: &[u8], authorization: &str, include_accept: bool) -> Vec<u8> {
     let accept = if include_accept {
-        "Accept: application/vnd.openpencil.relay-locator-v1\r\n"
+        "Accept: application/vnd.design-editor.relay-locator-v1\r\n"
     } else {
         ""
     };
     let headers = format!(
         "POST {path} HTTP/1.1\r\nHost: test\r\n\
-         Content-Type: application/vnd.openpencil.relay-owner-publish-v1\r\n\
+         Content-Type: application/vnd.design-editor.relay-owner-publish-v1\r\n\
          {accept}Authorization: {authorization}\r\n\
          Content-Length: {}\r\nConnection: close\r\n\r\n",
         body.len()

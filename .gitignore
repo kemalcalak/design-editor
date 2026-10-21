@@ -9,7 +9,7 @@ count.txt
 .vinxi
 __unconfig*
 todos.json
-.openpencil-tmp/
+.design-editor-tmp/
 .superpowers/
 .playwright-cli/
 .playwright-mcp/
@@ -68,7 +68,7 @@ Cargo.lock.merge-conflict
 tools/__pycache__/
 __pycache__/
 *.pyc
-openpencil-docs
+design-editor-docs
 output
 
 # op-auth provenance signing private key — NEVER commit

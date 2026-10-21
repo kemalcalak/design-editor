@@ -1,5 +1,5 @@
-//! `op` - the OpenPencil CLI.
-//! Keeps common TS `op` aliases while preserving low-level `op <tool> key=value`.
+//! `de` - the Design Editor CLI.
+//! Keeps common TS `de` aliases while preserving low-level `op <tool> key=value`.
 
 use std::collections::BTreeMap;
 
@@ -49,7 +49,7 @@ fn main() {
             println!("{out}");
         }
         Err(e) => {
-            eprintln!("op: {e}");
+            eprintln!("de: {e}");
             std::process::exit(1);
         }
     }
@@ -64,7 +64,7 @@ fn run(args: &[String]) -> Result<String, CliError> {
         command,
     } = parse_args(args)?;
     // For commands that talk to a running server, resolve the live
-    // editor's published port (`~/.openpencil/.op-mcp-port`) unless the user
+    // editor's published port (`~/.design-editor/.de-mcp-port`) unless the user
     // pinned `--port` explicitly. `de start` keeps the requested port.
     let needs_server = command_needs_server(&command);
     // The live MCP endpoint authenticates every stateful call, so the token

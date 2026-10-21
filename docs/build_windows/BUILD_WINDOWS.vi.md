@@ -1,13 +1,13 @@
 
 > [English](./BUILD_WINDOWS.md) · [简体中文](./BUILD_WINDOWS.zh.md) · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · [한국어](./BUILD_WINDOWS.ko.md) · [Français](./BUILD_WINDOWS.fr.md) · [Español](./BUILD_WINDOWS.es.md) · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · [हिन्दी](./BUILD_WINDOWS.hi.md) · [Türkçe](./BUILD_WINDOWS.tr.md) · [ไทย](./BUILD_WINDOWS.th.md) · **Tiếng Việt** · [Bahasa Indonesia](./BUILD_WINDOWS.id.md)
 
-# Hướng dẫn biên dịch OpenPencil cho Windows
+# Hướng dẫn biên dịch Design Editor cho Windows
 
 ## 1. Tải mã nguồn
 
-1. Tải mã nguồn từ kho lưu trữ openpencil
+1. Tải mã nguồn từ kho lưu trữ design-editor
 
-2. openpencil có 3 mô-đun phụ thuộc trong thư mục `vendor` (jian, casement, agent) cần tải riêng
+2. design-editor có 3 mô-đun phụ thuộc trong thư mục `vendor` (jian, casement, agent) cần tải riêng
 
     - 2.1 jian (khung UI): [https://github.com/ZSeven-W/jian](https://github.com/ZSeven-W/jian) → giải nén vào `vendor\jian`
 
@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 Tải `rustup-init.exe` từ rustup.rs và chạy. Thực thi các lệnh sau trong PowerShell. **Tương ứng `openpencil 0.8.4`**:
+    - 2.3 Tải `rustup-init.exe` từ rustup.rs và chạy. Thực thi các lệnh sau trong PowerShell. **Tương ứng `design-editor 0.8.4`**:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Cài đặt wasm-bindgen-cli để tạo ràng buộc WASM-JS. Thực thi lệnh sau trong PowerShell. **Tương ứng `openpencil 0.8.4`**:
+    - 2.4 Cài đặt wasm-bindgen-cli để tạo ràng buộc WASM-JS. Thực thi lệnh sau trong PowerShell. **Tương ứng `design-editor 0.8.4`**:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -124,17 +124,17 @@
             ├── snippets\
             ├── op_host-web.d.ts
             ├── de_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 4. Cấu hình biến môi trường cho plugin dsh-openpencil
+## 4. Cấu hình biến môi trường cho plugin dsh-design-editor
 
 1. Chạy PowerShell với quyền quản trị viên và thực thi các lệnh sau (thay đường dẫn bằng gốc kho lưu trữ thực tế):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. Xác minh
@@ -177,4 +177,4 @@
     > 
     > Nếu trang hiển thị không tìm thấy `/pkg/de_host_web.js`, file bị thiếu trong `web-bundle/`.
 
-3. Tài liệu này được viết cho phiên bản `openpencil 0.8.4`. Phiên bản chuỗi công cụ rustup `1.94`、wasm-bindgen-cli `0.2.117` và skia-bindings `0.97.2` được căn chỉnh theo phiên bản này — các phiên bản khác có thể khác biệt.
+3. Tài liệu này được viết cho phiên bản `design-editor 0.8.4`. Phiên bản chuỗi công cụ rustup `1.94`、wasm-bindgen-cli `0.2.117` và skia-bindings `0.97.2` được căn chỉnh theo phiên bản này — các phiên bản khác có thể khác biệt.

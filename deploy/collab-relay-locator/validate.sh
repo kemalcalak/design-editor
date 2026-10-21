@@ -22,7 +22,7 @@ hsm_dir="$script_dir/../collab-relay-locator-hsm"
 hsm_compose="$hsm_dir/compose.yaml"
 hsm_overlay="$script_dir/compose.hsm.yaml"
 hsm_dockerfile="$hsm_dir/Dockerfile"
-hsm_tmpfiles="$hsm_dir/openpencil-locator-hsm.conf"
+hsm_tmpfiles="$hsm_dir/design-editor-locator-hsm.conf"
 cn_firewall_validator="$script_dir/validate-cn-docker-user-firewall.sh"
 
 require_literal() {
@@ -46,7 +46,7 @@ for pattern in \
     'cargo build --locked --release -p de-collab-relay-locator-hsm' \
     'USER ${SIGNER_UID}:${SHARED_GID}' \
     'HEALTHCHECK --interval=30s' \
-    'CMD ["serve", "--config", "/run/openpencil-config/locator-hsm.json"]'
+    'CMD ["serve", "--config", "/run/design-editor-config/locator-hsm.json"]'
 do
     require_literal "$pattern" "$hsm_dockerfile"
 done
@@ -56,46 +56,46 @@ for pattern in \
     'read_only: true' \
     'no-new-privileges:true' \
     'target: /run/secrets/locator-hsm-pin' \
-    'target: /var/lib/openpencil-softhsm/tokens' \
-    'target: /run/openpencil-hsm'
+    'target: /var/lib/design-editor-softhsm/tokens' \
+    'target: /run/design-editor-hsm'
 do
     require_literal "$pattern" "$hsm_compose"
 done
 
 require_literal 'condition: service_healthy' "$hsm_overlay"
-require_literal 'd /run/openpencil/locator-hsm 0770 root 65532 -' "$hsm_tmpfiles"
+require_literal 'd /run/design-editor/locator-hsm 0770 root 65532 -' "$hsm_tmpfiles"
 
 for pattern in \
     'read_only: true' \
     'cap_drop:' \
     'no-new-privileges:true' \
-    'OPENPENCIL_COLLAB_LOCATOR_TICKET_POLICY_FILE: /run/secrets/collab-policy.json' \
-    'OPENPENCIL_COLLAB_LOCATOR_HSM_SOCKET: /run/openpencil-hsm/signer.sock'
+    'DESIGN_EDITOR_COLLAB_LOCATOR_TICKET_POLICY_FILE: /run/secrets/collab-policy.json' \
+    'DESIGN_EDITOR_COLLAB_LOCATOR_HSM_SOCKET: /run/design-editor-hsm/signer.sock'
 do
     require_literal "$pattern" "$compose_file"
 done
 
-require_literal 'OPENPENCIL_COLLAB_LOCATOR_HOME_REGION: global' "$locator_global"
-require_literal 'OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND: "100"' \
+require_literal 'DESIGN_EDITOR_COLLAB_LOCATOR_HOME_REGION: global' "$locator_global"
+require_literal 'DESIGN_EDITOR_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND: "100"' \
     "$locator_global"
 require_literal 'host_ip: 127.0.0.1' "$locator_global"
 require_literal 'target: 8092' "$locator_global"
 require_literal 'published: "8092"' "$locator_global"
-require_literal 'OPENPENCIL_COLLAB_LOCATOR_HOME_REGION: cn' "$locator_cn"
-require_literal 'OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND: "100"' \
+require_literal 'DESIGN_EDITOR_COLLAB_LOCATOR_HOME_REGION: cn' "$locator_cn"
+require_literal 'DESIGN_EDITOR_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND: "100"' \
     "$locator_cn"
 require_literal 'host_ip: 10.0.0.10' "$locator_cn"
 require_literal 'target: 8092' "$locator_cn"
 require_literal 'published: "8092"' "$locator_cn"
 
-require_literal 'OPENPENCIL_COLLAB_RELAY_HOME_REGION: global' "$relay_global"
-require_literal 'OPENPENCIL_COLLAB_RELAY_MAX_PENDING_PER_SOURCE: "1024"' \
+require_literal 'DESIGN_EDITOR_COLLAB_RELAY_HOME_REGION: global' "$relay_global"
+require_literal 'DESIGN_EDITOR_COLLAB_RELAY_MAX_PENDING_PER_SOURCE: "1024"' \
     "$relay_global"
 require_literal 'host_ip: 127.0.0.1' "$relay_global"
 require_literal 'target: 8091' "$relay_global"
 require_literal 'published: "8091"' "$relay_global"
-require_literal 'OPENPENCIL_COLLAB_RELAY_HOME_REGION: cn' "$relay_cn"
-require_literal 'OPENPENCIL_COLLAB_RELAY_MAX_PENDING_PER_SOURCE: "1024"' \
+require_literal 'DESIGN_EDITOR_COLLAB_RELAY_HOME_REGION: cn' "$relay_cn"
+require_literal 'DESIGN_EDITOR_COLLAB_RELAY_MAX_PENDING_PER_SOURCE: "1024"' \
     "$relay_cn"
 require_literal 'host_ip: 10.0.0.10' "$relay_cn"
 require_literal 'target: 8091' "$relay_cn"
@@ -117,7 +117,7 @@ do
     require_literal "$pattern" "$nginx_config"
 done
 
-require_literal 'proxy_pass http://openpencil_collab_locator/v1/locator;' \
+require_literal 'proxy_pass http://design_editor_collab_locator/v1/locator;' \
     "$nginx_direct_location"
 require_literal 'server 127.0.0.1:8092;' "$nginx_direct_global"
 require_literal 'server 10.0.0.10:8092;' "$nginx_direct_cn"
@@ -125,8 +125,8 @@ require_literal 'server 127.0.0.1:8091;' "$relay_direct_global"
 require_literal 'server 10.0.0.10:8091;' "$relay_direct_cn"
 
 for pattern in \
-    'limit_req_zone $binary_remote_addr zone=openpencil_locator_per_source:10m rate=10r/s;' \
-    'limit_conn_zone $binary_remote_addr zone=openpencil_locator_connections:10m;' \
+    'limit_req_zone $binary_remote_addr zone=design_editor_locator_per_source:10m rate=10r/s;' \
+    'limit_conn_zone $binary_remote_addr zone=design_editor_locator_connections:10m;' \
     'client_header_buffer_size 64k;' \
     'large_client_header_buffers 2 64k;'
 do
@@ -134,9 +134,9 @@ do
 done
 
 for pattern in \
-    'limit_req zone=openpencil_locator_per_source burst=20 nodelay;' \
+    'limit_req zone=design_editor_locator_per_source burst=20 nodelay;' \
     'limit_req_status 429;' \
-    'limit_conn openpencil_locator_connections 16;' \
+    'limit_conn design_editor_locator_connections 16;' \
     'limit_conn_status 429;'
 do
     require_literal "$pattern" "$nginx_config"
@@ -152,10 +152,10 @@ fi
 
 if grep -Eq '^[[:space:]]*ports:' "$compose_file" "$relay_compose" \
     "$relay_production" ||
-    grep -Eq 'OPENPENCIL_COLLAB_(LOCATOR|RELAY)_(HOST_BIND|HOME_REGION)' \
+    grep -Eq 'DESIGN_EDITOR_COLLAB_(LOCATOR|RELAY)_(HOST_BIND|HOME_REGION)' \
         "$compose_file" "$relay_compose" "$relay_production" ||
     grep -Eq \
-        'OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND|OPENPENCIL_COLLAB_RELAY_MAX_PENDING_PER_SOURCE' \
+        'DESIGN_EDITOR_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND|DESIGN_EDITOR_COLLAB_RELAY_MAX_PENDING_PER_SOURCE' \
         "$compose_file" "$relay_compose" "$relay_production" ||
     grep -F '${' "$locator_global" "$locator_cn" "$relay_global" \
         "$relay_cn" >/dev/null
@@ -191,10 +191,10 @@ fi
 if command -v docker >/dev/null 2>&1 &&
     docker compose version >/dev/null 2>&1
 then
-    OPENPENCIL_COLLAB_HSM_CONFIG_HOST_FILE=/dev/null \
-    OPENPENCIL_COLLAB_HSM_PIN_HOST_FILE=/dev/null \
-    OPENPENCIL_COLLAB_HSM_TOKEN_HOST_DIR=/tmp \
-    OPENPENCIL_COLLAB_HSM_SOCKET_HOST_DIR=/tmp \
+    DESIGN_EDITOR_COLLAB_HSM_CONFIG_HOST_FILE=/dev/null \
+    DESIGN_EDITOR_COLLAB_HSM_PIN_HOST_FILE=/dev/null \
+    DESIGN_EDITOR_COLLAB_HSM_TOKEN_HOST_DIR=/tmp \
+    DESIGN_EDITOR_COLLAB_HSM_SOCKET_HOST_DIR=/tmp \
         docker compose -f "$hsm_compose" config -q
 
     for region in global cn
@@ -214,17 +214,17 @@ then
                 ;;
         esac
         locator_config=$(
-            OPENPENCIL_COLLAB_LOCATOR_HOME_REGION=$hostile_region \
-            OPENPENCIL_COLLAB_LOCATOR_HOST_BIND=0.0.0.0 \
-            OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND=1 \
-            OPENPENCIL_COLLAB_LOCATOR_HSM_KEY_ID=locator-prod-2026-07 \
-            OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_UID=65533 \
-            OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_GID=65532 \
-            OPENPENCIL_COLLAB_POLICY_HOST_FILE=/dev/null \
-            OPENPENCIL_COLLAB_HSM_SOCKET_HOST_DIR=/tmp \
-            OPENPENCIL_COLLAB_HSM_CONFIG_HOST_FILE=/dev/null \
-            OPENPENCIL_COLLAB_HSM_PIN_HOST_FILE=/dev/null \
-            OPENPENCIL_COLLAB_HSM_TOKEN_HOST_DIR=/tmp \
+            DESIGN_EDITOR_COLLAB_LOCATOR_HOME_REGION=$hostile_region \
+            DESIGN_EDITOR_COLLAB_LOCATOR_HOST_BIND=0.0.0.0 \
+            DESIGN_EDITOR_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND=1 \
+            DESIGN_EDITOR_COLLAB_LOCATOR_HSM_KEY_ID=locator-prod-2026-07 \
+            DESIGN_EDITOR_COLLAB_LOCATOR_HSM_PEER_UID=65533 \
+            DESIGN_EDITOR_COLLAB_LOCATOR_HSM_PEER_GID=65532 \
+            DESIGN_EDITOR_COLLAB_POLICY_HOST_FILE=/dev/null \
+            DESIGN_EDITOR_COLLAB_HSM_SOCKET_HOST_DIR=/tmp \
+            DESIGN_EDITOR_COLLAB_HSM_CONFIG_HOST_FILE=/dev/null \
+            DESIGN_EDITOR_COLLAB_HSM_PIN_HOST_FILE=/dev/null \
+            DESIGN_EDITOR_COLLAB_HSM_TOKEN_HOST_DIR=/tmp \
                 docker compose \
                 -f "$hsm_compose" -f "$compose_file" \
                 -f "$locator_overlay" -f "$hsm_overlay" config
@@ -233,9 +233,9 @@ then
         printf '%s\n' "$locator_config" | grep -F 'target: 8092' >/dev/null
         printf '%s\n' "$locator_config" | grep -F 'published: "8092"' >/dev/null
         printf '%s\n' "$locator_config" |
-            grep -F "OPENPENCIL_COLLAB_LOCATOR_HOME_REGION: $region" >/dev/null
+            grep -F "DESIGN_EDITOR_COLLAB_LOCATOR_HOME_REGION: $region" >/dev/null
         printf '%s\n' "$locator_config" |
-            grep -F 'OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND: "100"' \
+            grep -F 'DESIGN_EDITOR_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND: "100"' \
                 >/dev/null
         if [ "$(printf '%s\n' "$locator_config" |
             grep -Ec '^[[:space:]]+host_ip:')" -ne 1 ] ||
@@ -248,12 +248,12 @@ then
         fi
 
         relay_config=$(
-            OPENPENCIL_COLLAB_RELAY_HOME_REGION=$hostile_region \
-            OPENPENCIL_COLLAB_RELAY_HOST_BIND=0.0.0.0 \
-            OPENPENCIL_COLLAB_RELAY_MAX_PENDING_PER_SOURCE=1 \
-            OPENPENCIL_COLLAB_POLICY_HOST_FILE=/dev/null \
-            OPENPENCIL_RELAY_LOCATOR_KEYS_HOST_FILE=/dev/null \
-            OPENPENCIL_RELAY_X25519_KEYS_HOST_FILE=/dev/null \
+            DESIGN_EDITOR_COLLAB_RELAY_HOME_REGION=$hostile_region \
+            DESIGN_EDITOR_COLLAB_RELAY_HOST_BIND=0.0.0.0 \
+            DESIGN_EDITOR_COLLAB_RELAY_MAX_PENDING_PER_SOURCE=1 \
+            DESIGN_EDITOR_COLLAB_POLICY_HOST_FILE=/dev/null \
+            DESIGN_EDITOR_RELAY_LOCATOR_KEYS_HOST_FILE=/dev/null \
+            DESIGN_EDITOR_RELAY_X25519_KEYS_HOST_FILE=/dev/null \
                 docker compose \
                 -f "$relay_compose" -f "$relay_production" \
                 -f "$relay_overlay" config
@@ -262,9 +262,9 @@ then
         printf '%s\n' "$relay_config" | grep -F 'target: 8091' >/dev/null
         printf '%s\n' "$relay_config" | grep -F 'published: "8091"' >/dev/null
         printf '%s\n' "$relay_config" |
-            grep -F "OPENPENCIL_COLLAB_RELAY_HOME_REGION: $region" >/dev/null
+            grep -F "DESIGN_EDITOR_COLLAB_RELAY_HOME_REGION: $region" >/dev/null
         printf '%s\n' "$relay_config" |
-            grep -F 'OPENPENCIL_COLLAB_RELAY_MAX_PENDING_PER_SOURCE: "1024"' \
+            grep -F 'DESIGN_EDITOR_COLLAB_RELAY_MAX_PENDING_PER_SOURCE: "1024"' \
                 >/dev/null
         if [ "$(printf '%s\n' "$relay_config" |
             grep -Ec '^[[:space:]]+host_ip:')" -ne 1 ] ||

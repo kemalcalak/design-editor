@@ -12,12 +12,12 @@ use serde_json::{Map, Value};
 
 use crate::mcp_config_error::McpConfigError;
 use crate::mcp_config_io::{
-    atomic_write, grok_config_has_openpencil, update_grok_config, FileSnapshot,
+    atomic_write, grok_config_has_design_editor, update_grok_config, FileSnapshot,
 };
-use crate::mcp_integrations_dsh::{dsh_config_has_openpencil, update_dsh_patch_config};
+use crate::mcp_integrations_dsh::{dsh_config_has_design_editor, update_dsh_patch_config};
 
-const SERVER_NAME: &str = "openpencil";
-const ANTIGRAVITY_MCP_PERMISSION: &str = "mcp(openpencil/*)";
+const SERVER_NAME: &str = "design-editor";
+const ANTIGRAVITY_MCP_PERMISSION: &str = "mcp(design-editor/*)";
 
 pub(crate) fn set_cli_enabled(
     cli: McpCli,
@@ -64,11 +64,11 @@ fn detect_enabled_clis_for_home(home: &Path, use_env: bool) -> [bool; 13] {
     let mut flags = [false; 13];
     for (idx, cli) in McpCli::ALL.iter().copied().enumerate() {
         flags[idx] = if cli == McpCli::Antigravity {
-            antigravity_config_has_openpencil(&config_path(cli, home, use_env))
+            antigravity_config_has_design_editor(&config_path(cli, home, use_env))
                 && antigravity_permission_is_present(&antigravity_permissions_path(home))
         } else {
             let path = config_path(cli, home, use_env);
-            cli_config_has_openpencil(cli, &path)
+            cli_config_has_design_editor(cli, &path)
         };
     }
     flags
@@ -97,27 +97,27 @@ fn set_cli_enabled_at_path(
     Ok(path)
 }
 
-fn cli_config_has_openpencil(cli: McpCli, path: &Path) -> bool {
+fn cli_config_has_design_editor(cli: McpCli, path: &Path) -> bool {
     match cli {
         McpCli::Codex => fs::read_to_string(path)
-            .map(|text| codex_config_has_openpencil(&text))
+            .map(|text| codex_config_has_design_editor(&text))
             .unwrap_or(false),
         McpCli::GrokBuild => fs::read_to_string(path)
-            .map(|text| grok_config_has_openpencil(&text))
+            .map(|text| grok_config_has_design_editor(&text))
             .unwrap_or(false),
-        McpCli::Antigravity => antigravity_config_has_openpencil(path),
-        McpCli::OpenCode => opencode_config_has_openpencil(path),
-        McpCli::Kiro => kiro_config_has_openpencil(path),
-        McpCli::ZCode => zcode_config_has_openpencil(path),
-        McpCli::Dsh => dsh_config_has_openpencil(path),
-        // Every remaining CLI keys its servers off `mcpServers.openpencil`;
+        McpCli::Antigravity => antigravity_config_has_design_editor(path),
+        McpCli::OpenCode => opencode_config_has_design_editor(path),
+        McpCli::Kiro => kiro_config_has_design_editor(path),
+        McpCli::ZCode => zcode_config_has_design_editor(path),
+        McpCli::Dsh => dsh_config_has_design_editor(path),
+        // Every remaining CLI keys its servers off `mcpServers.design-editor`;
         // only the value shape differs, so presence is the same check.
         McpCli::ClaudeCode
         | McpCli::GithubCopilot
         | McpCli::GeminiCli
         | McpCli::QwenCode
         | McpCli::Cursor
-        | McpCli::Kimi => json_config_has_openpencil(path),
+        | McpCli::Kimi => json_config_has_design_editor(path),
     }
 }
 
@@ -288,7 +288,7 @@ fn antigravity_permission_is_present(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-fn json_config_has_openpencil(path: &Path) -> bool {
+fn json_config_has_design_editor(path: &Path) -> bool {
     read_json_object(path)
         .ok()
         .and_then(|root| {
@@ -299,7 +299,7 @@ fn json_config_has_openpencil(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-fn opencode_config_has_openpencil(path: &Path) -> bool {
+fn opencode_config_has_design_editor(path: &Path) -> bool {
     read_json_object(path)
         .ok()
         .and_then(|root| {
@@ -312,7 +312,7 @@ fn opencode_config_has_openpencil(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-fn kiro_config_has_openpencil(path: &Path) -> bool {
+fn kiro_config_has_design_editor(path: &Path) -> bool {
     read_json_object(path)
         .ok()
         .and_then(|root| {
@@ -325,7 +325,7 @@ fn kiro_config_has_openpencil(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-fn antigravity_config_has_openpencil(path: &Path) -> bool {
+fn antigravity_config_has_design_editor(path: &Path) -> bool {
     let Some(server) = read_json_object(path).ok().and_then(|root| {
         root.get("mcpServers")
             .and_then(Value::as_object)
@@ -464,7 +464,7 @@ fn update_zcode_config(path: &Path, enabled: bool, port: u16) -> Result<(), McpC
     write_json_object(path, &root)
 }
 
-fn zcode_config_has_openpencil(path: &Path) -> bool {
+fn zcode_config_has_design_editor(path: &Path) -> bool {
     read_json_object(path)
         .ok()
         .and_then(|root| {
@@ -478,7 +478,7 @@ fn zcode_config_has_openpencil(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-/// Merge `server` in under `mcpServers.openpencil` (or remove that key when
+/// Merge `server` in under `mcpServers.design-editor` (or remove that key when
 /// disabling), leaving every other server and top-level setting untouched.
 fn update_mcp_servers_json(
     path: &Path,
@@ -587,7 +587,7 @@ fn update_codex_config(path: &Path, enabled: bool, port: u16) -> Result<(), McpC
         if !text.is_empty() {
             text.push_str("\n\n");
         }
-        text.push_str("[mcp_servers.openpencil]\n");
+        text.push_str("[mcp_servers.design-editor]\n");
         text.push_str(&format!(
             "url = \"{}\"\n",
             toml_basic_string_escape(&endpoint(port))
@@ -596,8 +596,11 @@ fn update_codex_config(path: &Path, enabled: bool, port: u16) -> Result<(), McpC
     atomic_write(path, text.as_bytes())
 }
 
-fn codex_config_has_openpencil(input: &str) -> bool {
-    input.lines().map(str::trim).any(is_codex_openpencil_table)
+fn codex_config_has_design_editor(input: &str) -> bool {
+    input
+        .lines()
+        .map(str::trim)
+        .any(is_codex_design_editor_table)
 }
 
 fn remove_codex_server_block(input: &str) -> String {
@@ -605,7 +608,7 @@ fn remove_codex_server_block(input: &str) -> String {
     let mut skipping = false;
     for line in input.split_inclusive('\n') {
         let trimmed = line.trim();
-        if is_codex_openpencil_table(trimmed) {
+        if is_codex_design_editor_table(trimmed) {
             skipping = true;
             continue;
         }
@@ -619,12 +622,12 @@ fn remove_codex_server_block(input: &str) -> String {
     out
 }
 
-fn is_codex_openpencil_table(line: &str) -> bool {
+fn is_codex_design_editor_table(line: &str) -> bool {
     matches!(
         line,
-        "[mcp_servers.openpencil]"
-            | "[mcp_servers.\"openpencil\"]"
-            | "[\"mcp_servers\".\"openpencil\"]"
+        "[mcp_servers.design-editor]"
+            | "[mcp_servers.\"design-editor\"]"
+            | "[\"mcp_servers\".\"design-editor\"]"
     )
 }
 

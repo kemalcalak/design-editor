@@ -75,7 +75,7 @@ def render_frames(doc: pathlib.Path, out: pathlib.Path, template: str) -> list[p
     subprocess.run(
         [str(BIN), "--render-shots", str(doc), str(shots), "2"],
         capture_output=True, text=True,
-        env={"PATH": "/usr/bin:/bin", "OPENPENCIL_RENDER_MARGIN": "0"},
+        env={"PATH": "/usr/bin:/bin", "DESIGN_EDITOR_RENDER_MARGIN": "0"},
     )
     kids = boards(doc)
     written = []

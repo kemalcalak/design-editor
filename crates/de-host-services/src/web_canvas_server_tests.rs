@@ -44,7 +44,7 @@ fn write_temp_op(name: &str, body: &str) -> PathBuf {
 
 fn temp_op_file_name(name: &str, thread_name: &str) -> String {
     format!(
-        "openpencil-web-canvas-{}-{}-{}.op",
+        "design-editor-web-canvas-{}-{}-{}.op",
         sanitize_temp_file_component(name),
         std::process::id(),
         sanitize_temp_file_component(thread_name)
@@ -88,7 +88,7 @@ fn server_health_matches_ts_running_port_shape() {
     assert!(r.body.contains(r#""running":true"#));
     assert!(r.body.contains(r#""port":3100"#));
     assert!(r.body.contains(r#""localIp":"#));
-    assert!(r.body.contains(r#""server":"openpencil-mcp""#));
+    assert!(r.body.contains(r#""server":"design-editor-mcp""#));
 }
 
 #[test]

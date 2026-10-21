@@ -577,8 +577,9 @@ mod tests {
         assert_eq!(manifest.html_entry().relative_path, "index.html");
         assert_eq!(manifest.html_entry_count, 2);
         assert_eq!(
-            manifest
-                .entry_for_resource_url("https://openpencil.local/assets/site.css?cache=1#ignored"),
+            manifest.entry_for_resource_url(
+                "https://design-editor.local/assets/site.css?cache=1#ignored"
+            ),
             manifest
                 .entries
                 .iter()
@@ -586,7 +587,7 @@ mod tests {
         );
         assert_eq!(
             html_zip_project_url("assets/my image.png"),
-            "https://openpencil.local/assets/my%20image.png"
+            "https://design-editor.local/assets/my%20image.png"
         );
         assert_eq!(
             decode(&bytes, &manifest, manifest.html_entry_index),

@@ -1,14 +1,14 @@
 # Rust Shell
 
-Native + web editor chrome implemented in Rust against jian-skia. This is the **canonical** OpenPencil implementation — the original TypeScript editor (`apps/web`, `apps/desktop`, `apps/cli`, `pen-*`) has been **retired**, so the Rust shell is the product, not a parity port. `// ported from pen-*` comments below name the retired TS as historical origin; that code lives only in git history now.
+Native + web editor chrome implemented in Rust against jian-skia. This is the **canonical** Design Editor implementation — the original TypeScript editor (`apps/web`, `apps/desktop`, `apps/cli`, `pen-*`) has been **retired**, so the Rust shell is the product, not a parity port. `// ported from pen-*` comments below name the retired TS as historical origin; that code lives only in git history now.
 
 ## Crate layout
 
 > **Phase 7.3 reorg — read before trusting paths below.** The old
-> `openpencil-shell-*` crates were dissolved/renamed; deeper sections in this doc
-> may still cite pre-reorg paths. Map them: `openpencil-shell-native` →
-> **`de-host-native`**, `openpencil-shell-web` → **`de-host-web`**,
-> `design-editor` → **`de-host-desktop`**. `openpencil-shell-core` was
+> `design-editor-shell-*` crates were dissolved/renamed; deeper sections in this doc
+> may still cite pre-reorg paths. Map them: `design-editor-shell-native` →
+> **`de-host-native`**, `design-editor-shell-web` → **`de-host-web`**,
+> `design-editor` → **`de-host-desktop`**. `design-editor-shell-core` was
 > **split**, not just renamed: widgets / Document / `RenderBackend` →
 > **`de-editor-ui`**, the MCP wire layer → **`de-mcp`** (flat `de-mcp/src/*.rs`,
 > no `mcp/` subdir). The `wasm-libc-shim` + `vendor/skia-safe-op` wasm-skia fork
@@ -38,10 +38,10 @@ crates/
 ├── de-host-native/       Native host lib: WidgetHostNative + skia-safe GL backend (desktop + mobile)
 ├── de-engine-ffi/        Player C ABI: embed the canvas in iOS / Android shells (metal / gl / raster surfaces)
 ├── de-engine-jni/        Android JNI marshalling layer for de-engine-ffi (engine thread, registry, callbacks)
-├── de-engine-napi/       OpenHarmony (OHOS) Node-API layer → `libopenpencil.so`; reuses de-engine-jni's engine thread + registry, everything else target-gated on `target_env = "ohos"` (see its README for the ArkTS API table)
+├── de-engine-napi/       OpenHarmony (OHOS) Node-API layer → `libdesign_editor.so`; reuses de-engine-jni's engine thread + registry, everything else target-gated on `target_env = "ohos"` (see its README for the ArkTS API table)
 ├── de-host-web/          Browser bundle entry: wasm32-unknown-unknown cdylib, CanvasKit renderer
 ├── de-host-desktop/      Desktop binary `design-editor` (winit + skia-safe GL); also the `--serve-web` daemon
-├── de-cli/               `op` command-line tool
+├── de-cli/               `de` command-line tool
 ├── de-util/              Dependency-free leaf: shared collaboration-id grammar + hex-colour / JSON / XML helpers
 └── …                     de-mcp / de-ai / de-ai-skills / de-codegen / de-orchestrator / de-figma /
                           de-git / de-opmerge / de-pen-loader / de-design-lint / de-config-store /
@@ -319,7 +319,7 @@ Skia surface: `wasm32-unknown-unknown` raster (N32_PREMUL) + `put_image_data`. F
 
 Build: needs `EMSDK` env var pointing at an emsdk install (brew emscripten won't work — needs the real emsdk layout `$EMSDK/upstream/emscripten/llvm/bin/clang++`). Once set: `tools/check-wasm-bundle.sh` runs the full bundle gate (cargo → wasm-bindgen → wasm-opt -Oz, asserts 0 env.\* imports + ≤1 MiB gzip).
 
-Smoke: `crates/openpencil-shell-web/smoke/step-1b.html` — start `python3 -m http.server 8000` from `crates/openpencil-shell-web/` and open http://localhost:8000/smoke/step-1b.html.
+Smoke: `crates/design-editor-shell-web/smoke/step-1b.html` — start `python3 -m http.server 8000` from `crates/design-editor-shell-web/` and open http://localhost:8000/smoke/step-1b.html.
 
 ## Hit-test order
 

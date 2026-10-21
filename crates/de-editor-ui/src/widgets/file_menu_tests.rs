@@ -422,8 +422,11 @@ fn recent_columns_keep_an_exact_gap_before_the_right_aligned_age() {
 #[test]
 fn measured_truncation_stays_inside_its_budget() {
     let measure = |text: &str| text.chars().count() as f32 * 7.0;
-    let output =
-        truncate_to_width_measured("openpencil-super-long-project-file-name.op", 98.0, measure);
+    let output = truncate_to_width_measured(
+        "design-editor-super-long-project-file-name.op",
+        98.0,
+        measure,
+    );
 
     assert!(output.ends_with('…'), "{output:?}");
     assert!(measure(&output) <= 98.0, "{output:?}");

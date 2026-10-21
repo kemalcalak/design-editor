@@ -7,18 +7,18 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-const PID_FILE_NAME: &str = "openpencil-mcp-server.pid";
-const PORT_FILE_NAME: &str = "openpencil-mcp-server.port";
-const TOKEN_FILE_NAME: &str = "openpencil-mcp-server.token";
+const PID_FILE_NAME: &str = "design-editor-mcp-server.pid";
+const PORT_FILE_NAME: &str = "design-editor-mcp-server.port";
+const TOKEN_FILE_NAME: &str = "design-editor-mcp-server.token";
 const MINIMAL_DOCUMENT: &str = concat!(
     "{\n  \"version\": \"",
     env!("CARGO_PKG_VERSION"),
-    "\",\n  \"name\": \"OpenPencil CLI Session\",\n  \"children\": []\n}\n"
+    "\",\n  \"name\": \"Design Editor CLI Session\",\n  \"children\": []\n}\n"
 );
 
-/// Rust live-canvas discovery file (`~/.openpencil/.op-mcp-port`), written
+/// Rust live-canvas discovery file (`~/.design-editor/.de-mcp-port`), written
 /// by the running editor when its `McpLiveServer` binds. Deliberately
-/// distinct from the TS app's `~/.openpencil/.port`: the Rust editor
+/// distinct from the TS app's `~/.design-editor/.port`: the Rust editor
 /// serves JSON-RPC at `/mcp`, while the TS app serves REST at
 /// `/api/mcp/*` behind an app URL — sharing one file would let either
 /// stack mis-route to the other. Discovery here always confirms identity
@@ -35,7 +35,7 @@ struct RunningMcp {
 }
 
 /// `de start` — by default launch the live-rendering editor GUI and wait
-/// for it to publish `~/.openpencil/.op-mcp-port`, so subsequent `op <tool>`
+/// for it to publish `~/.design-editor/.de-mcp-port`, so subsequent `op <tool>`
 /// calls drive the on-screen canvas in real time (TS parity). Pass
 /// `headless` to instead run the windowless file-backed MCP server
 /// (`--mcp-http`) — useful for CI / display-less agents. Pass `web` to run
@@ -96,7 +96,7 @@ fn editor_will_open(path: &str) -> bool {
 
 /// Launch the visible editor with `--live-mcp <port>` and wait for it to
 /// publish the discovery port file. No `$TMPDIR` manager files: the
-/// editor owns `~/.openpencil/.op-mcp-port` and removes it on exit.
+/// editor owns `~/.design-editor/.de-mcp-port` and removes it on exit.
 fn run_start_live(port: u16, document_path: Option<&str>) -> Result<String, CliError> {
     let binary = find_desktop_binary()?;
     let mut command = Command::new(&binary);
@@ -125,7 +125,7 @@ fn run_start_live(port: u16, document_path: Option<&str>) -> Result<String, CliE
         }
         WaitOutcome::Exited(status) => {
             return Err(CliError::Daemon(format!(
-                "OpenPencil editor exited before serving the live MCP server: {status}"
+                "Design Editor editor exited before serving the live MCP server: {status}"
             )));
         }
         WaitOutcome::TimedOut => {}
@@ -135,8 +135,8 @@ fn run_start_live(port: u16, document_path: Option<&str>) -> Result<String, CliE
     // process is left running and may still come up, but we cannot
     // confirm the canvas is live yet.
     Err(CliError::Daemon(format!(
-        "OpenPencil editor did not publish a live MCP server within 15s \
-         (expected ~/.openpencil/{LIVE_PORT_FILE_NAME}); it may still be starting"
+        "Design Editor editor did not publish a live MCP server within 15s \
+         (expected ~/.design-editor/{LIVE_PORT_FILE_NAME}); it may still be starting"
     )))
 }
 
@@ -144,7 +144,7 @@ fn run_start_live(port: u16, document_path: Option<&str>) -> Result<String, CliE
 /// bundle at `/` + `/pkg/*`, REST sync, JSON-RPC `/mcp`), track it via the
 /// same `$TMPDIR` pid/port/token manager files as the headless server (so
 /// `de stop` / discovery work unchanged — the daemon honors the token-authed
-/// `openpencil/shutdown`), wait until its HTTP port answers our token, then
+/// `design-editor/shutdown`), wait until its HTTP port answers our token, then
 /// print the URL and open it in the default browser.
 fn run_start_web(
     port: u16,
@@ -210,13 +210,13 @@ fn run_start_web(
         WaitOutcome::Exited(status) => {
             remove_manager_files();
             return Err(CliError::Daemon(format!(
-                "OpenPencil web daemon exited before accepting connections: {status}"
+                "Design Editor web daemon exited before accepting connections: {status}"
             )));
         }
         WaitOutcome::TimedOut => {}
     }
     Err(CliError::Daemon(format!(
-        "OpenPencil web daemon did not respond on 127.0.0.1:{port} within 5s"
+        "Design Editor web daemon did not respond on 127.0.0.1:{port} within 5s"
     )))
 }
 
@@ -322,20 +322,20 @@ fn run_start_headless(port: u16, document_path: Option<&str>) -> Result<String, 
         WaitOutcome::Exited(status) => {
             remove_manager_files();
             return Err(CliError::Daemon(format!(
-                "OpenPencil MCP server exited before accepting connections: {status}"
+                "Design Editor MCP server exited before accepting connections: {status}"
             )));
         }
         WaitOutcome::TimedOut => {}
     }
 
     Err(CliError::Daemon(format!(
-        "OpenPencil MCP server did not respond on 127.0.0.1:{port} within 3s"
+        "Design Editor MCP server did not respond on 127.0.0.1:{port} within 3s"
     )))
 }
 
 pub(crate) fn run_stop() -> Result<String, CliError> {
     // `de stop` asks the server to quit ITSELF via a token-authed
-    // `openpencil/shutdown`. This NEVER signals a pid, so there is no
+    // `design-editor/shutdown`. This NEVER signals a pid, so there is no
     // recycled-pid / wrong-process race anywhere — and the live editor
     // exits cleanly (saving state + removing its own discovery file).
     // Safe by construction: only the server holding this exact token acts,
@@ -347,7 +347,7 @@ pub(crate) fn run_stop() -> Result<String, CliError> {
         if !live_token.is_empty() && crate::mcp_http_cli::request_shutdown(live_port, &live_token) {
             wait_until(|| crate::mcp_http_cli::mcp_ping_live(live_port, &live_token));
             remove_live_port_file();
-            return Ok(stop_message("OpenPencil editor stopped"));
+            return Ok(stop_message("Design Editor editor stopped"));
         }
         // No live server answered our token. Tidy an orphaned file only when
         // the recorded process is definitively gone; a live-but-unresponsive
@@ -361,7 +361,7 @@ pub(crate) fn run_stop() -> Result<String, CliError> {
         if !info.token.is_empty() && crate::mcp_http_cli::request_shutdown(info.port, &info.token) {
             wait_until(|| crate::mcp_http_cli::mcp_ping_headless(info.port, &info.token));
             remove_manager_files();
-            return Ok(stop_message("OpenPencil MCP server stopped"));
+            return Ok(stop_message("Design Editor MCP server stopped"));
         }
         // Didn't answer our token (recycled pid / reused port, or transiently
         // busy). Don't signal anything; only clean up files when the recorded
@@ -393,7 +393,7 @@ fn wait_until<F: Fn() -> bool>(still_up: F) {
     let _ = wait_until_false(30, Duration::from_millis(100), still_up);
 }
 
-/// Path to the Rust live discovery file `~/.openpencil/.op-mcp-port`.
+/// Path to the Rust live discovery file `~/.design-editor/.de-mcp-port`.
 fn live_port_file_path() -> Option<PathBuf> {
     de_config_store::ConfigStore::user()
         .ok()
@@ -404,7 +404,7 @@ fn live_port_file_path_in(store: &de_config_store::ConfigStore) -> std::io::Resu
     store.path(de_config_store::well_known::LIVE_MCP_PORT)
 }
 
-/// Read `~/.openpencil/.op-mcp-port` → `(port, pid, token)`. `pid` is 0
+/// Read `~/.design-editor/.de-mcp-port` → `(port, pid, token)`. `pid` is 0
 /// when absent or out of `u32` range (so callers never act on a truncated
 /// pid); `token` is empty when absent.
 fn read_live_port_file() -> Option<(u16, u32, String)> {
@@ -519,7 +519,7 @@ fn preflight_document(path: &Path) -> Result<(), CliError> {
     // error that reads like the file is unreadable.
     let src = std::str::from_utf8(&bytes).map_err(|_| {
         CliError::Document(format!(
-            "{} is not a valid OpenPencil document: not UTF-8 text \
+            "{} is not a valid Design Editor document: not UTF-8 text \
              (looks like a binary archive). Only .op (JSON) documents open \
              directly; legacy .pen / .fig files must be imported.",
             path.display()
@@ -527,7 +527,7 @@ fn preflight_document(path: &Path) -> Result<(), CliError> {
     })?;
     de_pen_loader::load_canonical(src).map(|_| ()).map_err(|e| {
         CliError::Document(format!(
-            "{} is not a valid OpenPencil document: {e}\n\
+            "{} is not a valid Design Editor document: {e}\n\
              Only .op (JSON) documents open directly; legacy .pen / .fig files must be imported.",
             path.display()
         ))
@@ -623,12 +623,12 @@ fn home_dir() -> Result<PathBuf, CliError> {
 }
 
 fn find_desktop_binary() -> Result<PathBuf, CliError> {
-    if let Some(path) = env::var_os("OPENPENCIL_DESKTOP_BIN").map(PathBuf::from) {
+    if let Some(path) = env::var_os("DESIGN_EDITOR_DESKTOP_BIN").map(PathBuf::from) {
         if path.is_file() {
             return Ok(path);
         }
         return Err(CliError::Daemon(format!(
-            "OPENPENCIL_DESKTOP_BIN points to a missing file: {}",
+            "DESIGN_EDITOR_DESKTOP_BIN points to a missing file: {}",
             path.display()
         )));
     }
@@ -639,7 +639,7 @@ fn find_desktop_binary() -> Result<PathBuf, CliError> {
         }
     }
     Err(CliError::Daemon(
-        "OpenPencil desktop binary not found; set OPENPENCIL_DESKTOP_BIN or build design-editor"
+        "Design Editor desktop binary not found; set DESIGN_EDITOR_DESKTOP_BIN or build design-editor"
             .into(),
     ))
 }
@@ -651,7 +651,7 @@ fn desktop_binary_candidates() -> Vec<PathBuf> {
         .and_then(|exe| exe.parent().map(Path::to_path_buf));
     if let Some(dir) = exe_dir {
         candidates.push(dir.join(desktop_binary_name()));
-        candidates.push(dir.join("OpenPencil"));
+        candidates.push(dir.join("Design Editor"));
     }
     if let Ok(cwd) = env::current_dir() {
         candidates.push(cwd.join("target").join("debug").join(desktop_binary_name()));
@@ -666,37 +666,39 @@ fn desktop_binary_candidates() -> Vec<PathBuf> {
         if let Ok(home) = home_dir() {
             candidates.push(
                 home.join("Applications")
-                    .join("OpenPencil.app")
+                    .join("Design Editor.app")
                     .join("Contents")
                     .join("MacOS")
-                    .join("OpenPencil"),
+                    .join("Design Editor"),
             );
         }
         candidates.push(
             PathBuf::from("/Applications")
-                .join("OpenPencil.app")
+                .join("Design Editor.app")
                 .join("Contents")
                 .join("MacOS")
-                .join("OpenPencil"),
+                .join("Design Editor"),
         );
     } else if cfg!(target_os = "windows") {
         if let Some(local_app_data) = env::var_os("LOCALAPPDATA").map(PathBuf::from) {
             candidates.push(
                 local_app_data
                     .join("Programs")
-                    .join("openpencil")
-                    .join("OpenPencil.exe"),
+                    .join("design-editor")
+                    .join("design-editor.exe"),
             );
         }
-        candidates.push(PathBuf::from(r"C:\Program Files\OpenPencil\OpenPencil.exe"));
         candidates.push(PathBuf::from(
-            r"C:\Program Files (x86)\OpenPencil\OpenPencil.exe",
+            r"C:\Program Files\Design Editor\design-editor.exe",
+        ));
+        candidates.push(PathBuf::from(
+            r"C:\Program Files (x86)\Design Editor\design-editor.exe",
         ));
     } else {
-        candidates.push(PathBuf::from("/usr/bin/openpencil"));
-        candidates.push(PathBuf::from("/usr/local/bin/openpencil"));
+        candidates.push(PathBuf::from("/usr/bin/design-editor"));
+        candidates.push(PathBuf::from("/usr/local/bin/design-editor"));
         if let Ok(home) = home_dir() {
-            candidates.push(home.join(".local").join("bin").join("openpencil"));
+            candidates.push(home.join(".local").join("bin").join("design-editor"));
             collect_app_images(&home.join("Applications"), &mut candidates);
             collect_app_images(&home.join("Downloads"), &mut candidates);
         }
@@ -721,7 +723,7 @@ fn collect_app_images(dir: &Path, candidates: &mut Vec<PathBuf>) {
         let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
             continue;
         };
-        if name.starts_with("OpenPencil") && name.ends_with(".AppImage") {
+        if name.starts_with("Design Editor") && name.ends_with(".AppImage") {
             candidates.push(path);
         }
     }

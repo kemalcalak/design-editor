@@ -289,10 +289,10 @@ export class PenEditorProvider implements vscode.CustomEditorProvider<PenDocumen
         if (externalUrl !== undefined) {
           void vscode.env.openExternal(vscode.Uri.parse(externalUrl, true)).then(
             (opened) => {
-              if (!opened) this.logger.error("the host refused to open the OpenPencil sign-in page");
+              if (!opened) this.logger.error("the host refused to open the Design Editor sign-in page");
             },
             (error: unknown) =>
-              this.logger.error(`opening the OpenPencil sign-in page failed: ${String(error)}`),
+              this.logger.error(`opening the Design Editor sign-in page failed: ${String(error)}`),
           );
           return;
         }
@@ -460,7 +460,7 @@ export class PenEditorProvider implements vscode.CustomEditorProvider<PenDocumen
       },
       writeBackupFallback: async (bytes) => {
         const target = await vscode.window.showSaveDialog({
-          title: "Save your OpenPencil version",
+          title: "Save your Design Editor version",
           saveLabel: "Save copy",
         });
         if (!target) throw new Error("backup save cancelled — bytes not persisted");
@@ -497,7 +497,7 @@ export class PenEditorProvider implements vscode.CustomEditorProvider<PenDocumen
       },
       warn: (message) => {
         this.logger.error(message);
-        void vscode.window.showWarningMessage(`OpenPencil: ${message}`);
+        void vscode.window.showWarningMessage(`Design Editor: ${message}`);
       },
     };
   }
@@ -618,8 +618,8 @@ function delay(ms: number): Promise<void> {
 function errorPage(detail: string): string {
   const safe = detail.replace(/[<&]/g, (c) => (c === "<" ? "&lt;" : "&amp;"));
   return `<!doctype html><html><body style="font-family:sans-serif;padding:2rem;color:var(--vscode-foreground)">
-<h3>OpenPencil could not open this design</h3><p>${safe}</p>
-<p>Check that <code>de-host-web-server</code> is built (<code>cargo build -p de-host-web-server</code>) or set <code>openpencil.dev.daemonPath</code>.</p>
+<h3>Design Editor could not open this design</h3><p>${safe}</p>
+<p>Check that <code>de-host-web-server</code> is built (<code>cargo build -p de-host-web-server</code>) or set <code>design-editor.dev.daemonPath</code>.</p>
 </body></html>`;
 }
 

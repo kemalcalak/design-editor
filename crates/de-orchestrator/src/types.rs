@@ -287,7 +287,7 @@ impl GeometryEchoBudget {
     /// Consume one unit of budget iff any remains. Returns `true` when the
     /// caller may proceed with an echo retry — `false` means the run-wide
     /// cap is already exhausted (or was `0` to begin with, e.g. the
-    /// `OPENPENCIL_GEOMETRY_ECHO=0` rollback valve — see
+    /// `DESIGN_EDITOR_GEOMETRY_ECHO=0` rollback valve — see
     /// [`geometry_echo_cap`]).
     pub(crate) fn try_consume(&self) -> bool {
         self.0
@@ -297,7 +297,7 @@ impl GeometryEchoBudget {
 }
 
 /// `min(subtask_count, 6)` unless `env_value == Some("0")` (the
-/// `OPENPENCIL_GEOMETRY_ECHO=0` rollback safety valve — geometry echo
+/// `DESIGN_EDITOR_GEOMETRY_ECHO=0` rollback safety valve — geometry echo
 /// defaults ON), in which case `0`. A zero-budget [`GeometryEchoBudget`]
 /// degrades to a no-op exactly like "no budget left", so disabling the env
 /// var needs no separate branch anywhere the budget is consumed.

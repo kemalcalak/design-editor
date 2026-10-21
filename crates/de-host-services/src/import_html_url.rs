@@ -14,7 +14,7 @@ use crate::import_html_url_error::ImportHtmlUrlError;
 use crate::provider_dial::{client_for, EndpointDialPolicy};
 use crate::web_image_search::{read_capped, ImageJobSlot};
 
-const ALLOWLIST_ENV: &str = "OPENPENCIL_WEB_AI_ENDPOINT_ALLOWLIST";
+const ALLOWLIST_ENV: &str = "DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST";
 const PAGE_BYTES_CAP: usize = 10 * 1024 * 1024;
 const RESOURCE_BYTES_CAP: usize = 4 * 1024 * 1024;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);

@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil headless host services — the GUI-free backend (serve-web daemon, MCP, AI chat/orchestration, export, persistence) shared by de-host-desktop + de-host-web-server; no winit/skia-GL"
+description = "Design Editor headless host services — the GUI-free backend (serve-web daemon, MCP, AI chat/orchestration, export, persistence) shared by de-host-desktop + de-host-web-server; no winit/skia-GL"
 
 [lib]
 name = "de_host_services"

@@ -398,7 +398,7 @@ fn file_mcp_applier_normalizes_mobile_document_before_save() {
         .expect("system clock")
         .as_nanos();
     let path = std::env::temp_dir().join(format!(
-        "openpencil-mcp-mobile-normalize-{}-{suffix}.op",
+        "design-editor-mcp-mobile-normalize-{}-{suffix}.op",
         std::process::id()
     ));
     let mut state = de_editor_core::EditorState::new();
@@ -491,7 +491,7 @@ fn full_design_context_tools_dispatch_as_read_only_nested_json() {
         ),
         (
             "list_ui_kits",
-            r#"{"kitId":"openpencil-starter","limit":2}"#,
+            r#"{"kitId":"design-editor-starter","limit":2}"#,
             &["kits", "scriptRef", "starter/btn-primary"][..],
         ),
         (
@@ -524,7 +524,7 @@ fn full_design_context_tools_dispatch_as_read_only_nested_json() {
 fn load_theme_preset_merges_live_doc_over_mcp() {
     let mut state = de_editor_core::EditorState::new();
     let dir = std::env::temp_dir().join(format!(
-        "openpencil-theme-preset-test-{}",
+        "design-editor-theme-preset-test-{}",
         std::process::id()
     ));
     std::fs::create_dir_all(&dir).expect("temp dir");
@@ -532,7 +532,7 @@ fn load_theme_preset_merges_live_doc_over_mcp() {
     std::fs::write(
         &preset_path,
         r##"{
-  "type": "openpencil-theme-preset",
+  "type": "design-editor-theme-preset",
   "version": "1.0.0",
   "name": "Dark",
   "themes": { "Mode": ["Light", "Dark"] },

@@ -26,7 +26,7 @@ use crate::UnixHsmRelayLocatorSigner;
 #[cfg(unix)]
 const EXPIRED_NOT_BEFORE_UNIX: u64 = 1;
 const EXPIRED_AT_UNIX: u64 = 2;
-const EXPECTED_POLICY_SHA256_ENV: &str = "OPENPENCIL_COLLAB_EXPECTED_POLICY_SHA256";
+const EXPECTED_POLICY_SHA256_ENV: &str = "DESIGN_EDITOR_COLLAB_EXPECTED_POLICY_SHA256";
 
 /// Verify the production policy and exercise one real HSM signing round trip.
 pub fn check_production() -> Result<(), ProductionLocatorCheckError> {

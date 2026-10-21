@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  cargo-bundle merges this file into the generated OpenPencil.app
+  cargo-bundle merges this file into the generated Design Editor.app
   Info.plist. The app UI is localized in Rust rather than .lproj
   resources, so let AppKit use the user's preferred language for
   native panels such as NSOpenPanel / NSSavePanel.
@@ -31,10 +31,10 @@
     <string>id</string>
   </array>
   <key>NSLocalNetworkUsageDescription</key>
-  <string>OpenPencil uses your local network to discover and connect to collaboration sessions you start or join.</string>
+  <string>Design Editor uses your local network to discover and connect to collaboration sessions you start or join.</string>
   <key>NSBonjourServices</key>
   <array>
-    <string>_openpencil-collab._tcp</string>
+    <string>_design-editor-collab._tcp</string>
   </array>
 </dict>
 </plist>

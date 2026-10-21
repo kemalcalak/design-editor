@@ -1,7 +1,7 @@
 //! Headless agentic tool-loop mode for the smoke runner
-//! (`OPENPENCIL_SMOKE_LOOP=1`).
+//! (`DESIGN_EDITOR_SMOKE_LOOP=1`).
 //!
-//! The DEFAULT smoke path (no `OPENPENCIL_SMOKE_LOOP`) drives the
+//! The DEFAULT smoke path (no `DESIGN_EDITOR_SMOKE_LOOP`) drives the
 //! `Orchestrator` and is byte-for-byte unchanged — see `main.rs`. This
 //! module is a SEPARATE branch that exercises Pencil's *agentic loop*
 //! instead: the model is handed the 14 design tools, calls them
@@ -74,9 +74,9 @@ use crate::loop_seed::SeedBuildError;
 /// benchmark logs are unchanged byte-for-byte.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LoopSetupError {
-    /// `OPENPENCIL_LLM_*` did not describe a usable builtin provider.
+    /// `DESIGN_EDITOR_LLM_*` did not describe a usable builtin provider.
     ProviderNotReady,
-    /// `OPENPENCIL_SMOKE_LIBRARY` named a library that failed to merge.
+    /// `DESIGN_EDITOR_SMOKE_LIBRARY` named a library that failed to merge.
     /// Payload is the rendered `de_pen_loader::LibraryMergeError`.
     LibraryLoad(String),
     /// The minimal scaffold seed subtree could not be built.
@@ -117,7 +117,7 @@ pub struct HeadlessExecutor {
     state: Arc<Mutex<EditorState>>,
     root_seed_guard: Mutex<RootSeedGuard>,
     /// Echo each tool call + truncated result to stderr when
-    /// `OPENPENCIL_SMOKE_DUMP` is set, so ab-v9 logs capture the run.
+    /// `DESIGN_EDITOR_SMOKE_DUMP` is set, so ab-v9 logs capture the run.
     dump: bool,
 }
 
@@ -251,7 +251,7 @@ impl ChatToolExecutor for HeadlessExecutor {
     }
 }
 
-/// Build the design-tool builtin provider from the `OPENPENCIL_LLM_*` env.
+/// Build the design-tool builtin provider from the `DESIGN_EDITOR_LLM_*` env.
 ///
 /// Always the `OpenAiCompat` wire (ab-v9's path) — the loop runs
 /// `run_openai_agent_loop` for this kind. `base_url` / `api_key` / `model`
@@ -292,10 +292,10 @@ fn build_design_provider(
 /// return `state` carries the finalized design (`finalize()` already ran,
 /// gated by `with_loop_finalize`).
 ///
-/// `OPENPENCIL_SMOKE_DUMP` streams per-delta text / tool-call / thinking
+/// `DESIGN_EDITOR_SMOKE_DUMP` streams per-delta text / tool-call / thinking
 /// lines to stderr so ab-v9 logs capture the run.
 ///
-/// `seed = true` (the `OPENPENCIL_SMOKE_LOOP_SEED=1` path) applies a MINIMAL
+/// `seed = true` (the `DESIGN_EDITOR_SMOKE_LOOP_SEED=1` path) applies a MINIMAL
 /// scaffold seed to the `EditorState` BEFORE the loop runs — a page-root frame
 /// plus a few empty named section stubs, derived from the orchestrator's
 /// heuristic fallback planner (see [`crate::loop_seed`]). The system prompt is
@@ -315,10 +315,10 @@ pub fn run_loop(
     library_path: Option<String>,
     seed: bool,
 ) -> Result<Arc<Mutex<EditorState>>, LoopSetupError> {
-    // `OPENPENCIL_SMOKE_STARTER=1` seeds the fresh-canvas starter frame so the
+    // `DESIGN_EDITOR_SMOKE_STARTER=1` seeds the fresh-canvas starter frame so the
     // loop exercises the same `replaceEmptyFrame` reuse path the desktop GUI
     // carries; default stays the empty `new()` doc (matches orchestrator mode).
-    let seed_starter = std::env::var("OPENPENCIL_SMOKE_STARTER")
+    let seed_starter = std::env::var("DESIGN_EDITOR_SMOKE_STARTER")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
     let mut initial = if seed_starter {
@@ -326,7 +326,7 @@ pub fn run_loop(
     } else {
         EditorState::new()
     };
-    // Merge a harvested component library (`OPENPENCIL_SMOKE_LIBRARY`) into the
+    // Merge a harvested component library (`DESIGN_EDITOR_SMOKE_LIBRARY`) into the
     // doc before the loop runs so its `batch_design` ref nodes can target the
     // loaded masters. `None` ⇒ no merge, byte-for-byte unchanged.
     if let Some(path) = library_path.as_deref() {
@@ -341,7 +341,7 @@ pub fn run_loop(
             report.themes_added
         );
     }
-    // Minimal scaffold seed (`OPENPENCIL_SMOKE_LOOP_SEED=1`): apply a page-root
+    // Minimal scaffold seed (`DESIGN_EDITOR_SMOKE_LOOP_SEED=1`): apply a page-root
     // + named empty section stubs to the live state BEFORE the loop runs, so a
     // weak model has structure to fill instead of an empty canvas it collapses
     // on. `seed = false` ⇒ this whole block is skipped (pure-loop, unchanged).

@@ -7,11 +7,11 @@
 use super::*;
 
 #[test]
-fn ping_response_carries_openpencil_identity_marker() {
+fn ping_response_carries_design_editor_identity_marker() {
     // The `op` CLI keys discovery on this marker; if it ever changes,
     // CLI `mcp_ping` must change in lockstep. No token ⇒ no `mode`/`token`.
     let resp = ping_response("7", None);
-    assert!(resp.contains(r#""server":"openpencil-mcp""#), "{resp}");
+    assert!(resp.contains(r#""server":"design-editor-mcp""#), "{resp}");
     assert!(resp.contains(r#""id":7"#), "{resp}");
     assert!(!resp.contains("mode"), "{resp}");
 }
@@ -21,14 +21,14 @@ fn ping_response_embeds_headless_token_when_present() {
     let resp = ping_response("5", Some("abc-123"));
     assert!(resp.contains(r#""mode":"headless""#), "{resp}");
     assert!(resp.contains(r#""token":"abc-123""#), "{resp}");
-    assert!(resp.contains(r#""server":"openpencil-mcp""#), "{resp}");
+    assert!(resp.contains(r#""server":"design-editor-mcp""#), "{resp}");
 }
 
 #[test]
 fn ping_response_result_is_spec_empty_apart_from_meta() {
     // The MCP spec says a ping result is empty; strict clients (Gemini
     // CLI's `EmptyResultSchema.strict()`, issue #199) reject any top-level
-    // key other than `_meta`. The OpenPencil identity must therefore ride
+    // key other than `_meta`. The Design Editor identity must therefore ride
     // INSIDE `_meta` — a top-level `server`/`mode`/`token` is a regression.
     for resp in [ping_response("1", None), ping_response("2", Some("tok-9"))] {
         let value: serde_json::Value = serde_json::from_str(&resp).expect("valid JSON");
@@ -62,7 +62,7 @@ fn sanitize_token_rejects_unsafe_or_empty() {
 #[test]
 fn shutdown_request_id_requires_matching_nonempty_token() {
     let line =
-        r#"{"jsonrpc":"2.0","id":9,"method":"openpencil/shutdown","params":{"token":"tok-1"}}"#;
+        r#"{"jsonrpc":"2.0","id":9,"method":"design-editor/shutdown","params":{"token":"tok-1"}}"#;
     assert_eq!(shutdown_request_id(line, "tok-1").as_deref(), Some("9"));
     assert_eq!(shutdown_request_id(line, "tok-2"), None); // wrong token
     assert_eq!(shutdown_request_id(line, ""), None); // empty never authenticates
@@ -74,7 +74,7 @@ fn shutdown_request_id_requires_matching_nonempty_token() {
     // Missing params.token → no shutdown.
     assert_eq!(
         shutdown_request_id(
-            r#"{"jsonrpc":"2.0","id":1,"method":"openpencil/shutdown","params":{}}"#,
+            r#"{"jsonrpc":"2.0","id":1,"method":"design-editor/shutdown","params":{}}"#,
             "tok-1"
         ),
         None
@@ -137,8 +137,8 @@ fn initialize_response_includes_protocol_and_capabilities() {
     assert!(r.contains(r#""tools""#));
     assert!(r.contains(r#""serverInfo""#));
     // Cross-stack parity with TS pen-mcp: serverInfo.name must be the shared
-    // `openpencil-mcp` identity, and serverInfo.version must track the crate
+    // `design-editor-mcp` identity, and serverInfo.version must track the crate
     // version (TS sources its package.json) — guards against version drift.
-    assert!(r.contains(r#""name":"openpencil-mcp""#));
+    assert!(r.contains(r#""name":"design-editor-mcp""#));
     assert!(r.contains(&format!(r#""version":"{}""#, env!("CARGO_PKG_VERSION"))));
 }

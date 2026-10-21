@@ -3,7 +3,7 @@ use super::super::*;
 fn settings_save_test_root(case: &str) -> std::path::PathBuf {
     let sequence = SETTINGS_TEMP_SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     std::env::temp_dir().join(format!(
-        "openpencil-settings-save-{}-{sequence}-{case}",
+        "design-editor-settings-save-{}-{sequence}-{case}",
         std::process::id()
     ))
 }

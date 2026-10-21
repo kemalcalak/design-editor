@@ -3,7 +3,7 @@
 //! neutral Code-tab placeholder).
 //!
 //! Split out of `property_panel_snapshot.rs` to keep both files under
-//! the openpencil 800-line cap.
+//! the design-editor 800-line cap.
 
 use super::node_props::*;
 use super::widget_props::{text_summary_of, widget_summary_of};

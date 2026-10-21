@@ -16,7 +16,7 @@
 //!   original behaviour: the engine owns the destination directory —
 //!   `documents_root` from `op_create` when the shell has a user-visible one
 //!   (iOS `NSDocumentDirectory`, which the Files app surfaces under
-//!   "On My iPhone ▸ OpenPencil"), else `documents/` under the private
+//!   "On My iPhone ▸ Design Editor"), else `documents/` under the private
 //!   storage root — and the engine-painted name dialog names the file.
 //!
 //! `documents_root` still matters for a picker shell: it is where legacy
@@ -482,7 +482,7 @@ fn documents_dir(state: &DocumentSaveShellState) -> FfiResult<PathBuf> {
 fn legacy_documents_dir() -> FfiResult<PathBuf> {
     let root = match de_config_store::configured_user_root() {
         Some(root) => root,
-        None => de_config_store::openpencil_dir().map_err(|error| {
+        None => de_config_store::design_editor_dir().map_err(|error| {
             FfiError::new(
                 OpStatus::NotReady,
                 format!("no private storage root is available: {error}"),
@@ -689,7 +689,7 @@ mod tests {
     #[test]
     fn unique_target_dedupes_with_numeric_suffixes() {
         let dir = std::env::temp_dir().join(format!(
-            "openpencil-ffi-save-unique-{}-{:?}",
+            "design-editor-ffi-save-unique-{}-{:?}",
             std::process::id(),
             std::thread::current().id()
         ));

@@ -41,7 +41,7 @@ impl McpTool for SaveThemePreset {
             .cloned()
             .unwrap_or_else(|| file_stem(&preset_path));
         let preset = json!({
-            "type": "openpencil-theme-preset",
+            "type": "design-editor-theme-preset",
             "version": "1.0.0",
             "name": name,
             "themes": &self.themes,
@@ -239,7 +239,7 @@ fn read_preset_value(path: &Path) -> Result<Value, ToolCallError> {
             format!("theme preset must be valid JSON: {e}"),
         )
     })?;
-    if value.get("type").and_then(Value::as_str) != Some("openpencil-theme-preset") {
+    if value.get("type").and_then(Value::as_str) != Some("design-editor-theme-preset") {
         return Err((
             ToolErrorCode::InvalidArgument,
             "Invalid theme preset file".into(),

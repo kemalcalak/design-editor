@@ -446,7 +446,7 @@ fn the_export_writes_the_composition_and_its_render_notes_side_by_side() {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let dir = std::env::temp_dir().join(format!(
-        "openpencil-hyperframes-{}-{nanos}",
+        "design-editor-hyperframes-{}-{nanos}",
         std::process::id()
     ));
 

@@ -22,8 +22,8 @@ use crate::{
 };
 
 pub const RELAY_LOCATOR_PUBLISH_PATH: &str = "/v1/locator";
-pub const OWNER_PUBLISH_CONTENT_TYPE: &str = "application/vnd.openpencil.relay-owner-publish-v1";
-pub const SIGNED_LOCATOR_CONTENT_TYPE: &str = "application/vnd.openpencil.relay-locator-v1";
+pub const OWNER_PUBLISH_CONTENT_TYPE: &str = "application/vnd.design-editor.relay-owner-publish-v1";
+pub const SIGNED_LOCATOR_CONTENT_TYPE: &str = "application/vnd.design-editor.relay-locator-v1";
 pub const CONTROL_PLANE_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 pub const CONTROL_PLANE_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 pub const MAX_PUBLISH_AUTHORIZATION_BYTES: usize = 7 + MAX_COLLAB_TICKET_BYTES;

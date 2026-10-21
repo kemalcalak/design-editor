@@ -16,7 +16,7 @@ set -euo pipefail
 
 PEN="$1"; NAME="$2"; SCALE="${3:-2}"
 ROOT="${RPARITY_ROOT:?set RPARITY_ROOT to a working dir}"
-BIN="${OPENPENCIL_BIN:-/Users/fini/workspace/openpencil/target/debug}"
+BIN="${DESIGN_EDITOR_BIN:-/Users/fini/workspace/design-editor/target/debug}"
 
 OP="$ROOT/$NAME.op"
 OURS="$ROOT/$NAME/ours"

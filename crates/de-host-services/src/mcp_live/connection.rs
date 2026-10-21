@@ -27,7 +27,7 @@ pub(super) fn server_loop(
 ) {
     // Serializes only *stateful* requests so a concurrent multi-apply batch
     // can't interleave. Stateless probes (`ping`/`initialize`) bypass it, so
-    // `op`'s liveness probe is never blocked behind an in-flight write.
+    // `de`'s liveness probe is never blocked behind an in-flight write.
     let stateful_lock = Arc::new(Mutex::new(()));
     // Bounds the number of in-flight connection threads.
     let conn_count = Arc::new(AtomicUsize::new(0));
@@ -212,7 +212,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
         return Ok(());
     }
     // Stateless handshake/liveness methods must NOT block on the UI thread or
-    // take the stateful lock, so `op`'s `ping` probe stays fast and never
+    // take the stateful lock, so `de`'s `ping` probe stays fast and never
     // false-negatives a busy editor. The live `ping` reply carries our
     // identity token so the CLI can confirm THIS server published the file.
     match crate::mcp_serve::classify_stateless(&req.body) {
@@ -263,7 +263,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     // `debug_screenshot` against the LIVE canvas: route through the
     // raster export pipeline on the UI thread instead of the generic
     // dispatch (whose headless tool can only report no-live-canvas).
-    // Gate-closed (`OPENPENCIL_DEBUG_TOOLS` unset) falls through to the
+    // Gate-closed (`DESIGN_EDITOR_DEBUG_TOOLS` unset) falls through to the
     // generic dispatch, which reports UnknownTool exactly like the
     // headless registry that never registered the tool.
     #[cfg(feature = "mcp-debug-tools")]

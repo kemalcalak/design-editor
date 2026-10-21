@@ -17,7 +17,7 @@
 //! ## Read-only + env-gated
 //!
 //! The tool emits no `EditorCommand` and mutates nothing — it only
-//! runs `detect_all`. It is gated behind `OPENPENCIL_DEBUG_TOOLS=1`
+//! runs `detect_all`. It is gated behind `DESIGN_EDITOR_DEBUG_TOOLS=1`
 //! (the existing debug-tool isolation env flag); when the flag is
 //! unset the tool surfaces a clean `ToolFailed` error at call time.
 
@@ -32,10 +32,10 @@ use regex::{Regex, RegexBuilder};
 use super::{McpTool, ToolErrorCode, ToolOutcome};
 
 /// The env flag that gates the debug tools — matches the isolation
-/// flag the TS debug tooling uses (`OPENPENCIL_DEBUG_TOOLS=1`).
-const DEBUG_TOOLS_ENV: &str = "OPENPENCIL_DEBUG_TOOLS";
+/// flag the TS debug tooling uses (`DESIGN_EDITOR_DEBUG_TOOLS=1`).
+const DEBUG_TOOLS_ENV: &str = "DESIGN_EDITOR_DEBUG_TOOLS";
 
-/// Returns whether the debug tools are enabled (`OPENPENCIL_DEBUG_TOOLS=1`).
+/// Returns whether the debug tools are enabled (`DESIGN_EDITOR_DEBUG_TOOLS=1`).
 ///
 /// Public so the host MCP server can keep the debug tool out of the
 /// production catalog entirely — both `rebuild_registry` and
@@ -341,10 +341,10 @@ pub fn debug_screenshot_snapshot() -> DebugScreenshot {
 }
 
 fn default_log_dir() -> PathBuf {
-    // Shared `~/.openpencil` resolution; fall back to a cwd-relative dir
+    // Shared `~/.design-editor` resolution; fall back to a cwd-relative dir
     // (matching the old behavior) when no home directory is available.
-    de_config_store::openpencil_dir()
-        .unwrap_or_else(|_| PathBuf::from(".").join(de_config_store::OPENPENCIL_DIR_NAME))
+    de_config_store::design_editor_dir()
+        .unwrap_or_else(|_| PathBuf::from(".").join(de_config_store::DESIGN_EDITOR_DIR_NAME))
         .join("logs")
 }
 
@@ -531,7 +531,7 @@ mod tests {
     /// flip the same process-wide env var, so they MUST run as a single
     /// `#[test]` — separate tests would race under cargo's parallel
     /// runner. The snapshot (`detect_all`) is env-independent; only the
-    /// `call()` gate reads `OPENPENCIL_DEBUG_TOOLS`.
+    /// `call()` gate reads `DESIGN_EDITOR_DEBUG_TOOLS`.
     #[test]
     fn debug_tools_respect_the_env_gate_and_match_ts_debug_behaviour() {
         let bad = debug_validation_report_snapshot(&state_with(vec![rotated_frame()]));
@@ -716,7 +716,7 @@ mod tests {
             .expect("clock")
             .as_nanos();
         std::env::temp_dir().join(format!(
-            "openpencil-debug-tools-{label}-{}-{nanos}",
+            "design-editor-debug-tools-{label}-{}-{nanos}",
             std::process::id()
         ))
     }

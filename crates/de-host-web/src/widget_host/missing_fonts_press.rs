@@ -282,13 +282,13 @@ mod tests {
         let mut host = WidgetHost::new();
         host.editor_state.editor_ui.system_fonts_loaded = true;
 
-        host.install_ingested_state(state_with_text("__OpenPencilWebMissingFontTest__"));
+        host.install_ingested_state(state_with_text("__DesignEditorWebMissingFontTest__"));
 
         let ui = &host.editor_state.editor_ui;
         assert!(ui.missing_fonts_modal_open);
         assert_eq!(
             ui.missing_fonts_prompt.as_ref().unwrap().entries[0].family,
-            "__OpenPencilWebMissingFontTest__"
+            "__DesignEditorWebMissingFontTest__"
         );
     }
 
@@ -296,7 +296,7 @@ mod tests {
     fn ingest_without_snapshot_stays_pending_until_query_result_lands() {
         let mut host = WidgetHost::new();
 
-        host.install_ingested_state(state_with_text("__OpenPencilWebDeferredFontTest__"));
+        host.install_ingested_state(state_with_text("__DesignEditorWebDeferredFontTest__"));
         assert!(host.editor_state.editor_ui.missing_fonts_pending_detect);
 
         host.apply_browser_system_font_families(vec!["Arial".to_string()]);
@@ -306,7 +306,7 @@ mod tests {
         assert!(ui.missing_fonts_modal_open);
         assert_eq!(
             ui.missing_fonts_prompt.as_ref().unwrap().entries[0].family,
-            "__OpenPencilWebDeferredFontTest__"
+            "__DesignEditorWebDeferredFontTest__"
         );
     }
 
@@ -353,7 +353,7 @@ mod tests {
 
     #[test]
     fn a_family_no_bundled_font_covers_still_raises_the_prompt() {
-        const MISSING: &str = "__OpenPencilWebUnbundledFontTest__";
+        const MISSING: &str = "__DesignEditorWebUnbundledFontTest__";
         let mut host = host_awaiting_bundled_fonts(MISSING);
         host.apply_browser_system_font_families(vec!["Arial".to_string()]);
 
@@ -370,7 +370,7 @@ mod tests {
 
     #[test]
     fn keyboard_history_navigation_refreshes_missing_fonts_without_reopening_prompt() {
-        const MISSING: &str = "__OpenPencilWebUndoMissingFont__";
+        const MISSING: &str = "__DesignEditorWebUndoMissingFont__";
         let mut host = host_after_resolving_missing_font(MISSING, true);
 
         assert!(host.apply_undo());
@@ -392,7 +392,7 @@ mod tests {
 
     #[test]
     fn toolbar_undo_refreshes_missing_fonts_without_reopening_prompt() {
-        const MISSING: &str = "__OpenPencilWebToolbarUndoMissingFont__";
+        const MISSING: &str = "__DesignEditorWebToolbarUndoMissingFont__";
         let mut host = host_after_resolving_missing_font(MISSING, true);
 
         assert!(host.dispatch_toolbar_action(de_editor_ui::widgets::ToolbarAction::Undo));
@@ -414,7 +414,7 @@ mod tests {
 
     #[test]
     fn undo_keeps_deferred_font_detection_passive_after_query_completes() {
-        const MISSING: &str = "__OpenPencilWebDeferredUndoMissingFont__";
+        const MISSING: &str = "__DesignEditorWebDeferredUndoMissingFont__";
         let mut host = host_after_resolving_missing_font(MISSING, false);
         assert!(host.editor_state.editor_ui.missing_fonts_pending_detect);
         assert!(host.editor_state.editor_ui.missing_fonts_pending_open_modal);

@@ -48,7 +48,7 @@ pub struct MediaFile {
 pub struct SlidePart {
     /// The board's authored name. PowerPoint shows it in the outline and
     /// the selection pane, so a slide stays identifiable as the board it
-    /// came from after the deck leaves OpenPencil.
+    /// came from after the deck leaves Design Editor.
     pub name: String,
     /// The `<p:sp>` / `<p:pic>` elements, in paint order.
     pub shapes: String,
@@ -379,8 +379,8 @@ const LAYOUT_RELS: &str = concat!(
 const THEME: &str = concat!(
     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n",
     "<a:theme xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" ",
-    "name=\"OpenPencil\"><a:themeElements>",
-    "<a:clrScheme name=\"OpenPencil\">",
+    "name=\"Design Editor\"><a:themeElements>",
+    "<a:clrScheme name=\"Design Editor\">",
     "<a:dk1><a:sysClr val=\"windowText\" lastClr=\"000000\"/></a:dk1>",
     "<a:lt1><a:sysClr val=\"window\" lastClr=\"FFFFFF\"/></a:lt1>",
     "<a:dk2><a:srgbClr val=\"44546A\"/></a:dk2>",
@@ -394,13 +394,13 @@ const THEME: &str = concat!(
     "<a:hlink><a:srgbClr val=\"0563C1\"/></a:hlink>",
     "<a:folHlink><a:srgbClr val=\"954F72\"/></a:folHlink>",
     "</a:clrScheme>",
-    "<a:fontScheme name=\"OpenPencil\">",
+    "<a:fontScheme name=\"Design Editor\">",
     "<a:majorFont><a:latin typeface=\"Calibri Light\"/><a:ea typeface=\"\"/>",
     "<a:cs typeface=\"\"/></a:majorFont>",
     "<a:minorFont><a:latin typeface=\"Calibri\"/><a:ea typeface=\"\"/>",
     "<a:cs typeface=\"\"/></a:minorFont>",
     "</a:fontScheme>",
-    "<a:fmtScheme name=\"OpenPencil\">",
+    "<a:fmtScheme name=\"Design Editor\">",
     "<a:fillStyleLst>",
     "<a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill>",
     "<a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill>",

@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license = "MIT"
 repository.workspace = true
-description = "Open, bounded relay locator and rendezvous protocol for OpenPencil collaboration"
+description = "Open, bounded relay locator and rendezvous protocol for Design Editor collaboration"
 
 [features]
 default = ["random"]

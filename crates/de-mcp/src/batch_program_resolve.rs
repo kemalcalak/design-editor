@@ -21,7 +21,7 @@ pub(crate) fn resolve_kit_component_id(raw: &str, state: &EditorState) -> Result
         ));
     };
     let kit_id = match kit_part {
-        "starter" => "openpencil-starter".to_string(),
+        "starter" => "design-editor-starter".to_string(),
         "shadcn" => "shadcn-ui".to_string(),
         other => other.to_string(),
     };

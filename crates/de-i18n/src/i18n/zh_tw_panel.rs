@@ -627,12 +627,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.tab.ai" => "AI",
         "settings.agents.heroTitle" => "連接你的 AI 服務商",
         "settings.agents.heroSubtitle" => {
-            "OpenPencil 直接驅動本機 CLI Agent 與 API 服務商，連接任一個即可開始產生設計。"
+            "Design Editor 直接驅動本機 CLI Agent 與 API 服務商，連接任一個即可開始產生設計。"
         }
         "settings.agents.statusConnected" => "已連接",
         "settings.agents.statusNotConnected" => "未連接",
         "settings.agents.statusChecking" => "正在檢測…",
-        "settings.mcp.heroTitle" => "從外部透過 MCP 連接 OpenPencil",
+        "settings.mcp.heroTitle" => "從外部透過 MCP 連接 Design Editor",
         "settings.mcp.heroSubtitle" => {
             "把任何支援 MCP 的 CLI 或編輯器指向這個工作區，即可用內建 Agent 同款工具驅動畫布。"
         }

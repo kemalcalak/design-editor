@@ -52,7 +52,7 @@ fn parse_args_maps_ts_status_to_local_status_probe() {
 #[test]
 fn parse_args_without_port_is_not_explicit_so_discovery_runs() {
     // No `--port` ⇒ server-bound commands resolve the live editor's port
-    // from ~/.openpencil/.op-mcp-port instead of pinning the default.
+    // from ~/.design-editor/.de-mcp-port instead of pinning the default.
     let p = parse_args(&["status".to_string()]).expect("parse status");
     assert_eq!(p.port, DEFAULT_PORT);
     assert!(!p.port_explicit);
@@ -104,7 +104,7 @@ fn start_document_file_is_minimal_op_when_missing() {
     assert_eq!(
         std::fs::read_to_string(&path).expect("read document"),
         format!(
-            "{{\n  \"version\": \"{}\",\n  \"name\": \"OpenPencil CLI Session\",\n  \"children\": []\n}}\n",
+            "{{\n  \"version\": \"{}\",\n  \"name\": \"Design Editor CLI Session\",\n  \"children\": []\n}}\n",
             env!("CARGO_PKG_VERSION")
         )
     );
@@ -120,14 +120,14 @@ fn install_codex_writes_bundle_and_uninstall_removes_it() {
     skill_install_cli::install_target_at_home("codex", &home).expect("install codex");
 
     assert!(home
-        .join(".codex/openpencil-skill/skills/openpencil-design/SKILL.md")
+        .join(".codex/design-editor-skill/skills/design-editor-design/SKILL.md")
         .is_file());
-    assert!(home.join(".agents/skills/openpencil-skill").exists());
+    assert!(home.join(".agents/skills/design-editor-skill").exists());
 
     skill_install_cli::uninstall_target_at_home("codex", &home).expect("uninstall codex");
 
-    assert!(!home.join(".codex/openpencil-skill").exists());
-    assert!(!home.join(".agents/skills/openpencil-skill").exists());
+    assert!(!home.join(".codex/design-editor-skill").exists());
+    assert!(!home.join(".agents/skills/design-editor-skill").exists());
     let _ = std::fs::remove_dir_all(&home);
 }
 
@@ -140,14 +140,14 @@ fn install_opencode_writes_scanned_skills_dir_and_prunes_legacy_plugin_entry() {
     // Seed a config carrying the legacy no-op plugin entry plus a foreign one.
     std::fs::write(
         &config,
-        r#"{"plugin":["other@file","openpencil-skill@git+https://github.com/zseven-w/openpencil-skill.git"]}"#,
+        r#"{"plugin":["other@file","design-editor-skill@git+https://github.com/kemalcalak/design-editor-skill.git"]}"#,
     )
     .expect("seed config");
 
     // A stale plain file squatting on the discovery entry must be replaced,
     // not silently kept (it would make install report success while opencode
     // discovers nothing).
-    let link = home.join(".config/opencode/skills/openpencil-skill");
+    let link = home.join(".config/opencode/skills/design-editor-skill");
     std::fs::create_dir_all(link.parent().unwrap()).expect("skills dir");
     std::fs::write(&link, "stale").expect("seed stale entry");
 
@@ -157,11 +157,11 @@ fn install_opencode_writes_scanned_skills_dir_and_prunes_legacy_plugin_entry() {
     // The skill lands where opencode's scanner looks:
     // <config-dir>/skills/**/SKILL.md (symlink into the bundle copy).
     assert!(
-        link.join("openpencil-design/SKILL.md").exists(),
+        link.join("design-editor-design/SKILL.md").exists(),
         "SKILL.md must be reachable under the scanned skills dir"
     );
     assert!(home
-        .join(".config/opencode/openpencil-skill/skills/openpencil-design/SKILL.md")
+        .join(".config/opencode/design-editor-skill/skills/design-editor-design/SKILL.md")
         .exists());
 
     // The legacy plugin entry is pruned; foreign entries survive.
@@ -172,7 +172,7 @@ fn install_opencode_writes_scanned_skills_dir_and_prunes_legacy_plugin_entry() {
 
     skill_install_cli::uninstall_target_at_home("opencode", &home).expect("uninstall opencode");
     assert!(std::fs::symlink_metadata(&link).is_err());
-    assert!(!home.join(".config/opencode/openpencil-skill").exists());
+    assert!(!home.join(".config/opencode/design-editor-skill").exists());
     let uninstalled: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(&config).expect("read config"))
             .expect("json config");

@@ -8,17 +8,17 @@
 //! ## Usage
 //!
 //! ```sh
-//! export OPENPENCIL_ANTHROPIC_API_KEY=sk-ant-...   # or ANTHROPIC_API_KEY
+//! export DESIGN_EDITOR_ANTHROPIC_API_KEY=sk-ant-...   # or ANTHROPIC_API_KEY
 //! cargo run -p de-smoke -- "design a login screen"
 //! ```
 //!
 //! Optional env overrides:
-//! - `OPENPENCIL_ORCHESTRATOR_MODEL` — default `claude-sonnet-4-6`.
-//! - `OPENPENCIL_LLM_PROVIDER` — `anthropic` (default), `openai-compat`,
+//! - `DESIGN_EDITOR_ORCHESTRATOR_MODEL` — default `claude-sonnet-4-6`.
+//! - `DESIGN_EDITOR_LLM_PROVIDER` — `anthropic` (default), `openai-compat`,
 //!   `antigravity` / `agy`, or `claude` / `claude-code`. The CLI arms reuse
 //!   the production generation-only subprocess transport and the CLI's
 //!   existing login (no API key needed).
-//! - `OPENPENCIL_SMOKE_VALIDATION=1` — opt into the production lint
+//! - `DESIGN_EDITOR_SMOKE_VALIDATION=1` — opt into the production lint
 //!   pre-validator and post-generation validation stage. The default remains
 //!   skipped so existing smoke traces are unchanged.
 //!
@@ -40,7 +40,7 @@
 //! - Cross-session abort (mid-turn switch to chat — covered by
 //!   `chat_session::launch_if_pending` host tests).
 //! - Pre-validation fixes by default — smoke uses `SkippedPreValidator`
-//!   unless `OPENPENCIL_SMOKE_VALIDATION=1` explicitly opts into the
+//!   unless `DESIGN_EDITOR_SMOKE_VALIDATION=1` explicitly opts into the
 //!   production `LintPreValidator`.
 
 use std::sync::Arc;
@@ -71,48 +71,50 @@ use smoke_support::{
     truthy_env_value, SmokeProviderKind,
 };
 
-/// Headless agentic tool-loop branch (`OPENPENCIL_SMOKE_LOOP=1`).
+/// Headless agentic tool-loop branch (`DESIGN_EDITOR_SMOKE_LOOP=1`).
 ///
-/// Reads the openai-compat `OPENPENCIL_LLM_*` env (the ab-v9 wire), runs the
+/// Reads the openai-compat `DESIGN_EDITOR_LLM_*` env (the ab-v9 wire), runs the
 /// production builtin design loop against a live `EditorState`, then dumps
-/// `state.doc` to `OPENPENCIL_SMOKE_OUT` using the SAME serialize path as the
+/// `state.doc` to `DESIGN_EDITOR_SMOKE_OUT` using the SAME serialize path as the
 /// orchestrator mode (`serde_json::to_string_pretty` → `std::fs::write`).
 async fn run_loop_mode(prompt: String) -> std::process::ExitCode {
     let model =
-        std::env::var("OPENPENCIL_ORCHESTRATOR_MODEL").unwrap_or_else(|_| "gpt-4o-mini".into());
-    let key = match std::env::var("OPENPENCIL_LLM_API_KEY")
+        std::env::var("DESIGN_EDITOR_ORCHESTRATOR_MODEL").unwrap_or_else(|_| "gpt-4o-mini".into());
+    let key = match std::env::var("DESIGN_EDITOR_LLM_API_KEY")
         .ok()
         .filter(|k| !k.is_empty())
     {
         Some(k) => k,
         None => {
             eprintln!(
-                "error: OPENPENCIL_LLM_API_KEY is not set (loop mode needs an openai-compat key)"
+                "error: DESIGN_EDITOR_LLM_API_KEY is not set (loop mode needs an openai-compat key)"
             );
             return std::process::ExitCode::from(3);
         }
     };
-    let base_url = match std::env::var("OPENPENCIL_LLM_BASE_URL")
+    let base_url = match std::env::var("DESIGN_EDITOR_LLM_BASE_URL")
         .ok()
         .filter(|u| !u.is_empty())
     {
         Some(u) => u,
         None => {
-            eprintln!("error: OPENPENCIL_LLM_BASE_URL is not set (e.g. https://api.openai.com/v1)");
+            eprintln!(
+                "error: DESIGN_EDITOR_LLM_BASE_URL is not set (e.g. https://api.openai.com/v1)"
+            );
             return std::process::ExitCode::from(3);
         }
     };
-    let dump = std::env::var("OPENPENCIL_SMOKE_DUMP").is_ok();
-    let max_tokens: u32 = std::env::var("OPENPENCIL_SMOKE_MAX_TOKENS")
+    let dump = std::env::var("DESIGN_EDITOR_SMOKE_DUMP").is_ok();
+    let max_tokens: u32 = std::env::var("DESIGN_EDITOR_SMOKE_MAX_TOKENS")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(8192);
     let thinking = loop_thinking_mode();
-    // `OPENPENCIL_SMOKE_LOOP_SEED=1` (only meaningful with OPENPENCIL_SMOKE_LOOP=1)
+    // `DESIGN_EDITOR_SMOKE_LOOP_SEED=1` (only meaningful with DESIGN_EDITOR_SMOKE_LOOP=1)
     // arms the minimal-seed path: a page-root + named section stubs are applied
     // before the SAME agentic loop runs to fill them. Unset ⇒ pure loop (the
     // existing behaviour, byte-for-byte unchanged).
-    let seed = std::env::var("OPENPENCIL_SMOKE_LOOP_SEED")
+    let seed = std::env::var("DESIGN_EDITOR_SMOKE_LOOP_SEED")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true") || v.eq_ignore_ascii_case("on"))
         .unwrap_or(false);
 
@@ -122,11 +124,11 @@ async fn run_loop_mode(prompt: String) -> std::process::ExitCode {
     // Protocol base + prompt-matched domain depth — mirrors the desktop
     // design-loop launch so headless A/B runs measure the same supply.
     let system_prompt = de_ai_skills::design_agent_system_prompt_with_skills(&prompt);
-    // `OPENPENCIL_SMOKE_LIBRARY` is honored here too: the path is threaded into
+    // `DESIGN_EDITOR_SMOKE_LIBRARY` is honored here too: the path is threaded into
     // `run_loop`, which merges the harvested library into the live `EditorState`
     // before the agentic loop runs (so its `batch_design` ref nodes can target
     // the loaded masters). Unset ⇒ no merge, byte-for-byte unchanged.
-    let library_path = std::env::var("OPENPENCIL_SMOKE_LIBRARY")
+    let library_path = std::env::var("DESIGN_EDITOR_SMOKE_LIBRARY")
         .ok()
         .filter(|p| !p.is_empty());
     let started = std::time::Instant::now();
@@ -163,7 +165,7 @@ async fn run_loop_mode(prompt: String) -> std::process::ExitCode {
         }
     };
 
-    // Image-fill post-loop step (OPENPENCIL_SMOKE_FILL_IMAGES=1): resolve
+    // Image-fill post-loop step (DESIGN_EDITOR_SMOKE_FILL_IMAGES=1): resolve
     // pending image-search queries to real URLs from Openverse BEFORE the `.op`
     // is persisted so the saved document contains the filled `src` values.
     let image_config = image_fill::ImageFillConfig::from_env();
@@ -183,7 +185,7 @@ async fn run_loop_mode(prompt: String) -> std::process::ExitCode {
     eprintln!("[LOOP] finished in {elapsed:?}; top-level node(s)={total_nodes}");
 
     // Dump via the IDENTICAL serialize path the orchestrator mode uses.
-    let save_failed = match std::env::var("OPENPENCIL_SMOKE_OUT") {
+    let save_failed = match std::env::var("DESIGN_EDITOR_SMOKE_OUT") {
         Ok(out_path) if !out_path.is_empty() => match serde_json::to_string_pretty(&guard.doc) {
             Ok(json) => match std::fs::write(&out_path, json) {
                 Ok(()) => {
@@ -218,15 +220,15 @@ async fn main() -> std::process::ExitCode {
             eprintln!(
                 "usage: de-smoke <prompt>\n\n\
                  providers:\n\
-                   anthropic (default): OPENPENCIL_ANTHROPIC_API_KEY=...\n\
-                   openai-compat: OPENPENCIL_LLM_BASE_URL=... OPENPENCIL_LLM_API_KEY=...\n\
+                   anthropic (default): DESIGN_EDITOR_ANTHROPIC_API_KEY=...\n\
+                   openai-compat: DESIGN_EDITOR_LLM_BASE_URL=... DESIGN_EDITOR_LLM_API_KEY=...\n\
                    antigravity/agy: uses the logged-in agy CLI\n\
                    claude/claude-code: uses the logged-in claude CLI (model alias e.g. opus)\n\n\
                  common:\n\
-                   OPENPENCIL_ORCHESTRATOR_MODEL=<model>\n\
-                   OPENPENCIL_SMOKE_OUT=<result.op>\n\
-                   OPENPENCIL_SMOKE_PIN_STYLE_GUIDE=<style guide name>\n\
-                   OPENPENCIL_SMOKE_VALIDATION=1"
+                   DESIGN_EDITOR_ORCHESTRATOR_MODEL=<model>\n\
+                   DESIGN_EDITOR_SMOKE_OUT=<result.op>\n\
+                   DESIGN_EDITOR_SMOKE_PIN_STYLE_GUIDE=<style guide name>\n\
+                   DESIGN_EDITOR_SMOKE_VALIDATION=1"
             );
             return std::process::ExitCode::from(2);
         }
@@ -236,13 +238,13 @@ async fn main() -> std::process::ExitCode {
         return code;
     }
 
-    // `OPENPENCIL_SMOKE_LOOP=1` is a SEPARATE branch: instead of the
+    // `DESIGN_EDITOR_SMOKE_LOOP=1` is a SEPARATE branch: instead of the
     // `Orchestrator`, it runs the headless Pencil-style agentic tool-loop
     // (the model calls `batch_design` / `get_screenshot` / … over a real SSE
     // stream; the host applies each call to a live `EditorState`). Without
     // this flag de-smoke behaves exactly as before. The branch returns early
     // so the orchestrator path below is byte-for-byte unchanged.
-    if std::env::var("OPENPENCIL_SMOKE_LOOP")
+    if std::env::var("DESIGN_EDITOR_SMOKE_LOOP")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true") || v.eq_ignore_ascii_case("on"))
         .unwrap_or(false)
     {
@@ -250,16 +252,16 @@ async fn main() -> std::process::ExitCode {
     }
 
     let provider_kind_raw =
-        std::env::var("OPENPENCIL_LLM_PROVIDER").unwrap_or_else(|_| "anthropic".into());
+        std::env::var("DESIGN_EDITOR_LLM_PROVIDER").unwrap_or_else(|_| "anthropic".into());
     let Some(provider_kind) = SmokeProviderKind::parse(&provider_kind_raw) else {
         eprintln!(
-            "error: unknown OPENPENCIL_LLM_PROVIDER={provider_kind_raw:?} \
+            "error: unknown DESIGN_EDITOR_LLM_PROVIDER={provider_kind_raw:?} \
              (want anthropic|openai-compat|antigravity|agy|claude|claude-code)"
         );
         return std::process::ExitCode::from(3);
     };
     let model =
-        std::env::var("OPENPENCIL_ORCHESTRATOR_MODEL").unwrap_or_else(|_| match provider_kind {
+        std::env::var("DESIGN_EDITOR_ORCHESTRATOR_MODEL").unwrap_or_else(|_| match provider_kind {
             SmokeProviderKind::Anthropic => "claude-sonnet-4-6".into(),
             SmokeProviderKind::OpenAiCompat => "gpt-4o-mini".into(),
             SmokeProviderKind::Antigravity => "gemini-3.6-flash-high".into(),
@@ -269,19 +271,19 @@ async fn main() -> std::process::ExitCode {
     eprintln!("[SMOKE] provider={} model={model}", provider_kind.label());
     eprintln!("[SMOKE] prompt={prompt:?}");
 
-    // `OPENPENCIL_SMOKE_DIRECT=1` swaps the QueryEngine path for a direct
+    // `DESIGN_EDITOR_SMOKE_DIRECT=1` swaps the QueryEngine path for a direct
     // openai-compat client that can send MiniMax `thinking:{type:disabled}`
     // (the vendored agent QueryEngine can't) — needed to validate M3 headless.
-    let direct = std::env::var("OPENPENCIL_SMOKE_DIRECT").is_ok();
+    let direct = std::env::var("DESIGN_EDITOR_SMOKE_DIRECT").is_ok();
     let llm: Box<dyn LlmClient> = match provider_kind {
         SmokeProviderKind::Anthropic => {
-            let key = std::env::var("OPENPENCIL_ANTHROPIC_API_KEY")
+            let key = std::env::var("DESIGN_EDITOR_ANTHROPIC_API_KEY")
                 .ok()
                 .or_else(|| std::env::var("ANTHROPIC_API_KEY").ok())
                 .filter(|k| !k.is_empty());
             let Some(key) = key else {
                 eprintln!(
-                    "error: neither OPENPENCIL_ANTHROPIC_API_KEY nor ANTHROPIC_API_KEY is set"
+                    "error: neither DESIGN_EDITOR_ANTHROPIC_API_KEY nor ANTHROPIC_API_KEY is set"
                 );
                 return std::process::ExitCode::from(3);
             };
@@ -291,19 +293,19 @@ async fn main() -> std::process::ExitCode {
             })
         }
         SmokeProviderKind::OpenAiCompat => {
-            let key = std::env::var("OPENPENCIL_LLM_API_KEY")
+            let key = std::env::var("DESIGN_EDITOR_LLM_API_KEY")
                 .ok()
                 .filter(|k| !k.is_empty());
             let Some(key) = key else {
-                eprintln!("error: OPENPENCIL_LLM_API_KEY is not set");
+                eprintln!("error: DESIGN_EDITOR_LLM_API_KEY is not set");
                 return std::process::ExitCode::from(3);
             };
-            let base_url = std::env::var("OPENPENCIL_LLM_BASE_URL")
+            let base_url = std::env::var("DESIGN_EDITOR_LLM_BASE_URL")
                 .ok()
                 .filter(|u| !u.is_empty());
             let Some(base_url) = base_url else {
                 eprintln!(
-                    "error: OPENPENCIL_LLM_BASE_URL is not set (e.g. https://api.openai.com/v1)"
+                    "error: DESIGN_EDITOR_LLM_BASE_URL is not set (e.g. https://api.openai.com/v1)"
                 );
                 return std::process::ExitCode::from(3);
             };
@@ -327,11 +329,11 @@ async fn main() -> std::process::ExitCode {
         SmokeProviderKind::ClaudeCode => claude_code_llm(&model),
     };
 
-    // `OPENPENCIL_SMOKE_STARTER=1` seeds the fresh-canvas starter frame so a
+    // `DESIGN_EDITOR_SMOKE_STARTER=1` seeds the fresh-canvas starter frame so a
     // smoke run exercises the TS `replaceEmptyFrame` reuse path (the desktop
     // GUI always carries this single empty starter); default stays the empty
     // `new()` doc so existing traces are unaffected.
-    let seed_starter = std::env::var("OPENPENCIL_SMOKE_STARTER")
+    let seed_starter = std::env::var("DESIGN_EDITOR_SMOKE_STARTER")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
     let mut sink = InlineDocSink {
@@ -341,7 +343,7 @@ async fn main() -> std::process::ExitCode {
             EditorState::new()
         },
     };
-    // `OPENPENCIL_SMOKE_LIBRARY=<path-to-.lib.op>` loads a harvested component
+    // `DESIGN_EDITOR_SMOKE_LIBRARY=<path-to-.lib.op>` loads a harvested component
     // library into the doc BEFORE generation so the generator can instantiate
     // its reusable masters (the AVAILABLE COMPONENTS manifest path). Unset =
     // today's behavior, byte-for-byte. A load error aborts the run loudly — a
@@ -350,12 +352,12 @@ async fn main() -> std::process::ExitCode {
         return code;
     }
 
-    // `OPENPENCIL_SMOKE_AUDIT=<path.op>` — self-loop quality gate: load the
+    // `DESIGN_EDITOR_SMOKE_AUDIT=<path.op>` — self-loop quality gate: load the
     // doc, run the REAL-layout geometry diagnostics (the same detector family
     // the per-batch feedback uses), print a JSON report, exit. Zero LLM calls.
     // Exit code 0 = structurally clean, 1 = issues found. This is the
     // machine-checkable leg of the develop→generate→render→audit loop.
-    if let Ok(audit_path) = std::env::var("OPENPENCIL_SMOKE_AUDIT") {
+    if let Ok(audit_path) = std::env::var("DESIGN_EDITOR_SMOKE_AUDIT") {
         let text = match std::fs::read_to_string(&audit_path) {
             Ok(s) => s,
             Err(e) => {
@@ -413,14 +415,14 @@ async fn main() -> std::process::ExitCode {
         };
     }
 
-    // `OPENPENCIL_SMOKE_PROGRAM=<path>` runs a Pencil-style batch_design DSL
+    // `DESIGN_EDITOR_SMOKE_PROGRAM=<path>` runs a Pencil-style batch_design DSL
     // PROGRAM (a `binding=I(parent,{...})` tree-builder) against the doc and
     // saves it, bypassing the orchestrator entirely. This is the experiment
     // harness for "can a weak model emit a structurally-stable PROGRAM
     // (parent-by-reference) instead of fragile flat JSONL?". postProcess stays
     // OFF so the saved doc is the RAW structure the program builds — no cleanup
     // post-pass — which is the whole point: the program needs no repair pass.
-    if let Ok(program_path) = std::env::var("OPENPENCIL_SMOKE_PROGRAM") {
+    if let Ok(program_path) = std::env::var("DESIGN_EDITOR_SMOKE_PROGRAM") {
         let program = match std::fs::read_to_string(&program_path) {
             Ok(s) => s,
             Err(e) => {
@@ -448,7 +450,7 @@ async fn main() -> std::process::ExitCode {
                 false
             }
         };
-        let code = match std::env::var("OPENPENCIL_SMOKE_OUT") {
+        let code = match std::env::var("DESIGN_EDITOR_SMOKE_OUT") {
             Ok(out) if !out.is_empty() => match serde_json::to_string_pretty(&sink.state.doc) {
                 Ok(j) => match std::fs::write(&out, j) {
                     Ok(()) => {
@@ -480,8 +482,11 @@ async fn main() -> std::process::ExitCode {
         return code;
     }
 
-    let validation_enabled =
-        truthy_env_value(std::env::var("OPENPENCIL_SMOKE_VALIDATION").ok().as_deref());
+    let validation_enabled = truthy_env_value(
+        std::env::var("DESIGN_EDITOR_SMOKE_VALIDATION")
+            .ok()
+            .as_deref(),
+    );
     let mut request = DesignRequest {
         prompt,
         model: Some(model),
@@ -489,16 +494,16 @@ async fn main() -> std::process::ExitCode {
         design_md: sink.state.doc.design_md.clone(),
         continuation_context: None,
         append_context: None,
-        concurrency: std::env::var("OPENPENCIL_SMOKE_CONCURRENCY")
+        concurrency: std::env::var("DESIGN_EDITOR_SMOKE_CONCURRENCY")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(1),
         validation_enabled,
         visual_ref_enabled: false,
-        // `OPENPENCIL_SMOKE_PIN_STYLE_GUIDE=<name>` fixes the style guide so an
+        // `DESIGN_EDITOR_SMOKE_PIN_STYLE_GUIDE=<name>` fixes the style guide so an
         // ablation can vary one contract (corpus, pass, tier) while the look
         // stays constant; unset keeps the planner's own choice.
-        pinned_style_guide: std::env::var("OPENPENCIL_SMOKE_PIN_STYLE_GUIDE")
+        pinned_style_guide: std::env::var("DESIGN_EDITOR_SMOKE_PIN_STYLE_GUIDE")
             .ok()
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty()),
@@ -556,7 +561,7 @@ async fn main() -> std::process::ExitCode {
         system_prompt: String::new(),
     };
 
-    // `OPENPENCIL_SMOKE_BEST_OF=N` (2..=4): N independent generations,
+    // `DESIGN_EDITOR_SMOKE_BEST_OF=N` (2..=4): N independent generations,
     // geometry-scored, best one saved. The plain single-run path below
     // stays byte-identical when the knob is unset.
     let best_of_n = best_of::parse_best_of_count();
@@ -589,27 +594,27 @@ async fn main() -> std::process::ExitCode {
         .await;
     let elapsed = started.elapsed();
 
-    // Image-fill post step (OPENPENCIL_SMOKE_FILL_IMAGES=1), the same one the
+    // Image-fill post step (DESIGN_EDITOR_SMOKE_FILL_IMAGES=1), the same one the
     // loop path runs: resolve pending image-search queries to real Openverse
     // URLs BEFORE persisting, so the saved `.op` — and the render-shots pass
     // that reads it — carries real pictures instead of grey placeholders.
     // Scoped thread for the same reason as the loop path: the fetch bridge
     // builds its own runtime and cannot be driven from this tokio main.
     let image_config = image_fill::ImageFillConfig::from_env();
-    let dump_images = std::env::var("OPENPENCIL_SMOKE_DUMP").is_ok();
+    let dump_images = std::env::var("DESIGN_EDITOR_SMOKE_DUMP").is_ok();
     std::thread::scope(|scope| {
         scope.spawn(|| {
             image_fill::fill_images(&mut sink.state, &image_config, dump_images);
         });
     });
 
-    // Persist the produced PenDocument when OPENPENCIL_SMOKE_OUT is set,
+    // Persist the produced PenDocument when DESIGN_EDITOR_SMOKE_OUT is set,
     // so the render / screenshot step can pick it up. Canonical
     // serde_json mirrors `persistence::save_to_path`. Saved regardless of
     // Ok/Err so a partial doc stays inspectable on failure.
     // A requested save that FAILS forces a non-zero exit below — a
     // benchmark driver must not read "success" when no `.op` was written.
-    let save_failed = match std::env::var("OPENPENCIL_SMOKE_OUT") {
+    let save_failed = match std::env::var("DESIGN_EDITOR_SMOKE_OUT") {
         Ok(out_path) if !out_path.is_empty() => match serde_json::to_string_pretty(&sink.state.doc)
         {
             Ok(json) => match std::fs::write(&out_path, json) {
@@ -648,7 +653,7 @@ async fn main() -> std::process::ExitCode {
                 );
             }
             if save_failed {
-                eprintln!("[FINAL] generation OK but OPENPENCIL_SMOKE_OUT write failed");
+                eprintln!("[FINAL] generation OK but DESIGN_EDITOR_SMOKE_OUT write failed");
                 std::process::ExitCode::from(4)
             } else {
                 std::process::ExitCode::SUCCESS

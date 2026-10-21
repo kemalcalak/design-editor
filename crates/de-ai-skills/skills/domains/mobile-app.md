@@ -29,7 +29,7 @@ Focal idioms include a hero card in the rail, full-bleed media under the status 
 
 ## 1) STATUS BAR (OS-controlled) — PRE-INSERTED
 
-The status bar (time, signal, wifi, battery) is **automatically provided by OpenPencil on every generation path (orchestrator, design agent, and direct MCP)** as the first child of the root frame — a hand-drawn one is replaced by the canonical node. It is a fixed 62px-tall frame with hardcoded path icons.
+The status bar (time, signal, wifi, battery) is **automatically provided by Design Editor on every generation path (orchestrator, design agent, and direct MCP)** as the first child of the root frame — a hand-drawn one is replaced by the canonical node. It is a fixed 62px-tall frame with hardcoded path icons.
 
 - **DO NOT generate a status bar** — it already exists
 - **DO NOT delete or modify** the pre-inserted status bar

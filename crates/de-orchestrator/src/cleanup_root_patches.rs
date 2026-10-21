@@ -13,13 +13,13 @@ use de_editor_core::{EditorCommand, NodeId, PenNodeExt};
 
 use crate::types::DocSink;
 
-/// Env-gated (`OPENPENCIL_DEBUG_CLEANUP=1`) probe: log the named child's
+/// Env-gated (`DESIGN_EDITOR_DEBUG_CLEANUP=1`) probe: log the named child's
 /// current height under `root_id`, tagged with the pass that just ran.
 /// Lives here (not in the `cleanup.rs` spine) to keep the spine under the
 /// 800-line cap; the driver calls it through the existing
 /// `use cleanup_root_patches::*` glob.
 pub(super) fn debug_probe_child_height(sink: &dyn DocSink, root_id: &str, tag: &str) {
-    if std::env::var("OPENPENCIL_DEBUG_CLEANUP").is_err() {
+    if std::env::var("DESIGN_EDITOR_DEBUG_CLEANUP").is_err() {
         return;
     }
     let Some(root) = sink

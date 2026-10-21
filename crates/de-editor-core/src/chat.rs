@@ -1,6 +1,6 @@
 //! AI chat sub-state for `EditorState`.
 //!
-//! Faithful copy of `openpencil-shell-core::document::chat::ChatState`
+//! Faithful copy of `design-editor-shell-core::document::chat::ChatState`
 //! and its supporting types, adapted for the wasm-clean
 //! `de-editor-core` crate. These are plain data types — message list,
 //! input draft, panel anchor, model catalog — with no widget or

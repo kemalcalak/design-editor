@@ -12,14 +12,14 @@ if [ "$#" -ne 2 ]; then
 fi
 candidate=$1
 revoked_cert=$2
-: "${OPENPENCIL_LOCATOR_EDGE_CLIENT_CRL:?set the active absolute locator-edge CRL path}"
-: "${OPENPENCIL_LOCATOR_EDGE_CLIENT_CA:?set the absolute locator-edge client CA path}"
-: "${OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM:?set fixed CN federation IPv4:port}"
-: "${OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_INNER_HTTPS_UPSTREAM:?set fixed CN inner HTTPS IPv4:port}"
-: "${OPENPENCIL_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_NAME:?set outer TLS DNS name}"
-: "${OPENPENCIL_LOCATOR_EDGE_EXPECTED_INNER_HOST:?set common client hostname}"
-active=$OPENPENCIL_LOCATOR_EDGE_CLIENT_CRL
-client_ca=$OPENPENCIL_LOCATOR_EDGE_CLIENT_CA
+: "${DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CRL:?set the active absolute locator-edge CRL path}"
+: "${DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CA:?set the absolute locator-edge client CA path}"
+: "${DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM:?set fixed CN federation IPv4:port}"
+: "${DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_INNER_HTTPS_UPSTREAM:?set fixed CN inner HTTPS IPv4:port}"
+: "${DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_CN_FEDERATION_NAME:?set outer TLS DNS name}"
+: "${DESIGN_EDITOR_LOCATOR_EDGE_EXPECTED_INNER_HOST:?set common client hostname}"
+active=$DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CRL
+client_ca=$DESIGN_EDITOR_LOCATOR_EDGE_CLIENT_CA
 backup="${active}.previous"
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -93,13 +93,13 @@ then
     exit 1
 fi
 
-OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE=production \
+DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE=production \
     "$script_dir/validate.sh" >/dev/null
 docker compose -f "$compose_file" config -q
 
 umask 077
-staged=$(mktemp "$active_dir/.openpencil-locator-crl.new.XXXXXX")
-staged_cert=$(mktemp "$active_dir/.openpencil-locator-cert.revoked.XXXXXX")
+staged=$(mktemp "$active_dir/.design-editor-locator-crl.new.XXXXXX")
+staged_cert=$(mktemp "$active_dir/.design-editor-locator-cert.revoked.XXXXXX")
 active_serials=
 candidate_serials=
 cleanup() {
@@ -177,8 +177,8 @@ then
     exit 1
 fi
 
-active_serials=$(mktemp "$active_dir/.openpencil-locator-crl.active.XXXXXX")
-candidate_serials=$(mktemp "$active_dir/.openpencil-locator-crl.candidate.XXXXXX")
+active_serials=$(mktemp "$active_dir/.design-editor-locator-crl.active.XXXXXX")
+candidate_serials=$(mktemp "$active_dir/.design-editor-locator-crl.candidate.XXXXXX")
 extract_serials() {
     openssl crl -in "$1" -noout -text |
         sed -n 's/^[[:space:]]*Serial Number:[[:space:]]*//p' |

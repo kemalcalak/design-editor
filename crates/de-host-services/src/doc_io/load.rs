@@ -60,7 +60,7 @@ pub fn load_editor_state_with_report(
         ));
     }
     // SAFETY: The map is read-only and lives through this synchronous parse.
-    // OpenPencil atomically replaces its own files rather than truncating the
+    // Design Editor atomically replaces its own files rather than truncating the
     // mapped inode in place.
     let bytes = unsafe { memmap2::MmapOptions::new().map(&file) }
         .map_err(|e| DocIoError::Io(e.to_string()))?;

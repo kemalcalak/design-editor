@@ -1,7 +1,7 @@
 //! Read-only MCP access to the complete, task-matched design-agent prompt.
 //!
 //! `get_design_prompt` exposes individual reference sections. This tool
-//! exposes the actual host-aware system prompt used by OpenPencil's design
+//! exposes the actual host-aware system prompt used by Design Editor's design
 //! loop, including the generation skills resolved from the user's request.
 
 use std::collections::BTreeMap;

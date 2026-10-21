@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 fn temp_path(tag: &str) -> PathBuf {
     std::env::temp_dir().join(format!(
-        "openpencil-load-report-{tag}-{}-{}.op",
+        "design-editor-load-report-{tag}-{}-{}.op",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

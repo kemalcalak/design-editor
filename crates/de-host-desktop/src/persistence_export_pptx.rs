@@ -10,7 +10,7 @@ use de_i18n::Locale;
 use std::path::Path;
 
 /// Default file name offered by the save picker.
-const DEFAULT_FILE_NAME: &str = "openpencil-deck.pptx";
+const DEFAULT_FILE_NAME: &str = "design-editor-deck.pptx";
 
 /// Run the whole flow: save picker → export → report.
 pub fn handle_export_pptx(host: &mut WidgetHostNative) {

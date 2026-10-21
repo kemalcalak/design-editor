@@ -1,7 +1,7 @@
 //! GitHub Copilot CLI bridge — adapts the official
 //! `github-copilot-sdk` to the shell-core [`ChatProvider`] trait.
 //!
-//! OpenPencil owns the `copilot --server --stdio` process lifetime while the
+//! Design Editor owns the `copilot --server --stdio` process lifetime while the
 //! SDK speaks `Content-Length`-framed JSON-RPC. Events reach us through an SDK
 //! [`EventSubscription`](github_copilot_sdk::EventSubscription); each
 //! `SessionEvent` is forwarded into the turn's `ChatDelta` channel.
@@ -9,7 +9,7 @@
 //! One client and session are started per `send` on a disposable runtime; the
 //! turn subscribes before sending. Multi-turn context rides the request's
 //! history digest, matching the TS Copilot path. A process-global SDK resume
-//! slot is deliberately avoided because OpenPencil supports multiple chat tabs.
+//! slot is deliberately avoided because Design Editor supports multiple chat tabs.
 //!
 //! Event mapping:
 //! - `assistant.message_delta` (`deltaContent`) → `TextDelta`
@@ -126,7 +126,7 @@ impl CopilotProvider {
         let (tx, rx) = mpsc::channel::<ChatDelta>(64);
         let worker_tx = tx.clone();
         let worker = std::thread::Builder::new()
-            .name("openpencil-copilot-turn".to_string())
+            .name("design-editor-copilot-turn".to_string())
             .spawn(move || {
                 let runtime = tokio::runtime::Builder::new_current_thread()
                     .enable_all()
@@ -195,7 +195,7 @@ fn session_config(request: &ChatRequest, session_id: &SessionId) -> SessionConfi
     let mut config = SessionConfig::default();
     config.session_id = Some(session_id.clone());
     config.streaming = Some(true);
-    // OpenPencil supplies the owning tab's history on every turn and never
+    // Design Editor supplies the owning tab's history on every turn and never
     // uses Copilot's cross-session search/retrieval store. Keep that store
     // isolated; bounded session.delete below remains the persistence cleanup.
     config.enable_session_store = Some(false);
@@ -244,7 +244,7 @@ fn new_turn_session_id() -> SessionId {
         .unwrap_or_default()
         .as_nanos();
     SessionId::new(format!(
-        "openpencil-{}-{timestamp}-{serial}",
+        "design-editor-{}-{timestamp}-{serial}",
         std::process::id()
     ))
 }
@@ -492,11 +492,11 @@ mod tests {
     }
 
     #[test]
-    fn turn_session_ids_are_unique_and_openpencil_owned() {
+    fn turn_session_ids_are_unique_and_design_editor_owned() {
         let first = new_turn_session_id();
         let second = new_turn_session_id();
         assert_ne!(first, second);
-        assert!(first.as_str().starts_with("openpencil-"));
+        assert!(first.as_str().starts_with("design-editor-"));
     }
 
     #[test]
@@ -544,7 +544,7 @@ mod tests {
         assert_eq!(create["params"]["enableSessionStore"], false);
         let session_id = create["params"]["sessionId"]
             .as_str()
-            .expect("OpenPencil-assigned session ID")
+            .expect("Design Editor-assigned session ID")
             .to_string();
 
         // Cancel while session.create is still unanswered. The turn must not
@@ -580,7 +580,7 @@ mod tests {
             model: Some("claude-sonnet-4".into()),
             ..Default::default()
         };
-        let session_id = SessionId::new("openpencil-test-session");
+        let session_id = SessionId::new("design-editor-test-session");
         let config = session_config(&req, &session_id);
         assert_eq!(config.model.as_deref(), Some("claude-sonnet-4"));
         assert_eq!(config.streaming, Some(true));
@@ -593,7 +593,7 @@ mod tests {
     fn session_config_without_model_keeps_cli_default() {
         // No selection → leave `model` unset so the CLI picks its own
         // default; its reasoning capability is also unknown.
-        let session_id = SessionId::new("openpencil-test-session");
+        let session_id = SessionId::new("design-editor-test-session");
         let config = session_config(&ChatRequest::default(), &session_id);
         assert!(config.model.is_none());
         assert!(config.reasoning_effort.is_none());
@@ -610,7 +610,7 @@ mod tests {
 
     #[test]
     fn session_config_auto_leaves_reasoning_selection_to_the_cli() {
-        let session_id = SessionId::new("openpencil-test-session");
+        let session_id = SessionId::new("design-editor-test-session");
         let config = session_config(
             &ChatRequest {
                 model: Some("auto".into()),

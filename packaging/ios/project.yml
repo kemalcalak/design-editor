@@ -1,7 +1,7 @@
-name: OpenPencilPlayer
+name: DesignEditorPlayer
 
 options:
-  bundleIdPrefix: tech.zseven
+  bundleIdPrefix: com.kemalcalak
   deploymentTarget:
     iOS: "15.0"
   xcodeVersion: "26.4"
@@ -12,7 +12,7 @@ settings:
     CLANG_CXX_LANGUAGE_STANDARD: c++17
 
 targets:
-  OpenPencilPlayer:
+  DesignEditorPlayer:
     type: application
     platform: iOS
     deploymentTarget: "15.0"
@@ -23,8 +23,8 @@ targets:
       - path: Assets.xcassets
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: tech.zseven.openpencil
-        PRODUCT_NAME: OpenPencilPlayer
+        PRODUCT_BUNDLE_IDENTIFIER: com.kemalcalak.designeditor
+        PRODUCT_NAME: DesignEditorPlayer
         # Local-development fallbacks; the release pipeline overrides both on
         # the xcodebuild command line.
         MARKETING_VERSION: "1.0"
@@ -33,15 +33,15 @@ targets:
         IPHONEOS_DEPLOYMENT_TARGET: "15.0"
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: OpenPencil
+        INFOPLIST_KEY_CFBundleDisplayName: Design Editor
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
-        INFOPLIST_KEY_NSLocalNetworkUsageDescription: "Connect to an OpenPencil collaboration session on your local network when you enter its address."
+        INFOPLIST_KEY_NSLocalNetworkUsageDescription: "Connect to a Design Editor collaboration session on your local network when you enter its address."
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
-        SWIFT_OBJC_BRIDGING_HEADER: "$(SRCROOT)/OpenPencilPlayer-Bridging-Header.h"
-        CODE_SIGN_ENTITLEMENTS: "$(SRCROOT)/OpenPencilPlayer.entitlements"
+        SWIFT_OBJC_BRIDGING_HEADER: "$(SRCROOT)/DesignEditorPlayer-Bridging-Header.h"
+        CODE_SIGN_ENTITLEMENTS: "$(SRCROOT)/DesignEditorPlayer.entitlements"
         HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../../crates/de-engine-ffi/include"
         "LIBRARY_SEARCH_PATHS[sdk=iphoneos*]": "$(inherited) $(SRCROOT)/../../target/aarch64-apple-ios/release"
         "LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]": "$(inherited) $(SRCROOT)/../../target/aarch64-apple-ios-sim/release"
@@ -82,14 +82,14 @@ targets:
         # must match AlipayNativeSignIn.callbackScheme.
         DouyinAppID: awbponwo0ls6cjos
         # Saved documents live in NSDocumentDirectory, which the Files app
-        # only exposes ("On My iPhone -> OpenPencil") when BOTH keys are
+        # only exposes ("On My iPhone -> Design Editor") when BOTH keys are
         # true. Without them the engine's saves are invisible to the user.
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
         # Each foreground generation registers a unique concrete identifier;
         # this wildcard authorizes its per-generation UUID suffix.
         BGTaskSchedulerPermittedIdentifiers:
-          - tech.zseven.openpencil.generation.*
+          - com.kemalcalak.designeditor.generation.*
         UIBackgroundModes:
           - processing
         LSApplicationQueriesSchemes:
@@ -103,11 +103,11 @@ targets:
           - weixinULAPI
           - weixinURLParamsAPI
         CFBundleURLTypes:
-          - CFBundleURLName: tech.zseven.openpencil.douyin
+          - CFBundleURLName: com.kemalcalak.designeditor.douyin
             CFBundleURLSchemes: [awbponwo0ls6cjos]
-          - CFBundleURLName: tech.zseven.openpencil.alipay
-            CFBundleURLSchemes: [openpencilalipay]
-          - CFBundleURLName: tech.zseven.openpencil.wechat
+          - CFBundleURLName: com.kemalcalak.designeditor.alipay
+            CFBundleURLSchemes: [designeditoralipay]
+          - CFBundleURLName: com.kemalcalak.designeditor.wechat
             CFBundleURLSchemes: [wx327d6a759ea9fe62]
     preBuildScripts:
       - name: Fetch vendored sign-in SDKs

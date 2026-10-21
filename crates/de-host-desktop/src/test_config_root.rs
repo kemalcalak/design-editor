@@ -1,9 +1,9 @@
-//! Keeps test runs off the user's real `~/.openpencil`.
+//! Keeps test runs off the user's real `~/.design-editor`.
 //!
 //! `agent_connect_store` and `ui_prefs` persist through `de_config_store`'s
 //! process-level helpers, which resolve the real user directory. Exercising
 //! either from a test therefore rewrites live config — measured: a
-//! `cargo test -p de-host-desktop` run rewrote `~/.openpencil/agents.json`,
+//! `cargo test -p de-host-desktop` run rewrote `~/.design-editor/agents.json`,
 //! the file that decides which agent providers auto-reconnect at launch,
 //! and since the harness runs cases in parallel whichever one finished last
 //! decided its contents.
@@ -31,7 +31,7 @@ pub(crate) fn guard_user_config() {
     de_config_store::redirect_user_root_for_tests(root);
 }
 
-/// Real builds must resolve the real `~/.openpencil` — compiles away.
+/// Real builds must resolve the real `~/.design-editor` — compiles away.
 #[cfg(not(test))]
 #[inline]
 pub(crate) fn guard_user_config() {}

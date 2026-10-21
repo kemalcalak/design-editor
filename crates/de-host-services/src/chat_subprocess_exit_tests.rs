@@ -55,7 +55,7 @@ fn stub_cli(body: &str) -> (std::path::PathBuf, std::path::PathBuf) {
     // directory, so one test silently executed another's stub.
     static SEQ: AtomicU64 = AtomicU64::new(0);
     let dir = std::env::temp_dir().join(format!(
-        "openpencil-exit-tests-{}-{}",
+        "design-editor-exit-tests-{}-{}",
         std::process::id(),
         SEQ.fetch_add(1, Ordering::Relaxed)
     ));

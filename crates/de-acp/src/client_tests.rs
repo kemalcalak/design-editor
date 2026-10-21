@@ -245,7 +245,7 @@ async fn mock_agent_checking_session_new(
             "session/new" => {
                 let params = &frame["params"];
                 let server = &params["mcpServers"][0];
-                let ok = server["name"] == "openpencil"
+                let ok = server["name"] == "design-editor"
                     && server["type"] == "http"
                     && server["url"] == "http://127.0.0.1:3100/mcp"
                     && server["headers"].as_array().is_some_and(Vec::is_empty)
@@ -274,7 +274,7 @@ async fn session_new_carries_mcp_servers_and_system_prompt_meta() {
     let session = conn
         .new_session_with(&NewSessionOptions {
             mcp_servers: vec![McpHttpServer {
-                name: "openpencil".into(),
+                name: "design-editor".into(),
                 url: "http://127.0.0.1:3100/mcp".into(),
             }],
             system_prompt_meta: Some("use the canvas tools".into()),
@@ -292,7 +292,7 @@ async fn http_mcp_requires_an_advertised_capability() {
     let error = conn
         .new_session_with(&NewSessionOptions {
             mcp_servers: vec![McpHttpServer {
-                name: "openpencil".into(),
+                name: "design-editor".into(),
                 url: "http://127.0.0.1:3100/mcp".into(),
             }],
             system_prompt_meta: None,

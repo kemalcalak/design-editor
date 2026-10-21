@@ -24,18 +24,19 @@ const MIN_LEASE_PING_INTERVAL: Duration = Duration::from_secs(1);
 /// relay reaping the very peers it is trying to hold.
 const LEASE_PINGS_PER_WINDOW: u32 = 3;
 
-const LISTEN_ENV: &str = "OPENPENCIL_COLLAB_RELAY_LISTEN";
-const MAX_PENDING_ENV: &str = "OPENPENCIL_COLLAB_RELAY_MAX_PENDING";
-const MAX_PENDING_PER_SOURCE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_MAX_PENDING_PER_SOURCE";
-const MAX_AUTH_IN_FLIGHT_ENV: &str = "OPENPENCIL_COLLAB_RELAY_MAX_AUTH_IN_FLIGHT";
-const MAX_REAUTH_IN_FLIGHT_ENV: &str = "OPENPENCIL_COLLAB_RELAY_MAX_REAUTH_IN_FLIGHT";
-const MAX_ACTIVE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_MAX_ACTIVE";
-const MAX_WAITING_PER_ROUTE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_MAX_WAITING_PER_ROUTE";
-const RELAY_QUEUE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_QUEUE_CAPACITY";
-const MAX_QUEUED_BYTES_ENV: &str = "OPENPENCIL_COLLAB_RELAY_MAX_QUEUED_BYTES";
-const MAX_QUEUED_BYTES_PER_ROUTE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_MAX_QUEUED_BYTES_PER_ROUTE";
-const WAITING_TIMEOUT_SECS_ENV: &str = "OPENPENCIL_COLLAB_RELAY_WAITING_TIMEOUT_SECS";
-const WAITING_LEASE_ENV: &str = "OPENPENCIL_COLLAB_RELAY_WAITING_LEASE";
+const LISTEN_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_LISTEN";
+const MAX_PENDING_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_MAX_PENDING";
+const MAX_PENDING_PER_SOURCE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_MAX_PENDING_PER_SOURCE";
+const MAX_AUTH_IN_FLIGHT_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_MAX_AUTH_IN_FLIGHT";
+const MAX_REAUTH_IN_FLIGHT_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_MAX_REAUTH_IN_FLIGHT";
+const MAX_ACTIVE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_MAX_ACTIVE";
+const MAX_WAITING_PER_ROUTE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_MAX_WAITING_PER_ROUTE";
+const RELAY_QUEUE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_QUEUE_CAPACITY";
+const MAX_QUEUED_BYTES_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_MAX_QUEUED_BYTES";
+const MAX_QUEUED_BYTES_PER_ROUTE_ENV: &str =
+    "DESIGN_EDITOR_COLLAB_RELAY_MAX_QUEUED_BYTES_PER_ROUTE";
+const WAITING_TIMEOUT_SECS_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_WAITING_TIMEOUT_SECS";
+const WAITING_LEASE_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_WAITING_LEASE";
 
 #[derive(Clone, Debug)]
 pub struct RelayConfig {
@@ -52,7 +53,7 @@ pub struct RelayConfig {
     /// `de_collab_relay_protocol::pairing_window`, which both sides build
     /// their constants from, so neither can drift silently.
     ///
-    /// Operators override it with `OPENPENCIL_COLLAB_RELAY_WAITING_TIMEOUT_SECS`.
+    /// Operators override it with `DESIGN_EDITOR_COLLAB_RELAY_WAITING_TIMEOUT_SECS`.
     pub waiting_timeout: Duration,
     pub idle_timeout: Duration,
     pub tunnel_lifetime: Duration,
@@ -87,7 +88,7 @@ pub struct RelayConfig {
     /// `tunnel_lifetime` (see `RelayAuthState::effective_deadline`), so a lease
     /// can never outlive the credential that opened it.
     ///
-    /// Operators disable it with `OPENPENCIL_COLLAB_RELAY_WAITING_LEASE=0`.
+    /// Operators disable it with `DESIGN_EDITOR_COLLAB_RELAY_WAITING_LEASE=0`.
     pub waiting_lease: bool,
     unauthenticated_dev: bool,
 }

@@ -12,9 +12,9 @@ use futures::stream::{self, StreamExt};
 
 use crate::validation_providers::ChatVisionLlmClient;
 
-const BASE_URL_ENV: &str = "OPENPENCIL_IMAGE_JUDGE_BASE_URL";
-const API_KEY_ENV: &str = "OPENPENCIL_IMAGE_JUDGE_API_KEY";
-const MODEL_ENV: &str = "OPENPENCIL_IMAGE_JUDGE_MODEL";
+const BASE_URL_ENV: &str = "DESIGN_EDITOR_IMAGE_JUDGE_BASE_URL";
+const API_KEY_ENV: &str = "DESIGN_EDITOR_IMAGE_JUDGE_API_KEY";
+const MODEL_ENV: &str = "DESIGN_EDITOR_IMAGE_JUDGE_MODEL";
 const MAX_RETRIES: usize = 2;
 const MAX_TOKENS: u32 = 600;
 const MAX_CONCURRENT_CALLS: usize = 3;

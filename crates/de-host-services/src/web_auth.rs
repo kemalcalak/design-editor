@@ -3,7 +3,7 @@
 //! The wasm bundle ships no auth code: it drives the flow through these
 //! REST handlers, and the daemon runs the proprietary `de-auth-bridge`
 //! client on its behalf. The credential store is shared with the desktop
-//! GUI (`~/.openpencil/auth`), so a session started in either host is
+//! GUI (`~/.design-editor/auth`), so a session started in either host is
 //! visible to both — signing in on the desktop signs the web editor in
 //! too, and vice versa.
 //!
@@ -28,7 +28,7 @@ pub(crate) fn init(editor: &mut EditorState, remote_exposure_ok: bool) {
     if !remote_exposure_ok || !de_auth_bridge::available() {
         return;
     }
-    let Ok(dir) = de_config_store::openpencil_dir() else {
+    let Ok(dir) = de_config_store::design_editor_dir() else {
         return;
     };
     let config = de_auth_bridge::desktop_init_config(&dir, env!("CARGO_PKG_VERSION"));
@@ -124,7 +124,7 @@ pub(crate) static LOADING_PAGE_HTML: std::sync::LazyLock<String> = std::sync::La
     let fallback = de_i18n::translate(de_i18n::Locale::EnUs, "account.openingPopup");
     format!(
         r#"<!doctype html>
-<html><head><meta charset="utf-8"><title>OpenPencil</title><style>
+<html><head><meta charset="utf-8"><title>Design Editor</title><style>
   html,body{{height:100%;margin:0;background:#111113;color:#e4e4e7;
     font:14px/1.6 system-ui,-apple-system,sans-serif}}
   .wrap{{height:100%;display:flex;flex-direction:column;align-items:center;

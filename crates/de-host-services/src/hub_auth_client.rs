@@ -38,13 +38,13 @@ use sha2::{Digest, Sha256};
 use crate::hub_auth_error::HubAuthError;
 
 /// Base URL of the hub, e.g. `http://backend:8080`.
-pub const HUB_BASE_URL_ENV: &str = "OPENPENCIL_HUB_BASE_URL";
+pub const HUB_BASE_URL_ENV: &str = "DESIGN_EDITOR_HUB_BASE_URL";
 /// Shared secret sent as `X-OP-Internal-Auth` on the introspection call.
-pub const HUB_INTERNAL_AUTH_ENV: &str = "OPENPENCIL_HUB_INTERNAL_AUTH";
+pub const HUB_INTERNAL_AUTH_ENV: &str = "DESIGN_EDITOR_HUB_INTERNAL_AUTH";
 /// Path to a file holding that secret. Preferred over the inline value: an
 /// orchestrator mounts a secret rather than putting it in the environment,
 /// where it is visible to anything that can read the process table.
-pub const HUB_INTERNAL_AUTH_FILE_ENV: &str = "OPENPENCIL_HUB_INTERNAL_AUTH_FILE";
+pub const HUB_INTERNAL_AUTH_FILE_ENV: &str = "DESIGN_EDITOR_HUB_INTERNAL_AUTH_FILE";
 
 /// Longest secret file this reads. The secret is a short opaque token.
 const MAX_INTERNAL_AUTH_BYTES: u64 = 4096;
@@ -415,13 +415,13 @@ pub fn internal_auth_from_env() -> Option<String> {
 fn read_secret_file(path: &str) -> Option<String> {
     let metadata = std::fs::metadata(path).ok()?;
     if !metadata.is_file() || metadata.len() > MAX_INTERNAL_AUTH_BYTES {
-        eprintln!("openpencil: {HUB_INTERNAL_AUTH_FILE_ENV} is not a readable regular file");
+        eprintln!("design-editor: {HUB_INTERNAL_AUTH_FILE_ENV} is not a readable regular file");
         return None;
     }
     let body = std::fs::read_to_string(path).ok()?;
     let secret = body.trim().to_string();
     if secret.is_empty() || !secret.bytes().all(|byte| byte.is_ascii_graphic()) {
-        eprintln!("openpencil: {HUB_INTERNAL_AUTH_FILE_ENV} does not hold a usable secret");
+        eprintln!("design-editor: {HUB_INTERNAL_AUTH_FILE_ENV} does not hold a usable secret");
         return None;
     }
     Some(secret)

@@ -1,6 +1,6 @@
 //! Best-of-N candidate selection for smoke runs.
 //!
-//! `OPENPENCIL_SMOKE_BEST_OF=N` (2..=4) runs the full generation N times
+//! `DESIGN_EDITOR_SMOKE_BEST_OF=N` (2..=4) runs the full generation N times
 //! against independent fresh states, scores every candidate with the
 //! real-layout geometry diagnostics, and keeps the best one. Selection
 //! rule: issueCount ascending → nodeCount descending → first to arrive.
@@ -17,10 +17,10 @@ use crate::InlineDocSink;
 /// Sentinel score for a candidate whose generation failed outright.
 const FAILED_ISSUES: usize = 9999;
 
-/// Parse `OPENPENCIL_SMOKE_BEST_OF`. Anything outside 2..=4 (including
+/// Parse `DESIGN_EDITOR_SMOKE_BEST_OF`. Anything outside 2..=4 (including
 /// unset or unparsable) collapses to 1 — the plain single-run path.
 pub fn parse_best_of_count() -> usize {
-    std::env::var("OPENPENCIL_SMOKE_BEST_OF")
+    std::env::var("DESIGN_EDITOR_SMOKE_BEST_OF")
         .ok()
         .and_then(|v| v.parse::<usize>().ok())
         .filter(|n| (2..=4).contains(n))
@@ -82,7 +82,7 @@ pub fn save_candidate(
 
 /// The best-of-N driver: N independent generations from clones of the
 /// prepared base state (post seed/library merge), one score line per
-/// candidate, best document written to `OPENPENCIL_SMOKE_OUT`.
+/// candidate, best document written to `DESIGN_EDITOR_SMOKE_OUT`.
 pub async fn run_best_of(
     n: usize,
     template: &DesignRequest,
@@ -91,7 +91,7 @@ pub async fn run_best_of(
     abort: &AbortFlag,
     providers: &ValidationProviders<'_>,
 ) -> std::process::ExitCode {
-    let out_path = std::env::var("OPENPENCIL_SMOKE_OUT")
+    let out_path = std::env::var("DESIGN_EDITOR_SMOKE_OUT")
         .ok()
         .filter(|s| !s.is_empty());
     let mut scores: Vec<(usize, usize)> = Vec::new();

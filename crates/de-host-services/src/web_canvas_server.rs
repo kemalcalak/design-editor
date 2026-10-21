@@ -3,7 +3,7 @@
 //! external MCP/CLI clients. It is the Rust analog of the TS web app's
 //! `apps/web/server/api/mcp/*` Nitro routes + `setSyncDocument`: it owns the
 //! canonical document in memory and answers the same whole-document REST sync
-//! shape, so a JSON-RPC/REST client (e.g. the `op` CLI or any MCP client) can
+//! shape, so a JSON-RPC/REST client (e.g. the `de` CLI or any MCP client) can
 //! drive the Rust *web* canvas the same way it drives the desktop canvas.
 //!
 //! This module ships the request-handling CORE (`handle_web_canvas_request`,
@@ -12,7 +12,7 @@
 //! `design-editor --serve-web <port> [doc] [--host <addr>]`).
 //! Layered on top: an SSE endpoint that streams `version` bumps to connected
 //! shells, static serving of the host page + WASM bundle (`crate::web_static`
-//! — `GET /` and `GET /pkg/*`), and a token-authenticated `openpencil/shutdown`
+//! — `GET /` and `GET /pkg/*`), and a token-authenticated `design-editor/shutdown`
 //! (same contract as `--mcp-http`) so `de stop` works against this daemon.
 
 use std::io::{Read, Write};
@@ -475,7 +475,7 @@ pub fn handle_web_canvas_request(
             // decides whether a sync conflict may be auto-resolved — see
             // `de-host-web/src/live_sync_glue.rs::auto_resolve_is_safe`.
             body: format!(
-                r#"{{"running":true,"port":{},"localIp":"127.0.0.1","server":"openpencil-mcp","mode":"web-canvas","serveMode":"{}"}}"#,
+                r#"{{"running":true,"port":{},"localIp":"127.0.0.1","server":"design-editor-mcp","mode":"web-canvas","serveMode":"{}"}}"#,
                 state.port,
                 state.mode.wire_name()
             ),

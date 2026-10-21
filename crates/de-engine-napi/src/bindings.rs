@@ -1,4 +1,4 @@
-//! NAPI entry points for `libopenpencil.so` — lifecycle, surface, and
+//! NAPI entry points for `libdesign_editor.so` — lifecycle, surface, and
 //! pointer input.
 //!
 //! Every entry point validates its handle against the tombstoning

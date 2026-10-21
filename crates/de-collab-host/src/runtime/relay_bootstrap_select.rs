@@ -15,11 +15,11 @@ use super::{
 /// endpoint. Both hubs serve the same signed bootstrap document (verified
 /// against the embedded union root), so the region preference is a
 /// reachability choice, not a trust choice. A build without injection keeps
-/// the public relay purely `OPENPENCIL_COLLAB_BOOTSTRAP_URL`-configured.
+/// the public relay purely `DESIGN_EDITOR_COLLAB_BOOTSTRAP_URL`-configured.
 const BUILTIN_BOOTSTRAP_URL_CN: Option<&str> =
-    option_env!("OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN");
+    option_env!("DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN");
 const BUILTIN_BOOTSTRAP_URL_GLOBAL: Option<&str> =
-    option_env!("OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL");
+    option_env!("DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL");
 
 const fn builtin_bootstrap_url(region: RelayRegion) -> Option<&'static str> {
     match region {

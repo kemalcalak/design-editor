@@ -228,7 +228,7 @@ pub fn execute_design_tool_with_root_seed_guard(
         );
         if icon_path_report != Default::default() {
             eprintln!(
-                "openpencil agent: icon path normalization: converted_to_icon_font={}, refit_uniform={}",
+                "design-editor agent: icon path normalization: converted_to_icon_font={}, refit_uniform={}",
                 icon_path_report.converted_to_icon_font, icon_path_report.refit_uniform
             );
         }

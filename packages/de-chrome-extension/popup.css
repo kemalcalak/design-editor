@@ -108,7 +108,7 @@ body {
 }
 
 /*
- * Never wraps. The longest of the fifteen titles — German's "OpenPencil
+ * Never wraps. The longest of the fifteen titles — German's "Design Editor
  * Web-Erfassung" — clears the row with room to spare, so the ellipsis here is
  * a guard for a future string, not a working part of the layout.
  */

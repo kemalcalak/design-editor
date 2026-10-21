@@ -53,7 +53,7 @@ fn the_gap_is_read_through_the_positional_index_not_a_literal() {
 
 #[test]
 fn agents_that_do_not_hard_require_mcp_report_nothing() {
-    // Grok Build talks to OpenPencil over MCP but degrades to a tool-free
+    // Grok Build talks to Design Editor over MCP but degrades to a tool-free
     // turn, and Claude Code needs no integration at all. Neither may raise a
     // notice the user cannot act on.
     for agent in [

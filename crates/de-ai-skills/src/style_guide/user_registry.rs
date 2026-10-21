@@ -13,7 +13,7 @@
 //! should have to know which half of the catalogue the answer came from.
 //!
 //! This module holds no files. Persistence is a host capability (the desktop
-//! writes `~/.openpencil/styles/*.md`; the browser has no disk), so hosts call
+//! writes `~/.design-editor/styles/*.md`; the browser has no disk), so hosts call
 //! [`load_user_style_guide`] on boot and [`import_design_md`] on demand, and
 //! this stays a pure in-memory catalogue that compiles for wasm32 unchanged.
 

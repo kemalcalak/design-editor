@@ -46,7 +46,7 @@ pub struct FontStore {
 }
 
 impl FontStore {
-    /// The per-user store under the shared OpenPencil config dir.
+    /// The per-user store under the shared Design Editor config dir.
     pub fn user() -> std::io::Result<Self> {
         Ok(Self::at(ConfigStore::user()?.root()))
     }

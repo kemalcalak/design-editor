@@ -28,7 +28,7 @@ afterEach(async () => {
 
 async function fakeDaemon(token: string, respond: (body: string) => { status: number; body: string; sessionId?: string }): Promise<FakeDaemon> {
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
-    d.lastToken = req.headers["x-openpencil-token"] as string | undefined;
+    d.lastToken = req.headers["x-design-editor-token"] as string | undefined;
     const chunks: Buffer[] = [];
     req.on("data", (c) => chunks.push(c as Buffer));
     req.on("end", () => {
@@ -80,7 +80,7 @@ test("no active document → -32002 error echoing the request id", async () => {
   const json = (await res.json()) as { id: number; error: { code: number; message: string } };
   expect(json.id).toBe(1);
   expect(json.error.code).toBe(-32002);
-  expect(json.error.message).toContain("No active OpenPencil document");
+  expect(json.error.message).toContain("No active Design Editor document");
 });
 
 test("active daemon → forwards with the token injected, returns its response", async () => {

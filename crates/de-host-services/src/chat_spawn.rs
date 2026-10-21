@@ -512,7 +512,7 @@ pub fn build_command(binary: &str, args: &[String]) -> Command {
     #[cfg(windows)]
     {
         // CREATE_NO_WINDOW from winbase.h — keeps the console hidden
-        // when OpenPencil launches from a non-console parent (e.g.,
+        // when Design Editor launches from a non-console parent (e.g.,
         // double-click on the .exe from Explorer).
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         let bare = std::path::Path::new(binary);

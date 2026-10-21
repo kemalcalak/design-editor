@@ -3,10 +3,10 @@ import { defineComponent, h, nextTick } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { makeMockViewer } from './mock-core.js';
 const mock = makeMockViewer();
-vi.mock('@zseven-w/de-web-sdk', () => ({ createViewer: vi.fn(async () => mock.viewer) }));
+vi.mock('@kemalcalak/de-web-sdk', () => ({ createViewer: vi.fn(async () => mock.viewer) }));
 import { DesignView } from '../src/index.js';
 import { useViewport } from '../src/index.js';
-import { createViewer } from '@zseven-w/de-web-sdk';
+import { createViewer } from '@kemalcalak/de-web-sdk';
 
 describe('DesignView (vue)', () => {
   beforeEach(() => vi.clearAllMocks());

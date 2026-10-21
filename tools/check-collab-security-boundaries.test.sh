@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-if [[ "${OPENPENCIL_COLLAB_SECURITY_FAKE_CARGO:-}" == "1" ]]; then
+if [[ "${DESIGN_EDITOR_COLLAB_SECURITY_FAKE_CARGO:-}" == "1" ]]; then
     if [[ "${1:-}" != "tree" ]]; then
         printf 'unexpected fake cargo invocation: %s\n' "$*" >&2
         exit 2
@@ -127,7 +127,7 @@ server {
     large_client_header_buffers 2 64k;
     location = /v1/tunnel {
         proxy_set_header Authorization $http_authorization;
-        proxy_pass_header OpenPencil-Relay-Challenge;
+        proxy_pass_header Design-Editor-Relay-Challenge;
     }
 }
 server {
@@ -138,7 +138,7 @@ server {
         limit_req zone=relay_federation_handshakes burst=500 nodelay;
         limit_conn relay_federation_connections 512;
         proxy_set_header Authorization $http_authorization;
-        proxy_pass_header OpenPencil-Relay-Challenge;
+        proxy_pass_header Design-Editor-Relay-Challenge;
     }
 }
 EOF
@@ -181,7 +181,7 @@ echo "candidate CRLNumber must be strictly greater"
 echo "candidate CRL drops an existing revoked certificate serial"
 echo "CRL activation requires root"
 echo "CRL/CA files must be root:101 mode 0440"
-OPENPENCIL_RELAY_EDGE_VALIDATION_MODE=production
+DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE=production
 # Recheck the final staged inode after ownership and mode changes.
 docker compose up -d --no-deps --force-recreate cn-federation
 docker compose exec -T cn-federation nginx -t
@@ -214,13 +214,13 @@ EOF
     cat > "$fixture_root/deploy/collab-relay-edge/deploy-global.sh" <<'EOF'
 #!/bin/sh
 "$script_dir/install-global-new-connection-rate.sh"
-OPENPENCIL_RELAY_EDGE_VALIDATION_MODE=production
+DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE=production
 --abort-on-container-exit --exit-code-from global-edge
 EOF
-    cat > "$fixture_root/deploy/collab-relay-edge/openpencil-collab-relay-global.service.example" <<'EOF'
+    cat > "$fixture_root/deploy/collab-relay-edge/design-editor-collab-relay-global.service.example" <<'EOF'
 Requires=docker.service nftables.service
 After=network-online.target nftables.service docker.service
-ExecStart=/opt/openpencil/deploy/collab-relay-edge/deploy-global.sh
+ExecStart=/opt/design-editor/deploy/collab-relay-edge/deploy-global.sh
 EOF
 
     cat > "$fixture_root/deploy/collab-relay-locator/nginx-location.conf" <<'EOF'
@@ -231,8 +231,8 @@ location = /v1/locator {
     if ($http_host = "") {
         return 400;
     }
-    limit_req zone=openpencil_locator_per_source burst=20 nodelay;
-    limit_conn openpencil_locator_connections 16;
+    limit_req zone=design_editor_locator_per_source burst=20 nodelay;
+    limit_conn design_editor_locator_connections 16;
     client_max_body_size 191;
     proxy_set_header Authorization $http_authorization;
 }
@@ -240,7 +240,7 @@ location = /v1/pairing-code {
     if ($request_uri != "/v1/pairing-code") { return 404; }
     limit_except POST { deny all; }
     client_max_body_size 624; client_body_buffer_size 624;
-    if ($http_content_type != "application/vnd.openpencil.relay-pairing-publish-v1") { return 415; }
+    if ($http_content_type != "application/vnd.design-editor.relay-pairing-publish-v1") { return 415; }
     proxy_pass_request_headers off;
     proxy_pass http://locator:8092/v1/pairing-code;
 }
@@ -249,8 +249,8 @@ location = /v1/pairing-code/claim {
     limit_except POST { deny all; }
     client_max_body_size 49; client_body_buffer_size 49;
     if ($content_length != "49") { return 400; }
-    if ($http_content_type != "application/vnd.openpencil.relay-pairing-claim-v1") { return 415; }
-    if ($http_accept != "application/vnd.openpencil.relay-sealed-invite-v1") { return 406; }
+    if ($http_content_type != "application/vnd.design-editor.relay-pairing-claim-v1") { return 415; }
+    if ($http_accept != "application/vnd.design-editor.relay-sealed-invite-v1") { return 406; }
     proxy_pass_request_headers off;
     proxy_pass http://locator:8092/v1/pairing-code/claim;
 }
@@ -259,8 +259,8 @@ location / {
 }
 EOF
     cat > "$fixture_root/deploy/collab-relay-locator/nginx-http-limits.conf" <<'EOF'
-limit_req_zone $binary_remote_addr zone=openpencil_locator_per_source:10m rate=10r/s;
-limit_conn_zone $binary_remote_addr zone=openpencil_locator_connections:10m;
+limit_req_zone $binary_remote_addr zone=design_editor_locator_per_source:10m rate=10r/s;
+limit_conn_zone $binary_remote_addr zone=design_editor_locator_connections:10m;
 client_header_buffer_size 64k;
 large_client_header_buffers 2 64k;
 EOF
@@ -268,7 +268,7 @@ EOF
 services:
   locator:
     environment:
-      OPENPENCIL_COLLAB_LOCATOR_HSM_SOCKET: /run/openpencil-hsm/signer.sock
+      DESIGN_EDITOR_COLLAB_LOCATOR_HSM_SOCKET: /run/design-editor-hsm/signer.sock
     read_only: true
     cap_drop:
       - ALL
@@ -297,7 +297,7 @@ EOF
         README.md \
         compose.yaml \
         config.example.json \
-        openpencil-locator-hsm.conf \
+        design-editor-locator-hsm.conf \
         softhsm2.conf; do
         : > "$fixture_root/deploy/collab-relay-locator-hsm/$locator_hsm_file"
     done
@@ -363,19 +363,19 @@ server {
         if ($request_uri != "/v1/pairing-code") { return 404; }
         limit_except POST { deny all; }
         client_max_body_size 624; client_body_buffer_size 624;
-        if ($http_content_type != "application/vnd.openpencil.relay-pairing-publish-v1") { return 415; }
+        if ($http_content_type != "application/vnd.design-editor.relay-pairing-publish-v1") { return 415; }
         proxy_pass_request_headers off;
-        proxy_pass http://openpencil_locator/v1/pairing-code;
+        proxy_pass http://design_editor_locator/v1/pairing-code;
     }
     location = /v1/pairing-code/claim {
         if ($request_uri != "/v1/pairing-code/claim") { return 404; }
         limit_except POST { deny all; }
         client_max_body_size 49; client_body_buffer_size 49;
         if ($content_length != "49") { return 400; }
-        if ($http_content_type != "application/vnd.openpencil.relay-pairing-claim-v1") { return 415; }
-        if ($http_accept != "application/vnd.openpencil.relay-sealed-invite-v1") { return 406; }
+        if ($http_content_type != "application/vnd.design-editor.relay-pairing-claim-v1") { return 415; }
+        if ($http_accept != "application/vnd.design-editor.relay-sealed-invite-v1") { return 406; }
         proxy_pass_request_headers off;
-        proxy_pass http://openpencil_locator/v1/pairing-code/claim;
+        proxy_pass http://design_editor_locator/v1/pairing-code/claim;
     }
     location / { return 404; }
 }
@@ -402,20 +402,20 @@ EOF
     cat > "$fixture_root/deploy/collab-relay-locator-edge/deploy-global.sh" <<'EOF'
 #!/bin/sh
 "$script_dir/install-global-new-connection-rate.sh"
-OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE=production
+DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE=production
 --abort-on-container-exit --exit-code-from global-locator-edge
 EOF
-    cat > "$fixture_root/deploy/collab-relay-locator-edge/openpencil-collab-locator-global.service.example" <<'EOF'
+    cat > "$fixture_root/deploy/collab-relay-locator-edge/design-editor-collab-locator-global.service.example" <<'EOF'
 Requires=docker.service nftables.service
 After=network-online.target nftables.service docker.service
-ExecStart=/opt/openpencil/deploy/collab-relay-locator-edge/deploy-global.sh
+ExecStart=/opt/design-editor/deploy/collab-relay-locator-edge/deploy-global.sh
 EOF
     cat > "$fixture_root/deploy/collab-relay-locator-edge/rotate-cn-crl.sh" <<'EOF'
 echo "candidate CRLNumber must be strictly greater"
 echo "candidate CRL drops an existing revoked certificate serial"
 echo "CRL activation requires root"
 echo "CRL/CA files must be root:101 mode 0440"
-OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE=production
+DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE=production
 # Revalidate the exact staged inode after its final ownership/mode changes.
 docker compose up -d --no-deps --force-recreate
 docker compose exec -T locator-cn-federation nginx -t
@@ -812,7 +812,7 @@ run_gate() {
     gate_output=$(
         cd "$fixture_root"
         PATH="$fixture_root/fake-bin:$PATH" \
-            OPENPENCIL_COLLAB_SECURITY_FAKE_CARGO=1 \
+            DESIGN_EDITOR_COLLAB_SECURITY_FAKE_CARGO=1 \
             bash tools/check-collab-security-boundaries.sh 2>&1
     )
     gate_status=$?

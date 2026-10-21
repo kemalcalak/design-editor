@@ -29,8 +29,9 @@ pub(super) fn run_import_figma(fig_path: &str, out_path: &str) -> Result<String,
         .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("Figma Import");
-    let import = de_figma::parse_fig_binary(&bytes, file_name, de_figma::FigLayoutMode::OpenPencil)
-        .map_err(|e| CliError::Document(format!("import {fig_path:?}: {e}")))?;
+    let import =
+        de_figma::parse_fig_binary(&bytes, file_name, de_figma::FigLayoutMode::DesignEditor)
+            .map_err(|e| CliError::Document(format!("import {fig_path:?}: {e}")))?;
     // Dedup shared image payloads into the `images` table — an
     // image-heavy `.fig` references the same bitmap from many fills,
     // and the inline form writes one full copy per reference.

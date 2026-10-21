@@ -335,13 +335,13 @@ fn base_href_cannot_move_a_virtual_project_to_an_external_origin() {
     let requests = std::cell::RefCell::new(Vec::new());
     let fetcher = |url: &str| -> Option<Vec<u8>> {
         requests.borrow_mut().push(url.to_string());
-        (url == "https://openpencil.local/site/assets/theme.css")
+        (url == "https://design-editor.local/site/assets/theme.css")
             .then(|| b".hot { color: #00ff00 }".to_vec())
     };
     let result = import_html_with_resources(
         html,
         &HtmlImportOptions {
-            base_url: Some("https://openpencil.local/site/index.html".into()),
+            base_url: Some("https://design-editor.local/site/index.html".into()),
             ..Default::default()
         },
         Some(&fetcher),
@@ -351,7 +351,7 @@ fn base_href_cannot_move_a_virtual_project_to_an_external_origin() {
     assert_eq!(imported_text_color(&result), "#00ff00");
     assert_eq!(
         requests.into_inner(),
-        ["https://openpencil.local/site/assets/theme.css"]
+        ["https://design-editor.local/site/assets/theme.css"]
     );
     assert!(result
         .warnings
@@ -476,27 +476,27 @@ fn repeated_import_probes_expose_nested_missing_resources() {
         })
     };
     let options = HtmlImportOptions {
-        base_url: Some("https://openpencil.local/index.html".into()),
+        base_url: Some("https://design-editor.local/index.html".into()),
         ..Default::default()
     };
 
     import_html_with_resources(html, &options, Some(&fetcher), None);
     assert_eq!(
         missing.replace(Vec::new()),
-        ["https://openpencil.local/css/main.css"]
+        ["https://design-editor.local/css/main.css"]
     );
     loaded.borrow_mut().insert(
-        "https://openpencil.local/css/main.css".into(),
+        "https://design-editor.local/css/main.css".into(),
         b"@import 'nested.css'; .hot { color: blue }".to_vec(),
     );
 
     import_html_with_resources(html, &options, Some(&fetcher), None);
     assert_eq!(
         missing.replace(Vec::new()),
-        ["https://openpencil.local/css/nested.css"]
+        ["https://design-editor.local/css/nested.css"]
     );
     loaded.borrow_mut().insert(
-        "https://openpencil.local/css/nested.css".into(),
+        "https://design-editor.local/css/nested.css".into(),
         b".hot { color: red }".to_vec(),
     );
 

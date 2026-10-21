@@ -4,7 +4,7 @@
 //!
 //! Also reports the per-thumbnail render cost, which is the number the
 //! per-frame budget in `slides_panel_thumbs.rs` is sized against. Set
-//! `OPENPENCIL_SLIDES_PANEL_SHOT` to a path to keep the image; without
+//! `DESIGN_EDITOR_SLIDES_PANEL_SHOT` to a path to keep the image; without
 //! it the test still runs the whole loop and asserts the rail filled in.
 //!
 //! Windows-gated like every other test that solves layout through
@@ -86,7 +86,7 @@ fn a_real_deck_fills_the_rail_with_rendered_thumbnails() {
         elapsed / rendered.max(1) as u32
     );
 
-    if let Ok(path) = std::env::var("OPENPENCIL_SLIDES_PANEL_SHOT") {
+    if let Ok(path) = std::env::var("DESIGN_EDITOR_SLIDES_PANEL_SHOT") {
         let image = surface.image_snapshot();
         // Crop to the rail plus a slice of canvas, so the shot shows the
         // panel in context rather than floating.

@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil code generators — emit HTML/Vue/Svelte/React/Flutter/SwiftUI/Compose/RN from a PenDocument"
+description = "Design Editor code generators — emit HTML/Vue/Svelte/React/Flutter/SwiftUI/Compose/RN from a PenDocument"
 
 [lib]
 name = "de_codegen"

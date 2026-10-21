@@ -223,7 +223,7 @@ fn serve_one_post_mcp_dispatches_jsonrpc() {
 #[cfg(feature = "mcp-debug-tools")]
 #[test]
 fn serve_one_post_mcp_debug_screenshot_uses_web_canvas_renderer() {
-    let _debug_gate = EnvVarGuard::set("OPENPENCIL_DEBUG_TOOLS", "1");
+    let _debug_gate = EnvVarGuard::set("DESIGN_EDITOR_DEBUG_TOOLS", "1");
     let state = Mutex::new(fresh_state());
     let hub = SseHub::default();
     {

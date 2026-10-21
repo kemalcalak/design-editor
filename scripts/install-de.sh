@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install the OpenPencil `de` CLI from a GitHub Release.
+# Install the Design Editor `de` CLI from a GitHub Release.
 #
 # Detects the host OS + architecture, downloads the matching standalone
 # `de-cli-<label>` tarball published by .github/workflows/rust-release.yml,
@@ -17,8 +17,8 @@
 
 set -euo pipefail
 
-OWNER="ZSeven-W"
-REPO="openpencil"
+OWNER="kemalcalak"
+REPO="design-editor"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 DEFAULT_OP_VERSION=""

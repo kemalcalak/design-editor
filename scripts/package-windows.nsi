@@ -1,4 +1,4 @@
-; OpenPencil Windows installer (NSIS).
+; Design Editor Windows installer (NSIS).
 ;
 ; Why NSIS (not Inno Setup): the TS reference pipeline
 ; (apps/desktop/electron-builder.yml) also targets `nsis`, so installer UX
@@ -11,10 +11,10 @@
 ;                           de-cli-<target>.zip in the release; $INSTDIR is
 ;                           NOT added to PATH — doing so reliably needs the
 ;                           non-stock EnVar plugin, deferred)
-;   openpencil.ico          icon used by shortcuts + the .op/.pen ProgID
+;   design-editor.ico          icon used by shortcuts + the .op/.pen ProgID
 ;   Uninstall.exe           uninstaller (registered in Add/Remove Programs)
 ;
-; File association: ProgID "OpenPencil.Document" under HKCR with DefaultIcon
+; File association: ProgID "DesignEditor.Document" under HKCR with DefaultIcon
 ; and an open command, claimed by .op and .pen. Writing the machine hive
 ; requires elevation, hence RequestExecutionLevel admin + $PROGRAMFILES64 —
 ; an intentional divergence from electron-builder's per-user install
@@ -29,7 +29,7 @@
 ;     "/DBIN_DIR=D:\w\target\x86_64-pc-windows-msvc\release" ^
 ;     "/DICON_FILE=D:\w\crates\de-host-desktop\assets\icon.ico" ^
 ;     "/DVC_REDIST_FILE=D:\w\VC_redist.x64.exe" ^
-;     "/DOUT_FILE=D:\w\OpenPencil-X.Y.Z-x64-win-setup.exe" ^
+;     "/DOUT_FILE=D:\w\Design-Editor-X.Y.Z-x64-win-setup.exe" ^
 ;     scripts\package-windows.nsi
 ;
 ; The script is compile-tested with pinned NSIS 3.12 for x64 and ARM64,
@@ -59,7 +59,7 @@ Unicode true
   !define ICON_FILE "..\crates\de-host-desktop\assets\icon.ico"
 !endif
 !ifndef OUT_FILE
-  !define OUT_FILE "OpenPencil-${VERSION}-${ARCH}-win-setup.exe"
+  !define OUT_FILE "Design-Editor-${VERSION}-${ARCH}-win-setup.exe"
 !endif
 !ifndef VC_REDIST_FILE
   !error "VC_REDIST_FILE must point to the staged Microsoft Visual C++ Redistributable"
@@ -77,15 +77,15 @@ Unicode true
   !error "VC_REDIST_FILE does not contain readable ProductVersion metadata"
 !endif
 
-!define PRODUCT_NAME "OpenPencil"
+!define PRODUCT_NAME "Design Editor"
 !define EXE_NAME "design-editor.exe"
 !define CLI_NAME "de.exe"
-!define PROG_ID "OpenPencil.Document"
+!define PROG_ID "DesignEditor.Document"
 !define REG_APP_KEY "Software\${PRODUCT_NAME}"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define VC_RUNTIME_REG_KEY "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\${ARCH}"
 !define VC_REDIST_EXE "vc_redist.${ARCH}.exe"
-!define VC_REDIST_LOG "$TEMP\OpenPencil-vc-redist-${ARCH}.log"
+!define VC_REDIST_LOG "$TEMP\Design-Editor-vc-redist-${ARCH}.log"
 
 Var VCRuntimeCompatible
 Var VCRuntimeInstalled
@@ -187,13 +187,13 @@ Function .onInstSuccess
   vc_runtime_no_reboot_exit:
 FunctionEnd
 
-Section "OpenPencil" SecMain
+Section "Design Editor" SecMain
   SectionIn RO
 
   ; Embed the bundled redistributable's ProductVersion as two DWORDs, unpack it
   ; into the registry's Major/Minor/Bld/Rbld shape, and stage the prerequisite
   ; in the automatically cleaned NSIS plug-in directory. This all happens
-  ; before any OpenPencil application file is written to $INSTDIR.
+  ; before any Design Editor application file is written to $INSTDIR.
   StrCpy $VCRuntimeRequiredHigh "${VC_REDIST_VERSION_HIGH}"
   StrCpy $VCRuntimeRequiredLow "${VC_REDIST_VERSION_LOW}"
   IntOp $VCRuntimeRequiredMajor $VCRuntimeRequiredHigh >>> 16
@@ -259,19 +259,19 @@ Section "OpenPencil" SecMain
 
   vc_runtime_launch_failed:
     MessageBox MB_OK|MB_ICONSTOP \
-      "The Microsoft Visual C++ Redistributable could not be started.$\r$\n$\r$\nOpenPencil was not installed. See the log for details:$\r$\n${VC_REDIST_LOG}" \
+      "The Microsoft Visual C++ Redistributable could not be started.$\r$\n$\r$\nDesign Editor was not installed. See the log for details:$\r$\n${VC_REDIST_LOG}" \
       /SD IDOK
     Abort "Microsoft Visual C++ Redistributable could not be started."
 
   vc_runtime_verification_failed:
     MessageBox MB_OK|MB_ICONSTOP \
-      "The Microsoft Visual C++ Redistributable returned exit code $VCRuntimeExitCode, but runtime $VCRuntimeRequiredVersion was not detected.$\r$\n$\r$\nOpenPencil was not installed. See the log for details:$\r$\n${VC_REDIST_LOG}" \
+      "The Microsoft Visual C++ Redistributable returned exit code $VCRuntimeExitCode, but runtime $VCRuntimeRequiredVersion was not detected.$\r$\n$\r$\nDesign Editor was not installed. See the log for details:$\r$\n${VC_REDIST_LOG}" \
       /SD IDOK
     Abort "Microsoft Visual C++ Redistributable verification failed."
 
   vc_runtime_install_failed:
     MessageBox MB_OK|MB_ICONSTOP \
-      "The Microsoft Visual C++ Redistributable installation failed with exit code $VCRuntimeExitCode.$\r$\n$\r$\nOpenPencil was not installed. See the log for details:$\r$\n${VC_REDIST_LOG}" \
+      "The Microsoft Visual C++ Redistributable installation failed with exit code $VCRuntimeExitCode.$\r$\n$\r$\nDesign Editor was not installed. See the log for details:$\r$\n${VC_REDIST_LOG}" \
       /SD IDOK
     Abort "Microsoft Visual C++ Redistributable installation failed."
 
@@ -283,7 +283,7 @@ Section "OpenPencil" SecMain
 
   File "${BIN_DIR}\${EXE_NAME}"
   File "${BIN_DIR}\${CLI_NAME}"
-  File "/oname=openpencil.ico" "${ICON_FILE}"
+  File "/oname=design-editor.ico" "${ICON_FILE}"
 
   ; ANGLE fallback DLLs (libEGL.dll + libGLESv2.dll, optionally
   ; d3dcompiler_47.dll). Installed next to the exe so glutin's EGL path
@@ -306,31 +306,31 @@ Section "OpenPencil" SecMain
   ; Shortcuts — createDesktopShortcut / createStartMenuShortcut parity.
   CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
   CreateShortcut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" \
-    "$INSTDIR\${EXE_NAME}" "" "$INSTDIR\openpencil.ico"
+    "$INSTDIR\${EXE_NAME}" "" "$INSTDIR\design-editor.ico"
   CreateShortcut "$DESKTOP\${PRODUCT_NAME}.lnk" \
-    "$INSTDIR\${EXE_NAME}" "" "$INSTDIR\openpencil.ico"
+    "$INSTDIR\${EXE_NAME}" "" "$INSTDIR\design-editor.ico"
 
   ; Add/Remove Programs entry.
   WriteRegStr HKLM "${UNINST_KEY}" "DisplayName" "${PRODUCT_NAME}"
   WriteRegStr HKLM "${UNINST_KEY}" "DisplayVersion" "${VERSION}"
-  WriteRegStr HKLM "${UNINST_KEY}" "DisplayIcon" "$INSTDIR\openpencil.ico"
-  WriteRegStr HKLM "${UNINST_KEY}" "Publisher" "OpenPencil contributors"
-  WriteRegStr HKLM "${UNINST_KEY}" "URLInfoAbout" "https://github.com/ZSeven-W/openpencil"
+  WriteRegStr HKLM "${UNINST_KEY}" "DisplayIcon" "$INSTDIR\design-editor.ico"
+  WriteRegStr HKLM "${UNINST_KEY}" "Publisher" "Design Editor contributors"
+  WriteRegStr HKLM "${UNINST_KEY}" "URLInfoAbout" "https://github.com/kemalcalak/design-editor"
   WriteRegStr HKLM "${UNINST_KEY}" "InstallLocation" "$INSTDIR"
   WriteRegStr HKLM "${UNINST_KEY}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
   WriteRegDWORD HKLM "${UNINST_KEY}" "NoModify" 1
   WriteRegDWORD HKLM "${UNINST_KEY}" "NoRepair" 1
 
-  ; File association: one ProgID claimed by both OpenPencil extensions.
-  WriteRegStr HKCR "${PROG_ID}" "" "OpenPencil Document"
-  WriteRegStr HKCR "${PROG_ID}\DefaultIcon" "" "$INSTDIR\openpencil.ico"
+  ; File association: one ProgID claimed by both Design Editor extensions.
+  WriteRegStr HKCR "${PROG_ID}" "" "Design Editor Document"
+  WriteRegStr HKCR "${PROG_ID}\DefaultIcon" "" "$INSTDIR\design-editor.ico"
   WriteRegStr HKCR "${PROG_ID}\shell" "" "open"
   WriteRegStr HKCR "${PROG_ID}\shell\open\command" "" '"$INSTDIR\${EXE_NAME}" "%1"'
 
   WriteRegStr HKCR ".op" "" "${PROG_ID}"
-  WriteRegStr HKCR ".op" "Content Type" "application/x-openpencil"
+  WriteRegStr HKCR ".op" "Content Type" "application/x-design-editor"
   WriteRegStr HKCR ".pen" "" "${PROG_ID}"
-  WriteRegStr HKCR ".pen" "Content Type" "application/x-openpencil"
+  WriteRegStr HKCR ".pen" "Content Type" "application/x-design-editor"
 
   ; SHCNE_ASSOCCHANGED — tell the shell to refresh icon/association caches.
   System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
@@ -339,7 +339,7 @@ SectionEnd
 Section "Uninstall"
   Delete "$INSTDIR\${EXE_NAME}"
   Delete "$INSTDIR\${CLI_NAME}"
-  Delete "$INSTDIR\openpencil.ico"
+  Delete "$INSTDIR\design-editor.ico"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
 

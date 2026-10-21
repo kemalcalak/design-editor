@@ -1,2 +1,2 @@
 import { defineConfig } from 'tsup';
-export default defineConfig({ entry: ['src/index.ts'], format: ['esm', 'cjs'], dts: true, clean: true, sourcemap: true, external: ['vue', '@zseven-w/de-web-sdk'] });
+export default defineConfig({ entry: ['src/index.ts'], format: ['esm', 'cjs'], dts: true, clean: true, sourcemap: true, external: ['vue', '@kemalcalak/de-web-sdk'] });

@@ -60,7 +60,7 @@ impl AccountState {
     }
 
     /// Dev/test fake sign-in — the fast path gated by
-    /// `OPENPENCIL_DEV_FAKE_LOGIN=1` (checked host-side; this crate reads
+    /// `DESIGN_EDITOR_DEV_FAKE_LOGIN=1` (checked host-side; this crate reads
     /// no env vars so it stays wasm32-clean). Never reachable from the
     /// production sign-in button.
     pub fn dev_fake_signed_in() -> Self {

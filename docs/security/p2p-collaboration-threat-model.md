@@ -5,7 +5,7 @@ source integration and public relay/bootstrap client boundaries are
 implemented, while production provisioning, op-hub/relay/locator deployment,
 and the full real-platform acceptance matrix remain pending.
 
-This document is the security contract for OpenPencil peer-to-peer
+This document is the security contract for Design Editor peer-to-peer
 collaboration. It is intentionally public. The protocol, parsers, state
 machines, cryptographic transport integration, resource limits, and security
 tests do not rely on implementation secrecy.
@@ -56,7 +56,7 @@ The implementation must:
 
 Availability against a party that can saturate the host's network link is not
 guaranteed. The limits below are intended to contain CPU and memory use after
-traffic reaches OpenPencil.
+traffic reaches Design Editor.
 
 ## Assets
 
@@ -127,9 +127,9 @@ client uses another SSO origin. Both deployments must issue the exact same
 logical collaboration `iss` and the same immutable global account `sub`; email
 address matching or region-local account ids are not a federation mechanism.
 
-The desktop reads `OPENPENCIL_SSO_URL`,
-`OPENPENCIL_COLLAB_ISSUER`, and
-`OPENPENCIL_COLLAB_POLICY_ENDPOINT` only from trusted process-startup
+The desktop reads `DESIGN_EDITOR_SSO_URL`,
+`DESIGN_EDITOR_COLLAB_ISSUER`, and
+`DESIGN_EDITOR_COLLAB_POLICY_ENDPOINT` only from trusted process-startup
 configuration. Production fetches `/api/v1/collab/policy`; the envelope must
 verify under an offline Ed25519 root pinned into the open client. The emergency
 root transition is bounded by policy generation: the legacy union-policy root
@@ -141,7 +141,7 @@ variable cannot add or replace a union-policy root. Endpoint-only
 configuration, conflicting policy/JWKS endpoints, signature or issuer
 mismatch, inactive key metadata, generation rollback, and same-generation
 rewrites fail closed without a raw-JWKS fallback. The old
-`OPENPENCIL_COLLAB_JWKS_ENDPOINT` remains an explicit self-hosted compatibility
+`DESIGN_EDITOR_COLLAB_JWKS_ENDPOINT` remains an explicit self-hosted compatibility
 path. No ticket, provider response, mDNS record, invite, or peer message can
 supply or replace the pinned trust values.
 
@@ -167,10 +167,10 @@ without the injection keeps the relay purely environment-configured. A
 persisted user preference selects which hub serves the signed bootstrap
 document, and — absent an override — which region an owner publishes in. Both
 hubs serve the same signed document verified against the same embedded root set,
-so the preference is a reachability choice, not a trust choice. `OPENPENCIL_COLLAB_BOOTSTRAP_URL` remains as an
+so the preference is a reachability choice, not a trust choice. `DESIGN_EDITOR_COLLAB_BOOTSTRAP_URL` remains as an
 operator override that wins when set and stays fail-closed on an invalid
 value, and an owner may still pin
-`OPENPENCIL_COLLAB_RELAY_HOME_REGION=cn|global` as a local home selector that
+`DESIGN_EDITOR_COLLAB_RELAY_HOME_REGION=cn|global` as a local home selector that
 overrides the preference. A guest obtains its home region only from the
 signed invite or the region-tagged pairing code. During the emergency
 transition the embedded bootstrap root set contains the legacy
@@ -231,21 +231,21 @@ snapshot. The online service never receives the offline bootstrap private key.
 
 Debug plaintext is a narrow exception, not a production alternate trust path.
 Only a test/debug build with
-`OPENPENCIL_COLLAB_BOOTSTRAP_DEV_HTTP=1` may fetch bootstrap HTTP from a
+`DESIGN_EDITOR_COLLAB_BOOTSTRAP_DEV_HTTP=1` may fetch bootstrap HTTP from a
 numeric-loopback address. Additional
-`OPENPENCIL_COLLAB_BOOTSTRAP_DEV_ROOT_KEYS` are considered only in that mode;
+`DESIGN_EDITOR_COLLAB_BOOTSTRAP_DEV_ROOT_KEYS` are considered only in that mode;
 plaintext locator and relay endpoints in the snapshot must also be numeric
 loopback. Unsigned relay operation separately requires
-`OPENPENCIL_COLLAB_RELAY_DEV_UNSIGNED=1` in a debug build and numeric-loopback
+`DESIGN_EDITOR_COLLAB_RELAY_DEV_UNSIGNED=1` in a debug build and numeric-loopback
 WebSocket endpoint. `localhost`, non-loopback plaintext, and release builds are
 not covered by these exceptions.
 
 Client bootstrap does not replace service-side secret and policy
 provisioning. The relay server retains
-`OPENPENCIL_COLLAB_RELAY_TICKET_POLICY_FILE`,
-`OPENPENCIL_COLLAB_RELAY_LOCATOR_KEYS_FILE`, and
-`OPENPENCIL_COLLAB_RELAY_X25519_KEYS_FILE`; the locator server retains
-`OPENPENCIL_COLLAB_LOCATOR_TICKET_POLICY_FILE`. Those files remain bounded
+`DESIGN_EDITOR_COLLAB_RELAY_TICKET_POLICY_FILE`,
+`DESIGN_EDITOR_COLLAB_RELAY_LOCATOR_KEYS_FILE`, and
+`DESIGN_EDITOR_COLLAB_RELAY_X25519_KEYS_FILE`; the locator server retains
+`DESIGN_EDITOR_COLLAB_LOCATOR_TICKET_POLICY_FILE`. Those files remain bounded
 operator/HSM-side production inputs and are not desktop discovery settings.
 
 ## Public and private ownership
@@ -255,13 +255,13 @@ expose an account credential or a production signing secret.
 
 | Component | Repository boundary | Rationale |
 | --- | --- | --- |
-| Wire protocol, exact diff/apply, canonical hash, owner/guest state machines | Public `openpencil/crates/de-collab` | Reviewable deterministic behavior; wasm-compatible |
-| Noise/TCP framing, admission, limits, queues, discovery, key-store interface and safe fallback | Public `openpencil/crates/de-collab-transport` | Security comes from open protocol and audited libraries |
-| Ticket claims/profile, signed-union-policy and legacy JWKS parser/cache, Ed25519 verifier, provider trait, stub, ABI declarations | Public `openpencil/crates/de-auth-bridge` | Trust decisions must remain reviewable |
-| Relay protocol/client/server, signed locator verifier, bootstrap verifier/cache, canonical wire and rollback tests | Public `openpencil` crates and desktop host | Endpoint, key-selection, and data-plane trust decisions must remain reviewable |
+| Wire protocol, exact diff/apply, canonical hash, owner/guest state machines | Public `design-editor/crates/de-collab` | Reviewable deterministic behavior; wasm-compatible |
+| Noise/TCP framing, admission, limits, queues, discovery, key-store interface and safe fallback | Public `design-editor/crates/de-collab-transport` | Security comes from open protocol and audited libraries |
+| Ticket claims/profile, signed-union-policy and legacy JWKS parser/cache, Ed25519 verifier, provider trait, stub, ABI declarations | Public `design-editor/crates/de-auth-bridge` | Trust decisions must remain reviewable |
+| Relay protocol/client/server, signed locator verifier, bootstrap verifier/cache, canonical wire and rollback tests | Public `design-editor` crates and desktop host | Endpoint, key-selection, and data-plane trust decisions must remain reviewable |
 | Signed bootstrap HTTP serving and deployment | Private `op-hub` service; public signed response | The online service holds no root private key; private deployment topology is not a cryptographic control |
 | Deterministic issuer and rotation fixtures | Public, compiled only for tests or `test-issuer` | Contain deliberately public seeds and a `.invalid` issuer; production verifier rejects that issuer |
-| Host integration, UI, recovery, diagnostics, and smoke tests | Public `openpencil` | No credential-handling reason to hide them |
+| Host integration, UI, recovery, diagnostics, and smoke tests | Public `design-editor` | No credential-handling reason to hide them |
 | Device token and authenticated ticket request implementation | Private `op-platform` real provider | Holds the account credential and platform storage integration |
 | Ticket issuance policy, production signing/HSM keys, rotation and revocation | Private `zseven-sso` | Contains production signing authority and account policy |
 | Runtime tickets, Noise private keys, device tokens, HSM material | Never committed | Secrets are runtime data, not source assets |
@@ -297,7 +297,7 @@ notification and relies on the next heartbeat to republish current state;
 receiver disconnection is the condition that stops the worker.
 
 The macOS source plist declares the canonical local-network usage description
-and exactly `_openpencil-collab._tcp` in `NSBonjourServices`. Both bundle paths
+and exactly `_design-editor-collab._tcp` in `NSBonjourServices`. Both bundle paths
 patch and validate the final plist through one helper, and the release workflow
 validates the exact app plist before notarization. This is a packaging/TCC
 precondition, not peer authentication.

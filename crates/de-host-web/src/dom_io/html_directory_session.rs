@@ -471,7 +471,7 @@ fn virtual_project_url(path: &str) -> String {
 fn canonical_virtual_resource_url(requested: &str) -> Option<String> {
     let mut url = Url::parse(requested).ok()?;
     if url.scheme() != "https"
-        || url.host_str() != Some("openpencil.local")
+        || url.host_str() != Some("design-editor.local")
         || !url.username().is_empty()
         || url.password().is_some()
     {
@@ -518,7 +518,7 @@ mod tests {
         );
         assert_eq!(
             index.entry_for_resource_url(
-                "https://openpencil.local/assets/hero%20image.png?cache=1#preview"
+                "https://design-editor.local/assets/hero%20image.png?cache=1#preview"
             ),
             Some(1)
         );

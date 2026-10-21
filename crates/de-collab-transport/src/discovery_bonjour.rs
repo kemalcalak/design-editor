@@ -15,7 +15,7 @@ use super::{
     MAX_DISCOVERY_ADDRESSES,
 };
 
-const REGISTRATION_TYPE: &[u8] = b"_openpencil-collab._tcp\0";
+const REGISTRATION_TYPE: &[u8] = b"_design-editor-collab._tcp\0";
 const LOCAL_DOMAIN: &[u8] = b"local.\0";
 const HOST_RECORD_TTL: u32 = 120;
 const POLL_INTERVAL: Duration = Duration::from_millis(50);

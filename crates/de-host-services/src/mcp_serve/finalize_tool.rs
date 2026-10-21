@@ -1,4 +1,4 @@
-//! MCP tool `finalize_design` — run OpenPencil's post-generation repair
+//! MCP tool `finalize_design` — run Design Editor's post-generation repair
 //! passes over the document from a plain MCP call.
 //!
 //! External models that drive the editor through the bare MCP `batch_design`

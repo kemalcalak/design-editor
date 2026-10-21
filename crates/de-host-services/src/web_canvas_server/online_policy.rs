@@ -87,7 +87,7 @@ impl ServeMode {
         !self.is_online()
     }
 
-    /// The `openpencil/shutdown` JSON-RPC branch. Online keeps only the
+    /// The `design-editor/shutdown` JSON-RPC branch. Online keeps only the
     /// env-token operations channel that `de stop` uses; there is no
     /// generic client-reachable stop.
     pub const fn allows_generic_shutdown(self) -> bool {
@@ -150,7 +150,7 @@ impl ServeMode {
 
 /// Read the public origins this deployment answers for.
 ///
-/// Shares `OPENPENCIL_WEB_ALLOWED_ORIGINS` with the existing sensitive-POST
+/// Shares `DESIGN_EDITOR_WEB_ALLOWED_ORIGINS` with the existing sensitive-POST
 /// guard so an operator configures the deployment's origin exactly once.
 /// Entries that are not a bare `scheme://host[:port]` are dropped rather than
 /// failing start-up: a typo must narrow the allowlist, never widen it.

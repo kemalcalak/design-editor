@@ -79,7 +79,7 @@ export async function createDesignMd(tabId, endpoint) {
     markdown = fallback.markdown;
   }
   if (typeof markdown !== 'string' || markdown.trim() === '') {
-    const error = new Error('OpenPencil returned an empty design.md');
+    const error = new Error('Design Editor returned an empty design.md');
     error.code = 'designEmpty';
     throw error;
   }

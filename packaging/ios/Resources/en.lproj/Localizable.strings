@@ -45,11 +45,11 @@
 "accountCenter.region" = "Sign-in Region";
 "accountCenter.manage" = "Manage Account in Browser";
 "accountCenter.signOut" = "Sign Out";
-"accountCenter.signOutConfirmTitle" = "Sign out of OpenPencil?";
+"accountCenter.signOutConfirmTitle" = "Sign out of Design Editor?";
 "sso.region.china" = "Mainland China";
 "sso.region.global" = "Global";
 "sso.region.pickerTitle" = "Sign-in Region";
-"sso.region.restartNote" = "A region change takes effect after you restart OpenPencil.";
+"sso.region.restartNote" = "A region change takes effect after you restart Design Editor.";
 "common.cancel" = "Cancel";
 "nativeLogin.unavailableTitle" = "Sign-in unavailable";
 "nativeLogin.unavailableBody" = "This build has no sign-in backend.";
@@ -58,10 +58,10 @@
 "sso.region.quitNow" = "Quit now";
 "language.pickerTitle" = "Language";
 "update.availableTitle" = "Version %@ available";
-"update.availableBody" = "A newer version of OpenPencil is available.";
+"update.availableBody" = "A newer version of Design Editor is available.";
 "update.goToStore" = "Update";
 "editMenu.paste" = "Paste";
-"backgroundGeneration.title" = "Creating in OpenPencil";
+"backgroundGeneration.title" = "Creating in Design Editor";
 "backgroundGeneration.subtitle" = "Your design is still being generated.";
 "imageImport.error.title" = "Unable to Import Image";
 "imageImport.error.body" = "Choose a PNG, JPEG, GIF, WebP, or SVG file up to 32 MiB.";

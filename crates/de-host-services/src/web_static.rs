@@ -13,7 +13,7 @@
 //!
 //! Bundle directory resolution order (first directory actually containing
 //! `de_host_web.js` wins):
-//! 1. `$OPENPENCIL_WEB_BUNDLE_DIR` — explicit override.
+//! 1. `$DESIGN_EDITOR_WEB_BUNDLE_DIR` — explicit override.
 //! 2. `<exe_dir>/web-bundle` — deploy layout: the bundle shipped next to
 //!    the `design-editor` executable.
 //! 3. `<exe_dir>/../../crates/de-host-web/pkg` — dev layout: a cargo build
@@ -64,7 +64,7 @@ pub struct StaticReply {
 /// [`resolve_bundle_dir`].
 pub(crate) fn bundle_dir_candidates() -> Vec<PathBuf> {
     let mut candidates = Vec::new();
-    if let Some(dir) = std::env::var_os("OPENPENCIL_WEB_BUNDLE_DIR") {
+    if let Some(dir) = std::env::var_os("DESIGN_EDITOR_WEB_BUNDLE_DIR") {
         candidates.push(PathBuf::from(dir));
     }
     if let Some(exe_dir) = std::env::current_exe()
@@ -100,7 +100,7 @@ pub fn resolve_bundle_dir() -> Option<PathBuf> {
 /// runtime, so the daemon must expose this directory.
 pub(crate) fn canvaskit_dir_candidates() -> Vec<PathBuf> {
     let mut candidates = Vec::new();
-    if let Some(dir) = std::env::var_os("OPENPENCIL_CANVASKIT_DIR") {
+    if let Some(dir) = std::env::var_os("DESIGN_EDITOR_CANVASKIT_DIR") {
         candidates.push(PathBuf::from(dir));
     }
     if let Some(exe_dir) = std::env::current_exe()
@@ -342,10 +342,10 @@ mod tests {
 
     /// Fresh temp bundle dir containing the wasm-bindgen entry + stub files.
     fn stub_bundle(tag: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("op-web-bundle-{tag}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("de-web-bundle-{tag}-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("create stub bundle dir");
         std::fs::write(dir.join(BUNDLE_ENTRY_JS), "export default function(){}").expect("js stub");
-        std::fs::write(dir.join("op_host_web_bg.wasm"), [0u8, 0x61, 0x73, 0x6d]).expect("wasm");
+        std::fs::write(dir.join("de_host_web_bg.wasm"), [0u8, 0x61, 0x73, 0x6d]).expect("wasm");
         dir
     }
 
@@ -371,7 +371,7 @@ mod tests {
             "/pkg/.hidden",
             "/pkg/..\\..\\windows\\system32",
             "/pkg/C:/Windows/win.ini",
-            "/pkg/op_host_web_bg.wasm:$DATA",
+            "/pkg/de_host_web_bg.wasm:$DATA",
         ] {
             let r = handle_static_request(bad, Some(&dir)).expect("owned");
             assert_eq!(r.status, "404 Not Found", "{bad}");
@@ -420,14 +420,14 @@ mod tests {
         std::fs::create_dir_all(&dir).expect("ck dir");
         std::fs::write(dir.join("canvaskit.js"), b"/* ck */").expect("ck.js");
         std::fs::write(dir.join("canvaskit.wasm"), [0u8, 0x61, 0x73, 0x6d]).expect("ck.wasm");
-        std::env::set_var("OPENPENCIL_CANVASKIT_DIR", &dir);
+        std::env::set_var("DESIGN_EDITOR_CANVASKIT_DIR", &dir);
         let js = handle_static_request("/canvaskit/canvaskit.js", None).expect("route");
         assert_eq!(js.status, "200 OK");
         assert_eq!(js.content_type, "text/javascript");
         let wasm = handle_static_request("/canvaskit/canvaskit.wasm", None).expect("route");
         assert_eq!(wasm.status, "200 OK");
         assert_eq!(wasm.content_type, "application/wasm");
-        std::env::remove_var("OPENPENCIL_CANVASKIT_DIR");
+        std::env::remove_var("DESIGN_EDITOR_CANVASKIT_DIR");
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -511,7 +511,7 @@ mod tests {
     fn pkg_wasm_gets_application_wasm_mime() {
         let dir = stub_bundle("wasm");
         let reply =
-            handle_static_request("/pkg/op_host_web_bg.wasm", Some(&dir)).expect("static route");
+            handle_static_request("/pkg/de_host_web_bg.wasm", Some(&dir)).expect("static route");
         assert_eq!(reply.status, "200 OK");
         assert_eq!(reply.content_type, "application/wasm");
         assert_eq!(reply.body, vec![0u8, 0x61, 0x73, 0x6d]);
@@ -534,7 +534,7 @@ mod tests {
         assert_eq!(reply.content_type, "text/html; charset=utf-8");
         let body = String::from_utf8(reply.body).expect("utf8");
         assert!(body.contains("check-wasm-bundle.sh"), "{body}");
-        assert!(body.contains("OPENPENCIL_WEB_BUNDLE_DIR"), "{body}");
+        assert!(body.contains("DESIGN_EDITOR_WEB_BUNDLE_DIR"), "{body}");
     }
 
     #[test]

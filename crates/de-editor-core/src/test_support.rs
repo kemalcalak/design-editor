@@ -251,7 +251,15 @@ pub fn state_with(roots: Vec<PenNode>) -> EditorState {
 /// containing a Text `n11` and a Group `n12` (`n13` rect + `n14`
 /// text). Selection anchors on `n11`.
 pub fn sample() -> EditorState {
-    let title = text("n11", "Title", 60.0, 60.0, 240.0, 28.0, "Hello OpenPencil");
+    let title = text(
+        "n11",
+        "Title",
+        60.0,
+        60.0,
+        240.0,
+        28.0,
+        "Hello Design Editor",
+    );
     let button_rect = rect("n13", "Button background", 60.0, 130.0, 180.0, 36.0);
     let button_text = text("n14", "Click me", 76.0, 152.0, 160.0, 16.0, "Click me");
     let button = group("n12", "Button", vec![button_rect, button_text]);

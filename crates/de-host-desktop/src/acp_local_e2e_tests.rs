@@ -11,8 +11,8 @@ use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
-const FIXTURE_ENV: &str = "OPENPENCIL_LOCAL_ACP_E2E_FIXTURE";
-const FIXTURE_AGENT_NAME: &str = "OpenPencil Local ACP Fixture";
+const FIXTURE_ENV: &str = "DESIGN_EDITOR_LOCAL_ACP_E2E_FIXTURE";
+const FIXTURE_AGENT_NAME: &str = "Design Editor Local ACP Fixture";
 const FIXTURE_AGENT_VERSION: &str = "1.0";
 const FIXTURE_PROMPT: &str = "LOCAL_ACP_E2E_7C1: reply with the fixture greeting.";
 const FIXTURE_REPLY: &str = "Hello from the real local ACP subprocess.";
@@ -258,7 +258,7 @@ fn fixture_executable() -> PathBuf {
             };
             stem == "de-acp-test-agent"
                 || stem
-                    .strip_prefix("op_acp_test_agent-")
+                    .strip_prefix("de_acp_test_agent-")
                     .is_some_and(|hash| hash.len() == 16 && hash.bytes().all(|byte| byte.is_ascii_hexdigit()))
         })
         .max_by_key(|path| {

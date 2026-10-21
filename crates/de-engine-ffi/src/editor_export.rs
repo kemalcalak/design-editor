@@ -384,7 +384,7 @@ mod tests {
             .file_name
             .clone();
         let root = std::env::temp_dir().join(format!(
-            "openpencil-ffi-export-{}-{}",
+            "design-editor-ffi-export-{}-{}",
             std::process::id(),
             TEMP_ID.fetch_add(1, Ordering::Relaxed)
         ));
@@ -412,7 +412,7 @@ mod tests {
         assert_eq!(artifact.mime_type, "text/plain; charset=utf-8");
 
         let root = std::env::temp_dir().join(format!(
-            "openpencil-ffi-codegen-export-{}-{}",
+            "design-editor-ffi-codegen-export-{}-{}",
             std::process::id(),
             TEMP_ID.fetch_add(1, Ordering::Relaxed)
         ));
@@ -521,7 +521,7 @@ mod tests {
             .file_name
             .clone();
         let root = std::env::temp_dir().join(format!(
-            "openpencil-ffi-export-retry-{}-{}",
+            "design-editor-ffi-export-retry-{}-{}",
             std::process::id(),
             TEMP_ID.fetch_add(1, Ordering::Relaxed)
         ));

@@ -1,4 +1,4 @@
-//! Android JNI marshalling layer for the OpenPencil engine player.
+//! Android JNI marshalling layer for the Design Editor engine player.
 //!
 //! `engine_thread` is the host-testable queue core and `registry` is the
 //! host-testable handle table; the JNI bindings, callback trampolines, and
@@ -13,6 +13,8 @@ pub mod alog;
 pub mod bindings;
 #[cfg(all(target_os = "android", feature = "editor"))]
 mod bindings_editor;
+#[cfg(all(target_os = "android", feature = "editor"))]
+mod bindings_editor_save;
 #[cfg(target_os = "android")]
 mod bindings_media;
 #[cfg(target_os = "android")]
@@ -125,17 +127,18 @@ mod editor_ime_offset_tests {
 
 #[cfg(test)]
 mod binding_contract_tests {
-    const CANONICAL_JNI_PREFIX: &str = "Java_tech_zseven_openpencil_OpNative_";
+    const CANONICAL_JNI_PREFIX: &str = "Java_com_kemalcalak_designeditor_OpNative_";
 
     #[test]
     fn every_native_export_uses_the_canonical_android_package() {
         for source in [
             include_str!("bindings.rs"),
             include_str!("bindings_editor.rs"),
+            include_str!("bindings_editor_save.rs"),
             include_str!("bindings_media.rs"),
             include_str!("bindings_text.rs"),
         ] {
-            assert!(!source.contains("Java_dev_openpencil_player_"));
+            assert!(!source.contains("Java_dev_design_editor_player_"));
             for line in source.lines().filter(|line| line.contains("fn Java_")) {
                 assert!(
                     line.contains(CANONICAL_JNI_PREFIX),
@@ -158,7 +161,7 @@ mod binding_contract_tests {
     fn atomic_resize_native_forwards_the_complete_tuple_once() {
         let source = include_str!("bindings.rs");
         let start = source
-            .find("Java_tech_zseven_openpencil_OpNative_nativeResizeWithSafeArea")
+            .find("Java_com_kemalcalak_designeditor_OpNative_nativeResizeWithSafeArea")
             .expect("atomic resize JNI export");
         let tail = &source[start..];
         let end = tail[1..]
@@ -202,7 +205,7 @@ mod binding_contract_tests {
     fn editor_transform_begin_native_forwards_the_down_midpoint() {
         let source = include_str!("bindings_editor.rs");
         let start = source
-            .find("Java_tech_zseven_openpencil_OpNative_nativeEditorBeginTransform")
+            .find("Java_com_kemalcalak_designeditor_OpNative_nativeEditorBeginTransform")
             .expect("editor transform begin JNI export");
         let function = &source[start..];
         assert!(function.contains("de_engine_ffi::op_editor_begin_transform(e, x, y)"));
@@ -250,7 +253,7 @@ mod binding_contract_tests {
     fn editor_image_import_native_owns_java_arguments_before_dispatch() {
         let source = include_str!("bindings_editor.rs");
         let start = source
-            .find("Java_tech_zseven_openpencil_OpNative_nativeEditorImportImageOrSvg")
+            .find("Java_com_kemalcalak_designeditor_OpNative_nativeEditorImportImageOrSvg")
             .expect("image import JNI export");
         let tail = &source[start..];
         let end = tail[1..]
@@ -268,7 +271,7 @@ mod binding_contract_tests {
     fn editor_preedit_converts_android_utf16_offsets_before_ffi() {
         let source = include_str!("bindings_editor.rs");
         let start = source
-            .find("Java_tech_zseven_openpencil_OpNative_nativeEditorImePreedit")
+            .find("Java_com_kemalcalak_designeditor_OpNative_nativeEditorImePreedit")
             .expect("editor preedit JNI export");
         let tail = &source[start..];
         let end = tail[1..]

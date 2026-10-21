@@ -1,4 +1,4 @@
-//! Git-backed version control for OpenPencil documents.
+//! Git-backed version control for Design Editor documents.
 //!
 //! This crate is the Rust counterpart of the TS Electron app's
 //! in-app Git (`apps/desktop/git/`). EVERY operation runs through

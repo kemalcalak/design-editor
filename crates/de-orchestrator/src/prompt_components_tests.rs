@@ -218,7 +218,7 @@ fn components_manifest_instruction_matches_active_protocol() {
     );
 }
 
-/// Regression guard for the tier-drop bug (smoke `OPENPENCIL_SMOKE_LIBRARY`
+/// Regression guard for the tier-drop bug (smoke `DESIGN_EDITOR_SMOKE_LIBRARY`
 /// scenario): a Basic-tier model with a component library loaded must get BOTH
 /// the AVAILABLE COMPONENTS manifest (concrete ids) AND the
 /// `component-composition` teaching (the `ref` + `descendants` syntax) in its

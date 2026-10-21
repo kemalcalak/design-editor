@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub const MAX_PROJECT_FILES: usize = 16_384;
-pub const VIRTUAL_PROJECT_ORIGIN: &str = "https://openpencil.local/";
+pub const VIRTUAL_PROJECT_ORIGIN: &str = "https://design-editor.local/";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HtmlProjectFile {
@@ -327,7 +327,7 @@ pub(crate) fn virtual_url(path: &str) -> String {
 pub(crate) fn virtual_resource_key(requested: &str) -> Option<String> {
     let mut url = Url::parse(requested).ok()?;
     if url.scheme() != "https"
-        || url.host_str() != Some("openpencil.local")
+        || url.host_str() != Some("design-editor.local")
         || !url.username().is_empty()
         || url.password().is_some()
     {

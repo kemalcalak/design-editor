@@ -1,6 +1,6 @@
 //! Per-user file-backed config primitives.
 //!
-//! Desktop defaults to `~/.openpencil`. Embedded hosts must call
+//! Desktop defaults to `~/.design-editor`. Embedded hosts must call
 //! [`configure_user_root`] with their private app-sandbox directory before
 //! any process-level config access.
 
@@ -10,27 +10,34 @@ use std::io::{Error, ErrorKind, Write};
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
+mod legacy_migration;
+
+pub use legacy_migration::{
+    migrate_legacy_config_file, migrate_legacy_dir, LEGACY_APP_DIR, LEGACY_DIR_NAME,
+    LEGACY_LIVE_MCP_PORT,
+};
+
 /// Process-wide config root. First resolution wins so a late mobile
 /// reconfiguration cannot split state between HOME and the app sandbox.
 static USER_ROOT_OVERRIDE: OnceLock<PathBuf> = OnceLock::new();
 static USER_ROOT_INIT_LOCK: Mutex<()> = Mutex::new(());
-/// Set only by [`configure_user_root`] — never by the lazy `~/.openpencil`
+/// Set only by [`configure_user_root`] — never by the lazy `~/.design-editor`
 /// default — so callers can distinguish "an embedded shell selected its
 /// app sandbox" from "desktop resolved the home-directory default".
 static EXPLICIT_USER_ROOT: OnceLock<PathBuf> = OnceLock::new();
 
 /// Name of the per-user config directory under the home directory
-/// (`~/.openpencil`). Exposed for callers that must resolve the
+/// (`~/.design-editor`). Exposed for callers that must resolve the
 /// directory under an explicit home (e.g. subprocess-safety checks
 /// against a caller-supplied `$HOME`); everything else should go
-/// through [`openpencil_dir`].
-pub const OPENPENCIL_DIR_NAME: &str = ".openpencil";
+/// through [`design_editor_dir`].
+pub const DESIGN_EDITOR_DIR_NAME: &str = ".design-editor";
 
-/// Environment variables shared across OpenPencil processes.
+/// Environment variables shared across Design Editor processes.
 pub mod env_vars {
     /// Per-instance MCP identity/shutdown token the spawning CLI passes
     /// to the host process (echoed in the server's `ping` reply).
-    pub const MCP_TOKEN: &str = "OPENPENCIL_MCP_TOKEN";
+    pub const MCP_TOKEN: &str = "DESIGN_EDITOR_MCP_TOKEN";
 }
 
 pub mod well_known {
@@ -40,8 +47,8 @@ pub mod well_known {
     pub const CREDENTIALS: &str = GIT_AUTH;
     /// Reserved for a future file-backed SSH key registry.
     pub const SSH_KEYS: &str = "ssh-keys.json";
-    /// Live editor discovery file written under `~/.openpencil`.
-    pub const LIVE_MCP_PORT: &str = ".op-mcp-port";
+    /// Live editor discovery file written under `~/.design-editor`.
+    pub const LIVE_MCP_PORT: &str = ".de-mcp-port";
     /// Default CLI session document.
     pub const CLI_SESSION: &str = "cli-session.op";
 }
@@ -54,7 +61,7 @@ pub struct ConfigStore {
 impl ConfigStore {
     pub fn user() -> std::io::Result<Self> {
         Ok(Self {
-            root: default_openpencil_dir()?,
+            root: default_design_editor_dir()?,
         })
     }
 
@@ -80,8 +87,8 @@ impl ConfigStore {
     }
 }
 
-pub fn openpencil_dir() -> std::io::Result<PathBuf> {
-    let dir = default_openpencil_dir()?;
+pub fn design_editor_dir() -> std::io::Result<PathBuf> {
+    let dir = default_design_editor_dir()?;
     std::fs::create_dir_all(&dir)?;
     Ok(dir)
 }
@@ -89,7 +96,7 @@ pub fn openpencil_dir() -> std::io::Result<PathBuf> {
 /// Selects the private application-sandbox directory used by every
 /// process-level config helper.
 ///
-/// This must run before [`ConfigStore::user`], [`openpencil_dir`],
+/// This must run before [`ConfigStore::user`], [`design_editor_dir`],
 /// [`read_json`], or [`write_json`]. Repeating the same canonical directory is
 /// idempotent; selecting a different directory after initialization is
 /// rejected. The root itself must be an absolute, real directory rather than
@@ -156,11 +163,11 @@ pub fn write_json_path<T: Serialize>(path: &Path, value: &T) -> std::io::Result<
 }
 
 /// Redirect [`ConfigStore::user`] — and everything built on it
-/// (`read_json` / `write_json` / [`openpencil_dir`]) — at `root` for the
+/// (`read_json` / `write_json` / [`design_editor_dir`]) — at `root` for the
 /// remainder of THIS PROCESS.
 ///
 /// Exists so a test binary can point the whole crate graph at a scratch
-/// directory instead of the developer's real `~/.openpencil`. Without it
+/// directory instead of the developer's real `~/.design-editor`. Without it
 /// a test that exercises a persistence path rewrites live user config:
 /// `cargo test -p de-host-desktop` was measured clobbering
 /// `agents.json`, the file that decides which agent providers
@@ -179,14 +186,19 @@ pub fn redirect_user_root_for_tests(root: impl Into<PathBuf>) -> &'static Path {
     USER_ROOT_OVERRIDE.get_or_init(|| root.into()).as_path()
 }
 
-fn default_openpencil_dir() -> std::io::Result<PathBuf> {
+fn default_design_editor_dir() -> std::io::Result<PathBuf> {
     let _guard = USER_ROOT_INIT_LOCK
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     if let Some(root) = USER_ROOT_OVERRIDE.get() {
         return Ok(root.clone());
     }
-    let default = home_dir()?.join(OPENPENCIL_DIR_NAME);
+    let home = home_dir()?;
+    let default = home.join(DESIGN_EDITOR_DIR_NAME);
+    // One-time rebrand migration: copy `~/.openpencil` to the new directory
+    // when the new one does not exist yet. Best effort and copy-only — a
+    // failure must never block startup, and the old tree is left untouched.
+    let _ = migrate_legacy_dir(&home.join(LEGACY_DIR_NAME), &default);
     Ok(install_user_root(&USER_ROOT_OVERRIDE, default)?.to_path_buf())
 }
 
@@ -400,7 +412,7 @@ mod tests {
         let root = temp_root("redirect");
         assert_eq!(redirect_user_root_for_tests(&root), root);
         assert_eq!(ConfigStore::user().unwrap().root(), root);
-        assert_eq!(openpencil_dir().unwrap(), root);
+        assert_eq!(design_editor_dir().unwrap(), root);
 
         // The free helpers are what callers actually reach for, and they
         // must land in the redirected root, not the real home directory.
@@ -408,7 +420,7 @@ mod tests {
         assert!(root.join("probe.json").is_file());
         let back: Option<serde_json::Value> = read_json("probe.json").unwrap();
         assert_eq!(back, Some(json!({ "ok": true })));
-        assert_ne!(root, home_dir().unwrap().join(".openpencil"));
+        assert_ne!(root, home_dir().unwrap().join(".design-editor"));
 
         // Idempotent: a second install does not move the root, so tests
         // may all call it in any order.
@@ -421,7 +433,7 @@ mod tests {
     #[test]
     fn well_known_files_preserve_existing_names() {
         assert_eq!(well_known::GIT_AUTH, "git-auth.json");
-        assert_eq!(well_known::LIVE_MCP_PORT, ".op-mcp-port");
+        assert_eq!(well_known::LIVE_MCP_PORT, ".de-mcp-port");
         assert_eq!(well_known::CLI_SESSION, "cli-session.op");
     }
 

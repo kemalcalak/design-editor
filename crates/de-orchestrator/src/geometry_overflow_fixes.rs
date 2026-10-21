@@ -18,7 +18,7 @@ pub(super) fn collect_collapse_fixes(
     cmds: &mut Vec<EditorCommand>,
 ) {
     if is_collapsed_fill_container(v, rects) {
-        if std::env::var("OPENPENCIL_DEBUG_CLEANUP").is_ok() {
+        if std::env::var("DESIGN_EDITOR_DEBUG_CLEANUP").is_ok() {
             let id = v.get("id").and_then(Value::as_str).unwrap_or("?");
             let r = rects.get(id);
             eprintln!(

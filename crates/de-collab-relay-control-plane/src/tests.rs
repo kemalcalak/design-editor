@@ -598,10 +598,9 @@ fn serve_one_locator(listener: TcpListener, signer: TestLocatorSigner) {
     };
     let headers = std::str::from_utf8(&request_bytes[..header_end]).expect("headers");
     assert!(headers.starts_with("POST /v1/locator HTTP/1.1\r\n"));
-    assert!(
-        headers.contains("\r\ncontent-type: application/vnd.openpencil.relay-owner-publish-v1\r\n")
-    );
-    assert!(headers.contains("\r\naccept: application/vnd.openpencil.relay-locator-v1\r\n"));
+    assert!(headers
+        .contains("\r\ncontent-type: application/vnd.design-editor.relay-owner-publish-v1\r\n"));
+    assert!(headers.contains("\r\naccept: application/vnd.design-editor.relay-locator-v1\r\n"));
     assert!(headers.contains("\r\nauthorization: Bearer header.payload.signature\r\n"));
     let content_length = headers
         .lines()

@@ -1,4 +1,4 @@
-//! Tests for the headless agentic tool-loop (`OPENPENCIL_SMOKE_LOOP=1`).
+//! Tests for the headless agentic tool-loop (`DESIGN_EDITOR_SMOKE_LOOP=1`).
 //!
 //! Two layers of proof:
 //!

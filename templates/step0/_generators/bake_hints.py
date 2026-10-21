@@ -34,7 +34,7 @@ def bake(tag, variables, groups, w, h):
             with open(src, "w", encoding="utf-8") as fh:
                 json.dump({"version": "1.0.0", "variables": variables,
                            "children": [box]}, fh, ensure_ascii=False)
-            env = dict(os.environ, OPENPENCIL_RENDER_MARGIN="0")
+            env = dict(os.environ, DESIGN_EDITOR_RENDER_MARGIN="0")
             subprocess.run([BIN, "--render-shots", src, td, "2"],
                            check=True, capture_output=True, env=env)
             png = [f for f in os.listdir(td) if f.endswith(".png")][0]

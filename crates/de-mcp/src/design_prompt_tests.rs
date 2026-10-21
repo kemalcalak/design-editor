@@ -16,7 +16,7 @@ fn get_design_prompt_defaults_to_all_and_lists_sections() {
                 .is_some_and(|sections| sections.contains("\"layout\"")));
             assert!(out
                 .get("designPrompt")
-                .is_some_and(|prompt| prompt.contains("OpenPencil")));
+                .is_some_and(|prompt| prompt.contains("Design Editor")));
         }
         other => panic!("expected prompt ok, got {other:?}"),
     }

@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   Hardened-runtime entitlements for the Developer ID-signed
-  OpenPencil.app bundle (tools/bundle-macos.sh).
+  Design Editor.app bundle (tools/bundle-macos.sh).
 
   disable-library-validation is required because the binary links
   Homebrew OpenSSL dylibs (/opt/homebrew/opt/openssl@3/...), which

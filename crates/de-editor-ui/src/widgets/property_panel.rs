@@ -7,7 +7,7 @@
 //! geometry, and the hover-wash helper. Construction, hit-testing,
 //! floating menus, and the `Widget` paint pass live in the sibling
 //! `property_panel/` submodules. Splitting the file keeps the pieces
-//! under the openpencil 800-line ceiling.
+//! under the design-editor 800-line ceiling.
 //!
 //! Sections (top → bottom, mirroring TS order):
 //!   1. Tab strip (Design / Code)

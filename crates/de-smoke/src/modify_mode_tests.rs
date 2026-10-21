@@ -164,7 +164,7 @@ fn modify_provider_selection_accepts_antigravity_aliases() {
 #[test]
 fn modify_provider_selection_rejects_unknown_and_missing_http_credentials() {
     let error = ModifyProviderKind::parse("anthropic").unwrap_err();
-    assert!(error.contains("unknown OPENPENCIL_LLM_PROVIDER"));
+    assert!(error.contains("unknown DESIGN_EDITOR_LLM_PROVIDER"));
     assert!(error.contains("antigravity"));
 
     let error = build_provider(
@@ -175,7 +175,7 @@ fn modify_provider_selection_rejects_unknown_and_missing_http_credentials() {
     )
     .err()
     .expect("missing base URL must fail");
-    assert!(error.contains("OPENPENCIL_LLM_BASE_URL is required"));
+    assert!(error.contains("DESIGN_EDITOR_LLM_BASE_URL is required"));
 
     let error = build_provider(
         ModifyProviderKind::OpenAiCompat,
@@ -185,7 +185,7 @@ fn modify_provider_selection_rejects_unknown_and_missing_http_credentials() {
     )
     .err()
     .expect("missing API key must fail");
-    assert!(error.contains("OPENPENCIL_LLM_API_KEY is required"));
+    assert!(error.contains("DESIGN_EDITOR_LLM_API_KEY is required"));
 }
 
 #[test]

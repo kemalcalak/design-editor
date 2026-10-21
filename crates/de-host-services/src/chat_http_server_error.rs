@@ -41,7 +41,7 @@ pub enum OpenCodeError {
     /// on <url>` line within the platform listen budget.
     ListenTimeout { millis: u128 },
     /// The server announced a different listener than the explicit loopback
-    /// port OpenPencil reserved and passed on its command line.
+    /// port Design Editor reserved and passed on its command line.
     UnexpectedListenUrl { expected: String, announced: String },
     /// A control-plane request never completed (connect / timeout / body).
     /// Text is `reqwest`'s own, an upstream crate this pass does not own.

@@ -31,10 +31,10 @@ mod guest_runtime;
 
 use control_plane_failure::{control_plane_failure, report_control_plane_failure};
 
-const RELAY_HOME_REGION_ENV: &str = "OPENPENCIL_COLLAB_RELAY_HOME_REGION";
+const RELAY_HOME_REGION_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_HOME_REGION";
 #[cfg(any(test, debug_assertions))]
-const RELAY_DEV_UNSIGNED_ENV: &str = "OPENPENCIL_COLLAB_RELAY_DEV_UNSIGNED";
-const DEBUG_LOCATOR_KEY_ID: &str = "openpencil-debug-unsigned";
+const RELAY_DEV_UNSIGNED_ENV: &str = "DESIGN_EDITOR_COLLAB_RELAY_DEV_UNSIGNED";
+const DEBUG_LOCATOR_KEY_ID: &str = "design-editor-debug-unsigned";
 const OWNER_RELAY_READY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(22);
 
 #[derive(Clone)]

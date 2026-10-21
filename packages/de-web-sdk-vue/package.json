@@ -1,7 +1,7 @@
 {
-  "name": "@zseven-w/de-web-sdk-vue",
+  "name": "@kemalcalak/de-web-sdk-vue",
   "version": "0.1.0",
-  "description": "Vue 3 adapter for the OpenPencil read-only web viewer SDK",
+  "description": "Vue 3 adapter for the Design Editor read-only web viewer SDK",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -23,7 +23,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@zseven-w/de-web-sdk": "workspace:*"
+    "@kemalcalak/de-web-sdk": "workspace:*"
   },
   "peerDependencies": {
     "vue": "^3.4.0"

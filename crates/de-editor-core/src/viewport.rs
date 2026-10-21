@@ -1,6 +1,6 @@
 //! Infinite-canvas pan + zoom state.
 //!
-//! Ported from `openpencil-shell-core::document::Viewport`. Pan is in
+//! Ported from `design-editor-shell-core::document::Viewport`. Pan is in
 //! canvas-local px; zoom is a multiplier. `Point2D` is the crate's
 //! `glam::Vec2` alias (the same one `render_backend.rs` uses), so the
 //! coordinate math stays consistent across the editor-core layer.

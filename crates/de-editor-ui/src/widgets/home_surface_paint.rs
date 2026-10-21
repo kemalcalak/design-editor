@@ -195,19 +195,19 @@ fn paint_top_bar(
         cx.backend
             .fill_round_rect(mark, 7.0, fade(palette.blue, 0.25));
     }
-    // OpenPencil, 20 px w700, −0.7 tracking.
+    // Design Editor, 20 px w700, −0.7 tracking.
     let name_x = mark.origin.x + mark.size.x + 10.0;
     let baseline = jian_widgets::centered_text_baseline_y(mark, 20.0);
     spaced_text(
         cx,
-        "OpenPencil",
+        "Design Editor",
         Point2D::new(name_x, baseline),
         20.0,
         palette.ink,
         700,
         -0.7,
     );
-    let name_w = spaced_width(cx, "OpenPencil", 20.0, -0.7);
+    let name_w = spaced_width(cx, "Design Editor", 20.0, -0.7);
     let divider_x = name_x + name_w + 6.0;
     cx.backend.stroke_line(
         Point2D::new(divider_x, mark.origin.y + 8.5),

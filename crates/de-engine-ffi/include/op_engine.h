@@ -1,5 +1,5 @@
 /*
- * OpenPencil Engine C ABI
+ * Design Editor Engine C ABI
  *
  * This header has one ABI shape in every build. Rust feature flags and debug
  * assertions never add, remove, or alter declarations in this contract.
@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-/* Stable status values returned by every OpenPencil C ABI call. */
+/* Stable status values returned by every Design Editor C ABI call. */
 typedef enum OpStatus {
     OpStatus_Ok = 0,
     OpStatus_InvalidArg = 1,

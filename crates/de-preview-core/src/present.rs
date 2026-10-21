@@ -171,7 +171,7 @@ impl PreviewSession {
         let bottom_gap =
             |node: &SceneNode| root_bottom - (node.bounds.origin.y + node.bounds.size.y);
 
-        // `role="bottom-tab-bar"` is OpenPencil's canonical authored
+        // `role="bottom-tab-bar"` is Design Editor's canonical authored
         // contract. Once a direct child carries it, App Mode owns its
         // placement: pin it even when a short/overflowing flex layout left
         // the authored y away from the root's bottom edge.

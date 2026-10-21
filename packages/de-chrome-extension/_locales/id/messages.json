@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "OpenPencil",
+    "message": "Design Editor",
     "description": "Extension name shown in Chrome."
   },
   "extDescription": {
-    "message": "Tangkap halaman sebagai node desain OpenPencil yang dapat diedit dan ekstrak panduan sistem desain design.md dengan sekali klik.",
+    "message": "Tangkap halaman sebagai node desain Design Editor yang dapat diedit dan ekstrak panduan sistem desain design.md dengan sekali klik.",
     "description": "Extension description shown in Chrome."
   },
   "captureButton": {
@@ -20,7 +20,7 @@
     "message": "Ekstrak design.md"
   },
   "statusDesignWorking": {
-    "message": "Mengumpulkan bukti gaya halaman yang telah dihapus identitasnya dan meminta OpenPencil AI…"
+    "message": "Mengumpulkan bukti gaya halaman yang telah dihapus identitasnya dan meminta Design Editor AI…"
   },
   "statusDesignSmartSuccess": {
     "message": "design.md dibuat dan diunduh menggunakan AI yang dikonfigurasi."
@@ -29,13 +29,13 @@
     "message": "AI tidak tersedia; design.md dibuat dan diunduh dengan fallback lokal deterministik: $1"
   },
   "designFallbackPairing": {
-    "message": "OpenPencil belum mengizinkan ekstensi ini untuk pembuatan dengan AI; fallback lokal telah digunakan."
+    "message": "Design Editor belum mengizinkan ekstensi ini untuk pembuatan dengan AI; fallback lokal telah digunakan."
   },
   "designFallbackOffline": {
-    "message": "OpenPencil di $1 tidak dapat dijangkau."
+    "message": "Design Editor di $1 tidak dapat dijangkau."
   },
   "designFallbackUnsupported": {
-    "message": "Versi OpenPencil ini tidak mendukung pembuatan design.md cerdas."
+    "message": "Versi Design Editor ini tidak mendukung pembuatan design.md cerdas."
   },
   "designFallbackError": {
     "message": "Pembuatan cerdas gagal: $1"
@@ -62,7 +62,7 @@
     "message": "Esc untuk membatalkan"
   },
   "endpointLabel": {
-    "message": "Alamat OpenPencil"
+    "message": "Alamat Design Editor"
   },
   "endpointHint": {
     "message": "Aplikasi desktop: Pengaturan → MCP → mulai server (port bawaan 3100)."
@@ -80,19 +80,19 @@
     "message": "Mengirim cuplikan ($1)…"
   },
   "statusSending": {
-    "message": "Mengirim ke OpenPencil…"
+    "message": "Mengirim ke Design Editor…"
   },
   "statusImported": {
-    "message": "$1 node diimpor ke OpenPencil."
+    "message": "$1 node diimpor ke Design Editor."
   },
   "statusSendingAccount": {
-    "message": "Mengirim ke akun OpenPencil Anda…"
+    "message": "Mengirim ke akun Design Editor Anda…"
   },
   "statusSentToAccount": {
-    "message": "Terkirim ke akun OpenPencil Anda: $1"
+    "message": "Terkirim ke akun Design Editor Anda: $1"
   },
   "statusSentLocalFallback": {
-    "message": "Sesi akun Anda sudah kedaluwarsa, jadi tangkapan ini dikirim ke OpenPencil di komputer ini: $1 node diimpor."
+    "message": "Sesi akun Anda sudah kedaluwarsa, jadi tangkapan ini dikirim ke Design Editor di komputer ini: $1 node diimpor."
   },
   "statusDownloaded": {
     "message": "$1 disimpan."
@@ -125,22 +125,22 @@
     "message": "Alamat harus berupa loopback dengan port — 127.0.0.1:3100 atau localhost:3100."
   },
   "errorOffline": {
-    "message": "OpenPencil tidak dapat dijangkau di $1. Jalankan aplikasi desktop dan mulai Pengaturan → MCP → server, atau jalankan: design-editor --serve-web 3100"
+    "message": "Design Editor tidak dapat dijangkau di $1. Jalankan aplikasi desktop dan mulai Pengaturan → MCP → server, atau jalankan: design-editor --serve-web 3100"
   },
   "errorTimeout": {
-    "message": "OpenPencil di $1 menerima koneksi tetapi tidak menjawab dalam $2 detik. Aplikasi mungkin sibuk atau macet — periksa aplikasinya, lalu coba lagi."
+    "message": "Design Editor di $1 menerima koneksi tetapi tidak menjawab dalam $2 detik. Aplikasi mungkin sibuk atau macet — periksa aplikasinya, lalu coba lagi."
   },
   "errorNoIngress": {
-    "message": "Versi OpenPencil ini tidak memiliki jalur masuk untuk ekstensi ($1). Perbarui aplikasi, atau gunakan “Unduh .op” lalu buka berkas di OpenPencil"
+    "message": "Versi Design Editor ini tidak memiliki jalur masuk untuk ekstensi ($1). Perbarui aplikasi, atau gunakan “Unduh .op” lalu buka berkas di Design Editor"
   },
   "errorTooLarge": {
-    "message": "Tangkapan ini lebih besar dari $1 MB, dan rute cuplikan OpenPencil menolaknya. Gunakan “Unduh .op”, lalu buka berkas di OpenPencil"
+    "message": "Tangkapan ini lebih besar dari $1 MB, dan rute cuplikan Design Editor menolaknya. Gunakan “Unduh .op”, lalu buka berkas di Design Editor"
   },
   "errorAccountTooLarge": {
     "message": "Tangkapan ini lebih besar dari $1 MB, dan kotak masuk akun menolaknya. Kirimkan ke perangkat ini saja."
   },
   "errorImport": {
-    "message": "OpenPencil menolak cuplikan: $1"
+    "message": "Design Editor menolak cuplikan: $1"
   },
   "errorDownload": {
     "message": "Unduhan gagal: $1"
@@ -164,16 +164,16 @@
     "message": "Selesaikan proses masuk di halaman yang baru terbuka, lalu buka lagi jendela ini."
   },
   "accountSignedOut": {
-    "message": "Anda telah keluar dari akun OpenPencil."
+    "message": "Anda telah keluar dari akun Design Editor."
   },
   "accountSignOutManual": {
     "message": "Selesaikan proses keluar di halaman akun yang baru terbuka."
   },
   "accountUnavailable": {
-    "message": "Tidak dapat menghubungi akun OpenPencil Anda: $1"
+    "message": "Tidak dapat menghubungi akun Design Editor Anda: $1"
   },
   "errorAccountSignedOut": {
-    "message": "Sesi akun OpenPencil Anda sudah kedaluwarsa. Masuk lagi, lalu coba sekali lagi."
+    "message": "Sesi akun Design Editor Anda sudah kedaluwarsa. Masuk lagi, lalu coba sekali lagi."
   },
   "errorAccountForbidden": {
     "message": "Hub menolak asal atau token sesi unggahan ini. Masuk lagi, lalu coba sekali lagi. ($1)"
@@ -191,10 +191,10 @@
     "message": "Terlalu banyak unggahan ke akun Anda. Coba lagi sekitar $1 detik lagi."
   },
   "errorAccountRejected": {
-    "message": "Akun OpenPencil Anda menolak snapshot: $1"
+    "message": "Akun Design Editor Anda menolak snapshot: $1"
   },
   "errorAccountUnavailable": {
-    "message": "Akun OpenPencil Anda tidak dapat menerima tangkapan saat ini ($1). Coba lagi nanti, atau kirim ke OpenPencil di komputer ini."
+    "message": "Akun Design Editor Anda tidak dapat menerima tangkapan saat ini ($1). Coba lagi nanti, atau kirim ke Design Editor di komputer ini."
   },
   "regionLabel": {
     "message": "Wilayah"
@@ -209,9 +209,9 @@
     "message": "Kirim ke"
   },
   "deliveryLocal": {
-    "message": "OpenPencil di komputer ini"
+    "message": "Design Editor di komputer ini"
   },
   "deliveryAccount": {
-    "message": "Akun OpenPencil saya"
+    "message": "Akun Design Editor saya"
   }
 }

@@ -286,7 +286,10 @@ fn a_deck_with_no_visible_board_refuses_to_write_a_file() {
         ]}"##,
     );
     let mut path = std::env::temp_dir();
-    path.push(format!("openpencil-pptx-empty-{}.pptx", std::process::id()));
+    path.push(format!(
+        "design-editor-pptx-empty-{}.pptx",
+        std::process::id()
+    ));
 
     let result = export_deck_pptx(&state, &path);
 
@@ -437,7 +440,7 @@ fn the_written_file_is_a_zip_holding_the_same_parts() {
     let state = two_board_deck();
     let mut path = std::env::temp_dir();
     path.push(format!(
-        "openpencil-pptx-write-{}-{}.pptx",
+        "design-editor-pptx-write-{}-{}.pptx",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

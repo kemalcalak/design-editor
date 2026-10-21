@@ -38,7 +38,7 @@ use crate::web_storage::storage_get;
 
 /// Device-level theme key. Deliberately carries **no** `::<subject>` suffix —
 /// that suffix is what makes a key account-scoped.
-const DEVICE_THEME_KEY: &str = "openpencil-rust-web-theme";
+const DEVICE_THEME_KEY: &str = "design-editor-rust-web-theme";
 
 /// Why a device-theme write did not land.
 ///

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed verifier for a dedicated OpenPencil edge nftables table."""
+"""Fail-closed verifier for a dedicated Design Editor edge nftables table."""
 
 from __future__ import annotations
 
@@ -189,7 +189,7 @@ def main() -> int:
     parser.add_argument("--address", required=True, type=public_ipv4)
     parser.add_argument(
         "--table",
-        default="openpencil_locator_edge_rate",
+        default="design_editor_locator_edge_rate",
     )
     parser.add_argument(
         "--meter",
@@ -197,7 +197,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--comment",
-        default="OpenPencil locator edge per-source new connections",
+        default="Design Editor locator edge per-source new connections",
     )
     parser.add_argument("--rules-json", action="store_true")
     arguments = parser.parse_args()

@@ -47,8 +47,8 @@ use crate::{DeviceStaticKey, KeyStoreError, StaticKeyStore};
 ))]
 // Desktop compatibility identifier. Renaming it without a migration would
 // silently rotate existing desktop Noise identities; mobile stores use their
-// explicit `tech.zseven.openpencil` identifiers instead.
-const KEYRING_SERVICE: &str = "app.openpencil.collaboration";
+// explicit `com.kemalcalak.designeditor` identifiers instead.
+const KEYRING_SERVICE: &str = "app.design-editor.collaboration";
 #[cfg(all(
     feature = "native",
     any(
@@ -353,7 +353,7 @@ mod tests {
     #[test]
     fn ios_keychain_contract_is_device_only_and_uses_the_canonical_service() {
         let source = include_str!("apple_key_store.rs");
-        assert!(source.contains("tech.zseven.openpencil.collaboration"));
+        assert!(source.contains("com.kemalcalak.designeditor.collaboration"));
         assert!(source.contains("kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly"));
         assert!(source.contains("kSecAttrSynchronizable"));
         assert!(source.contains("CFBoolean::false_value()"));
@@ -363,7 +363,7 @@ mod tests {
         assert!(source.contains("ERR_SEC_INTERACTION_NOT_ALLOWED"));
         assert!(source.contains("PlatformStoreAccessDenied"));
         assert!(!source.contains("PlatformStoreUnavailable"));
-        assert!(!source.contains("app.openpencil.collaboration"));
+        assert!(!source.contains("app.design-editor.collaboration"));
     }
 
     #[cfg(all(
@@ -375,7 +375,7 @@ mod tests {
     ))]
     #[test]
     fn desktop_keyring_keeps_its_legacy_identity_until_an_explicit_migration() {
-        assert_eq!(KEYRING_SERVICE, "app.openpencil.collaboration");
+        assert_eq!(KEYRING_SERVICE, "app.design-editor.collaboration");
     }
 
     #[derive(Default)]

@@ -142,7 +142,7 @@ test("listening restarts init after the original retry budget expires", () => {
   const s = new PenSession(host, "tok", "{}");
   s.start();
   for (let i = 0; i < 20; i++) host.fireLatestTimer();
-  expect(host.warnings).toEqual(["OpenPencil editor did not become ready"]);
+  expect(host.warnings).toEqual(["Design Editor editor did not become ready"]);
   const beforeListening = host.postedOfType("op-bridge/init").length;
 
   s.onPageMessage(JSON.stringify({ type: "op-bridge/listening" }));

@@ -1,4 +1,4 @@
-//! Bounded public-relay protocol primitives for OpenPencil collaboration.
+//! Bounded public-relay protocol primitives for Design Editor collaboration.
 //!
 //! The protocol keeps routing metadata separate from the bearer route
 //! capability. A decoded locator is untrusted until a caller explicitly

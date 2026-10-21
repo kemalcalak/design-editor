@@ -1,4 +1,4 @@
-//! Export embedded OpenPencil AI skills for external agent runtimes.
+//! Export embedded Design Editor AI skills for external agent runtimes.
 
 use std::fs;
 use std::path::Path;

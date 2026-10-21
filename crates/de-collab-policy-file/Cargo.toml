@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license = "MIT"
 repository.workspace = true
-description = "Bounded no-follow signed-policy file source for OpenPencil collaboration services"
+description = "Bounded no-follow signed-policy file source for Design Editor collaboration services"
 
 [dependencies]
 base64 = "0.22"

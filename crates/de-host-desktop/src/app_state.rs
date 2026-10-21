@@ -92,11 +92,11 @@ impl DesktopApp {
         host.editor_state_mut()
             .editor_ui
             .style_import_file_picker_supported = true;
-        // Imported style guides live in ~/.openpencil/styles; the runtime
+        // Imported style guides live in ~/.design-editor/styles; the runtime
         // catalogue they merge into is memory-only, so it has to be refilled
         // from disk at every launch.
         crate::user_style_store::load_user_style_guides_once();
-        // Saved scene templates live in ~/.openpencil/templates; the runtime
+        // Saved scene templates live in ~/.design-editor/templates; the runtime
         // registry they merge into is memory-only, so it has to be refilled
         // from disk at every launch, exactly like the style guides above.
         crate::user_template_store::load_user_scene_templates_once();
@@ -338,7 +338,7 @@ impl DesktopApp {
         }
     }
 
-    /// Set the window title to `<file> (<branch>) — OpenPencil`, with
+    /// Set the window title to `<file> (<branch>) — Design Editor`, with
     /// the branch shown only when the document is in a git repository.
     fn refresh_window_title(&self) {
         let Some(window) = self.window.as_ref() else {
@@ -350,9 +350,9 @@ impl DesktopApp {
             .and_then(|p| p.file_name())
             .map(|n| n.to_string_lossy().into_owned());
         let title = match (name, self.git_session.current_branch()) {
-            (Some(name), Some(branch)) => format!("{name} ({branch}) — OpenPencil"),
-            (Some(name), None) => format!("{name} — OpenPencil"),
-            (None, _) => "OpenPencil".to_string(),
+            (Some(name), Some(branch)) => format!("{name} ({branch}) — Design Editor"),
+            (Some(name), None) => format!("{name} — Design Editor"),
+            (None, _) => "Design Editor".to_string(),
         };
         window.set_title(&title);
     }

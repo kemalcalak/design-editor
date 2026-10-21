@@ -8,10 +8,10 @@ import { WechatNativeSignIn } from '../common/WechatNativeSignIn';
 import { WindowBridge } from '../common/WindowBridge';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /**
- * Hosts the single OpenPencil window.
+ * Hosts the single Design Editor window.
  *
  * The window is edge-to-edge: the engine's surface spans the full window
  * including the status bar, navigation area, and any display cutout, while

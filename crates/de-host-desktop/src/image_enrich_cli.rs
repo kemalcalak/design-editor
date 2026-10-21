@@ -9,7 +9,7 @@
 //! mode.
 //!
 //! Headless Openverse credentials may also be supplied with
-//! `OPENPENCIL_OPENVERSE_CLIENT_ID` and `OPENPENCIL_OPENVERSE_CLIENT_SECRET`.
+//! `DESIGN_EDITOR_OPENVERSE_CLIENT_ID` and `DESIGN_EDITOR_OPENVERSE_CLIENT_SECRET`.
 //! These are used only when both persisted Openverse settings are empty.
 
 use std::ffi::OsString;
@@ -28,8 +28,7 @@ mod retry;
 
 const DEFAULT_TIMEOUT_SECONDS: u64 = 120;
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
-const USAGE: &str =
-    "usage: design-editor --enrich-images <input.op> <output.op> [timeout_seconds]";
+const USAGE: &str = "usage: design-editor --enrich-images <input.op> <output.op> [timeout_seconds]";
 const MODE_CONTRACT: &str = "search-only mode: Auto/Search targets use stock search; \
 explicit Generate targets fail and are never converted to search";
 
@@ -320,7 +319,7 @@ mod tests {
     #[test]
     fn quiescent_document_wins_over_an_elapsed_deadline() {
         let unique = format!(
-            "openpencil-enrich-images-{}-{}",
+            "design-editor-enrich-images-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -361,7 +360,7 @@ mod tests {
     #[test]
     fn explicit_generate_fails_without_becoming_search_and_preserves_output() {
         let unique = format!(
-            "openpencil-enrich-generate-{}-{}",
+            "design-editor-enrich-generate-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -447,7 +446,7 @@ mod tests {
     #[test]
     fn schema_warning_blocks_rewrite_and_preserves_output() {
         let unique = format!(
-            "openpencil-enrich-future-schema-{}-{}",
+            "design-editor-enrich-future-schema-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -485,7 +484,7 @@ mod tests {
     #[test]
     fn invalid_document_ids_are_rejected_before_enrichment() {
         let unique = format!(
-            "openpencil-enrich-invalid-ids-{}-{}",
+            "design-editor-enrich-invalid-ids-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

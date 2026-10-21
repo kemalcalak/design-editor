@@ -95,7 +95,7 @@ impl IdAllocator for DocumentIdAllocator {
     }
 }
 
-/// Standalone allocator preserving OpenPencil's historical `n{counter}` ids.
+/// Standalone allocator preserving Design Editor's historical `n{counter}` ids.
 #[derive(Debug, PartialEq, Eq)]
 pub struct SequentialIdAllocator {
     next: u64,

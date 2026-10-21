@@ -7,7 +7,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-// The transport remains OpenPencil-owned because it also supports remote
+// The transport remains Design Editor-owned because it also supports remote
 // WebSockets and host-specific deadlines, but all stable request/response
 // shapes come from the official ACP Rust SDK 2.0.0. Keeping these re-exports
 // here makes the stable v1 boundary explicit and prevents our hand-written

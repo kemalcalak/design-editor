@@ -1,6 +1,6 @@
 //! Track B of the interactive-preview plan — the `navIssues` per-batch echo
 //! (see
-//! `openpencil-docs/openpencil/generation/preview-interactive-app-mode-0712.md`,
+//! `design-editor-docs/design-editor/generation/preview-interactive-app-mode-0712.md`,
 //! Track B item 2). `wire_screen_navigation` (Track A) is the deterministic
 //! backstop that fills unbound nav tabs once the loop finalizes; this scan
 //! runs IN-LOOP, right after a `batch_design` write, so the model can see and

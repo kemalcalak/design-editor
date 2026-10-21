@@ -1,4 +1,4 @@
-// Public types for the OpenPencil read-only web SDK.
+// Public types for the Design Editor read-only web SDK.
 export interface Viewport {
   panX: number;
   panY: number;

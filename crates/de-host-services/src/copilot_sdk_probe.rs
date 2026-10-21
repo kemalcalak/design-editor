@@ -78,7 +78,7 @@ fn probe_copilot_cli_with_timeout(
 ) -> Result<CopilotProbe, CopilotProbeError> {
     let exe = exe.to_path_buf();
     std::thread::Builder::new()
-        .name("openpencil-copilot-probe".to_string())
+        .name("design-editor-copilot-probe".to_string())
         .spawn(move || {
             // SDK 1.0.11's lifecycle dispatcher retains its ClientInner. A
             // disposable runtime cancels that task after every one-shot probe
@@ -334,7 +334,7 @@ mod tests {
         use std::os::unix::fs::PermissionsExt as _;
 
         let script = std::env::temp_dir().join(format!(
-            "openpencil-copilot-probe-{}-{}",
+            "design-editor-copilot-probe-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -385,7 +385,7 @@ mod tests {
         use std::os::unix::fs::PermissionsExt as _;
 
         let script = std::env::temp_dir().join(format!(
-            "openpencil-copilot-timeout-{}-{}",
+            "design-editor-copilot-timeout-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

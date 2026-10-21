@@ -1,13 +1,13 @@
 
 > [English](./BUILD_WINDOWS.md) · [简体中文](./BUILD_WINDOWS.zh.md) · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · [한국어](./BUILD_WINDOWS.ko.md) · [Français](./BUILD_WINDOWS.fr.md) · [Español](./BUILD_WINDOWS.es.md) · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · [हिन्दी](./BUILD_WINDOWS.hi.md) · [Türkçe](./BUILD_WINDOWS.tr.md) · **ไทย** · [Tiếng Việt](./BUILD_WINDOWS.vi.md) · [Bahasa Indonesia](./BUILD_WINDOWS.id.md)
 
-# คู่มือการคอมไพล์ OpenPencil สำหรับ Windows
+# คู่มือการคอมไพล์ Design Editor สำหรับ Windows
 
 ## 1. ดาวน์โหลดซอร์สโค้ด
 
-1. ดาวน์โหลดซอร์สโค้ดจากคลังเก็บ openpencil
+1. ดาวน์โหลดซอร์สโค้ดจากคลังเก็บ design-editor
 
-2. openpencil มีโมดูลย่อย 3 ตัวในไดเรกทอรี `vendor` (jian, casement, agent) ที่ต้องดาวน์โหลดแยกต่างหาก
+2. design-editor มีโมดูลย่อย 3 ตัวในไดเรกทอรี `vendor` (jian, casement, agent) ที่ต้องดาวน์โหลดแยกต่างหาก
 
     - 2.1 jian (เฟรมเวิร์ก UI): [https://github.com/ZSeven-W/jian](https://github.com/ZSeven-W/jian) → แตกไฟล์ไปยัง `vendor\jian`
 
@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 ดาวน์โหลด `rustup-init.exe` จาก rustup.rs แล้วรัน เป็นคำสั่งใน PowerShell **ตรงกับ `openpencil 0.8.4`**:
+    - 2.3 ดาวน์โหลด `rustup-init.exe` จาก rustup.rs แล้วรัน เป็นคำสั่งใน PowerShell **ตรงกับ `design-editor 0.8.4`**:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 ติดตั้ง wasm-bindgen-cli สำหรับการสร้าง WASM-JS binding รันคำสั่งต่อไปนี้ใน PowerShell **ตรงกับ `openpencil 0.8.4`**:
+    - 2.4 ติดตั้ง wasm-bindgen-cli สำหรับการสร้าง WASM-JS binding รันคำสั่งต่อไปนี้ใน PowerShell **ตรงกับ `design-editor 0.8.4`**:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -124,17 +124,17 @@
             ├── snippets\
             ├── op_host-web.d.ts
             ├── de_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 4. กำหนดค่า environment variable สำหรับปลั๊กอิน dsh-openpencil
+## 4. กำหนดค่า environment variable สำหรับปลั๊กอิน dsh-design-editor
 
 1. เปิด PowerShell ในฐานะผู้ดูแลระบบแล้วรันคำสั่งต่อไปนี้ (แทนที่เส้นทางด้วยรูทคลังเก็บจริง):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. การตรวจสอบ
@@ -177,4 +177,4 @@
     > 
     > ถ้าหน้าเว็บแจ้งว่าไม่พบ `/pkg/de_host_web.js` แสดงว่าไฟล์หายไปจาก `web-bundle/`
 
-3. เอกสารนี้เขียนสำหรับ `openpencil 0.8.4` เวอร์ชัน rustup toolchain `1.94`、wasm-bindgen-cli `0.2.117` และ skia-bindings `0.97.2` สอดคล้องกับเวอร์ชันนี้ — เวอร์ชันอื่นอาจแตกต่างกัน
+3. เอกสารนี้เขียนสำหรับ `design-editor 0.8.4` เวอร์ชัน rustup toolchain `1.94`、wasm-bindgen-cli `0.2.117` และ skia-bindings `0.97.2` สอดคล้องกับเวอร์ชันนี้ — เวอร์ชันอื่นอาจแตกต่างกัน

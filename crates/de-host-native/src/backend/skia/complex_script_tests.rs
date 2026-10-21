@@ -173,7 +173,7 @@ fn arabic_proof_sheet() {
     let data = image
         .encode(None, skia_safe::EncodedImageFormat::PNG, 100)
         .expect("encode png");
-    let out = std::env::temp_dir().join("openpencil-arabic-proof.png");
+    let out = std::env::temp_dir().join("design-editor-arabic-proof.png");
     std::fs::write(&out, data.as_bytes()).expect("write png");
     println!("proof sheet written to {}", out.display());
 }

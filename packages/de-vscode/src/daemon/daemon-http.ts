@@ -113,7 +113,7 @@ export class DaemonHttp {
     return fetch(`${this.baseUrl}${path}`, {
       ...init,
       headers: {
-        "X-OpenPencil-Token": this.token,
+        "X-Design-Editor-Token": this.token,
         ...init?.headers,
       },
       signal: AbortSignal.timeout(this.timeoutMs),

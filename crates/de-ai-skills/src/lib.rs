@@ -1,4 +1,4 @@
-//! OpenPencil AI skill engine — a Rust port of the TS `pen-ai-skills`
+//! Design Editor AI skill engine — a Rust port of the TS `pen-ai-skills`
 //! package's phase-driven prompt-skill resolution engine.
 //!
 //! The pipeline mirrors `pen-ai-skills/src/engine`:

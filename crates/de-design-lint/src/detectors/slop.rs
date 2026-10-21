@@ -1,5 +1,5 @@
 //! "AI slop" detectors — report-only rules derived from open-design's
-//! `impeccable-design-polish` "AI tells" list (openpencil-docs
+//! `impeccable-design-polish` "AI tells" list (design-editor-docs
 //! `generation/2026-09-06-mobile-expression-layer-sources.md` §七).
 //!
 //! Three detectors, each a pure walk over the `PenNode` tree, each emitting

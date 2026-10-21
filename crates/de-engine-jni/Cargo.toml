@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish    = false
-description = "Android JNI marshalling layer for the OpenPencil engine player (de-engine-ffi)"
+description = "Android JNI marshalling layer for the Design Editor engine player (de-engine-ffi)"
 
 [lib]
 # cdylib for the Android Player; rlib so the host-triple queue tests link.

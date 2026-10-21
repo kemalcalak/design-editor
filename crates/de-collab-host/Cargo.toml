@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil collaboration runtime — host-agnostic owner/guest actors bridged to the Noise/TCP/relay transports"
+description = "Design Editor collaboration runtime — host-agnostic owner/guest actors bridged to the Noise/TCP/relay transports"
 
 [lib]
 name = "de_collab_host"
@@ -43,7 +43,7 @@ de-editor-ui = { path = "../de-editor-ui" }
 # root. Links the proprietary prebuilt library when one exists, else an inert
 # stub (collaboration reports Unavailable).
 de-auth-bridge = { path = "../de-auth-bridge" }
-# Shared `~/.openpencil` well-known paths for the relay bootstrap cache and
+# Shared `~/.design-editor` well-known paths for the relay bootstrap cache and
 # the persisted service-region preference.
 de-config-store = { path = "../de-config-store" }
 # Canonical `.op` document schema — the payload of every collaboration

@@ -261,7 +261,7 @@ mod provider_impl;
 ///   (TS parity: `chat.ts` passes `systemPrompt: body.system`);
 /// - conversation history is deliberately absent from SDK options: it is
 ///   folded into the prompt by [`prompt_with_request_history`] so state stays
-///   bound to the originating OpenPencil tab.
+///   bound to the originating Design Editor tab.
 fn effective_options(
     base: Option<&ClaudeAgentOptions>,
     request: &ChatRequest,

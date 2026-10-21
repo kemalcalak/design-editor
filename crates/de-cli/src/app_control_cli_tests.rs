@@ -21,7 +21,7 @@ fn preflight_rejects_malformed_documents_and_accepts_a_valid_one() {
         .expect_err("binary archive must be rejected")
         .to_string();
     assert!(
-        err.contains("is not a valid OpenPencil document"),
+        err.contains("is not a valid Design Editor document"),
         "unexpected error text: {err}"
     );
 
@@ -33,7 +33,7 @@ fn preflight_rejects_malformed_documents_and_accepts_a_valid_one() {
         .expect_err("non-document text must be rejected")
         .to_string();
     assert!(
-        err.contains("is not a valid OpenPencil document"),
+        err.contains("is not a valid Design Editor document"),
         "unexpected error text: {err}"
     );
 
@@ -79,7 +79,7 @@ fn config_store_paths_keep_live_port_and_session_names() {
 
     assert_eq!(
         live_port_file_path_in(&store).unwrap(),
-        root.join(".op-mcp-port")
+        root.join(".de-mcp-port")
     );
     assert_eq!(
         default_document_path_in(&store).unwrap(),

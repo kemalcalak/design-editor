@@ -30,7 +30,7 @@ use zeroize::{Zeroize, Zeroizing};
 use crate::os_key_store::CredentialEntry;
 use crate::KeyStoreError;
 
-const KEYRING_SERVICE: &str = "tech.zseven.openpencil.collaboration";
+const KEYRING_SERVICE: &str = "com.kemalcalak.designeditor.collaboration";
 const KEYRING_ACCOUNT: &str = "device-noise-x25519-v1";
 
 const ERR_SEC_NOT_AVAILABLE: OSStatus = -25291;

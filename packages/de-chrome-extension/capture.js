@@ -1,5 +1,5 @@
 /**
- * Capture pipeline: run the canonical OpenPencil DOM extractor in the active
+ * Capture pipeline: run the canonical Design Editor DOM extractor in the active
  * tab and pull its JSON back into the extension.
  *
  * The extractor (`vendor/snapshot-extractor.js`, a byte-for-byte copy of
@@ -36,7 +36,7 @@ import { getCore } from './core-registry.js';
 
 const EXTRACTOR_FILE = 'vendor/snapshot-extractor.js';
 /** Sentinel object URL, so the harness only swallows the extractor's own anchor. */
-const CAPTURE_URL = 'blob:openpencil-capture';
+const CAPTURE_URL = 'blob:design-editor-capture';
 /** Hard ceiling on the lazy-content scroll march before a full-page capture. */
 export const SETTLE_BUDGET_MS = 7000;
 
@@ -47,19 +47,19 @@ export const SETTLE_BUDGET_MS = 7000;
  * ---------------------------------------------------------------------- */
 
 function beginCapture(captureUrl, keepPickedRoot) {
-  const state = (globalThis.openpencilCapture ||= {});
+  const state = (globalThis.designEditorCapture ||= {});
   state.blob = null;
   state.text = null;
   // The extractor reads its root from this global. A full-page capture must
   // clear whatever a previous element pick left behind, or it would silently
   // capture that old subtree again; a pick capture must keep it.
-  if (!keepPickedRoot) delete globalThis.openpencilSnapshotOptions;
+  if (!keepPickedRoot) delete globalThis.designEditorSnapshotOptions;
   // An element-pick overlay can still be armed when a capture starts (the
   // user reopened the popup instead of picking). It is page DOM in this
   // isolated world, so tear it down or it gets captured as content. After a
   // committed pick the teardown already ran and this is a no-op; the
   // abandoned `awaitPick` injection settles through its own timeout.
-  const pick = globalThis.openpencilPick;
+  const pick = globalThis.designEditorPick;
   if (pick && typeof pick.teardown === 'function') pick.teardown();
   if (!state.originals) {
     state.originals = {
@@ -87,7 +87,7 @@ function beginCapture(captureUrl, keepPickedRoot) {
 }
 
 async function finishCapture() {
-  const state = globalThis.openpencilCapture;
+  const state = globalThis.designEditorCapture;
   if (!state || !state.originals) return { ok: false, reason: 'state' };
   const originals = state.originals;
   URL.createObjectURL = originals.createObjectURL;
@@ -120,7 +120,7 @@ async function finishCapture() {
 }
 
 function readChunk(offset, length) {
-  const state = globalThis.openpencilCapture;
+  const state = globalThis.designEditorCapture;
   if (!state || typeof state.text !== 'string') return null;
   return state.text.slice(offset, offset + length);
 }
@@ -189,8 +189,8 @@ export function restoreScroll(position) {
 function endCapture() {
   // Drop the picked root unconditionally: it belongs to exactly one capture,
   // and leaving it parked would silently narrow the next one.
-  delete globalThis.openpencilSnapshotOptions;
-  const state = globalThis.openpencilCapture;
+  delete globalThis.designEditorSnapshotOptions;
+  const state = globalThis.designEditorCapture;
   if (!state) return true;
   const originals = state.originals;
   if (originals) {
@@ -219,7 +219,7 @@ export async function runInTab(tabId, injection) {
  * Capture the active tab.
  *
  * With `pickedRoot`, the extractor narrows to whatever element the picker
- * parked on `globalThis.openpencilSnapshotOptions` in the tab's isolated
+ * parked on `globalThis.designEditorSnapshotOptions` in the tab's isolated
  * world (see `picker.js`); without it, the whole page is captured and any
  * stale parked root is discarded first.
  *

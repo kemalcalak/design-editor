@@ -500,7 +500,7 @@ fn map_align_items(align: &str) -> Option<AlignItems> {
 
 // ── Sizing ────────────────────────────────────────────────────────
 
-/// Resolve a node's width as a `SizingBehavior` in `openpencil` layout
+/// Resolve a node's width as a `SizingBehavior` in `design-editor` layout
 /// mode (auto-layout-aware). `parent_stack_mode` is the parent frame's
 /// raw `stackMode`.
 pub fn map_width_sizing(node: &FigValue, parent_stack_mode: Option<&str>) -> SizingBehavior {

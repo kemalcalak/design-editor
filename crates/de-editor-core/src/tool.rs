@@ -1,6 +1,6 @@
 //! Editor tool — what a primary mouse drag does on the canvas.
 //!
-//! Ported verbatim from `openpencil-shell-core::document::Tool`. The
+//! Ported verbatim from `design-editor-shell-core::document::Tool`. The
 //! variant set + toolbar order + ident tokens are the editor's stable
 //! contract; keeping them identical means the later facade swap
 //! (Task 4.7) is a re-export with no behaviour change.

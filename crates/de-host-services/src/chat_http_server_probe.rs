@@ -64,7 +64,7 @@ async fn probe_server_inner(client: &reqwest::Client, base: &str) -> bool {
 }
 
 /// Parse the listen announcement, accepting only unauthenticated HTTP URLs
-/// on the loopback interface OpenPencil requested in the spawn argv.
+/// on the loopback interface Design Editor requested in the spawn argv.
 pub fn parse_server_url(line: &str) -> Option<String> {
     if !line.starts_with("opencode server listening") {
         return None;
