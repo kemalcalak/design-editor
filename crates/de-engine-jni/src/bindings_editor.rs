@@ -7,7 +7,10 @@ use jni::sys::{jfloat, jint, jlong, jstring};
 use jni::JNIEnv;
 
 use de_engine_ffi::{
-    op_editor_account_snapshot, op_editor_auth_sign_out, op_editor_begin_login, op_editor_cancel_login, op_editor_configure_auth, op_editor_copy_login_url, op_editor_locale_code, op_editor_open_document, op_editor_set_locale, op_editor_take_shell_action, OpStatus, SHELL_ACTION_NONE,
+    op_editor_account_snapshot, op_editor_auth_sign_out, op_editor_begin_login,
+    op_editor_cancel_login, op_editor_configure_auth, op_editor_copy_login_url,
+    op_editor_locale_code, op_editor_open_document, op_editor_set_locale,
+    op_editor_take_shell_action, OpStatus, SHELL_ACTION_NONE,
 };
 
 use crate::bindings::{call_status, jstring_bytes, with_engine};
