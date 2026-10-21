@@ -114,9 +114,9 @@
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
+        ├── design-editor.exe
         ├── de-host-web-server.exe
-        ├── op.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
@@ -133,17 +133,17 @@
 1. 관리자 권한으로 PowerShell을 실행하고 다음을 실행 (경로를 실제 저장소 루트로 대체):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. 검증
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # 창이 순간 나타났다 사라집니다 — 백그라운드에서 3100 포트를 수신합니다
     ```
 
@@ -152,7 +152,7 @@
     ```powershell
     cd target\release
     ./de-host-web-server.exe --serve-web 3100
-    # PowerShell에서 "openpencil-desktop --serve-web:"가 두 번 표시되고 3100 포트를 수신합니다
+    # PowerShell에서 "design-editor --serve-web:"가 두 번 표시되고 3100 포트를 수신합니다
     ```
 
 ---

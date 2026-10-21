@@ -1,4 +1,4 @@
-//! `op templates` and `op use-template` — the shipped scene-template
+//! `de templates` and `de use-template` — the shipped scene-template
 //! catalogue, including the 16:9 presentation deck templates.
 //!
 //! Both are thin passes over the matching MCP tools; the catalogue itself is
@@ -19,14 +19,14 @@ pub(crate) fn map_templates(flags: &Flags) -> Result<Command, CliError> {
 }
 
 pub(crate) fn map_use_template(flags: &Flags, positionals: &[String]) -> Result<Command, CliError> {
-    // Accept both `op use-template <id>` and `--template <id>`: the bare
+    // Accept both `de use-template <id>` and `--template <id>`: the bare
     // positional is what a person types, the flag is what a script generates.
     // `positionals[0]` is the command word itself, so the id is at index 1.
     let template_id = positionals
         .get(1)
         .cloned()
         .or_else(|| flag_value(flags, "template"))
-        .ok_or_else(|| CliError::usage("a template id is required (op templates lists them)"))?;
+        .ok_or_else(|| CliError::usage("a template id is required (de templates lists them)"))?;
     Ok(Command::UseTemplate { template_id })
 }
 

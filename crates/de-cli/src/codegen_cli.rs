@@ -18,7 +18,7 @@ pub(super) fn map_codegen(positionals: &[String], flags: &Flags) -> Result<Comma
 
 fn map_codegen_plan(positionals: &[String], flags: &Flags) -> Result<Command, CliError> {
     let raw =
-        resolve_codegen_payload(positionals, 1, "Usage: op codegen:plan <plan-json|@file|->")?;
+        resolve_codegen_payload(positionals, 1, "Usage: de codegen:plan <plan-json|@file|->")?;
     let plan = compact_json_object(&raw, "plan-json")?;
     let mut fields = Vec::new();
     if let Some(file_path) = flag_value(flags, "file") {
@@ -36,12 +36,12 @@ fn map_codegen_submit(positionals: &[String], flags: &Flags) -> Result<Command, 
     let plan_id = required_pos(
         positionals,
         1,
-        "Usage: op codegen:submit <planId> <chunk-result|@file|->",
+        "Usage: de codegen:submit <planId> <chunk-result|@file|->",
     )?;
     let raw = resolve_codegen_payload(
         positionals,
         2,
-        "Usage: op codegen:submit <planId> <chunk-result|@file|->",
+        "Usage: de codegen:submit <planId> <chunk-result|@file|->",
     )?;
     let result = compact_json_object(&raw, "chunk-result")?;
     let mut fields = vec![
@@ -58,7 +58,7 @@ fn map_codegen_assemble(positionals: &[String], flags: &Flags) -> Result<Command
     let plan_id = required_pos(
         positionals,
         1,
-        "Usage: op codegen:assemble <planId> [--framework react]",
+        "Usage: de codegen:assemble <planId> [--framework react]",
     )?;
     let framework = flag_value(flags, "framework").unwrap_or_else(|| "react".into());
     tool_call(
@@ -68,7 +68,7 @@ fn map_codegen_assemble(positionals: &[String], flags: &Flags) -> Result<Command
 }
 
 fn map_codegen_clean(positionals: &[String]) -> Result<Command, CliError> {
-    let plan_id = required_pos(positionals, 1, "Usage: op codegen:clean <planId>")?;
+    let plan_id = required_pos(positionals, 1, "Usage: de codegen:clean <planId>")?;
     tool_call("codegen_clean", vec![pair("planId", plan_id)])
 }
 

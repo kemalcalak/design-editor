@@ -34,7 +34,7 @@ struct RunningMcp {
     token: String,
 }
 
-/// `op start` — by default launch the live-rendering editor GUI and wait
+/// `de start` — by default launch the live-rendering editor GUI and wait
 /// for it to publish `~/.openpencil/.op-mcp-port`, so subsequent `op <tool>`
 /// calls drive the on-screen canvas in real time (TS parity). Pass
 /// `headless` to instead run the windowless file-backed MCP server
@@ -60,7 +60,7 @@ pub(crate) fn run_start(
         run_start_headless(port, document_path)
     } else {
         // Reuse a live editor only — a headless file server is NOT a live
-        // canvas, so `op start` must open the real GUI even if one runs.
+        // canvas, so `de start` must open the real GUI even if one runs.
         if let Some((live_port, live_pid)) = reachable_live_port_file() {
             return Ok(start_json(live_pid, live_port, None));
         }
@@ -79,7 +79,7 @@ fn reachable_headless_server() -> Option<RunningMcp> {
 /// Whether the live editor will actually open `path` on launch — mirrors
 /// the desktop's `initial_file_from_argv` gate: a supported `.op` / `.pen` /
 /// `.fig` extension AND an existing file. The editor silently ignores
-/// anything else (blank canvas), so `op start --file` must not claim such a
+/// anything else (blank canvas), so `de start --file` must not claim such a
 /// path in its `documentPath`.
 fn editor_will_open(path: &str) -> bool {
     let p = Path::new(path);
@@ -140,10 +140,10 @@ fn run_start_live(port: u16, document_path: Option<&str>) -> Result<String, CliE
     )))
 }
 
-/// `op start --web` — spawn the `--serve-web` daemon (headless: static wasm
+/// `de start --web` — spawn the `--serve-web` daemon (headless: static wasm
 /// bundle at `/` + `/pkg/*`, REST sync, JSON-RPC `/mcp`), track it via the
 /// same `$TMPDIR` pid/port/token manager files as the headless server (so
-/// `op stop` / discovery work unchanged — the daemon honors the token-authed
+/// `de stop` / discovery work unchanged — the daemon honors the token-authed
 /// `openpencil/shutdown`), wait until its HTTP port answers our token, then
 /// print the URL and open it in the default browser.
 fn run_start_web(
@@ -162,7 +162,7 @@ fn run_start_web(
             return Ok(start_web_json(existing.pid, existing.port, None, host));
         }
         return Err(CliError::Daemon(format!(
-            "a non-web MCP server (pid {}) already owns port {}; run `op stop` first",
+            "a non-web MCP server (pid {}) already owns port {}; run `de stop` first",
             existing.pid, existing.port
         )));
     }
@@ -222,7 +222,7 @@ fn run_start_web(
 
 /// Best-effort default-browser launch, per OS: `open` (macOS),
 /// `cmd /C start` (Windows), `xdg-open` (Linux/BSD). Failures are silent —
-/// the URL is always printed in the `op start --web` JSON, so a missing
+/// the URL is always printed in the `de start --web` JSON, so a missing
 /// opener (SSH session, container) degrades to copy/paste.
 fn open_in_browser(url: &str) {
     #[cfg(target_os = "macos")]
@@ -260,7 +260,7 @@ fn windows_start_args(url: &str) -> String {
     format!("/C start \"\" \"{}\"", url.replace('"', "%22"))
 }
 
-/// `op start --web` success JSON: the headless `start_json` shape plus
+/// `de start --web` success JSON: the headless `start_json` shape plus
 /// `mode:"web"` (and the non-default bind host when one was requested, so
 /// scripts can derive the LAN URL).
 fn start_web_json(pid: u32, port: u16, document_path: Option<&Path>, host: Option<&str>) -> String {
@@ -294,7 +294,7 @@ fn run_start_headless(port: u16, document_path: Option<&str>) -> Result<String, 
 
     let binary = find_desktop_binary()?;
     // Per-instance token passed to the server (echoed in its `ping`) so a
-    // later `op stop` can prove the pid in our manager file owns the port.
+    // later `de stop` can prove the pid in our manager file owns the port.
     let token = make_token();
     let mut command = Command::new(&binary);
     command
@@ -334,7 +334,7 @@ fn run_start_headless(port: u16, document_path: Option<&str>) -> Result<String, 
 }
 
 pub(crate) fn run_stop() -> Result<String, CliError> {
-    // `op stop` asks the server to quit ITSELF via a token-authed
+    // `de stop` asks the server to quit ITSELF via a token-authed
     // `openpencil/shutdown`. This NEVER signals a pid, so there is no
     // recycled-pid / wrong-process race anywhere — and the live editor
     // exits cleanly (saving state + removing its own discovery file).
@@ -425,9 +425,9 @@ fn read_live_port_file() -> Option<(u16, u32, String)> {
 }
 
 /// Read `(port, pid, timestamp_ms)` from the live discovery file for
-/// `op status`. The host writes `timestamp` at startup (see
+/// `de status`. The host writes `timestamp` at startup (see
 /// `mcp_port_file::write`), so the CLI can report pid + uptime exactly like
-/// the TS `op status` (`uptime = floor((now - timestamp) / 1000)`). The
+/// the TS `de status` (`uptime = floor((now - timestamp) / 1000)`). The
 /// caller matches `port` against the server it's reporting before trusting
 /// pid/timestamp. `None` when the file is absent or lacks the fields.
 pub(crate) fn live_status_fields() -> Option<(u16, u32, u64)> {
@@ -597,7 +597,7 @@ fn manager_files() -> (PathBuf, PathBuf, PathBuf) {
 }
 
 /// Per-instance identity token (pid + nanos, hex). Not security-sensitive —
-/// it only needs to be distinct per spawned server so a later `op stop`
+/// it only needs to be distinct per spawned server so a later `de stop`
 /// can confirm the recorded pid still owns the port.
 fn make_token() -> String {
     let pid = std::process::id();
@@ -639,7 +639,7 @@ fn find_desktop_binary() -> Result<PathBuf, CliError> {
         }
     }
     Err(CliError::Daemon(
-        "OpenPencil desktop binary not found; set OPENPENCIL_DESKTOP_BIN or build openpencil-desktop"
+        "OpenPencil desktop binary not found; set OPENPENCIL_DESKTOP_BIN or build design-editor"
             .into(),
     ))
 }
@@ -706,9 +706,9 @@ fn desktop_binary_candidates() -> Vec<PathBuf> {
 
 fn desktop_binary_name() -> &'static str {
     if cfg!(target_os = "windows") {
-        "openpencil-desktop.exe"
+        "design-editor.exe"
     } else {
-        "openpencil-desktop"
+        "design-editor"
     }
 }
 

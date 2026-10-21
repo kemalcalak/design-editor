@@ -2,7 +2,7 @@
 //!
 //! The WASM shell cannot spawn local CLIs. It raises the same
 //! `pending_provider_connect` seam as native, then this module POSTs that
-//! request to the `openpencil-desktop --serve-web` daemon. The daemon runs the
+//! request to the `design-editor --serve-web` daemon. The daemon runs the
 //! real probe and returns the concrete result; this module applies it to the
 //! browser's local editor state.
 

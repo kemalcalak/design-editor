@@ -62,14 +62,14 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         .local_addr()
         .map_err(|e| WebCanvasError::Config(e.to_string()))?;
     let bound = local_addr.port();
-    eprintln!("openpencil-desktop --serve-web: listening on {host}:{bound}");
+    eprintln!("design-editor --serve-web: listening on {host}:{bound}");
     match crate::web_static::resolve_bundle_dir() {
         Some(dir) => eprintln!(
-            "openpencil-desktop --serve-web: serving web bundle from {}",
+            "design-editor --serve-web: serving web bundle from {}",
             dir.display()
         ),
         None => eprintln!(
-            "openpencil-desktop --serve-web: no web bundle found — `/` serves build \
+            "design-editor --serve-web: no web bundle found — `/` serves build \
              instructions (tools/check-wasm-bundle.sh, or set OPENPENCIL_WEB_BUNDLE_DIR)"
         ),
     }
@@ -153,7 +153,7 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         let mut s = match stream {
             Ok(s) => s,
             Err(e) => {
-                eprintln!("openpencil-desktop --serve-web: accept: {e}");
+                eprintln!("design-editor --serve-web: accept: {e}");
                 continue;
             }
         };
@@ -186,14 +186,14 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
                         let _ = std::net::TcpStream::connect(("127.0.0.1", bound));
                     }
                     Ok(false) => {}
-                    Err(e) => eprintln!("openpencil-desktop --serve-web: {e}"),
+                    Err(e) => eprintln!("design-editor --serve-web: {e}"),
                 }
             });
         if spawned.is_err() {
             conn_count.fetch_sub(1, Ordering::AcqRel);
         }
     }
-    eprintln!("openpencil-desktop --serve-web: shutdown requested; exiting");
+    eprintln!("design-editor --serve-web: shutdown requested; exiting");
     Ok(())
 }
 

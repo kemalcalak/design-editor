@@ -37,7 +37,7 @@ impl DesktopApp {
     pub(super) fn on_resized(&mut self, event_loop: &ActiveEventLoop, size: PhysicalSize<u32>) {
         if let Some(ctx) = self.ctx.as_mut() {
             if let Err(err) = ctx.resize(size.width, size.height) {
-                eprintln!("openpencil-desktop: resize failed: {err}");
+                eprintln!("design-editor: resize failed: {err}");
                 self.error = Some(err);
                 event_loop.exit();
             }
@@ -136,7 +136,7 @@ impl DesktopApp {
             );
             if outcome == image_drop_host::ImageDropOutcome::Ignored {
                 eprintln!(
-                    "openpencil-desktop: dropped image had no effect: {}",
+                    "design-editor: dropped image had no effect: {}",
                     path.display()
                 );
             }
@@ -166,7 +166,7 @@ impl DesktopApp {
             }
         } else {
             eprintln!(
-                        "openpencil-desktop: ignored dropped file (not .op / .pen / .fig / .html / .zip): {}",
+                        "design-editor: ignored dropped file (not .op / .pen / .fig / .html / .zip): {}",
                         path.display()
                     );
         }

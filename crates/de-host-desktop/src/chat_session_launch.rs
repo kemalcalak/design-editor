@@ -439,7 +439,7 @@ fn launch_direct_modify_turn(
     if let Err(err) = spawned {
         // Worker never started — un-park the session and fall through
         // to the honest-error path instead of crashing the UI thread.
-        eprintln!("openpencil-desktop: spawn op-chat-modify thread failed: {err}");
+        eprintln!("design-editor: spawn op-chat-modify thread failed: {err}");
         *current_chat = None;
         return false;
     }
@@ -584,7 +584,7 @@ fn launch_cli_standard_turn(
         // Worker never started — un-park both sessions, end the epoch
         // begun above, and fall to the honest-error path instead of
         // crashing the UI thread.
-        eprintln!("openpencil-desktop: spawn op-chat-intent thread failed: {err}");
+        eprintln!("design-editor: spawn op-chat-intent thread failed: {err}");
         *current_chat = None;
         *current_design = None;
         de_editor_core::agent_indicators::end_if_epoch(indicator_epoch);

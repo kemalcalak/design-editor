@@ -37,7 +37,7 @@ if [ "${OPENPENCIL_VALIDATE_VERSION_ONLY:-}" = 1 ]; then
   printf '%s\n' "$APP_VERSION"
   exit 0
 fi
-BIN="$ROOT/target/release/openpencil-desktop"
+BIN="$ROOT/target/release/design-editor"
 ICON="$ROOT/crates/de-host-desktop/assets/icon.icns"
 ENTITLEMENTS="$ROOT/crates/de-host-desktop/entitlements.plist"
 APP="$ROOT/target/release/OpenPencil.app"
@@ -53,7 +53,7 @@ fi
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN" "$APP/Contents/MacOS/openpencil-desktop"
+cp "$BIN" "$APP/Contents/MacOS/design-editor"
 cp "$ICON" "$APP/Contents/Resources/icon.icns"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
@@ -63,7 +63,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <dict>
   <key>CFBundleName</key><string>OpenPencil</string>
   <key>CFBundleDisplayName</key><string>OpenPencil</string>
-  <key>CFBundleExecutable</key><string>openpencil-desktop</string>
+  <key>CFBundleExecutable</key><string>design-editor</string>
   <key>CFBundleIdentifier</key><string>${BUNDLE_ID}</string>
   <key>CFBundleAllowMixedLocalizations</key><true/>
   <key>CFBundleDevelopmentRegion</key><string>en</string>

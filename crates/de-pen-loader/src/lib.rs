@@ -17,7 +17,7 @@
 //!
 //! This crate is desktop-side and may depend on skia; it does NOT
 //! need to be wasm-clean. The `rfd` Save/Open dialogs + error
-//! dialogs stay in `openpencil-desktop/src/persistence.rs`.
+//! dialogs stay in `design-editor/src/persistence.rs`.
 
 mod adapter;
 mod authored_geometry;
@@ -91,7 +91,7 @@ pub use layout_scene::{
 /// are unchanged — the hosts hold one and drive `refresh_layout_scene` through it.
 pub use scene_cache::SceneBuildCache;
 
-// Re-exports so `openpencil-desktop`'s existing call sites change
+// Re-exports so `design-editor`'s existing call sites change
 // minimally.
 pub use adapter::{
     build_var_table, pen_document_to_payload, pen_document_to_payload_preserving_geometry,

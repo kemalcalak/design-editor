@@ -1,6 +1,6 @@
 //! Hidden `--render-shots` headless raster mode.
 //!
-//! `openpencil-desktop --render-shots <file.op> <out_dir> [scale]`
+//! `design-editor --render-shots <file.op> <out_dir> [scale]`
 //! loads a canonical `.op`, runs the SAME jian layout pass the editor
 //! canvas uses (`de_pen_loader::editor_state_to_layout_scene`), and
 //! writes one cropped PNG per top-level node on the active page via
@@ -30,7 +30,7 @@ pub fn run_cli_if_requested() -> bool {
         return false;
     };
     let (Some(file), Some(out_dir)) = (args.get(pos + 1), args.get(pos + 2)) else {
-        eprintln!("usage: openpencil-desktop --render-shots <file.op> <out_dir> [scale]");
+        eprintln!("usage: design-editor --render-shots <file.op> <out_dir> [scale]");
         std::process::exit(2);
     };
     let scale: f32 = args

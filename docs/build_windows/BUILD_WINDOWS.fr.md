@@ -114,9 +114,9 @@
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
+        ├── design-editor.exe
         ├── de-host-web-server.exe
-        ├── op.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
@@ -133,17 +133,17 @@
 1. Exécutez PowerShell en tant qu'administrateur et lancez les commandes suivantes (remplacez le chemin par la racine réelle du dépôt) :
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. Vérification
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # La fenêtre apparaît brièvement puis se ferme — le service écoute sur le port 3100 en arrière-plan
     ```
 
@@ -152,7 +152,7 @@
     ```powershell
     cd target\release
     ./de-host-web-server.exe --serve-web 3100
-    # Vous verrez deux lignes « openpencil-desktop --serve-web: » et le port 3100 dans PowerShell
+    # Vous verrez deux lignes « design-editor --serve-web: » et le port 3100 dans PowerShell
     ```
 
 ---

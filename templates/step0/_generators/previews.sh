@@ -3,7 +3,7 @@
 # 卡片缩略图由 scene_preview_cards.py 从这些渲染产物再烤一层。
 set -euo pipefail
 R=/Users/fini/workspace/openpencil
-BIN=$R/target/release/openpencil-desktop
+BIN=$R/target/release/design-editor
 OUT=$R/templates/step0/previews
 TMP=$(mktemp -d)
 mkdir -p "$OUT"

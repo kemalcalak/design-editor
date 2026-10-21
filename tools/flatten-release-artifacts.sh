@@ -58,7 +58,7 @@ if [ "$copied" -eq 0 ]; then
 fi
 
 shopt -s nullglob
-native=("$temporary"/OpenPencil-* "$temporary"/openpencil-desktop-*)
+native=("$temporary"/OpenPencil-* "$temporary"/design-editor-*)
 cli=("$temporary"/de-cli-*)
 sdk=("$temporary"/*.tgz)
 vsix=("$temporary"/*.vsix)
@@ -74,8 +74,8 @@ if [ "${#cli[@]}" -eq 0 ]; then
     exit 1
 fi
 for required in \
-    openpencil-desktop-linux-x86_64.tar.gz \
-    op-cli-linux-x86_64.tar.gz; do
+    design-editor-linux-x86_64.tar.gz \
+    de-cli-linux-x86_64.tar.gz; do
     if [ ! -f "$temporary/$required" ]; then
         printf 'error: missing Linux x86_64 Nix manifest asset: %s\n' "$required" >&2
         exit 1

@@ -80,7 +80,7 @@ impl PendingDocumentPush {
             jian_ops_schema::image_thumbs::discard_for_document(&loaded.value);
         }
         for w in &loaded.warnings {
-            eprintln!("openpencil-desktop --serve-web: schema warning: {w:?}");
+            eprintln!("design-editor --serve-web: schema warning: {w:?}");
         }
         // Structural validation happens here, before any state changes, so the
         // in-session install is infallible and cannot leave a half-applied

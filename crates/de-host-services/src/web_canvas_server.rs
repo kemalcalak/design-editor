@@ -9,11 +9,11 @@
 //! This module ships the request-handling CORE (`handle_web_canvas_request`,
 //! fully unit-testable without a socket) plus a runnable loop
 //! (`run_web_canvas`, behind
-//! `openpencil-desktop --serve-web <port> [doc] [--host <addr>]`).
+//! `design-editor --serve-web <port> [doc] [--host <addr>]`).
 //! Layered on top: an SSE endpoint that streams `version` bumps to connected
 //! shells, static serving of the host page + WASM bundle (`crate::web_static`
 //! — `GET /` and `GET /pkg/*`), and a token-authenticated `openpencil/shutdown`
-//! (same contract as `--mcp-http`) so `op stop` works against this daemon.
+//! (same contract as `--mcp-http`) so `de stop` works against this daemon.
 
 use std::io::{Read, Write};
 use std::net::TcpListener;

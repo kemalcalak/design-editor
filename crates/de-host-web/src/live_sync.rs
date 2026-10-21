@@ -1,7 +1,7 @@
 //! Live-canvas sync IO for the Rust web shell — the pure `web_sys` plumbing
 //! (interval timer, one-shot GET, one-shot POST) the live-sync glue drives to
 //! talk to the web-canvas daemon (`de-host-desktop`'s `web_canvas_server`,
-//! run via `--serve-web` / `op start --web`).
+//! run via `--serve-web` / `de start --web`).
 //!
 //! This module is PURE `web_sys` IO (no native Skia/C toolchain and no
 //! `de_editor_core`), so it compile-checks on the wasm32 web stub. The

@@ -75,7 +75,7 @@ pub(crate) fn spawn(
         .spawn(move || run(&state, &hub, &shutdown, &rx));
     if spawned.is_err() {
         eprintln!(
-            "openpencil-desktop --serve-web: could not start the collaboration driver; \
+            "design-editor --serve-web: could not start the collaboration driver; \
              collaboration stays unavailable"
         );
     }

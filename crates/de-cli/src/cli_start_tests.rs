@@ -1,4 +1,4 @@
-//! `op start` argument-parsing tests (sibling file per the 800-line-cap
+//! `de start` argument-parsing tests (sibling file per the 800-line-cap
 //! convention; split from `tests.rs`).
 
 use super::*;

@@ -155,7 +155,7 @@ fn parse_args_maps_design_script_flag_to_script_arg() {
 fn parse_args_maps_design_js_file_payload_to_script_arg() {
     let dir = std::env::temp_dir();
     let file_path = dir.join(format!(
-        "op-cli-design-script-test-{}.js",
+        "de-cli-design-script-test-{}.js",
         std::process::id()
     ));
     let script = r#"I(null, {"type":"frame","name":"Page","width":320,"height":240});"#;

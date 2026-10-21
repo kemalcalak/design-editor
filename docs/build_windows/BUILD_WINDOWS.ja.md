@@ -114,9 +114,9 @@
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
+        ├── design-editor.exe
         ├── de-host-web-server.exe
-        ├── op.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
@@ -133,17 +133,17 @@
 1. 管理者として PowerShell を実行し、以下を実行（パスを実際のリポジトリルートに置き換え）：
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. 検証
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # ウィンドウが一瞬表示されて閉じます — バックグラウンドで3100ポートをリッスンします
     ```
 
@@ -152,7 +152,7 @@
     ```powershell
     cd target\release
     ./de-host-web-server.exe --serve-web 3100
-    # PowerShell で「openpencil-desktop --serve-web:」が2行表示され、3100ポートをリッスンします
+    # PowerShell で「design-editor --serve-web:」が2行表示され、3100ポートをリッスンします
     ```
 
 ---

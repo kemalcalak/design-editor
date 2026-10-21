@@ -39,7 +39,7 @@ pub(super) fn server_loop(
         match listener.accept() {
             Ok((mut stream, _addr)) => {
                 if let Err(e) = stream.set_nonblocking(false) {
-                    eprintln!("openpencil-desktop mcp: accepted stream blocking mode: {e}");
+                    eprintln!("design-editor mcp: accepted stream blocking mode: {e}");
                     continue;
                 }
                 if conn_count.load(Ordering::Acquire) >= MAX_LIVE_CONNS {
@@ -84,7 +84,7 @@ pub(super) fn server_loop(
                             &wake,
                             &identity,
                         ) {
-                            eprintln!("openpencil-desktop mcp: {e}");
+                            eprintln!("design-editor mcp: {e}");
                             let _ = crate::mcp_serve::write_mcp_http_response(
                                 &mut stream,
                                 "500 Internal Server Error",
@@ -102,7 +102,7 @@ pub(super) fn server_loop(
                 thread::sleep(ACCEPT_IDLE_SLEEP);
             }
             Err(e) => {
-                eprintln!("openpencil-desktop mcp: accept: {e}");
+                eprintln!("design-editor mcp: accept: {e}");
                 thread::sleep(ACCEPT_IDLE_SLEEP);
             }
         }
@@ -297,7 +297,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
                 ack.applied
             }
             Err(e) => {
-                eprintln!("openpencil-desktop mcp: apply failed: {e}");
+                eprintln!("design-editor mcp: apply failed: {e}");
                 false
             }
         },
@@ -338,7 +338,7 @@ pub(super) fn process_lightweight_live_tool(
             match request_apply(req_tx, wake_ui, tool_name.to_string(), cmd.clone()) {
                 Ok(ack) => ack.applied,
                 Err(e) => {
-                    eprintln!("openpencil-desktop mcp: apply failed: {e}");
+                    eprintln!("design-editor mcp: apply failed: {e}");
                     false
                 }
             }

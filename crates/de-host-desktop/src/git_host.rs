@@ -397,7 +397,7 @@ impl DesktopApp {
                 if !url.is_empty() {
                     if let Some(repo) = self.git_session.repo() {
                         if let Err(err) = repo.set_remote("origin", &url) {
-                            eprintln!("openpencil-desktop: git set-remote failed: {err}");
+                            eprintln!("design-editor: git set-remote failed: {err}");
                         }
                     }
                     let panel = &mut self.host.editor_state_mut().editor_ui.git_panel;
@@ -433,7 +433,7 @@ impl DesktopApp {
                         repo.stage(&[p])
                     };
                     if let Err(err) = result {
-                        eprintln!("openpencil-desktop: git stage toggle failed: {err}");
+                        eprintln!("design-editor: git stage toggle failed: {err}");
                     }
                 }
             }
@@ -485,7 +485,7 @@ impl DesktopApp {
                 // refresh re-reads ahead/behind afterward.
                 if let Some(repo) = self.git_session.authed_repo() {
                     if let Err(e) = repo.fetch() {
-                        eprintln!("openpencil-desktop: git fetch failed: {e}");
+                        eprintln!("design-editor: git fetch failed: {e}");
                     }
                 }
             }
@@ -512,7 +512,7 @@ impl DesktopApp {
             Some(repo) => match op(repo) {
                 Ok(()) => true,
                 Err(err) => {
-                    eprintln!("openpencil-desktop: git {label} failed: {err}");
+                    eprintln!("design-editor: git {label} failed: {err}");
                     false
                 }
             },

@@ -114,9 +114,9 @@
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
+        ├── design-editor.exe
         ├── de-host-web-server.exe
-        ├── op.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
@@ -133,17 +133,17 @@
 1. Chạy PowerShell với quyền quản trị viên và thực thi các lệnh sau (thay đường dẫn bằng gốc kho lưu trữ thực tế):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. Xác minh
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # Cửa sổ xuất hiện rồi đóng — dịch vụ chạy nền và lắng nghe cổng 3100
     ```
 
@@ -152,7 +152,7 @@
     ```powershell
     cd target\release
     ./de-host-web-server.exe --serve-web 3100
-    # Bạn sẽ thấy hai dòng "openpencil-desktop --serve-web:" và cổng 3100 trong PowerShell
+    # Bạn sẽ thấy hai dòng "design-editor --serve-web:" và cổng 3100 trong PowerShell
     ```
 
 ---

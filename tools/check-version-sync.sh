@@ -589,11 +589,11 @@ done
 require_regex scripts/package-windows.nsi \
     '^[[:space:]]*;[[:space:]]*makensis[[:space:]]+"/DVERSION=X[.]Y[.]Z"' \
     'NSIS compile example must use /DVERSION=X.Y.Z'
-require_regex scripts/install-op.sh \
-    '^[[:space:]]*#[[:space:]]*OP_VERSION=(X[.]Y[.]Z|<version>)[[:space:]]+[.]/install-op[.]sh' \
+require_regex scripts/install-de.sh \
+    '^[[:space:]]*#[[:space:]]*OP_VERSION=(X[.]Y[.]Z|<version>)[[:space:]]+[.]/install-de[.]sh' \
     'install usage example must use OP_VERSION=X.Y.Z or OP_VERSION=<version>'
 reject_example_semver_tokens scripts/package-windows.nsi
-reject_example_semver_tokens scripts/install-op.sh
+reject_example_semver_tokens scripts/install-de.sh
 
 release_workflow=.github/workflows/rust-release.yml
 require_workflow_job_regex version \

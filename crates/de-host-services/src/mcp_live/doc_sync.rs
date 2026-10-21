@@ -66,7 +66,7 @@ pub(super) fn serve_document_sync<S: std::io::Read + std::io::Write>(
         }
     };
     for w in &loaded.warnings {
-        eprintln!("openpencil-desktop mcp: document-sync schema warning: {w:?}");
+        eprintln!("design-editor mcp: document-sync schema warning: {w:?}");
     }
     // Serialize the swap against concurrent live writes (same lock the JSON-RPC
     // apply path takes). The lock is now held only for the fast in-memory

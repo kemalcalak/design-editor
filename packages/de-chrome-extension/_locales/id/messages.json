@@ -125,7 +125,7 @@
     "message": "Alamat harus berupa loopback dengan port — 127.0.0.1:3100 atau localhost:3100."
   },
   "errorOffline": {
-    "message": "OpenPencil tidak dapat dijangkau di $1. Jalankan aplikasi desktop dan mulai Pengaturan → MCP → server, atau jalankan: openpencil-desktop --serve-web 3100"
+    "message": "OpenPencil tidak dapat dijangkau di $1. Jalankan aplikasi desktop dan mulai Pengaturan → MCP → server, atau jalankan: design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "OpenPencil di $1 menerima koneksi tetapi tidak menjawab dalam $2 detik. Aplikasi mungkin sibuk atau macet — periksa aplikasinya, lalu coba lagi."

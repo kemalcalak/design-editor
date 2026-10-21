@@ -8,7 +8,7 @@ script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd)
 vcredist_stager=${OPENPENCIL_VC_REDIST_STAGER:-$repo_root/tools/stage-pinned-vcredist.ps1}
 windows_installer=${OPENPENCIL_WINDOWS_NSIS_INSTALLER:-$repo_root/scripts/package-windows.nsi}
-cli_installer=${OPENPENCIL_WINDOWS_CLI_INSTALLER:-$repo_root/scripts/install-op.ps1}
+cli_installer=${OPENPENCIL_WINDOWS_CLI_INSTALLER:-$repo_root/scripts/install-de.ps1}
 
 for file in "$vcredist_stager" "$windows_installer" "$cli_installer"; do
     [[ -f "$file" && ! -L "$file" ]] || {

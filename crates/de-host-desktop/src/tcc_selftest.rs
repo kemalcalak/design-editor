@@ -7,7 +7,7 @@
 //! already-granted app inherits that grant (TCC matches on the
 //! designated requirement, not the exact binary).
 //!
-//! `openpencil-desktop --tcc-selftest <dir> [outfile]` probes whether
+//! `design-editor --tcc-selftest <dir> [outfile]` probes whether
 //! THIS process can read `<dir>` — via `read_dir`, the exact syscall
 //! git's working-tree scan makes — and writes an `OK …` / `ERR …`
 //! line to `outfile` (default `$TMPDIR/openpencil-tcc-selftest.txt`)

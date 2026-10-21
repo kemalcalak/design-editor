@@ -69,8 +69,8 @@ impl DesktopApp {
         });
         match imported {
             Some(Ok(())) => self.enter_ssh_keys(), // re-enumerate
-            Some(Err(e)) => eprintln!("openpencil-desktop: ssh import failed: {e}"),
-            None => eprintln!("openpencil-desktop: ssh import — no key store available"),
+            Some(Err(e)) => eprintln!("design-editor: ssh import failed: {e}"),
+            None => eprintln!("design-editor: ssh import — no key store available"),
         }
     }
 }

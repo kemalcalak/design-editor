@@ -1,7 +1,7 @@
 //! Daemon base-URL resolution shared by every module that talks to the
 //! web-canvas daemon (`live_sync`, `codegen_web`, `web_chat`).
 //!
-//! When the page is served by the daemon itself (`op start --web` serves
+//! When the page is served by the daemon itself (`de start --web` serves
 //! the host page at `/` plus the bundle under `/pkg/*`), the daemon base
 //! IS the page origin — deriving it from `window.location` makes the
 //! shell work on any host/port the daemon was bound to (`--host`,
@@ -14,7 +14,7 @@
 //! `daemon_base()` wrapper reads `window.location`.
 #![allow(dead_code)]
 
-/// Default daemon origin — `op start --web`'s default port, and the
+/// Default daemon origin — `de start --web`'s default port, and the
 /// target the dev smoke page polls. Sourced from the shared MCP-port
 /// constants in `de-editor-core` so client and CLI can't drift.
 pub const DEFAULT_DAEMON_BASE: &str = de_editor_core::DEFAULT_LOCAL_DAEMON_ORIGIN;

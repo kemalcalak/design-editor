@@ -367,7 +367,7 @@ struct DesktopApp {
     /// Connect), drained by `drain_acp_agent_connect`.
     acp_agent_connect_job: Option<acp_agent_probe_host::AcpAgentConnectJob>,
     /// Document to open once the window is ready — set from argv by
-    /// the file-association launch path (`openpencil-desktop X.op`).
+    /// the file-association launch path (`design-editor X.op`).
     initial_file: Option<PathBuf>,
     /// Native menu bar — kept alive for the process lifetime;
     /// `None` until `resumed` builds it (and always `None` on Linux,
@@ -430,10 +430,10 @@ struct DesktopApp {
     /// Live in-process MCP HTTP server, started from Settings -> MCP.
     mcp_server: Option<de_host_services::mcp_live::McpLiveServer>,
     /// When set (via the `--live-mcp[=port]` launch flag used by
-    /// `op start`), the editor force-enables the live MCP server on
+    /// `de start`), the editor force-enables the live MCP server on
     /// this port during `resumed()`, regardless of the persisted
     /// `agent_settings.mcp_server.running` toggle. This is what lets
-    /// `op start` bring up a live-rendering canvas the CLI can drive. When
+    /// `de start` bring up a live-rendering canvas the CLI can drive. When
     /// the live server binds, `reconcile_mcp_server_from_settings` updates
     /// this to the actually-bound port (it never mutates persisted settings
     /// for a forced launch).
@@ -471,7 +471,7 @@ const DEFAULT_LIVE_MCP_PORT: u16 = 3100;
 /// Parse `--live-mcp` / `--live-mcp=<port>` / `--live-mcp <port>` from
 /// argv. Returns the requested live MCP port (the GUI then force-enables
 /// `McpLiveServer` on it during `resumed()`), or `None` when the flag is
-/// absent. `op start` uses this to bring up a live-rendering editor the
+/// absent. `de start` uses this to bring up a live-rendering editor the
 /// CLI can drive; double-clicking the app (no flag) keeps the persisted
 /// settings-gated behavior.
 fn live_mcp_port_from_argv() -> Option<u16> {
@@ -619,7 +619,7 @@ fn main() {
     init_tracing();
     if let Some(modes) = conflicting_headless_modes(std::env::args_os().skip(1)) {
         eprintln!(
-            "openpencil-desktop: headless modes are mutually exclusive: {}",
+            "design-editor: headless modes are mutually exclusive: {}",
             modes.join(", ")
         );
         std::process::exit(2);
@@ -662,7 +662,7 @@ fn main() {
     let event_loop = match event_loop_builder.build() {
         Ok(el) => el,
         Err(err) => {
-            eprintln!("openpencil-desktop: EventLoop::new failed: {err}");
+            eprintln!("design-editor: EventLoop::new failed: {err}");
             std::process::exit(1);
         }
     };
@@ -685,11 +685,11 @@ fn main() {
     app.forwarded_files = forwarded_files;
     app.force_live_mcp_port = live_mcp_port_from_argv();
     if let Err(err) = event_loop.run_app(&mut app) {
-        eprintln!("openpencil-desktop: run_app exited with error: {err}");
+        eprintln!("design-editor: run_app exited with error: {err}");
         std::process::exit(1);
     }
     if let Some(err) = app.error {
-        eprintln!("openpencil-desktop: fatal error during run: {err}");
+        eprintln!("design-editor: fatal error during run: {err}");
         std::process::exit(1);
     }
 }

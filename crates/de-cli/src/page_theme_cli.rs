@@ -1,4 +1,4 @@
-//! `op page ...`, `op vars:set` / `themes:set`, and `op theme:*` command
+//! `de page ...`, `de vars:set` / `themes:set`, and `op theme:*` command
 //! mappers — split out of `main.rs` per the 800-line-cap convention. Pure
 //! arg → `Command` mapping; the shared helpers stay in `main.rs`.
 
@@ -8,7 +8,7 @@ use crate::{Command, Flags};
 
 pub(crate) fn map_page(positionals: &[String], flags: &Flags) -> Result<Command, CliError> {
     let sub = positionals.get(1).map(String::as_str).ok_or_else(|| {
-        CliError::usage("Usage: op page list|add|remove|rename|reorder|duplicate ...")
+        CliError::usage("Usage: de page list|add|remove|rename|reorder|duplicate ...")
     })?;
     match sub {
         "list" => {
@@ -26,27 +26,27 @@ pub(crate) fn map_page(positionals: &[String], flags: &Flags) -> Result<Command,
             tool_call("add_page", pairs)
         }
         "remove" | "delete" => {
-            let page_id = required_pos(positionals, 2, "Usage: op page remove <page-id>")?;
+            let page_id = required_pos(positionals, 2, "Usage: de page remove <page-id>")?;
             let mut pairs = vec![pair("pageId", page_id)];
             push_file_path(&mut pairs, flags);
             tool_call("remove_page", pairs)
         }
         "rename" => {
-            let page_id = required_pos(positionals, 2, "Usage: op page rename <page-id> <name>")?;
-            let name = required_pos(positionals, 3, "Usage: op page rename <page-id> <name>")?;
+            let page_id = required_pos(positionals, 2, "Usage: de page rename <page-id> <name>")?;
+            let name = required_pos(positionals, 3, "Usage: de page rename <page-id> <name>")?;
             let mut pairs = vec![pair("pageId", page_id), pair("name", name)];
             push_file_path(&mut pairs, flags);
             tool_call("rename_page", pairs)
         }
         "reorder" => {
-            let page_id = required_pos(positionals, 2, "Usage: op page reorder <page-id> <index>")?;
-            let index = required_pos(positionals, 3, "Usage: op page reorder <page-id> <index>")?;
+            let page_id = required_pos(positionals, 2, "Usage: de page reorder <page-id> <index>")?;
+            let index = required_pos(positionals, 3, "Usage: de page reorder <page-id> <index>")?;
             let mut pairs = vec![pair("pageId", page_id), pair("index", index)];
             push_file_path(&mut pairs, flags);
             tool_call("reorder_page", pairs)
         }
         "duplicate" => {
-            let page_id = required_pos(positionals, 2, "Usage: op page duplicate <page-id>")?;
+            let page_id = required_pos(positionals, 2, "Usage: de page duplicate <page-id>")?;
             let mut pairs = vec![pair("pageId", page_id)];
             if let Some(name) = flag_value(flags, "name") {
                 pairs.push(pair("name", name));
@@ -79,7 +79,7 @@ pub(crate) fn map_themes_set(positionals: &[String], flags: &Flags) -> Result<Co
 }
 
 pub(crate) fn map_theme_save(positionals: &[String], flags: &Flags) -> Result<Command, CliError> {
-    let preset_path = required_pos(positionals, 1, "Usage: op theme:save <file.optheme>")?;
+    let preset_path = required_pos(positionals, 1, "Usage: de theme:save <file.optheme>")?;
     let mut pairs = vec![pair("presetPath", preset_path)];
     if let Some(name) = flag_value(flags, "name") {
         pairs.push(pair("name", name));
@@ -89,13 +89,13 @@ pub(crate) fn map_theme_save(positionals: &[String], flags: &Flags) -> Result<Co
 }
 
 pub(crate) fn map_theme_load(positionals: &[String], flags: &Flags) -> Result<Command, CliError> {
-    let preset_path = required_pos(positionals, 1, "Usage: op theme:load <file.optheme>")?;
+    let preset_path = required_pos(positionals, 1, "Usage: de theme:load <file.optheme>")?;
     let mut pairs = vec![pair("presetPath", preset_path)];
     push_file_path(&mut pairs, flags);
     tool_call("load_theme_preset", pairs)
 }
 
 pub(crate) fn map_theme_list(positionals: &[String]) -> Result<Command, CliError> {
-    let directory = required_pos(positionals, 1, "Usage: op theme:list <directory>")?;
+    let directory = required_pos(positionals, 1, "Usage: de theme:list <directory>")?;
     tool_call("list_theme_presets", vec![pair("directory", directory)])
 }

@@ -114,9 +114,9 @@
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
+        ├── design-editor.exe
         ├── de-host-web-server.exe
-        ├── op.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
@@ -133,17 +133,17 @@
 1. Jalankan PowerShell sebagai administrator dan eksekusi perintah berikut (ganti path dengan root repositori yang sebenarnya):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. Verifikasi
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # Jendela muncul sebentar lalu menutup — layanan berjalan di latar belakang dan mendengarkan port 3100
     ```
 
@@ -152,7 +152,7 @@
     ```powershell
     cd target\release
     ./de-host-web-server.exe --serve-web 3100
-    # Anda akan melihat dua baris "openpencil-desktop --serve-web:" dan port 3100 di PowerShell
+    # Anda akan melihat dua baris "design-editor --serve-web:" dan port 3100 di PowerShell
     ```
 
 ---

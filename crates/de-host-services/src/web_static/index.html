@@ -36,7 +36,7 @@
   <body>
     <!--
       Production host page for the Rust WASM web shell (de-host-web),
-      served by `openpencil-desktop --serve-web` at `/`. The wasm-bindgen
+      served by `design-editor --serve-web` at `/`. The wasm-bindgen
       bundle (JS glue + .wasm) is served from `/pkg/*` by the same daemon.
 
       The hidden IME composition <textarea> the web shell needs is created
@@ -47,7 +47,7 @@
     <script type="module">
       const errorPane = document.getElementById('op-error');
       const markSmoke = (state) => {
-        document.documentElement.setAttribute('data-op-smoke', state);
+        document.documentElement.setAttribute('data-de-smoke', state);
         // Mirrored to the console for the headless browser smoke: the
         // editor keeps a live SSE stream open, which freezes headless
         // Chrome's virtual clock, so --dump-dom never flushes — stderr

@@ -1,4 +1,4 @@
-//! Typed failures for `op install` / `op uninstall` (see `skill_install_cli`).
+//! Typed failures for `de install` / `de uninstall` (see `skill_install_cli`).
 //!
 //! Same hand-rolled style as `de_orchestrator::OrchestratorError` — a plain
 //! enum with a `Display` impl, no `thiserror`. Every variant reproduces the

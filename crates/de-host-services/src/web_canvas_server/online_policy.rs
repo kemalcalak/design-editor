@@ -88,7 +88,7 @@ impl ServeMode {
     }
 
     /// The `openpencil/shutdown` JSON-RPC branch. Online keeps only the
-    /// env-token operations channel that `op stop` uses; there is no
+    /// env-token operations channel that `de stop` uses; there is no
     /// generic client-reachable stop.
     pub const fn allows_generic_shutdown(self) -> bool {
         !self.is_online()

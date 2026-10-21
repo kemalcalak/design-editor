@@ -146,7 +146,7 @@ Apply these silently through node structure; never emit the contract IDs as text
 Built boards are not a delivered deck. Export it:
 
 - MCP: `export_deck { format: "pptx" | "html" | "pdf", outputPath }`
-- CLI: `op export-deck --output PATH [--format pptx|html|pdf]`
+- CLI: `de export-deck --output PATH [--format pptx|html|pdf]`
 
 `pptx` is editable PowerPoint and the default; `html` is self-contained; `pdf`
 is one page per slide. The path argument is `outputPath` — `filePath` means

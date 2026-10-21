@@ -13,8 +13,8 @@ trap cleanup EXIT HUP INT TERM
 make_fixture() {
     local root=$1
     mkdir -p "$root/desktop" "$root/cli" "$root/sdk" "$root/vsix" "$root/android"
-    printf 'desktop\n' > "$root/desktop/openpencil-desktop-linux-x86_64.tar.gz"
-    printf 'cli\n' > "$root/cli/op-cli-linux-x86_64.tar.gz"
+    printf 'desktop\n' > "$root/desktop/design-editor-linux-x86_64.tar.gz"
+    printf 'cli\n' > "$root/cli/de-cli-linux-x86_64.tar.gz"
     for index in 1 2 3; do
         printf 'sdk-%s\n' "$index" > "$root/sdk/sdk-${index}.tgz"
     done

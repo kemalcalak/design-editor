@@ -18,7 +18,7 @@ vcredist_stager=${OPENPENCIL_VC_REDIST_STAGER:-$repo_root/tools/stage-pinned-vcr
 vcredist_checker=$repo_root/tools/check-windows-vcredist-release.sh
 windows_signer=$repo_root/tools/sign-windows-release.ps1
 windows_installer=${OPENPENCIL_WINDOWS_NSIS_INSTALLER:-$repo_root/scripts/package-windows.nsi}
-cli_installer=${OPENPENCIL_WINDOWS_CLI_INSTALLER:-$repo_root/scripts/install-op.ps1}
+cli_installer=${OPENPENCIL_WINDOWS_CLI_INSTALLER:-$repo_root/scripts/install-de.ps1}
 package_handoff=$repo_root/tools/package-manager-handoff.sh
 release_flattener=$repo_root/tools/flatten-release-artifacts.sh
 release_flattener_test=$repo_root/tools/flatten-release-artifacts.test.sh
@@ -438,7 +438,7 @@ scoop_source = scoop_update.fetch("run")
 unless scoop_source.scan(/^write_scoop_manifest \\$/).length == 2 &&
     scoop_source.include?("scoop-bucket/bucket/openpencil.json") &&
     scoop_source.include?("scoop-bucket/bucket/op.json") &&
-    scoop_source.include?("openpencil-desktop.exe") && scoop_source.include?("op.exe")
+    scoop_source.include?("design-editor.exe") && scoop_source.include?("de.exe")
   raise "Scoop desktop and CLI must both use the reviewed shared manifest generator"
 end
 [

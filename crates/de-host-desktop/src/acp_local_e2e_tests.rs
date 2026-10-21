@@ -256,7 +256,7 @@ fn fixture_executable() -> PathBuf {
             let Some(stem) = name.strip_suffix(executable_suffix) else {
                 return false;
             };
-            stem == "op-acp-test-agent"
+            stem == "de-acp-test-agent"
                 || stem
                     .strip_prefix("op_acp_test_agent-")
                     .is_some_and(|hash| hash.len() == 16 && hash.bytes().all(|byte| byte.is_ascii_hexdigit()))

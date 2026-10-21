@@ -65,7 +65,7 @@ fn run(args: &[String]) -> Result<String, CliError> {
     } = parse_args(args)?;
     // For commands that talk to a running server, resolve the live
     // editor's published port (`~/.openpencil/.op-mcp-port`) unless the user
-    // pinned `--port` explicitly. `op start` keeps the requested port.
+    // pinned `--port` explicitly. `de start` keeps the requested port.
     let needs_server = command_needs_server(&command);
     // The live MCP endpoint authenticates every stateful call, so the token
     // has to be resolved alongside the port rather than after it.
@@ -401,7 +401,7 @@ fn command_from_positionals(positionals: &[String], flags: &Flags) -> Result<Com
             name: required_pos(
                 positionals,
                 1,
-                "Usage: op skill:export <skill-name> [--out .claude/skills]",
+                "Usage: de skill:export <skill-name> [--out .claude/skills]",
             )?,
             out_dir: flag_value(flags, "out"),
         }),
@@ -420,7 +420,7 @@ fn command_from_positionals(positionals: &[String], flags: &Flags) -> Result<Com
         }
         "save" => {
             let file_path =
-                resolve_file_path_arg(&required_pos(positionals, 1, "Usage: op save <file.op>")?);
+                resolve_file_path_arg(&required_pos(positionals, 1, "Usage: de save <file.op>")?);
             let mut args = vec![pair("filePath", file_path)];
             if let Some(source) = flag_value(flags, "file") {
                 args.push(pair("sourceFilePath", resolve_file_path_arg(&source)));

@@ -428,7 +428,7 @@ impl DesktopApp {
                 }
                 if opened {
                     eprintln!(
-                        "openpencil-desktop: ignoring extra opened file \
+                        "design-editor: ignoring extra opened file \
                          (single-window editor): {}",
                         path.display()
                     );

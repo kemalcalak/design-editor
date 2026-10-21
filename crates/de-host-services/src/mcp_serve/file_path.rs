@@ -41,7 +41,7 @@ pub fn process_message_for_file_path_arg(
             true
         })?;
     if let Some(msg) = applier_failed {
-        eprintln!("openpencil-desktop mcp: {msg}");
+        eprintln!("design-editor mcp: {msg}");
     }
     Ok(response)
 }

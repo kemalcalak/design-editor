@@ -318,7 +318,7 @@ pub(super) fn document_and_active_page_from_body(
     let loaded = de_pen_loader::load_canonical(doc_json)
         .map_err(|e| WebCanvasError::Document(e.to_string()))?;
     for w in &loaded.warnings {
-        eprintln!("openpencil-desktop --serve-web: schema warning: {w:?}");
+        eprintln!("design-editor --serve-web: schema warning: {w:?}");
     }
     let active_page_index = parsed.active_page_index.map(|value| value as usize);
     Ok((loaded.value, active_page_index, editor_meta))

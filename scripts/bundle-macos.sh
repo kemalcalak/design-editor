@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Produce a fully-wired macOS .app bundle for openpencil-desktop.
+# Produce a fully-wired macOS .app bundle for design-editor.
 #
 # `cargo-bundle` 0.10.0 ignores most of our `[package.metadata.bundle]`
 # entries (CFBundleName / CFBundleIdentifier / CFBundleIconFile come
@@ -34,7 +34,7 @@
 #   OPENPENCIL_TARGET      cargo target triple (e.g. x86_64-apple-darwin);
 #                          builds + bundles for that triple and reads the
 #                          bundle from target/<triple>/release/bundle/osx
-#   OPENPENCIL_BINARY      path to a prebuilt release openpencil-desktop;
+#   OPENPENCIL_BINARY      path to a prebuilt release design-editor;
 #                          skips this script's own cargo build and is copied
 #                          over the bundled executable afterwards, so the
 #                          shipped binary is EXACTLY the one CI built; the
@@ -89,9 +89,9 @@ cargo_bundle_is_pinned "$CARGO_BUNDLE" || {
 }
 
 if [ -n "$TARGET_TRIPLE" ]; then
-  BUNDLE_INPUT="$WS_ROOT/target/$TARGET_TRIPLE/release/openpencil-desktop"
+  BUNDLE_INPUT="$WS_ROOT/target/$TARGET_TRIPLE/release/design-editor"
 else
-  BUNDLE_INPUT="$WS_ROOT/target/release/openpencil-desktop"
+  BUNDLE_INPUT="$WS_ROOT/target/release/design-editor"
 fi
 if [ -n "${OPENPENCIL_BINARY:-}" ]; then
   echo "==> skipping cargo build (prebuilt binary: $OPENPENCIL_BINARY)"
@@ -102,14 +102,14 @@ if [ -n "${OPENPENCIL_BINARY:-}" ]; then
   fi
 else
   echo "==> building release binary"
-  ( cd "$WS_ROOT" && cargo build --release --locked --bin openpencil-desktop \
+  ( cd "$WS_ROOT" && cargo build --release --locked --bin design-editor \
       ${TARGET_TRIPLE:+--target "$TARGET_TRIPLE"} )
 fi
 
 echo "==> running cargo-bundle"
 ( cd "$WS_ROOT/crates/de-host-desktop" \
     && export CARGO_BUNDLE_SKIP_BUILD=1 \
-    && "$CARGO_BUNDLE" bundle --bin openpencil-desktop --release --format osx \
+    && "$CARGO_BUNDLE" bundle --bin design-editor --release --format osx \
          ${TARGET_TRIPLE:+--target "$TARGET_TRIPLE"} )
 
 if [ -n "$TARGET_TRIPLE" ]; then
@@ -198,8 +198,8 @@ cp "$WS_ROOT/crates/de-host-desktop/assets/icon.icns" "$APP/Contents/Resources/i
 
 if [ -n "${OPENPENCIL_BINARY:-}" ]; then
   echo "==> installing prebuilt binary into Contents/MacOS/"
-  cp "$OPENPENCIL_BINARY" "$APP/Contents/MacOS/openpencil-desktop"
-  chmod 755 "$APP/Contents/MacOS/openpencil-desktop"
+  cp "$OPENPENCIL_BINARY" "$APP/Contents/MacOS/design-editor"
+  chmod 755 "$APP/Contents/MacOS/design-editor"
 fi
 
 if [ -n "${OPENPENCIL_CLI_BINARY:-}" ]; then
@@ -226,7 +226,7 @@ sign_macos_code() {
 if [ -f "$APP/Contents/MacOS/op" ]; then
   sign_macos_code "$APP/Contents/MacOS/op"
 fi
-sign_macos_code "$APP/Contents/MacOS/openpencil-desktop"
+sign_macos_code "$APP/Contents/MacOS/design-editor"
 sign_macos_code "$APP"
 
 echo "==> registering with LaunchServices"

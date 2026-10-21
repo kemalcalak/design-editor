@@ -6,15 +6,15 @@
 #   mime type    application/x-openpencil  (covers .op and .pen)
 #   categories   Graphics;
 # Divergences (intentional):
-#   * Exec is `openpencil-desktop %U`, not electron's `AppRun --no-sandbox %U`
+#   * Exec is `design-editor %U`, not electron's `AppRun --no-sandbox %U`
 #     — the Rust shell has no Chromium sandbox flag.
 #   * Icon ships at its source size (1024px) into hicolor + pixmaps; older
 #     hicolor index files may not list 1024x1024, so usr/share/pixmaps is the
 #     universal fallback. No resize step: imagemagick is not guaranteed on
 #     runners and the spec tolerates the fallback path.
 
-OP_DESKTOP_BIN_NAME="openpencil-desktop"
-OP_CLI_BIN_NAME="op"
+OP_DESKTOP_BIN_NAME="design-editor"
+DE_CLI_BIN_NAME="de"
 
 # op_write_desktop_file <dest-path>
 op_write_desktop_file() {
@@ -22,7 +22,7 @@ op_write_desktop_file() {
 [Desktop Entry]
 Name=OpenPencil
 Comment=Open-source AI-native vector design tool
-Exec=openpencil-desktop %U
+Exec=design-editor %U
 Terminal=false
 Type=Application
 Icon=openpencil
@@ -50,7 +50,7 @@ EOF
 
 # op_install_usr_tree <root> <desktop-bin> <cli-bin> <icon-png>
 # Lays out the usr/ tree shared by the .deb payload and the AppImage AppDir:
-#   usr/bin/openpencil-desktop, usr/bin/op
+#   usr/bin/design-editor, usr/bin/de
 #   usr/share/applications/openpencil.desktop
 #   usr/share/mime/packages/openpencil.xml
 #   usr/share/icons/hicolor/1024x1024/apps/openpencil.png
@@ -68,8 +68,8 @@ op_install_usr_tree() {
     "$root/usr/share/pixmaps"
 
   cp "$desktop_bin" "$root/usr/bin/$OP_DESKTOP_BIN_NAME"
-  cp "$cli_bin" "$root/usr/bin/$OP_CLI_BIN_NAME"
-  chmod 755 "$root/usr/bin/$OP_DESKTOP_BIN_NAME" "$root/usr/bin/$OP_CLI_BIN_NAME"
+  cp "$cli_bin" "$root/usr/bin/$DE_CLI_BIN_NAME"
+  chmod 755 "$root/usr/bin/$OP_DESKTOP_BIN_NAME" "$root/usr/bin/$DE_CLI_BIN_NAME"
 
   op_write_desktop_file "$root/usr/share/applications/openpencil.desktop"
   op_write_mime_xml "$root/usr/share/mime/packages/openpencil.xml"

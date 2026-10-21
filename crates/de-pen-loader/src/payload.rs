@@ -7,7 +7,7 @@
 //! (`layout_scene.rs`) then re-shapes it into a paint-only render
 //! scene.
 //!
-//! Carved out of `openpencil-desktop/src/persistence.rs` so library
+//! Carved out of `design-editor/src/persistence.rs` so library
 //! crates can reuse the canonical `.op` loader; the desktop binary's
 //! `rfd` Save/Open dialogs + error dialogs stay desktop-side.
 

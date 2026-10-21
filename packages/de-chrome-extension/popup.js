@@ -311,7 +311,7 @@ async function onDownload() {
   try {
     const { text, meta } = await ensureCapture();
     // Convert the raw snapshot into a ready-to-open `.op` document (the same
-    // conversion `op import:snapshot` runs), so the download opens directly by
+    // conversion `de import:snapshot` runs), so the download opens directly by
     // double-click with no CLI step.
     const converted = JSON.parse(getCore().snapshotToOpDocument(text, String(meta.title || '')));
     if (!converted.ok) {

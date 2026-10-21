@@ -143,7 +143,7 @@ guarantees it fails closed. Hosts should select this fallback only when the
 platform store is known to be unavailable, not when it is merely locked, so a
 temporary access failure cannot create a second device identity.
 
-For local diagnosis, a debug-assertions `openpencil-desktop` build can set
+For local diagnosis, a debug-assertions `design-editor` build can set
 `OPENPENCIL_COLLAB_DEV_FILE_KEYSTORE=1` to bypass the OS credential store and
 use that same hardened `FileKeyStore` directly. The opt-in is exact, ignored by
 release builds, and must not be enabled in packaged applications. Without it,

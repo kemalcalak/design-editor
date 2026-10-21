@@ -6,19 +6,19 @@ rust-version.workspace = true
 license.workspace = true
 description = "OpenPencil desktop host — winit + skia-safe binary that drives the Rust editor on macOS / Linux / Windows"
 
-# The shipped executable keeps the stable `openpencil-desktop` name so
+# The shipped executable keeps the stable `design-editor` name so
 # release artifacts + external CLI integrations are unaffected by the
 # Phase 7.3 crate rename.
 [[bin]]
-name = "openpencil-desktop"
+name = "design-editor"
 path = "src/main.rs"
 
 # Clean stdio peer for the local ACP process-boundary E2E. Cargo builds
 # examples during an ordinary `cargo test`, but does not wrap their `main`
 # functions in libtest, so stdout contains ACP ndJSON and nothing else.
 [[example]]
-name = "op-acp-test-agent"
-path = "examples/op-acp-test-agent.rs"
+name = "de-acp-test-agent"
+path = "examples/de-acp-test-agent.rs"
 test = true
 harness = false
 

@@ -1,6 +1,6 @@
 //! macOS app identity for the non-bundled dev binary.
 //!
-//! Run bare (`./target/release/openpencil-desktop`), the app shows
+//! Run bare (`./target/release/design-editor`), the app shows
 //! up in the Dock as the raw executable name with a blank icon —
 //! there is no `Info.plist` to read `CFBundleName` / the icon from.
 //! [`apply`] sets both at runtime: the Dock / menu-bar name becomes

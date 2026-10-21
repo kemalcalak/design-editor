@@ -125,7 +125,7 @@
     "message": "位址必須是本機回送位址加連接埠——127.0.0.1:3100 或 localhost:3100。"
   },
   "errorOffline": {
-    "message": "無法連線到 $1。請啟動 OpenPencil 桌面版並在 設定 → MCP 中啟動伺服器，或執行：openpencil-desktop --serve-web 3100"
+    "message": "無法連線到 $1。請啟動 OpenPencil 桌面版並在 設定 → MCP 中啟動伺服器，或執行：design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "$1 已接受連線，但 $2 秒內沒有回應。應用程式可能正忙或已卡住，請檢查後再試一次。"

@@ -1,7 +1,7 @@
 //! MCP tool `enrich_images` — resolve unresolved image slots on the active
 //! page with real stock photos (Openverse, Wikimedia fallback).
 //!
-//! This is the in-process version of `openpencil-desktop --enrich-images` for
+//! This is the in-process version of `design-editor --enrich-images` for
 //! MCP clients: it reuses the exact slot-detection predicates and write-back
 //! semantics of the desktop image-search session (both lifted into the shared
 //! `de-image-enrich` crate), but drives them synchronously on the calling

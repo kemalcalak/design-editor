@@ -53,7 +53,7 @@ pub async fn fetch_first_image_url(
     let client = reqwest::Client::builder()
         .use_rustls_tls()
         .timeout(Duration::from_secs(8))
-        .user_agent(concat!("openpencil-desktop/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("design-editor/", env!("CARGO_PKG_VERSION")))
         .build()
         .ok()?;
     let query = simplify_search_query(query);
@@ -111,7 +111,7 @@ async fn fetch_first_image_url_with_judge(
     let client = reqwest::Client::builder()
         .use_rustls_tls()
         .timeout(Duration::from_secs(8))
-        .user_agent(concat!("openpencil-desktop/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("design-editor/", env!("CARGO_PKG_VERSION")))
         .build()
         .ok()?;
     let query = simplify_search_query(query);

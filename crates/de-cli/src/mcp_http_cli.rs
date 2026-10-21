@@ -12,11 +12,11 @@ const MCP_SERVER_NAME: &str = "openpencil-mcp";
 pub(crate) fn status_json(port: u16) -> String {
     // Verify it's genuinely an OpenPencil MCP server (identity ping —
     // `result.server == "openpencil-mcp"`), not merely any TCP listener on
-    // the port. Mirrors TS `op status`, which reports running only when the
+    // the port. Mirrors TS `de status`, which reports running only when the
     // OpenPencil endpoint actually responds. A stale/foreign listener now
     // correctly reports `running:false`.
     let running = ping_result(port).is_some();
-    // TS `op status` returns {running, port, pid, url, uptime}. When the live
+    // TS `de status` returns {running, port, pid, url, uptime}. When the live
     // discovery file is present AND advertises this port, surface pid +
     // uptime (seconds since the host wrote `timestamp`). Otherwise fall back
     // to the discovery-free shape.
@@ -43,7 +43,7 @@ pub(crate) fn status_json_from_running(port: u16, running: bool) -> String {
     }
 }
 
-/// Wall-clock milliseconds since the Unix epoch (for `op status` uptime).
+/// Wall-clock milliseconds since the Unix epoch (for `de status` uptime).
 fn now_millis() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -181,7 +181,7 @@ fn http_get_raw(
 
 /// True when `127.0.0.1:port` is the `--serve-web` web-canvas daemon —
 /// `GET /api/mcp/server` reports our identity AND `mode:"web-canvas"`. Used
-/// by `op start --web` so it never "reuses" a plain `--mcp-http` server
+/// by `de start --web` so it never "reuses" a plain `--mcp-http` server
 /// (which answers the token ping but serves no browser editor).
 pub(crate) fn web_daemon_running(port: u16) -> bool {
     match http_get_raw(port, "/api/mcp/server", PING_TIMEOUT) {
@@ -243,7 +243,7 @@ pub(crate) fn mcp_ping_live(port: u16, token: &str) -> bool {
 
 /// True when `127.0.0.1:port` is the CLI-spawned *headless* server that
 /// reported this exact `token` — proving the pid in our manager file owns
-/// this port, so `op stop` / reuse never act on a recycled pid. An empty or
+/// this port, so `de stop` / reuse never act on a recycled pid. An empty or
 /// mismatched token is treated as UNVERIFIED (returns false): we'd rather
 /// re-launch / report "not running" than risk killing an unrelated process.
 pub(crate) fn mcp_ping_headless(port: u16, token: &str) -> bool {
@@ -254,7 +254,7 @@ pub(crate) fn mcp_ping_headless(port: u16, token: &str) -> bool {
         .is_some_and(|result| result.get("token").and_then(Value::as_str) == Some(token))
 }
 
-/// Ask the server on `127.0.0.1:port` to shut itself down (`op stop`),
+/// Ask the server on `127.0.0.1:port` to shut itself down (`de stop`),
 /// authenticated by `token`. Returns true when the server acked
 /// `shuttingDown`. This avoids signalling a pid entirely — so there's no
 /// race where a recycled pid is killed — and lets the live editor quit

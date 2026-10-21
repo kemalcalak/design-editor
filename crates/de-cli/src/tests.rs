@@ -95,7 +95,7 @@ fn parse_args_maps_install_and_uninstall_targets() {
 
 #[test]
 fn start_document_file_is_minimal_op_when_missing() {
-    let dir = std::env::temp_dir().join(format!("op-cli-start-doc-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("de-cli-start-doc-{}", std::process::id()));
     let path = dir.join("nested").join("session.op");
     let _ = std::fs::remove_dir_all(&dir);
 
@@ -113,7 +113,7 @@ fn start_document_file_is_minimal_op_when_missing() {
 
 #[test]
 fn install_codex_writes_bundle_and_uninstall_removes_it() {
-    let home = std::env::temp_dir().join(format!("op-cli-skill-codex-{}", std::process::id()));
+    let home = std::env::temp_dir().join(format!("de-cli-skill-codex-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&home);
     std::fs::create_dir_all(&home).expect("temp home");
 
@@ -133,7 +133,7 @@ fn install_codex_writes_bundle_and_uninstall_removes_it() {
 
 #[test]
 fn install_opencode_writes_scanned_skills_dir_and_prunes_legacy_plugin_entry() {
-    let home = std::env::temp_dir().join(format!("op-cli-skill-opencode-{}", std::process::id()));
+    let home = std::env::temp_dir().join(format!("de-cli-skill-opencode-{}", std::process::id()));
     let config = home.join(".config/opencode/opencode.json");
     let _ = std::fs::remove_dir_all(&home);
     std::fs::create_dir_all(config.parent().unwrap()).expect("config dir");

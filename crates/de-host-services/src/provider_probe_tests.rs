@@ -271,7 +271,7 @@ fn version_failure_message_falls_back_when_the_cli_said_nothing() {
 #[cfg(unix)]
 fn fake_cli(name: &str, body: &str) -> (std::path::PathBuf, std::path::PathBuf) {
     use std::os::unix::fs::PermissionsExt;
-    let dir = std::env::temp_dir().join(format!("op-cli-version-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("de-cli-version-{}-{name}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("scratch dir");
     let exe = dir.join(name);
     std::fs::write(&exe, format!("#!/bin/sh\n{body}")).expect("write fake cli");

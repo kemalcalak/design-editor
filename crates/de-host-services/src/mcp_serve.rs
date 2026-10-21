@@ -1,6 +1,6 @@
 //! Stdio MCP server mode for the desktop binary.
 //!
-//! `openpencil-desktop --mcp <path>` runs JSON-RPC stdio against a
+//! `design-editor --mcp <path>` runs JSON-RPC stdio against a
 //! `.op` file. External CLIs can spawn this mode to drive the Rust
 //! editor the way they drive TS pen-mcp today.
 //! The server backs the `.op` file with an `de_editor_core::
@@ -135,7 +135,7 @@ pub(crate) fn normalize_mobile_screens_after_apply(
     }
     if !changes.is_empty() {
         eprintln!(
-            "openpencil-desktop mcp: mobile normalization: {}",
+            "design-editor mcp: mobile normalization: {}",
             changes.join(", ")
         );
     }
@@ -151,7 +151,7 @@ pub(crate) fn normalize_icon_paths_after_apply(
     );
     if report != Default::default() {
         eprintln!(
-            "openpencil-desktop mcp: icon path normalization: converted_to_icon_font={}, refit_uniform={}",
+            "design-editor mcp: icon path normalization: converted_to_icon_font={}, refit_uniform={}",
             report.converted_to_icon_font, report.refit_uniform
         );
     }
@@ -214,7 +214,7 @@ fn process_message_with_auto_finalize(
         true
     })?;
     if let Some(ref msg) = applier_failed {
-        eprintln!("openpencil-desktop mcp: {msg}");
+        eprintln!("design-editor mcp: {msg}");
     }
     if explicit_finalize
         && !apply_rejected

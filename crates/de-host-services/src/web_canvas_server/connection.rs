@@ -69,7 +69,7 @@ pub(super) fn serve_one<S: Read + Write>(
 ///
 /// Returns `Ok(true)` when the client requested a token-authenticated graceful
 /// shutdown (same `openpencil/shutdown` body contract as `--mcp-http`) — the
-/// caller then stops the accept loop so `op stop` never signals a pid. In
+/// caller then stops the accept loop so `de stop` never signals a pid. In
 /// managed mode only this lifecycle request, not ordinary traffic, uses the
 /// token emitted in the startup handshake.
 pub(super) fn serve_one_in_mode<S: Read + Write>(
@@ -422,7 +422,7 @@ pub(super) fn dispatch<S: Read + Write>(
         )?;
         return Ok(false);
     }
-    // Token-authenticated graceful shutdown (`op stop`): same body-carried
+    // Token-authenticated graceful shutdown (`de stop`): same body-carried
     // token contract as the `--mcp-http` server. Managed mode accepts the
     // startup-handshake token here for lifecycle compatibility, but never as
     // an ordinary request header; local/online operator shutdown continues to
@@ -527,7 +527,7 @@ pub(super) fn dispatch<S: Read + Write>(
         // start`) is a SEPARATE request loop from `mcp_live.rs`'s
         // `McpLiveServer` (desktop `--live-mcp`), not the same struct;
         // wiring canvas-generation indicators here (so a `batch_design`
-        // call against a headless `op start` daemon also relays the
+        // call against a headless `de start` daemon also relays the
         // radar-scan to the browser shell) is tracked as follow-up
         // scope, not part of this pass.
         let response = crate::mcp_serve::process_message_with_applier_profiled(

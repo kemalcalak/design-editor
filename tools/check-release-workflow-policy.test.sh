@@ -190,8 +190,8 @@ case ${1-} in
             vcredist-nsis-soft-fail
         expect_rejected vcredist-nsis-soft-fail OPENPENCIL_WINDOWS_NSIS_INSTALLER \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"
-        fixture=$temporary/install-op.ps1
-        mutate "$repo_root/scripts/install-op.ps1" "$fixture" \
+        fixture=$temporary/install-de.ps1
+        mutate "$repo_root/scripts/install-de.ps1" "$fixture" \
             vcredist-cli-skip-postcheck
         expect_rejected vcredist-cli-skip-postcheck OPENPENCIL_WINDOWS_CLI_INSTALLER \
             "$repo_root/tools/check-rust-release-auth-workflow.sh" "$fixture"

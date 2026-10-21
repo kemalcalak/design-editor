@@ -1,6 +1,6 @@
 //! Hidden headless image-enrichment mode for batch design artifacts.
 //!
-//! `openpencil-desktop --enrich-images <input.op> <output.op> [timeout_seconds]`
+//! `design-editor --enrich-images <input.op> <output.op> [timeout_seconds]`
 //! loads and saves through the canonical document I/O layer while delegating
 //! every target decision and mutation to `ImageSearchSession`. The command
 //! runs before the desktop event loop and single-instance gate. It is
@@ -29,7 +29,7 @@ mod retry;
 const DEFAULT_TIMEOUT_SECONDS: u64 = 120;
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
 const USAGE: &str =
-    "usage: openpencil-desktop --enrich-images <input.op> <output.op> [timeout_seconds]";
+    "usage: design-editor --enrich-images <input.op> <output.op> [timeout_seconds]";
 const MODE_CONTRACT: &str = "search-only mode: Auto/Search targets use stock search; \
 explicit Generate targets fail and are never converted to search";
 

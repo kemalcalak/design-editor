@@ -63,7 +63,7 @@ pub struct McpLiveServer {
     token: String,
     /// Set by a connection thread when a token-authed `openpencil/shutdown`
     /// arrives; the UI thread polls it (`shutdown_requested`) and exits the
-    /// event loop, so `op stop` quits the editor cleanly without a signal.
+    /// event loop, so `de stop` quits the editor cleanly without a signal.
     quit_flag: Arc<AtomicBool>,
     req_rx: Receiver<UiRequest>,
     stop_tx: Sender<()>,
@@ -208,7 +208,7 @@ impl McpLiveServer {
                 )
             })
             .map_err(|e| McpLiveError::Startup(format!("spawn MCP live server: {e}")))?;
-        eprintln!("openpencil-desktop mcp: listening on 127.0.0.1:{bound_port}/mcp");
+        eprintln!("design-editor mcp: listening on 127.0.0.1:{bound_port}/mcp");
         Ok(Self {
             port: bound_port,
             token,

@@ -5,7 +5,7 @@
 //! hand-written `Display`, no `thiserror` and no new dependency. `Display` is
 //! transparent — the stringly code carried the bare `serde_json` / `std::io`
 //! message with no envelope of its own, and `kit_persistence::save` prints it
-//! inside `openpencil-desktop: uikits.json save failed: {e}`, so the line is
+//! inside `design-editor: uikits.json save failed: {e}`, so the line is
 //! unchanged byte for byte.
 //!
 //! Saving here is deliberately best-effort (the retired TS `persist()`

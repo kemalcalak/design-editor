@@ -77,14 +77,14 @@ impl DesktopApp {
         let src = match std::fs::read_to_string(&path) {
             Ok(src) => src,
             Err(err) => {
-                eprintln!("openpencil-desktop: kit import read failed: {err}");
+                eprintln!("design-editor: kit import read failed: {err}");
                 return;
             }
         };
         let doc = match de_pen_loader::load_canonical(&src) {
             Ok(loaded) => loaded.value,
             Err(err) => {
-                eprintln!("openpencil-desktop: kit import parse failed: {err}");
+                eprintln!("design-editor: kit import parse failed: {err}");
                 return;
             }
         };
@@ -125,12 +125,12 @@ impl DesktopApp {
         let json = match serde_json::to_string_pretty(&kit_doc) {
             Ok(json) => json,
             Err(err) => {
-                eprintln!("openpencil-desktop: kit export encode failed: {err}");
+                eprintln!("design-editor: kit export encode failed: {err}");
                 return;
             }
         };
         if let Err(err) = std::fs::write(&path, json) {
-            eprintln!("openpencil-desktop: kit export write failed: {err}");
+            eprintln!("design-editor: kit export write failed: {err}");
         }
     }
 }

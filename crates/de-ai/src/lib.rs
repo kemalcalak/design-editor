@@ -7,7 +7,7 @@
 //! - [`chat_provider`] — the `ChatProvider` trait + provider-category
 //!   types (`CliName`, `Provider`, …) and the `EchoProvider` test
 //!   double. Real transports (tokio / reqwest / process-spawn) live
-//!   desktop-side in `openpencil-desktop`.
+//!   desktop-side in `design-editor`.
 //! - [`chat_models`] — the `ModelEntry` model-catalog type.
 //! - [`chat_sse`] — transport-free Anthropic / OpenAI-compatible SSE
 //!   payload → `ChatDelta` parsers shared by the desktop/daemon

@@ -6,8 +6,8 @@
 ; installs NSIS explicitly before invoking makensis.
 ;
 ; Installs:
-;   openpencil-desktop.exe  editor binary
-;   op.exe                  CLI binary (also shipped standalone as
+;   design-editor.exe  editor binary
+;   de.exe                  CLI binary (also shipped standalone as
 ;                           de-cli-<target>.zip in the release; $INSTDIR is
 ;                           NOT added to PATH — doing so reliably needs the
 ;                           non-stock EnVar plugin, deferred)
@@ -78,8 +78,8 @@ Unicode true
 !endif
 
 !define PRODUCT_NAME "OpenPencil"
-!define EXE_NAME "openpencil-desktop.exe"
-!define CLI_NAME "op.exe"
+!define EXE_NAME "design-editor.exe"
+!define CLI_NAME "de.exe"
 !define PROG_ID "OpenPencil.Document"
 !define REG_APP_KEY "Software\${PRODUCT_NAME}"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"

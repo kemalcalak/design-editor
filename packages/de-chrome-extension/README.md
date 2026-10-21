@@ -289,7 +289,7 @@ The extension POSTs the snapshot to the local editor. It tries, in order:
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `POST /api/import/web-snapshot`                | desktop app's live MCP endpoint (`crates/de-host-services/src/mcp_live/snapshot_ingest.rs`) | Insert-only. Open to a well-formed extension id by default; optionally pinned as described below.                |
 | `POST /api/generate/design-md`                 | desktop app's live MCP endpoint (`crates/de-host-services/src/mcp_live/design_md_route.rs`) | Bounded style evidence only. Model work requires explicit extension pairing; every refusal falls back locally.   |
-| `POST /mcp` → `tools/call import_web_snapshot` | headless daemon `openpencil-desktop --serve-web <port>`                                     | Fallback, tried only on a `404`. That daemon is unmanaged (permissive CORS, no token) so a plain MCP call works. |
+| `POST /mcp` → `tools/call import_web_snapshot` | headless daemon `design-editor --serve-web <port>`                                     | Fallback, tried only on a `404`. That daemon is unmanaged (permissive CORS, no token) so a plain MCP call works. |
 
 The desktop route is the recommended path, and the only one this extension is
 designed around. The fallback exists for the **unmanaged** `--serve-web` daemon,
@@ -302,7 +302,7 @@ that predates the ingest route answers `403` (not `404`), so the extension
 reports "no extension ingress" rather than retrying.
 
 **The desktop app does not listen by default.** Turn the server on in
-`Settings → MCP → server` (default port `3100`), or launch via `op start`, which
+`Settings → MCP → server` (default port `3100`), or launch via `de start`, which
 forces it on for that run. `~/.openpencil/.op-mcp-port` records the port the
 editor actually bound if you changed it.
 
@@ -331,7 +331,7 @@ fallback. This does not change snapshot ingest's open development default.
 To lock the route to specific ids, start the editor with:
 
 ```bash
-OPENPENCIL_EXTENSION_ALLOWED_IDS=abcdefghijklmnopabcdefghijklmnop openpencil-desktop
+OPENPENCIL_EXTENSION_ALLOWED_IDS=abcdefghijklmnopabcdefghijklmnop design-editor
 ```
 
 (comma-separated, ids only, no `chrome-extension://` prefix). With it set, every
@@ -341,12 +341,12 @@ in `chrome://extensions`.
 ### 2. Download and open by hand
 
 `Download .op` writes a ready-to-open `.op` document (OpenPencil's `PenDocument`
-format — the same conversion `op import:snapshot` performs, run in the browser).
+format — the same conversion `de import:snapshot` performs, run in the browser).
 Open it directly:
 
 - double-click the `<page-title>.op` file, or
 - drag it onto the app window, or
-- `op open ~/Downloads/example.op`.
+- `de open ~/Downloads/example.op`.
 
 No CLI conversion step is needed — the file is already a `.op` document.
 
@@ -670,7 +670,7 @@ store assigns one:
    design generation from it:
 
    ```bash
-   OPENPENCIL_EXTENSION_ALLOWED_IDS=<id> openpencil-desktop
+   OPENPENCIL_EXTENSION_ALLOWED_IDS=<id> design-editor
    ```
 
    The editor's snapshot ingest route admits any `chrome-extension://` origin
@@ -688,8 +688,8 @@ passes the hub's `Origin` check.
 ## Troubleshooting
 
 **"OpenPencil is not reachable at 127.0.0.1:3100"** — nothing is listening.
-Start the desktop app and switch on `Settings → MCP → server`, run `op start`,
-or run `openpencil-desktop --serve-web 3100`. Check the port with
+Start the desktop app and switch on `Settings → MCP → server`, run `de start`,
+or run `design-editor --serve-web 3100`. Check the port with
 `cat ~/.openpencil/.op-mcp-port`.
 
 **"This OpenPencil build has no extension ingress"** — the app is listening but

@@ -90,7 +90,7 @@ impl DesktopApp {
     pub(crate) fn clear_commit_author(&mut self) {
         if let Some(repo) = self.git_session.repo() {
             if let Err(e) = repo.unset_local_author() {
-                eprintln!("openpencil-desktop: git clear-author failed: {e}");
+                eprintln!("design-editor: git clear-author failed: {e}");
             }
         }
     }
@@ -113,7 +113,7 @@ impl DesktopApp {
         }
         if let Some(repo) = self.git_session.repo() {
             if let Err(e) = repo.set_local_author(&name, &email) {
-                eprintln!("openpencil-desktop: set commit author failed: {e}");
+                eprintln!("design-editor: set commit author failed: {e}");
                 return;
             }
         }

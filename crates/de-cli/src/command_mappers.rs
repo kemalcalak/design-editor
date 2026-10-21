@@ -70,7 +70,7 @@ pub(crate) fn map_insert(positionals: &[String], flags: &Flags) -> Result<Comman
 }
 
 pub(crate) fn map_update(positionals: &[String], flags: &Flags) -> Result<Command, CliError> {
-    let node_id = required_pos(positionals, 1, "Usage: op update <node-id> <json>")?;
+    let node_id = required_pos(positionals, 1, "Usage: de update <node-id> <json>")?;
     let raw = resolve_arg(positionals.get(2).map(String::as_str))?;
     let mut pairs = vec![pair("nodeId", node_id)];
     pairs.extend(data_pairs(&raw)?);
@@ -85,7 +85,7 @@ pub(crate) fn map_update(positionals: &[String], flags: &Flags) -> Result<Comman
 }
 
 pub(crate) fn map_replace(positionals: &[String], flags: &Flags) -> Result<Command, CliError> {
-    let node_id = required_pos(positionals, 1, "Usage: op replace <node-id> <json>")?;
+    let node_id = required_pos(positionals, 1, "Usage: de replace <node-id> <json>")?;
     let raw = resolve_arg(positionals.get(2).map(String::as_str))?;
     let mut pairs = vec![pair("nodeId", node_id)];
     pairs.extend(data_pairs(&raw)?);
@@ -100,7 +100,7 @@ pub(crate) fn map_replace(positionals: &[String], flags: &Flags) -> Result<Comma
 }
 
 pub(crate) fn map_delete(positionals: &[String], flags: &Flags) -> Result<Command, CliError> {
-    let id = required_pos(positionals, 1, "Usage: op delete <node-id>")?;
+    let id = required_pos(positionals, 1, "Usage: de delete <node-id>")?;
     let mut pairs = vec![pair("nodeId", id)];
     if let Some(page) = flag_value(flags, "page") {
         pairs.push(pair("pageId", page));
@@ -113,7 +113,7 @@ pub(crate) fn map_read_nodes(positionals: &[String], flags: &Flags) -> Result<Co
     let mut pairs = Vec::new();
     if positionals.len() > 1 {
         // Canonical nodeIds shape matches map_get / batch_get: a JSON string
-        // array. Comma-joined positionals (`op read-nodes "n10,n11"`) are
+        // array. Comma-joined positionals (`de read-nodes "n10,n11"`) are
         // split client-side so they resolve to the same array.
         let ids: Vec<String> = positionals[1..]
             .iter()
@@ -152,7 +152,7 @@ pub(crate) fn map_reparent(
     let id = required_pos(
         positionals,
         1,
-        "Usage: op move/copy <node-id> [--parent <parent-id>] [--page PAGE]",
+        "Usage: de move/copy <node-id> [--parent <parent-id>] [--page PAGE]",
     )?;
     let id_key = if tool == "copy_node" {
         "sourceId"
@@ -213,7 +213,7 @@ pub(crate) fn map_design_content(
     let section_id = required_pos(
         positionals,
         1,
-        "Usage: op design:content <section-id> <json|@file|->",
+        "Usage: de design:content <section-id> <json|@file|->",
     )?;
     let raw = resolve_arg(positionals.get(2).map(String::as_str))?;
     let payload: Value = serde_json::from_str(raw.trim())
@@ -311,7 +311,7 @@ pub(crate) fn map_design_skeleton(
 
 pub(crate) fn map_design_refine(flags: &Flags) -> Result<Command, CliError> {
     let root_id = flag_value(flags, "root-id")
-        .ok_or_else(|| CliError::usage("Usage: op design:refine --root-id <id>"))?;
+        .ok_or_else(|| CliError::usage("Usage: de design:refine --root-id <id>"))?;
     let mut pairs = vec![pair("rootId", root_id)];
     if let Some(canvas_width) = flag_value(flags, "canvas-width") {
         pairs.push(pair("canvasWidth", canvas_width));

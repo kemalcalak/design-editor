@@ -98,7 +98,7 @@ impl AutoFinalize {
         let recorded = match de_orchestrator::record_loop_finalize_counted(state) {
             Ok(recorded) => recorded,
             Err(error) => {
-                eprintln!("openpencil-desktop mcp: auto-finalize ({reason}) failed: {error}");
+                eprintln!("design-editor mcp: auto-finalize ({reason}) failed: {error}");
                 return None;
             }
         };
@@ -107,7 +107,7 @@ impl AutoFinalize {
         let finalized_revision = state.document_revision();
         self.finalized_at_revision = Some(finalized_revision);
         eprintln!(
-            "openpencil-desktop mcp: auto-finalize ({reason}) repairs={} revision={finalized_revision}",
+            "design-editor mcp: auto-finalize ({reason}) repairs={} revision={finalized_revision}",
             summary.total_repairs()
         );
         Some(summary)
@@ -188,7 +188,7 @@ pub(super) fn run_http(path: PathBuf, port: u16) -> Result<(), McpServeError> {
     listener
         .set_nonblocking(true)
         .map_err(|e| McpServeError::Config(format!("set nonblocking listener: {e}")))?;
-    eprintln!("openpencil-desktop --mcp-http: listening on 127.0.0.1:{port}");
+    eprintln!("design-editor --mcp-http: listening on 127.0.0.1:{port}");
     loop {
         if signals.requested() {
             break;
@@ -207,11 +207,11 @@ pub(super) fn run_http(path: PathBuf, port: u16) -> Result<(), McpServeError> {
                     Some(&mut auto_finalize),
                 ) {
                     Ok(true) => {
-                        eprintln!("openpencil-desktop --mcp-http: shutdown requested; exiting");
+                        eprintln!("design-editor --mcp-http: shutdown requested; exiting");
                         break;
                     }
                     Ok(false) => {}
-                    Err(e) => eprintln!("openpencil-desktop --mcp-http: {e}"),
+                    Err(e) => eprintln!("design-editor --mcp-http: {e}"),
                 }
             }
             Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
@@ -222,7 +222,7 @@ pub(super) fn run_http(path: PathBuf, port: u16) -> Result<(), McpServeError> {
                 // of the threshold.
                 std::thread::sleep(ACCEPT_POLL_INTERVAL);
             }
-            Err(error) => eprintln!("openpencil-desktop --mcp-http: accept: {error}"),
+            Err(error) => eprintln!("design-editor --mcp-http: accept: {error}"),
         }
     }
     run_auto_finalize_and_save(&mut auto_finalize, &mut state, &path, "shutdown")

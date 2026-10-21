@@ -18,7 +18,7 @@
  *    design evidence. The request body here IS the snapshot JSON.
  * 2. `POST /mcp` — a plain MCP `tools/call` for `import_web_snapshot`. This
  *    covers exactly one host: the UNMANAGED headless daemon
- *    (`openpencil-desktop --serve-web <port>`), whose `/mcp` needs no token.
+ *    (`design-editor --serve-web <port>`), whose `/mcp` needs no token.
  *    It is NOT a compatibility path for older desktop builds — a desktop app
  *    that predates the ingest route answers 404 there and 403 on `/mcp` (its
  *    admission gate refuses extension origins outright), and the fallback

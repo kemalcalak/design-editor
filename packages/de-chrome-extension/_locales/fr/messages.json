@@ -125,7 +125,7 @@
     "message": "L’adresse doit être une adresse de bouclage avec un port — 127.0.0.1:3100 ou localhost:3100."
   },
   "errorOffline": {
-    "message": "OpenPencil est injoignable à l’adresse $1. Lancez l’application de bureau et démarrez Paramètres → MCP → serveur, ou exécutez : openpencil-desktop --serve-web 3100"
+    "message": "OpenPencil est injoignable à l’adresse $1. Lancez l’application de bureau et démarrez Paramètres → MCP → serveur, ou exécutez : design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "OpenPencil à l’adresse $1 a accepté la connexion mais n’a pas répondu en $2 s. L’application est peut-être occupée ou bloquée — vérifiez-la, puis réessayez."

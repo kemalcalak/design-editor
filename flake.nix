@@ -187,15 +187,15 @@
             cargoBuildCommand = "cargo build --release --package de-host-desktop --package de-cli --package de-host-web-server";
             installPhase = ''
               runHook preInstall
-              install -Dm755 target/release/openpencil-desktop $out/bin/openpencil-desktop
-              install -Dm755 target/release/op $out/bin/op
+              install -Dm755 target/release/design-editor $out/bin/design-editor
+              install -Dm755 target/release/de $out/bin/de
               install -Dm755 target/release/de-host-web-server $out/bin/de-host-web-server
               install -Dm644 crates/de-host-desktop/assets/icon.png $out/share/icons/hicolor/1024x1024/apps/openpencil.png
               install -Dm644 ${pkgs.writeText "openpencil.desktop" ''
                 [Desktop Entry]
                 Name=OpenPencil
                 Comment=Open-source AI-native vector design tool
-                Exec=openpencil-desktop %U
+                Exec=design-editor %U
                 Terminal=false
                 Type=Application
                 Icon=openpencil
@@ -216,7 +216,7 @@
               runHook postInstall
             '';
             postFixup = ''
-              for program in openpencil-desktop op de-host-web-server; do
+              for program in design-editor de de-host-web-server; do
                 wrapProgram "$out/bin/$program" \
                   --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath runtimeLibraries}
               done
@@ -239,7 +239,7 @@
           pname = "openpencil-prebuilt";
           version = releaseVersion;
           src = pkgs.fetchurl {
-            url = "https://github.com/ZSeven-W/openpencil/releases/download/v${releaseVersion}/openpencil-desktop-linux-x86_64.tar.gz";
+            url = "https://github.com/ZSeven-W/openpencil/releases/download/v${releaseVersion}/design-editor-linux-x86_64.tar.gz";
             hash = releaseManifest.desktopHash;
           };
           dontUnpack = true;
@@ -248,14 +248,14 @@
           installPhase = ''
             runHook preInstall
             tar -xzf "$src" -C "$TMPDIR"
-            install -Dm755 "$TMPDIR/openpencil-desktop" $out/bin/openpencil-desktop
+            install -Dm755 "$TMPDIR/design-editor" $out/bin/design-editor
             install -Dm644 ${./crates/de-host-desktop/assets/icon.png} \
               $out/share/icons/hicolor/1024x1024/apps/openpencil.png
             install -Dm644 ${pkgs.writeText "openpencil-prebuilt.desktop" ''
               [Desktop Entry]
               Name=OpenPencil
               Comment=Open-source AI-native vector design tool
-              Exec=openpencil-desktop %U
+              Exec=design-editor %U
               Terminal=false
               Type=Application
               Icon=openpencil
@@ -264,7 +264,7 @@
             runHook postInstall
           '';
           postFixup = ''
-            wrapProgram $out/bin/openpencil-desktop \
+            wrapProgram $out/bin/design-editor \
               --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath prebuiltDesktopRuntimeLibraries}
           '';
         };
@@ -273,7 +273,7 @@
           pname = "openpencil-cli-prebuilt";
           version = releaseVersion;
           src = pkgs.fetchurl {
-            url = "https://github.com/ZSeven-W/openpencil/releases/download/v${releaseVersion}/op-cli-linux-x86_64.tar.gz";
+            url = "https://github.com/ZSeven-W/openpencil/releases/download/v${releaseVersion}/de-cli-linux-x86_64.tar.gz";
             hash = releaseManifest.cliHash;
           };
           dontUnpack = true;
@@ -282,7 +282,7 @@
           installPhase = ''
             runHook preInstall
             tar -xzf "$src" -C "$TMPDIR"
-            install -Dm755 "$TMPDIR/op" $out/bin/op
+            install -Dm755 "$TMPDIR/de" $out/bin/de
             runHook postInstall
           '';
         };
@@ -356,7 +356,7 @@
           paths = [nativePackage];
           postBuild = ''
             mkdir -p $out/bin
-            ln -sf ${nativePackage}/bin/op $out/bin/op
+            ln -sf ${nativePackage}/bin/de $out/bin/de
           '';
         };
 
@@ -454,11 +454,11 @@
             outputs = {self}: {
               apps.x86_64-linux.prebuilt = {
                 type = "app";
-                program = "${prebuiltDesktopPackage}/bin/openpencil-desktop";
+                program = "${prebuiltDesktopPackage}/bin/design-editor";
               };
               apps.x86_64-linux.prebuilt-cli = {
                 type = "app";
-                program = "${prebuiltCliPackage}/bin/op";
+                program = "${prebuiltCliPackage}/bin/de";
               };
             };
           }
@@ -493,16 +493,16 @@
           paths = [prebuiltDesktopPackage prebuiltCliPackage];
           nativeBuildInputs = [pkgs.makeWrapper];
           postBuild = ''
-            rm -f "$out/bin/op"
-            makeWrapper ${prebuiltCliPackage}/bin/op "$out/bin/op" \
-              --set-default OPENPENCIL_DESKTOP_BIN "$out/bin/openpencil-desktop"
+            rm -f "$out/bin/de"
+            makeWrapper ${prebuiltCliPackage}/bin/de "$out/bin/de" \
+              --set-default OPENPENCIL_DESKTOP_BIN "$out/bin/design-editor"
             install -Dm644 ${defaultDocument} "$out/share/openpencil/default.op"
           '';
         };
 
         runtimePrebuiltToolsCheck = pkgs.runCommand "openpencil-runtime-prebuilt-tools-${version}" {} ''
-          test -x ${runtimePrebuiltPackage}/bin/openpencil-desktop
-          test -x ${runtimePrebuiltPackage}/bin/op
+          test -x ${runtimePrebuiltPackage}/bin/design-editor
+          test -x ${runtimePrebuiltPackage}/bin/de
           touch "$out"
         '';
 
@@ -539,7 +539,7 @@
         appimage = rs-harbor.lib.mkAppImage {
           inherit nix-appimage system version;
           pname = "openpencil";
-          program = "${nativePackage}/bin/openpencil-desktop";
+          program = "${nativePackage}/bin/design-editor";
         };
       in {
         packages = {
@@ -562,19 +562,19 @@
         apps = {
           default = {
             type = "app";
-            program = "${nativePackage}/bin/openpencil-desktop";
+            program = "${nativePackage}/bin/design-editor";
           };
-          op = {
+          de = {
             type = "app";
-            program = "${nativePackage}/bin/op";
+            program = "${nativePackage}/bin/de";
           };
           prebuilt = {
             type = "app";
-            program = "${prebuiltDesktopPackage}/bin/openpencil-desktop";
+            program = "${prebuiltDesktopPackage}/bin/design-editor";
           };
           prebuilt-cli = {
             type = "app";
-            program = "${prebuiltCliPackage}/bin/op";
+            program = "${prebuiltCliPackage}/bin/de";
           };
           web-server = {
             type = "app";

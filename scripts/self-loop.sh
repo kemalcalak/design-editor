@@ -8,7 +8,7 @@
 #   1. GENERATE  de-smoke (orchestrator DIRECT by default; set
 #                OPENPENCIL_SMOKE_LOOP=1 for the agentic loop)
 #                → <out>/<run>/pNN.op
-#   2. RENDER    openpencil-desktop --render-shots — the REAL jian-core
+#   2. RENDER    design-editor --render-shots — the REAL jian-core
 #                (taffy) layout + jian-skia paint, the exact desktop canvas
 #                pipeline → <out>/<run>/pNN_shots/*.png
 #   3. AUDIT     de-smoke OPENPENCIL_SMOKE_AUDIT — real-layout geometry
@@ -31,7 +31,7 @@ PROMPTS="${2:?prompts file required}"
 OUT="${3:-/tmp/self-loop}/$RUN"
 mkdir -p "$OUT"
 SMOKE="$REPO/target/release/de-smoke"
-DESKTOP="$REPO/target/release/openpencil-desktop"
+DESKTOP="$REPO/target/release/design-editor"
 [ -x "$SMOKE" ] && [ -x "$DESKTOP" ] || {
   echo "build first: cargo build --release -p de-smoke -p de-host-desktop" >&2
   exit 2

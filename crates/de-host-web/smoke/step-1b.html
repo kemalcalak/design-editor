@@ -58,7 +58,7 @@
       // holds browser event closures into the wasm module.
       const status = document.getElementById('status');
       const markSmoke = (state) => {
-        document.documentElement.setAttribute('data-op-smoke', state);
+        document.documentElement.setAttribute('data-de-smoke', state);
         // Console mirror for the headless smoke; see the host page note —
         // stderr logging arrives incrementally while --dump-dom waits for
         // a quiescence the live editor never reaches.
@@ -101,7 +101,7 @@
             '  3. serve crates/de-host-web/assets/canvaskit at /canvaskit/',
             '',
             'For the normal local path, run:',
-            '  op start --web',
+            '  de start --web',
             '',
             'A LinkError after a clean rebuild means a new env.* import',
             'snuck back in. Run tools/check-wasm-bundle.sh and inspect',

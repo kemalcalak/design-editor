@@ -167,7 +167,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         let window = match event_loop.create_window(attrs) {
             Ok(w) => w,
             Err(err) => {
-                eprintln!("openpencil-desktop: create_window failed: {err}");
+                eprintln!("design-editor: create_window failed: {err}");
                 event_loop.exit();
                 return;
             }
@@ -189,7 +189,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                 self.rotate_cursor = Some(event_loop.create_custom_cursor(source));
             }
             Err(err) => {
-                eprintln!("openpencil-desktop: rotate cursor build failed: {err}");
+                eprintln!("design-editor: rotate cursor build failed: {err}");
             }
         }
 
@@ -345,11 +345,11 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         // first paint so the launch document shows immediately.
         self.drain_opened_files();
 
-        // `op start` launches us with `--live-mcp[=port]`. The force flag is
+        // `de start` launches us with `--live-mcp[=port]`. The force flag is
         // honored directly by `reconcile_mcp_server_from_settings` (via
         // `force_live_mcp_port`) WITHOUT mutating or persisting the user's
         // MCP settings — mirroring TS's always-on editor MCP sync — so a
-        // one-off `op start` never rewrites the user's saved settings.
+        // one-off `de start` never rewrites the user's saved settings.
         let bootstrap_changed = self.bootstrap_mcp_runtime_from_settings();
         if bootstrap_changed && self.force_live_mcp_port.is_none() {
             de_host_services::settings_io::save(self.host.editor_state());
@@ -601,7 +601,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         }
         if let Some(mut ctx) = self.ctx.take() {
             if let Err(err) = ctx.teardown() {
-                eprintln!("openpencil-desktop: teardown failed: {err}");
+                eprintln!("design-editor: teardown failed: {err}");
             }
         }
         self.backend.take();

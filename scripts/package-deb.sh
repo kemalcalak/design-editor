@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Build a Debian package for the OpenPencil Rust desktop shell + `op` CLI.
+# Build a Debian package for the OpenPencil Rust desktop shell + `de` CLI.
 #
 # Payload:
-#   usr/bin/openpencil-desktop          editor binary
-#   usr/bin/op                          CLI binary
+#   usr/bin/design-editor          editor binary
+#   usr/bin/de                          CLI binary
 #   usr/share/applications/openpencil.desktop
 #       Desktop entry with MimeType=application/x-openpencil so .op/.pen
 #       double-clicks route to the editor after update-desktop-database.
@@ -95,8 +95,8 @@ Depends: libc6, libssl3, libfontconfig1, libfreetype6, libegl1, libgles2, libgbm
 Recommends: shared-mime-info, desktop-file-utils
 Homepage: https://github.com/ZSeven-W/openpencil
 Description: OpenPencil — open-source AI-native vector design tool
- Native desktop editor (openpencil-desktop) built on the Rust shell, plus
- the op command-line client that drives the editor over MCP.
+ Native desktop editor (design-editor) built on the Rust shell, plus
+ the de command-line client that drives the editor over MCP.
  Registers the application/x-openpencil MIME type for .op and .pen files.
 EOF
 

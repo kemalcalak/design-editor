@@ -9,7 +9,7 @@ pub(super) fn map_import_figma(positionals: &[String], flags: &Flags) -> Result<
     let fig_path = required_pos(
         positionals,
         1,
-        "Usage: op import:figma <file.fig> [--out output.op]",
+        "Usage: de import:figma <file.fig> [--out output.op]",
     )?;
     let out_path = flag_value(flags, "out").unwrap_or_else(|| figma_default_out_path(&fig_path));
     Ok(Command::ImportFigma { fig_path, out_path })

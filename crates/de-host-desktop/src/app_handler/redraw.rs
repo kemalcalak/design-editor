@@ -488,7 +488,7 @@ impl DesktopApp {
         if self.poll_mcp_server() {
             self.redraw_dirty = true;
         }
-        // A token-authed `op stop` asked the live MCP server to quit
+        // A token-authed `de stop` asked the live MCP server to quit
         // — exit the event loop cleanly (runs `exiting()`, saving
         // window state + settings and removing the discovery file).
         if self.mcp_shutdown_requested() {

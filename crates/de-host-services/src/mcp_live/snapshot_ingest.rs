@@ -240,7 +240,7 @@ pub(super) fn serve_snapshot_ingest<S: std::io::Read + std::io::Write>(
                 ack.applied
             }
             Err(e) => {
-                eprintln!("openpencil-desktop mcp: snapshot ingest apply failed: {e}");
+                eprintln!("design-editor mcp: snapshot ingest apply failed: {e}");
                 false
             }
         },

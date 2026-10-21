@@ -6,7 +6,7 @@
 #   2. `/` — daemon-served host page, including `/api/mcp/sync-reset`.
 #
 # The script intentionally uses Chrome/Chromium headless directly instead of a
-# new test dependency. The pages write `data-op-smoke="ok"` only after the wasm
+# new test dependency. The pages write `data-de-smoke="ok"` only after the wasm
 # bundle has loaded and `mount_ck()` has resolved.
 set -euo pipefail
 
@@ -112,12 +112,12 @@ chrome_dump() {
     # signal; a successful mount synthesizes the DOM line the assertions
     # expect.
     if grep -Fq 'de-smoke:ok' "$out.stderr" 2>/dev/null; then
-      printf '<html data-op-smoke="ok"><!-- synthesized from console marker --></html>\n' >"$out"
+      printf '<html data-de-smoke="ok"><!-- synthesized from console marker --></html>\n' >"$out"
       kill -9 "$chrome_pid" >/dev/null 2>&1 || true
       wait "$chrome_pid" >/dev/null 2>&1 || true
       return 0
     fi
-    if grep -Fq 'data-op-smoke="ok"' "$out" 2>/dev/null; then
+    if grep -Fq 'data-de-smoke="ok"' "$out" 2>/dev/null; then
       kill -9 "$chrome_pid" >/dev/null 2>&1 || true
       wait "$chrome_pid" >/dev/null 2>&1 || true
       return 0
@@ -199,10 +199,10 @@ curl -fsS "$BASE_URL/assets/iconify-catalog-brands.json" >/dev/null
 
 pure="$TMP_DIR/pure-smoke.html"
 chrome_dump "$BASE_URL/smoke/step-1b.html" "$pure"
-assert_contains "$pure" 'data-op-smoke="ok"' "pure CanvasKit smoke should mount"
+assert_contains "$pure" 'data-de-smoke="ok"' "pure CanvasKit smoke should mount"
 
 daemon="$TMP_DIR/daemon-smoke.html"
 chrome_dump "$BASE_URL/" "$daemon"
-assert_contains "$daemon" 'data-op-smoke="ok"' "daemon host page should mount"
+assert_contains "$daemon" 'data-de-smoke="ok"' "daemon host page should mount"
 
 printf 'PASS: browser smoke mounted CanvasKit via /smoke/step-1b.html and daemon /\n'

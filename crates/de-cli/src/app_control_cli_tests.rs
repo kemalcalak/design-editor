@@ -51,7 +51,7 @@ fn preflight_rejects_malformed_documents_and_accepts_a_valid_one() {
 
 #[test]
 fn reports_only_files_the_editor_actually_opens() {
-    // Mirrors the desktop `initial_file_from_argv` gate so `op start
+    // Mirrors the desktop `initial_file_from_argv` gate so `de start
     // --file` never claims a documentPath the editor silently ignored.
     let dir = std::env::temp_dir().join(format!("op-start-file-{}", std::process::id()));
     let _ = fs::create_dir_all(&dir);
@@ -74,7 +74,7 @@ fn reports_only_files_the_editor_actually_opens() {
 
 #[test]
 fn config_store_paths_keep_live_port_and_session_names() {
-    let root = std::env::temp_dir().join(format!("op-cli-config-paths-{}", std::process::id()));
+    let root = std::env::temp_dir().join(format!("de-cli-config-paths-{}", std::process::id()));
     let store = de_config_store::ConfigStore::at(&root);
 
     assert_eq!(

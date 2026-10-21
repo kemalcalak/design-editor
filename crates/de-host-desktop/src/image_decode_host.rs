@@ -63,7 +63,7 @@ impl ImageDecodeHost {
                     .name(format!("op-image-decode-{index}"))
                     .spawn(move || decode_worker(job_rx, result_tx, wake_proxy))
                     .map_err(|err| {
-                        eprintln!("openpencil-desktop: spawn image decode worker failed: {err}");
+                        eprintln!("design-editor: spawn image decode worker failed: {err}");
                     })
                     .ok()
             })

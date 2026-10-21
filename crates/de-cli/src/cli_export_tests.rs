@@ -121,7 +121,7 @@ fn export_rejects_conflicting_target_and_format_flags() {
 #[test]
 fn write_export_response_decodes_png_to_exact_path() {
     let path =
-        std::env::temp_dir().join(format!("op-cli-export-{}-selected.png", std::process::id()));
+        std::env::temp_dir().join(format!("de-cli-export-{}-selected.png", std::process::id()));
     let png = [0x89, b'P', b'N', b'G', 13, 10, 26, 10];
     let response = serde_json::json!({
         "itemId": "n1",
@@ -139,7 +139,7 @@ fn write_export_response_decodes_png_to_exact_path() {
 
 #[test]
 fn write_export_response_rejects_invalid_payloads() {
-    let path = std::env::temp_dir().join("op-cli-export-invalid.png");
+    let path = std::env::temp_dir().join("de-cli-export-invalid.png");
     assert!(export_cli::write_export_response("not-json", &path).is_err());
     assert!(export_cli::write_export_response(
         r#"{"itemId":"n1","itemType":"node","format":"png","bytes_base64":"%%%"}"#,
@@ -182,7 +182,7 @@ fn export_deck_defaults_to_pptx_and_requires_an_output() {
 
 #[test]
 fn export_deck_rejects_a_node_export_format() {
-    // png is valid for `op export` and meaningless for a deck; accepting it
+    // png is valid for `de export` and meaningless for a deck; accepting it
     // would reach the daemon and fail there instead of at the typo.
     let error = parse_args(&args(&[
         "export-deck",
@@ -271,7 +271,7 @@ fn export_frames_requires_a_directory_and_rejects_pdf() {
         .to_string()
         .contains("--output-dir"));
 
-    // A frame batch is images; pdf belongs to `op export` / `op export-deck`.
+    // A frame batch is images; pdf belongs to `de export` / `de export-deck`.
     assert!(parse_args(&args(&[
         "export-frames",
         "--output-dir",

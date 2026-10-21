@@ -46,9 +46,9 @@ impl DesktopApp {
     /// Reconcile the live MCP server against settings + the `--live-mcp`
     /// force flag. Returns `true` when the server's running-state or port
     /// changed (so the caller refreshes the discovery file). A forced
-    /// (`op start`) launch starts the server WITHOUT mutating or persisting
+    /// (`de start`) launch starts the server WITHOUT mutating or persisting
     /// the user's settings — the runtime force port is updated to the bound
-    /// port instead, so a one-off `op start` never rewrites saved prefs.
+    /// port instead, so a one-off `de start` never rewrites saved prefs.
     pub(crate) fn reconcile_mcp_server_from_settings(&mut self) -> bool {
         let setting_running = self
             .host
@@ -97,7 +97,7 @@ impl DesktopApp {
                 true
             }
             Err(err) => {
-                eprintln!("openpencil-desktop mcp: failed to start on {port}: {err}");
+                eprintln!("design-editor mcp: failed to start on {port}: {err}");
                 if port != 0 {
                     match de_host_services::mcp_live::McpLiveServer::start_with_wake(
                         0,
@@ -106,7 +106,7 @@ impl DesktopApp {
                         Ok(server) => {
                             let bound_port = server.port();
                             eprintln!(
-                                "openpencil-desktop mcp: fell back to 127.0.0.1:{bound_port}/mcp"
+                                "design-editor mcp: fell back to 127.0.0.1:{bound_port}/mcp"
                             );
                             self.mcp_server = Some(server);
                             self.note_bound_mcp_port(forced, setting_running, bound_port);
@@ -114,7 +114,7 @@ impl DesktopApp {
                         }
                         Err(fallback_err) => {
                             eprintln!(
-                                "openpencil-desktop mcp: fallback start failed: {fallback_err}"
+                                "design-editor mcp: fallback start failed: {fallback_err}"
                             );
                         }
                     }
@@ -147,7 +147,7 @@ impl DesktopApp {
     /// Record the actually-bound MCP port. A forced (`--live-mcp`) launch
     /// updates the runtime force port only — never the persisted settings —
     /// so later reconciles see the bound port and don't restart, and a
-    /// one-off `op start` leaves saved prefs untouched. A user-enabled
+    /// one-off `de start` leaves saved prefs untouched. A user-enabled
     /// server persists the bound port into settings (existing behavior).
     fn note_bound_mcp_port(&mut self, forced: bool, setting_running: bool, bound: u16) {
         if forced {
@@ -212,7 +212,7 @@ impl DesktopApp {
         self.mcp_server.is_some()
     }
 
-    /// Whether the live MCP server received a token-authed `op stop`
+    /// Whether the live MCP server received a token-authed `de stop`
     /// (`openpencil/shutdown`) and the editor should quit.
     pub(crate) fn mcp_shutdown_requested(&self) -> bool {
         self.mcp_server
@@ -270,7 +270,7 @@ impl DesktopApp {
             };
             if let Err(err) = result {
                 eprintln!(
-                    "openpencil-desktop mcp: failed to update {} integration: {err}",
+                    "design-editor mcp: failed to update {} integration: {err}",
                     cli.label()
                 );
                 if flag_changed {

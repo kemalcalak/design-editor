@@ -9,8 +9,8 @@ transport arguments, or harness config paths.
 For each supported system the contract names these package outputs:
 
 - `runtime`: source-built desktop and CLI runtime;
-- `runtime-prebuilt`: the matching release binaries, wrapped so `op` can find
-  the desktop executable (exports both `openpencil-desktop` and `op`);
+- `runtime-prebuilt`: the matching release binaries, wrapped so `de` can find
+  the desktop executable (exports both `design-editor` and `de`);
 - `web-server`: the source-built `de-host-web-server` plus its web bundle;
 - `skills`: an immutable Skillnet bundle containing `Skillnet.pkl` and the
   OpenPencil design skill.

@@ -125,7 +125,7 @@
     "message": "주소는 포트가 포함된 루프백이어야 합니다 — 127.0.0.1:3100 또는 localhost:3100."
   },
   "errorOffline": {
-    "message": "$1에 연결할 수 없습니다. OpenPencil 데스크톱 앱을 실행한 뒤 설정 → MCP → 서버를 시작하거나 다음을 실행하세요: openpencil-desktop --serve-web 3100"
+    "message": "$1에 연결할 수 없습니다. OpenPencil 데스크톱 앱을 실행한 뒤 설정 → MCP → 서버를 시작하거나 다음을 실행하세요: design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "$1 서버가 연결은 수락했지만 $2초 안에 응답하지 않았습니다. 앱이 바쁘거나 멈췄을 수 있으니 확인 후 다시 시도하세요."

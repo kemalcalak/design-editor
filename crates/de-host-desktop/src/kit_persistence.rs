@@ -85,7 +85,7 @@ pub fn save(state: &EditorState) {
         return;
     };
     if let Err(e) = save_to(state, &path) {
-        eprintln!("openpencil-desktop: uikits.json save failed: {e}");
+        eprintln!("design-editor: uikits.json save failed: {e}");
     }
 }
 

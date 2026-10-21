@@ -50,8 +50,8 @@ integration = new Integration {
     skills = "skills"
   }
   executables = new Executables {
-    desktop = "openpencil-desktop"
-    cli = "op"
+    desktop = "design-editor"
+    cli = "de"
   }
   documentTemplate = "share/openpencil/default.op"
   mcp = new {

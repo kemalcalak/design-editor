@@ -23,7 +23,7 @@ pub fn run_cli_if_requested() -> bool {
     let Some(first) = args.next() else {
         return false;
     };
-    match de_host_services::cli_modes::run_cli_mode("openpencil-desktop", &first, args) {
+    match de_host_services::cli_modes::run_cli_mode("design-editor", &first, args) {
         Some(0) => true,
         Some(code) => std::process::exit(code),
         // Unknown leading arg → fall through to GUI mode for now.

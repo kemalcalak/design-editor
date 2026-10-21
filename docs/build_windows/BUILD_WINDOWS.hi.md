@@ -114,9 +114,9 @@
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
+        ├── design-editor.exe
         ├── de-host-web-server.exe
-        ├── op.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
@@ -133,17 +133,17 @@
 1. एडमिनिस्ट्रेटर के रूप में PowerShell चलाएं और निम्नलिखित कमांड चलाएं (पथ को वास्तविक रिपॉज़िटरी रूट से बदलें):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. सत्यापन
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # विंडो एक पल के लिए दिखेगी और बंद हो जाएगी — सेवा बैकग्राउंड में 3100 पोर्ट सुनती है
     ```
 
@@ -152,7 +152,7 @@
     ```powershell
     cd target\release
     ./de-host-web-server.exe --serve-web 3100
-    # आपको PowerShell में दो "openpencil-desktop --serve-web:" पंक्तियाँ और 3100 पोर्ट दिखेगा
+    # आपको PowerShell में दो "design-editor --serve-web:" पंक्तियाँ और 3100 पोर्ट दिखेगा
     ```
 
 ---

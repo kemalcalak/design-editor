@@ -5,7 +5,7 @@
 //! Style follows `de_orchestrator::OrchestratorError`: a plain enum plus a
 //! hand-written `Display`, no `thiserror` and no new dependency. `Display` is
 //! transparent — each variant reproduces the exact sentence the stringly
-//! code produced, so the stderr lines (`openpencil-desktop mcp: …`), the
+//! code produced, so the stderr lines (`design-editor mcp: …`), the
 //! `{"error":…}` HTTP bodies, and the `Renderer reported failure: …`
 //! screenshot envelope are unchanged byte for byte.
 //!

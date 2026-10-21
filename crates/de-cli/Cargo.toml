@@ -4,11 +4,11 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "OpenPencil `op` CLI — drives the editor via the HTTP MCP transport"
+description = "OpenPencil `de` CLI — drives the editor via the HTTP MCP transport"
 
-# The binary is `op` (the command users type); the crate is `de-cli`.
+# The binary is `de` (the command users type); the crate is `de-cli`.
 [[bin]]
-name = "op"
+name = "de"
 path = "src/main.rs"
 
 [dependencies]

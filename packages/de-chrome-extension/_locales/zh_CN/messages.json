@@ -125,7 +125,7 @@
     "message": "地址必须是本机回环地址加端口——127.0.0.1:3100 或 localhost:3100。"
   },
   "errorOffline": {
-    "message": "无法连接 $1。请启动 OpenPencil 桌面版并在 设置 → MCP 中启动服务器，或运行：openpencil-desktop --serve-web 3100"
+    "message": "无法连接 $1。请启动 OpenPencil 桌面版并在 设置 → MCP 中启动服务器，或运行：design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "$1 已建立连接，但 $2 秒内没有响应。应用可能正忙或已卡住，请检查后重试。"

@@ -23,11 +23,11 @@ fn map_upsert_variables(flags: &Flags) -> Result<Command, CliError> {
     let key = required_flag(
         flags,
         "key",
-        "Usage: op design:upsert-vars --key <key> --file vars.json",
+        "Usage: de design:upsert-vars --key <key> --file vars.json",
     )?;
     let variables = read_payload_file(
         flags,
-        "Usage: op design:upsert-vars --key <key> --file vars.json",
+        "Usage: de design:upsert-vars --key <key> --file vars.json",
     )?;
     let mut args = vec![pair("key", key), pair("variables", variables)];
     push_source_fields(&mut args, flags);
@@ -38,16 +38,16 @@ fn map_upsert_component(flags: &Flags) -> Result<Command, CliError> {
     let key = required_flag(
         flags,
         "key",
-        "Usage: op design:upsert-component --key <key> --name <name> --file node.json",
+        "Usage: de design:upsert-component --key <key> --name <name> --file node.json",
     )?;
     let name = required_flag(
         flags,
         "name",
-        "Usage: op design:upsert-component --key <key> --name <name> --file node.json",
+        "Usage: de design:upsert-component --key <key> --name <name> --file node.json",
     )?;
     let node_json = read_payload_file(
         flags,
-        "Usage: op design:upsert-component --key <key> --name <name> --file node.json",
+        "Usage: de design:upsert-component --key <key> --name <name> --file node.json",
     )?;
     let mut args = vec![
         pair("key", key),
@@ -62,11 +62,11 @@ fn map_upsert_screen(flags: &Flags) -> Result<Command, CliError> {
     let key = required_flag(
         flags,
         "key",
-        "Usage: op design:upsert-screen --key <key> --file node.json",
+        "Usage: de design:upsert-screen --key <key> --file node.json",
     )?;
     let node_json = read_payload_file(
         flags,
-        "Usage: op design:upsert-screen --key <key> --file node.json",
+        "Usage: de design:upsert-screen --key <key> --file node.json",
     )?;
     let mut args = vec![pair("key", key), pair("node_json", node_json)];
     push_source_fields(&mut args, flags);

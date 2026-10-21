@@ -6,8 +6,8 @@ and the rules the project follows for code signing.
 ## What gets signed
 
 - **Windows:** the NSIS installer `OpenPencil-<version>-<arch>-win-setup.exe`
-  (x64 and arm64), containing the desktop app `openpencil-desktop.exe`, the
-  CLI `op.exe`, the bundled ANGLE runtime DLLs, and an unmodified
+  (x64 and arm64), containing the desktop app `design-editor.exe`, the
+  CLI `de.exe`, the bundled ANGLE runtime DLLs, and an unmodified
   Microsoft-signed Visual C++ Redistributable prerequisite.
 - **macOS:** the `.dmg` disk images and the app bundle inside them
   (Developer ID signing + notarization when release certificates are

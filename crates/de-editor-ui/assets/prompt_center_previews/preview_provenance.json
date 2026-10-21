@@ -1073,7 +1073,7 @@
     "web-kilnform": {
       "generationRoute": "scene-template-render",
       "provider": "openpencil",
-      "model": "openpencil-desktop --render-shots",
+      "model": "design-editor --render-shots",
       "sourceLocale": "zh-CN",
       "status": "accepted",
       "note": "Not a model sample. This prompt ships alongside the scene template of the same design; the preview is a deterministic render of that template's checked-in document, so the card shows exactly what the repository contains.",
@@ -1093,7 +1093,7 @@
     "web-reefwright": {
       "generationRoute": "scene-template-render",
       "provider": "openpencil",
-      "model": "openpencil-desktop --render-shots",
+      "model": "design-editor --render-shots",
       "sourceLocale": "zh-CN",
       "status": "accepted",
       "note": "Not a model sample. This prompt ships alongside the scene template of the same design; the preview is a deterministic render of that template's checked-in document, so the card shows exactly what the repository contains.",

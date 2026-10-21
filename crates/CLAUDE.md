@@ -8,7 +8,7 @@ Native + web editor chrome implemented in Rust against jian-skia. This is the **
 > `openpencil-shell-*` crates were dissolved/renamed; deeper sections in this doc
 > may still cite pre-reorg paths. Map them: `openpencil-shell-native` →
 > **`de-host-native`**, `openpencil-shell-web` → **`de-host-web`**,
-> `openpencil-desktop` → **`de-host-desktop`**. `openpencil-shell-core` was
+> `design-editor` → **`de-host-desktop`**. `openpencil-shell-core` was
 > **split**, not just renamed: widgets / Document / `RenderBackend` →
 > **`de-editor-ui`**, the MCP wire layer → **`de-mcp`** (flat `de-mcp/src/*.rs`,
 > no `mcp/` subdir). The `wasm-libc-shim` + `vendor/skia-safe-op` wasm-skia fork
@@ -40,7 +40,7 @@ crates/
 ├── de-engine-jni/        Android JNI marshalling layer for de-engine-ffi (engine thread, registry, callbacks)
 ├── de-engine-napi/       OpenHarmony (OHOS) Node-API layer → `libopenpencil.so`; reuses de-engine-jni's engine thread + registry, everything else target-gated on `target_env = "ohos"` (see its README for the ArkTS API table)
 ├── de-host-web/          Browser bundle entry: wasm32-unknown-unknown cdylib, CanvasKit renderer
-├── de-host-desktop/      Desktop binary `openpencil-desktop` (winit + skia-safe GL); also the `--serve-web` daemon
+├── de-host-desktop/      Desktop binary `design-editor` (winit + skia-safe GL); also the `--serve-web` daemon
 ├── de-cli/               `op` command-line tool
 ├── de-util/              Dependency-free leaf: shared collaboration-id grammar + hex-colour / JSON / XML helpers
 └── …                     de-mcp / de-ai / de-ai-skills / de-codegen / de-orchestrator / de-figma /
@@ -276,7 +276,7 @@ All struct fields and intra-module helpers are scoped `pub(in crate::widget_host
 
 ### Keyboard shortcuts
 
-Native (`openpencil-desktop`) + web (`shell-web`) both dispatch the following P1 keyboard shortcuts through `WidgetHostNative` / `WidgetHost` methods. The desktop runner reads modifier state from `WindowEvent::ModifiersChanged` (`zoom_modifier` = Cmd/Ctrl, `shift_modifier` = Shift); the web shell reads `evt.meta_key() || evt.ctrl_key()` and `evt.shift_key()` from `KeyboardEvent`.
+Native (`design-editor`) + web (`shell-web`) both dispatch the following P1 keyboard shortcuts through `WidgetHostNative` / `WidgetHost` methods. The desktop runner reads modifier state from `WindowEvent::ModifiersChanged` (`zoom_modifier` = Cmd/Ctrl, `shift_modifier` = Shift); the web shell reads `evt.meta_key() || evt.ctrl_key()` and `evt.shift_key()` from `KeyboardEvent`.
 
 | Key                       | Method                | Behaviour (TS parity: `use-edit-shortcuts.ts` + `use-clipboard-shortcuts.ts`)                                                      |
 | ------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -291,9 +291,9 @@ Native (`openpencil-desktop`) + web (`shell-web`) both dispatch the following P1
 
 The shared implementation of these lives in `de_editor_core::host_keyboard_transitions` + `host_escape_transitions`; the host `keyboard*.rs` files are the platform arms.
 
-## Desktop binary (`openpencil-desktop/`)
+## Desktop binary (`design-editor/`)
 
-`crates/openpencil-desktop/src/main.rs` is the production desktop entry. It owns the winit `ApplicationHandler`, opens a GL window via `SharedSkiaContext::new_desktop`, and dispatches every `WindowEvent` onto `WidgetHostNative::apply_*`. Behaviour:
+`crates/design-editor/src/main.rs` is the production desktop entry. It owns the winit `ApplicationHandler`, opens a GL window via `SharedSkiaContext::new_desktop`, and dispatches every `WindowEvent` onto `WidgetHostNative::apply_*`. Behaviour:
 
 - DPI scale via `canvas.scale((dpi, dpi))` per frame (preceded by `reset_matrix()` so it doesn't compound)
 - LOGICAL viewport sizes (physical / dpi)
@@ -304,7 +304,7 @@ The shared implementation of these lives in `de_editor_core::host_keyboard_trans
 
 Native font path bypasses jian-skia's `textlayout` (which builds a fresh `FontCollection` per call → 605ms chrome frame): `NativeBackend` caches a Roboto Typeface + per-codepoint system fonts (resolved via `FontMgr::match_family_style_character`, cached per `i32`) so multi-script chrome (한국어 / हिन्दी / ไทย / Tiếng Việt) renders against the right font. `draw_text` segments each run by typeface and dispatches each segment via `Canvas::draw_str`.
 
-Run: `cargo run -p openpencil-desktop --release`.
+Run: `cargo run -p design-editor --release`.
 
 ## Web runner (`shell-web/`)
 
@@ -404,7 +404,7 @@ Layer-panel drag now supports **cross-parent reparenting**: a drag whose drop-ta
 - **History via VecDeque** (`document/mutators.rs`) — `pop_front` + `push_back` capped at 100 entries; the old `Vec::remove(0)` was O(n) on every commit past the cap.
 - **`Document::t` returns `&'static str`** — every locale value is a string literal, so chrome paint stores `&'static str` instead of cloning a `String` per frame. `PropertyLabels` is a `Copy` struct of static slices; widget builders propagate the `'static` lifetime so no per-paint allocations happen for labels.
 - **Viewport culling** (`widgets/canvas_viewport.rs`) — `paint_node` takes a `cull: Rect` (canvas region + 64 px stroke/handle margin). Leaf nodes outside the cull skip paint entirely; containers always recurse so off-screen-parent / on-screen-child still renders.
-- **Redraw scheduler** (`openpencil-desktop/src/main.rs`) — `request_redraw(dirty: bool)` + a `prepare_redraw` step that skips paint when only a tracked redraw fired and no visible state changed (kills the first-click chip flicker because macOS GL swap chain didn't perfectly hide `canvas.clear(BLACK)` between same-output frames).
+- **Redraw scheduler** (`design-editor/src/main.rs`) — `request_redraw(dirty: bool)` + a `prepare_redraw` step that skips paint when only a tracked redraw fired and no visible state changed (kills the first-click chip flicker because macOS GL swap chain didn't perfectly hide `canvas.clear(BLACK)` between same-output frames).
 - **Cursor-move coalescing** — `apply_cursor_move` cached as `pending_cursor_move`, drained on `RedrawRequested` AND right before `apply_press` / `apply_release` / `apply_right_press` (so the final drag-end frame isn't dropped). Without the press-time drain a fast drag-release could fire press before the queued cursor-move and the release saw stale hover state.
 - **Font cache prewarm** (`de-host-native/src/backend/skia.rs`) — `NativeBackend::new` walks `PREWARM_CJK_CODEPOINTS` (~50 chars covering every CJK glyph used in the chrome + settings modal) through `FontMgr::match_family_style_character` at startup. Without this the first cross-tab paint stutters because each unseen CJK char triggers a synchronous system font scan.
 
@@ -472,7 +472,7 @@ Outside the widget hosts the same rule applies: settings payload serde lives in 
 
 ## Canonical `.op` / `.pen` loader (v0.8.0+)
 
-`openpencil-desktop/src/pen_doc_adapter.rs` bridges the canonical `jian_ops_schema::PenDocument` into the desktop's private `DocPayload` so files saved by the TS editor, Jian apps, or any other tool emitting the canonical schema load through the shared parser. Adapter responsibilities:
+`design-editor/src/pen_doc_adapter.rs` bridges the canonical `jian_ops_schema::PenDocument` into the desktop's private `DocPayload` so files saved by the TS editor, Jian apps, or any other tool emitting the canonical schema load through the shared parser. Adapter responsibilities:
 
 1. **Variant routing** — all 12 `PenNode` variants (frame / group / rectangle / ellipse / line / polygon / path / text / text_input / image / icon_font / ref) become `NodePayload`. Image / TextInput / IconFont degrade where their renderer isn't wired yet (image → grey placeholder rect; text_input → text node with seeded value / placeholder; icon_font → `NodeKind::Other("icon_font")` with `iconFontName` stashed in `text`).
 2. **Layout via `jian_core::layout::LayoutEngine`** — taffy-backed flex solver, with the canonical `clipContent` / `justifyContent` / `alignItems` semantics. Each page-root gets its own engine pass; harvested rects are offset by `(base.x, base.y)` so multi-design files (e.g. `pencil-demo.op`'s 14 side-by-side mock-ups) spread across the infinite canvas instead of overlapping at origin.
@@ -636,7 +636,7 @@ mcp_tests.rs                 Cross-cutting: stdio dispatch, parser invariants
 
 ### Host wiring
 
-`openpencil-desktop --mcp <path>` (`crates/de-host-services/src/mcp_serve.rs`, shared by the desktop binary and `de-host-web-server` via `de_host_services::cli_modes`) runs a JSON-RPC stdio MCP server backed by the .op file at `<path>`. External CLIs (Claude Code / Codex / OpenCode / Kiro / Copilot / Antigravity / Grok Build) spawn the binary in this mode to drive the Rust editor. The module is itself a spine over `mcp_serve/` siblings: `schemas.rs` (the `TOOL_SCHEMAS` catalog), `wire.rs`, `sniff.rs` (top-level method / id sniffing), `error.rs` (`McpServeError`, which separates protocol faults from socket failures), `file_path.rs`, `doc_sync.rs`, and the export / screenshot tool arms.
+`design-editor --mcp <path>` (`crates/de-host-services/src/mcp_serve.rs`, shared by the desktop binary and `de-host-web-server` via `de_host_services::cli_modes`) runs a JSON-RPC stdio MCP server backed by the .op file at `<path>`. External CLIs (Claude Code / Codex / OpenCode / Kiro / Copilot / Antigravity / Grok Build) spawn the binary in this mode to drive the Rust editor. The module is itself a spine over `mcp_serve/` siblings: `schemas.rs` (the `TOOL_SCHEMAS` catalog), `wire.rs`, `sniff.rs` (top-level method / id sniffing), `error.rs` (`McpServeError`, which separates protocol faults from socket failures), `file_path.rs`, `doc_sync.rs`, and the export / screenshot tool arms.
 
 - Handshake: `initialize` returns protocol version + capabilities + serverInfo; `tools/list` enumerates the full catalog with JSON inputSchemas; `notifications/initialized` + `ping` handled inline.
 - Per-call lifecycle: re-build the `ToolRegistry` against the live document (so read-tool snapshots reflect prior writes) → dispatch through `run_stdio_with_applier` → applier closure mutates the doc + saves to disk on each successful write.

@@ -2,7 +2,7 @@
 # Build this checkout and install it as /Applications/OpenPencil.app.
 #
 # Personal-build installer: stages the pinned cargo-bundle once, builds the
-# desktop binary and the `op` CLI in release mode, wraps them with
+# desktop binary and the `de` CLI in release mode, wraps them with
 # scripts/bundle-macos.sh (ad-hoc signed), and replaces the installed app.
 # A Homebrew-managed copy would be overwritten by `brew upgrade`, so the
 # script refuses to run while the openpencil cask is installed.
@@ -28,8 +28,8 @@ echo "==> building release binaries"
 ( cd "$WS_ROOT" && cargo build --release --locked -p de-host-desktop -p de-cli )
 
 echo "==> bundling"
-OPENPENCIL_BINARY="$WS_ROOT/target/release/openpencil-desktop" \
-OPENPENCIL_CLI_BINARY="$WS_ROOT/target/release/op" \
+OPENPENCIL_BINARY="$WS_ROOT/target/release/design-editor" \
+OPENPENCIL_CLI_BINARY="$WS_ROOT/target/release/de" \
 CARGO_BUNDLE_HOME="$CARGO_BUNDLE_HOME" \
   "$WS_ROOT/scripts/bundle-macos.sh"
 

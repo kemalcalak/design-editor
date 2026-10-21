@@ -6,7 +6,7 @@ Personal build of a Rust, AI-native vector design editor driven over MCP.
 
 ```bash
 cargo build -p de-host-desktop --release
-OPENPENCIL_DESKTOP_BIN="$PWD/target/release/openpencil-desktop" op start
+OPENPENCIL_DESKTOP_BIN="$PWD/target/release/design-editor" de start
 ```
 
 The live MCP endpoint is `http://127.0.0.1:3100/mcp`.

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Install the OpenPencil `op` CLI from a GitHub Release.
+# Install the OpenPencil `de` CLI from a GitHub Release.
 #
 # Detects the host OS + architecture, downloads the matching standalone
 # `de-cli-<label>` tarball published by .github/workflows/rust-release.yml,
-# and installs the `op` binary into a bin directory on PATH.
+# and installs the `de` binary into a bin directory on PATH.
 #
 # Usage:
-#   ./install-op.sh                         # install the latest stable release
-#   OP_VERSION=X.Y.Z ./install-op.sh        # pin a specific version
-#   OP_PRERELEASE=1 ./install-op.sh         # allow the newest pre-release
-#   INSTALL_DIR=$HOME/.local/bin ./install-op.sh
+#   ./install-de.sh                         # install the latest stable release
+#   OP_VERSION=X.Y.Z ./install-de.sh        # pin a specific version
+#   OP_PRERELEASE=1 ./install-de.sh         # allow the newest pre-release
+#   INSTALL_DIR=$HOME/.local/bin ./install-de.sh
 #
 # The release workflow stamps DEFAULT_OP_VERSION and DEFAULT_SHA_* in the copy
 # uploaded to GitHub Releases, so the release asset installs that exact tag and
@@ -104,7 +104,7 @@ main() {
   url="https://github.com/${OWNER}/${REPO}/releases/download/v${version}/${asset}"
   expected_sha="$(expected_sha_for_label "$label")"
 
-  echo "==> Installing op ${version} (${label})"
+  echo "==> Installing de ${version} (${label})"
   echo "    from ${url}"
 
   tmp="$(mktemp -d)"
@@ -123,22 +123,22 @@ main() {
   fi
 
   tar -xzf "$tmp/${asset}" -C "$tmp"
-  if [ ! -f "$tmp/op" ]; then
-    echo "error: ${asset} did not contain an 'op' binary" >&2
+  if [ ! -f "$tmp/de" ]; then
+    echo "error: ${asset} did not contain an 'de' binary" >&2
     exit 1
   fi
-  chmod +x "$tmp/op"
+  chmod +x "$tmp/de"
 
-  echo "==> Installing to ${INSTALL_DIR}/op"
+  echo "==> Installing to ${INSTALL_DIR}/de"
   mkdir -p "$INSTALL_DIR" 2>/dev/null || true
   if [ -w "$INSTALL_DIR" ]; then
-    install -m 0755 "$tmp/op" "$INSTALL_DIR/op"
+    install -m 0755 "$tmp/de" "$INSTALL_DIR/de"
   else
     echo "    (need elevated permissions for ${INSTALL_DIR})"
-    sudo install -m 0755 "$tmp/op" "$INSTALL_DIR/op"
+    sudo install -m 0755 "$tmp/de" "$INSTALL_DIR/de"
   fi
 
-  echo "==> Done. Run 'op --version' to verify."
+  echo "==> Done. Run 'de --version' to verify."
 }
 
 main "$@"

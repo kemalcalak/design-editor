@@ -3,7 +3,7 @@
 真实行数 == 硬换行数 => 根本没发生自动折行 => 该报告是保守模拟的误报。
 只留真正折了行的节点。"""
 import json, re, subprocess, sys, pathlib
-BIN="/Users/fini/workspace/openpencil/target/release/openpencil-desktop"
+BIN="/Users/fini/workspace/openpencil/target/release/design-editor"
 TOOL=str(pathlib.Path(__file__).resolve().parent / "cjkcheck.py")
 def snap(path):
     req=[{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}},

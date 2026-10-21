@@ -125,7 +125,7 @@
     "message": "接続先はポート付きのループバックアドレスである必要があります — 127.0.0.1:3100 または localhost:3100。"
   },
   "errorOffline": {
-    "message": "$1 に接続できません。OpenPencil デスクトップアプリを起動して 設定 → MCP → サーバー を開始するか、次を実行してください: openpencil-desktop --serve-web 3100"
+    "message": "$1 に接続できません。OpenPencil デスクトップアプリを起動して 設定 → MCP → サーバー を開始するか、次を実行してください: design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "$1 は接続を受け付けましたが、$2 秒以内に応答しませんでした。処理中か停止している可能性があります。アプリを確認してからもう一度お試しください。"

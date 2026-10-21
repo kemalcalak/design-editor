@@ -12,7 +12,7 @@ import json, os, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-BIN = os.path.join(REPO, "target", "release", "openpencil-desktop")
+BIN = os.path.join(REPO, "target", "release", "design-editor")
 ASSETS = os.path.join(HERE, "assets")
 sys.path.insert(0, HERE)
 

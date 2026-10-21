@@ -25,7 +25,7 @@ impl DesktopApp {
         match self.git_session.repo() {
             Some(repo) => {
                 if let Err(err) = repo.apply_cached(&patch) {
-                    eprintln!("openpencil-desktop: stage hunk failed: {err}");
+                    eprintln!("design-editor: stage hunk failed: {err}");
                     return;
                 }
             }
@@ -102,7 +102,7 @@ impl DesktopApp {
                 self.reload_tracked_document();
             }
             Err(err) => {
-                eprintln!("openpencil-desktop: git merge of {other} failed: {err}");
+                eprintln!("design-editor: git merge of {other} failed: {err}");
             }
         }
         self.refresh_git_panel();
@@ -146,7 +146,7 @@ impl DesktopApp {
             }
             Some(Ok(_)) => self.reload_tracked_document(),
             Some(Err(err)) => {
-                eprintln!("openpencil-desktop: applying merge resolution failed: {err}");
+                eprintln!("design-editor: applying merge resolution failed: {err}");
             }
             None => {}
         }
@@ -184,7 +184,7 @@ impl DesktopApp {
         })();
         match outcome {
             Ok((host, public_key)) => self.show_ssh_setup_dialog(&host, &public_key),
-            Err(err) => eprintln!("openpencil-desktop: ssh auth setup failed: {err}"),
+            Err(err) => eprintln!("design-editor: ssh auth setup failed: {err}"),
         }
     }
 
@@ -231,7 +231,7 @@ impl DesktopApp {
                 panel.https_focused = false;
             }
             Err(err) => {
-                eprintln!("openpencil-desktop: store HTTPS credential failed: {err}");
+                eprintln!("design-editor: store HTTPS credential failed: {err}");
             }
         }
     }
@@ -446,7 +446,7 @@ impl DesktopApp {
                 _ => false,
             },
             Err(err) => {
-                eprintln!("openpencil-desktop: git clone failed: {err}");
+                eprintln!("design-editor: git clone failed: {err}");
                 false
             }
         };

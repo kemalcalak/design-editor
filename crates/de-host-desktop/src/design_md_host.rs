@@ -57,7 +57,7 @@ impl DesignMdSession {
         if let Err(err) = spawned {
             // Deliver the failure through the normal poll path so the
             // generating flag clears instead of the app crashing.
-            eprintln!("openpencil-desktop: spawn op-design-md thread failed: {err}");
+            eprintln!("design-editor: spawn op-design-md thread failed: {err}");
             let _ = tx.send(Err(DesignMdError::WorkerSpawn(err.to_string())));
         }
         Self { rx }
@@ -290,7 +290,7 @@ impl DesktopApp {
                     Err(error) => {
                         let response_error = match error {
                             McpDesignMdFailure::Provider => {
-                                eprintln!("openpencil-desktop: MCP design.md provider failed");
+                                eprintln!("design-editor: MCP design.md provider failed");
                                 DesignMdResponseError::ProviderError
                             }
                             McpDesignMdFailure::EmptyOutput => DesignMdResponseError::EmptyOutput,
@@ -306,7 +306,7 @@ impl DesktopApp {
                 }
             });
         if let Err(error) = spawned {
-            eprintln!("openpencil-desktop: spawn MCP design.md thread failed: {error}");
+            eprintln!("design-editor: spawn MCP design.md thread failed: {error}");
             if let Some(responder) = responder
                 .lock()
                 .unwrap_or_else(|poison| poison.into_inner())
@@ -362,7 +362,7 @@ impl DesktopApp {
         let markdown = match std::fs::read_to_string(&path) {
             Ok(text) => text,
             Err(err) => {
-                eprintln!("openpencil-desktop: design.md import failed: {err}");
+                eprintln!("design-editor: design.md import failed: {err}");
                 return false;
             }
         };
@@ -406,7 +406,7 @@ impl DesktopApp {
             return false;
         }
         let Some(provider) = self.design_md_provider_for_generation() else {
-            eprintln!("openpencil-desktop: design.md auto-generate skipped: no model configured");
+            eprintln!("design-editor: design.md auto-generate skipped: no model configured");
             return false;
         };
         let model = selected_cli_model_id(&self.host);
@@ -442,7 +442,7 @@ impl DesktopApp {
         let provider = self.design_md_provider_for_generation()?;
         if !provider.supports_cancellable_send() || !provider.supports_evidence_only_send() {
             eprintln!(
-                "openpencil-desktop: MCP design.md skipped unsafe provider: {}",
+                "design-editor: MCP design.md skipped unsafe provider: {}",
                 provider.provider_label()
             );
             return None;
@@ -470,7 +470,7 @@ impl DesktopApp {
                 self.apply_generated_design_md(markdown);
             }
             Err(err) => {
-                eprintln!("openpencil-desktop: design.md auto-generate failed: {err}");
+                eprintln!("design-editor: design.md auto-generate failed: {err}");
                 self.host.mark_editor_state_dirty();
             }
         }
@@ -521,7 +521,7 @@ impl DesktopApp {
             return false;
         };
         if let Err(err) = std::fs::write(&path, raw) {
-            eprintln!("openpencil-desktop: design.md export failed: {err}");
+            eprintln!("design-editor: design.md export failed: {err}");
         }
         false
     }

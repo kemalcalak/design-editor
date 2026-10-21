@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 fn temp_json(name: &str, contents: &str) -> String {
     let path = std::env::temp_dir().join(format!(
-        "op-cli-conversion-{name}-{}.json",
+        "de-cli-conversion-{name}-{}.json",
         std::process::id()
     ));
     std::fs::write(&path, contents).expect("write temp json");
@@ -12,7 +12,7 @@ fn temp_json(name: &str, contents: &str) -> String {
 
 fn temp_out_dir(name: &str) -> PathBuf {
     let path =
-        std::env::temp_dir().join(format!("op-cli-skill-export-{name}-{}", std::process::id()));
+        std::env::temp_dir().join(format!("de-cli-skill-export-{name}-{}", std::process::id()));
     std::fs::remove_dir_all(&path).ok();
     path
 }

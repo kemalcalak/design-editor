@@ -13,7 +13,7 @@ pub(super) fn map_import_svg(positionals: &[String], flags: &Flags) -> Result<Co
     let path = required_pos(
         positionals,
         1,
-        "Usage: op import:svg <file.svg> [--x N] [--y N] [--parent P] [--page PAGE]",
+        "Usage: de import:svg <file.svg> [--x N] [--y N] [--parent P] [--page PAGE]",
     )?;
     let mut pairs = vec![pair("svgPath", path)];
     for (flag, key) in [
@@ -34,7 +34,7 @@ pub(super) fn map_import_html(positionals: &[String], flags: &Flags) -> Result<C
     let source = required_pos(
         positionals,
         1,
-        "Usage: op import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.op]",
+        "Usage: de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.op]",
     )?;
     let is_url = source.starts_with("http://") || source.starts_with("https://");
     let viewport_height = match flag_value(flags, "viewport-height") {
@@ -99,7 +99,7 @@ pub(super) fn map_import_snapshot(
     let json_path = required_pos(
         positionals,
         1,
-        "Usage: op import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.op]",
+        "Usage: de import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.op]",
     )?;
     if let Some(out_path) = flag_value(flags, "out") {
         return Ok(Command::ImportSnapshot {
@@ -296,7 +296,7 @@ mod tests {
             .map(|duration| duration.as_nanos())
             .unwrap_or_default();
         std::env::temp_dir().join(format!(
-            "op-cli-html-{tag}-{}-{nanos}.{extension}",
+            "de-cli-html-{tag}-{}-{nanos}.{extension}",
             std::process::id()
         ))
     }
@@ -435,7 +435,7 @@ mod tests {
             .map(|duration| duration.as_nanos())
             .unwrap_or_default();
         let dir =
-            std::env::temp_dir().join(format!("op-cli-html-{tag}-{}-{nanos}", std::process::id()));
+            std::env::temp_dir().join(format!("de-cli-html-{tag}-{}-{nanos}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("create fixture dir");
         dir
     }

@@ -129,7 +129,7 @@ fn fetch_remote_image_blocking(url: &str) -> Result<Vec<u8>, AssetFetchError> {
         let client = reqwest::Client::builder()
             .use_rustls_tls()
             .timeout(Duration::from_secs(20))
-            .user_agent(concat!("openpencil-desktop/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("design-editor/", env!("CARGO_PKG_VERSION")))
             .build()
             .map_err(|e| AssetFetchError::HttpClient(e.to_string()))?;
         let resp = client

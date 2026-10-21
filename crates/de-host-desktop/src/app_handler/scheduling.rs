@@ -237,7 +237,7 @@ impl DesktopApp {
                 false
             }
             Err(err) => {
-                eprintln!("openpencil-desktop: SharedSkiaContext::new_desktop failed: {err}");
+                eprintln!("design-editor: SharedSkiaContext::new_desktop failed: {err}");
                 // The GUI subsystem has no console (`windows_subsystem =
                 // "windows"`), so the `eprintln!` above goes nowhere on a
                 // double-click launch — the app would just flash and

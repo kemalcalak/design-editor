@@ -19,7 +19,7 @@ Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**;
 - **Type check:** `cargo check --workspace`; wasm: `cargo check --target wasm32-unknown-unknown -p de-host-web --no-default-features --features web`
 - **Lint / format (Rust):** `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --all`
 - **Lint / format (remaining TS SDK):** from `packages/`: `bun run lint` (oxlint) / `bun run format` (oxfmt)
-- **Desktop app:** `cargo build -p de-host-desktop` → binary `openpencil-desktop` (live MCP on `127.0.0.1:<port>/mcp`)
+- **Desktop app:** `cargo build -p de-host-desktop` → binary `design-editor` (live MCP on `127.0.0.1:<port>/mcp`)
 - **CLI:** `cargo build -p de-cli` → binary `op`
 - **MCP server:** built into the desktop/web host (`--mcp <path>`); crate `de-mcp`
 - **Iconify catalog (Rust assets):** from `packages/`: `bun run generate-iconify-catalog`
@@ -36,7 +36,7 @@ crates/
 ├── de-editor-host-core/  Transport-free host state machines shared by all hosts
 ├── de-host-native/       Native host lib (winit + skia-safe GL) — desktop + mobile
 ├── de-host-web/          Browser bundle: wasm32 cdylib, CanvasKit renderer
-├── de-host-desktop/      Desktop binary `openpencil-desktop`; also the `--serve-web` daemon
+├── de-host-desktop/      Desktop binary `design-editor`; also the `--serve-web` daemon
 ├── de-host-services/     Headless serve-web / MCP daemon lib (shared by desktop + web-server)
 ├── de-host-web-server/   Thin GL-free web-server binary
 ├── de-cli/               `op` command-line tool

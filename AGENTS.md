@@ -16,7 +16,7 @@ Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**;
 - **Type check:** `cargo check --workspace`; wasm: `cargo check --target wasm32-unknown-unknown -p de-host-web --no-default-features --features web`
 - **Lint / format (Rust):** `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --all`
 - **Lint / format (TS SDK):** from `packages/`: `bun run lint` (oxlint) / `bun run format` (oxfmt)
-- **Desktop app:** `cargo build -p de-host-desktop` → binary `openpencil-desktop`
+- **Desktop app:** `cargo build -p de-host-desktop` → binary `design-editor`
 - **CLI:** `cargo build -p de-cli` → binary `op`
 - **Iconify catalog (Rust assets):** from `packages/`: `bun run generate-iconify-catalog`
 

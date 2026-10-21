@@ -63,7 +63,7 @@ pub(crate) fn alert(title: &str, body: &str, level: MessageLevel) {
         Backend::Unavailable => false,
     };
     if !displayed {
-        eprintln!("openpencil-desktop: {title}: {body}");
+        eprintln!("design-editor: {title}: {body}");
     }
 }
 

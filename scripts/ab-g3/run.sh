@@ -12,7 +12,7 @@ TIMEOUT_S="${OPENPENCIL_AB_G3_TIMEOUT_SECONDS:-900}"
 AUDIT_TIMEOUT_S="${OPENPENCIL_AB_G3_AUDIT_TIMEOUT_SECONDS:-120}"
 RENDER_TIMEOUT_S="${OPENPENCIL_AB_G3_RENDER_TIMEOUT_SECONDS:-120}"
 SMOKE="${OPENPENCIL_AB_G3_SMOKE_BIN:-$REPO/target/release/de-smoke}"
-DESKTOP="${OPENPENCIL_AB_G3_DESKTOP_BIN:-$REPO/target/release/openpencil-desktop}"
+DESKTOP="${OPENPENCIL_AB_G3_DESKTOP_BIN:-$REPO/target/release/design-editor}"
 DRY_RUN="${OPENPENCIL_AB_G3_DRY_RUN:-0}"
 SUMMARY_PATH=""
 GLM_BASE="https://open.bigmodel.cn/api/coding/paas/v4"
@@ -699,7 +699,7 @@ lines.append("- `glm-5.2`: `GLM_KEY` is mapped to `OPENPENCIL_LLM_API_KEY`; base
 lines.append("- Both modes use `OPENPENCIL_LLM_PROVIDER=openai-compat`, `OPENPENCIL_LLM_BASE_URL`, `OPENPENCIL_LLM_API_KEY`, `OPENPENCIL_ORCHESTRATOR_MODEL`, and `OPENPENCIL_SMOKE_OUT`.")
 lines.append("- Orchestrator mode adds `OPENPENCIL_SMOKE_DIRECT=1`; loop mode adds `OPENPENCIL_SMOKE_LOOP=1` and currently requires OpenAI-compatible provider wiring.")
 lines.append("- Audit runs `OPENPENCIL_SMOKE_AUDIT=<file.op> de-smoke audit`; current `de-smoke` still constructs the provider before the audit branch, so the harness passes the same `OPENPENCIL_LLM_*` env into audit. Audit output has `issueCount` plus string `issues`, not structured categories.")
-lines.append("- Render shots run `openpencil-desktop --render-shots <file.op> <outdir>`.")
+lines.append("- Render shots run `design-editor --render-shots <file.op> <outdir>`.")
 lines.append("")
 lines.append("## Models")
 lines.append("")

@@ -342,9 +342,9 @@ SCRIPT
 !endif
 SCRIPT
 
-    cat > "$repo/scripts/install-op.sh" <<'SCRIPT'
-# OP_VERSION=X.Y.Z ./install-op.sh
-# set OP_VERSION explicitly, e.g. OP_VERSION=X.Y.Z ./install-op.sh
+    cat > "$repo/scripts/install-de.sh" <<'SCRIPT'
+# OP_VERSION=X.Y.Z ./install-de.sh
+# set OP_VERSION explicitly, e.g. OP_VERSION=X.Y.Z ./install-de.sh
 SCRIPT
 
     write_workflow_fixture "$repo" required canonical
@@ -369,30 +369,30 @@ repo_snapshot() {
 }
 
 repo=$(new_repo v_prefixed_stale_version 0.8.1)
-printf '%s\n' '# pin v0.8.2' >> "$repo/scripts/install-op.sh"
+printf '%s\n' '# pin v0.8.2' >> "$repo/scripts/install-de.sh"
 run_guard "$repo"
 assert_status 1 'v-prefixed stale version'
-assert_contains 'scripts/install-op.sh:' 'v-prefixed stale version'
+assert_contains 'scripts/install-de.sh:' 'v-prefixed stale version'
 assert_contains 'error: version examples must use X.Y.Z or <version>, not a SemVer release' \
     'v-prefixed stale version'
 assert_no_success_output 'v-prefixed stale version'
 pass 'v-prefixed stale SemVer examples are rejected'
 
 repo=$(new_repo sentence_final_stale_version 0.8.1)
-printf '%s\n' '# pin 0.8.2.' >> "$repo/scripts/install-op.sh"
+printf '%s\n' '# pin 0.8.2.' >> "$repo/scripts/install-de.sh"
 run_guard "$repo"
 assert_status 1 'sentence-final stale version'
-assert_contains 'scripts/install-op.sh:' 'sentence-final stale version'
+assert_contains 'scripts/install-de.sh:' 'sentence-final stale version'
 assert_contains 'error: version examples must use X.Y.Z or <version>, not a SemVer release' \
     'sentence-final stale version'
 assert_no_success_output 'sentence-final stale version'
 pass 'sentence-final stale SemVer examples are rejected'
 
 repo=$(new_repo prerelease_build_stale_version 0.8.1)
-printf '%s\n' '# pin v0.8.2-beta.1+build.5.' >> "$repo/scripts/install-op.sh"
+printf '%s\n' '# pin v0.8.2-beta.1+build.5.' >> "$repo/scripts/install-de.sh"
 run_guard "$repo"
 assert_status 1 'pre-release/build stale version'
-assert_contains 'scripts/install-op.sh:' 'pre-release/build stale version'
+assert_contains 'scripts/install-de.sh:' 'pre-release/build stale version'
 assert_contains 'error: version examples must use X.Y.Z or <version>, not a SemVer release' \
     'pre-release/build stale version'
 assert_no_success_output 'pre-release/build stale version'
@@ -595,10 +595,10 @@ assert_no_success_output 'macOS no-op mismatch and reassignment'
 pass 'macOS validation rejects no-op mismatch bodies and APP_VERSION reassignment'
 
 repo=$(new_repo arbitrary_stale_example_version 0.8.1)
-printf '%s\n' '# stale example: OP_VERSION=0.8.2' >> "$repo/scripts/install-op.sh"
+printf '%s\n' '# stale example: OP_VERSION=0.8.2' >> "$repo/scripts/install-de.sh"
 run_guard "$repo"
 assert_status 1 'arbitrary stale example version'
-assert_contains 'scripts/install-op.sh:' 'arbitrary stale example version'
+assert_contains 'scripts/install-de.sh:' 'arbitrary stale example version'
 assert_contains 'error: version examples must use X.Y.Z or <version>, not a SemVer release' \
     'arbitrary stale example version'
 assert_no_success_output 'arbitrary stale example version'
@@ -606,7 +606,7 @@ pass 'arbitrary stale SemVer examples are rejected'
 
 repo=$(new_repo embedded_version_like_substring 0.8.1)
 printf '%s\n' '# identifier build0.8.2candidate is not a version token' \
-    >> "$repo/scripts/install-op.sh"
+    >> "$repo/scripts/install-de.sh"
 run_guard "$repo"
 assert_status 0 'embedded version-like substring'
 assert_contains 'all managed versions derive from Cargo workspace version 0.8.1' \

@@ -95,12 +95,12 @@ function Install-VcRedistIfRequired {
   if ($InstallerItem.PSIsContainer -or
       ($InstallerItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -or
       $InstallerItem.Length -le 0) {
-    throw "install-op: Visual C++ runtime download did not produce a regular file"
+    throw "install-de: Visual C++ runtime download did not produce a regular file"
   }
 
   $ActualSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $Installer).Hash.ToLowerInvariant()
   if ($ActualSha -ne $VcRedistSha256) {
-    throw "install-op: checksum mismatch for Visual C++ runtime. Expected $VcRedistSha256, got $ActualSha"
+    throw "install-de: checksum mismatch for Visual C++ runtime. Expected $VcRedistSha256, got $ActualSha"
   }
 
   $VersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($Installer)
@@ -108,7 +108,7 @@ function Install-VcRedistIfRequired {
   $ProductVersion = ConvertTo-Version $VersionInfo.ProductVersion
   if ($null -eq $FileVersion -or $FileVersion -ne $VcRedistVersion -or
       $null -eq $ProductVersion -or $ProductVersion -ne $VcRedistVersion) {
-    throw "install-op: unexpected Visual C++ runtime version file=$FileVersion product=$ProductVersion (expected $VcRedistVersion)"
+    throw "install-de: unexpected Visual C++ runtime version file=$FileVersion product=$ProductVersion (expected $VcRedistVersion)"
   }
 
   $Signature = Get-AuthenticodeSignature -LiteralPath $Installer
@@ -124,24 +124,24 @@ function Install-VcRedistIfRequired {
       $null -eq $Signature.SignerCertificate -or
       $SignerName -cne "Microsoft Corporation" -or
       $Signature.SignerCertificate.Subject -notmatch '(^|,\s*)O=Microsoft Corporation(,|$)') {
-    throw "install-op: Visual C++ runtime does not have a valid Microsoft Authenticode signature"
+    throw "install-de: Visual C++ runtime does not have a valid Microsoft Authenticode signature"
   }
 
   $Arguments = '/install /passive /norestart /log "{0}"' -f $LogPath
   try {
     $Process = Start-Process -FilePath $Installer -ArgumentList $Arguments -Verb RunAs -Wait -PassThru
   } catch {
-    throw "install-op: Visual C++ runtime installation could not start: $($_.Exception.Message)"
+    throw "install-de: Visual C++ runtime installation could not start: $($_.Exception.Message)"
   }
 
   if ($Process.ExitCode -notin @(0, 3010, 1638)) {
-    throw "install-op: Visual C++ runtime installer exited with code $($Process.ExitCode). See $LogPath"
+    throw "install-de: Visual C++ runtime installer exited with code $($Process.ExitCode). See $LogPath"
   }
   $RebootRequired = $Process.ExitCode -eq 3010
 
   $InstalledVersion = Get-InstalledVcRedistVersion $RuntimeArch
   if ($null -eq $InstalledVersion -or $InstalledVersion -lt $VcRedistVersion) {
-    throw "install-op: Visual C++ runtime $VcRedistVersion was not registered after installation. See $LogPath"
+    throw "install-de: Visual C++ runtime $VcRedistVersion was not registered after installation. See $LogPath"
   }
 
   Remove-Item -LiteralPath $LogPath -Force -ErrorAction SilentlyContinue
@@ -172,7 +172,7 @@ function Resolve-Version {
     $Latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Owner/$Repo/releases/latest"
   }
   if (-not $Latest.tag_name) {
-    throw "install-op: could not resolve latest release tag; set OP_VERSION explicitly or OP_PRERELEASE=1 to allow pre-release tags"
+    throw "install-de: could not resolve latest release tag; set OP_VERSION explicitly or OP_PRERELEASE=1 to allow pre-release tags"
   }
   return $Latest.tag_name.TrimStart("v")
 }
@@ -195,7 +195,7 @@ switch ($NativeProcessorArchitecture) {
     $VcRuntimeArch = "arm64"
   }
   default {
-    throw "install-op: unsupported Windows architecture $NativeProcessorArchitecture"
+    throw "install-de: unsupported Windows architecture $NativeProcessorArchitecture"
   }
 }
 
@@ -203,7 +203,7 @@ $Version = Resolve-Version
 $Asset = "de-cli-$Label.zip"
 $Url = "https://github.com/$Owner/$Repo/releases/download/v$Version/$Asset"
 
-Write-Host "==> Installing op $Version ($Label)"
+Write-Host "==> Installing de $Version ($Label)"
 Write-Host "    from $Url"
 
 $Temp = Join-Path ([System.IO.Path]::GetTempPath()) ("openpencil-op-install-" + [System.Guid]::NewGuid().ToString("N"))
@@ -219,31 +219,31 @@ try {
   if (-not [string]::IsNullOrWhiteSpace($ExpectedSha)) {
     $ActualSha = (Get-FileHash -Algorithm SHA256 $Archive).Hash.ToLowerInvariant()
     if ($ActualSha -ne $ExpectedSha) {
-      throw "install-op: checksum mismatch for $Asset. Expected $ExpectedSha, got $ActualSha"
+      throw "install-de: checksum mismatch for $Asset. Expected $ExpectedSha, got $ActualSha"
     }
   }
 
   Expand-Archive -Path $Archive -DestinationPath $Temp -Force
-  $Source = Get-ChildItem -Path $Temp -Filter "op.exe" -Recurse | Select-Object -First 1
+  $Source = Get-ChildItem -Path $Temp -Filter "de.exe" -Recurse | Select-Object -First 1
   if (-not $Source) {
-    throw "install-op: op.exe was not found in $Asset"
+    throw "install-de: de.exe was not found in $Asset"
   }
 
   New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
-  $Target = Join-Path $InstallDir "op.exe"
+  $Target = Join-Path $InstallDir "de.exe"
   Copy-Item -Path $Source.FullName -Destination $Target -Force
 
   $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
   $PathEntries = @($UserPath -split ";" | Where-Object { $_ })
   if ($PathEntries -notcontains $InstallDir) {
     [Environment]::SetEnvironmentVariable("Path", (($PathEntries + $InstallDir) -join ";"), "User")
-    Write-Host "Added $InstallDir to the user PATH. Restart the shell to use op globally."
+    Write-Host "Added $InstallDir to the user PATH. Restart the shell to use de globally."
   }
 
   if ($VcRedistRebootRequired) {
-    Write-Host "==> op $Version is installed. Restart Windows, then run 'op --version' to verify."
+    Write-Host "==> de $Version is installed. Restart Windows, then run 'de --version' to verify."
   } else {
-    Write-Host "==> Done. Run 'op --version' to verify."
+    Write-Host "==> Done. Run 'de --version' to verify."
     & $Target --version
   }
 } finally {

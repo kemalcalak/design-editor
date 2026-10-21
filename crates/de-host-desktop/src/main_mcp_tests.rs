@@ -457,7 +457,7 @@ fn forced_live_mcp_starts_without_persisting_settings() {
         settings.mcp_server.running = false;
         settings.mcp_server.port = 3100;
     }
-    // `op start --live-mcp` forces the server on (ephemeral port 0 here to
+    // `de start --live-mcp` forces the server on (ephemeral port 0 here to
     // avoid clashing with a real 3100 server during tests).
     app.force_live_mcp_port = Some(0);
 
@@ -518,6 +518,6 @@ fn parse_live_mcp_port_accepts_all_three_forms() {
 #[test]
 fn default_live_mcp_port_matches_ts_and_cli_default() {
     // CLI default + TS pen-mcp default are both 3100; they must agree so
-    // `op start` and `op <tool>` find each other out of the box.
+    // `de start` and `op <tool>` find each other out of the box.
     assert_eq!(DEFAULT_LIVE_MCP_PORT, 3100);
 }

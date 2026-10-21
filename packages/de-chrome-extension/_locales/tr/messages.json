@@ -125,7 +125,7 @@
     "message": "Adres, port içeren bir geri döngü adresi olmalı — 127.0.0.1:3100 veya localhost:3100."
   },
   "errorOffline": {
-    "message": "OpenPencil $1 adresinde erişilebilir değil. Masaüstü uygulamasını başlatıp Ayarlar → MCP → sunucu bölümünden sunucuyu açın veya şunu çalıştırın: openpencil-desktop --serve-web 3100"
+    "message": "OpenPencil $1 adresinde erişilebilir değil. Masaüstü uygulamasını başlatıp Ayarlar → MCP → sunucu bölümünden sunucuyu açın veya şunu çalıştırın: design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "$1 adresindeki OpenPencil bağlantıyı kabul etti ama $2 saniye içinde yanıt vermedi. Uygulama meşgul ya da takılmış olabilir — kontrol edip yeniden deneyin."

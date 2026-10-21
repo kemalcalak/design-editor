@@ -125,7 +125,7 @@
     "message": "Die Adresse muss eine Loopback-Adresse mit Port sein — 127.0.0.1:3100 oder localhost:3100."
   },
   "errorOffline": {
-    "message": "OpenPencil ist unter $1 nicht erreichbar. Starte die Desktop-App und schalte Einstellungen → MCP → Server ein, oder führe aus: openpencil-desktop --serve-web 3100"
+    "message": "OpenPencil ist unter $1 nicht erreichbar. Starte die Desktop-App und schalte Einstellungen → MCP → Server ein, oder führe aus: design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "OpenPencil unter $1 hat die Verbindung angenommen, aber innerhalb von $2 s nicht geantwortet. Die App ist möglicherweise beschäftigt oder hängt — prüfe sie und versuche es erneut."

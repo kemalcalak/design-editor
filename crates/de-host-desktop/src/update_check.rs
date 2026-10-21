@@ -135,7 +135,7 @@ fn fetch_latest_tag() -> Option<String> {
             .use_rustls_tls()
             .timeout(std::time::Duration::from_secs(15))
             // GitHub's API rejects requests without a User-Agent.
-            .user_agent(concat!("openpencil-desktop/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("design-editor/", env!("CARGO_PKG_VERSION")))
             .build()
             .ok()?;
         // The API carries the richer response, so it stays the first choice;
@@ -274,7 +274,7 @@ fn download_and_open_blocking(version: &str) -> bool {
             .use_rustls_tls()
             // Installers run tens of MB — allow a long transfer.
             .timeout(std::time::Duration::from_secs(600))
-            .user_agent(concat!("openpencil-desktop/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("design-editor/", env!("CARGO_PKG_VERSION")))
             .build()
             .ok()?;
         let mut resp = client.get(&url).send().await.ok()?;
@@ -373,7 +373,7 @@ pub fn open_url(url: &str) {
     #[cfg(target_os = "windows")]
     let result = windows_start(url);
     if let Err(e) = result {
-        eprintln!("openpencil-desktop: open_url({url}) failed: {e}");
+        eprintln!("design-editor: open_url({url}) failed: {e}");
     }
 }
 

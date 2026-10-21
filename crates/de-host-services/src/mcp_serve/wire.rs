@@ -42,7 +42,7 @@ pub fn ping_response(id_raw: &str, token: Option<&str>) -> String {
     // Carry the OpenPencil identity marker so the `op` CLI can confirm a
     // port is really our MCP server (not a stale listener or a third-party
     // JSON-RPC server) before routing tool calls to it. A CLI-spawned
-    // headless server also echoes its per-instance `token` so `op stop` can
+    // headless server also echoes its per-instance `token` so `de stop` can
     // confirm the pid in its manager file owns this port. The token is
     // passed in (sourced from the env at the call site) so this stays a
     // pure formatter — testable without mutating process-global env.
@@ -69,7 +69,7 @@ pub fn ping_response(id_raw: &str, token: Option<&str>) -> String {
 /// The CLI passes a per-instance token to a spawned `--mcp-http` server via
 /// `OPENPENCIL_MCP_TOKEN`; reporting it in `ping` lets the CLI confirm the
 /// pid in its manager file belongs to the server actually serving the port
-/// (defeats stale-pid / port-reuse confusion on `op stop` / reuse).
+/// (defeats stale-pid / port-reuse confusion on `de stop` / reuse).
 /// Restricted to safe chars so it embeds in the JSON reply without escaping;
 /// anything else is treated as absent.
 pub fn headless_token_from_env() -> Option<String> {

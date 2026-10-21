@@ -125,7 +125,7 @@
     "message": "La dirección debe ser de bucle invertido con un puerto: 127.0.0.1:3100 o localhost:3100."
   },
   "errorOffline": {
-    "message": "No se puede conectar con OpenPencil en $1. Abre la aplicación de escritorio e inicia Configuración → MCP → servidor, o ejecuta: openpencil-desktop --serve-web 3100"
+    "message": "No se puede conectar con OpenPencil en $1. Abre la aplicación de escritorio e inicia Configuración → MCP → servidor, o ejecuta: design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "OpenPencil en $1 aceptó la conexión pero no respondió en $2 s. Puede estar ocupado o bloqueado: revisa la aplicación y vuelve a intentarlo."

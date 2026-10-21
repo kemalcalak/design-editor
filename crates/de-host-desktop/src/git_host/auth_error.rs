@@ -5,8 +5,8 @@
 //! Style follows `de_orchestrator::OrchestratorError`: a plain enum plus a
 //! hand-written `Display`, no `thiserror` and no new dependency. `Display`
 //! reproduces the exact sentence the stringly code produced, so the
-//! `openpencil-desktop: ssh auth setup failed: …` and
-//! `openpencil-desktop: store HTTPS credential failed: …` stderr lines are
+//! `design-editor: ssh auth setup failed: …` and
+//! `design-editor: store HTTPS credential failed: …` stderr lines are
 //! unchanged byte for byte.
 //!
 //! Both flows were written as `Result`-returning closures typed

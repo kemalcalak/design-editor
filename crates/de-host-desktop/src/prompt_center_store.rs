@@ -16,7 +16,7 @@ pub(crate) fn install_user_prompts(host: &mut WidgetHostNative) {
     let store = match ConfigStore::user() {
         Ok(store) => store,
         Err(error) => {
-            eprintln!("openpencil-desktop: prompt center store unavailable: {error}");
+            eprintln!("design-editor: prompt center store unavailable: {error}");
             host.editor_state_mut()
                 .editor_ui
                 .prompt_center
@@ -45,14 +45,14 @@ pub(crate) fn flush_user_prompts_if_dirty(host: &mut WidgetHostNative) -> bool {
     let store = match ConfigStore::user() {
         Ok(store) => store,
         Err(error) => {
-            eprintln!("openpencil-desktop: prompt center store unavailable: {error}");
+            eprintln!("design-editor: prompt center store unavailable: {error}");
             return false;
         }
     };
     match flush_to_store(&store, &mut host.editor_state_mut().editor_ui.prompt_center) {
         Ok(wrote) => wrote,
         Err(error) => {
-            eprintln!("openpencil-desktop: prompt center save failed: {error}");
+            eprintln!("design-editor: prompt center save failed: {error}");
             false
         }
     }
@@ -63,7 +63,7 @@ fn load_prompts(store: &ConfigStore) -> Vec<CustomPrompt> {
         Ok(Some(prompts)) => prompts,
         Ok(None) => Vec::new(),
         Err(error) => {
-            eprintln!("openpencil-desktop: prompt center load failed: {error}");
+            eprintln!("design-editor: prompt center load failed: {error}");
             Vec::new()
         }
     }

@@ -91,7 +91,7 @@ pub(crate) fn finalize_design_session_if_needed(
     // finalize actually run, and from where" for the next one. There is no
     // live transcript to append to at teardown time (the session is
     // already being discarded), so stderr is this path's signal.
-    eprintln!("openpencil-desktop: design-loop finalize ran (source={source})");
+    eprintln!("design-editor: design-loop finalize ran (source={source})");
 }
 
 /// Pump the in-flight turn's deltas into the trailing assistant message, then

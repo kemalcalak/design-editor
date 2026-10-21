@@ -15,7 +15,7 @@
 //! `de_host_web.js` wins):
 //! 1. `$OPENPENCIL_WEB_BUNDLE_DIR` — explicit override.
 //! 2. `<exe_dir>/web-bundle` — deploy layout: the bundle shipped next to
-//!    the `openpencil-desktop` executable.
+//!    the `design-editor` executable.
 //! 3. `<exe_dir>/../../crates/de-host-web/pkg` — dev layout: a cargo build
 //!    runs from `target/<profile>/`, two levels under the repo root, where
 //!    `tools/check-wasm-bundle.sh` writes the bundle.
@@ -457,7 +457,7 @@ mod tests {
         assert!(body.contains("/pkg/de_host_web.js"), "{body}");
         assert!(!body.contains("fetch('/api/mcp/sync-reset'"), "{body}");
         assert!(body.contains("await mod.mount_ck('op')"), "{body}");
-        assert!(body.contains("data-op-smoke"), "{body}");
+        assert!(body.contains("data-de-smoke"), "{body}");
         assert!(!body.contains("mod.mount('op')"), "{body}");
         assert!(!body.contains("EMSDK"), "{body}");
         let _ = std::fs::remove_dir_all(&dir);
@@ -500,7 +500,7 @@ mod tests {
         assert_eq!(reply.content_type, "text/html; charset=utf-8");
         let body = String::from_utf8(reply.body).expect("utf8");
         assert!(body.contains("mod.mount_ck('op')"), "{body}");
-        assert!(body.contains("data-op-smoke"), "{body}");
+        assert!(body.contains("data-de-smoke"), "{body}");
         assert!(body.contains("--features canvaskit"), "{body}");
         assert!(!body.contains("mod.mount('op')"), "{body}");
         assert!(!body.contains("EMSDK"), "{body}");

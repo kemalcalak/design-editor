@@ -65,7 +65,7 @@ pub fn persist_if_dirty(state: &mut EditorState) {
         let _ = std::fs::create_dir_all(dir);
     }
     if let Err(e) = std::fs::write(&path, presets_to_json(&state.theme_presets)) {
-        eprintln!("openpencil-desktop: theme-presets.json save failed: {e}");
+        eprintln!("design-editor: theme-presets.json save failed: {e}");
     }
 }
 
@@ -121,7 +121,7 @@ fn export_preset_dialog(state: &EditorState) {
     );
     if let Err(e) = std::fs::write(&path, json) {
         eprintln!(
-            "openpencil-desktop: theme preset export failed ({}): {e}",
+            "design-editor: theme preset export failed ({}): {e}",
             path.display()
         );
     }
@@ -143,7 +143,7 @@ fn import_preset_dialog(host: &mut WidgetHostNative) {
         Ok(raw) => raw,
         Err(e) => {
             eprintln!(
-                "openpencil-desktop: theme preset read failed ({}): {e}",
+                "design-editor: theme preset read failed ({}): {e}",
                 path.display()
             );
             return;
@@ -151,7 +151,7 @@ fn import_preset_dialog(host: &mut WidgetHostNative) {
     };
     let Some((_name, themes, variables)) = parse_preset_file(&raw) else {
         eprintln!(
-            "openpencil-desktop: invalid theme preset file: {}",
+            "design-editor: invalid theme preset file: {}",
             path.display()
         );
         return;

@@ -123,9 +123,9 @@
 
         ```plaintext
         release\
-        ├── openpencil-desktop.exe
+        ├── design-editor.exe
         ├── de-host-web-server.exe
-        ├── op.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
@@ -142,18 +142,18 @@
 1. 以管理员身份运行 PowerShell，执行以下命令，**把 <i><u>openpencil‑main 根目录</u></i> 替换为实际仓库目录**：
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "openpencil-main根目录\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "openpencil-main根目录\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "openpencil-main根目录\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "openpencil-main根目录\target\release\design-editor.exe", "User")
     ```
 
 ## 五、验证
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
-    #屏幕会一闪而过，后台运行openpencil-desktop服务监听3100端口
+    ./design-editor.exe --serve-web 3100
+    #屏幕会一闪而过，后台运行design-editor服务监听3100端口
     ```
 
 2. de-host-web-server.exe  <i>` (dsh插件可以不用这个文件) `</i>
@@ -161,7 +161,7 @@
     ```powershell
     cd target\release
     ./de-host-web-server.exe --serve-web 3100
-    #会看到两段“openpencil-desktop --serve-web: ”，在PowerShell中监听3100端口
+    #会看到两段“design-editor --serve-web: ”，在PowerShell中监听3100端口
     ```
 
 ---

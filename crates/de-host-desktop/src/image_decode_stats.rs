@@ -111,7 +111,7 @@ impl ImageDecodeStats {
             .spawn(move || report_loop(reporter_shared, stop_rx))
             .map_err(|err| {
                 // Opt-in telemetry only — log and run without stats.
-                eprintln!("openpencil-desktop: spawn image decode stats reporter failed: {err}");
+                eprintln!("design-editor: spawn image decode stats reporter failed: {err}");
             })
             .ok()?;
         Some(Self {

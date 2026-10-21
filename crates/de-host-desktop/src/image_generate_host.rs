@@ -50,7 +50,7 @@ async fn run_generate(
     let client = reqwest::Client::builder()
         .use_rustls_tls()
         .timeout(Duration::from_secs(120))
-        .user_agent(concat!("openpencil-desktop/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("design-editor/", env!("CARGO_PKG_VERSION")))
         .build()
         .map_err(|e| ImageGenerateError::ClientBuild {
             message: e.to_string(),

@@ -5,7 +5,7 @@
 //! Style follows `de_orchestrator::OrchestratorError`: a plain enum plus a
 //! hand-written `Display`, no `thiserror` and no new dependency. `Display`
 //! reproduces the exact sentence the stringly code produced, so the
-//! `openpencil-desktop: design.md auto-generate failed: …` stderr line is
+//! `design-editor: design.md auto-generate failed: …` stderr line is
 //! unchanged byte for byte.
 //!
 //! What the enum adds is the difference between "the model answered with an

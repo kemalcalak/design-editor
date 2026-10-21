@@ -152,7 +152,7 @@ fn release_workflow_does_not_publish_unsigned_macos_desktop_tarball() {
     .expect("rust-release workflow is readable");
 
     assert!(
-        workflow.contains("if [ \"$RUNNER_OS\" != \"macOS\" ]; then\n            tar czf ../../../openpencil-desktop-${{ matrix.label }}.tar.gz openpencil-desktop"),
+        workflow.contains("if [ \"$RUNNER_OS\" != \"macOS\" ]; then\n            tar czf ../../../design-editor-${{ matrix.label }}.tar.gz design-editor"),
         "macOS release artifacts should not include the raw desktop binary tarball because the signed/notarized desktop artifact is the DMG"
     );
     assert!(
@@ -168,7 +168,7 @@ fn release_workflow_does_not_publish_unsigned_macos_desktop_tarball() {
         .expect("workflow should document Windows artifacts");
     let macos_block = &workflow[macos_block_start..windows_block_start];
     assert!(
-        !macos_block.contains("openpencil-desktop-<label>.tar.gz"),
+        !macos_block.contains("design-editor-<label>.tar.gz"),
         "release workflow comments should not document a macOS raw desktop tarball"
     );
     assert!(
@@ -190,7 +190,7 @@ fn macos_bundle_signing_uses_hardened_runtime_for_developer_id() {
         "Developer ID macOS signing should enable hardened runtime and secure timestamp"
     );
     assert!(
-        script.contains("sign_macos_code \"$APP/Contents/MacOS/openpencil-desktop\""),
+        script.contains("sign_macos_code \"$APP/Contents/MacOS/design-editor\""),
         "bundle script should explicitly sign the main app executable before signing the bundle"
     );
     assert!(
@@ -202,7 +202,7 @@ fn macos_bundle_signing_uses_hardened_runtime_for_developer_id() {
         .find("sign_macos_code \"$APP/Contents/MacOS/op\"")
         .expect("bundle script signs embedded op CLI");
     let sign_main = script
-        .find("sign_macos_code \"$APP/Contents/MacOS/openpencil-desktop\"")
+        .find("sign_macos_code \"$APP/Contents/MacOS/design-editor\"")
         .expect("bundle script signs the main app executable");
     assert!(
         sign_cli < sign_main,
@@ -375,7 +375,7 @@ fn windows_nsis_installer_services_vc_runtime_fail_closed() {
 fn windows_cli_installer_services_vc_runtime_fail_closed() {
     let installer = std::fs::read_to_string(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../scripts/install-op.ps1"
+        "/../../scripts/install-de.ps1"
     ))
     .expect("Windows CLI installer is readable");
     assert!(
@@ -431,7 +431,7 @@ fn windows_cli_installer_services_vc_runtime_fail_closed() {
     );
     assert!(
         service.contains("$null -eq $InstalledVersion -or $InstalledVersion -lt $VcRedistVersion")
-            && service.contains("throw \"install-op: Visual C++ runtime"),
+            && service.contains("throw \"install-de: Visual C++ runtime"),
         "the CLI install must fail closed when the post-install Runtime version is insufficient"
     );
     let service_call = installer
@@ -568,7 +568,7 @@ fn browser_smoke_script_and_ci_cover_canvas_and_daemon_paths() {
         "browser smoke should cover the daemon health path"
     );
     assert!(
-        script.contains("data-op-smoke=\"ok\""),
+        script.contains("data-de-smoke=\"ok\""),
         "browser smoke should assert the DOM success marker written after mount"
     );
     assert!(

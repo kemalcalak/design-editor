@@ -5,7 +5,7 @@
 //! - the desktop host's background `ImageSearchSession` (which resolves slots
 //!   on the live canvas as searches complete), and
 //! - the headless MCP `enrich_images` tool in `de-host-services` (the
-//!   in-process version of `openpencil-desktop --enrich-images`).
+//!   in-process version of `design-editor --enrich-images`).
 //!
 //! Both were originally born in `de-host-desktop/src/image_search_session`;
 //! they moved here as pure code motion so the dependency direction stays

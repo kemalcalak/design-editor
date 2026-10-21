@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Assemble an AppImage for the OpenPencil Rust desktop shell + `op` CLI.
+# Assemble an AppImage for the OpenPencil Rust desktop shell + `de` CLI.
 #
 # AppDir layout (usr/ tree shared with the .deb via package-linux-common.sh):
-#   AppRun -> usr/bin/openpencil-desktop   (symlink entrypoint)
+#   AppRun -> usr/bin/design-editor   (symlink entrypoint)
 #   openpencil.desktop, openpencil.png, .DirIcon   (AppImage root metadata)
-#   usr/bin/{openpencil-desktop,op}
+#   usr/bin/{design-editor,de}
 #   usr/share/{applications,mime/packages,icons,pixmaps}/...
 #
 # The packing tool and type2 runtime are downloaded with reviewed SHA-256 pins
@@ -87,7 +87,7 @@ op_install_usr_tree "$APPDIR" "$DESKTOP_BIN" "$CLI_BIN" "$ICON_PNG"
 cp "$APPDIR/usr/share/applications/openpencil.desktop" "$APPDIR/openpencil.desktop"
 cp "$ICON_PNG" "$APPDIR/openpencil.png"
 cp "$ICON_PNG" "$APPDIR/.DirIcon"
-ln -sf usr/bin/openpencil-desktop "$APPDIR/AppRun"
+ln -sf usr/bin/design-editor "$APPDIR/AppRun"
 
 if [ "$LAYOUT_ONLY" = 1 ] || [ -z "$TOOL" ]; then
   echo "==> layout-only mode: assembled AppDir"

@@ -125,7 +125,7 @@
     "message": "Địa chỉ phải là loopback kèm cổng — 127.0.0.1:3100 hoặc localhost:3100."
   },
   "errorOffline": {
-    "message": "Không kết nối được tới OpenPencil tại $1. Hãy mở ứng dụng máy tính và bật Cài đặt → MCP → máy chủ, hoặc chạy: openpencil-desktop --serve-web 3100"
+    "message": "Không kết nối được tới OpenPencil tại $1. Hãy mở ứng dụng máy tính và bật Cài đặt → MCP → máy chủ, hoặc chạy: design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "OpenPencil tại $1 đã chấp nhận kết nối nhưng không phản hồi trong $2 giây. Ứng dụng có thể đang bận hoặc bị treo — hãy kiểm tra rồi thử lại."

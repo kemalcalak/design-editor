@@ -125,7 +125,7 @@
     "message": "Endpoint must be loopback with a port — 127.0.0.1:3100 or localhost:3100."
   },
   "errorOffline": {
-    "message": "OpenPencil is not reachable at $1. Launch the desktop app and start Settings → MCP → server, or run: openpencil-desktop --serve-web 3100"
+    "message": "OpenPencil is not reachable at $1. Launch the desktop app and start Settings → MCP → server, or run: design-editor --serve-web 3100"
   },
   "errorTimeout": {
     "message": "OpenPencil at $1 accepted the connection but did not answer within $2s. It may be busy or stuck — check the app, then try again."

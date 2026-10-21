@@ -2,7 +2,7 @@
 //!
 //! shell-core is wasm32-clean and transport-free, so it owns only
 //! the [`ModelEntry`] *type* — it never queries a CLI. The desktop
-//! host (`openpencil-desktop`) discovers real models from the
+//! host (`design-editor`) discovers real models from the
 //! connected CLIs (Codex's `models_cache.json`, `opencode models`,
 //! the Claude SDK, …) and writes them into
 //! `Document.chat.available_models`.
