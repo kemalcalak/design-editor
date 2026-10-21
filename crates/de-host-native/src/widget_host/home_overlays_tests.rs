@@ -1,5 +1,5 @@
 //! gl-host tests for Home's model-access surface: the model chip, the
-//! connect card, the Home-anchored picker, and the orchestrator launch
+//! provider link, the Home-anchored picker, and the orchestrator launch
 //! route. Run with `--features gl-host`.
 
 use super::WidgetHostNative;
@@ -65,61 +65,47 @@ fn pressing_the_model_chip_opens_the_chat_model_picker() {
 }
 
 #[test]
-fn pressing_the_model_chip_without_a_usable_agent_opens_the_connect_card() {
+fn the_provider_link_opens_the_agents_settings_tab() {
     let mut host = host_with_home();
     let point = chip_center(&host);
-    assert!(host.apply_press(point.x, point.y, W, H));
-    assert!(host.editor_state().editor_ui.home.connect_card_open);
-    assert!(!host.editor_state().editor_ui.chat_model_picker.open);
-}
-
-#[test]
-fn pressing_send_without_a_usable_agent_opens_the_connect_card_not_a_turn() {
-    let mut host = host_with_home();
-    host.editor_state_mut().editor_ui.home.set_draft("取餐预约");
     let home = HomeSurface::for_editor(host.editor_state()).expect("home visible");
-    let send = center(home.layout(W, H).send);
-    assert!(host.apply_press(send.x, send.y, W, H));
-    assert!(host.editor_state().editor_ui.home.connect_card_open);
-    assert!(
-        host.editor_state().chat.pending_send.is_none(),
-        "no turn may be queued while nothing can answer it"
+    assert_eq!(
+        home.hit_test(W, H, point),
+        Some(HomeHit::AddProvider),
+        "with nothing to answer, the model slot is the provider link"
     );
-    assert!(host.home_visible(), "Home stays up under the card");
-}
-
-#[test]
-fn connect_card_rows_open_their_modals_and_escape_closes_the_card() {
-    let mut host = host_with_home();
-    let chip = chip_center(&host);
-    assert!(host.apply_press(chip.x, chip.y, W, H));
-    let home = HomeSurface::for_editor(host.editor_state()).expect("home visible");
-    let layout = home.layout(W, H);
-
-    let api_key = center(layout.connect_rows[1]);
-    assert!(host.apply_press(api_key.x, api_key.y, W, H));
-    assert!(!host.editor_state().editor_ui.home.connect_card_open);
+    drop(home);
+    assert!(host.apply_press(point.x, point.y, W, H));
     assert!(host.editor_state().editor_ui.agent_settings_open);
     assert_eq!(
         host.editor_state().editor_ui.agent_settings.tab,
         de_editor_core::AgentSettingsTab::Agents
     );
+    assert!(!host.editor_state().editor_ui.chat_model_picker.open);
+}
 
-    // Re-open via Send this time, then Escape peels the card off. The
-    // settings modal must be closed first — while it is open it owns
-    // every press above Home.
-    host.editor_state_mut().editor_ui.agent_settings_open = false;
-    let send = center(layout.send);
+#[test]
+fn pressing_send_without_a_usable_agent_queues_no_turn() {
+    let mut host = host_with_home();
+    host.editor_state_mut().editor_ui.home.set_draft("a bakery");
+    let home = HomeSurface::for_editor(host.editor_state()).expect("home visible");
+    let send = center(home.layout(W, H).send);
     assert!(host.apply_press(send.x, send.y, W, H));
-    assert!(host.editor_state().editor_ui.home.connect_card_open);
-    assert!(host.apply_escape());
-    assert!(!host.editor_state().editor_ui.home.connect_card_open);
+    assert!(
+        host.editor_state().chat.pending_send.is_none(),
+        "no turn may be queued while nothing can answer it"
+    );
+    assert!(host.editor_state().editor_ui.agent_settings_open);
+    assert!(
+        host.home_visible(),
+        "Home stays up under the settings modal"
+    );
 }
 
 #[test]
 fn home_send_marks_the_turn_for_the_orchestrator_route() {
     let mut host = host_with_usable_agent();
-    for character in "取餐预约".chars() {
+    for character in "a bakery".chars() {
         assert!(host.apply_text(character));
     }
     assert!(host.apply_send());
@@ -227,7 +213,7 @@ fn home_hit_test_still_routes_the_sheet_under_the_new_chip() {
 /// same thing, or a first-run user finds a way in on one screen and a
 /// different one on the other.
 #[test]
-fn home_and_top_bar_avatars_open_the_same_account_entry() {
+fn the_top_bar_avatar_opens_the_account_entry() {
     let mut host = WidgetHostNative::new();
     // Without the host's account gate neither entry does anything.
     assert!(!host.open_account_entry());
@@ -240,50 +226,4 @@ fn home_and_top_bar_avatars_open_the_same_account_entry() {
         "signed out opens the login modal"
     );
     assert!(!host.editor_state().editor_ui.account_menu_open);
-}
-
-/// Home's avatar opens one of two things, and the takeover has to draw
-/// and route BOTH — a signed-in user clicking it got an account menu
-/// that existed in state and appeared nowhere.
-#[test]
-fn home_routes_the_signed_in_account_menu_as_well_as_the_sign_in_modal() {
-    let mut host = WidgetHostNative::new();
-    host.editor_state_mut().editor_ui.home.visible = true;
-    host.editor_state_mut().editor_ui.account_ui_available = true;
-    // Signed out: the avatar opens the sign-in modal, and Home owns the press.
-    assert!(host.open_account_entry());
-    assert!(host.editor_state().editor_ui.login_modal_open);
-    assert_eq!(
-        host.press_home_overlays(400.0, 400.0, 1440.0, 900.0),
-        Some(true),
-        "the modal owns presses over the takeover"
-    );
-
-    // Signed in: the menu opens instead, and Home owns its presses too.
-    host.editor_state_mut().editor_ui.login_modal_open = false;
-    host.editor_state_mut().editor_ui.account_menu_open = true;
-    assert_eq!(
-        host.press_home_overlays(400.0, 400.0, 1440.0, 900.0),
-        Some(true),
-        "an open account menu must not let presses fall through Home"
-    );
-}
-
-/// ...and the menu hangs off HOME's avatar, not the professional top
-/// bar's, which is a different place on the same window.
-#[test]
-fn the_account_menu_anchors_to_homes_own_avatar() {
-    let mut state = de_editor_core::EditorState::new();
-    state.editor_ui.account_ui_available = true;
-    let pro = de_editor_ui::widgets::touch_overlay_geometry::account_anchor(&state, 1440.0);
-    state.editor_ui.home.visible = true;
-    let home = de_editor_ui::widgets::touch_overlay_geometry::account_anchor(&state, 1440.0);
-    assert_ne!(
-        pro.origin.x, home.origin.x,
-        "different avatars, different anchors"
-    );
-    // The anchor sits in Home's top bar, left of its 打开文件 button.
-    assert!(home.size.x > 0.0 && home.size.y > 0.0);
-    assert!(home.origin.y < 60.0, "in the top bar: {home:?}");
-    assert!(home.origin.x < pro.origin.x, "left of the pro avatar");
 }

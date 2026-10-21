@@ -16,7 +16,9 @@ use de_editor_core::{
     WORKSPACE_DECK_STRIP_H, WORKSPACE_HEADER_H, WORKSPACE_TOOLBAR_H,
 };
 
-pub use super::home_surface::StudioPalette;
+#[path = "workspace_surface_palette.rs"]
+mod palette;
+pub use palette::StudioPalette;
 
 /// Back circle button (36 px) inset.
 /// Left inset of the header's back circle. The desktop window is
@@ -89,15 +91,15 @@ pub fn workspace_enter(shown_at_ms: u64, now_ms: u64) -> (f32, f32) {
 /// The view segments a family's toolbar offers, in paint order.
 pub fn family_views(family: HomeFamily) -> &'static [WorkspaceView] {
     match family {
-        HomeFamily::Presentation => &[WorkspaceView::Single { index: 0 }],
-        HomeFamily::Web | HomeFamily::Infographic => &[WorkspaceView::LongPage],
+        HomeFamily::Slides => &[WorkspaceView::Single { index: 0 }],
+        HomeFamily::LandingPage => &[WorkspaceView::LongPage],
         _ => &[WorkspaceView::AllBoards, WorkspaceView::Single { index: 0 }],
     }
 }
 
 /// Whether this family paints the bottom deck strip.
 pub fn family_has_strip(family: HomeFamily) -> bool {
-    matches!(family, HomeFamily::Presentation)
+    matches!(family, HomeFamily::Slides)
 }
 
 /// Every rect the paint pass, the host blit and the tests need.
@@ -215,8 +217,8 @@ pub fn layout_for(
     right -= ZOOM_FIT_W + 2.0;
     let zoom_out = Rect::xywh(right - ZOOM_ICON_W, icon_y, ZOOM_ICON_W, TOOLBAR_BUTTON_H);
     right -= ZOOM_ICON_W + 10.0;
-    let show_pager = matches!(family, HomeFamily::Presentation)
-        || views.contains(&WorkspaceView::Single { index: 0 });
+    let show_pager =
+        matches!(family, HomeFamily::Slides) || views.contains(&WorkspaceView::Single { index: 0 });
     let next = show_pager
         .then(|| Rect::xywh(right - TOOLBAR_ICON, icon_y, TOOLBAR_ICON, TOOLBAR_BUTTON_H));
     right -= TOOLBAR_ICON + 2.0;

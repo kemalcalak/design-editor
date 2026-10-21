@@ -387,6 +387,17 @@ pub fn run_action(
             let mut state = EditorState::starter();
             preserve_app_preferences(host.editor_state(), &mut state);
             state.editor_ui.home.hide();
+            // A Home template entry asked for this fresh document; open its
+            // panel on the replacement state.
+            if let Some(template) = host
+                .editor_state_mut()
+                .editor_ui
+                .home
+                .pending_template
+                .take()
+            {
+                state.editor_ui.apply_home_template(template, host.now_ms());
+            }
             if !host.replace_editor_state(state) {
                 return ActionOutcome::Noop;
             }
@@ -404,7 +415,8 @@ pub fn run_action(
         }
         FileAction::Home => {
             host.editor_state_mut().editor_ui.entry_surface = de_editor_core::EntrySurface::Home;
-            host.editor_state_mut().editor_ui.home.visible = true;
+            // Opened over the current document, so Escape returns to it.
+            host.editor_state_mut().editor_ui.home.show(true);
             host.mark_editor_state_dirty();
             ActionOutcome::Noop
         }

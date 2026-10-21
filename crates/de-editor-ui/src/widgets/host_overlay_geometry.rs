@@ -174,10 +174,16 @@ pub fn close_import_menu(state: &mut EditorState) {
     state.editor_ui.import_menu.hover = None;
 }
 
-/// Locale-picker dropdown rect — centred under the TopBar globe button,
-/// clamped 8 px inside both viewport edges.
+/// Locale-picker dropdown rect — centred under the TopBar globe button
+/// (Home's language button while Home is up), clamped 8 px inside both
+/// viewport edges.
 pub fn locale_picker_rect(state: &EditorState, viewport_w: f32) -> Rect {
-    let globe = TopBar::for_editor_ui(&state.editor_ui).globe_rect(top_bar_rect(viewport_w));
+    // Home paints its own top bar; the picker hangs off ITS language
+    // button. The button depends only on the width, so any height works.
+    let globe = match crate::widgets::HomeSurface::for_editor(state) {
+        Some(home) => home.layout(viewport_w, 900.0).locale_button,
+        None => TopBar::for_editor_ui(&state.editor_ui).globe_rect(top_bar_rect(viewport_w)),
+    };
     let x = (globe.origin.x + globe.size.x / 2.0 - LOCALE_PICKER_WIDTH / 2.0)
         .max(8.0)
         .min(viewport_w - LOCALE_PICKER_WIDTH - 8.0);

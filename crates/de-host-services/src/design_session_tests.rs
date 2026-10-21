@@ -749,7 +749,7 @@ fn the_design_fit_uses_the_docked_workspace_canvas() {
     // dock now, so the opener is what puts the chrome in the docked
     // shape (panel open, Chat tab showing).
     state.editor_ui.open_workspace_for_generation(
-        de_editor_core::HomeFamily::Presentation,
+        de_editor_core::HomeFamily::Slides,
         "deck brief",
         de_editor_core::TaskDraft::default(),
         0,

@@ -39,21 +39,19 @@ impl WidgetHostNative {
         );
 
         if self.editor_state.editor_ui.home.visible {
-            // The Home headline and the workspace title resolve their
-            // serif at paint time. Load the native family snapshot before
-            // constructing the surface so the first frame does not fall
-            // back to the editor sans face.
+            // Home and the workspace title resolve their faces at paint
+            // time. Load the native family snapshot before constructing the
+            // surface so the first frame does not fall back to the editor
+            // sans face.
             self.ensure_system_fonts_loaded();
         }
-        if self.editor_state.editor_ui.home.visible
-            && self.editor_state.editor_ui.home.shown_at_ms == 0
+        let wall_secs = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        if let Some(home) = HomeSurface::for_editor_at(&self.editor_state, self.now_ms)
+            .map(|home| home.with_wall_clock(wall_secs))
         {
-            // First frame since the show: stamp the wall clock the
-            // entrance choreography phases against. Every hide path
-            // resets the stamp, so each show animates from the top.
-            self.editor_state.editor_ui.home.shown_at_ms = self.now_ms;
-        }
-        if let Some(home) = HomeSurface::for_editor_at(&self.editor_state, self.now_ms) {
             {
                 let mut cx = PaintCx {
                     backend: &mut *frame,
@@ -63,8 +61,8 @@ impl WidgetHostNative {
                     Rect::xywh(0.0, 0.0, viewport_width, viewport_height),
                 );
             }
-            // The overlays Home opens (settings modal, sign-in modal,
-            // model picker) paint above the takeover — mirroring the
+            // The overlays Home opens (settings modal, model picker)
+            // paint above the takeover — mirroring the
             // z-order `paint_topmost_overlays` gives them elsewhere.
             self.paint_home_overlays(frame, viewport_width, viewport_height);
             return;

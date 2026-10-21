@@ -4,7 +4,7 @@
 //! pass under the 800-line cap.
 //!
 //! Light-mode values restate the founder-approved Studio Home
-//! palette — origin: `home_surface_palette.rs`. Several are verbatim
+//! palette — origin: `workspace_surface_palette.rs`. Several are verbatim
 //! `tab_*` tokens (hover fill `#F0F5FD`, selected fill `#EAF2FF`,
 //! border `#E1EAF7`, focus line `#C8DBFF`). The picker is painted
 //! from the generic editor `Theme`, which carries no Studio tokens,

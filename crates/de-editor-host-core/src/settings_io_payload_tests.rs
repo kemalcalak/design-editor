@@ -203,6 +203,23 @@ fn entry_surface_preference_round_trips_and_changes_fingerprint() {
 }
 
 #[test]
+fn home_recent_view_round_trips_and_changes_fingerprint() {
+    let mut src = EditorState::new();
+    src.editor_ui.home.recent_view = de_editor_core::RecentView::List;
+    assert_ne!(fingerprint(&src), fingerprint(&EditorState::new()));
+    let json = serde_json::to_string(&to_payload(&src)).unwrap();
+    assert!(json.contains("\"home_recent_view\":\"list\""));
+
+    let payload: SettingsPayload = serde_json::from_str(&json).unwrap();
+    let mut dst = EditorState::new();
+    apply_payload(&mut dst, payload);
+    assert_eq!(
+        dst.editor_ui.home.recent_view,
+        de_editor_core::RecentView::List
+    );
+}
+
+#[test]
 fn legacy_settings_without_preferred_agent_team_size_default_to_one() {
     // A settings.json written before this field existed must still load —
     // `SettingsPayload::preferred_agent_team_size` deserializes to `None`

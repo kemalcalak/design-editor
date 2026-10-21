@@ -59,8 +59,8 @@ impl WorkspaceView {
     /// The default view a family opens with.
     pub fn default_for(family: HomeFamily) -> Self {
         match family {
-            HomeFamily::Presentation => Self::Single { index: 0 },
-            HomeFamily::Web | HomeFamily::Infographic => Self::LongPage,
+            HomeFamily::Slides => Self::Single { index: 0 },
+            HomeFamily::LandingPage => Self::LongPage,
             _ => Self::AllBoards,
         }
     }
@@ -147,10 +147,10 @@ impl Default for WorkspaceState {
         Self {
             active: false,
             visible: false,
-            family: HomeFamily::AppUi,
+            family: HomeFamily::LandingPage,
             brief: String::new(),
             options: TaskDraft::default(),
-            view: WorkspaceView::default_for(HomeFamily::AppUi),
+            view: WorkspaceView::default_for(HomeFamily::LandingPage),
             selected: 0,
             phase: WorkspacePhase::Generating,
             run_epoch: 0,

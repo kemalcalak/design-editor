@@ -1,12 +1,14 @@
-//! Studio Home state: the seven creation tasks, their per-task drafts,
-//! and the prompt contracts that steer the orchestrator's design-type
-//! detection.
+//! Home state: the six design kinds, their per-kind drafts and canvas
+//! sizes, and the prompt contracts that steer the orchestrator's
+//! design-type detection.
 //!
 //! Home is an entry surface over the same `EditorState` as the canvas. It
-//! owns only transient chrome state: which task is active, one draft per
-//! task (text + options), and the small prompt wrapper that turns a task
-//! selection into the existing chat-design request shape.
+//! owns only transient chrome state: which kind is active, one draft per
+//! kind (text + size), the open popovers, and the small prompt wrapper
+//! that turns a kind selection into the existing chat-design request
+//! shape.
 
+use crate::agent_settings::McpCli;
 use jian_core::text_input::TextInputState;
 
 /// The persisted first-launch entry preference.
@@ -34,40 +36,38 @@ impl EntrySurface {
     }
 }
 
-/// Home's seven creation tasks. The discriminant order is the tab order.
+/// Home's design kinds. The discriminant order is the chip order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum HomeFamily {
     #[default]
-    AppUi,
-    Web,
-    Presentation,
-    KnowledgeCards,
-    ScreenshotTutorial,
-    Infographic,
-    EventPoster,
+    LandingPage,
+    MobileApp,
+    WebApp,
+    Slides,
+    Dashboard,
+    /// "Something else…": a free brief with no kind contract.
+    Other,
 }
 
 impl HomeFamily {
-    pub const ALL: [Self; 7] = [
-        Self::AppUi,
-        Self::Web,
-        Self::Presentation,
-        Self::KnowledgeCards,
-        Self::ScreenshotTutorial,
-        Self::Infographic,
-        Self::EventPoster,
+    pub const ALL: [Self; 6] = [
+        Self::LandingPage,
+        Self::MobileApp,
+        Self::WebApp,
+        Self::Slides,
+        Self::Dashboard,
+        Self::Other,
     ];
 
-    /// Stable persistence/test id.
+    /// Stable persistence / i18n id (`home.kind.<id>`).
     pub const fn id(self) -> &'static str {
         match self {
-            Self::AppUi => "app",
-            Self::Web => "web",
-            Self::Presentation => "presentation",
-            Self::KnowledgeCards => "knowledge",
-            Self::ScreenshotTutorial => "tutorial",
-            Self::Infographic => "infographic",
-            Self::EventPoster => "poster",
+            Self::LandingPage => "landing",
+            Self::MobileApp => "mobile",
+            Self::WebApp => "webapp",
+            Self::Slides => "slides",
+            Self::Dashboard => "dashboard",
+            Self::Other => "other",
         }
     }
 
@@ -75,82 +75,76 @@ impl HomeFamily {
         Self::ALL.iter().copied().find(|f| f.id() == value)
     }
 
-    /// Short zh label (the result-view breadcrumb still paints it; the
-    /// Home surface itself resolves copy through i18n `home.task.<id>.*`).
-    pub const fn label(self) -> &'static str {
+    /// The sizes the size chip offers for this kind, in menu order.
+    pub const fn sizes(self) -> &'static [HomeSize] {
         match self {
-            Self::AppUi => "App 界面",
-            Self::Web => "网页设计",
-            Self::Presentation => "演示文稿",
-            Self::KnowledgeCards => "图文卡片",
-            Self::ScreenshotTutorial => "截图教程",
-            Self::Infographic => "信息图",
-            Self::EventPoster => "活动海报",
+            Self::Slides => &[HomeSize::Slide169, HomeSize::Slide43],
+            _ => &[
+                HomeSize::Desktop1440,
+                HomeSize::Tablet768,
+                HomeSize::Mobile390,
+            ],
         }
     }
 
-    /// The user-visible name of the active infographic sub-kind.
-    pub const fn info_kind_label(kind: InfoKind) -> &'static str {
-        match kind {
-            InfoKind::Data => "数据",
-            InfoKind::Flow => "流程",
-            InfoKind::Comparison => "对比",
+    /// The size a fresh draft of this kind starts with.
+    pub const fn default_size(self) -> HomeSize {
+        match self {
+            Self::MobileApp => HomeSize::Mobile390,
+            Self::Slides => HomeSize::Slide169,
+            _ => HomeSize::Desktop1440,
         }
     }
 
-    /// Wrap the task's draft with the contract the orchestrator's
+    /// Wrap the kind's draft with the contract the orchestrator's
     /// `detect_design_type` and the desktop launch path understand.
+    ///
+    /// Every contract except `Other` names a component disqualifier
+    /// ("page", "screen", "app", "slides", "dashboard"), so a brief that
+    /// mentions a card or a chart is not shrunk to a single component.
+    /// The order of precedence in the detector is slides → mobile →
+    /// dashboard/workspace → landing, which is why the web app contract
+    /// says "workspace".
     pub fn generation_prompt(self, draft: &TaskDraft) -> Option<String> {
         let text = draft.text.trim();
         if text.is_empty() {
             return None;
         }
+        let size = draft.size.prompt_text();
         let prompt = match self {
-            Self::AppUi if draft.device == HomeDevice::Mobile => format!(
-                "请设计一套可编辑的高保真手机 App 界面（mobile app，375×812）。\
-交付一组完整界面：统一的组件、变量与图层结构，屏幕之间用 onTap 串起导航。\n\n用户需求：{text}"
+            Self::LandingPage => format!(
+                "Design a complete, vertically scrolling landing page ({size}). Organise it \
+in sections from the hero to the footer, with one consistent visual system and editable \
+layers.\n\nBrief: {text}"
             ),
-            Self::AppUi => format!(
-                "请设计一套可编辑的高保真桌面端应用界面（desktop app，1440 宽的 dashboard \
-工作台）。交付一组完整界面：统一的组件、变量与图层结构。\n\n用户需求：{text}"
+            Self::MobileApp => format!(
+                "Design a set of editable, high-fidelity mobile app screens ({size}). Deliver \
+complete screens with shared components, variables and a clean layer structure, and link \
+the screens with onTap navigation.\n\nBrief: {text}"
             ),
-            Self::Web => format!(
-                "请设计一个完整的纵向滚动网站页面（landing page，1440 宽）。\
-从首屏主视觉到页脚分区块组织内容，保持统一的视觉系统与可编辑图层。\n\n用户需求：{text}"
+            Self::WebApp => format!(
+                "Design an editable, high-fidelity web app workspace ({size}). Deliver the main \
+screens with shared components, variables and a clean layer structure.\n\nBrief: {text}"
             ),
-            Self::Presentation => format!(
-                "请做一份 {} 页的 PPT 演示文稿（slides，{}）。封面、正文与结束页风格统一，\
-文字与图形保持可编辑图层。\n\n用户需求：{text}",
-                slide_count(text),
-                match draft.ratio {
-                    SlideRatio::Wide169 => "16:9",
-                    SlideRatio::Classic43 => "4:3",
-                }
+            Self::Slides => format!(
+                "Design a {}-slide presentation deck ({size}). Keep the cover, content and \
+closing slides in one style, with text and graphics as editable layers.\n\nBrief: {text}",
+                slide_count(text)
             ),
-            Self::KnowledgeCards => format!(
-                "请做一套图文卡片（card，竖版 3:4，多页轮播）。保持统一排版与视觉系统，\
-文字与图形保持可编辑图层。\n\n用户需求：{text}"
+            Self::Dashboard => format!(
+                "Design an editable, high-fidelity dashboard ({size}) with clear metrics, \
+charts and tables, shared components and a clean layer structure.\n\nBrief: {text}"
             ),
-            Self::ScreenshotTutorial => format!(
-                "请做一篇截图教程图文（card，竖版，截图配上步骤说明）。按步骤组织画面，\
-并为关键操作加清晰标注。\n\n用户需求：{text}"
-            ),
-            Self::Infographic => format!(
-                "请做一张{}信息图长图（card，竖版图文长图）。信息层级清晰，\
-数字与图形保持可编辑图层。\n\n用户需求：{text}",
-                Self::info_kind_label(draft.info_kind)
-            ),
-            Self::EventPoster => format!(
-                "请做一套活动海报（card，主海报竖版 + 社交方图）。整组海报视觉一致，\
-主视觉、时间地点与报名信息完整，图层保持可编辑。\n\n用户需求：{text}"
-            ),
+            Self::Other => {
+                format!("{text}\n\nCanvas: {size}. Keep every part as editable layers.")
+            }
         };
         Some(prompt)
     }
 }
 
-/// Page count a presentation wrapper names: the first small number in the
-/// draft (e.g. "5 页"), else the 5-page default.
+/// Slide count a deck wrapper names: the first small number in the
+/// draft (e.g. "5 slides"), else the 5-slide default.
 fn slide_count(text: &str) -> u32 {
     let mut digits: Option<String> = None;
     // The trailing space flushes a number that ends the draft.
@@ -170,259 +164,327 @@ fn slide_count(text: &str) -> u32 {
     5
 }
 
-/// Total window the entrance choreography animates over (the recent
-/// row's 240 ms stagger + 600 ms rise is the longest block; prototype
-/// `enter .6s cubic-bezier(.22,1,.36,1)` with a 0/60/120/180/240 ms
-/// stagger). Shared by the widget's paint pass and the host's frame
-/// scheduler so both agree on when the entrance has fully settled.
-pub const HOME_ENTER_WINDOW_MS: u64 = 840;
-/// While the entrance is running the scheduler keeps frames coming at
-/// this cadence so the staggered rise never freezes mid-motion.
-pub const HOME_ENTER_FRAME_MS: u64 = 16;
-/// The example art crossfades over this window after a task switch
-/// (prototype `art-in .3s`: opacity .2→1, rise 8 px, scale .985→1).
-pub const HOME_ART_SWITCH_MS: u64 = 300;
-/// The explore card's hover lift plays out over this window in BOTH
-/// directions (prototype `.example-card{transition:transform .3s}`).
-pub const HOME_HOVER_LIFT_MS: u64 = 300;
-
-/// The App task's screen dimension.
+/// The canvas size the size chip writes into the prompt.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub enum HomeDevice {
+pub enum HomeSize {
     #[default]
-    Mobile,
-    Desktop,
+    Desktop1440,
+    Tablet768,
+    Mobile390,
+    Slide169,
+    Slide43,
 }
 
-/// The presentation task's aspect choice.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub enum SlideRatio {
-    #[default]
-    Wide169,
-    Classic43,
+impl HomeSize {
+    /// Stable persistence / i18n id (`home.size.<id>`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            Self::Desktop1440 => "desktop",
+            Self::Tablet768 => "tablet",
+            Self::Mobile390 => "mobile",
+            Self::Slide169 => "wide",
+            Self::Slide43 => "classic",
+        }
+    }
+
+    /// The number the chip shows after the size name ("Desktop 1440").
+    pub const fn chip_suffix(self) -> &'static str {
+        match self {
+            Self::Desktop1440 => "1440",
+            Self::Tablet768 => "768",
+            Self::Mobile390 => "390",
+            Self::Slide169 => "16:9",
+            Self::Slide43 => "4:3",
+        }
+    }
+
+    /// The menu row's detail column.
+    pub const fn detail(self) -> &'static str {
+        match self {
+            Self::Desktop1440 => "1440 px",
+            Self::Tablet768 => "768 px",
+            Self::Mobile390 => "390 × 844",
+            Self::Slide169 => "1920 × 1080",
+            Self::Slide43 => "1440 × 1080",
+        }
+    }
+
+    pub const fn is_slide(self) -> bool {
+        matches!(self, Self::Slide169 | Self::Slide43)
+    }
+
+    /// The size phrase the prompt contracts embed. The phone size names
+    /// its frame explicitly so the detector's phone-dimension rule fires.
+    pub const fn prompt_text(self) -> &'static str {
+        match self {
+            Self::Desktop1440 => "desktop, 1440 px wide",
+            Self::Tablet768 => "tablet, 768 px wide",
+            Self::Mobile390 => "mobile, 390×844",
+            Self::Slide169 => "16:9, 1920×1080",
+            Self::Slide43 => "4:3, 1440×1080",
+        }
+    }
 }
 
-/// The infographic task's sub-kind.
+/// How the Recent section lists files.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub enum InfoKind {
+pub enum RecentView {
     #[default]
-    Data,
-    Flow,
-    Comparison,
+    Grid,
+    List,
 }
 
-/// One task's kept draft: the text plus the options its segmented
-/// control owns. Attachments deliberately live in the chat composer's
+impl RecentView {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Grid => "grid",
+            Self::List => "list",
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn from_str(value: &str) -> Self {
+        match value {
+            "list" => Self::List,
+            _ => Self::Grid,
+        }
+    }
+}
+
+/// A template entry the sidebar opens on a fresh document. Home asks for
+/// a new file and parks this here; the host's New handler applies it to
+/// the replacement state (see `EditorUiState::apply_home_template`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HomeTemplate {
+    DesignSystems,
+    SceneTemplates,
+}
+
+/// One kind's kept draft: the text plus the chosen canvas size.
+/// Attachments deliberately live in the chat composer's
 /// `pending_attachments` — that list is the single source of truth.
 #[derive(Debug, Clone, Default)]
 pub struct TaskDraft {
     pub text: String,
-    pub device: HomeDevice,
-    pub ratio: SlideRatio,
-    pub info_kind: InfoKind,
+    pub size: HomeSize,
 }
 
 impl TaskDraft {
-    fn cleared() -> Self {
-        Self::default()
+    fn for_family(family: HomeFamily) -> Self {
+        Self {
+            text: String::new(),
+            size: family.default_size(),
+        }
     }
 }
 
-/// Interactive target ids used by Home hover and pressed feedback.
+/// A copy button on Home, for the short "Copied" acknowledgement.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HomeCopyTarget {
+    Endpoint,
+    Snippet,
+}
+
+/// How long a copy button reads "Copied" after a press.
+pub const HOME_COPIED_MS: u64 = 1_500;
+
+/// Interactive target ids used by Home hover, pressed feedback and the
+/// host's press dispatch.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HomeHit {
     /// The composer's input box (caret press).
     Sheet,
-    /// One of the seven task tabs.
-    Tab(HomeFamily),
-    /// The 更多 ▾ button that opens the narrow-viewport task popover.
-    More,
-    /// One row of the 更多 popover.
-    MoreItem(HomeFamily),
-    /// The task's segmented control; `0` is the leftmost option.
-    Segment(u8),
-    /// The 添加截图 tool.
-    Attachment,
-    /// The 参考链接 tool (disabled M1).
-    ReferenceLink,
-    /// The Figma tool (disabled M1).
-    Figma,
-    /// The model button on the submit row.
+    /// One of the kind chips above the composer.
+    Kind(HomeFamily),
+    /// The composer's size chip (opens the size menu).
+    SizeChip,
+    /// A row of the open size menu.
+    SizeOption(HomeSize),
+    /// A press inside the size menu that hits no row.
+    SizeMenuInside,
+    /// The composer's `+` (the chat attachment picker).
+    Attach,
+    /// The model button on the composer toolbar.
     ModelChip,
-    /// The 开始设计 primary button.
+    /// "Add a model provider →", shown instead of the model button when
+    /// no chat agent can answer.
+    AddProvider,
+    /// The round send button.
     Send,
-    /// The preview footer's 使用这个示例 link.
-    UseExample,
-    /// The preview footer's 回到工作区 link — shown instead of
-    /// UseExample while a workspace is active.
-    BackToWorkspace,
-    /// The replace-confirm strip's 保留 button.
-    ReplaceKeep,
-    /// The replace-confirm strip's 使用示例 button.
-    ReplaceConfirm,
-    /// One of the three 看看还能做什么 cards.
-    ExploreCard(HomeFamily),
-    /// A recent-project chip.
+    ImportFigma,
+    ImportWeb,
+    ImportScreenshot,
+    /// A Recent card or row.
     Recent(usize),
-    /// The ＋ 新建空白画布 button.
-    NewCanvas,
-    /// The top bar's account avatar. Home is where a first-run user
-    /// lands, so the way in to an account has to be reachable without
-    /// first going to the professional canvas to find it.
-    Account,
-    /// The top bar's 打开文件 button.
+    /// One half of the grid / list toggle.
+    RecentView(RecentView),
+    NavRecents,
+    NavOpenFile,
+    NavDesignSystems,
+    NavSceneTemplates,
+    NavSettings,
+    /// The sidebar's MCP status card (opens the connect popover).
+    McpCard,
+    /// The top bar's language button (opens the shared locale picker).
+    Locale,
+    /// The top bar's "Open file".
     OpenFile,
-    /// The top bar's 进入专业画布 button.
-    Professional,
-    /// The 接入卡's free-tier row.
-    ConnectFreeTier,
-    /// The 接入卡's own-API-key row.
-    ConnectApiKey,
-    /// The 接入卡's local-CLI row.
-    ConnectCli,
-    /// Any press outside the open 接入卡 (or its close affordance).
-    ConnectClose,
+    /// The top bar's accent "New file".
+    NewFile,
+    McpCopyEndpoint,
+    /// One of the connect popover's agent tabs, or a row of its ▾ menu.
+    McpAgent(McpCli),
+    /// The ▾ at the end of the agent tabs.
+    McpAgentMore,
+    /// "Set up" — writes the selected agent's config.
+    McpSetUp,
+    /// "Remove" — the set-up agent's undo.
+    McpRemove,
+    McpCopySnippet,
+    /// "MCP settings →".
+    McpSettings,
+    /// "Start server" while MCP is stopped.
+    McpStart,
+    /// A press inside the connect popover that hits no control.
+    McpInside,
 }
 
-/// Transient state for the Studio Home surface.
+/// Transient state for the Home surface.
 #[derive(Debug, Clone)]
 pub struct HomeState {
     pub visible: bool,
-    /// The always-selected task the composer edits.
+    /// Home was opened over a document (File ▸ Home), so Escape returns
+    /// to it. The launch-time Home has nothing behind it to go back to.
+    pub dismissible: bool,
+    /// The always-selected kind the composer edits.
     pub task: HomeFamily,
-    /// One draft per task; `draft`/`input` mirror the active one.
-    pub drafts: [TaskDraft; 7],
+    /// One draft per kind; `draft`/`input` mirror the active one.
+    pub drafts: [TaskDraft; 6],
     pub draft: String,
     pub hover: Option<HomeHit>,
     pub pressed: Option<HomeHit>,
-    /// Scroll offset for a home stack that is taller than the viewport.
-    /// The top bar stays pinned while the page content scrolls under it.
+    /// Scroll offset for a page that is taller than the viewport. The top
+    /// bar and sidebar stay pinned while the column scrolls under them.
     pub scroll_y: f32,
-    /// Wall-clock instant the entrance choreography phases against, in ms.
-    /// `0` = not started: the surface paints settled (no motion) until a
-    /// host paint stamps it. Never persisted — it is frame-clock state.
-    pub shown_at_ms: u64,
     /// The same caret/selection machinery used by the chat composer. `draft`
     /// remains the public Home contract; this field keeps native text input,
     /// IME, clipboard, and caret edits lossless.
     pub input: TextInputState,
-    /// The "先接入一个模型" connect card, opened by Send / the model chip
-    /// when no chat agent can answer yet. Modal over the composer.
-    pub connect_card_open: bool,
-    /// The narrow-viewport 更多 task popover.
-    pub more_open: bool,
-    /// The inline 替换现有需求？ confirm strip inside the composer.
-    pub replace_pending: bool,
-    /// Wall-clock instant the preview art last changed task, for the
-    /// 300 ms crossfade. `0` = no switch to animate.
-    pub art_switched_at_ms: u64,
-    /// Wall-clock instant the hovered explore card last changed, for the
-    /// 300 ms hover lift (in AND out). `0` = never stamped; the lift
-    /// paints settled so an unstamped host degrades to an instant hover.
-    pub card_hover_since_ms: u64,
-    /// The explore card the cursor most recently LEFT, so only that card
-    /// plays the descent half of the lift; every other rest card stays put.
-    pub card_hover_leaving: Option<HomeFamily>,
+    pub size_menu_open: bool,
+    /// The sidebar MCP card's "Connect an agent" popover.
+    pub mcp_popover_open: bool,
+    /// The agent tab the popover shows.
+    pub mcp_agent: McpCli,
+    /// The ▾ list of the agents without a tab of their own.
+    pub mcp_agent_menu_open: bool,
+    /// The copy button that last fired and when, for "Copied".
+    pub copied: Option<(HomeCopyTarget, u64)>,
+    pub recent_view: RecentView,
+    /// The last MCP client that sent `initialize`, as it named itself.
+    pub mcp_client: Option<String>,
+    /// A sidebar template waiting for the fresh document it asked for.
+    pub pending_template: Option<HomeTemplate>,
 }
 
 impl Default for HomeState {
     fn default() -> Self {
         Self {
             visible: false,
-            task: HomeFamily::AppUi,
-            drafts: std::array::from_fn(|_| TaskDraft::cleared()),
+            dismissible: false,
+            task: HomeFamily::LandingPage,
+            drafts: HomeFamily::ALL.map(TaskDraft::for_family),
             draft: String::new(),
             hover: None,
             pressed: None,
             scroll_y: 0.0,
-            shown_at_ms: 0,
             input: TextInputState::default(),
-            connect_card_open: false,
-            more_open: false,
-            replace_pending: false,
-            art_switched_at_ms: 0,
-            card_hover_since_ms: 0,
-            card_hover_leaving: None,
+            size_menu_open: false,
+            mcp_popover_open: false,
+            mcp_agent: McpCli::ClaudeCode,
+            mcp_agent_menu_open: false,
+            copied: None,
+            recent_view: RecentView::Grid,
+            mcp_client: None,
+            pending_template: None,
         }
     }
 }
 
 impl HomeState {
-    /// Leave the surface. The entrance stamp resets so the next show
-    /// replays the choreography from the top; hover/pressed drop with it.
+    /// Show Home. `over_document` marks it as opened from the canvas, so
+    /// Escape may return there.
+    pub fn show(&mut self, over_document: bool) {
+        self.visible = true;
+        self.dismissible = over_document;
+        self.scroll_y = 0.0;
+    }
+
+    /// Leave the surface; hover, pressed and every popover drop with it.
     pub fn hide(&mut self) {
         self.visible = false;
+        self.dismissible = false;
         self.hover = None;
         self.pressed = None;
-        self.shown_at_ms = 0;
-        self.connect_card_open = false;
-        self.more_open = false;
-        self.replace_pending = false;
-        self.card_hover_since_ms = 0;
-        self.card_hover_leaving = None;
+        self.close_popovers();
     }
 
-    /// The next frame instant the entrance choreography still needs, or
-    /// `None` when hidden, not yet stamped, or past the whole window.
-    pub fn entrance_deadline_ms(&self, now_ms: u64) -> Option<u64> {
-        if !self.visible || self.shown_at_ms == 0 {
-            return None;
+    /// Close every Home popover. Returns whether one was open.
+    pub fn close_popovers(&mut self) -> bool {
+        let was_open = self.size_menu_open || self.mcp_popover_open || self.mcp_agent_menu_open;
+        self.size_menu_open = false;
+        self.mcp_popover_open = false;
+        self.mcp_agent_menu_open = false;
+        was_open
+    }
+
+    /// Escape's Home rung: the innermost popover first, then Home itself
+    /// when it was opened over a document. Returns whether it acted.
+    pub fn escape(&mut self) -> bool {
+        if self.mcp_agent_menu_open {
+            self.mcp_agent_menu_open = false;
+            return true;
         }
-        (now_ms.saturating_sub(self.shown_at_ms) < HOME_ENTER_WINDOW_MS)
-            .then_some(now_ms.saturating_add(HOME_ENTER_FRAME_MS))
-    }
-
-    /// Stamp a hover change between explore cards: `from` is the card the
-    /// cursor left (it plays the descent), `now_ms` starts the 300 ms lift.
-    pub fn stamp_card_hover(&mut self, from: Option<HomeFamily>, now_ms: u64) {
-        self.card_hover_since_ms = now_ms.max(1);
-        self.card_hover_leaving = from;
-    }
-
-    /// The next frame instant the explore-card hover lift still needs.
-    pub fn hover_lift_deadline_ms(&self, now_ms: u64) -> Option<u64> {
-        if !self.visible || self.card_hover_since_ms == 0 {
-            return None;
+        if self.close_popovers() {
+            return true;
         }
-        (now_ms.saturating_sub(self.card_hover_since_ms) < HOME_HOVER_LIFT_MS)
-            .then_some(now_ms.saturating_add(HOME_ENTER_FRAME_MS))
+        if self.visible && self.dismissible {
+            self.hide();
+            return true;
+        }
+        false
     }
 
-    /// The next frame instant the art crossfade still needs.
-    pub fn art_deadline_ms(&self, now_ms: u64) -> Option<u64> {
-        if !self.visible || self.art_switched_at_ms == 0 {
-            return None;
-        }
-        (now_ms.saturating_sub(self.art_switched_at_ms) < HOME_ART_SWITCH_MS)
-            .then_some(now_ms.saturating_add(HOME_ENTER_FRAME_MS))
+    /// Whether `target` should read "Copied" at `now_ms`.
+    pub fn copied_recently(&self, target: HomeCopyTarget, now_ms: u64) -> bool {
+        self.copied
+            .is_some_and(|(hit, at)| hit == target && now_ms.saturating_sub(at) < HOME_COPIED_MS)
+    }
+
+    /// The next frame instant the "Copied" label needs to revert.
+    pub fn copied_deadline_ms(&self, now_ms: u64) -> Option<u64> {
+        let (_, at) = self.copied?;
+        let until = at.saturating_add(HOME_COPIED_MS);
+        (self.visible && now_ms < until).then_some(until)
     }
 
     pub fn task_draft(&self) -> &TaskDraft {
         self.draft_for(self.task)
     }
 
-    /// The kept draft of any task, active or not (explore cards and the
-    /// 更多 popover read the options of tasks that are not selected).
+    /// The kept draft of any kind, active or not.
     pub fn draft_for(&self, family: HomeFamily) -> &TaskDraft {
-        let index = HomeFamily::ALL
-            .iter()
-            .position(|candidate| *candidate == family)
-            .unwrap_or(0);
-        &self.drafts[index]
+        &self.drafts[family_index(family)]
     }
 
     fn task_draft_mut(&mut self) -> &mut TaskDraft {
-        let index = HomeFamily::ALL
-            .iter()
-            .position(|family| *family == self.task)
-            .unwrap_or(0);
-        &mut self.drafts[index]
+        &mut self.drafts[family_index(self.task)]
     }
 
-    /// Switch the active task. The live input text is saved into the old
-    /// task's draft and the new one is loaded into `input`; the preview
-    /// art crossfade restamps. Returns whether anything changed.
-    pub fn set_task(&mut self, family: HomeFamily, now_ms: u64) -> bool {
+    /// Switch the active kind. The live input text is saved into the old
+    /// kind's draft and the new one is loaded into `input`. Returns
+    /// whether anything changed.
+    pub fn set_task(&mut self, family: HomeFamily) -> bool {
+        self.size_menu_open = false;
         if self.task == family {
             return false;
         }
@@ -431,48 +493,16 @@ impl HomeState {
         let text = self.task_draft().text.clone();
         self.input.set_text(text.clone());
         self.draft = text;
-        self.art_switched_at_ms = now_ms.max(1);
-        self.more_open = false;
-        self.replace_pending = false;
         true
     }
 
-    pub fn set_device(&mut self, device: HomeDevice) {
-        self.task_draft_mut().device = device;
-    }
-
-    pub fn set_ratio(&mut self, ratio: SlideRatio) {
-        self.task_draft_mut().ratio = ratio;
-    }
-
-    pub fn set_info_kind(&mut self, kind: InfoKind) {
-        self.task_draft_mut().info_kind = kind;
-    }
-
-    /// Fill the draft with an example prompt. A non-empty differing draft
-    /// arms the inline confirm strip instead (`replace_pending`), exactly
-    /// like the prototype's replace dialog. Returns `true` when the text
-    /// was filled immediately.
-    pub fn use_example(&mut self, example: &str) -> bool {
-        if self.draft.trim().is_empty() || self.draft == example {
-            self.set_draft(example);
-            self.replace_pending = false;
-            true
-        } else {
-            self.replace_pending = true;
-            false
+    /// Pick the active kind's canvas size (ignored when the kind does not
+    /// offer it). Closes the size menu either way.
+    pub fn set_size(&mut self, size: HomeSize) {
+        self.size_menu_open = false;
+        if self.task.sizes().contains(&size) {
+            self.task_draft_mut().size = size;
         }
-    }
-
-    /// The confirm strip's 使用示例 action.
-    pub fn confirm_replace_example(&mut self, example: &str) {
-        self.set_draft(example);
-        self.replace_pending = false;
-    }
-
-    /// The confirm strip's 保留 action.
-    pub fn keep_draft(&mut self) {
-        self.replace_pending = false;
     }
 
     pub fn set_draft(&mut self, draft: impl Into<String>) {
@@ -487,7 +517,7 @@ impl HomeState {
     }
 
     /// Fold a committed IME composition (or any external input-state
-    /// write) back into the public draft mirror + the active task's
+    /// write) back into the public draft mirror + the active kind's
     /// kept draft.
     pub fn sync_committed_input(&mut self) {
         self.sync_input_into_draft();
@@ -543,6 +573,28 @@ impl HomeState {
     pub fn generation_prompt(&self) -> Option<String> {
         self.task.generation_prompt(self.task_draft())
     }
+}
+
+impl super::EditorUiState {
+    /// Open the panel a sidebar template entry asked for, on the fresh
+    /// document the host just installed.
+    pub fn apply_home_template(&mut self, template: HomeTemplate, now_ms: u64) {
+        match template {
+            HomeTemplate::DesignSystems => {
+                // The two share the left rail slot.
+                self.variables_panel_open = false;
+                self.design_md_panel.open = true;
+            }
+            HomeTemplate::SceneTemplates => self.open_scene_template_center(now_ms),
+        }
+    }
+}
+
+fn family_index(family: HomeFamily) -> usize {
+    HomeFamily::ALL
+        .iter()
+        .position(|candidate| *candidate == family)
+        .unwrap_or(0)
 }
 
 #[cfg(test)]

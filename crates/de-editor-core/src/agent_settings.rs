@@ -70,7 +70,7 @@ impl AgentSettingsTab {
 
 /// Terminal-side MCP integrations the user can flip on/off. Order
 /// matches the TS app's MCP settings grid.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum McpCli {
     ClaudeCode,
     Codex,

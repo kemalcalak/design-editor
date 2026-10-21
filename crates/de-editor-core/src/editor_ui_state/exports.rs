@@ -16,7 +16,8 @@ pub use super::groups::{
     SceneTemplateFocus, SizeToggleState, StyleImportState,
 };
 pub use super::home::{
-    EntrySurface, HomeDevice, HomeFamily, HomeHit, HomeState, InfoKind, SlideRatio, TaskDraft,
+    EntrySurface, HomeCopyTarget, HomeFamily, HomeHit, HomeSize, HomeState, HomeTemplate,
+    RecentView, TaskDraft,
 };
 pub use super::pickers::{
     CanvasDropIndicator, CanvasOverlayLine, CanvasOverlayRect, CompositingPickerTarget,

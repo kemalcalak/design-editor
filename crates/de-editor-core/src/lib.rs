@@ -74,6 +74,7 @@ pub mod document_install;
 pub mod drag_mutators;
 pub mod edit_transaction;
 pub mod editor_toast;
+pub mod home_mcp_setup;
 pub mod size_class;
 // Runtime-fetched product assets for the browser bundle (native embeds them).
 pub mod editor_ui_state;
@@ -346,7 +347,7 @@ pub use document_install::{DocumentInstallError, DocumentInstallReport, Prepared
 pub use edit_transaction::{
     CompletedLocalEdit, EditOrigin, LocalEditCapture, LocalEditError, LocalEditOutcome,
 };
-pub use editor_ui_state::home::{HOME_ART_SWITCH_MS, HOME_ENTER_FRAME_MS, HOME_ENTER_WINDOW_MS};
+pub use editor_ui_state::home::HOME_COPIED_MS;
 pub use editor_ui_state::workspace::{
     WorkspaceHit, WorkspacePhase, WorkspaceState, WorkspaceView, WORKSPACE_DECK_STRIP_H,
     WORKSPACE_ENTER_MS, WORKSPACE_HEADER_H, WORKSPACE_TOOLBAR_H,
@@ -356,12 +357,12 @@ pub use editor_ui_state::{
     CommitDiffView, CompositingPickerTarget, CustomPrompt, DesignMdPanelState, DesignMdRequest,
     EditorUiState, EmbedHost, EntrySurface, ExportFormat, FileAction, FillType, FlexLayout,
     FontPickerPurpose, GitBranchPickerMode, GitCandidateFile, GitCommitSummary, GitDiffTarget,
-    GitDiffView, GitFileEntry, GitOverflowView, GitPanelAction, GitPanelState, HomeDevice,
-    HomeFamily, HomeHit, HomeState, ImageAdjustmentField, ImageFillMode, InfoKind,
+    GitDiffView, GitFileEntry, GitOverflowView, GitPanelAction, GitPanelState, HomeCopyTarget,
+    HomeFamily, HomeHit, HomeSize, HomeState, HomeTemplate, ImageAdjustmentField, ImageFillMode,
     LayerContextMenuState, LeftPanelTab, Locale, MergeConflictRow, MergeResolveFile,
     MergeResolveState, MissingFontSurface, PaddingEditMode, PageRenameState, PencilCursorStyle,
     PreviewDeviceKind, PromptCenterFocus, PromptCenterState, PromptFilter, PropertyTab, RecentFile,
-    SceneFilter, SceneTemplateCenterState, SceneTemplateFocus, SizeToggleState, SlideRatio,
+    RecentView, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus, SizeToggleState,
     SlidesDrag, SlidesPanelState, SlidesPanelTarget, StyleImportState, TaskDraft, ThemeMode,
     UpdateStatus, VariableRowFocus, WindowControlRequest, CHAT_TAB_MIN_WIDTH,
     LAYER_PANEL_MAX_WIDTH, LAYER_PANEL_MIN_WIDTH,

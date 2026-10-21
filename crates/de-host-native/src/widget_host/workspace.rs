@@ -63,9 +63,9 @@ impl WidgetHostNative {
         match hit {
             WorkspaceHit::Back | WorkspaceHit::ReturnEdit => {
                 // Home is a takeover painted above the workspace; the
-                // workspace stays active so Home's footer offers
-                // 回到工作区 and the generation keeps running.
-                self.editor_state.editor_ui.home.visible = true;
+                // workspace stays active so Escape on Home returns to it
+                // and the generation keeps running.
+                self.editor_state.editor_ui.home.show(true);
                 self.editor_state.editor_ui.entry_surface = EntrySurface::Home;
             }
             WorkspaceHit::Export => {
