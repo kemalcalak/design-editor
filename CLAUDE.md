@@ -65,11 +65,13 @@ Data flow, canvas engine, Document/EditorCommand model, MCP layered-design workf
 
 Use [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<scope>): <subject>`
 
-**Types:** `feat`, `fix`, `refactor`, `perf`, `style`, `docs`, `test`, `chore`
+**Types:** `feat`, `fix`, `refactor`, `perf`, `style`, `docs`, `test`, `chore`, `ci`
 
-**Scopes:** `editor`, `canvas`, `panels`, `history`, `ai`, `codegen`, `store`, `types`, `variables`, `figma`, `mcp`, `desktop`, `web`, `renderer`, `sdk`, `cli`, `agent`, `i18n`
+**Scopes:** `editor`, `canvas`, `panels`, `history`, `ai`, `codegen`, `store`, `types`, `variables`, `figma`, `mcp`, `desktop`, `web`, `renderer`, `sdk`, `cli`, `agent`, `i18n`, `ci`
 
 **Rules:** Subject in English, lowercase start, no period, imperative mood. Body optional; explain **why** not what. One commit per change.
+
+**PR titles:** `<type>(<scope>): <subject> (#<issue>)`, e.g. `chore(ci): require issue labels (#31)`. PRs are squash-merged, so the title becomes the commit on `main`; `.github/workflows/pr-title.yml` enforces it.
 
 ## License
 

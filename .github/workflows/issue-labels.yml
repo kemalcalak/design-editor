@@ -1,0 +1,79 @@
+name: Issue Labels
+
+# Every issue must carry one type, one priority and one size label. Issue
+# forms collect priority and size as dropdowns; this workflow turns those
+# answers into labels and flags anything still incomplete with
+# `needs-triage`. Issue text is untrusted, so it only reaches the script
+# through environment variables and is matched against fixed values.
+
+on:
+  issues:
+    types: [opened, edited, reopened, labeled, unlabeled]
+
+permissions:
+  issues: write
+
+concurrency:
+  group: issue-labels-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check required labels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: github.event.issue.state == 'open'
+    steps:
+      - name: Apply form answers and flag missing labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          set -euo pipefail
+          marker='<!-- issue-labels-check -->'
+          # Read live labels: a queued run's event payload can be stale.
+          LABELS_JSON=$(gh issue view "$NUMBER" --json labels --jq '[.labels[].name]')
+          has() { jq -e --arg re "$1" 'any(.[]; test($re))' <<<"$LABELS_JSON" >/dev/null; }
+
+          # Dropdown answers from the issue forms: "### Priority\n\nhigh".
+          answer() {
+            printf '%s\n' "$BODY" | tr -d '\r' \
+              | awk -v h="### $1" '$0==h{f=1;next} f&&NF&&!d{print;d=1}'
+          }
+          add=()
+          if ! has '^priority: '; then
+            p=$(answer Priority)
+            case "$p" in high|medium|low) add+=("priority: $p") ;; esac
+          fi
+          if ! has '^size: '; then
+            s=$(answer Size)
+            case "$s" in S|M|L) add+=("size: $s") ;; esac
+          fi
+          for l in ${add[@]+"${add[@]}"}; do
+            gh issue edit "$NUMBER" --add-label "$l"
+            LABELS_JSON=$(jq -c --arg l "$l" '. + [$l]' <<<"$LABELS_JSON")
+          done
+
+          missing=()
+          has '^(feature|bug|chore|question|documentation)$' || missing+=("a type (feature, bug, chore, question or documentation)")
+          has '^priority: (high|medium|low)$' || missing+=("a priority (priority: high, medium or low)")
+          has '^size: (S|M|L)$' || missing+=("a size (size: S, M or L)")
+
+          if [ "${#missing[@]}" -eq 0 ]; then
+            if has '^needs-triage$'; then gh issue edit "$NUMBER" --remove-label needs-triage; fi
+            exit 0
+          fi
+
+          gh label create needs-triage --color FBCA04 \
+            --description "Missing a required type, priority or size label" 2>/dev/null || true
+          has '^needs-triage$' || gh issue edit "$NUMBER" --add-label needs-triage
+
+          bodies=$(gh api "repos/$GH_REPO/issues/$NUMBER/comments" --paginate --jq '.[].body')
+          if ! grep -qF "$marker" <<<"$bodies"; then
+            list=$(printf -- '- %s\n' "${missing[@]}")
+            gh issue comment "$NUMBER" --body "$marker
+          This issue needs one label from each group before it can be triaged:
+          $list"
+          fi
