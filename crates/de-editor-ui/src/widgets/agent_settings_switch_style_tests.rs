@@ -96,7 +96,7 @@ fn system_row_rect(rect: Rect, index: usize) -> Rect {
     const SYSTEM_ROWS: [RowLines; 4] = [RowLines::One, RowLines::Two, RowLines::Two, RowLines::One];
     let content = crate::widgets::agent_settings_panel::content_viewport(rect);
     super::agent_settings_rows::row_rect_in(
-        content,
+        super::agent_settings_rows::card_rows_content(content),
         content.origin.y + super::agent_settings_rows::tab_intro_height(true),
         &SYSTEM_ROWS,
         index,

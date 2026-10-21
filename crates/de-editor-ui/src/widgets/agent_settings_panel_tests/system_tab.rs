@@ -53,6 +53,8 @@ fn system_tab_reserves_space_for_update_status() {
         panel.content_total_height(),
         tab_intro_height(true)
             + SYSTEM_ROWS.iter().copied().map(row_height).sum::<f32>()
+            // The gap between the rows' card and the version footnote.
+            + 8.0
             + FOOTNOTE_H
             + CONTENT_TAIL_PAD,
         "System tab = heading + Appearance/Auto-update/Experimental/Pencil-cursor rows \

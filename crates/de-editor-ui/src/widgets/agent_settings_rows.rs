@@ -290,6 +290,28 @@ pub(super) fn row_rect_in(content: Rect, top: f32, kinds: &[RowLines], index: us
 }
 
 /// Total height of a mixed-height row list.
+/// Settings v2 groups a tab's rows on a card: the rows sit this far in
+/// from the card's edges.
+pub(super) const CARD_INSET_X: f32 = 16.0;
+
+/// The column rows lay out in when they sit on a card spanning `content`.
+pub(super) fn card_rows_content(content: Rect) -> Rect {
+    Rect {
+        origin: Point2D::new(content.origin.x + CARD_INSET_X, content.origin.y),
+        size: Point2D::new(
+            (content.size.x - 2.0 * CARD_INSET_X).max(0.0),
+            content.size.y,
+        ),
+    }
+}
+
+/// The card under a run of rows: page-background fill, hairline, 10 px
+/// corners.
+pub(super) fn paint_row_card(cx: &mut PaintCx<'_>, theme: &Theme, card: Rect) {
+    cx.backend.fill_round_rect(card, 10.0, theme.background);
+    cx.backend.stroke_round_rect(card, 10.0, theme.border, 1.0);
+}
+
 pub(super) fn rows_block_height(kinds: &[RowLines]) -> f32 {
     kinds.iter().map(|kind| row_height(*kind)).sum()
 }

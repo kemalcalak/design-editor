@@ -9,9 +9,10 @@ use crate::theme::Theme;
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_metrics::CONTENT_TAIL_PAD;
 use crate::widgets::agent_settings_rows::{
-    fit_text, measure_settings_text, paint_footnote, paint_row_hairline, paint_row_label,
-    paint_row_label_above_status, paint_row_status_line, paint_tab_intro, row_control_rect,
-    row_rect_in, rows_block_height, tab_intro_height, RowLines, FOOTNOTE_H, SETTINGS_FONT_FAMILY,
+    card_rows_content, fit_text, measure_settings_text, paint_footnote, paint_row_card,
+    paint_row_hairline, paint_row_label, paint_row_label_above_status, paint_row_status_line,
+    paint_tab_intro, row_control_rect, row_rect_in, rows_block_height, tab_intro_height, RowLines,
+    FOOTNOTE_H, SETTINGS_FONT_FAMILY,
 };
 use crate::widgets::agent_settings_switch::{
     paint_settings_switch, SETTINGS_SWITCH_H, SETTINGS_SWITCH_W,
@@ -24,6 +25,8 @@ use de_editor_core::editor_ui_state::{EditorUiState, ThemeMode, UpdateStatus};
 
 /// System opens with the shared tab intro: title plus one muted line.
 const HEADING_HAS_DESC: bool = true;
+/// Space between the rows' card and the version footnote under it.
+const FOOTNOTE_GAP: f32 = 8.0;
 const SEGMENT_W: f32 = 78.0;
 const SEGMENT_H: f32 = 30.0;
 const SEGMENT_ICON: f32 = 13.0;
@@ -98,7 +101,12 @@ fn row_kinds() -> Vec<RowLines> {
 pub(super) fn row_boxes(content: Rect) -> Vec<(Rect, RowLines)> {
     let kinds = row_kinds();
     (0..kinds.len())
-        .map(|i| (row_rect_in(content, body_top(content), &kinds, i), kinds[i]))
+        .map(|i| {
+            (
+                row_rect_in(card_rows_content(content), body_top(content), &kinds, i),
+                kinds[i],
+            )
+        })
         .collect()
 }
 
@@ -111,12 +119,26 @@ fn rect_for(content: Rect, row: SystemRow) -> Rect {
         .iter()
         .position(|candidate| *candidate == row)
         .unwrap_or(0);
-    row_rect_in(content, body_top(content), &row_kinds(), index)
+    row_rect_in(
+        card_rows_content(content),
+        body_top(content),
+        &row_kinds(),
+        index,
+    )
+}
+
+/// The card the rows sit on.
+fn card_rect(content: Rect) -> Rect {
+    Rect {
+        origin: Point2D::new(content.origin.x, body_top(content)),
+        size: Point2D::new(content.size.x, rows_block_height(&row_kinds())),
+    }
 }
 
 pub(super) fn content_height() -> f32 {
     tab_intro_height(HEADING_HAS_DESC)
         + rows_block_height(&row_kinds())
+        + FOOTNOTE_GAP
         + FOOTNOTE_H
         + CONTENT_TAIL_PAD
 }
@@ -202,8 +224,9 @@ pub(super) fn paint_system_tab(
     let rows = visible_rows();
     let kinds = row_kinds();
     let last = rows.len() - 1;
+    paint_row_card(cx, theme, card_rect(content));
     for (index, row) in rows.iter().enumerate() {
-        let rect = row_rect_in(content, body_top(content), &kinds, index);
+        let rect = rect_for(content, *row);
         match row {
             SystemRow::Appearance => paint_appearance_row(cx, theme, ui, content, rect),
             SystemRow::AutoUpdate => {
@@ -238,7 +261,7 @@ pub(super) fn paint_system_tab(
             cx,
             theme,
             content,
-            body_top(content) + rows_block_height(&kinds),
+            body_top(content) + rows_block_height(&kinds) + FOOTNOTE_GAP,
             &format!(
                 "{}: v{} — {}",
                 t_settings(ui, "settings.system.currentVersion"),
