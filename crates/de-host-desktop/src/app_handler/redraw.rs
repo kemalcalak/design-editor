@@ -453,6 +453,10 @@ impl DesktopApp {
         if self.drain_builtin_model_refresh() {
             self.redraw_dirty = true;
         }
+        // Install saved Recent thumbnails while Home is up.
+        if self.home_thumbnails.poll(self.host.editor_state()) {
+            self.redraw_dirty = true;
+        }
         // Drain the background auto-update probe.
         if self.poll_update_probe() {
             self.redraw_dirty = true;

@@ -47,6 +47,7 @@ mod git_overflow_host;
 mod git_session;
 mod git_ssh_host;
 mod heap_pressure;
+mod home_thumbnails;
 mod html_import_error;
 mod html_import_session;
 mod iconify_host;
@@ -326,6 +327,8 @@ struct DesktopApp {
     collab_avatars: collab_avatar_host::CollabAvatarHost,
     /// Two-thread local image raster decode pool.
     image_decodes: image_decode_host::ImageDecodeHost,
+    /// Loads Home's Recent thumbnails into the image cache.
+    home_thumbnails: home_thumbnails::HomeThumbnails,
     /// Cross-thread wake handle used by live MCP connection threads.
     mcp_wake_proxy: Option<EventLoopProxy<DesktopEvent>>,
     /// Collaboration session/editor actor. Sockets remain on bounded network

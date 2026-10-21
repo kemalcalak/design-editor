@@ -59,6 +59,8 @@ mod top_bar;
 /// One Recent entry as Home lists it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct HomeRecent {
+    /// The full path, for opening and for the thumbnail lookup.
+    pub path: String,
     /// The file name without its folder or `.op` extension.
     pub name: String,
     /// The folder, `~`-abbreviated when it sits under the home dir.
@@ -332,6 +334,7 @@ fn recent_entry(path: &str, modified_at: u64) -> HomeRecent {
         .map(|rest| format!("~{rest}"))
         .unwrap_or_else(|| folder.to_string());
     HomeRecent {
+        path: path.to_string(),
         name: name.to_string(),
         folder,
         modified_at,

@@ -175,6 +175,7 @@ impl DesktopApp {
             remote_images: remote_image_host::RemoteImageSession::new(),
             collab_avatars: collab_avatar_host::CollabAvatarHost::new(),
             image_decodes: image_decode_host::ImageDecodeHost::new(),
+            home_thumbnails: crate::home_thumbnails::HomeThumbnails::default(),
             mcp_wake_proxy: None,
             collab_runtime: crate::collab_runtime::DesktopCollabRuntime::new(),
             forwarded_files: single_instance::ForwardQueue::default(),

@@ -99,17 +99,19 @@ fn paint_card(
     cx.backend.fill_rect(rect, p.surface);
     let thumb = Rect::xywh(rect.origin.x, rect.origin.y, rect.size.x, CARD_THUMB_H);
     cx.backend.fill_rect(thumb, p.subtle);
-    draw_glyph(
-        cx.backend,
-        HomeGlyph::File,
-        Point2D::new(
-            thumb.origin.x + (thumb.size.x - 22.0) / 2.0,
-            thumb.origin.y + (thumb.size.y - 22.0) / 2.0,
-        ),
-        22.0,
-        p.text_3,
-        1.5,
-    );
+    if !paint_thumbnail(cx, entry, thumb) {
+        draw_glyph(
+            cx.backend,
+            HomeGlyph::File,
+            Point2D::new(
+                thumb.origin.x + (thumb.size.x - 22.0) / 2.0,
+                thumb.origin.y + (thumb.size.y - 22.0) / 2.0,
+            ),
+            22.0,
+            p.text_3,
+            1.5,
+        );
+    }
     cx.backend.fill_rect(
         Rect::xywh(
             rect.origin.x,
@@ -147,6 +149,37 @@ fn paint_card(
             Point2D::new(x, thumb.origin.y + thumb.size.y + 44.0),
         );
     }
+}
+
+/// Paint the document's saved thumbnail into `thumb`, cropped to fill
+/// it. Returns `false` while there is none (never saved by
+/// this build, or still decoding) so the caller paints the file glyph.
+fn paint_thumbnail(cx: &mut PaintCx<'_>, entry: &HomeRecent, thumb: Rect) -> bool {
+    use crate::widgets::canvas_viewport_image::{
+        cached_bytes_for, note_pending_decode, required_raster_edge,
+    };
+    let id =
+        de_editor_core::home_thumbnail::home_thumbnail_image_id(&entry.path, entry.modified_at);
+    let Some(bytes) = cached_bytes_for(id) else {
+        return false;
+    };
+    let max_edge = required_raster_edge(thumb, cx.backend.dpi_scale());
+    if !cx.backend.image_decoded(id, &bytes, max_edge) {
+        note_pending_decode(id, max_edge);
+    }
+    if !cx.backend.image_resident(id) {
+        return false;
+    }
+    cx.backend.draw_image_with_options(
+        thumb,
+        id,
+        &bytes,
+        crate::ImageDrawMode::Fill,
+        crate::ImageAdjustments::default(),
+        1.0,
+        0.0,
+    );
+    true
 }
 
 fn paint_list(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &HomeLayout) {
