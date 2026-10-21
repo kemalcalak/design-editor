@@ -1032,22 +1032,10 @@ jobs:
         run: |
           set -euo pipefail
           version="$DE_VERSION"
-          note="RELEASE_NOTES/v${version}.md"
-          if [ ! -f "$note" ]; then
-            echo "::error::missing release note: $note"
-            exit 1
-          fi
-          # The note's leading `# ` heading is the release title; the rest is
-          # the body, so the title is not repeated on the release page.
-          title="$(head -n 1 "$note")"
-          if [[ "$title" != "# "* ]]; then
-            echo "::error::release note must start with a '# ' title heading: $note"
-            exit 1
-          fi
-          echo "title=${title#\# }" >> "$GITHUB_OUTPUT"
-          tail -n +2 "$note" | sed '/./,$!d' > release-body.md
+          echo "title=Design Editor v${version}" >> "$GITHUB_OUTPUT"
+          : > release-body.md
           {
-            printf '\n## Web Docker Image\n\n'
+            printf '## Web Docker Image\n\n'
             printf -- '- Image: `%s`\n' '${{ needs.web-docker.outputs.tag }}'
             printf -- '- Digest: `%s`\n' '${{ needs.web-docker.outputs.digest }}'
             printf '\n## Verify Your Download\n\n'
