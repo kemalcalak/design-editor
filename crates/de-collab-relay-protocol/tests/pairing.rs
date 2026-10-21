@@ -341,7 +341,7 @@ fn legacy_v1_seal_matches_an_independent_v0_8_4_transcription() {
     let mut body = fragment.into_bytes();
     let mut stream = vec![0_u8; body.len()];
     blake3::Hasher::new_keyed(&subkey(
-        "openpencil/op-collab-relay-protocol/pairing-code-enc-key/v1",
+        "design-editor/de-collab-relay-protocol/pairing-code-enc-key/v1",
     ))
     .finalize_xof()
     .fill(&mut stream);
@@ -352,7 +352,7 @@ fn legacy_v1_seal_matches_an_independent_v0_8_4_transcription() {
     expected.extend_from_slice(&v1_nonce);
     expected.extend_from_slice(&body);
     let tag = blake3::Hasher::new_keyed(&subkey(
-        "openpencil/op-collab-relay-protocol/pairing-code-mac-key/v1",
+        "design-editor/de-collab-relay-protocol/pairing-code-mac-key/v1",
     ))
     .update(&expected)
     .finalize();

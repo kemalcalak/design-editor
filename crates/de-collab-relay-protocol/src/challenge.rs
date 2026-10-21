@@ -22,9 +22,9 @@ pub const RELAY_CHALLENGE_PROOF_VERSION: u8 = 2;
 const CHALLENGE_FIXED_BYTES: usize = 2 + RELAY_CHALLENGE_NONCE_BYTES;
 const PROOF_TAG_BYTES: usize = 32;
 const PROOF_BINDING_DOMAIN: &[u8] =
-    b"openpencil/op-collab-relay-protocol/challenge-proof-binding/v2\0";
+    b"design-editor/de-collab-relay-protocol/challenge-proof-binding/v2\0";
 const PROOF_KEY_INFO_DOMAIN: &[u8] =
-    b"openpencil/op-collab-relay-protocol/challenge-proof-key/v2\0";
+    b"design-editor/de-collab-relay-protocol/challenge-proof-key/v2\0";
 
 type HmacSha256 = Hmac<Sha256>;
 

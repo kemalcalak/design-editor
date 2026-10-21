@@ -41,9 +41,9 @@ use crate::{
 };
 
 /// Required protected-header `typ` for the minimized relay token.
-pub const RELAY_TOKEN_JWS_TYPE: &str = "openpencil-relay+jwt";
+pub const RELAY_TOKEN_JWS_TYPE: &str = "design-editor-relay+jwt";
 /// Required `aud` claim for the minimized relay token.
-pub const RELAY_TOKEN_AUDIENCE: &str = "openpencil-relay";
+pub const RELAY_TOKEN_AUDIENCE: &str = "design-editor-relay";
 /// Required authorization scope for the minimized relay token.
 pub const RELAY_TOKEN_SCOPE: &str = "relay:connect";
 /// Supported relay-token claims revision.

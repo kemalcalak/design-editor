@@ -45,7 +45,7 @@ pub(super) const BOOTSTRAP_URL_ENV: &str = "DESIGN_EDITOR_COLLAB_BOOTSTRAP_URL";
 const BOOTSTRAP_DEV_HTTP_ENV: &str = "DESIGN_EDITOR_COLLAB_BOOTSTRAP_DEV_HTTP";
 
 const BOOTSTRAP_PATH: &str = "/api/v1/collaboration/bootstrap";
-const BOOTSTRAP_CONTEXT: &[u8] = b"openpencil/op-hub/collaboration-bootstrap/v1\0";
+const BOOTSTRAP_CONTEXT: &[u8] = b"design-editor/de-hub/collaboration-bootstrap/v1\0";
 /// Legacy shared-file name, kept for the fixed cache paths tests construct.
 #[cfg(test)]
 const BOOTSTRAP_CACHE_FILE: &str = "collaboration-bootstrap-v1.json";

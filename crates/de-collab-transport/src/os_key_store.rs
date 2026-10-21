@@ -45,9 +45,8 @@ use crate::{DeviceStaticKey, KeyStoreError, StaticKeyStore};
         target_os = "macos"
     )
 ))]
-// Desktop compatibility identifier. Renaming it without a migration would
-// silently rotate existing desktop Noise identities; mobile stores use their
-// explicit `com.kemalcalak.designeditor` identifiers instead.
+// Desktop keyring service id; mobile stores use their explicit
+// `com.kemalcalak.designeditor` identifiers instead.
 const KEYRING_SERVICE: &str = "app.design-editor.collaboration";
 #[cfg(all(
     feature = "native",
@@ -374,7 +373,7 @@ mod tests {
         )
     ))]
     #[test]
-    fn desktop_keyring_keeps_its_legacy_identity_until_an_explicit_migration() {
+    fn desktop_keyring_uses_the_design_editor_service_identity() {
         assert_eq!(KEYRING_SERVICE, "app.design-editor.collaboration");
     }
 

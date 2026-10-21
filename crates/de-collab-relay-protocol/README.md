@@ -33,7 +33,7 @@ China relay when policy and network reachability permit it.
 
 Short pairing codes store an opaque sealed invite in the control plane. The
 storage handle deliberately retains the v0.8.4 derivation: the first 16 bytes
-of BLAKE3 `derive_key("openpencil/op-collab-relay-protocol/pairing-code-id/v1",
+of BLAKE3 `derive_key("design-editor/de-collab-relay-protocol/pairing-code-id/v1",
 canonical_code)`. It remains separate from the HKDF sealing key.
 
 The sealed binary format has its own version, independent from the locator
@@ -45,9 +45,9 @@ protocol version:
 
 The 32-byte AEAD key is HKDF-SHA256 with the canonical pairing-code bytes as
 IKM, the 12-byte nonce as salt, and
-`"openpencil/op-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-key/v2\0"`
+`"design-editor/de-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-key/v2\0"`
 as info. The AAD is
-`"openpencil/op-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-aad/v2\0" || sealed_version || nonce`.
+`"design-editor/de-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-aad/v2\0" || sealed_version || nonce`.
 The nonce must be nonzero and unique for a pairing code; production sealing
 uses a fresh CSPRNG value. The full 16-byte RFC 8439 tag is always carried.
 The v2 parser ceiling is 541 bytes. The public opaque transport/storage ceiling
@@ -95,14 +95,14 @@ The interoperable derivation is:
 bearer_hash = SHA256(exact bearer-token bytes)
 normalized_hello = fixed 501-byte hello with byte [68] and range [69,165) zeroed
 binding = SHA256(
-  "openpencil/op-collab-relay-protocol/challenge-proof-binding/v2\x00" ||
+  "design-editor/de-collab-relay-protocol/challenge-proof-binding/v2\x00" ||
   u16be(challenge_binary_length) ||
   challenge_binary ||
   bearer_hash ||
   normalized_hello
 )
 info =
-  "openpencil/op-collab-relay-protocol/challenge-proof-key/v2\x00" ||
+  "design-editor/de-collab-relay-protocol/challenge-proof-key/v2\x00" ||
   0x01 || key_id_length || key_id
 okm = HKDF-SHA256(
   ikm = X25519_shared_secret,

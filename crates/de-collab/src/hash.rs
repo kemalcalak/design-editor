@@ -15,11 +15,11 @@ pub const CANONICAL_HASH_VERSION: u16 = 1;
 /// Hash algorithm frozen by collaboration protocol v1.
 pub const CANONICAL_HASH_ALGORITHM: &str = "blake3";
 /// Domain prefix for complete canonical documents.
-pub const DOCUMENT_HASH_DOMAIN: &str = "openpencil-collab/document/v1";
+pub const DOCUMENT_HASH_DOMAIN: &str = "design-editor-collab/document/v1";
 /// Domain prefix for canonical nodes and their authored subtrees.
-pub const NODE_HASH_DOMAIN: &str = "openpencil-collab/node/v1";
+pub const NODE_HASH_DOMAIN: &str = "design-editor-collab/node/v1";
 /// Domain prefix for exact collaboration transactions.
-pub const TXN_HASH_DOMAIN: &str = "openpencil-collab/txn/v1";
+pub const TXN_HASH_DOMAIN: &str = "design-editor-collab/txn/v1";
 
 /// A BLAKE3 digest of a domain-separated canonical JSON encoding.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

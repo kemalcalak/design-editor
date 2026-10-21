@@ -33,7 +33,7 @@ use crate::close::RelayCloseReason;
 /// secret-derived material and must never be logged. Re-deriving under a
 /// distinct context yields a stable correlation handle that cannot be walked
 /// back to the capability.
-const ROUTE_LOG_REF_CONTEXT: &str = "openpencil/op-collab-relay-server/route-log-ref/v1";
+const ROUTE_LOG_REF_CONTEXT: &str = "design-editor/de-collab-relay-server/route-log-ref/v1";
 
 /// Bytes of digest kept for a route reference: 12 bytes rendered as 24 hex
 /// characters, matching the SSO audit reference width.

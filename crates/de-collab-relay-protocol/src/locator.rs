@@ -25,7 +25,8 @@ const KEY_ID_LEN_OFFSET: usize = 203;
 const KEY_ID_OFFSET: usize = 204;
 const SIGNATURE_OFFSET: usize = LOCATOR_CANONICAL_SIGNING_BYTES;
 const CHECKSUM_OFFSET: usize = 332;
-const CHECKSUM_CONTEXT: &str = "openpencil/op-collab-relay-protocol/locator-corruption-checksum/v1";
+const CHECKSUM_CONTEXT: &str =
+    "design-editor/de-collab-relay-protocol/locator-corruption-checksum/v1";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u8)]
