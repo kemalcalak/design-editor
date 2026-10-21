@@ -230,6 +230,16 @@ impl McpLiveServer {
         &self.token
     }
 
+    /// The name the last MCP client gave in `initialize`'s
+    /// `clientInfo.name`, or `None` before any client has connected. Home's
+    /// MCP card and Settings ▸ MCP show it as the connected agent.
+    pub fn client_name(&self) -> Option<String> {
+        self.client_identity
+            .lock()
+            .ok()
+            .and_then(|guard| guard.as_ref().map(|(name, _)| name.clone()))
+    }
+
     /// Whether a token-authed `design-editor/shutdown` was received — the UI
     /// thread should exit the event loop.
     pub fn shutdown_requested(&self) -> bool {
