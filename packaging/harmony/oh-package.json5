@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Design Editor HarmonyOS player: a thin ArkUI shell around the Rust engine.",
   "main": "",
-  "author": "ZSeven",
+  "author": "kemalcalak",
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Design Editor player entry HAP.",
   "main": "",
-  "author": "ZSeven",
+  "author": "kemalcalak",
   "license": "MIT",
   "dependencies": {
     // Type-only package for the prebuilt Rust NAPI module. The actual
