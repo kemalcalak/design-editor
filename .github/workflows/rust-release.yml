@@ -1181,13 +1181,8 @@ jobs:
 
             zap trash: [
               "~/Library/Application Support/design-editor",
-              "~/Library/Application Support/openpencil",
               "~/Library/Preferences/com.kemalcalak.design-editor.plist",
-              "~/Library/Preferences/com.zseven-w.openpencil.plist",
-              "~/Library/Preferences/dev.openpencil.app.plist",
               "~/Library/Caches/com.kemalcalak.design-editor",
-              "~/Library/Caches/com.zseven-w.openpencil",
-              "~/Library/Caches/dev.openpencil.app",
             ]
           end
           EOF
