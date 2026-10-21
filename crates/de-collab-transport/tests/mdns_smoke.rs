@@ -12,7 +12,7 @@ use de_collab_transport::{DiscoveryBrowser, DiscoveryPublisher};
 #[ignore = "requires a LAN interface with multicast DNS enabled"]
 fn publisher_is_discovered_and_unregisters_cleanly() {
     let mut browser = DiscoveryBrowser::start().expect("start mDNS browser");
-    let explicit_address = std::env::var("OP_COLLAB_MDNS_SMOKE_ADDRESS")
+    let explicit_address = std::env::var("DE_COLLAB_MDNS_SMOKE_ADDRESS")
         .ok()
         .map(|value| value.parse::<IpAddr>().expect("parse smoke IP address"));
     let publisher = match explicit_address {

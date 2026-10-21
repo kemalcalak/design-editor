@@ -130,14 +130,14 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
       - run: echo build
   web-docker:
 __WEB_NEEDS__
     runs-on: ubuntu-latest
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
       - run: |
           version="__PUBLISH_VERSION__"
@@ -146,7 +146,7 @@ __WEB_NEEDS__
 __SDK_NEEDS__
     runs-on: ubuntu-latest
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
       - run: bun run sync-version:check
       - run: |
@@ -156,22 +156,22 @@ __SDK_NEEDS__
     needs: [version, android-release, build, web-docker, sdk-packages, vsix]
     runs-on: ubuntu-latest
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - run: version="$OP_VERSION"
+      - run: version="$DE_VERSION"
   package-managers:
     needs: [version, release-draft]
     runs-on: ubuntu-latest
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - run: version="$OP_VERSION"
+      - run: version="$DE_VERSION"
 SCRIPT
 
     if [[ "$publish_version_mode" == independent ]]; then
         publish_version='${GITHUB_REF_NAME#v}'
     else
-        publish_version='$OP_VERSION'
+        publish_version='$DE_VERSION'
     fi
 
     awk -v dependency_mode="$dependency_mode" -v publish_version="$publish_version" '
@@ -343,8 +343,8 @@ SCRIPT
 SCRIPT
 
     cat > "$repo/scripts/install-de.sh" <<'SCRIPT'
-# OP_VERSION=X.Y.Z ./install-de.sh
-# set OP_VERSION explicitly, e.g. OP_VERSION=X.Y.Z ./install-de.sh
+# DE_VERSION=X.Y.Z ./install-de.sh
+# set DE_VERSION explicitly, e.g. DE_VERSION=X.Y.Z ./install-de.sh
 SCRIPT
 
     write_workflow_fixture "$repo" required canonical
@@ -595,7 +595,7 @@ assert_no_success_output 'macOS no-op mismatch and reassignment'
 pass 'macOS validation rejects no-op mismatch bodies and APP_VERSION reassignment'
 
 repo=$(new_repo arbitrary_stale_example_version 0.8.1)
-printf '%s\n' '# stale example: OP_VERSION=0.8.2' >> "$repo/scripts/install-de.sh"
+printf '%s\n' '# stale example: DE_VERSION=0.8.2' >> "$repo/scripts/install-de.sh"
 run_guard "$repo"
 assert_status 1 'arbitrary stale example version'
 assert_contains 'scripts/install-de.sh:' 'arbitrary stale example version'

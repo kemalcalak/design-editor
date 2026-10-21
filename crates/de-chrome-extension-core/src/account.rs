@@ -132,7 +132,7 @@ impl Region {
 /// The hub origin to talk to: the region's published one, unless a loopback
 /// development origin has been stored.
 ///
-/// The override exists so `OP_HUB_PUBLIC_URL=http://127.0.0.1:18081` (the
+/// The override exists so `DE_HUB_PUBLIC_URL=http://127.0.0.1:18081` (the
 /// Hub's documented development invocation) can be driven from the same
 /// popup. It is accepted **only** when it normalizes to a loopback
 /// `host:port` — the exact rule [`crate::endpoint`] applies to the local
@@ -156,7 +156,7 @@ fn dev_origin(raw: &str) -> Option<String> {
         return None;
     }
     // `https://127.0.0.1:8443` is not a development Hub — the Hub only
-    // serves plaintext when `OP_HUB_PUBLIC_URL` is `http://`, and accepting
+    // serves plaintext when `DE_HUB_PUBLIC_URL` is `http://`, and accepting
     // both would mean two spellings of one thing. `get` rather than a slice
     // index: byte 8 can land inside a multi-byte character.
     if trimmed

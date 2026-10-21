@@ -13,7 +13,7 @@
 #     universal fallback. No resize step: imagemagick is not guaranteed on
 #     runners and the spec tolerates the fallback path.
 
-OP_DESKTOP_BIN_NAME="design-editor"
+DE_DESKTOP_BIN_NAME="design-editor"
 DE_CLI_BIN_NAME="de"
 
 # op_write_desktop_file <dest-path>
@@ -67,9 +67,9 @@ op_install_usr_tree() {
     "$root/usr/share/icons/hicolor/1024x1024/apps" \
     "$root/usr/share/pixmaps"
 
-  cp "$desktop_bin" "$root/usr/bin/$OP_DESKTOP_BIN_NAME"
+  cp "$desktop_bin" "$root/usr/bin/$DE_DESKTOP_BIN_NAME"
   cp "$cli_bin" "$root/usr/bin/$DE_CLI_BIN_NAME"
-  chmod 755 "$root/usr/bin/$OP_DESKTOP_BIN_NAME" "$root/usr/bin/$DE_CLI_BIN_NAME"
+  chmod 755 "$root/usr/bin/$DE_DESKTOP_BIN_NAME" "$root/usr/bin/$DE_CLI_BIN_NAME"
 
   op_write_desktop_file "$root/usr/share/applications/design-editor.desktop"
   op_write_mime_xml "$root/usr/share/mime/packages/design-editor.xml"

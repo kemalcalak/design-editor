@@ -21,7 +21,7 @@ name: de-web-sdk bundle build + size gate
 #   3. assert 0 env.* imports (LinkError guard)
 #   4. wasm-opt -Oz with rustc-emitted WebAssembly feature flags, then
 #      gzip size <= ceiling (default 6291456 bytes = 6 MiB, overridable via
-#      OP_WEB_SDK_WASM_GZIP_LIMIT_BYTES)
+#      DE_WEB_SDK_WASM_GZIP_LIMIT_BYTES)
 # The job calls the script directly — it is the single source of truth for the
 # gate logic.
 

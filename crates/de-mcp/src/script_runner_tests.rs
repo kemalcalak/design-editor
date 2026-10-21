@@ -546,7 +546,7 @@ D(root);"#,
     )
     .expect_err("D() must not look successful while doing nothing")
     .to_string();
-    assert!(error.contains("OP_SCRIPT_MODE_UNSUPPORTED"), "{error}");
+    assert!(error.contains("DE_SCRIPT_MODE_UNSUPPORTED"), "{error}");
     assert!(error.contains("direct QuickJS"), "{error}");
     assert!(error.contains("I(), K(), and authorized U()"), "{error}");
 }

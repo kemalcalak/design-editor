@@ -406,7 +406,7 @@ raise "missing immutable package-manager handoff upload" unless handoff_upload
 raise "package-manager handoff must fail closed" unless handoff_upload.fetch("with").fetch("if-no-files-found") == "error"
 flatten = release.fetch("steps").find { |step| step["name"] == "Flatten artifacts" }
 raise "missing release asset flatten gate" unless flatten
-unless flatten.fetch("run") == 'tools/flatten-release-artifacts.sh dist release-files "$OP_VERSION"'
+unless flatten.fetch("run") == 'tools/flatten-release-artifacts.sh dist release-files "$DE_VERSION"'
   raise "release assets must pass the repository-owned flatten gate"
 end
 
@@ -428,7 +428,7 @@ unless handoff_verify.fetch("env") == {
   raise "package-manager handoff must carry the upload action digest"
 end
 unless handoff_verify.fetch("run") ==
-    'tools/package-manager-handoff.sh verify release-assets "$OP_VERSION" "$EXPECTED_ARTIFACT_DIGEST" "$EXPECTED_MANIFEST_SHA256" "$GITHUB_ENV"'
+    'tools/package-manager-handoff.sh verify release-assets "$DE_VERSION" "$EXPECTED_ARTIFACT_DIGEST" "$EXPECTED_MANIFEST_SHA256" "$GITHUB_ENV"'
   raise "package-manager handoff verification must use the reviewed repository helper"
 end
 

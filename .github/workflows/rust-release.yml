@@ -176,7 +176,7 @@ jobs:
       contents: read
     if: (github.event_name == 'workflow_dispatch' && inputs.ios_app_store_only == false) || (startsWith(github.ref, 'refs/tags/v') && github.event_name != 'workflow_dispatch')
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
       HAS_APPLE_CERTIFICATE: ${{ secrets.CSC_LINK != '' && secrets.CSC_KEY_PASSWORD != '' && secrets.APPLE_ID != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && 'true' || 'false' }}
       HAS_WINDOWS_CERTIFICATE: ${{ secrets.WIN_CSC_LINK != '' && secrets.WIN_CSC_KEY_PASSWORD != '' && secrets.WIN_CSC_PFX_SHA256 != '' && secrets.WIN_CSC_CERTIFICATE_SHA1 != '' && 'true' || 'false' }}
     strategy:
@@ -356,7 +356,7 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         env:
-          DESIGN_EDITOR_VERSION: ${{ env.OP_VERSION }}
+          DESIGN_EDITOR_VERSION: ${{ env.DE_VERSION }}
           DESIGN_EDITOR_TARGET: ${{ matrix.target }}
           # Hand the already-built binaries to the bundle script: it skips its
           # own cargo build and overwrites the bundled executable with exactly
@@ -382,7 +382,7 @@ jobs:
         run: |
           set -euo pipefail
           APP="target/${{ matrix.target }}/release/bundle/osx/Design Editor.app"
-          APP_ZIP="Design-Editor-$OP_VERSION-${{ matrix.arch }}-mac-app.zip"
+          APP_ZIP="Design-Editor-$DE_VERSION-${{ matrix.arch }}-mac-app.zip"
           ditto -c -k --keepParent "$APP" "$APP_ZIP"
           notary_log="$(mktemp)"
           set +e
@@ -412,7 +412,7 @@ jobs:
         run: |
           set -euo pipefail
           APP="target/${{ matrix.target }}/release/bundle/osx/Design Editor.app"
-          DMG="Design-Editor-$OP_VERSION-${{ matrix.arch }}-mac.dmg"
+          DMG="Design-Editor-$DE_VERSION-${{ matrix.arch }}-mac.dmg"
           STAGE="$(mktemp -d)"
           ditto "$APP" "$STAGE/Design Editor.app"
           if [ "$HAS_APPLE_CERTIFICATE" = "true" ]; then
@@ -422,7 +422,7 @@ jobs:
           # HFS+ instead of the APFS default: mountable on every macOS the
           # binary itself supports.
           hdiutil create \
-            -volname "Design Editor $OP_VERSION" \
+            -volname "Design Editor $DE_VERSION" \
             -srcfolder "$STAGE" \
             -fs HFS+ -format UDZO -ov \
             "$DMG"
@@ -439,7 +439,7 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
           set -euo pipefail
-          DMG="Design-Editor-$OP_VERSION-${{ matrix.arch }}-mac.dmg"
+          DMG="Design-Editor-$DE_VERSION-${{ matrix.arch }}-mac.dmg"
           notary_log="$(mktemp)"
           set +e
           xcrun notarytool submit "$DMG" \
@@ -517,11 +517,11 @@ jobs:
           # Defines are absolute because NSIS resolves relative paths against
           # the .nsi's own directory (scripts/).
           makensis `
-            "/DVERSION=$env:OP_VERSION" `
+            "/DVERSION=$env:DE_VERSION" `
             "/DARCH=${{ matrix.arch }}" `
             "/DBIN_DIR=$env:GITHUB_WORKSPACE\target\${{ matrix.target }}\release" `
             "/DICON_FILE=$env:GITHUB_WORKSPACE\crates\de-host-desktop\assets\icon.ico" `
-            "/DOUT_FILE=$env:GITHUB_WORKSPACE\Design-Editor-$env:OP_VERSION-${{ matrix.arch }}-win-setup.exe" `
+            "/DOUT_FILE=$env:GITHUB_WORKSPACE\Design-Editor-$env:DE_VERSION-${{ matrix.arch }}-win-setup.exe" `
             "/DVC_REDIST_FILE=$env:VC_REDIST_FILE" `
             scripts\package-windows.nsi
       # Authenticode signing scaffolding (NO-OP until WINDOWS_CERT_BASE64
@@ -536,7 +536,7 @@ jobs:
           WIN_CSC_PFX_SHA256: ${{ secrets.WIN_CSC_PFX_SHA256 }}
           WIN_CSC_CERTIFICATE_SHA1: ${{ secrets.WIN_CSC_CERTIFICATE_SHA1 }}
         run: |
-          $exe = "Design-Editor-$env:OP_VERSION-${{ matrix.arch }}-win-setup.exe"
+          $exe = "Design-Editor-$env:DE_VERSION-${{ matrix.arch }}-win-setup.exe"
           & tools/sign-windows-release.ps1 `
             -CertificateBase64 $env:WIN_CSC_LINK `
             -CertificatePassword $env:WIN_CSC_KEY_PASSWORD `
@@ -556,7 +556,7 @@ jobs:
             --desktop-bin "target/${{ matrix.target }}/release/design-editor" \
             --cli-bin "target/${{ matrix.target }}/release/de" \
             --icon crates/de-host-desktop/assets/icon.png \
-            --version "$OP_VERSION" \
+            --version "$DE_VERSION" \
             --arch "$DEB_ARCH" \
             --out-dir .
       - name: Package AppImage (linux)
@@ -576,7 +576,7 @@ jobs:
             --desktop-bin "target/${{ matrix.target }}/release/design-editor" \
             --cli-bin "target/${{ matrix.target }}/release/de" \
             --icon crates/de-host-desktop/assets/icon.png \
-            --version "$OP_VERSION" \
+            --version "$DE_VERSION" \
             --arch "$AI_ARCH" \
             --tool "$appimagetool" \
             --runtime-file "$runtime" \
@@ -617,7 +617,7 @@ jobs:
       packages: write
     if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     outputs:
       image: ${{ steps.meta.outputs.image }}
       tag: ${{ steps.meta.outputs.tag }}
@@ -648,7 +648,7 @@ jobs:
         id: meta
         shell: bash
         run: |
-          version="$OP_VERSION"
+          version="$DE_VERSION"
           image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/design-editor-web"
           tag="${image}:v${version}"
           echo "image=${image}" >> "$GITHUB_OUTPUT"
@@ -671,7 +671,7 @@ jobs:
       contents: read
     if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
@@ -746,7 +746,7 @@ jobs:
           npm_token=
           export NPM_CONFIG_USERCONFIG=$npmrc
           npm whoami
-          version="$OP_VERSION"
+          version="$DE_VERSION"
           publish_pkg() {
             local name="$1"
             local tarball="$2"
@@ -781,7 +781,7 @@ jobs:
       contents: read
     if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
@@ -830,7 +830,7 @@ jobs:
           node build.mjs
           # Stamp the release version into the manifest (runtime-only — the
           # extension is not in the sync-version managed set yet).
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=process.env.OP_VERSION;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=process.env.DE_VERSION;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
           cp ../../LICENSE LICENSE
       - name: Package platform vsix (daemon + web assets bundled)
         working-directory: packages/de-vscode
@@ -869,7 +869,7 @@ jobs:
             cp -R ../../crates/de-host-web/assets/canvaskit web/canvaskit
             ./node_modules/.bin/vsce package --no-dependencies --allow-missing-repository \
               --target "$vs_target" \
-              --out "design-editor-vscode-${OP_VERSION}-${vs_target}.vsix"
+              --out "design-editor-vscode-${DE_VERSION}-${vs_target}.vsix"
           done
           ls -la ./*.vsix
       - name: Upload .vsix artifacts
@@ -904,7 +904,7 @@ jobs:
           # attempt every remaining platform, and fails the job at the end
           # if anything genuinely failed.
           failed=0
-          for f in ./design-editor-vscode-"${OP_VERSION}"-*.vsix; do
+          for f in ./design-editor-vscode-"${DE_VERSION}"-*.vsix; do
             if out="$(./node_modules/.bin/ovsx publish --packagePath "$f" -p "$openvsx_token" 2>&1)"; then
               printf '%s\n' "$out"
             elif printf '%s' "$out" | grep -qiE "already (exists|published)"; then
@@ -932,7 +932,7 @@ jobs:
       id-token: write
       attestations: write
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     outputs:
       package_manager_artifact_id: ${{ steps.package_manager_handoff.outputs.artifact-id }}
       package_manager_artifact_digest: ${{ steps.package_manager_handoff.outputs.artifact-digest }}
@@ -948,12 +948,12 @@ jobs:
           pattern: design-editor-*
       - name: Flatten artifacts
         shell: bash
-        run: tools/flatten-release-artifacts.sh dist release-files "$OP_VERSION"
+        run: tools/flatten-release-artifacts.sh dist release-files "$DE_VERSION"
       - name: Generate CLI install scripts
         shell: bash
         run: |
           set -euo pipefail
-          version="$OP_VERSION"
+          version="$DE_VERSION"
 
           sha_file() {
             sha256sum "release-files/$1" | awk '{print $1}'
@@ -968,28 +968,28 @@ jobs:
 
           cp scripts/install-de.sh release-files/install-de.sh
           cp scripts/install-de.ps1 release-files/install-de.ps1
-          OP_INSTALLER_VERSION="$version" \
-          OP_SHA_MACOS_AARCH64="$cli_mac_arm_sha" \
-          OP_SHA_MACOS_X86_64="$cli_mac_x64_sha" \
-          OP_SHA_LINUX_AARCH64="$cli_linux_arm_sha" \
-          OP_SHA_LINUX_X86_64="$cli_linux_x64_sha" \
+          DE_INSTALLER_VERSION="$version" \
+          DE_SHA_MACOS_AARCH64="$cli_mac_arm_sha" \
+          DE_SHA_MACOS_X86_64="$cli_mac_x64_sha" \
+          DE_SHA_LINUX_AARCH64="$cli_linux_arm_sha" \
+          DE_SHA_LINUX_X86_64="$cli_linux_x64_sha" \
           perl -0pi -e '
-            s/^DEFAULT_OP_VERSION=.*/DEFAULT_OP_VERSION="$ENV{OP_INSTALLER_VERSION}"/m;
-            s/^DEFAULT_SHA_MACOS_AARCH64=.*/DEFAULT_SHA_MACOS_AARCH64="$ENV{OP_SHA_MACOS_AARCH64}"/m;
-            s/^DEFAULT_SHA_MACOS_X86_64=.*/DEFAULT_SHA_MACOS_X86_64="$ENV{OP_SHA_MACOS_X86_64}"/m;
-            s/^DEFAULT_SHA_LINUX_AARCH64=.*/DEFAULT_SHA_LINUX_AARCH64="$ENV{OP_SHA_LINUX_AARCH64}"/m;
-            s/^DEFAULT_SHA_LINUX_X86_64=.*/DEFAULT_SHA_LINUX_X86_64="$ENV{OP_SHA_LINUX_X86_64}"/m;
+            s/^DEFAULT_DE_VERSION=.*/DEFAULT_DE_VERSION="$ENV{DE_INSTALLER_VERSION}"/m;
+            s/^DEFAULT_SHA_MACOS_AARCH64=.*/DEFAULT_SHA_MACOS_AARCH64="$ENV{DE_SHA_MACOS_AARCH64}"/m;
+            s/^DEFAULT_SHA_MACOS_X86_64=.*/DEFAULT_SHA_MACOS_X86_64="$ENV{DE_SHA_MACOS_X86_64}"/m;
+            s/^DEFAULT_SHA_LINUX_AARCH64=.*/DEFAULT_SHA_LINUX_AARCH64="$ENV{DE_SHA_LINUX_AARCH64}"/m;
+            s/^DEFAULT_SHA_LINUX_X86_64=.*/DEFAULT_SHA_LINUX_X86_64="$ENV{DE_SHA_LINUX_X86_64}"/m;
           ' release-files/install-de.sh
-          OP_INSTALLER_VERSION="$version" \
-          OP_SHA_WINDOWS_AARCH64="$cli_win_arm_sha" \
-          OP_SHA_WINDOWS_X86_64="$cli_win_x64_sha" \
+          DE_INSTALLER_VERSION="$version" \
+          DE_SHA_WINDOWS_AARCH64="$cli_win_arm_sha" \
+          DE_SHA_WINDOWS_X86_64="$cli_win_x64_sha" \
           perl -0pi -e '
-            s/^\$DefaultOpVersion = .*/\$DefaultOpVersion = "$ENV{OP_INSTALLER_VERSION}"/m;
-            s/^\$DefaultShaWindowsAarch64 = .*/\$DefaultShaWindowsAarch64 = "$ENV{OP_SHA_WINDOWS_AARCH64}"/m;
-            s/^\$DefaultShaWindowsX86_64 = .*/\$DefaultShaWindowsX86_64 = "$ENV{OP_SHA_WINDOWS_X86_64}"/m;
+            s/^\$DefaultOpVersion = .*/\$DefaultOpVersion = "$ENV{DE_INSTALLER_VERSION}"/m;
+            s/^\$DefaultShaWindowsAarch64 = .*/\$DefaultShaWindowsAarch64 = "$ENV{DE_SHA_WINDOWS_AARCH64}"/m;
+            s/^\$DefaultShaWindowsX86_64 = .*/\$DefaultShaWindowsX86_64 = "$ENV{DE_SHA_WINDOWS_X86_64}"/m;
           ' release-files/install-de.ps1
           chmod +x release-files/install-de.sh
-          if grep -E 'DEFAULT_OP_VERSION=""|DEFAULT_SHA_(MACOS|LINUX)_[A-Z0-9_]+=""|\$Default(OpVersion|ShaWindows[A-Za-z0-9_]+) = ""' \
+          if grep -E 'DEFAULT_DE_VERSION=""|DEFAULT_SHA_(MACOS|LINUX)_[A-Z0-9_]+=""|\$Default(OpVersion|ShaWindows[A-Za-z0-9_]+) = ""' \
               release-files/install-de.sh release-files/install-de.ps1; then
             echo "::error::CLI install scripts still contain unstamped release metadata"
             exit 1
@@ -1013,7 +1013,7 @@ jobs:
         shell: bash
         run: >-
           tools/package-manager-handoff.sh stage release-files package-manager-handoff
-          "$OP_VERSION" "$GITHUB_OUTPUT"
+          "$DE_VERSION" "$GITHUB_OUTPUT"
       - name: Upload immutable package-manager handoff
         id: package_manager_handoff
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -1031,7 +1031,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$OP_VERSION"
+          version="$DE_VERSION"
           note="RELEASE_NOTES/v${version}.md"
           if [ ! -f "$note" ]; then
             echo "::error::missing release note: $note"
@@ -1069,7 +1069,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$OP_VERSION"
+          version="$DE_VERSION"
           sri_hash() {
             printf 'sha256-%s' "$(openssl dgst -sha256 -binary "release-files/$1" | base64 -w0)"
           }
@@ -1112,13 +1112,13 @@ jobs:
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           base: ${{ steps.nix-manifest.outputs.target-branch }}
-          branch: automation/nix-release-manifest-v${{ env.OP_VERSION }}
+          branch: automation/nix-release-manifest-v${{ env.DE_VERSION }}
           delete-branch: true
           add-paths: nix/release-manifest.json
-          commit-message: "chore(release): update Nix release manifest for v${{ env.OP_VERSION }}"
-          title: "chore(release): update Nix release manifest for v${{ env.OP_VERSION }}"
+          commit-message: "chore(release): update Nix release manifest for v${{ env.DE_VERSION }}"
+          title: "chore(release): update Nix release manifest for v${{ env.DE_VERSION }}"
           body: |
-            Updates the pinned Nix prebuilt release metadata after publishing v${{ env.OP_VERSION }}.
+            Updates the pinned Nix prebuilt release metadata after publishing v${{ env.DE_VERSION }}.
 
             This PR was generated by the Rust release workflow.
 
@@ -1132,7 +1132,7 @@ jobs:
       actions: read
     if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
       HOMEBREW_TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'ZSeven-W/homebrew-design-editor' }}
       SCOOP_BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY || 'ZSeven-W/scoop-design-editor' }}
     steps:
@@ -1150,14 +1150,14 @@ jobs:
           "${{ needs.release-draft.outputs.package_manager_artifact_id }}"
           "${{ needs.release-draft.outputs.package_manager_artifact_digest }}"
           "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT"
-          "$GITHUB_API_URL" release-assets "$OP_VERSION"
+          "$GITHUB_API_URL" release-assets "$DE_VERSION"
       - name: Verify handoff manifest and compute hashes
         shell: bash
         env:
           EXPECTED_ARTIFACT_DIGEST: ${{ needs.release-draft.outputs.package_manager_artifact_digest }}
           EXPECTED_MANIFEST_SHA256: ${{ needs.release-draft.outputs.package_manager_manifest_sha256 }}
         run: >-
-          tools/package-manager-handoff.sh verify release-assets "$OP_VERSION"
+          tools/package-manager-handoff.sh verify release-assets "$DE_VERSION"
           "$EXPECTED_ARTIFACT_DIGEST" "$EXPECTED_MANIFEST_SHA256" "$GITHUB_ENV"
 
       - name: Checkout Homebrew tap
@@ -1174,7 +1174,7 @@ jobs:
           mkdir -p homebrew-tap/Casks homebrew-tap/Formula
           cat > homebrew-tap/Casks/design-editor.rb <<EOF
           cask "design-editor" do
-            version "${OP_VERSION}"
+            version "${DE_VERSION}"
 
             on_arm do
               sha256 "${MAC_ARM_DMG_SHA}"
@@ -1208,7 +1208,7 @@ jobs:
           class De < Formula
             desc "Design Editor command-line tool"
             homepage "https://github.com/kemalcalak/design-editor"
-            version "${OP_VERSION}"
+            version "${DE_VERSION}"
             license "MIT"
 
             on_macos do
@@ -1253,9 +1253,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Casks/design-editor.rb Formula/de.rb
           if git diff --cached --quiet; then
-            echo "::notice::Homebrew tap already matches v${OP_VERSION}"
+            echo "::notice::Homebrew tap already matches v${DE_VERSION}"
           else
-            git commit -m "Update Design Editor to v${OP_VERSION}"
+            git commit -m "Update Design Editor to v${DE_VERSION}"
             git push
           fi
 
@@ -1336,7 +1336,7 @@ jobs:
             local x64_url=$4 x64_hash=$5 arm64_url=$6 arm64_hash=$7
             local x64_autoupdate=$8 arm64_autoupdate=$9 shortcuts=${10}
             jq -n \
-              --arg version "$OP_VERSION" \
+              --arg version "$DE_VERSION" \
               --arg description "$description" \
               --arg executable "$executable" \
               --arg x64_url "$x64_url" \
@@ -1382,9 +1382,9 @@ jobs:
             scoop-bucket/bucket/design-editor.json \
             'Open-source AI-native vector design tool' \
             design-editor.exe \
-            "https://github.com/kemalcalak/design-editor/releases/download/v${OP_VERSION}/design-editor-windows-x86_64.zip" \
+            "https://github.com/kemalcalak/design-editor/releases/download/v${DE_VERSION}/design-editor-windows-x86_64.zip" \
             "$DESKTOP_WIN_X64_SHA" \
-            "https://github.com/kemalcalak/design-editor/releases/download/v${OP_VERSION}/design-editor-windows-aarch64.zip" \
+            "https://github.com/kemalcalak/design-editor/releases/download/v${DE_VERSION}/design-editor-windows-aarch64.zip" \
             "$DESKTOP_WIN_ARM_SHA" \
             'https://github.com/kemalcalak/design-editor/releases/download/v$version/design-editor-windows-x86_64.zip' \
             'https://github.com/kemalcalak/design-editor/releases/download/v$version/design-editor-windows-aarch64.zip' \
@@ -1394,9 +1394,9 @@ jobs:
             scoop-bucket/bucket/de.json \
             'Design Editor command-line tool' \
             de.exe \
-            "https://github.com/kemalcalak/design-editor/releases/download/v${OP_VERSION}/de-cli-windows-x86_64.zip" \
+            "https://github.com/kemalcalak/design-editor/releases/download/v${DE_VERSION}/de-cli-windows-x86_64.zip" \
             "$CLI_WIN_X64_SHA" \
-            "https://github.com/kemalcalak/design-editor/releases/download/v${OP_VERSION}/de-cli-windows-aarch64.zip" \
+            "https://github.com/kemalcalak/design-editor/releases/download/v${DE_VERSION}/de-cli-windows-aarch64.zip" \
             "$CLI_WIN_ARM_SHA" \
             'https://github.com/kemalcalak/design-editor/releases/download/v$version/de-cli-windows-x86_64.zip' \
             'https://github.com/kemalcalak/design-editor/releases/download/v$version/de-cli-windows-aarch64.zip' \
@@ -1413,8 +1413,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add bucket/design-editor.json bucket/de.json
           if git diff --cached --quiet; then
-            echo "::notice::Scoop bucket already matches v${OP_VERSION}"
+            echo "::notice::Scoop bucket already matches v${DE_VERSION}"
           else
-            git commit -m "Update Design Editor to v${OP_VERSION}"
+            git commit -m "Update Design Editor to v${DE_VERSION}"
             git push
           fi

@@ -46,7 +46,7 @@ targets:
         "LIBRARY_SEARCH_PATHS[sdk=iphoneos*]": "$(inherited) $(SRCROOT)/../../target/aarch64-apple-ios/release"
         "LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]": "$(inherited) $(SRCROOT)/../../target/aarch64-apple-ios-sim/release"
         OP_AUTH_ARCHIVE: ""
-        OTHER_LDFLAGS: "$(inherited) $(OP_ENGINE_ARCHIVE) $(OP_AUTH_ARCHIVE) -lc++"
+        OTHER_LDFLAGS: "$(inherited) $(DE_ENGINE_ARCHIVE) $(OP_AUTH_ARCHIVE) -lc++"
         # Native sign-in SDKs (Douyin OpenSDK / Alipay AFServiceSDK) ship as
         # proprietary fat static frameworks with device-arm64 + x86_64 slices
         # only, so they link on device builds exclusively; simulator builds
@@ -62,12 +62,12 @@ targets:
         "OTHER_LDFLAGS[sdk=iphoneos*]": "$(inherited) -ObjC -framework DouyinOpenSDK -framework AFServiceSDK -framework WechatOpenSDK -framework WebKit -framework CoreData -framework SystemConfiguration -framework Network -lz -lsqlite3.0 -Wl,-no_compact_unwind"
       configs:
         Debug:
-          "OP_ENGINE_ARCHIVE[sdk=iphoneos*]": "$(SRCROOT)/../../target/aarch64-apple-ios/debug/libde_engine_ffi.a"
-          "OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]": "$(SRCROOT)/../../target/aarch64-apple-ios-sim/debug/libde_engine_ffi.a"
+          "DE_ENGINE_ARCHIVE[sdk=iphoneos*]": "$(SRCROOT)/../../target/aarch64-apple-ios/debug/libde_engine_ffi.a"
+          "DE_ENGINE_ARCHIVE[sdk=iphonesimulator*]": "$(SRCROOT)/../../target/aarch64-apple-ios-sim/debug/libde_engine_ffi.a"
         Release:
           GCC_OPTIMIZATION_LEVEL: s
-          "OP_ENGINE_ARCHIVE[sdk=iphoneos*]": "$(SRCROOT)/../../target/aarch64-apple-ios/release/libde_engine_ffi.a"
-          "OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]": "$(SRCROOT)/../../target/aarch64-apple-ios-sim/release/libde_engine_ffi.a"
+          "DE_ENGINE_ARCHIVE[sdk=iphoneos*]": "$(SRCROOT)/../../target/aarch64-apple-ios/release/libde_engine_ffi.a"
+          "DE_ENGINE_ARCHIVE[sdk=iphonesimulator*]": "$(SRCROOT)/../../target/aarch64-apple-ios-sim/release/libde_engine_ffi.a"
     info:
       path: Info.plist
       properties:

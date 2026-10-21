@@ -143,7 +143,7 @@ jobs:
       - name: Test workspace (Windows, nextest per-process isolation)
         if: runner.os == 'Windows'
         env:
-          OP_TEST_ESTIMATE_TEXT_MEASURE: "1"
+          DE_TEST_ESTIMATE_TEXT_MEASURE: "1"
         # --no-fail-fast: the windows runner surfaces latent platform-only
         # failures one per round when the run cancels on the first one;
         # enumerating them all in a single run is what ends that loop.

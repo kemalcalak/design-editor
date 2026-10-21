@@ -172,7 +172,7 @@ endpoint, unregisters it, and waits for the browser cache to remove it. It is
 not enabled on generic hosted runners because those networks commonly suppress
 mDNS and would make the result environmental rather than deterministic.
 Runners where interface auto-selection is ambiguous can set
-`OP_COLLAB_MDNS_SMOKE_ADDRESS` to that runner's active LAN address.
+`DE_COLLAB_MDNS_SMOKE_ADDRESS` to that runner's active LAN address.
 
 On macOS the discovery I/O backend uses the system Bonjour daemon through
 `dns_sd.h`; Linux and Windows continue to use `mdns-sd`. The macOS publisher

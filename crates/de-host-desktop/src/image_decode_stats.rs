@@ -100,7 +100,7 @@ pub(super) struct ImageDecodeStatsSnapshot {
 
 impl ImageDecodeStats {
     pub(crate) fn from_env() -> Option<Self> {
-        if std::env::var("OP_IMAGE_DECODE_STATS").as_deref() != Ok("1") {
+        if std::env::var("DE_IMAGE_DECODE_STATS").as_deref() != Ok("1") {
             return None;
         }
         let shared = Arc::new(SharedCounters::default());

@@ -88,7 +88,7 @@ fn main() {
         }
     }
 
-    if let Ok(out) = std::env::var("OP_DUMP_JSON") {
+    if let Ok(out) = std::env::var("DE_DUMP_JSON") {
         let json = serde_json::to_string_pretty(&import.document).expect("serialize");
         std::fs::write(&out, json).expect("write json");
         eprintln!("dumped PenDocument JSON to {out}");
@@ -111,7 +111,7 @@ fn main() {
             // Recursive drill: prints every descendant whose name
             // contains the needle, showing its own children. Useful for
             // tracking down a horizontal-row container by name.
-            if let Ok(needle) = std::env::var("OP_PROBE_DRILL") {
+            if let Ok(needle) = std::env::var("DE_PROBE_DRILL") {
                 drill_all(root, &needle, 0);
             }
         }

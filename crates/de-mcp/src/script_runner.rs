@@ -364,7 +364,7 @@ fn eval_to_program(script: &str) -> Result<String, ScriptError> {
         // keeps the exact reach the `String` version had: the sentinel is
         // raised by the prelude's `__unsupported` thrower, so it can only
         // ever arrive inside a script-throw payload.
-        Err(e) if e.to_string().contains("OP_SCRIPT_MODE_UNSUPPORTED") => Err(e),
+        Err(e) if e.to_string().contains("DE_SCRIPT_MODE_UNSUPPORTED") => Err(e),
         Err(e) => {
             tracing::warn!(
                 error = %e,

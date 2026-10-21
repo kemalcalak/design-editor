@@ -511,13 +511,13 @@ mod tests {
     }
 
     /// Manual diagnostics: apply `maybe_downscale` to every file in a
-    /// directory (`OP_DOWNSCALE_BENCH_DIR`) and print the outcome
+    /// directory (`DE_DOWNSCALE_BENCH_DIR`) and print the outcome
     /// distribution — used to tune the budgets against real imports.
     #[test]
-    #[ignore = "manual bench — needs OP_DOWNSCALE_BENCH_DIR pointing at an image dir"]
+    #[ignore = "manual bench — needs DE_DOWNSCALE_BENCH_DIR pointing at an image dir"]
     fn downscale_dir_bench() {
-        let Ok(dir) = std::env::var("OP_DOWNSCALE_BENCH_DIR") else {
-            eprintln!("OP_DOWNSCALE_BENCH_DIR not set — skipping");
+        let Ok(dir) = std::env::var("DE_DOWNSCALE_BENCH_DIR") else {
+            eprintln!("DE_DOWNSCALE_BENCH_DIR not set — skipping");
             return;
         };
         let (mut n, mut before, mut after) = (0usize, 0usize, 0usize);

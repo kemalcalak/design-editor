@@ -590,8 +590,8 @@ require_regex scripts/package-windows.nsi \
     '^[[:space:]]*;[[:space:]]*makensis[[:space:]]+"/DVERSION=X[.]Y[.]Z"' \
     'NSIS compile example must use /DVERSION=X.Y.Z'
 require_regex scripts/install-de.sh \
-    '^[[:space:]]*#[[:space:]]*OP_VERSION=(X[.]Y[.]Z|<version>)[[:space:]]+[.]/install-de[.]sh' \
-    'install usage example must use OP_VERSION=X.Y.Z or OP_VERSION=<version>'
+    '^[[:space:]]*#[[:space:]]*DE_VERSION=(X[.]Y[.]Z|<version>)[[:space:]]+[.]/install-de[.]sh' \
+    'install usage example must use DE_VERSION=X.Y.Z or DE_VERSION=<version>'
 reject_example_semver_tokens scripts/package-windows.nsi
 reject_example_semver_tokens scripts/install-de.sh
 
@@ -655,10 +655,10 @@ reject_matches regex "$release_workflow" \
 reject_matches regex "$release_workflow" \
     '^[[:space:]]*version[[:space:]]*=[[:space:]]*"\$\{tag#v\}"' \
     'publish paths must consume the canonical version job output'
-reject_matches fixed "$release_workflow" 'echo "OP_VERSION=${GITHUB_REF_NAME#v}"' \
-    'OP_VERSION must not be written directly from the release tag'
-reject_matches fixed "$release_workflow" 'echo "OP_VERSION=${ver:-0.0.0}"' \
-    'OP_VERSION must not use an independent manifest parser or fallback'
+reject_matches fixed "$release_workflow" 'echo "DE_VERSION=${GITHUB_REF_NAME#v}"' \
+    'DE_VERSION must not be written directly from the release tag'
+reject_matches fixed "$release_workflow" 'echo "DE_VERSION=${ver:-0.0.0}"' \
+    'DE_VERSION must not use an independent manifest parser or fallback'
 
 if [[ "$errors" -ne 0 ]]; then
     exit 1

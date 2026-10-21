@@ -357,7 +357,7 @@ write_result_json() {
     RENDER_RC="${14}" \
     GEN_SECONDS="${15}" \
     TOTAL_SECONDS="${16}" \
-    OP_PATH="${17}" \
+    DE_PATH="${17}" \
     AUDIT_PATH="${18}" \
     SHOTS_DIR="${19}" \
     GEN_LOG="${20}" \
@@ -472,7 +472,7 @@ row = {
     "renderReturnCode": int_env("RENDER_RC", -1),
     "generationSeconds": int_env("GEN_SECONDS", 0),
     "totalSeconds": int_env("TOTAL_SECONDS", 0),
-    "op": rel(os.environ["OP_PATH"]) if os.path.exists(os.environ["OP_PATH"]) else "",
+    "op": rel(os.environ["DE_PATH"]) if os.path.exists(os.environ["DE_PATH"]) else "",
     "audit": rel(audit_path) if os.path.exists(audit_path) else "",
     "shots": shots,
     "issueCount": audit_issue_count,

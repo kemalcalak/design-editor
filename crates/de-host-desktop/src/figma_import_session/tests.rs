@@ -181,7 +181,7 @@ fn run_zoomed_out_decode_probe(mut state: EditorState, mut host: WidgetHostNativ
     let settled_at = started.elapsed();
     let before_idle = image_decodes
         .stats_snapshot()
-        .expect("set OP_IMAGE_DECODE_STATS=1 for the real-file decode probe");
+        .expect("set DE_IMAGE_DECODE_STATS=1 for the real-file decode probe");
     let idle_started = Instant::now();
     while idle_started.elapsed() < IDLE_SAMPLE {
         let frame_started = Instant::now();
@@ -637,11 +637,11 @@ fn completed_persisted_import_binds_current_path_and_display_name() {
 /// It converts every page and publishes the generated `.op` beside the source
 /// by atomically replacing the same fixed sibling used by the UI worker.
 #[test]
-#[ignore = "manual smoke — needs OP_FIG_ADJACENT_SMOKE pointing at a local .fig"]
+#[ignore = "manual smoke — needs DE_FIG_ADJACENT_SMOKE pointing at a local .fig"]
 fn fig_import_adjacent_smoke() {
     let source = PathBuf::from(
-        std::env::var_os("OP_FIG_ADJACENT_SMOKE")
-            .expect("OP_FIG_ADJACENT_SMOKE must point at a local .fig"),
+        std::env::var_os("DE_FIG_ADJACENT_SMOKE")
+            .expect("DE_FIG_ADJACENT_SMOKE must point at a local .fig"),
     );
     let parse_started = std::time::Instant::now();
     let prepared = parse_path(&source).expect("smoke file parses and converts");
@@ -676,20 +676,20 @@ fn fig_import_adjacent_smoke() {
 
 /// Manual large-file bench for the exact worker code path
 /// (`parse_path`, including the down-scale transform). Point
-/// `OP_FIG_BENCH` at a `.fig` file and run:
+/// `DE_FIG_BENCH` at a `.fig` file and run:
 ///
 /// ```sh
-/// OP_IMAGE_DECODE_STATS=1 OP_FIG_BENCH=/path/to/big.fig \
+/// DE_IMAGE_DECODE_STATS=1 DE_FIG_BENCH=/path/to/big.fig \
 ///   cargo test -p de-host-desktop --release fig_import_bench -- --ignored --nocapture
 /// ```
 #[test]
-#[ignore = "manual bench — needs OP_FIG_BENCH pointing at a local .fig"]
+#[ignore = "manual bench — needs DE_FIG_BENCH pointing at a local .fig"]
 fn fig_import_bench() {
-    let Ok(path) = std::env::var("OP_FIG_BENCH") else {
-        eprintln!("OP_FIG_BENCH not set — skipping");
+    let Ok(path) = std::env::var("DE_FIG_BENCH") else {
+        eprintln!("DE_FIG_BENCH not set — skipping");
         return;
     };
-    let output = std::env::var_os("OP_FIG_BENCH_OUT")
+    let output = std::env::var_os("DE_FIG_BENCH_OUT")
         .map(PathBuf::from)
         .unwrap_or_else(|| {
             PathBuf::from(format!(

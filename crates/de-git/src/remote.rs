@@ -14,7 +14,7 @@
 //! ## Auth carrier (libgit2 migration note)
 //!
 //! The subprocess backend carried auth as *git environment* pairs —
-//! `GIT_SSH_COMMAND`, `GIT_CONFIG_*`, `OP_GIT_HTTPS_*`. libgit2 takes
+//! `GIT_SSH_COMMAND`, `GIT_CONFIG_*`, `DE_GIT_HTTPS_*`. libgit2 takes
 //! credentials through a callback, not the environment, so the
 //! `auth_env` `Vec<(String, String)>` is repurposed as a small,
 //! structured credential carrier interpreted by [`build_callbacks`]:

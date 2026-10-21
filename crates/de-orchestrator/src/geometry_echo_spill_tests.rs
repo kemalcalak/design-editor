@@ -284,20 +284,20 @@ fn fill_image_in_absolute_container_is_pinned_to_parent_rect() {
     }
 }
 
-/// One-off forensic harness: `OP_FORENSIC_FILE=<path> cargo test -p
+/// One-off forensic harness: `DE_FORENSIC_FILE=<path> cargo test -p
 /// de-orchestrator forensic_resolved_rects -- --ignored --nocapture`
 #[test]
 #[ignore]
 fn forensic_resolved_rects() {
-    let Ok(path) = std::env::var("OP_FORENSIC_FILE") else {
+    let Ok(path) = std::env::var("DE_FORENSIC_FILE") else {
         return;
     };
     let json = std::fs::read_to_string(&path).expect("read file");
     let doc: jian_ops_schema::PenDocument = serde_json::from_str(&json).expect("parse");
     let mut state = de_editor_core::EditorState::from_document(doc);
-    // `OP_FORENSIC_FIX=1` additionally runs the repair loop on every page
+    // `DE_FORENSIC_FIX=1` additionally runs the repair loop on every page
     // root, so the rect dump below shows the POST-fix geometry.
-    if std::env::var("OP_FORENSIC_FIX").as_deref() == Ok("1") {
+    if std::env::var("DE_FORENSIC_FIX").as_deref() == Ok("1") {
         use de_editor_core::PenNodeExt as _;
         let roots: Vec<String> = state
             .active_children()

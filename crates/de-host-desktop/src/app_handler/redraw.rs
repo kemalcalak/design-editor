@@ -531,11 +531,11 @@ impl DesktopApp {
         if should_paint {
             self.refresh_host_clock();
             let mut painted = false;
-            // `OP_SLOW_FRAME_LOG=1` prints every paint slower
+            // `DE_SLOW_FRAME_LOG=1` prints every paint slower
             // than ~2 frames with pan-cache attribution, so a
             // felt stutter can be pinned to blit / scroll /
             // full-paint work on a live session.
-            let slow_log = std::env::var_os("OP_SLOW_FRAME_LOG").is_some();
+            let slow_log = std::env::var_os("DE_SLOW_FRAME_LOG").is_some();
             let frame_start = slow_log.then(Instant::now);
             let stats_before = slow_log.then(|| self.host.pan_cache_stats());
             if let (Some(ctx), Some(backend)) = (self.ctx.as_mut(), self.backend.as_mut()) {

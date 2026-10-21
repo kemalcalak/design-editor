@@ -89,7 +89,7 @@ thread_local! {
 #[cfg(feature = "skia-measure")]
 fn make_measure_backend() -> Rc<dyn MeasureBackend> {
     // Windows CI sets this for tests that load de-pen-loader as a dependency.
-    if cfg!(target_os = "windows") && std::env::var_os("OP_TEST_ESTIMATE_TEXT_MEASURE").is_some() {
+    if cfg!(target_os = "windows") && std::env::var_os("DE_TEST_ESTIMATE_TEXT_MEASURE").is_some() {
         return jian_core::layout::measure::default_backend();
     }
 

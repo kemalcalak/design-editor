@@ -16,7 +16,7 @@
 #      document logic; CanvasKit itself is loaded externally by the host page.
 #   4. Assert 0 env.* imports in the raw bindgen wasm (LinkError guard).
 #   5. wasm-opt -Oz (with the rustc-emitted WebAssembly feature flags) then
-#      gzip size <= OP_WEB_SDK_WASM_GZIP_LIMIT_BYTES (default 6 291 456 = 6 MiB).
+#      gzip size <= DE_WEB_SDK_WASM_GZIP_LIMIT_BYTES (default 6 291 456 = 6 MiB).
 #      The SDK is pure logic with no CanvasKit WASM included — the ceiling
 #      is its own tripwire, not de-host-web's, and is now measured: see below.
 #
@@ -74,7 +74,7 @@ WASM_OPT_CANDIDATE_FEATURES=(
 # `runtime-icon-catalog` feature is opt-in and only de-host-web opts in): the
 # SDK renders iconFont nodes but has no daemon to fetch a catalog from, so for
 # it "not fetched yet" would mean "never".
-LIMIT="${OP_WEB_SDK_WASM_GZIP_LIMIT_BYTES:-6291456}"
+LIMIT="${DE_WEB_SDK_WASM_GZIP_LIMIT_BYTES:-6291456}"
 
 step() { printf '\n[step %d/%d] %s\n' "$1" "$2" "$3"; }
 fail() { printf 'FAIL: %s\n' "$1" >&2; exit 1; }

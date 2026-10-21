@@ -156,14 +156,14 @@ end
 raise "native login must not link WebKit" if frameworks.include?("WebKit.framework")
 raise "optional auth archive must be empty by default" unless settings.fetch("OP_AUTH_ARCHIVE") == ""
 raise "final link must consume the explicit auth archive setting" unless settings.fetch("OTHER_LDFLAGS").include?("$(OP_AUTH_ARCHIVE)")
-raise "final link must consume the exact engine archive setting" unless settings.fetch("OTHER_LDFLAGS").include?("$(OP_ENGINE_ARCHIVE)")
+raise "final link must consume the exact engine archive setting" unless settings.fetch("OTHER_LDFLAGS").include?("$(DE_ENGINE_ARCHIVE)")
 configs = target.fetch("settings").fetch("configs")
 debug = configs.fetch("Debug")
 release = configs.fetch("Release")
-raise "Debug simulator must link the static debug engine" unless debug.fetch("OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/debug/libde_engine_ffi.a")
-raise "Debug device must link the static debug engine" unless debug.fetch("OP_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/debug/libde_engine_ffi.a")
-raise "Release simulator must link the static release engine" unless release.fetch("OP_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/release/libde_engine_ffi.a")
-raise "Release device must link the static release engine" unless release.fetch("OP_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/release/libde_engine_ffi.a")
+raise "Debug simulator must link the static debug engine" unless debug.fetch("DE_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/debug/libde_engine_ffi.a")
+raise "Debug device must link the static debug engine" unless debug.fetch("DE_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/debug/libde_engine_ffi.a")
+raise "Release simulator must link the static release engine" unless release.fetch("DE_ENGINE_ARCHIVE[sdk=iphonesimulator*]").end_with?("aarch64-apple-ios-sim/release/libde_engine_ffi.a")
+raise "Release device must link the static release engine" unless release.fetch("DE_ENGINE_ARCHIVE[sdk=iphoneos*]").end_with?("aarch64-apple-ios/release/libde_engine_ffi.a")
 info_properties = target.fetch("info").fetch("properties")
 %w[UIFileSharingEnabled LSSupportsOpeningDocumentsInPlace].each do |key|
   raise "#{key} must be declared so saved documents appear in Files" unless info_properties[key] == true

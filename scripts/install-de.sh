@@ -7,11 +7,11 @@
 #
 # Usage:
 #   ./install-de.sh                         # install the latest stable release
-#   OP_VERSION=X.Y.Z ./install-de.sh        # pin a specific version
-#   OP_PRERELEASE=1 ./install-de.sh         # allow the newest pre-release
+#   DE_VERSION=X.Y.Z ./install-de.sh        # pin a specific version
+#   DE_PRERELEASE=1 ./install-de.sh         # allow the newest pre-release
 #   INSTALL_DIR=$HOME/.local/bin ./install-de.sh
 #
-# The release workflow stamps DEFAULT_OP_VERSION and DEFAULT_SHA_* in the copy
+# The release workflow stamps DEFAULT_DE_VERSION and DEFAULT_SHA_* in the copy
 # uploaded to GitHub Releases, so the release asset installs that exact tag and
 # verifies the CLI archive checksum.
 
@@ -21,7 +21,7 @@ OWNER="kemalcalak"
 REPO="design-editor"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-DEFAULT_OP_VERSION=""
+DEFAULT_DE_VERSION=""
 DEFAULT_SHA_MACOS_AARCH64=""
 DEFAULT_SHA_MACOS_X86_64=""
 DEFAULT_SHA_LINUX_AARCH64=""
@@ -50,17 +50,17 @@ detect_label() {
 }
 
 resolve_version() {
-  if [ -n "${OP_VERSION:-}" ]; then
-    printf '%s' "$OP_VERSION"
+  if [ -n "${DE_VERSION:-}" ]; then
+    printf '%s' "$DE_VERSION"
     return
   fi
-  if [ -n "$DEFAULT_OP_VERSION" ]; then
-    printf '%s' "$DEFAULT_OP_VERSION"
+  if [ -n "$DEFAULT_DE_VERSION" ]; then
+    printf '%s' "$DEFAULT_DE_VERSION"
     return
   fi
 
   local api tag
-  if [ "${OP_PRERELEASE:-}" = "1" ] || [ "${OP_PRERELEASE:-}" = "true" ]; then
+  if [ "${DE_PRERELEASE:-}" = "1" ] || [ "${DE_PRERELEASE:-}" = "true" ]; then
     api="https://api.github.com/repos/${OWNER}/${REPO}/releases"
   else
     api="https://api.github.com/repos/${OWNER}/${REPO}/releases/latest"
@@ -68,8 +68,8 @@ resolve_version() {
   tag="$(curl -fsSL "$api" | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | sed 's/.*"\(v\{0,1\}[^"]*\)"$/\1/')"
   if [ -z "$tag" ]; then
     echo "error: could not resolve the latest release tag from GitHub" >&2
-    echo "       set OP_VERSION explicitly, e.g. OP_VERSION=X.Y.Z $0" >&2
-    echo "       or set OP_PRERELEASE=1 to allow pre-release tags" >&2
+    echo "       set DE_VERSION explicitly, e.g. DE_VERSION=X.Y.Z $0" >&2
+    echo "       or set DE_PRERELEASE=1 to allow pre-release tags" >&2
     exit 1
   fi
   printf '%s' "${tag#v}"

@@ -224,9 +224,9 @@ not preserve a global generation floor.
 Domestic and overseas op-hub sites may serve the same byte-identical signed
 envelope, but the current service does not replicate or hot-reload snapshots;
 operations must deploy the same artifact to both sites. Each op-hub process
-loads `OP_HUB_BOOTSTRAP_FILE`, verifies it with
-`OP_HUB_BOOTSTRAP_ROOT_KEYS`, and enforces
-`OP_HUB_BOOTSTRAP_MIN_GENERATION` before serving an immutable in-memory
+loads `DE_HUB_BOOTSTRAP_FILE`, verifies it with
+`DE_HUB_BOOTSTRAP_ROOT_KEYS`, and enforces
+`DE_HUB_BOOTSTRAP_MIN_GENERATION` before serving an immutable in-memory
 snapshot. The online service never receives the offline bootstrap private key.
 
 Debug plaintext is a narrow exception, not a production alternate trust path.

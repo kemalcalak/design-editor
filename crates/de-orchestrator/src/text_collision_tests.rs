@@ -221,12 +221,12 @@ fn empty_and_hidden_text_are_excluded() {
 
 // ── real-sample harness (manual, not part of the default suite) ──
 //
-// `OP_TEXT_COLLISION_SAMPLE=/path/to/0724-1-gm-2.op cargo test -p
+// `DE_TEXT_COLLISION_SAMPLE=/path/to/0724-1-gm-2.op cargo test -p
 // de-orchestrator text_collision -- --ignored --nocapture`
 #[test]
 #[ignore]
 fn detects_the_measured_stacked_word_card_sample() {
-    let path = std::env::var("OP_TEXT_COLLISION_SAMPLE").expect("OP_TEXT_COLLISION_SAMPLE");
+    let path = std::env::var("DE_TEXT_COLLISION_SAMPLE").expect("DE_TEXT_COLLISION_SAMPLE");
     let text = std::fs::read_to_string(&path).expect("read sample .op");
     let doc: jian_ops_schema::PenDocument = serde_json::from_str(&text).expect("parse .op");
     let state = de_editor_core::EditorState::from_document(doc);

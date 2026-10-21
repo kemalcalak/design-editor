@@ -156,7 +156,7 @@ fn release_workflow_does_not_publish_unsigned_macos_desktop_tarball() {
         "macOS release artifacts should not include the raw desktop binary tarball because the signed/notarized desktop artifact is the DMG"
     );
     assert!(
-        workflow.contains("tar czf ../../../de-cli-${{ matrix.label }}.tar.gz op"),
+        workflow.contains("tar czf ../../../de-cli-${{ matrix.label }}.tar.gz de"),
         "macOS and Linux release artifacts should keep publishing standalone de CLI archives"
     );
 
@@ -194,12 +194,12 @@ fn macos_bundle_signing_uses_hardened_runtime_for_developer_id() {
         "bundle script should explicitly sign the main app executable before signing the bundle"
     );
     assert!(
-        script.contains("sign_macos_code \"$APP/Contents/MacOS/op\""),
+        script.contains("sign_macos_code \"$APP/Contents/MacOS/de\""),
         "bundle script should sign the embedded de CLI before signing the bundle"
     );
 
     let sign_cli = script
-        .find("sign_macos_code \"$APP/Contents/MacOS/op\"")
+        .find("sign_macos_code \"$APP/Contents/MacOS/de\"")
         .expect("bundle script signs embedded de CLI");
     let sign_main = script
         .find("sign_macos_code \"$APP/Contents/MacOS/design-editor\"")
@@ -453,7 +453,7 @@ fn windows_cli_installer_services_vc_runtime_fail_closed() {
             .find("} else {")
             .zip(reboot_branch.find("& $Target --version"))
             .is_some_and(|(otherwise, verify)| otherwise < verify),
-        "a 3010 Runtime result must not execute op before Windows restarts"
+        "a 3010 Runtime result must not execute de before Windows restarts"
     );
 }
 
@@ -777,7 +777,7 @@ fn formal_release_calls_mobile_distribution_lanes_without_coupling_ios_failure()
     );
     assert!(
         release
-            .contains("run: tools/flatten-release-artifacts.sh dist release-files \"$OP_VERSION\"",)
+            .contains("run: tools/flatten-release-artifacts.sh dist release-files \"$DE_VERSION\"",)
             && flattener.contains("expected_apk=\"Design-Editor-${version}-android.apk\"")
             && flattener.contains("expected_aab=\"Design-Editor-${version}-android.aab\"")
             && flattener.contains("sha256sum --check SHA256SUMS.android.txt"),

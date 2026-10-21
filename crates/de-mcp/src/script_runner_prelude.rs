@@ -182,7 +182,7 @@ globalThis.U = function (nodeId, patch) {
 };
 function __unsupported(op) {
   return function () {
-    throw new Error("OP_SCRIPT_MODE_UNSUPPORTED: " + op + "() is unavailable in direct QuickJS; use only I(), K(), and authorized U() calls");
+    throw new Error("DE_SCRIPT_MODE_UNSUPPORTED: " + op + "() is unavailable in direct QuickJS; use only I(), K(), and authorized U() calls");
   };
 }
 globalThis.C = __unsupported("C");

@@ -1,5 +1,5 @@
 param(
-  [string]$OpVersion = $env:OP_VERSION,
+  [string]$OpVersion = $env:DE_VERSION,
   [switch]$PreRelease,
   [string]$InstallDir = $(if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { Join-Path $env:USERPROFILE ".design-editor\bin" })
 )
@@ -161,7 +161,7 @@ function Resolve-Version {
     return $DefaultOpVersion.TrimStart("v")
   }
 
-  $AllowPreRelease = $PreRelease.IsPresent -or $env:OP_PRERELEASE -in @("1", "true", "TRUE", "yes", "YES")
+  $AllowPreRelease = $PreRelease.IsPresent -or $env:DE_PRERELEASE -in @("1", "true", "TRUE", "yes", "YES")
   if ($AllowPreRelease) {
     # Invoke-RestMethod emits a JSON array as a single pipeline object, so
     # `| Select-Object -First 1` yields the whole array and `.tag_name` then
@@ -172,7 +172,7 @@ function Resolve-Version {
     $Latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Owner/$Repo/releases/latest"
   }
   if (-not $Latest.tag_name) {
-    throw "install-de: could not resolve latest release tag; set OP_VERSION explicitly or OP_PRERELEASE=1 to allow pre-release tags"
+    throw "install-de: could not resolve latest release tag; set DE_VERSION explicitly or DE_PRERELEASE=1 to allow pre-release tags"
   }
   return $Latest.tag_name.TrimStart("v")
 }
