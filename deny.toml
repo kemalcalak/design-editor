@@ -60,6 +60,14 @@ ignore = [
   # zbus_xml bump their quick-xml requirement to >= 0.41.
   "RUSTSEC-2026-0194",
   "RUSTSEC-2026-0195",
+  # zbus_names / zvariant / zvariant_derive flagged unmaintained (2026-10):
+  # they were folded into zbus 6. They reach this tree only through the Linux
+  # D-Bus stack (rfd/ashpd file dialogs, keyring/secret-service, accesskit
+  # atspi), none of which has moved to zbus 6 yet. Informational only (no
+  # vulnerability); remove when those crates upgrade.
+  "RUSTSEC-2026-0370",
+  "RUSTSEC-2026-0371",
+  "RUSTSEC-2026-0372",
   # The only zip <9 edge is github-copilot-sdk 1.0.11's build dependency.
   # Its downloader is disabled by COPILOT_SKIP_CLI_DOWNLOAD, and its ZIP
   # reader uses by_index + io::copy, never ZipArchive/ZipStreamReader::extract
