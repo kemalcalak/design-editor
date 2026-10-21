@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+script_dir=$(CDPATH= cd "$(dirname "$0")" && pwd)
+repo_root=$(CDPATH= cd "$script_dir/.." && pwd)
+cd "$repo_root"
+
+echo "[pre-commit] checking version consistency"
+if ! tools/check-version-sync.sh; then
+  echo "[pre-commit] version consistency check failed. Run: scripts/sync-version.sh"
+  exit 1
+fi
+
+# --- Rust format + lint gates (same checks as CI) ---
+echo "[pre-commit] checking Rust format"
+if ! cargo fmt --all -- --check; then
+  echo "[pre-commit] Rust format check failed. Run: cargo fmt --all"
+  exit 1
+fi
+
+echo "[pre-commit] running Rust clippy"
+if ! cargo clippy --workspace --all-targets -- -D warnings; then
+  echo "[pre-commit] Rust clippy failed. Fix warnings before committing."
+  exit 1
+fi

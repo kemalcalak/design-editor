@@ -1,0 +1,1417 @@
+name: Rust release artifacts
+
+# Triggered on tag push (v*) — builds release binaries across desktop targets,
+# packages real installers per platform, builds the web Docker image and SDK
+# tarballs, publishes the web SDK packages to npm, publishes a GitHub
+# prerelease, then updates the Homebrew tap and Scoop bucket.
+#
+# Desktop installers, Android APK/AAB, web/SDK/VSIX assets, and package-manager
+# updates are attached to the GitHub release. The protected iOS job uploads to
+# App Store Connect / TestFlight and intentionally produces no GitHub asset.
+# Desktop artifact map:
+#   macOS   OpenPencil-<v>-<arch>-mac.dmg        signed/notarized app bundle
+#           op-cli-<label>.tar.gz                standalone CLI
+#   Windows OpenPencil-<v>-<arch>-win-setup.exe  NSIS installer
+#           openpencil-desktop-<label>.zip       portable desktop
+#           op-cli-<label>.zip                   standalone CLI
+#   Linux   OpenPencil-<v>-<arch>-linux.AppImage portable app image
+#           OpenPencil-<v>-<arch>-linux.deb      Debian package
+#           openpencil-desktop-<label>.tar.gz    raw desktop binary
+#           op-cli-<label>.tar.gz                standalone CLI
+#
+# Platform installer and notarization paths still require a real tag run;
+# repository-owned scripts and workflow contract checks cover local validation.
+#
+# The `build` job builds the real `op-host-desktop` crate (winit + skia-safe
+# runner that drives the Rust editor); its shipped executable keeps the
+# stable `openpencil-desktop` name. The `op` CLI (crates/op-cli, binary name
+# `op`) is built in the same cargo invocation. The web Docker job builds the
+# Rust web host from `Dockerfile.web-rust`, and the SDK job packages the
+# wasm-backed `packages/op-web-sdk*` workspace tarballs.
+#
+# The standalone `.github/workflows/wasm-bundle-build.yml` still gates the
+# CanvasKit web bundle on push/PR. This release workflow only assembles the
+# tagged, publishable artifacts.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      ios_app_store_only:
+        description: Run only the iOS App Store / TestFlight lane
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  # Keep these byte-for-byte aligned with tools/stage-pinned-vcredist.ps1.
+  # The versioned URL avoids the mutable aka.ms payload changing underneath
+  # the reviewed hash used by NSIS and the generated Scoop manifests.
+  VC_REDIST_URL: 'https://download.visualstudio.microsoft.com/download/pr/ebdab8e5-1d7b-4d9f-a11b-cbb1720c3b12/843068991DAAA1F73AD9F6239BCE4D0F6A07A51F18C37EA2A867E9BECA71295C/VC_redist.x64.exe'
+  VC_REDIST_SHA256: '843068991daaa1f73ad9f6239bce4d0f6a07a51f18c37ea2a867e9beca71295c'
+  VC_REDIST_VERSION: '14.51.36247.0'
+
+jobs:
+  version:
+    name: Validate release version and production auth matrix
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      source_sha: ${{ steps.version.outputs.source_sha }}
+    steps:
+      - name: Checkout the exact release source without credentials
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - name: Validate Cargo version and the signed Auth matrix in this source
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]] || {
+            echo "::error::checkout does not match the release source SHA"
+            exit 1
+          }
+          version=$(scripts/workspace-version.sh)
+          case "$GITHUB_REF" in
+            "refs/heads/v$version"|"refs/tags/v$version") ;;
+            *)
+              echo "::error::release ref must exactly match workspace version v$version"
+              exit 2
+              ;;
+          esac
+          tools/check-rust-release-auth-workflow.sh
+          tools/check-release-workflow-policy.test.sh rust
+          tools/check-op-auth-release-matrix.test.sh
+          tools/check-op-auth-cargo-build.test.sh
+          tools/pinned-release-tools.test.sh
+          tools/check-op-auth-release-matrix.sh
+          tools/check-op-auth-prebuilt.sh --require-hardened
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+
+  ios-app-store:
+    name: iOS App Store / TestFlight
+    needs: version
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.ios_app_store_only == true)
+    runs-on: macos-26
+    timeout-minutes: 120
+    environment: testflight
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the exact release source without credentials
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          ref: ${{ needs.version.outputs.source_sha }}
+          submodules: recursive
+
+      - name: Prepare the pinned iOS release runner
+        id: ios_release
+        shell: bash
+        env:
+          OPENPENCIL_RELEASE_SHA: ${{ needs.version.outputs.source_sha }}
+          OPENPENCIL_RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: scripts/prepare-ios-app-store-runner.sh
+
+      - name: Validate protected production release configuration
+        shell: bash
+        env:
+          RELAY_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+          RELAY_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+        run: |
+          set -euo pipefail
+          relay_cn=$RELAY_CN
+          relay_global=$RELAY_GLOBAL
+          unset RELAY_CN RELAY_GLOBAL
+          printf '%s\0%s\0' "$relay_cn" "$relay_global" \
+            | python3 tools/check-collab-bootstrap-urls.py
+          echo "Validated the protected production release configuration."
+
+      - name: Publish the collaboration-enabled build to TestFlight
+        shell: bash
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          IOS_BUILD_NUMBER: ${{ steps.ios_release.outputs.build_number }}
+          IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          IOS_MARKETING_VERSION: ${{ steps.ios_release.outputs.version }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+          OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/op-auth-bridge/prebuilt
+          XCODEGEN_BIN: ${{ steps.ios_release.outputs.xcodegen_binary }}
+        run: scripts/publish-ios-testflight.sh
+
+  android-release:
+    name: Android APK / AAB
+    needs: version
+    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    permissions:
+      contents: read
+    uses: ./.github/workflows/android-release.yml
+    secrets:
+      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+
+  build:
+    name: ${{ matrix.label }}
+    needs: version
+    environment: release-production
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    if: (github.event_name == 'workflow_dispatch' && inputs.ios_app_store_only == false) || (startsWith(github.ref, 'refs/tags/v') && github.event_name != 'workflow_dispatch')
+    env:
+      OP_VERSION: ${{ needs.version.outputs.version }}
+      HAS_APPLE_CERTIFICATE: ${{ secrets.CSC_LINK != '' && secrets.CSC_KEY_PASSWORD != '' && secrets.APPLE_ID != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && 'true' || 'false' }}
+      HAS_WINDOWS_CERTIFICATE: ${{ secrets.WIN_CSC_LINK != '' && secrets.WIN_CSC_KEY_PASSWORD != '' && secrets.WIN_CSC_PFX_SHA256 != '' && secrets.WIN_CSC_CERTIFICATE_SHA1 != '' && 'true' || 'false' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macos-aarch64
+            runner: macos-latest
+            target: aarch64-apple-darwin
+            archive: tar.gz
+            arch: arm64
+          # macos-13 (Intel) deprecated; cross-compile x86_64-apple-darwin
+          # from Apple Silicon (cargo supports cross-compile to host's other
+          # arch out of the box, no `cross` needed).
+          - label: macos-x86_64
+            runner: macos-latest
+            target: x86_64-apple-darwin
+            archive: tar.gz
+            arch: x64
+          - label: linux-x86_64
+            runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            archive: tar.gz
+            arch: x64
+          # Native ARM64 hosted runner — no `cross`. The cross 0.2.x aarch64
+          # image (Ubuntu 16.04 / GCC 5 / FreeType 2.6) is too old to link the
+          # modern skia that skia-bindings builds.
+          - label: linux-aarch64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            archive: tar.gz
+            arch: arm64
+          - label: windows-x86_64
+            runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive: zip
+            arch: x64
+          # Windows ARM64 — cargo cross-compile from x86_64 windows runner.
+          # The NSIS installer stub stays x86 (runs under emulation on
+          # Windows-on-ARM); the installed payload is native aarch64.
+          - label: windows-aarch64
+            runner: windows-latest
+            target: aarch64-pc-windows-msvc
+            archive: zip
+            arch: arm64
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable 2026-08-15
+        with:
+          toolchain: '1.94'
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          key: release-${{ matrix.target }}
+      - name: Install Linux GL/EGL prereqs
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          snapshot_url=https://snapshot.ubuntu.com/ubuntu/20260801T000000Z/
+          sources_file=$RUNNER_TEMP/openpencil-release.sources
+          apt_lists=$RUNNER_TEMP/openpencil-apt-lists
+          cat > "$sources_file" <<EOF
+          Types: deb
+          URIs: $snapshot_url
+          Suites: noble noble-updates noble-backports noble-security
+          Components: main restricted universe multiverse
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          Check-Valid-Until: no
+          EOF
+          mkdir -p "$apt_lists/partial"
+          apt_options=(
+            -o "Dir::Etc::sourcelist=$sources_file"
+            -o Dir::Etc::sourceparts=-
+            -o "Dir::State::lists=$apt_lists"
+            -o Acquire::ForceIPv4=true
+            -o Acquire::Retries=3
+            -o Acquire::https::Timeout=30
+          )
+          uri_plan=$(sudo apt-get "${apt_options[@]}" --print-uris update)
+          mapfile -t requested_uris < <(
+            sed -n "s/^'\([^']*\)'.*/\1/p" <<< "$uri_plan"
+          )
+          if [[ ${#requested_uris[@]} -eq 0 ]]; then
+            echo "::error::Ubuntu snapshot preflight produced no package index URIs"
+            exit 1
+          fi
+          for uri in "${requested_uris[@]}"; do
+            if [[ $uri != "$snapshot_url"* ]]; then
+              echo "::error::unreviewed apt index URI: $uri"
+              exit 1
+            fi
+          done
+          packages=(
+            libxkbcommon-dev libxkbcommon-x11-dev \
+            libwayland-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+            libegl1-mesa-dev libgles2-mesa-dev libgbm-dev \
+            libfreetype-dev libfontconfig1-dev \
+            pkg-config libssl-dev
+          )
+          for attempt in 1 2 3 4; do
+            if sudo apt-get "${apt_options[@]}" update && \
+              sudo apt-get "${apt_options[@]}" install --yes "${packages[@]}"; then
+              break
+            fi
+            if [[ "$attempt" == 4 ]]; then
+              echo "::error::apt prerequisites failed after $attempt attempts"
+              exit 1
+            fi
+            delay=$((attempt * 20))
+            echo "::warning::apt prerequisites attempt $attempt failed; retrying in ${delay}s"
+            sleep "$delay"
+          done
+      - name: Stage digest-pinned Skia binary cache
+        shell: bash
+        run: >-
+          tools/pinned-release-tools.sh skia desktop '${{ matrix.target }}'
+          "$RUNNER_TEMP/openpencil-skia-${{ matrix.target }}"
+      - name: Validate pinned VC++ Runtime covers Windows build toolset
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '& tools/stage-pinned-vcredist.ps1 -ValidateBuildToolset'
+      - name: Build (host)
+        shell: bash
+        env:
+          OPENPENCIL_RELEASE_TARGET: ${{ matrix.target }}
+          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+        run: scripts/build-rust-release-host.sh
+      - name: Package archives (unix)
+        if: matrix.archive == 'tar.gz'
+        shell: bash
+        run: |
+          cd target/${{ matrix.target }}/release
+          if [ "$RUNNER_OS" != "macOS" ]; then
+            tar czf ../../../openpencil-desktop-${{ matrix.label }}.tar.gz openpencil-desktop
+          fi
+          tar czf ../../../op-cli-${{ matrix.label }}.tar.gz op
+      - name: Package archives (windows)
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path target\${{ matrix.target }}\release\openpencil-desktop.exe `
+            -DestinationPath openpencil-desktop-${{ matrix.label }}.zip
+          Compress-Archive `
+            -Path target\${{ matrix.target }}\release\op.exe `
+            -DestinationPath op-cli-${{ matrix.label }}.zip
+      - name: Install digest-pinned cargo-bundle
+        if: runner.os == 'macOS'
+        shell: bash
+        run: >-
+          tools/pinned-release-tools.sh cargo-cli cargo-bundle
+          "$RUNNER_TEMP/cargo-bundle-0.10.0"
+      - name: Import codesign certificate (macos)
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true'
+        uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d # v3.0.0
+        with:
+          p12-file-base64: ${{ secrets.CSC_LINK }}
+          p12-password: ${{ secrets.CSC_KEY_PASSWORD }}
+      - name: Resolve macOS signing identity
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          identity="$(security find-identity -v -p codesigning | awk -F'"' '/Developer ID Application/ {print $2; exit}')"
+          if [ -z "$identity" ]; then
+            security find-identity -v -p codesigning
+            echo "::error::Developer ID Application identity not found in imported keychain"
+            exit 1
+          fi
+          echo "MACOS_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+      - name: Bundle macOS app
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          OPENPENCIL_VERSION: ${{ env.OP_VERSION }}
+          OPENPENCIL_TARGET: ${{ matrix.target }}
+          # Hand the already-built binaries to the bundle script: it skips its
+          # own cargo build and overwrites the bundled executable with exactly
+          # what this workflow built (and embeds the op CLI in Contents/MacOS).
+          OPENPENCIL_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/openpencil-desktop
+          OPENPENCIL_CLI_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/op
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ "$HAS_APPLE_CERTIFICATE" = "true" ]; then
+            : "${MACOS_SIGN_IDENTITY:?MACOS_SIGN_IDENTITY was not resolved}"
+            export MACOS_SIGN_IDENTITY
+          fi
+          bash scripts/bundle-macos.sh
+          bash tools/check-macos-bundle-plist.sh \
+            "target/${{ matrix.target }}/release/bundle/osx/OpenPencil.app/Contents/Info.plist"
+      - name: Notarize macOS app
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true'
+        shell: bash
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          APP="target/${{ matrix.target }}/release/bundle/osx/OpenPencil.app"
+          APP_ZIP="OpenPencil-$OP_VERSION-${{ matrix.arch }}-mac-app.zip"
+          ditto -c -k --keepParent "$APP" "$APP_ZIP"
+          notary_log="$(mktemp)"
+          set +e
+          xcrun notarytool submit "$APP_ZIP" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --wait 2>&1 | tee "$notary_log"
+          notary_status="${PIPESTATUS[0]}"
+          set -e
+          submission_id="$(awk '/id: / { print $2; exit }' "$notary_log")"
+          if [ -n "$submission_id" ]; then
+            xcrun notarytool log "$submission_id" \
+              --apple-id "$APPLE_ID" \
+              --team-id "$APPLE_TEAM_ID" \
+              --password "$APPLE_APP_SPECIFIC_PASSWORD" || true
+          fi
+          if [ "$notary_status" -ne 0 ] || grep -q "status: Invalid" "$notary_log"; then
+            echo "::error::macOS app notarization failed"
+            exit 1
+          fi
+          xcrun stapler staple "$APP"
+          xcrun stapler validate "$APP"
+      - name: Package DMG (macos)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="target/${{ matrix.target }}/release/bundle/osx/OpenPencil.app"
+          DMG="OpenPencil-$OP_VERSION-${{ matrix.arch }}-mac.dmg"
+          STAGE="$(mktemp -d)"
+          ditto "$APP" "$STAGE/OpenPencil.app"
+          if [ "$HAS_APPLE_CERTIFICATE" = "true" ]; then
+            xcrun stapler validate "$STAGE/OpenPencil.app"
+          fi
+          ln -s /Applications "$STAGE/Applications"
+          # HFS+ instead of the APFS default: mountable on every macOS the
+          # binary itself supports.
+          hdiutil create \
+            -volname "OpenPencil $OP_VERSION" \
+            -srcfolder "$STAGE" \
+            -fs HFS+ -format UDZO -ov \
+            "$DMG"
+          if [ "$HAS_APPLE_CERTIFICATE" = "true" ]; then
+            codesign --force --timestamp --sign "$MACOS_SIGN_IDENTITY" "$DMG"
+            codesign --verify --verbose "$DMG"
+          fi
+      - name: Notarize DMG (macos)
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true'
+        shell: bash
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          DMG="OpenPencil-$OP_VERSION-${{ matrix.arch }}-mac.dmg"
+          notary_log="$(mktemp)"
+          set +e
+          xcrun notarytool submit "$DMG" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --wait 2>&1 | tee "$notary_log"
+          notary_status="${PIPESTATUS[0]}"
+          set -e
+          submission_id="$(awk '/id: / { print $2; exit }' "$notary_log")"
+          if [ -n "$submission_id" ]; then
+            xcrun notarytool log "$submission_id" \
+              --apple-id "$APPLE_ID" \
+              --team-id "$APPLE_TEAM_ID" \
+              --password "$APPLE_APP_SPECIFIC_PASSWORD" || true
+          fi
+          if [ "$notary_status" -ne 0 ] || grep -q "status: Invalid" "$notary_log"; then
+            echo "::error::macOS DMG notarization failed"
+            exit 1
+          fi
+          xcrun stapler staple "$DMG"
+          xcrun stapler validate "$DMG"
+      # ─── Code-signing secret reference ─────────────────────────────────
+      # Each platform signing path is gated on its required secrets. Without
+      # them, releases ship ad-hoc-signed (macOS, via scripts/bundle-macos.sh)
+      # / unsigned (Windows); with them, CI performs Developer ID
+      # signing/notarization for macOS and Authenticode signing for Windows.
+      #
+      # Required macOS secrets (Developer ID + notarization):
+      #   CSC_LINK                    base64 of the Developer ID Application
+      #                               .p12 export
+      #   CSC_KEY_PASSWORD            password for that .p12
+      #   APPLE_TEAM_ID               10-char Apple Developer Team ID
+      #   APPLE_ID                    Apple ID email used for notarization
+      #   APPLE_APP_SPECIFIC_PASSWORD app-specific password for notarytool
+      #
+      # Required Windows secrets (Authenticode):
+      #   WIN_CSC_LINK                base64/data URL of the code-signing .pfx
+      #   WIN_CSC_KEY_PASSWORD        password for that .pfx
+      #   WIN_CSC_PFX_SHA256          independent SHA-256 of the .pfx bytes
+      #   WIN_CSC_CERTIFICATE_SHA1    reviewed signer certificate thumbprint
+      #
+      # Optional downstream publish secrets consumed by release packaging:
+      #   NPM_TOKEN                   npm registry token for SDK publishing
+      #   TAP_GITHUB_TOKEN            GitHub token for tap/formula publishing
+      - name: Install NSIS (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & tools/install-pinned-nsis.ps1 -SelfTest
+          & tools/install-pinned-nsis.ps1
+      - name: Validate Windows signing input policy
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '& tools/sign-windows-release.ps1 -SelfTest'
+      - name: Stage ANGLE DLLs (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & tools/stage-pinned-angle.ps1 -SelfTest
+          & tools/stage-pinned-angle.ps1 \
+            -Architecture '${{ matrix.arch }}' -Target '${{ matrix.target }}'
+      - name: Stage pinned Microsoft Visual C++ Redistributable (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & tools/stage-pinned-vcredist.ps1 -SelfTest
+          $vcRedist = Join-Path $env:RUNNER_TEMP 'VC_redist.x64.exe'
+          & tools/stage-pinned-vcredist.ps1 -Destination $vcRedist
+          "VC_REDIST_FILE=$vcRedist" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Package NSIS installer (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Defines are absolute because NSIS resolves relative paths against
+          # the .nsi's own directory (scripts/).
+          makensis `
+            "/DVERSION=$env:OP_VERSION" `
+            "/DARCH=${{ matrix.arch }}" `
+            "/DBIN_DIR=$env:GITHUB_WORKSPACE\target\${{ matrix.target }}\release" `
+            "/DICON_FILE=$env:GITHUB_WORKSPACE\crates\op-host-desktop\assets\icon.ico" `
+            "/DOUT_FILE=$env:GITHUB_WORKSPACE\OpenPencil-$env:OP_VERSION-${{ matrix.arch }}-win-setup.exe" `
+            "/DVC_REDIST_FILE=$env:VC_REDIST_FILE" `
+            scripts\package-windows.nsi
+      # Authenticode signing scaffolding (NO-OP until WINDOWS_CERT_BASE64
+      # exists — see the secrets comment block in the macOS section above).
+      # Until then the NSIS installer ships unsigned (current behavior).
+      - name: Sign NSIS installer (windows)
+        if: runner.os == 'Windows' && env.HAS_WINDOWS_CERTIFICATE == 'true'
+        shell: pwsh
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          WIN_CSC_PFX_SHA256: ${{ secrets.WIN_CSC_PFX_SHA256 }}
+          WIN_CSC_CERTIFICATE_SHA1: ${{ secrets.WIN_CSC_CERTIFICATE_SHA1 }}
+        run: |
+          $exe = "OpenPencil-$env:OP_VERSION-${{ matrix.arch }}-win-setup.exe"
+          & tools/sign-windows-release.ps1 `
+            -CertificateBase64 $env:WIN_CSC_LINK `
+            -CertificatePassword $env:WIN_CSC_KEY_PASSWORD `
+            -ExpectedPfxSha256 $env:WIN_CSC_PFX_SHA256 `
+            -ExpectedCertificateSha1 $env:WIN_CSC_CERTIFICATE_SHA1 `
+            -Executable $exe
+      - name: Package .deb (linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          case "${{ matrix.target }}" in
+            x86_64-*)  DEB_ARCH=amd64 ;;
+            aarch64-*) DEB_ARCH=arm64 ;;
+            *) echo "unmapped deb arch for ${{ matrix.target }}" >&2; exit 1 ;;
+          esac
+          bash scripts/package-deb.sh \
+            --desktop-bin "target/${{ matrix.target }}/release/openpencil-desktop" \
+            --cli-bin "target/${{ matrix.target }}/release/op" \
+            --icon crates/op-host-desktop/assets/icon.png \
+            --version "$OP_VERSION" \
+            --arch "$DEB_ARCH" \
+            --out-dir .
+      - name: Package AppImage (linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          case "${{ matrix.target }}" in
+            x86_64-*)  AI_ARCH=x86_64 ;;
+            aarch64-*) AI_ARCH=aarch64 ;;
+            *) echo "unmapped AppImage arch for ${{ matrix.target }}" >&2; exit 1 ;;
+          esac
+          appimagetool="$RUNNER_TEMP/appimagetool"
+          runtime="$RUNNER_TEMP/appimage-runtime"
+          tools/pinned-release-tools.sh appimage \
+            "$AI_ARCH" "$appimagetool" "$runtime"
+          bash scripts/package-appimage.sh \
+            --desktop-bin "target/${{ matrix.target }}/release/openpencil-desktop" \
+            --cli-bin "target/${{ matrix.target }}/release/op" \
+            --icon crates/op-host-desktop/assets/icon.png \
+            --version "$OP_VERSION" \
+            --arch "$AI_ARCH" \
+            --tool "$appimagetool" \
+            --runtime-file "$runtime" \
+            --out-dir .
+      - name: Upload artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: openpencil-desktop-${{ matrix.label }}
+          path: |
+            openpencil-desktop-${{ matrix.label }}.tar.gz
+            openpencil-desktop-${{ matrix.label }}.zip
+            op-cli-${{ matrix.label }}.tar.gz
+            op-cli-${{ matrix.label }}.zip
+            OpenPencil-*-mac.dmg
+            OpenPencil-*-win-setup.exe
+            OpenPencil-*-linux.AppImage
+            OpenPencil-*-linux.deb
+          if-no-files-found: ignore
+      # Raw daemon binary for the platform vsix (the extension's bundled
+      # runtime). No archive extension, so release-draft's flatten step
+      # never picks it up as a release file on its own.
+      - name: Upload daemon binary for the VS Code extension
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: openpencil-daemon-${{ matrix.label }}
+          path: |
+            target/${{ matrix.target }}/release/op-host-web-server
+            target/${{ matrix.target }}/release/op-host-web-server.exe
+          if-no-files-found: error
+
+  web-docker:
+    name: Build and push web Docker image
+    needs: version
+    environment: release-production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    env:
+      OP_VERSION: ${{ needs.version.outputs.version }}
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      tag: ${{ steps.meta.outputs.tag }}
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - name: Install digest-pinned Buildx
+        shell: bash
+        run: |
+          set -euo pipefail
+          buildx="$HOME/.docker/cli-plugins/docker-buildx"
+          tools/pinned-release-tools.sh buildx "$buildx"
+          docker buildx version | grep -F 'github.com/docker/buildx v0.36.1 '
+          buildkit=moby/buildkit:v0.32.2@sha256:28a898719c18a33f4e8000685287fa36fd0dd9560c6440227d3a732d79bb41d8
+          docker buildx create --name openpencil-release --driver docker-container \
+            --driver-opt "image=$buildkit" --use
+          docker buildx inspect openpencil-release --bootstrap
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Compute image metadata
+        id: meta
+        shell: bash
+        run: |
+          version="$OP_VERSION"
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/openpencil-web"
+          tag="${image}:v${version}"
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: Dockerfile.web-rust
+          push: true
+          tags: ${{ steps.meta.outputs.tag }}
+
+  sdk-packages:
+    name: Build and publish web SDK npm packages
+    needs: version
+    environment: release-production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    env:
+      OP_VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable 2026-08-15
+        with:
+          toolchain: '1.94'
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          shared-key: web-sdk-release
+      - name: Install digest-pinned Bun
+        run: tools/pinned-release-tools.sh bun "$RUNNER_TEMP/bun-1.3.14"
+      - name: Install digest-pinned Node
+        run: tools/pinned-release-tools.sh node "$RUNNER_TEMP/node-20.20.2"
+      - name: Install digest-pinned wasm-bindgen-cli
+        shell: bash
+        run: |
+          version="$(awk '/^name = "wasm-bindgen"$/{found=1; next} found && /^version = /{gsub(/[" ]/,"",$3); print $3; exit}' Cargo.lock)"
+          if [ "$version" != 0.2.117 ]; then
+            echo "::error::Cargo.lock wasm-bindgen must match the reviewed 0.2.117 CLI"
+            exit 1
+          fi
+          tools/pinned-release-tools.sh cargo-cli wasm-bindgen-cli \
+            "$RUNNER_TEMP/wasm-bindgen-cli-0.2.117"
+      - name: Install binaryen
+        run: tools/pinned-release-tools.sh binaryen "$GITHUB_WORKSPACE"
+      - name: Install package workspace dependencies
+        working-directory: packages
+        run: bun install --frozen-lockfile
+      - name: Verify package versions
+        working-directory: packages
+        run: bun run sync-version:check
+      - name: Build wasm-backed SDK packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd packages/op-web-sdk
+          bun run sync-wasm
+          bun run build
+          cd ../op-web-sdk-react
+          bun run build
+          cd ../op-web-sdk-vue
+          bun run build
+      - name: Pack npm tarballs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p sdk-packages
+          for pkg in op-web-sdk op-web-sdk-react op-web-sdk-vue; do
+            (cd "packages/${pkg}" && bun pm pack --destination "${GITHUB_WORKSPACE}/sdk-packages")
+          done
+          ls -la sdk-packages
+      - name: Publish npm packages
+        shell: bash
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          npm_token=${NPM_TOKEN-}
+          export -n npm_token
+          unset NPM_TOKEN
+          umask 077
+          if [ -z "$npm_token" ]; then
+            echo "::error::NPM_TOKEN is required to publish web SDK packages"
+            exit 1
+          fi
+          npmrc=$(mktemp)
+          trap 'rm -f "$npmrc"' EXIT
+          printf '//registry.npmjs.org/:_authToken=%s\n' "$npm_token" > "$npmrc"
+          npm_token=
+          export NPM_CONFIG_USERCONFIG=$npmrc
+          npm whoami
+          version="$OP_VERSION"
+          publish_pkg() {
+            local name="$1"
+            local tarball="$2"
+            local view_output
+            if view_output="$(npm view "${name}@${version}" version 2>&1)"; then
+              echo "::notice::${name}@${version} is already published; skipping"
+              return
+            fi
+            if ! grep -Eq 'E404|404 Not Found|is not in this registry' <<<"$view_output"; then
+              printf '%s\n' "$view_output"
+              echo "::error::failed to check npm package ${name}@${version}"
+              exit 1
+            fi
+            npm publish "./$tarball" --access public --tag next
+          }
+          publish_pkg "@zseven-w/op-web-sdk" "sdk-packages/zseven-w-op-web-sdk-${version}.tgz"
+          publish_pkg "@zseven-w/op-web-sdk-react" "sdk-packages/zseven-w-op-web-sdk-react-${version}.tgz"
+          publish_pkg "@zseven-w/op-web-sdk-vue" "sdk-packages/zseven-w-op-web-sdk-vue-${version}.tgz"
+      - name: Upload SDK tarballs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: openpencil-web-sdk-packages
+          path: sdk-packages/*.tgz
+          if-no-files-found: error
+
+  vsix:
+    name: Package VS Code extension (platform vsix with bundled runtime)
+    needs: [version, build]
+    environment: release-production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    env:
+      OP_VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable 2026-08-15
+        with:
+          toolchain: '1.94'
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          shared-key: web-sdk-release
+      - name: Install digest-pinned Bun
+        run: tools/pinned-release-tools.sh bun "$RUNNER_TEMP/bun-1.3.14"
+      - name: Install digest-pinned Node
+        run: tools/pinned-release-tools.sh node "$RUNNER_TEMP/node-20.20.2"
+      - name: Install digest-pinned wasm-bindgen-cli
+        shell: bash
+        run: |
+          version="$(awk '/^name = "wasm-bindgen"$/{found=1; next} found && /^version = /{gsub(/[" ]/,"",$3); print $3; exit}' Cargo.lock)"
+          if [ "$version" != 0.2.117 ]; then
+            echo "::error::Cargo.lock wasm-bindgen must match the reviewed 0.2.117 CLI"
+            exit 1
+          fi
+          tools/pinned-release-tools.sh cargo-cli wasm-bindgen-cli \
+            "$RUNNER_TEMP/wasm-bindgen-cli-0.2.117"
+      - name: Install binaryen
+        run: tools/pinned-release-tools.sh binaryen "$GITHUB_WORKSPACE"
+      - name: Build web bundle (served by the bundled daemon)
+        run: bash tools/check-wasm-bundle.sh
+      - name: Download daemon binaries
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          path: daemons
+          pattern: openpencil-daemon-*
+      - name: Install package workspace dependencies
+        working-directory: packages
+        run: bun install --frozen-lockfile
+      - name: Check and build extension
+        working-directory: packages/op-vscode
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./node_modules/.bin/tsc -p tsconfig.json --noEmit
+          bun test src
+          node build.mjs
+          # Stamp the release version into the manifest (runtime-only — the
+          # extension is not in the sync-version managed set yet).
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=process.env.OP_VERSION;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          cp ../../LICENSE LICENSE
+      - name: Package platform vsix (daemon + web assets bundled)
+        working-directory: packages/op-vscode
+        shell: bash
+        run: |
+          set -euo pipefail
+          # build-matrix label -> vsce --target. The extension resolves
+          # bin/op-host-web-server[.exe] and web/{pkg,canvaskit} at runtime
+          # (restart-source.ts bundledDaemonPath / bundledDaemonEnv).
+          pairs=(
+            "macos-aarch64 darwin-arm64"
+            "macos-x86_64 darwin-x64"
+            "linux-x86_64 linux-x64"
+            "linux-aarch64 linux-arm64"
+            "windows-x86_64 win32-x64"
+            "windows-aarch64 win32-arm64"
+          )
+          for pair in "${pairs[@]}"; do
+            label="${pair% *}"
+            vs_target="${pair#* }"
+            exe="op-host-web-server"
+            case "$label" in windows-*) exe="op-host-web-server.exe";; esac
+            src="../../daemons/openpencil-daemon-${label}/${exe}"
+            if [ ! -f "$src" ]; then
+              echo "::error::missing daemon binary for ${label}: ${src}"
+              exit 1
+            fi
+            rm -rf bin web
+            mkdir -p bin web
+            cp "$src" "bin/${exe}"
+            chmod +x "bin/${exe}" || true
+            cp -R ../../crates/op-host-web/pkg web/pkg
+            # The .opt.wasm is a byte-identical intermediate of the served
+            # op_host_web_bg.wasm — shipping both doubles the vsix.
+            rm -f web/pkg/*.opt.wasm web/pkg/*.d.ts
+            cp -R ../../crates/op-host-web/assets/canvaskit web/canvaskit
+            ./node_modules/.bin/vsce package --no-dependencies --allow-missing-repository \
+              --target "$vs_target" \
+              --out "openpencil-vscode-${OP_VERSION}-${vs_target}.vsix"
+          done
+          ls -la ./*.vsix
+      - name: Upload .vsix artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: openpencil-vscode-vsix
+          path: packages/op-vscode/*.vsix
+          if-no-files-found: error
+      # Open VSX is the registry Cursor / VSCodium / Gitpod pull from. The
+      # token comes from https://open-vsx.org/user-settings/tokens (an
+      # account owning the `openpencil` namespace) stored as the
+      # OPENVSX_TOKEN repo secret — mirrors the NPM_TOKEN hard-requirement.
+      - name: Publish to Open VSX
+        working-directory: packages/op-vscode
+        env:
+          OPENVSX_TOKEN: ${{ secrets.OPENVSX_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          openvsx_token=${OPENVSX_TOKEN-}
+          export -n openvsx_token
+          unset OPENVSX_TOKEN
+          if [ -z "$openvsx_token" ]; then
+            echo "::error::OPENVSX_TOKEN is required to publish to open-vsx.org (create it at https://open-vsx.org/user-settings/tokens, add as repo secret)"
+            exit 1
+          fi
+          # First-run namespace claim; harmless "already exists" afterwards.
+          ./node_modules/.bin/ovsx create-namespace openpencil -p "$openvsx_token" || true
+          # Per-file tolerance so a partial failure is retryable: a re-run
+          # skips targets that already landed ("already published") instead
+          # of aborting the loop on them, keeps going past a real failure to
+          # attempt every remaining platform, and fails the job at the end
+          # if anything genuinely failed.
+          failed=0
+          for f in ./openpencil-vscode-"${OP_VERSION}"-*.vsix; do
+            if out="$(./node_modules/.bin/ovsx publish --packagePath "$f" -p "$openvsx_token" 2>&1)"; then
+              printf '%s\n' "$out"
+            elif printf '%s' "$out" | grep -qiE "already (exists|published)"; then
+              echo "skipping ${f}: this target/version is already on open-vsx"
+            else
+              printf '%s\n' "$out"
+              echo "::error::open-vsx publish failed for ${f}"
+              failed=1
+            fi
+          done
+          exit "$failed"
+
+  release-draft:
+    name: Create / update GitHub prerelease
+    needs: [version, android-release, build, web-docker, sdk-packages, vsix]
+    environment: release-production
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    # id-token + attestations power the build-provenance step below; the
+    # job-level block overrides the workflow defaults, so contents/PR write
+    # must be restated for the release upload and Nix manifest PR.
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+      attestations: write
+    env:
+      OP_VERSION: ${{ needs.version.outputs.version }}
+    outputs:
+      package_manager_artifact_id: ${{ steps.package_manager_handoff.outputs.artifact-id }}
+      package_manager_artifact_digest: ${{ steps.package_manager_handoff.outputs.artifact-digest }}
+      package_manager_manifest_sha256: ${{ steps.package_manager_manifest.outputs.manifest_sha256 }}
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          path: dist
+          pattern: openpencil-*
+      - name: Flatten artifacts
+        shell: bash
+        run: tools/flatten-release-artifacts.sh dist release-files "$OP_VERSION"
+      - name: Generate CLI install scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$OP_VERSION"
+
+          sha_file() {
+            sha256sum "release-files/$1" | awk '{print $1}'
+          }
+
+          cli_mac_arm_sha="$(sha_file "op-cli-macos-aarch64.tar.gz")"
+          cli_mac_x64_sha="$(sha_file "op-cli-macos-x86_64.tar.gz")"
+          cli_linux_arm_sha="$(sha_file "op-cli-linux-aarch64.tar.gz")"
+          cli_linux_x64_sha="$(sha_file "op-cli-linux-x86_64.tar.gz")"
+          cli_win_arm_sha="$(sha_file "op-cli-windows-aarch64.zip")"
+          cli_win_x64_sha="$(sha_file "op-cli-windows-x86_64.zip")"
+
+          cp scripts/install-op.sh release-files/install-op.sh
+          cp scripts/install-op.ps1 release-files/install-op.ps1
+          OP_INSTALLER_VERSION="$version" \
+          OP_SHA_MACOS_AARCH64="$cli_mac_arm_sha" \
+          OP_SHA_MACOS_X86_64="$cli_mac_x64_sha" \
+          OP_SHA_LINUX_AARCH64="$cli_linux_arm_sha" \
+          OP_SHA_LINUX_X86_64="$cli_linux_x64_sha" \
+          perl -0pi -e '
+            s/^DEFAULT_OP_VERSION=.*/DEFAULT_OP_VERSION="$ENV{OP_INSTALLER_VERSION}"/m;
+            s/^DEFAULT_SHA_MACOS_AARCH64=.*/DEFAULT_SHA_MACOS_AARCH64="$ENV{OP_SHA_MACOS_AARCH64}"/m;
+            s/^DEFAULT_SHA_MACOS_X86_64=.*/DEFAULT_SHA_MACOS_X86_64="$ENV{OP_SHA_MACOS_X86_64}"/m;
+            s/^DEFAULT_SHA_LINUX_AARCH64=.*/DEFAULT_SHA_LINUX_AARCH64="$ENV{OP_SHA_LINUX_AARCH64}"/m;
+            s/^DEFAULT_SHA_LINUX_X86_64=.*/DEFAULT_SHA_LINUX_X86_64="$ENV{OP_SHA_LINUX_X86_64}"/m;
+          ' release-files/install-op.sh
+          OP_INSTALLER_VERSION="$version" \
+          OP_SHA_WINDOWS_AARCH64="$cli_win_arm_sha" \
+          OP_SHA_WINDOWS_X86_64="$cli_win_x64_sha" \
+          perl -0pi -e '
+            s/^\$DefaultOpVersion = .*/\$DefaultOpVersion = "$ENV{OP_INSTALLER_VERSION}"/m;
+            s/^\$DefaultShaWindowsAarch64 = .*/\$DefaultShaWindowsAarch64 = "$ENV{OP_SHA_WINDOWS_AARCH64}"/m;
+            s/^\$DefaultShaWindowsX86_64 = .*/\$DefaultShaWindowsX86_64 = "$ENV{OP_SHA_WINDOWS_X86_64}"/m;
+          ' release-files/install-op.ps1
+          chmod +x release-files/install-op.sh
+          if grep -E 'DEFAULT_OP_VERSION=""|DEFAULT_SHA_(MACOS|LINUX)_[A-Z0-9_]+=""|\$Default(OpVersion|ShaWindows[A-Za-z0-9_]+) = ""' \
+              release-files/install-op.sh release-files/install-op.ps1; then
+            echo "::error::CLI install scripts still contain unstamped release metadata"
+            exit 1
+          fi
+          grep -q "$version" release-files/install-op.sh
+          grep -q "$version" release-files/install-op.ps1
+      # Downloaders (and antivirus false-positive triage — see issue #198)
+      # need a way to confirm an asset is the exact file CI produced:
+      # a checksum manifest plus a signed SLSA provenance attestation that
+      # links every asset back to this workflow run and source commit
+      # (verifiable via `gh attestation verify`).
+      - name: Generate SHA256SUMS
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd release-files && sha256sum -- * | sort -k2 > ../SHA256SUMS.txt)
+          mv SHA256SUMS.txt release-files/
+          cat release-files/SHA256SUMS.txt
+      - name: Stage package-manager handoff
+        id: package_manager_manifest
+        shell: bash
+        run: >-
+          tools/package-manager-handoff.sh stage release-files package-manager-handoff
+          "$OP_VERSION" "$GITHUB_OUTPUT"
+      - name: Upload immutable package-manager handoff
+        id: package_manager_handoff
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: package-manager-assets-${{ github.run_id }}-${{ github.run_attempt }}
+          path: package-manager-handoff/
+          if-no-files-found: error
+          retention-days: 1
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-path: release-files/*
+      - name: Prepare release body
+        id: body
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$OP_VERSION"
+          note="RELEASE_NOTES/v${version}.md"
+          if [ ! -f "$note" ]; then
+            echo "::error::missing release note: $note"
+            exit 1
+          fi
+          # The note's leading `# ` heading is the release title; the rest is
+          # the body, so the title is not repeated on the release page.
+          title="$(head -n 1 "$note")"
+          if [[ "$title" != "# "* ]]; then
+            echo "::error::release note must start with a '# ' title heading: $note"
+            exit 1
+          fi
+          echo "title=${title#\# }" >> "$GITHUB_OUTPUT"
+          tail -n +2 "$note" | sed '/./,$!d' > release-body.md
+          {
+            printf '\n## Web Docker Image\n\n'
+            printf -- '- Image: `%s`\n' '${{ needs.web-docker.outputs.tag }}'
+            printf -- '- Digest: `%s`\n' '${{ needs.web-docker.outputs.digest }}'
+            printf '\n## Verify Your Download\n\n'
+            printf 'Every asset is listed in `SHA256SUMS.txt` and carries a signed build-provenance attestation tying it to this repository, commit, and CI run:\n\n'
+            printf '```bash\ngh attestation verify <downloaded-file> --repo %s\n```\n\n' '${{ github.repository }}'
+            printf 'Some antivirus engines heuristically flag low-prevalence installers — see [docs/security/antivirus-false-positives.md](https://github.com/%s/blob/main/docs/security/antivirus-false-positives.md).\n' '${{ github.repository }}'
+          } >> release-body.md
+      - name: Create / update GitHub prerelease
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          draft: false
+          prerelease: true
+          make_latest: false
+          name: ${{ steps.body.outputs.title }}
+          body_path: release-body.md
+          files: release-files/*
+      - name: Prepare latest published Nix release manifest
+        id: nix-manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$OP_VERSION"
+          sri_hash() {
+            printf 'sha256-%s' "$(openssl dgst -sha256 -binary "release-files/$1" | base64 -w0)"
+          }
+          manifest="$(jq -n \
+            --arg version "$version" \
+            --arg desktopHash "$(sri_hash openpencil-desktop-linux-x86_64.tar.gz)" \
+            --arg cliHash "$(sri_hash op-cli-linux-x86_64.tar.gz)" \
+            '{version: $version, desktopHash: $desktopHash, cliHash: $cliHash}')"
+
+          # Tags do not retain their source branch. Prefer the matching release
+          # branch when it contains the tagged commit, then fall back to the
+          # repository's default branch.
+          release_branch="v${version}"
+          default_branch="${{ github.event.repository.default_branch }}"
+          git fetch --prune origin \
+            "+refs/heads/*:refs/remotes/origin/*"
+          if git show-ref --verify --quiet "refs/remotes/origin/${release_branch}" \
+              && git merge-base --is-ancestor "$GITHUB_SHA" "origin/${release_branch}"; then
+            target_branch="$release_branch"
+          elif git merge-base --is-ancestor "$GITHUB_SHA" "origin/${default_branch}"; then
+            target_branch="$default_branch"
+          else
+            echo "::error::tagged commit is not contained in ${release_branch} or ${default_branch}"
+            exit 1
+          fi
+
+          git switch --force-create "$target_branch" "origin/${target_branch}"
+          # Release branches share their name with the release tag. Remove the
+          # runner-local tag so create-pull-request's `symbolic-ref --short`
+          # resolves vX.Y.Z instead of heads/vX.Y.Z (and then tries the
+          # nonexistent origin/heads/vX.Y.Z remote-tracking branch).
+          git update-ref -d "refs/tags/${target_branch}"
+          printf '%s\n' "$manifest" > nix/release-manifest.json
+          echo "target-branch=$target_branch" >> "$GITHUB_OUTPUT"
+
+      # The release branches are protected, so publish the generated hash
+      # update through a reviewable PR instead of trying to push as the
+      # GitHub Actions bot. Re-running a release updates the same PR branch.
+      - name: Open Nix release manifest update
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          base: ${{ steps.nix-manifest.outputs.target-branch }}
+          branch: automation/nix-release-manifest-v${{ env.OP_VERSION }}
+          delete-branch: true
+          add-paths: nix/release-manifest.json
+          commit-message: "chore(release): update Nix release manifest for v${{ env.OP_VERSION }}"
+          title: "chore(release): update Nix release manifest for v${{ env.OP_VERSION }}"
+          body: |
+            Updates the pinned Nix prebuilt release metadata after publishing v${{ env.OP_VERSION }}.
+
+            This PR was generated by the Rust release workflow.
+
+  package-managers:
+    name: Update Homebrew tap and Scoop bucket
+    needs: [version, release-draft]
+    environment: release-production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    env:
+      OP_VERSION: ${{ needs.version.outputs.version }}
+      HOMEBREW_TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'ZSeven-W/homebrew-openpencil' }}
+      SCOOP_BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY || 'ZSeven-W/scoop-openpencil' }}
+    steps:
+      - name: Checkout release helpers without credentials
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - name: Download immutable same-run package-manager handoff
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          tools/package-manager-handoff.sh download
+          "${{ needs.release-draft.outputs.package_manager_artifact_id }}"
+          "${{ needs.release-draft.outputs.package_manager_artifact_digest }}"
+          "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT"
+          "$GITHUB_API_URL" release-assets "$OP_VERSION"
+      - name: Verify handoff manifest and compute hashes
+        shell: bash
+        env:
+          EXPECTED_ARTIFACT_DIGEST: ${{ needs.release-draft.outputs.package_manager_artifact_digest }}
+          EXPECTED_MANIFEST_SHA256: ${{ needs.release-draft.outputs.package_manager_manifest_sha256 }}
+        run: >-
+          tools/package-manager-handoff.sh verify release-assets "$OP_VERSION"
+          "$EXPECTED_ARTIFACT_DIGEST" "$EXPECTED_MANIFEST_SHA256" "$GITHUB_ENV"
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          repository: ${{ env.HOMEBREW_TAP_REPOSITORY }}
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update Homebrew cask and formula
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p homebrew-tap/Casks homebrew-tap/Formula
+          cat > homebrew-tap/Casks/openpencil.rb <<EOF
+          cask "openpencil" do
+            version "${OP_VERSION}"
+
+            on_arm do
+              sha256 "${MAC_ARM_DMG_SHA}"
+              url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/OpenPencil-#{version}-arm64-mac.dmg"
+            end
+            on_intel do
+              sha256 "${MAC_X64_DMG_SHA}"
+              url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/OpenPencil-#{version}-x64-mac.dmg"
+            end
+
+            name "OpenPencil"
+            desc "Open-source AI-native vector design tool"
+            homepage "https://github.com/zseven-w/openpencil"
+
+            app "OpenPencil.app"
+
+            zap trash: [
+              "~/Library/Application Support/OpenPencil",
+              "~/Library/Preferences/com.zseven-w.openpencil.plist",
+              "~/Library/Preferences/dev.openpencil.app.plist",
+              "~/Library/Caches/com.zseven-w.openpencil",
+              "~/Library/Caches/dev.openpencil.app",
+            ]
+          end
+          EOF
+
+          cat > homebrew-tap/Formula/op.rb <<EOF
+          class Op < Formula
+            desc "OpenPencil command-line tool"
+            homepage "https://github.com/zseven-w/openpencil"
+            version "${OP_VERSION}"
+            license "MIT"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/op-cli-macos-aarch64.tar.gz"
+                sha256 "${CLI_MAC_ARM_SHA}"
+              else
+                url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/op-cli-macos-x86_64.tar.gz"
+                sha256 "${CLI_MAC_X64_SHA}"
+              end
+            end
+
+            on_linux do
+              if Hardware::CPU.arm?
+                url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/op-cli-linux-aarch64.tar.gz"
+                sha256 "${CLI_LINUX_ARM_SHA}"
+              else
+                url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/op-cli-linux-x86_64.tar.gz"
+                sha256 "${CLI_LINUX_X64_SHA}"
+              end
+            end
+
+            def install
+              bin.install "op"
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/op --version")
+            end
+          end
+          EOF
+
+          ruby -c homebrew-tap/Casks/openpencil.rb
+          ruby -c homebrew-tap/Formula/op.rb
+
+      - name: Commit Homebrew updates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/openpencil.rb Formula/op.rb
+          if git diff --cached --quiet; then
+            echo "::notice::Homebrew tap already matches v${OP_VERSION}"
+          else
+            git commit -m "Update OpenPencil to v${OP_VERSION}"
+            git push
+          fi
+
+      - name: Checkout Scoop bucket
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          repository: ${{ env.SCOOP_BUCKET_REPOSITORY }}
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: scoop-bucket
+
+      - name: Update Scoop manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p scoop-bucket/bucket
+          # Scoop invokes this installer hook on both a fresh install and an
+          # upgrade. Check the native registry view before downloading or
+          # elevating, so a compatible machine does not depend on Microsoft's
+          # CDN for an ordinary OpenPencil update.
+          vc_redist_installer="$(
+            jq -cn \
+              --arg required_version "$VC_REDIST_VERSION" \
+              --arg redist_url "$VC_REDIST_URL" \
+              --arg redist_sha256 "$VC_REDIST_SHA256" \
+              -f /dev/stdin <<'JQ'
+          {
+            script: [
+              "$runtimeArchitecture = if ($architecture -eq 'arm64') { 'arm64' } else { 'x64' }",
+              ("$requiredVersion = [version]'" + $required_version + "'"),
+              ("$redistUrl = '" + $redist_url + "'"),
+              ("$expectedSha256 = '" + $redist_sha256 + "'"),
+              "function Get-InstalledVcRuntimeVersion {",
+              "  $baseKey = $null",
+              "  $runtimeKey = $null",
+              "  try {",
+              "    $baseKey = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, [Microsoft.Win32.RegistryView]::Registry64)",
+              "    $runtimeKey = $baseKey.OpenSubKey(\"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\$runtimeArchitecture\")",
+              "    if ($null -eq $runtimeKey -or [int]$runtimeKey.GetValue('Installed', 0) -ne 1) { return $null }",
+              "    $versionValue = [string]$runtimeKey.GetValue('Version', '')",
+              "    try { return [version]($versionValue.TrimStart('v')) } catch { return $null }",
+              "  } finally {",
+              "    if ($null -ne $runtimeKey) { $runtimeKey.Dispose() }",
+              "    if ($null -ne $baseKey) { $baseKey.Dispose() }",
+              "  }",
+              "}",
+              "$installedVersion = Get-InstalledVcRuntimeVersion",
+              "if ($null -eq $installedVersion -or $installedVersion -lt $requiredVersion) {",
+              "  $redist = Join-Path $dir 'VC_redist.x64.exe'",
+              "  $log = Join-Path $env:TEMP ('openpencil-vcredist-' + [Guid]::NewGuid().ToString('N') + '.log')",
+              "  [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12",
+              "  Invoke-WebRequest -Uri $redistUrl -OutFile $redist -UseBasicParsing",
+              "  $redistItem = Get-Item -LiteralPath $redist -Force -ErrorAction Stop",
+              "  if ($redistItem.PSIsContainer -or ($redistItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $redistItem.Length -le 0) { throw 'Visual C++ Redistributable download is not a regular file.' }",
+              "  $actualSha256 = (Get-FileHash -LiteralPath $redist -Algorithm SHA256).Hash.ToLowerInvariant()",
+              "  if ($actualSha256 -cne $expectedSha256) { throw 'Visual C++ Redistributable checksum mismatch.' }",
+              "  $versionInfo = [Diagnostics.FileVersionInfo]::GetVersionInfo($redist)",
+              "  $downloadedFileVersion = [version]$versionInfo.FileVersion",
+              "  $downloadedProductVersion = [version]$versionInfo.ProductVersion",
+              "  if ($downloadedFileVersion -ne $requiredVersion -or $downloadedProductVersion -ne $requiredVersion) { throw \"Unexpected Visual C++ Redistributable versions file=$downloadedFileVersion product=$downloadedProductVersion.\" }",
+              "  $signature = Get-AuthenticodeSignature -LiteralPath $redist",
+              "  $signerName = if ($null -ne $signature.SignerCertificate) { $signature.SignerCertificate.GetNameInfo([Security.Cryptography.X509Certificates.X509NameType]::SimpleName, $false) } else { '' }",
+              "  if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid -or $signerName -cne 'Microsoft Corporation' -or $signature.SignerCertificate.Subject -notmatch '(^|,\\s*)O=Microsoft Corporation(,|$)') { throw 'Visual C++ Redistributable does not have a valid Microsoft signature.' }",
+              "  $arguments = @('/install', '/passive', '/norestart', '/log', ('\"' + $log + '\"'))",
+              "  $process = Start-Process -FilePath $redist -ArgumentList $arguments -Verb RunAs -Wait -PassThru",
+              "  if ($process.ExitCode -notin @(0, 1638, 3010)) { throw \"Microsoft Visual C++ Redistributable exited with code $($process.ExitCode). See $log.\" }",
+              "  $installedVersion = Get-InstalledVcRuntimeVersion",
+              "  if ($null -eq $installedVersion -or $installedVersion -lt $requiredVersion) { throw \"Microsoft Visual C++ Redistributable $requiredVersion or newer is required.\" }",
+              "  if ($process.ExitCode -eq 3010) { Write-Warning 'Restart Windows before running OpenPencil.' }",
+              "}",
+              "Remove-Item -LiteralPath (Join-Path $dir 'VC_redist.x64.exe') -Force -ErrorAction SilentlyContinue"
+            ]
+          }
+          JQ
+          )"
+
+          write_scoop_manifest() {
+            local output=$1 description=$2 executable=$3
+            local x64_url=$4 x64_hash=$5 arm64_url=$6 arm64_hash=$7
+            local x64_autoupdate=$8 arm64_autoupdate=$9 shortcuts=${10}
+            jq -n \
+              --arg version "$OP_VERSION" \
+              --arg description "$description" \
+              --arg executable "$executable" \
+              --arg x64_url "$x64_url" \
+              --arg x64_hash "$x64_hash" \
+              --arg arm64_url "$arm64_url" \
+              --arg arm64_hash "$arm64_hash" \
+              --arg x64_autoupdate "$x64_autoupdate" \
+              --arg arm64_autoupdate "$arm64_autoupdate" \
+              --argjson shortcuts "$shortcuts" \
+              --argjson installer "$vc_redist_installer" \
+              -f /dev/stdin > "$output" <<'JQ'
+          {
+            version: $version,
+            description: $description,
+            homepage: "https://github.com/zseven-w/openpencil",
+            license: "MIT",
+            architecture: {
+              "64bit": {
+                url: $x64_url,
+                hash: $x64_hash
+              },
+              arm64: {
+                url: $arm64_url,
+                hash: $arm64_hash
+              }
+            },
+            bin: $executable,
+            installer: $installer,
+            checkver: {
+              github: "https://github.com/zseven-w/openpencil"
+            },
+            autoupdate: {
+              architecture: {
+                "64bit": {url: $x64_autoupdate},
+                arm64: {url: $arm64_autoupdate}
+              }
+            }
+          } + if $shortcuts == null then {} else {shortcuts: $shortcuts} end
+          JQ
+          }
+
+          write_scoop_manifest \
+            scoop-bucket/bucket/openpencil.json \
+            'Open-source AI-native vector design tool' \
+            openpencil-desktop.exe \
+            "https://github.com/zseven-w/openpencil/releases/download/v${OP_VERSION}/openpencil-desktop-windows-x86_64.zip" \
+            "$DESKTOP_WIN_X64_SHA" \
+            "https://github.com/zseven-w/openpencil/releases/download/v${OP_VERSION}/openpencil-desktop-windows-aarch64.zip" \
+            "$DESKTOP_WIN_ARM_SHA" \
+            'https://github.com/zseven-w/openpencil/releases/download/v$version/openpencil-desktop-windows-x86_64.zip' \
+            'https://github.com/zseven-w/openpencil/releases/download/v$version/openpencil-desktop-windows-aarch64.zip' \
+            '[["openpencil-desktop.exe", "OpenPencil"]]'
+
+          write_scoop_manifest \
+            scoop-bucket/bucket/op.json \
+            'OpenPencil command-line tool' \
+            op.exe \
+            "https://github.com/zseven-w/openpencil/releases/download/v${OP_VERSION}/op-cli-windows-x86_64.zip" \
+            "$CLI_WIN_X64_SHA" \
+            "https://github.com/zseven-w/openpencil/releases/download/v${OP_VERSION}/op-cli-windows-aarch64.zip" \
+            "$CLI_WIN_ARM_SHA" \
+            'https://github.com/zseven-w/openpencil/releases/download/v$version/op-cli-windows-x86_64.zip' \
+            'https://github.com/zseven-w/openpencil/releases/download/v$version/op-cli-windows-aarch64.zip' \
+            null
+
+          jq empty scoop-bucket/bucket/openpencil.json scoop-bucket/bucket/op.json
+
+      - name: Commit Scoop updates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd scoop-bucket
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bucket/openpencil.json bucket/op.json
+          if git diff --cached --quiet; then
+            echo "::notice::Scoop bucket already matches v${OP_VERSION}"
+          else
+            git commit -m "Update OpenPencil to v${OP_VERSION}"
+            git push
+          fi

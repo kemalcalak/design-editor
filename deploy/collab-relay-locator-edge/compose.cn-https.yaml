@@ -1,0 +1,70 @@
+name: openpencil-collab-locator-cn-https
+
+services:
+  locator-cn-https:
+    image: ${OPENPENCIL_LOCATOR_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
+    user: "101:101"
+    command:
+      - nginx
+      - -g
+      - daemon off;
+    ports:
+      - target: 8445
+        published: ${OPENPENCIL_LOCATOR_CN_HTTPS_PORT:-8445}
+        host_ip: ${OPENPENCIL_LOCATOR_CN_HTTPS_BIND_IP:?set a private/firewalled CN IP}
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: bind
+        source: ./cn-locator-https-nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+    secrets:
+      - source: cn_locator_inner_fullchain
+        target: cn-locator-inner-fullchain.pem
+      - source: cn_locator_inner_privkey
+        target: cn-locator-inner-privkey.pem
+    networks:
+      - locator_backend
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=8m,uid=101,gid=101,mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 96m
+    cpus: 0.50
+    ulimits:
+      nofile:
+        soft: 2048
+        hard: 2048
+    restart: unless-stopped
+    stop_grace_period: 10s
+    healthcheck:
+      test:
+        - CMD
+        - nginx
+        - -t
+        - -q
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  locator_backend:
+    external: true
+    name: ${OPENPENCIL_LOCATOR_BACKEND_NETWORK:?set the existing private locator Compose network}
+
+secrets:
+  cn_locator_inner_fullchain:
+    file: ${OPENPENCIL_LOCATOR_CN_INNER_FULLCHAIN:?set the inner HTTPS certificate chain}
+  cn_locator_inner_privkey:
+    file: ${OPENPENCIL_LOCATOR_CN_INNER_PRIVKEY:?set the inner HTTPS private key}

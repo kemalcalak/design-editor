@@ -1,0 +1,17 @@
+[Unit]
+Description=OpenPencil CN Docker ingress firewall pre-start gate
+Wants=network-online.target
+After=network-online.target
+Before=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/openpencil-collab-cn-firewall/apply-cn-docker-user-firewall.sh
+ExecStartPost=/usr/local/libexec/openpencil-collab-cn-firewall/verify-cn-docker-user-firewall.sh --pre-docker
+ExecReload=/usr/local/libexec/openpencil-collab-cn-firewall/apply-cn-docker-user-firewall.sh
+ExecReload=/usr/local/libexec/openpencil-collab-cn-firewall/verify-cn-docker-user-firewall.sh --pre-docker
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

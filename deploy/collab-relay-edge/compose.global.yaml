@@ -1,0 +1,69 @@
+name: openpencil-collab-relay-global-edge
+
+services:
+  global-edge:
+    # Keep repository and reviewed digest separate so a mutable tag cannot be
+    # substituted for the deployment identity.
+    image: ${OPENPENCIL_RELAY_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${OPENPENCIL_RELAY_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
+    user: "101:101"
+    command:
+      - nginx
+      - -g
+      - daemon off;
+    ports:
+      - target: 8443
+        published: 443
+        host_ip: ${OPENPENCIL_RELAY_EDGE_PUBLIC_BIND_IP:?set a dedicated overseas public IPv4}
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: bind
+        source: ./global-nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+    secrets:
+      - source: global_edge_client_cert
+        target: global-edge-client-cert.pem
+      - source: global_edge_client_key
+        target: global-edge-client-key.pem
+      - source: cn_federation_ca
+        target: cn-federation-ca.pem
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,uid=101,gid=101,mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 128m
+    cpus: 0.50
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 4096
+    restart: "no"
+    stop_grace_period: 10s
+    healthcheck:
+      test:
+        - CMD
+        - nginx
+        - -t
+        - -q
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+
+secrets:
+  global_edge_client_cert:
+    file: ${OPENPENCIL_RELAY_EDGE_CLIENT_CERT:?set an absolute mTLS client-certificate path}
+  global_edge_client_key:
+    file: ${OPENPENCIL_RELAY_EDGE_CLIENT_KEY:?set an absolute mTLS client-key path}
+  cn_federation_ca:
+    file: ${OPENPENCIL_RELAY_CN_FEDERATION_CA:?set an absolute pinned CN federation CA path}

@@ -1,0 +1,82 @@
+node_modules
+.DS_Store
+*.local
+count.txt
+.env
+.nitro
+.tanstack
+.wrangler
+.vinxi
+__unconfig*
+todos.json
+.openpencil-tmp/
+.superpowers/
+.playwright-cli/
+.playwright-mcp/
+editor-*.png
+scripts/ab-corpus/runs/
+
+docs/
+# Keep internal planning documents ignored, but publish the reviewed
+# collaboration security contract with the open implementation.
+!/docs/
+/docs/*
+!/docs/security/
+/docs/security/*
+!/docs/security/p2p-collaboration-threat-model.md
+!/docs/security/antivirus-false-positives.md
+!/docs/security/code-signing-policy.md
+!/docs/testing/
+/docs/testing/*
+!/docs/testing/p2p-collaboration-platform-acceptance.md
+
+# The bare `docs/` pattern above also shadows this test-fixture dir, which
+# MUST be tracked (the CI diagnostics-golden drift guard reads it).
+!crates/op-design-lint/tests/fixtures/docs/
+
+# Keep the Chrome Web Store policy alongside the extension source. The bare
+# `docs/` rule above also matches nested extension documentation directories.
+!packages/op-chrome-extension/docs/
+packages/op-chrome-extension/docs/*
+!packages/op-chrome-extension/docs/privacy-policy.md
+
+# Build outputs
+out/
+dist/
+apps/cli/src/commands/skill-bundle.json
+dist-ssr/
+electron-dist/
+dist-electron/
+.claude
+.omx
+.worktrees/
+.omx/
+
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock.merge-conflict
+/crates/*/target
+/vendor/agent/target
+
+# Never stage local collaboration/HSM private-key containers.
+**/relay-x25519-keys*.json
+**/*private-keys*.json
+**/*private_keys*.json
+**/locator-signing-key*.json
+
+tools/__pycache__/
+__pycache__/
+*.pyc
+openpencil-docs
+output
+
+# op-auth provenance signing private key — NEVER commit
+op-auth-provenance.pem
+*.provenance.pem
+
+# Local node toolchain downloaded by tooling — never commit (binaries exceed GitHub's 100MB limit)
+packages/.toolchain/
+
+# Codex CLI local config
+.codex/

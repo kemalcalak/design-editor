@@ -1,0 +1,21 @@
+services:
+  relay:
+    command:
+      - --production
+      - --allow-ticket-binding-only
+    environment:
+      OPENPENCIL_COLLAB_RELAY_HOME_REGION: cn
+      OPENPENCIL_COLLAB_RELAY_TICKET_POLICY_FILE: /run/secrets/openpencil-collab-policy.json
+      OPENPENCIL_COLLAB_RELAY_LOCATOR_KEYS_FILE: /run/secrets/openpencil-relay-locator-keys.json
+      OPENPENCIL_COLLAB_RELAY_POLICY_MAX_AGE_SECONDS: "60"
+    secrets:
+      - source: openpencil_collab_policy
+        target: openpencil-collab-policy.json
+      - source: openpencil_relay_locator_keys
+        target: openpencil-relay-locator-keys.json
+
+secrets:
+  openpencil_collab_policy:
+    file: ${OPENPENCIL_COLLAB_POLICY_HOST_FILE:?set an absolute signed-policy file path}
+  openpencil_relay_locator_keys:
+    file: ${OPENPENCIL_RELAY_LOCATOR_KEYS_HOST_FILE:?set an absolute locator-key file path}

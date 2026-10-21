@@ -1,0 +1,28 @@
+# Waiting-queue policy is inherited from compose.yaml and is identical in both
+# regions: one lease per WAITING_TIMEOUT_SECS, renewed while the peer answers
+# pings. Rolling the lease needs no client rollout — already-shipped clients
+# pong as a side effect of reading. See README.md, "Mixed-fleet migration".
+services:
+  relay:
+    command:
+      - --production
+    environment:
+      OPENPENCIL_COLLAB_RELAY_TICKET_POLICY_FILE: /run/secrets/openpencil-collab-policy.json
+      OPENPENCIL_COLLAB_RELAY_LOCATOR_KEYS_FILE: /run/secrets/openpencil-relay-locator-keys.json
+      OPENPENCIL_COLLAB_RELAY_X25519_KEYS_FILE: /run/secrets/openpencil-relay-x25519-keys.json
+      OPENPENCIL_COLLAB_RELAY_POLICY_MAX_AGE_SECONDS: "60"
+    secrets:
+      - source: openpencil_collab_policy
+        target: openpencil-collab-policy.json
+      - source: openpencil_relay_locator_keys
+        target: openpencil-relay-locator-keys.json
+      - source: openpencil_relay_x25519_keys
+        target: openpencil-relay-x25519-keys.json
+
+secrets:
+  openpencil_collab_policy:
+    file: ${OPENPENCIL_COLLAB_POLICY_HOST_FILE:?set an absolute signed-policy file path}
+  openpencil_relay_locator_keys:
+    file: ${OPENPENCIL_RELAY_LOCATOR_KEYS_HOST_FILE:?set an absolute locator-key file path}
+  openpencil_relay_x25519_keys:
+    file: ${OPENPENCIL_RELAY_X25519_KEYS_HOST_FILE:?set an absolute relay X25519 key file path}

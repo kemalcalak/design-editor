@@ -1,0 +1,33 @@
+services:
+  locator-hsm:
+    build:
+      context: ../..
+      dockerfile: deploy/collab-relay-locator-hsm/Dockerfile
+    restart: unless-stopped
+    network_mode: none
+    environment:
+      OPENPENCIL_LOCATOR_HSM_LOG: ${OPENPENCIL_LOCATOR_HSM_LOG:-info}
+    volumes:
+      - type: bind
+        source: ${OPENPENCIL_COLLAB_HSM_CONFIG_HOST_FILE:?set absolute public signer config file}
+        target: /run/openpencil-config/locator-hsm.json
+        read_only: true
+      - type: bind
+        source: ${OPENPENCIL_COLLAB_HSM_PIN_HOST_FILE:?set absolute signer PIN file}
+        target: /run/secrets/locator-hsm-pin
+        read_only: true
+      - type: bind
+        source: ${OPENPENCIL_COLLAB_HSM_TOKEN_HOST_DIR:?set absolute SoftHSM token directory}
+        target: /var/lib/openpencil-softhsm/tokens
+      - type: bind
+        source: ${OPENPENCIL_COLLAB_HSM_SOCKET_HOST_DIR:?set absolute HSM socket directory}
+        target: /run/openpencil-hsm
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 128m
+    tmpfs:
+      - /tmp:size=8m,mode=1700,noexec,nosuid,nodev

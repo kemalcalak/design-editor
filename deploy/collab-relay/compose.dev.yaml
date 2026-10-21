@@ -1,0 +1,6 @@
+services:
+  relay:
+    # Never combine this development override with a public port or an
+    # Internet-facing reverse proxy.
+    command:
+      - --allow-unauthenticated-dev

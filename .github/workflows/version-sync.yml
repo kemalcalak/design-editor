@@ -1,0 +1,143 @@
+name: Version consistency
+
+on:
+  pull_request:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "README*.md"
+      - "crates/**/Cargo.toml"
+      - "crates/**/*.rs"
+      - "crates/op-cli/assets/skill-bundle.json"
+      - "packages/package.json"
+      - "packages/bun.lock"
+      - "packages/op-web-sdk/package.json"
+      - "packages/op-web-sdk/src/index.ts"
+      - "packages/op-web-sdk-react/package.json"
+      - "packages/op-web-sdk-react/src/index.ts"
+      - "packages/op-web-sdk-vue/package.json"
+      - "packages/op-web-sdk-vue/src/index.ts"
+      - "packages/scripts/sync-version.mjs"
+      - "packages/scripts/sync-version.test.mjs"
+      - "scripts/workspace-version.sh"
+      - "scripts/workspace-version.test.sh"
+      - "scripts/android-version.sh"
+      - "scripts/android-version.test.sh"
+      - "scripts/sync-version.sh"
+      - "scripts/sync-version.test.sh"
+      - "packaging/android/README.md"
+      - "packaging/android/app/build.gradle.kts"
+      - "scripts/bundle-macos.sh"
+      - "crates/op-host-desktop/Info.plist"
+      - "scripts/package-windows.nsi"
+      - "scripts/install-op.sh"
+      - "tools/check-version-sync.sh"
+      - "tools/check-version-sync.test.sh"
+      - "tools/check-version-sync-policy.test-cases.sh"
+      - "tools/pinned-release-tools.sh"
+      - "tools/pinned-release-tools.test.sh"
+      - "tools/bundle-macos.sh"
+      - "tools/macos-local-network-plist.sh"
+      - "tools/check-macos-bundle-plist.sh"
+      - "tools/check-macos-bundle-plist.test.sh"
+      - ".githooks/pre-commit"
+      - ".github/workflows/rust-release.yml"
+      - ".github/workflows/version-sync.yml"
+  push:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "README*.md"
+      - "crates/**/Cargo.toml"
+      - "crates/**/*.rs"
+      - "crates/op-cli/assets/skill-bundle.json"
+      - "packages/package.json"
+      - "packages/bun.lock"
+      - "packages/op-web-sdk/package.json"
+      - "packages/op-web-sdk/src/index.ts"
+      - "packages/op-web-sdk-react/package.json"
+      - "packages/op-web-sdk-react/src/index.ts"
+      - "packages/op-web-sdk-vue/package.json"
+      - "packages/op-web-sdk-vue/src/index.ts"
+      - "packages/scripts/sync-version.mjs"
+      - "packages/scripts/sync-version.test.mjs"
+      - "scripts/workspace-version.sh"
+      - "scripts/workspace-version.test.sh"
+      - "scripts/android-version.sh"
+      - "scripts/android-version.test.sh"
+      - "scripts/sync-version.sh"
+      - "scripts/sync-version.test.sh"
+      - "packaging/android/README.md"
+      - "packaging/android/app/build.gradle.kts"
+      - "scripts/bundle-macos.sh"
+      - "crates/op-host-desktop/Info.plist"
+      - "scripts/package-windows.nsi"
+      - "scripts/install-op.sh"
+      - "tools/check-version-sync.sh"
+      - "tools/check-version-sync.test.sh"
+      - "tools/check-version-sync-policy.test-cases.sh"
+      - "tools/pinned-release-tools.sh"
+      - "tools/pinned-release-tools.test.sh"
+      - "tools/bundle-macos.sh"
+      - "tools/macos-local-network-plist.sh"
+      - "tools/check-macos-bundle-plist.sh"
+      - "tools/check-macos-bundle-plist.test.sh"
+      - ".githooks/pre-commit"
+      - ".github/workflows/rust-release.yml"
+      - ".github/workflows/version-sync.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  version-sync:
+    name: Verify synchronized versions
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable 2026-08-15
+        with:
+          toolchain: '1.94'
+
+      - name: Test pinned release tool contracts
+        run: tools/pinned-release-tools.test.sh
+
+      - name: Install digest-pinned Bun
+        run: tools/pinned-release-tools.sh bun "$RUNNER_TEMP/bun-1.3.14"
+
+      - name: Install digest-pinned ripgrep
+        run: tools/pinned-release-tools.sh ripgrep "$RUNNER_TEMP/ripgrep-15.2.0"
+
+      - name: Verify pinned ripgrep
+        run: rg --version
+
+      - name: Install SDK dependencies
+        working-directory: packages
+        run: bun install --frozen-lockfile
+
+      - name: Test canonical version reader
+        run: scripts/workspace-version.test.sh
+
+      - name: Test Android version policy
+        run: scripts/android-version.test.sh
+
+      - name: Test version synchronization entrypoint
+        run: scripts/sync-version.test.sh
+
+      - name: Test repository version guard
+        run: tools/check-version-sync.test.sh
+
+      - name: Check repository version consistency
+        run: tools/check-version-sync.sh
+
+      - name: Test macOS bundle privacy metadata guard
+        run: bash tools/check-macos-bundle-plist.test.sh
+
+      - name: Check macOS bundle privacy metadata
+        run: bash tools/check-macos-bundle-plist.sh

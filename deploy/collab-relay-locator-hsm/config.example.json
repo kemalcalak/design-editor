@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "region": "global",
+  "socket_path": "/run/openpencil-hsm/signer.sock",
+  "expected_client_uid": 65532,
+  "expected_client_gid": 65532,
+  "pkcs11_module_path": "/usr/lib/softhsm/libsofthsm2.so",
+  "token_label": "openpencil-locator-global",
+  "pin_file": "/run/secrets/locator-hsm-pin",
+  "active_kid": "replace-with-active-public-kid",
+  "keys": [
+    {
+      "kid": "replace-with-active-public-kid",
+      "object_id_hex": "7101"
+    },
+    {
+      "kid": "replace-with-next-public-kid",
+      "object_id_hex": "7102"
+    }
+  ],
+  "request_timeout_ms": 2000
+}

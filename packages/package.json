@@ -1,0 +1,42 @@
+{
+  "name": "@zseven-w/openpencil-packages",
+  "version": "0.8.5",
+  "private": true,
+  "description": "Web SDK workspace for OpenPencil (the Rust product lives in ../crates). Hosts the wasm-backed op-web-sdk viewer family plus the JS build glue that feeds the Rust web target.",
+  "author": {
+    "name": "ZSeven-W",
+    "email": "xkayshen@gmail.com"
+  },
+  "workspaces": [
+    "op-vscode",
+    "op-web-sdk",
+    "op-web-sdk-react",
+    "op-web-sdk-vue"
+  ],
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint . && bun run check-extractor-sync && bun run check-sw-imports && bun run check-locales && bun run check-design-evidence",
+    "check-extractor-sync": "bash op-chrome-extension/scripts/check-extractor-sync.sh",
+    "check-sw-imports": "node op-chrome-extension/scripts/check-sw-imports.mjs",
+    "check-locales": "node op-chrome-extension/scripts/check-locales.mjs",
+    "check-design-evidence": "node op-chrome-extension/scripts/check-design-evidence.mjs",
+    "check-extractor-sync:fix": "bash op-chrome-extension/scripts/check-extractor-sync.sh --fix",
+    "build-extension": "bash op-chrome-extension/scripts/build-wasm.sh",
+    "package-extension": "bash op-chrome-extension/scripts/package-extension.sh",
+    "lint:fix": "oxlint --fix . && bun run check-extractor-sync:fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "generate-iconify-catalog": "node scripts/generate-iconify-catalog.mjs",
+    "sync-version": "node scripts/sync-version.mjs",
+    "sync-version:check": "node scripts/sync-version.mjs --check"
+  },
+  "devDependencies": {
+    "@iconify-json/feather": "^1.2.1",
+    "@iconify-json/lucide": "^1.2.93",
+    "@iconify-json/simple-icons": "^1.2.71",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "bun@1.3.14"
+}

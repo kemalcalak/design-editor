@@ -1,0 +1,224 @@
+# syntax=docker/dockerfile:1.26.0@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+#
+# Dockerfile.web-rust — container for the RUST web host (C1).
+#
+# Serves the Rust CanvasKit web editor: the `op-host-web-server` daemon running
+# in `--serve-web` mode, hosting the wasm-bindgen bundle + the vendored
+# CanvasKit artifact out of a `web-bundle/` directory placed next to the binary.
+# This is the sole web container now that the TypeScript/Nitro web app (and its
+# root `Dockerfile`) have been retired.
+#
+# Build (self-contained, builds the wasm bundle in-image — the default):
+#   docker build -f Dockerfile.web-rust -t openpencil-web-rust .
+#
+# Build reusing a prebuilt bundle (the `op-web-bundle` artifact from the
+# `wasm-bundle-build.yml` CI job — skips the in-image wasm rebuild):
+#   # download + unzip the CI artifact into ./web-bundle first, then:
+#   docker build -f Dockerfile.web-rust --build-arg WEB_BUNDLE_SOURCE=copy \
+#     -t openpencil-web-rust .
+#
+# Run (single-user, the historical default):
+#   docker run -p 3100:3100 openpencil-web-rust
+#   # then open http://localhost:3100/
+#
+# Run (multi-account online mode, behind a reverse proxy on one public origin):
+#   docker run -p 3100:3100 \
+#     -e OPENPENCIL_SERVE_MODE=online \
+#     -e OPENPENCIL_HUB_BASE_URL=http://backend:8080 \
+#     -e OPENPENCIL_HUB_INTERNAL_AUTH="$(cat /run/secrets/op-canvas-internal-auth)" \
+#     -e OPENPENCIL_WEB_ALLOWED_ORIGINS=https://hub.example.com \
+#     openpencil-web-rust
+#   Every request is then attributed to a verified op-hub account and served
+#   against that account's own document. See `web_canvas_server/online_policy.rs`
+#   for what online mode refuses, and `hub_auth_client.rs` for the identity call.
+#
+# Why wasm-in-Docker is the default (vs. always COPY-artifact): the production
+# `canvaskit` feature is pure Rust + web_sys + serde — it needs NO emscripten /
+# EMSDK / skia-safe / libc shim (the from-scratch skia path that needed those
+# was retired 2026-06-17; the editor renders through the official CanvasKit
+# skia WASM loaded separately). So the only extra toolchain over a normal cargo
+# build is the wasm32 target + wasm-bindgen-cli + pinned Binaryen (wasm-opt) +
+# node + Python, all installed in the builder stage. That keeps the image
+# self-contained and reproducible. The `WEB_BUNDLE_SOURCE=copy` build arg is the
+# fast path: it skips the wasm rebuild and copies a `./web-bundle` provided as
+# build context (e.g. the Task-1 CI artifact).
+
+# ── Stage 1: builder ──────────────────────────────────────────────────────────
+# rust:1.94 ships cargo + a Debian (bookworm) base. Debian's apt binaryen is
+# too old for rustc 1.94's wasm feature set, so wasm-opt is pinned below to the
+# same modern Binaryen release used by the wasm bundle CI.
+FROM rust:1.94-bookworm@sha256:6ae102bdbf528294bc79ad6e1fae682f6f7c2a6e6621506ba959f9685b308a55 AS builder
+
+# WEB_BUNDLE_SOURCE = build  -> build the wasm bundle in this stage (default).
+#                   = copy   -> skip the build; the runtime stage COPYs a
+#                              prebuilt ./web-bundle from the build context.
+ARG WEB_BUNDLE_SOURCE=build
+ENV BINARYEN_VERSION=version_123 \
+    BINARYEN_SHA256=e959f2170af4c20c552e9de3a0253704d6a9d2766e8fdb88e4d6ac4bae9388fe \
+    SKIA_BINARY_KEY=da8fc6731fc439bc3b6a-x86_64-unknown-linux-gnu-jpegd-jpege-pdf-textlayout \
+    SKIA_BINARY_SHA256=c066658b13e257d418f647447d06eb8a83cb060b037228da838589dd863bf053 \
+    SKIA_BINARIES_URL=file:///opt/openpencil-skia-cache/skia-binaries-{key}.tar.gz
+
+# Port baked into the image's CMD; overridable at build + run time.
+ARG SERVE_PORT=3100
+
+# pinned Binaryen -> wasm-opt -Oz ; nodejs -> the 0-env-import assert in the gate
+# script; python3 -> deterministic runtime i18n catalog export during asset
+# staging. op-host-web-server is the headless raster daemon (links
+# op-host-services only — no winit/glutin/skia-GL under Approach Y), so NONE of
+# the GL/X11 link-time libs the desktop binary needed are required here. It does
+# need OpenSSL for SDK/native-tls compatibility plus freetype/fontconfig (+ CJK
+# fonts) for skia's raster text shaping at export.
+RUN sed -ri \
+      -e 's|^URIs: http://deb.debian.org/debian$|URIs: http://snapshot.debian.org/archive/debian/20260406T000000Z|' \
+      -e 's|^URIs: http://deb.debian.org/debian-security$|URIs: http://snapshot.debian.org/archive/debian-security/20260406T000000Z|' \
+      -e '/^Signed-By:/a Check-Valid-Until: no' \
+      /etc/apt/sources.list.d/debian.sources \
+    && apt-get update && apt-get install -y --no-install-recommends \
+      curl \
+      nodejs \
+      python3 \
+      gzip \
+      ca-certificates \
+      pkg-config \
+      libssl-dev \
+      libfreetype-dev libfontconfig1-dev fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL --output /tmp/binaryen.tar.gz \
+      "https://github.com/WebAssembly/binaryen/releases/download/${BINARYEN_VERSION}/binaryen-${BINARYEN_VERSION}-x86_64-linux.tar.gz" \
+    && printf '%s  %s\n' "$BINARYEN_SHA256" /tmp/binaryen.tar.gz | sha256sum -c - \
+    && tar -xzf /tmp/binaryen.tar.gz -C /opt \
+    && rm -f /tmp/binaryen.tar.gz \
+    && ln -s "/opt/binaryen-${BINARYEN_VERSION}/bin/wasm-opt" /usr/local/bin/wasm-opt \
+    && wasm-opt --version \
+    && mkdir -p /opt/openpencil-skia-cache \
+    && curl -fsSL --output "/opt/openpencil-skia-cache/skia-binaries-${SKIA_BINARY_KEY}.tar.gz" \
+      "https://github.com/rust-skia/skia-binaries/releases/download/0.97.2/skia-binaries-${SKIA_BINARY_KEY}.tar.gz" \
+    && printf '%s  %s\n' "$SKIA_BINARY_SHA256" "/opt/openpencil-skia-cache/skia-binaries-${SKIA_BINARY_KEY}.tar.gz" \
+      | sha256sum -c -
+
+WORKDIR /src
+
+# Copy the whole repo (the `.dockerignore` trims node_modules / out / dist etc.)
+# Submodules (vendor/jian) must already be checked out in the build context —
+# the CI checkout uses `submodules: recursive`.
+COPY . .
+
+# Build the headless web/MCP server binary (the `--serve-web` host) — links
+# op-host-services only, no winit/skia-GL. Always built; this is the runtime
+# binary regardless of how the web bundle is produced.
+RUN cargo build -p op-host-web-server --features pinned-skia-binaries --release --locked
+
+# Build the canvaskit wasm bundle in-image, UNLESS WEB_BUNDLE_SOURCE=copy.
+# Mirrors `tools/check-wasm-bundle.sh` exactly (cargo build --features canvaskit
+# -> wasm-bindgen --target web -> 0-env-import assert -> wasm-opt -Oz -> gzip
+# size gate). The script reads the locked wasm-bindgen-cli version requirement
+# from Cargo.lock so the CLI matches the linked runtime.
+RUN if [ "$WEB_BUNDLE_SOURCE" = "build" ]; then \
+      rustup target add wasm32-unknown-unknown && \
+      version="$(awk '/^name = "wasm-bindgen"$/{found=1; next} found && /^version = /{gsub(/[" ]/,"",$3); print $3; exit}' Cargo.lock)" && \
+      if [ "$version" != 0.2.117 ]; then echo "Cargo.lock wasm-bindgen must match the reviewed 0.2.117 CLI" >&2; exit 2; fi && \
+      tools/pinned-release-tools.sh cargo-cli wasm-bindgen-cli \
+        /opt/wasm-bindgen-cli-0.2.117 >/dev/null && \
+      PATH="/opt/wasm-bindgen-cli-0.2.117/bin:$PATH" \
+        bash tools/check-wasm-bundle.sh ; \
+    else \
+      echo "WEB_BUNDLE_SOURCE=$WEB_BUNDLE_SOURCE — skipping in-image wasm build; runtime stage will COPY ./web-bundle from the build context" ; \
+    fi
+
+# Assemble the deployable web-bundle/ layout the daemon's `web_static.rs`
+# resolves: the wasm-bindgen `pkg/` output (which now also carries the runtime
+# product assets under `assets/`, staged by `tools/stage-web-assets.sh` inside
+# the gate script) PLUS the vendored CanvasKit artifact under a `canvaskit/`
+# subdir. For the `copy` path the bundle already exists in the build context
+# (./web-bundle); just normalize it into /out/web-bundle so the runtime stage
+# has one stable source path either way.
+RUN mkdir -p /out/web-bundle && \
+    if [ "$WEB_BUNDLE_SOURCE" = "build" ]; then \
+      cp -R crates/op-host-web/pkg/. /out/web-bundle/ && \
+      cp -R crates/op-host-web/assets/canvaskit /out/web-bundle/canvaskit ; \
+    else \
+      cp -R web-bundle/. /out/web-bundle/ ; \
+    fi && \
+    echo "assembled web-bundle:" && find /out/web-bundle -maxdepth 2 -type f | sort && \
+    # The browser fetches these from `/pkg/assets/…` at run time (see
+    # `op_editor_core::web_assets`); without them previews fall back to
+    # placeholders, templates refuse to instantiate, the icon panel stays
+    # empty, and locale switches fail. Catch it here rather than in production
+    # — the `copy` path is the likely offender, fed a pre-split artifact.
+    for required in assets/prompt_center_previews assets/scene_template_previews \
+                    assets/scene_templates assets/iconify-catalog-core.json \
+                    assets/i18n; do \
+      if [ ! -e "/out/web-bundle/$required" ]; then \
+        echo "FAIL: web-bundle is missing $required (stale artifact?)" >&2; exit 1; \
+      fi; \
+    done && \
+    expected_i18n_files="$(printf '%s\n' de.json es.json fr.json hi.json id.json ja.json ko.json pt.json ru.json th.json tr.json vi.json zh-TW.json | LC_ALL=C sort)" && \
+    actual_i18n_files="$(find /out/web-bundle/assets/i18n -mindepth 1 -maxdepth 1 -exec basename {} \; | LC_ALL=C sort)" && \
+    i18n_count="$(find /out/web-bundle/assets/i18n -maxdepth 1 -type f -name '*.json' | wc -l | tr -d ' ')" && \
+    if [ "$i18n_count" -ne 13 ] || [ "$actual_i18n_files" != "$expected_i18n_files" ]; then \
+      echo "FAIL: web-bundle runtime i18n catalogs differ from the exact 13-file BCP-47 set" >&2; \
+      printf '%s\n' "$actual_i18n_files" >&2; exit 1; \
+    fi
+
+# ── Stage 2: runtime (slim) ───────────────────────────────────────────────────
+# Only the runtime shared libs the daemon needs (OpenSSL, fontconfig/freetype,
+# and CJK fonts). No Rust toolchain, no node, no build deps.
+FROM debian:bookworm-slim@sha256:abd67ffcfa541b485a3dff59865ab629aa048a6c613e639d36e7456b0b229241 AS runtime
+
+ARG SERVE_PORT=3100
+# `local` keeps the historical single-user daemon; `online` adds `--online`,
+# the multi-account mode. Set at run time, so one image serves both.
+ARG SERVE_MODE=local
+ENV OPENPENCIL_SERVE_PORT=${SERVE_PORT} \
+    OPENPENCIL_SERVE_MODE=${SERVE_MODE}
+
+RUN sed -ri \
+      -e 's|^URIs: http://deb.debian.org/debian$|URIs: http://snapshot.debian.org/archive/debian/20260803T000000Z|' \
+      -e 's|^URIs: http://deb.debian.org/debian-security$|URIs: http://snapshot.debian.org/archive/debian-security/20260803T000000Z|' \
+      -e '/^Signed-By:/a Check-Valid-Until: no' \
+      /etc/apt/sources.list.d/debian.sources \
+    && apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates wget \
+      libssl3 \
+      libfreetype6 libfontconfig1 fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -g 10001 openpencil \
+    && useradd -r -u 10001 -g openpencil -M -d /app openpencil
+
+WORKDIR /app
+
+# Lay out the bundle the way `web_static.rs` expects: the daemon resolves the
+# bundle as `<exe_dir>/web-bundle` (and CanvasKit as `<exe_dir>/web-bundle/
+# canvaskit`). Keep the binary + the bundle dir as siblings under /app so that
+# `<exe_dir> == /app`.
+COPY --from=builder --chown=10001:10001 /src/target/release/op-host-web-server /app/op-host-web-server
+COPY --from=builder --chown=10001:10001 /out/web-bundle /app/web-bundle
+
+# The daemon writes nothing outside /tmp in online mode (settings persistence
+# is refused there), so it runs unprivileged and the image can be mounted
+# read-only by the orchestrator.
+# The online data directory, created with the runtime owner so a fresh named
+# volume inherits that ownership and mode on its first mount. The daemon probes
+# it at start-up and refuses to run if it is not writable.
+RUN install -d -o 10001 -g 10001 -m 0700 /data
+
+USER 10001:10001
+
+EXPOSE ${SERVE_PORT}
+
+# `/` is the one route served without a credential in every mode, so it is the
+# only probe that works for both `local` and `online`.
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=6 \
+    CMD wget --quiet --output-document=/dev/null \
+        "http://127.0.0.1:${OPENPENCIL_SERVE_PORT}/" || exit 1
+
+STOPSIGNAL SIGTERM
+
+# Bind 0.0.0.0 so the daemon is reachable from outside the container (the LAN /
+# Docker opt-in documented in `parse_serve_web_args`). No TLS — front with a
+# reverse proxy for anything beyond a trusted network. The port is taken from
+# the build-time SERVE_PORT (baked into OPENPENCIL_SERVE_PORT); `sh -c` lets the
+# env var expand at container start.
+CMD ["sh", "-c", "if [ \"${OPENPENCIL_SERVE_MODE}\" = online ]; then set -- --online; else set --; fi; \
+exec /app/op-host-web-server --serve-web \"${OPENPENCIL_SERVE_PORT}\" --host 0.0.0.0 \"$@\""]

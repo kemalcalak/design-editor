@@ -1,0 +1,474 @@
+//! LLM clients for the headless smoke runner.
+//!
+//! Two `op_orchestrator::LlmClient` impls carved off `main.rs` to keep both
+//! files under the 800-line cap:
+//!
+//! - [`SmokeLlmClient`] — the default path, `agent`'s `QueryEngine` over an
+//!   `AnthropicProvider` / `OpenAiCompatProvider`.
+//! - [`DirectOpenAiClient`] — `OPENPENCIL_SMOKE_DIRECT=1`, a plain
+//!   non-streaming openai-compat POST that can send the provider-specific
+//!   reasoning controls the QueryEngine cannot.
+
+use std::sync::Arc;
+
+use agent::abort::AbortController;
+use agent::provider::Provider;
+use agent::query::QueryEngine;
+use agent::stream::Event;
+use futures::channel::mpsc;
+use futures::StreamExt;
+use op_chat_agent::backoff::{send_with_backoff, BUILTIN_HTTP_MAX_RETRIES};
+use op_host_services::chat_builtin_http::apply_reasoning_wire_control;
+use op_orchestrator::{CallRequest, LlmChunk, LlmClient, LlmError};
+
+/// Whether this harness call asks the provider to reduce reasoning.
+///
+/// Mirrors the live design turn: `design_turn_thinking_mode` forces thinking
+/// off exactly for models whose profile declares `thinking_disabled`, and
+/// `chat_builtin_http` then hands that flag to
+/// [`apply_reasoning_wire_control`]. The two env overrides are harness-only
+/// arms on the same flag — they never pick a wire shape themselves, so a model
+/// that rejects the `thinking` field cannot be sent one by way of an override.
+///
+/// - `OPENPENCIL_SMOKE_DISABLE_THINKING=1` asks for reduction even when the
+///   profile does not (benchmarking a 方舟-hosted reasoning model clean).
+/// - `OPENPENCIL_SMOKE_KEEP_THINKING=1` wins over both: ab-v9 showed
+///   M3-nothink emits lazy minimal manifests, so the with-think arm has to be
+///   benchmarkable (`strip_reasoning` handles the `<think>` blocks).
+pub(crate) fn reduce_reasoning_for_smoke(model: &str) -> bool {
+    reduce_reasoning(
+        model,
+        std::env::var("OPENPENCIL_SMOKE_DISABLE_THINKING").is_ok(),
+        std::env::var("OPENPENCIL_SMOKE_KEEP_THINKING").is_ok(),
+    )
+}
+
+fn reduce_reasoning(model: &str, force_disable: bool, keep_thinking: bool) -> bool {
+    !keep_thinking
+        && (force_disable || op_orchestrator::resolve_model_profile(model).thinking_disabled)
+}
+
+/// `LlmClient` impl for the smoke runner — `AnthropicProvider` under a
+/// `QueryEngine`, with every call spawned onto the current tokio runtime.
+/// Standalone — `op-host-desktop` no longer ships a desktop
+/// `LlmClient`; its production path goes through
+/// `chat_provider_llm::ChatProviderLlmClient` (wrapping the user's
+/// selected chat CLI). The smoke needs to talk to a raw API endpoint
+/// to validate orchestrator behaviour independently of any CLI, hence
+/// this dedicated client.
+pub(crate) struct SmokeLlmClient {
+    pub(crate) provider: Arc<dyn Provider>,
+    pub(crate) default_model: String,
+}
+
+impl LlmClient for SmokeLlmClient {
+    fn call(
+        &self,
+        req: CallRequest,
+    ) -> futures::stream::BoxStream<'static, Result<LlmChunk, LlmError>> {
+        let (tx, rx) = mpsc::unbounded::<Result<LlmChunk, LlmError>>();
+        if req.abort.is_set() {
+            let _ = tx.unbounded_send(Err(LlmError {
+                message: "aborted".into(),
+                aborted: true,
+            }));
+            return Box::pin(rx);
+        }
+        let provider = self.provider.clone();
+        let model = req
+            .model
+            .clone()
+            .unwrap_or_else(|| self.default_model.clone());
+        let system = req.system_prompt.clone();
+        let user = req.user_prompt.clone();
+
+        eprintln!(
+            "[LLM] call: model={model} system_len={} user_len={}",
+            system.len(),
+            user.len()
+        );
+
+        tokio::spawn(async move {
+            // QueryEngine 默认 4096 输出 token,对推理模型(MiniMax-M3 等)远不够
+            // ——它先吐 <think>(常 ~3.5k token)再给 JSON,4096 会在答案前截断。
+            // 生产路径(chat_provider_llm)用 8192 且关思考;benchmark 走 QueryEngine
+            // 无法关思考,故给更宽预算让其 think 完还能产出 JSON。可用
+            // OPENPENCIL_SMOKE_MAX_TOKENS 覆盖。
+            let max_tokens = std::env::var("OPENPENCIL_SMOKE_MAX_TOKENS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(16384);
+            let engine = QueryEngine::new(provider, model)
+                .with_system(system)
+                .with_max_output_tokens(max_tokens);
+            let abort = AbortController::new();
+            let stream = match engine.run(user, abort).await {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("[LLM] engine.run error: {e}");
+                    let _ = tx.unbounded_send(Err(LlmError {
+                        message: e.to_string(),
+                        aborted: false,
+                    }));
+                    return;
+                }
+            };
+            let mut stream = stream;
+            // Optional raw-response capture for diagnosing weak-model
+            // JSON malformations (set OPENPENCIL_SMOKE_DUMP=1).
+            let dump = std::env::var("OPENPENCIL_SMOKE_DUMP").is_ok();
+            let mut full = String::new();
+            while let Some(item) = stream.next().await {
+                let sent = match item {
+                    Ok(Event::TextDelta { delta }) => {
+                        if dump {
+                            full.push_str(&delta);
+                        }
+                        tx.unbounded_send(Ok(LlmChunk::Text(delta)))
+                    }
+                    Ok(Event::Thinking { delta }) => {
+                        tx.unbounded_send(Ok(LlmChunk::Thinking(delta)))
+                    }
+                    Ok(Event::Result { .. }) => break,
+                    Ok(Event::Error { code, message }) => {
+                        eprintln!("[LLM] event error: {code}: {message}");
+                        tx.unbounded_send(Err(LlmError {
+                            message: format!("{code}: {message}"),
+                            aborted: false,
+                        }))
+                    }
+                    Ok(_) => Ok(()),
+                    Err(e) => {
+                        eprintln!("[LLM] stream error: {e}");
+                        tx.unbounded_send(Err(LlmError {
+                            message: e.to_string(),
+                            aborted: false,
+                        }))
+                    }
+                };
+                if sent.is_err() {
+                    break;
+                }
+            }
+            if dump && !full.is_empty() {
+                eprintln!(
+                    "[DUMP] ===== LLM response ({} chars) =====\n{full}\n[DUMP] ===== end =====",
+                    full.len()
+                );
+            }
+        });
+
+        Box::pin(rx)
+    }
+}
+
+/// Direct openai-compat `LlmClient` for the harness (OPENPENCIL_SMOKE_DIRECT=1).
+///
+/// The default [`SmokeLlmClient`] goes through the vendored `agent` QueryEngine,
+/// which can't send the provider-specific reasoning controls — so a reasoning
+/// model thinks itself out of budget. This client does a plain non-streaming
+/// POST and applies the SAME control production applies (via
+/// [`apply_reasoning_wire_control`], shared with
+/// `chat_builtin_http::run_openai_chat`), so a thinking-reduced arm can be
+/// validated end-to-end headless (no GUI, no submodule edit).
+pub(crate) struct DirectOpenAiClient {
+    pub(crate) base_url: String,
+    pub(crate) api_key: String,
+    pub(crate) default_model: String,
+}
+
+impl LlmClient for DirectOpenAiClient {
+    fn call(
+        &self,
+        req: CallRequest,
+    ) -> futures::stream::BoxStream<'static, Result<LlmChunk, LlmError>> {
+        let (tx, rx) = mpsc::unbounded::<Result<LlmChunk, LlmError>>();
+        if req.abort.is_set() {
+            let _ = tx.unbounded_send(Err(LlmError {
+                message: "aborted".into(),
+                aborted: true,
+            }));
+            return Box::pin(rx);
+        }
+        let url = format!("{}/chat/completions", self.base_url.trim_end_matches('/'));
+        let key = self.api_key.clone();
+        let model = req
+            .model
+            .clone()
+            .unwrap_or_else(|| self.default_model.clone());
+        let system = req.system_prompt.clone();
+        let user = req.user_prompt.clone();
+        let max_tokens: u32 = std::env::var("OPENPENCIL_SMOKE_MAX_TOKENS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(16384);
+        let dump = std::env::var("OPENPENCIL_SMOKE_DUMP").is_ok();
+        eprintln!(
+            "[LLM] direct call: model={model} system_len={} user_len={}",
+            system.len(),
+            user.len()
+        );
+        tokio::spawn(async move {
+            let mut body = serde_json::json!({
+                "model": model,
+                "stream": false,
+                "max_tokens": max_tokens,
+                "messages": [
+                    { "role": "system", "content": system },
+                    { "role": "user", "content": user },
+                ],
+            });
+            // Optional temperature override: read OPENPENCIL_LLM_TEMPERATURE
+            // (f32 in range 0.0..=2.0). If set and valid, add to body; else
+            // omit (preserve provider default).
+            if let Ok(temp_str) = std::env::var("OPENPENCIL_LLM_TEMPERATURE") {
+                if let Ok(temp) = temp_str.parse::<f32>() {
+                    if (0.0..=2.0).contains(&temp) {
+                        body["temperature"] = serde_json::json!(temp);
+                    }
+                }
+            }
+            // Reasoning models burn their whole output budget on thinking and
+            // return truncated (or empty) JSON, so a design turn asks for it
+            // reduced. Both the DECISION and the wire shape are production's:
+            // `resolve_model_profile(...).thinking_disabled` is what
+            // `design_turn_thinking_mode` reads, and
+            // `apply_reasoning_wire_control` is the exact function
+            // `chat_builtin_http` calls — MiniMax / GLM / DeepSeek / K2.5-2.6
+            // get `thinking:{type:"disabled"}`, Kimi K3 gets the top-level
+            // `reasoning_effort:"low"` it demands instead (sending `thinking`
+            // to K3 is a 400).
+            apply_reasoning_wire_control(&mut body, &model, reduce_reasoning_for_smoke(&model));
+            // Connect + read-idle deadlines so a hung provider endpoint surfaces
+            // as an error instead of pinning the headless harness forever
+            // (mirrors the desktop's builtin_http_client). Per-read, not
+            // per-request: a reasoning model can spend longer than any whole-
+            // request budget on one generation without the connection stalling.
+            // The idle budget scales with the profile's timeout multiplier:
+            // an always-thinking model (GLM-5.3, ×3) is silent for longer
+            // than 180 s before its first byte, and a flat 180 s surfaced as
+            // "error sending request" on 43 of one day's subtasks.
+            let read_idle_secs = (180.0
+                * op_orchestrator::resolve_model_profile(&model).timeout_multiplier)
+                .round() as u64;
+            let client = reqwest::Client::builder()
+                .use_rustls_tls()
+                .connect_timeout(std::time::Duration::from_secs(15))
+                .read_timeout(std::time::Duration::from_secs(read_idle_secs))
+                .build()
+                .expect("build smoke rustls client");
+            // The per-read deadline above is no deadline at all for this
+            // non-streaming call: DeepSeek keeps the socket warm with blank
+            // lines while it works, so a stuck generation never goes idle
+            // (web-05 sat 32 min in Planning on 2026-09-08). Cap the whole
+            // call; the orchestrator's retry loop takes it from there.
+            let max_retries = smoke_http_max_retries();
+            let total_budget = total_call_budget(
+                op_orchestrator::resolve_model_profile(&model).timeout_multiplier,
+            ) + retry_ladder_budget(max_retries);
+            // Rate limits are a transport concern, not a model verdict: a
+            // shared-pool provider (OpenRouter's stealth channel, measured
+            // 2026-09-17) answers 429 on most subtasks of a 12-task suite, and
+            // `op_orchestrator::retry::is_non_retryable` deliberately stops the
+            // subtask ladder on `http 429` — so without a ladder HERE the run
+            // reads as a model that produced nothing. `send_with_backoff` is
+            // production's own ladder (same throttle, same adaptive gap, same
+            // Retry-After handling); the harness differs only in that the
+            // provider's error body stays reachable via the opt-in
+            // `OPENPENCIL_DEBUG_HTTP_ERROR_BODY` file.
+            let call = async {
+                let resp = send_with_backoff(
+                    "smoke direct",
+                    &url,
+                    max_retries,
+                    op_chat_agent::backoff::builtin_http_min_gap(),
+                    || client.post(&url).bearer_auth(&key).json(&body),
+                )
+                .await
+                .map_err(|e| e.to_string())?;
+                let status = resp.status();
+                let text = resp.text().await.unwrap_or_default();
+                Ok::<_, String>((status, text))
+            };
+            let (status, text) = match tokio::time::timeout(total_budget, call).await {
+                Ok(Ok(reply)) => reply,
+                Ok(Err(message)) => {
+                    let _ = tx.unbounded_send(Err(LlmError {
+                        message,
+                        aborted: false,
+                    }));
+                    return;
+                }
+                Err(_) => {
+                    let _ = tx.unbounded_send(Err(LlmError {
+                        message: format!(
+                            "POST {url}: no complete reply within {} s (total call budget)",
+                            total_budget.as_secs()
+                        ),
+                        aborted: false,
+                    }));
+                    return;
+                }
+            };
+            if !status.is_success() {
+                let head: String = text.chars().take(300).collect();
+                let _ = tx.unbounded_send(Err(LlmError {
+                    message: format!("http {status}: {head}"),
+                    aborted: false,
+                }));
+                return;
+            }
+            let content = serde_json::from_str::<serde_json::Value>(&text)
+                .ok()
+                .and_then(|v| {
+                    v["choices"][0]["message"]["content"]
+                        .as_str()
+                        .map(str::to_string)
+                })
+                .unwrap_or_default();
+            if dump {
+                eprintln!(
+                    "[DUMP] ===== LLM response ({} chars) =====\n{content}\n[DUMP] ===== end =====",
+                    content.len()
+                );
+            }
+            if content.trim().is_empty() {
+                let _ = tx.unbounded_send(Err(LlmError {
+                    message: "empty content from provider".into(),
+                    aborted: false,
+                }));
+            } else {
+                let _ = tx.unbounded_send(Ok(LlmChunk::Text(content)));
+            }
+        });
+        Box::pin(rx)
+    }
+}
+
+/// Retries the harness's direct provider POST rides out before giving up.
+///
+/// Defaults to production's ladder ([`BUILTIN_HTTP_MAX_RETRIES`]); a batch
+/// against a heavily shared free pool raises it with
+/// `OPENPENCIL_SMOKE_HTTP_MAX_RETRIES`.
+fn smoke_http_max_retries() -> u32 {
+    std::env::var("OPENPENCIL_SMOKE_HTTP_MAX_RETRIES")
+        .ok()
+        .and_then(|raw| raw.trim().parse::<u32>().ok())
+        .unwrap_or(BUILTIN_HTTP_MAX_RETRIES)
+}
+
+/// Head-room the whole-call deadline needs for the retry ladder's own sleeps.
+///
+/// Without it the ladder eats the generation budget: `RETRY_AFTER_MAX` caps one
+/// wait at 30 s, so `max_retries` waits are the worst case the deadline has to
+/// absorb before the last attempt even dials.
+fn retry_ladder_budget(max_retries: u32) -> std::time::Duration {
+    std::time::Duration::from_secs(30 * u64::from(max_retries))
+}
+
+/// Whole-call budget for the non-streaming provider path: 15 min scaled by
+/// the model profile's timeout multiplier, or `OPENPENCIL_SMOKE_LLM_TOTAL_BUDGET_SECS`
+/// when set (the harness tests use it to make the deadline observable).
+fn total_call_budget(timeout_multiplier: f64) -> std::time::Duration {
+    if let Some(secs) = std::env::var("OPENPENCIL_SMOKE_LLM_TOTAL_BUDGET_SECS")
+        .ok()
+        .and_then(|raw| raw.trim().parse::<u64>().ok())
+        .filter(|secs| *secs > 0)
+    {
+        return std::time::Duration::from_secs(secs);
+    }
+    std::time::Duration::from_secs((900.0 * timeout_multiplier).round().max(60.0) as u64)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn retry_ladder_budget_covers_the_worst_case_waits() {
+        // RETRY_AFTER_MAX (30 s) per retry — the deadline must outlast the
+        // ladder, or the last attempt never dials.
+        assert_eq!(retry_ladder_budget(0).as_secs(), 0);
+        assert_eq!(retry_ladder_budget(5).as_secs(), 150);
+    }
+
+    #[test]
+    fn total_call_budget_scales_with_the_profile_multiplier() {
+        std::env::remove_var("OPENPENCIL_SMOKE_LLM_TOTAL_BUDGET_SECS");
+        assert_eq!(total_call_budget(1.0).as_secs(), 900);
+        assert_eq!(total_call_budget(3.0).as_secs(), 2700);
+        assert_eq!(total_call_budget(0.01).as_secs(), 60);
+    }
+
+    /// What the harness would put on the wire for `model`.
+    fn harness_body(model: &str) -> serde_json::Value {
+        let mut body = json!({ "model": model });
+        apply_reasoning_wire_control(&mut body, model, reduce_reasoning(model, false, false));
+        body
+    }
+
+    /// What the live design turn puts on the wire for `model`:
+    /// `design_turn_thinking_mode` forces thinking off exactly when the profile
+    /// declares it, and `chat_builtin_http` hands that flag to the same helper.
+    fn production_body(model: &str) -> serde_json::Value {
+        let mut body = json!({ "model": model });
+        apply_reasoning_wire_control(
+            &mut body,
+            model,
+            op_orchestrator::resolve_model_profile(model).thinking_disabled,
+        );
+        body
+    }
+
+    /// The harness is a benchmark: a control it sends that production does not
+    /// (or a shape production would never send) makes every number it produces
+    /// unattributable. This drifted twice already — a private capability table,
+    /// then a private JSON shape.
+    #[test]
+    fn harness_sends_the_same_reasoning_control_as_a_live_design_turn() {
+        for model in [
+            "kimi-k3",
+            "moonshot/kimi-k3",
+            "kimi-k2.6",
+            "glm-5.2",
+            "ark/glm-5.1",
+            "MiniMax-M3",
+            "deepseek-v4-pro",
+            "gpt-5.6-sol",
+            "claude-opus-5",
+            "qwen3-coder-plus",
+        ] {
+            assert_eq!(
+                harness_body(model),
+                production_body(model),
+                "harness and production disagree for {model}"
+            );
+        }
+    }
+
+    /// Kimi K3 rejects `thinking` outright (`cannot specify both 'thinking'
+    /// and 'reasoning_effort'`), so the harness must not be able to send it —
+    /// not even through `OPENPENCIL_SMOKE_DISABLE_THINKING=1`, which used to
+    /// force that exact field for every model.
+    #[test]
+    fn forcing_reduction_never_sends_kimi_k3_the_field_it_rejects() {
+        let mut body = json!({ "model": "kimi-k3" });
+        apply_reasoning_wire_control(
+            &mut body,
+            "kimi-k3",
+            reduce_reasoning("kimi-k3", true, false),
+        );
+        assert_eq!(body["reasoning_effort"], json!("low"));
+        assert!(body.get("thinking").is_none(), "{body}");
+
+        // …and the opt-out still keeps reasoning fully on.
+        let mut body = json!({ "model": "kimi-k3" });
+        apply_reasoning_wire_control(
+            &mut body,
+            "kimi-k3",
+            reduce_reasoning("kimi-k3", true, true),
+        );
+        assert_eq!(body, json!({ "model": "kimi-k3" }));
+    }
+}

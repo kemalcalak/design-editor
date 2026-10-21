@@ -1,0 +1,10 @@
+services:
+  locator:
+    environment:
+      OPENPENCIL_COLLAB_LOCATOR_HOME_REGION: cn
+      OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND: "100"
+    ports:
+      - target: 8092
+        published: "8092"
+        host_ip: 10.0.0.10
+        protocol: tcp

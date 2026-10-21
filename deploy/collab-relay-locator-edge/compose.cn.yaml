@@ -1,0 +1,71 @@
+name: openpencil-collab-locator-cn-federation
+
+services:
+  locator-cn-federation:
+    image: ${OPENPENCIL_LOCATOR_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${OPENPENCIL_LOCATOR_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
+    user: "101:101"
+    command:
+      - nginx
+      - -g
+      - daemon off;
+    ports:
+      - target: 9543
+        published: ${OPENPENCIL_LOCATOR_CN_FEDERATION_PORT:-9543}
+        host_ip: ${OPENPENCIL_LOCATOR_CN_FEDERATION_BIND_IP:?set a private/firewalled CN IP}
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: bind
+        source: ./cn-federation-nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+    secrets:
+      - source: cn_locator_federation_server_cert
+        target: cn-locator-federation-server-cert.pem
+      - source: cn_locator_federation_server_key
+        target: cn-locator-federation-server-key.pem
+      - source: global_locator_edge_client_ca
+        target: global-locator-edge-client-ca.pem
+      - source: global_locator_edge_client_crl
+        target: global-locator-edge-client-crl.pem
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=8m,uid=101,gid=101,mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 96m
+    cpus: 0.50
+    ulimits:
+      nofile:
+        soft: 2048
+        hard: 2048
+    restart: unless-stopped
+    stop_grace_period: 10s
+    healthcheck:
+      test:
+        - CMD
+        - nginx
+        - -t
+        - -q
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+
+secrets:
+  cn_locator_federation_server_cert:
+    file: ${OPENPENCIL_LOCATOR_CN_FEDERATION_CERT:?set an absolute outer-mTLS server certificate}
+  cn_locator_federation_server_key:
+    file: ${OPENPENCIL_LOCATOR_CN_FEDERATION_KEY:?set an absolute outer-mTLS server key}
+  global_locator_edge_client_ca:
+    file: ${OPENPENCIL_LOCATOR_EDGE_CLIENT_CA:?set the dedicated locator-edge client CA}
+  global_locator_edge_client_crl:
+    file: ${OPENPENCIL_LOCATOR_EDGE_CLIENT_CRL:?set the current locator-edge client CRL}

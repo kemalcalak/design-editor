@@ -1,0 +1,19 @@
+[Unit]
+Description=OpenPencil supervised Global-to-CN locator edge
+Wants=network-online.target
+Requires=docker.service nftables.service
+After=network-online.target nftables.service docker.service
+
+[Service]
+Type=simple
+# Copy the reviewed environment file to this root-owned path and replace the
+# repository path below with the immutable deployed release directory.
+EnvironmentFile=/etc/openpencil/collab-locator-global.env
+WorkingDirectory=/opt/openpencil
+ExecStart=/opt/openpencil/deploy/collab-relay-locator-edge/deploy-global.sh
+Restart=always
+RestartSec=5s
+TimeoutStopSec=45s
+
+[Install]
+WantedBy=multi-user.target

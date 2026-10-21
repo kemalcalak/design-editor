@@ -1,0 +1,14 @@
+# Waiting-queue policy is inherited from compose.yaml and is identical in both
+# regions: one lease per WAITING_TIMEOUT_SECS, renewed while the peer answers
+# pings. Rolling the lease needs no client rollout — already-shipped clients
+# pong as a side effect of reading. See README.md, "Mixed-fleet migration".
+services:
+  relay:
+    environment:
+      OPENPENCIL_COLLAB_RELAY_HOME_REGION: global
+      OPENPENCIL_COLLAB_RELAY_MAX_PENDING_PER_SOURCE: "1024"
+    ports:
+      - target: 8091
+        published: "8091"
+        host_ip: 127.0.0.1
+        protocol: tcp

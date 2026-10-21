@@ -1,0 +1,14 @@
+# Replace the TEST-NET address with the dedicated IPv4 address bound by
+# OPENPENCIL_LOCATOR_EDGE_PUBLIC_BIND_IP before installation.
+#
+# The prerouting priority is before Docker destination NAT, so the rule still
+# matches the original public destination. It only drops over-limit initial
+# SYN packets; every other host firewall policy remains authoritative.
+
+table inet openpencil_locator_edge_rate {
+    chain prerouting {
+        type filter hook prerouting priority mangle; policy accept;
+
+        ip daddr 203.0.113.20 tcp dport 443 tcp flags & (fin | syn | rst | ack) == syn ct state new meter locator_edge_new_v4 { ip saddr timeout 2m limit rate over 60/minute burst 20 packets } counter drop comment "OpenPencil locator edge per-source new connections"
+    }
+}

@@ -1,0 +1,38 @@
+services:
+  locator:
+    build:
+      context: ../..
+      dockerfile: deploy/collab-relay-locator/Dockerfile
+    restart: unless-stopped
+    environment:
+      OPENPENCIL_COLLAB_LOCATOR_LISTEN: 0.0.0.0:8092
+      OPENPENCIL_COLLAB_LOCATOR_TICKET_POLICY_FILE: /run/secrets/collab-policy.json
+      OPENPENCIL_COLLAB_LOCATOR_HSM_SOCKET: /run/openpencil-hsm/signer.sock
+      OPENPENCIL_COLLAB_LOCATOR_HSM_KEY_ID: ${OPENPENCIL_COLLAB_LOCATOR_HSM_KEY_ID:?set public HSM key id}
+      OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_UID: ${OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_UID:?set HSM service uid}
+      OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_GID: ${OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_GID:?set HSM service gid}
+      OPENPENCIL_COLLAB_LOCATOR_POLICY_MAX_AGE_SECONDS: ${OPENPENCIL_COLLAB_LOCATOR_POLICY_MAX_AGE_SECONDS:-60}
+      OPENPENCIL_COLLAB_LOCATOR_HSM_TIMEOUT_MS: ${OPENPENCIL_COLLAB_LOCATOR_HSM_TIMEOUT_MS:-2000}
+      OPENPENCIL_COLLAB_LOCATOR_MAX_AUTH_IN_FLIGHT: ${OPENPENCIL_COLLAB_LOCATOR_MAX_AUTH_IN_FLIGHT:-16}
+      OPENPENCIL_COLLAB_LOCATOR_RATE_PER_SECOND: ${OPENPENCIL_COLLAB_LOCATOR_RATE_PER_SECOND:-100}
+      OPENPENCIL_COLLAB_LOCATOR_LOG_LEVEL: ${OPENPENCIL_COLLAB_LOCATOR_LOG_LEVEL:-info}
+    volumes:
+      - type: bind
+        source: ${OPENPENCIL_COLLAB_POLICY_HOST_FILE:?set absolute signed-policy file}
+        target: /run/secrets/collab-policy.json
+        read_only: true
+      - type: bind
+        source: ${OPENPENCIL_COLLAB_HSM_SOCKET_HOST_DIR:?set absolute HSM socket directory}
+        target: /run/openpencil-hsm
+        read_only: true
+    expose:
+      - "8092"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 256m
+    tmpfs:
+      - /tmp:size=8m,mode=1777,noexec,nosuid,nodev

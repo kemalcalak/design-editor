@@ -1,0 +1,73 @@
+name: openpencil-collab-relay-cn-federation
+
+services:
+  cn-federation:
+    # Keep repository and reviewed digest separate so a mutable tag cannot be
+    # substituted for the deployment identity.
+    image: ${OPENPENCIL_RELAY_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${OPENPENCIL_RELAY_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
+    user: "101:101"
+    command:
+      - nginx
+      - -g
+      - daemon off;
+    ports:
+      - target: 9443
+        published: ${OPENPENCIL_RELAY_CN_FEDERATION_PORT:-9443}
+        host_ip: ${OPENPENCIL_RELAY_CN_FEDERATION_BIND_IP:?set a private/firewalled bind IP}
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: bind
+        source: ./cn-federation-nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+    secrets:
+      - source: cn_federation_server_cert
+        target: cn-federation-server-cert.pem
+      - source: cn_federation_server_key
+        target: cn-federation-server-key.pem
+      - source: global_edge_client_ca
+        target: global-edge-client-ca.pem
+      - source: global_edge_client_crl
+        target: global-edge-client-crl.pem
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,uid=101,gid=101,mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 128m
+    cpus: 0.50
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 4096
+    restart: unless-stopped
+    stop_grace_period: 10s
+    healthcheck:
+      test:
+        - CMD
+        - nginx
+        - -t
+        - -q
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+
+secrets:
+  cn_federation_server_cert:
+    file: ${OPENPENCIL_RELAY_CN_FEDERATION_CERT:?set an absolute outer-mTLS server-certificate path}
+  cn_federation_server_key:
+    file: ${OPENPENCIL_RELAY_CN_FEDERATION_KEY:?set an absolute outer-mTLS server-key path}
+  global_edge_client_ca:
+    file: ${OPENPENCIL_RELAY_EDGE_CLIENT_CA:?set an absolute trusted Global edge client CA path}
+  global_edge_client_crl:
+    file: ${OPENPENCIL_RELAY_EDGE_CLIENT_CRL:?set an absolute current Global edge client CRL path}

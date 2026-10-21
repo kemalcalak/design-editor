@@ -1,0 +1,10 @@
+# Reviewed reference emitted by install-global-new-connection-rate.sh.
+# Replace TEST-NET only for a manual nft --check review; production installation
+# is generated from the helper's strictly validated public IPv4 argument.
+table inet openpencil_relay_edge_rate {
+    chain prerouting {
+        type filter hook prerouting priority mangle; policy accept;
+
+        ip daddr 203.0.113.10 tcp dport 443 tcp flags & (fin | syn | rst | ack) == syn ct state new meter relay_edge_new_v4 { ip saddr timeout 2m limit rate over 60/minute burst 20 packets } counter drop comment "OpenPencil relay edge per-source new connections"
+    }
+}

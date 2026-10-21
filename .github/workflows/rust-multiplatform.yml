@@ -1,0 +1,302 @@
+name: Rust multi-platform build
+
+# Builds the OpenPencil Rust workspace across all supported targets.
+# Runs on every push/PR to verify the matrix stays green; release artifacts
+# are produced by `rust-release.yml` on tag pushes.
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'crates/**'
+      - 'vendor/jian/**'
+      # The casement winit fork + agent runtime link into every desktop
+      # target — a change there must re-run the multiplatform matrix.
+      - 'vendor/casement/**'
+      - 'vendor/agent/**'
+      - 'rust-toolchain.toml'
+      - 'deny.toml'
+      - '.github/workflows/rust-release.yml'
+      - '.github/workflows/rust-multiplatform.yml'
+  pull_request:
+    paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'crates/**'
+      - 'vendor/jian/**'
+      - 'vendor/casement/**'
+      - 'vendor/agent/**'
+      - '.github/workflows/rust-release.yml'
+      - '.github/workflows/rust-multiplatform.yml'
+  workflow_dispatch:
+
+jobs:
+  desktop:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macos-aarch64
+            runner: macos-latest
+            target: aarch64-apple-darwin
+            cross: false
+            # macos-13 (Intel runners) deprecated; build x86_64-apple-darwin via
+            # cross-compile from Apple Silicon. cargo build/check run; no test
+            # since binary arch ≠ host arch.
+          - label: macos-x86_64
+            runner: macos-latest
+            target: x86_64-apple-darwin
+            cross: false
+            check_only: true
+          - label: linux-x86_64
+            runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            cross: false
+          # Native ARM64 hosted runner — no `cross`. The cross 0.2.x aarch64
+          # image (Ubuntu 16.04 / GCC 5 / FreeType 2.6) is too old to link the
+          # modern skia that skia-bindings builds (missing COLR/variable-font
+          # FreeType symbols + libstdc++ ABI mismatch).
+          - label: linux-aarch64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            cross: false
+          - label: windows-x86_64
+            runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            cross: false
+          # Windows ARM64 — cargo cross-compile from x86_64 host (no Win11
+          # ARM hosted runner GA yet); cargo check only since binary arch
+          # ≠ host arch.
+          - label: windows-aarch64
+            runner: windows-latest
+            target: aarch64-pc-windows-msvc
+            cross: false
+            check_only: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.94'
+          targets: ${{ matrix.target }}
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - name: Install Linux GL/EGL prereqs
+        if: runner.os == 'Linux' && matrix.cross == false
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Runner images ship third-party apt sources (Google Chrome, Microsoft) this job never installs
+          # from; a bad index on one of those mirrors ("Hash Sum mismatch", 2026-09-10) fails `apt-get
+          # update` for everything. Drop them so only Ubuntu's own sources gate the prerequisites.
+          # Removed: google-chrome*.list/.sources, microsoft-*.list/.sources (azure-cli, edge,
+          # microsoft-prod). Ubuntu's own sources and the unused PPAs stay untouched.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome*.list /etc/apt/sources.list.d/google-chrome*.sources \
+                     /etc/apt/sources.list.d/microsoft-*.list /etc/apt/sources.list.d/microsoft-*.sources
+          packages=(
+            libxkbcommon-dev libxkbcommon-x11-dev \
+            libwayland-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+            libegl1-mesa-dev libgles2-mesa-dev libgbm-dev mesa-utils \
+            libfreetype-dev libfontconfig1-dev fonts-noto-cjk \
+            pkg-config libssl-dev \
+            xvfb
+          )
+          for attempt in 1 2 3 4; do
+            if sudo env DEBIAN_FRONTEND=noninteractive \
+                timeout 180s apt-get \
+                -o Acquire::ForceIPv4=true \
+                -o Acquire::Retries=3 \
+                -o Acquire::http::Timeout=30 \
+                update && \
+              sudo env DEBIAN_FRONTEND=noninteractive \
+                timeout 300s apt-get \
+                -o Acquire::ForceIPv4=true \
+                -o Acquire::Retries=3 \
+                -o Acquire::http::Timeout=30 \
+                install --yes "${packages[@]}"; then
+              break
+            fi
+            if [[ "$attempt" == 4 ]]; then
+              echo "::error::apt prerequisites failed after $attempt attempts"
+              exit 1
+            fi
+            delay=$((attempt * 20))
+            echo "::warning::apt prerequisites attempt $attempt failed; retrying in ${delay}s"
+            sleep "$delay"
+          done
+      - name: Build (host)
+        if: matrix.cross == false && matrix.check_only != true
+        run: cargo build --workspace --target ${{ matrix.target }} --release
+      - name: Build examples (host, spec §1.2 acceptance #7)
+        if: matrix.cross == false && matrix.check_only != true
+        run: cargo build --examples --workspace --target ${{ matrix.target }} --release
+      - name: Check (cross-arch host, e.g. macos-x86_64 from Apple Silicon)
+        if: matrix.check_only == true
+        run: cargo check --workspace --target ${{ matrix.target }}
+      - name: Test (host, Linux)
+        if: matrix.cross == false && runner.os == 'Linux'
+        # Linux GPU smoke + gpu_chrome_stub_composition now run un-ignored:
+        # Skia loads its GL interface through the provider's
+        # `gl_proc_address` (eglGetProcAddress), closing the old
+        # LINUX_GPU_SKIA_LOADER_TBD gap. On runners without a working
+        # EGL/Mesa stack they soft-skip (INCONCLUSIVE eprintln); set
+        # STEP1A_REQUIRE_GPU=1 on a known-good GPU runner to fail hard.
+        run: cargo test --workspace --target ${{ matrix.target }}
+      - name: Test (host, macOS — parallel)
+        if: matrix.cross == false && matrix.check_only != true && runner.os == 'macOS'
+        run: cargo test --workspace --target ${{ matrix.target }}
+      # Windows: skia's FontMgr (DirectWrite) segfaults when a test spawns a
+      # worker thread doing font layout (SkiaMeasure) concurrently with the
+      # main thread — an intra-test race --test-threads=1 can't serialize.
+      # nextest runs each test in its own process so such a crash is isolated
+      # + named. Keep those test processes serial on Windows: DirectWrite/Skia
+      # still aborts in CI when several native text-layout processes run at
+      # once. Doctests run separately (nextest doesn't execute them). Matches
+      # rust-check.yml.
+      - name: Install cargo-nextest (Windows)
+        if: matrix.cross == false && matrix.check_only != true && runner.os == 'Windows'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+      - name: Test (host, Windows — nextest per-process isolation)
+        if: matrix.cross == false && matrix.check_only != true && runner.os == 'Windows'
+        env:
+          OP_TEST_ESTIMATE_TEXT_MEASURE: "1"
+        run: cargo nextest run --workspace --target ${{ matrix.target }} --test-threads=1
+      - name: Doctests (host, Windows)
+        if: matrix.cross == false && matrix.check_only != true && runner.os == 'Windows'
+        run: cargo test --workspace --target ${{ matrix.target }} --doc
+      # Desktop binary artifact upload is intentionally not wired here yet.
+      # The real desktop binary lives in the `op-host-desktop` crate; a
+      # build + upload step can be added once release packaging is finalized.
+
+  wasm-web:
+    name: wasm32-unknown-unknown / op-host-web (compile guard)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.94'
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm32
+      # Step 1b wasm32-clean compile guard. The default `web` feature is a
+      # stub mount that validates the canvas and does not paint; it stays here
+      # to prove the public surface remains wasm32-clean without the production
+      # bundle deps. The real deployable renderer is built in
+      # wasm-bundle-build.yml with the `canvaskit` feature and the
+      # tools/check-wasm-bundle.sh gate.
+      - run: cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features web
+      # Artifact upload deliberately removed: the stub `.wasm` from this
+      # path would mislead downstream consumers into thinking the shell can
+      # render. The deployable artifact is uploaded by wasm-bundle-build.yml.
+
+  mobile-check:
+    name: ${{ matrix.label }} (cargo check only)
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # iOS targets need Xcode SDK — macOS runner only.
+          - label: ios-aarch64
+            runner: macos-latest
+            target: aarch64-apple-ios
+            features: metal,editor
+          - label: ios-aarch64-sim
+            runner: macos-latest
+            target: aarch64-apple-ios-sim
+            features: metal,editor
+          # Android targets via NDK — Linux runner.
+          - label: android-aarch64
+            runner: ubuntu-latest
+            target: aarch64-linux-android
+            features: gl,editor
+          - label: android-x86_64
+            runner: ubuntu-latest
+            target: x86_64-linux-android
+            features: gl,editor
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.94'
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: mobile-${{ matrix.target }}
+      - name: Configure Android NDK toolchain
+        if: startsWith(matrix.target, 'aarch64-linux-android') || startsWith(matrix.target, 'x86_64-linux-android')
+        shell: bash
+        run: |
+          NDK_HOME="${ANDROID_NDK_LATEST_HOME:-${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-}}}"
+          if [ -z "$NDK_HOME" ]; then
+            SDK_HOME="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+            if [ -z "$SDK_HOME" ]; then
+              echo "Android SDK root is not available on this runner" >&2
+              exit 1
+            fi
+            NDK_HOME="$(find "$SDK_HOME/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          fi
+          TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          echo "ANDROID_NDK_HOME=$NDK_HOME" >> "$GITHUB_ENV"
+          API_LEVEL=21
+          case "${{ matrix.target }}" in
+            aarch64-linux-android)
+              CC="$TOOLCHAIN/aarch64-linux-android${API_LEVEL}-clang"
+              CXX="$TOOLCHAIN/aarch64-linux-android${API_LEVEL}-clang++"
+              echo "CC_aarch64_linux_android=$CC" >> "$GITHUB_ENV"
+              echo "CXX_aarch64_linux_android=$CXX" >> "$GITHUB_ENV"
+              echo "AR_aarch64_linux_android=$TOOLCHAIN/llvm-ar" >> "$GITHUB_ENV"
+              echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$CC" >> "$GITHUB_ENV"
+              # rquickjs-sys (op-mcp `script`, via the editor design pipeline)
+              # runs bindgen at build time on Android; bindgen's libclang
+              # reads neither CC nor CFLAGS, so hand it target + sysroot or it
+              # parses QuickJS headers against the host sysroot.
+              echo "BINDGEN_EXTRA_CLANG_ARGS_aarch64_linux_android=--target=aarch64-linux-android${API_LEVEL} --sysroot=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> "$GITHUB_ENV"
+              ;;
+            x86_64-linux-android)
+              CC="$TOOLCHAIN/x86_64-linux-android${API_LEVEL}-clang"
+              CXX="$TOOLCHAIN/x86_64-linux-android${API_LEVEL}-clang++"
+              echo "CC_x86_64_linux_android=$CC" >> "$GITHUB_ENV"
+              echo "CXX_x86_64_linux_android=$CXX" >> "$GITHUB_ENV"
+              echo "AR_x86_64_linux_android=$TOOLCHAIN/llvm-ar" >> "$GITHUB_ENV"
+              echo "CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=$CC" >> "$GITHUB_ENV"
+              # Same bindgen story as the aarch64 arm above.
+              echo "BINDGEN_EXTRA_CLANG_ARGS_x86_64_linux_android=--target=x86_64-linux-android${API_LEVEL} --sysroot=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot" >> "$GITHUB_ENV"
+              ;;
+          esac
+          test -x "$CC"
+          test -x "$CXX"
+          test -x "$TOOLCHAIN/llvm-ar"
+      # Step 1a spec §11 mobile invariants verify on iOS / Android cargo check:
+      # - op-editor-ui wasm32/ios/android-clean (no platform deps) — the
+      #   widget facade / editor-UI composition crate.
+      # - op-host-native compiles on mobile targets with EaglProvider /
+      #   AndroidEglProvider stubs (`unimplemented!("Step 1f")`); desktop GL
+      #   stack (glutin / winit) is target-gated to desktop in Cargo.toml +
+      #   GlutinProvider source is cfg-gated to desktop OS only. Real SDK
+      #   linking and iOS/Android runtime is Step 1f.
+      # - op-engine-ffi (the player C ABI) + op-engine-jni (Android JNI
+      #   marshalling) compile on every mobile target with the platform GPU
+      #   feature plus the full editor integration exercised by the mobile
+      #   shells (metal,editor on iOS; gl,editor on Android).
+      - run: cargo check -p op-editor-ui --target ${{ matrix.target }}
+      - run: cargo check -p op-host-native --target ${{ matrix.target }}
+      - run: cargo check -p op-engine-ffi --target ${{ matrix.target }} --features ${{ matrix.features }}
+      - run: cargo check -p op-engine-jni --target ${{ matrix.target }} --features ${{ matrix.features }}

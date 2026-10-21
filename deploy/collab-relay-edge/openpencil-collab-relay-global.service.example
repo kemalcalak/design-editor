@@ -1,0 +1,17 @@
+[Unit]
+Description=OpenPencil supervised Global-to-CN relay edge
+Wants=network-online.target
+Requires=docker.service nftables.service
+After=network-online.target nftables.service docker.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/openpencil/collab-relay-global.env
+WorkingDirectory=/opt/openpencil
+ExecStart=/opt/openpencil/deploy/collab-relay-edge/deploy-global.sh
+Restart=always
+RestartSec=5s
+TimeoutStopSec=210s
+
+[Install]
+WantedBy=multi-user.target
