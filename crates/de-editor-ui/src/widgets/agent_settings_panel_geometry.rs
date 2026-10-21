@@ -160,9 +160,41 @@ pub(super) fn hero_body_rect_for_ui(content: Rect, touch: bool) -> Rect {
         SECONDARY_HEADING_HAS_DESC,
         touch,
     );
+    if touch {
+        return Rect {
+            origin: Point2D::new(content.origin.x, content.origin.y + dy),
+            size: Point2D::new(content.size.x, (content.size.y - dy).max(0.0)),
+        };
+    }
+    // Desktop (Settings v2) sets these tabs' bodies on a card: the body
+    // sits inside it, inset by the card padding.
+    let inset_x = crate::widgets::agent_settings_rows::CARD_INSET_X;
     Rect {
-        origin: Point2D::new(content.origin.x, content.origin.y + dy),
-        size: Point2D::new(content.size.x, (content.size.y - dy).max(0.0)),
+        origin: Point2D::new(
+            content.origin.x + inset_x,
+            content.origin.y + dy + SECONDARY_CARD_PAD_Y,
+        ),
+        size: Point2D::new(
+            (content.size.x - 2.0 * inset_x).max(0.0),
+            (content.size.y - dy - SECONDARY_CARD_PAD_Y).max(0.0),
+        ),
+    }
+}
+
+/// Vertical padding inside the desktop card that holds a secondary tab's
+/// body (top and bottom).
+pub(super) const SECONDARY_CARD_PAD_Y: f32 = 12.0;
+
+/// The desktop card behind a secondary tab's body of `body_h`.
+pub(super) fn secondary_card_rect(content: Rect, body_h: f32) -> Rect {
+    let top = content.origin.y
+        + crate::widgets::agent_settings_rows::tab_intro_height_for_ui(
+            SECONDARY_HEADING_HAS_DESC,
+            false,
+        );
+    Rect {
+        origin: Point2D::new(content.origin.x, top),
+        size: Point2D::new(content.size.x, body_h + 2.0 * SECONDARY_CARD_PAD_Y),
     }
 }
 

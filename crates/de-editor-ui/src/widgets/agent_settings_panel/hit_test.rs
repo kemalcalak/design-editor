@@ -8,6 +8,15 @@ use super::*;
 use crate::widgets::agent_settings_panel_geometry::SECONDARY_HEADING_HAS_DESC;
 use de_editor_core::agent_settings::SettingsFocus;
 
+/// The desktop card's top and bottom padding around a secondary body.
+fn secondary_card_pad(touch: bool) -> f32 {
+    if touch {
+        0.0
+    } else {
+        2.0 * crate::widgets::agent_settings_panel_geometry::SECONDARY_CARD_PAD_Y
+    }
+}
+
 fn secondary_hero_height(touch: bool) -> f32 {
     crate::widgets::agent_settings_rows::tab_intro_height_for_ui(SECONDARY_HEADING_HAS_DESC, touch)
 }
@@ -499,9 +508,10 @@ impl AgentSettingsPanel<'_> {
                 } else if self.ui.touch_chrome() {
                     680.0
                 } else {
-                    896.0
+                    672.0
                 };
                 secondary_hero_height(self.ui.touch_chrome())
+                    + secondary_card_pad(self.ui.touch_chrome())
                     + agent_settings_images::responsive_content_height(
                         &self.settings,
                         content_width,
@@ -510,11 +520,13 @@ impl AgentSettingsPanel<'_> {
             }
             AgentSettingsTab::Fonts => {
                 secondary_hero_height(self.ui.touch_chrome())
+                    + secondary_card_pad(self.ui.touch_chrome())
                     + agent_settings_fonts::content_height(self.ui)
             }
             AgentSettingsTab::System => agent_settings_system::content_height(),
             AgentSettingsTab::Account => {
                 secondary_hero_height(self.ui.touch_chrome())
+                    + secondary_card_pad(self.ui.touch_chrome())
                     + agent_settings_account::content_height()
             }
         }

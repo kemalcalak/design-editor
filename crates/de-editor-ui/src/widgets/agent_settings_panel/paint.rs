@@ -171,6 +171,21 @@ fn paint_panel(cx: &mut PaintCx<'_>, panel: Rect, args: PanelPaintArgs<'_>) {
         ),
         AgentSettingsTab::Images => {
             paint_secondary_hero(cx, theme, ui, content_rect, "settings.images");
+            if !ui.touch_chrome() {
+                let body_h = agent_settings_images::responsive_content_height(
+                    settings,
+                    hero_body_rect_for_ui(content_rect, false).size.x,
+                    false,
+                );
+                crate::widgets::agent_settings_rows::paint_row_card(
+                    cx,
+                    theme,
+                    crate::widgets::agent_settings_panel_geometry::secondary_card_rect(
+                        content_rect,
+                        body_h,
+                    ),
+                );
+            }
             agent_settings_images::paint_images_tab(
                 cx,
                 theme,
@@ -182,6 +197,17 @@ fn paint_panel(cx: &mut PaintCx<'_>, panel: Rect, args: PanelPaintArgs<'_>) {
         }
         AgentSettingsTab::Fonts => {
             paint_secondary_hero(cx, theme, ui, content_rect, "settings.fonts");
+            if !ui.touch_chrome() {
+                let body_h = agent_settings_fonts::content_height(ui);
+                crate::widgets::agent_settings_rows::paint_row_card(
+                    cx,
+                    theme,
+                    crate::widgets::agent_settings_panel_geometry::secondary_card_rect(
+                        content_rect,
+                        body_h,
+                    ),
+                );
+            }
             agent_settings_fonts::paint_fonts_tab(
                 cx,
                 theme,
