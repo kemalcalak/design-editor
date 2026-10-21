@@ -22,8 +22,8 @@ if [[ "$#" -ne 0 ]]; then
     exit 2
 fi
 
-prebuilt_root=${OP_AUTH_PREBUILT_ROOT:-crates/op-auth-bridge/prebuilt}
-trusted_public_key=$repo_root/crates/op-auth-bridge/prebuilt/PROVENANCE_PUBKEY
+prebuilt_root=${OP_AUTH_PREBUILT_ROOT:-crates/de-auth-bridge/prebuilt}
+trusted_public_key=$repo_root/crates/de-auth-bridge/prebuilt/PROVENANCE_PUBKEY
 failures=()
 artifact_count=0
 signature_verification_error=

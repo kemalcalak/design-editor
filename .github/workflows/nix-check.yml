@@ -15,10 +15,10 @@ on:
       - "packages/package.json"
       - "packages/bun.lock"
       - "packages/*/package.json"
-      - "crates/op-host-desktop/assets/icon.png"
+      - "crates/de-host-desktop/assets/icon.png"
       - ".github/workflows/nix-check.yml"
   push:
-    branches: ["**"]
+    branches: [main]
     paths:
       - "Cargo.toml"
       - "Cargo.lock"
@@ -32,12 +32,18 @@ on:
       - "packages/package.json"
       - "packages/bun.lock"
       - "packages/*/package.json"
-      - "crates/op-host-desktop/assets/icon.png"
+      - "crates/de-host-desktop/assets/icon.png"
       - ".github/workflows/nix-check.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
+
+# One run per PR (or per branch push); a newer push to a PR cancels the
+# older run. Pushes to main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   flake:
@@ -82,7 +88,7 @@ jobs:
       - name: Build representative source outputs
         run: |
           nix build \
-            .#op-cli \
+            .#de-cli \
             .#web-server \
             .#web-bundle \
             .#web-sdk-wasm \
@@ -135,19 +141,19 @@ jobs:
           MESA_LOADER_DRIVER_OVERRIDE=llvmpipe \
           GALLIUM_DRIVER=llvmpipe \
           timeout 20s xvfb-run -a -s "-screen 0 1280x720x24" nix run .#prebuilt $NIX_VENDOR_OVERRIDES \
-            >/tmp/openpencil-desktop.log 2>&1
+            >/tmp/design-editor.log 2>&1
           status=$?
           set -e
 
           # A GUI process is expected to remain alive until timeout. Any other
           # non-zero status means startup failed before the process was usable.
           if [[ "$status" -ne 0 && "$status" -ne 124 ]]; then
-            cat /tmp/openpencil-desktop.log
+            cat /tmp/design-editor.log
             exit "$status"
           fi
           if grep -Eq 'error while loading|cannot open shared object' \
-            /tmp/openpencil-desktop.log; then
-            cat /tmp/openpencil-desktop.log
+            /tmp/design-editor.log; then
+            cat /tmp/design-editor.log
             exit 1
           fi
 

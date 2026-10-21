@@ -95,7 +95,7 @@ validate_macos_version_behavior() {
     fi
 
     validation_status=0
-    validation_output=$(env -u OPENPENCIL_VERSION OPENPENCIL_VALIDATE_VERSION_ONLY=1 \
+    validation_output=$(env -u DESIGN_EDITOR_VERSION DESIGN_EDITOR_VALIDATE_VERSION_ONLY=1 \
         "$interpreter" "$file" 2>&1) || validation_status=$?
     if [[ "$validation_status" -ne 0 || "$validation_output" != "$current_version" ]]; then
         report_missing "$file" \
@@ -103,8 +103,8 @@ validate_macos_version_behavior() {
     fi
 
     validation_status=0
-    validation_output=$(OPENPENCIL_VERSION="$current_version" \
-        OPENPENCIL_VALIDATE_VERSION_ONLY=1 "$interpreter" "$file" 2>&1) || \
+    validation_output=$(DESIGN_EDITOR_VERSION="$current_version" \
+        DESIGN_EDITOR_VALIDATE_VERSION_ONLY=1 "$interpreter" "$file" 2>&1) || \
         validation_status=$?
     if [[ "$validation_status" -ne 0 || "$validation_output" != "$current_version" ]]; then
         report_missing "$file" \
@@ -115,14 +115,14 @@ validate_macos_version_behavior() {
     if [[ "$current_version" == "$mismatch_version" ]]; then
         mismatch_version=0.0.0
     fi
-    expected_mismatch="bundle-macos: error: OPENPENCIL_VERSION (${mismatch_version}) must match Cargo workspace version (${current_version})"
+    expected_mismatch="bundle-macos: error: DESIGN_EDITOR_VERSION (${mismatch_version}) must match Cargo workspace version (${current_version})"
     validation_status=0
-    validation_output=$(OPENPENCIL_VERSION="$mismatch_version" \
-        OPENPENCIL_VALIDATE_VERSION_ONLY=1 "$interpreter" "$file" 2>&1) || \
+    validation_output=$(DESIGN_EDITOR_VERSION="$mismatch_version" \
+        DESIGN_EDITOR_VALIDATE_VERSION_ONLY=1 "$interpreter" "$file" 2>&1) || \
         validation_status=$?
     if [[ "$validation_status" -ne 1 || "$validation_output" != "$expected_mismatch" ]]; then
         report_missing "$file" \
-            'mismatched OPENPENCIL_VERSION must fail validation with actionable error'
+            'mismatched DESIGN_EDITOR_VERSION must fail validation with actionable error'
     fi
 }
 
@@ -242,7 +242,7 @@ validate_manifest_workspace_version() {
 
     if [[ ! -f "$manifest" ]]; then
         report_missing "$relative_manifest" \
-            'local op-* package manifest returned by cargo metadata does not exist'
+            'local de-* package manifest returned by cargo metadata does not exist'
         return
     fi
 
@@ -292,7 +292,7 @@ validate_manifest_workspace_version() {
     IFS=$'\t' read -r inheritance_count diagnostic_line <<< "$manifest_result"
 
     if [[ "$inheritance_count" != 1 ]]; then
-        printf '%s:%s: error: local op-* package must declare exactly one active version.workspace = true in [package] (found %s)\n' \
+        printf '%s:%s: error: local de-* package must declare exactly one active version.workspace = true in [package] (found %s)\n' \
             "$relative_manifest" "$diagnostic_line" "$inheritance_count" >&2
         errors=1
     fi
@@ -310,7 +310,7 @@ validate_workspace_package_versions() {
         --arg crates_prefix "$repo_root/crates/" \
         '
             .packages[]?
-            | select(.name | startswith("op-"))
+            | select(.name | startswith("de-"))
             | select(.manifest_path | startswith($crates_prefix))
             | [.manifest_path, .name, .version]
             | @tsv
@@ -323,7 +323,7 @@ validate_workspace_package_versions() {
 
     if [[ -z "$package_rows" ]]; then
         report_missing Cargo.toml \
-            'cargo metadata found no local op-* workspace packages under crates; verify workspace members and repository path resolution'
+            'cargo metadata found no local de-* workspace packages under crates; verify workspace members and repository path resolution'
         return
     fi
 
@@ -349,7 +349,7 @@ validate_package_versions() {
 }
 
 validate_chrome_extension_manifest_version() {
-    manifest=packages/op-chrome-extension/manifest.json
+    manifest=packages/de-chrome-extension/manifest.json
     if [[ ! -f "$manifest" ]]; then
         report_missing "$manifest" \
             'Chrome extension manifest is missing; it must exist and carry the Cargo workspace version'
@@ -358,7 +358,7 @@ validate_chrome_extension_manifest_version() {
     manifest_version=$(jq -r '.version' "$manifest")
     if [[ "$manifest_version" != "$current_version" ]]; then
         report_missing "$manifest" \
-            "Chrome extension manifest version ${manifest_version} must match Cargo workspace version ${current_version}; edit the \"version\" field (scripts/sync-version.sh does not rewrite this file — see packages/op-chrome-extension/README.md)"
+            "Chrome extension manifest version ${manifest_version} must match Cargo workspace version ${current_version}; edit the \"version\" field (scripts/sync-version.sh does not rewrite this file — see packages/de-chrome-extension/README.md)"
     fi
 }
 
@@ -452,8 +452,8 @@ validate_release_tag() {
 }
 
 validate_cli_bundle_version_template() {
-    bundle=crates/op-cli/assets/skill-bundle.json
-    sentinel=__OPENPENCIL_VERSION__
+    bundle=crates/de-cli/assets/skill-bundle.json
+    sentinel=__DESIGN_EDITOR_VERSION__
     sentinel_count=$(rg --fixed-strings --count-matches -- "$sentinel" "$bundle" || true)
     if [[ "${sentinel_count:-0}" != 5 ]]; then
         report_missing "$bundle" \
@@ -464,14 +464,14 @@ validate_cli_bundle_version_template() {
 }
 
 validate_rust_product_version_producers() {
-    require_statement crates/op-editor-core/src/state.rs \
+    require_statement crates/de-editor-core/src/state.rs \
         'version:[[:space:]]*env!\("CARGO_PKG_VERSION"\)[.]to_owned\(\),' \
         'empty documents must derive their version from CARGO_PKG_VERSION'
 
-    host_support=crates/op-editor-core/src/host_support.rs
+    host_support=crates/de-editor-core/src/host_support.rs
     read -r host_production_version_count host_test_version_count < <(
         awk \
-            -v needle='src.replace("__OPENPENCIL_VERSION__", env!("CARGO_PKG_VERSION"))' \
+            -v needle='src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"))' \
             '
                 /^#[[:space:]]*\[cfg\(test\)\][[:space:]]*$/ { in_tests = 1 }
                 index($0, needle) {
@@ -490,16 +490,16 @@ validate_rust_product_version_producers() {
             'ordinary test fixtures must use stable 1.0.0 instead of CARGO_PKG_VERSION'
     fi
 
-    cli_source=crates/op-cli/src/app_control_cli.rs
+    cli_source=crates/de-cli/src/app_control_cli.rs
     require_regex "$cli_source" 'env!\("CARGO_PKG_VERSION"\)' \
         'CLI starter documents must derive their version from CARGO_PKG_VERSION'
     reject_matches regex "$cli_source" \
         '"version"[^[:cntrl:]]*"[0-9]+[.][0-9]+[.][0-9]+' \
         'CLI starter documents must not hard-code a product version'
 
-    reject_matches regex crates/op-host-desktop/Cargo.toml \
-        '^[[:space:]]*op-host-native[[:space:]]*=.*path[[:space:]]*=.*version[[:space:]]*=' \
-        'local op-host-native dependency must not duplicate the product version'
+    reject_matches regex crates/de-host-desktop/Cargo.toml \
+        '^[[:space:]]*de-host-native[[:space:]]*=.*path[[:space:]]*=.*version[[:space:]]*=' \
+        'local de-host-native dependency must not duplicate the product version'
 }
 
 validate_workspace_package_versions
@@ -524,7 +524,7 @@ else
         --with-filename \
         --color never \
         --glob '*.rs' \
-        --glob '!**/op-host-desktop/src/update_check.rs' \
+        --glob '!**/de-host-desktop/src/update_check.rs' \
         "$current_version" \
         crates) || rg_status=$?
 
@@ -555,10 +555,10 @@ for macos_script in scripts/bundle-macos.sh tools/bundle-macos.sh; do
             'CFBundleShortVersionString must use APP_VERSION'
         require_statement "$macos_script" \
             'if[[:space:]]+\[\[[[:space:]]*"\$APP_VERSION"[[:space:]]*!=[[:space:]]*"\$CANONICAL_VERSION"[[:space:]]*\]\][[:space:]]*;[[:space:]]*then' \
-            'OPENPENCIL_VERSION overrides must be rejected when they differ from Cargo'
-        validation_pattern='^[[:space:]]*if[[:space:]]+\[\[[[:space:]]*"\$\{OPENPENCIL_VALIDATE_VERSION_ONLY:-\}"[[:space:]]*==[[:space:]]*1[[:space:]]*\]\][[:space:]]*;[[:space:]]*then[[:space:]]*$'
+            'DESIGN_EDITOR_VERSION overrides must be rejected when they differ from Cargo'
+        validation_pattern='^[[:space:]]*if[[:space:]]+\[\[[[:space:]]*"\$\{DESIGN_EDITOR_VALIDATE_VERSION_ONLY:-\}"[[:space:]]*==[[:space:]]*1[[:space:]]*\]\][[:space:]]*;[[:space:]]*then[[:space:]]*$'
         require_regex "$macos_script" "$validation_pattern" \
-            'macOS packaging must support OPENPENCIL_VALIDATE_VERSION_ONLY immediately after version validation'
+            'macOS packaging must support DESIGN_EDITOR_VALIDATE_VERSION_ONLY immediately after version validation'
         validate_macos_version_behavior "$macos_script" bash "$validation_pattern"
     else
         require_statement "$macos_script" \
@@ -569,18 +569,18 @@ for macos_script in scripts/bundle-macos.sh tools/bundle-macos.sh; do
             'CFBundleShortVersionString must use APP_VERSION'
         require_statement "$macos_script" \
             'if[[:space:]]+\[[[:space:]]*"\$APP_VERSION"[[:space:]]*!=[[:space:]]*"\$CANONICAL_VERSION"[[:space:]]*\][[:space:]]*;[[:space:]]*then' \
-            'OPENPENCIL_VERSION overrides must be rejected when they differ from Cargo'
-        validation_pattern='^[[:space:]]*if[[:space:]]+\[[[:space:]]*"\$\{OPENPENCIL_VALIDATE_VERSION_ONLY:-\}"[[:space:]]*=[[:space:]]*1[[:space:]]*\][[:space:]]*;[[:space:]]*then[[:space:]]*$'
+            'DESIGN_EDITOR_VERSION overrides must be rejected when they differ from Cargo'
+        validation_pattern='^[[:space:]]*if[[:space:]]+\[[[:space:]]*"\$\{DESIGN_EDITOR_VALIDATE_VERSION_ONLY:-\}"[[:space:]]*=[[:space:]]*1[[:space:]]*\][[:space:]]*;[[:space:]]*then[[:space:]]*$'
         require_regex "$macos_script" "$validation_pattern" \
-            'macOS packaging must support OPENPENCIL_VALIDATE_VERSION_ONLY immediately after version validation'
+            'macOS packaging must support DESIGN_EDITOR_VALIDATE_VERSION_ONLY immediately after version validation'
         validate_macos_version_behavior "$macos_script" sh "$validation_pattern"
     fi
     require_statement "$macos_script" \
-        'APP_VERSION[[:space:]]*=[[:space:]]*"\$\{OPENPENCIL_VERSION:-\$CANONICAL_VERSION\}"' \
-        'OPENPENCIL_VERSION must default to the Cargo workspace version'
+        'APP_VERSION[[:space:]]*=[[:space:]]*"\$\{DESIGN_EDITOR_VERSION:-\$CANONICAL_VERSION\}"' \
+        'DESIGN_EDITOR_VERSION must default to the Cargo workspace version'
     reject_matches regex "$macos_script" \
-        'OPENPENCIL_VERSION:-[0-9]+[.][0-9]+[.][0-9]+' \
-        'OPENPENCIL_VERSION must fall back to the Cargo workspace version'
+        'DESIGN_EDITOR_VERSION:-[0-9]+[.][0-9]+[.][0-9]+' \
+        'DESIGN_EDITOR_VERSION must fall back to the Cargo workspace version'
     reject_matches regex "$macos_script" \
         'CFBundleShortVersionString[^[:cntrl:]]*[0-9]+[.][0-9]+[.][0-9]+' \
         'CFBundleShortVersionString must use the resolved Cargo workspace version'
@@ -589,11 +589,11 @@ done
 require_regex scripts/package-windows.nsi \
     '^[[:space:]]*;[[:space:]]*makensis[[:space:]]+"/DVERSION=X[.]Y[.]Z"' \
     'NSIS compile example must use /DVERSION=X.Y.Z'
-require_regex scripts/install-op.sh \
-    '^[[:space:]]*#[[:space:]]*OP_VERSION=(X[.]Y[.]Z|<version>)[[:space:]]+[.]/install-op[.]sh' \
-    'install usage example must use OP_VERSION=X.Y.Z or OP_VERSION=<version>'
+require_regex scripts/install-de.sh \
+    '^[[:space:]]*#[[:space:]]*DE_VERSION=(X[.]Y[.]Z|<version>)[[:space:]]+[.]/install-de[.]sh' \
+    'install usage example must use DE_VERSION=X.Y.Z or DE_VERSION=<version>'
 reject_example_semver_tokens scripts/package-windows.nsi
-reject_example_semver_tokens scripts/install-op.sh
+reject_example_semver_tokens scripts/install-de.sh
 
 release_workflow=.github/workflows/rust-release.yml
 require_workflow_job_regex version \
@@ -655,10 +655,10 @@ reject_matches regex "$release_workflow" \
 reject_matches regex "$release_workflow" \
     '^[[:space:]]*version[[:space:]]*=[[:space:]]*"\$\{tag#v\}"' \
     'publish paths must consume the canonical version job output'
-reject_matches fixed "$release_workflow" 'echo "OP_VERSION=${GITHUB_REF_NAME#v}"' \
-    'OP_VERSION must not be written directly from the release tag'
-reject_matches fixed "$release_workflow" 'echo "OP_VERSION=${ver:-0.0.0}"' \
-    'OP_VERSION must not use an independent manifest parser or fallback'
+reject_matches fixed "$release_workflow" 'echo "DE_VERSION=${GITHUB_REF_NAME#v}"' \
+    'DE_VERSION must not be written directly from the release tag'
+reject_matches fixed "$release_workflow" 'echo "DE_VERSION=${ver:-0.0.0}"' \
+    'DE_VERSION must not use an independent manifest parser or fallback'
 
 if [[ "$errors" -ne 0 ]]; then
     exit 1

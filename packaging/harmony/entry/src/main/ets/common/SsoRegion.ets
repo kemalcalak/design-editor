@@ -5,7 +5,7 @@ import { i18n } from '@kit.LocalizationKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 const PREFS = 'sso-region';
 const OVERRIDE_KEY = 'region-override';

@@ -42,13 +42,13 @@ expected:
 ```
 
 ab-v0 / ab-v1 stay frozen. Their results in
-`openpencil-docs/superpowers/notes/2026-04-20-ab-v1-results.md` and
+`design-editor-docs/superpowers/notes/2026-04-20-ab-v1-results.md` and
 `2026-04-28-ab-v2-results.md` are reproducible against the originals.
 
 ## Loading
 
 ```ts
-import { loadCorpus } from '@zseven-w/pen-ai-skills/src/corpus/corpus-loader';
+import { loadCorpus } from '@kemalcalak/pen-ai-skills/src/corpus/corpus-loader';
 const prompts = loadCorpus('packages/pen-ai-skills/corpus/ab-v3');
 ```
 

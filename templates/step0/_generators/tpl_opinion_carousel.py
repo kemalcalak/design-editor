@@ -448,7 +448,7 @@ def build():
     return [cover(), contrast_board(), prose(), method(), quote(), closing()]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；本表逐对实算，非估值）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；本表逐对实算，非估值）：
 #   c-ink        on c-bg     14.77    c-ink-soft  on c-bg      6.92
 #   c-caption    on c-bg      4.71    c-vermilion on c-bg      4.43
 #   c-ink        on c-aged   12.80    c-ink-soft  on c-aged    5.99

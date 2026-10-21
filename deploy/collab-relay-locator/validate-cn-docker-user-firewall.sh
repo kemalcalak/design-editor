@@ -21,8 +21,8 @@ config_example=cn-docker-user-firewall.env.example
 apply_file=apply-cn-docker-user-firewall.sh
 verify_file=verify-cn-docker-user-firewall.sh
 install_file=install-cn-docker-user-firewall.sh
-unit_file=openpencil-collab-cn-firewall.service
-dropin_file=openpencil-collab-cn-firewall-docker.conf
+unit_file=design-editor-collab-cn-firewall.service
+dropin_file=design-editor-collab-cn-firewall-docker.conf
 
 require_literal() {
     cn_fw_pattern=$1
@@ -58,13 +58,13 @@ validate_artifacts() {
         'cn_firewall_load_deployment_binding "$binding_file"' \
         'configured service IPv4 must be assigned exactly once to the ingress interface' \
         'foreign jump or goto reference into the managed chain is forbidden' \
-        'existing unanchored managed-chain name is not an exact prior OpenPencil chain' \
+        'existing unanchored managed-chain name is not an exact prior Design Editor chain' \
         'iptables-restore --wait 10 --noflush --test' \
         'iptables-restore --wait 10 --noflush' \
         '-I DOCKER-USER 1' \
         '-F $chain_name' \
         '--ctdir ORIGINAL' \
-        '--ctorigdst $OPENPENCIL_CN_SERVICE_IPV4/32' \
+        '--ctorigdst $DESIGN_EDITOR_CN_SERVICE_IPV4/32' \
         '--ctorigdstport 8091' \
         '--ctorigdstport 8092' \
         '-j DROP' \
@@ -150,9 +150,9 @@ validate_artifacts() {
     fi
 
     for cn_fw_pattern in \
-        'OPENPENCIL_CN_INGRESS_INTERFACE=eth0' \
-        'OPENPENCIL_CN_GATEWAY_SOURCE_IPV4=198.51.100.10' \
-        'OPENPENCIL_CN_SERVICE_IPV4=203.0.113.10'
+        'DESIGN_EDITOR_CN_INGRESS_INTERFACE=eth0' \
+        'DESIGN_EDITOR_CN_GATEWAY_SOURCE_IPV4=198.51.100.10' \
+        'DESIGN_EDITOR_CN_SERVICE_IPV4=203.0.113.10'
     do
         require_literal "$cn_fw_pattern" "$config_example"
     done
@@ -163,8 +163,8 @@ validate_artifacts() {
         'check-cn-docker-user-firewall-references.awk' \
         'check-cn-docker-user-firewall-deployment-binding.sh' \
         'staged inventory changed during deployment binding' \
-        'existing /etc/openpencil directory is not root-owned and safe' \
-        'systemctl enable openpencil-collab-cn-firewall.service' \
+        'existing /etc/design-editor directory is not root-owned and safe' \
+        'systemctl enable design-editor-collab-cn-firewall.service' \
         'docker_pid_before=$(systemctl show --property MainPID --value docker.service)' \
         'docker_pid_after=$(systemctl show --property MainPID --value docker.service)' \
         'active Docker PID/state changed during direct reconciliation' \
@@ -182,16 +182,16 @@ validate_artifacts() {
     for cn_fw_pattern in \
         'Before=docker.service' \
         'PartOf=docker.service' \
-        'ExecStartPost=/usr/local/libexec/openpencil-collab-cn-firewall/verify-cn-docker-user-firewall.sh --pre-docker' \
+        'ExecStartPost=/usr/local/libexec/design-editor-collab-cn-firewall/verify-cn-docker-user-firewall.sh --pre-docker' \
         'WantedBy=multi-user.target'
     do
         require_literal "$cn_fw_pattern" "$unit_file"
     done
     for cn_fw_pattern in \
-        'Requires=openpencil-collab-cn-firewall.service' \
-        'After=openpencil-collab-cn-firewall.service' \
-        'ExecStartPost=/usr/local/libexec/openpencil-collab-cn-firewall/apply-cn-docker-user-firewall.sh' \
-        'ExecStartPost=/usr/local/libexec/openpencil-collab-cn-firewall/verify-cn-docker-user-firewall.sh'
+        'Requires=design-editor-collab-cn-firewall.service' \
+        'After=design-editor-collab-cn-firewall.service' \
+        'ExecStartPost=/usr/local/libexec/design-editor-collab-cn-firewall/apply-cn-docker-user-firewall.sh' \
+        'ExecStartPost=/usr/local/libexec/design-editor-collab-cn-firewall/verify-cn-docker-user-firewall.sh'
     do
         require_literal "$cn_fw_pattern" "$dropin_file"
     done
@@ -212,27 +212,27 @@ validate_artifacts() {
 
 assert_reference_guard() {
     cn_fw_reference_dir=$1
-    cn_fw_canonical='-A DOCKER-USER -m comment --comment openpencil-cn-ingress-v1 -j OPENPENCIL-CN-INGRESS'
+    cn_fw_canonical='-A DOCKER-USER -m comment --comment design-editor-cn-ingress-v1 -j DESIGN-EDITOR-CN-INGRESS'
     cn_fw_summary=$(printf '%s\n' '*filter' ':DOCKER-USER - [0:0]' \
-        ':OPENPENCIL-CN-INGRESS - [0:0]' "$cn_fw_canonical" 'COMMIT' |
-        awk -v managed_chain=OPENPENCIL-CN-INGRESS \
-            -v anchor_comment=openpencil-cn-ingress-v1 \
+        ':DESIGN-EDITOR-CN-INGRESS - [0:0]' "$cn_fw_canonical" 'COMMIT' |
+        awk -v managed_chain=DESIGN-EDITOR-CN-INGRESS \
+            -v anchor_comment=design-editor-cn-ingress-v1 \
             -f "$cn_fw_reference_dir/$reference_checker")
     [ "$cn_fw_summary" = '1 1 1 0' ] || return 1
 
     for cn_fw_foreign_rule in \
-        '-A FORWARD -j OPENPENCIL-CN-INGRESS' \
-        '-A INPUT -j OPENPENCIL-CN-INGRESS' \
-        '-A FOREIGN-CUSTOM -j OPENPENCIL-CN-INGRESS' \
-        '-A DOCKER-USER -g OPENPENCIL-CN-INGRESS' \
-        '-A FOREIGN-CUSTOM --goto OPENPENCIL-CN-INGRESS'
+        '-A FORWARD -j DESIGN-EDITOR-CN-INGRESS' \
+        '-A INPUT -j DESIGN-EDITOR-CN-INGRESS' \
+        '-A FOREIGN-CUSTOM -j DESIGN-EDITOR-CN-INGRESS' \
+        '-A DOCKER-USER -g DESIGN-EDITOR-CN-INGRESS' \
+        '-A FOREIGN-CUSTOM --goto DESIGN-EDITOR-CN-INGRESS'
     do
         cn_fw_summary=$(printf '%s\n' '*filter' ':DOCKER-USER - [0:0]' \
-            ':OPENPENCIL-CN-INGRESS - [0:0]' \
+            ':DESIGN-EDITOR-CN-INGRESS - [0:0]' \
             ':FOREIGN-CUSTOM - [0:0]' "$cn_fw_canonical" \
             "$cn_fw_foreign_rule" 'COMMIT' |
-            awk -v managed_chain=OPENPENCIL-CN-INGRESS \
-                -v anchor_comment=openpencil-cn-ingress-v1 \
+            awk -v managed_chain=DESIGN-EDITOR-CN-INGRESS \
+                -v anchor_comment=design-editor-cn-ingress-v1 \
                 -f "$cn_fw_reference_dir/$reference_checker")
         [ "$cn_fw_summary" = '2 1 1 1' ] || return 1
     done
@@ -264,36 +264,36 @@ managed_chain_summary() {
     cn_fw_managed_dir=$1
     cn_fw_managed_snapshot=$2
     printf '%s\n' "$cn_fw_managed_snapshot" | awk \
-        -v managed_chain=OPENPENCIL-CN-INGRESS \
+        -v managed_chain=DESIGN-EDITOR-CN-INGRESS \
         -v ingress_interface=eth0 -v gateway_ipv4=198.51.100.10 \
         -v service_ipv4=203.0.113.10 \
-        -v allow_relay_comment=openpencil-cn-allow-8091-v1 \
-        -v drop_relay_comment=openpencil-cn-drop-8091-v1 \
-        -v allow_locator_comment=openpencil-cn-allow-8092-v1 \
-        -v drop_locator_comment=openpencil-cn-drop-8092-v1 \
-        -v fallthrough_comment=openpencil-cn-fallthrough-v1 \
+        -v allow_relay_comment=design-editor-cn-allow-8091-v1 \
+        -v drop_relay_comment=design-editor-cn-drop-8091-v1 \
+        -v allow_locator_comment=design-editor-cn-allow-8092-v1 \
+        -v drop_locator_comment=design-editor-cn-drop-8092-v1 \
+        -v fallthrough_comment=design-editor-cn-fallthrough-v1 \
         -f "$cn_fw_managed_dir/$managed_chain_checker"
 }
 
 assert_managed_chain_guard() {
     cn_fw_managed_dir=$1
     cn_fw_valid_managed=$(printf '%s\n' \
-        '-A OPENPENCIL-CN-INGRESS -i eth0 -s 198.51.100.10/32 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdst 203.0.113.10/32 --ctorigdstport 8091 -m comment --comment openpencil-cn-allow-8091-v1 -j RETURN' \
-        '-A OPENPENCIL-CN-INGRESS -p tcp -m conntrack --ctdir ORIGINAL --ctorigdst 203.0.113.10/32 --ctorigdstport 8091 -m comment --comment openpencil-cn-drop-8091-v1 -j DROP' \
-        '-A OPENPENCIL-CN-INGRESS -i eth0 -s 198.51.100.10/32 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdst 203.0.113.10/32 --ctorigdstport 8092 -m comment --comment openpencil-cn-allow-8092-v1 -j RETURN' \
-        '-A OPENPENCIL-CN-INGRESS -p tcp -m conntrack --ctdir ORIGINAL --ctorigdst 203.0.113.10/32 --ctorigdstport 8092 -m comment --comment openpencil-cn-drop-8092-v1 -j DROP' \
-        '-A OPENPENCIL-CN-INGRESS -m comment --comment openpencil-cn-fallthrough-v1 -j RETURN')
+        '-A DESIGN-EDITOR-CN-INGRESS -i eth0 -s 198.51.100.10/32 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdst 203.0.113.10/32 --ctorigdstport 8091 -m comment --comment design-editor-cn-allow-8091-v1 -j RETURN' \
+        '-A DESIGN-EDITOR-CN-INGRESS -p tcp -m conntrack --ctdir ORIGINAL --ctorigdst 203.0.113.10/32 --ctorigdstport 8091 -m comment --comment design-editor-cn-drop-8091-v1 -j DROP' \
+        '-A DESIGN-EDITOR-CN-INGRESS -i eth0 -s 198.51.100.10/32 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdst 203.0.113.10/32 --ctorigdstport 8092 -m comment --comment design-editor-cn-allow-8092-v1 -j RETURN' \
+        '-A DESIGN-EDITOR-CN-INGRESS -p tcp -m conntrack --ctdir ORIGINAL --ctorigdst 203.0.113.10/32 --ctorigdstport 8092 -m comment --comment design-editor-cn-drop-8092-v1 -j DROP' \
+        '-A DESIGN-EDITOR-CN-INGRESS -m comment --comment design-editor-cn-fallthrough-v1 -j RETURN')
     [ "$(managed_chain_summary "$cn_fw_managed_dir" \
         "$cn_fw_valid_managed")" = '5 5 5 0' ] || return 1
     cn_fw_live_serialized=$(printf '%s\n' \
-        '-A OPENPENCIL-CN-INGRESS -s 198.51.100.10/32 -i eth0 -p tcp -m conntrack --ctorigdst 203.0.113.10 --ctorigdstport 8091 --ctdir ORIGINAL -m comment --comment openpencil-cn-allow-8091-v1 -j RETURN' \
-        '-A OPENPENCIL-CN-INGRESS -p tcp -m conntrack --ctorigdst 203.0.113.10 --ctorigdstport 8091 --ctdir ORIGINAL -m comment --comment openpencil-cn-drop-8091-v1 -j DROP' \
-        '-A OPENPENCIL-CN-INGRESS -s 198.51.100.10/32 -i eth0 -p tcp -m conntrack --ctorigdst 203.0.113.10 --ctorigdstport 8092 --ctdir ORIGINAL -m comment --comment openpencil-cn-allow-8092-v1 -j RETURN' \
-        '-A OPENPENCIL-CN-INGRESS -p tcp -m conntrack --ctorigdst 203.0.113.10 --ctorigdstport 8092 --ctdir ORIGINAL -m comment --comment openpencil-cn-drop-8092-v1 -j DROP' \
-        '-A OPENPENCIL-CN-INGRESS -m comment --comment openpencil-cn-fallthrough-v1 -j RETURN')
+        '-A DESIGN-EDITOR-CN-INGRESS -s 198.51.100.10/32 -i eth0 -p tcp -m conntrack --ctorigdst 203.0.113.10 --ctorigdstport 8091 --ctdir ORIGINAL -m comment --comment design-editor-cn-allow-8091-v1 -j RETURN' \
+        '-A DESIGN-EDITOR-CN-INGRESS -p tcp -m conntrack --ctorigdst 203.0.113.10 --ctorigdstport 8091 --ctdir ORIGINAL -m comment --comment design-editor-cn-drop-8091-v1 -j DROP' \
+        '-A DESIGN-EDITOR-CN-INGRESS -s 198.51.100.10/32 -i eth0 -p tcp -m conntrack --ctorigdst 203.0.113.10 --ctorigdstport 8092 --ctdir ORIGINAL -m comment --comment design-editor-cn-allow-8092-v1 -j RETURN' \
+        '-A DESIGN-EDITOR-CN-INGRESS -p tcp -m conntrack --ctorigdst 203.0.113.10 --ctorigdstport 8092 --ctdir ORIGINAL -m comment --comment design-editor-cn-drop-8092-v1 -j DROP' \
+        '-A DESIGN-EDITOR-CN-INGRESS -m comment --comment design-editor-cn-fallthrough-v1 -j RETURN')
     [ "$(managed_chain_summary "$cn_fw_managed_dir" \
         "$cn_fw_live_serialized")" = '5 5 5 0' ] || return 1
-    cn_fw_unowned='-A OPENPENCIL-CN-INGRESS -j RETURN'
+    cn_fw_unowned='-A DESIGN-EDITOR-CN-INGRESS -j RETURN'
     [ "$(managed_chain_summary "$cn_fw_managed_dir" "$cn_fw_unowned")" != \
         '5 5 5 0' ] || return 1
     cn_fw_weakened=$(printf '%s\n' "$cn_fw_valid_managed" |
@@ -326,7 +326,7 @@ assert_managed_chain_guard "$artifact_dir" || {
 }
 sh "$artifact_dir/$config_checker" "$artifact_dir/$config_example" >/dev/null
 
-mutation_dir=$(mktemp -d "${TMPDIR:-/tmp}/openpencil-cn-firewall.XXXXXX")
+mutation_dir=$(mktemp -d "${TMPDIR:-/tmp}/design-editor-cn-firewall.XXXXXX")
 cleanup() {
     rm -rf "$mutation_dir"
 }
@@ -349,7 +349,7 @@ expect_config_failure() {
     fi
 }
 
-sed 's/OPENPENCIL_CN_INGRESS_INTERFACE=eth0/OPENPENCIL_CN_INGRESS_INTERFACE=eth0;id/' \
+sed 's/DESIGN_EDITOR_CN_INGRESS_INTERFACE=eth0/DESIGN_EDITOR_CN_INGRESS_INTERFACE=eth0;id/' \
     "$artifact_dir/$config_example" >"$mutation_dir/mutated.env"
 expect_config_failure 'shell metacharacter in interface'
 sed 's/198\.51\.100\.10/gateway.internal/' "$artifact_dir/$config_example" \
@@ -366,7 +366,7 @@ sed 's/198\.51\.100\.10/999999999999999999999999999999/' \
 expect_config_failure 'overflowing IPv4 octet'
 {
     sed -n '1,$p' "$artifact_dir/$config_example"
-    printf '%s\n' 'OPENPENCIL_CN_SERVICE_IPV4=203.0.113.11'
+    printf '%s\n' 'DESIGN_EDITOR_CN_SERVICE_IPV4=203.0.113.11'
 } >"$mutation_dir/mutated.env"
 expect_config_failure 'duplicate required key'
 
@@ -403,7 +403,7 @@ actual_locator_overlay="$script_dir/compose.production.cn.yaml"
 actual_relay_overlay="$script_dir/../collab-relay/compose.production.cn.yaml"
 actual_service_ipv4=$(awk '$1 == "host_ip:" { print $2 }' \
     "$actual_locator_overlay")
-sed "s/OPENPENCIL_CN_SERVICE_IPV4=203\.0\.113\.10/OPENPENCIL_CN_SERVICE_IPV4=$actual_service_ipv4/" \
+sed "s/DESIGN_EDITOR_CN_SERVICE_IPV4=203\.0\.113\.10/DESIGN_EDITOR_CN_SERVICE_IPV4=$actual_service_ipv4/" \
     "$artifact_dir/$config_example" >"$mutation_dir/actual.env"
 sh "$artifact_dir/$deployment_checker" --syntax-only \
     "$mutation_dir/actual.env" "$actual_locator_overlay" \

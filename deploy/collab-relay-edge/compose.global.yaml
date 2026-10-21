@@ -1,10 +1,10 @@
-name: openpencil-collab-relay-global-edge
+name: design-editor-collab-relay-global-edge
 
 services:
   global-edge:
     # Keep repository and reviewed digest separate so a mutable tag cannot be
     # substituted for the deployment identity.
-    image: ${OPENPENCIL_RELAY_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${OPENPENCIL_RELAY_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
+    image: ${DESIGN_EDITOR_RELAY_EDGE_IMAGE_REPOSITORY:?set the audited nginx-unprivileged repository}@sha256:${DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}
     user: "101:101"
     command:
       - nginx
@@ -13,7 +13,7 @@ services:
     ports:
       - target: 8443
         published: 443
-        host_ip: ${OPENPENCIL_RELAY_EDGE_PUBLIC_BIND_IP:?set a dedicated overseas public IPv4}
+        host_ip: ${DESIGN_EDITOR_RELAY_EDGE_PUBLIC_BIND_IP:?set a dedicated overseas public IPv4}
         protocol: tcp
         mode: host
     volumes:
@@ -62,8 +62,8 @@ services:
 
 secrets:
   global_edge_client_cert:
-    file: ${OPENPENCIL_RELAY_EDGE_CLIENT_CERT:?set an absolute mTLS client-certificate path}
+    file: ${DESIGN_EDITOR_RELAY_EDGE_CLIENT_CERT:?set an absolute mTLS client-certificate path}
   global_edge_client_key:
-    file: ${OPENPENCIL_RELAY_EDGE_CLIENT_KEY:?set an absolute mTLS client-key path}
+    file: ${DESIGN_EDITOR_RELAY_EDGE_CLIENT_KEY:?set an absolute mTLS client-key path}
   cn_federation_ca:
-    file: ${OPENPENCIL_RELAY_CN_FEDERATION_CA:?set an absolute pinned CN federation CA path}
+    file: ${DESIGN_EDITOR_RELAY_CN_FEDERATION_CA:?set an absolute pinned CN federation CA path}

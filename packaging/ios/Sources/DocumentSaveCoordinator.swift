@@ -12,7 +12,7 @@ import UIKit
 /// destination really received the bytes does `op_editor_commit_save` mark
 /// the document saved.
 ///
-/// The picker opens on `NSDocumentDirectory` — "On My iPhone ▸ OpenPencil",
+/// The picker opens on `NSDocumentDirectory` — "On My iPhone ▸ Design Editor",
 /// the Files-visible home this app already publishes — so accepting the
 /// default keeps the pre-picker behaviour, and the user can now also place
 /// the document in iCloud Drive or any file provider.
@@ -36,7 +36,7 @@ final class DocumentSaveCoordinator: NSObject {
     private var stagedFilename: String?
     private var hasPendingEngineRequest = false
     private var saveErrorPending = false
-    private let writeQueue = DispatchQueue(label: "tech.zseven.openpencil.save", qos: .userInitiated)
+    private let writeQueue = DispatchQueue(label: "com.kemalcalak.designeditor.save", qos: .userInitiated)
 
     init(host: OpEngineHost) {
         self.host = host
@@ -85,7 +85,7 @@ final class DocumentSaveCoordinator: NSObject {
         do {
             staged = try makeStagedFileURL(filename: filename)
         } catch {
-            NSLog("OpenPencil could not prepare a save file: %@", error.localizedDescription)
+            NSLog("Design Editor could not prepare a save file: %@", error.localizedDescription)
             fail()
             return
         }
@@ -165,7 +165,7 @@ final class DocumentSaveCoordinator: NSObject {
                     self.commit(handle: handle, displayName: name.isEmpty ? filename : name)
                 case .failure(let error):
                     NSLog(
-                        "OpenPencil could not rewrite the bound save destination: %@",
+                        "Design Editor could not rewrite the bound save destination: %@",
                         error.localizedDescription
                     )
                     self.presentPicker(for: staged)
@@ -227,7 +227,7 @@ final class DocumentSaveCoordinator: NSObject {
         picker.delegate = self
         picker.allowsMultipleSelection = false
         picker.modalPresentationStyle = .formSheet
-        // "On My iPhone ▸ OpenPencil" is this app's published home, so the
+        // "On My iPhone ▸ Design Editor" is this app's published home, so the
         // default destination stays exactly where saves used to land.
         picker.directoryURL = DocumentStorage.prepare()
         activePicker = picker
@@ -320,7 +320,7 @@ final class DocumentSaveCoordinator: NSObject {
         precondition(Thread.isMainThread)
         let fileManager = FileManager.default
         let root = fileManager.temporaryDirectory
-            .appendingPathComponent("OpenPencilSaves", isDirectory: true)
+            .appendingPathComponent("DesignEditorSaves", isDirectory: true)
         let directory = root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try fileManager.createDirectory(
             at: directory,
@@ -347,7 +347,7 @@ final class DocumentSaveCoordinator: NSObject {
         } catch {
             if (error as NSError).code != NSFileNoSuchFileError {
                 NSLog(
-                    "OpenPencil could not remove save staging directory: %@",
+                    "Design Editor could not remove save staging directory: %@",
                     error.localizedDescription
                 )
             }
@@ -404,7 +404,7 @@ final class DocumentSaveCoordinator: NSObject {
         let alert = UIAlertController(
             title: NSLocalizedString("Unable to Save Document", comment: "Save failure title"),
             message: NSLocalizedString(
-                "OpenPencil could not save this document.",
+                "Design Editor could not save this document.",
                 comment: "Save failure message"
             ),
             preferredStyle: .alert

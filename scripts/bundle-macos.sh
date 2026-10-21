@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Produce a fully-wired macOS .app bundle for openpencil-desktop.
+# Produce a fully-wired macOS .app bundle for design-editor.
 #
 # `cargo-bundle` 0.10.0 ignores most of our `[package.metadata.bundle]`
 # entries (CFBundleName / CFBundleIdentifier / CFBundleIconFile come
@@ -14,7 +14,7 @@
 # This script:
 #   1. Builds the release binary.
 #   2. Runs cargo-bundle.
-#   3. Renames the produced `.app` to `OpenPencil.app`.
+#   3. Renames the produced `.app` to `Design Editor.app`.
 #   4. Backfills the Info.plist with CFBundleName / CFBundleIdentifier
 #      / CFBundleIconFile / CFBundleShortVersionString /
 #      CFBundleDocumentTypes (with UTI binding) /
@@ -29,18 +29,18 @@
 # first).
 #
 # CI / cross-build controls (all optional, default = local behavior):
-#   OPENPENCIL_VERSION     CFBundleShortVersionString (default: root Cargo
+#   DESIGN_EDITOR_VERSION     CFBundleShortVersionString (default: root Cargo
 #                          workspace version; overrides must match it)
-#   OPENPENCIL_TARGET      cargo target triple (e.g. x86_64-apple-darwin);
+#   DESIGN_EDITOR_TARGET      cargo target triple (e.g. x86_64-apple-darwin);
 #                          builds + bundles for that triple and reads the
 #                          bundle from target/<triple>/release/bundle/osx
-#   OPENPENCIL_BINARY      path to a prebuilt release openpencil-desktop;
+#   DESIGN_EDITOR_BINARY      path to a prebuilt release design-editor;
 #                          skips this script's own cargo build and is copied
 #                          over the bundled executable afterwards, so the
 #                          shipped binary is EXACTLY the one CI built; the
 #                          wrapper disables cargo-bundle's implicit build
-#   OPENPENCIL_CLI_BINARY  path to a prebuilt `op` CLI binary; embedded at
-#                          Contents/MacOS/op so the .app/DMG ships the CLI
+#   DESIGN_EDITOR_CLI_BINARY  path to a prebuilt `de` CLI binary; embedded at
+#                          Contents/MacOS/de so the .app/DMG ships the CLI
 #   MACOS_SIGN_IDENTITY    codesign identity. Defaults to "-" (ad-hoc).
 #                          When set to a Developer ID identity, the script
 #                          signs binaries and the app bundle with hardened
@@ -52,17 +52,17 @@ WS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$WS_ROOT/tools/macos-local-network-plist.sh"
 CANONICAL_VERSION="$("$WS_ROOT/scripts/workspace-version.sh")"
-APP_VERSION="${OPENPENCIL_VERSION:-$CANONICAL_VERSION}"
+APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [[ "$APP_VERSION" != "$CANONICAL_VERSION" ]]; then
-  printf 'bundle-macos: error: OPENPENCIL_VERSION (%s) must match Cargo workspace version (%s)\n' \
+  printf 'bundle-macos: error: DESIGN_EDITOR_VERSION (%s) must match Cargo workspace version (%s)\n' \
     "$APP_VERSION" "$CANONICAL_VERSION" >&2
   exit 1
 fi
-if [[ "${OPENPENCIL_VALIDATE_VERSION_ONLY:-}" == 1 ]]; then
+if [[ "${DESIGN_EDITOR_VALIDATE_VERSION_ONLY:-}" == 1 ]]; then
   printf '%s\n' "$APP_VERSION"
   exit 0
 fi
-TARGET_TRIPLE="${OPENPENCIL_TARGET:-}"
+TARGET_TRIPLE="${DESIGN_EDITOR_TARGET:-}"
 
 # Locate only the digest-pinned cargo-bundle staged by the release workflow (or
 # by tools/pinned-release-tools.sh for a local release build). Never bootstrap
@@ -89,27 +89,27 @@ cargo_bundle_is_pinned "$CARGO_BUNDLE" || {
 }
 
 if [ -n "$TARGET_TRIPLE" ]; then
-  BUNDLE_INPUT="$WS_ROOT/target/$TARGET_TRIPLE/release/openpencil-desktop"
+  BUNDLE_INPUT="$WS_ROOT/target/$TARGET_TRIPLE/release/design-editor"
 else
-  BUNDLE_INPUT="$WS_ROOT/target/release/openpencil-desktop"
+  BUNDLE_INPUT="$WS_ROOT/target/release/design-editor"
 fi
-if [ -n "${OPENPENCIL_BINARY:-}" ]; then
-  echo "==> skipping cargo build (prebuilt binary: $OPENPENCIL_BINARY)"
+if [ -n "${DESIGN_EDITOR_BINARY:-}" ]; then
+  echo "==> skipping cargo build (prebuilt binary: $DESIGN_EDITOR_BINARY)"
   mkdir -p "${BUNDLE_INPUT%/*}"
-  if [ ! -e "$BUNDLE_INPUT" ] || [ ! "$OPENPENCIL_BINARY" -ef "$BUNDLE_INPUT" ]; then
-    cp "$OPENPENCIL_BINARY" "$BUNDLE_INPUT"
+  if [ ! -e "$BUNDLE_INPUT" ] || [ ! "$DESIGN_EDITOR_BINARY" -ef "$BUNDLE_INPUT" ]; then
+    cp "$DESIGN_EDITOR_BINARY" "$BUNDLE_INPUT"
     chmod 0755 "$BUNDLE_INPUT"
   fi
 else
   echo "==> building release binary"
-  ( cd "$WS_ROOT" && cargo build --release --locked --bin openpencil-desktop \
+  ( cd "$WS_ROOT" && cargo build --release --locked --bin design-editor \
       ${TARGET_TRIPLE:+--target "$TARGET_TRIPLE"} )
 fi
 
 echo "==> running cargo-bundle"
-( cd "$WS_ROOT/crates/op-host-desktop" \
+( cd "$WS_ROOT/crates/de-host-desktop" \
     && export CARGO_BUNDLE_SKIP_BUILD=1 \
-    && "$CARGO_BUNDLE" bundle --bin openpencil-desktop --release --format osx \
+    && "$CARGO_BUNDLE" bundle --bin design-editor --release --format osx \
          ${TARGET_TRIPLE:+--target "$TARGET_TRIPLE"} )
 
 if [ -n "$TARGET_TRIPLE" ]; then
@@ -117,15 +117,15 @@ if [ -n "$TARGET_TRIPLE" ]; then
 else
   OUT_DIR="$WS_ROOT/target/release/bundle/osx"
 fi
-RAW_APP="$OUT_DIR/op-host-desktop.app"
-APP="$OUT_DIR/OpenPencil.app"
+RAW_APP="$OUT_DIR/de-host-desktop.app"
+APP="$OUT_DIR/Design Editor.app"
 
 if [ ! -d "$RAW_APP" ]; then
   echo "error: cargo-bundle did not produce $RAW_APP" >&2
   exit 1
 fi
 
-echo "==> renaming to OpenPencil.app"
+echo "==> renaming to Design Editor.app"
 rm -rf "$APP"
 mv "$RAW_APP" "$APP"
 
@@ -133,9 +133,9 @@ PLIST="$APP/Contents/Info.plist"
 
 echo "==> patching Info.plist (name, identifier, icon, doc-types, UTI)"
 # Set known fields (Set is idempotent).
-/usr/libexec/PlistBuddy -c "Set :CFBundleName OpenPencil"                         "$PLIST"
-/usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName OpenPencil"                  "$PLIST"
-/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.zseven-w.openpencil"      "$PLIST"
+/usr/libexec/PlistBuddy -c "Set :CFBundleName Design Editor"                         "$PLIST"
+/usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Design Editor"                  "$PLIST"
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.kemalcalak.design-editor"      "$PLIST"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $APP_VERSION"         "$PLIST"
 
 # Clear-and-add the entries cargo-bundle leaves blank / wrong. Suppress
@@ -146,10 +146,10 @@ echo "==> patching Info.plist (name, identifier, icon, doc-types, UTI)"
 /usr/libexec/PlistBuddy -c "Delete :CFBundleDocumentTypes"         "$PLIST" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Add    :CFBundleDocumentTypes array"   "$PLIST"
 
-# Group 0: .op / .pen (canonical OpenPencil documents).
+# Group 0: .op / .pen (canonical Design Editor documents).
 /usr/libexec/PlistBuddy \
   -c "Add :CFBundleDocumentTypes:0 dict" \
-  -c "Add :CFBundleDocumentTypes:0:CFBundleTypeName string 'OpenPencil Document'" \
+  -c "Add :CFBundleDocumentTypes:0:CFBundleTypeName string 'Design Editor Document'" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeRole string Editor" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions array" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions:0 string op" \
@@ -189,23 +189,23 @@ echo "==> patching Info.plist (name, identifier, icon, doc-types, UTI)"
   "$PLIST"
 
 echo "==> patching local-network privacy and Bonjour service metadata"
-openpencil_apply_macos_local_network_plist "$PLIST"
+design_editor_apply_macos_local_network_plist "$PLIST"
 bash "$WS_ROOT/tools/check-macos-bundle-plist.sh" "$PLIST"
 
 echo "==> copying icon into Resources/"
 mkdir -p "$APP/Contents/Resources"
-cp "$WS_ROOT/crates/op-host-desktop/assets/icon.icns" "$APP/Contents/Resources/icon.icns"
+cp "$WS_ROOT/crates/de-host-desktop/assets/icon.icns" "$APP/Contents/Resources/icon.icns"
 
-if [ -n "${OPENPENCIL_BINARY:-}" ]; then
+if [ -n "${DESIGN_EDITOR_BINARY:-}" ]; then
   echo "==> installing prebuilt binary into Contents/MacOS/"
-  cp "$OPENPENCIL_BINARY" "$APP/Contents/MacOS/openpencil-desktop"
-  chmod 755 "$APP/Contents/MacOS/openpencil-desktop"
+  cp "$DESIGN_EDITOR_BINARY" "$APP/Contents/MacOS/design-editor"
+  chmod 755 "$APP/Contents/MacOS/design-editor"
 fi
 
-if [ -n "${OPENPENCIL_CLI_BINARY:-}" ]; then
-  echo "==> embedding op CLI into Contents/MacOS/"
-  cp "$OPENPENCIL_CLI_BINARY" "$APP/Contents/MacOS/op"
-  chmod 755 "$APP/Contents/MacOS/op"
+if [ -n "${DESIGN_EDITOR_CLI_BINARY:-}" ]; then
+  echo "==> embedding de CLI into Contents/MacOS/"
+  cp "$DESIGN_EDITOR_CLI_BINARY" "$APP/Contents/MacOS/de"
+  chmod 755 "$APP/Contents/MacOS/de"
 fi
 
 # Sign the bundle. Ad-hoc ("-") by default — enough for local launch and
@@ -223,10 +223,10 @@ sign_macos_code() {
     codesign --force --timestamp --options runtime --sign "$SIGN_IDENTITY" "$path"
   fi
 }
-if [ -f "$APP/Contents/MacOS/op" ]; then
-  sign_macos_code "$APP/Contents/MacOS/op"
+if [ -f "$APP/Contents/MacOS/de" ]; then
+  sign_macos_code "$APP/Contents/MacOS/de"
 fi
-sign_macos_code "$APP/Contents/MacOS/openpencil-desktop"
+sign_macos_code "$APP/Contents/MacOS/design-editor"
 sign_macos_code "$APP"
 
 echo "==> registering with LaunchServices"

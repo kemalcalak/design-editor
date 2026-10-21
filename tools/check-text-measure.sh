@@ -27,7 +27,7 @@
 
 set -euo pipefail
 
-WIDGETS="crates/op-editor-ui/src/widgets"
+WIDGETS="crates/de-editor-ui/src/widgets"
 
 # Files that legitimately name the blind call:
 #   text_metrics.rs          — defines the sanctioned wrappers, and its own
@@ -40,7 +40,7 @@ WIDGETS="crates/op-editor-ui/src/widgets"
 #                            — the cross-panel guard's negative control
 #                              paints a deliberately blind fitter to prove the
 #                              guard can fail.
-ALLOWED_RE='^crates/op-editor-ui/src/widgets/(text_metrics|text_metrics_paint_tests|text_input_backend|test_family_gap_backend|test_capture_backend)\.rs:'
+ALLOWED_RE='^crates/de-editor-ui/src/widgets/(text_metrics|text_metrics_paint_tests|text_input_backend|test_family_gap_backend|test_capture_backend)\.rs:'
 
 # `.measure_text(` as a method call, excluding the family-aware and
 # weight-aware siblings (`measure_text_family`, `measure_text_family_styled`,

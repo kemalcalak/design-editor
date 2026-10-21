@@ -1,10 +1,10 @@
 {
   "modelVersion": "5.0.0",
-  "name": "openpencil-harmony",
+  "name": "design-editor-harmony",
   "version": "1.0.0",
-  "description": "OpenPencil HarmonyOS player: a thin ArkUI shell around the Rust engine.",
+  "description": "Design Editor HarmonyOS player: a thin ArkUI shell around the Rust engine.",
   "main": "",
-  "author": "ZSeven",
+  "author": "kemalcalak",
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {

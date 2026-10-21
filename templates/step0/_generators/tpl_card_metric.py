@@ -166,7 +166,7 @@ def card():
     return node
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 的门槛是 2.0；数值实测）：
+# 对比度（WCAG 相对亮度比，de-design-lint 的门槛是 2.0；数值实测）：
 #   c-black  on c-white   18.10    c-grey   on c-white    5.74
 #   c-black  on c-paper   16.58    c-grey   on c-paper    5.26
 #   c-signal on c-white    5.07    c-rule   on c-white    1.60

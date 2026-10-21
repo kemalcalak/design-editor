@@ -153,24 +153,24 @@ final class OpEngineHost: NSObject {
                 let documentURL = Bundle.main.url(forResource: docName, withExtension: "op"),
                 let bundledDocument = try? Data(contentsOf: documentURL)
             else {
-                NSLog("OpenPencil Player could not load bundled document %@.op", docName)
+                NSLog("Design Editor Player could not load bundled document %@.op", docName)
                 return
             }
             document = bundledDocument
         }
         guard let storageURL = AuthStorage.prepare() else {
-            NSLog("OpenPencil Player could not prepare its private storage")
+            NSLog("Design Editor Player could not prepare its private storage")
             return
         }
 
         let assetBase = Data((Bundle.main.resourceURL?.path ?? "").utf8)
         let storageRoot = Data(storageURL.path.utf8)
         guard !storageRoot.isEmpty else {
-            NSLog("OpenPencil Player resolved an empty private storage path")
+            NSLog("Design Editor Player resolved an empty private storage path")
             return
         }
         // Saves must land where the user can find them: NSDocumentDirectory
-        // is what Files shows under "On My iPhone -> OpenPencil". An empty
+        // is what Files shows under "On My iPhone -> Design Editor". An empty
         // value leaves the engine on its private fallback rather than
         // failing to start.
         let documentsRoot = Data((DocumentStorage.prepare()?.path ?? "").utf8)
@@ -695,7 +695,7 @@ final class OpEngineHost: NSObject {
     func deferRuntimeError(_ message: String, source: String, kind: Int32) {
         DispatchQueue.main.async {
             let suffix = source.isEmpty ? "" : " [\(source)]"
-            NSLog("OpenPencil runtime diagnostic kind=%d: %@%@", kind, message, suffix)
+            NSLog("Design Editor runtime diagnostic kind=%d: %@%@", kind, message, suffix)
         }
     }
 

@@ -1,0 +1,27 @@
+[package]
+name = "de-collab-smoke"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "Two-process authenticated collaboration smoke test for Design Editor"
+
+[features]
+default = []
+test-issuer = ["dep:de-auth-bridge", "de-auth-bridge/test-issuer"]
+
+[[bin]]
+name = "de-collab-smoke"
+path = "src/main.rs"
+required-features = ["test-issuer"]
+
+[dependencies]
+anyhow = { workspace = true }
+base64 = "0.22"
+jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
+de-auth-bridge = { path = "../de-auth-bridge", optional = true }
+de-collab = { path = "../de-collab" }
+de-collab-transport = { path = "../de-collab-transport" }
+serde_json = { workspace = true }

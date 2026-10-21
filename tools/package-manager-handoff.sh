@@ -14,16 +14,16 @@ sha256_file() {
 required_files() {
     local version=$1
     printf '%s\n' \
-        "OpenPencil-${version}-arm64-mac.dmg" \
-        "OpenPencil-${version}-x64-mac.dmg" \
-        openpencil-desktop-windows-aarch64.zip \
-        openpencil-desktop-windows-x86_64.zip \
-        op-cli-linux-aarch64.tar.gz \
-        op-cli-linux-x86_64.tar.gz \
-        op-cli-macos-aarch64.tar.gz \
-        op-cli-macos-x86_64.tar.gz \
-        op-cli-windows-aarch64.zip \
-        op-cli-windows-x86_64.zip
+        "Design-Editor-${version}-arm64-mac.dmg" \
+        "Design-Editor-${version}-x64-mac.dmg" \
+        design-editor-windows-aarch64.zip \
+        design-editor-windows-x86_64.zip \
+        de-cli-linux-aarch64.tar.gz \
+        de-cli-linux-x86_64.tar.gz \
+        de-cli-macos-aarch64.tar.gz \
+        de-cli-macos-x86_64.tar.gz \
+        de-cli-windows-aarch64.zip \
+        de-cli-windows-x86_64.zip
 }
 
 validate_version() {
@@ -206,16 +206,16 @@ verify_handoff() {
     }
     sha_file() { sha256sum "$directory/$1" | awk '{print $1}'; }
     {
-        printf 'MAC_ARM_DMG_SHA=%s\n' "$(sha_file "OpenPencil-${version}-arm64-mac.dmg")"
-        printf 'MAC_X64_DMG_SHA=%s\n' "$(sha_file "OpenPencil-${version}-x64-mac.dmg")"
-        printf 'CLI_MAC_ARM_SHA=%s\n' "$(sha_file op-cli-macos-aarch64.tar.gz)"
-        printf 'CLI_MAC_X64_SHA=%s\n' "$(sha_file op-cli-macos-x86_64.tar.gz)"
-        printf 'CLI_LINUX_ARM_SHA=%s\n' "$(sha_file op-cli-linux-aarch64.tar.gz)"
-        printf 'CLI_LINUX_X64_SHA=%s\n' "$(sha_file op-cli-linux-x86_64.tar.gz)"
-        printf 'DESKTOP_WIN_ARM_SHA=%s\n' "$(sha_file openpencil-desktop-windows-aarch64.zip)"
-        printf 'DESKTOP_WIN_X64_SHA=%s\n' "$(sha_file openpencil-desktop-windows-x86_64.zip)"
-        printf 'CLI_WIN_ARM_SHA=%s\n' "$(sha_file op-cli-windows-aarch64.zip)"
-        printf 'CLI_WIN_X64_SHA=%s\n' "$(sha_file op-cli-windows-x86_64.zip)"
+        printf 'MAC_ARM_DMG_SHA=%s\n' "$(sha_file "Design-Editor-${version}-arm64-mac.dmg")"
+        printf 'MAC_X64_DMG_SHA=%s\n' "$(sha_file "Design-Editor-${version}-x64-mac.dmg")"
+        printf 'CLI_MAC_ARM_SHA=%s\n' "$(sha_file de-cli-macos-aarch64.tar.gz)"
+        printf 'CLI_MAC_X64_SHA=%s\n' "$(sha_file de-cli-macos-x86_64.tar.gz)"
+        printf 'CLI_LINUX_ARM_SHA=%s\n' "$(sha_file de-cli-linux-aarch64.tar.gz)"
+        printf 'CLI_LINUX_X64_SHA=%s\n' "$(sha_file de-cli-linux-x86_64.tar.gz)"
+        printf 'DESKTOP_WIN_ARM_SHA=%s\n' "$(sha_file design-editor-windows-aarch64.zip)"
+        printf 'DESKTOP_WIN_X64_SHA=%s\n' "$(sha_file design-editor-windows-x86_64.zip)"
+        printf 'CLI_WIN_ARM_SHA=%s\n' "$(sha_file de-cli-windows-aarch64.zip)"
+        printf 'CLI_WIN_X64_SHA=%s\n' "$(sha_file de-cli-windows-x86_64.zip)"
     } >> "$env_output"
 }
 
@@ -235,7 +235,7 @@ self_test() {
     manifest_line=$(cat "$output_file")
     manifest_digest=${manifest_line#manifest_sha256=}
     verify_handoff "$handoff" 1.2.3 "$digest" "$manifest_digest" "$env_file"
-    printf tamper >> "$handoff/op-cli-linux-x86_64.tar.gz"
+    printf tamper >> "$handoff/de-cli-linux-x86_64.tar.gz"
     if verify_handoff "$handoff" 1.2.3 "$digest" "$manifest_digest" "$env_file" >/dev/null 2>&1; then
         printf 'error: tampered handoff was accepted\n' >&2
         exit 1

@@ -100,7 +100,7 @@ VARS = color_vars({
 
 CJK = "Noto Sans SC"
 # 等宽数字。card-system 点名 IBM Plex Mono；仓里烤进桌面端的等宽族是
-# DM Mono（crates/op-host-desktop/assets/fonts/DMMono-*.ttf），字面宽度
+# DM Mono（crates/de-host-desktop/assets/fonts/DMMono-*.ttf），字面宽度
 # 关系一致。用没打包的字族会退回系统字体，数字就不再等宽 —— 那正是这套
 # 主题最不能丢的一条。
 NUM = "DM Mono"
@@ -412,7 +412,7 @@ def build():
             recap()]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；本表逐对实算）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；本表逐对实算）：
 #   c-ink    on c-bg    18.73    c-mid    on c-bg     5.49
 #   c-signal on c-bg     5.13    c-ink    on c-panel  16.73
 #   c-mid    on c-panel  4.90    c-rule   on c-bg      1.53

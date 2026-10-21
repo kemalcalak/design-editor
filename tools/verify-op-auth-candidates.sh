@@ -58,7 +58,7 @@ for revision_name in private_head_sha openpencil_sha; do
     }
 done
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]] || {
-    printf 'error: invalid OpenPencil version\n' >&2
+    printf 'error: invalid Design Editor version\n' >&2
     exit 2
 }
 

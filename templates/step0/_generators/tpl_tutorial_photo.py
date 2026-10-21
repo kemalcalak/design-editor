@@ -370,7 +370,7 @@ def build():
     ]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；数值由脚本实测）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；数值由脚本实测）：
 #   c-ink       on c-bg     17.28   c-muted     on c-bg      5.15
 #   c-ink       on c-card   19.03   c-muted     on c-card    5.67
 #   c-card      on c-ink    19.03   c-inv-muted on c-ink     6.91

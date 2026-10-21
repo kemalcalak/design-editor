@@ -23,5 +23,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "OpenPencilPlayer"
+rootProject.name = "DesignEditorPlayer"
 include(":app")

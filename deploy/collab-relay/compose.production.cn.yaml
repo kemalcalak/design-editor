@@ -5,8 +5,8 @@
 services:
   relay:
     environment:
-      OPENPENCIL_COLLAB_RELAY_HOME_REGION: cn
-      OPENPENCIL_COLLAB_RELAY_MAX_PENDING_PER_SOURCE: "1024"
+      DESIGN_EDITOR_COLLAB_RELAY_HOME_REGION: cn
+      DESIGN_EDITOR_COLLAB_RELAY_MAX_PENDING_PER_SOURCE: "1024"
     ports:
       - target: 8091
         published: "8091"

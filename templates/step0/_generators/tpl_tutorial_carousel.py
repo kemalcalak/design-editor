@@ -500,7 +500,7 @@ def build():
     return [cover(), prep(), step_one(), ladder(), reminder(), closing()]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；本表逐对实算）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；本表逐对实算）：
 #   c-ink  on c-bg      10.82    c-soft on c-bg       5.28
 #   c-rust on c-bg       4.68    c-ink  on c-deep     9.45
 #   c-soft on c-deep     4.61    c-rust on c-deep     4.09

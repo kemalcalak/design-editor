@@ -1,13 +1,13 @@
 
 > [English](./BUILD_WINDOWS.md) · [简体中文](./BUILD_WINDOWS.zh.md) · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · [한국어](./BUILD_WINDOWS.ko.md) · [Français](./BUILD_WINDOWS.fr.md) · [Español](./BUILD_WINDOWS.es.md) · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · [हिन्दी](./BUILD_WINDOWS.hi.md) · [Türkçe](./BUILD_WINDOWS.tr.md) · [ไทย](./BUILD_WINDOWS.th.md) · [Tiếng Việt](./BUILD_WINDOWS.vi.md) · **Bahasa Indonesia**
 
-# Panduan Build OpenPencil untuk Windows
+# Panduan Build Design Editor untuk Windows
 
 ## 1. Mengunduh Sumber Kode
 
-1. Unduh sumber kode dari repositori openpencil
+1. Unduh sumber kode dari repositori design-editor
 
-2. openpencil memiliki 3 submodul dependensi di direktori `vendor` (jian, casement, agent) yang perlu diunduh secara terpisah
+2. design-editor memiliki 3 submodul dependensi di direktori `vendor` (jian, casement, agent) yang perlu diunduh secara terpisah
 
     - 2.1 jian (framework UI): [https://github.com/ZSeven-W/jian](https://github.com/ZSeven-W/jian) → ekstrak ke `vendor\jian`
 
@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 Unduh `rustup-init.exe` dari rustup.rs dan jalankan. Eksekusi perintah berikut di PowerShell. **Sesuai dengan `openpencil 0.8.4`**:
+    - 2.3 Unduh `rustup-init.exe` dari rustup.rs dan jalankan. Eksekusi perintah berikut di PowerShell. **Sesuai dengan `design-editor 0.8.4`**:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Instal wasm-bindgen-cli untuk pembuatan binding WASM-JS. Eksekusi perintah berikut di PowerShell. **Sesuai dengan `openpencil 0.8.4`**:
+    - 2.4 Instal wasm-bindgen-cli untuk pembuatan binding WASM-JS. Eksekusi perintah berikut di PowerShell. **Sesuai dengan `design-editor 0.8.4`**:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -95,64 +95,64 @@
     - 2.1 Kompilasi library WASM. Di root repositori, buka PowerShell dan eksekusi:
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 Generate file binding JS
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 Salin aset rendering CanvasKit dari `crates\op-host-web\assets\canvaskit` ke `web-bundle`:
+    - 2.3 Salin aset rendering CanvasKit dari `crates\de-host-web\assets\canvaskit` ke `web-bundle`:
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 Struktur direktori akhir
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
-        ├── op.exe
+        ├── design-editor.exe
+        ├── de-host-web-server.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web.js
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 4. Konfigurasi Environment Variable untuk Plugin dsh-openpencil
+## 4. Konfigurasi Environment Variable untuk Plugin dsh-design-editor
 
 1. Jalankan PowerShell sebagai administrator dan eksekusi perintah berikut (ganti path dengan root repositori yang sebenarnya):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. Verifikasi
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # Jendela muncul sebentar lalu menutup — layanan berjalan di latar belakang dan mendengarkan port 3100
     ```
 
-2. op-host-web-server.exe  <i>` (tidak diperlukan untuk plugin dsh) `</i>
+2. de-host-web-server.exe  <i>` (tidak diperlukan untuk plugin dsh) `</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
-    # Anda akan melihat dua baris "openpencil-desktop --serve-web:" dan port 3100 di PowerShell
+    ./de-host-web-server.exe --serve-web 3100
+    # Anda akan melihat dua baris "design-editor --serve-web:" dan port 3100 di PowerShell
     ```
 
 ---
@@ -162,7 +162,7 @@
 1. Perhatikan parameter `--features` saat kompilasi WASM
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > Gunakan `--features "web canvaskit"` bukan `--features "web"`.
@@ -173,8 +173,8 @@
 
 2. Server memetakan seluruh direktori `web-bundle` ke rute HTTP `/pkg/`
 
-    > Path disk `web-bundle/op_host_web.js` → URL browser `/pkg/op_host_web.js`
+    > Path disk `web-bundle/de_host_web.js` → URL browser `/pkg/de_host_web.js`
     > 
-    > Jika halaman melaporkan `/pkg/op_host_web.js` tidak ditemukan, file tersebut tidak ada di `web-bundle/`.
+    > Jika halaman melaporkan `/pkg/de_host_web.js` tidak ditemukan, file tersebut tidak ada di `web-bundle/`.
 
-3. Dokumen ini ditulis untuk versi `openpencil 0.8.4`. Versi toolchain rustup `1.94`、wasm-bindgen-cli `0.2.117` dan skia-bindings `0.97.2` selaras dengan versi ini — versi lain mungkin berbeda.
+3. Dokumen ini ditulis untuk versi `design-editor 0.8.4`. Versi toolchain rustup `1.94`、wasm-bindgen-cli `0.2.117` dan skia-bindings `0.97.2` selaras dengan versi ini — versi lain mungkin berbeda.

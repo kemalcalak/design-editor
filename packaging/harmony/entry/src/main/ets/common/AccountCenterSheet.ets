@@ -6,7 +6,7 @@ import { LucideGlyph, LucideIcon } from './LucideIcon';
 import { SsoRegion, SsoRegionStore } from './SsoRegion';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /**
  * Platform-native account center. Profile data comes from the engine snapshot

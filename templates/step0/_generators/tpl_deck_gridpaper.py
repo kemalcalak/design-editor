@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gridpaper-graphite-deck.op — 方格石墨 · 学术答辩档（8 页 1920×1080）
 
-spec: openpencil-docs/openpencil/generation/deck-system-0809.md §2 · D10
+spec: design-editor-docs/design-editor/generation/deck-system-0809.md §2 · D10
 落格：high formality × medium-high density × light
 
 锚点是实验记录本，锚的是**「过程被记录下来因此可被复核」**这件事 ——

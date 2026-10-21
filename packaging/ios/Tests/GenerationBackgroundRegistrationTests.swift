@@ -20,7 +20,7 @@ enum GenerationBackgroundRegistrationTests {
     }
 
     static func uniqueTokensProduceUniqueIdentifiers() {
-        let prefix = "tech.zseven.openpencil.generation."
+        let prefix = "com.kemalcalak.designeditor.generation."
         let first = GenerationBackgroundRegistration(token: "first", identifierPrefix: prefix)
         let second = GenerationBackgroundRegistration(token: "second", identifierPrefix: prefix)
         check(first.identifier != second.identifier, "each generation needs a unique identifier")

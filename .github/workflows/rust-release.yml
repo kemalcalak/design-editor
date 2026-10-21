@@ -9,25 +9,25 @@ name: Rust release artifacts
 # updates are attached to the GitHub release. The protected iOS job uploads to
 # App Store Connect / TestFlight and intentionally produces no GitHub asset.
 # Desktop artifact map:
-#   macOS   OpenPencil-<v>-<arch>-mac.dmg        signed/notarized app bundle
-#           op-cli-<label>.tar.gz                standalone CLI
-#   Windows OpenPencil-<v>-<arch>-win-setup.exe  NSIS installer
-#           openpencil-desktop-<label>.zip       portable desktop
-#           op-cli-<label>.zip                   standalone CLI
-#   Linux   OpenPencil-<v>-<arch>-linux.AppImage portable app image
-#           OpenPencil-<v>-<arch>-linux.deb      Debian package
-#           openpencil-desktop-<label>.tar.gz    raw desktop binary
-#           op-cli-<label>.tar.gz                standalone CLI
+#   macOS   Design-Editor-<v>-<arch>-mac.dmg        signed/notarized app bundle
+#           de-cli-<label>.tar.gz                standalone CLI
+#   Windows Design-Editor-<v>-<arch>-win-setup.exe  NSIS installer
+#           design-editor-<label>.zip       portable desktop
+#           de-cli-<label>.zip                   standalone CLI
+#   Linux   Design-Editor-<v>-<arch>-linux.AppImage portable app image
+#           Design-Editor-<v>-<arch>-linux.deb      Debian package
+#           design-editor-<label>.tar.gz    raw desktop binary
+#           de-cli-<label>.tar.gz                standalone CLI
 #
 # Platform installer and notarization paths still require a real tag run;
 # repository-owned scripts and workflow contract checks cover local validation.
 #
-# The `build` job builds the real `op-host-desktop` crate (winit + skia-safe
+# The `build` job builds the real `de-host-desktop` crate (winit + skia-safe
 # runner that drives the Rust editor); its shipped executable keeps the
-# stable `openpencil-desktop` name. The `op` CLI (crates/op-cli, binary name
-# `op`) is built in the same cargo invocation. The web Docker job builds the
+# stable `design-editor` name. The `de` CLI (crates/de-cli, binary name
+# `de`) is built in the same cargo invocation. The web Docker job builds the
 # Rust web host from `Dockerfile.web-rust`, and the SDK job packages the
-# wasm-backed `packages/op-web-sdk*` workspace tarballs.
+# wasm-backed `packages/de-web-sdk*` workspace tarballs.
 #
 # The standalone `.github/workflows/wasm-bundle-build.yml` still gates the
 # CanvasKit web bundle on push/PR. This release workflow only assembles the
@@ -120,15 +120,15 @@ jobs:
         id: ios_release
         shell: bash
         env:
-          OPENPENCIL_RELEASE_SHA: ${{ needs.version.outputs.source_sha }}
-          OPENPENCIL_RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          DESIGN_EDITOR_RELEASE_SHA: ${{ needs.version.outputs.source_sha }}
+          DESIGN_EDITOR_RELEASE_VERSION: ${{ needs.version.outputs.version }}
         run: scripts/prepare-ios-app-store-runner.sh
 
       - name: Validate protected production release configuration
         shell: bash
         env:
-          RELAY_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-          RELAY_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+          RELAY_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+          RELAY_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
         run: |
           set -euo pipefail
           relay_cn=$RELAY_CN
@@ -150,9 +150,9 @@ jobs:
           IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
           IOS_MARKETING_VERSION: ${{ steps.ios_release.outputs.version }}
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
-          OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/op-auth-bridge/prebuilt
+          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+          OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/de-auth-bridge/prebuilt
           XCODEGEN_BIN: ${{ steps.ios_release.outputs.xcodegen_binary }}
         run: scripts/publish-ios-testflight.sh
 
@@ -164,8 +164,8 @@ jobs:
       contents: read
     uses: ./.github/workflows/android-release.yml
     secrets:
-      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
 
   build:
     name: ${{ matrix.label }}
@@ -176,7 +176,7 @@ jobs:
       contents: read
     if: (github.event_name == 'workflow_dispatch' && inputs.ios_app_store_only == false) || (startsWith(github.ref, 'refs/tags/v') && github.event_name != 'workflow_dispatch')
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
       HAS_APPLE_CERTIFICATE: ${{ secrets.CSC_LINK != '' && secrets.CSC_KEY_PASSWORD != '' && secrets.APPLE_ID != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && 'true' || 'false' }}
       HAS_WINDOWS_CERTIFICATE: ${{ secrets.WIN_CSC_LINK != '' && secrets.WIN_CSC_KEY_PASSWORD != '' && secrets.WIN_CSC_PFX_SHA256 != '' && secrets.WIN_CSC_CERTIFICATE_SHA1 != '' && 'true' || 'false' }}
     strategy:
@@ -240,8 +240,8 @@ jobs:
         run: |
           set -euo pipefail
           snapshot_url=https://snapshot.ubuntu.com/ubuntu/20260801T000000Z/
-          sources_file=$RUNNER_TEMP/openpencil-release.sources
-          apt_lists=$RUNNER_TEMP/openpencil-apt-lists
+          sources_file=$RUNNER_TEMP/design-editor-release.sources
+          apt_lists=$RUNNER_TEMP/design-editor-apt-lists
           cat > "$sources_file" <<EOF
           Types: deb
           URIs: $snapshot_url
@@ -297,7 +297,7 @@ jobs:
         shell: bash
         run: >-
           tools/pinned-release-tools.sh skia desktop '${{ matrix.target }}'
-          "$RUNNER_TEMP/openpencil-skia-${{ matrix.target }}"
+          "$RUNNER_TEMP/design-editor-skia-${{ matrix.target }}"
       - name: Validate pinned VC++ Runtime covers Windows build toolset
         if: runner.os == 'Windows'
         shell: pwsh
@@ -305,9 +305,9 @@ jobs:
       - name: Build (host)
         shell: bash
         env:
-          OPENPENCIL_RELEASE_TARGET: ${{ matrix.target }}
-          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+          DESIGN_EDITOR_RELEASE_TARGET: ${{ matrix.target }}
+          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
         run: scripts/build-rust-release-host.sh
       - name: Package archives (unix)
         if: matrix.archive == 'tar.gz'
@@ -315,19 +315,19 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           if [ "$RUNNER_OS" != "macOS" ]; then
-            tar czf ../../../openpencil-desktop-${{ matrix.label }}.tar.gz openpencil-desktop
+            tar czf ../../../design-editor-${{ matrix.label }}.tar.gz design-editor
           fi
-          tar czf ../../../op-cli-${{ matrix.label }}.tar.gz op
+          tar czf ../../../de-cli-${{ matrix.label }}.tar.gz de
       - name: Package archives (windows)
         if: matrix.archive == 'zip'
         shell: pwsh
         run: |
           Compress-Archive `
-            -Path target\${{ matrix.target }}\release\openpencil-desktop.exe `
-            -DestinationPath openpencil-desktop-${{ matrix.label }}.zip
+            -Path target\${{ matrix.target }}\release\design-editor.exe `
+            -DestinationPath design-editor-${{ matrix.label }}.zip
           Compress-Archive `
-            -Path target\${{ matrix.target }}\release\op.exe `
-            -DestinationPath op-cli-${{ matrix.label }}.zip
+            -Path target\${{ matrix.target }}\release\de.exe `
+            -DestinationPath de-cli-${{ matrix.label }}.zip
       - name: Install digest-pinned cargo-bundle
         if: runner.os == 'macOS'
         shell: bash
@@ -356,13 +356,13 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         env:
-          OPENPENCIL_VERSION: ${{ env.OP_VERSION }}
-          OPENPENCIL_TARGET: ${{ matrix.target }}
+          DESIGN_EDITOR_VERSION: ${{ env.DE_VERSION }}
+          DESIGN_EDITOR_TARGET: ${{ matrix.target }}
           # Hand the already-built binaries to the bundle script: it skips its
           # own cargo build and overwrites the bundled executable with exactly
-          # what this workflow built (and embeds the op CLI in Contents/MacOS).
-          OPENPENCIL_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/openpencil-desktop
-          OPENPENCIL_CLI_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/op
+          # what this workflow built (and embeds the de CLI in Contents/MacOS).
+          DESIGN_EDITOR_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/design-editor
+          DESIGN_EDITOR_CLI_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/de
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           if [ "$HAS_APPLE_CERTIFICATE" = "true" ]; then
@@ -371,7 +371,7 @@ jobs:
           fi
           bash scripts/bundle-macos.sh
           bash tools/check-macos-bundle-plist.sh \
-            "target/${{ matrix.target }}/release/bundle/osx/OpenPencil.app/Contents/Info.plist"
+            "target/${{ matrix.target }}/release/bundle/osx/Design Editor.app/Contents/Info.plist"
       - name: Notarize macOS app
         if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true'
         shell: bash
@@ -381,8 +381,8 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
           set -euo pipefail
-          APP="target/${{ matrix.target }}/release/bundle/osx/OpenPencil.app"
-          APP_ZIP="OpenPencil-$OP_VERSION-${{ matrix.arch }}-mac-app.zip"
+          APP="target/${{ matrix.target }}/release/bundle/osx/Design Editor.app"
+          APP_ZIP="Design-Editor-$DE_VERSION-${{ matrix.arch }}-mac-app.zip"
           ditto -c -k --keepParent "$APP" "$APP_ZIP"
           notary_log="$(mktemp)"
           set +e
@@ -411,18 +411,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          APP="target/${{ matrix.target }}/release/bundle/osx/OpenPencil.app"
-          DMG="OpenPencil-$OP_VERSION-${{ matrix.arch }}-mac.dmg"
+          APP="target/${{ matrix.target }}/release/bundle/osx/Design Editor.app"
+          DMG="Design-Editor-$DE_VERSION-${{ matrix.arch }}-mac.dmg"
           STAGE="$(mktemp -d)"
-          ditto "$APP" "$STAGE/OpenPencil.app"
+          ditto "$APP" "$STAGE/Design Editor.app"
           if [ "$HAS_APPLE_CERTIFICATE" = "true" ]; then
-            xcrun stapler validate "$STAGE/OpenPencil.app"
+            xcrun stapler validate "$STAGE/Design Editor.app"
           fi
           ln -s /Applications "$STAGE/Applications"
           # HFS+ instead of the APFS default: mountable on every macOS the
           # binary itself supports.
           hdiutil create \
-            -volname "OpenPencil $OP_VERSION" \
+            -volname "Design Editor $DE_VERSION" \
             -srcfolder "$STAGE" \
             -fs HFS+ -format UDZO -ov \
             "$DMG"
@@ -439,7 +439,7 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
           set -euo pipefail
-          DMG="OpenPencil-$OP_VERSION-${{ matrix.arch }}-mac.dmg"
+          DMG="Design-Editor-$DE_VERSION-${{ matrix.arch }}-mac.dmg"
           notary_log="$(mktemp)"
           set +e
           xcrun notarytool submit "$DMG" \
@@ -517,11 +517,11 @@ jobs:
           # Defines are absolute because NSIS resolves relative paths against
           # the .nsi's own directory (scripts/).
           makensis `
-            "/DVERSION=$env:OP_VERSION" `
+            "/DVERSION=$env:DE_VERSION" `
             "/DARCH=${{ matrix.arch }}" `
             "/DBIN_DIR=$env:GITHUB_WORKSPACE\target\${{ matrix.target }}\release" `
-            "/DICON_FILE=$env:GITHUB_WORKSPACE\crates\op-host-desktop\assets\icon.ico" `
-            "/DOUT_FILE=$env:GITHUB_WORKSPACE\OpenPencil-$env:OP_VERSION-${{ matrix.arch }}-win-setup.exe" `
+            "/DICON_FILE=$env:GITHUB_WORKSPACE\crates\de-host-desktop\assets\icon.ico" `
+            "/DOUT_FILE=$env:GITHUB_WORKSPACE\Design-Editor-$env:DE_VERSION-${{ matrix.arch }}-win-setup.exe" `
             "/DVC_REDIST_FILE=$env:VC_REDIST_FILE" `
             scripts\package-windows.nsi
       # Authenticode signing scaffolding (NO-OP until WINDOWS_CERT_BASE64
@@ -536,7 +536,7 @@ jobs:
           WIN_CSC_PFX_SHA256: ${{ secrets.WIN_CSC_PFX_SHA256 }}
           WIN_CSC_CERTIFICATE_SHA1: ${{ secrets.WIN_CSC_CERTIFICATE_SHA1 }}
         run: |
-          $exe = "OpenPencil-$env:OP_VERSION-${{ matrix.arch }}-win-setup.exe"
+          $exe = "Design-Editor-$env:DE_VERSION-${{ matrix.arch }}-win-setup.exe"
           & tools/sign-windows-release.ps1 `
             -CertificateBase64 $env:WIN_CSC_LINK `
             -CertificatePassword $env:WIN_CSC_KEY_PASSWORD `
@@ -553,10 +553,10 @@ jobs:
             *) echo "unmapped deb arch for ${{ matrix.target }}" >&2; exit 1 ;;
           esac
           bash scripts/package-deb.sh \
-            --desktop-bin "target/${{ matrix.target }}/release/openpencil-desktop" \
-            --cli-bin "target/${{ matrix.target }}/release/op" \
-            --icon crates/op-host-desktop/assets/icon.png \
-            --version "$OP_VERSION" \
+            --desktop-bin "target/${{ matrix.target }}/release/design-editor" \
+            --cli-bin "target/${{ matrix.target }}/release/de" \
+            --icon crates/de-host-desktop/assets/icon.png \
+            --version "$DE_VERSION" \
             --arch "$DEB_ARCH" \
             --out-dir .
       - name: Package AppImage (linux)
@@ -573,10 +573,10 @@ jobs:
           tools/pinned-release-tools.sh appimage \
             "$AI_ARCH" "$appimagetool" "$runtime"
           bash scripts/package-appimage.sh \
-            --desktop-bin "target/${{ matrix.target }}/release/openpencil-desktop" \
-            --cli-bin "target/${{ matrix.target }}/release/op" \
-            --icon crates/op-host-desktop/assets/icon.png \
-            --version "$OP_VERSION" \
+            --desktop-bin "target/${{ matrix.target }}/release/design-editor" \
+            --cli-bin "target/${{ matrix.target }}/release/de" \
+            --icon crates/de-host-desktop/assets/icon.png \
+            --version "$DE_VERSION" \
             --arch "$AI_ARCH" \
             --tool "$appimagetool" \
             --runtime-file "$runtime" \
@@ -584,16 +584,16 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: openpencil-desktop-${{ matrix.label }}
+          name: design-editor-${{ matrix.label }}
           path: |
-            openpencil-desktop-${{ matrix.label }}.tar.gz
-            openpencil-desktop-${{ matrix.label }}.zip
-            op-cli-${{ matrix.label }}.tar.gz
-            op-cli-${{ matrix.label }}.zip
-            OpenPencil-*-mac.dmg
-            OpenPencil-*-win-setup.exe
-            OpenPencil-*-linux.AppImage
-            OpenPencil-*-linux.deb
+            design-editor-${{ matrix.label }}.tar.gz
+            design-editor-${{ matrix.label }}.zip
+            de-cli-${{ matrix.label }}.tar.gz
+            de-cli-${{ matrix.label }}.zip
+            Design-Editor-*-mac.dmg
+            Design-Editor-*-win-setup.exe
+            Design-Editor-*-linux.AppImage
+            Design-Editor-*-linux.deb
           if-no-files-found: ignore
       # Raw daemon binary for the platform vsix (the extension's bundled
       # runtime). No archive extension, so release-draft's flatten step
@@ -601,10 +601,10 @@ jobs:
       - name: Upload daemon binary for the VS Code extension
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: openpencil-daemon-${{ matrix.label }}
+          name: design-editor-daemon-${{ matrix.label }}
           path: |
-            target/${{ matrix.target }}/release/op-host-web-server
-            target/${{ matrix.target }}/release/op-host-web-server.exe
+            target/${{ matrix.target }}/release/de-host-web-server
+            target/${{ matrix.target }}/release/de-host-web-server.exe
           if-no-files-found: error
 
   web-docker:
@@ -617,7 +617,7 @@ jobs:
       packages: write
     if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     outputs:
       image: ${{ steps.meta.outputs.image }}
       tag: ${{ steps.meta.outputs.tag }}
@@ -635,9 +635,9 @@ jobs:
           tools/pinned-release-tools.sh buildx "$buildx"
           docker buildx version | grep -F 'github.com/docker/buildx v0.36.1 '
           buildkit=moby/buildkit:v0.32.2@sha256:28a898719c18a33f4e8000685287fa36fd0dd9560c6440227d3a732d79bb41d8
-          docker buildx create --name openpencil-release --driver docker-container \
+          docker buildx create --name design-editor-release --driver docker-container \
             --driver-opt "image=$buildkit" --use
-          docker buildx inspect openpencil-release --bootstrap
+          docker buildx inspect design-editor-release --bootstrap
       - name: Log in to GHCR
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
@@ -648,8 +648,8 @@ jobs:
         id: meta
         shell: bash
         run: |
-          version="$OP_VERSION"
-          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/openpencil-web"
+          version="$DE_VERSION"
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/design-editor-web"
           tag="${image}:v${version}"
           echo "image=${image}" >> "$GITHUB_OUTPUT"
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
@@ -671,7 +671,7 @@ jobs:
       contents: read
     if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
@@ -710,19 +710,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cd packages/op-web-sdk
+          cd packages/de-web-sdk
           bun run sync-wasm
           bun run build
-          cd ../op-web-sdk-react
+          cd ../de-web-sdk-react
           bun run build
-          cd ../op-web-sdk-vue
+          cd ../de-web-sdk-vue
           bun run build
       - name: Pack npm tarballs
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p sdk-packages
-          for pkg in op-web-sdk op-web-sdk-react op-web-sdk-vue; do
+          for pkg in de-web-sdk de-web-sdk-react de-web-sdk-vue; do
             (cd "packages/${pkg}" && bun pm pack --destination "${GITHUB_WORKSPACE}/sdk-packages")
           done
           ls -la sdk-packages
@@ -746,7 +746,7 @@ jobs:
           npm_token=
           export NPM_CONFIG_USERCONFIG=$npmrc
           npm whoami
-          version="$OP_VERSION"
+          version="$DE_VERSION"
           publish_pkg() {
             local name="$1"
             local tarball="$2"
@@ -762,13 +762,13 @@ jobs:
             fi
             npm publish "./$tarball" --access public --tag next
           }
-          publish_pkg "@zseven-w/op-web-sdk" "sdk-packages/zseven-w-op-web-sdk-${version}.tgz"
-          publish_pkg "@zseven-w/op-web-sdk-react" "sdk-packages/zseven-w-op-web-sdk-react-${version}.tgz"
-          publish_pkg "@zseven-w/op-web-sdk-vue" "sdk-packages/zseven-w-op-web-sdk-vue-${version}.tgz"
+          publish_pkg "@kemalcalak/de-web-sdk" "sdk-packages/kemalcalak-de-web-sdk-${version}.tgz"
+          publish_pkg "@kemalcalak/de-web-sdk-react" "sdk-packages/kemalcalak-de-web-sdk-react-${version}.tgz"
+          publish_pkg "@kemalcalak/de-web-sdk-vue" "sdk-packages/kemalcalak-de-web-sdk-vue-${version}.tgz"
       - name: Upload SDK tarballs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: openpencil-web-sdk-packages
+          name: design-editor-web-sdk-packages
           path: sdk-packages/*.tgz
           if-no-files-found: error
 
@@ -781,7 +781,7 @@ jobs:
       contents: read
     if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
@@ -816,12 +816,12 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: daemons
-          pattern: openpencil-daemon-*
+          pattern: design-editor-daemon-*
       - name: Install package workspace dependencies
         working-directory: packages
         run: bun install --frozen-lockfile
       - name: Check and build extension
-        working-directory: packages/op-vscode
+        working-directory: packages/de-vscode
         shell: bash
         run: |
           set -euo pipefail
@@ -830,15 +830,15 @@ jobs:
           node build.mjs
           # Stamp the release version into the manifest (runtime-only — the
           # extension is not in the sync-version managed set yet).
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=process.env.OP_VERSION;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=process.env.DE_VERSION;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
           cp ../../LICENSE LICENSE
       - name: Package platform vsix (daemon + web assets bundled)
-        working-directory: packages/op-vscode
+        working-directory: packages/de-vscode
         shell: bash
         run: |
           set -euo pipefail
           # build-matrix label -> vsce --target. The extension resolves
-          # bin/op-host-web-server[.exe] and web/{pkg,canvaskit} at runtime
+          # bin/de-host-web-server[.exe] and web/{pkg,canvaskit} at runtime
           # (restart-source.ts bundledDaemonPath / bundledDaemonEnv).
           pairs=(
             "macos-aarch64 darwin-arm64"
@@ -851,9 +851,9 @@ jobs:
           for pair in "${pairs[@]}"; do
             label="${pair% *}"
             vs_target="${pair#* }"
-            exe="op-host-web-server"
-            case "$label" in windows-*) exe="op-host-web-server.exe";; esac
-            src="../../daemons/openpencil-daemon-${label}/${exe}"
+            exe="de-host-web-server"
+            case "$label" in windows-*) exe="de-host-web-server.exe";; esac
+            src="../../daemons/design-editor-daemon-${label}/${exe}"
             if [ ! -f "$src" ]; then
               echo "::error::missing daemon binary for ${label}: ${src}"
               exit 1
@@ -862,28 +862,28 @@ jobs:
             mkdir -p bin web
             cp "$src" "bin/${exe}"
             chmod +x "bin/${exe}" || true
-            cp -R ../../crates/op-host-web/pkg web/pkg
+            cp -R ../../crates/de-host-web/pkg web/pkg
             # The .opt.wasm is a byte-identical intermediate of the served
             # op_host_web_bg.wasm — shipping both doubles the vsix.
             rm -f web/pkg/*.opt.wasm web/pkg/*.d.ts
-            cp -R ../../crates/op-host-web/assets/canvaskit web/canvaskit
+            cp -R ../../crates/de-host-web/assets/canvaskit web/canvaskit
             ./node_modules/.bin/vsce package --no-dependencies --allow-missing-repository \
               --target "$vs_target" \
-              --out "openpencil-vscode-${OP_VERSION}-${vs_target}.vsix"
+              --out "design-editor-vscode-${DE_VERSION}-${vs_target}.vsix"
           done
           ls -la ./*.vsix
       - name: Upload .vsix artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: openpencil-vscode-vsix
-          path: packages/op-vscode/*.vsix
+          name: design-editor-vscode-vsix
+          path: packages/de-vscode/*.vsix
           if-no-files-found: error
       # Open VSX is the registry Cursor / VSCodium / Gitpod pull from. The
       # token comes from https://open-vsx.org/user-settings/tokens (an
-      # account owning the `openpencil` namespace) stored as the
+      # account owning the `design-editor` namespace) stored as the
       # OPENVSX_TOKEN repo secret — mirrors the NPM_TOKEN hard-requirement.
       - name: Publish to Open VSX
-        working-directory: packages/op-vscode
+        working-directory: packages/de-vscode
         env:
           OPENVSX_TOKEN: ${{ secrets.OPENVSX_TOKEN }}
         shell: bash
@@ -897,14 +897,14 @@ jobs:
             exit 1
           fi
           # First-run namespace claim; harmless "already exists" afterwards.
-          ./node_modules/.bin/ovsx create-namespace openpencil -p "$openvsx_token" || true
+          ./node_modules/.bin/ovsx create-namespace design-editor -p "$openvsx_token" || true
           # Per-file tolerance so a partial failure is retryable: a re-run
           # skips targets that already landed ("already published") instead
           # of aborting the loop on them, keeps going past a real failure to
           # attempt every remaining platform, and fails the job at the end
           # if anything genuinely failed.
           failed=0
-          for f in ./openpencil-vscode-"${OP_VERSION}"-*.vsix; do
+          for f in ./design-editor-vscode-"${DE_VERSION}"-*.vsix; do
             if out="$(./node_modules/.bin/ovsx publish --packagePath "$f" -p "$openvsx_token" 2>&1)"; then
               printf '%s\n' "$out"
             elif printf '%s' "$out" | grep -qiE "already (exists|published)"; then
@@ -932,7 +932,7 @@ jobs:
       id-token: write
       attestations: write
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
     outputs:
       package_manager_artifact_id: ${{ steps.package_manager_handoff.outputs.artifact-id }}
       package_manager_artifact_digest: ${{ steps.package_manager_handoff.outputs.artifact-digest }}
@@ -945,57 +945,57 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: dist
-          pattern: openpencil-*
+          pattern: design-editor-*
       - name: Flatten artifacts
         shell: bash
-        run: tools/flatten-release-artifacts.sh dist release-files "$OP_VERSION"
+        run: tools/flatten-release-artifacts.sh dist release-files "$DE_VERSION"
       - name: Generate CLI install scripts
         shell: bash
         run: |
           set -euo pipefail
-          version="$OP_VERSION"
+          version="$DE_VERSION"
 
           sha_file() {
             sha256sum "release-files/$1" | awk '{print $1}'
           }
 
-          cli_mac_arm_sha="$(sha_file "op-cli-macos-aarch64.tar.gz")"
-          cli_mac_x64_sha="$(sha_file "op-cli-macos-x86_64.tar.gz")"
-          cli_linux_arm_sha="$(sha_file "op-cli-linux-aarch64.tar.gz")"
-          cli_linux_x64_sha="$(sha_file "op-cli-linux-x86_64.tar.gz")"
-          cli_win_arm_sha="$(sha_file "op-cli-windows-aarch64.zip")"
-          cli_win_x64_sha="$(sha_file "op-cli-windows-x86_64.zip")"
+          cli_mac_arm_sha="$(sha_file "de-cli-macos-aarch64.tar.gz")"
+          cli_mac_x64_sha="$(sha_file "de-cli-macos-x86_64.tar.gz")"
+          cli_linux_arm_sha="$(sha_file "de-cli-linux-aarch64.tar.gz")"
+          cli_linux_x64_sha="$(sha_file "de-cli-linux-x86_64.tar.gz")"
+          cli_win_arm_sha="$(sha_file "de-cli-windows-aarch64.zip")"
+          cli_win_x64_sha="$(sha_file "de-cli-windows-x86_64.zip")"
 
-          cp scripts/install-op.sh release-files/install-op.sh
-          cp scripts/install-op.ps1 release-files/install-op.ps1
-          OP_INSTALLER_VERSION="$version" \
-          OP_SHA_MACOS_AARCH64="$cli_mac_arm_sha" \
-          OP_SHA_MACOS_X86_64="$cli_mac_x64_sha" \
-          OP_SHA_LINUX_AARCH64="$cli_linux_arm_sha" \
-          OP_SHA_LINUX_X86_64="$cli_linux_x64_sha" \
+          cp scripts/install-de.sh release-files/install-de.sh
+          cp scripts/install-de.ps1 release-files/install-de.ps1
+          DE_INSTALLER_VERSION="$version" \
+          DE_SHA_MACOS_AARCH64="$cli_mac_arm_sha" \
+          DE_SHA_MACOS_X86_64="$cli_mac_x64_sha" \
+          DE_SHA_LINUX_AARCH64="$cli_linux_arm_sha" \
+          DE_SHA_LINUX_X86_64="$cli_linux_x64_sha" \
           perl -0pi -e '
-            s/^DEFAULT_OP_VERSION=.*/DEFAULT_OP_VERSION="$ENV{OP_INSTALLER_VERSION}"/m;
-            s/^DEFAULT_SHA_MACOS_AARCH64=.*/DEFAULT_SHA_MACOS_AARCH64="$ENV{OP_SHA_MACOS_AARCH64}"/m;
-            s/^DEFAULT_SHA_MACOS_X86_64=.*/DEFAULT_SHA_MACOS_X86_64="$ENV{OP_SHA_MACOS_X86_64}"/m;
-            s/^DEFAULT_SHA_LINUX_AARCH64=.*/DEFAULT_SHA_LINUX_AARCH64="$ENV{OP_SHA_LINUX_AARCH64}"/m;
-            s/^DEFAULT_SHA_LINUX_X86_64=.*/DEFAULT_SHA_LINUX_X86_64="$ENV{OP_SHA_LINUX_X86_64}"/m;
-          ' release-files/install-op.sh
-          OP_INSTALLER_VERSION="$version" \
-          OP_SHA_WINDOWS_AARCH64="$cli_win_arm_sha" \
-          OP_SHA_WINDOWS_X86_64="$cli_win_x64_sha" \
+            s/^DEFAULT_DE_VERSION=.*/DEFAULT_DE_VERSION="$ENV{DE_INSTALLER_VERSION}"/m;
+            s/^DEFAULT_SHA_MACOS_AARCH64=.*/DEFAULT_SHA_MACOS_AARCH64="$ENV{DE_SHA_MACOS_AARCH64}"/m;
+            s/^DEFAULT_SHA_MACOS_X86_64=.*/DEFAULT_SHA_MACOS_X86_64="$ENV{DE_SHA_MACOS_X86_64}"/m;
+            s/^DEFAULT_SHA_LINUX_AARCH64=.*/DEFAULT_SHA_LINUX_AARCH64="$ENV{DE_SHA_LINUX_AARCH64}"/m;
+            s/^DEFAULT_SHA_LINUX_X86_64=.*/DEFAULT_SHA_LINUX_X86_64="$ENV{DE_SHA_LINUX_X86_64}"/m;
+          ' release-files/install-de.sh
+          DE_INSTALLER_VERSION="$version" \
+          DE_SHA_WINDOWS_AARCH64="$cli_win_arm_sha" \
+          DE_SHA_WINDOWS_X86_64="$cli_win_x64_sha" \
           perl -0pi -e '
-            s/^\$DefaultOpVersion = .*/\$DefaultOpVersion = "$ENV{OP_INSTALLER_VERSION}"/m;
-            s/^\$DefaultShaWindowsAarch64 = .*/\$DefaultShaWindowsAarch64 = "$ENV{OP_SHA_WINDOWS_AARCH64}"/m;
-            s/^\$DefaultShaWindowsX86_64 = .*/\$DefaultShaWindowsX86_64 = "$ENV{OP_SHA_WINDOWS_X86_64}"/m;
-          ' release-files/install-op.ps1
-          chmod +x release-files/install-op.sh
-          if grep -E 'DEFAULT_OP_VERSION=""|DEFAULT_SHA_(MACOS|LINUX)_[A-Z0-9_]+=""|\$Default(OpVersion|ShaWindows[A-Za-z0-9_]+) = ""' \
-              release-files/install-op.sh release-files/install-op.ps1; then
+            s/^\$DefaultOpVersion = .*/\$DefaultOpVersion = "$ENV{DE_INSTALLER_VERSION}"/m;
+            s/^\$DefaultShaWindowsAarch64 = .*/\$DefaultShaWindowsAarch64 = "$ENV{DE_SHA_WINDOWS_AARCH64}"/m;
+            s/^\$DefaultShaWindowsX86_64 = .*/\$DefaultShaWindowsX86_64 = "$ENV{DE_SHA_WINDOWS_X86_64}"/m;
+          ' release-files/install-de.ps1
+          chmod +x release-files/install-de.sh
+          if grep -E 'DEFAULT_DE_VERSION=""|DEFAULT_SHA_(MACOS|LINUX)_[A-Z0-9_]+=""|\$Default(OpVersion|ShaWindows[A-Za-z0-9_]+) = ""' \
+              release-files/install-de.sh release-files/install-de.ps1; then
             echo "::error::CLI install scripts still contain unstamped release metadata"
             exit 1
           fi
-          grep -q "$version" release-files/install-op.sh
-          grep -q "$version" release-files/install-op.ps1
+          grep -q "$version" release-files/install-de.sh
+          grep -q "$version" release-files/install-de.ps1
       # Downloaders (and antivirus false-positive triage — see issue #198)
       # need a way to confirm an asset is the exact file CI produced:
       # a checksum manifest plus a signed SLSA provenance attestation that
@@ -1013,7 +1013,7 @@ jobs:
         shell: bash
         run: >-
           tools/package-manager-handoff.sh stage release-files package-manager-handoff
-          "$OP_VERSION" "$GITHUB_OUTPUT"
+          "$DE_VERSION" "$GITHUB_OUTPUT"
       - name: Upload immutable package-manager handoff
         id: package_manager_handoff
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -1031,23 +1031,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$OP_VERSION"
-          note="RELEASE_NOTES/v${version}.md"
-          if [ ! -f "$note" ]; then
-            echo "::error::missing release note: $note"
-            exit 1
-          fi
-          # The note's leading `# ` heading is the release title; the rest is
-          # the body, so the title is not repeated on the release page.
-          title="$(head -n 1 "$note")"
-          if [[ "$title" != "# "* ]]; then
-            echo "::error::release note must start with a '# ' title heading: $note"
-            exit 1
-          fi
-          echo "title=${title#\# }" >> "$GITHUB_OUTPUT"
-          tail -n +2 "$note" | sed '/./,$!d' > release-body.md
+          version="$DE_VERSION"
+          echo "title=Design Editor v${version}" >> "$GITHUB_OUTPUT"
+          : > release-body.md
           {
-            printf '\n## Web Docker Image\n\n'
+            printf '## Web Docker Image\n\n'
             printf -- '- Image: `%s`\n' '${{ needs.web-docker.outputs.tag }}'
             printf -- '- Digest: `%s`\n' '${{ needs.web-docker.outputs.digest }}'
             printf '\n## Verify Your Download\n\n'
@@ -1069,14 +1057,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$OP_VERSION"
+          version="$DE_VERSION"
           sri_hash() {
             printf 'sha256-%s' "$(openssl dgst -sha256 -binary "release-files/$1" | base64 -w0)"
           }
           manifest="$(jq -n \
             --arg version "$version" \
-            --arg desktopHash "$(sri_hash openpencil-desktop-linux-x86_64.tar.gz)" \
-            --arg cliHash "$(sri_hash op-cli-linux-x86_64.tar.gz)" \
+            --arg desktopHash "$(sri_hash design-editor-linux-x86_64.tar.gz)" \
+            --arg cliHash "$(sri_hash de-cli-linux-x86_64.tar.gz)" \
             '{version: $version, desktopHash: $desktopHash, cliHash: $cliHash}')"
 
           # Tags do not retain their source branch. Prefer the matching release
@@ -1112,13 +1100,13 @@ jobs:
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           base: ${{ steps.nix-manifest.outputs.target-branch }}
-          branch: automation/nix-release-manifest-v${{ env.OP_VERSION }}
+          branch: automation/nix-release-manifest-v${{ env.DE_VERSION }}
           delete-branch: true
           add-paths: nix/release-manifest.json
-          commit-message: "chore(release): update Nix release manifest for v${{ env.OP_VERSION }}"
-          title: "chore(release): update Nix release manifest for v${{ env.OP_VERSION }}"
+          commit-message: "chore(release): update Nix release manifest for v${{ env.DE_VERSION }}"
+          title: "chore(release): update Nix release manifest for v${{ env.DE_VERSION }}"
           body: |
-            Updates the pinned Nix prebuilt release metadata after publishing v${{ env.OP_VERSION }}.
+            Updates the pinned Nix prebuilt release metadata after publishing v${{ env.DE_VERSION }}.
 
             This PR was generated by the Rust release workflow.
 
@@ -1132,9 +1120,9 @@ jobs:
       actions: read
     if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
     env:
-      OP_VERSION: ${{ needs.version.outputs.version }}
-      HOMEBREW_TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'ZSeven-W/homebrew-openpencil' }}
-      SCOOP_BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY || 'ZSeven-W/scoop-openpencil' }}
+      DE_VERSION: ${{ needs.version.outputs.version }}
+      HOMEBREW_TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'ZSeven-W/homebrew-design-editor' }}
+      SCOOP_BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY || 'ZSeven-W/scoop-design-editor' }}
     steps:
       - name: Checkout release helpers without credentials
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -1150,14 +1138,14 @@ jobs:
           "${{ needs.release-draft.outputs.package_manager_artifact_id }}"
           "${{ needs.release-draft.outputs.package_manager_artifact_digest }}"
           "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT"
-          "$GITHUB_API_URL" release-assets "$OP_VERSION"
+          "$GITHUB_API_URL" release-assets "$DE_VERSION"
       - name: Verify handoff manifest and compute hashes
         shell: bash
         env:
           EXPECTED_ARTIFACT_DIGEST: ${{ needs.release-draft.outputs.package_manager_artifact_digest }}
           EXPECTED_MANIFEST_SHA256: ${{ needs.release-draft.outputs.package_manager_manifest_sha256 }}
         run: >-
-          tools/package-manager-handoff.sh verify release-assets "$OP_VERSION"
+          tools/package-manager-handoff.sh verify release-assets "$DE_VERSION"
           "$EXPECTED_ARTIFACT_DIGEST" "$EXPECTED_MANIFEST_SHA256" "$GITHUB_ENV"
 
       - name: Checkout Homebrew tap
@@ -1172,74 +1160,72 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p homebrew-tap/Casks homebrew-tap/Formula
-          cat > homebrew-tap/Casks/openpencil.rb <<EOF
-          cask "openpencil" do
-            version "${OP_VERSION}"
+          cat > homebrew-tap/Casks/design-editor.rb <<EOF
+          cask "design-editor" do
+            version "${DE_VERSION}"
 
             on_arm do
               sha256 "${MAC_ARM_DMG_SHA}"
-              url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/OpenPencil-#{version}-arm64-mac.dmg"
+              url "https://github.com/kemalcalak/design-editor/releases/download/v#{version}/Design-Editor-#{version}-arm64-mac.dmg"
             end
             on_intel do
               sha256 "${MAC_X64_DMG_SHA}"
-              url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/OpenPencil-#{version}-x64-mac.dmg"
+              url "https://github.com/kemalcalak/design-editor/releases/download/v#{version}/Design-Editor-#{version}-x64-mac.dmg"
             end
 
-            name "OpenPencil"
+            name "Design Editor"
             desc "Open-source AI-native vector design tool"
-            homepage "https://github.com/zseven-w/openpencil"
+            homepage "https://github.com/kemalcalak/design-editor"
 
-            app "OpenPencil.app"
+            app "Design Editor.app"
 
             zap trash: [
-              "~/Library/Application Support/OpenPencil",
-              "~/Library/Preferences/com.zseven-w.openpencil.plist",
-              "~/Library/Preferences/dev.openpencil.app.plist",
-              "~/Library/Caches/com.zseven-w.openpencil",
-              "~/Library/Caches/dev.openpencil.app",
+              "~/Library/Application Support/design-editor",
+              "~/Library/Preferences/com.kemalcalak.design-editor.plist",
+              "~/Library/Caches/com.kemalcalak.design-editor",
             ]
           end
           EOF
 
-          cat > homebrew-tap/Formula/op.rb <<EOF
-          class Op < Formula
-            desc "OpenPencil command-line tool"
-            homepage "https://github.com/zseven-w/openpencil"
-            version "${OP_VERSION}"
+          cat > homebrew-tap/Formula/de.rb <<EOF
+          class De < Formula
+            desc "Design Editor command-line tool"
+            homepage "https://github.com/kemalcalak/design-editor"
+            version "${DE_VERSION}"
             license "MIT"
 
             on_macos do
               if Hardware::CPU.arm?
-                url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/op-cli-macos-aarch64.tar.gz"
+                url "https://github.com/kemalcalak/design-editor/releases/download/v#{version}/de-cli-macos-aarch64.tar.gz"
                 sha256 "${CLI_MAC_ARM_SHA}"
               else
-                url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/op-cli-macos-x86_64.tar.gz"
+                url "https://github.com/kemalcalak/design-editor/releases/download/v#{version}/de-cli-macos-x86_64.tar.gz"
                 sha256 "${CLI_MAC_X64_SHA}"
               end
             end
 
             on_linux do
               if Hardware::CPU.arm?
-                url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/op-cli-linux-aarch64.tar.gz"
+                url "https://github.com/kemalcalak/design-editor/releases/download/v#{version}/de-cli-linux-aarch64.tar.gz"
                 sha256 "${CLI_LINUX_ARM_SHA}"
               else
-                url "https://github.com/zseven-w/openpencil/releases/download/v#{version}/op-cli-linux-x86_64.tar.gz"
+                url "https://github.com/kemalcalak/design-editor/releases/download/v#{version}/de-cli-linux-x86_64.tar.gz"
                 sha256 "${CLI_LINUX_X64_SHA}"
               end
             end
 
             def install
-              bin.install "op"
+              bin.install "de"
             end
 
             test do
-              assert_match version.to_s, shell_output("#{bin}/op --version")
+              assert_match version.to_s, shell_output("#{bin}/de --version")
             end
           end
           EOF
 
-          ruby -c homebrew-tap/Casks/openpencil.rb
-          ruby -c homebrew-tap/Formula/op.rb
+          ruby -c homebrew-tap/Casks/design-editor.rb
+          ruby -c homebrew-tap/Formula/de.rb
 
       - name: Commit Homebrew updates
         shell: bash
@@ -1248,11 +1234,11 @@ jobs:
           cd homebrew-tap
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Casks/openpencil.rb Formula/op.rb
+          git add Casks/design-editor.rb Formula/de.rb
           if git diff --cached --quiet; then
-            echo "::notice::Homebrew tap already matches v${OP_VERSION}"
+            echo "::notice::Homebrew tap already matches v${DE_VERSION}"
           else
-            git commit -m "Update OpenPencil to v${OP_VERSION}"
+            git commit -m "Update Design Editor to v${DE_VERSION}"
             git push
           fi
 
@@ -1271,7 +1257,7 @@ jobs:
           # Scoop invokes this installer hook on both a fresh install and an
           # upgrade. Check the native registry view before downloading or
           # elevating, so a compatible machine does not depend on Microsoft's
-          # CDN for an ordinary OpenPencil update.
+          # CDN for an ordinary Design Editor update.
           vc_redist_installer="$(
             jq -cn \
               --arg required_version "$VC_REDIST_VERSION" \
@@ -1301,7 +1287,7 @@ jobs:
               "$installedVersion = Get-InstalledVcRuntimeVersion",
               "if ($null -eq $installedVersion -or $installedVersion -lt $requiredVersion) {",
               "  $redist = Join-Path $dir 'VC_redist.x64.exe'",
-              "  $log = Join-Path $env:TEMP ('openpencil-vcredist-' + [Guid]::NewGuid().ToString('N') + '.log')",
+              "  $log = Join-Path $env:TEMP ('design-editor-vcredist-' + [Guid]::NewGuid().ToString('N') + '.log')",
               "  [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12",
               "  Invoke-WebRequest -Uri $redistUrl -OutFile $redist -UseBasicParsing",
               "  $redistItem = Get-Item -LiteralPath $redist -Force -ErrorAction Stop",
@@ -1320,7 +1306,7 @@ jobs:
               "  if ($process.ExitCode -notin @(0, 1638, 3010)) { throw \"Microsoft Visual C++ Redistributable exited with code $($process.ExitCode). See $log.\" }",
               "  $installedVersion = Get-InstalledVcRuntimeVersion",
               "  if ($null -eq $installedVersion -or $installedVersion -lt $requiredVersion) { throw \"Microsoft Visual C++ Redistributable $requiredVersion or newer is required.\" }",
-              "  if ($process.ExitCode -eq 3010) { Write-Warning 'Restart Windows before running OpenPencil.' }",
+              "  if ($process.ExitCode -eq 3010) { Write-Warning 'Restart Windows before running Design Editor.' }",
               "}",
               "Remove-Item -LiteralPath (Join-Path $dir 'VC_redist.x64.exe') -Force -ErrorAction SilentlyContinue"
             ]
@@ -1333,7 +1319,7 @@ jobs:
             local x64_url=$4 x64_hash=$5 arm64_url=$6 arm64_hash=$7
             local x64_autoupdate=$8 arm64_autoupdate=$9 shortcuts=${10}
             jq -n \
-              --arg version "$OP_VERSION" \
+              --arg version "$DE_VERSION" \
               --arg description "$description" \
               --arg executable "$executable" \
               --arg x64_url "$x64_url" \
@@ -1348,7 +1334,7 @@ jobs:
           {
             version: $version,
             description: $description,
-            homepage: "https://github.com/zseven-w/openpencil",
+            homepage: "https://github.com/kemalcalak/design-editor",
             license: "MIT",
             architecture: {
               "64bit": {
@@ -1363,7 +1349,7 @@ jobs:
             bin: $executable,
             installer: $installer,
             checkver: {
-              github: "https://github.com/zseven-w/openpencil"
+              github: "https://github.com/kemalcalak/design-editor"
             },
             autoupdate: {
               architecture: {
@@ -1376,30 +1362,30 @@ jobs:
           }
 
           write_scoop_manifest \
-            scoop-bucket/bucket/openpencil.json \
+            scoop-bucket/bucket/design-editor.json \
             'Open-source AI-native vector design tool' \
-            openpencil-desktop.exe \
-            "https://github.com/zseven-w/openpencil/releases/download/v${OP_VERSION}/openpencil-desktop-windows-x86_64.zip" \
+            design-editor.exe \
+            "https://github.com/kemalcalak/design-editor/releases/download/v${DE_VERSION}/design-editor-windows-x86_64.zip" \
             "$DESKTOP_WIN_X64_SHA" \
-            "https://github.com/zseven-w/openpencil/releases/download/v${OP_VERSION}/openpencil-desktop-windows-aarch64.zip" \
+            "https://github.com/kemalcalak/design-editor/releases/download/v${DE_VERSION}/design-editor-windows-aarch64.zip" \
             "$DESKTOP_WIN_ARM_SHA" \
-            'https://github.com/zseven-w/openpencil/releases/download/v$version/openpencil-desktop-windows-x86_64.zip' \
-            'https://github.com/zseven-w/openpencil/releases/download/v$version/openpencil-desktop-windows-aarch64.zip' \
-            '[["openpencil-desktop.exe", "OpenPencil"]]'
+            'https://github.com/kemalcalak/design-editor/releases/download/v$version/design-editor-windows-x86_64.zip' \
+            'https://github.com/kemalcalak/design-editor/releases/download/v$version/design-editor-windows-aarch64.zip' \
+            '[["design-editor.exe", "Design Editor"]]'
 
           write_scoop_manifest \
-            scoop-bucket/bucket/op.json \
-            'OpenPencil command-line tool' \
-            op.exe \
-            "https://github.com/zseven-w/openpencil/releases/download/v${OP_VERSION}/op-cli-windows-x86_64.zip" \
+            scoop-bucket/bucket/de.json \
+            'Design Editor command-line tool' \
+            de.exe \
+            "https://github.com/kemalcalak/design-editor/releases/download/v${DE_VERSION}/de-cli-windows-x86_64.zip" \
             "$CLI_WIN_X64_SHA" \
-            "https://github.com/zseven-w/openpencil/releases/download/v${OP_VERSION}/op-cli-windows-aarch64.zip" \
+            "https://github.com/kemalcalak/design-editor/releases/download/v${DE_VERSION}/de-cli-windows-aarch64.zip" \
             "$CLI_WIN_ARM_SHA" \
-            'https://github.com/zseven-w/openpencil/releases/download/v$version/op-cli-windows-x86_64.zip' \
-            'https://github.com/zseven-w/openpencil/releases/download/v$version/op-cli-windows-aarch64.zip' \
+            'https://github.com/kemalcalak/design-editor/releases/download/v$version/de-cli-windows-x86_64.zip' \
+            'https://github.com/kemalcalak/design-editor/releases/download/v$version/de-cli-windows-aarch64.zip' \
             null
 
-          jq empty scoop-bucket/bucket/openpencil.json scoop-bucket/bucket/op.json
+          jq empty scoop-bucket/bucket/design-editor.json scoop-bucket/bucket/de.json
 
       - name: Commit Scoop updates
         shell: bash
@@ -1408,10 +1394,10 @@ jobs:
           cd scoop-bucket
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add bucket/openpencil.json bucket/op.json
+          git add bucket/design-editor.json bucket/de.json
           if git diff --cached --quiet; then
-            echo "::notice::Scoop bucket already matches v${OP_VERSION}"
+            echo "::notice::Scoop bucket already matches v${DE_VERSION}"
           else
-            git commit -m "Update OpenPencil to v${OP_VERSION}"
+            git commit -m "Update Design Editor to v${DE_VERSION}"
             git push
           fi

@@ -1,0 +1,97 @@
+de - Design Editor CLI (drives the editor over the HTTP MCP transport)
+
+USAGE:
+  op [--port N] tools                     list every MCP tool + input schema
+  op [--port N] <tool> [key=value ...]    call one MCP tool with string args
+  op [--port N] <command> [options]       TS-style command aliases
+  de help                                 show this message
+
+COMMON COMMANDS:
+  de start [--file path.op] [--port N]     launch the live editor (live canvas);
+                                           op <tool> then drives the on-screen canvas
+  de start --web [--host H] [--file path.op]
+                                           serve the browser editor (wasm bundle +
+                                           MCP) and open http://127.0.0.1:PORT;
+                                           --host 0.0.0.0 binds for LAN/Docker
+  de start --headless [--file path.op]     run the windowless file-backed MCP server
+                                           (CI / display-less agents)
+  de stop                                  stop the running editor / MCP server
+  de install [--target T]                  install design-editor-skill for AI agents
+  de uninstall [--target T]                uninstall design-editor-skill
+  de skill:export <skill> [--out DIR]       export embedded skill as DIR/<skill>/SKILL.md
+  de status                               check whether MCP HTTP is reachable
+  de export [--item ID|--selection] --output PATH [--format png] [--scale N]
+                                          export a page, arbitrary node, or the
+                                          current Live Canvas selection; omitting
+                                          --item is equivalent to --selection
+  de export-deck --output PATH [--format pptx|html|pdf]
+                                          export the active page's boards as a
+                                          presentation deck: PowerPoint, self-
+                                          contained HTML, or slide-per-page PDF
+  de export-frames --output-dir DIR [--format png|jpeg|webp]
+                                          export every top-level frame on the
+                                          active page, one image per frame
+  de templates [--scene S] [--tag T]        list scene templates: the shipped
+                                          catalogue plus the templates you
+                                          saved, saved first (user: ids)
+  de use-template <id>                      start from a scene template: takes
+                                          over a blank starter page, otherwise
+                                          appends its boards
+  de styles [<id>] [--tag T] [--platform P] list style guides: the shipped
+                                          corpus plus your imported DESIGN.md
+                                          files; a bare id prints its markdown
+  de get [--type T] [--name N] [--id ID] [--depth N] [--parent P]
+  de selection                            get current selection
+  de insert <json|@file|-> [--parent P] [--page PAGE] [--post-process]
+                                          insert a PenNode JSON tree
+  de update <id> <json|@file|-> [--page PAGE] [--post-process]
+                                          patch node data
+  de delete <id> [--page PAGE]            delete a node
+  de read-nodes [ids] [--depth N] [--vars] [--page P] [--file F]
+  de move <id> [--parent P] [--index N] [--page PAGE]
+                                          reparent a node (empty parent = page root)
+  de copy <id> [--parent P] [--page PAGE] deep-copy a node
+  de replace <id> <json|@file|-> [--page PAGE] [--post-process]
+                                          replace with PenNode JSON
+  de design <dsl|json-array|@file|->      call batch_design(operations/nodes_json)
+      --script            treat the payload as a sandboxed JS program (I(parent, obj) + loops); implied for @file.js / @file.mjs
+  de design:skeleton <json-array|@file|->
+  de design:content [section] <json-array|@file|->
+  de design:refine --root-id <id>
+  de design:upsert-vars --key K --file vars.json [--source P] [--hash H]
+  de design:upsert-component --key K --name N --file node.json [--source P] [--hash H]
+  de design:upsert-screen --key K --file node.json [--source P] [--hash H]
+  de design:status [--kind token|component|screen]
+  de design:lint [--node ID]
+  de page list|add [--name N]|remove|rename|reorder|duplicate ...
+  de vars                                 get variables + theme axes
+  de vars:set <json|@file|-> [--replace] set variables
+  de themes                               get theme axes
+  de themes:set <json|@file|-> [--replace]
+  de layout [--parent P] [--depth N]      snapshot layout tree
+  de find-space [--direction D] [--width W] [--height H]
+  de import:svg <file.svg> [--x N] [--y N] [--parent P] [--page PAGE]
+  de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.op]
+  de import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.op]
+  de import:figma <file.fig> [--out output.op]
+  de codegen:plan <plan-json|@file|->
+  de codegen:submit <planId> <chunk-result|@file|->
+  de codegen:assemble <planId> [--framework react]
+  de codegen:clean <planId>
+
+GLOBAL FLAGS:
+  --port <n>      MCP HTTP port (default: 3100). When omitted, server-bound
+                  commands auto-discover the live editor via
+                  ~/.design-editor/.de-mcp-port (verified with a JSON-RPC ping)
+  --pretty        pretty-print JSON replies
+  --file <path>   `de start` document path; otherwise target .op file for
+                  tools that accept filePath (omit for the live canvas)
+  --page <id>     target page ID for tools that support pageId
+
+The server must be running at:
+  http://127.0.0.1:3100/mcp
+
+Low-level examples:
+  de tools
+  de insert_node kind=rect name=Box x=10 y=20 width=100 height=60
+  de set_node_fill_hex node_id=n3 hex=#ff0000

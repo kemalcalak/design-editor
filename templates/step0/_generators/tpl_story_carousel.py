@@ -463,7 +463,7 @@ def build():
             closing()]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 门槛 2.0；本表逐对实算）：
+# 对比度（WCAG 相对亮度比，de-design-lint 门槛 2.0；本表逐对实算）：
 #   c-ink     on c-bg     15.04    c-dim     on c-bg      8.65
 #   c-faint   on c-bg      4.50    c-magenta on c-bg      6.32
 #   c-cyan    on c-bg     10.43    c-amber   on c-bg      9.73

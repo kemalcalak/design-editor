@@ -1,6 +1,6 @@
 """D7/D8 两套 deck 的共享度量层 —— 画幅、板位、字阶行高、CJK 行长、虚线。
 
-来源是 `openpencil-docs/openpencil/generation/deck-system-0809.md` 的 §3
+来源是 `design-editor-docs/design-editor/generation/deck-system-0809.md` 的 §3
 （deck 通用契约）与 §6（工程约束移交）。cardlib 是卡片体系的度量层、只被
 tpl_*_card.py 引用；这一层是 **deck 体系专用**，只被 deck_*.py 引用。两者
 都建在 oplib 的节点构造层之上，互不依赖。

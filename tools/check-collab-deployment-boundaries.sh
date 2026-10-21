@@ -33,31 +33,31 @@ for required in \
     .dockerignore \
     .gitignore \
     Cargo.toml \
-    crates/op-collab/Cargo.toml \
-    crates/op-collab/LICENSE \
-    crates/op-collab/src/ticket_json.rs \
-    crates/op-collab/tests/credential_ownership.rs \
-    crates/op-collab-transport/Cargo.toml \
-    crates/op-collab-transport/LICENSE \
-    crates/op-collab-relay-protocol/Cargo.toml \
-    crates/op-collab-relay-protocol/LICENSE \
-    crates/op-collab-relay-client/Cargo.toml \
-    crates/op-collab-relay-client/LICENSE \
-    crates/op-collab-relay-server/Cargo.toml \
-    crates/op-collab-relay-server/LICENSE \
-    crates/op-collab-relay-control-plane/Cargo.toml \
-    crates/op-collab-relay-control-plane/LICENSE \
-    crates/op-collab-policy-file/Cargo.toml \
-    crates/op-collab-policy-file/LICENSE \
-    crates/op-collab-relay-locator-hsm/Cargo.toml \
-    crates/op-collab-relay-locator-hsm/LICENSE \
-    crates/op-collab-relay-locator-hsm/tests/softhsm.rs \
-    crates/op-collab-relay-locator-server/Cargo.toml \
-    crates/op-collab-relay-locator-server/LICENSE \
-    crates/op-collab-smoke/LICENSE \
-    crates/op-auth-bridge/Cargo.toml \
-    crates/op-auth-bridge/LICENSE \
-    crates/op-auth-bridge/prebuilt_provenance.rs \
+    crates/de-collab/Cargo.toml \
+    crates/de-collab/LICENSE \
+    crates/de-collab/src/ticket_json.rs \
+    crates/de-collab/tests/credential_ownership.rs \
+    crates/de-collab-transport/Cargo.toml \
+    crates/de-collab-transport/LICENSE \
+    crates/de-collab-relay-protocol/Cargo.toml \
+    crates/de-collab-relay-protocol/LICENSE \
+    crates/de-collab-relay-client/Cargo.toml \
+    crates/de-collab-relay-client/LICENSE \
+    crates/de-collab-relay-server/Cargo.toml \
+    crates/de-collab-relay-server/LICENSE \
+    crates/de-collab-relay-control-plane/Cargo.toml \
+    crates/de-collab-relay-control-plane/LICENSE \
+    crates/de-collab-policy-file/Cargo.toml \
+    crates/de-collab-policy-file/LICENSE \
+    crates/de-collab-relay-locator-hsm/Cargo.toml \
+    crates/de-collab-relay-locator-hsm/LICENSE \
+    crates/de-collab-relay-locator-hsm/tests/softhsm.rs \
+    crates/de-collab-relay-locator-server/Cargo.toml \
+    crates/de-collab-relay-locator-server/LICENSE \
+    crates/de-collab-smoke/LICENSE \
+    crates/de-auth-bridge/Cargo.toml \
+    crates/de-auth-bridge/LICENSE \
+    crates/de-auth-bridge/prebuilt_provenance.rs \
     deploy/collab-relay/Dockerfile \
     deploy/collab-relay/README.md \
     deploy/collab-relay/compose.yaml \
@@ -74,7 +74,7 @@ for required in \
     deploy/collab-relay-edge/verify-global-new-connection-rate.sh \
     deploy/collab-relay-edge/verify-rate-rules.py \
     deploy/collab-relay-edge/deploy-global.sh \
-    deploy/collab-relay-edge/openpencil-collab-relay-global.service.example \
+    deploy/collab-relay-edge/design-editor-collab-relay-global.service.example \
     deploy/collab-relay-edge/rotate-cn-crl.sh \
     deploy/collab-relay-edge/validate.sh \
     deploy/collab-relay-locator/Dockerfile \
@@ -87,7 +87,7 @@ for required in \
     deploy/collab-relay-locator-hsm/README.md \
     deploy/collab-relay-locator-hsm/compose.yaml \
     deploy/collab-relay-locator-hsm/config.example.json \
-    deploy/collab-relay-locator-hsm/openpencil-locator-hsm.conf \
+    deploy/collab-relay-locator-hsm/design-editor-locator-hsm.conf \
     deploy/collab-relay-locator-hsm/softhsm2.conf \
     deploy/collab-relay-locator-edge/README.md \
     deploy/collab-relay-locator-edge/global-nginx.conf \
@@ -100,7 +100,7 @@ for required in \
     deploy/collab-relay-locator-edge/install-global-new-connection-rate.sh \
     deploy/collab-relay-locator-edge/verify-global-new-connection-rate.sh \
     deploy/collab-relay-locator-edge/deploy-global.sh \
-    deploy/collab-relay-locator-edge/openpencil-collab-locator-global.service.example \
+    deploy/collab-relay-locator-edge/design-editor-collab-locator-global.service.example \
     deploy/collab-relay-locator-edge/rotate-cn-crl.sh \
     deploy/collab-relay-locator-edge/validate.sh \
     tools/check-collab-security-boundaries-cases.sh \
@@ -137,23 +137,23 @@ done
 for workflow_path in \
     ".dockerignore" \
     ".gitignore" \
-    "crates/op-collab-smoke/**" \
-    "crates/op-collab-relay-protocol/**" \
-    "crates/op-collab-relay-client/**" \
-    "crates/op-collab-relay-server/**" \
-    "crates/op-collab-relay-control-plane/**" \
-    "crates/op-collab-policy-file/**" \
-    "crates/op-collab-relay-locator-hsm/**" \
-    "crates/op-collab-relay-locator-server/**" \
-    "crates/op-util/**" \
-    "crates/op-editor-core/**" \
-    "crates/op-editor-host-core/**" \
-    "crates/op-editor-ui/**" \
-    "crates/op-host-native/**" \
-    "crates/op-host-desktop/**" \
-    "crates/op-chat-agent/src/provider_dial.rs" \
-    "crates/op-host-services/**" \
-    "crates/op-i18n/**" \
+    "crates/de-collab-smoke/**" \
+    "crates/de-collab-relay-protocol/**" \
+    "crates/de-collab-relay-client/**" \
+    "crates/de-collab-relay-server/**" \
+    "crates/de-collab-relay-control-plane/**" \
+    "crates/de-collab-policy-file/**" \
+    "crates/de-collab-relay-locator-hsm/**" \
+    "crates/de-collab-relay-locator-server/**" \
+    "crates/de-util/**" \
+    "crates/de-editor-core/**" \
+    "crates/de-editor-host-core/**" \
+    "crates/de-editor-ui/**" \
+    "crates/de-host-native/**" \
+    "crates/de-host-desktop/**" \
+    "crates/de-chat-agent/src/provider_dial.rs" \
+    "crates/de-host-services/**" \
+    "crates/de-i18n/**" \
     "deploy/collab-relay/**" \
     "deploy/collab-relay-edge/**" \
     "deploy/collab-relay-locator/**" \
@@ -211,7 +211,7 @@ for relay_edge_supervision_anchor in \
 done
 for relay_edge_deploy_anchor in \
     '"$script_dir/install-global-new-connection-rate.sh"' \
-    'OPENPENCIL_RELAY_EDGE_VALIDATION_MODE=production' \
+    'DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE=production' \
     '--abort-on-container-exit --exit-code-from global-edge'; do
     require_literal deploy/collab-relay-edge/deploy-global.sh \
         "$relay_edge_deploy_anchor" "overseas relay supervised startup boundary"
@@ -219,8 +219,8 @@ done
 for relay_edge_service_anchor in \
     'Requires=docker.service nftables.service' \
     'After=network-online.target nftables.service docker.service' \
-    'ExecStart=/opt/openpencil/deploy/collab-relay-edge/deploy-global.sh'; do
-    require_literal deploy/collab-relay-edge/openpencil-collab-relay-global.service.example \
+    'ExecStart=/opt/design-editor/deploy/collab-relay-edge/deploy-global.sh'; do
+    require_literal deploy/collab-relay-edge/design-editor-collab-relay-global.service.example \
         "$relay_edge_service_anchor" "overseas relay boot-order boundary"
 done
 for relay_edge_rotation_anchor in \
@@ -228,7 +228,7 @@ for relay_edge_rotation_anchor in \
     "candidate CRL drops an existing revoked certificate serial" \
     "CRL activation requires root" \
     "CRL/CA files must be root:101 mode 0440" \
-    "OPENPENCIL_RELAY_EDGE_VALIDATION_MODE=production" \
+    "DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE=production" \
     "Recheck the final staged inode after ownership and mode changes." \
     "up -d --no-deps --force-recreate cn-federation" \
     "exec -T cn-federation nginx -t"; do
@@ -271,7 +271,7 @@ done
 for cn_wss_anchor in \
     "location = /v1/tunnel {" \
     'proxy_set_header Authorization $http_authorization;' \
-    "proxy_pass_header OpenPencil-Relay-Challenge;" \
+    "proxy_pass_header Design-Editor-Relay-Challenge;" \
     "listen 8444 ssl;" \
     "limit_req zone=relay_federation_handshakes burst=500 nodelay;" \
     "limit_conn relay_federation_connections 512;"; do
@@ -286,15 +286,15 @@ for locator_ingress_anchor in \
     'if ($request_uri != "/v1/pairing-code") {' \
     "client_max_body_size 624;" \
     "client_body_buffer_size 624;" \
-    'application/vnd.openpencil.relay-pairing-publish-v1' \
+    'application/vnd.design-editor.relay-pairing-publish-v1' \
     "proxy_pass http://locator:8092/v1/pairing-code;" \
     "location = /v1/pairing-code/claim {" \
     'if ($request_uri != "/v1/pairing-code/claim") {' \
     "client_max_body_size 49;" \
     "client_body_buffer_size 49;" \
     'if ($content_length != "49") {' \
-    'application/vnd.openpencil.relay-pairing-claim-v1' \
-    'application/vnd.openpencil.relay-sealed-invite-v1' \
+    'application/vnd.design-editor.relay-pairing-claim-v1' \
+    'application/vnd.design-editor.relay-sealed-invite-v1' \
     "proxy_pass http://locator:8092/v1/pairing-code/claim;" \
     'if ($http_host = "") {' \
     "client_max_body_size 191;" \
@@ -311,20 +311,20 @@ require_literal_count deploy/collab-relay-locator/nginx-location.conf \
     'proxy_pass_request_headers off;' 2 \
     "locator pairing ingress header isolation boundary"
 for locator_limit_anchor in \
-    'limit_req_zone $binary_remote_addr zone=openpencil_locator_per_source:10m rate=10r/s;' \
-    'limit_conn_zone $binary_remote_addr zone=openpencil_locator_connections:10m;' \
+    'limit_req_zone $binary_remote_addr zone=design_editor_locator_per_source:10m rate=10r/s;' \
+    'limit_conn_zone $binary_remote_addr zone=design_editor_locator_connections:10m;' \
     'large_client_header_buffers 2 64k;'; do
     require_literal deploy/collab-relay-locator/nginx-http-limits.conf \
         "$locator_limit_anchor" "locator per-source ingress boundary"
 done
 for locator_location_limit_anchor in \
-    "limit_req zone=openpencil_locator_per_source burst=20 nodelay;" \
-    "limit_conn openpencil_locator_connections 16;"; do
+    "limit_req zone=design_editor_locator_per_source burst=20 nodelay;" \
+    "limit_conn design_editor_locator_connections 16;"; do
     require_literal deploy/collab-relay-locator/nginx-location.conf \
         "$locator_location_limit_anchor" "locator per-source ingress boundary"
 done
 for locator_container_anchor in \
-    "OPENPENCIL_COLLAB_LOCATOR_HSM_SOCKET: /run/openpencil-hsm/signer.sock" \
+    "DESIGN_EDITOR_COLLAB_LOCATOR_HSM_SOCKET: /run/design-editor-hsm/signer.sock" \
     "read_only: true" \
     "cap_drop:" \
     "no-new-privileges:true"; do
@@ -332,7 +332,7 @@ for locator_container_anchor in \
         "$locator_container_anchor" "locator production container boundary"
 done
 require_literal deploy/collab-relay-locator/Dockerfile \
-    'ENTRYPOINT ["/usr/local/bin/op-collab-relay-locator-server", "--production"]' \
+    'ENTRYPOINT ["/usr/local/bin/de-collab-relay-locator-server", "--production"]' \
     "locator production-only image entrypoint"
 for relay_dockerfile in \
     deploy/collab-relay/Dockerfile \
@@ -352,7 +352,7 @@ require_literal .github/workflows/collab-security.yml \
     "bash deploy/collab-relay-locator/validate.sh" \
     "locator deployment workflow validation"
 require_literal .github/workflows/collab-security.yml \
-    "cargo test --locked -p op-collab-relay-locator-hsm" \
+    "cargo test --locked -p de-collab-relay-locator-hsm" \
     "locator HSM crate workflow test"
 require_literal .github/workflows/collab-security.yml \
     "docker build --target test" \
@@ -363,7 +363,7 @@ require_literal .github/workflows/collab-security.yml \
 for locator_hsm_test_anchor in \
     "FROM build AS test" \
     "apt-get install -y --no-install-recommends softhsm2" \
-    "cargo test --locked -p op-collab-relay-locator-hsm --test softhsm -- --nocapture"; do
+    "cargo test --locked -p de-collab-relay-locator-hsm --test softhsm -- --nocapture"; do
     require_literal deploy/collab-relay-locator-hsm/Dockerfile \
         "$locator_hsm_test_anchor" "real SoftHSM image test boundary"
 done
@@ -406,11 +406,11 @@ for locator_edge_https_anchor in \
     'client_body_buffer_size 624;' \
     'client_body_buffer_size 49;' \
     'if ($content_length != "49") {' \
-    'application/vnd.openpencil.relay-pairing-publish-v1' \
-    'application/vnd.openpencil.relay-pairing-claim-v1' \
-    'application/vnd.openpencil.relay-sealed-invite-v1' \
-    'proxy_pass http://openpencil_locator/v1/pairing-code;' \
-    'proxy_pass http://openpencil_locator/v1/pairing-code/claim;' \
+    'application/vnd.design-editor.relay-pairing-publish-v1' \
+    'application/vnd.design-editor.relay-pairing-claim-v1' \
+    'application/vnd.design-editor.relay-sealed-invite-v1' \
+    'proxy_pass http://design_editor_locator/v1/pairing-code;' \
+    'proxy_pass http://design_editor_locator/v1/pairing-code/claim;' \
     'keepalive_requests 1;' \
     'keepalive_timeout 0;' \
     'client_header_buffer_size 64k;' \
@@ -445,7 +445,7 @@ for locator_edge_supervision_anchor in \
 done
 for locator_edge_deploy_anchor in \
     '"$script_dir/install-global-new-connection-rate.sh"' \
-    'OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE=production' \
+    'DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE=production' \
     '--abort-on-container-exit --exit-code-from global-locator-edge'; do
     require_literal deploy/collab-relay-locator-edge/deploy-global.sh \
         "$locator_edge_deploy_anchor" "overseas locator supervised startup boundary"
@@ -453,9 +453,9 @@ done
 for locator_edge_service_anchor in \
     'Requires=docker.service nftables.service' \
     'After=network-online.target nftables.service docker.service' \
-    'ExecStart=/opt/openpencil/deploy/collab-relay-locator-edge/deploy-global.sh'; do
+    'ExecStart=/opt/design-editor/deploy/collab-relay-locator-edge/deploy-global.sh'; do
     require_literal \
-        deploy/collab-relay-locator-edge/openpencil-collab-locator-global.service.example \
+        deploy/collab-relay-locator-edge/design-editor-collab-locator-global.service.example \
         "$locator_edge_service_anchor" "overseas locator boot-order boundary"
 done
 for locator_edge_rotation_anchor in \
@@ -463,7 +463,7 @@ for locator_edge_rotation_anchor in \
     "candidate CRL drops an existing revoked certificate serial" \
     "CRL activation requires root" \
     "CRL/CA files must be root:101 mode 0440" \
-    "OPENPENCIL_LOCATOR_EDGE_VALIDATION_MODE=production" \
+    "DESIGN_EDITOR_LOCATOR_EDGE_VALIDATION_MODE=production" \
     "Revalidate the exact staged inode after its final ownership/mode changes." \
     "up -d --no-deps --force-recreate" \
     "exec -T locator-cn-federation nginx -t"; do

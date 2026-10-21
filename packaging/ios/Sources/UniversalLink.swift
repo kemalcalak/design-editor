@@ -46,8 +46,8 @@ struct UniversalLink: Equatable, Sendable {
 }
 
 extension Notification.Name {
-    static let openPencilUniversalLink = Notification.Name(
-        "tech.zseven.openpencil.universal-link"
+    static let designEditorUniversalLink = Notification.Name(
+        "com.kemalcalak.designeditor.universal-link"
     )
 }
 
@@ -60,7 +60,7 @@ enum UniversalLinkRouter {
         }
 
         NotificationCenter.default.post(
-            name: .openPencilUniversalLink,
+            name: .designEditorUniversalLink,
             object: link
         )
         return true

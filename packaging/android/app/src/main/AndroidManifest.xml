@@ -53,7 +53,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="openpencilalipay" />
+                <data android:scheme="designeditoralipay" />
             </intent-filter>
         </activity>
 
@@ -65,7 +65,7 @@
             android:name=".wxapi.WXEntryActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:taskAffinity="tech.zseven.openpencil"
+            android:taskAffinity="com.kemalcalak.designeditor"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <!-- Douyin OpenSDK auth callback. The SDK resolves this activity by
@@ -75,6 +75,6 @@
             android:name=".douyinapi.DouYinEntryActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:taskAffinity="tech.zseven.openpencil" />
+            android:taskAffinity="com.kemalcalak.designeditor" />
     </application>
 </manifest>

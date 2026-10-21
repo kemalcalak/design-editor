@@ -5,7 +5,7 @@ import Foundation
 /// again on the next save.
 ///
 /// The engine deliberately treats this as an opaque string (see
-/// `DocumentBinding::Shell` in `op-engine-ffi/src/editor_document.rs`) — a
+/// `DocumentBinding::Shell` in `de-engine-ffi/src/editor_document.rs`) — a
 /// picked destination is not a path the engine can open. On iOS the token is
 /// base64-encoded bookmark data, which survives app relaunches and keeps
 /// working when the user later moves or renames the file in Files.
@@ -45,12 +45,12 @@ enum DocumentSaveBinding {
                 relativeTo: nil
             )
             guard data.count <= maximumHandleBytes else {
-                NSLog("OpenPencil save bookmark is too large (%d bytes)", data.count)
+                NSLog("Design Editor save bookmark is too large (%d bytes)", data.count)
                 return nil
             }
             return data.base64EncodedString()
         } catch {
-            NSLog("OpenPencil could not bookmark the save destination: %@", error.localizedDescription)
+            NSLog("Design Editor could not bookmark the save destination: %@", error.localizedDescription)
             return nil
         }
     }
@@ -74,7 +74,7 @@ enum DocumentSaveBinding {
             )
         } catch {
             NSLog(
-                "OpenPencil could not resolve the bound save destination: %@",
+                "Design Editor could not resolve the bound save destination: %@",
                 error.localizedDescription
             )
             return nil

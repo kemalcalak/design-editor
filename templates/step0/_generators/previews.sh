@@ -2,8 +2,8 @@
 # 渲染场景模板的预览图：每帧一张（scale 2）+ 整页拼合总览（scale 1）
 # 卡片缩略图由 scene_preview_cards.py 从这些渲染产物再烤一层。
 set -euo pipefail
-R=/Users/fini/workspace/openpencil
-BIN=$R/target/release/openpencil-desktop
+R=/Users/fini/workspace/design-editor
+BIN=$R/target/release/design-editor
 OUT=$R/templates/step0/previews
 TMP=$(mktemp -d)
 mkdir -p "$OUT"
@@ -74,9 +74,9 @@ for t in "${templates[@]}"; do
   # The documents themselves are shipped assets (embedded by the scene
   # template catalogue); this directory keeps only the generators and the
   # full-resolution renders they produce.
-  op=$R/crates/op-editor-core/assets/scene_templates/$t.op
+  op=$R/crates/de-editor-core/assets/scene_templates/$t.op
   rm -rf "$TMP/$t"; mkdir -p "$TMP/$t"
-  OPENPENCIL_RENDER_MARGIN=0 "$BIN" --render-shots "$op" "$TMP/$t" 2 >/dev/null
+  DESIGN_EDITOR_RENDER_MARGIN=0 "$BIN" --render-shots "$op" "$TMP/$t" 2 >/dev/null
 
   # 按 .op 里 children 的顺序把 <node-id>.png 重命名成 <模板>-NN.png
   python3 - "$op" "$TMP/$t" "$OUT" "$t" <<'PY'

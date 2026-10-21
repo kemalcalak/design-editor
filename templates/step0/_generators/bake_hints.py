@@ -2,7 +2,7 @@
 """把空态提示烘焙成 assets/*.png —— 必须先于 tpl1.py / tpl3.py 运行。
 
 为什么要烤：拖图时编辑器写的是 fill[0]
-(`op-editor-core/src/image_fill_upload.rs`: `fills[0] = body`)。把提示做成
+(`de-editor-core/src/image_fill_upload.rs`: `fills[0] = body`)。把提示做成
 fill[0] 的内嵌 PNG，用户拖图就是"直接替换提示"，零手工、随框自适应，
 不依赖任何 jian 布局修复，也不用写死浮层尺寸。
 
@@ -12,7 +12,7 @@ import json, os, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-BIN = os.path.join(REPO, "target", "release", "openpencil-desktop")
+BIN = os.path.join(REPO, "target", "release", "design-editor")
 ASSETS = os.path.join(HERE, "assets")
 sys.path.insert(0, HERE)
 
@@ -34,7 +34,7 @@ def bake(tag, variables, groups, w, h):
             with open(src, "w", encoding="utf-8") as fh:
                 json.dump({"version": "1.0.0", "variables": variables,
                            "children": [box]}, fh, ensure_ascii=False)
-            env = dict(os.environ, OPENPENCIL_RENDER_MARGIN="0")
+            env = dict(os.environ, DESIGN_EDITOR_RENDER_MARGIN="0")
             subprocess.run([BIN, "--render-shots", src, td, "2"],
                            check=True, capture_output=True, env=env)
             png = [f for f in os.listdir(td) if f.endswith(".png")][0]

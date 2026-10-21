@@ -13,13 +13,13 @@ fi
 
 candidate=$1
 revoked_cert=$2
-: "${OPENPENCIL_RELAY_EDGE_CLIENT_CRL:?set the active absolute CRL path}"
-: "${OPENPENCIL_RELAY_EDGE_CLIENT_CA:?set the absolute Global edge client CA path}"
-: "${OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM:?set fixed CN federation IPv4:port}"
-: "${OPENPENCIL_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM:?set fixed CN inner WSS IPv4:port}"
-: "${OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME:?set outer TLS DNS name}"
-active=$OPENPENCIL_RELAY_EDGE_CLIENT_CRL
-client_ca=$OPENPENCIL_RELAY_EDGE_CLIENT_CA
+: "${DESIGN_EDITOR_RELAY_EDGE_CLIENT_CRL:?set the active absolute CRL path}"
+: "${DESIGN_EDITOR_RELAY_EDGE_CLIENT_CA:?set the absolute Global edge client CA path}"
+: "${DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM:?set fixed CN federation IPv4:port}"
+: "${DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM:?set fixed CN inner WSS IPv4:port}"
+: "${DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME:?set outer TLS DNS name}"
+active=$DESIGN_EDITOR_RELAY_EDGE_CLIENT_CRL
+client_ca=$DESIGN_EDITOR_RELAY_EDGE_CLIENT_CA
 backup="${active}.previous"
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -97,12 +97,12 @@ fi
 
 # Check every required Compose variable and the digest-pinned deployment
 # contract before changing the active file.
-OPENPENCIL_RELAY_EDGE_VALIDATION_MODE=production \
+DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE=production \
     sh "$script_dir/validate.sh" >/dev/null
 docker compose -f "$compose_file" config -q
 
-staged=$(mktemp "$active_dir/.openpencil-edge-crl.new.XXXXXX")
-staged_revoked_cert=$(mktemp "$active_dir/.openpencil-edge-cert.revoked.XXXXXX")
+staged=$(mktemp "$active_dir/.design-editor-edge-crl.new.XXXXXX")
+staged_revoked_cert=$(mktemp "$active_dir/.design-editor-edge-cert.revoked.XXXXXX")
 active_serials=
 candidate_serials=
 cleanup_validation_files() {
@@ -206,8 +206,8 @@ then
     exit 1
 fi
 
-active_serials=$(mktemp "$active_dir/.openpencil-edge-crl.active-serials.XXXXXX")
-candidate_serials=$(mktemp "$active_dir/.openpencil-edge-crl.candidate-serials.XXXXXX")
+active_serials=$(mktemp "$active_dir/.design-editor-edge-crl.active-serials.XXXXXX")
+candidate_serials=$(mktemp "$active_dir/.design-editor-edge-crl.candidate-serials.XXXXXX")
 
 extract_crl_serials() {
     openssl crl -in "$1" -noout -text |

@@ -158,9 +158,9 @@ cn_firewall_load_config() {
         return 1
     fi
 
-    OPENPENCIL_CN_INGRESS_INTERFACE=
-    OPENPENCIL_CN_GATEWAY_SOURCE_IPV4=
-    OPENPENCIL_CN_SERVICE_IPV4=
+    DESIGN_EDITOR_CN_INGRESS_INTERFACE=
+    DESIGN_EDITOR_CN_GATEWAY_SOURCE_IPV4=
+    DESIGN_EDITOR_CN_SERVICE_IPV4=
     cn_fw_seen_interface=0
     cn_fw_seen_source=0
     cn_fw_seen_service=0
@@ -185,29 +185,29 @@ cn_firewall_load_config() {
             return 1
         fi
         case $cn_fw_key in
-            OPENPENCIL_CN_INGRESS_INTERFACE)
+            DESIGN_EDITOR_CN_INGRESS_INTERFACE)
                 if [ "$cn_fw_seen_interface" -ne 0 ]; then
                     cn_firewall_fail "duplicate ingress-interface key"
                     return 1
                 fi
                 cn_fw_seen_interface=1
-                OPENPENCIL_CN_INGRESS_INTERFACE=$cn_fw_value
+                DESIGN_EDITOR_CN_INGRESS_INTERFACE=$cn_fw_value
                 ;;
-            OPENPENCIL_CN_GATEWAY_SOURCE_IPV4)
+            DESIGN_EDITOR_CN_GATEWAY_SOURCE_IPV4)
                 if [ "$cn_fw_seen_source" -ne 0 ]; then
                     cn_firewall_fail "duplicate gateway-source key"
                     return 1
                 fi
                 cn_fw_seen_source=1
-                OPENPENCIL_CN_GATEWAY_SOURCE_IPV4=$cn_fw_value
+                DESIGN_EDITOR_CN_GATEWAY_SOURCE_IPV4=$cn_fw_value
                 ;;
-            OPENPENCIL_CN_SERVICE_IPV4)
+            DESIGN_EDITOR_CN_SERVICE_IPV4)
                 if [ "$cn_fw_seen_service" -ne 0 ]; then
                     cn_firewall_fail "duplicate service-address key"
                     return 1
                 fi
                 cn_fw_seen_service=1
-                OPENPENCIL_CN_SERVICE_IPV4=$cn_fw_value
+                DESIGN_EDITOR_CN_SERVICE_IPV4=$cn_fw_value
                 ;;
             *)
                 cn_firewall_fail \
@@ -224,13 +224,13 @@ cn_firewall_load_config() {
         cn_firewall_fail "configuration must contain each required key exactly once"
         return 1
     fi
-    cn_firewall_validate_interface "$OPENPENCIL_CN_INGRESS_INTERFACE" ||
+    cn_firewall_validate_interface "$DESIGN_EDITOR_CN_INGRESS_INTERFACE" ||
         return 1
-    cn_firewall_validate_ipv4 "$OPENPENCIL_CN_GATEWAY_SOURCE_IPV4" ||
+    cn_firewall_validate_ipv4 "$DESIGN_EDITOR_CN_GATEWAY_SOURCE_IPV4" ||
         return 1
-    cn_firewall_validate_ipv4 "$OPENPENCIL_CN_SERVICE_IPV4" || return 1
-    if [ "$OPENPENCIL_CN_GATEWAY_SOURCE_IPV4" = \
-        "$OPENPENCIL_CN_SERVICE_IPV4" ]
+    cn_firewall_validate_ipv4 "$DESIGN_EDITOR_CN_SERVICE_IPV4" || return 1
+    if [ "$DESIGN_EDITOR_CN_GATEWAY_SOURCE_IPV4" = \
+        "$DESIGN_EDITOR_CN_SERVICE_IPV4" ]
     then
         cn_firewall_fail "gateway source and service destination must differ"
         return 1
@@ -240,19 +240,19 @@ cn_firewall_load_config() {
 cn_firewall_load_deployment_binding() {
     cn_fw_binding_file=$1
     cn_firewall_require_secure_root_file "$cn_fw_binding_file" 400 || return 1
-    OPENPENCIL_CN_EXPECTED_SERVICE_IPV4=
+    DESIGN_EDITOR_CN_EXPECTED_SERVICE_IPV4=
     cn_fw_binding_seen=0
     cn_fw_binding_line_number=0
     while IFS= read -r cn_fw_binding_line || [ -n "$cn_fw_binding_line" ]; do
         cn_fw_binding_line_number=$((cn_fw_binding_line_number + 1))
         case $cn_fw_binding_line in
-            OPENPENCIL_CN_EXPECTED_SERVICE_IPV4=*)
+            DESIGN_EDITOR_CN_EXPECTED_SERVICE_IPV4=*)
                 if [ "$cn_fw_binding_seen" -ne 0 ]; then
                     cn_firewall_fail "duplicate deployment-binding key"
                     return 1
                 fi
                 cn_fw_binding_seen=1
-                OPENPENCIL_CN_EXPECTED_SERVICE_IPV4=${cn_fw_binding_line#*=}
+                DESIGN_EDITOR_CN_EXPECTED_SERVICE_IPV4=${cn_fw_binding_line#*=}
                 ;;
             *)
                 cn_firewall_fail \
@@ -265,10 +265,10 @@ cn_firewall_load_deployment_binding() {
         cn_firewall_fail "deployment binding must contain exactly one key"
         return 1
     fi
-    cn_firewall_validate_ipv4 "$OPENPENCIL_CN_EXPECTED_SERVICE_IPV4" ||
+    cn_firewall_validate_ipv4 "$DESIGN_EDITOR_CN_EXPECTED_SERVICE_IPV4" ||
         return 1
-    if [ "$OPENPENCIL_CN_EXPECTED_SERVICE_IPV4" != \
-        "$OPENPENCIL_CN_SERVICE_IPV4" ]
+    if [ "$DESIGN_EDITOR_CN_EXPECTED_SERVICE_IPV4" != \
+        "$DESIGN_EDITOR_CN_SERVICE_IPV4" ]
     then
         cn_firewall_fail \
             "inventory service IPv4 differs from the installed Compose binding"

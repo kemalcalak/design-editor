@@ -9,7 +9,13 @@ on:
       - 'deny.toml'
       - '.github/workflows/wasm-bundle-check.yml'
   push:
-    branches: ['**']
+    branches: [main]
+
+# One run per PR (or per branch push); a newer push to a PR cancels the
+# older run. Pushes to main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   wasm32-check:
@@ -29,11 +35,11 @@ jobs:
       - name: Forward — bucket A crates compile on wasm32
         run: |
           cargo check --target wasm32-unknown-unknown \
-            -p op-collab --no-default-features
+            -p de-collab --no-default-features
           cargo check --target wasm32-unknown-unknown \
-            -p op-host-web --no-default-features --features web
+            -p de-host-web --no-default-features --features web
           cargo check --target wasm32-unknown-unknown \
-            -p op-chrome-extension-core
+            -p de-chrome-extension-core
 
   wasm32-deny:
     name: cargo-deny --target wasm32-unknown-unknown check bans

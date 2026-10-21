@@ -27,22 +27,22 @@ done
 # Generate the only accepted ruleset from a strictly parsed IPv4 argument.
 # Never ask root to reopen or execute a caller-controlled nftables file.
 umask 077
-staged=$(mktemp /run/openpencil-locator-edge-rate.XXXXXX)
+staged=$(mktemp /run/design-editor-locator-edge-rate.XXXXXX)
 cleanup() {
     rm -f "$staged"
 }
 trap cleanup EXIT HUP INT TERM
 chmod 0600 "$staged"
 
-if nft list table inet openpencil_locator_edge_rate >/dev/null 2>&1; then
+if nft list table inet design_editor_locator_edge_rate >/dev/null 2>&1; then
     printf '%s\n' \
-        'delete table inet openpencil_locator_edge_rate' >>"$staged"
+        'delete table inet design_editor_locator_edge_rate' >>"$staged"
 fi
 printf '%s\n' \
-    'table inet openpencil_locator_edge_rate {' \
+    'table inet design_editor_locator_edge_rate {' \
     '    chain prerouting {' \
     '        type filter hook prerouting priority mangle; policy accept;' \
-    "        ip daddr $public_ipv4 tcp dport 443 tcp flags & (fin | syn | rst | ack) == syn ct state new meter locator_edge_new_v4 { ip saddr timeout 2m limit rate over 60/minute burst 20 packets } counter drop comment \"OpenPencil locator edge per-source new connections\"" \
+    "        ip daddr $public_ipv4 tcp dport 443 tcp flags & (fin | syn | rst | ack) == syn ct state new meter locator_edge_new_v4 { ip saddr timeout 2m limit rate over 60/minute burst 20 packets } counter drop comment \"Design Editor locator edge per-source new connections\"" \
     '    }' \
     '}' >>"$staged"
 

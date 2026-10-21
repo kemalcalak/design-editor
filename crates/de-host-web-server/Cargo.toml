@@ -1,0 +1,23 @@
+[package]
+name = "de-host-web-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Design Editor headless web/MCP server binary — links de-host-services only, no winit/skia-GL"
+
+[[bin]]
+name = "de-host-web-server"
+path = "src/main.rs"
+
+[features]
+pinned-skia-binaries = ["de-host-services/pinned-skia-binaries"]
+# Forwarded to de-host-services so a dev daemon can mint collaboration
+# tickets from the locally built ABI-v2 op-auth archive (debug only).
+dev-op-auth-abi-v2 = ["de-host-services/dev-op-auth-abi-v2"]
+
+[dependencies]
+de-host-services = { path = "../de-host-services" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

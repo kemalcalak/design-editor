@@ -45,7 +45,7 @@ final class DocumentExportCoordinator: NSObject {
         do {
             stagedFile = try makeStagedFileURL(filename: filename)
         } catch {
-            NSLog("OpenPencil could not prepare an export file: %@", error.localizedDescription)
+            NSLog("Design Editor could not prepare an export file: %@", error.localizedDescription)
             cancelPendingEngineRequest()
             cleanupStagingDirectory()
             presentExportError()
@@ -151,7 +151,7 @@ final class DocumentExportCoordinator: NSObject {
         precondition(Thread.isMainThread)
         let fileManager = FileManager.default
         let root = fileManager.temporaryDirectory
-            .appendingPathComponent("OpenPencilExports", isDirectory: true)
+            .appendingPathComponent("DesignEditorExports", isDirectory: true)
         let directory = root.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try fileManager.createDirectory(
             at: directory,
@@ -216,7 +216,7 @@ final class DocumentExportCoordinator: NSObject {
         } catch {
             if (error as NSError).code != NSFileNoSuchFileError {
                 NSLog(
-                    "OpenPencil could not remove export staging directory: %@",
+                    "Design Editor could not remove export staging directory: %@",
                     error.localizedDescription
                 )
             }
@@ -252,7 +252,7 @@ final class DocumentExportCoordinator: NSObject {
         let alert = UIAlertController(
             title: NSLocalizedString("Unable to Export File", comment: "Export failure title"),
             message: NSLocalizedString(
-                "OpenPencil could not create the requested export.",
+                "Design Editor could not create the requested export.",
                 comment: "Export failure message"
             ),
             preferredStyle: .alert

@@ -1,6 +1,6 @@
 import UIKit
 
-/// The engine's 15 UI locales (mirrors `op_i18n::Locale::ALL` order and
+/// The engine's 15 UI locales (mirrors `de_i18n::Locale::ALL` order and
 /// codes; the lifecycle contract pins the codes against the engine header
 /// side). Native display names match the engine's own picker.
 enum EngineLanguage {

@@ -2,7 +2,7 @@ import { window, display } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /** One atomic viewport tuple in engine units (vp) plus keyboard occlusion. */
 export class ViewportBands {

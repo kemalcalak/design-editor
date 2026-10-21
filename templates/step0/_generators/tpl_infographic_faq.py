@@ -277,7 +277,7 @@ def build():
     return [page]
 
 
-# 对比度（WCAG 相对亮度比，op-design-lint 的门槛是 2.0；数值实测）：
+# 对比度（WCAG 相对亮度比，de-design-lint 的门槛是 2.0；数值实测）：
 #   c-ink         on c-bg          15.64   c-muted      on c-bg          5.88
 #   c-ink         on c-surface     17.16   c-muted      on c-surface     6.46
 #   c-surface     on c-band        16.66   c-band-muted on c-band        6.67

@@ -2,7 +2,7 @@
 # tools/stage-web-assets.sh — copy the runtime-fetched product assets into a
 # web bundle's `assets/` directory.
 #
-# The wasm bundle deliberately omits these (see `op_editor_core::web_assets`):
+# The wasm bundle deliberately omits these (see `de_editor_core::web_assets`):
 # the browser fetches each on demand from `/pkg/assets/<dir>/<file>`, which the
 # daemon serves straight out of the resolved bundle directory. The desktop
 # binary still embeds them with `include_bytes!` / `include_str!`, so this
@@ -11,7 +11,7 @@
 # The layout under the destination MUST match the route literals in
 # `prompt_center_previews.rs`, `scene_template_previews.rs`,
 # `scene_template_catalog.rs`, `icon_catalog.rs`, `bundled_fonts_web.rs` and
-# `op_i18n::catalog_route` — those are `concat!`ed / formatted at compile time,
+# `de_i18n::catalog_route` — those are `concat!`ed / formatted at compile time,
 # so a mismatch is a silent 404 per asset rather than a build error. The Rust
 # side pins its half with route tests (the font manifest additionally asserts
 # every listed file exists in the source directories staged below); this script
@@ -23,10 +23,10 @@
 set -euo pipefail
 
 DEST="${1:?usage: stage-web-assets.sh <dest-assets-dir>}"
-UI_ASSETS="crates/op-editor-ui/assets"
-CORE_ASSETS="crates/op-editor-core/assets"
-DESKTOP_FONTS="crates/op-host-desktop/assets/fonts"
-NATIVE_ASSETS="crates/op-host-native/assets"
+UI_ASSETS="crates/de-editor-ui/assets"
+CORE_ASSETS="crates/de-editor-core/assets"
+DESKTOP_FONTS="crates/de-host-desktop/assets/fonts"
+NATIVE_ASSETS="crates/de-host-native/assets"
 I18N_EXPORTER="tools/export-i18n-catalogs.py"
 
 command -v python3 >/dev/null 2>&1 || {
@@ -66,7 +66,7 @@ copy_file "${UI_ASSETS}/iconify-catalog-core.json" "iconify-catalog-core.json"
 # The OFL design fonts the desktop binary embeds with `include_bytes!`. The
 # browser has no bundled fonts of its own, so without these a document using
 # e.g. Inter pops the missing-fonts modal and renders a fallback face; the web
-# host fetches them all at mount (`op-host-web/src/bundled_fonts_web.rs`).
+# host fetches them all at mount (`de-host-web/src/bundled_fonts_web.rs`).
 copy_dir "${DESKTOP_FONTS}" "fonts"
 # Roboto lives with the native host (it is also that backend's last-resort
 # face), not in the desktop font directory, so it is staged separately.

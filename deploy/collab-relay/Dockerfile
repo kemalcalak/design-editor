@@ -5,9 +5,9 @@
 FROM rust:1.94-bookworm@sha256:6ae102bdbf528294bc79ad6e1fae682f6f7c2a6e6621506ba959f9685b308a55 AS build
 WORKDIR /src
 COPY . .
-RUN cargo build --locked --release -p op-collab-relay-server
+RUN cargo build --locked --release -p de-collab-relay-server
 
 FROM gcr.io/distroless/cc-debian12:nonroot@sha256:fccdbb0a547c14e23fcf4ce8ad62ca5d43b4faae8d22cd292f490fef9946c96e
-COPY --from=build /src/target/release/op-collab-relay-server /usr/local/bin/op-collab-relay-server
+COPY --from=build /src/target/release/de-collab-relay-server /usr/local/bin/de-collab-relay-server
 EXPOSE 8091
-ENTRYPOINT ["/usr/local/bin/op-collab-relay-server"]
+ENTRYPOINT ["/usr/local/bin/de-collab-relay-server"]

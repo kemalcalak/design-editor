@@ -6,17 +6,17 @@ set -euo pipefail
 
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd)
-workflow=${OPENPENCIL_ANDROID_RELEASE_WORKFLOW:-$repo_root/.github/workflows/android-release.yml}
-builder=${OPENPENCIL_ANDROID_RELEASE_BUILDER:-$repo_root/scripts/build-android-release.sh}
-signer=${OPENPENCIL_ANDROID_RELEASE_SIGNER:-$repo_root/scripts/sign-android-release.sh}
-app_gradle=${OPENPENCIL_ANDROID_APP_GRADLE:-$repo_root/packaging/android/app/build.gradle.kts}
-root_gradle=${OPENPENCIL_ANDROID_ROOT_GRADLE:-$repo_root/packaging/android/build.gradle.kts}
-wrapper=${OPENPENCIL_ANDROID_GRADLE_WRAPPER:-$repo_root/packaging/android/gradle/wrapper/gradle-wrapper.properties}
-verification=${OPENPENCIL_ANDROID_VERIFICATION_METADATA:-$repo_root/packaging/android/gradle/verification-metadata.xml}
-jni_manifest=${OPENPENCIL_ANDROID_JNI_MANIFEST:-$repo_root/crates/op-engine-jni/Cargo.toml}
-pinned_tools=${OPENPENCIL_ANDROID_PINNED_TOOLS:-$repo_root/tools/pinned-release-tools.sh}
-sdk_installer=${OPENPENCIL_ANDROID_SDK_INSTALLER:-$repo_root/tools/install-pinned-android-sdk.sh}
-mobile_auth_gate=${OPENPENCIL_ANDROID_AUTH_GATE:-$repo_root/tools/check-mobile-auth-link-input.sh}
+workflow=${DESIGN_EDITOR_ANDROID_RELEASE_WORKFLOW:-$repo_root/.github/workflows/android-release.yml}
+builder=${DESIGN_EDITOR_ANDROID_RELEASE_BUILDER:-$repo_root/scripts/build-android-release.sh}
+signer=${DESIGN_EDITOR_ANDROID_RELEASE_SIGNER:-$repo_root/scripts/sign-android-release.sh}
+app_gradle=${DESIGN_EDITOR_ANDROID_APP_GRADLE:-$repo_root/packaging/android/app/build.gradle.kts}
+root_gradle=${DESIGN_EDITOR_ANDROID_ROOT_GRADLE:-$repo_root/packaging/android/build.gradle.kts}
+wrapper=${DESIGN_EDITOR_ANDROID_GRADLE_WRAPPER:-$repo_root/packaging/android/gradle/wrapper/gradle-wrapper.properties}
+verification=${DESIGN_EDITOR_ANDROID_VERIFICATION_METADATA:-$repo_root/packaging/android/gradle/verification-metadata.xml}
+jni_manifest=${DESIGN_EDITOR_ANDROID_JNI_MANIFEST:-$repo_root/crates/de-engine-jni/Cargo.toml}
+pinned_tools=${DESIGN_EDITOR_ANDROID_PINNED_TOOLS:-$repo_root/tools/pinned-release-tools.sh}
+sdk_installer=${DESIGN_EDITOR_ANDROID_SDK_INSTALLER:-$repo_root/tools/install-pinned-android-sdk.sh}
+mobile_auth_gate=${DESIGN_EDITOR_ANDROID_AUTH_GATE:-$repo_root/tools/check-mobile-auth-link-input.sh}
 
 require_literal() {
     grep -Fq -- "$1" "$2" || {
@@ -60,8 +60,8 @@ call_outputs = events.fetch("workflow_call").fetch("outputs")
 %w[version artifact_name artifact_id].each { |name| call_outputs.fetch(name) }
 call_secrets = events.fetch("workflow_call").fetch("secrets")
 expected_call_secrets = %w[
-  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN
-  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
+  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN
+  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
 ]
 unless call_secrets.keys.sort == expected_call_secrets &&
     call_secrets.values.all? { |contract| contract.fetch("required") == true }
@@ -122,7 +122,7 @@ end
 build_secret_names = build_secret_steps.fetch(0).fetch("env").select do |_name, value|
   value.to_s.include?("secrets.")
 end.keys.sort
-unless build_secret_names == %w[OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL]
+unless build_secret_names == %w[DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL]
   raise "build runner may receive only the two relay bootstrap secrets"
 end
 %w[
@@ -184,16 +184,16 @@ end
 build_handoff = build_steps.find do |step|
   step["name"] == "Build collaboration-enabled unsigned release handoff"
 end
-unless build_handoff.fetch("env").fetch("OPENPENCIL_RELEASE_SOURCE_SHA") ==
+unless build_handoff.fetch("env").fetch("DESIGN_EDITOR_RELEASE_SOURCE_SHA") ==
       '${{ needs.verify.outputs.source_sha }}' &&
     build_handoff.fetch("env").fetch("OP_AUTH_ARTIFACT_ROOT") ==
-      '${{ github.workspace }}/crates/op-auth-bridge/prebuilt'
+      '${{ github.workspace }}/crates/de-auth-bridge/prebuilt'
   raise "Android build must consume the verified matrix from the release source"
 end
 sign_handoff = sign_steps.find do |step|
   step["name"] == "Sign and verify without invoking Cargo or Gradle"
 end
-unless sign_handoff.fetch("env").fetch("OPENPENCIL_RELEASE_SOURCE_SHA") ==
+unless sign_handoff.fetch("env").fetch("DESIGN_EDITOR_RELEASE_SOURCE_SHA") ==
     '${{ needs.verify.outputs.source_sha }}'
   raise "Android signer must bind the handoff to the release source"
 end
@@ -213,13 +213,13 @@ require_literal 'cancel-in-progress: false' "$workflow"
 require_literal 'artifact-ids: ${{ needs.build.outputs.artifact_id }}' "$workflow"
 require_literal 'merge-multiple: true' "$workflow"
 require_literal 'name: internal-android-unsigned-${{ github.run_id }}-${{ github.run_attempt }}' "$workflow"
-require_literal 'name: openpencil-android-${{ needs.verify.outputs.version }}' "$workflow"
-require_literal '${{ runner.temp }}/openpencil-android-signed/SHA256SUMS.android.txt' "$workflow"
+require_literal 'name: design-editor-android-${{ needs.verify.outputs.version }}' "$workflow"
+require_literal '${{ runner.temp }}/design-editor-android-signed/SHA256SUMS.android.txt' "$workflow"
 require_literal 'tools/check-op-auth-release-matrix.test.sh' "$workflow"
 require_literal 'tools/check-op-auth-release-matrix.sh' "$workflow"
 require_literal 'tools/check-op-auth-prebuilt.sh --require-hardened' "$workflow"
-require_literal 'OPENPENCIL_RELEASE_SOURCE_SHA: ${{ needs.verify.outputs.source_sha }}' "$workflow"
-require_literal 'OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/op-auth-bridge/prebuilt' "$workflow"
+require_literal 'DESIGN_EDITOR_RELEASE_SOURCE_SHA: ${{ needs.verify.outputs.source_sha }}' "$workflow"
+require_literal 'OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/de-auth-bridge/prebuilt' "$workflow"
 reject_literal 'tools/check-op-auth-artifact-commit.sh' "$workflow"
 reject_literal 'OP_AUTH_RELEASE_EXPECTED_OPENPENCIL_REVISION:' "$workflow"
 reject_literal 'OP_AUTH_RELEASE_WORKSPACE_VERSION:' "$workflow"
@@ -262,7 +262,7 @@ require_literal 'compileSdk = 36' "$app_gradle"
 require_literal 'targetSdk = 36' "$app_gradle"
 require_literal 'buildToolsVersion = "36.0.0"' "$app_gradle"
 require_literal 'ndkVersion = "28.2.13676358"' "$app_gradle"
-require_literal 'applicationId = "tech.zseven.openpencil"' "$app_gradle"
+require_literal 'applicationId = "com.kemalcalak.designeditor"' "$app_gradle"
 require_literal 'abortOnError = true' "$app_gradle"
 require_literal 'sourceSets["release"].jniLibs.srcDirs("src/release/jniLibs")' "$app_gradle"
 reject_literal 'signingConfigs' "$app_gradle"
@@ -280,7 +280,7 @@ require_literal 'name="activity-ktx" version="1.7.0"' "$verification"
 require_literal 'name="appcompat" version="1.7.0"' "$verification"
 require_literal 'name="junit" version="4.13.2"' "$verification"
 
-require_literal 'pinned-skia-binaries = ["op-engine-ffi/pinned-skia-binaries"]' "$jni_manifest"
+require_literal 'pinned-skia-binaries = ["de-engine-ffi/pinned-skia-binaries"]' "$jni_manifest"
 require_literal 'aarch64-linux-android) expected=82ca6dd1720bbe8b105c12c4d0c78786d2c792e9d2a7f2102ab66bb24dafa9d0' "$pinned_tools"
 require_literal 'x86_64-linux-android) expected=ca217df6ffced17381cbea4df044969a493a46bddc757ee844e2fbaf54fa1257' "$pinned_tools"
 require_literal 'a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29' "$pinned_tools"
@@ -298,7 +298,7 @@ require_literal 'dfb20d396df28ca02a8c708314b814a4d961dc9074f9a161932746f815aa552
 require_literal 'https://dl.google.com/android/repository/$name' "$sdk_installer"
 
 require_literal 'export -n relay_bootstrap_cn relay_bootstrap_global' "$builder"
-require_literal 'unset OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN' "$builder"
+require_literal 'unset DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN' "$builder"
 require_literal 'expected_sdk_digests=' "$builder"
 require_literal 'AndroidVersion\.ApiLevel=36' "$builder"
 require_literal '--dependency-verification strict' "$builder"
@@ -307,8 +307,8 @@ require_literal 'PAGE_ALIGNMENT_16K' "$builder"
 require_literal 'alignment >= 0x4000' "$builder"
 require_literal '--features gl,editor,pinned-skia-binaries' "$builder"
 require_literal 'tools/check-op-auth-cargo-build.sh' "$builder"
-require_literal 'OPENPENCIL_RELEASE_SOURCE_SHA' "$builder"
-require_literal 'format=openpencil-android-unsigned-v2' "$builder"
+require_literal 'DESIGN_EDITOR_RELEASE_SOURCE_SHA' "$builder"
+require_literal 'format=design-editor-android-unsigned-v2' "$builder"
 require_literal 'auth_matrix_sha256=$auth_matrix_sha' "$builder"
 reject_literal 'OP_AUTH_RELEASE_EXPECTED_OPENPENCIL_REVISION' "$builder"
 reject_literal 'OP_AUTH_RELEASE_WORKSPACE_VERSION' "$builder"
@@ -327,14 +327,14 @@ require_literal '"$keytool_bin" -printcert -rfc -jarfile' "$signer"
 require_literal '"$apksigner_bin" verify --verbose --print-certs' "$signer"
 require_literal '"$jarsigner_bin" -verify -verbose -certs' "$signer"
 require_literal 'PAGE_ALIGNMENT_16K' "$signer"
-require_literal 'OPENPENCIL_RELEASE_SOURCE_SHA' "$signer"
-require_literal 'openpencil-android-unsigned-v2' "$signer"
+require_literal 'DESIGN_EDITOR_RELEASE_SOURCE_SHA' "$signer"
+require_literal 'design-editor-android-unsigned-v2' "$signer"
 require_literal 'auth_matrix_sha256' "$signer"
 require_literal '"$(wc -l < "$manifest" | tr -d '\''[:space:]'\'')" -eq 13' "$signer"
 reject_literal 'OP_AUTH_RELEASE_EXPECTED_OPENPENCIL_REVISION' "$signer"
 reject_literal 'OP_AUTH_ARTIFACT_COMMIT' "$signer"
-require_literal 'OpenPencil-$ANDROID_RELEASE_VERSION-android.apk' "$signer"
-require_literal 'OpenPencil-$ANDROID_RELEASE_VERSION-android.aab' "$signer"
+require_literal 'Design-Editor-$ANDROID_RELEASE_VERSION-android.apk' "$signer"
+require_literal 'Design-Editor-$ANDROID_RELEASE_VERSION-android.aab' "$signer"
 if grep -Eq '^[[:space:]]*(cargo|\./gradlew|gradle)[[:space:]]' "$signer"; then
     printf 'error: protected Android signer must not invoke Cargo or Gradle\n' >&2
     exit 1

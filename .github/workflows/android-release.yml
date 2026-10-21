@@ -8,15 +8,15 @@ name: Android Release
 "on":
   workflow_call:
     secrets:
-      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN:
+      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN:
         description: Reviewed China collaboration bootstrap URL
         required: true
-      OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:
+      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:
         description: Reviewed global collaboration bootstrap URL
         required: true
     outputs:
       version:
-        description: Canonical OpenPencil version
+        description: Canonical Design Editor version
         value: ${{ jobs.verify.outputs.version }}
       artifact_name:
         description: Signed Android Actions artifact consumed by Rust Release
@@ -81,7 +81,7 @@ jobs:
           tools/check-op-auth-prebuilt.sh --require-hardened
           for target in aarch64-linux-android x86_64-linux-android; do
             CONFIGURATION=Release \
-            OP_AUTH_ARCHIVE="$GITHUB_WORKSPACE/crates/op-auth-bridge/prebuilt/$target/libop_auth.a" \
+            OP_AUTH_ARCHIVE="$GITHUB_WORKSPACE/crates/de-auth-bridge/prebuilt/$target/libop_auth.a" \
             OP_AUTH_TARGET="$target" \
               tools/check-mobile-auth-link-input.sh
           done
@@ -132,11 +132,11 @@ jobs:
       - name: Build collaboration-enabled unsigned release handoff
         shell: bash
         env:
-          ANDROID_UNSIGNED_OUTPUT_DIR: ${{ runner.temp }}/openpencil-android-unsigned
-          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-          OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
-          OPENPENCIL_RELEASE_SOURCE_SHA: ${{ needs.verify.outputs.source_sha }}
-          OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/op-auth-bridge/prebuilt
+          ANDROID_UNSIGNED_OUTPUT_DIR: ${{ runner.temp }}/design-editor-android-unsigned
+          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
+          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
+          DESIGN_EDITOR_RELEASE_SOURCE_SHA: ${{ needs.verify.outputs.source_sha }}
+          OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/de-auth-bridge/prebuilt
         run: |
           set -euo pipefail
           scripts/build-android-release.sh
@@ -146,7 +146,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: internal-android-unsigned-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/openpencil-android-unsigned/
+          path: ${{ runner.temp }}/design-editor-android-unsigned/
           if-no-files-found: error
           retention-days: 1
 
@@ -178,7 +178,7 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ needs.build.outputs.artifact_id }}
-          path: ${{ runner.temp }}/openpencil-android-unsigned
+          path: ${{ runner.temp }}/design-editor-android-unsigned
           merge-multiple: true
 
       - name: Sign and verify without invoking Cargo or Gradle
@@ -190,9 +190,9 @@ jobs:
           ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
           ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
           ANDROID_RELEASE_VERSION: ${{ needs.verify.outputs.version }}
-          ANDROID_SIGNED_OUTPUT_DIR: ${{ runner.temp }}/openpencil-android-signed
-          ANDROID_UNSIGNED_HANDOFF_DIR: ${{ runner.temp }}/openpencil-android-unsigned
-          OPENPENCIL_RELEASE_SOURCE_SHA: ${{ needs.verify.outputs.source_sha }}
+          ANDROID_SIGNED_OUTPUT_DIR: ${{ runner.temp }}/design-editor-android-signed
+          ANDROID_UNSIGNED_HANDOFF_DIR: ${{ runner.temp }}/design-editor-android-unsigned
+          DESIGN_EDITOR_RELEASE_SOURCE_SHA: ${{ needs.verify.outputs.source_sha }}
         run: |
           set -euo pipefail
           export JAVA_HOME="$ANDROID_JAVA_HOME"
@@ -204,16 +204,16 @@ jobs:
         shell: bash
         env:
           VERSION: ${{ needs.verify.outputs.version }}
-        run: echo "artifact_name=openpencil-android-$VERSION" >> "$GITHUB_OUTPUT"
+        run: echo "artifact_name=design-editor-android-$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Upload signed Android release assets
         id: signed
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: openpencil-android-${{ needs.verify.outputs.version }}
+          name: design-editor-android-${{ needs.verify.outputs.version }}
           path: |
-            ${{ runner.temp }}/openpencil-android-signed/*.apk
-            ${{ runner.temp }}/openpencil-android-signed/*.aab
-            ${{ runner.temp }}/openpencil-android-signed/SHA256SUMS.android.txt
+            ${{ runner.temp }}/design-editor-android-signed/*.apk
+            ${{ runner.temp }}/design-editor-android-signed/*.aab
+            ${{ runner.temp }}/design-editor-android-signed/SHA256SUMS.android.txt
           if-no-files-found: error
           retention-days: 7

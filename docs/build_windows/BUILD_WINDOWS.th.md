@@ -1,13 +1,13 @@
 
 > [English](./BUILD_WINDOWS.md) · [简体中文](./BUILD_WINDOWS.zh.md) · [繁體中文](./BUILD_WINDOWS.zh-TW.md) · [日本語](./BUILD_WINDOWS.ja.md) · [한국어](./BUILD_WINDOWS.ko.md) · [Français](./BUILD_WINDOWS.fr.md) · [Español](./BUILD_WINDOWS.es.md) · [Deutsch](./BUILD_WINDOWS.de.md) · [Português](./BUILD_WINDOWS.pt.md) · [Русский](./BUILD_WINDOWS.ru.md) · [हिन्दी](./BUILD_WINDOWS.hi.md) · [Türkçe](./BUILD_WINDOWS.tr.md) · **ไทย** · [Tiếng Việt](./BUILD_WINDOWS.vi.md) · [Bahasa Indonesia](./BUILD_WINDOWS.id.md)
 
-# คู่มือการคอมไพล์ OpenPencil สำหรับ Windows
+# คู่มือการคอมไพล์ Design Editor สำหรับ Windows
 
 ## 1. ดาวน์โหลดซอร์สโค้ด
 
-1. ดาวน์โหลดซอร์สโค้ดจากคลังเก็บ openpencil
+1. ดาวน์โหลดซอร์สโค้ดจากคลังเก็บ design-editor
 
-2. openpencil มีโมดูลย่อย 3 ตัวในไดเรกทอรี `vendor` (jian, casement, agent) ที่ต้องดาวน์โหลดแยกต่างหาก
+2. design-editor มีโมดูลย่อย 3 ตัวในไดเรกทอรี `vendor` (jian, casement, agent) ที่ต้องดาวน์โหลดแยกต่างหาก
 
     - 2.1 jian (เฟรมเวิร์ก UI): [https://github.com/ZSeven-W/jian](https://github.com/ZSeven-W/jian) → แตกไฟล์ไปยัง `vendor\jian`
 
@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 ดาวน์โหลด `rustup-init.exe` จาก rustup.rs แล้วรัน เป็นคำสั่งใน PowerShell **ตรงกับ `openpencil 0.8.4`**:
+    - 2.3 ดาวน์โหลด `rustup-init.exe` จาก rustup.rs แล้วรัน เป็นคำสั่งใน PowerShell **ตรงกับ `design-editor 0.8.4`**:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 ติดตั้ง wasm-bindgen-cli สำหรับการสร้าง WASM-JS binding รันคำสั่งต่อไปนี้ใน PowerShell **ตรงกับ `openpencil 0.8.4`**:
+    - 2.4 ติดตั้ง wasm-bindgen-cli สำหรับการสร้าง WASM-JS binding รันคำสั่งต่อไปนี้ใน PowerShell **ตรงกับ `design-editor 0.8.4`**:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -95,64 +95,64 @@
     - 2.1 คอมไพล์ไลบรารี WASM ในรูทของคลังเก็บ เปิด PowerShell แล้วรัน:
 
         ```powershell
-        cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
         ```
 
     - 2.2 สร้างไฟล์ JS binding
 
         ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\op_host_web.wasm --out-dir target\release\web-bundle --target web
+        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
         ```
 
-    - 2.3 คัดลอกทรัพยากร CanvasKit rendering จาก `crates\op-host-web\assets\canvaskit` ไปยัง `web-bundle`:
+    - 2.3 คัดลอกทรัพยากร CanvasKit rendering จาก `crates\de-host-web\assets\canvaskit` ไปยัง `web-bundle`:
 
         ```powershell
-        Copy-Item -Recurse "crates\op-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
+        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
         ```
 
     - 2.4 โครงสร้างไดเรกทอรีสุดท้าย
 
         ```plaintext
         target\release\
-        ├── openpencil-desktop.exe
-        ├── op-host-web-server.exe
-        ├── op.exe
+        ├── design-editor.exe
+        ├── de-host-web-server.exe
+        ├── de.exe
         └── web-bundle\
             ├── canvaskit\
             │   ├── canvaskit.js
             │   └── canvaskit.wasm
             ├── snippets\
             ├── op_host-web.d.ts
-            ├── op_host_web.js
-            ├── op_host_web_bg.wasm
-            └── op_host_web_bg.wasm.d.ts
+            ├── de_host_web.js
+            ├── de_host_web_bg.wasm
+            └── de_host_web_bg.wasm.d.ts
         ```
 
-## 4. กำหนดค่า environment variable สำหรับปลั๊กอิน dsh-openpencil
+## 4. กำหนดค่า environment variable สำหรับปลั๊กอิน dsh-design-editor
 
 1. เปิด PowerShell ในฐานะผู้ดูแลระบบแล้วรันคำสั่งต่อไปนี้ (แทนที่เส้นทางด้วยรูทคลังเก็บจริง):
 
     ```powershell
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
-    [Environment]::SetEnvironmentVariable("DSH_OPENPENCIL_EDITOR_BINARY", "<openpencil-root>\target\release\openpencil-desktop.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
+    [Environment]::SetEnvironmentVariable("DSH_DESIGN_EDITOR_EDITOR_BINARY", "<design-editor-root>\target\release\design-editor.exe", "User")
     ```
 
 ## 5. การตรวจสอบ
 
-1. openpencil-desktop.exe
+1. design-editor.exe
 
     ```powershell
     cd target\release
-    ./openpencil-desktop.exe --serve-web 3100
+    ./design-editor.exe --serve-web 3100
     # หน้าต่างจะกะพริบแล้วปิด — บริการทำงานในพื้นหลังและฟังพอร์ต 3100
     ```
 
-2. op-host-web-server.exe  <i>` (ไม่จำเป็นสำหรับปลั๊กอิน dsh) `</i>
+2. de-host-web-server.exe  <i>` (ไม่จำเป็นสำหรับปลั๊กอิน dsh) `</i>
 
     ```powershell
     cd target\release
-    ./op-host-web-server.exe --serve-web 3100
-    # คุณจะเห็นสองบรรทัด "openpencil-desktop --serve-web:" และพอร์ต 3100 ใน PowerShell
+    ./de-host-web-server.exe --serve-web 3100
+    # คุณจะเห็นสองบรรทัด "design-editor --serve-web:" และพอร์ต 3100 ใน PowerShell
     ```
 
 ---
@@ -162,7 +162,7 @@
 1. ให้ความสำคัญกับพารามิเตอร์ `--features` เมื่อคอมไพล์ WASM
 
     ```powershell
-    cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
+    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
     ```
 
     > ใช้ `--features "web canvaskit"` แทน `--features "web"`
@@ -173,8 +173,8 @@
 
 2. เซิร์ฟเวอร์จะแมปไดเรกทอรี `web-bundle` ทั้งหมดไปยังเส้นทาง HTTP `/pkg/`
 
-    > เส้นทางดิ스크 `web-bundle/op_host_web.js` → URL ในเบราว์เซอร์ `/pkg/op_host_web.js`
+    > เส้นทางดิ스크 `web-bundle/de_host_web.js` → URL ในเบราว์เซอร์ `/pkg/de_host_web.js`
     > 
-    > ถ้าหน้าเว็บแจ้งว่าไม่พบ `/pkg/op_host_web.js` แสดงว่าไฟล์หายไปจาก `web-bundle/`
+    > ถ้าหน้าเว็บแจ้งว่าไม่พบ `/pkg/de_host_web.js` แสดงว่าไฟล์หายไปจาก `web-bundle/`
 
-3. เอกสารนี้เขียนสำหรับ `openpencil 0.8.4` เวอร์ชัน rustup toolchain `1.94`、wasm-bindgen-cli `0.2.117` และ skia-bindings `0.97.2` สอดคล้องกับเวอร์ชันนี้ — เวอร์ชันอื่นอาจแตกต่างกัน
+3. เอกสารนี้เขียนสำหรับ `design-editor 0.8.4` เวอร์ชัน rustup toolchain `1.94`、wasm-bindgen-cli `0.2.117` และ skia-bindings `0.97.2` สอดคล้องกับเวอร์ชันนี้ — เวอร์ชันอื่นอาจแตกต่างกัน

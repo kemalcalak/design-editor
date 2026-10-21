@@ -1,0 +1,217 @@
+{
+  "extName": {
+    "message": "Design Editor",
+    "description": "Extension name shown in Chrome."
+  },
+  "extDescription": {
+    "message": "Sayfaları düzenlenebilir Design Editor tasarım düğümleri olarak yakalayın ve tek tıkla design.md tasarım sistemi kılavuzu çıkarın.",
+    "description": "Extension description shown in Chrome."
+  },
+  "captureButton": {
+    "message": "Tüm sayfayı yakala"
+  },
+  "pickButton": {
+    "message": "Öğe yakala"
+  },
+  "downloadButton": {
+    "message": ".op indir"
+  },
+  "designButton": {
+    "message": "design.md dosyasını çıkar"
+  },
+  "statusDesignWorking": {
+    "message": "Sayfadaki kimlikten arındırılmış stil kanıtları toplanıyor ve Design Editor AI'a soruluyor…"
+  },
+  "statusDesignSmartSuccess": {
+    "message": "design.md yapılandırılmış yapay zekâ ile oluşturulup indirildi."
+  },
+  "statusDesignFallbackSuccess": {
+    "message": "Yapay zekâ kullanılamıyor; design.md deterministik yerel geri dönüş yöntemiyle oluşturulup indirildi: $1"
+  },
+  "designFallbackPairing": {
+    "message": "Design Editor bu uzantıyı yapay zekâ ile oluşturma için yetkilendirmedi; yerel geri dönüş yöntemi kullanıldı."
+  },
+  "designFallbackOffline": {
+    "message": "$1 adresindeki Design Editor'e ulaşılamıyor."
+  },
+  "designFallbackUnsupported": {
+    "message": "Bu Design Editor sürümü akıllı design.md oluşturmayı desteklemiyor."
+  },
+  "designFallbackError": {
+    "message": "Akıllı oluşturma başarısız oldu: $1"
+  },
+  "designBusy": {
+    "message": "Başka bir yakalama veya design.md işlemi zaten çalışıyor."
+  },
+  "designEvidenceSummary": {
+    "message": "$1 görünür öğe örneklendi."
+  },
+  "designEvidenceTruncated": {
+    "message": "$1 görünür öğe örneklendi; toplayıcı güvenlik sınırında durdu."
+  },
+  "designFallbackModel": {
+    "message": "Kullanılabilir bir yapay zekâ modeli yapılandırılmamış."
+  },
+  "errorDesign": {
+    "message": "design.md oluşturulamadı: $1"
+  },
+  "pickHint": {
+    "message": "Yakalamak için bir öğeye tıklayın"
+  },
+  "pickCancelHint": {
+    "message": "İptal için Esc"
+  },
+  "endpointLabel": {
+    "message": "Design Editor adresi"
+  },
+  "endpointHint": {
+    "message": "Masaüstü uygulaması: Ayarlar → MCP → sunucuyu başlatın (varsayılan port 3100)."
+  },
+  "languageLabel": {
+    "message": "Dil"
+  },
+  "statusIdle": {
+    "message": "Hazır."
+  },
+  "statusCapturing": {
+    "message": "Sayfa yakalanıyor…"
+  },
+  "statusTransferring": {
+    "message": "Anlık görüntü aktarılıyor ($1)…"
+  },
+  "statusSending": {
+    "message": "Design Editor’a gönderiliyor…"
+  },
+  "statusImported": {
+    "message": "$1 düğüm Design Editor’a aktarıldı."
+  },
+  "statusSendingAccount": {
+    "message": "Design Editor hesabınıza gönderiliyor…"
+  },
+  "statusSentToAccount": {
+    "message": "Design Editor hesabınıza gönderildi: $1"
+  },
+  "statusSentLocalFallback": {
+    "message": "Hesap oturumunuzun süresi dolmuştu, bu yüzden bu bilgisayardaki Design Editor'a gitti: $1 düğüm içe aktarıldı."
+  },
+  "statusDownloaded": {
+    "message": "$1 kaydedildi."
+  },
+  "statusPicked": {
+    "message": "$1 yakalandı. $2"
+  },
+  "statusPickCancelled": {
+    "message": "Öğe yakalama iptal edildi."
+  },
+  "statusTruncated": {
+    "message": "Not: Sayfa, çıkarıcının 40.000 düğüm sınırına ulaştı; bu nedenle yakalama eksik."
+  },
+  "errorNoTab": {
+    "message": "Etkin sekme yok."
+  },
+  "errorRestrictedTab": {
+    "message": "Chrome, uzantıların bu sayfada çalışmasına izin vermiyor. Normal bir http(s) sayfası açıp yeniden deneyin."
+  },
+  "errorInjection": {
+    "message": "Yakalama betiği bu sekmede çalıştırılamadı: $1"
+  },
+  "errorNoSnapshot": {
+    "message": "Çıkarıcı hiçbir anlık görüntü üretmedi (sayfada görünür bir body olmayabilir)."
+  },
+  "errorChunkLost": {
+    "message": "Yakalanan anlık görüntü aktarım sırasında kayboldu (sayfa muhtemelen başka bir adrese geçti). Yeniden deneyin."
+  },
+  "errorEndpoint": {
+    "message": "Adres, port içeren bir geri döngü adresi olmalı — 127.0.0.1:3100 veya localhost:3100."
+  },
+  "errorOffline": {
+    "message": "Design Editor $1 adresinde erişilebilir değil. Masaüstü uygulamasını başlatıp Ayarlar → MCP → sunucu bölümünden sunucuyu açın veya şunu çalıştırın: design-editor --serve-web 3100"
+  },
+  "errorTimeout": {
+    "message": "$1 adresindeki Design Editor bağlantıyı kabul etti ama $2 saniye içinde yanıt vermedi. Uygulama meşgul ya da takılmış olabilir — kontrol edip yeniden deneyin."
+  },
+  "errorNoIngress": {
+    "message": "Bu Design Editor sürümünde uzantı girişi yok ($1). Uygulamayı güncelleyin veya “.op indir” ile kaydedip dosyayı Design Editor’da açın"
+  },
+  "errorTooLarge": {
+    "message": "Bu yakalama $1 MB’tan büyük ve Design Editor’ın anlık görüntü yolu bunu reddediyor. “.op indir” kullanın, ardından dosyayı Design Editor’da açın"
+  },
+  "errorAccountTooLarge": {
+    "message": "Bu yakalama $1 MB’tan büyük ve hesabın gelen kutusu bunu reddediyor. Bunun yerine bu cihaza gönderin."
+  },
+  "errorImport": {
+    "message": "Design Editor anlık görüntüyü reddetti: $1"
+  },
+  "errorDownload": {
+    "message": "İndirme başarısız: $1"
+  },
+  "errorCoreMissing": {
+    "message": "Bu uzantı derlenmemiş. packages/de-chrome-extension/scripts/build-wasm.sh betiğini çalıştırın, sonra uzantı kartındaki Yeniden Yükle düğmesine basın. ($1)"
+  },
+  "errorCoreInit": {
+    "message": "Uzantı derlenmiş ancak mantık çekirdeği başlamadı. packages/de-chrome-extension/scripts/build-wasm.sh betiğini yeniden çalıştırıp uzantı kartındaki Yeniden Yükle düğmesine basın. ($1)"
+  },
+  "errorPickUnavailable": {
+    "message": "Öğe yakalama kullanılamıyor: uzantının arka plan worker’ı çalışmıyor. chrome://extensions sayfasındaki uzantı kartında hata olup olmadığını kontrol edin, build-wasm.sh betiğini yeniden çalıştırın, sonra Yeniden Yükle düğmesine basın. ($1)"
+  },
+  "accountSignIn": {
+    "message": "Oturum aç"
+  },
+  "accountSignOut": {
+    "message": "Oturumu kapat"
+  },
+  "accountSignInOpened": {
+    "message": "Az önce açılan sayfada oturum açmayı tamamlayın, sonra bu pencereyi yeniden açın."
+  },
+  "accountSignedOut": {
+    "message": "Design Editor hesabınızdan çıkış yapıldı."
+  },
+  "accountSignOutManual": {
+    "message": "Az önce açılan hesap sayfasında çıkışı tamamlayın."
+  },
+  "accountUnavailable": {
+    "message": "Design Editor hesabınıza ulaşılamadı: $1"
+  },
+  "errorAccountSignedOut": {
+    "message": "Design Editor hesap oturumunuzun süresi doldu. Yeniden oturum açıp tekrar deneyin."
+  },
+  "errorAccountForbidden": {
+    "message": "Hub bu yüklemenin kaynağını veya oturum belirtecini reddetti. Yeniden oturum açıp tekrar deneyin. ($1)"
+  },
+  "errorAccountQuota": {
+    "message": "Hesabınızın gelen kutusu dolu — en fazla $1 anlık görüntü veya $2 MB tutar. Hesap sayfasından birkaçını silip tekrar deneyin. ($3)"
+  },
+  "errorAccountRateLimited": {
+    "message": "Hesabınıza çok fazla yükleme yapıldı. Biraz sonra tekrar deneyin. ($1)"
+  },
+  "errorAccountRateLimitedMinutes": {
+    "message": "Hesabınıza çok fazla yükleme yapıldı. Yaklaşık $1 dakika sonra tekrar deneyin."
+  },
+  "errorAccountRateLimitedSeconds": {
+    "message": "Hesabınıza çok fazla yükleme yapıldı. Yaklaşık $1 saniye sonra tekrar deneyin."
+  },
+  "errorAccountRejected": {
+    "message": "Design Editor hesabınız anlık görüntüyü reddetti: $1"
+  },
+  "errorAccountUnavailable": {
+    "message": "Design Editor hesabınız şu anda yakalama alamıyor ($1). Daha sonra deneyin veya bu bilgisayardaki Design Editor'a gönderin."
+  },
+  "regionLabel": {
+    "message": "Bölge"
+  },
+  "regionCn": {
+    "message": "Çin"
+  },
+  "regionGlobal": {
+    "message": "Küresel"
+  },
+  "deliveryLabel": {
+    "message": "Gönderilecek yer"
+  },
+  "deliveryLocal": {
+    "message": "Bu bilgisayardaki Design Editor"
+  },
+  "deliveryAccount": {
+    "message": "Design Editor hesabım"
+  }
+}

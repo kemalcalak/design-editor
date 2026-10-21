@@ -5,7 +5,7 @@
     <string name="document_export_failed">导出文件失败。</string>
     <string name="document_save_failed">保存文档失败。</string>
     <string name="image_import_failed">请选择不超过 32 MiB 的 PNG、JPEG、GIF、WebP 或 SVG 文件。</string>
-    <string name="native_login_title">登录 OpenPencil</string>
+    <string name="native_login_title">登录 Design Editor</string>
     <string name="native_login_close">关闭</string>
     <string name="native_login_email">邮箱</string>
     <string name="native_login_password">密码</string>
@@ -29,11 +29,11 @@
     <string name="account_center_region_value">登录区域：%1$s</string>
     <string name="account_center_manage">在浏览器中管理账号</string>
     <string name="account_center_sign_out">退出登录</string>
-    <string name="account_center_sign_out_confirm">退出 OpenPencil 登录？</string>
+    <string name="account_center_sign_out_confirm">退出 Design Editor 登录？</string>
     <string name="sso_region_china">中国大陆</string>
     <string name="sso_region_global">国际</string>
     <string name="sso_region_picker_title">登录区域</string>
-    <string name="sso_region_restart_note">切换区域将在重启 OpenPencil 后生效。</string>
+    <string name="sso_region_restart_note">切换区域将在重启 Design Editor 后生效。</string>
     <string name="native_login_welcome">欢迎回来</string>
     <string name="native_login_subtitle">登录到 ZSeven</string>
     <string name="native_login_email_label">邮箱地址</string>
@@ -68,12 +68,12 @@
     <string name="sso_region_restart_now">立即重启</string>
     <string name="language_picker_title">语言</string>
     <string name="background_generation_channel">AI 生成</string>
-    <string name="background_generation_channel_description">OpenPencil 在后台生成时显示进度</string>
+    <string name="background_generation_channel_description">Design Editor 在后台生成时显示进度</string>
     <string name="background_generation_result_channel">生成结果</string>
-    <string name="background_generation_running_title">OpenPencil 正在生成</string>
+    <string name="background_generation_running_title">Design Editor 正在生成</string>
     <string name="background_generation_running_body">你可以使用其他应用，生成会在后台继续。</string>
     <string name="background_generation_complete_title">生成完成</string>
-    <string name="background_generation_complete_body">点按返回 OpenPencil 查看结果。</string>
+    <string name="background_generation_complete_body">点按返回 Design Editor 查看结果。</string>
     <string name="background_generation_paused_title">后台生成已暂停</string>
-    <string name="background_generation_paused_body">已达到 Android 后台运行时限，请返回 OpenPencil 继续。</string>
+    <string name="background_generation_paused_body">已达到 Android 后台运行时限，请返回 Design Editor 继续。</string>
 </resources>

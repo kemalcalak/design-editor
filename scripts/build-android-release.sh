@@ -4,11 +4,11 @@
 
 set -euo pipefail
 
-relay_bootstrap_cn=${OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN:-}
-relay_bootstrap_global=${OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:-}
+relay_bootstrap_cn=${DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN:-}
+relay_bootstrap_global=${DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL:-}
 export -n relay_bootstrap_cn relay_bootstrap_global
-unset OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN
-unset OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
+unset DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN
+unset DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL
 umask 077
 
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
@@ -21,14 +21,14 @@ usage() {
         '' \
         'Required environment:' \
         '  OP_AUTH_ARTIFACT_ROOT' \
-        '  OPENPENCIL_RELEASE_SOURCE_SHA' \
+        '  DESIGN_EDITOR_RELEASE_SOURCE_SHA' \
         '  ANDROID_NDK_HOME, ANDROID_HOME' \
         '  ANDROID_SKIA_AARCH64_BINARIES_URL' \
         '  ANDROID_SKIA_X86_64_BINARIES_URL' \
         '  ANDROID_UNSIGNED_OUTPUT_DIR' \
         '  BUNDLETOOL_JAR' \
-        '  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN' \
-        '  OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL'
+        '  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN' \
+        '  DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL'
 }
 
 [[ "$#" -eq 0 ]] || { usage >&2; exit 2; }
@@ -59,7 +59,7 @@ sha256_file() {
 }
 
 for name in \
-    OP_AUTH_ARTIFACT_ROOT OPENPENCIL_RELEASE_SOURCE_SHA \
+    OP_AUTH_ARTIFACT_ROOT DESIGN_EDITOR_RELEASE_SOURCE_SHA \
     ANDROID_NDK_HOME ANDROID_HOME \
     ANDROID_SKIA_AARCH64_BINARIES_URL \
     ANDROID_SKIA_X86_64_BINARIES_URL \
@@ -67,14 +67,14 @@ for name in \
     require_env "$name"
 done
 [[ -n "$relay_bootstrap_cn" ]] || {
-    printf 'error: required secret is missing: OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN\n' >&2
+    printf 'error: required secret is missing: DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN\n' >&2
     exit 2
 }
 [[ -n "$relay_bootstrap_global" ]] || {
-    printf 'error: required secret is missing: OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL\n' >&2
+    printf 'error: required secret is missing: DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL\n' >&2
     exit 2
 }
-[[ "$OPENPENCIL_RELEASE_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+[[ "$DESIGN_EDITOR_RELEASE_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || {
     printf 'error: Android release source must be a full lowercase SHA\n' >&2
     exit 2
 }
@@ -169,14 +169,14 @@ done
 "$repo_root/tools/pinned-release-tools.sh" verify-skia android \
     x86_64-linux-android "$ANDROID_SKIA_X86_64_BINARIES_URL"
 
-canonical_prebuilt=$repo_root/crates/op-auth-bridge/prebuilt
+canonical_prebuilt=$repo_root/crates/de-auth-bridge/prebuilt
 release_jni=$repo_root/packaging/android/app/src/release/jniLibs
 [[ ! -e "$release_jni" && ! -L "$release_jni" ]] || {
     printf 'error: refusing to replace an existing Android Release jniLibs directory\n' >&2
     exit 1
 }
 work_root=${RUNNER_TEMP:-${TMPDIR:-/tmp}}
-temp_dir=$(mktemp -d "$work_root/openpencil-android-build.XXXXXX")
+temp_dir=$(mktemp -d "$work_root/design-editor-android-build.XXXXXX")
 staged_prebuilt=$temp_dir/prebuilt
 canonical_backups=()
 canonical_installed=()
@@ -286,7 +286,7 @@ build_target() {
     local cargo_env_target=${env_target^^}
     local cc=$ndk_tools/${clang_prefix}26-clang
     local cxx=$ndk_tools/${clang_prefix}26-clang++
-    local so=$repo_root/target/$target/release/libop_engine_jni.so
+    local so=$repo_root/target/$target/release/libde_engine_jni.so
     require_ndk_tool "$cc"
     require_ndk_tool "$cxx"
     require_ndk_tool "$ndk_tools/llvm-ar"
@@ -300,9 +300,9 @@ build_target() {
         "BINDGEN_EXTRA_CLANG_ARGS_$env_target=--target=${clang_prefix}26 --sysroot=$ndk_tools/../sysroot" \
         RUSTUP_TOOLCHAIN=1.94 \
         SKIA_BINARIES_URL="$skia_url" \
-        OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_CN="$relay_bootstrap_cn" \
-        OPENPENCIL_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL="$relay_bootstrap_global" \
-        cargo build --locked --release -p op-engine-jni --target "$target" \
+        DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN="$relay_bootstrap_cn" \
+        DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL="$relay_bootstrap_global" \
+        cargo build --locked --release -p de-engine-jni --target "$target" \
             --features gl,editor,pinned-skia-binaries
     OP_AUTH_CARGO_TARGET=$target \
         "$repo_root/tools/check-op-auth-cargo-build.sh"
@@ -317,7 +317,7 @@ build_target() {
         exit 1
     }
     mkdir -p "$release_jni/$abi"
-    install -m 0755 "$so" "$release_jni/$abi/libop_engine_jni.so"
+    install -m 0755 "$so" "$release_jni/$abi/libde_engine_jni.so"
 }
 
 build_target \
@@ -359,7 +359,7 @@ grep -Fq PAGE_ALIGNMENT_16K <<< "$bundle_config" || {
 }
 
 badging=$("$aapt_bin" dump badging "$unsigned_apk")
-grep -Fq "package: name='tech.zseven.openpencil'" <<< "$badging" || {
+grep -Fq "package: name='com.kemalcalak.designeditor'" <<< "$badging" || {
     printf 'error: Android package id does not match the production application\n' >&2
     exit 1
 }
@@ -376,22 +376,22 @@ version_code=$(sed -n 's/^versionCode=//p' <<< "$version_metadata")
 }
 
 mkdir -p "$ANDROID_UNSIGNED_OUTPUT_DIR"
-apk_name=OpenPencil-$workspace_version-android-unsigned.apk
-aab_name=OpenPencil-$workspace_version-android-unsigned.aab
+apk_name=Design-Editor-$workspace_version-android-unsigned.apk
+aab_name=Design-Editor-$workspace_version-android-unsigned.aab
 install -m 0644 "$unsigned_apk" "$ANDROID_UNSIGNED_OUTPUT_DIR/$apk_name"
 install -m 0644 "$unsigned_aab" "$ANDROID_UNSIGNED_OUTPUT_DIR/$aab_name"
 apk_sha=$(sha256_file "$ANDROID_UNSIGNED_OUTPUT_DIR/$apk_name")
 aab_sha=$(sha256_file "$ANDROID_UNSIGNED_OUTPUT_DIR/$aab_name")
-arm64_sha=$(sha256_file "$release_jni/arm64-v8a/libop_engine_jni.so")
-x86_64_sha=$(sha256_file "$release_jni/x86_64/libop_engine_jni.so")
+arm64_sha=$(sha256_file "$release_jni/arm64-v8a/libde_engine_jni.so")
+x86_64_sha=$(sha256_file "$release_jni/x86_64/libde_engine_jni.so")
 auth_matrix_sha=$(sha256_file "$staged_prebuilt/RELEASE-MANIFEST")
 cat > "$ANDROID_UNSIGNED_OUTPUT_DIR/ANDROID-RELEASE-MANIFEST" <<EOF
-format=openpencil-android-unsigned-v2
-application_id=tech.zseven.openpencil
+format=design-editor-android-unsigned-v2
+application_id=com.kemalcalak.designeditor
 version=$workspace_version
 version_code=$version_code
 target_sdk=36
-release_source_revision=$OPENPENCIL_RELEASE_SOURCE_SHA
+release_source_revision=$DESIGN_EDITOR_RELEASE_SOURCE_SHA
 auth_matrix_sha256=$auth_matrix_sha
 apk=$apk_name
 apk_sha256=$apk_sha

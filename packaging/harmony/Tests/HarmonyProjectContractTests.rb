@@ -26,14 +26,14 @@ end
 # ---- Identity --------------------------------------------------------------
 
 app = parse_json5(File.join(player_dir, "AppScope/app.json5"))
-raise "bundleName must be tech.zseven.openpencil" unless app["app"]["bundleName"] == "tech.zseven.openpencil"
+raise "bundleName must be com.kemalcalak.designeditor" unless app["app"]["bundleName"] == "com.kemalcalak.designeditor"
 raise "app label must come from the shared string resource" unless app["app"]["label"] == "$string:app_name"
 raise "app icon must be declared" unless app["app"]["icon"] == "$media:app_icon"
 raise "HarmonyOS 5 floor is API 12" unless app["app"]["minAPIVersion"] == 12
 
 app_strings = JSON.parse(read(player_dir, "AppScope/resources/base/element/string.json"))
 app_name = app_strings["string"].find { |entry| entry["name"] == "app_name" }
-raise "app_name must be exactly OpenPencil" unless app_name && app_name["value"] == "OpenPencil"
+raise "app_name must be exactly Design Editor" unless app_name && app_name["value"] == "Design Editor"
 
 icon = File.binread(File.join(player_dir, "AppScope/resources/base/media/app_icon.png"))
 raise "app icon must be a PNG" unless icon.start_with?("\x89PNG\r\n\x1a\n".b)
@@ -74,8 +74,8 @@ raise "app hvigor task set drifted" unless read(player_dir, "hvigorfile.ts").inc
 raise "entry hvigor task set drifted" unless read(player_dir, "entry/hvigorfile.ts").include?("hapTasks")
 
 entry_package = parse_json5(File.join(player_dir, "entry/oh-package.json5"))
-raise "the native module type package must be wired" unless entry_package["dependencies"]["libopenpencil.so"] ==
-  "file:./src/main/cpp/types/libopenpencil"
+raise "the native module type package must be wired" unless entry_package["dependencies"]["libdesign_editor.so"] ==
+  "file:./src/main/cpp/types/libdesign_editor"
 
 # The native build entry point owns installation of the exact ABI payload.
 # It must validate the freshly-built NAPI surface before atomically replacing
@@ -88,7 +88,7 @@ raise "the OHOS build must target entry\/libs\/<abi>" unless ohos_build.include?
   'install_dir="$repo_root/packaging/harmony/entry/libs/$hap_abi"',
 )
 raise "the OHOS install temp file must share the destination filesystem" unless ohos_build.include?(
-  'mktemp "$install_dir/.libopenpencil.so.tmp.XXXXXX"',
+  'mktemp "$install_dir/.libdesign_editor.so.tmp.XXXXXX"',
 )
 raise "the OHOS payload must be installed by atomic rename" unless ohos_build.include?(
   'mv -f "$install_tmp" "$install_path"',
@@ -105,13 +105,13 @@ atomic_move = ohos_build.index('mv -f "$install_tmp" "$install_path"')
 raise "the OHOS install must follow build and artifact validation" unless
   build_call && marker_gate && atomic_move && build_call < marker_gate && marker_gate < atomic_move
 
-# ---- XComponent <-> libopenpencil.so binding -------------------------------
+# ---- XComponent <-> libdesign_editor.so binding -------------------------------
 
 index = read(ets_dir, "pages/Index.ets")
 raise "the surface must be an XComponent" unless index.include?("XComponent({")
-raise "XComponent must bind libopenpencil.so by library name" unless index.include?("libraryname: 'openpencil'")
+raise "XComponent must bind libdesign_editor.so by library name" unless index.include?("libraryname: 'design-editor'")
 raise "XComponent must be a surface type" unless index.include?("type: XComponentType.SURFACE")
-raise "the XComponent id must be a single shared constant" unless index.include?("const SURFACE_ID = 'openpencil_surface'") &&
+raise "the XComponent id must be a single shared constant" unless index.include?("const SURFACE_ID = 'design_editor_surface'") &&
   index.include?("id: SURFACE_ID")
 raise "the engine must be created against the same surface id" unless index.match?(
   /this\.host\.create\(\s*SURFACE_ID/m,
@@ -203,7 +203,7 @@ raise "the surface must take focus for keyboard input" unless index.include?(".f
 # A SURFACE XComponent consumes hardware keys on the NATIVE channel, so ArkTS
 # `onKeyEvent` never fires while it holds focus: the key path lives in
 # `xcomponent.rs`. A second ArkTS forwarder would double every keystroke.
-xcomponent = read(repo_dir, "crates/op-engine-napi/src/xcomponent.rs")
+xcomponent = read(repo_dir, "crates/de-engine-napi/src/xcomponent.rs")
 raise "physical keys must be forwarded on the native channel" unless xcomponent.include?(
   "OH_NativeXComponent_RegisterKeyEventCallback",
 )
@@ -326,7 +326,7 @@ raise "README must carry a LIMITATIONS section" unless readme.include?("## Limit
 # This is a release gate, not only a source-contract test: hvigor packages the
 # local prebuilt directly. Fail closed when it is stale even if the ArkTS
 # and Rust sources themselves are correct.
-native_artifact_path = File.join(player_dir, "entry/libs/arm64-v8a/libopenpencil.so")
+native_artifact_path = File.join(player_dir, "entry/libs/arm64-v8a/libdesign_editor.so")
 raise "HarmonyOS native artifact missing; run scripts/build-ohos.sh" unless File.file?(native_artifact_path)
 native_artifact = File.binread(native_artifact_path)
 raise "HarmonyOS native artifact is not ELF; run scripts/build-ohos.sh" unless native_artifact.start_with?("\x7fELF".b)

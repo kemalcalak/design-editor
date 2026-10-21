@@ -21,7 +21,7 @@ build
 
 # Local scratch / screenshots / editor temp.
 screenshot
-.openpencil-tmp
+.design-editor-tmp
 
 # Docs add nothing to the build.
 *.md

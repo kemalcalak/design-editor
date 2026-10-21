@@ -3,7 +3,7 @@ import { common } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 const PREFS = 'engine-locale';
 const KEY = 'tag';
 
@@ -19,7 +19,7 @@ export class EngineLocale {
 }
 
 /**
- * The engine's 15 UI locales (mirrors `op_i18n::Locale::ALL` order and codes,
+ * The engine's 15 UI locales (mirrors `de_i18n::Locale::ALL` order and codes,
  * identical to `EngineLanguage.kt` on Android and `EngineLanguage.swift` on
  * iOS). Display names match the engine's own picker.
  */

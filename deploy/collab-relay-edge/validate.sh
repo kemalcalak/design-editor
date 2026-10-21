@@ -16,7 +16,7 @@ nft_installer="$script_dir/install-global-new-connection-rate.sh"
 nft_verifier="$script_dir/verify-global-new-connection-rate.sh"
 rate_rules_verifier="$script_dir/verify-rate-rules.py"
 global_deployer="$script_dir/deploy-global.sh"
-global_service="$script_dir/openpencil-collab-relay-global.service.example"
+global_service="$script_dir/design-editor-collab-relay-global.service.example"
 
 require_literal() {
     pattern=$1
@@ -54,7 +54,7 @@ require_single_upstream_server() {
     fi
 }
 
-validation_mode=${OPENPENCIL_RELAY_EDGE_VALIDATION_MODE:-scaffold}
+validation_mode=${DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE:-scaffold}
 case "$validation_mode" in
     scaffold)
         expected_cn_upstream=192.0.2.10:9443
@@ -62,12 +62,12 @@ case "$validation_mode" in
         expected_outer_name=cn-federation.example.cn
         ;;
     production)
-        : "${OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM:?set fixed CN federation IPv4:port}"
-        : "${OPENPENCIL_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM:?set fixed CN inner WSS IPv4:port}"
-        : "${OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME:?set outer TLS DNS name}"
-        expected_cn_upstream=$OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM
-        expected_inner_upstream=$OPENPENCIL_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM
-        expected_outer_name=$OPENPENCIL_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME
+        : "${DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM:?set fixed CN federation IPv4:port}"
+        : "${DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM:?set fixed CN inner WSS IPv4:port}"
+        : "${DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME:?set outer TLS DNS name}"
+        expected_cn_upstream=$DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_UPSTREAM
+        expected_inner_upstream=$DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_INNER_WSS_UPSTREAM
+        expected_outer_name=$DESIGN_EDITOR_RELAY_EDGE_EXPECTED_CN_FEDERATION_NAME
         for endpoint in "$expected_cn_upstream" "$expected_inner_upstream"; do
             if ! printf '%s\n' "$endpoint" |
                 grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}:[1-9][0-9]{0,4}$'
@@ -86,7 +86,7 @@ case "$validation_mode" in
         fi
         ;;
     *)
-        echo "OPENPENCIL_RELAY_EDGE_VALIDATION_MODE must be scaffold or production" >&2
+        echo "DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE must be scaffold or production" >&2
         exit 2
         ;;
 esac
@@ -150,7 +150,7 @@ fi
 
 require_literal 'location = /v1/tunnel {' "$cn_wss_config"
 require_literal 'proxy_set_header Authorization $http_authorization;' "$cn_wss_config"
-require_literal 'proxy_pass_header OpenPencil-Relay-Challenge;' "$cn_wss_config"
+require_literal 'proxy_pass_header Design-Editor-Relay-Challenge;' "$cn_wss_config"
 [ "$(grep -Fc 'client_header_buffer_size 64k;' "$cn_wss_config")" -eq 2 ]
 [ "$(grep -Fc 'large_client_header_buffers 2 64k;' "$cn_wss_config")" -eq 2 ]
 require_literal \
@@ -163,7 +163,7 @@ require_literal \
 for compose_file in "$global_compose" "$cn_compose"; do
     for pattern in \
         'user: "101:101"' \
-        '@sha256:${OPENPENCIL_RELAY_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}' \
+        '@sha256:${DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256:?set its reviewed 64-hex digest}' \
         'read_only: true' \
         'cap_drop:' \
         '- ALL' \
@@ -184,7 +184,7 @@ for compose_file in "$global_compose" "$cn_compose"; do
 done
 require_literal 'published: 443' "$global_compose"
 require_literal \
-    'host_ip: ${OPENPENCIL_RELAY_EDGE_PUBLIC_BIND_IP:?set a dedicated overseas public IPv4}' \
+    'host_ip: ${DESIGN_EDITOR_RELAY_EDGE_PUBLIC_BIND_IP:?set a dedicated overseas public IPv4}' \
     "$global_compose"
 require_literal 'restart: "no"' "$global_compose"
 require_literal 'restart: unless-stopped' "$cn_compose"
@@ -222,7 +222,7 @@ do
 done
 for pattern in \
     '"$script_dir/install-global-new-connection-rate.sh"' \
-    'OPENPENCIL_RELAY_EDGE_VALIDATION_MODE=production' \
+    'DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE=production' \
     '--abort-on-container-exit --exit-code-from global-edge'
 do
     require_literal "$pattern" "$global_deployer"
@@ -230,7 +230,7 @@ done
 for pattern in \
     'Requires=docker.service nftables.service' \
     'After=network-online.target nftables.service docker.service' \
-    'ExecStart=/opt/openpencil/deploy/collab-relay-edge/deploy-global.sh' \
+    'ExecStart=/opt/design-editor/deploy/collab-relay-edge/deploy-global.sh' \
     'Restart=always'
 do
     require_literal "$pattern" "$global_service"
@@ -244,7 +244,7 @@ for pattern in \
     'candidate CRL does not revoke the supplied Global edge certificate' \
     'CRL activation requires root' \
     'CRL/CA files must be root:101 mode 0440' \
-    'OPENPENCIL_RELAY_EDGE_VALIDATION_MODE=production' \
+    'DESIGN_EDITOR_RELAY_EDGE_VALIDATION_MODE=production' \
     'Recheck the final staged inode after ownership and mode changes.' \
     'mv -f "$staged" "$active"' \
     'up -d --no-deps --force-recreate cn-federation' \
@@ -253,11 +253,11 @@ do
     require_literal "$pattern" "$crl_rotation"
 done
 
-if [ -n "${OPENPENCIL_RELAY_EDGE_IMAGE_SHA256:-}" ] &&
-    ! printf '%s\n' "$OPENPENCIL_RELAY_EDGE_IMAGE_SHA256" |
+if [ -n "${DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256:-}" ] &&
+    ! printf '%s\n' "$DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256" |
         grep -Eq '^[0-9a-f]{64}$'
 then
-    echo "OPENPENCIL_RELAY_EDGE_IMAGE_SHA256 must be 64 lowercase hex characters" >&2
+    echo "DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256 must be 64 lowercase hex characters" >&2
     exit 1
 fi
 if command -v docker >/dev/null 2>&1 &&
@@ -265,20 +265,20 @@ if command -v docker >/dev/null 2>&1 &&
 then
     test_repository=nginx-unprivileged.invalid/test
     test_digest=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-    OPENPENCIL_RELAY_EDGE_IMAGE_REPOSITORY=$test_repository \
-    OPENPENCIL_RELAY_EDGE_IMAGE_SHA256=$test_digest \
-    OPENPENCIL_RELAY_EDGE_PUBLIC_BIND_IP=203.0.113.10 \
-    OPENPENCIL_RELAY_EDGE_CLIENT_CERT=/dev/null \
-    OPENPENCIL_RELAY_EDGE_CLIENT_KEY=/dev/null \
-    OPENPENCIL_RELAY_CN_FEDERATION_CA=/dev/null \
+    DESIGN_EDITOR_RELAY_EDGE_IMAGE_REPOSITORY=$test_repository \
+    DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256=$test_digest \
+    DESIGN_EDITOR_RELAY_EDGE_PUBLIC_BIND_IP=203.0.113.10 \
+    DESIGN_EDITOR_RELAY_EDGE_CLIENT_CERT=/dev/null \
+    DESIGN_EDITOR_RELAY_EDGE_CLIENT_KEY=/dev/null \
+    DESIGN_EDITOR_RELAY_CN_FEDERATION_CA=/dev/null \
         docker compose -f "$global_compose" config -q
-    OPENPENCIL_RELAY_EDGE_IMAGE_REPOSITORY=$test_repository \
-    OPENPENCIL_RELAY_EDGE_IMAGE_SHA256=$test_digest \
-    OPENPENCIL_RELAY_CN_FEDERATION_BIND_IP=10.0.0.1 \
-    OPENPENCIL_RELAY_CN_FEDERATION_CERT=/dev/null \
-    OPENPENCIL_RELAY_CN_FEDERATION_KEY=/dev/null \
-    OPENPENCIL_RELAY_EDGE_CLIENT_CA=/dev/null \
-    OPENPENCIL_RELAY_EDGE_CLIENT_CRL=/dev/null \
+    DESIGN_EDITOR_RELAY_EDGE_IMAGE_REPOSITORY=$test_repository \
+    DESIGN_EDITOR_RELAY_EDGE_IMAGE_SHA256=$test_digest \
+    DESIGN_EDITOR_RELAY_CN_FEDERATION_BIND_IP=10.0.0.1 \
+    DESIGN_EDITOR_RELAY_CN_FEDERATION_CERT=/dev/null \
+    DESIGN_EDITOR_RELAY_CN_FEDERATION_KEY=/dev/null \
+    DESIGN_EDITOR_RELAY_EDGE_CLIENT_CA=/dev/null \
+    DESIGN_EDITOR_RELAY_EDGE_CLIENT_CRL=/dev/null \
         docker compose -f "$cn_compose" config -q
 fi
 

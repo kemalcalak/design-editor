@@ -1,5 +1,5 @@
 {
-  description = "OpenPencil native editor, web host, and web SDK flake";
+  description = "Design Editor native editor, web host, and web SDK flake";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -68,7 +68,7 @@
       systems = ["x86_64-linux"];
 
       flake = {
-        lib.integrationManifest = import ./nix/integration/openpencil.nix;
+        lib.integrationManifest = import ./nix/integration/design-editor.nix;
       };
 
       perSystem = {system, ...}: let
@@ -127,7 +127,7 @@
           ];
         prebuiltCliRuntimeLibraries = [pkgs.stdenv.cc.cc.lib];
 
-        source = pkgs.runCommand "openpencil-source-${version}" {} ''
+        source = pkgs.runCommand "design-editor-source-${version}" {} ''
           mkdir -p $out/vendor/agent $out/vendor/casement $out/vendor/jian
           cp -R --no-preserve=ownership ${./.}/. $out/
           rm -rf $out/vendor/agent $out/vendor/casement $out/vendor/jian
@@ -182,41 +182,41 @@
 
         nativePackage = craneLib.buildPackage (commonArgs
           // {
-            pname = "openpencil-native";
+            pname = "design-editor-native";
             buildInputs = commonArgs.buildInputs ++ [pkgs.openssl];
-            cargoBuildCommand = "cargo build --release --package op-host-desktop --package op-cli --package op-host-web-server";
+            cargoBuildCommand = "cargo build --release --package de-host-desktop --package de-cli --package de-host-web-server";
             installPhase = ''
               runHook preInstall
-              install -Dm755 target/release/openpencil-desktop $out/bin/openpencil-desktop
-              install -Dm755 target/release/op $out/bin/op
-              install -Dm755 target/release/op-host-web-server $out/bin/op-host-web-server
-              install -Dm644 crates/op-host-desktop/assets/icon.png $out/share/icons/hicolor/1024x1024/apps/openpencil.png
-              install -Dm644 ${pkgs.writeText "openpencil.desktop" ''
+              install -Dm755 target/release/design-editor $out/bin/design-editor
+              install -Dm755 target/release/de $out/bin/de
+              install -Dm755 target/release/de-host-web-server $out/bin/de-host-web-server
+              install -Dm644 crates/de-host-desktop/assets/icon.png $out/share/icons/hicolor/1024x1024/apps/design-editor.png
+              install -Dm644 ${pkgs.writeText "design-editor.desktop" ''
                 [Desktop Entry]
-                Name=OpenPencil
+                Name=Design Editor
                 Comment=Open-source AI-native vector design tool
-                Exec=openpencil-desktop %U
+                Exec=design-editor %U
                 Terminal=false
                 Type=Application
-                Icon=openpencil
+                Icon=design-editor
                 Categories=Graphics;
-                MimeType=application/x-openpencil;
-              ''} $out/share/applications/openpencil.desktop
-              install -Dm644 ${pkgs.writeText "openpencil.xml" ''
+                MimeType=application/x-design-editor;
+              ''} $out/share/applications/design-editor.desktop
+              install -Dm644 ${pkgs.writeText "design-editor.xml" ''
                 <?xml version="1.0" encoding="UTF-8"?>
                 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
-                  <mime-type type="application/x-openpencil">
-                    <comment>OpenPencil Document</comment>
+                  <mime-type type="application/x-design-editor">
+                    <comment>Design Editor Document</comment>
                     <glob pattern="*.op"/>
                     <glob pattern="*.pen"/>
                   </mime-type>
                 </mime-info>
-              ''} $out/share/mime/packages/openpencil.xml
-              install -Dm644 crates/op-host-desktop/assets/icon.png $out/share/pixmaps/openpencil.png
+              ''} $out/share/mime/packages/design-editor.xml
+              install -Dm644 crates/de-host-desktop/assets/icon.png $out/share/pixmaps/design-editor.png
               runHook postInstall
             '';
             postFixup = ''
-              for program in openpencil-desktop op op-host-web-server; do
+              for program in design-editor de de-host-web-server; do
                 wrapProgram "$out/bin/$program" \
                   --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath runtimeLibraries}
               done
@@ -224,10 +224,10 @@
           });
 
         runtimePackage = pkgs.symlinkJoin {
-          name = "openpencil-runtime-${version}";
+          name = "design-editor-runtime-${version}";
           paths = [nativePackage];
           postBuild = ''
-            install -Dm644 ${defaultDocument} "$out/share/openpencil/default.op"
+            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.op"
           '';
         };
 
@@ -236,10 +236,10 @@
         # source build remains the default, while users with a matching release
         # asset can avoid compiling Rust and Skia.
         prebuiltDesktopPackage = pkgs.stdenvNoCC.mkDerivation {
-          pname = "openpencil-prebuilt";
+          pname = "design-editor-prebuilt";
           version = releaseVersion;
           src = pkgs.fetchurl {
-            url = "https://github.com/ZSeven-W/openpencil/releases/download/v${releaseVersion}/openpencil-desktop-linux-x86_64.tar.gz";
+            url = "https://github.com/kemalcalak/design-editor/releases/download/v${releaseVersion}/design-editor-linux-x86_64.tar.gz";
             hash = releaseManifest.desktopHash;
           };
           dontUnpack = true;
@@ -248,32 +248,32 @@
           installPhase = ''
             runHook preInstall
             tar -xzf "$src" -C "$TMPDIR"
-            install -Dm755 "$TMPDIR/openpencil-desktop" $out/bin/openpencil-desktop
-            install -Dm644 ${./crates/op-host-desktop/assets/icon.png} \
-              $out/share/icons/hicolor/1024x1024/apps/openpencil.png
-            install -Dm644 ${pkgs.writeText "openpencil-prebuilt.desktop" ''
+            install -Dm755 "$TMPDIR/design-editor" $out/bin/design-editor
+            install -Dm644 ${./crates/de-host-desktop/assets/icon.png} \
+              $out/share/icons/hicolor/1024x1024/apps/design-editor.png
+            install -Dm644 ${pkgs.writeText "design-editor-prebuilt.desktop" ''
               [Desktop Entry]
-              Name=OpenPencil
+              Name=Design Editor
               Comment=Open-source AI-native vector design tool
-              Exec=openpencil-desktop %U
+              Exec=design-editor %U
               Terminal=false
               Type=Application
-              Icon=openpencil
+              Icon=design-editor
               Categories=Graphics;
-            ''} $out/share/applications/openpencil.desktop
+            ''} $out/share/applications/design-editor.desktop
             runHook postInstall
           '';
           postFixup = ''
-            wrapProgram $out/bin/openpencil-desktop \
+            wrapProgram $out/bin/design-editor \
               --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath prebuiltDesktopRuntimeLibraries}
           '';
         };
 
         prebuiltCliPackage = pkgs.stdenvNoCC.mkDerivation {
-          pname = "openpencil-cli-prebuilt";
+          pname = "design-editor-cli-prebuilt";
           version = releaseVersion;
           src = pkgs.fetchurl {
-            url = "https://github.com/ZSeven-W/openpencil/releases/download/v${releaseVersion}/op-cli-linux-x86_64.tar.gz";
+            url = "https://github.com/kemalcalak/design-editor/releases/download/v${releaseVersion}/de-cli-linux-x86_64.tar.gz";
             hash = releaseManifest.cliHash;
           };
           dontUnpack = true;
@@ -282,7 +282,7 @@
           installPhase = ''
             runHook preInstall
             tar -xzf "$src" -C "$TMPDIR"
-            install -Dm755 "$TMPDIR/op" $out/bin/op
+            install -Dm755 "$TMPDIR/de" $out/bin/de
             runHook postInstall
           '';
         };
@@ -316,14 +316,14 @@
 
         webHostBundle = craneLib.buildPackage (commonArgs
           // {
-            pname = "openpencil-web-bundle";
-            cargoBuildCommand = "cargo build --release --target wasm32-unknown-unknown --no-default-features --features canvaskit --package op-host-web";
+            pname = "design-editor-web-bundle";
+            cargoBuildCommand = "cargo build --release --target wasm32-unknown-unknown --no-default-features --features canvaskit --package de-host-web";
             nativeBuildInputs = commonArgs.nativeBuildInputs ++ [wasmBindgen.package pkgs.binaryen pkgs.nodejs pkgs.gzip];
             installPhase = ''
               runHook preInstall
               mkdir -p $out
-              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out target/wasm32-unknown-unknown/release/op_host_web.wasm
-              cp -R crates/op-host-web/assets/canvaskit $out/canvaskit
+              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out --out-name op_host_web target/wasm32-unknown-unknown/release/de_host_web.wasm
+              cp -R crates/de-host-web/assets/canvaskit $out/canvaskit
               ${wasmGate "op_host_web_bg.wasm" "op_host_web_bg.opt.wasm"}
               runHook postInstall
             '';
@@ -331,20 +331,20 @@
 
         webSdkWasm = craneLib.buildPackage (commonArgs
           // {
-            pname = "openpencil-web-sdk-wasm";
-            cargoBuildCommand = "cargo build --release --target wasm32-unknown-unknown --features canvaskit --package op-web-sdk";
+            pname = "design-editor-web-sdk-wasm";
+            cargoBuildCommand = "cargo build --release --target wasm32-unknown-unknown --features canvaskit --package de-web-sdk";
             nativeBuildInputs = commonArgs.nativeBuildInputs ++ [wasmBindgen.package pkgs.binaryen pkgs.nodejs pkgs.gzip];
             installPhase = ''
               runHook preInstall
               mkdir -p $out
-              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out target/wasm32-unknown-unknown/release/op_web_sdk.wasm
-              ${wasmGate "op_web_sdk_bg.wasm" "op_web_sdk_bg.opt.wasm"}
+              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out target/wasm32-unknown-unknown/release/de_web_sdk.wasm
+              ${wasmGate "de_web_sdk_bg.wasm" "de_web_sdk_bg.opt.wasm"}
               runHook postInstall
             '';
           });
 
         webServerPackage = pkgs.symlinkJoin {
-          name = "openpencil-${version}";
+          name = "design-editor-${version}";
           paths = [nativePackage];
           postBuild = ''
             mkdir -p $out/bin/web-bundle
@@ -352,18 +352,18 @@
           '';
         };
         opCliPackage = pkgs.symlinkJoin {
-          name = "openpencil-cli-${version}";
+          name = "design-editor-cli-${version}";
           paths = [nativePackage];
           postBuild = ''
             mkdir -p $out/bin
-            ln -sf ${nativePackage}/bin/op $out/bin/op
+            ln -sf ${nativePackage}/bin/de $out/bin/de
           '';
         };
 
-        defaultDocument = pkgs.writeText "openpencil-default-${version}.op" ''
+        defaultDocument = pkgs.writeText "design-editor-default-${version}.op" ''
           {
             "version": "${version}",
-            "name": "OpenPencil Nix Session",
+            "name": "Design Editor Nix Session",
             "children": []
           }
         '';
@@ -388,7 +388,7 @@
           hash = "sha256-aY3Nr1+a1o7TojefRcozmntbdfrF2JRtOrRY8Hqs8rE=";
         };
         webSdkPackages = pkgs.stdenvNoCC.mkDerivation {
-          pname = "openpencil-web-sdk-packages";
+          pname = "design-editor-web-sdk-packages";
           inherit version;
           src = source;
           # nodejs_22 (LTS), not pkgs.nodejs: vitest's tinypool 1.x crashes on
@@ -399,50 +399,50 @@
           nativeBuildInputs = [bunToolchain.bun pkgs.coreutils pkgs.nodejs_22];
           buildPhase = ''
             runHook preBuild
-            rm -rf packages/node_modules packages/op-web-sdk/wasm
+            rm -rf packages/node_modules packages/de-web-sdk/wasm
             cp -R ${bunDeps}/packages/node_modules packages/node_modules
-            for workspace in op-web-sdk op-web-sdk-react op-web-sdk-vue; do
+            for workspace in de-web-sdk de-web-sdk-react de-web-sdk-vue; do
               cp -R ${bunDeps}/packages/$workspace/node_modules packages/$workspace/
             done
             chmod -R u+w packages/node_modules
-            chmod -R u+w packages/op-web-sdk/node_modules packages/op-web-sdk-react/node_modules packages/op-web-sdk-vue/node_modules
+            chmod -R u+w packages/de-web-sdk/node_modules packages/de-web-sdk-react/node_modules packages/de-web-sdk-vue/node_modules
             patchShebangs packages/node_modules
             find packages/node_modules -type f -exec sed -i \
               -e 's|^#!/usr/bin/env bun$|#!${bunToolchain.bun}/bin/bun|' \
               -e 's|^#!/usr/bin/env node$|#!${pkgs.nodejs_22}/bin/node|' {} +
-            mkdir -p packages/op-web-sdk/wasm
-            cp -R ${webSdkWasm}/. packages/op-web-sdk/wasm/
+            mkdir -p packages/de-web-sdk/wasm
+            cp -R ${webSdkWasm}/. packages/de-web-sdk/wasm/
             bun run --cwd packages sync-version:check
             bun run --cwd packages lint
-            bun run --cwd packages/op-web-sdk typecheck
-            bun run --cwd packages/op-web-sdk test
-            bun run --cwd packages/op-web-sdk build
-            bun run --cwd packages/op-web-sdk-react typecheck
-            bun run --cwd packages/op-web-sdk-react test
-            bun run --cwd packages/op-web-sdk-react build
-            bun run --cwd packages/op-web-sdk-vue typecheck
-            bun run --cwd packages/op-web-sdk-vue test
-            bun run --cwd packages/op-web-sdk-vue build
+            bun run --cwd packages/de-web-sdk typecheck
+            bun run --cwd packages/de-web-sdk test
+            bun run --cwd packages/de-web-sdk build
+            bun run --cwd packages/de-web-sdk-react typecheck
+            bun run --cwd packages/de-web-sdk-react test
+            bun run --cwd packages/de-web-sdk-react build
+            bun run --cwd packages/de-web-sdk-vue typecheck
+            bun run --cwd packages/de-web-sdk-vue test
+            bun run --cwd packages/de-web-sdk-vue build
             runHook postBuild
           '';
           installPhase = ''
             runHook preInstall
             mkdir -p $out
-            (cd packages/op-web-sdk && bun pm pack --destination $out)
-            (cd packages/op-web-sdk-react && bun pm pack --destination $out)
-            (cd packages/op-web-sdk-vue && bun pm pack --destination $out)
+            (cd packages/de-web-sdk && bun pm pack --destination $out)
+            (cd packages/de-web-sdk-react && bun pm pack --destination $out)
+            (cd packages/de-web-sdk-vue && bun pm pack --destination $out)
             runHook postInstall
           '';
         };
 
         pythonEnv = py-harbor.lib.mkPythonEnv {inherit pkgs;};
         pythonCheck =
-          pkgs.runCommand "openpencil-python-check" {
+          pkgs.runCommand "design-editor-python-check" {
             nativeBuildInputs = [pythonEnv];
           } ''
-            cp -R ${source} "$TMPDIR/openpencil-source"
-            chmod -R u+w "$TMPDIR/openpencil-source"
-            cd "$TMPDIR/openpencil-source"
+            cp -R ${source} "$TMPDIR/design-editor-source"
+            chmod -R u+w "$TMPDIR/design-editor-source"
+            cd "$TMPDIR/design-editor-source"
             python -m compileall -q scripts tools
             touch $out
           '';
@@ -454,23 +454,23 @@
             outputs = {self}: {
               apps.x86_64-linux.prebuilt = {
                 type = "app";
-                program = "${prebuiltDesktopPackage}/bin/openpencil-desktop";
+                program = "${prebuiltDesktopPackage}/bin/design-editor";
               };
               apps.x86_64-linux.prebuilt-cli = {
                 type = "app";
-                program = "${prebuiltCliPackage}/bin/op";
+                program = "${prebuiltCliPackage}/bin/de";
               };
             };
           }
         '';
 
         prebuiltRuntimeTest = pkgs.testers.runNixOSTest ({...}: {
-          name = "openpencil-prebuilt-runtime";
+          name = "design-editor-prebuilt-runtime";
           nodes.machine = {pkgs, ...}: {
             system.stateVersion = "25.11";
             virtualisation.memorySize = 2048;
             nix.settings.experimental-features = ["nix-command" "flakes"];
-            environment.etc."openpencil-test-flake".source = prebuiltTestFlake;
+            environment.etc."design-editor-test-flake".source = prebuiltTestFlake;
             environment.variables = {
               LIBGL_ALWAYS_SOFTWARE = "1";
               MESA_LOADER_DRIVER_OVERRIDE = "llvmpipe";
@@ -483,69 +483,69 @@
             ];
           };
           testScript = ''
-            machine.succeed("nix run --offline /etc/openpencil-test-flake#prebuilt-cli -- --version | grep -F ${releaseVersion}")
-            machine.succeed("set +e; timeout 15s xvfb-run -a -s '-screen 0 1280x720x24' nix run --offline /etc/openpencil-test-flake#prebuilt >/tmp/openpencil.log 2>&1; rc=$?; test $rc -eq 0 -o $rc -eq 124; ! grep -E 'error while loading|cannot open shared object' /tmp/openpencil.log")
+            machine.succeed("nix run --offline /etc/design-editor-test-flake#prebuilt-cli -- --version | grep -F ${releaseVersion}")
+            machine.succeed("set +e; timeout 15s xvfb-run -a -s '-screen 0 1280x720x24' nix run --offline /etc/design-editor-test-flake#prebuilt >/tmp/design-editor.log 2>&1; rc=$?; test $rc -eq 0 -o $rc -eq 124; ! grep -E 'error while loading|cannot open shared object' /tmp/design-editor.log")
           '';
         });
 
         runtimePrebuiltPackage = pkgs.symlinkJoin {
-          name = "openpencil-runtime-prebuilt-${version}";
+          name = "design-editor-runtime-prebuilt-${version}";
           paths = [prebuiltDesktopPackage prebuiltCliPackage];
           nativeBuildInputs = [pkgs.makeWrapper];
           postBuild = ''
-            rm -f "$out/bin/op"
-            makeWrapper ${prebuiltCliPackage}/bin/op "$out/bin/op" \
-              --set-default OPENPENCIL_DESKTOP_BIN "$out/bin/openpencil-desktop"
-            install -Dm644 ${defaultDocument} "$out/share/openpencil/default.op"
+            rm -f "$out/bin/de"
+            makeWrapper ${prebuiltCliPackage}/bin/de "$out/bin/de" \
+              --set-default DESIGN_EDITOR_DESKTOP_BIN "$out/bin/design-editor"
+            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.op"
           '';
         };
 
-        runtimePrebuiltToolsCheck = pkgs.runCommand "openpencil-runtime-prebuilt-tools-${version}" {} ''
-          test -x ${runtimePrebuiltPackage}/bin/openpencil-desktop
-          test -x ${runtimePrebuiltPackage}/bin/op
+        runtimePrebuiltToolsCheck = pkgs.runCommand "design-editor-runtime-prebuilt-tools-${version}" {} ''
+          test -x ${runtimePrebuiltPackage}/bin/design-editor
+          test -x ${runtimePrebuiltPackage}/bin/de
           touch "$out"
         '';
 
-        webServerToolsCheck = pkgs.runCommand "openpencil-web-server-tools-${version}" {} ''
-          test -x ${webServerPackage}/bin/op-host-web-server
+        webServerToolsCheck = pkgs.runCommand "design-editor-web-server-tools-${version}" {} ''
+          test -x ${webServerPackage}/bin/de-host-web-server
           test -d ${webServerPackage}/bin/web-bundle
           touch "$out"
         '';
 
         skillBundle = builtins.fromJSON (
           builtins.replaceStrings
-          ["__OPENPENCIL_VERSION__"]
+          ["__DESIGN_EDITOR_VERSION__"]
           [version]
-          (builtins.readFile ./crates/op-cli/assets/skill-bundle.json)
+          (builtins.readFile ./crates/de-cli/assets/skill-bundle.json)
         );
         skillBundleFiles =
           builtins.mapAttrs
           (relativePath: contents:
             pkgs.writeText
-            "openpencil-skill-${builtins.replaceStrings ["/"] ["-"] relativePath}"
+            "design-editor-skill-${builtins.replaceStrings ["/"] ["-"] relativePath}"
             contents)
           skillBundle.files;
-        skillsPackage = pkgs.runCommand "openpencil-skills-${version}" {} ''
-          mkdir -p "$out/share/skillnet/openpencil"
+        skillsPackage = pkgs.runCommand "design-editor-skills-${version}" {} ''
+          mkdir -p "$out/share/skillnet/design-editor"
           install -Dm644 ${./nix/integration/Skillnet.pkl} \
-            "$out/share/skillnet/openpencil/Skillnet.pkl"
+            "$out/share/skillnet/design-editor/Skillnet.pkl"
           ${lib.concatStringsSep "\n" (
             lib.mapAttrsToList
-            (relativePath: source: "install -Dm644 ${source} \"$out/share/skillnet/openpencil/${relativePath}\"")
+            (relativePath: source: "install -Dm644 ${source} \"$out/share/skillnet/design-editor/${relativePath}\"")
             skillBundleFiles
           )}
         '';
 
         appimage = rs-harbor.lib.mkAppImage {
           inherit nix-appimage system version;
-          pname = "openpencil";
-          program = "${nativePackage}/bin/openpencil-desktop";
+          pname = "design-editor";
+          program = "${nativePackage}/bin/design-editor";
         };
       in {
         packages = {
           default = webServerPackage;
-          openpencil = webServerPackage;
-          op-cli = opCliPackage;
+          design-editor = webServerPackage;
+          de-cli = opCliPackage;
           runtime = runtimePackage;
           runtime-prebuilt = runtimePrebuiltPackage;
           prebuilt = prebuiltDesktopPackage;
@@ -562,39 +562,39 @@
         apps = {
           default = {
             type = "app";
-            program = "${nativePackage}/bin/openpencil-desktop";
+            program = "${nativePackage}/bin/design-editor";
           };
-          op = {
+          de = {
             type = "app";
-            program = "${nativePackage}/bin/op";
+            program = "${nativePackage}/bin/de";
           };
           prebuilt = {
             type = "app";
-            program = "${prebuiltDesktopPackage}/bin/openpencil-desktop";
+            program = "${prebuiltDesktopPackage}/bin/design-editor";
           };
           prebuilt-cli = {
             type = "app";
-            program = "${prebuiltCliPackage}/bin/op";
+            program = "${prebuiltCliPackage}/bin/de";
           };
           web-server = {
             type = "app";
-            program = "${webServerPackage}/bin/op-host-web-server";
+            program = "${webServerPackage}/bin/de-host-web-server";
           };
           integration-export = {
             type = "app";
             program = "${pkgs.writeShellApplication {
-              name = "openpencil-integration-export";
+              name = "design-editor-integration-export";
               runtimeInputs = [nix-pklx.packages.${system}.pklx pkgs.coreutils];
               text = ''
                 export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-                output="''${1:-nix/integration/openpencil.nix}"
+                output="''${1:-nix/integration/design-editor.nix}"
                 tmp="$(mktemp)"
                 trap 'rm -f "$tmp"' EXIT
-                pklx eval nix/integration/OpenPencil.pkl -o "$tmp"
+                pklx eval nix/integration/DesignEditor.pkl -o "$tmp"
                 mv "$tmp" "$output"
-                echo "Wrote $output from nix/integration/OpenPencil.pkl"
+                echo "Wrote $output from nix/integration/DesignEditor.pkl"
               '';
-            }}/bin/openpencil-integration-export";
+            }}/bin/design-editor-integration-export";
           };
         };
 
@@ -630,23 +630,23 @@
           prebuilt-runtime-tools = runtimePrebuiltToolsCheck;
           web-server-tools = webServerToolsCheck;
           integration-manifest =
-            pkgs.runCommand "openpencil-integration-manifest" {
+            pkgs.runCommand "design-editor-integration-manifest" {
               nativeBuildInputs = [nix-pklx.packages.${system}.pklx];
               SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
             } ''
-              pklx eval ${./nix/integration/OpenPencil.pkl} -o "$out"
+              pklx eval ${./nix/integration/DesignEditor.pkl} -o "$out"
             '';
           integration-sidecar =
-            pkgs.runCommand "openpencil-integration-sidecar" {
+            pkgs.runCommand "design-editor-integration-sidecar" {
               nativeBuildInputs = [nix-pklx.packages.${system}.pklx pkgs.diffutils];
               SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
             } ''
-              generated="$TMPDIR/openpencil.nix"
-              pklx eval ${./nix/integration/OpenPencil.pkl} -o "$generated"
-              diff -u ${./nix/integration/openpencil.nix} "$generated"
+              generated="$TMPDIR/design-editor.nix"
+              pklx eval ${./nix/integration/DesignEditor.pkl} -o "$generated"
+              diff -u ${./nix/integration/design-editor.nix} "$generated"
               touch "$out"
             '';
-          flake-format = pkgs.runCommand "openpencil-flake-format" {} ''
+          flake-format = pkgs.runCommand "design-editor-flake-format" {} ''
             ${pkgs.alejandra}/bin/alejandra --check ${./flake.nix}
             touch $out
           '';

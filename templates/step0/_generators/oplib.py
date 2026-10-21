@@ -27,7 +27,7 @@ def stroke(color, thickness=2):
 def linear(angle, stops):
     """线性渐变填充。`stops` 是 (offset, color) 序列。
 
-    注意 op-design-lint 的对比度检测器只读 stops[0]，所以「文字压在渐变
+    注意 de-design-lint 的对比度检测器只读 stops[0]，所以「文字压在渐变
     上」这件事必须自己按每个 stop 都量一遍（各 deck 生成器文件末尾的对比度
     表就是这么来的），别指望 lint 兜住。
     """
@@ -84,7 +84,7 @@ def path(ids, name, d, **props):
 def group(ids, name, **props):
     """A `group` lays out exactly like a frame but is NOT an image-drop target.
 
-    `op-editor-core/src/image_drop.rs::node_accepts_image_drop` matches only
+    `de-editor-core/src/image_drop.rs::node_accepts_image_drop` matches only
     Frame | Rectangle | Ellipse | Polygon | Path | Image — Group is excluded
     ("a structural wrapper with no painted body of its own"). Its `fill` is
     also never painted, so use it purely as a transparent wrapper.

@@ -1,4 +1,4 @@
-# OpenPencil relay locator service
+# Design Editor relay locator service
 
 This directory packages the production `POST /v1/locator` control plane. It is
 separate from the blind WebSocket relay. The service verifies a current
@@ -15,7 +15,7 @@ network. Terminate public TLS at a trusted ingress, include
 enforce per-source request and connection limits before the process-wide
 aggregate limiter. Docker NAT collapses clients crossing the host-published
 port into one locator-visible peer address. The immutable regional overlays
-therefore set `OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND=100`, equal to
+therefore set `DESIGN_EDITOR_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND=100`, equal to
 the global locator ceiling, while the common Compose file sets no production
 override. Host Nginx is the trusted real-source boundary and must retain the
 checked-in per-source zones. If a load balancer sits in front, restore client
@@ -82,20 +82,20 @@ keeps the Ed25519 private key and token PIN outside this container.
 Required runtime environment variables (the compose file supplies the two
 container paths and listen address):
 
-- `OPENPENCIL_COLLAB_LOCATOR_HOME_REGION=cn|global`;
-- `OPENPENCIL_COLLAB_LOCATOR_TICKET_POLICY_FILE`, the absolute container path
+- `DESIGN_EDITOR_COLLAB_LOCATOR_HOME_REGION=cn|global`;
+- `DESIGN_EDITOR_COLLAB_LOCATOR_TICKET_POLICY_FILE`, the absolute container path
   to the public signed collaboration union-policy JSON;
-- `OPENPENCIL_COLLAB_LOCATOR_HSM_SOCKET`, the absolute container path to the
+- `DESIGN_EDITOR_COLLAB_LOCATOR_HSM_SOCKET`, the absolute container path to the
   external signer socket;
-- `OPENPENCIL_COLLAB_LOCATOR_HSM_KEY_ID`, a public locator key id;
-- `OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_UID` and
-  `OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_GID`.
+- `DESIGN_EDITOR_COLLAB_LOCATOR_HSM_KEY_ID`, a public locator key id;
+- `DESIGN_EDITOR_COLLAB_LOCATOR_HSM_PEER_UID` and
+  `DESIGN_EDITOR_COLLAB_LOCATOR_HSM_PEER_GID`.
 
 The compose wrapper instead requires these host mount inputs:
 
-- `OPENPENCIL_COLLAB_POLICY_HOST_FILE`, an absolute host path to the public
+- `DESIGN_EDITOR_COLLAB_POLICY_HOST_FILE`, an absolute host path to the public
   signed collaboration union-policy JSON;
-- `OPENPENCIL_COLLAB_HSM_SOCKET_HOST_DIR`, an absolute host directory
+- `DESIGN_EDITOR_COLLAB_HSM_SOCKET_HOST_DIR`, an absolute host directory
   containing `signer.sock`.
 
 On Unix, the public signed-policy file may be owned either by the locator's
@@ -119,17 +119,17 @@ tag-plus-digest `FROM` values, rebuild with `--pull --no-cache`, and rerun the
 locator validator and collaboration security gate.
 
 Optional runtime settings are
-`OPENPENCIL_COLLAB_LOCATOR_LISTEN` (default `127.0.0.1:8092`; compose uses
+`DESIGN_EDITOR_COLLAB_LOCATOR_LISTEN` (default `127.0.0.1:8092`; compose uses
 `0.0.0.0:8092`),
-`OPENPENCIL_COLLAB_LOCATOR_POLICY_MAX_AGE_SECONDS` (`1..=3600`),
-`OPENPENCIL_COLLAB_LOCATOR_HSM_TIMEOUT_MS` (`50..=5000`),
-`OPENPENCIL_COLLAB_LOCATOR_MAX_AUTH_IN_FLIGHT` (`1..=256`), and
-`OPENPENCIL_COLLAB_LOCATOR_RATE_PER_SECOND` (`1..=10000`).
-`OPENPENCIL_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND` (`1..=10000`) is also
+`DESIGN_EDITOR_COLLAB_LOCATOR_POLICY_MAX_AGE_SECONDS` (`1..=3600`),
+`DESIGN_EDITOR_COLLAB_LOCATOR_HSM_TIMEOUT_MS` (`50..=5000`),
+`DESIGN_EDITOR_COLLAB_LOCATOR_MAX_AUTH_IN_FLIGHT` (`1..=256`), and
+`DESIGN_EDITOR_COLLAB_LOCATOR_RATE_PER_SECOND` (`1..=10000`).
+`DESIGN_EDITOR_COLLAB_LOCATOR_CLIENT_RATE_PER_SECOND` (`1..=10000`) is also
 optional outside the immutable regional production overlays; those overlays
 fix it at `100` because Docker NAT removes usable client identity at the
 locator socket. The optional
-`OPENPENCIL_COLLAB_LOCATOR_LOG_LEVEL` accepts only `error`, `warn`, `info`, or
+`DESIGN_EDITOR_COLLAB_LOCATOR_LOG_LEVEL` accepts only `error`, `warn`, `info`, or
 `debug` and is scoped to this crate; arbitrary dependency trace filters are
 not accepted, so HTTP headers cannot be enabled through logging configuration.
 
@@ -142,10 +142,10 @@ deploy/collab-relay-locator/validate.sh
 Start after provisioning the public policy file and signer token:
 
 ```sh
-export OPENPENCIL_COLLAB_POLICY_HOST_FILE=/secure/public/collab-policy.json
-export OPENPENCIL_COLLAB_LOCATOR_HSM_KEY_ID=replace-with-active-public-kid
-export OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_UID=65533
-export OPENPENCIL_COLLAB_LOCATOR_HSM_PEER_GID=65532
+export DESIGN_EDITOR_COLLAB_POLICY_HOST_FILE=/secure/public/collab-policy.json
+export DESIGN_EDITOR_COLLAB_LOCATOR_HSM_KEY_ID=replace-with-active-public-kid
+export DESIGN_EDITOR_COLLAB_LOCATOR_HSM_PEER_UID=65533
+export DESIGN_EDITOR_COLLAB_LOCATOR_HSM_PEER_GID=65532
 docker compose \
   -f deploy/collab-relay-locator-hsm/compose.yaml \
   -f deploy/collab-relay-locator/compose.yaml \
@@ -177,13 +177,13 @@ non-symlink inventory path under root-owned, non-writable directories, replace
 the RFC 5737 examples, and keep the file exactly `root:root` mode `0600`:
 
 ```sh
-sudo install -d -o root -g root -m 0700 /etc/openpencil/inventory
+sudo install -d -o root -g root -m 0700 /etc/design-editor/inventory
 sudo install -o root -g root -m 0600 \
   deploy/collab-relay-locator/cn-docker-user-firewall.env.example \
-  /etc/openpencil/inventory/collab-cn-firewall.env
-sudoedit /etc/openpencil/inventory/collab-cn-firewall.env
+  /etc/design-editor/inventory/collab-cn-firewall.env
+sudoedit /etc/design-editor/inventory/collab-cn-firewall.env
 sudo deploy/collab-relay-locator/install-cn-docker-user-firewall.sh \
-  /etc/openpencil/inventory/collab-cn-firewall.env
+  /etc/design-editor/inventory/collab-cn-firewall.env
 ```
 
 The inventory accepts exactly three unquoted data values: the existing Linux
@@ -197,7 +197,7 @@ and locator TCP `8092`. The derived value is retained separately as a
 root-owned mode `0400` deployment binding. Every apply and verify then requires
 that exact IPv4 to be assigned exactly once on the configured live interface.
 
-The installer atomically replaces `/etc/openpencil/collab-cn-firewall.env`,
+The installer atomically replaces `/etc/design-editor/collab-cn-firewall.env`,
 installs immutable root-owned helpers, enables a pre-Docker systemd gate, and
 adds a Docker drop-in that reapplies and verifies the rules after every daemon
 start. When Docker is already active, installation calls the immutable apply
@@ -208,8 +208,8 @@ maintenance restart, require both units to remain healthy:
 ```sh
 sudo systemctl restart docker.service
 sudo systemctl status --no-pager \
-  openpencil-collab-cn-firewall.service docker.service
-sudo /usr/local/libexec/openpencil-collab-cn-firewall/verify-cn-docker-user-firewall.sh
+  design-editor-collab-cn-firewall.service docker.service
+sudo /usr/local/libexec/design-editor-collab-cn-firewall/verify-cn-docker-user-firewall.sh
 ```
 
 The atomic `iptables-restore --noflush` transaction places one dedicated chain

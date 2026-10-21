@@ -58,8 +58,8 @@ if [ "$copied" -eq 0 ]; then
 fi
 
 shopt -s nullglob
-native=("$temporary"/OpenPencil-* "$temporary"/openpencil-desktop-*)
-cli=("$temporary"/op-cli-*)
+native=("$temporary"/Design-Editor-* "$temporary"/design-editor-*)
+cli=("$temporary"/de-cli-*)
 sdk=("$temporary"/*.tgz)
 vsix=("$temporary"/*.vsix)
 android_apk=("$temporary"/*.apk)
@@ -70,12 +70,12 @@ if [ "${#native[@]}" -eq 0 ]; then
     exit 1
 fi
 if [ "${#cli[@]}" -eq 0 ]; then
-    printf 'error: missing op-cli artifacts\n' >&2
+    printf 'error: missing de-cli artifacts\n' >&2
     exit 1
 fi
 for required in \
-    openpencil-desktop-linux-x86_64.tar.gz \
-    op-cli-linux-x86_64.tar.gz; do
+    design-editor-linux-x86_64.tar.gz \
+    de-cli-linux-x86_64.tar.gz; do
     if [ ! -f "$temporary/$required" ]; then
         printf 'error: missing Linux x86_64 Nix manifest asset: %s\n' "$required" >&2
         exit 1
@@ -90,8 +90,8 @@ if [ "${#vsix[@]}" -ne 6 ]; then
     exit 1
 fi
 
-expected_apk="OpenPencil-${version}-android.apk"
-expected_aab="OpenPencil-${version}-android.aab"
+expected_apk="Design-Editor-${version}-android.apk"
+expected_aab="Design-Editor-${version}-android.aab"
 if [ "${#android_apk[@]}" -ne 1 ] || [ "${android_apk[0]##*/}" != "$expected_apk" ]; then
     printf 'error: missing exact signed Android APK\n' >&2
     exit 1

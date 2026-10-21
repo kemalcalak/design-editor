@@ -4,7 +4,7 @@
 # surfaces on Android: engine-owned URLs, single cancellation, region
 # hygiene, and the retirement of the login WebView.
 
-root = File.expand_path("../app/src/main/kotlin/tech/zseven/openpencil", __dir__)
+root = File.expand_path("../app/src/main/kotlin/com/kemalcalak/designeditor", __dir__)
 overlay = File.read(File.join(root, "NativeLoginOverlay.kt"))
 account = File.read(File.join(root, "AccountCenterOverlay.kt"))
 region = File.read(File.join(root, "SsoRegion.kt"))
@@ -16,7 +16,7 @@ surface_bridge = File.read(File.join(root, "OpSurfaceViewShellBridge.kt"))
 runtime = File.read(File.join(root, "AndroidAuthRuntime.kt"))
 client = File.read(File.join(root, "SsoAuthClient.kt"))
 header = File.read(File.expand_path(
-  "../../../crates/op-engine-ffi/include/op_engine.h", __dir__
+  "../../../crates/de-engine-ffi/include/op_engine.h", __dir__
 ))
 
 # The login URL comes only from native; the shell never manufactures one.
@@ -161,8 +161,8 @@ raise "manifest must bind the douyin entry activity" unless manifest.include?(
   'android:name=".douyinapi.DouYinEntryActivity"',
 )
 raise "manifest must bind the alipay return scheme" unless manifest.include?(
-  'android:scheme="openpencilalipay"',
-) && alipay_native.include?('SCHEME = "openpencilalipay"')
+  'android:scheme="designeditoralipay"',
+) && alipay_native.include?('SCHEME = "designeditoralipay"')
 wechat_native = File.read(File.join(root, "WechatNativeSignIn.kt"))
 wx_entry = File.read(File.join(root, "wxapi/WXEntryActivity.kt"))
 raise "wechat mobile AppID drifted" unless wechat_native.include?(

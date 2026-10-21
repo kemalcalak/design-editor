@@ -10,12 +10,12 @@ source "$script_dir/op-auth-candidate-targets.sh"
 
 repo=
 expected_parent=
-prefix=crates/op-auth-bridge/prebuilt
-policy=crates/op-auth-bridge/AUTH-RELEASE-POLICY
+prefix=crates/de-auth-bridge/prebuilt
+policy=crates/de-auth-bridge/AUTH-RELEASE-POLICY
 
 usage() {
     printf '%s\n' \
-        'usage: verify-op-auth-promotion-diff.sh --repo OPENPENCIL_CHECKOUT --expected-parent FULL_SHA' \
+        'usage: verify-op-auth-promotion-diff.sh --repo DESIGN_EDITOR_CHECKOUT --expected-parent FULL_SHA' \
         >&2
 }
 

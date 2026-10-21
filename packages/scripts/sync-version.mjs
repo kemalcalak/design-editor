@@ -11,18 +11,18 @@ const defaultRepositoryRoot = resolve(defaultPackagesRoot, '..');
 
 const manifestPaths = [
   'package.json',
-  'op-web-sdk/package.json',
-  'op-web-sdk-react/package.json',
-  'op-web-sdk-vue/package.json',
+  'de-web-sdk/package.json',
+  'de-web-sdk-react/package.json',
+  'de-web-sdk-vue/package.json',
 ];
 
 const sdkEntryPaths = [
-  'op-web-sdk/src/index.ts',
-  'op-web-sdk-react/src/index.ts',
-  'op-web-sdk-vue/src/index.ts',
+  'de-web-sdk/src/index.ts',
+  'de-web-sdk-react/src/index.ts',
+  'de-web-sdk-vue/src/index.ts',
 ];
 
-const sdkWorkspaceNames = ['op-web-sdk', 'op-web-sdk-react', 'op-web-sdk-vue'];
+const sdkWorkspaceNames = ['de-web-sdk', 'de-web-sdk-react', 'de-web-sdk-vue'];
 const managedPaths = [...manifestPaths, ...sdkEntryPaths, 'bun.lock'];
 
 export function renderPackageManifest(source, version) {

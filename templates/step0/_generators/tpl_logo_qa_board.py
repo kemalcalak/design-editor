@@ -9,7 +9,7 @@ has its own check, question, and observable evidence.
 The sample mark is generated from one original polygon. Its outer contour reads
 as a G, while the same inward cross-stroke reads as an entry route. The sample is
 only there to demonstrate how evidence belongs on the board; every label and
-shape remains editable in OpenPencil.
+shape remains editable in Design Editor.
 
 Design constraints:
   - 1600x1000 single artboard, with 54 px outer margins.

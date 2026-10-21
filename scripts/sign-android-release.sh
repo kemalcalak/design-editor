@@ -34,7 +34,7 @@ usage() {
         '  ANDROID_BUILD_TOOLS_DIR' \
         '  ANDROID_JAVA_HOME' \
         '  BUNDLETOOL_JAR' \
-        '  OPENPENCIL_RELEASE_SOURCE_SHA' \
+        '  DESIGN_EDITOR_RELEASE_SOURCE_SHA' \
         '  ANDROID_RELEASE_VERSION' \
         '  ANDROID_RELEASE_KEYSTORE_BASE64' \
         '  ANDROID_RELEASE_KEYSTORE_PASSWORD' \
@@ -89,7 +89,7 @@ for name in \
     ANDROID_UNSIGNED_HANDOFF_DIR ANDROID_SIGNED_OUTPUT_DIR \
     ANDROID_SIGNING_TOOLS_ROOT ANDROID_BUILD_TOOLS_DIR \
     ANDROID_JAVA_HOME BUNDLETOOL_JAR \
-    OPENPENCIL_RELEASE_SOURCE_SHA \
+    DESIGN_EDITOR_RELEASE_SOURCE_SHA \
     ANDROID_RELEASE_VERSION; do
     require_env "$name"
 done
@@ -138,7 +138,7 @@ expected_tool_digests=$'android_build_tools_sha256=5d9ac77fb6ff43d9da518a337b4fc
     printf 'error: Android signing tool digest receipt is invalid\n' >&2
     exit 1
 }
-[[ "$OPENPENCIL_RELEASE_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+[[ "$DESIGN_EDITOR_RELEASE_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || {
     printf 'error: Android signing source must be a full lowercase SHA\n' >&2
     exit 2
 }
@@ -196,12 +196,12 @@ require_regular_file "$manifest"
     printf 'error: Android handoff manifest has an invalid line format\n' >&2
     exit 1
 }
-[[ "$(manifest_field format "$manifest")" == openpencil-android-unsigned-v2 ]]
-[[ "$(manifest_field application_id "$manifest")" == tech.zseven.openpencil ]]
+[[ "$(manifest_field format "$manifest")" == design-editor-android-unsigned-v2 ]]
+[[ "$(manifest_field application_id "$manifest")" == com.kemalcalak.designeditor ]]
 [[ "$(manifest_field version "$manifest")" == "$ANDROID_RELEASE_VERSION" ]]
 [[ "$(manifest_field target_sdk "$manifest")" == 36 ]]
 [[ "$(manifest_field release_source_revision "$manifest")" \
-    == "$OPENPENCIL_RELEASE_SOURCE_SHA" ]]
+    == "$DESIGN_EDITOR_RELEASE_SOURCE_SHA" ]]
 auth_matrix_sha=$(manifest_field auth_matrix_sha256 "$manifest")
 [[ "$auth_matrix_sha" =~ ^[0-9a-f]{64}$ ]] || {
     printf 'error: Android handoff Auth matrix digest is malformed\n' >&2
@@ -214,8 +214,8 @@ version_code=$(manifest_field version_code "$manifest")
 }
 apk_name=$(manifest_field apk "$manifest")
 aab_name=$(manifest_field aab "$manifest")
-[[ "$apk_name" == "OpenPencil-$ANDROID_RELEASE_VERSION-android-unsigned.apk" \
-    && "$aab_name" == "OpenPencil-$ANDROID_RELEASE_VERSION-android-unsigned.aab" ]] || {
+[[ "$apk_name" == "Design-Editor-$ANDROID_RELEASE_VERSION-android-unsigned.apk" \
+    && "$aab_name" == "Design-Editor-$ANDROID_RELEASE_VERSION-android-unsigned.aab" ]] || {
     printf 'error: Android handoff artifact names are not canonical\n' >&2
     exit 1
 }
@@ -246,7 +246,7 @@ if unzip -Z1 "$unsigned_aab" | grep -Eq '^META-INF/[^/]+\.(RSA|DSA|EC|SF)$'; the
 fi
 
 work_root=${RUNNER_TEMP:-${TMPDIR:-/tmp}}
-temp_dir=$(mktemp -d "$work_root/openpencil-android-sign.XXXXXX")
+temp_dir=$(mktemp -d "$work_root/design-editor-android-sign.XXXXXX")
 keystore_path=$temp_dir/release.keystore
 store_password_file=$temp_dir/store-password
 key_password_file=$temp_dir/key-password
@@ -277,8 +277,8 @@ actual_certificate_sha256=$(sha256_file "$certificate_der")
 }
 
 mkdir -p "$ANDROID_SIGNED_OUTPUT_DIR"
-signed_apk=$ANDROID_SIGNED_OUTPUT_DIR/OpenPencil-$ANDROID_RELEASE_VERSION-android.apk
-signed_aab=$ANDROID_SIGNED_OUTPUT_DIR/OpenPencil-$ANDROID_RELEASE_VERSION-android.aab
+signed_apk=$ANDROID_SIGNED_OUTPUT_DIR/Design-Editor-$ANDROID_RELEASE_VERSION-android.apk
+signed_aab=$ANDROID_SIGNED_OUTPUT_DIR/Design-Editor-$ANDROID_RELEASE_VERSION-android.aab
 
 "$zipalign_bin" -P 16 -f -v 4 "$unsigned_apk" "$aligned_apk" >/dev/null
 "$apksigner_bin" sign \
@@ -335,7 +335,7 @@ grep -Fq PAGE_ALIGNMENT_16K <<< "$bundle_config" || {
 }
 
 badging=$("$aapt_bin" dump badging "$signed_apk")
-[[ "$badging" == *"package: name='tech.zseven.openpencil'"* \
+[[ "$badging" == *"package: name='com.kemalcalak.designeditor'"* \
     && "$badging" == *"versionName='$ANDROID_RELEASE_VERSION'"* \
     && "$badging" == *"versionCode='$version_code'"* \
     && "$badging" == *"targetSdkVersion:'36'"* ]] || {
@@ -343,9 +343,9 @@ badging=$("$aapt_bin" dump badging "$signed_apk")
     exit 1
 }
 
-arm64_sha=$(unzip -p "$signed_apk" lib/arm64-v8a/libop_engine_jni.so \
+arm64_sha=$(unzip -p "$signed_apk" lib/arm64-v8a/libde_engine_jni.so \
     | sha256sum | awk '{ print $1 }')
-x86_64_sha=$(unzip -p "$signed_apk" lib/x86_64/libop_engine_jni.so \
+x86_64_sha=$(unzip -p "$signed_apk" lib/x86_64/libde_engine_jni.so \
     | sha256sum | awk '{ print $1 }')
 [[ "$arm64_sha" == "$(manifest_field arm64_v8a_sha256 "$manifest")" \
     && "$x86_64_sha" == "$(manifest_field x86_64_sha256 "$manifest")" ]] || {

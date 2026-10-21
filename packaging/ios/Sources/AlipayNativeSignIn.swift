@@ -8,7 +8,7 @@ import AFServiceSDK
 /// payload) via the AFServiceSDK and reports the auth code.
 ///
 /// The SDK opens the Alipay app on the unsigned authweb URL for the mobile
-/// AppID and jumps back through `openpencilalipay://apmqpdispatch/…`, which
+/// AppID and jumps back through `designeditoralipay://apmqpdispatch/…`, which
 /// `NativeProviderCallbacks` forwards back into the SDK. The caller
 /// exchanges the code at `POST /api/v1/auth/providers/alipay/native-login`
 /// and then approves the running device pairing.
@@ -20,7 +20,7 @@ enum AlipayNativeSignIn {
     static let appID = "2021006190626680"
 
     /// App-unique return scheme, registered in the Info.plist URL types.
-    static let callbackScheme = "openpencilalipay"
+    static let callbackScheme = "designeditoralipay"
 
     #if targetEnvironment(simulator) || !canImport(AFServiceSDK)
 

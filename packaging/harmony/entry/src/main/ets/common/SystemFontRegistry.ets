@@ -3,7 +3,7 @@ import { fileIo as fs } from '@kit.CoreFileKit';
 import napi from './OpNative';
 
 const DOMAIN = 0x0001;
-const TAG = 'OpenPencilPlayer';
+const TAG = 'DesignEditorPlayer';
 
 /**
  * Registers the platform's CJK / Thai / Devanagari system fonts with a
