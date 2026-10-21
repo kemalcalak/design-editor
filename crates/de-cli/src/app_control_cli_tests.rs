@@ -1,14 +1,14 @@
 //! Tests for app control helpers, split out to keep the implementation below 800 lines.
 
 use super::{
-    default_document_path_in, editor_will_open, live_port_file_path_in, preflight_document,
+    collect_app_images, default_document_path_in, editor_will_open, live_port_file_path_in, preflight_document,
     MINIMAL_DOCUMENT,
 };
 use std::fs;
 
 #[test]
 fn preflight_rejects_malformed_documents_and_accepts_a_valid_one() {
-    let dir = std::env::temp_dir().join(format!("op-preflight-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("de-preflight-{}", std::process::id()));
     let _ = fs::create_dir_all(&dir);
 
     // A real `.fig` / `.pen` is a binary ZIP archive — `PK\x03\x04` then
@@ -53,7 +53,7 @@ fn preflight_rejects_malformed_documents_and_accepts_a_valid_one() {
 fn reports_only_files_the_editor_actually_opens() {
     // Mirrors the desktop `initial_file_from_argv` gate so `de start
     // --file` never claims a documentPath the editor silently ignored.
-    let dir = std::env::temp_dir().join(format!("op-start-file-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("de-start-file-{}", std::process::id()));
     let _ = fs::create_dir_all(&dir);
     let op = dir.join("doc.op");
     fs::write(&op, "{}").expect("write .op");
@@ -85,4 +85,22 @@ fn config_store_paths_keep_live_port_and_session_names() {
         default_document_path_in(&store).unwrap(),
         root.join("cli-session.op")
     );
+}
+
+#[test]
+fn collect_app_images_matches_the_packaged_appimage_name() {
+    let dir = std::env::temp_dir().join(format!("de-appimage-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&dir);
+    fs::create_dir_all(&dir).expect("create dir");
+    // `scripts/package-appimage.sh` emits `Design-Editor-<v>-<arch>-linux.AppImage`.
+    let packaged = dir.join("Design-Editor-0.1.0-x64-linux.AppImage");
+    fs::write(&packaged, b"").expect("write packaged appimage");
+    fs::write(dir.join("Design Editor-0.1.0.AppImage"), b"").expect("write stale name");
+    fs::write(dir.join("Design-Editor-0.1.0-x64-linux.tar.gz"), b"").expect("write archive");
+
+    let mut candidates = Vec::new();
+    collect_app_images(&dir, &mut candidates);
+
+    assert_eq!(candidates, vec![packaged]);
+    let _ = fs::remove_dir_all(&dir);
 }

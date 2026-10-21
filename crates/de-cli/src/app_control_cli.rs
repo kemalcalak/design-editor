@@ -35,7 +35,7 @@ struct RunningMcp {
 }
 
 /// `de start` — by default launch the live-rendering editor GUI and wait
-/// for it to publish `~/.design-editor/.de-mcp-port`, so subsequent `op <tool>`
+/// for it to publish `~/.design-editor/.de-mcp-port`, so subsequent `de <tool>`
 /// calls drive the on-screen canvas in real time (TS parity). Pass
 /// `headless` to instead run the windowless file-backed MCP server
 /// (`--mcp-http`) — useful for CI / display-less agents. Pass `web` to run
@@ -651,7 +651,6 @@ fn desktop_binary_candidates() -> Vec<PathBuf> {
         .and_then(|exe| exe.parent().map(Path::to_path_buf));
     if let Some(dir) = exe_dir {
         candidates.push(dir.join(desktop_binary_name()));
-        candidates.push(dir.join("Design Editor"));
     }
     if let Ok(cwd) = env::current_dir() {
         candidates.push(cwd.join("target").join("debug").join(desktop_binary_name()));
@@ -669,7 +668,7 @@ fn desktop_binary_candidates() -> Vec<PathBuf> {
                     .join("Design Editor.app")
                     .join("Contents")
                     .join("MacOS")
-                    .join("Design Editor"),
+                    .join("design-editor"),
             );
         }
         candidates.push(
@@ -677,7 +676,7 @@ fn desktop_binary_candidates() -> Vec<PathBuf> {
                 .join("Design Editor.app")
                 .join("Contents")
                 .join("MacOS")
-                .join("Design Editor"),
+                .join("design-editor"),
         );
     } else if cfg!(target_os = "windows") {
         if let Some(local_app_data) = env::var_os("LOCALAPPDATA").map(PathBuf::from) {
@@ -723,7 +722,7 @@ fn collect_app_images(dir: &Path, candidates: &mut Vec<PathBuf>) {
         let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
             continue;
         };
-        if name.starts_with("Design Editor") && name.ends_with(".AppImage") {
+        if name.starts_with("Design-Editor-") && name.ends_with("-linux.AppImage") {
             candidates.push(path);
         }
     }
