@@ -187,3 +187,19 @@ fn templates_open_their_panel_on_the_ui_state() {
     ui.apply_home_template(HomeTemplate::SceneTemplates, 1);
     assert!(ui.scene_template_center.open);
 }
+
+#[test]
+fn an_external_edit_hides_home_only_when_it_is_showing() {
+    let mut home = HomeState {
+        visible: true,
+        mcp_popover_open: true,
+        ..HomeState::default()
+    };
+    assert!(home.reveal_for_external_edit());
+    assert!(!home.visible);
+    assert!(!home.mcp_popover_open);
+    assert!(
+        !home.reveal_for_external_edit(),
+        "a hidden Home reports no change"
+    );
+}

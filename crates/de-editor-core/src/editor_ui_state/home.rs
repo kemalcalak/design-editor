@@ -433,6 +433,18 @@ impl HomeState {
         self.close_popovers();
     }
 
+    /// Step aside for a document edit that arrived from outside the UI
+    /// (a live MCP client), so the user sees it land on the canvas. Only
+    /// this session's surface changes; the persisted `entry_surface`
+    /// preference is left alone. Returns whether Home was showing.
+    pub fn reveal_for_external_edit(&mut self) -> bool {
+        if !self.visible {
+            return false;
+        }
+        self.hide();
+        true
+    }
+
     /// Close every Home popover. Returns whether one was open.
     pub fn close_popovers(&mut self) -> bool {
         let was_open = self.size_menu_open || self.mcp_popover_open || self.mcp_agent_menu_open;

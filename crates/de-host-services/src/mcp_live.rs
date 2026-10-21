@@ -105,6 +105,11 @@ pub struct McpPumpOutcome {
     /// host's image-search scan gate) whenever this is `true`, the same way
     /// it already does after a Figma import installs a fresh `EditorState`.
     pub document_replaced: bool,
+    /// Set when this pump actually changed the document: an `Apply` that
+    /// advanced `document_revision()`, or a `ReplaceDocument`. Selection,
+    /// viewport and other chrome-only commands leave it `false`, so a host
+    /// can use it to bring the canvas forward for external edits only.
+    pub document_edited: bool,
 }
 
 enum UiRequest {
@@ -291,6 +296,7 @@ impl McpLiveServer {
                     // is a targeted property tweak, not a "generation").
                     let ids_before = (tool_name == "batch_design")
                         .then(|| crate::design_agent_tools::collect_active_node_ids(state));
+                    let revision_before = state.document_revision();
                     let applied = state.apply(cmd);
                     if applied {
                         let write_repairs = crate::mcp_serve::run_write_repairs_after_apply(state);
@@ -303,6 +309,7 @@ impl McpLiveServer {
                     if applied {
                         outcome.repaint = true;
                         outcome.layout_dirty |= layout_dirty;
+                        outcome.document_edited |= state.document_revision() != revision_before;
                     }
                 }
                 Ok(UiRequest::ReplaceDocument {
@@ -331,6 +338,7 @@ impl McpLiveServer {
                     outcome.repaint = true;
                     outcome.layout_dirty = true;
                     outcome.document_replaced = true;
+                    outcome.document_edited = true;
                 }
                 Ok(UiRequest::UpdateEditorMeta { editor_meta, ack }) => {
                     de_pen_loader::apply_editor_meta(state, editor_meta);
