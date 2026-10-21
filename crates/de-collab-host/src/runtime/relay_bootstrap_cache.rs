@@ -88,7 +88,7 @@ mod tests {
 
     fn scratch_root(label: &str) -> std::path::PathBuf {
         let root = std::env::temp_dir().join(format!(
-            "op-bootstrap-cache-unit-{label}-{}",
+            "de-bootstrap-cache-unit-{label}-{}",
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&root);

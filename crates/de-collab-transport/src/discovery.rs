@@ -149,7 +149,7 @@ impl DiscoveryPublisher {
     ) -> Result<Self, DiscoveryError> {
         let discovery_id = random_hex(DISCOVERY_ID_BYTES)?;
         let instance_name = format!("design-editor-{}", random_hex(RANDOM_LABEL_BYTES)?);
-        let hostname = format!("op-{}.local.", random_hex(RANDOM_LABEL_BYTES)?);
+        let hostname = format!("de-{}.local.", random_hex(RANDOM_LABEL_BYTES)?);
         let service =
             build_service_info(&discovery_id, port, addresses, &instance_name, &hostname)?;
         let next_rotation_at = next_rotation(now)?;
@@ -189,7 +189,7 @@ impl DiscoveryPublisher {
 
         let next_id = random_hex(DISCOVERY_ID_BYTES)?;
         let instance_name = format!("design-editor-{}", random_hex(RANDOM_LABEL_BYTES)?);
-        let hostname = format!("op-{}.local.", random_hex(RANDOM_LABEL_BYTES)?);
+        let hostname = format!("de-{}.local.", random_hex(RANDOM_LABEL_BYTES)?);
         let addresses: Vec<_> = self.service.get_addresses().iter().copied().collect();
         let next_service = build_service_info(
             &next_id,

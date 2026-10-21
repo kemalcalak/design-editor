@@ -7,7 +7,7 @@ fn temp_import_dir(tag: &str) -> PathBuf {
         .map(|duration| duration.as_nanos())
         .unwrap_or_default();
     std::env::temp_dir().join(format!(
-        "op-figma-session-{tag}-{}-{nanos}",
+        "de-figma-session-{tag}-{}-{nanos}",
         std::process::id()
     ))
 }
@@ -377,7 +377,7 @@ fn adjacent_persist_atomically_replaces_the_fixed_sibling_op() {
             .expect("read directory entry")
             .file_name()
             .to_string_lossy()
-            .contains("op-import")));
+            .contains("de-import")));
 
     std::fs::remove_dir_all(dir).expect("remove import directory");
 }

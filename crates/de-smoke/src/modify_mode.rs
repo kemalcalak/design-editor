@@ -274,7 +274,7 @@ fn run_loaded_modify(
     let (executor, tool_rx) = chat_tool_channel();
     let expected_targets = target_frame_ids.clone();
     let host = std::thread::Builder::new()
-        .name("op-smoke-modify-host".into())
+        .name("de-smoke-modify-host".into())
         .spawn(move || serve_modify_apply(state, tool_rx, &expected_targets))
         .map_err(|error| format!("spawn modify host: {error}"))?;
 

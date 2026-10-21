@@ -212,7 +212,7 @@ fn reap_in_background(mut child: Child) {
         return;
     }
     let _ = std::thread::Builder::new()
-        .name("op-acp-child-reaper".into())
+        .name("de-acp-child-reaper".into())
         .spawn(move || loop {
             match child.try_wait() {
                 Ok(Some(_)) | Err(_) => break,

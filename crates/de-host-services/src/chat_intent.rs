@@ -352,7 +352,7 @@ fn classify_intent_llm_with_timeout_and_cancel(
     let iter = provider.send_cancellable(req, Arc::clone(&classify_cancel));
     let (tx, rx) = mpsc::channel::<ChatDelta>();
     let spawned = std::thread::Builder::new()
-        .name("op-chat-classify".into())
+        .name("de-chat-classify".into())
         .spawn(move || {
             for delta in iter {
                 if tx.send(delta).is_err() {

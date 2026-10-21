@@ -323,7 +323,7 @@ impl SaveSession {
         let worker_snapshot = Arc::clone(&snapshot);
         let (tx, rx) = mpsc::channel();
         let spawned = std::thread::Builder::new()
-            .name("op-document-save".to_string())
+            .name("de-document-save".to_string())
             .spawn(move || {
                 let started = Instant::now();
                 // Both payloads stream directly: a dirty document serializes

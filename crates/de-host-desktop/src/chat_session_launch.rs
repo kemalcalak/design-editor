@@ -425,7 +425,7 @@ fn launch_direct_modify_turn(
         Arc::clone(&cancel),
     ));
     let spawned = thread::Builder::new()
-        .name("op-chat-modify".into())
+        .name("de-chat-modify".into())
         .spawn(move || {
             de_host_services::chat_intent::run_modify_turn_cancellable(
                 provider.as_ref(),
@@ -576,7 +576,7 @@ fn launch_cli_standard_turn(
         model,
     };
     let spawned = thread::Builder::new()
-        .name("op-chat-intent".into())
+        .name("de-chat-intent".into())
         .spawn(move || {
             de_host_services::chat_intent::run_cli_turn(plan, chat_tx, executor, delta_tx, cmd_tx);
         });

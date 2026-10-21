@@ -25,7 +25,7 @@
 #   docker run -p 3100:3100 \
 #     -e DESIGN_EDITOR_SERVE_MODE=online \
 #     -e DESIGN_EDITOR_HUB_BASE_URL=http://backend:8080 \
-#     -e DESIGN_EDITOR_HUB_INTERNAL_AUTH="$(cat /run/secrets/op-canvas-internal-auth)" \
+#     -e DESIGN_EDITOR_HUB_INTERNAL_AUTH="$(cat /run/secrets/de-canvas-internal-auth)" \
 #     -e DESIGN_EDITOR_WEB_ALLOWED_ORIGINS=https://hub.example.com \
 #     design-editor-web-rust
 #   Every request is then attributed to a verified op-hub account and served

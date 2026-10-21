@@ -550,7 +550,7 @@ fn local_environment_allowlist_excludes_credentials() {
 #[test]
 fn configured_path_resolves_the_exact_agent_executable() {
     use std::os::unix::fs::PermissionsExt;
-    let dir = std::env::temp_dir().join(format!("op-acp-resolve-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("de-acp-resolve-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let executable = dir.join("mock-acp");
     std::fs::write(&executable, "#!/bin/sh\nexit 0\n").unwrap();
@@ -569,7 +569,7 @@ fn stub_agent(body: &str) -> (PathBuf, AcpAgentConfig) {
     use std::sync::atomic::{AtomicU64, Ordering};
     static SEQ: AtomicU64 = AtomicU64::new(0);
     let dir = std::env::temp_dir().join(format!(
-        "op-acp-stub-{}-{}",
+        "de-acp-stub-{}-{}",
         std::process::id(),
         SEQ.fetch_add(1, Ordering::Relaxed)
     ));

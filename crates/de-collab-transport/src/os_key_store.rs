@@ -68,7 +68,7 @@ const KEYRING_ACCOUNT: &str = "device-noise-x25519-v1";
         )
     )
 ))]
-const STORED_KEY_PREFIX: &str = "op-noise-x25519-v1:";
+const STORED_KEY_PREFIX: &str = "de-noise-x25519-v1:";
 #[cfg(any(
     test,
     all(

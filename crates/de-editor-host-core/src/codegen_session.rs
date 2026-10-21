@@ -128,7 +128,7 @@ impl CodegenSession {
     ) -> Result<Self, CodegenStartError> {
         Self::try_start_with_model_and_spawner(provider, input, framework, model, |worker| {
             std::thread::Builder::new()
-                .name("op-codegen-turn".into())
+                .name("de-codegen-turn".into())
                 .spawn(worker)
                 .map(drop)
         })
@@ -244,7 +244,7 @@ fn run_pipeline_with_model_and_cancel_token(
     let provider_label = provider.provider_label().to_string();
     let framework = input.framework.as_wire();
     tracing::info!(
-        target: "op_codegen_runtime",
+        target: "de_codegen_runtime",
         provider = %provider_label,
         model = model.unwrap_or("<provider-default>"),
         framework,
@@ -288,7 +288,7 @@ fn run_pipeline_with_model_and_cancel_token(
                     let mut stop_reason = None;
                     let response_byte_limit = response_byte_limit(req.max_output_tokens);
                     tracing::debug!(
-                        target: "op_codegen_runtime",
+                        target: "de_codegen_runtime",
                         provider = %provider_label,
                         model = model.unwrap_or("<provider-default>"),
                         request = %request_label,
@@ -319,7 +319,7 @@ fn run_pipeline_with_model_and_cancel_token(
                             }
                             ChatDelta::Error(e) => {
                                 tracing::warn!(
-                                    target: "op_codegen_runtime",
+                                    target: "de_codegen_runtime",
                                     provider = %provider_label,
                                     model = model.unwrap_or("<provider-default>"),
                                     request = %request_label,
@@ -361,7 +361,7 @@ fn run_pipeline_with_model_and_cancel_token(
                             format!("{request_label}: {}", bounded_message(detail)),
                         );
                         tracing::warn!(
-                            target: "op_codegen_runtime",
+                            target: "de_codegen_runtime",
                             provider = %provider_label,
                             model = model.unwrap_or("<provider-default>"),
                             request = %request_label,
@@ -384,7 +384,7 @@ fn run_pipeline_with_model_and_cancel_token(
                 assets,
             } => {
                 tracing::info!(
-                    target: "op_codegen_runtime",
+                    target: "de_codegen_runtime",
                     provider = %provider_label,
                     model = model.unwrap_or("<provider-default>"),
                     framework,
@@ -408,7 +408,7 @@ fn run_pipeline_with_model_and_cancel_token(
                     &diagnostics,
                 );
                 tracing::error!(
-                    target: "op_codegen_runtime",
+                    target: "de_codegen_runtime",
                     provider = %provider_label,
                     model = model.unwrap_or("<provider-default>"),
                     framework,

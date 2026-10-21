@@ -112,7 +112,7 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         // the process exit reaps it. The flag check per iteration is what
         // makes (b) prompt rather than "whenever the parent next writes".
         let _ = std::thread::Builder::new()
-            .name("op-serve-web-stdin".into())
+            .name("de-serve-web-stdin".into())
             .spawn(move || {
                 let mut sink = [0u8; 64];
                 let mut stdin = std::io::stdin();
@@ -172,7 +172,7 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         let conns = Arc::clone(&conn_count);
         let shutdown_flag = Arc::clone(&shutdown);
         let spawned = thread::Builder::new()
-            .name("op-serve-web-conn".into())
+            .name("de-serve-web-conn".into())
             .spawn(move || {
                 let _conn_guard = ConnGuard(conns);
                 let _ = s.set_read_timeout(Some(IO_TIMEOUT));

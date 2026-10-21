@@ -107,7 +107,7 @@ impl ImageDecodeStats {
         let reporter_shared = Arc::clone(&shared);
         let (stop_tx, stop_rx) = mpsc::channel();
         let reporter = std::thread::Builder::new()
-            .name("op-image-decode-stats".into())
+            .name("de-image-decode-stats".into())
             .spawn(move || report_loop(reporter_shared, stop_rx))
             .map_err(|err| {
                 // Opt-in telemetry only — log and run without stats.

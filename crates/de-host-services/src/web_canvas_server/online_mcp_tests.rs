@@ -125,7 +125,7 @@ fn calling_a_denied_tool_by_name_is_refused_rather_than_executed() {
 
 #[test]
 fn a_path_traversal_argument_on_a_denied_tool_never_reaches_the_filesystem() {
-    let target = std::env::temp_dir().join("op-m3-traversal-probe.op");
+    let target = std::env::temp_dir().join("de-m3-traversal-probe.op");
     let _ = std::fs::remove_file(&target);
     let payload = mcp(
         &registry(),

@@ -316,7 +316,7 @@ pub(crate) fn drop_document_after_replace(doc: jian_ops_schema::PenDocument) {
     #[cfg(not(target_arch = "wasm32"))]
     {
         let _ = std::thread::Builder::new()
-            .name("op-doc-drop".into())
+            .name("de-doc-drop".into())
             .stack_size(512 * 1024 * 1024)
             .spawn(move || drop(doc));
     }

@@ -10,7 +10,7 @@ let canvasSeq = 0;
 
 /** Ensure the canvas element has an id, assigning one if absent. */
 function ensureCanvasId(canvas: HTMLCanvasElement): string {
-  if (!canvas.id) canvas.id = `op-web-sdk-canvas-${++canvasSeq}`;
+  if (!canvas.id) canvas.id = `de-web-sdk-canvas-${++canvasSeq}`;
   return canvas.id;
 }
 

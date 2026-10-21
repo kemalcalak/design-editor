@@ -169,7 +169,7 @@ fn create_impl<'local>(
     // would leak (DeleteGlobalRef needs an attached thread), so it is
     // disposed on the caller instead.
     let ctx = Box::new(EngineCtx::new(clone_vm(vm), receiver));
-    let thread = Arc::new(EngineThread::spawn("op-engine"));
+    let thread = Arc::new(EngineThread::spawn("de-engine"));
 
     // Step 1: attach the engine thread to the VM (permanent — detaches at
     // thread exit) so its callbacks have a JNIEnv.

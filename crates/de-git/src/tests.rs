@@ -39,7 +39,7 @@ pub(crate) fn unique_temp_dir(tag: &str) -> PathBuf {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    std::env::temp_dir().join(format!("op-git-test-{tag}-{}-{nanos}", std::process::id()))
+    std::env::temp_dir().join(format!("de-git-test-{tag}-{}-{nanos}", std::process::id()))
 }
 
 /// A throwaway repository with a configured commit identity, removed

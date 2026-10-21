@@ -397,7 +397,7 @@ impl WidgetHostNative {
         let work = std::sync::Arc::new(std::sync::Mutex::new(Some(work)));
         let worker_slot = std::sync::Arc::clone(&work);
         let spawned = std::thread::Builder::new()
-            .name("op-import-drop".into())
+            .name("de-import-drop".into())
             .spawn(move || {
                 if let Some(f) = worker_slot.lock().unwrap_or_else(|p| p.into_inner()).take() {
                     f();

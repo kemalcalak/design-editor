@@ -91,7 +91,7 @@ fn mobile_runtime() -> Option<&'static Runtime> {
     }
     let runtime = Builder::new_multi_thread()
         .enable_all()
-        .thread_name("op-mobile-collab")
+        .thread_name("de-mobile-collab")
         .build()
         .ok()?;
     let _ = RUNTIME.set(runtime);

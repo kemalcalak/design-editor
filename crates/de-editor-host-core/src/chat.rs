@@ -497,7 +497,7 @@ impl ChatSession {
         let cancel = Arc::new(AtomicBool::new(false));
         let worker_cancel = Arc::clone(&cancel);
         thread::Builder::new()
-            .name("op-chat-turn".into())
+            .name("de-chat-turn".into())
             .spawn(move || {
                 for delta in provider.send_cancellable(req, worker_cancel) {
                     if tx.send(delta).is_err() {

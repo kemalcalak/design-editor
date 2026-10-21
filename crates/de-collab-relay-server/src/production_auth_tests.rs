@@ -743,7 +743,7 @@ impl TempFixture {
             .as_nanos();
         let sequence = NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed);
         let path = std::env::temp_dir().join(format!(
-            "op-collab-relay-auth-{}-{nonce}-{sequence}",
+            "de-collab-relay-auth-{}-{nonce}-{sequence}",
             std::process::id(),
         ));
         fs::create_dir(&path).expect("create isolated temporary directory");

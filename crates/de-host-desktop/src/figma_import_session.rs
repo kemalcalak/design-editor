@@ -156,7 +156,7 @@ pub(crate) fn spawn_approved(
     let worker_cancellation = cancellation.clone();
     let worker_tx = tx.clone();
     let spawned = thread::Builder::new()
-        .name("op-figma-import".into())
+        .name("de-figma-import".into())
         .spawn(move || {
             let Some(_permit) = worker_cancellation.worker_permit() else {
                 return;
@@ -273,7 +273,7 @@ fn conversion_receiver(
     let (tx, rx) = mpsc::channel();
     let worker_tx = tx.clone();
     let spawned = thread::Builder::new()
-        .name("op-figma-convert".into())
+        .name("de-figma-convert".into())
         .spawn(move || {
             let Some(_permit) = cancellation.worker_permit() else {
                 return;

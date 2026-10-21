@@ -483,7 +483,7 @@ fn spawn_job_watchdog(
         return Err(std::io::Error::other("forced watchdog spawn failure"));
     }
     thread::Builder::new()
-        .name("op-design-md-watchdog".into())
+        .name("de-design-md-watchdog".into())
         .stack_size(256 * 1024)
         .spawn(move || {
             if matches!(

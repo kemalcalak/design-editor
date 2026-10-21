@@ -291,7 +291,7 @@ mod tests {
             .unwrap()
             .as_nanos();
         let parent = std::env::temp_dir().join(format!(
-            "op-collab-key-store-{name}-{}-{nonce}",
+            "de-collab-key-store-{name}-{}-{nonce}",
             std::process::id()
         ));
         std::fs::create_dir(&parent).unwrap();

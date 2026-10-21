@@ -16,7 +16,7 @@ fn service_key() -> ServiceKey {
 fn metadata() -> ResolvedMetadata {
     ResolvedMetadata {
         fullname: "design-editor-aabbccddeeff._design-editor-collab._tcp.local.".to_owned(),
-        hostname: "op-aabbccddeeff.local.".to_owned(),
+        hostname: "de-aabbccddeeff.local.".to_owned(),
         port: 45_123,
         txt: vec![
             35, b'i', b'd', b'=', b'0', b'0', b'1', b'1', b'2', b'2', b'3', b'3', b'4', b'4', b'5',
@@ -124,7 +124,7 @@ fn resolved_metadata_rejects_nonlocal_or_unbounded_records() {
     assert!(valid_resolved_metadata(&valid));
 
     let mut nonlocal = valid.clone();
-    nonlocal.hostname = "op-aabbccddeeff.example.com.".to_owned();
+    nonlocal.hostname = "de-aabbccddeeff.example.com.".to_owned();
     assert!(!valid_resolved_metadata(&nonlocal));
 
     let mut oversized = valid;

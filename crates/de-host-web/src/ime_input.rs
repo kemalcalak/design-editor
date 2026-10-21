@@ -29,7 +29,7 @@ use wasm_bindgen::JsCast;
 use web_sys::HtmlInputElement;
 
 /// The id of the hidden IME input appended next to the canvas.
-const INPUT_ID: &str = "op-ime-input";
+const INPUT_ID: &str = "de-ime-input";
 
 /// Off-screen-but-focusable style. NOT `display:none` / `visibility:hidden`
 /// (both block focus + IME composition); uses `opacity:0` + `pointer-events:

@@ -78,7 +78,7 @@ fn export_raster_writes_png_for_minimal_scene() {
             a: 1.0,
         },
     )]);
-    let tmp = std::env::temp_dir().join(format!("op-export-test-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-test-{}.png", std::process::id()));
     let res = export_raster(&scene, &tmp, RasterFormat::Png, 2.0);
     assert!(res.is_ok(), "export_raster PNG failed: {res:?}");
     let bytes = std::fs::read(&tmp).unwrap();
@@ -160,7 +160,7 @@ fn export_raster_writes_jpeg_with_white_background() {
             a: 1.0,
         },
     )]);
-    let tmp = std::env::temp_dir().join(format!("op-export-test-{}.jpg", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-test-{}.jpg", std::process::id()));
     let res = export_raster(&scene, &tmp, RasterFormat::Jpeg, 1.0);
     assert!(res.is_ok(), "export_raster JPEG failed: {res:?}");
     let bytes = std::fs::read(&tmp).unwrap();
@@ -186,7 +186,7 @@ fn export_raster_scale_clamps_extreme_values() {
     )]);
     // Both extremes should succeed (clamped silently) rather than
     // allocating a gigapixel surface or zero-sized output.
-    let tmp = std::env::temp_dir().join(format!("op-export-clamp-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-clamp-{}.png", std::process::id()));
     assert!(export_raster(&scene, &tmp, RasterFormat::Png, 0.001).is_ok());
     assert!(export_raster(&scene, &tmp, RasterFormat::Png, 1000.0).is_ok());
     let _ = std::fs::remove_file(&tmp);
@@ -195,7 +195,7 @@ fn export_raster_scale_clamps_extreme_values() {
 #[test]
 fn export_raster_fails_on_empty_scene() {
     let scene = scene_with(Vec::new());
-    let tmp = std::env::temp_dir().join(format!("op-export-empty-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-empty-{}.png", std::process::id()));
     let res = export_raster(&scene, &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_err(), "expected Err on empty scene, got {res:?}");
     assert_eq!(res.unwrap_err().to_string(), "nothing to export");
@@ -238,7 +238,7 @@ fn export_raster_applies_flex_layout_from_editor_state() {
     let b = page_bounds(scene.active_page().unwrap()).expect("paintable bounds");
     assert_eq!(b.size.x, 375.0, "page bounds reflect resolved layout width");
     // And the export succeeds against the layout-resolved scene.
-    let tmp = std::env::temp_dir().join(format!("op-export-flex-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-flex-{}.png", std::process::id()));
     let res = export_raster(&scene, &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_ok(), "flex export failed: {res:?}");
     let bytes = std::fs::read(&tmp).unwrap();
@@ -303,7 +303,7 @@ fn export_node_raster_crops_to_the_named_node() {
         filled_rect("big", 0.0, 0.0, 100.0, 50.0, grey),
         filled_rect("small", 400.0, 400.0, 40.0, 40.0, grey),
     ]);
-    let tmp = std::env::temp_dir().join(format!("op-export-node-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-node-{}.png", std::process::id()));
     let res = export_node_raster(&scene, "small", &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_ok(), "export_node_raster failed: {res:?}");
     let bytes = std::fs::read(&tmp).unwrap();
@@ -336,7 +336,7 @@ fn export_node_raster_paints_icon_font_glyphs() {
     });
 
     let scene = scene_with(vec![icon]);
-    let tmp = std::env::temp_dir().join(format!("op-export-icon-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-icon-{}.png", std::process::id()));
     let res = export_node_raster(&scene, "home-icon", &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_ok(), "export_node_raster icon failed: {res:?}");
 
@@ -388,7 +388,7 @@ fn export_node_raster_paints_svg_path_d_stroke() {
 
     let scene = scene_with(vec![path]);
     let tmp = std::env::temp_dir().join(format!(
-        "op-export-svg-path-stroke-{}.png",
+        "de-export-svg-path-stroke-{}.png",
         std::process::id()
     ));
     let res = export_node_raster(&scene, "activity-line", &tmp, RasterFormat::Png, 1.0);
@@ -422,7 +422,7 @@ fn export_raster_paints_only_authored_stroke_sides() {
         align: SceneStrokeAlign::Center,
     });
     let scene = scene_with(vec![node]);
-    let tmp = std::env::temp_dir().join(format!("op-export-sided-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-sided-{}.png", std::process::id()));
     let res = export_node_raster(&scene, "bottom-border", &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_ok(), "sided-stroke export failed: {res:?}");
     let decoded = decode_rgba(&std::fs::read(&tmp).unwrap());
@@ -464,7 +464,7 @@ fn export_node_raster_errors_on_unknown_id() {
             a: 1.0,
         },
     )]);
-    let tmp = std::env::temp_dir().join(format!("op-export-node-miss-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-node-miss-{}.png", std::process::id()));
     let res = export_node_raster(&scene, "ghost", &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_err(), "expected Err on unknown id, got {res:?}");
     assert!(res.unwrap_err().to_string().contains("not found"));
@@ -542,7 +542,7 @@ fn export_renders_data_url_image_bitmaps() {
         a: 1.0,
     });
     let scene = scene_with(vec![node]);
-    let tmp = std::env::temp_dir().join(format!("op-export-img-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-img-{}.png", std::process::id()));
     let res = export_node_raster(&scene, "img", &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_ok(), "image export failed: {res:?}");
     let decoded = decode_rgba(&std::fs::read(&tmp).unwrap());
@@ -600,7 +600,7 @@ fn export_recovers_an_image_stolen_by_a_concurrent_decode_pump() {
         a: 1.0,
     });
     let scene = scene_with(vec![node]);
-    let tmp = std::env::temp_dir().join(format!("op-export-stolen-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-stolen-{}.png", std::process::id()));
     let res = export_node_raster(&scene, "img", &tmp, RasterFormat::Png, 1.0);
     thief.join().unwrap();
     assert!(res.is_ok(), "image export failed: {res:?}");
@@ -628,7 +628,7 @@ fn export_remote_image_without_bytes_paints_the_canvas_placeholder() {
         a: 1.0,
     });
     let scene = scene_with(vec![node]);
-    let tmp = std::env::temp_dir().join(format!("op-export-remote-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-remote-{}.png", std::process::id()));
     let res = export_node_raster(&scene, "remote-img", &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_ok(), "remote-image export failed: {res:?}");
     let decoded = decode_rgba(&std::fs::read(&tmp).unwrap());
@@ -664,7 +664,7 @@ fn export_clip_content_trims_child_overflow() {
     // Child overflows the frame by 40 px vertically.
     frame.children = vec![filled_rect("ovf", 0.0, 0.0, 40.0, 80.0, blue)];
     let scene = scene_with(vec![frame]);
-    let tmp = std::env::temp_dir().join(format!("op-export-clip-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-clip-{}.png", std::process::id()));
     let res = export_node_raster(&scene, "clipper", &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_ok(), "clip export failed: {res:?}");
     let bytes = std::fs::read(&tmp).unwrap();
@@ -759,7 +759,7 @@ fn export_paints_styled_text_runs_with_decorations() {
         strikethrough: false,
     }];
     let scene = scene_with(vec![node]);
-    let tmp = std::env::temp_dir().join(format!("op-export-styled-{}.png", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("de-export-styled-{}.png", std::process::id()));
     let res = export_node_raster(&scene, "styled", &tmp, RasterFormat::Png, 1.0);
     assert!(res.is_ok(), "styled-text export failed: {res:?}");
     let decoded = decode_rgba(&std::fs::read(&tmp).unwrap());

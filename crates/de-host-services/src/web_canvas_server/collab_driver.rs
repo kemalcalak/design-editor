@@ -71,7 +71,7 @@ pub(crate) fn spawn(
     let hub = Arc::clone(hub);
     let shutdown = Arc::clone(shutdown);
     let spawned = std::thread::Builder::new()
-        .name("op-serve-web-collab".into())
+        .name("de-serve-web-collab".into())
         .spawn(move || run(&state, &hub, &shutdown, &rx));
     if spawned.is_err() {
         eprintln!(

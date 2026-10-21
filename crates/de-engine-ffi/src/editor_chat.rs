@@ -736,7 +736,7 @@ fn chat_runtime() -> Result<&'static Runtime, &'static str> {
             Builder::new_multi_thread()
                 .worker_threads(1)
                 .enable_all()
-                .thread_name("op-mobile-chat")
+                .thread_name("de-mobile-chat")
                 .build()
                 .map_err(|_| ())
         })

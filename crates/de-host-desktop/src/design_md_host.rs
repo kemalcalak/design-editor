@@ -50,7 +50,7 @@ impl DesignMdSession {
         let (tx, rx) = mpsc::channel();
         let worker_tx = tx.clone();
         let spawned = thread::Builder::new()
-            .name("op-design-md".into())
+            .name("de-design-md".into())
             .spawn(move || {
                 let _ = worker_tx.send(run_design_md_provider_blocking(provider, request));
             });

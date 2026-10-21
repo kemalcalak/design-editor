@@ -13,7 +13,7 @@ fn service(
     ServiceInfo::new(
         DISCOVERY_SERVICE_TYPE,
         instance,
-        "op-aabbccddeeff.local.",
+        "de-aabbccddeeff.local.",
         addresses,
         port,
         properties,
@@ -71,7 +71,7 @@ fn publisher_metadata_has_only_the_allowlisted_fields() {
         45123,
         &addresses,
         "design-editor-aabbccddeeff",
-        "op-ffeeddccbbaa.local.",
+        "de-ffeeddccbbaa.local.",
     )
     .unwrap();
 

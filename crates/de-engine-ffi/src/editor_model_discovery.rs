@@ -208,7 +208,7 @@ fn model_discovery_runtime() -> Result<&'static Runtime, &'static str> {
             Builder::new_multi_thread()
                 .worker_threads(1)
                 .enable_all()
-                .thread_name("op-mobile-model-discovery")
+                .thread_name("de-mobile-model-discovery")
                 .build()
                 .map_err(|_| ())
         })

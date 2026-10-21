@@ -280,7 +280,7 @@ mod tests {
             .map(|d| d.as_nanos())
             .unwrap_or(0);
         std::env::temp_dir().join(format!(
-            "op-gitsession-{tag}-{}-{nanos}",
+            "de-gitsession-{tag}-{}-{nanos}",
             std::process::id()
         ))
     }

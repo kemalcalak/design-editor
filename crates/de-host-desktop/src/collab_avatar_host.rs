@@ -159,7 +159,7 @@ fn spawn_fetch(request: CollabAvatarFetchRequest, fetcher: Fetcher) -> Option<Fe
     let (tx, rx) = mpsc::channel();
     let worker_request = request.clone();
     std::thread::Builder::new()
-        .name("op-collab-avatar".into())
+        .name("de-collab-avatar".into())
         .spawn(move || {
             let _ = tx.send(fetcher(&worker_request));
         })

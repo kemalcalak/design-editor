@@ -15,7 +15,7 @@ pub fn shared_runtime() -> &'static Runtime {
     RUNTIME.get_or_init(|| {
         Builder::new_multi_thread()
             .enable_all()
-            .thread_name("op-chat")
+            .thread_name("de-chat")
             .build()
             .expect("chat runtime build")
     })

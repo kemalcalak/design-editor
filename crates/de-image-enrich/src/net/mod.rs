@@ -29,7 +29,7 @@ pub fn block_on_image_runtime<F: std::future::Future>(fut: F) -> F::Output {
             tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(1)
                 .enable_all()
-                .thread_name("op-image-fetch")
+                .thread_name("de-image-fetch")
                 .build()
                 .expect("image fetch runtime build")
         })

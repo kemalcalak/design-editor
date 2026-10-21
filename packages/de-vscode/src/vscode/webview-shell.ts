@@ -63,11 +63,11 @@ export function buildWebviewHtml(opts: { iframeSrc: string; nonce: string }): st
 <style>html,body{margin:0;height:100%;overflow:hidden;background:transparent}iframe{border:0;width:100%;height:100%;display:block}</style>
 </head>
 <body>
-<iframe id="op-frame" src="${iframeSrc}" allow="clipboard-read; clipboard-write"></iframe>
+<iframe id="de-frame" src="${iframeSrc}" allow="clipboard-read; clipboard-write"></iframe>
 <script nonce="${nonce}">
 (function () {
   const vscode = acquireVsCodeApi();
-  const frame = document.getElementById("op-frame");
+  const frame = document.getElementById("de-frame");
   const IFRAME_ORIGIN = ${JSON.stringify(iframeOrigin)};
 
   // Keyboard shortcuts only reach the editor while the iframe holds focus —

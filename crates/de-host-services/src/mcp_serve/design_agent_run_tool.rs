@@ -343,7 +343,7 @@ fn drain_with_deadline(
     let (tx, rx) = mpsc::channel::<ChatDelta>();
     let thread_cancel = cancel.clone();
     std::thread::Builder::new()
-        .name("op-design-agent-run".into())
+        .name("de-design-agent-run".into())
         .spawn(move || {
             for delta in driver.run(request, thread_cancel) {
                 if tx.send(delta).is_err() {

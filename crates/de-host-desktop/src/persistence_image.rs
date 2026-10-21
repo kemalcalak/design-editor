@@ -267,7 +267,7 @@ mod relink_tests {
             .expect("image node inserted and selected");
 
         let tmp_path =
-            std::env::temp_dir().join(format!("op-relink-test-{}.png", std::process::id()));
+            std::env::temp_dir().join(format!("de-relink-test-{}.png", std::process::id()));
         std::fs::write(&tmp_path, b"not a real png, just bytes to embed").expect("write temp file");
         apply_relink(&mut host, &tmp_path);
         let _ = std::fs::remove_file(&tmp_path);
@@ -294,7 +294,7 @@ mod relink_tests {
             .insert_image_node_at_viewport("Photo", "assets/broken.png")
             .expect("image node inserted and selected");
 
-        let missing_path = std::env::temp_dir().join("op-relink-test-does-not-exist.png");
+        let missing_path = std::env::temp_dir().join("de-relink-test-does-not-exist.png");
         apply_relink(&mut host, &missing_path);
 
         let node = host.editor_state().selected_node().expect("still selected");
@@ -317,7 +317,7 @@ mod relink_tests {
             .encode(None, skia_safe::EncodedImageFormat::PNG, 100)
             .expect("encode png");
         let path =
-            std::env::temp_dir().join(format!("op-fill-upload-test-{}.png", std::process::id()));
+            std::env::temp_dir().join(format!("de-fill-upload-test-{}.png", std::process::id()));
         std::fs::write(&path, png.as_bytes()).expect("write png");
 
         let mut host = WidgetHostNative::new();

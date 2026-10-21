@@ -626,7 +626,7 @@ fn nested_frame_doc(depth: usize) -> String {
 
 fn run_deep_layer_fixture(test: impl FnOnce() + Send + 'static) {
     let handle = std::thread::Builder::new()
-        .name("op-layer-panel-deep-fixture".into())
+        .name("de-layer-panel-deep-fixture".into())
         .stack_size(64 * 1024 * 1024)
         .spawn(test)
         .expect("spawn deep layer fixture test");

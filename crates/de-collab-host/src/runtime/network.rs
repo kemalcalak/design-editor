@@ -423,7 +423,7 @@ pub(super) fn spawn_owner(
     let (commands, receiver) = mpsc::sync_channel(GUI_COMMAND_CAPACITY);
     let (shutdown, shutdown_receiver) = mpsc::sync_channel(TERMINAL_COMMAND_CAPACITY);
     let thread = std::thread::Builder::new()
-        .name("op-collab-owner-network".to_string())
+        .name("de-collab-owner-network".to_string())
         .spawn(move || {
             owner::run(
                 sink,
@@ -456,7 +456,7 @@ pub(super) fn spawn_guest(
     let (commands, receiver) = mpsc::sync_channel(GUI_COMMAND_CAPACITY);
     let (shutdown, shutdown_receiver) = mpsc::sync_channel(TERMINAL_COMMAND_CAPACITY);
     let thread = std::thread::Builder::new()
-        .name("op-collab-guest-network".to_string())
+        .name("de-collab-guest-network".to_string())
         .spawn(move || {
             guest::run(
                 sink,
@@ -477,7 +477,7 @@ pub(super) fn spawn_guest(
 pub(super) fn spawn_discovery(sink: EventSink) -> DiscoveryNetwork {
     let (stop, receiver) = mpsc::sync_channel(DISCOVERY_COMMAND_CAPACITY);
     let thread = std::thread::Builder::new()
-        .name("op-collab-discovery".to_string())
+        .name("de-collab-discovery".to_string())
         .spawn(move || discovery::run(sink, receiver))
         .expect("spawn collaboration discovery thread");
     DiscoveryNetwork {

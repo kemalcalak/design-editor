@@ -45,10 +45,10 @@ use web_sys::{Document, Element, HtmlElement};
 /// `data-*` attribute holding the stable `accesskit::NodeId` of a mirror
 /// element. The event-routing layer reads it back to map a DOM event to a
 /// host action.
-pub(crate) const NODE_ID_ATTR: &str = "data-op-a11y-id";
+pub(crate) const NODE_ID_ATTR: &str = "data-de-a11y-id";
 
 /// The id of the mirror container element appended next to the canvas.
-const CONTAINER_ID: &str = "op-a11y-mirror";
+const CONTAINER_ID: &str = "de-a11y-mirror";
 
 /// Standard screen-reader-only style: zero-area, clipped, off-screen, but
 /// NOT `display:none` (which would drop it from the accessibility tree).

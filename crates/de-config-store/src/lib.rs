@@ -474,7 +474,7 @@ mod tests {
         let first = temp_root("late-first");
         configure_user_root_in(&slot, first).unwrap();
         let absent = std::env::temp_dir().join(format!(
-            "op-config-store-late-absent-{}",
+            "de-config-store-late-absent-{}",
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&absent);

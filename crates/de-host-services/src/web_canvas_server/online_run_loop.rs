@@ -238,7 +238,7 @@ pub fn run_online_web_canvas(options: ServeWebOptions) -> Result<()> {
         let write_barrier = Arc::clone(&write_barrier);
         let shutdown_flag = Arc::clone(&shutdown);
         let spawned = thread::Builder::new()
-            .name("op-serve-web-online-conn".into())
+            .name("de-serve-web-online-conn".into())
             .spawn(move || {
                 let _conn_guard = ConnGuard(conns);
                 let _ = s.set_read_timeout(Some(IO_TIMEOUT));
@@ -354,7 +354,7 @@ fn install_shutdown_signals(
         // it raises the real flag and pokes the listener, exactly as the
         // token-authed shutdown path does.
         let spawned = thread::Builder::new()
-            .name("op-serve-web-online-signal".into())
+            .name("de-serve-web-online-signal".into())
             .spawn(move || loop {
                 if SIGNAL_RECEIVED.load(Ordering::Acquire) {
                     if !shutdown.swap(true, Ordering::AcqRel) {
@@ -408,7 +408,7 @@ fn spawn_sweeper(registry: &Arc<TenantRegistry>, shutdown: &Arc<AtomicBool>) -> 
     let shutdown = Arc::clone(shutdown);
     let interval = sweep_interval_secs(registry.limits().idle_evict_secs);
     let spawned = thread::Builder::new()
-        .name("op-serve-web-online-sweeper".into())
+        .name("de-serve-web-online-sweeper".into())
         .spawn(move || {
             while !shutdown.load(Ordering::Acquire) {
                 std::thread::sleep(std::time::Duration::from_secs(interval));

@@ -169,7 +169,7 @@ impl DesktopApp {
                 .ok_or(GitAuthError::CredentialStoresUnavailable)?;
             let repo = self.git_session.repo().ok_or(GitAuthError::NoRepository)?;
             let host = repo.origin_host().ok_or(GitAuthError::NoOriginRemote)?;
-            let key_name = format!("op-{}", host.replace(['/', '\\', ':'], "-"));
+            let key_name = format!("de-{}", host.replace(['/', '\\', ':'], "-"));
             // Reuse an existing key of that name, else generate one.
             let key = match ssh.load(&key_name) {
                 Ok(key) => key,

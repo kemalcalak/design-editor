@@ -20,7 +20,7 @@ fn temp_storage_root() -> PathBuf {
         .expect("system time after epoch")
         .as_nanos();
     let root = std::env::temp_dir().join(format!(
-        "op-engine-ffi-settings-{}-{nanos}",
+        "de-engine-ffi-settings-{}-{nanos}",
         std::process::id()
     ));
     std::fs::create_dir_all(&root).expect("create temp storage root");

@@ -10,7 +10,7 @@ fn temp_import_dir(tag: &str) -> PathBuf {
         .map(|duration| duration.as_nanos())
         .unwrap_or_default();
     std::env::temp_dir().join(format!(
-        "op-figma-session-{tag}-{}-{nanos}",
+        "de-figma-session-{tag}-{}-{nanos}",
         std::process::id()
     ))
 }

@@ -12,7 +12,7 @@ struct TempStore {
 impl TempStore {
     fn new(label: &str) -> Self {
         let root = std::env::temp_dir().join(format!(
-            "op-tenant-store-{label}-{}-{:?}",
+            "de-tenant-store-{label}-{}-{:?}",
             std::process::id(),
             std::thread::current().id()
         ));

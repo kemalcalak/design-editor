@@ -162,7 +162,7 @@ fn successful_turn_closes_then_deletes_an_ephemeral_session() {
 
     static SEQUENCE: AtomicU64 = AtomicU64::new(0);
     let dir = std::env::temp_dir().join(format!(
-        "op-acp-close-{}-{}",
+        "de-acp-close-{}-{}",
         std::process::id(),
         SEQUENCE.fetch_add(1, Ordering::Relaxed)
     ));
@@ -244,7 +244,7 @@ fn cancelling_a_silent_agent_sends_session_cancel_before_cleanup() {
 
     static SEQUENCE: AtomicU64 = AtomicU64::new(0);
     let dir = std::env::temp_dir().join(format!(
-        "op-acp-cancel-{}-{}",
+        "de-acp-cancel-{}-{}",
         std::process::id(),
         SEQUENCE.fetch_add(1, Ordering::Relaxed)
     ));

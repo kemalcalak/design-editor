@@ -223,7 +223,7 @@ mod tests {
         fn new() -> Self {
             let seq = TMP_SEQ.fetch_add(1, Ordering::Relaxed);
             let dir =
-                std::env::temp_dir().join(format!("op-fonts-test-{}-{seq}", std::process::id()));
+                std::env::temp_dir().join(format!("de-fonts-test-{}-{seq}", std::process::id()));
             let _ = std::fs::remove_dir_all(&dir);
             std::fs::create_dir_all(&dir).unwrap();
             Self(dir)
@@ -329,7 +329,7 @@ mod tests {
         // registration — proving persistence precedes registration.
         let seq = TMP_SEQ.fetch_add(1, Ordering::Relaxed);
         let file_root =
-            std::env::temp_dir().join(format!("op-fonts-notadir-{}-{seq}", std::process::id()));
+            std::env::temp_dir().join(format!("de-fonts-notadir-{}-{seq}", std::process::id()));
         let _ = std::fs::remove_dir_all(&file_root);
         std::fs::write(&file_root, b"x").unwrap();
         struct Cleanup(PathBuf);

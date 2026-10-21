@@ -63,7 +63,7 @@ fn write_png(tag: &str) -> PathBuf {
         .image_snapshot()
         .encode(None, skia_safe::EncodedImageFormat::PNG, 100)
         .expect("encode png");
-    let path = std::env::temp_dir().join(format!("op-image-drop-{tag}-{}.png", std::process::id()));
+    let path = std::env::temp_dir().join(format!("de-image-drop-{tag}-{}.png", std::process::id()));
     std::fs::write(&path, png.as_bytes()).expect("write png");
     path
 }
@@ -153,7 +153,7 @@ fn a_drop_without_a_position_falls_back_to_the_viewport_centre() {
 fn an_unreadable_file_changes_nothing() {
     let mut host = seed();
     let before = host.editor_state().active_children().len();
-    let missing = std::env::temp_dir().join("op-image-drop-does-not-exist.png");
+    let missing = std::env::temp_dir().join("de-image-drop-does-not-exist.png");
 
     let outcome = apply_image_drop(&mut host, &missing, None, VIEWPORT_W, VIEWPORT_H);
 

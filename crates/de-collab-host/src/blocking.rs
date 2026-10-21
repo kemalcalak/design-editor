@@ -84,7 +84,7 @@ mod test_support {
         RUNTIME.get_or_init(|| {
             Builder::new_multi_thread()
                 .enable_all()
-                .thread_name("op-collab-host-test")
+                .thread_name("de-collab-host-test")
                 .build()
                 .expect("test runtime build")
         })

@@ -14,7 +14,7 @@ pub(crate) fn schedule_relief(reason: &'static str) {
     let sender = SENDER.get_or_init(|| {
         let (tx, rx) = mpsc::channel();
         std::thread::Builder::new()
-            .name("op-heap-relief".into())
+            .name("de-heap-relief".into())
             .spawn(move || relief_worker(rx))
             .expect("spawn allocator pressure-relief worker");
         tx

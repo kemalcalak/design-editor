@@ -54,7 +54,7 @@ impl BonjourBrowserBackend {
         let (stop_sender, stop_receiver) = mpsc::channel();
         let (ready_sender, ready_receiver) = mpsc::sync_channel(1);
         let join = thread::Builder::new()
-            .name("op-bonjour-browser".to_owned())
+            .name("de-bonjour-browser".to_owned())
             .spawn(move || browser_worker(event_sender, stop_receiver, ready_sender))
             .map_err(DiscoveryError::BonjourIo)?;
         let mut backend = Self {

@@ -260,7 +260,7 @@ mod tests {
 
     fn temp_path(tag: &str) -> PathBuf {
         std::env::temp_dir().join(format!(
-            "op-kit-persistence-{tag}-{}.json",
+            "de-kit-persistence-{tag}-{}.json",
             std::process::id()
         ))
     }

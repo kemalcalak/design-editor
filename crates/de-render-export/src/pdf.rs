@@ -378,7 +378,7 @@ mod tests {
             ],
             active_page_index: 0,
         };
-        let tmp = std::env::temp_dir().join(format!("op-export-pdf-{}.pdf", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("de-export-pdf-{}.pdf", std::process::id()));
         let res = export_pdf(&scene, &tmp);
         assert!(res.is_ok(), "export_pdf failed: {res:?}");
         let bytes = std::fs::read(&tmp).unwrap();
@@ -410,7 +410,7 @@ mod tests {
             ],
             active_page_index: 0,
         };
-        let tmp = std::env::temp_dir().join(format!("op-pdf-empty-{}.pdf", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("de-pdf-empty-{}.pdf", std::process::id()));
         let res = export_pdf(&scene, &tmp);
         assert!(res.is_err(), "expected Err on all-empty, got {res:?}");
         assert_eq!(res.unwrap_err().to_string(), "nothing to export");
@@ -449,7 +449,7 @@ mod tests {
             .map(|d| d.as_nanos())
             .unwrap_or(0);
         std::env::temp_dir().join(format!(
-            "op-deck-pdf-{tag}-{}-{nanos}.pdf",
+            "de-deck-pdf-{tag}-{}-{nanos}.pdf",
             std::process::id()
         ))
     }

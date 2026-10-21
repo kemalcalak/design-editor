@@ -131,7 +131,7 @@ pub(super) fn data_attribute(node: &PenNode) -> String {
         return String::new();
     }
     format!(
-        " data-op-motion-node=\"{}\"",
+        " data-de-motion-node=\"{}\"",
         html_escape(&css_identifier(node.id_str()))
     )
 }
@@ -229,11 +229,11 @@ fn easing_to_css(easing: &Easing) -> String {
 }
 
 fn animation_name(node_id: &str, index: usize) -> String {
-    format!("op-{}-{index}", css_identifier(node_id))
+    format!("de-{}-{index}", css_identifier(node_id))
 }
 
 fn selector(node_id: &str) -> String {
-    format!("[data-op-motion-node=\"{}\"]", css_identifier(node_id))
+    format!("[data-de-motion-node=\"{}\"]", css_identifier(node_id))
 }
 
 fn css_identifier(value: &str) -> String {

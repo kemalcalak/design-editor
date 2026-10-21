@@ -45,7 +45,7 @@ describe("bundled runtime resolution", () => {
   const exe = process.platform === "win32" ? "de-host-web-server.exe" : "de-host-web-server";
 
   test("prefers the vsix-bundled binary over the workspace debug build", () => {
-    const root = mkdtempSync(join(tmpdir(), "op-ext-"));
+    const root = mkdtempSync(join(tmpdir(), "de-ext-"));
     try {
       mkdirSync(join(root, "bin"), { recursive: true });
       writeFileSync(join(root, "bin", exe), "");
@@ -63,7 +63,7 @@ describe("bundled runtime resolution", () => {
   });
 
   test("bundledDaemonEnv requires BOTH web asset dirs", () => {
-    const root = mkdtempSync(join(tmpdir(), "op-ext-"));
+    const root = mkdtempSync(join(tmpdir(), "de-ext-"));
     try {
       expect(bundledDaemonEnv(root)).toBeUndefined();
       mkdirSync(join(root, "web/pkg"), { recursive: true });

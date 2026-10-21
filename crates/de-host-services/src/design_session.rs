@@ -61,7 +61,7 @@ pub fn start<L: LlmClient + Send + 'static>(
 
     let failure_tx = delta_tx.clone();
     if let Err(err) = thread::Builder::new()
-        .name("op-design-turn".into())
+        .name("de-design-turn".into())
         .spawn(move || {
             run_design_worker(
                 llm,
@@ -320,7 +320,7 @@ pub fn start_subtask_retry<L: LlmClient + Send + 'static>(
 
     let failure_tx = delta_tx.clone();
     if let Err(err) = thread::Builder::new()
-        .name("op-subtask-retry".into())
+        .name("de-subtask-retry".into())
         .spawn(move || {
             run_subtask_retry_worker(
                 llm,

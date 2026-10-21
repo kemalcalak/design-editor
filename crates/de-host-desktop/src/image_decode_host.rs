@@ -60,7 +60,7 @@ impl ImageDecodeHost {
                 let result_tx = result_tx.clone();
                 let wake_proxy = Arc::clone(&wake_proxy);
                 std::thread::Builder::new()
-                    .name(format!("op-image-decode-{index}"))
+                    .name(format!("de-image-decode-{index}"))
                     .spawn(move || decode_worker(job_rx, result_tx, wake_proxy))
                     .map_err(|err| {
                         eprintln!("design-editor: spawn image decode worker failed: {err}");

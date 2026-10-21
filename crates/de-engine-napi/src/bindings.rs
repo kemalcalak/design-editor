@@ -188,7 +188,7 @@ fn create_impl(
         input_focus_changed: callbacks.on_input_focus_changed,
         remote_image_request: callbacks.on_remote_image_request,
     });
-    let thread = Arc::new(EngineThread::spawn("op-engine"));
+    let thread = Arc::new(EngineThread::spawn("de-engine"));
 
     // Build the callback table and create the engine, both on the engine
     // thread: the `!Send` table never leaves it, and the context's disposal

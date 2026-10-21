@@ -548,7 +548,7 @@ fn provider_reuses_a_valid_signed_cache_on_transport_failure() {
         stream.write_all(&response_body).unwrap();
     });
     let cache_root =
-        std::env::temp_dir().join(format!("op-bootstrap-cache-{}-{}", std::process::id(), NOW));
+        std::env::temp_dir().join(format!("de-bootstrap-cache-{}-{}", std::process::id(), NOW));
     let _ = std::fs::remove_dir_all(&cache_root);
     std::fs::create_dir_all(&cache_root).unwrap();
     let provider = EnvironmentRelayBootstrapProvider {
@@ -599,7 +599,7 @@ fn provider_sends_etag_and_accepts_only_matching_not_modified() {
         }
     });
     let cache_root =
-        std::env::temp_dir().join(format!("op-bootstrap-etag-{}-{}", std::process::id(), NOW));
+        std::env::temp_dir().join(format!("de-bootstrap-etag-{}-{}", std::process::id(), NOW));
     let _ = std::fs::remove_dir_all(&cache_root);
     std::fs::create_dir_all(&cache_root).unwrap();
     let provider = EnvironmentRelayBootstrapProvider {
@@ -666,7 +666,7 @@ fn assert_bad_cache_degrades_to_an_unarmed_rollback_floor(
         }
     });
     let cache_root = std::env::temp_dir().join(format!(
-        "op-bootstrap-floor-{label}-{}-{NOW}",
+        "de-bootstrap-floor-{label}-{}-{NOW}",
         std::process::id()
     ));
     let _ = std::fs::remove_dir_all(&cache_root);
@@ -722,7 +722,7 @@ fn unreadable_cache_degrades_to_an_unarmed_rollback_floor() {
     use std::os::unix::fs::PermissionsExt as _;
 
     let probe = std::env::temp_dir().join(format!(
-        "op-bootstrap-permission-probe-{}-{NOW}",
+        "de-bootstrap-permission-probe-{}-{NOW}",
         std::process::id()
     ));
     let _ = std::fs::remove_file(&probe);
@@ -746,7 +746,7 @@ fn cache_persist_failure_degrades_without_failing_the_bootstrap() {
     let signing = SigningKey::from_bytes(&[7; 32]);
     let body = signed_envelope(&signing, "test_root_1", &valid_payload());
     let cache_root = std::env::temp_dir().join(format!(
-        "op-bootstrap-unwritable-{}-{}",
+        "de-bootstrap-unwritable-{}-{}",
         std::process::id(),
         NOW
     ));

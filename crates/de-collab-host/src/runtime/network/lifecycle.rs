@@ -58,7 +58,7 @@ impl Retirement {
         let pending = Arc::new(Mutex::new(Some(handles)));
         let worker_pending = Arc::clone(&pending);
         let spawn = std::thread::Builder::new()
-            .name("op-collab-network-reaper".to_string())
+            .name("de-collab-network-reaper".to_string())
             .spawn(move || {
                 let _completion = RetirementCompletion(worker_complete);
                 let handles = worker_pending

@@ -454,7 +454,7 @@ struct PeerArgs {
 
 fn spawn_peer(args: PeerArgs) -> Result<JoinHandle<()>, CollabRuntimeFailure> {
     std::thread::Builder::new()
-        .name(format!("op-collab-peer-{}", args.connection_id.get()))
+        .name(format!("de-collab-peer-{}", args.connection_id.get()))
         .spawn(move || run_peer(args))
         .map_err(|_| CollabRuntimeFailure::ResourceLimit)
 }

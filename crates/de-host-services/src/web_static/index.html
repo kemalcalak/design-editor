@@ -15,7 +15,7 @@
       canvas {
         display: block;
       }
-      #op-error {
+      #de-error {
         position: fixed;
         inset: 16px;
         overflow: auto;
@@ -43,9 +43,9 @@
       by `mount_ck()` itself, so this page only has to provide the <canvas>.
     -->
     <canvas id="op"></canvas>
-    <pre id="op-error"></pre>
+    <pre id="de-error"></pre>
     <script type="module">
-      const errorPane = document.getElementById('op-error');
+      const errorPane = document.getElementById('de-error');
       const markSmoke = (state) => {
         document.documentElement.setAttribute('data-de-smoke', state);
         // Mirrored to the console for the headless browser smoke: the

@@ -396,7 +396,7 @@ fn next_skeleton_id(kind: &str) -> String {
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_nanos())
         .unwrap_or(0);
-    format!("op-skeleton-{stamp}-{kind}-{seq}")
+    format!("de-skeleton-{stamp}-{kind}-{seq}")
 }
 
 struct ParsedChildren {

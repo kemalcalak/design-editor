@@ -16,7 +16,7 @@ struct PersistentRegistry {
 impl PersistentRegistry {
     fn new(label: &str) -> Self {
         let root = std::env::temp_dir().join(format!(
-            "op-online-share-{label}-{}-{:?}",
+            "de-online-share-{label}-{}-{:?}",
             std::process::id(),
             std::thread::current().id()
         ));
@@ -745,7 +745,7 @@ fn an_unauthenticated_caller_cannot_reach_the_status_projection() {
 fn an_unwritable_data_directory_is_refused_at_start_up() {
     // The alternative is an eviction failing silently half an hour after
     // start, one account at a time.
-    let root = std::env::temp_dir().join(format!("op-unwritable-{}", std::process::id()));
+    let root = std::env::temp_dir().join(format!("de-unwritable-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
     std::fs::write(&root, b"not a directory").expect("block the root");
 

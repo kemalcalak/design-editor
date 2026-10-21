@@ -63,7 +63,7 @@ impl GuestShutdownController {
         let watcher_socket = Arc::clone(&socket);
         let watcher_done = Arc::clone(&done);
         let watcher = std::thread::Builder::new()
-            .name("op-collab-guest-shutdown".to_string())
+            .name("de-collab-guest-shutdown".to_string())
             .spawn(move || loop {
                 if watcher_done.load(Ordering::Acquire) {
                     return;

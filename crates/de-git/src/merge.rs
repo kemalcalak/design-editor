@@ -679,7 +679,7 @@ fn merge_worktree_dir() -> PathBuf {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    std::env::temp_dir().join(format!("op-git-merge-{}-{nanos}", std::process::id()))
+    std::env::temp_dir().join(format!("de-git-merge-{}-{nanos}", std::process::id()))
 }
 
 /// Build a [`ConflictBag`] from a conflicted worktree's index. Only

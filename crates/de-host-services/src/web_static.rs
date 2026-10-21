@@ -352,7 +352,7 @@ mod tests {
     #[test]
     fn pkg_serves_nested_wasm_bindgen_snippet_and_blocks_traversal() {
         let dir = stub_bundle("snippet");
-        let snip = dir.join("snippets").join("op-host-web-abc").join("src");
+        let snip = dir.join("snippets").join("de-host-web-abc").join("src");
         std::fs::create_dir_all(&snip).expect("snippet dir");
         std::fs::write(snip.join("op_ck_bridge.js"), b"export function x(){}").expect("snippet js");
         // Nested snippet path resolves (this is what wasm-bindgen `module=` emits).
@@ -416,7 +416,7 @@ mod tests {
             assert_eq!(reply.status, "404 Not Found", "{bad}");
         }
         // Positive serve from a resolved dir (via the env override candidate).
-        let dir = std::env::temp_dir().join(format!("op-ck-assets-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("de-ck-assets-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("ck dir");
         std::fs::write(dir.join("canvaskit.js"), b"/* ck */").expect("ck.js");
         std::fs::write(dir.join("canvaskit.wasm"), [0u8, 0x61, 0x73, 0x6d]).expect("ck.wasm");

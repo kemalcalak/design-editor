@@ -57,7 +57,7 @@ pub fn spawn(host: &mut WidgetHostNative, path: PathBuf) -> HtmlImportSession {
     let path_for_thread = path.clone();
     let worker_tx = tx.clone();
     let spawned = thread::Builder::new()
-        .name("op-html-import".into())
+        .name("de-html-import".into())
         .spawn(move || {
             let result = parse_path(&path_for_thread);
             let _ = worker_tx.send(result);
@@ -310,7 +310,7 @@ mod tests {
             .map(|duration| duration.as_nanos())
             .unwrap_or_default();
         std::env::temp_dir().join(format!(
-            "op-html-session-{tag}-{}-{nanos}.{extension}",
+            "de-html-session-{tag}-{}-{nanos}.{extension}",
             std::process::id()
         ))
     }

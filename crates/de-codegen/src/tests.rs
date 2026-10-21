@@ -295,18 +295,18 @@ fn html_motion_export_matches_the_golden_css() {
         "  }\n",
         "}\n",
         "@media (prefers-reduced-motion: reduce) {\n",
-        "  [data-op-motion-node=\"hero\"] {\n",
+        "  [data-de-motion-node=\"hero\"] {\n",
         "    animation: none;\n",
         "    transition: none;\n",
         "  }\n",
-        "  [data-op-motion-node=\"card\"] {\n",
+        "  [data-de-motion-node=\"card\"] {\n",
         "    animation: none;\n",
         "    transition: none;\n",
         "  }\n",
         "}\n"
     );
     assert_eq!(html_style_block(&html), expected);
-    assert!(html.contains("data-op-motion-node=\"hero\""));
+    assert!(html.contains("data-de-motion-node=\"hero\""));
     assert!(html.contains("transition:opacity 150ms cubic-bezier(0.2,0,0,1)"));
     assert!(html.contains("animation-timeline:view();animation-range:entry 0% entry 40%"));
 }
@@ -327,7 +327,7 @@ fn html_motion_export_honours_authored_reduced_preference() {
     let css = html_style_block(&html);
     assert!(css.contains("/* Authored motion preference: reduced */"));
     assert!(
-        css.contains("[data-op-motion-node=\"n1\"] {\n  animation: none;\n  transition: none;\n}")
+        css.contains("[data-de-motion-node=\"n1\"] {\n  animation: none;\n  transition: none;\n}")
     );
 }
 
@@ -335,7 +335,7 @@ fn html_motion_export_honours_authored_reduced_preference() {
 fn html_without_motion_has_no_extra_css() {
     let html = Html.generate(&empty_doc());
     assert!(!html.contains("<style>"));
-    assert!(!html.contains("data-op-motion-node"));
+    assert!(!html.contains("data-de-motion-node"));
     assert!(!html.contains("@keyframes"));
 }
 

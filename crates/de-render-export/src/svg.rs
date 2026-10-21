@@ -65,7 +65,7 @@ mod tests {
                 a: 1.0,
             },
         )]);
-        let tmp = std::env::temp_dir().join(format!("op-export-svg-{}.svg", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("de-export-svg-{}.svg", std::process::id()));
         let res = export_svg(&scene, &tmp);
         assert!(res.is_ok(), "export_svg failed: {res:?}");
         let body = std::fs::read_to_string(&tmp).unwrap();
@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn export_svg_fails_on_empty_scene() {
         let scene = scene_with(Vec::new());
-        let tmp = std::env::temp_dir().join(format!("op-svg-empty-{}.svg", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("de-svg-empty-{}.svg", std::process::id()));
         let res = export_svg(&scene, &tmp);
         assert!(res.is_err());
         assert_eq!(res.unwrap_err().to_string(), "nothing to export");
@@ -92,7 +92,7 @@ mod tests {
             filled_rect("sibling", 500.0, 500.0, 10.0, 10.0, Color::BLACK),
         ]);
         let tmp =
-            std::env::temp_dir().join(format!("op-export-node-svg-{}.svg", std::process::id()));
+            std::env::temp_dir().join(format!("de-export-node-svg-{}.svg", std::process::id()));
 
         export_node_svg(&scene, "selected", &tmp).expect("selected svg export");
 

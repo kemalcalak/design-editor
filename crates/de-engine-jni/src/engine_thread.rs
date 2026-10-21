@@ -391,7 +391,7 @@ impl EngineThread {
             // itself never waits on the latch — it IS the teardown.
             if let Some(handle) = handle {
                 if let Err(error) = thread::Builder::new()
-                    .name("op-engine-reaper".into())
+                    .name("de-engine-reaper".into())
                     .spawn(move || join_guarded(handle))
                 {
                     // Never unwind the engine job: detaching leaks one
@@ -437,7 +437,7 @@ impl Drop for EngineThread {
                 join_guarded(handle);
             } else {
                 thread::Builder::new()
-                    .name("op-engine-reaper".into())
+                    .name("de-engine-reaper".into())
                     .spawn(move || join_guarded(handle))
                     .ok();
             }
@@ -528,7 +528,7 @@ mod tests {
 
     #[test]
     fn call_runs_on_the_engine_thread_and_returns_the_value() {
-        let thread = EngineThread::spawn("op-test-engine");
+        let thread = EngineThread::spawn("de-test-engine");
         let owner = thread::current().id();
         let outcome = thread.call(|| thread::current().id());
         let ran = match outcome {
@@ -541,7 +541,7 @@ mod tests {
 
     #[test]
     fn post_is_fire_and_forget() {
-        let thread = EngineThread::spawn("op-test-post");
+        let thread = EngineThread::spawn("de-test-post");
         let ran = Arc::new(AtomicBool::new(false));
         let flag = ran.clone();
         assert_eq!(
@@ -565,7 +565,7 @@ mod tests {
 
     #[test]
     fn close_drains_parked_callers_with_closing() {
-        let thread = Arc::new(EngineThread::spawn("op-test-drain"));
+        let thread = Arc::new(EngineThread::spawn("de-test-drain"));
         // Hold the loop inside a gate job so later messages stay queued.
         let entered = Arc::new(std::sync::Barrier::new(2));
         let gate = Arc::new(std::sync::Barrier::new(2));
@@ -629,7 +629,7 @@ mod tests {
 
     #[test]
     fn call_from_callback_frame_runs_directly() {
-        let thread = Arc::new(EngineThread::spawn("op-test-frame"));
+        let thread = Arc::new(EngineThread::spawn("de-test-frame"));
         let inner_thread = thread.clone();
         let outcome = thread.call(move || {
             enter_callback_frame();
@@ -645,7 +645,7 @@ mod tests {
 
     #[test]
     fn panicking_call_is_re_raised_on_the_caller() {
-        let thread = EngineThread::spawn("op-test-panic");
+        let thread = EngineThread::spawn("de-test-panic");
         let outcome = std::panic::catch_unwind(AssertUnwindSafe(|| {
             let _ = thread.call(|| -> u32 { panic!("engine job panic") });
         }));

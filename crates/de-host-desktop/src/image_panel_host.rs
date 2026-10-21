@@ -368,7 +368,7 @@ mod tests {
         // HERE, but it's still a pointer, not portable content (see
         // `ImageAssetStatus::LinkedLocal`'s doc).
         let dir = std::env::temp_dir();
-        let file = dir.join(format!("op-image-panel-test-{}.png", std::process::id()));
+        let file = dir.join(format!("de-image-panel-test-{}.png", std::process::id()));
         std::fs::write(&file, b"x").unwrap();
         assert_eq!(
             asset_status(&file.display().to_string(), None),

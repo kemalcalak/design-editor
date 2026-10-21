@@ -6,7 +6,7 @@ use de_editor_core::EditorState;
 
 fn temp_settings_path(tag: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!(
-        "op-settings-guard-{tag}-{}-{}",
+        "de-settings-guard-{tag}-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

@@ -45,7 +45,7 @@ impl PublisherBackend for BonjourPublisherBackend {
         let (stop_sender, stop_receiver) = mpsc::channel();
         let (ready_sender, ready_receiver) = mpsc::sync_channel(1);
         let join = thread::Builder::new()
-            .name("op-bonjour-publisher".to_owned())
+            .name("de-bonjour-publisher".to_owned())
             .spawn(move || publisher_worker(specification, stop_receiver, ready_sender))
             .map_err(DiscoveryError::BonjourIo)?;
         let worker = Worker {

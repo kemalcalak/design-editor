@@ -371,7 +371,7 @@ impl LocalTicketRenewer {
             let worker_cancelled = Arc::clone(&cancelled);
             let renewal_deadline = self.shutdown_at;
             let worker = match std::thread::Builder::new()
-                .name("op-collab-ticket-renewal".to_string())
+                .name("de-collab-ticket-renewal".to_string())
                 .spawn(move || {
                     let _ = sender.send(LocalAdmission::request_cancellable_until(
                         &local_static,

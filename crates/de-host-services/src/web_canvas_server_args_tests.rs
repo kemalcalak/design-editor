@@ -147,7 +147,7 @@ fn parse_serve_web_args_managed_flag_form() {
 
 #[test]
 fn managed_config_root_is_explicit_and_never_changes_standalone_defaults() {
-    let root = std::env::temp_dir().join("op-managed-config-test");
+    let root = std::env::temp_dir().join("de-managed-config-test");
     let parse = |args: Vec<String>| parse_serve_web_args(args.into_iter());
     let options = parse(vec![
         "--managed".into(),
