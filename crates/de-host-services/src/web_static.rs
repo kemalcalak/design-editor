@@ -12,7 +12,7 @@
 //!   `text/javascript`).
 //!
 //! Bundle directory resolution order (first directory actually containing
-//! `de_host_web.js` wins):
+//! `op_host_web.js` wins):
 //! 1. `$DESIGN_EDITOR_WEB_BUNDLE_DIR` — explicit override.
 //! 2. `<exe_dir>/web-bundle` — deploy layout: the bundle shipped next to
 //!    the `design-editor` executable.
@@ -50,7 +50,13 @@ pub(crate) const ICONIFY_BRANDS_PATH: &str = de_editor_ui::ICONIFY_BRANDS_ROUTE;
 
 /// The wasm-bindgen JS entry the host page imports; its presence marks a
 /// directory as a usable bundle.
-const BUNDLE_ENTRY_JS: &str = "de_host_web.js";
+///
+/// The bundle keeps its pre-rebrand `op_host_web*` file names (the committed
+/// `crates/de-host-web/pkg-ck/` and `pkg-webgl/` bundles, and the `--out-name`
+/// in `tools/check-wasm-bundle.sh`) until the next wasm rebuild; renaming
+/// them needs a rebuild. Every consumer — this daemon, the host pages, the
+/// figma worker and the vscode extension — must keep using these names.
+const BUNDLE_ENTRY_JS: &str = "op_host_web.js";
 
 /// A fully-formed static HTTP reply (status + MIME + body bytes).
 pub struct StaticReply {
@@ -87,7 +93,7 @@ pub(crate) fn bundle_dir_candidates() -> Vec<PathBuf> {
 }
 
 /// First candidate directory that actually contains the wasm-bindgen JS
-/// entry (`de_host_web.js`), or `None` when no bundle is built anywhere.
+/// entry (`op_host_web.js`), or `None` when no bundle is built anywhere.
 pub fn resolve_bundle_dir() -> Option<PathBuf> {
     bundle_dir_candidates()
         .into_iter()
@@ -214,7 +220,7 @@ pub fn handle_static_request(path: &str, bundle_dir: Option<&Path>) -> Option<St
     if let Some(file) = path.strip_prefix("/pkg/") {
         // Serve flat bundle files AND nested ones: wasm-bindgen with a JS
         // `module = "..."` snippet emits `snippets/<hash>/src/<file>.js`, which
-        // `de_host_web.js` imports relative to `/pkg/`. `safe_relative_path`
+        // `op_host_web.js` imports relative to `/pkg/`. `safe_relative_path`
         // permits the subdirectories while still rejecting traversal.
         let Some(rel) = safe_relative_path(file) else {
             return Some(not_found_reply());
@@ -345,14 +351,14 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("de-web-bundle-{tag}-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("create stub bundle dir");
         std::fs::write(dir.join(BUNDLE_ENTRY_JS), "export default function(){}").expect("js stub");
-        std::fs::write(dir.join("de_host_web_bg.wasm"), [0u8, 0x61, 0x73, 0x6d]).expect("wasm");
+        std::fs::write(dir.join("op_host_web_bg.wasm"), [0u8, 0x61, 0x73, 0x6d]).expect("wasm");
         dir
     }
 
     #[test]
     fn pkg_serves_nested_wasm_bindgen_snippet_and_blocks_traversal() {
         let dir = stub_bundle("snippet");
-        let snip = dir.join("snippets").join("de-host-web-abc").join("src");
+        let snip = dir.join("snippets").join("op-host-web-abc").join("src");
         std::fs::create_dir_all(&snip).expect("snippet dir");
         std::fs::write(snip.join("op_ck_bridge.js"), b"export function x(){}").expect("snippet js");
         // Nested snippet path resolves (this is what wasm-bindgen `module=` emits).
@@ -371,7 +377,7 @@ mod tests {
             "/pkg/.hidden",
             "/pkg/..\\..\\windows\\system32",
             "/pkg/C:/Windows/win.ini",
-            "/pkg/de_host_web_bg.wasm:$DATA",
+            "/pkg/op_host_web_bg.wasm:$DATA",
         ] {
             let r = handle_static_request(bad, Some(&dir)).expect("owned");
             assert_eq!(r.status, "404 Not Found", "{bad}");
@@ -383,7 +389,7 @@ mod tests {
     fn safe_relative_path_rejects_traversal_and_windows_escapes() {
         // Valid nested file.
         assert!(safe_relative_path("snippets/op-host-web-x/src/op_ck_bridge.js").is_some());
-        assert!(safe_relative_path("de_host_web.js").is_some());
+        assert!(safe_relative_path("op_host_web.js").is_some());
         // Escapes / invalid — all must reject.
         for bad in [
             "",
@@ -454,7 +460,7 @@ mod tests {
         // The host page loads the glue and mounts the production CanvasKit
         // shell on the canvas, which handles sync-reset internally. The page
         // no longer issues sync-reset directly.
-        assert!(body.contains("/pkg/de_host_web.js"), "{body}");
+        assert!(body.contains("/pkg/op_host_web.js"), "{body}");
         assert!(!body.contains("fetch('/api/mcp/sync-reset'"), "{body}");
         assert!(body.contains("await mod.mount_ck('op')"), "{body}");
         assert!(body.contains("data-de-smoke"), "{body}");
@@ -511,7 +517,7 @@ mod tests {
     fn pkg_wasm_gets_application_wasm_mime() {
         let dir = stub_bundle("wasm");
         let reply =
-            handle_static_request("/pkg/de_host_web_bg.wasm", Some(&dir)).expect("static route");
+            handle_static_request("/pkg/op_host_web_bg.wasm", Some(&dir)).expect("static route");
         assert_eq!(reply.status, "200 OK");
         assert_eq!(reply.content_type, "application/wasm");
         assert_eq!(reply.body, vec![0u8, 0x61, 0x73, 0x6d]);
@@ -521,7 +527,7 @@ mod tests {
     #[test]
     fn pkg_js_gets_text_javascript_mime() {
         let dir = stub_bundle("js");
-        let reply = handle_static_request("/pkg/de_host_web.js", Some(&dir)).expect("static route");
+        let reply = handle_static_request("/pkg/op_host_web.js", Some(&dir)).expect("static route");
         assert_eq!(reply.status, "200 OK");
         assert_eq!(reply.content_type, "text/javascript");
         let _ = std::fs::remove_dir_all(&dir);

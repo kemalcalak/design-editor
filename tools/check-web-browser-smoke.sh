@@ -193,7 +193,7 @@ wait_for_health "$BASE_URL/api/mcp/server" || {
 health="$TMP_DIR/health.json"
 curl -fsS "$BASE_URL/api/mcp/server" >"$health"
 assert_contains "$health" '"mode":"web-canvas"' "daemon health should report web-canvas mode"
-curl -fsS "$BASE_URL/pkg/de_host_web.js" >/dev/null
+curl -fsS "$BASE_URL/pkg/op_host_web.js" >/dev/null
 curl -fsS "$BASE_URL/canvaskit/canvaskit.js" >/dev/null
 curl -fsS "$BASE_URL/assets/iconify-catalog-brands.json" >/dev/null
 

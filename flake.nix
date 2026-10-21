@@ -322,9 +322,9 @@
             installPhase = ''
               runHook preInstall
               mkdir -p $out
-              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out target/wasm32-unknown-unknown/release/de_host_web.wasm
+              ${wasmBindgen.package}/bin/wasm-bindgen --target web --out-dir $out --out-name op_host_web target/wasm32-unknown-unknown/release/de_host_web.wasm
               cp -R crates/de-host-web/assets/canvaskit $out/canvaskit
-              ${wasmGate "de_host_web_bg.wasm" "de_host_web_bg.opt.wasm"}
+              ${wasmGate "op_host_web_bg.wasm" "op_host_web_bg.opt.wasm"}
               runHook postInstall
             '';
           });

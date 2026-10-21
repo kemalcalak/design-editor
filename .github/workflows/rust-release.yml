@@ -864,7 +864,7 @@ jobs:
             chmod +x "bin/${exe}" || true
             cp -R ../../crates/de-host-web/pkg web/pkg
             # The .opt.wasm is a byte-identical intermediate of the served
-            # de_host_web_bg.wasm — shipping both doubles the vsix.
+            # op_host_web_bg.wasm — shipping both doubles the vsix.
             rm -f web/pkg/*.opt.wasm web/pkg/*.d.ts
             cp -R ../../crates/de-host-web/assets/canvaskit web/canvaskit
             ./node_modules/.bin/vsce package --no-dependencies --allow-missing-repository \

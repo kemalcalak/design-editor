@@ -20,7 +20,7 @@ name: WASM bundle build (#56 — real canvaskit deployable)
 #   prerequisites: cargo, wasm-bindgen, wasm-opt, node, python3, gzip (NO EMSDK)
 #   1. cargo build -p de-host-web --target wasm32-unknown-unknown \
 #        --no-default-features --features canvaskit --release
-#   2. wasm-bindgen --target web --out-dir crates/de-host-web/pkg <target.wasm>
+#   2. wasm-bindgen --target web --out-dir crates/de-host-web/pkg --out-name op_host_web <target.wasm>
 #   3. assert 0 env.* imports (LinkError guard)
 #   4. wasm-opt -Oz with the rustc-emitted WebAssembly feature flags, then
 #      gzip size <= ceiling (default 6291456 bytes = 6 MiB, overridable via

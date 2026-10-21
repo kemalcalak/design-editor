@@ -94,8 +94,8 @@ function generatedWasmModuleUrl() {
   if (at >= 0) {
     // wasm-bindgen copies this file to
     //   <pkg>/snippets/<hash>/src/figma_temp_worker.js
-    // while the generated module remains at <pkg>/de_host_web.js.
-    url.pathname = `${url.pathname.slice(0, at)}/de_host_web.js`;
+    // while the generated module remains at <pkg>/op_host_web.js.
+    url.pathname = `${url.pathname.slice(0, at)}/op_host_web.js`;
     url.search = '';
     url.hash = '';
     return url.href;
@@ -103,7 +103,7 @@ function generatedWasmModuleUrl() {
   // Source-tree/dev fallback. Production bundles always take the snippets
   // branch above, but keeping this deterministic makes direct smoke harnesses
   // easier to diagnose.
-  return new URL('../pkg-ck/de_host_web.js', import.meta.url).href;
+  return new URL('../pkg-ck/op_host_web.js', import.meta.url).href;
 }
 
 function workerSource() {

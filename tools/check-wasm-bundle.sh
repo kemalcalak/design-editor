@@ -6,10 +6,10 @@
 #   1. Required local tools are available: cargo, wasm-bindgen, wasm-opt,
 #      node, python3, and gzip. CanvasKit needs no EMSDK / skia-safe / libc shim.
 #   2. cargo build → wasm-bindgen → wasm-opt -Oz pipeline produces the
-#      served crates/de-host-web/pkg/de_host_web_bg.wasm. `wasm-opt` is invoked
+#      served crates/de-host-web/pkg/op_host_web_bg.wasm. `wasm-opt` is invoked
 #      with the core WebAssembly features emitted by current rustc.
 #   3. Post-bindgen bundle has 0 env.* imports
-#      (i.e. all imports come from `./de_host_web_bg.js`,
+#      (i.e. all imports come from `./op_host_web_bg.js`,
 #      the wasm-bindgen JS shim). Any env.* import = LinkError at
 #      load time → regression → fail.
 #   4. Post wasm-opt -Oz gzip size ≤ STEP1B_SHELL_WASM_GZIP_LIMIT_BYTES
@@ -27,8 +27,12 @@ set -euo pipefail
 
 CRATE_DIR="crates/de-host-web"
 PKG_DIR="${CRATE_DIR}/pkg"
-WASM_RAW="${PKG_DIR}/de_host_web_bg.wasm"
-WASM_OPT="${PKG_DIR}/de_host_web_bg.opt.wasm"
+# The bundle keeps its pre-rebrand `op_host_web*` file names (wasm-bindgen
+# `--out-name`) so the committed pkg-ck/ + pkg-webgl/ bundles and every
+# consumer (daemon, vscode extension, figma worker) agree on one name until
+# the committed bundles are rebuilt under the new crate name.
+WASM_RAW="${PKG_DIR}/op_host_web_bg.wasm"
+WASM_OPT="${PKG_DIR}/op_host_web_bg.opt.wasm"
 TARGET_WASM="target/wasm32-unknown-unknown/release/de_host_web.wasm"
 # The wasm feature flags rustc emits for wasm32-unknown-unknown that wasm-opt
 # must be told to accept. Kept as CANDIDATES because binaryen versions disagree
@@ -88,7 +92,7 @@ cargo build -p de-host-web \
   --target wasm32-unknown-unknown --no-default-features --features canvaskit --release --locked >/dev/null
 
 step 4 7 "wasm-bindgen --target web → ${PKG_DIR}/"
-wasm-bindgen --target web --out-dir "${PKG_DIR}" "${TARGET_WASM}" >/dev/null
+wasm-bindgen --target web --out-dir "${PKG_DIR}" --out-name op_host_web "${TARGET_WASM}" >/dev/null
 
 step 5 7 "Stage runtime product assets into ${PKG_DIR}/assets/"
 # The wasm bundle no longer embeds the preview JPEGs, template documents, icon

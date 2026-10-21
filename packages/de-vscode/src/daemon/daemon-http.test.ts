@@ -67,7 +67,7 @@ test("ready is false when / returns 404 (bundle-less help page)", async () => {
   const base = await stub((req, res) => {
     if (req.url === "/") {
       res.writeHead(404);
-      res.end("help page mentioning de_host_web.js");
+      res.end("help page mentioning op_host_web.js");
     } else {
       res.writeHead(200);
       res.end("ok");
@@ -76,9 +76,9 @@ test("ready is false when / returns 404 (bundle-less help page)", async () => {
   expect(await new DaemonHttp(base, TOKEN).ready()).toBe(false);
 });
 
-test("ready is false when / is 200 but /pkg/de_host_web.js is 404", async () => {
+test("ready is false when / is 200 but /pkg/op_host_web.js is 404", async () => {
   const base = await stub((req, res) => {
-    if (req.url === "/pkg/de_host_web.js") {
+    if (req.url === "/pkg/op_host_web.js") {
       res.writeHead(404);
       res.end("missing");
     } else {
@@ -89,7 +89,7 @@ test("ready is false when / is 200 but /pkg/de_host_web.js is 404", async () => 
   expect(await new DaemonHttp(base, TOKEN).ready()).toBe(false);
 });
 
-test("ready is true when both / and /pkg/de_host_web.js are 200", async () => {
+test("ready is true when both / and /pkg/op_host_web.js are 200", async () => {
   const base = await stub((_req, res) => {
     res.writeHead(200);
     res.end("ok");

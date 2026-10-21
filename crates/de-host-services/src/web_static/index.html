@@ -92,7 +92,7 @@
       markSmoke('booting');
       sizeCanvasForDisplay(BOOT_CANVAS_PIXEL_BUDGET);
       try {
-        const mod = await import('/pkg/de_host_web.js');
+        const mod = await import('/pkg/op_host_web.js');
         await mod.default();
         sizeCanvasForDisplay(STEADY_CANVAS_PIXEL_BUDGET);
         await mod.mount_ck('op');
@@ -102,7 +102,7 @@
           [
             'Design Editor web shell failed to load.',
             '',
-            'Expected the wasm-bindgen bundle at /pkg/de_host_web.js.',
+            'Expected the wasm-bindgen bundle at /pkg/op_host_web.js.',
             'Rebuild it with tools/check-wasm-bundle.sh, or',
             'point the daemon at an existing bundle directory via the',
             'DESIGN_EDITOR_WEB_BUNDLE_DIR environment variable.',

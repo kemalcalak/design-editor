@@ -36,12 +36,12 @@ export class DaemonHttp {
 
   /** The editor shell is servable only when both the root page AND the wasm
    *  glue return 200. The bundle-less daemon serves a 404 help page at `/`
-   *  that itself mentions "de_host_web.js", so a body substring probe would
+   *  that itself mentions "op_host_web.js", so a body substring probe would
    *  false-positive — we probe HTTP status only. */
   async ready(): Promise<boolean> {
     const [root, glue] = await Promise.all([
       this.fetch("/"),
-      this.fetch("/pkg/de_host_web.js"),
+      this.fetch("/pkg/op_host_web.js"),
     ]);
     // Drain bodies so the sockets can close promptly.
     await Promise.all([root.text().catch(() => ""), glue.text().catch(() => "")]);

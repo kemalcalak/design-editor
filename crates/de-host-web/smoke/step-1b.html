@@ -72,7 +72,7 @@
       };
       markSmoke('booting');
       try {
-        const mod = await import('../pkg/de_host_web.js');
+        const mod = await import('../pkg/op_host_web.js');
         await mod.default();
         window.__opShell = mod.mount_ck('op');
         await window.__opShell;
@@ -92,7 +92,7 @@
           [
             header,
             '',
-            'Expected file: ../pkg/de_host_web.js',
+            'Expected file: ../pkg/op_host_web.js',
             '',
             'How to rebuild the bundle (when the file is missing or stale):',
             '  1. bash tools/check-wasm-bundle.sh',

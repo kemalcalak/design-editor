@@ -365,7 +365,7 @@ fn managed_daemon_rejects_a_browser_origin_outside_its_allowlist() {
 
 #[test]
 fn managed_daemon_serves_pkg_to_its_own_loopback_origin() {
-    let request = "GET /pkg/de_host_web.js HTTP/1.1\r\nHost: 127.0.0.1:60615\r\nOrigin: http://127.0.0.1:60615\r\nContent-Length: 0\r\n\r\n";
+    let request = "GET /pkg/op_host_web.js HTTP/1.1\r\nHost: 127.0.0.1:60615\r\nOrigin: http://127.0.0.1:60615\r\nContent-Length: 0\r\n\r\n";
     let mut stream = mock_stream(request);
     let mut managed = fresh_state();
     managed.mode = ServeMode::Managed;
@@ -390,7 +390,7 @@ fn managed_daemon_serves_pkg_to_its_own_loopback_origin() {
 fn managed_daemon_rejects_pkg_from_a_hostile_or_wrong_port_origin() {
     for origin in ["https://evil.example", "http://127.0.0.1:60616"] {
         let request = format!(
-            "GET /pkg/de_host_web.js HTTP/1.1\r\nHost: 127.0.0.1:60615\r\nOrigin: {origin}\r\nContent-Length: 0\r\n\r\n"
+            "GET /pkg/op_host_web.js HTTP/1.1\r\nHost: 127.0.0.1:60615\r\nOrigin: {origin}\r\nContent-Length: 0\r\n\r\n"
         );
         let mut stream = mock_stream(&request);
         let mut managed = fresh_state();
