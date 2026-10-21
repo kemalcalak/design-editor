@@ -1,8 +1,8 @@
 //! Tests for app control helpers, split out to keep the implementation below 800 lines.
 
 use super::{
-    collect_app_images, default_document_path_in, editor_will_open, live_port_file_path_in, preflight_document,
-    MINIMAL_DOCUMENT,
+    collect_app_images, default_document_path_in, editor_will_open, live_port_file_path_in,
+    preflight_document, MINIMAL_DOCUMENT,
 };
 use std::fs;
 
