@@ -362,6 +362,18 @@ impl HomeState {
         self.card_hover_leaving = None;
     }
 
+    /// Step aside for a document edit that arrived from outside the UI
+    /// (a live MCP client), so the user sees it land on the canvas. Only
+    /// this session's surface changes; the persisted `entry_surface`
+    /// preference is left alone. Returns whether Home was showing.
+    pub fn reveal_for_external_edit(&mut self) -> bool {
+        if !self.visible {
+            return false;
+        }
+        self.hide();
+        true
+    }
+
     /// The next frame instant the entrance choreography still needs, or
     /// `None` when hidden, not yet stamped, or past the whole window.
     pub fn entrance_deadline_ms(&self, now_ms: u64) -> Option<u64> {

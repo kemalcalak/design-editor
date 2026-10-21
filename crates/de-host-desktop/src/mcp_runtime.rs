@@ -180,6 +180,9 @@ impl DesktopApp {
         if outcome.layout_dirty {
             self.host.mark_editor_state_dirty();
         }
+        if outcome.document_edited {
+            self.reveal_canvas_for_external_edit();
+        }
         if outcome.document_replaced {
             mark_external_document_replacement_dirty(self.host.editor_state_mut());
             // `ReplaceDocument` (whole-document MCP sync, e.g. TS
@@ -202,6 +205,23 @@ impl DesktopApp {
             self.host.force_rotate_layer_panel_owner();
         }
         outcome.repaint
+    }
+
+    /// A live MCP client edited the document: drop the Home overlay so the
+    /// edit shows on the canvas instead of landing out of sight. The pump
+    /// outcome already requests the repaint; this only invalidates state.
+    /// Desktop-only: the web host has no live MCP pump to drive it.
+    fn reveal_canvas_for_external_edit(&mut self) -> bool {
+        let revealed = self
+            .host
+            .editor_state_mut()
+            .editor_ui
+            .home
+            .reveal_for_external_edit();
+        if revealed {
+            self.host.mark_editor_state_dirty();
+        }
+        revealed
     }
 
     pub(crate) fn mcp_server_active(&self) -> bool {
@@ -343,5 +363,22 @@ mod tests {
         );
         assert!(!app.mcp_server_active());
         let _ = std::fs::remove_dir_all(home);
+    }
+
+    #[test]
+    fn external_edit_reveals_the_canvas_without_touching_entry_preference() {
+        let mut app = DesktopApp::new(None);
+        let ui = &mut app.host.editor_state_mut().editor_ui;
+        ui.home.visible = true;
+        ui.entry_surface = de_editor_core::EntrySurface::Home;
+
+        assert!(app.reveal_canvas_for_external_edit());
+        let ui = &app.host.editor_state().editor_ui;
+        assert!(!ui.home.visible);
+        assert_eq!(ui.entry_surface, de_editor_core::EntrySurface::Home);
+        assert!(
+            !app.reveal_canvas_for_external_edit(),
+            "a canvas already in view is left alone"
+        );
     }
 }

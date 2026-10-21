@@ -323,3 +323,21 @@ fn the_hover_stamp_names_the_leaving_card_and_schedules_frames() {
     assert_eq!(home.card_hover_since_ms, 0);
     assert_eq!(home.card_hover_leaving, None);
 }
+
+#[test]
+fn an_external_edit_hides_home_only_when_it_is_showing() {
+    let mut home = HomeState {
+        visible: true,
+        shown_at_ms: 1_000,
+        connect_card_open: true,
+        ..HomeState::default()
+    };
+    assert!(home.reveal_for_external_edit());
+    assert!(!home.visible);
+    assert_eq!(home.shown_at_ms, 0);
+    assert!(!home.connect_card_open);
+    assert!(
+        !home.reveal_for_external_edit(),
+        "a hidden Home reports no change"
+    );
+}
