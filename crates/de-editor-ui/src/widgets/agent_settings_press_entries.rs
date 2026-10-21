@@ -493,6 +493,9 @@ pub(crate) fn apply_entry_hit(
         | AgentSettingsHit::ToggleMcpServer
         | AgentSettingsHit::ToggleMcpCli(_)
         | AgentSettingsHit::CopyMcpClientConfig
+        | AgentSettingsHit::ExpandMcpCli(_)
+        | AgentSettingsHit::CopyMcpSnippet(_)
+        | AgentSettingsHit::ToggleMcpShowAll
         | AgentSettingsHit::Fonts(_)
         | AgentSettingsHit::ToggleImagesAdvanced
         | AgentSettingsHit::FocusSearchField(_)

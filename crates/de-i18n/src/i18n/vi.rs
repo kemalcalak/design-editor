@@ -571,7 +571,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "Cổng",
         "settings.mcp.start" => "Bắt đầu",
         "settings.mcp.stop" => "Dừng",
-        "settings.mcp.terminalIntegrations" => "Tích hợp MCP của terminal",
         "settings.mcp.terminalSubtitle1" => "Tích hợp MCP có hiệu lực sau khi khởi động lại terminal.",
         "settings.mcp.terminalSubtitle2" => "Sau khi nâng cấp Design Editor, vui lòng cài đặt lại tích hợp MCP để đảm bảo tương thích.",
         "settings.images.search" => "Tìm kiếm hình ảnh",

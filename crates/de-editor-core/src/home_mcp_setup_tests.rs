@@ -34,3 +34,10 @@ fn claude_code_gets_the_cli_command_and_codex_the_toml_table() {
     );
     assert_eq!(home_mcp_config_path(McpCli::Codex), "~/.codex/config.toml");
 }
+
+#[test]
+fn snippets_wrap_at_the_column_count_and_keep_their_breaks() {
+    let lines = wrap_snippet("abcdefghij\nxy", 8);
+    assert_eq!(lines, vec!["abcdefgh", "ij", "xy"]);
+    assert_eq!(wrap_snippet("a\n\nb", 20), vec!["a", "", "b"]);
+}

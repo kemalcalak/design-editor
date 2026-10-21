@@ -128,12 +128,10 @@ pub fn mcp_server_button(panel: Rect) -> Rect {
     agent_settings_mcp::server_button_rect(content_rect(panel))
 }
 
-/// MCP tab: the "Copy MCP config" action in the custom-configuration
-/// section header. Its y depends on whether the terminal-integration
-/// list sits above it, so callers pass the host's
-/// [`EditorUiState::external_cli_available`] capability.
-pub fn mcp_copy_config_button(panel: Rect, external_cli_available: bool) -> Rect {
-    agent_settings_mcp::client_config_copy_button_rect(content_rect(panel), external_cli_available)
+/// MCP tab: the endpoint's Copy chip in the server card. It sits right
+/// after the endpoint text, so it needs the settings that pick the URL.
+pub fn mcp_copy_config_button(panel: Rect, settings: &AgentSettings) -> Rect {
+    agent_settings_mcp::client_config_copy_button_rect(content_rect(panel), settings)
 }
 
 /// System tab: the switch on the Auto-update row.
@@ -303,6 +301,10 @@ pub enum AgentSettingsHit {
     ToggleMcpServer,
     ToggleMcpCli(McpCli),
     CopyMcpClientConfig,
+    /// Expand / collapse an MCP agent row's manual snippet.
+    ExpandMcpCli(McpCli),
+    CopyMcpSnippet(McpCli),
+    ToggleMcpShowAll,
     ToggleImagesAdvanced,
     FocusSearchField(ImageSearchField),
     OpenImageRegisterLink,

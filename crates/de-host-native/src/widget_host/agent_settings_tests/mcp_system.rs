@@ -85,14 +85,15 @@ fn copy_mcp_client_config_queues_clipboard_text() {
     let rect = panel.rect(VIEWPORT_W, VIEWPORT_H);
     let copy = de_editor_ui::widgets::agent_settings_panel::mcp_copy_config_button(
         rect,
-        host.editor_state().editor_ui.external_cli_available,
+        &host.editor_state().editor_ui.agent_settings,
     );
     let (x, y) = scroll_to_centre(&mut host, rect, copy);
     assert!(host.dispatch_agent_settings_press(x, y, VIEWPORT_W, VIEWPORT_H));
 
     assert_eq!(
         host.editor_state().chat.pending_copy_text.as_deref(),
-        Some("{\n  \"type\": \"http\",\n  \"url\": \"http://127.0.0.1:4123/mcp\"\n}")
+        Some("http://127.0.0.1:4123/mcp"),
+        "the server card copies the endpoint itself"
     );
 }
 
@@ -247,7 +248,7 @@ fn copying_mcp_client_config_records_feedback_time() {
     let rect = AgentSettingsPanel::for_editor(host.editor_state()).rect(VIEWPORT_W, VIEWPORT_H);
     let copy = de_editor_ui::widgets::agent_settings_panel::mcp_copy_config_button(
         rect,
-        host.editor_state().editor_ui.external_cli_available,
+        &host.editor_state().editor_ui.agent_settings,
     );
     let (x, y) = scroll_to_centre(&mut host, rect, copy);
 
@@ -262,7 +263,7 @@ fn copying_mcp_client_config_records_feedback_time() {
     );
     assert_eq!(
         host.editor_state().chat.pending_copy_text.as_deref(),
-        Some("{\n  \"type\": \"http\",\n  \"url\": \"http://127.0.0.1:3100/mcp\"\n}")
+        Some("http://127.0.0.1:3100/mcp")
     );
     assert_eq!(
         host.editor_state().editor_ui.pressed_button,

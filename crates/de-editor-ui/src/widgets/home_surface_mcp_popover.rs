@@ -13,7 +13,7 @@ use crate::{Point2D, Rect};
 use de_editor_core::agent_settings::McpCli;
 use de_editor_core::home_mcp_setup::{
     home_mcp_agent_name, home_mcp_config_path, home_mcp_manual_snippet, home_mcp_more_agents,
-    HOME_MCP_TABS,
+    wrap_snippet, HOME_MCP_TABS,
 };
 use de_editor_core::{local_mcp_url, HomeCopyTarget, HomeHit};
 
@@ -126,18 +126,7 @@ fn wrap_words(text: &str, max_w: f32, size: f32) -> Vec<String> {
 
 /// Hard-wrap mono lines at the column count that fits `max_w`.
 fn wrap_mono(text: &str, max_w: f32, size: f32) -> Vec<String> {
-    let columns = ((max_w / (size * 0.6)).floor() as usize).max(8);
-    let mut lines = Vec::new();
-    for raw in text.lines() {
-        let chars: Vec<char> = raw.chars().collect();
-        if chars.is_empty() {
-            lines.push(String::new());
-        }
-        for chunk in chars.chunks(columns) {
-            lines.push(chunk.iter().collect());
-        }
-    }
-    lines
+    wrap_snippet(text, (max_w / (size * 0.6)).floor() as usize)
 }
 
 fn agent_title(surface: &HomeSurface<'_>) -> String {

@@ -571,7 +571,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "พอร์ต",
         "settings.mcp.start" => "เริ่ม",
         "settings.mcp.stop" => "หยุด",
-        "settings.mcp.terminalIntegrations" => "การผสานรวม MCP ของเทอร์มินัล",
         "settings.mcp.terminalSubtitle1" => "การผสานรวม MCP จะมีผลหลังจากรีสตาร์ทเทอร์มินัล",
         "settings.mcp.terminalSubtitle2" => "หลังจากอัปเกรด Design Editor โปรดติดตั้งการผสานรวม MCP ใหม่เพื่อความเข้ากันได้",
         "settings.images.search" => "ค้นหารูปภาพ",

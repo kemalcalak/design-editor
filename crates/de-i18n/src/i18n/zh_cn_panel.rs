@@ -641,10 +641,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.heroSubtitle" => {
             "把任意支持 MCP 的 CLI 或编辑器指向这个工作区，即可用内置 Agent 同款工具驱动画布。"
         }
-        "settings.mcp.terminalFootnote" => "* 启动时会自动为选中的 CLI 工具配置 MCP。",
-        "settings.mcp.customConfigTitle" => "自定义 MCP 服务器配置",
-        "settings.mcp.customConfigDesc" => "粘贴到任何读取标准 MCP server 配置块的客户端即可。",
-        "settings.mcp.copyConfig" => "复制 MCP 配置",
         "settings.system.heroSubtitle" => "本机安装的外观、更新与画布行为。",
         "settings.system.appearance" => "外观",
         "settings.system.appearanceLight" => "浅色",

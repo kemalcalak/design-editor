@@ -569,7 +569,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "पोर्ट",
         "settings.mcp.start" => "प्रारंभ करें",
         "settings.mcp.stop" => "रोकें",
-        "settings.mcp.terminalIntegrations" => "टर्मिनल MCP एकीकरण",
         "settings.mcp.terminalSubtitle1" => "MCP एकीकरण टर्मिनल पुनः आरंभ करने के बाद प्रभावी होते हैं।",
         "settings.mcp.terminalSubtitle2" => "Design Editor अपग्रेड करने के बाद, संगतता के लिए MCP एकीकरण पुनः इंस्टॉल करें।",
         "settings.images.search" => "छवि खोज",

@@ -223,6 +223,9 @@ impl AgentSettingsPanel<'_> {
                     McpHit::ToggleCli(cli) => return AgentSettingsHit::ToggleMcpCli(cli),
                     McpHit::CopyClientConfig => return AgentSettingsHit::CopyMcpClientConfig,
                     McpHit::FocusPort => return AgentSettingsHit::FocusMcpPort,
+                    McpHit::ExpandCli(cli) => return AgentSettingsHit::ExpandMcpCli(cli),
+                    McpHit::CopySnippet(cli) => return AgentSettingsHit::CopyMcpSnippet(cli),
+                    McpHit::ToggleShowAll => return AgentSettingsHit::ToggleMcpShowAll,
                     McpHit::None => {}
                 }
             }

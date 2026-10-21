@@ -632,7 +632,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "端口",
         "settings.mcp.start" => "启动",
         "settings.mcp.stop" => "停止",
-        "settings.mcp.terminalIntegrations" => "终端中的 MCP 集成",
         "settings.mcp.terminalSubtitle1" => "MCP 集成将在重启终端后生效。",
         "settings.mcp.terminalSubtitle2" => MCP_TERMINAL_SUBTITLE_2,
         "settings.images.search" => "图片搜索",

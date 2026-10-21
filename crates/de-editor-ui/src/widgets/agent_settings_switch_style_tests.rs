@@ -2,7 +2,7 @@ use crate::widgets::agent_settings_panel::AgentSettingsPanel;
 use crate::widgets::text_metrics;
 use crate::widgets::{PaintCx, Widget};
 use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
-use de_editor_core::agent_settings::{AgentSettingsTab, McpCli};
+use de_editor_core::agent_settings::AgentSettingsTab;
 use de_editor_core::editor_ui_state::ThemeMode;
 use de_editor_core::{AgentSettingsButton, ButtonPressTarget, EditorState};
 
@@ -79,19 +79,6 @@ fn settings_content_metrics(rect: Rect) -> (f32, f32, f32) {
     )
 }
 
-fn codex_mcp_row_rect(rect: Rect) -> Rect {
-    // Rows are painted in `McpCli::DISPLAY` order, so the row index is the
-    // position in DISPLAY, not in ALL.
-    let codex_idx = McpCli::DISPLAY
-        .iter()
-        .position(|cli| *cli == McpCli::Codex)
-        .unwrap();
-    super::agent_settings_mcp::cli_row_rect(
-        crate::widgets::agent_settings_panel::content_viewport(rect),
-        codex_idx,
-    )
-}
-
 /// Right-aligned switch track on a settings row.
 fn row_switch_track(row: Rect) -> Rect {
     super::agent_settings_rows::row_control_rect(
@@ -156,9 +143,7 @@ fn first_builtin_row_offset() -> f32 {
 fn mcp_client_config_copy_rect(rect: Rect) -> Rect {
     super::agent_settings_mcp::client_config_copy_button_rect(
         crate::widgets::agent_settings_panel::content_viewport(rect),
-        // Every state in this file is `EditorState::default()`, whose
-        // `external_cli_available` is the desktop default.
-        true,
+        &de_editor_core::agent_settings::AgentSettings::default(),
     )
 }
 
@@ -252,131 +237,6 @@ fn pressed_mcp_server_button_uses_shared_button_feedback() {
             .iter()
             .any(|(r, color)| rect_eq(*r, button) && color_eq(*color, expected)),
         "pressed MCP server button should paint the shared pressed feedback token"
-    );
-}
-
-#[test]
-fn enabled_mcp_cli_row_is_borderless_with_a_hairline_separator() {
-    let mut state = EditorState::default();
-    state.editor_ui.theme_mode = ThemeMode::Light;
-    state.editor_ui.agent_settings.tab = AgentSettingsTab::Mcp;
-    let codex_idx = McpCli::ALL
-        .iter()
-        .position(|cli| *cli == McpCli::Codex)
-        .unwrap();
-    state.editor_ui.agent_settings.mcp_cli_enabled[codex_idx] = true;
-    let panel = AgentSettingsPanel::for_editor(&state);
-    let rect = panel.rect(1200.0, 800.0);
-    let row = codex_mcp_row_rect(rect);
-    let mut backend = CaptureBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    assert!(
-        !backend
-            .round_strokes
-            .iter()
-            .any(|(r, _, _)| rect_eq(*r, row)),
-        "CLI integrations list rows carry no card outline — the hairline is the separator"
-    );
-    assert!(
-        !backend.round_fills.iter().any(|(r, _)| rect_eq(*r, row)),
-        "an enabled CLI row must not tint its background; the green switch carries the state"
-    );
-    let hairline_y = row.origin.y + row.size.y;
-    assert!(
-        backend.lines.iter().any(|(from, to, color, width)| {
-            (from.y - hairline_y).abs() < 0.01
-                && (to.y - hairline_y).abs() < 0.01
-                && (from.x - row.origin.x).abs() < 0.01
-                && (to.x - (row.origin.x + row.size.x)).abs() < 0.01
-                && color_eq(*color, panel.theme.border)
-                && (*width - 1.0).abs() < 0.01
-        }),
-        "each CLI row should be separated by a full-width hairline"
-    );
-}
-
-#[test]
-fn settings_content_clip_preserves_full_width_row_hairlines() {
-    let mut state = EditorState::default();
-    state.editor_ui.theme_mode = ThemeMode::Light;
-    state.editor_ui.agent_settings.tab = AgentSettingsTab::Mcp;
-    state.editor_ui.agent_settings.mcp_server.running = true;
-    let panel = AgentSettingsPanel::for_editor(&state);
-    let rect = panel.rect(1200.0, 800.0);
-    let content = super::agent_settings_panel_geometry::content_rect(rect);
-    let content_right = content.origin.x + content.size.x;
-    let mut backend = CaptureBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    let clip = backend
-        .clips
-        .first()
-        .expect("settings body should be clipped");
-    assert!((clip.origin.y - content.origin.y).abs() < 0.01);
-    assert!((clip.size.y - content.size.y).abs() < 0.01);
-
-    let edge_hairlines: Vec<_> = backend
-        .lines
-        .iter()
-        .filter(|(from, to, _, width)| {
-            (*width - 1.0).abs() < 0.01
-                && (from.x - content.origin.x).abs() < 0.01
-                && (to.x - content_right).abs() < 0.01
-        })
-        .collect();
-    assert!(
-        edge_hairlines.len() >= 4,
-        "the server row and the CLI list should separate with content-wide hairlines"
-    );
-    for (from, to, _, _) in edge_hairlines {
-        assert!(clip.origin.x <= from.x);
-        assert!(clip.origin.x + clip.size.x >= to.x);
-    }
-}
-
-#[test]
-fn enabled_mcp_cli_switch_uses_light_thumb() {
-    let mut state = EditorState::default();
-    state.editor_ui.theme_mode = ThemeMode::Light;
-    state.editor_ui.agent_settings.tab = AgentSettingsTab::Mcp;
-    let codex_idx = McpCli::ALL
-        .iter()
-        .position(|cli| *cli == McpCli::Codex)
-        .unwrap();
-    state.editor_ui.agent_settings.mcp_cli_enabled[codex_idx] = true;
-    let panel = AgentSettingsPanel::for_editor(&state);
-    let rect = panel.rect(1200.0, 800.0);
-    let track = row_switch_track(codex_mcp_row_rect(rect));
-    let knob = ts_switch_knob_rect(track, true);
-    let mut backend = CaptureBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    assert!(
-        backend
-            .ovals
-            .iter()
-            .any(|(r, color)| rect_eq(*r, knob) && color_eq(*color, panel.theme.primary_foreground)),
-        "enabled MCP CLI switch should use a light switch thumb"
-    );
-    assert!(
-        !backend
-            .ovals
-            .iter()
-            .any(|(r, color)| rect_eq(*r, knob) && color_eq(*color, panel.theme.foreground)),
-        "enabled MCP CLI switch thumb should not be black in light theme"
     );
 }
 

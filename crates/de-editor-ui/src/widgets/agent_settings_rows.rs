@@ -142,9 +142,6 @@ pub(super) const fn row_height(lines: RowLines) -> f32 {
     }
 }
 
-/// Uniform stride for the lists whose rows are all single-line (the MCP
-/// CLI toggles). Mixed lists must walk [`row_rect_in`] instead.
-pub(super) const ROW_HEIGHT: f32 = ROW_H_ONE_LINE;
 pub(super) use crate::widgets::agent_settings_metrics::{SECTION_GAP, SECTION_HEADER_H};
 /// Footnote line under a row list (the `*` caveat under the CLI toggles).
 pub(super) const FOOTNOTE_H: f32 = 24.0;
@@ -273,14 +270,6 @@ pub(super) fn paint_section_title(
 pub(super) fn section_title_baseline(band_top: f32) -> f32 {
     let ink = SECTION_TITLE_FONT * (ASCENT_RATIO + DESCENT_RATIO);
     band_top + (SECTION_HEADER_H - ink) / 2.0 + SECTION_TITLE_FONT * ASCENT_RATIO
-}
-
-/// Full-width row `index` in a list of uniform single-line rows.
-pub(super) fn row_rect(content: Rect, top: f32, index: usize) -> Rect {
-    Rect {
-        origin: Point2D::new(content.origin.x, top + index as f32 * ROW_HEIGHT),
-        size: Point2D::new(content.size.x, ROW_HEIGHT),
-    }
 }
 
 /// Row `index` in a list whose rows differ in height. Sums the boxes

@@ -105,6 +105,24 @@ pub fn home_mcp_manual_snippet(cli: McpCli, port: u16) -> String {
     }
 }
 
+/// Hard-wrap a snippet into lines of at most `columns` characters,
+/// keeping its own line breaks. Snippets render in a monospace face, so a
+/// column count is an exact width.
+pub fn wrap_snippet(text: &str, columns: usize) -> Vec<String> {
+    let columns = columns.max(8);
+    let mut lines = Vec::new();
+    for raw in text.lines() {
+        let chars: Vec<char> = raw.chars().collect();
+        if chars.is_empty() {
+            lines.push(String::new());
+        }
+        for chunk in chars.chunks(columns) {
+            lines.push(chunk.iter().collect());
+        }
+    }
+    lines
+}
+
 #[cfg(test)]
 #[path = "home_mcp_setup_tests.rs"]
 mod tests;

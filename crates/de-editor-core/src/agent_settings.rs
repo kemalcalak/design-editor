@@ -309,6 +309,12 @@ pub struct AgentSettings {
     pub mcp_server: McpServer,
     pub mcp_cli_enabled: [bool; 13],
     pub mcp_client_config_copied_at_ms: Option<u64>,
+    /// MCP tab: the agent row whose manual snippet is expanded.
+    pub mcp_expanded_agent: Option<McpCli>,
+    /// MCP tab: the agent list shows every agent, not the first six.
+    pub mcp_show_all_agents: bool,
+    /// MCP tab: when a row's snippet was last copied (for "Copied").
+    pub mcp_snippet_copied_at_ms: Option<u64>,
     pub hover_agent_settings_close: bool,
     pub hover_mcp_server_button: bool,
     pub hover_mcp_client_config_copy: bool,
@@ -389,6 +395,9 @@ impl Default for AgentSettings {
             mcp_server: McpServer::default(),
             mcp_cli_enabled: [false; 13],
             mcp_client_config_copied_at_ms: None,
+            mcp_expanded_agent: None,
+            mcp_show_all_agents: false,
+            mcp_snippet_copied_at_ms: None,
             hover_agent_settings_close: false,
             hover_mcp_server_button: false,
             hover_mcp_client_config_copy: false,

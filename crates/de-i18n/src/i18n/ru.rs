@@ -571,7 +571,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "Порт",
         "settings.mcp.start" => "Запустить",
         "settings.mcp.stop" => "Остановить",
-        "settings.mcp.terminalIntegrations" => "Интеграции MCP в терминале",
         "settings.mcp.terminalSubtitle1" => "Интеграции MCP вступают в силу после перезапуска терминала.",
         "settings.mcp.terminalSubtitle2" => "После обновления Design Editor переустановите интеграции MCP для совместимости.",
         "settings.images.search" => "Поиск изображений",

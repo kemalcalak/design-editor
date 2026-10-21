@@ -571,7 +571,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "Bağlantı noktası",
         "settings.mcp.start" => "Başlat",
         "settings.mcp.stop" => "Durdur",
-        "settings.mcp.terminalIntegrations" => "Terminal MCP entegrasyonları",
         "settings.mcp.terminalSubtitle1" => "MCP entegrasyonları terminal yeniden başlatıldıktan sonra etkinleşir.",
         "settings.mcp.terminalSubtitle2" => "Design Editor'i yükselttikten sonra uyumluluk için MCP entegrasyonlarını yeniden yükleyin.",
         "settings.images.search" => "Görsel arama",

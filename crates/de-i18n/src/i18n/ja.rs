@@ -571,7 +571,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "ポート",
         "settings.mcp.start" => "開始",
         "settings.mcp.stop" => "停止",
-        "settings.mcp.terminalIntegrations" => "ターミナルの MCP 連携",
         "settings.mcp.terminalSubtitle1" => "MCP 連携はターミナルの再起動後に有効になります。",
         "settings.mcp.terminalSubtitle2" => "Design Editor をアップグレードした後は、互換性のため MCP 連携を再インストールしてください。",
         "settings.images.search" => "画像検索",

@@ -584,7 +584,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "連接埠",
         "settings.mcp.start" => "啟動",
         "settings.mcp.stop" => "停止",
-        "settings.mcp.terminalIntegrations" => "終端機中的 MCP 整合",
         "settings.mcp.terminalSubtitle1" => "MCP 整合將在重新啟動終端機後生效。",
         "settings.mcp.terminalSubtitle2" => {
             "升級 Design Editor 版本後，請重新安裝 MCP 整合以確保相容性。"
