@@ -616,3 +616,7 @@ mod tests {
         assert_eq!(p.root_height, 0.0);
     }
 }
+
+#[cfg(test)]
+#[path = "design_type_home_tests.rs"]
+mod home_tests;

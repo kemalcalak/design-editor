@@ -3,9 +3,7 @@
 
 use super::WidgetHostNative;
 use de_editor_core::home_mcp_setup::home_mcp_manual_snippet;
-use de_editor_core::{
-    local_mcp_url, AgentSettingsTab, FileAction, HomeCopyTarget, HomeHit, HomeTemplate,
-};
+use de_editor_core::{AgentSettingsTab, FileAction, HomeCopyTarget, HomeHit, HomeTemplate};
 use de_editor_ui::widgets::{HomeSurface, TopBar, TOP_BAR_HEIGHT};
 use de_editor_ui::{Point2D, Rect};
 
@@ -93,15 +91,10 @@ impl WidgetHostNative {
                 }
             }
             HomeHit::AddProvider => open_settings(ui, Some(AgentSettingsTab::Agents)),
+            // Without a provider the button is greyed out and does nothing;
+            // the "Add a model provider" link beside it is the way forward.
             HomeHit::Send => {
-                if self.editor_state.has_usable_chat_agent() {
-                    self.queue_home_send();
-                } else {
-                    open_settings(
-                        &mut self.editor_state.editor_ui,
-                        Some(AgentSettingsTab::Agents),
-                    );
-                }
+                self.queue_home_send();
             }
             HomeHit::ImportFigma => ui.pending_file_action = Some(FileAction::ImportFigma),
             HomeHit::ImportWeb => ui.pending_file_action = Some(FileAction::ImportHtml),
@@ -133,13 +126,15 @@ impl WidgetHostNative {
                 ui.home.mcp_agent_menu_open = false;
             }
             HomeHit::McpCopyEndpoint => {
-                let url = local_mcp_url(ui.agent_settings.mcp_server.port);
+                let url = ui.agent_settings.mcp_endpoint_url();
                 ui.home.copied = Some((HomeCopyTarget::Endpoint, now_ms.max(1)));
                 self.editor_state.chat.queue_copy_text(url);
             }
             HomeHit::McpCopySnippet => {
-                let snippet =
-                    home_mcp_manual_snippet(ui.home.mcp_agent, ui.agent_settings.mcp_server.port);
+                let snippet = home_mcp_manual_snippet(
+                    ui.home.mcp_agent,
+                    &ui.agent_settings.mcp_endpoint_url(),
+                );
                 ui.home.copied = Some((HomeCopyTarget::Snippet, now_ms.max(1)));
                 self.editor_state.chat.queue_copy_text(snippet);
             }
@@ -153,12 +148,8 @@ impl WidgetHostNative {
             HomeHit::McpSetUp | HomeHit::McpRemove => {
                 // The same slot the Settings ▸ MCP toggle flips; the desktop
                 // reconciles the agent's config file after this event.
-                let enable = hit == HomeHit::McpSetUp;
-                let settings = &mut ui.agent_settings;
-                settings.mcp_cli_enabled[ui.home.mcp_agent.index()] = enable;
-                if enable {
-                    settings.mcp_server.running = true;
-                }
+                ui.agent_settings
+                    .set_mcp_cli_enabled(ui.home.mcp_agent, hit == HomeHit::McpSetUp);
             }
             HomeHit::McpStart => ui.agent_settings.mcp_server.running = true,
             HomeHit::McpSettings => {
@@ -197,7 +188,9 @@ impl WidgetHostNative {
     }
 
     /// Whether a press at `(x, y)` should drag the borderless window:
-    /// Home's title strip outside every Home control and popover.
+    /// Home's title strip outside every Home control and popover. While
+    /// an overlay Home opened is up (Settings, sign-in, the language menu,
+    /// the model picker, which can reach the strip) the press is theirs.
     pub fn home_window_drag_at(
         &self,
         x: f32,
@@ -205,12 +198,25 @@ impl WidgetHostNative {
         viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
+        let ui = &self.editor_state.editor_ui;
+        if ui.agent_settings_open
+            || ui.login_modal_open
+            || ui.locale_picker.open
+            || ui.chat_model_picker.open
+        {
+            return false;
+        }
         HomeSurface::for_editor_at(&self.editor_state, self.now_ms).is_some_and(|home| {
             home.window_drag_at(viewport_width, viewport_height, Point2D::new(x, y))
         })
     }
 
+    /// Queue Home's brief as a generation turn. Refused (returns false)
+    /// while no agent can answer it, the same rule that greys Send out.
     pub(in crate::widget_host) fn queue_home_send(&mut self) -> bool {
+        if !self.editor_state.has_usable_chat_agent() {
+            return false;
+        }
         let Some(prompt) = self.editor_state.editor_ui.home.generation_prompt() else {
             return false;
         };

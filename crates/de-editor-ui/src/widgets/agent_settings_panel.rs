@@ -436,7 +436,16 @@ impl<'a> AgentSettingsPanel<'a> {
     }
 
     pub fn max_scroll(&self, panel: Rect) -> f32 {
-        (self.content_total_height() - self.resolved_content_viewport(panel).size.y).max(0.0)
+        let content = self.resolved_content_viewport(panel);
+        let total = match self.mode.active_tab(&self.settings, self.ui) {
+            AgentSettingsTab::Mcp => crate::widgets::agent_settings_mcp::content_height_at(
+                &self.settings,
+                self.ui.external_cli_available,
+                content.size.x,
+            ),
+            _ => self.content_total_height(),
+        };
+        (total - content.size.y).max(0.0)
     }
 
     pub fn effective_scroll(&self, panel: Rect) -> f32 {

@@ -175,6 +175,15 @@ pub fn base_animation_deadline_ms(
     if let Some(deadline) = state.editor_ui.home.copied_deadline_ms(now_ms) {
         next = earliest(next, deadline);
     }
+    // So do the Settings ▸ MCP copy chips.
+    if state.editor_ui.agent_settings_open {
+        if let Some(deadline) = crate::widgets::agent_settings_mcp::copy_feedback_deadline_ms(
+            &state.editor_ui.agent_settings,
+            now_ms,
+        ) {
+            next = earliest(next, deadline);
+        }
+    }
     // A time-driven shader fill on screen animates without any input, so
     // the scheduler keeps frames coming for as long as one is painted.
     if let Some(deadline) = crate::widgets::canvas_shader_clock::next_deadline_ms(now_ms) {

@@ -95,11 +95,20 @@ fn pressing_send_without_a_usable_agent_queues_no_turn() {
         host.editor_state().chat.pending_send.is_none(),
         "no turn may be queued while nothing can answer it"
     );
-    assert!(host.editor_state().editor_ui.agent_settings_open);
     assert!(
-        host.home_visible(),
-        "Home stays up under the settings modal"
+        !host.editor_state().editor_ui.agent_settings_open,
+        "a greyed-out Send does nothing"
     );
+    assert!(host.home_visible());
+}
+
+#[test]
+fn enter_without_a_usable_agent_queues_no_turn() {
+    let mut host = host_with_home();
+    host.editor_state_mut().editor_ui.home.set_draft("a bakery");
+    assert!(!host.apply_send(), "Enter is refused like the greyed Send");
+    assert!(host.editor_state().chat.pending_send.is_none());
+    assert!(host.home_visible());
 }
 
 #[test]

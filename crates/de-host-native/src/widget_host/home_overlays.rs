@@ -32,11 +32,20 @@ impl WidgetHostNative {
             return None;
         }
         // Same z-order as the normal path: the settings modal (tier 1),
-        // then the locale dropdown, then the model picker.
+        // then the sign-in modal Settings ▸ Account opens, then the locale
+        // dropdown, then the model picker.
         if self.editor_state.editor_ui.agent_settings_open {
             return self
                 .dispatch_agent_settings_press(x, y, viewport_width, viewport_height)
                 .then_some(true);
+        }
+        let login_open = {
+            let ui = &self.editor_state.editor_ui;
+            ui.login_modal_open && (ui.account_ui_available || ui.touch_chrome())
+        };
+        if login_open {
+            self.dispatch_login_modal_press(x, y, viewport_width, viewport_height);
+            return Some(true);
         }
         if self.editor_state.editor_ui.locale_picker.open {
             let panel = self.locale_picker_rect(viewport_width);
@@ -62,7 +71,8 @@ impl WidgetHostNative {
     }
 
     /// Paint the Home-opened overlays above the takeover: the agent-
-    /// settings modal, then the Home-anchored model picker.
+    /// settings modal, the sign-in modal, the language menu, then the
+    /// Home-anchored model picker.
     pub(in crate::widget_host) fn paint_home_overlays(
         &mut self,
         frame: &mut NativeFrameBackend<'_>,
@@ -73,6 +83,7 @@ impl WidgetHostNative {
             return;
         }
         self.paint_agent_settings_modal_overlay(frame, viewport_width, viewport_height);
+        self.paint_login_modal_overlay(frame, viewport_width, viewport_height);
         if self.editor_state.editor_ui.locale_picker.open {
             let rect = self.locale_picker_rect(viewport_width);
             let picker =

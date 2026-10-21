@@ -43,7 +43,8 @@ const SNIPPET_PAD_LEFT: f32 = 40.0;
 const SNIPPET_COPY_W: f32 = 64.0;
 const SNIPPET_COPY_H: f32 = 26.0;
 const CONNECTED_H: f32 = 20.0;
-pub(super) const COPY_FEEDBACK_MS: u64 = 2_000;
+/// Same span as Home's acknowledgement, so the two read alike.
+pub(super) const COPY_FEEDBACK_MS: u64 = de_editor_core::HOME_COPIED_MS;
 
 /// Build capability: the agent list writes MCP endpoints into external
 /// CLI config files (`~/.claude.json` etc.) via the desktop MCP runtime.
@@ -113,15 +114,7 @@ pub(super) fn endpoint_copy_rect(content: Rect, endpoint: &str) -> Rect {
 /// Kept under its old name for the hosts' hover plumbing: the endpoint
 /// Copy chip is the tab's one copy-config action now.
 pub(super) fn client_config_copy_button_rect(content: Rect, settings: &AgentSettings) -> Rect {
-    endpoint_copy_rect(content, &endpoint_url(settings))
-}
-
-/// The URL agents connect to: the embed host's, else the local server's.
-pub(super) fn endpoint_url(settings: &AgentSettings) -> String {
-    settings
-        .embed_mcp_url
-        .clone()
-        .unwrap_or_else(|| de_editor_core::local_mcp_url(settings.mcp_server.port))
+    endpoint_copy_rect(content, &settings.mcp_endpoint_url())
 }
 
 pub(super) fn agents_header_top(content: Rect) -> f32 {
@@ -155,7 +148,7 @@ fn snippet_columns(content: Rect) -> usize {
 
 pub(super) fn snippet_lines(content: Rect, settings: &AgentSettings, cli: McpCli) -> Vec<String> {
     wrap_snippet(
-        &home_mcp_manual_snippet(cli, settings.mcp_server.port),
+        &home_mcp_manual_snippet(cli, &settings.mcp_endpoint_url()),
         snippet_columns(content),
     )
 }
@@ -306,7 +299,17 @@ pub(super) fn row_boxes(
 }
 
 pub(super) fn content_height(settings: &AgentSettings, external_cli_available: bool) -> f32 {
-    let origin = Rect::xywh(0.0, 0.0, 600.0, 0.0);
+    content_height_at(settings, external_cli_available, 600.0)
+}
+
+/// The tab's height when laid out `width` wide: an expanded snippet wraps
+/// onto more lines in a narrow window.
+pub(super) fn content_height_at(
+    settings: &AgentSettings,
+    external_cli_available: bool,
+    width: f32,
+) -> f32 {
+    let origin = Rect::xywh(0.0, 0.0, width, 0.0);
     connected_rect(origin, settings, external_cli_available)
         .origin
         .y
@@ -372,6 +375,20 @@ pub fn hit_test(
 /// Whether a copy acknowledgement started at `copied_at` still shows.
 pub(super) fn copy_feedback_active(copied_at: Option<u64>, now_ms: u64) -> bool {
     copied_at.is_some_and(|at| now_ms.saturating_sub(at) < COPY_FEEDBACK_MS)
+}
+
+/// When the Settings ▸ MCP "Copied" chips revert, so the frame loop wakes
+/// for it instead of waiting on the next input event.
+pub fn copy_feedback_deadline_ms(settings: &AgentSettings, now_ms: u64) -> Option<u64> {
+    [
+        settings.mcp_client_config_copied_at_ms,
+        settings.mcp_snippet_copied_at_ms,
+    ]
+    .into_iter()
+    .flatten()
+    .map(|at| at.saturating_add(COPY_FEEDBACK_MS))
+    .filter(|deadline| *deadline > now_ms)
+    .min()
 }
 
 #[cfg(test)]

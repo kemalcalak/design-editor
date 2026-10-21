@@ -81,7 +81,7 @@ impl TopBar {
                 self.is_hovered(TopBarButton::OpenImportMenu),
                 self.is_pressed(TopBarButton::OpenImportMenu),
             );
-            // Divider then Home (制图台) — return to the drafting table.
+            // Divider then Home — back to the Home page.
             let home = self.home_button_rect(rect);
             paint_divider(
                 cx,

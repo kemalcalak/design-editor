@@ -15,7 +15,7 @@
 //! honor the 800-line file cap); it is re-exported from there so
 //! call sites keep the `agent_settings::McpServer` path.
 
-use crate::agent_settings::AgentSettings;
+use crate::agent_settings::{AgentSettings, McpCli};
 use crate::chat::AgentProvider;
 
 /// Lifecycle phase of one provider card's connect probe.
@@ -131,22 +131,6 @@ impl Default for McpServer {
     }
 }
 
-impl McpServer {
-    pub fn client_config_display_text(self) -> String {
-        format!(
-            r#"{{ "type": "http", "url": "{}" }}"#,
-            local_mcp_url(self.port)
-        )
-    }
-
-    pub fn client_config_clipboard_text(self) -> String {
-        format!(
-            "{{\n  \"type\": \"http\",\n  \"url\": \"{}\"\n}}",
-            local_mcp_url(self.port)
-        )
-    }
-}
-
 impl AgentSettings {
     /// True when an embedding host owns the MCP lifecycle
     /// (`embed_mcp_url` set): the server card then reads as
@@ -169,22 +153,24 @@ impl AgentSettings {
         authority.rsplit_once(':').map(|(_, port)| port)
     }
 
-    /// The client-config card's one-line display text. Prefers the
-    /// embedding host's real endpoint (`embed_mcp_url`, set via the
-    /// bridge init) over the daemon-internal `mcp_server` port.
-    pub fn mcp_client_config_display_text(&self) -> String {
-        match &self.embed_mcp_url {
-            Some(url) => format!(r#"{{ "type": "http", "url": "{url}" }}"#),
-            None => self.mcp_server.client_config_display_text(),
-        }
+    /// The URL agents connect to: the embedding host's real endpoint
+    /// (`embed_mcp_url`, set via the bridge init) when it owns MCP, else
+    /// the local server's. Home's MCP card, its connect popover and
+    /// Settings ▸ MCP all show and copy this one value.
+    pub fn mcp_endpoint_url(&self) -> String {
+        self.embed_mcp_url
+            .clone()
+            .unwrap_or_else(|| local_mcp_url(self.mcp_server.port))
     }
 
-    /// The client-config card's copied (pretty-printed) text — same
-    /// endpoint preference as `mcp_client_config_display_text`.
-    pub fn mcp_client_config_clipboard_text(&self) -> String {
-        match &self.embed_mcp_url {
-            Some(url) => format!("{{\n  \"type\": \"http\",\n  \"url\": \"{url}\"\n}}"),
-            None => self.mcp_server.client_config_clipboard_text(),
+    /// Write (or remove) Design Editor in `cli`'s MCP config: the slot
+    /// the desktop reconciles into that agent's config file. Setting one
+    /// up also starts the server it points at. The one transition behind
+    /// Home's connect popover and Settings ▸ MCP.
+    pub fn set_mcp_cli_enabled(&mut self, cli: McpCli, enabled: bool) {
+        self.mcp_cli_enabled[cli.index()] = enabled;
+        if enabled {
+            self.mcp_server.running = true;
         }
     }
 
@@ -389,19 +375,22 @@ mod embed_mcp_url_tests {
     use super::*;
 
     #[test]
-    fn client_config_prefers_the_embed_url_over_the_daemon_port() {
+    fn the_endpoint_prefers_the_embed_url_over_the_daemon_port() {
         let mut settings = AgentSettings::default();
-        assert!(settings
-            .mcp_client_config_display_text()
-            .contains("http://127.0.0.1:3100/mcp"));
+        assert_eq!(settings.mcp_endpoint_url(), "http://127.0.0.1:3100/mcp");
         settings.embed_mcp_url = Some("http://127.0.0.1:63655/mcp".into());
-        assert_eq!(
-            settings.mcp_client_config_display_text(),
-            r#"{ "type": "http", "url": "http://127.0.0.1:63655/mcp" }"#
-        );
-        assert!(settings
-            .mcp_client_config_clipboard_text()
-            .contains("\"url\": \"http://127.0.0.1:63655/mcp\""));
+        assert_eq!(settings.mcp_endpoint_url(), "http://127.0.0.1:63655/mcp");
+    }
+
+    #[test]
+    fn setting_an_agent_up_starts_the_server_and_removing_it_does_not_stop_it() {
+        let mut settings = AgentSettings::default();
+        settings.set_mcp_cli_enabled(McpCli::Codex, true);
+        assert!(settings.mcp_cli_enabled[McpCli::Codex.index()]);
+        assert!(settings.mcp_server.running);
+        settings.set_mcp_cli_enabled(McpCli::Codex, false);
+        assert!(!settings.mcp_cli_enabled[McpCli::Codex.index()]);
+        assert!(settings.mcp_server.running);
     }
 }
 

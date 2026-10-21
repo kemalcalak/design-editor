@@ -307,6 +307,21 @@ fn a_second_home_brief_starts_on_a_fresh_page() {
     // it must not append to whatever the previous run drew, or the two
     // deliverables share a canvas, a deck strip and a transcript.
     let mut host = WidgetHostNative::new();
+    // Home refuses a brief nothing can answer; give it a ready agent.
+    host.editor_state_mut()
+        .editor_ui
+        .agent_settings
+        .builtin_agents
+        .push(de_editor_core::BuiltinAgentConfig {
+            id: "builtin-1".into(),
+            preset: de_editor_core::BuiltinAgentPresetKey::Custom,
+            display_name: "MiniMax".into(),
+            kind: de_editor_core::BuiltinAgentKind::OpenAiCompat,
+            api_key: "sk-test".into(),
+            models: vec!["MiniMax-M2.7".into()],
+            base_url: "http://localhost:9".into(),
+            enabled: true,
+        });
     host.editor_state_mut().editor_ui.home.visible = true;
     host.editor_state_mut().editor_ui.home.task = HomeFamily::MobileApp;
     host.editor_state_mut()

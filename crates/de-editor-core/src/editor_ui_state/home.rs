@@ -213,13 +213,15 @@ impl HomeSize {
         matches!(self, Self::Slide169 | Self::Slide43)
     }
 
-    /// The size phrase the prompt contracts embed. The phone size names
-    /// its frame explicitly so the detector's phone-dimension rule fires.
+    /// The size phrase the prompt contracts embed. The phone size says
+    /// neither "mobile" nor a `W×H` pair: the detector reads both as the
+    /// mobile-app preset, which would turn a 390 px landing page into app
+    /// screens. The mobile app contract names "mobile" itself.
     pub const fn prompt_text(self) -> &'static str {
         match self {
             Self::Desktop1440 => "desktop, 1440 px wide",
             Self::Tablet768 => "tablet, 768 px wide",
-            Self::Mobile390 => "mobile, 390×844",
+            Self::Mobile390 => "390 px wide",
             Self::Slide169 => "16:9, 1920×1080",
             Self::Slide43 => "4:3, 1440×1080",
         }
@@ -277,6 +279,9 @@ impl TaskDraft {
         }
     }
 }
+
+/// Most files Home's Recent section lists (two grid rows of four).
+pub const HOME_RECENT_MAX: usize = 8;
 
 /// A copy button on Home, for the short "Copied" acknowledgement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

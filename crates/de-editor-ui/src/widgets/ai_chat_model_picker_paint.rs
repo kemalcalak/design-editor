@@ -1,4 +1,4 @@
-//! Studio-language painting for the chat model picker. The geometry,
+//! Home v2 painting for the chat model picker. The geometry,
 //! scroll and hit-test contract live in `ai_chat_model_picker.rs`;
 //! this sibling (declared from there via `#[path]`) keeps the paint
 //! pass under the 800-line cap.

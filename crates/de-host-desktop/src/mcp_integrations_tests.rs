@@ -743,3 +743,17 @@ fn zcode_detection_ignores_a_top_level_mcp_servers_key() {
 
     let _ = fs::remove_dir_all(home);
 }
+
+#[test]
+fn home_shows_the_config_path_the_writer_uses() {
+    let home = Path::new("/h");
+    for cli in McpCli::ALL {
+        let shown = de_editor_core::home_mcp_setup::home_mcp_config_path(cli);
+        let expected = config_path(cli, home, false);
+        assert_eq!(
+            home.join(shown.trim_start_matches("~/")),
+            expected,
+            "{cli:?}: Home's popover must name the file Set up writes"
+        );
+    }
+}

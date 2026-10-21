@@ -166,12 +166,9 @@ pub fn apply_agent_settings_hit(
             // `mcp_cli_enabled` is indexed by `McpCli::ALL` order; the row
             // this hit came from is `McpCli::DISPLAY` order, so resolve the
             // storage slot through `McpCli::index`.
-            let idx = cli.index();
             let settings = &mut state.editor_ui.agent_settings;
-            settings.mcp_cli_enabled[idx] ^= true;
-            if settings.mcp_cli_enabled[idx] {
-                settings.mcp_server.running = true;
-            }
+            let enabled = settings.mcp_cli_enabled[cli.index()];
+            settings.set_mcp_cli_enabled(cli, !enabled);
             SettingsPressOutcome::handled()
         }
         AgentSettingsHit::CopyMcpClientConfig => {
@@ -182,8 +179,7 @@ pub fn apply_agent_settings_hit(
                 .mcp_client_config_copied_at_ms = Some(now_ms);
             // The card's Copy chip copies the endpoint itself — what every
             // agent's config (and the manual snippets below it) points at.
-            let url =
-                crate::widgets::agent_settings_mcp::endpoint_url(&state.editor_ui.agent_settings);
+            let url = state.editor_ui.agent_settings.mcp_endpoint_url();
             SettingsPressOutcome::effect(SettingsPress::CopyText(url))
         }
         AgentSettingsHit::ExpandMcpCli(cli) => {
@@ -196,7 +192,7 @@ pub fn apply_agent_settings_hit(
             settings.mcp_snippet_copied_at_ms = Some(now_ms.max(1));
             let snippet = de_editor_core::home_mcp_setup::home_mcp_manual_snippet(
                 cli,
-                settings.mcp_server.port,
+                &settings.mcp_endpoint_url(),
             );
             SettingsPressOutcome::effect(SettingsPress::CopyText(snippet))
         }

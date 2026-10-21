@@ -2,14 +2,15 @@
 //! the config file each agent reads, and the snippet a user pastes when
 //! they set the agent up by hand.
 //!
-//! The automatic path does not live here: "Set up" flips the same
-//! `agent_settings.mcp_cli_enabled` slot the Settings ▸ MCP toggle does,
-//! and the desktop's `mcp_integrations` writer reconciles the file. The
-//! snippets below mirror what that writer emits, so the manual and the
-//! automatic routes leave the same entry behind.
+//! Shared by Home's "Connect an agent" popover and Settings ▸ MCP. The
+//! automatic path does not live here: "Set up" calls
+//! `AgentSettings::set_mcp_cli_enabled`, and the desktop's
+//! `mcp_integrations` writer reconciles the file. The snippets below
+//! restate the entry that writer emits (a desktop test pins the paths to
+//! these), so the manual and the automatic routes leave the same thing
+//! behind.
 
 use crate::agent_settings::McpCli;
-use crate::agent_settings_connection::local_mcp_url;
 
 /// The agents that get a tab of their own; the rest sit behind the ▾ menu
 /// in `McpCli::DISPLAY` order.
@@ -69,11 +70,11 @@ pub const fn home_mcp_config_path(cli: McpCli) -> &'static str {
     }
 }
 
-/// What a user pastes to add Design Editor to `cli` by hand. Claude Code
-/// gets its own `claude mcp add` command; every other agent gets the
-/// entry its config file expects.
-pub fn home_mcp_manual_snippet(cli: McpCli, port: u16) -> String {
-    let url = local_mcp_url(port);
+/// What a user pastes to add Design Editor to `cli` by hand, pointing at
+/// `url` (`AgentSettings::mcp_endpoint_url`). Claude Code gets its own
+/// `claude mcp add` command; every other agent gets the entry its config
+/// file expects.
+pub fn home_mcp_manual_snippet(cli: McpCli, url: &str) -> String {
     match cli {
         McpCli::ClaudeCode => {
             format!("claude mcp add --transport http design-editor {url}")
@@ -82,10 +83,13 @@ pub fn home_mcp_manual_snippet(cli: McpCli, port: u16) -> String {
             format!("[mcp_servers.design-editor]\nurl = \"{url}\"")
         }
         McpCli::OpenCode => format!(
-            "\"mcp\": {{\n  \"design-editor\": {{ \"type\": \"remote\", \"url\": \"{url}\" }}\n}}"
+            "\"mcp\": {{\n  \"design-editor\": {{ \"type\": \"remote\", \"url\": \"{url}\", \"enabled\": true }}\n}}"
         ),
-        McpCli::Kiro | McpCli::Kimi => format!(
-            "\"mcpServers\": {{\n  \"design-editor\": {{ \"url\": \"{url}\" }}\n}}"
+        McpCli::Kiro => format!(
+            "\"mcpServers\": {{\n  \"design-editor\": {{ \"url\": \"{url}\", \"disabled\": false }}\n}}"
+        ),
+        McpCli::Kimi => format!(
+            "\"mcpServers\": {{\n  \"design-editor\": {{ \"url\": \"{url}\", \"transport\": \"http\" }}\n}}"
         ),
         McpCli::QwenCode => format!(
             "\"mcpServers\": {{\n  \"design-editor\": {{ \"httpUrl\": \"{url}\" }}\n}}"
@@ -96,8 +100,10 @@ pub fn home_mcp_manual_snippet(cli: McpCli, port: u16) -> String {
         McpCli::ZCode => format!(
             "\"mcp\": {{ \"servers\": {{\n  \"design-editor\": {{ \"type\": \"http\", \"url\": \"{url}\" }}\n}} }}"
         ),
+        // The markers are what lets the writer recognise (and remove) the
+        // block later; without them a pasted entry is refused as manual.
         McpCli::Dsh => format!(
-            "- insert:\n    - id: mcp-design-editor\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: design-editor\n        transport: streamable-http\n        url: {url}"
+            "# design-editor-mcp-begin (managed by Design Editor; do not edit)\n- insert:\n    - id: mcp-design-editor\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: design-editor\n        transport: streamable-http\n        url: {url}\n# design-editor-mcp-end"
         ),
         McpCli::GithubCopilot | McpCli::GeminiCli | McpCli::Cursor => format!(
             "\"mcpServers\": {{\n  \"design-editor\": {{ \"type\": \"http\", \"url\": \"{url}\" }}\n}}"

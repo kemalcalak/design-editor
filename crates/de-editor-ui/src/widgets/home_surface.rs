@@ -74,6 +74,8 @@ pub struct HomeRecent {
 pub struct HomeMcpView {
     pub running: bool,
     pub port: u16,
+    /// The URL agents connect to (`AgentSettings::mcp_endpoint_url`).
+    pub endpoint: String,
     /// The popover's selected agent and whether its config is written.
     pub agent: McpCli,
     pub agent_enabled: bool,
@@ -136,6 +138,7 @@ impl<'a> HomeSurface<'a> {
             mcp: HomeMcpView {
                 running: ui.agent_settings.mcp_server.running,
                 port: ui.agent_settings.mcp_server.port,
+                endpoint: ui.agent_settings.mcp_endpoint_url(),
                 agent: home.mcp_agent,
                 agent_enabled: ui.agent_settings.mcp_cli_enabled[home.mcp_agent.index()],
                 client: home.mcp_client.clone(),

@@ -15,7 +15,7 @@ use de_editor_core::home_mcp_setup::{
     home_mcp_agent_name, home_mcp_config_path, home_mcp_manual_snippet, home_mcp_more_agents,
     wrap_snippet, HOME_MCP_TABS,
 };
-use de_editor_core::{local_mcp_url, HomeCopyTarget, HomeHit};
+use de_editor_core::{HomeCopyTarget, HomeHit};
 
 const WIDTH: f32 = 440.0;
 const PAD: f32 = 16.0;
@@ -166,7 +166,7 @@ pub fn mcp_popover_layout(
         "home.mcp.stoppedIntro"
     };
     let intro_lines = wrap_words(tr(surface.locale, intro_key), inner_w, INTRO_FONT);
-    let snippet = home_mcp_manual_snippet(surface.mcp.agent, surface.mcp.port);
+    let snippet = home_mcp_manual_snippet(surface.mcp.agent, &surface.mcp.endpoint);
     let copy_w = copy_button_w(surface);
     let snippet_lines = wrap_mono(&snippet, inner_w - 20.0 - copy_w - 8.0, SNIPPET_FONT);
 
@@ -396,7 +396,7 @@ pub(super) fn paint_mcp_popover(
     code_box(cx, surface, layout.endpoint_box);
     draw_text(
         cx,
-        &local_mcp_url(surface.mcp.port),
+        &surface.mcp.endpoint,
         MONO,
         SNIPPET_FONT,
         p.text,

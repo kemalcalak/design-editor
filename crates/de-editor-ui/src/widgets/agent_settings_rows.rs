@@ -27,7 +27,7 @@ use crate::{Point2D, Rect, TextLayout};
 /// has to name it too — see [`fit_text`]. Aliases the workspace-wide chrome
 /// family so the modal cannot drift from the rest of the editor.
 /// Settings paints in Home's UI face (bundled on desktop and web).
-pub(super) const SETTINGS_FONT_FAMILY: &str = "Manrope";
+pub(super) const SETTINGS_FONT_FAMILY: &str = crate::widgets::home_surface::SANS;
 
 /// Tab intro: a section-sized title with one optional muted line under
 /// it. Deliberately the same size as a section title — the intro IS a

@@ -2,16 +2,9 @@
 //! PNG of a document's active page after each save; Home looks it up by
 //! the same names, so the writer and the reader never disagree.
 
-/// FNV-1a over `bytes` — stable across runs and platforms (unlike
-/// `std`'s randomly seeded hasher), which a file name needs.
-fn fnv1a(bytes: &[u8]) -> u64 {
-    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
-    for byte in bytes {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x0100_0000_01b3);
-    }
-    hash
-}
+/// Names must be stable across runs and platforms (unlike `std`'s
+/// randomly seeded hasher), so they hash with the crate's FNV-1a.
+use crate::web_sync::fnv1a64 as fnv1a;
 
 /// The thumbnail file for the document at `path`, relative to the
 /// thumbnails folder. One file per document; a new save overwrites it.

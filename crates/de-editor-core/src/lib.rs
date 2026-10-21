@@ -348,7 +348,7 @@ pub use document_install::{DocumentInstallError, DocumentInstallReport, Prepared
 pub use edit_transaction::{
     CompletedLocalEdit, EditOrigin, LocalEditCapture, LocalEditError, LocalEditOutcome,
 };
-pub use editor_ui_state::home::HOME_COPIED_MS;
+pub use editor_ui_state::home::{HOME_COPIED_MS, HOME_RECENT_MAX};
 pub use editor_ui_state::workspace::{
     WorkspaceHit, WorkspacePhase, WorkspaceState, WorkspaceView, WORKSPACE_DECK_STRIP_H,
     WORKSPACE_ENTER_MS, WORKSPACE_HEADER_H, WORKSPACE_TOOLBAR_H,

@@ -155,7 +155,11 @@ fn paint_mcp_card(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &Home
     );
     draw_text(
         cx,
-        &format!("127.0.0.1:{}/mcp", surface.mcp.port),
+        surface
+            .mcp
+            .endpoint
+            .trim_start_matches("http://")
+            .trim_start_matches("https://"),
         MONO,
         11.0,
         p.text_2,

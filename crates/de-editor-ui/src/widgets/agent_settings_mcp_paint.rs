@@ -168,7 +168,7 @@ fn paint_server_card(
         600,
         Point2D::new(x + 16.0, card.origin.y + 29.0),
     );
-    let url = endpoint_url(settings);
+    let url = settings.mcp_endpoint_url();
     let line = endpoint_rect(content);
     text(
         cx,
@@ -364,7 +364,6 @@ fn paint_agents(
     );
 }
 
-#[allow(clippy::too_many_arguments)]
 fn paint_agent_row(
     cx: &mut PaintCx<'_>,
     theme: &Theme,

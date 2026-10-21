@@ -16,10 +16,10 @@ pub const HOME_TOPBAR_H: f32 = 60.0;
 /// window-control dots and the drag band live here.
 pub const WINDOW_STRIP_H: f32 = 40.0;
 /// Most files the Recent section lists (two grid rows of four).
-pub const RECENT_MAX: usize = 8;
+pub const RECENT_MAX: usize = de_editor_core::HOME_RECENT_MAX;
 
 const COLUMN_MAX_W: f32 = 1000.0;
-const GUTTER: f32 = 40.0;
+const GUTTER: f32 = 32.0;
 const GUTTER_NARROW: f32 = 20.0;
 const PAD_TOP: f32 = 36.0;
 const PAD_TOP_NARROW: f32 = 28.0;

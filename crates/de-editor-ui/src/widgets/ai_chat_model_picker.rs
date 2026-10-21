@@ -2,10 +2,10 @@
 //! popover that lists saved models grouped by provider.
 //! Mirrors the TS `ai-chat-model-selector.tsx` `ModelDropdown`
 //! (search row + grouped rows + selected check / qualifiers),
-//! restyled to the Studio design language: a 12 px-radius card
-//! with a soft ink shadow, 36 px rows with an 18 px provider mark
-//! and a right-aligned qualifier line, a filled selected pill,
-//! and an "添加模型" footer action.
+//! restyled to the Home v2 language: a 12 px-radius card on the Home
+//! palette, rows with an 18 px provider mark and the model name in the
+//! mono face, a filled selected pill, and an "Add a model provider"
+//! footer action.
 //!
 //! This file owns the layout, scroll and hit-test contract; the
 //! painting lives in the sibling `ai_chat_model_picker_paint.rs`,
