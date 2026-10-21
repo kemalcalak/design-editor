@@ -15,7 +15,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.action.start" => "Tạo phiên",
         "collab.action.join" => "Tham gia phiên",
         "collab.home.hint" => "Tạo phiên mới hoặc tham gia bằng lời mời.",
-        "home.connectMoreModels" => "Connect more models…",
         "settings.mcp.agents" => "Agent",
         "settings.mcp.agentsHint" => "Thiết lập sẽ ghi vào tệp cấu hình của agent. Mở rộng một hàng để xem đoạn mã thủ công.",
         "settings.mcp.showMore" => "Hiện thêm {{count}} agent",

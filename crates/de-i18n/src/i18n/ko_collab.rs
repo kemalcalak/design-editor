@@ -15,7 +15,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.action.start" => "세션 만들기",
         "collab.action.join" => "세션 참여",
         "collab.home.hint" => "새 세션을 만들거나 초대로 참여하세요.",
-        "home.connectMoreModels" => "Connect more models…",
         "settings.mcp.agents" => "에이전트",
         "settings.mcp.agentsHint" => "설정하면 에이전트의 설정 파일에 기록합니다. 행을 펼치면 수동 스니펫이 보입니다.",
         "settings.mcp.showMore" => "에이전트 {{count}}개 더 보기",

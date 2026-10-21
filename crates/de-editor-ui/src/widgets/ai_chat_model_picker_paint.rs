@@ -3,17 +3,16 @@
 //! this sibling (declared from there via `#[path]`) keeps the paint
 //! pass under the 800-line cap.
 //!
-//! Light-mode values restate the founder-approved Studio Home
-//! palette — origin: `workspace_surface_palette.rs`. Several are verbatim
-//! `tab_*` tokens (hover fill `#F0F5FD`, selected fill `#EAF2FF`,
-//! border `#E1EAF7`, focus line `#C8DBFF`). The picker is painted
-//! from the generic editor `Theme`, which carries no Studio tokens,
-//! so dark mode derives each value from the closest `Theme` field.
+//! Colours come from Home's v2 palette in both modes (issue #22): the
+//! picker opens over Home's composer and over the chat panel, and reads
+//! the same in both. Model names paint in the mono face, the selected row
+//! carries a neutral wash plus an accent check, and the footer offers to
+//! add a model provider.
 
 use super::{
-    is_acp, is_builtin, model_list_rect, model_row_pill_rect, normalized_query,
-    paint_provider_logo, search_field_rect, visible_model_indices, walk_rows, Row, MODEL_EMPTY_H,
-    MODEL_FOOTER_H, MODEL_GROUP_H, MODEL_PICKER_PAD_Y, MODEL_ROW_H,
+    model_list_rect, model_row_pill_rect, paint_provider_logo, search_field_rect,
+    visible_model_indices, walk_rows, Row, MODEL_EMPTY_H, MODEL_FOOTER_H, MODEL_GROUP_H,
+    MODEL_PICKER_PAD_Y, MODEL_ROW_H,
 };
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
@@ -25,24 +24,6 @@ use de_editor_core::chat::ModelEntry;
 use de_editor_core::Locale;
 use jian_core::text_input::TextInputState;
 use jian_widgets::components::select::SelectState;
-
-// Studio light tokens (see the module doc for their origin).
-const STUDIO_CARD: Color = Color::rgb_u8(0xFF, 0xFF, 0xFF);
-const STUDIO_BORDER: Color = Color::rgb_u8(0xE1, 0xEA, 0xF7);
-/// Popover shadow ink `#283548` at 10 % — `0 12px 32px`.
-const STUDIO_SHADOW: Color = Color::rgba_u8(0x28, 0x35, 0x48, 0.10);
-const STUDIO_SEARCH_WELL: Color = Color::rgb_u8(0xF5, 0xF8, 0xFD);
-const STUDIO_HOVER_FILL: Color = Color::rgb_u8(0xF0, 0xF5, 0xFD);
-/// One step darker than the hover fill (no Studio token exists for
-/// the pressed step).
-const STUDIO_PRESSED_FILL: Color = Color::rgb_u8(0xE7, 0xEF, 0xFB);
-const STUDIO_SELECTED_FILL: Color = Color::rgb_u8(0xEA, 0xF2, 0xFF);
-const STUDIO_SELECTED_INK: Color = Color::rgb_u8(0x25, 0x63, 0xEB);
-const STUDIO_INK: Color = Color::rgb_u8(0x11, 0x1A, 0x32);
-const STUDIO_MUTED: Color = Color::rgb_u8(0x78, 0x85, 0x9C);
-const STUDIO_PLACEHOLDER: Color = Color::rgb_u8(0x92, 0x9D, 0xAF);
-const STUDIO_HAIRLINE: Color = Color::rgb_u8(0xE8, 0xEE, 0xF7);
-const STUDIO_ACTION_BLUE: Color = Color::rgb_u8(0x07, 0x5B, 0xFF);
 
 /// Popover corner radius.
 const POPOVER_RADIUS: f32 = 12.0;
@@ -91,44 +72,28 @@ struct PickerTokens {
 
 impl PickerTokens {
     fn for_theme(theme: &Theme) -> Self {
-        if theme_is_dark(theme) {
-            // Dark mode: derive from the editor Theme so the popover
-            // harmonises with the dark shell it floats over.
-            Self {
-                card: theme.popover,
-                border: theme.border,
-                shadow: Color::rgb_u8(0x00, 0x00, 0x00).with_alpha(0.32),
-                search_well: theme.muted,
-                search_border: theme.border,
-                search_focus_border: theme.ring,
-                hover_fill: theme.accent,
-                pressed_fill: theme.muted,
-                selected_fill: theme.row_selected_primary,
-                selected_ink: theme.primary,
-                ink: theme.foreground,
-                muted: theme.muted_foreground,
-                placeholder: theme.muted_foreground,
-                hairline: theme.border,
-                action_blue: theme.primary,
-            }
+        let mode = if theme_is_dark(theme) {
+            de_editor_core::ThemeMode::Dark
         } else {
-            Self {
-                card: STUDIO_CARD,
-                border: STUDIO_BORDER,
-                shadow: STUDIO_SHADOW,
-                search_well: STUDIO_SEARCH_WELL,
-                search_border: STUDIO_BORDER,
-                search_focus_border: Color::rgb_u8(0xC8, 0xDB, 0xFF),
-                hover_fill: STUDIO_HOVER_FILL,
-                pressed_fill: STUDIO_PRESSED_FILL,
-                selected_fill: STUDIO_SELECTED_FILL,
-                selected_ink: STUDIO_SELECTED_INK,
-                ink: STUDIO_INK,
-                muted: STUDIO_MUTED,
-                placeholder: STUDIO_PLACEHOLDER,
-                hairline: STUDIO_HAIRLINE,
-                action_blue: STUDIO_ACTION_BLUE,
-            }
+            de_editor_core::ThemeMode::Light
+        };
+        let p = crate::widgets::home_surface::HomePalette::for_mode(mode);
+        Self {
+            card: p.surface,
+            border: p.border,
+            shadow: p.shadow,
+            search_well: p.surface,
+            search_border: p.border,
+            search_focus_border: p.accent,
+            hover_fill: p.subtle,
+            pressed_fill: p.subtle,
+            selected_fill: p.subtle,
+            ink: p.text_2,
+            selected_ink: p.text,
+            muted: p.text_3,
+            placeholder: p.text_3,
+            hairline: p.border,
+            action_blue: p.accent,
         }
     }
 }
@@ -186,26 +151,6 @@ pub(crate) fn fit_row_text(
     }
 }
 
-/// The qualifier a model row carries as its right-aligned detail
-/// line: the key / plug state for built-in / ACP rows, else the
-/// group's recommended flag on an unfiltered list. (The catalogue
-/// has no context-size field to surface.)
-fn row_qualifier(
-    entry: Option<&ModelEntry>,
-    first_in_group: bool,
-    query_empty: bool,
-    locale: Locale,
-) -> Option<String> {
-    let entry = entry?;
-    if is_builtin(entry) {
-        return Some(de_i18n::translate(locale, "builtin.apiKeyBadge").to_string());
-    }
-    if is_acp(entry) {
-        return Some("ACP".to_string());
-    }
-    (first_in_group && query_empty).then(|| de_i18n::translate(locale, "common.best").to_string())
-}
-
 /// Paint the dropdown card + grouped rows + footer. `selected` is
 /// the index of the active model (gets the filled pill + check),
 /// `hover` / `pressed` the row under the cursor. `rect` is the
@@ -252,7 +197,7 @@ pub fn paint_model_picker(
         let empty = de_i18n::translate(locale, "ai.noModelsFound");
         let layout = TextLayout::single_run(
             empty,
-            "system-ui",
+            crate::widgets::home_surface::SANS,
             12.0,
             (tokens.muted).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -273,15 +218,11 @@ pub fn paint_model_picker(
         cx.backend.save();
         cx.backend.clip_rect(list_rect);
         cx.backend.translate(Point2D::new(0.0, -scroll));
-        let query_empty = normalized_query(search).is_empty();
         walk_rows(models, search, list_rect.origin.y, |row, y, h| match row {
             Row::Header { first_group, label } => {
                 paint_group_header(cx, &tokens, rect, y, *first_group, label);
             }
-            Row::Model {
-                idx,
-                first_in_group,
-            } => {
+            Row::Model { idx } => {
                 paint_model_row(
                     cx,
                     &tokens,
@@ -291,9 +232,6 @@ pub fn paint_model_picker(
                     selected,
                     state.hover,
                     state.pressed,
-                    *first_in_group,
-                    query_empty,
-                    locale,
                     y,
                     h,
                 );
@@ -349,7 +287,7 @@ fn paint_group_header(
         let glyph = character.to_string();
         let layout = TextLayout::single_run(
             &glyph,
-            "system-ui",
+            crate::widgets::home_surface::SANS,
             GROUP_LABEL_SIZE,
             (tokens.muted).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -375,9 +313,6 @@ fn paint_model_row(
     selected: usize,
     hover: Option<usize>,
     pressed: Option<usize>,
-    first_in_group: bool,
-    query_empty: bool,
-    locale: Locale,
     y: f32,
     _h: f32,
 ) {
@@ -407,7 +342,8 @@ fn paint_model_row(
             tokens.muted,
         );
     }
-    let detail = row_qualifier(entry, first_in_group, query_empty, locale);
+    // v2 rows carry the name only; the provider is the group heading.
+    let detail: Option<String> = None;
     let label = fit_row_text(
         cx.backend,
         rect,
@@ -424,8 +360,8 @@ fn paint_model_row(
     let name_weight = if is_selected { 600 } else { 500 };
     let name = TextLayout::single_run(
         &label.name,
-        "system-ui",
-        NAME_SIZE,
+        crate::widgets::home_surface::MONO,
+        NAME_SIZE - 0.5,
         name_color.to_jian(),
         Point2D::new(0.0, 0.0),
     )
@@ -435,7 +371,7 @@ fn paint_model_row(
     if label.detail_w > 0.0 {
         let detail = TextLayout::single_run(
             &label.detail,
-            "system-ui",
+            crate::widgets::home_surface::SANS,
             DETAIL_SIZE,
             (tokens.muted).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -452,7 +388,7 @@ fn paint_model_row(
                 y + (MODEL_ROW_H - CHECK_SIZE) / 2.0,
             ),
             CHECK_SIZE,
-            tokens.selected_ink,
+            tokens.action_blue,
             1.7,
         );
     }
@@ -506,7 +442,7 @@ fn paint_search_row(
         let placeholder = de_i18n::translate(locale, "ai.searchModels");
         let layout = TextLayout::single_run(
             placeholder,
-            "system-ui",
+            crate::widgets::home_surface::SANS,
             12.0,
             (tokens.placeholder).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -550,19 +486,19 @@ fn paint_footer_row(cx: &mut PaintCx<'_>, tokens: &PickerTokens, rect: Rect, loc
             top + (MODEL_FOOTER_H - FOOTER_GLYPH) / 2.0,
         ),
         FOOTER_GLYPH,
-        tokens.action_blue,
+        tokens.ink,
         1.6,
     );
-    let label = de_i18n::translate(locale, "home.connectMoreModels");
+    let label = de_i18n::translate(locale, "home.model.addProvider");
     let row = Rect {
         origin: Point2D::new(rect.origin.x, top),
         size: Point2D::new(rect.size.x, MODEL_FOOTER_H),
     };
     let layout = TextLayout::single_run(
         label,
-        "system-ui",
-        12.0,
-        (tokens.action_blue).to_jian(),
+        crate::widgets::home_surface::SANS,
+        12.5,
+        (tokens.ink).to_jian(),
         Point2D::new(0.0, 0.0),
     )
     .with_font_weight(500);

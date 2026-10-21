@@ -15,7 +15,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.action.start" => "Crear sesión",
         "collab.action.join" => "Unirse a una sesión",
         "collab.home.hint" => "Crea una sesión nueva o únete con una invitación.",
-        "home.connectMoreModels" => "Connect more models…",
         "settings.mcp.agents" => "Agentes",
         "settings.mcp.agentsHint" => "Configurar escribe el archivo de configuración del agente. Despliega una fila para ver el fragmento manual.",
         "settings.mcp.showMore" => "Mostrar {{count}} agentes más",

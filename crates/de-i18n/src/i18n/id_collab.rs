@@ -15,7 +15,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.action.start" => "Buat sesi",
         "collab.action.join" => "Gabung sesi",
         "collab.home.hint" => "Buat sesi baru atau bergabung dengan undangan.",
-        "home.connectMoreModels" => "Connect more models…",
         "settings.mcp.agents" => "Agen",
         "settings.mcp.agentsHint" => "Siapkan menulis file konfigurasi agen. Bentangkan baris untuk cuplikan manual.",
         "settings.mcp.showMore" => "Tampilkan {{count}} agen lagi",

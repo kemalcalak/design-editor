@@ -15,7 +15,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.action.start" => "建立工作階段",
         "collab.action.join" => "加入工作階段",
         "collab.home.hint" => "建立新工作階段，或使用邀請加入。",
-        "home.connectMoreModels" => "接入更多模型…",
         "settings.mcp.agents" => "Agent",
         "settings.mcp.agentsHint" => "設定會寫入該 agent 的設定檔。展開一列可查看手動設定片段。",
         "settings.mcp.showMore" => "再顯示 {{count}} 個 agent",

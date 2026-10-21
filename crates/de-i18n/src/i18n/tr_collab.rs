@@ -15,7 +15,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.action.start" => "Oturum oluştur",
         "collab.action.join" => "Oturuma katıl",
         "collab.home.hint" => "Yeni bir oturum oluşturun veya davetle katılın.",
-        "home.connectMoreModels" => "Connect more models…",
         "settings.mcp.agents" => "Agent'lar",
         "settings.mcp.agentsHint" => "Kur, agent'ın yapılandırma dosyasını yazar. Elle eklemek için satırı açın.",
         "settings.mcp.showMore" => "{{count}} agent daha göster",

@@ -73,7 +73,7 @@ enum Row {
         label: String,
     },
     /// Selectable model — carries its index into the flat list.
-    Model { idx: usize, first_in_group: bool },
+    Model { idx: usize },
 }
 
 fn normalized_query(search: &str) -> String {
@@ -166,15 +166,8 @@ fn walk_rows(models: &[ModelEntry], search: &str, top: f32, mut f: impl FnMut(&R
             MODEL_GROUP_H,
         );
         y += MODEL_GROUP_H;
-        for (group_row, idx) in group.into_iter().enumerate() {
-            f(
-                &Row::Model {
-                    idx,
-                    first_in_group: group_row == 0,
-                },
-                y,
-                MODEL_ROW_H,
-            );
+        for idx in group {
+            f(&Row::Model { idx }, y, MODEL_ROW_H);
             y += MODEL_ROW_H;
         }
     }

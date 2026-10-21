@@ -15,7 +15,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.action.start" => "セッションを作成",
         "collab.action.join" => "セッションに参加",
         "collab.home.hint" => "新しいセッションを作成するか、招待で参加します。",
-        "home.connectMoreModels" => "Connect more models…",
         "settings.mcp.agents" => "エージェント",
         "settings.mcp.agentsHint" => "設定するとエージェントの設定ファイルに書き込みます。行を展開すると手動用のスニペットを表示します。",
         "settings.mcp.showMore" => "さらに {{count}} 件のエージェントを表示",

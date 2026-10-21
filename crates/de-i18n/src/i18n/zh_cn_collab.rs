@@ -15,7 +15,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.action.start" => "创建会话",
         "collab.action.join" => "加入会话",
         "collab.home.hint" => "创建新会话，或使用邀请码加入。",
-        "home.connectMoreModels" => "接入更多模型…",
         "settings.mcp.agents" => "Agent",
         "settings.mcp.agentsHint" => "设置会写入该 agent 的配置文件。展开一行可查看手动配置片段。",
         "settings.mcp.showMore" => "再显示 {{count}} 个 agent",

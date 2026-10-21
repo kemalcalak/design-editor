@@ -7,7 +7,6 @@
 //! primary tint.
 
 use crate::theme::Theme;
-use crate::widgets::editor_state_ext::theme_for;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Point2D, Rect};
 use de_editor_core::editor_ui_state::EditorUiState;
@@ -32,7 +31,9 @@ impl LocalePicker {
     pub fn for_editor_ui(ui: &EditorUiState) -> Self {
         Self {
             id: WidgetId::new(5100),
-            theme: theme_for(ui),
+            // Home's v2 tokens, so the menu matches Home and Settings in
+            // both the Home top bar and the editor TopBar.
+            theme: crate::widgets::home_surface::settings_theme(ui.effective_theme_mode()),
             selected: ui.effective_locale(),
             state: ui.locale_picker.clone(),
         }
