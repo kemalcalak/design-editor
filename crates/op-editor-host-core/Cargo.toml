@@ -28,6 +28,9 @@ thiserror = { workspace = true }
 # `settings-io` only: the desktop settings-file location. NOT wasm32-clean —
 # the feature must stay out of the browser bundle's graph.
 dirs = { version = "5", optional = true }
+# `settings-io` only: the OS preferred-language list for the first-run
+# locale (Dock-launched macOS apps get no LANG / LC_*).
+sys-locale = { version = "0.3", optional = true }
 
 [features]
 default = ["chat", "codegen", "design"]
@@ -47,6 +50,7 @@ design = ["dep:op-orchestrator"]
 # (mobile shells), never by the browser host.
 settings-io = [
   "dep:dirs",
+  "dep:sys-locale",
   "dep:op-config-store",
   "dep:op-i18n",
   "dep:serde_json",

@@ -631,14 +631,10 @@ fn save_refused_for(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-/// Seed the first-run locale through the shared i18n environment resolver.
-///
-/// `Locale::from_environment` owns POSIX precedence and parsing semantics, so
-/// desktop and web-server startup cannot drift from the translation layer.
+/// Seed the first-run locale from the host system (environment, then the
+/// OS preferred languages, then English); see [`crate::system_locale`].
 fn seed_system_locale(state: &mut EditorState) {
-    if let Some(locale) = Locale::from_environment() {
-        state.editor_ui.locale = locale;
-    }
+    state.editor_ui.locale = crate::system_locale::detect();
 }
 
 /// Persist settings and report any failure to the caller.

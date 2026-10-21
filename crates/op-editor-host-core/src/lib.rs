@@ -18,3 +18,5 @@ pub mod settings_io;
 #[cfg(feature = "settings-io")]
 pub mod settings_io_error;
 pub mod settings_payload;
+#[cfg(feature = "settings-io")]
+pub mod system_locale;
