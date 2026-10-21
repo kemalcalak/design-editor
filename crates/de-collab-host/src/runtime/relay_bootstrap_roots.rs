@@ -4,9 +4,11 @@ use ed25519_dalek::VerifyingKey;
 
 use super::{canonical_ed25519_key, decode_fixed, valid_key_id, BootstrapError};
 
-pub(super) const LEGACY_BUILTIN_ROOT_KID: &str = "design-editor-collab-union-root-v2";
+// NOTE: the key ids keep their pre-rebrand spelling: the signed fixtures in
+// the bootstrap tests carry them and cannot be re-signed without the roots.
+pub(super) const LEGACY_BUILTIN_ROOT_KID: &str = "openpencil-collab-union-root-v2";
 pub(super) const LEGACY_BUILTIN_ROOT_X: &str = "5SVj-_jnJbuZlpDoD3M9x1eZAPDFLSq5jRb-c0xUh5A";
-pub(super) const CURRENT_BUILTIN_ROOT_KID: &str = "design-editor-collab-bootstrap-root-v2";
+pub(super) const CURRENT_BUILTIN_ROOT_KID: &str = "openpencil-collab-bootstrap-root-v2";
 pub(super) const CURRENT_BUILTIN_ROOT_X: &str = "2pPo4zN_Az7leTslTYWUkO-hyNjd_hZx83f6h_vUGAY";
 const LEGACY_BUILTIN_ROOT_MAX_GENERATION: u64 = 2;
 const CURRENT_BUILTIN_ROOT_MIN_GENERATION: u64 = 3;

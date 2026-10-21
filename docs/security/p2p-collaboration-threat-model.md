@@ -174,8 +174,8 @@ value, and an owner may still pin
 overrides the preference. A guest obtains its home region only from the
 signed invite or the region-tagged pairing code. During the emergency
 transition the embedded bootstrap root set contains the legacy
-`design-editor-collab-union-root-v2` key and the independent
-`design-editor-collab-bootstrap-root-v2` key. The envelope `kid` selects exactly
+`openpencil-collab-union-root-v2` key and the independent
+`openpencil-collab-bootstrap-root-v2` key. The envelope `kid` selects exactly
 one of them before signature verification. The legacy root is authorized only
 through bootstrap generation 2, while the successor root is authorized from
 generation 3 onward. An unknown id, a signature made by the other root, or a
@@ -188,7 +188,7 @@ re-encoding. Payload, signature, and public-key fields use unpadded canonical
 base64url. The signature is Ed25519 over:
 
 ```text
-"design-editor/de-hub/collaboration-bootstrap/v1\0" ||
+"openpencil/op-hub/collaboration-bootstrap/v1\0" ||
 canonical_payload_json_bytes
 ```
 

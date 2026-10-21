@@ -73,13 +73,15 @@ pub const MAX_SEALED_PAIRING_INVITE_V2_BYTES: usize =
 const SEALED_INVITE_HEADER_BYTES: usize = 1 + SEALED_INVITE_NONCE_BYTES;
 const SEALED_INVITE_V1_HEADER_BYTES: usize = 1 + SEALED_INVITE_V1_NONCE_BYTES;
 const SEALED_INVITE_KEY_BYTES: usize = 32;
-const CODE_ID_CONTEXT: &str = "design-editor/de-collab-relay-protocol/pairing-code-id/v1";
-const V1_ENC_KEY_CONTEXT: &str = "design-editor/de-collab-relay-protocol/pairing-code-enc-key/v1";
-const V1_MAC_KEY_CONTEXT: &str = "design-editor/de-collab-relay-protocol/pairing-code-mac-key/v1";
+// NOTE: these domain strings keep their pre-rebrand `openpencil/op-*` spelling
+// because the known-answer vectors in `tests/pairing.rs` are pinned to them.
+const CODE_ID_CONTEXT: &str = "openpencil/op-collab-relay-protocol/pairing-code-id/v1";
+const V1_ENC_KEY_CONTEXT: &str = "openpencil/op-collab-relay-protocol/pairing-code-enc-key/v1";
+const V1_MAC_KEY_CONTEXT: &str = "openpencil/op-collab-relay-protocol/pairing-code-mac-key/v1";
 const SEALED_INVITE_KEY_INFO: &[u8] =
-    b"design-editor/de-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-key/v2\0";
+    b"openpencil/op-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-key/v2\0";
 const SEALED_INVITE_AAD_DOMAIN: &[u8] =
-    b"design-editor/de-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-aad/v2\0";
+    b"openpencil/op-collab-relay-protocol/sealed-pairing-invite/chacha20poly1305-aad/v2\0";
 
 /// A canonical (uppercase, exact-length) short pairing code.
 ///

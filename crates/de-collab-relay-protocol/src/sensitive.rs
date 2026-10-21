@@ -5,7 +5,9 @@ use zeroize::Zeroize;
 
 use crate::RelayProtocolError;
 
-const ROUTE_MAP_KEY_CONTEXT: &str = "design-editor/de-collab-relay-protocol/route-map-key/v1";
+// NOTE: pre-rebrand `openpencil/op-*` spelling kept; known-answer vectors in
+// `tests/` are pinned to it (see `pairing.rs`).
+const ROUTE_MAP_KEY_CONTEXT: &str = "openpencil/op-collab-relay-protocol/route-map-key/v1";
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RouteId([u8; 16]);

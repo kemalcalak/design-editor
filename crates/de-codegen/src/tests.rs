@@ -274,7 +274,7 @@ fn html_motion_export_matches_the_golden_css() {
     .value;
     let html = Html.generate(&doc);
     let expected = concat!(
-        "@keyframes op-hero-0 {\n",
+        "@keyframes de-hero-0 {\n",
         "  0% {\n",
         "    opacity: 0;\n",
         "    transform: translate(0px, 16px);\n",
@@ -284,7 +284,7 @@ fn html_motion_export_matches_the_golden_css() {
         "    transform: translate(0px, 0px);\n",
         "  }\n",
         "}\n",
-        "@keyframes op-card-0 {\n",
+        "@keyframes de-card-0 {\n",
         "  0% {\n",
         "    opacity: 0;\n",
         "    transform: translate(0px, 12px);\n",
