@@ -93,10 +93,10 @@ fn collect_app_images_matches_the_packaged_appimage_name() {
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).expect("create dir");
     // `scripts/package-appimage.sh` emits `Design-Editor-<v>-<arch>-linux.AppImage`.
-    let packaged = dir.join("Design-Editor-0.1.0-x64-linux.AppImage");
+    let packaged = dir.join("Design-Editor-1.0.0-x64-linux.AppImage");
     fs::write(&packaged, b"").expect("write packaged appimage");
-    fs::write(dir.join("Design Editor-0.1.0.AppImage"), b"").expect("write stale name");
-    fs::write(dir.join("Design-Editor-0.1.0-x64-linux.tar.gz"), b"").expect("write archive");
+    fs::write(dir.join("Design Editor-1.0.0.AppImage"), b"").expect("write stale name");
+    fs::write(dir.join("Design-Editor-1.0.0-x64-linux.tar.gz"), b"").expect("write archive");
 
     let mut candidates = Vec::new();
     collect_app_images(&dir, &mut candidates);
