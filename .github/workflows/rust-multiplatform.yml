@@ -1,6 +1,6 @@
 name: Rust multi-platform build
 
-# Builds the OpenPencil Rust workspace across all supported targets.
+# Builds the Design Editor Rust workspace across all supported targets.
 # Runs on every push/PR to verify the matrix stays green; release artifacts
 # are produced by `rust-release.yml` on tag pushes.
 
@@ -176,11 +176,11 @@ jobs:
         if: matrix.cross == false && matrix.check_only != true && runner.os == 'Windows'
         run: cargo test --workspace --target ${{ matrix.target }} --doc
       # Desktop binary artifact upload is intentionally not wired here yet.
-      # The real desktop binary lives in the `op-host-desktop` crate; a
+      # The real desktop binary lives in the `de-host-desktop` crate; a
       # build + upload step can be added once release packaging is finalized.
 
   wasm-web:
-    name: wasm32-unknown-unknown / op-host-web (compile guard)
+    name: wasm32-unknown-unknown / de-host-web (compile guard)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -199,7 +199,7 @@ jobs:
       # bundle deps. The real deployable renderer is built in
       # wasm-bundle-build.yml with the `canvaskit` feature and the
       # tools/check-wasm-bundle.sh gate.
-      - run: cargo build -p op-host-web --target wasm32-unknown-unknown --release --no-default-features --features web
+      - run: cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features web
       # Artifact upload deliberately removed: the stub `.wasm` from this
       # path would mislead downstream consumers into thinking the shell can
       # render. The deployable artifact is uploaded by wasm-bundle-build.yml.
@@ -264,7 +264,7 @@ jobs:
               echo "CXX_aarch64_linux_android=$CXX" >> "$GITHUB_ENV"
               echo "AR_aarch64_linux_android=$TOOLCHAIN/llvm-ar" >> "$GITHUB_ENV"
               echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$CC" >> "$GITHUB_ENV"
-              # rquickjs-sys (op-mcp `script`, via the editor design pipeline)
+              # rquickjs-sys (de-mcp `script`, via the editor design pipeline)
               # runs bindgen at build time on Android; bindgen's libclang
               # reads neither CC nor CFLAGS, so hand it target + sysroot or it
               # parses QuickJS headers against the host sysroot.
@@ -285,18 +285,18 @@ jobs:
           test -x "$CXX"
           test -x "$TOOLCHAIN/llvm-ar"
       # Step 1a spec §11 mobile invariants verify on iOS / Android cargo check:
-      # - op-editor-ui wasm32/ios/android-clean (no platform deps) — the
+      # - de-editor-ui wasm32/ios/android-clean (no platform deps) — the
       #   widget facade / editor-UI composition crate.
-      # - op-host-native compiles on mobile targets with EaglProvider /
+      # - de-host-native compiles on mobile targets with EaglProvider /
       #   AndroidEglProvider stubs (`unimplemented!("Step 1f")`); desktop GL
       #   stack (glutin / winit) is target-gated to desktop in Cargo.toml +
       #   GlutinProvider source is cfg-gated to desktop OS only. Real SDK
       #   linking and iOS/Android runtime is Step 1f.
-      # - op-engine-ffi (the player C ABI) + op-engine-jni (Android JNI
+      # - de-engine-ffi (the player C ABI) + de-engine-jni (Android JNI
       #   marshalling) compile on every mobile target with the platform GPU
       #   feature plus the full editor integration exercised by the mobile
       #   shells (metal,editor on iOS; gl,editor on Android).
-      - run: cargo check -p op-editor-ui --target ${{ matrix.target }}
-      - run: cargo check -p op-host-native --target ${{ matrix.target }}
-      - run: cargo check -p op-engine-ffi --target ${{ matrix.target }} --features ${{ matrix.features }}
-      - run: cargo check -p op-engine-jni --target ${{ matrix.target }} --features ${{ matrix.features }}
+      - run: cargo check -p de-editor-ui --target ${{ matrix.target }}
+      - run: cargo check -p de-host-native --target ${{ matrix.target }}
+      - run: cargo check -p de-engine-ffi --target ${{ matrix.target }} --features ${{ matrix.features }}
+      - run: cargo check -p de-engine-jni --target ${{ matrix.target }} --features ${{ matrix.features }}
