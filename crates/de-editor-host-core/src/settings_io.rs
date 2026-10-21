@@ -145,7 +145,6 @@ pub fn save_if_changed(state: &EditorState, before: Fingerprint) {
 }
 
 const SETTINGS_VERSION: u32 = 1;
-const APP_DIR: &str = "design-editor";
 const FILE_NAME: &str = "settings.json";
 static SETTINGS_TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 /// Settings paths whose file existed but did not parse at startup. Every
@@ -217,8 +216,7 @@ struct SettingsPayload {
 /// app-sandbox directory through `de_config_store::configure_user_root`
 /// before engine construction; `settings.json` then lives next to the
 /// other per-user config files in that root. Desktop never configures an
-/// explicit root and keeps the platform config directory, so existing
-/// installs do not move.
+/// explicit root and uses the platform config directory.
 fn settings_path() -> Option<PathBuf> {
     if let Some(root) = de_config_store::configured_user_root() {
         return Some(root.join(FILE_NAME));
@@ -227,9 +225,7 @@ fn settings_path() -> Option<PathBuf> {
         return Some(sandbox.join(FILE_NAME));
     }
     let base = dirs::config_dir()?;
-    // One-time rebrand migration: copy the pre-rename file when the new one is missing.
-    let _ = de_config_store::migrate_legacy_config_file(&base, APP_DIR, FILE_NAME);
-    Some(base.join(APP_DIR).join(FILE_NAME))
+    Some(base.join(de_config_store::APP_DIR).join(FILE_NAME))
 }
 
 /// A cargo test binary (`target/…/deps/<crate>-<hash>`) never touches the

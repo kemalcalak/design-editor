@@ -10,13 +10,6 @@ use std::io::{Error, ErrorKind, Write};
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-mod legacy_migration;
-
-pub use legacy_migration::{
-    migrate_legacy_config_file, migrate_legacy_dir, LEGACY_APP_DIR, LEGACY_DIR_NAME,
-    LEGACY_LIVE_MCP_PORT,
-};
-
 /// Process-wide config root. First resolution wins so a late mobile
 /// reconfiguration cannot split state between HOME and the app sandbox.
 static USER_ROOT_OVERRIDE: OnceLock<PathBuf> = OnceLock::new();
@@ -32,6 +25,11 @@ static EXPLICIT_USER_ROOT: OnceLock<PathBuf> = OnceLock::new();
 /// against a caller-supplied `$HOME`); everything else should go
 /// through [`design_editor_dir`].
 pub const DESIGN_EDITOR_DIR_NAME: &str = ".design-editor";
+
+/// Name of the app's directory under the platform config directory
+/// (`<config dir>/design-editor`). Shared by every host-side store
+/// (settings, window state, theme presets, UI kits).
+pub const APP_DIR: &str = "design-editor";
 
 /// Environment variables shared across Design Editor processes.
 pub mod env_vars {
@@ -195,10 +193,6 @@ fn default_design_editor_dir() -> std::io::Result<PathBuf> {
     }
     let home = home_dir()?;
     let default = home.join(DESIGN_EDITOR_DIR_NAME);
-    // One-time rebrand migration: copy `~/.openpencil` to the new directory
-    // when the new one does not exist yet. Best effort and copy-only — a
-    // failure must never block startup, and the old tree is left untouched.
-    let _ = migrate_legacy_dir(&home.join(LEGACY_DIR_NAME), &default);
     Ok(install_user_root(&USER_ROOT_OVERRIDE, default)?.to_path_buf())
 }
 

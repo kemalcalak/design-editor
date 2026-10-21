@@ -27,7 +27,6 @@ use de_editor_core::theme_presets::{
 use de_editor_core::EditorState;
 use de_host_native::WidgetHostNative;
 
-const APP_DIR: &str = "design-editor";
 const FILE_NAME: &str = "theme-presets.json";
 
 /// Resolve the platform-specific store path. `None` when no usable
@@ -35,10 +34,7 @@ const FILE_NAME: &str = "theme-presets.json";
 /// contract as kit_persistence.rs).
 fn store_path() -> Option<PathBuf> {
     let base = dirs::config_dir()?;
-    // One-time rebrand migration: copy the pre-rename file when the new one is missing.
-    #[cfg(not(test))]
-    let _ = de_config_store::migrate_legacy_config_file(&base, APP_DIR, FILE_NAME);
-    Some(base.join(APP_DIR).join(FILE_NAME))
+    Some(base.join(de_config_store::APP_DIR).join(FILE_NAME))
 }
 
 /// Hydrate the preset list at startup (TS `hydrate()` — tolerant of

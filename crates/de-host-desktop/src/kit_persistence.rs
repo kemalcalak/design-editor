@@ -30,7 +30,6 @@ use de_editor_core::{ComponentCategory, EditorState};
 use crate::kit_persistence_error::KitStoreError;
 use serde::{Deserialize, Serialize};
 
-const APP_DIR: &str = "design-editor";
 const FILE_NAME: &str = "uikits.json";
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,10 +69,7 @@ struct PersistedComponent {
 /// config base exists — load/save become silent no-ops.
 fn store_path() -> Option<PathBuf> {
     let base = dirs::config_dir()?;
-    // One-time rebrand migration: copy the pre-rename file when the new one is missing.
-    #[cfg(not(test))]
-    let _ = de_config_store::migrate_legacy_config_file(&base, APP_DIR, FILE_NAME);
-    Some(base.join(APP_DIR).join(FILE_NAME))
+    Some(base.join(de_config_store::APP_DIR).join(FILE_NAME))
 }
 
 // ---------------------------------------------------------------------------
