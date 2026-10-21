@@ -22,8 +22,10 @@ pub enum Locale {
 }
 
 impl Locale {
-    /// All locales in the UI picker order.
+    /// All locales in the UI picker order: Turkish first, then English
+    /// (the default UI language) and the rest.
     pub const ALL: [Locale; 15] = [
+        Locale::Tr,
         Locale::EnUs,
         Locale::ZhCn,
         Locale::ZhTw,
@@ -35,7 +37,6 @@ impl Locale {
         Locale::Pt,
         Locale::Ru,
         Locale::Hi,
-        Locale::Tr,
         Locale::Th,
         Locale::Vi,
         Locale::Id,
