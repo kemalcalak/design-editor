@@ -129,7 +129,7 @@ fn authenticated_tool_call_is_served() {
     assert!(!response.contains("-32001"), "{response}");
 }
 
-/// The `op` CLI's exact wire shape: no `Origin` (not a browser) and a bare
+/// The `de` CLI's exact wire shape: no `Origin` (not a browser) and a bare
 /// `Host: 127.0.0.1` with no port
 /// (`de_rpc_transport::TcpJsonRpc::http_post_request`). It must keep
 /// working with the token it is handed by the discovery file.
@@ -212,7 +212,7 @@ fn non_loopback_or_wrong_port_host_is_refused() {
     assert!(!host_allowed(None, PORT), "a missing Host is refused");
 }
 
-/// The identity probes stay tokenless on purpose: `op` discovers this
+/// The identity probes stay tokenless on purpose: `de` discovers this
 /// instance by pinging it and matching the reply's token against the
 /// discovery file. Gating `ping` would break discovery for every CLI.
 #[test]

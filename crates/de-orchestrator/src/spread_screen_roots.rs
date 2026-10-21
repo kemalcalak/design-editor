@@ -8,7 +8,7 @@
 //! "Saved Places" are three CLEAN top-level frames, each with exactly one
 //! bottom nav and correct internal structure — but all three carry
 //! `x: None, y: None`. Every unpositioned root resolves to the SAME (0, 0)
-//! origin (`op layout` on the raw file confirms all three land at
+//! origin (`de layout` on the raw file confirms all three land at
 //! `x=0, y=0`), so on the infinite canvas they render on top of each
 //! other. Because the three screens have different total heights
 //! (864 / 844 / 1155), each one's OWN bottom nav lands at a different

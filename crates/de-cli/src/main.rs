@@ -1,5 +1,5 @@
 //! `de` - the Design Editor CLI.
-//! Keeps common TS `de` aliases while preserving low-level `op <tool> key=value`.
+//! Keeps common TS `de` aliases while preserving low-level `de <tool> key=value`.
 
 use std::collections::BTreeMap;
 

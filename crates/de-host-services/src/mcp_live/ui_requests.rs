@@ -156,7 +156,7 @@ pub(super) fn make_live_token() -> String {
 }
 
 /// Live `ping` reply: Design Editor identity + `mode:"live"` + the instance
-/// token, so `op` can distinguish this live canvas server from the
+/// token, so `de` can distinguish this live canvas server from the
 /// headless file server and confirm it owns the discovery file. The
 /// identity rides in `_meta` — the MCP spec's extension point — because
 /// strict clients validate a ping result as exactly `{ _meta? }` and

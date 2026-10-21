@@ -523,7 +523,7 @@ pub(super) fn dispatch<S: Read + Write>(
         // out from under the peers.
         let policy = guard.collab_policy();
         let mut refused: Option<de_editor_core::CollabGateReason> = None;
-        // Mechanical passthrough only — this daemon (`--serve-web`/`op
+        // Mechanical passthrough only — this daemon (`--serve-web`/`de
         // start`) is a SEPARATE request loop from `mcp_live.rs`'s
         // `McpLiveServer` (desktop `--live-mcp`), not the same struct;
         // wiring canvas-generation indicators here (so a `batch_design`

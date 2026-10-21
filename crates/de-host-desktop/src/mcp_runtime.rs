@@ -217,7 +217,7 @@ impl DesktopApp {
     }
 
     /// Publish (or retract) the live MCP server's port to the TS-compatible
-    /// discovery file `~/.design-editor/.de-mcp-port` so the `op` CLI can find this
+    /// discovery file `~/.design-editor/.de-mcp-port` so the `de` CLI can find this
     /// editor's on-screen canvas. Called from the app lifecycle (after the
     /// launch bootstrap and after a settings-driven reconcile), NOT from
     /// `reconcile_mcp_server_from_settings` itself — keeping reconcile free

@@ -1,4 +1,4 @@
-//! `de page ...`, `de vars:set` / `themes:set`, and `op theme:*` command
+//! `de page ...`, `de vars:set` / `themes:set`, and `de theme:*` command
 //! mappers — split out of `main.rs` per the 800-line-cap convention. Pure
 //! arg → `Command` mapping; the shared helpers stay in `main.rs`.
 

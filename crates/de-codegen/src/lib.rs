@@ -3,7 +3,7 @@
 //! which emits the design's variable table as CSS custom properties.
 //! Future generators (React + Tailwind, HTML, Vue, Svelte, Flutter,
 //! SwiftUI, Compose, React Native) live behind the same `Codegen`
-//! trait so a single dispatcher (eventually a `op codegen <target>`
+//! trait so a single dispatcher (eventually a `de codegen <target>`
 //! CLI) can fan out by target enum.
 //!
 //! All generators consume the canonical `jian_ops_schema::PenDocument`

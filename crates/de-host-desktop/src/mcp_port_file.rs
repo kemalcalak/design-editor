@@ -1,4 +1,4 @@
-//! Writes `~/.design-editor/.de-mcp-port` so the Rust `op` CLI can discover
+//! Writes `~/.design-editor/.de-mcp-port` so the Rust `de` CLI can discover
 //! this running editor's live MCP server.
 //!
 //! This is a SEPARATE file from the TS app's `~/.design-editor/.port` because

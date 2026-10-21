@@ -1,4 +1,4 @@
-//! Alias → `Command` mappers for the `op` CLI.
+//! Alias → `Command` mappers for the `de` CLI.
 //!
 //! `command_from_positionals` in `main.rs` routes each TS-compatible
 //! alias here; every mapper turns positionals + flags into a `Command`.

@@ -57,7 +57,7 @@ const MCP_CLIENT_COLOR: &str = "#8A8F98";
 pub struct McpLiveServer {
     port: u16,
     /// Per-instance identity token, reported in the live `ping` reply and
-    /// written into `~/.design-editor/.de-mcp-port`. Lets the `op` CLI confirm
+    /// written into `~/.design-editor/.de-mcp-port`. Lets the `de` CLI confirm
     /// the server it pings is the exact instance that wrote the discovery
     /// file (defeats stale-file / port-reuse / pid-recycle confusion).
     token: String,

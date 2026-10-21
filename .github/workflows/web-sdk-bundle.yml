@@ -2,7 +2,7 @@ name: de-web-sdk bundle build + size gate
 
 # Builds the de-web-sdk WASM package (canvaskit feature), asserts 0 env.*
 # imports and gzip size <= 6 MiB (this viewer bundle's own measured tripwire —
-# 5 200 519 bytes + ~20% headroom), then uploads pkg/ as the `op-web-sdk-bundle`
+# 5 200 519 bytes + ~20% headroom), then uploads pkg/ as the `de-web-sdk-bundle`
 # artifact.  This is the CI counterpart of the local
 # `crates/de-web-sdk/tools/build-wasm.sh` developer gate.
 #
@@ -104,10 +104,10 @@ jobs:
       - name: Build + size-gate the de-web-sdk bundle
         run: bash crates/de-web-sdk/tools/build-wasm.sh
 
-      - name: Upload op-web-sdk-bundle artifact
+      - name: Upload de-web-sdk-bundle artifact
         uses: actions/upload-artifact@v4
         with:
-          name: op-web-sdk-bundle
+          name: de-web-sdk-bundle
           # Upload the full wasm-pack output directory: wasm + JS glue + .d.ts.
           path: crates/de-web-sdk/pkg
           if-no-files-found: error

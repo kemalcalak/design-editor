@@ -465,7 +465,7 @@ fn initial_file_from_argv() -> Option<PathBuf> {
 
 /// Default port for the live MCP server when `--live-mcp` is passed
 /// without an explicit port. Mirrors the TS `pen-mcp` default (3100)
-/// and the `op` CLI default so the CLI finds the editor out of the box.
+/// and the `de` CLI default so the CLI finds the editor out of the box.
 const DEFAULT_LIVE_MCP_PORT: u16 = 3100;
 
 /// Parse `--live-mcp` / `--live-mcp=<port>` / `--live-mcp <port>` from

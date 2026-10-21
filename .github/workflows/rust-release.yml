@@ -24,8 +24,8 @@ name: Rust release artifacts
 #
 # The `build` job builds the real `de-host-desktop` crate (winit + skia-safe
 # runner that drives the Rust editor); its shipped executable keeps the
-# stable `design-editor` name. The `op` CLI (crates/de-cli, binary name
-# `op`) is built in the same cargo invocation. The web Docker job builds the
+# stable `design-editor` name. The `de` CLI (crates/de-cli, binary name
+# `de`) is built in the same cargo invocation. The web Docker job builds the
 # Rust web host from `Dockerfile.web-rust`, and the SDK job packages the
 # wasm-backed `packages/de-web-sdk*` workspace tarballs.
 #
@@ -360,7 +360,7 @@ jobs:
           DESIGN_EDITOR_TARGET: ${{ matrix.target }}
           # Hand the already-built binaries to the bundle script: it skips its
           # own cargo build and overwrites the bundled executable with exactly
-          # what this workflow built (and embeds the op CLI in Contents/MacOS).
+          # what this workflow built (and embeds the de CLI in Contents/MacOS).
           DESIGN_EDITOR_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/design-editor
           DESIGN_EDITOR_CLI_BINARY: ${{ github.workspace }}/target/${{ matrix.target }}/release/de
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}

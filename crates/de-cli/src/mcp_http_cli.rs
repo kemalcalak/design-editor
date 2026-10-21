@@ -108,7 +108,7 @@ fn post_raw(
 ) -> Result<(u16, String), CliError> {
     // `de_rpc_transport::HttpTransportError` is the transport's own typed
     // failure domain; flatten it into the CLI's `Transport` variant, whose
-    // payload is the exact sentence `op:` prints.
+    // payload is the exact sentence `de:` prints.
     TcpJsonRpc::local_mcp(port)
         .with_token(token)
         .post_raw(body, timeout)
@@ -121,7 +121,7 @@ fn post_raw(
 /// service, or a 500 from a failed live UI request) is an error. The MCP
 /// `tools/call` content envelope is unwrapped to the raw tool result, and an
 /// `isError` tool result (or a JSON-RPC transport error) is surfaced as an
-/// error — so `op` exits non-zero on a failed tool, like the TS CLI.
+/// error — so `de` exits non-zero on a failed tool, like the TS CLI.
 pub(crate) fn post(port: u16, token: &str, body: &str) -> Result<String, CliError> {
     let (status, reply) = post_raw(port, token, body, POST_TIMEOUT)?;
     if !(200..300).contains(&status) {

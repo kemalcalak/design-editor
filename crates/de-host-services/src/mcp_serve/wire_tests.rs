@@ -8,7 +8,7 @@ use super::*;
 
 #[test]
 fn ping_response_carries_design_editor_identity_marker() {
-    // The `op` CLI keys discovery on this marker; if it ever changes,
+    // The `de` CLI keys discovery on this marker; if it ever changes,
     // CLI `mcp_ping` must change in lockstep. No token ⇒ no `mode`/`token`.
     let resp = ping_response("7", None);
     assert!(resp.contains(r#""server":"design-editor-mcp""#), "{resp}");
