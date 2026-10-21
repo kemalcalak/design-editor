@@ -140,7 +140,7 @@ fn complex_svg_fill_uses_raster_cache_after_first_paint() {
 
 #[test]
 fn native_mesh_gradient_is_actually_interpolated_not_flat() {
-    // PROOF (native op-host path): render a 2x2 R/G/B/Y mesh onto a raster
+    // PROOF (native de-host path): render a 2x2 R/G/B/Y mesh onto a raster
     // surface and read pixels back. Corners must read pure; the centre must
     // be an interpolated blend distinct from every corner. A first-vertex
     // solid fallback would paint the whole rect one colour.

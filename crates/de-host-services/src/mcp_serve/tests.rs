@@ -759,7 +759,7 @@ fn export_frames_writes_one_image_per_top_level_frame() {
         });
     }
 
-    let directory = std::env::temp_dir().join("op-mcp-export-frames-test");
+    let directory = std::env::temp_dir().join("de-mcp-export-frames-test");
     let _ = std::fs::remove_dir_all(&directory);
     let mut args = BTreeMap::new();
     args.insert("outputDir".to_string(), directory.display().to_string());

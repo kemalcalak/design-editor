@@ -234,7 +234,7 @@ fn seed(host: &mut WidgetHost, json: &str) {
 
 fn run_deep_layer_fixture(test: impl FnOnce() + Send + 'static) {
     let handle = std::thread::Builder::new()
-        .name("op-host-web-deep-layer-fixture".into())
+        .name("de-host-web-deep-layer-fixture".into())
         .stack_size(64 * 1024 * 1024)
         .spawn(test)
         .expect("spawn deep layer fixture test");

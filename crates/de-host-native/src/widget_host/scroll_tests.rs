@@ -24,7 +24,7 @@ fn seed(host: &mut WidgetHostNative, json: &str) {
 
 fn run_deep_layer_fixture(test: impl FnOnce() + Send + 'static) {
     let handle = std::thread::Builder::new()
-        .name("op-host-native-deep-layer-fixture".into())
+        .name("de-host-native-deep-layer-fixture".into())
         .stack_size(64 * 1024 * 1024)
         .spawn(test)
         .expect("spawn deep layer fixture test");

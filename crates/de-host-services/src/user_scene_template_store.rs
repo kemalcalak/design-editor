@@ -18,7 +18,7 @@ const TEMPLATES_DIR: &str = "templates";
 #[cfg(test)]
 fn guard_user_config() {
     let root = std::env::temp_dir().join(format!(
-        "op-host-services-test-config-{}",
+        "de-host-services-test-config-{}",
         std::process::id()
     ));
     de_config_store::redirect_user_root_for_tests(root);

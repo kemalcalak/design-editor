@@ -195,7 +195,7 @@ impl McpLiveServer {
         let client_identity = Arc::new(Mutex::new(None));
         let server_identity = Arc::clone(&client_identity);
         thread::Builder::new()
-            .name("op-mcp-live-http".into())
+            .name("de-mcp-live-http".into())
             .spawn(move || {
                 server_loop(
                     listener,

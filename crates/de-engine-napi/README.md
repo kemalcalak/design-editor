@@ -29,7 +29,7 @@ de-engine-napi                        ← this crate
    ├── hilog.rs         HiLog writer (the twin of Android's alog.rs)
    └── action.rs        Platform-free constants + event mappings (host-tested)
    ▼
-de-engine-ffi (C ABI)  →  de-host-native / op-editor-* / jian-skia
+de-engine-ffi (C ABI)  →  de-host-native / de-editor-* / jian-skia
 ```
 
 Two pieces are **imported, not re-implemented**:

@@ -197,7 +197,7 @@ fn author_reads_the_configured_identity() {
     };
     let author = tr.repo.author();
     assert_eq!(author.name.as_deref(), Some("OP Test"));
-    assert_eq!(author.email.as_deref(), Some("test@openpencil.dev"));
+    assert_eq!(author.email.as_deref(), Some("test@design-editor.dev"));
 }
 
 #[test]

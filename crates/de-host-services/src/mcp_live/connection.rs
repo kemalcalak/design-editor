@@ -64,7 +64,7 @@ pub(super) fn server_loop(
                 let wake = Arc::clone(&wake_ui);
                 let identity = Arc::clone(&client_identity);
                 let spawned = thread::Builder::new()
-                    .name("op-mcp-live-conn".into())
+                    .name("de-mcp-live-conn".into())
                     .stack_size(LIVE_CONN_STACK_SIZE)
                     .spawn(move || {
                         // RAII: decrement the live-connection count even if

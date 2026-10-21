@@ -273,7 +273,7 @@ impl DesktopApp {
         let responder = Arc::new(Mutex::new(Some(responder)));
         let worker_responder = Arc::clone(&responder);
         let spawned = thread::Builder::new()
-            .name("op-mcp-design-md".into())
+            .name("de-mcp-design-md".into())
             .spawn(move || {
                 let outcome = run_mcp_design_md_provider_blocking(provider, request, cancel);
                 let Some(responder) = worker_responder

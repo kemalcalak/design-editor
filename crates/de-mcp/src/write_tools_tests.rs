@@ -748,7 +748,7 @@ fn import_svg_accepts_ts_parent_arg() {
 #[test]
 fn import_svg_accepts_ts_svg_path_arg() {
     let tool = import_svg_snapshot();
-    let path = std::env::temp_dir().join(format!("op-mcp-import-svg-{}.svg", std::process::id()));
+    let path = std::env::temp_dir().join(format!("de-mcp-import-svg-{}.svg", std::process::id()));
     fs::write(&path, r#"<svg><rect width="10" height="10"/></svg>"#).expect("write svg");
     let mut args = BTreeMap::new();
     args.insert("svgPath".into(), path.to_string_lossy().into_owned());

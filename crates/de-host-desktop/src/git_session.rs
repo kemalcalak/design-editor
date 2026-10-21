@@ -312,7 +312,7 @@ mod tests {
                 .output()
                 .expect("git config");
         };
-        git_config("user.email", "t@openpencil.dev");
+        git_config("user.email", "t@design-editor.dev");
         git_config("user.name", "OP Test");
         let doc = dir.join("design.op");
         std::fs::write(&doc, "{}").unwrap();

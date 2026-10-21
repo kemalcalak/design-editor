@@ -13,7 +13,7 @@ impl ScratchHome {
     fn new() -> Self {
         static NEXT: AtomicUsize = AtomicUsize::new(0);
         let path = std::env::temp_dir().join(format!(
-            "op-host-web-server-user-templates-{}-{}",
+            "de-host-web-server-user-templates-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));

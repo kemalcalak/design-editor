@@ -59,7 +59,7 @@ impl TempRepo {
         let repo = GitRepo::init(&dir).expect("git init");
         // A hermetic identity so `git commit` never depends on the
         // host's global git config.
-        repo.run(&["config", "user.email", "test@openpencil.dev"])
+        repo.run(&["config", "user.email", "test@design-editor.dev"])
             .expect("set user.email");
         repo.run(&["config", "user.name", "OP Test"])
             .expect("set user.name");
@@ -83,7 +83,7 @@ impl Drop for TempRepo {
 pub(crate) fn clone_for_test(remote: &std::path::Path, tag: &str) -> (PathBuf, GitRepo) {
     let dir = unique_temp_dir(tag);
     let repo = GitRepo::clone(remote.to_str().unwrap(), &dir).expect("clone");
-    repo.run(&["config", "user.email", "t@openpencil.dev"])
+    repo.run(&["config", "user.email", "t@design-editor.dev"])
         .unwrap();
     repo.run(&["config", "user.name", "OP Test"]).unwrap();
     (dir, repo)

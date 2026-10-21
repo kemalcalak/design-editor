@@ -25,7 +25,7 @@
 #[cfg(test)]
 pub(crate) fn guard_user_config() {
     let root = std::env::temp_dir().join(format!(
-        "op-host-desktop-test-config-{}",
+        "de-host-desktop-test-config-{}",
         std::process::id()
     ));
     de_config_store::redirect_user_root_for_tests(root);
