@@ -6,7 +6,7 @@ name: Rust multi-platform build
 
 on:
   push:
-    branches: ['**']
+    branches: [main]
     paths:
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -33,6 +33,12 @@ on:
       - '.github/workflows/rust-release.yml'
       - '.github/workflows/rust-multiplatform.yml'
   workflow_dispatch:
+
+# One run per PR (or per branch push); a newer push to a PR cancels the
+# older run. Pushes to main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   desktop:

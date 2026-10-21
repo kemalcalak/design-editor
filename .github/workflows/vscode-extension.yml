@@ -7,7 +7,7 @@ name: VS Code extension package
 
 on:
   push:
-    branches: ['**']
+    branches: [main]
     tags: ['v*']
     paths:
       - 'packages/de-vscode/**'
@@ -27,6 +27,12 @@ on:
       - 'packages/bun.lock'
       - 'crates/de-cli/assets/skill-bundle.json'
       - '.github/workflows/vscode-extension.yml'
+
+# One run per PR (or per branch push); a newer push to a PR cancels the
+# older run. Pushes to main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   package:

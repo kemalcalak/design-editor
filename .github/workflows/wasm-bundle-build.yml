@@ -42,7 +42,7 @@ on:
       - 'tools/test_export_i18n_catalogs.py'
       - '.github/workflows/wasm-bundle-build.yml'
   push:
-    branches: ['**']
+    branches: [main]
     paths:
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -55,6 +55,12 @@ on:
   # Allow on-demand runs so a release can produce the artifact without a code
   # change (e.g. to re-bundle against an updated toolchain).
   workflow_dispatch:
+
+# One run per PR (or per branch push); a newer push to a PR cancels the
+# older run. Pushes to main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-canvaskit-bundle:

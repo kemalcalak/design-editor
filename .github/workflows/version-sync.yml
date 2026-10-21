@@ -44,6 +44,7 @@ on:
       - ".github/workflows/rust-release.yml"
       - ".github/workflows/version-sync.yml"
   push:
+    branches: [main]
     paths:
       - "Cargo.toml"
       - "Cargo.lock"
@@ -88,6 +89,12 @@ on:
 
 permissions:
   contents: read
+
+# One run per PR (or per branch push); a newer push to a PR cancels the
+# older run. Pushes to main are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   version-sync:
