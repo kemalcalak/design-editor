@@ -1,0 +1,36 @@
+name: PR Title
+
+# Squash merges turn the PR title into the commit on main, so it must follow
+# the repo convention: `type(scope): subject (#issue)`. The title is
+# untrusted and only reaches the script through an environment variable.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  check:
+    name: Check PR title
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Match the convention
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          types='feat|fix|refactor|perf|style|docs|test|chore|ci'
+          scopes='editor|canvas|panels|history|ai|codegen|store|types|variables|figma|mcp|desktop|web|renderer|sdk|cli|agent|i18n|ci'
+          re="^($types)(\\(($scopes)\\))?: [a-z][^.]* \\(#[0-9]+\\)\$"
+          if printf '%s' "$TITLE" | grep -Eq "$re"; then
+            echo "ok: $TITLE"
+            exit 0
+          fi
+          echo "::error::PR title must be 'type(scope): subject (#issue)'"
+          echo "types: ${types//|/, }"
+          echo "scopes (optional): ${scopes//|/, }"
+          echo "subject: lowercase start, no period; end with the issue number, e.g. (#31)"
+          echo "got: $TITLE"
+          exit 1
