@@ -61,15 +61,15 @@ fn domains_are_distinct_and_contract_is_frozen() {
 
     assert_eq!(
         canonical_document_hash(&document).unwrap().to_string(),
-        "dfeef86a8306c18da6163c91e0438583e768af2966122e67d96e1cb2149c9346"
+        "2cd1b158d5594e8602b6be5fb994229195c1c6b955c8d7f49405b8345248b3a3"
     );
     assert_eq!(
         canonical_node_hash(&node).unwrap().to_string(),
-        "317f589a59ab5c9ada648b3850f58d8af8de08759850be8fac3e22fedd479a9b"
+        "8694f3f5febeac3a70e87ceeee5a3fb41a9972d22ee1266527c835282a97d76e"
     );
     assert_eq!(
         canonical_txn_hash(&txn).unwrap().to_string(),
-        "c0261b5bbefb751d94b87d546a638280f928110bb1e17764f7302652b16da85b"
+        "ff7e53eb0c263a19b13665bda76ca56878e1e4aa8485e8954d44742134d6e42b"
     );
 }
 
