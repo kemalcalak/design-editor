@@ -443,3 +443,39 @@ fn design_refine_layout_snapshot_reports_flowed_position_of_auto_layout_child() 
         (30.into(), 18.into())
     );
 }
+
+#[test]
+fn design_refine_layout_snapshot_lays_out_the_requested_page() {
+    // The root lives on the second (inactive) page; `pageId` by id or by
+    // index must lay that page out, and the active page must not find it.
+    let src = r#"{"version":"1.0.0","children":[],"pages":[
+      {"id":"p1","name":"One","children":[{"type":"frame","id":"other","x":0,"y":0,"width":10,"height":10}]},
+      {"id":"p2","name":"Two","children":[{"type":"frame","id":"root","x":5,"y":7,"width":50,"height":40}]}]}"#;
+    let parsed = jian_ops_schema::load_str(src).expect("parse .op fixture");
+    let state = EditorState::from_document(parsed.value);
+    let tool = design_refine_snapshot(&state);
+
+    for page in ["p2", "1"] {
+        let mut args = BTreeMap::new();
+        args.insert("rootId".into(), "root".into());
+        args.insert("pageId".into(), page.into());
+        let json = match tool.call(&args) {
+            ToolOutcome::OkJsonWithCommand(json, _) => json,
+            other => panic!("pageId {page}: expected OkJsonWithCommand, got {other:?}"),
+        };
+        let v: serde_json::Value = serde_json::from_str(&json).expect("refine json");
+        let root = &v["layoutSnapshot"][0];
+        assert_eq!(root["id"], "root", "pageId {page}: {v}");
+        assert_eq!((root["x"].clone(), root["y"].clone()), (5.into(), 7.into()));
+    }
+
+    let mut args = BTreeMap::new();
+    args.insert("rootId".into(), "root".into());
+    assert!(
+        matches!(
+            tool.call(&args),
+            ToolOutcome::Err(ToolErrorCode::ToolFailed, _)
+        ),
+        "the active page (p1) has no `root`"
+    );
+}
