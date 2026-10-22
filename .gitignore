@@ -25,6 +25,7 @@ docs/
 /docs/security/*
 !/docs/security/antivirus-false-positives.md
 !/docs/security/code-signing-policy.md
+!/docs/guide/
 
 # The bare `docs/` pattern above also shadows this test-fixture dir, which
 # MUST be tracked (the CI diagnostics-golden drift guard reads it).
