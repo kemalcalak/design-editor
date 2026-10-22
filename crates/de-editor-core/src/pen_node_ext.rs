@@ -62,6 +62,10 @@ pub trait PenNodeExt {
     /// No-op on variants without a width field (Line / Text-input-
     /// less kinds handled per-variant).
     fn set_width_px(&mut self, w: f64);
+    /// Author an explicit pixel width, as a resize or a W edit does. An
+    /// `auto`-growth text hugs its content and would ignore the number, so
+    /// it switches to `fixed-width` first (Figma parity).
+    fn set_authored_width_px(&mut self, w: f64);
     /// Overwrite the variant's height with a literal pixel number.
     fn set_height_px(&mut self, h: f64);
 
@@ -319,6 +323,16 @@ impl PenNodeExt for PenNode {
             PenNode::Tabs(n) => n.width = Some(v),
             PenNode::Line(_) | PenNode::Ref(_) => {}
         }
+    }
+
+    fn set_authored_width_px(&mut self, w: f64) {
+        use jian_ops_schema::node::TextGrowth;
+        if let PenNode::Text(n) = self {
+            if n.text_growth == Some(TextGrowth::Auto) {
+                n.text_growth = Some(TextGrowth::FixedWidth);
+            }
+        }
+        self.set_width_px(w);
     }
 
     fn set_height_px(&mut self, h: f64) {

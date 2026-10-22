@@ -74,3 +74,40 @@ fn batch_program_transaction_applies_token_only_fill_patch() {
     assert_eq!(value["x"].as_f64(), Some(48.0));
     assert_eq!(value["fill"][0]["color"], "$--primary");
 }
+
+/// An `auto` text ignores a numeric width in layout, so `U({width})` switches
+/// it to `fixed-width`; `textGrowth: "auto"` in the same call still wins.
+#[test]
+fn width_update_switches_auto_text_to_fixed_width_unless_auto_is_requested() {
+    for (patch, expected) in [
+        (r#"{"width":200}"#, "fixed-width"),
+        (r#"{"width":200,"textGrowth":"auto"}"#, "auto"),
+    ] {
+        let mut state = sample();
+        let mut set_auto = BTreeMap::new();
+        set_auto.insert(
+            "operations".into(),
+            "U(\"n11\", {\"textGrowth\":\"auto\"})".into(),
+        );
+        apply_operations(&mut state, set_auto);
+        let mut args = BTreeMap::new();
+        args.insert("operations".into(), format!("U(\"n11\", {patch})"));
+        apply_operations(&mut state, args);
+        let node = de_editor_core::walkers::find_node(state.active_children(), &NodeId::new("n11"))
+            .expect("updated text");
+        let value = serde_json::to_value(node).expect("updated node json");
+        assert_eq!(value["width"].as_f64(), Some(200.0), "{patch}");
+        assert_eq!(value["textGrowth"], expected, "{patch}");
+    }
+}
+
+fn apply_operations(state: &mut de_editor_core::EditorState, args: BTreeMap<String, String>) {
+    let tool = batch_design_snapshot(state);
+    let command = match tool.call(&args) {
+        ToolOutcome::OkWithCommand(_, command) | ToolOutcome::OkJsonWithCommand(_, command) => {
+            command
+        }
+        other => panic!("update must emit a command, got {other:?}"),
+    };
+    assert!(state.apply(command), "update must apply");
+}

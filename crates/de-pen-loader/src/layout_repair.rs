@@ -657,6 +657,8 @@ fn layout_child(node: &PenNode) -> bool {
     // fit-content repair must not put it back into flex flow. Requiring
     // constraints preserves compatibility with legacy documents whose flow
     // children contain stale x/y=0 coordinates but no constraint metadata.
+    // Keep in sync with jian-core's `layout::flow_child::keeps_absolute`,
+    // which keeps the same nodes absolute inside auto-layout parents.
     !(base.constraints.is_some() && (base.x.is_some() || base.y.is_some()))
 }
 

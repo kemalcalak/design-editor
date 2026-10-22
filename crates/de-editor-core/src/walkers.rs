@@ -420,10 +420,9 @@ pub fn insert_into_parent(
 /// auto-layout (flex) container — i.e. `target` is positioned by the
 /// layout engine, not by stored `x` / `y`.
 ///
-/// Such a node must not be free-dragged: writing `x` / `y` onto it (even
-/// the tiny delta of a jittered click) flips it to `Position::Absolute`
-/// in jian-core and detaches it from its parent's flex flow, collapsing
-/// the siblings. A drag of an auto-layout child is therefore a no-op
+/// Such a node must not be free-dragged: jian-core ignores `x` / `y` on a
+/// flex child (only overlays / constrained nodes stay absolute), so a write
+/// would be dead data — and on an overlay it would detach it. A drag of an auto-layout child is therefore a no-op
 /// (reorder-on-drag is a separate, future affordance). Top-level nodes
 /// and children of free-layout parents are NOT affected.
 pub fn is_flow_child_of_flex(children: &[PenNode], target: &NodeId) -> bool {

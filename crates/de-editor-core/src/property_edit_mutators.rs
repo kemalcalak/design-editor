@@ -335,7 +335,7 @@ impl EditorState {
         match focus {
             PropertyFocus::PositionX => node.base_mut().x = Some(v),
             PropertyFocus::PositionY => node.base_mut().y = Some(v),
-            PropertyFocus::SizeW => node.set_width_px(v.max(0.0)),
+            PropertyFocus::SizeW => node.set_authored_width_px(v.max(0.0)),
             PropertyFocus::SizeH => node.set_height_px(v.max(0.0)),
             PropertyFocus::Rotation => node.base_mut().rotation = Some(v),
             PropertyFocus::PositionR

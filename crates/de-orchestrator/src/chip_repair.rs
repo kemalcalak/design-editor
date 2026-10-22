@@ -99,6 +99,8 @@ fn adopt_in_value(v: &mut Value) -> bool {
                 if let Some(obj) = badge.as_object_mut() {
                     obj.insert("x".into(), serde_json::json!(8.0));
                     obj.insert("y".into(), serde_json::json!(8.0));
+                    // Absolute inside the wrapper even when it is auto-layout.
+                    obj.insert("role".into(), serde_json::json!("overlay"));
                 }
                 if let Some(wrapper_kids) =
                     kids[i].get_mut("children").and_then(Value::as_array_mut)
@@ -195,6 +197,8 @@ fn adopt_dots_in_value(v: &mut Value) -> bool {
                 // x/y are measured from there.
                 obj.insert("x".into(), serde_json::json!(icon_w - dot_w / 2.0));
                 obj.insert("y".into(), serde_json::json!(0.0));
+                // The button is flex: only an overlay keeps its x/y.
+                obj.insert("role".into(), serde_json::json!("overlay"));
                 changed = true;
             }
         }
@@ -224,3 +228,7 @@ fn is_notification_dot(v: &Value) -> bool {
     };
     w <= 12.0 && (w - h).abs() < 0.5 && has_paint(v) && children(v).is_empty()
 }
+
+#[cfg(test)]
+#[path = "chip_repair_tests.rs"]
+mod tests;
