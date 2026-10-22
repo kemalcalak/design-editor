@@ -118,20 +118,16 @@ jobs:
         shell: bash
         run: |
           [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]]
+          [[ "$GITHUB_REF" == refs/heads/main ]]
           version=$(scripts/workspace-version.sh)
-          case "$GITHUB_REF" in
-            "refs/heads/v$version"|"refs/tags/v$version") ;;
-          esac
           echo "version=$version" >> "$GITHUB_OUTPUT"
-  build:
+  checks:
     needs: version
     runs-on: ubuntu-latest
-    env:
-      DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - run: echo build
-  web-docker:
-__WEB_NEEDS__
+      - run: echo checks
+  build:
+__BUILD_NEEDS__
     runs-on: ubuntu-latest
     env:
       DE_VERSION: ${{ needs.version.outputs.version }}
@@ -139,25 +135,8 @@ __WEB_NEEDS__
       - run: |
           version="__PUBLISH_VERSION__"
           echo "$version"
-  sdk-packages:
-__SDK_NEEDS__
-    runs-on: ubuntu-latest
-    env:
-      DE_VERSION: ${{ needs.version.outputs.version }}
-    steps:
-      - run: bun run sync-version:check
-      - run: |
-          version="__PUBLISH_VERSION__"
-          echo "$version"
-  release-draft:
-    needs: [version, build, web-docker, sdk-packages, vsix]
-    runs-on: ubuntu-latest
-    env:
-      DE_VERSION: ${{ needs.version.outputs.version }}
-    steps:
-      - run: version="$DE_VERSION"
-  package-managers:
-    needs: [version, release-draft]
+  publish:
+    needs: [version, build]
     runs-on: ubuntu-latest
     env:
       DE_VERSION: ${{ needs.version.outputs.version }}
@@ -172,12 +151,8 @@ SCRIPT
     fi
 
     awk -v dependency_mode="$dependency_mode" -v publish_version="$publish_version" '
-        $0 == "__WEB_NEEDS__" {
-            if (dependency_mode == "required") print "    needs: version"
-            next
-        }
-        $0 == "__SDK_NEEDS__" {
-            if (dependency_mode == "required") print "    needs: version"
+        $0 == "__BUILD_NEEDS__" {
+            if (dependency_mode == "required") print "    needs: [version, checks]"
             next
         }
         {
@@ -598,12 +573,10 @@ run_guard "$repo"
 assert_status 1 'publish jobs without version dependency'
 assert_contains '.github/workflows/rust-release.yml:1:' \
     'publish jobs without version dependency'
-assert_contains 'error: web-docker must depend on the version preflight job' \
-    'publish jobs without version dependency'
-assert_contains 'error: sdk-packages must depend on the version preflight job' \
+assert_contains 'error: build must wait for the version preflight and the required checks' \
     'publish jobs without version dependency'
 assert_no_success_output 'publish jobs without version dependency'
-pass 'web Docker and SDK publishing cannot start before version preflight'
+pass 'release builds cannot start before the version preflight and checks'
 
 repo=$(new_repo independent_publish_tag_versions 0.8.1)
 write_workflow_fixture "$repo" required independent

@@ -21,163 +21,6 @@ fn rust_check_runs_canvaskit_widget_host_tests() {
 }
 
 #[test]
-fn release_workflow_documents_current_canvaskit_bundle_path() {
-    let workflow = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../.github/workflows/rust-release.yml"
-    ))
-    .expect("rust-release workflow is readable");
-
-    assert!(
-        workflow.contains("wasm-bundle-build.yml"),
-        "release workflow notes should point at the current CanvasKit bundle workflow"
-    );
-    assert!(
-        !workflow.contains("--features skia"),
-        "release workflow must not describe the retired skia wasm build path"
-    );
-    assert!(
-        !workflow.contains("EMSDK"),
-        "release workflow must not describe the retired EMSDK wasm build path"
-    );
-}
-
-#[test]
-fn release_workflow_resolves_macos_signing_identity_from_keychain() {
-    let workflow = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../.github/workflows/rust-release.yml"
-    ))
-    .expect("rust-release workflow is readable");
-
-    assert!(
-        workflow.contains("Resolve macOS signing identity"),
-        "release workflow should resolve the imported Developer ID identity before signing"
-    );
-    assert!(
-        workflow.contains("security find-identity -v -p codesigning"),
-        "release workflow should query the imported keychain identity instead of guessing it"
-    );
-    assert!(
-        !workflow.contains("Developer ID Application ($APPLE_TEAM_ID)"),
-        "release workflow must not hard-code an incomplete Developer ID identity"
-    );
-}
-
-#[test]
-fn release_workflow_notarizes_macos_app_before_packaging_dmg() {
-    let workflow = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../.github/workflows/rust-release.yml"
-    ))
-    .expect("rust-release workflow is readable");
-
-    let notarize = workflow
-        .find("Notarize macOS app")
-        .expect("release workflow should notarize the .app before packaging");
-    let package = workflow
-        .find("Package DMG (macos)")
-        .expect("release workflow should package a DMG after app notarization");
-    let notarize_dmg = workflow
-        .find("Notarize DMG (macos)")
-        .expect("release workflow should notarize the final DMG artifact");
-    assert!(
-        notarize < package,
-        "release workflow should notarize and staple Design Editor.app before creating the DMG"
-    );
-    assert!(
-        package < notarize_dmg,
-        "release workflow should notarize the final DMG after packaging the stapled app"
-    );
-    assert!(
-        workflow.contains("ditto -c -k --keepParent \"$APP\""),
-        "release workflow should submit a zipped .app bundle to Apple notarytool"
-    );
-    assert!(
-        workflow.contains("ditto \"$APP\" \"$STAGE/Design Editor.app\""),
-        "release workflow should preserve stapled app metadata when staging the DMG"
-    );
-    assert!(
-        workflow.contains("xcrun stapler validate \"$STAGE/Design Editor.app\""),
-        "release workflow should validate the staged app before creating the DMG"
-    );
-    assert!(
-        workflow.contains("xcrun stapler staple \"$APP\""),
-        "release workflow should staple the notarization ticket to the .app before DMG packaging"
-    );
-    assert!(
-        workflow.contains("xcrun stapler staple \"$DMG\""),
-        "release workflow should staple the final DMG so Gatekeeper can validate the downloaded artifact"
-    );
-    assert!(
-        workflow.contains("xcrun stapler validate \"$DMG\""),
-        "release workflow should validate the final stapled DMG"
-    );
-    assert!(
-        workflow.contains("xcrun notarytool log"),
-        "release workflow should fetch the Apple notary log when notarization fails"
-    );
-    assert!(
-        workflow.contains("::error::macOS app notarization failed"),
-        "macOS app notarization failures should block the release"
-    );
-    assert!(
-        workflow.contains("echo \"::error::macOS app notarization failed\"\n            exit 1"),
-        "invalid notarization status can be reported with a zero notarytool exit code, so the workflow must exit non-zero explicitly"
-    );
-    assert!(
-        !workflow.contains("exit \"$notary_status\""),
-        "workflow must not reuse notarytool's exit code after parsing an Invalid status"
-    );
-    assert!(
-        workflow.contains("::error::macOS DMG notarization failed"),
-        "final DMG notarization failures should block the release"
-    );
-    assert!(
-        !workflow.contains("cp -R \"$APP\" \"$STAGE/Design Editor.app\""),
-        "workflow should not use cp -R for the stapled app bundle because it can lose notarization metadata"
-    );
-    assert!(
-        !workflow.contains("signed but not notarized"),
-        "release workflow must not upload macOS artifacts after notarization fails"
-    );
-}
-
-#[test]
-fn release_workflow_does_not_publish_unsigned_macos_desktop_tarball() {
-    let workflow = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../.github/workflows/rust-release.yml"
-    ))
-    .expect("rust-release workflow is readable");
-
-    assert!(
-        workflow.contains("if [ \"$RUNNER_OS\" != \"macOS\" ]; then\n            tar czf ../../../design-editor-${{ matrix.label }}.tar.gz design-editor"),
-        "macOS release artifacts should not include the raw desktop binary tarball because the signed/notarized desktop artifact is the DMG"
-    );
-    assert!(
-        workflow.contains("tar czf ../../../de-cli-${{ matrix.label }}.tar.gz de"),
-        "macOS and Linux release artifacts should keep publishing standalone de CLI archives"
-    );
-
-    let macos_block_start = workflow
-        .find("#   macOS")
-        .expect("workflow should document macOS artifacts");
-    let windows_block_start = workflow
-        .find("#   Windows")
-        .expect("workflow should document Windows artifacts");
-    let macos_block = &workflow[macos_block_start..windows_block_start];
-    assert!(
-        !macos_block.contains("design-editor-<label>.tar.gz"),
-        "release workflow comments should not document a macOS raw desktop tarball"
-    );
-    assert!(
-        macos_block.contains("de-cli-<label>.tar.gz"),
-        "release workflow comments should still document the macOS CLI archive"
-    );
-}
-
-#[test]
 fn macos_bundle_signing_uses_hardened_runtime_for_developer_id() {
     let script = std::fs::read_to_string(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -222,7 +65,7 @@ fn release_workflow_installs_nsis_on_windows_runner() {
         .find("- name: Install NSIS (windows)")
         .expect("release workflow should install NSIS before invoking makensis");
     let following_step_offset = workflow[install_step_start..]
-        .find("- name: Validate Windows signing input policy")
+        .find("- name: Stage ANGLE DLLs (windows)")
         .expect("NSIS installation should remain a dedicated release step");
     let install_step = &workflow[install_step_start..install_step_start + following_step_offset];
     let self_test = install_step
@@ -243,7 +86,7 @@ fn release_workflow_installs_nsis_on_windows_runner() {
 }
 
 #[test]
-fn release_workflow_services_pinned_vc_runtime_for_nsis_and_scoop() {
+fn release_workflow_services_pinned_vc_runtime_for_nsis() {
     let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let workflow = std::fs::read_to_string(repo.join(".github/workflows/rust-release.yml"))
         .expect("rust-release workflow is readable");
@@ -252,7 +95,7 @@ fn release_workflow_services_pinned_vc_runtime_for_nsis_and_scoop() {
             .find("& tools/stage-pinned-vcredist.ps1 -ValidateBuildToolset")
             .expect("release workflow should run the MSVC compatibility gate")
             < workflow
-                .find("- name: Build (host)")
+                .find("- name: Build desktop app and CLI")
                 .expect("release workflow should build the host"),
         "the Windows MSVC compatibility gate must run before the host build"
     );
@@ -276,53 +119,34 @@ fn release_workflow_services_pinned_vc_runtime_for_nsis_and_scoop() {
         stage_step.contains("VC_REDIST_FILE=$vcRedist") && stage_step.contains("$env:GITHUB_ENV"),
         "the staged VC++ Redistributable path must cross the PowerShell step boundary explicitly"
     );
-    let package_end = workflow[package_start..]
-        .find("- name: Sign NSIS installer (windows)")
-        .map(|offset| package_start + offset)
-        .expect("NSIS packaging should be followed by its signing step");
-    let package_step = &workflow[package_start..package_end];
+    let package_step = &workflow[package_start..];
     assert!(
         package_step.contains("makensis")
             && package_step.contains(r#"/DVC_REDIST_FILE=$env:VC_REDIST_FILE"#),
         "makensis must receive the staged VC++ Redistributable as a mandatory input"
     );
-    let scoop_start = workflow
-        .find("- name: Update Scoop manifests")
-        .expect("release workflow should update Scoop manifests");
-    let scoop_end = workflow[scoop_start..]
-        .find("- name: Commit Scoop updates")
-        .map(|offset| scoop_start + offset)
-        .expect("Scoop manifest generation should precede its commit step");
-    let scoop_step = &workflow[scoop_start..scoop_end];
-    assert!(
-        scoop_step.matches("write_scoop_manifest \\").count() == 2,
-        "desktop and CLI Scoop manifests must both use the reviewed shared generator"
-    );
-    assert!(
-        !scoop_step.contains("url: [$x64_url")
-            && !scoop_step.contains("hash: [$x64_hash")
-            && scoop_step.contains("--arg redist_url \"$VC_REDIST_URL\"")
-            && scoop_step.contains("--arg redist_sha256 \"$VC_REDIST_SHA256\"")
-            && scoop_step.contains("installer: $installer"),
-        "desktop and CLI Scoop manifests must retain app-only assets plus the conditional Runtime hook"
-    );
-    let runtime_precheck = scoop_step
-        .find("$installedVersion = Get-InstalledVcRuntimeVersion")
-        .expect("Scoop should check the installed Runtime");
-    let runtime_download = scoop_step
-        .find("Invoke-WebRequest -Uri $redistUrl")
-        .expect("Scoop should conditionally download the Runtime");
-    assert!(
-        runtime_precheck < runtime_download
-            && scoop_step.contains("ReparsePoint")
-            && scoop_step.contains("Get-FileHash")
-            && scoop_step.contains("$downloadedFileVersion")
-            && scoop_step.contains("$downloadedProductVersion")
-            && scoop_step.contains("Get-AuthenticodeSignature")
-            && scoop_step.contains("X509NameType]::SimpleName")
-            && scoop_step.matches("Get-InstalledVcRuntimeVersion").count() == 3,
-        "Scoop must verify the Runtime before elevated servicing and post-check it afterward"
-    );
+}
+
+/// The in-app update check downloads `asset_name_for(version)`
+/// (crates/de-host-desktop/src/update_check.rs) from the release, so the
+/// workflow must publish exactly those names.
+#[test]
+fn release_workflow_publishes_the_update_check_asset_names() {
+    let workflow = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../.github/workflows/rust-release.yml"
+    ))
+    .expect("rust-release workflow is readable");
+    for needle in [
+        "Design-Editor-$DE_VERSION-${{ matrix.arch }}-mac.dmg",
+        "Design-Editor-$env:DE_VERSION-${{ matrix.arch }}-win-setup.exe",
+        "\"Design-Editor-$DE_VERSION-arm64-mac.dmg\"",
+        "\"Design-Editor-$DE_VERSION-x64-win-setup.exe\"",
+        "arch: arm64",
+        "arch: x64",
+    ] {
+        assert!(workflow.contains(needle), "release workflow lost {needle}");
+    }
 }
 
 #[test]
@@ -454,38 +278,6 @@ fn windows_cli_installer_services_vc_runtime_fail_closed() {
             .zip(reboot_branch.find("& $Target --version"))
             .is_some_and(|(otherwise, verify)| otherwise < verify),
         "a 3010 Runtime result must not execute de before Windows restarts"
-    );
-}
-
-#[test]
-fn release_workflow_distinguishes_published_npm_packages_from_check_failures() {
-    let workflow = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../.github/workflows/rust-release.yml"
-    ))
-    .expect("rust-release workflow is readable");
-
-    assert!(
-        workflow.contains("already published; skipping"),
-        "release workflow should skip npm packages that are already published"
-    );
-    assert!(
-        workflow.contains("E404") && workflow.contains("failed to check npm package"),
-        "release workflow should publish only on npm 404 and fail on other npm view errors"
-    );
-}
-
-#[test]
-fn release_workflow_downloads_only_design_editor_release_artifacts() {
-    let workflow = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../.github/workflows/rust-release.yml"
-    ))
-    .expect("rust-release workflow is readable");
-
-    assert!(
-        workflow.contains("pattern: design-editor-*"),
-        "release workflow should not download Docker build metadata artifacts into release assets"
     );
 }
 

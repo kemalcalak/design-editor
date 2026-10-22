@@ -533,8 +533,8 @@ require_workflow_job_regex version \
     '^[[:space:]]*version=\$\(scripts/workspace-version[.]sh\)[[:space:]]*$' \
     'release version computation must use the canonical workspace reader'
 require_workflow_job_regex version \
-    'refs/heads/v\$version.*refs/tags/v\$version' \
-    'release preflight must validate the exact version branch or tag ref'
+    'GITHUB_REF.*refs/heads/main' \
+    'release preflight must only release from main'
 require_workflow_job_regex version \
     'git rev-parse HEAD.*GITHUB_SHA' \
     'release preflight must bind the checkout to the event source SHA'
@@ -542,28 +542,16 @@ require_workflow_job_regex version \
     '^[[:space:]]*echo[[:space:]]+"version=\$version"[[:space:]]+>>[[:space:]]+"\$GITHUB_OUTPUT"[[:space:]]*$' \
     'release preflight must write the canonical version to GITHUB_OUTPUT'
 require_workflow_job_regex build \
-    '^[[:space:]]*needs:[[:space:]]*version[[:space:]]*$' \
-    'build must depend on the version preflight job'
-require_workflow_job_regex web-docker \
-    '^[[:space:]]*needs:[[:space:]]*version[[:space:]]*$' \
-    'web-docker must depend on the version preflight job'
-require_workflow_job_regex sdk-packages \
-    '^[[:space:]]*needs:[[:space:]]*version[[:space:]]*$' \
-    'sdk-packages must depend on the version preflight job'
-require_workflow_job_regex release-draft \
-    '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*build,[[:space:]]*web-docker,[[:space:]]*sdk-packages,[[:space:]]*vsix\][[:space:]]*$' \
-    'release-draft must preserve artifact dependencies and depend on version preflight'
-require_workflow_job_regex package-managers \
-    '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*release-draft\][[:space:]]*$' \
-    'package-managers must preserve release dependency and depend on version preflight'
-for version_consumer in build web-docker sdk-packages release-draft package-managers; do
+    '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*checks\][[:space:]]*$' \
+    'build must wait for the version preflight and the required checks'
+require_workflow_job_regex publish \
+    '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*build\][[:space:]]*$' \
+    'publish must wait for the version preflight and every build'
+for version_consumer in build publish; do
     require_workflow_job_regex "$version_consumer" \
         'needs[.]version[.]outputs[.]version' \
         "${version_consumer} must consume the canonical version job output"
 done
-require_workflow_job_regex sdk-packages \
-    'bun[[:space:]]+run[[:space:]]+sync-version:check' \
-    'sdk-packages must verify package versions after installing dependencies'
 reject_matches regex "$release_workflow" \
     '^[[:space:]]*version[[:space:]]*=.*GITHUB_REF_NAME#v' \
     'publish paths must consume the canonical version job output'
