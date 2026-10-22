@@ -27,7 +27,7 @@ jobs:
           set -euo pipefail
           types='feat|fix|refactor|perf|style|docs|test|chore|ci'
           scopes='editor|canvas|panels|history|ai|codegen|store|types|variables|figma|mcp|desktop|web|renderer|sdk|cli|agent|i18n|ci'
-          re="^($types)(\\(($scopes)\\))?: [a-z][^.]* \\(#[0-9]+\\)\$"
+          re="^($types)(\\(($scopes)\\))?: [a-z]([^ ]| [^(])*[^. ] \\(#[0-9]+\\)\$"
           if printf '%s' "$TITLE" | grep -Eq "$re"; then
             echo "ok: $TITLE"
             exit 0
@@ -35,6 +35,6 @@ jobs:
           echo "::error::PR title must be 'type(scope): subject (#issue)'"
           echo "types: ${types//|/, }"
           echo "scopes (optional): ${scopes//|/, }"
-          echo "subject: lowercase start, no period; end with the issue number, e.g. (#31)"
+          echo "subject: lowercase start, no trailing period; end with the issue number, e.g. (#31)"
           echo "got: $TITLE"
           exit 1
