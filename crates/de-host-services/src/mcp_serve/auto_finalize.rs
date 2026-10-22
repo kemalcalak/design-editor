@@ -87,9 +87,13 @@ impl AutoFinalize {
         }
     }
 
+    /// Finalize the document if this session applied a write. A read-only
+    /// session must leave the file untouched, so it never finalizes (the
+    /// caller saves only when this returns `Some`).
     pub fn run(&mut self, state: &mut EditorState, reason: &'static str) -> Option<RepairSummary> {
         let revision = state.document_revision();
         if !self.enabled()
+            || self.last_write_at.is_none()
             || state.active_children().is_empty()
             || self.finalized_at_revision == Some(revision)
         {
