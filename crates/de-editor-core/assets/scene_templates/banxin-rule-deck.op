@@ -1,12 +1,12 @@
 {
   "version": "1.0.0",
-  "name": "版心界行 · 中文原生排版档",
+  "name": "type-area-rules-native-type-deck",
   "variables": {
-    "c-xuan": {
+    "c-paper": {
       "type": "color",
       "value": "#F3F0E9"
     },
-    "c-xuan-deep": {
+    "c-paper-deep": {
       "type": "color",
       "value": "#E5E1D7"
     },
@@ -26,15 +26,15 @@
       "type": "color",
       "value": "#807A76"
     },
-    "c-xuan-on": {
+    "c-paper-on": {
       "type": "color",
       "value": "#F0ECE7"
     },
-    "c-xuan-dim": {
+    "c-paper-dim": {
       "type": "color",
       "value": "#B4B0AA"
     },
-    "c-jie": {
+    "c-column-rule": {
       "type": "color",
       "value": "#D0CBC5"
     },
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "01 封面 · 函套",
+      "name": "01-cover-case",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -66,7 +66,7 @@
         {
           "type": "frame",
           "id": "f3",
-          "name": "主标",
+          "name": "main-title-group",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -79,15 +79,15 @@
             {
               "type": "text",
               "id": "t2",
-              "name": "主标题",
-              "content": "汉字排版\n在屏幕上的四次退让",
-              "fontFamily": "Noto Sans SC",
+              "name": "main-title",
+              "content": "Type on Screen:\nFour Retreats",
+              "fontFamily": "Inter",
               "fontSize": 96,
               "fontWeight": 700,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-on"
+                  "color": "$c-paper-on"
                 }
               ],
               "lineHeight": 1.08,
@@ -100,7 +100,7 @@
         {
           "type": "rectangle",
           "id": "r4",
-          "name": "朱砂短线",
+          "name": "vermilion-dash",
           "width": 96,
           "height": 2,
           "fill": [
@@ -115,7 +115,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "副标",
+          "name": "subtitle-group",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -128,15 +128,15 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "写给编辑与界面设计者的一份版面评议",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "A layout review for editors and UI designers",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 400,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-dim"
+                  "color": "$c-paper-dim"
                 }
               ],
               "lineHeight": 1.75,
@@ -149,7 +149,7 @@
         {
           "type": "frame",
           "id": "f9",
-          "name": "落款",
+          "name": "signature",
           "width": 1680,
           "height": "fit_content",
           "layout": "horizontal",
@@ -162,15 +162,15 @@
             {
               "type": "text",
               "id": "t7",
-              "name": "落款 · 单位",
-              "content": "版面组 · 内部评议",
-              "fontFamily": "Noto Sans SC",
+              "name": "signature-org",
+              "content": "Layout Group · Review",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-dim"
+                  "color": "$c-paper-dim"
                 }
               ],
               "lineHeight": 1.2,
@@ -181,7 +181,7 @@
             {
               "type": "text",
               "id": "t8",
-              "name": "落款 · 日期",
+              "name": "signature-date",
               "content": "2026.08.09",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -189,7 +189,7 @@
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-dim"
+                  "color": "$c-paper-dim"
                 }
               ],
               "lineHeight": 1.2,
@@ -202,7 +202,7 @@
         {
           "type": "path",
           "id": "p10",
-          "name": "鱼尾 · 上",
+          "name": "fishtail-mark-top",
           "d": "M0 0 L20 0 L10.0 9 Z",
           "width": 20,
           "height": 9,
@@ -218,7 +218,7 @@
         {
           "type": "path",
           "id": "p11",
-          "name": "鱼尾 · 下",
+          "name": "fishtail-mark-bottom",
           "d": "M10.0 0 L20 9 L0 9 Z",
           "width": 20,
           "height": 9,
@@ -234,7 +234,7 @@
         {
           "type": "text",
           "id": "t12",
-          "name": "页码",
+          "name": "page-number",
           "content": "1 / 7",
           "fontFamily": "Inter",
           "fontSize": 24,
@@ -242,7 +242,7 @@
           "fill": [
             {
               "type": "solid",
-              "color": "$c-xuan-dim"
+              "color": "$c-paper-dim"
             }
           ],
           "lineHeight": 1.2,
@@ -260,7 +260,7 @@
     {
       "type": "frame",
       "id": "f13",
-      "name": "02 篇目 · 函套",
+      "name": "02-contents-case",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -275,7 +275,7 @@
         {
           "type": "frame",
           "id": "f15",
-          "name": "眉题",
+          "name": "kicker",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -288,15 +288,15 @@
             {
               "type": "text",
               "id": "t14",
-              "name": "眉题",
-              "content": "篇目",
-              "fontFamily": "Noto Sans SC",
+              "name": "kicker",
+              "content": "Contents",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 500,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-dim"
+                  "color": "$c-paper-dim"
                 }
               ],
               "lineHeight": 1.75,
@@ -309,7 +309,7 @@
         {
           "type": "frame",
           "id": "f35",
-          "name": "篇目列表",
+          "name": "contents-list",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -322,7 +322,7 @@
             {
               "type": "frame",
               "id": "f18",
-              "name": "篇目 01",
+              "name": "contents-01",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -337,7 +337,7 @@
                 {
                   "type": "text",
                   "id": "t16",
-                  "name": "序号",
+                  "name": "index",
                   "content": "01",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -345,7 +345,7 @@
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-dim"
+                      "color": "$c-paper-dim"
                     }
                   ],
                   "lineHeight": 1.2,
@@ -356,15 +356,15 @@
                 {
                   "type": "text",
                   "id": "t17",
-                  "name": "篇名",
-                  "content": "版心：先给一页定出可以落墨的地方",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "chapter-title",
+                  "content": "Type area: mark where ink may fall",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 600,
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-on"
+                      "color": "$c-paper-on"
                     }
                   ],
                   "lineHeight": 1.35,
@@ -377,20 +377,20 @@
             {
               "type": "rectangle",
               "id": "r19",
-              "name": "界行 · 条间",
+              "name": "rule-between-items",
               "width": "fill_container",
               "height": 1,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-jie"
+                  "color": "$c-column-rule"
                 }
               ]
             },
             {
               "type": "frame",
               "id": "f22",
-              "name": "篇目 02",
+              "name": "contents-02",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -405,7 +405,7 @@
                 {
                   "type": "text",
                   "id": "t20",
-                  "name": "序号",
+                  "name": "index",
                   "content": "02",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -413,7 +413,7 @@
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-dim"
+                      "color": "$c-paper-dim"
                     }
                   ],
                   "lineHeight": 1.2,
@@ -424,15 +424,15 @@
                 {
                   "type": "text",
                   "id": "t21",
-                  "name": "篇名",
-                  "content": "界行：分栏是为了缩短行，不是分盒子",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "chapter-title",
+                  "content": "Rules: columns shorten lines",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 600,
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-on"
+                      "color": "$c-paper-on"
                     }
                   ],
                   "lineHeight": 1.35,
@@ -445,20 +445,20 @@
             {
               "type": "rectangle",
               "id": "r23",
-              "name": "界行 · 条间",
+              "name": "rule-between-items",
               "width": "fill_container",
               "height": 1,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-jie"
+                  "color": "$c-column-rule"
                 }
               ]
             },
             {
               "type": "frame",
               "id": "f26",
-              "name": "篇目 03",
+              "name": "contents-03",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -473,7 +473,7 @@
                 {
                   "type": "text",
                   "id": "t24",
-                  "name": "序号",
+                  "name": "index",
                   "content": "03",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -481,7 +481,7 @@
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-dim"
+                      "color": "$c-paper-dim"
                     }
                   ],
                   "lineHeight": 1.2,
@@ -492,15 +492,15 @@
                 {
                   "type": "text",
                   "id": "t25",
-                  "name": "篇名",
-                  "content": "行长：三十个字是一道生理线",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "chapter-title",
+                  "content": "Measure: 66 characters, no more",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 600,
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-on"
+                      "color": "$c-paper-on"
                     }
                   ],
                   "lineHeight": 1.35,
@@ -513,20 +513,20 @@
             {
               "type": "rectangle",
               "id": "r27",
-              "name": "界行 · 条间",
+              "name": "rule-between-items",
               "width": "fill_container",
               "height": 1,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-jie"
+                  "color": "$c-column-rule"
                 }
               ]
             },
             {
               "type": "frame",
               "id": "f30",
-              "name": "篇目 04",
+              "name": "contents-04",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -541,7 +541,7 @@
                 {
                   "type": "text",
                   "id": "t28",
-                  "name": "序号",
+                  "name": "index",
                   "content": "04",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -549,7 +549,7 @@
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-dim"
+                      "color": "$c-paper-dim"
                     }
                   ],
                   "lineHeight": 1.2,
@@ -560,15 +560,15 @@
                 {
                   "type": "text",
                   "id": "t29",
-                  "name": "篇名",
-                  "content": "标点：断行处最见功夫",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "chapter-title",
+                  "content": "Breaks: craft lives at line ends",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 600,
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-on"
+                      "color": "$c-paper-on"
                     }
                   ],
                   "lineHeight": 1.35,
@@ -581,20 +581,20 @@
             {
               "type": "rectangle",
               "id": "r31",
-              "name": "界行 · 条间",
+              "name": "rule-between-items",
               "width": "fill_container",
               "height": 1,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-jie"
+                  "color": "$c-column-rule"
                 }
               ]
             },
             {
               "type": "frame",
               "id": "f34",
-              "name": "篇目 05",
+              "name": "contents-05",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -609,7 +609,7 @@
                 {
                   "type": "text",
                   "id": "t32",
-                  "name": "序号",
+                  "name": "index",
                   "content": "05",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -617,7 +617,7 @@
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-dim"
+                      "color": "$c-paper-dim"
                     }
                   ],
                   "lineHeight": 1.2,
@@ -628,15 +628,15 @@
                 {
                   "type": "text",
                   "id": "t33",
-                  "name": "篇名",
-                  "content": "收束：把四次退让逐项收回",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "chapter-title",
+                  "content": "Close: win back all four",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 600,
                   "fill": [
                     {
                       "type": "solid",
-                      "color": "$c-xuan-on"
+                      "color": "$c-paper-on"
                     }
                   ],
                   "lineHeight": 1.35,
@@ -651,7 +651,7 @@
         {
           "type": "path",
           "id": "p36",
-          "name": "鱼尾 · 上",
+          "name": "fishtail-mark-top",
           "d": "M0 0 L20 0 L10.0 9 Z",
           "width": 20,
           "height": 9,
@@ -667,7 +667,7 @@
         {
           "type": "path",
           "id": "p37",
-          "name": "鱼尾 · 下",
+          "name": "fishtail-mark-bottom",
           "d": "M10.0 0 L20 9 L0 9 Z",
           "width": 20,
           "height": 9,
@@ -683,7 +683,7 @@
         {
           "type": "text",
           "id": "t38",
-          "name": "页码",
+          "name": "page-number",
           "content": "2 / 7",
           "fontFamily": "Inter",
           "fontSize": 24,
@@ -691,7 +691,7 @@
           "fill": [
             {
               "type": "solid",
-              "color": "$c-xuan-dim"
+              "color": "$c-paper-dim"
             }
           ],
           "lineHeight": 1.2,
@@ -709,14 +709,14 @@
     {
       "type": "frame",
       "id": "f39",
-      "name": "03 论述 · 版心",
+      "name": "03-argument-type-area",
       "width": 1920,
       "height": 1080,
       "layout": "none",
       "fill": [
         {
           "type": "solid",
-          "color": "$c-xuan"
+          "color": "$c-paper"
         }
       ],
       "clipContent": true,
@@ -724,7 +724,7 @@
         {
           "type": "frame",
           "id": "f41",
-          "name": "天头批注",
+          "name": "head-margin-note",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -737,9 +737,9 @@
             {
               "type": "text",
               "id": "t40",
-              "name": "批注",
-              "content": "版心先于版式；边界不定，谈不上呼吸",
-              "fontFamily": "Noto Sans SC",
+              "name": "margin-note",
+              "content": "Type area first; no edges, no breathing room",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -758,7 +758,7 @@
         {
           "type": "frame",
           "id": "f43",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -771,9 +771,9 @@
             {
               "type": "text",
               "id": "t42",
-              "name": "标题",
-              "content": "版心不是边距，是一页里可以落墨的那块地",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "The type area is not padding, it is where ink falls",
+              "fontFamily": "Inter",
               "fontSize": 56,
               "fontWeight": 700,
               "fill": [
@@ -792,7 +792,7 @@
         {
           "type": "frame",
           "id": "f45",
-          "name": "正文",
+          "name": "body",
           "width": 960,
           "height": "fit_content",
           "layout": "vertical",
@@ -805,9 +805,9 @@
             {
               "type": "text",
               "id": "t44",
-              "name": "正文",
-              "content": "屏幕上的版面把版心简化成了四边等距的内边距，\n于是每一页都从同一个位置开始，也在同一处结束。\n古籍的做法相反：天头留给批注，地脚留给页码，\n两者从来不等高，页面因此有了上下方向。\n这一档把天头定为 144、地脚定为 108，\n多出来的那一截，是给投影时被人头遮住的下沿的。",
-              "fontFamily": "Noto Sans SC",
+              "name": "body",
+              "content": "Screens reduce the type area to equal padding,\nso every page starts and ends in the same place.\nOld books did the opposite: notes up top, folios below,\nnever the same depth, so the page had a direction.\nThis deck sets the head at 144, the foot at 108;\nthe extra covers the edge heads block on a projector.",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 400,
               "fill": [
@@ -826,13 +826,13 @@
         {
           "type": "rectangle",
           "id": "r46",
-          "name": "界行 · 横",
+          "name": "rule-horizontal",
           "width": 960,
           "height": 1,
           "fill": [
             {
               "type": "solid",
-              "color": "$c-jie"
+              "color": "$c-column-rule"
             }
           ],
           "x": 120,
@@ -841,7 +841,7 @@
         {
           "type": "frame",
           "id": "f56",
-          "name": "三条做法",
+          "name": "three-practices",
           "width": 960,
           "height": "fit_content",
           "layout": "vertical",
@@ -854,7 +854,7 @@
             {
               "type": "frame",
               "id": "f49",
-              "name": "做法 1",
+              "name": "practice-1",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -869,7 +869,7 @@
                 {
                   "type": "text",
                   "id": "t47",
-                  "name": "序号",
+                  "name": "index",
                   "content": "01",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -888,9 +888,9 @@
                 {
                   "type": "text",
                   "id": "t48",
-                  "name": "做法",
-                  "content": "天头留给批注，地脚留给页码与鱼尾",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "practice",
+                  "content": "Head margin for notes, foot for folios and marks",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -909,7 +909,7 @@
             {
               "type": "frame",
               "id": "f52",
-              "name": "做法 2",
+              "name": "practice-2",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -924,7 +924,7 @@
                 {
                   "type": "text",
                   "id": "t50",
-                  "name": "序号",
+                  "name": "index",
                   "content": "02",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -943,9 +943,9 @@
                 {
                   "type": "text",
                   "id": "t51",
-                  "name": "做法",
-                  "content": "正文块收窄到三十字，宁可分栏也不放宽",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "practice",
+                  "content": "Hold body text to 66 characters; add a column instead",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -964,7 +964,7 @@
             {
               "type": "frame",
               "id": "f55",
-              "name": "做法 3",
+              "name": "practice-3",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -979,7 +979,7 @@
                 {
                   "type": "text",
                   "id": "t53",
-                  "name": "序号",
+                  "name": "index",
                   "content": "03",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -998,9 +998,9 @@
                 {
                   "type": "text",
                   "id": "t54",
-                  "name": "做法",
-                  "content": "界行的长度由版面定，与文字多少无关",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "practice",
+                  "content": "Rule length follows the layout, not the text",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -1021,7 +1021,7 @@
         {
           "type": "frame",
           "id": "f58",
-          "name": "旁注",
+          "name": "side-note",
           "width": 600,
           "height": "fit_content",
           "layout": "vertical",
@@ -1034,9 +1034,9 @@
             {
               "type": "text",
               "id": "t57",
-              "name": "旁注",
-              "content": "版心之外的留白不是废纸。\n天头承批注，地脚承页码，\n两者各有职务在身，\n所以不必、也不该等高。",
-              "fontFamily": "Noto Sans SC",
+              "name": "side-note",
+              "content": "Margins are not wasted paper.\nThe head holds notes, the foot folios.\nEach has its own job,\nso they need not match.",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -1055,13 +1055,13 @@
         {
           "type": "rectangle",
           "id": "r59",
-          "name": "界行",
+          "name": "rule",
           "width": 1,
           "height": 708,
           "fill": [
             {
               "type": "solid",
-              "color": "$c-jie"
+              "color": "$c-column-rule"
             }
           ],
           "x": 1140,
@@ -1070,7 +1070,7 @@
         {
           "type": "path",
           "id": "p60",
-          "name": "鱼尾 · 上",
+          "name": "fishtail-mark-top",
           "d": "M0 0 L20 0 L10.0 9 Z",
           "width": 20,
           "height": 9,
@@ -1086,7 +1086,7 @@
         {
           "type": "path",
           "id": "p61",
-          "name": "鱼尾 · 下",
+          "name": "fishtail-mark-bottom",
           "d": "M10.0 0 L20 9 L0 9 Z",
           "width": 20,
           "height": 9,
@@ -1102,7 +1102,7 @@
         {
           "type": "text",
           "id": "t62",
-          "name": "页码",
+          "name": "page-number",
           "content": "3 / 7",
           "fontFamily": "Inter",
           "fontSize": 24,
@@ -1128,14 +1128,14 @@
     {
       "type": "frame",
       "id": "f63",
-      "name": "04 双栏对读",
+      "name": "04-two-column-read",
       "width": 1920,
       "height": 1080,
       "layout": "none",
       "fill": [
         {
           "type": "solid",
-          "color": "$c-xuan"
+          "color": "$c-paper"
         }
       ],
       "clipContent": true,
@@ -1143,7 +1143,7 @@
         {
           "type": "frame",
           "id": "f65",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -1156,9 +1156,9 @@
             {
               "type": "text",
               "id": "t64",
-              "name": "标题",
-              "content": "分栏是为了把行缩短，不是把内容装进两个盒子",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Columns shorten lines; they are not two boxes for content",
+              "fontFamily": "Inter",
               "fontSize": 56,
               "fontWeight": 700,
               "fill": [
@@ -1177,7 +1177,7 @@
         {
           "type": "frame",
           "id": "f69",
-          "name": "左栏 · 其说",
+          "name": "left-column-usual-view",
           "width": 808,
           "height": "fit_content",
           "layout": "vertical",
@@ -1190,9 +1190,9 @@
             {
               "type": "text",
               "id": "t66",
-              "name": "栏题",
-              "content": "其说",
-              "fontFamily": "Noto Sans SC",
+              "name": "column-title",
+              "content": "Common",
+              "fontFamily": "Inter",
               "fontSize": 40,
               "fontWeight": 600,
               "fill": [
@@ -1209,9 +1209,9 @@
             {
               "type": "text",
               "id": "t67",
-              "name": "左栏正文",
-              "content": "通行的做法是给每一栏加一个\n圆角卡片，再用底色把两边分开。\n分是分开了，读者读到的却是\n两张卡片，而不是一篇文章的\n两个部分。",
-              "fontFamily": "Noto Sans SC",
+              "name": "left-column-body",
+              "content": "The usual move gives each column\na rounded card and a tint of its own.\nThey are apart, but readers see\ntwo cards, not two halves\nof one piece.",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 400,
               "fill": [
@@ -1228,9 +1228,9 @@
             {
               "type": "text",
               "id": "t68",
-              "name": "左栏续",
-              "content": "卡片还有一个副作用：它必须有内边距，\n于是同一块版心里，能排的字更少，\n行却没有因此变短。",
-              "fontFamily": "Noto Sans SC",
+              "name": "left-column-cont",
+              "content": "Cards also need padding,\nso the same type area holds fewer words,\nand the lines get no shorter.",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 400,
               "fill": [
@@ -1249,7 +1249,7 @@
         {
           "type": "frame",
           "id": "f75",
-          "name": "右栏 · 我见",
+          "name": "right-column-our-view",
           "width": 808,
           "height": "fit_content",
           "layout": "vertical",
@@ -1262,9 +1262,9 @@
             {
               "type": "text",
               "id": "t72",
-              "name": "栏题",
-              "content": "我见",
-              "fontFamily": "Noto Sans SC",
+              "name": "column-title",
+              "content": "Ours",
+              "fontFamily": "Inter",
               "fontSize": 40,
               "fontWeight": 600,
               "fill": [
@@ -1281,7 +1281,7 @@
             {
               "type": "frame",
               "id": "f71",
-              "name": "首句",
+              "name": "lead-sentence",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1301,9 +1301,9 @@
                 {
                   "type": "text",
                   "id": "t70",
-                  "name": "首句",
-                  "content": "界行只标记分栏，不圈占内容。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "lead-sentence",
+                  "content": "A rule marks a column, not a fence.",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 500,
                   "fill": [
@@ -1322,9 +1322,9 @@
             {
               "type": "text",
               "id": "t73",
-              "name": "右栏正文",
-              "content": "线画在版面上，卡片扣在内容上。\n界行贯穿整个版心，不随文字长短\n伸缩；它分的是版面，不是归属。",
-              "fontFamily": "Noto Sans SC",
+              "name": "right-column-body",
+              "content": "A line sits on the page; a card on content.\nA rule spans the type area and never flexes\nwith the text; it divides space, not ownership.",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 400,
               "fill": [
@@ -1341,9 +1341,9 @@
             {
               "type": "text",
               "id": "t74",
-              "name": "右栏续",
-              "content": "把分栏交给线之后，栏宽就能完全由\n行长决定：三十字一行，多出来的宽度\n留给留白，而不是留给边框。",
-              "fontFamily": "Noto Sans SC",
+              "name": "right-column-cont",
+              "content": "Let lines split the columns and width follows\nthe measure: 66 characters, spare width\ngoes to white space, not borders.",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 400,
               "fill": [
@@ -1362,13 +1362,13 @@
         {
           "type": "rectangle",
           "id": "r76",
-          "name": "界行",
+          "name": "rule",
           "width": 1,
           "height": 708,
           "fill": [
             {
               "type": "solid",
-              "color": "$c-jie"
+              "color": "$c-column-rule"
             }
           ],
           "x": 960,
@@ -1377,7 +1377,7 @@
         {
           "type": "path",
           "id": "p77",
-          "name": "鱼尾 · 上",
+          "name": "fishtail-mark-top",
           "d": "M0 0 L20 0 L10.0 9 Z",
           "width": 20,
           "height": 9,
@@ -1393,7 +1393,7 @@
         {
           "type": "path",
           "id": "p78",
-          "name": "鱼尾 · 下",
+          "name": "fishtail-mark-bottom",
           "d": "M10.0 0 L20 9 L0 9 Z",
           "width": 20,
           "height": 9,
@@ -1409,7 +1409,7 @@
         {
           "type": "text",
           "id": "t79",
-          "name": "页码",
+          "name": "page-number",
           "content": "4 / 7",
           "fontFamily": "Inter",
           "fontSize": 24,
@@ -1435,14 +1435,14 @@
     {
       "type": "frame",
       "id": "f80",
-      "name": "05 引文",
+      "name": "05-quote",
       "width": 1920,
       "height": 1080,
       "layout": "none",
       "fill": [
         {
           "type": "solid",
-          "color": "$c-xuan"
+          "color": "$c-paper"
         }
       ],
       "clipContent": true,
@@ -1450,7 +1450,7 @@
         {
           "type": "frame",
           "id": "f82",
-          "name": "天头批注",
+          "name": "head-margin-note",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -1463,9 +1463,9 @@
             {
               "type": "text",
               "id": "t81",
-              "name": "批注",
-              "content": "回行的距离，是版面替眼睛付的成本",
-              "fontFamily": "Noto Sans SC",
+              "name": "margin-note",
+              "content": "Every return sweep is a cost paid by the eye",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -1484,7 +1484,7 @@
         {
           "type": "frame",
           "id": "f84",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -1497,9 +1497,9 @@
             {
               "type": "text",
               "id": "t83",
-              "name": "标题",
-              "content": "一行超过三十个汉字，眼睛就会在回行时丢位置",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Past 66 characters, the eye loses its place on return",
+              "fontFamily": "Inter",
               "fontSize": 56,
               "fontWeight": 700,
               "fill": [
@@ -1518,7 +1518,7 @@
         {
           "type": "frame",
           "id": "f86",
-          "name": "引文块",
+          "name": "quote-block",
           "width": 1080,
           "height": "fit_content",
           "layout": "vertical",
@@ -1527,7 +1527,7 @@
           "fill": [
             {
               "type": "solid",
-              "color": "$c-xuan-deep"
+              "color": "$c-paper-deep"
             }
           ],
           "padding": [
@@ -1540,9 +1540,9 @@
             {
               "type": "text",
               "id": "t85",
-              "name": "引文",
-              "content": "行的长度决定读者每次回行要走多远。\n走得太远，眼睛会落到上一行或下一行，\n于是要重读；重读不是理解慢，是版面失职。",
-              "fontFamily": "Noto Sans SC",
+              "name": "quote",
+              "content": "Line length sets how far the eye travels back.\nToo far, and it lands a line above or below,\nso we reread: not slow reading, a failed layout.",
+              "fontFamily": "Inter",
               "fontSize": 36,
               "fontWeight": 400,
               "fill": [
@@ -1561,7 +1561,7 @@
         {
           "type": "frame",
           "id": "f88",
-          "name": "出处",
+          "name": "citation",
           "width": 1080,
           "height": "fit_content",
           "layout": "vertical",
@@ -1574,9 +1574,9 @@
             {
               "type": "text",
               "id": "t87",
-              "name": "出处",
-              "content": "——《版面与阅读》第二章 · 行长与回行",
-              "fontFamily": "Noto Sans SC",
+              "name": "citation",
+              "content": "— Layout and Reading, ch. 2 · Measure",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -1596,13 +1596,13 @@
         {
           "type": "rectangle",
           "id": "r89",
-          "name": "界行",
+          "name": "rule",
           "width": 1,
           "height": 708,
           "fill": [
             {
               "type": "solid",
-              "color": "$c-jie"
+              "color": "$c-column-rule"
             }
           ],
           "x": 360,
@@ -1611,13 +1611,13 @@
         {
           "type": "rectangle",
           "id": "r90",
-          "name": "界行",
+          "name": "rule",
           "width": 1,
           "height": 708,
           "fill": [
             {
               "type": "solid",
-              "color": "$c-jie"
+              "color": "$c-column-rule"
             }
           ],
           "x": 1560,
@@ -1626,7 +1626,7 @@
         {
           "type": "path",
           "id": "p91",
-          "name": "鱼尾 · 上",
+          "name": "fishtail-mark-top",
           "d": "M0 0 L20 0 L10.0 9 Z",
           "width": 20,
           "height": 9,
@@ -1642,7 +1642,7 @@
         {
           "type": "path",
           "id": "p92",
-          "name": "鱼尾 · 下",
+          "name": "fishtail-mark-bottom",
           "d": "M10.0 0 L20 9 L0 9 Z",
           "width": 20,
           "height": 9,
@@ -1658,7 +1658,7 @@
         {
           "type": "text",
           "id": "t93",
-          "name": "页码",
+          "name": "page-number",
           "content": "5 / 7",
           "fontFamily": "Inter",
           "fontSize": 24,
@@ -1684,14 +1684,14 @@
     {
       "type": "frame",
       "id": "f94",
-      "name": "06 表列",
+      "name": "06-table",
       "width": 1920,
       "height": 1080,
       "layout": "none",
       "fill": [
         {
           "type": "solid",
-          "color": "$c-xuan"
+          "color": "$c-paper"
         }
       ],
       "clipContent": true,
@@ -1699,7 +1699,7 @@
         {
           "type": "frame",
           "id": "f96",
-          "name": "天头批注",
+          "name": "head-margin-note",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -1712,9 +1712,9 @@
             {
               "type": "text",
               "id": "t95",
-              "name": "批注",
-              "content": "避头尾在引擎里缺席，只能由文案补上",
-              "fontFamily": "Noto Sans SC",
+              "name": "margin-note",
+              "content": "The engine has no break rules, so copy must cover",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -1733,7 +1733,7 @@
         {
           "type": "frame",
           "id": "f98",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -1746,9 +1746,9 @@
             {
               "type": "text",
               "id": "t97",
-              "name": "标题",
-              "content": "断行处最见功夫，而排版引擎并不替我们避头尾",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Craft lives at line breaks, and the engine won't guard them",
+              "fontFamily": "Inter",
               "fontSize": 56,
               "fontWeight": 700,
               "fill": [
@@ -1767,7 +1767,7 @@
         {
           "type": "frame",
           "id": "f134",
-          "name": "表格",
+          "name": "table",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -1780,7 +1780,7 @@
             {
               "type": "frame",
               "id": "f103",
-              "name": "表头",
+              "name": "table-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1795,9 +1795,9 @@
                 {
                   "type": "text",
                   "id": "t99",
-                  "name": "表头 · 格",
-                  "content": "现象",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-header-cell",
+                  "content": "Issue",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 600,
                   "fill": [
@@ -1814,9 +1814,9 @@
                 {
                   "type": "text",
                   "id": "t100",
-                  "name": "表头 · 格",
-                  "content": "当前引擎行为",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-header-cell",
+                  "content": "Engine does",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 600,
                   "fill": [
@@ -1833,9 +1833,9 @@
                 {
                   "type": "text",
                   "id": "t101",
-                  "name": "表头 · 格",
-                  "content": "后果",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-header-cell",
+                  "content": "Result",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 600,
                   "fill": [
@@ -1852,9 +1852,9 @@
                 {
                   "type": "text",
                   "id": "t102",
-                  "name": "表头 · 格",
-                  "content": "我们的做法",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-header-cell",
+                  "content": "Our fix",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 600,
                   "fill": [
@@ -1873,7 +1873,7 @@
             {
               "type": "rectangle",
               "id": "r104",
-              "name": "表头线",
+              "name": "table-header-rule",
               "width": "fill_container",
               "height": 2,
               "fill": [
@@ -1886,7 +1886,7 @@
             {
               "type": "frame",
               "id": "f109",
-              "name": "表行 1",
+              "name": "table-row-1",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1901,9 +1901,9 @@
                 {
                   "type": "text",
                   "id": "t105",
-                  "name": "表行 1 · 格",
-                  "content": "行首标点",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-1-cell",
+                  "content": "Hung quotes",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -1920,9 +1920,9 @@
                 {
                   "type": "text",
                   "id": "t106",
-                  "name": "表行 1 · 格",
-                  "content": "逐字断行，不避头尾",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-1-cell",
+                  "content": "Sets them inside",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -1939,9 +1939,9 @@
                 {
                   "type": "text",
                   "id": "t107",
-                  "name": "表行 1 · 格",
-                  "content": "「。」被甩到行首",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-1-cell",
+                  "content": "Edge looks dented",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -1958,9 +1958,9 @@
                 {
                   "type": "text",
                   "id": "t108",
-                  "name": "表行 1 · 格",
-                  "content": "标题写死断点，正文控字数",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-1-cell",
+                  "content": "Hand-break titles, trim copy",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -1979,20 +1979,20 @@
             {
               "type": "rectangle",
               "id": "r110",
-              "name": "界行 · 行间",
+              "name": "rule-between-rows",
               "width": "fill_container",
               "height": 1,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-jie"
+                  "color": "$c-column-rule"
                 }
               ]
             },
             {
               "type": "frame",
               "id": "f115",
-              "name": "表行 2",
+              "name": "table-row-2",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2001,7 +2001,7 @@
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-deep"
+                  "color": "$c-paper-deep"
                 }
               ],
               "padding": [
@@ -2012,9 +2012,9 @@
                 {
                   "type": "text",
                   "id": "t111",
-                  "name": "表行 2 · 格",
-                  "content": "孤字末行",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-2-cell",
+                  "content": "Widows",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2031,9 +2031,9 @@
                 {
                   "type": "text",
                   "id": "t112",
-                  "name": "表行 2 · 格",
-                  "content": "末行只剩一两个字",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-2-cell",
+                  "content": "One word on last line",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2050,9 +2050,9 @@
                 {
                   "type": "text",
                   "id": "t113",
-                  "name": "表行 2 · 格",
-                  "content": "版面出现残行",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-2-cell",
+                  "content": "Broken paragraph",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2069,9 +2069,9 @@
                 {
                   "type": "text",
                   "id": "t114",
-                  "name": "表行 2 · 格",
-                  "content": "收窄栏宽，或改写文案",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-2-cell",
+                  "content": "Narrow column or rewrite",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2090,20 +2090,20 @@
             {
               "type": "rectangle",
               "id": "r116",
-              "name": "界行 · 行间",
+              "name": "rule-between-rows",
               "width": "fill_container",
               "height": 1,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-jie"
+                  "color": "$c-column-rule"
                 }
               ]
             },
             {
               "type": "frame",
               "id": "f121",
-              "name": "表行 3",
+              "name": "table-row-3",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2118,9 +2118,9 @@
                 {
                   "type": "text",
                   "id": "t117",
-                  "name": "表行 3 · 格",
-                  "content": "中英混排",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-3-cell",
+                  "content": "Acronyms",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2137,9 +2137,9 @@
                 {
                   "type": "text",
                   "id": "t118",
-                  "name": "表行 3 · 格",
-                  "content": "两侧不自动加间隙",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-3-cell",
+                  "content": "No small caps",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2156,9 +2156,9 @@
                 {
                   "type": "text",
                   "id": "t119",
-                  "name": "表行 3 · 格",
-                  "content": "数字与汉字粘连",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-3-cell",
+                  "content": "Caps shout",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2175,9 +2175,9 @@
                 {
                   "type": "text",
                   "id": "t120",
-                  "name": "表行 3 · 格",
-                  "content": "文案里补半角空格",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-3-cell",
+                  "content": "Small caps by hand",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2196,20 +2196,20 @@
             {
               "type": "rectangle",
               "id": "r122",
-              "name": "界行 · 行间",
+              "name": "rule-between-rows",
               "width": "fill_container",
               "height": 1,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-jie"
+                  "color": "$c-column-rule"
                 }
               ]
             },
             {
               "type": "frame",
               "id": "f127",
-              "name": "表行 4",
+              "name": "table-row-4",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2218,7 +2218,7 @@
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-deep"
+                  "color": "$c-paper-deep"
                 }
               ],
               "padding": [
@@ -2229,9 +2229,9 @@
                 {
                   "type": "text",
                   "id": "t123",
-                  "name": "表行 4 · 格",
-                  "content": "数值对齐",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-4-cell",
+                  "content": "Figures",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2248,9 +2248,9 @@
                 {
                   "type": "text",
                   "id": "t124",
-                  "name": "表行 4 · 格",
-                  "content": "没有等宽数字",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-4-cell",
+                  "content": "No tabular figures",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2267,9 +2267,9 @@
                 {
                   "type": "text",
                   "id": "t125",
-                  "name": "表行 4 · 格",
-                  "content": "列与列之间发抖",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-4-cell",
+                  "content": "Columns jitter",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2286,9 +2286,9 @@
                 {
                   "type": "text",
                   "id": "t126",
-                  "name": "表行 4 · 格",
-                  "content": "数字走西文族，列宽写死",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-4-cell",
+                  "content": "Tabular figures, fixed width",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2307,20 +2307,20 @@
             {
               "type": "rectangle",
               "id": "r128",
-              "name": "界行 · 行间",
+              "name": "rule-between-rows",
               "width": "fill_container",
               "height": 1,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-jie"
+                  "color": "$c-column-rule"
                 }
               ]
             },
             {
               "type": "frame",
               "id": "f133",
-              "name": "表行 5",
+              "name": "table-row-5",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2335,9 +2335,9 @@
                 {
                   "type": "text",
                   "id": "t129",
-                  "name": "表行 5 · 格",
-                  "content": "省略号截断",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-5-cell",
+                  "content": "Ellipsis",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2354,9 +2354,9 @@
                 {
                   "type": "text",
                   "id": "t130",
-                  "name": "表行 5 · 格",
-                  "content": "直接截去后半句",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-5-cell",
+                  "content": "Cuts the sentence",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2373,9 +2373,9 @@
                 {
                   "type": "text",
                   "id": "t131",
-                  "name": "表行 5 · 格",
-                  "content": "读者读到半截话",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-5-cell",
+                  "content": "Half a thought",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2392,9 +2392,9 @@
                 {
                   "type": "text",
                   "id": "t132",
-                  "name": "表行 5 · 格",
-                  "content": "不截断，改写或换页型",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-row-5-cell",
+                  "content": "Rewrite, never truncate",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2415,7 +2415,7 @@
         {
           "type": "frame",
           "id": "f136",
-          "name": "来源",
+          "name": "source",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -2428,9 +2428,9 @@
             {
               "type": "text",
               "id": "t135",
-              "name": "来源",
-              "content": "来源：版面组对内部三十份中文文档的抽样，2026 年 7 月",
-              "fontFamily": "Noto Sans SC",
+              "name": "source",
+              "content": "Source: Layout Group sample of 30 internal docs, July 2026",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -2449,7 +2449,7 @@
         {
           "type": "path",
           "id": "p137",
-          "name": "鱼尾 · 上",
+          "name": "fishtail-mark-top",
           "d": "M0 0 L20 0 L10.0 9 Z",
           "width": 20,
           "height": 9,
@@ -2465,7 +2465,7 @@
         {
           "type": "path",
           "id": "p138",
-          "name": "鱼尾 · 下",
+          "name": "fishtail-mark-bottom",
           "d": "M10.0 0 L20 9 L0 9 Z",
           "width": 20,
           "height": 9,
@@ -2481,7 +2481,7 @@
         {
           "type": "text",
           "id": "t139",
-          "name": "页码",
+          "name": "page-number",
           "content": "6 / 7",
           "fontFamily": "Inter",
           "fontSize": 24,
@@ -2507,7 +2507,7 @@
     {
       "type": "frame",
       "id": "f140",
-      "name": "07 收束 · 函套",
+      "name": "07-close-case",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -2522,7 +2522,7 @@
         {
           "type": "path",
           "id": "p141",
-          "name": "鱼尾 · 上",
+          "name": "fishtail-mark-top",
           "d": "M0 0 L80 0 L40.0 36 Z",
           "width": 80,
           "height": 36,
@@ -2538,7 +2538,7 @@
         {
           "type": "path",
           "id": "p142",
-          "name": "鱼尾 · 下",
+          "name": "fishtail-mark-bottom",
           "d": "M40.0 0 L80 36 L0 36 Z",
           "width": 80,
           "height": 36,
@@ -2554,7 +2554,7 @@
         {
           "type": "frame",
           "id": "f144",
-          "name": "收束句",
+          "name": "closing-line",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -2567,15 +2567,15 @@
             {
               "type": "text",
               "id": "t143",
-              "name": "收束",
-              "content": "把四次退让逐项收回来，\n从一行三十字开始。",
-              "fontFamily": "Noto Sans SC",
+              "name": "close",
+              "content": "Win back all four,\none 66-character line at a time.",
+              "fontFamily": "Inter",
               "fontSize": 64,
               "fontWeight": 700,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-on"
+                  "color": "$c-paper-on"
                 }
               ],
               "lineHeight": 1.12,
@@ -2589,7 +2589,7 @@
         {
           "type": "frame",
           "id": "f147",
-          "name": "落款",
+          "name": "signature",
           "width": 1680,
           "height": "fit_content",
           "layout": "horizontal",
@@ -2603,15 +2603,15 @@
             {
               "type": "text",
               "id": "t145",
-              "name": "落款 · 单位",
-              "content": "版面组 · 内部评议",
-              "fontFamily": "Noto Sans SC",
+              "name": "signature-org",
+              "content": "Layout Group · Review",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-dim"
+                  "color": "$c-paper-dim"
                 }
               ],
               "lineHeight": 1.2,
@@ -2622,7 +2622,7 @@
             {
               "type": "text",
               "id": "t146",
-              "name": "落款 · 日期",
+              "name": "signature-date",
               "content": "2026.08.09",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -2630,7 +2630,7 @@
               "fill": [
                 {
                   "type": "solid",
-                  "color": "$c-xuan-dim"
+                  "color": "$c-paper-dim"
                 }
               ],
               "lineHeight": 1.2,
@@ -2643,7 +2643,7 @@
         {
           "type": "path",
           "id": "p148",
-          "name": "鱼尾 · 上",
+          "name": "fishtail-mark-top",
           "d": "M0 0 L20 0 L10.0 9 Z",
           "width": 20,
           "height": 9,
@@ -2659,7 +2659,7 @@
         {
           "type": "path",
           "id": "p149",
-          "name": "鱼尾 · 下",
+          "name": "fishtail-mark-bottom",
           "d": "M10.0 0 L20 9 L0 9 Z",
           "width": 20,
           "height": 9,
@@ -2675,7 +2675,7 @@
         {
           "type": "text",
           "id": "t150",
-          "name": "页码",
+          "name": "page-number",
           "content": "7 / 7",
           "fontFamily": "Inter",
           "fontSize": 24,
@@ -2683,7 +2683,7 @@
           "fill": [
             {
               "type": "solid",
-              "color": "$c-xuan-dim"
+              "color": "$c-paper-dim"
             }
           ],
           "lineHeight": 1.2,

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "路演 deck · 深色 16:9",
+  "name": "pitch-deck-dark-16x9",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f11",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -80,7 +80,7 @@
         {
           "type": "frame",
           "id": "f10",
-          "name": "01 封面 · 正文",
+          "name": "01-cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -96,7 +96,7 @@
             {
               "type": "frame",
               "id": "f13",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -118,9 +118,9 @@
                 {
                   "type": "text",
                   "id": "t14",
-                  "name": "标签文字",
-                  "content": "种子轮 · 融资路演",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Seed round · Investor pitch",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -139,7 +139,7 @@
             {
               "type": "frame",
               "id": "f4",
-              "name": "主张",
+              "name": "claim",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -150,9 +150,9 @@
                 {
                   "type": "text",
                   "id": "t1",
-                  "name": "主标题",
-                  "content": "把三天的报价\n压进三分钟",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "main-title",
+                  "content": "Turn 3-day quotes\ninto 3-minute ones",
+                  "fontFamily": "Inter",
                   "fontSize": 128,
                   "fontWeight": 700,
                   "fill": [
@@ -169,7 +169,7 @@
                 {
                   "type": "rectangle",
                   "id": "r2",
-                  "name": "强调条",
+                  "name": "accent-bar",
                   "width": 160,
                   "height": 8,
                   "cornerRadius": 999,
@@ -183,9 +183,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "副标题",
-                  "content": "我们在做的，是让每一家工厂当场就能报出价来。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "subtitle",
+                  "content": "We help every factory quote a price on the spot.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -204,7 +204,7 @@
             {
               "type": "frame",
               "id": "f7",
-              "name": "落款",
+              "name": "sign-off",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -216,9 +216,9 @@
                 {
                   "type": "text",
                   "id": "t5",
-                  "name": "演讲者",
-                  "content": "启明智造 · 创始人 陈知远",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "speaker",
+                  "content": "Dawnforge · Founder Ethan Clarke",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 500,
                   "fill": [
@@ -235,9 +235,9 @@
                 {
                   "type": "text",
                   "id": "t6",
-                  "name": "场合",
-                  "content": "2026.08 · 种子轮路演",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "occasion",
+                  "content": "Aug 2026 · Seed round pitch",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -258,7 +258,7 @@
         {
           "type": "frame",
           "id": "f12",
-          "name": "01 封面 · 装饰",
+          "name": "01-cover-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -267,7 +267,7 @@
             {
               "type": "rectangle",
               "id": "r8",
-              "name": "光晕",
+              "name": "glow",
               "width": 1500,
               "height": 1500,
               "cornerRadius": 750,
@@ -295,7 +295,7 @@
             {
               "type": "rectangle",
               "id": "r9",
-              "name": "光晕",
+              "name": "glow",
               "width": 760,
               "height": 760,
               "cornerRadius": 380,
@@ -329,7 +329,7 @@
     {
       "type": "frame",
       "id": "f35",
-      "name": "02 问题",
+      "name": "02-problem",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -358,7 +358,7 @@
         {
           "type": "frame",
           "id": "f34",
-          "name": "02 问题 · 正文",
+          "name": "02-problem-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -374,7 +374,7 @@
             {
               "type": "frame",
               "id": "f39",
-              "name": "页头",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -385,9 +385,9 @@
                 {
                   "type": "text",
                   "id": "t37",
-                  "name": "页标题",
-                  "content": "报价这一步，卡住了整条链路",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Quoting is the bottleneck in the whole chain",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -404,9 +404,9 @@
                 {
                   "type": "text",
                   "id": "t38",
-                  "name": "页副标题",
-                  "content": "三个问题，每一个都在直接吃掉订单。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Three problems, and each one costs us orders.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -425,7 +425,7 @@
             {
               "type": "frame",
               "id": "f40",
-              "name": "痛点列表",
+              "name": "pain-point-list",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -437,7 +437,7 @@
                 {
                   "type": "frame",
                   "id": "f19",
-                  "name": "痛点 1",
+                  "name": "pain-point-1",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -448,7 +448,7 @@
                     {
                       "type": "text",
                       "id": "t15",
-                      "name": "痛点序号",
+                      "name": "pain-point-index",
                       "content": "01",
                       "fontFamily": "Inter",
                       "fontSize": 72,
@@ -467,7 +467,7 @@
                     {
                       "type": "frame",
                       "id": "f18",
-                      "name": "痛点文案",
+                      "name": "pain-point-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -478,9 +478,9 @@
                         {
                           "type": "text",
                           "id": "t16",
-                          "name": "痛点标题",
-                          "content": "算不清",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-point-title",
+                          "content": "Can't add it up",
+                          "fontFamily": "Inter",
                           "fontSize": 44,
                           "fontWeight": 600,
                           "fill": [
@@ -497,9 +497,9 @@
                         {
                           "type": "text",
                           "id": "t17",
-                          "name": "痛点说明",
-                          "content": "一份报价要问遍四个部门，等两天才知道能不能接。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-point-note",
+                          "content": "One quote means chasing four departments and waiting two days to know if you can take the job.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -520,7 +520,7 @@
                 {
                   "type": "rectangle",
                   "id": "r20",
-                  "name": "分隔线",
+                  "name": "divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -533,7 +533,7 @@
                 {
                   "type": "frame",
                   "id": "f25",
-                  "name": "痛点 2",
+                  "name": "pain-point-2",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -544,7 +544,7 @@
                     {
                       "type": "text",
                       "id": "t21",
-                      "name": "痛点序号",
+                      "name": "pain-point-index",
                       "content": "02",
                       "fontFamily": "Inter",
                       "fontSize": 72,
@@ -563,7 +563,7 @@
                     {
                       "type": "frame",
                       "id": "f24",
-                      "name": "痛点文案",
+                      "name": "pain-point-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -574,9 +574,9 @@
                         {
                           "type": "text",
                           "id": "t22",
-                          "name": "痛点标题",
-                          "content": "报不准",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-point-title",
+                          "content": "Can't price it right",
+                          "fontFamily": "Inter",
                           "fontSize": 44,
                           "fontWeight": 600,
                           "fill": [
@@ -593,9 +593,9 @@
                         {
                           "type": "text",
                           "id": "t23",
-                          "name": "痛点说明",
-                          "content": "凭经验拍的价，做完才发现毛利被工时和损耗吃光了。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-point-note",
+                          "content": "Gut-feel prices: only after the job do you find labor and scrap ate the margin.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -616,7 +616,7 @@
                 {
                   "type": "rectangle",
                   "id": "r26",
-                  "name": "分隔线",
+                  "name": "divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -629,7 +629,7 @@
                 {
                   "type": "frame",
                   "id": "f31",
-                  "name": "痛点 3",
+                  "name": "pain-point-3",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -640,7 +640,7 @@
                     {
                       "type": "text",
                       "id": "t27",
-                      "name": "痛点序号",
+                      "name": "pain-point-index",
                       "content": "03",
                       "fontFamily": "Inter",
                       "fontSize": 72,
@@ -659,7 +659,7 @@
                     {
                       "type": "frame",
                       "id": "f30",
-                      "name": "痛点文案",
+                      "name": "pain-point-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -670,9 +670,9 @@
                         {
                           "type": "text",
                           "id": "t28",
-                          "name": "痛点标题",
-                          "content": "跟不上",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-point-title",
+                          "content": "Can't keep up",
+                          "fontFamily": "Inter",
                           "fontSize": 44,
                           "fontWeight": 600,
                           "fill": [
@@ -689,9 +689,9 @@
                         {
                           "type": "text",
                           "id": "t29",
-                          "name": "痛点说明",
-                          "content": "客户当场要数，我们只能说「回去核一下」——单子就这么走了。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-point-note",
+                          "content": "The customer wants a number now, and all we can say is \"let me check\". That's how the deal walks.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -716,7 +716,7 @@
         {
           "type": "frame",
           "id": "f36",
-          "name": "02 问题 · 装饰",
+          "name": "02-problem-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -725,7 +725,7 @@
             {
               "type": "text",
               "id": "t32",
-              "name": "ghost 页码",
+              "name": "ghost-page-number",
               "content": "02",
               "fontFamily": "Inter",
               "fontSize": 480,
@@ -747,7 +747,7 @@
             {
               "type": "rectangle",
               "id": "r33",
-              "name": "光晕",
+              "name": "glow",
               "width": 900,
               "height": 900,
               "cornerRadius": 450,
@@ -781,7 +781,7 @@
     {
       "type": "frame",
       "id": "f56",
-      "name": "03 方案",
+      "name": "03-solution",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -810,7 +810,7 @@
         {
           "type": "frame",
           "id": "f55",
-          "name": "03 方案 · 正文",
+          "name": "03-solution-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -826,7 +826,7 @@
             {
               "type": "frame",
               "id": "f60",
-              "name": "页头",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -837,9 +837,9 @@
                 {
                   "type": "text",
                   "id": "t58",
-                  "name": "页标题",
-                  "content": "把报价变成一次点击",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Turn quoting into one click",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -856,9 +856,9 @@
                 {
                   "type": "text",
                   "id": "t59",
-                  "name": "页副标题",
-                  "content": "工艺库 + 实时成本模型，客户还在电话里，价就出来了。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Process library + live cost model: the price is ready while the customer is still on the phone.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -877,7 +877,7 @@
             {
               "type": "frame",
               "id": "f62",
-              "name": "卖点区",
+              "name": "feature-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -889,7 +889,7 @@
                 {
                   "type": "frame",
                   "id": "f61",
-                  "name": "卖点网格",
+                  "name": "feature-grid",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -900,7 +900,7 @@
                     {
                       "type": "frame",
                       "id": "f44",
-                      "name": "卖点卡",
+                      "name": "feature-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -921,7 +921,7 @@
                         {
                           "type": "rectangle",
                           "id": "r41",
-                          "name": "霓虹线",
+                          "name": "neon-line",
                           "width": 72,
                           "height": 4,
                           "cornerRadius": 999,
@@ -945,9 +945,9 @@
                         {
                           "type": "text",
                           "id": "t42",
-                          "name": "卖点标题",
-                          "content": "三分钟出价",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "feature-title",
+                          "content": "Quotes in 3 minutes",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 600,
                           "fill": [
@@ -964,9 +964,9 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "卖点说明",
-                          "content": "上传图纸，直接算出工时与材料。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "feature-note",
+                          "content": "Upload a drawing and get labor and materials instantly.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -985,7 +985,7 @@
                     {
                       "type": "frame",
                       "id": "f48",
-                      "name": "卖点卡",
+                      "name": "feature-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1006,7 +1006,7 @@
                         {
                           "type": "rectangle",
                           "id": "r45",
-                          "name": "霓虹线",
+                          "name": "neon-line",
                           "width": 72,
                           "height": 4,
                           "cornerRadius": 999,
@@ -1030,9 +1030,9 @@
                         {
                           "type": "text",
                           "id": "t46",
-                          "name": "卖点标题",
-                          "content": "毛利先看见",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "feature-title",
+                          "content": "Margin up front",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 600,
                           "fill": [
@@ -1049,9 +1049,9 @@
                         {
                           "type": "text",
                           "id": "t47",
-                          "name": "卖点说明",
-                          "content": "价格旁就是毛利率，接不接一眼定。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "feature-note",
+                          "content": "Margin sits next to the price, so go/no-go takes a glance.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1070,7 +1070,7 @@
                     {
                       "type": "frame",
                       "id": "f52",
-                      "name": "卖点卡",
+                      "name": "feature-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1091,7 +1091,7 @@
                         {
                           "type": "rectangle",
                           "id": "r49",
-                          "name": "霓虹线",
+                          "name": "neon-line",
                           "width": 72,
                           "height": 4,
                           "cornerRadius": 999,
@@ -1115,9 +1115,9 @@
                         {
                           "type": "text",
                           "id": "t50",
-                          "name": "卖点标题",
-                          "content": "越报越准",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "feature-title",
+                          "content": "Sharper every quote",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 600,
                           "fill": [
@@ -1134,9 +1134,9 @@
                         {
                           "type": "text",
                           "id": "t51",
-                          "name": "卖点说明",
-                          "content": "每完成一单回流成本，模型自己修。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "feature-note",
+                          "content": "Every finished job feeds costs back, and the model corrects itself.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1161,7 +1161,7 @@
         {
           "type": "frame",
           "id": "f57",
-          "name": "03 方案 · 装饰",
+          "name": "03-solution-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1170,7 +1170,7 @@
             {
               "type": "text",
               "id": "t53",
-              "name": "ghost 页码",
+              "name": "ghost-page-number",
               "content": "03",
               "fontFamily": "Inter",
               "fontSize": 480,
@@ -1192,7 +1192,7 @@
             {
               "type": "rectangle",
               "id": "r54",
-              "name": "光晕",
+              "name": "glow",
               "width": 1000,
               "height": 1000,
               "cornerRadius": 500,
@@ -1226,7 +1226,7 @@
     {
       "type": "frame",
       "id": "f66",
-      "name": "04 数据",
+      "name": "04-data",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1255,7 +1255,7 @@
         {
           "type": "frame",
           "id": "f65",
-          "name": "04 数据 · 正文",
+          "name": "04-data-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1271,7 +1271,7 @@
             {
               "type": "frame",
               "id": "f70",
-              "name": "页头",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1282,9 +1282,9 @@
                 {
                   "type": "text",
                   "id": "t68",
-                  "name": "页标题",
-                  "content": "半年里，它已经在跑",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Six months in, it's already running",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -1301,9 +1301,9 @@
                 {
                   "type": "text",
                   "id": "t69",
-                  "name": "页副标题",
-                  "content": "不是路演里的假设，是 46 家工厂每天在用的数。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Not pitch-deck assumptions: real numbers 46 factories use every day.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -1322,7 +1322,7 @@
             {
               "type": "frame",
               "id": "f96",
-              "name": "数据区",
+              "name": "data-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1334,7 +1334,7 @@
                 {
                   "type": "frame",
                   "id": "f95",
-                  "name": "数据网格",
+                  "name": "data-grid",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1345,7 +1345,7 @@
                     {
                       "type": "frame",
                       "id": "f78",
-                      "name": "数据卡",
+                      "name": "data-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1367,7 +1367,7 @@
                         {
                           "type": "rectangle",
                           "id": "r73",
-                          "name": "霓虹线",
+                          "name": "neon-line",
                           "width": 72,
                           "height": 4,
                           "cornerRadius": 999,
@@ -1391,7 +1391,7 @@
                         {
                           "type": "frame",
                           "id": "f75",
-                          "name": "数值",
+                          "name": "value",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1402,7 +1402,7 @@
                             {
                               "type": "text",
                               "id": "t74",
-                              "name": "数值文字",
+                              "name": "value-text",
                               "content": "42",
                               "fontFamily": "Inter",
                               "fontSize": 148,
@@ -1421,7 +1421,7 @@
                             {
                               "type": "frame",
                               "id": "f71",
-                              "name": "单位",
+                              "name": "unit",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -1437,9 +1437,9 @@
                                 {
                                   "type": "text",
                                   "id": "t72",
-                                  "name": "单位文字",
-                                  "content": "倍",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "unit-text",
+                                  "content": "×",
+                                  "fontFamily": "Inter",
                                   "fontSize": 46,
                                   "fontWeight": 600,
                                   "fill": [
@@ -1460,9 +1460,9 @@
                         {
                           "type": "text",
                           "id": "t76",
-                          "name": "指标名",
-                          "content": "报价提速",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "metric-name",
+                          "content": "Faster quotes",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -1479,9 +1479,9 @@
                         {
                           "type": "text",
                           "id": "t77",
-                          "name": "指标说明",
-                          "content": "两天的活儿，三分钟出结果",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "metric-note",
+                          "content": "Two days of work, done in three minutes",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -1500,7 +1500,7 @@
                     {
                       "type": "frame",
                       "id": "f86",
-                      "name": "数据卡",
+                      "name": "data-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1522,7 +1522,7 @@
                         {
                           "type": "rectangle",
                           "id": "r81",
-                          "name": "霓虹线",
+                          "name": "neon-line",
                           "width": 72,
                           "height": 4,
                           "cornerRadius": 999,
@@ -1546,7 +1546,7 @@
                         {
                           "type": "frame",
                           "id": "f83",
-                          "name": "数值",
+                          "name": "value",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1557,7 +1557,7 @@
                             {
                               "type": "text",
                               "id": "t82",
-                              "name": "数值文字",
+                              "name": "value-text",
                               "content": "97",
                               "fontFamily": "Inter",
                               "fontSize": 148,
@@ -1576,7 +1576,7 @@
                             {
                               "type": "frame",
                               "id": "f79",
-                              "name": "单位",
+                              "name": "unit",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -1592,7 +1592,7 @@
                                 {
                                   "type": "text",
                                   "id": "t80",
-                                  "name": "单位文字",
+                                  "name": "unit-text",
                                   "content": "%",
                                   "fontFamily": "Inter",
                                   "fontSize": 46,
@@ -1615,9 +1615,9 @@
                         {
                           "type": "text",
                           "id": "t84",
-                          "name": "指标名",
-                          "content": "报价准确率",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "metric-name",
+                          "content": "Quote accuracy",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -1634,9 +1634,9 @@
                         {
                           "type": "text",
                           "id": "t85",
-                          "name": "指标说明",
-                          "content": "与实际成本偏差不超过 3%",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "metric-note",
+                          "content": "Within 3% of actual cost",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -1655,7 +1655,7 @@
                     {
                       "type": "frame",
                       "id": "f94",
-                      "name": "数据卡",
+                      "name": "data-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1677,7 +1677,7 @@
                         {
                           "type": "rectangle",
                           "id": "r89",
-                          "name": "霓虹线",
+                          "name": "neon-line",
                           "width": 72,
                           "height": 4,
                           "cornerRadius": 999,
@@ -1701,7 +1701,7 @@
                         {
                           "type": "frame",
                           "id": "f91",
-                          "name": "数值",
+                          "name": "value",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1712,7 +1712,7 @@
                             {
                               "type": "text",
                               "id": "t90",
-                              "name": "数值文字",
+                              "name": "value-text",
                               "content": "2.3",
                               "fontFamily": "Inter",
                               "fontSize": 148,
@@ -1731,7 +1731,7 @@
                             {
                               "type": "frame",
                               "id": "f87",
-                              "name": "单位",
+                              "name": "unit",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -1747,9 +1747,9 @@
                                 {
                                   "type": "text",
                                   "id": "t88",
-                                  "name": "单位文字",
-                                  "content": "亿元",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "unit-text",
+                                  "content": "M",
+                                  "fontFamily": "Inter",
                                   "fontSize": 46,
                                   "fontWeight": 600,
                                   "fill": [
@@ -1770,9 +1770,9 @@
                         {
                           "type": "text",
                           "id": "t92",
-                          "name": "指标名",
-                          "content": "在跑的订单金额",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "metric-name",
+                          "content": "Live order value ($)",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -1789,9 +1789,9 @@
                         {
                           "type": "text",
                           "id": "t93",
-                          "name": "指标说明",
-                          "content": "来自 46 家制造企业",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "metric-note",
+                          "content": "Across 46 manufacturers",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -1816,7 +1816,7 @@
         {
           "type": "frame",
           "id": "f67",
-          "name": "04 数据 · 装饰",
+          "name": "04-data-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1825,7 +1825,7 @@
             {
               "type": "text",
               "id": "t63",
-              "name": "ghost 页码",
+              "name": "ghost-page-number",
               "content": "04",
               "fontFamily": "Inter",
               "fontSize": 480,
@@ -1847,7 +1847,7 @@
             {
               "type": "rectangle",
               "id": "r64",
-              "name": "光晕",
+              "name": "glow",
               "width": 1100,
               "height": 1100,
               "cornerRadius": 550,
@@ -1881,7 +1881,7 @@
     {
       "type": "frame",
       "id": "f100",
-      "name": "05 里程碑",
+      "name": "05-milestones",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1910,7 +1910,7 @@
         {
           "type": "frame",
           "id": "f99",
-          "name": "05 里程碑 · 正文",
+          "name": "05-milestones-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1926,7 +1926,7 @@
             {
               "type": "frame",
               "id": "f104",
-              "name": "页头",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1937,9 +1937,9 @@
                 {
                   "type": "text",
                   "id": "t102",
-                  "name": "页标题",
-                  "content": "接下来十二个月",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "The next 12 months",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -1956,9 +1956,9 @@
                 {
                   "type": "text",
                   "id": "t103",
-                  "name": "页副标题",
-                  "content": "前两步已经走完，这轮钱花在后两步上。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "The first two steps are done. This round funds the next two.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -1977,7 +1977,7 @@
             {
               "type": "frame",
               "id": "f142",
-              "name": "时间轴区",
+              "name": "timeline-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1989,7 +1989,7 @@
                 {
                   "type": "frame",
                   "id": "f141",
-                  "name": "时间轴",
+                  "name": "timeline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2000,7 +2000,7 @@
                     {
                       "type": "frame",
                       "id": "f113",
-                      "name": "里程碑",
+                      "name": "milestones",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2011,7 +2011,7 @@
                         {
                           "type": "frame",
                           "id": "f109",
-                          "name": "节点日期",
+                          "name": "node-date",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2028,7 +2028,7 @@
                             {
                               "type": "text",
                               "id": "t108",
-                              "name": "日期",
+                              "name": "date",
                               "content": "2026 Q3",
                               "fontFamily": "Inter",
                               "fontSize": 28,
@@ -2049,7 +2049,7 @@
                         {
                           "type": "frame",
                           "id": "f107",
-                          "name": "轴段",
+                          "name": "axis-segment",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2060,7 +2060,7 @@
                             {
                               "type": "rectangle",
                               "id": "r105",
-                              "name": "节点圆",
+                              "name": "node-dot",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 14,
@@ -2074,7 +2074,7 @@
                             {
                               "type": "rectangle",
                               "id": "r106",
-                              "name": "轴线",
+                              "name": "axis-line",
                               "width": "fill_container",
                               "height": 4,
                               "fill": [
@@ -2089,7 +2089,7 @@
                         {
                           "type": "frame",
                           "id": "f112",
-                          "name": "节点文案",
+                          "name": "node-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2106,9 +2106,9 @@
                             {
                               "type": "text",
                               "id": "t110",
-                              "name": "节点标题",
-                              "content": "工艺库上线",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "node-title",
+                              "content": "Process library live",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -2125,9 +2125,9 @@
                             {
                               "type": "text",
                               "id": "t111",
-                              "name": "节点说明",
-                              "content": "覆盖钣金、机加两条主线",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "node-note",
+                              "content": "Covers sheet metal and machining",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -2148,7 +2148,7 @@
                     {
                       "type": "frame",
                       "id": "f122",
-                      "name": "里程碑",
+                      "name": "milestones",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2159,7 +2159,7 @@
                         {
                           "type": "frame",
                           "id": "f118",
-                          "name": "节点日期",
+                          "name": "node-date",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2176,7 +2176,7 @@
                             {
                               "type": "text",
                               "id": "t117",
-                              "name": "日期",
+                              "name": "date",
                               "content": "2026 Q4",
                               "fontFamily": "Inter",
                               "fontSize": 28,
@@ -2197,7 +2197,7 @@
                         {
                           "type": "frame",
                           "id": "f116",
-                          "name": "轴段",
+                          "name": "axis-segment",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2208,7 +2208,7 @@
                             {
                               "type": "rectangle",
                               "id": "r114",
-                              "name": "节点圆",
+                              "name": "node-dot",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 14,
@@ -2222,7 +2222,7 @@
                             {
                               "type": "rectangle",
                               "id": "r115",
-                              "name": "轴线",
+                              "name": "axis-line",
                               "width": "fill_container",
                               "height": 4,
                               "fill": [
@@ -2237,7 +2237,7 @@
                         {
                           "type": "frame",
                           "id": "f121",
-                          "name": "节点文案",
+                          "name": "node-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2254,9 +2254,9 @@
                             {
                               "type": "text",
                               "id": "t119",
-                              "name": "节点标题",
-                              "content": "接入 ERP",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "node-title",
+                              "content": "ERP integration",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -2273,9 +2273,9 @@
                             {
                               "type": "text",
                               "id": "t120",
-                              "name": "节点说明",
-                              "content": "报价直接落成订单",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "node-note",
+                              "content": "Quotes turn straight into orders",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -2296,7 +2296,7 @@
                     {
                       "type": "frame",
                       "id": "f131",
-                      "name": "里程碑",
+                      "name": "milestones",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2307,7 +2307,7 @@
                         {
                           "type": "frame",
                           "id": "f127",
-                          "name": "节点日期",
+                          "name": "node-date",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2324,7 +2324,7 @@
                             {
                               "type": "text",
                               "id": "t126",
-                              "name": "日期",
+                              "name": "date",
                               "content": "2027 Q1",
                               "fontFamily": "Inter",
                               "fontSize": 28,
@@ -2345,7 +2345,7 @@
                         {
                           "type": "frame",
                           "id": "f125",
-                          "name": "轴段",
+                          "name": "axis-segment",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2356,7 +2356,7 @@
                             {
                               "type": "rectangle",
                               "id": "r123",
-                              "name": "节点圆",
+                              "name": "node-dot",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 14,
@@ -2379,7 +2379,7 @@
                             {
                               "type": "rectangle",
                               "id": "r124",
-                              "name": "轴线",
+                              "name": "axis-line",
                               "width": "fill_container",
                               "height": 4,
                               "fill": [
@@ -2394,7 +2394,7 @@
                         {
                           "type": "frame",
                           "id": "f130",
-                          "name": "节点文案",
+                          "name": "node-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2411,9 +2411,9 @@
                             {
                               "type": "text",
                               "id": "t128",
-                              "name": "节点标题",
-                              "content": "开放 API",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "node-title",
+                              "content": "Open API",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -2430,9 +2430,9 @@
                             {
                               "type": "text",
                               "id": "t129",
-                              "name": "节点说明",
-                              "content": "让客户在自己系统里报价",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "node-note",
+                              "content": "Customers quote inside their own systems",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -2453,7 +2453,7 @@
                     {
                       "type": "frame",
                       "id": "f140",
-                      "name": "里程碑",
+                      "name": "milestones",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2464,7 +2464,7 @@
                         {
                           "type": "frame",
                           "id": "f136",
-                          "name": "节点日期",
+                          "name": "node-date",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2481,7 +2481,7 @@
                             {
                               "type": "text",
                               "id": "t135",
-                              "name": "日期",
+                              "name": "date",
                               "content": "2027 Q2",
                               "fontFamily": "Inter",
                               "fontSize": 28,
@@ -2502,7 +2502,7 @@
                         {
                           "type": "frame",
                           "id": "f134",
-                          "name": "轴段",
+                          "name": "axis-segment",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2513,7 +2513,7 @@
                             {
                               "type": "rectangle",
                               "id": "r132",
-                              "name": "节点圆",
+                              "name": "node-dot",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 14,
@@ -2536,7 +2536,7 @@
                             {
                               "type": "rectangle",
                               "id": "r133",
-                              "name": "轴线",
+                              "name": "axis-line",
                               "width": "fill_container",
                               "height": 4,
                               "fill": [
@@ -2551,7 +2551,7 @@
                         {
                           "type": "frame",
                           "id": "f139",
-                          "name": "节点文案",
+                          "name": "node-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2568,9 +2568,9 @@
                             {
                               "type": "text",
                               "id": "t137",
-                              "name": "节点标题",
-                              "content": "行业模板",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "node-title",
+                              "content": "Industry templates",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -2587,9 +2587,9 @@
                             {
                               "type": "text",
                               "id": "t138",
-                              "name": "节点说明",
-                              "content": "从制造扩到工程与装修",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "node-note",
+                              "content": "From manufacturing to construction and fit-out",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -2616,7 +2616,7 @@
         {
           "type": "frame",
           "id": "f101",
-          "name": "05 里程碑 · 装饰",
+          "name": "05-milestones-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2625,7 +2625,7 @@
             {
               "type": "text",
               "id": "t97",
-              "name": "ghost 页码",
+              "name": "ghost-page-number",
               "content": "05",
               "fontFamily": "Inter",
               "fontSize": 480,
@@ -2647,7 +2647,7 @@
             {
               "type": "rectangle",
               "id": "r98",
-              "name": "光晕",
+              "name": "glow",
               "width": 880,
               "height": 880,
               "cornerRadius": 440,
@@ -2681,7 +2681,7 @@
     {
       "type": "frame",
       "id": "f158",
-      "name": "06 结尾",
+      "name": "06-closing",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -2710,7 +2710,7 @@
         {
           "type": "frame",
           "id": "f157",
-          "name": "06 结尾 · 正文",
+          "name": "06-closing-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2726,7 +2726,7 @@
             {
               "type": "frame",
               "id": "f146",
-              "name": "结语",
+              "name": "closing-note",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2737,7 +2737,7 @@
                 {
                   "type": "rectangle",
                   "id": "r143",
-                  "name": "强调条",
+                  "name": "accent-bar",
                   "width": 160,
                   "height": 8,
                   "cornerRadius": 999,
@@ -2751,9 +2751,9 @@
                 {
                   "type": "text",
                   "id": "t144",
-                  "name": "结语标题",
-                  "content": "如果你也觉得\n这事早该被解决",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-title",
+                  "content": "If you think this\nis overdue for a fix",
+                  "fontFamily": "Inter",
                   "fontSize": 100,
                   "fontWeight": 700,
                   "fill": [
@@ -2770,9 +2770,9 @@
                 {
                   "type": "text",
                   "id": "t145",
-                  "name": "结语副标题",
-                  "content": "我们缺的不是订单，是把它做快的那笔钱。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-subtitle",
+                  "content": "Orders aren't what we lack. It's the capital to make them faster.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -2791,7 +2791,7 @@
             {
               "type": "frame",
               "id": "f154",
-              "name": "联系卡",
+              "name": "contact-card",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2813,7 +2813,7 @@
                 {
                   "type": "frame",
                   "id": "f151",
-                  "name": "联系方式",
+                  "name": "contact-details",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2824,9 +2824,9 @@
                     {
                       "type": "text",
                       "id": "t147",
-                      "name": "联系人",
-                      "content": "陈知远 · 创始人",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "contact-name",
+                      "content": "Ethan Clarke · Founder",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -2843,7 +2843,7 @@
                     {
                       "type": "frame",
                       "id": "f150",
-                      "name": "联络方式",
+                      "name": "contact-info",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2854,8 +2854,8 @@
                         {
                           "type": "text",
                           "id": "t148",
-                          "name": "邮箱",
-                          "content": "zhiyuan@qimingzz.com",
+                          "name": "email",
+                          "content": "ethan@dawnforge.com",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 500,
@@ -2873,7 +2873,7 @@
                         {
                           "type": "text",
                           "id": "t149",
-                          "name": "电话",
+                          "name": "phone",
                           "content": "+86 138 0000 0000",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2896,7 +2896,7 @@
                 {
                   "type": "frame",
                   "id": "f152",
-                  "name": "二维码占位",
+                  "name": "qr-placeholder",
                   "width": 200,
                   "height": 200,
                   "layout": "vertical",
@@ -2923,9 +2923,9 @@
                     {
                       "type": "text",
                       "id": "t153",
-                      "name": "二维码提示",
-                      "content": "扫码看 Demo",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "qr-hint",
+                      "content": "Scan for the demo",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 600,
                       "fill": [
@@ -2948,7 +2948,7 @@
         {
           "type": "frame",
           "id": "f159",
-          "name": "06 结尾 · 装饰",
+          "name": "06-closing-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2957,7 +2957,7 @@
             {
               "type": "rectangle",
               "id": "r155",
-              "name": "光晕",
+              "name": "glow",
               "width": 1600,
               "height": 1600,
               "cornerRadius": 800,
@@ -2985,7 +2985,7 @@
             {
               "type": "rectangle",
               "id": "r156",
-              "name": "光晕",
+              "name": "glow",
               "width": 820,
               "height": 820,
               "cornerRadius": 410,

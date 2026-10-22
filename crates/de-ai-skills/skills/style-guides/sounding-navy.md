@@ -6,7 +6,7 @@ platform: slides
 
 ## Style Scope
 
-This guide is self-contained and written for **Chinese consulting / strategy decks** — high formality, medium density, a **mixed** ground structure where dark pages bookend a light body. Apply its palette, type pairing, layout grammar, and motifs only when this exact guide is selected; do not borrow dashboard, landing-page, or social-card patterns into it. The generic deck laws (overflow splits into a new page rather than shrinking type, the density-slot table, the locked-vs-free split, narrative arc, the ghost-deck test, the single-accent rule) live in the deck contract and are **not** restated here. What follows is only what makes this deck *this* deck.
+This guide is self-contained and written for **consulting / strategy decks** — high formality, medium density, a **mixed** ground structure where dark pages bookend a light body. Apply its palette, type pairing, layout grammar, and motifs only when this exact guide is selected; do not borrow dashboard, landing-page, or social-card patterns into it. The generic deck laws (overflow splits into a new page rather than shrinking type, the density-slot table, the locked-vs-free split, narrative arc, the ghost-deck test, the single-accent rule) live in the deck contract and are **not** restated here. What follows is only what makes this deck *this* deck.
 
 Treat unnamed layout frames as structural by default: no fill, no stroke, no cornerRadius, no shadow. Separation comes from a 1px rule and from whitespace, never from a container shell.
 
@@ -80,19 +80,19 @@ One rule colour, three weights, nothing else. If two regions need to be told apa
 
 | Role | Family | Usage |
 | --- | --- | --- |
-| Display | Noto Sans SC 700 | Cover title, page titles, closing line |
-| Body | Noto Sans SC 400 | Lead-in sentences, body copy, table body, annotations |
-| Numerals | Inter 500 | Every figure, readout, and index number |
+| Display | Inter 700 | Cover title, page titles, closing line |
+| Body | Inter 400 | Lead-in sentences, body copy, table body, annotations |
+| Numerals | JetBrains Mono 500 | Every figure, readout, and index number |
 
-These are the **production floor** — the layer that renders today, and the layer every shipped page uses. The preferred layer, for when the faces are available, is 思源宋体 Semibold for display (a conclusion-shaped title wants the settled weight of a serif), 霞鹜新晰黑 (OFL) for body, and IBM Plex Mono for figures; the Latin companions are `Source Serif 4` and `Geist`.
+These are the **production floor** — the layer that renders today, and the layer every shipped page uses. The preferred layer, for when the faces are available, is `Source Serif 4` Semibold for display (a conclusion-shaped title wants the settled weight of a serif), `Geist` (OFL) for body, and IBM Plex Mono for figures.
 
-Fallback chains, Latin face written first in every one:
+Fallback chains, preferred face first, production floor next, generic family last:
 
-- Display — `"Source Serif 4","思源宋体","Noto Serif SC",serif`
-- Body — `"Geist","LXGW Neo XiHei","Noto Sans SC",sans-serif`
-- Numerals — `"IBM Plex Mono",monospace`
+- Display — `"Source Serif 4","DM Serif Display","Inter",serif`
+- Body — `"Geist","Inter",sans-serif`
+- Numerals — `"IBM Plex Mono","JetBrains Mono",monospace`
 
-Latin faces carry no Han codepoints, so Chinese characters fall through to the CJK face per character automatically. Written the other way round, the CJK face's own mediocre Latin swallows every digit and the paired Latin face never appears.
+Figures never fall through to the body chain: a sounding set in a proportional sans stops lining up with the readouts on the next page, and the "somebody measured this" voice is lost. Keep `tabular-nums` on for every numeral run.
 
 ### Type Scale
 
@@ -135,7 +135,7 @@ Draw a horizontal 2px `rule.chart` baseline across the plot area at the **top**.
 
 ### 2. Track index `track-index`
 
-A section page opens with a 2px `rule.chart` line running the full content width near the top — the track. On it, place N dots of **12px** at equal intervals. The dot for the current section is filled `contour.steel` and carries the section's Chinese name **24px below it**; every other dot is hollow, 1.5px stroke, with no label at all.
+A section page opens with a 2px `rule.chart` line running the full content width near the top — the track. On it, place N dots of **12px** at equal intervals. The dot for the current section is filled `contour.steel` and carries the section's short name **24px below it**; every other dot is hollow, 1.5px stroke, with no label at all.
 
 The track is redrawn on **every** section page with only the filled dot moving. That repetition is what turns it from an ornament into a cross-page progress anchor.
 

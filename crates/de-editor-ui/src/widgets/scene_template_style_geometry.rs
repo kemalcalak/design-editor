@@ -56,7 +56,7 @@ impl SceneTemplatePanel<'_> {
     }
 
     pub(super) fn style_import_label(&self) -> &'static str {
-        self.t("assetCenter.style.import", "导入风格")
+        self.t("assetCenter.style.import", "Import style")
     }
 
     /// The delete button on an imported card, in its top-right corner.

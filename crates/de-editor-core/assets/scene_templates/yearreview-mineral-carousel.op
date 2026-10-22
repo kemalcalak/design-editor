@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "年度总结复盘轮播 · 3:4 八板",
+  "name": "year-in-review-carousel-3x4-8-boards",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f24",
-      "name": "01 封面 · 数字锚点",
+      "name": "01-cover-number-anchor",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -66,7 +66,7 @@
         {
           "type": "frame",
           "id": "f10",
-          "name": "封面 · 数字锚点 · 内容",
+          "name": "cover-number-anchor-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -83,7 +83,7 @@
             {
               "type": "frame",
               "id": "f14",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -95,9 +95,9 @@
                 {
                   "type": "text",
                   "id": "t11",
-                  "name": "系列名",
-                  "content": "年度复盘 · 八板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Year in Review · 8",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -114,7 +114,7 @@
                 {
                   "type": "frame",
                   "id": "f12",
-                  "name": "金线角标",
+                  "name": "gold-corner-mark",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -138,7 +138,7 @@
                     {
                       "type": "text",
                       "id": "t13",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "01/08",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -161,7 +161,7 @@
             {
               "type": "frame",
               "id": "f8",
-              "name": "主体",
+              "name": "main",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -177,7 +177,7 @@
                 {
                   "type": "frame",
                   "id": "f5",
-                  "name": "数字组",
+                  "name": "number-group",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -189,7 +189,7 @@
                     {
                       "type": "text",
                       "id": "t1",
-                      "name": "巨数字",
+                      "name": "big-number",
                       "content": "37",
                       "fontFamily": "Inter",
                       "fontSize": 120,
@@ -208,7 +208,7 @@
                     {
                       "type": "frame",
                       "id": "f4",
-                      "name": "单位组",
+                      "name": "unit-group",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -219,8 +219,8 @@
                         {
                           "type": "text",
                           "id": "t2",
-                          "name": "单位",
-                          "content": "件",
+                          "name": "unit",
+                          "content": "tasks",
                           "fontFamily": "Inter",
                           "fontSize": 64,
                           "fontWeight": 700,
@@ -238,9 +238,9 @@
                         {
                           "type": "text",
                           "id": "t3",
-                          "name": "单位说明",
-                          "content": "真正做完的",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "unit-note",
+                          "content": "actually done",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -261,9 +261,9 @@
                 {
                   "type": "text",
                   "id": "t6",
-                  "name": "主标",
-                  "content": "写了 214 条计划\n做完 37 件",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "headline",
+                  "content": "214 plans written\n37 finished",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -280,9 +280,9 @@
                 {
                   "type": "text",
                   "id": "t7",
-                  "name": "副标",
-                  "content": "八板复盘这一年，先从这个比例讲起。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "subhead",
+                  "content": "Eight boards on the year, starting with this ratio.",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 400,
                   "fill": [
@@ -301,7 +301,7 @@
             {
               "type": "frame",
               "id": "f19",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -312,7 +312,7 @@
                 {
                   "type": "rectangle",
                   "id": "r15",
-                  "name": "分隔线",
+                  "name": "separator",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -325,7 +325,7 @@
                 {
                   "type": "frame",
                   "id": "f18",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -337,9 +337,9 @@
                     {
                       "type": "text",
                       "id": "t16",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -356,9 +356,9 @@
                     {
                       "type": "text",
                       "id": "t17",
-                      "name": "本板提要",
-                      "content": "封面",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-tag",
+                      "content": "Cover",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -381,7 +381,7 @@
         {
           "type": "frame",
           "id": "f23",
-          "name": "封面 · 数字锚点 · 装饰",
+          "name": "cover-number-anchor-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -390,7 +390,7 @@
             {
               "type": "rectangle",
               "id": "r9",
-              "name": "壁龛光",
+              "name": "niche-glow",
               "width": 900,
               "height": 900,
               "cornerRadius": 450,
@@ -419,7 +419,7 @@
             {
               "type": "path",
               "id": "p20",
-              "name": "剥落 1",
+              "name": "flake-1",
               "d": "M 7.8 0.0 L 158.6 17.1 L 260.0 89.3 L 187.2 190.0 L 28.6 157.7 Z",
               "width": 260,
               "height": 190,
@@ -435,7 +435,7 @@
             {
               "type": "path",
               "id": "p21",
-              "name": "剥落 2",
+              "name": "flake-2",
               "d": "M 0.0 102.0 L 108.1 0.0 L 230.0 87.0 L 190.9 273.0 L 43.7 300.0 Z",
               "width": 230,
               "height": 300,
@@ -451,7 +451,7 @@
             {
               "type": "path",
               "id": "p22",
-              "name": "剥落 3",
+              "name": "flake-3",
               "d": "M 39.0 11.9 L 300.0 0.0 L 267.0 107.1 L 111.0 170.0 Z",
               "width": 300,
               "height": 170,
@@ -473,7 +473,7 @@
     {
       "type": "frame",
       "id": "f51",
-      "name": "02 落差 · 上下反差",
+      "name": "02-gap-contrast",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -488,7 +488,7 @@
         {
           "type": "frame",
           "id": "f37",
-          "name": "落差 · 上下反差 · 内容",
+          "name": "gap-contrast-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -505,7 +505,7 @@
             {
               "type": "frame",
               "id": "f41",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -517,9 +517,9 @@
                 {
                   "type": "text",
                   "id": "t38",
-                  "name": "系列名",
-                  "content": "年度复盘 · 八板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Year in Review · 8",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -536,7 +536,7 @@
                 {
                   "type": "frame",
                   "id": "f39",
-                  "name": "金线角标",
+                  "name": "gold-corner-mark",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -560,7 +560,7 @@
                     {
                       "type": "text",
                       "id": "t40",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "02/08",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -583,7 +583,7 @@
             {
               "type": "frame",
               "id": "f36",
-              "name": "主体",
+              "name": "main",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -599,9 +599,9 @@
                 {
                   "type": "text",
                   "id": "t25",
-                  "name": "小标题",
-                  "content": "年初和年末的差距",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "January vs. December",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -618,7 +618,7 @@
                 {
                   "type": "frame",
                   "id": "f35",
-                  "name": "上下反差",
+                  "name": "stacked-contrast",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -629,7 +629,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "反差块 · 年初以为",
+                      "name": "contrast-block-expected",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -649,9 +649,9 @@
                         {
                           "type": "text",
                           "id": "t26",
-                          "name": "反差标签",
-                          "content": "年初以为",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-label",
+                          "content": "In January",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -668,9 +668,9 @@
                         {
                           "type": "text",
                           "id": "t27",
-                          "name": "反差句",
-                          "content": "今年要做十件大事",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-line",
+                          "content": "Ten big things this year",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -687,9 +687,9 @@
                         {
                           "type": "text",
                           "id": "t28",
-                          "name": "反差注解",
-                          "content": "列了满满一页，每件都值得做。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-note",
+                          "content": "A full page, all worth doing.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -708,7 +708,7 @@
                     {
                       "type": "rectangle",
                       "id": "r30",
-                      "name": "分界",
+                      "name": "divider",
                       "width": "fill_container",
                       "height": 3,
                       "fill": [
@@ -721,7 +721,7 @@
                     {
                       "type": "frame",
                       "id": "f34",
-                      "name": "反差块 · 实际发生",
+                      "name": "contrast-block-actual",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -741,9 +741,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "反差标签",
-                          "content": "实际发生",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-label",
+                          "content": "What happened",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -760,9 +760,9 @@
                         {
                           "type": "text",
                           "id": "t32",
-                          "name": "反差句",
-                          "content": "只有两件真的完成",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-line",
+                          "content": "Two actually got done",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -779,9 +779,9 @@
                         {
                           "type": "text",
                           "id": "t33",
-                          "name": "反差注解",
-                          "content": "另外八件不是失败，是从来没开始。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-note",
+                          "content": "The other eight never even started.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -804,7 +804,7 @@
             {
               "type": "frame",
               "id": "f46",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -815,7 +815,7 @@
                 {
                   "type": "rectangle",
                   "id": "r42",
-                  "name": "分隔线",
+                  "name": "separator",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -828,7 +828,7 @@
                 {
                   "type": "frame",
                   "id": "f45",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -840,9 +840,9 @@
                     {
                       "type": "text",
                       "id": "t43",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -859,9 +859,9 @@
                     {
                       "type": "text",
                       "id": "t44",
-                      "name": "本板提要",
-                      "content": "起点",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-tag",
+                      "content": "Start",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -884,7 +884,7 @@
         {
           "type": "frame",
           "id": "f50",
-          "name": "落差 · 上下反差 · 装饰",
+          "name": "gap-contrast-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -893,7 +893,7 @@
             {
               "type": "path",
               "id": "p47",
-              "name": "剥落 4",
+              "name": "flake-4",
               "d": "M 0.0 54.6 L 158.4 7.8 L 240.0 184.6 L 69.6 244.4 Z",
               "width": 240,
               "height": 260,
@@ -909,7 +909,7 @@
             {
               "type": "path",
               "id": "p48",
-              "name": "剥落 5",
+              "name": "flake-5",
               "d": "M 14.7 0.0 L 195.3 40.8 L 161.7 240.0 L 0.0 165.6 Z",
               "width": 210,
               "height": 240,
@@ -925,7 +925,7 @@
             {
               "type": "path",
               "id": "p49",
-              "name": "剥落 6",
+              "name": "flake-6",
               "d": "M 58.8 6.4 L 280.0 49.6 L 176.4 155.2 L 0.0 84.8 L 25.2 30.4 Z",
               "width": 280,
               "height": 160,
@@ -947,7 +947,7 @@
     {
       "type": "frame",
       "id": "f77",
-      "name": "03 那段 · 段落纯排",
+      "name": "03-stretch-text-only",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -962,7 +962,7 @@
         {
           "type": "frame",
           "id": "f63",
-          "name": "那段 · 段落纯排 · 内容",
+          "name": "stretch-text-only-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -979,7 +979,7 @@
             {
               "type": "frame",
               "id": "f67",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -991,9 +991,9 @@
                 {
                   "type": "text",
                   "id": "t64",
-                  "name": "系列名",
-                  "content": "年度复盘 · 八板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Year in Review · 8",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -1010,7 +1010,7 @@
                 {
                   "type": "frame",
                   "id": "f65",
-                  "name": "金线角标",
+                  "name": "gold-corner-mark",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1034,7 +1034,7 @@
                     {
                       "type": "text",
                       "id": "t66",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "03/08",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -1057,7 +1057,7 @@
             {
               "type": "frame",
               "id": "f62",
-              "name": "主体",
+              "name": "main",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1073,9 +1073,9 @@
                 {
                   "type": "text",
                   "id": "t60",
-                  "name": "小标题",
-                  "content": "最难的那三个月",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "The hardest three months",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -1092,7 +1092,7 @@
                 {
                   "type": "frame",
                   "id": "f61",
-                  "name": "正文区",
+                  "name": "body-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1103,7 +1103,7 @@
                     {
                       "type": "frame",
                       "id": "f55",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1115,7 +1115,7 @@
                         {
                           "type": "frame",
                           "id": "f53",
-                          "name": "段首标记位",
+                          "name": "paragraph-marker-slot",
                           "width": 18,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1126,7 +1126,7 @@
                             {
                               "type": "rectangle",
                               "id": "r52",
-                              "name": "段首标记",
+                              "name": "paragraph-marker",
                               "width": 18,
                               "height": 18,
                               "fill": [
@@ -1141,9 +1141,9 @@
                         {
                           "type": "text",
                           "id": "t54",
-                          "name": "正文",
-                          "content": "三月到六月是最难的一段。手上四件事同时推，每一件都推到七成就停住，然后被下一件挤走。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body",
+                          "content": "March to June was the hardest. Four projects at once, each stuck at 70% until the next pushed it out.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -1162,7 +1162,7 @@
                     {
                       "type": "frame",
                       "id": "f59",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1174,7 +1174,7 @@
                         {
                           "type": "frame",
                           "id": "f57",
-                          "name": "段首标记位",
+                          "name": "paragraph-marker-slot",
                           "width": 18,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1185,7 +1185,7 @@
                             {
                               "type": "rectangle",
                               "id": "r56",
-                              "name": "段首标记",
+                              "name": "paragraph-marker",
                               "width": 18,
                               "height": 18,
                               "fill": [
@@ -1200,9 +1200,9 @@
                         {
                           "type": "text",
                           "id": "t58",
-                          "name": "正文",
-                          "content": "后来才看明白：不是时间不够，而是从来没有一件事被允许做完。开始永远比结束容易，于是我一直只在开始。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body",
+                          "content": "Later I saw it: time wasn't the issue. Nothing was ever allowed to finish. Starting is easier, so I only ever started.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -1225,7 +1225,7 @@
             {
               "type": "frame",
               "id": "f72",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1236,7 +1236,7 @@
                 {
                   "type": "rectangle",
                   "id": "r68",
-                  "name": "分隔线",
+                  "name": "separator",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -1249,7 +1249,7 @@
                 {
                   "type": "frame",
                   "id": "f71",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1261,9 +1261,9 @@
                     {
                       "type": "text",
                       "id": "t69",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -1280,9 +1280,9 @@
                     {
                       "type": "text",
                       "id": "t70",
-                      "name": "本板提要",
-                      "content": "低点",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-tag",
+                      "content": "Low",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1305,7 +1305,7 @@
         {
           "type": "frame",
           "id": "f76",
-          "name": "那段 · 段落纯排 · 装饰",
+          "name": "stretch-text-only-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1314,7 +1314,7 @@
             {
               "type": "path",
               "id": "p73",
-              "name": "剥落 7",
+              "name": "flake-7",
               "d": "M 0.0 0.0 L 162.0 39.0 L 200.0 249.0 L 48.0 300.0 L 6.0 123.0 Z",
               "width": 200,
               "height": 300,
@@ -1330,7 +1330,7 @@
             {
               "type": "path",
               "id": "p74",
-              "name": "剥落 8",
+              "name": "flake-8",
               "d": "M 32.3 25.3 L 178.6 0.0 L 190.0 131.1 L 77.9 230.0 L 0.0 167.9 Z",
               "width": 190,
               "height": 230,
@@ -1346,7 +1346,7 @@
             {
               "type": "path",
               "id": "p75",
-              "name": "剥落 9",
+              "name": "flake-9",
               "d": "M 23.4 0.0 L 184.6 34.5 L 260.0 136.5 L 85.8 118.5 Z",
               "width": 260,
               "height": 150,
@@ -1368,7 +1368,7 @@
     {
       "type": "frame",
       "id": "f112",
-      "name": "04 三个数 · 三栏指标",
+      "name": "04-three-numbers-stats",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -1383,7 +1383,7 @@
         {
           "type": "frame",
           "id": "f98",
-          "name": "三个数 · 三栏指标 · 内容",
+          "name": "three-numbers-stats-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1400,7 +1400,7 @@
             {
               "type": "frame",
               "id": "f102",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1412,9 +1412,9 @@
                 {
                   "type": "text",
                   "id": "t99",
-                  "name": "系列名",
-                  "content": "年度复盘 · 八板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Year in Review · 8",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -1431,7 +1431,7 @@
                 {
                   "type": "frame",
                   "id": "f100",
-                  "name": "金线角标",
+                  "name": "gold-corner-mark",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1455,7 +1455,7 @@
                     {
                       "type": "text",
                       "id": "t101",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "04/08",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -1478,7 +1478,7 @@
             {
               "type": "frame",
               "id": "f97",
-              "name": "主体",
+              "name": "main",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1494,9 +1494,9 @@
                 {
                   "type": "text",
                   "id": "t93",
-                  "name": "小标题",
-                  "content": "三个数说明一切",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Three numbers say it all",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -1513,7 +1513,7 @@
                 {
                   "type": "rectangle",
                   "id": "r94",
-                  "name": "指标上线",
+                  "name": "stat-top-rule",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -1526,7 +1526,7 @@
                 {
                   "type": "frame",
                   "id": "f95",
-                  "name": "三栏",
+                  "name": "three-columns",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1538,7 +1538,7 @@
                     {
                       "type": "frame",
                       "id": "f82",
-                      "name": "指标 1",
+                      "name": "stat-1",
                       "width": 248,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1549,7 +1549,7 @@
                         {
                           "type": "frame",
                           "id": "f80",
-                          "name": "数值行",
+                          "name": "value-row",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1561,7 +1561,7 @@
                             {
                               "type": "text",
                               "id": "t78",
-                              "name": "数值",
+                              "name": "value",
                               "content": "37",
                               "fontFamily": "Inter",
                               "fontSize": 88,
@@ -1580,8 +1580,8 @@
                             {
                               "type": "text",
                               "id": "t79",
-                              "name": "单位",
-                              "content": "件",
+                              "name": "unit",
+                              "content": "tasks",
                               "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
@@ -1601,9 +1601,9 @@
                         {
                           "type": "text",
                           "id": "t81",
-                          "name": "指标名",
-                          "content": "做完的事",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "stat-label",
+                          "content": "Finished",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -1622,7 +1622,7 @@
                     {
                       "type": "frame",
                       "id": "f87",
-                      "name": "指标 2",
+                      "name": "stat-2",
                       "width": 248,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1633,7 +1633,7 @@
                         {
                           "type": "frame",
                           "id": "f85",
-                          "name": "数值行",
+                          "name": "value-row",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1645,7 +1645,7 @@
                             {
                               "type": "text",
                               "id": "t83",
-                              "name": "数值",
+                              "name": "value",
                               "content": "214",
                               "fontFamily": "Inter",
                               "fontSize": 88,
@@ -1664,8 +1664,8 @@
                             {
                               "type": "text",
                               "id": "t84",
-                              "name": "单位",
-                              "content": "条",
+                              "name": "unit",
+                              "content": "aims",
                               "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
@@ -1685,9 +1685,9 @@
                         {
                           "type": "text",
                           "id": "t86",
-                          "name": "指标名",
-                          "content": "写下的计划",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "stat-label",
+                          "content": "Written down",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -1706,7 +1706,7 @@
                     {
                       "type": "frame",
                       "id": "f92",
-                      "name": "指标 3",
+                      "name": "stat-3",
                       "width": 248,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1717,7 +1717,7 @@
                         {
                           "type": "frame",
                           "id": "f90",
-                          "name": "数值行",
+                          "name": "value-row",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1729,7 +1729,7 @@
                             {
                               "type": "text",
                               "id": "t88",
-                              "name": "数值",
+                              "name": "value",
                               "content": "17",
                               "fontFamily": "Inter",
                               "fontSize": 88,
@@ -1748,7 +1748,7 @@
                             {
                               "type": "text",
                               "id": "t89",
-                              "name": "单位",
+                              "name": "unit",
                               "content": "%",
                               "fontFamily": "Inter",
                               "fontSize": 48,
@@ -1769,9 +1769,9 @@
                         {
                           "type": "text",
                           "id": "t91",
-                          "name": "指标名",
-                          "content": "完成率",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "stat-label",
+                          "content": "Done rate",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -1792,9 +1792,9 @@
                 {
                   "type": "text",
                   "id": "t96",
-                  "name": "来源",
-                  "content": "统计自本年度的任务清单，截至 12 月 31 日",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "source",
+                  "content": "From this year's task list, as of Dec 31",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -1813,7 +1813,7 @@
             {
               "type": "frame",
               "id": "f107",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1824,7 +1824,7 @@
                 {
                   "type": "rectangle",
                   "id": "r103",
-                  "name": "分隔线",
+                  "name": "separator",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -1837,7 +1837,7 @@
                 {
                   "type": "frame",
                   "id": "f106",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1849,9 +1849,9 @@
                     {
                       "type": "text",
                       "id": "t104",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -1868,9 +1868,9 @@
                     {
                       "type": "text",
                       "id": "t105",
-                      "name": "本板提要",
-                      "content": "盘点",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-tag",
+                      "content": "Tally",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1893,7 +1893,7 @@
         {
           "type": "frame",
           "id": "f111",
-          "name": "三个数 · 三栏指标 · 装饰",
+          "name": "three-numbers-stats-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1902,7 +1902,7 @@
             {
               "type": "path",
               "id": "p108",
-              "name": "剥落 10",
+              "name": "flake-10",
               "d": "M 0.0 131.6 L 97.5 0.0 L 242.5 103.6 L 142.5 280.0 Z",
               "width": 250,
               "height": 280,
@@ -1918,7 +1918,7 @@
             {
               "type": "path",
               "id": "p109",
-              "name": "剥落 11",
+              "name": "flake-11",
               "d": "M 26.4 27.3 L 208.8 0.0 L 240.0 144.9 L 45.6 210.0 L 0.0 107.1 Z",
               "width": 240,
               "height": 210,
@@ -1934,7 +1934,7 @@
             {
               "type": "path",
               "id": "p110",
-              "name": "剥落 12",
+              "name": "flake-12",
               "d": "M 0.0 15.3 L 135.7 0.0 L 230.0 103.7 L 108.1 158.1 L 16.1 120.7 Z",
               "width": 230,
               "height": 170,
@@ -1956,7 +1956,7 @@
     {
       "type": "frame",
       "id": "f161",
-      "name": "05 形状 · 时间轴",
+      "name": "05-shape-timeline",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -1971,7 +1971,7 @@
         {
           "type": "frame",
           "id": "f147",
-          "name": "形状 · 时间轴 · 内容",
+          "name": "shape-timeline-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1988,7 +1988,7 @@
             {
               "type": "frame",
               "id": "f151",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2000,9 +2000,9 @@
                 {
                   "type": "text",
                   "id": "t148",
-                  "name": "系列名",
-                  "content": "年度复盘 · 八板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Year in Review · 8",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -2019,7 +2019,7 @@
                 {
                   "type": "frame",
                   "id": "f149",
-                  "name": "金线角标",
+                  "name": "gold-corner-mark",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2043,7 +2043,7 @@
                     {
                       "type": "text",
                       "id": "t150",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "05/08",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -2066,7 +2066,7 @@
             {
               "type": "frame",
               "id": "f146",
-              "name": "主体",
+              "name": "main",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2082,9 +2082,9 @@
                 {
                   "type": "text",
                   "id": "t144",
-                  "name": "小标题",
-                  "content": "这一年的形状",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "The shape of the year",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -2101,7 +2101,7 @@
                 {
                   "type": "frame",
                   "id": "f145",
-                  "name": "时间轴",
+                  "name": "timeline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2112,7 +2112,7 @@
                     {
                       "type": "frame",
                       "id": "f120",
-                      "name": "刻度",
+                      "name": "tick",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2124,7 +2124,7 @@
                         {
                           "type": "text",
                           "id": "t115",
-                          "name": "月份",
+                          "name": "months",
                           "content": "01–03",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -2143,7 +2143,7 @@
                         {
                           "type": "frame",
                           "id": "f116",
-                          "name": "轴位",
+                          "name": "axis-slot",
                           "width": 16,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2154,7 +2154,7 @@
                             {
                               "type": "rectangle",
                               "id": "r113",
-                              "name": "节点",
+                              "name": "node",
                               "width": 16,
                               "height": 16,
                               "cornerRadius": 8,
@@ -2177,7 +2177,7 @@
                             {
                               "type": "rectangle",
                               "id": "r114",
-                              "name": "轴段",
+                              "name": "axis-segment",
                               "width": 2,
                               "height": 132,
                               "fill": [
@@ -2192,7 +2192,7 @@
                         {
                           "type": "frame",
                           "id": "f119",
-                          "name": "刻度文案",
+                          "name": "tick-copy",
                           "width": 716,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2203,9 +2203,9 @@
                             {
                               "type": "text",
                               "id": "t117",
-                              "name": "刻度标题",
-                              "content": "铺得最开",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tick-title",
+                              "content": "Spread thin",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -2222,9 +2222,9 @@
                             {
                               "type": "text",
                               "id": "t118",
-                              "name": "刻度注",
-                              "content": "同时开了四条线",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tick-note",
+                              "content": "Four tracks open at once",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 400,
                               "fill": [
@@ -2245,7 +2245,7 @@
                     {
                       "type": "frame",
                       "id": "f128",
-                      "name": "刻度",
+                      "name": "tick",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2257,7 +2257,7 @@
                         {
                           "type": "text",
                           "id": "t123",
-                          "name": "月份",
+                          "name": "months",
                           "content": "04–06",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -2276,7 +2276,7 @@
                         {
                           "type": "frame",
                           "id": "f124",
-                          "name": "轴位",
+                          "name": "axis-slot",
                           "width": 16,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2287,7 +2287,7 @@
                             {
                               "type": "rectangle",
                               "id": "r121",
-                              "name": "节点",
+                              "name": "node",
                               "width": 16,
                               "height": 16,
                               "cornerRadius": 8,
@@ -2310,7 +2310,7 @@
                             {
                               "type": "rectangle",
                               "id": "r122",
-                              "name": "轴段",
+                              "name": "axis-segment",
                               "width": 2,
                               "height": 132,
                               "fill": [
@@ -2325,7 +2325,7 @@
                         {
                           "type": "frame",
                           "id": "f127",
-                          "name": "刻度文案",
+                          "name": "tick-copy",
                           "width": 716,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2336,9 +2336,9 @@
                             {
                               "type": "text",
                               "id": "t125",
-                              "name": "刻度标题",
-                              "content": "全部卡住",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tick-title",
+                              "content": "All stuck",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -2355,9 +2355,9 @@
                             {
                               "type": "text",
                               "id": "t126",
-                              "name": "刻度注",
-                              "content": "每条都停在七成",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tick-note",
+                              "content": "Each one stalled at 70%",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 400,
                               "fill": [
@@ -2378,7 +2378,7 @@
                     {
                       "type": "frame",
                       "id": "f136",
-                      "name": "刻度",
+                      "name": "tick",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2390,7 +2390,7 @@
                         {
                           "type": "text",
                           "id": "t131",
-                          "name": "月份",
+                          "name": "months",
                           "content": "07–09",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -2409,7 +2409,7 @@
                         {
                           "type": "frame",
                           "id": "f132",
-                          "name": "轴位",
+                          "name": "axis-slot",
                           "width": 16,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2420,7 +2420,7 @@
                             {
                               "type": "rectangle",
                               "id": "r129",
-                              "name": "节点",
+                              "name": "node",
                               "width": 16,
                               "height": 16,
                               "cornerRadius": 8,
@@ -2443,7 +2443,7 @@
                             {
                               "type": "rectangle",
                               "id": "r130",
-                              "name": "轴段",
+                              "name": "axis-segment",
                               "width": 2,
                               "height": 132,
                               "fill": [
@@ -2458,7 +2458,7 @@
                         {
                           "type": "frame",
                           "id": "f135",
-                          "name": "刻度文案",
+                          "name": "tick-copy",
                           "width": 716,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2469,9 +2469,9 @@
                             {
                               "type": "text",
                               "id": "t133",
-                              "name": "刻度标题",
-                              "content": "砍到两条",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tick-title",
+                              "content": "Cut to two",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -2488,9 +2488,9 @@
                             {
                               "type": "text",
                               "id": "t134",
-                              "name": "刻度注",
-                              "content": "关掉的比做完的多",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tick-note",
+                              "content": "Closed more than finished",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 400,
                               "fill": [
@@ -2511,7 +2511,7 @@
                     {
                       "type": "frame",
                       "id": "f143",
-                      "name": "刻度",
+                      "name": "tick",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2523,7 +2523,7 @@
                         {
                           "type": "text",
                           "id": "t138",
-                          "name": "月份",
+                          "name": "months",
                           "content": "10–12",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -2542,7 +2542,7 @@
                         {
                           "type": "frame",
                           "id": "f139",
-                          "name": "轴位",
+                          "name": "axis-slot",
                           "width": 16,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2553,7 +2553,7 @@
                             {
                               "type": "rectangle",
                               "id": "r137",
-                              "name": "节点",
+                              "name": "node",
                               "width": 16,
                               "height": 16,
                               "cornerRadius": 8,
@@ -2578,7 +2578,7 @@
                         {
                           "type": "frame",
                           "id": "f142",
-                          "name": "刻度文案",
+                          "name": "tick-copy",
                           "width": 716,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2589,9 +2589,9 @@
                             {
                               "type": "text",
                               "id": "t140",
-                              "name": "刻度标题",
-                              "content": "第一次做完",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tick-title",
+                              "content": "First finish",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -2608,9 +2608,9 @@
                             {
                               "type": "text",
                               "id": "t141",
-                              "name": "刻度注",
-                              "content": "两件收尾，一件上线",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tick-note",
+                              "content": "Two wrapped, one shipped",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 400,
                               "fill": [
@@ -2635,7 +2635,7 @@
             {
               "type": "frame",
               "id": "f156",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2646,7 +2646,7 @@
                 {
                   "type": "rectangle",
                   "id": "r152",
-                  "name": "分隔线",
+                  "name": "separator",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -2659,7 +2659,7 @@
                 {
                   "type": "frame",
                   "id": "f155",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2671,9 +2671,9 @@
                     {
                       "type": "text",
                       "id": "t153",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -2690,9 +2690,9 @@
                     {
                       "type": "text",
                       "id": "t154",
-                      "name": "本板提要",
-                      "content": "全年",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-tag",
+                      "content": "Year",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -2715,7 +2715,7 @@
         {
           "type": "frame",
           "id": "f160",
-          "name": "形状 · 时间轴 · 装饰",
+          "name": "shape-timeline-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2724,7 +2724,7 @@
             {
               "type": "path",
               "id": "p157",
-              "name": "剥落 13",
+              "name": "flake-13",
               "d": "M 50.6 0.0 L 220.0 49.4 L 173.8 226.2 L 0.0 260.0 L 8.8 85.8 Z",
               "width": 220,
               "height": 260,
@@ -2740,7 +2740,7 @@
             {
               "type": "path",
               "id": "p158",
-              "name": "剥落 14",
+              "name": "flake-14",
               "d": "M 0.0 86.4 L 107.1 22.4 L 195.3 156.8 L 65.1 320.0 Z",
               "width": 210,
               "height": 320,
@@ -2756,7 +2756,7 @@
             {
               "type": "path",
               "id": "p159",
-              "name": "剥落 15",
+              "name": "flake-15",
               "d": "M 32.5 0.0 L 242.5 16.2 L 250.0 138.6 L 52.5 163.8 L 0.0 77.4 Z",
               "width": 250,
               "height": 180,
@@ -2778,7 +2778,7 @@
     {
       "type": "frame",
       "id": "f200",
-      "name": "06 那件事 · 图注混排",
+      "name": "06-the-one-caption-mix",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -2793,7 +2793,7 @@
         {
           "type": "frame",
           "id": "f186",
-          "name": "那件事 · 图注混排 · 内容",
+          "name": "the-one-caption-mix-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2810,7 +2810,7 @@
             {
               "type": "frame",
               "id": "f190",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2822,9 +2822,9 @@
                 {
                   "type": "text",
                   "id": "t187",
-                  "name": "系列名",
-                  "content": "年度复盘 · 八板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Year in Review · 8",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -2841,7 +2841,7 @@
                 {
                   "type": "frame",
                   "id": "f188",
-                  "name": "金线角标",
+                  "name": "gold-corner-mark",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2865,7 +2865,7 @@
                     {
                       "type": "text",
                       "id": "t189",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "06/08",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -2888,7 +2888,7 @@
             {
               "type": "frame",
               "id": "f173",
-              "name": "主体",
+              "name": "main",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2904,7 +2904,7 @@
                 {
                   "type": "frame",
                   "id": "f168",
-                  "name": "成品位",
+                  "name": "result-slot",
                   "width": "fill_container",
                   "height": 560,
                   "layout": "vertical",
@@ -2921,7 +2921,7 @@
                     {
                       "type": "group",
                       "id": "g164",
-                      "name": "上传占位",
+                      "name": "upload-slot",
                       "width": 112,
                       "height": 116,
                       "layout": "none",
@@ -2930,7 +2930,7 @@
                         {
                           "type": "icon_font",
                           "id": "i163",
-                          "name": "上传占位 · 图标",
+                          "name": "upload-slot-icon",
                           "iconFontName": "upload",
                           "width": 49,
                           "height": 49,
@@ -2946,7 +2946,7 @@
                         {
                           "type": "text",
                           "id": "t162",
-                          "name": "上传占位 · 圆底",
+                          "name": "upload-slot-circle",
                           "content": "●",
                           "fontFamily": "Inter",
                           "fontSize": 149,
@@ -2969,7 +2969,7 @@
                     {
                       "type": "frame",
                       "id": "f167",
-                      "name": "占位说明",
+                      "name": "slot-hint",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2980,9 +2980,9 @@
                         {
                           "type": "text",
                           "id": "t165",
-                          "name": "占位标题",
-                          "content": "放那件事的成品图",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "slot-title",
+                          "content": "Add a photo of the result",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 600,
                           "fill": [
@@ -2999,9 +2999,9 @@
                         {
                           "type": "text",
                           "id": "t166",
-                          "name": "占位规格",
-                          "content": "建议 920×560 以上",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "slot-spec",
+                          "content": "920×560 or larger",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -3022,7 +3022,7 @@
                 {
                   "type": "frame",
                   "id": "f172",
-                  "name": "图注区",
+                  "name": "caption-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3033,9 +3033,9 @@
                     {
                       "type": "text",
                       "id": "t169",
-                      "name": "小标题",
-                      "content": "如果只能留一件",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-title",
+                      "content": "If I could keep one",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 700,
                       "fill": [
@@ -3052,9 +3052,9 @@
                     {
                       "type": "text",
                       "id": "t170",
-                      "name": "正文",
-                      "content": "十月做完并交出去的那个东西。它不是最大的，但它是唯一一件走完全程的。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "body",
+                      "content": "The thing I finished and shipped in October. Not the biggest, but the only one that went the whole way.",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 400,
                       "fill": [
@@ -3071,9 +3071,9 @@
                     {
                       "type": "text",
                       "id": "t171",
-                      "name": "图注",
-                      "content": "从开始到交付 · 用了 47 天",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "caption",
+                      "content": "Start to delivery · 47 days",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -3094,7 +3094,7 @@
             {
               "type": "frame",
               "id": "f195",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3105,7 +3105,7 @@
                 {
                   "type": "rectangle",
                   "id": "r191",
-                  "name": "分隔线",
+                  "name": "separator",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -3118,7 +3118,7 @@
                 {
                   "type": "frame",
                   "id": "f194",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3130,9 +3130,9 @@
                     {
                       "type": "text",
                       "id": "t192",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -3149,9 +3149,9 @@
                     {
                       "type": "text",
                       "id": "t193",
-                      "name": "本板提要",
-                      "content": "高点",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-tag",
+                      "content": "High",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -3174,7 +3174,7 @@
         {
           "type": "frame",
           "id": "f199",
-          "name": "那件事 · 图注混排 · 装饰",
+          "name": "the-one-caption-mix-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -3183,7 +3183,7 @@
             {
               "type": "rectangle",
               "id": "r174",
-              "name": "矿彩颗粒 1",
+              "name": "pigment-grain-1",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3199,7 +3199,7 @@
             {
               "type": "rectangle",
               "id": "r175",
-              "name": "矿彩颗粒 2",
+              "name": "pigment-grain-2",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3215,7 +3215,7 @@
             {
               "type": "rectangle",
               "id": "r176",
-              "name": "矿彩颗粒 3",
+              "name": "pigment-grain-3",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3231,7 +3231,7 @@
             {
               "type": "rectangle",
               "id": "r177",
-              "name": "矿彩颗粒 4",
+              "name": "pigment-grain-4",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3247,7 +3247,7 @@
             {
               "type": "rectangle",
               "id": "r178",
-              "name": "矿彩颗粒 5",
+              "name": "pigment-grain-5",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3263,7 +3263,7 @@
             {
               "type": "rectangle",
               "id": "r179",
-              "name": "矿彩颗粒 6",
+              "name": "pigment-grain-6",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3279,7 +3279,7 @@
             {
               "type": "rectangle",
               "id": "r180",
-              "name": "矿彩颗粒 7",
+              "name": "pigment-grain-7",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3295,7 +3295,7 @@
             {
               "type": "rectangle",
               "id": "r181",
-              "name": "矿彩颗粒 8",
+              "name": "pigment-grain-8",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3311,7 +3311,7 @@
             {
               "type": "rectangle",
               "id": "r182",
-              "name": "矿彩颗粒 9",
+              "name": "pigment-grain-9",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3327,7 +3327,7 @@
             {
               "type": "rectangle",
               "id": "r183",
-              "name": "矿彩颗粒 10",
+              "name": "pigment-grain-10",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3343,7 +3343,7 @@
             {
               "type": "rectangle",
               "id": "r184",
-              "name": "矿彩颗粒 11",
+              "name": "pigment-grain-11",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3359,7 +3359,7 @@
             {
               "type": "rectangle",
               "id": "r185",
-              "name": "矿彩颗粒 12",
+              "name": "pigment-grain-12",
               "width": 4,
               "height": 4,
               "fill": [
@@ -3375,7 +3375,7 @@
             {
               "type": "path",
               "id": "p196",
-              "name": "剥落 16",
+              "name": "flake-16",
               "d": "M 15.6 40.8 L 215.8 0.0 L 260.0 127.2 L 127.4 240.0 L 0.0 194.4 Z",
               "width": 260,
               "height": 240,
@@ -3391,7 +3391,7 @@
             {
               "type": "path",
               "id": "p197",
-              "name": "剥落 17",
+              "name": "flake-17",
               "d": "M 0.0 0.0 L 154.1 31.9 L 230.0 194.3 L 62.1 290.0 Z",
               "width": 230,
               "height": 290,
@@ -3407,7 +3407,7 @@
             {
               "type": "path",
               "id": "p198",
-              "name": "剥落 18",
+              "name": "flake-18",
               "d": "M 55.1 9.0 L 290.0 0.0 L 263.9 106.5 L 26.1 145.5 L 0.0 43.5 Z",
               "width": 290,
               "height": 150,
@@ -3429,7 +3429,7 @@
     {
       "type": "frame",
       "id": "f219",
-      "name": "07 金句 · 满版一句",
+      "name": "07-quote-full-bleed",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -3444,7 +3444,7 @@
         {
           "type": "frame",
           "id": "f205",
-          "name": "金句 · 满版一句 · 内容",
+          "name": "quote-full-bleed-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -3461,7 +3461,7 @@
             {
               "type": "frame",
               "id": "f209",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -3473,9 +3473,9 @@
                 {
                   "type": "text",
                   "id": "t206",
-                  "name": "系列名",
-                  "content": "年度复盘 · 八板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Year in Review · 8",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -3492,7 +3492,7 @@
                 {
                   "type": "frame",
                   "id": "f207",
-                  "name": "金线角标",
+                  "name": "gold-corner-mark",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3516,7 +3516,7 @@
                     {
                       "type": "text",
                       "id": "t208",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "07/08",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -3539,7 +3539,7 @@
             {
               "type": "frame",
               "id": "f204",
-              "name": "主体",
+              "name": "main",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -3555,7 +3555,7 @@
                 {
                   "type": "rectangle",
                   "id": "r201",
-                  "name": "朱砂方块",
+                  "name": "vermilion-square",
                   "width": 24,
                   "height": 24,
                   "fill": [
@@ -3568,9 +3568,9 @@
                 {
                   "type": "text",
                   "id": "t202",
-                  "name": "金句",
-                  "content": "计划不是承诺，\n做完才是。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "quote",
+                  "content": "Plans aren't vows.\nFinishing is.",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -3587,9 +3587,9 @@
                 {
                   "type": "text",
                   "id": "t203",
-                  "name": "出处",
-                  "content": "写在今年最后一条待办的后面",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "attribution",
+                  "content": "Written after this year's last to-do",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -3608,7 +3608,7 @@
             {
               "type": "frame",
               "id": "f214",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3619,7 +3619,7 @@
                 {
                   "type": "rectangle",
                   "id": "r210",
-                  "name": "分隔线",
+                  "name": "separator",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -3632,7 +3632,7 @@
                 {
                   "type": "frame",
                   "id": "f213",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3644,9 +3644,9 @@
                     {
                       "type": "text",
                       "id": "t211",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -3663,9 +3663,9 @@
                     {
                       "type": "text",
                       "id": "t212",
-                      "name": "本板提要",
-                      "content": "复述点",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-tag",
+                      "content": "Takeaway",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -3688,7 +3688,7 @@
         {
           "type": "frame",
           "id": "f218",
-          "name": "金句 · 满版一句 · 装饰",
+          "name": "quote-full-bleed-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -3697,7 +3697,7 @@
             {
               "type": "path",
               "id": "p215",
-              "name": "剥落 19",
+              "name": "flake-19",
               "d": "M 0.0 97.5 L 90.3 0.0 L 210.0 57.5 L 149.1 232.5 L 27.3 250.0 Z",
               "width": 210,
               "height": 250,
@@ -3713,7 +3713,7 @@
             {
               "type": "path",
               "id": "p216",
-              "name": "剥落 20",
+              "name": "flake-20",
               "d": "M 22.0 0.0 L 178.0 70.2 L 126.0 260.0 L 0.0 153.4 Z",
               "width": 200,
               "height": 260,
@@ -3729,7 +3729,7 @@
             {
               "type": "path",
               "id": "p217",
-              "name": "剥落 21",
+              "name": "flake-21",
               "d": "M 0.0 22.1 L 184.8 5.1 L 240.0 137.7 L 88.8 164.9 L 7.2 103.7 Z",
               "width": 240,
               "height": 170,
@@ -3751,7 +3751,7 @@
     {
       "type": "frame",
       "id": "f255",
-      "name": "08 目录 · 回看",
+      "name": "08-index-recap",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -3766,7 +3766,7 @@
         {
           "type": "frame",
           "id": "f241",
-          "name": "目录 · 回看 · 内容",
+          "name": "index-recap-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -3783,7 +3783,7 @@
             {
               "type": "frame",
               "id": "f245",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -3795,9 +3795,9 @@
                 {
                   "type": "text",
                   "id": "t242",
-                  "name": "系列名",
-                  "content": "年度复盘 · 八板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Year in Review · 8",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -3814,7 +3814,7 @@
                 {
                   "type": "frame",
                   "id": "f243",
-                  "name": "金线角标",
+                  "name": "gold-corner-mark",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3838,7 +3838,7 @@
                     {
                       "type": "text",
                       "id": "t244",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "08/08",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -3861,7 +3861,7 @@
             {
               "type": "frame",
               "id": "f240",
-              "name": "主体",
+              "name": "main",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -3877,9 +3877,9 @@
                 {
                   "type": "text",
                   "id": "t238",
-                  "name": "收束句",
-                  "content": "明年只写\n十条计划。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-line",
+                  "content": "Next year,\nten plans only.",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -3896,7 +3896,7 @@
                 {
                   "type": "frame",
                   "id": "f239",
-                  "name": "目录",
+                  "name": "index",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3907,7 +3907,7 @@
                     {
                       "type": "frame",
                       "id": "f222",
-                      "name": "目录行",
+                      "name": "index-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3919,7 +3919,7 @@
                         {
                           "type": "text",
                           "id": "t220",
-                          "name": "回看页码",
+                          "name": "recap-page-number",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -3938,9 +3938,9 @@
                         {
                           "type": "text",
                           "id": "t221",
-                          "name": "回看标题",
-                          "content": "214 条计划，做完 37 件",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "recap-title",
+                          "content": "214 plans, 37 finished",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -3959,7 +3959,7 @@
                     {
                       "type": "frame",
                       "id": "f225",
-                      "name": "目录行",
+                      "name": "index-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3971,7 +3971,7 @@
                         {
                           "type": "text",
                           "id": "t223",
-                          "name": "回看页码",
+                          "name": "recap-page-number",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -3990,9 +3990,9 @@
                         {
                           "type": "text",
                           "id": "t224",
-                          "name": "回看标题",
-                          "content": "八件不是失败，是没开始",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "recap-title",
+                          "content": "Eight didn't fail; they never began",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -4011,7 +4011,7 @@
                     {
                       "type": "frame",
                       "id": "f228",
-                      "name": "目录行",
+                      "name": "index-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -4023,7 +4023,7 @@
                         {
                           "type": "text",
                           "id": "t226",
-                          "name": "回看页码",
+                          "name": "recap-page-number",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -4042,9 +4042,9 @@
                         {
                           "type": "text",
                           "id": "t227",
-                          "name": "回看标题",
-                          "content": "三到六月，全部停在七成",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "recap-title",
+                          "content": "March to June, all stuck at 70%",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -4063,7 +4063,7 @@
                     {
                       "type": "frame",
                       "id": "f231",
-                      "name": "目录行",
+                      "name": "index-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -4075,7 +4075,7 @@
                         {
                           "type": "text",
                           "id": "t229",
-                          "name": "回看页码",
+                          "name": "recap-page-number",
                           "content": "04",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -4094,9 +4094,9 @@
                         {
                           "type": "text",
                           "id": "t230",
-                          "name": "回看标题",
-                          "content": "完成率 17%",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "recap-title",
+                          "content": "17% done rate",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -4115,7 +4115,7 @@
                     {
                       "type": "frame",
                       "id": "f234",
-                      "name": "目录行",
+                      "name": "index-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -4127,7 +4127,7 @@
                         {
                           "type": "text",
                           "id": "t232",
-                          "name": "回看页码",
+                          "name": "recap-page-number",
                           "content": "05",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -4146,9 +4146,9 @@
                         {
                           "type": "text",
                           "id": "t233",
-                          "name": "回看标题",
-                          "content": "砍到两条线才有第一次做完",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "recap-title",
+                          "content": "Two tracks, then a first finish",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -4167,7 +4167,7 @@
                     {
                       "type": "frame",
                       "id": "f237",
-                      "name": "目录行",
+                      "name": "index-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -4179,7 +4179,7 @@
                         {
                           "type": "text",
                           "id": "t235",
-                          "name": "回看页码",
+                          "name": "recap-page-number",
                           "content": "06",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -4198,9 +4198,9 @@
                         {
                           "type": "text",
                           "id": "t236",
-                          "name": "回看标题",
-                          "content": "唯一走完全程的那件，47 天",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "recap-title",
+                          "content": "The one I saw through: 47 days",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -4223,7 +4223,7 @@
             {
               "type": "frame",
               "id": "f250",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -4234,7 +4234,7 @@
                 {
                   "type": "rectangle",
                   "id": "r246",
-                  "name": "分隔线",
+                  "name": "separator",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -4247,7 +4247,7 @@
                 {
                   "type": "frame",
                   "id": "f249",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4259,9 +4259,9 @@
                     {
                       "type": "text",
                       "id": "t247",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -4278,9 +4278,9 @@
                     {
                       "type": "text",
                       "id": "t248",
-                      "name": "本板提要",
-                      "content": "收束",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-tag",
+                      "content": "Wrap",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -4303,7 +4303,7 @@
         {
           "type": "frame",
           "id": "f254",
-          "name": "目录 · 回看 · 装饰",
+          "name": "index-recap-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -4312,7 +4312,7 @@
             {
               "type": "path",
               "id": "p251",
-              "name": "剥落 22",
+              "name": "flake-22",
               "d": "M 62.1 0.0 L 230.0 123.0 L 121.9 267.0 L 0.0 141.0 L 16.1 33.0 Z",
               "width": 230,
               "height": 300,
@@ -4328,7 +4328,7 @@
             {
               "type": "path",
               "id": "p252",
-              "name": "剥落 23",
+              "name": "flake-23",
               "d": "M 0.0 16.1 L 152.5 43.7 L 250.0 213.9 L 42.5 230.0 Z",
               "width": 250,
               "height": 230,
@@ -4344,7 +4344,7 @@
             {
               "type": "path",
               "id": "p253",
-              "name": "剥落 24",
+              "name": "flake-24",
               "d": "M 24.3 36.8 L 267.3 0.0 L 270.0 100.8 L 78.3 160.0 L 0.0 126.4 Z",
               "width": 270,
               "height": 160,

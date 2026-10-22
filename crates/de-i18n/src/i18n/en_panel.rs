@@ -154,7 +154,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.pitfallListInfographic.title" => "Pitfall Checklist Infographic",
         "sceneTemplate.item.pitfallListInfographic.summary" => "A tall scrolling graphic: six mistakes ranked by how often people make them, each with what goes wrong and what to do instead, plus a four-line pre-publish check. Black, white and grey only.",
         "sceneTemplate.item.spineCultureCard.title" => "Vertical Spine Card · Mineral Pigment",
-        "sceneTemplate.item.spineCultureCard.summary" => "A 3:4 card on ochre-clay dark ground with a vertical Chinese title, flaking plaster and pigment grains. For culture, long reads and personal-brand covers.",
+        "sceneTemplate.item.spineCultureCard.summary" => "A 3:4 card on ochre-clay dark ground with a stacked vertical title, flaking plaster and pigment grains. For culture, long reads and personal-brand covers.",
         "sceneTemplate.item.metricSingleCard.title" => "Single Metric Card · Grid Hanzi",
         "sceneTemplate.item.metricSingleCard.summary" => "A 1:1 card: one huge number on pure white, a strict Swiss grid and a single red signal square. For conclusions and results.",
         "sceneTemplate.item.quoteFrameCard.title" => "Quote Frame Card · Silk Blue-Green",

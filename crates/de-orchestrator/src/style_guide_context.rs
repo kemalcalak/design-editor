@@ -259,8 +259,9 @@ pub(crate) fn infer_tags_from_prompt(prompt: &str) -> Vec<String> {
         push("social-card");
         push("card-series");
         push("vertical-portrait");
-        // Every shipped card guide is CJK-first typography — the tag is what
-        // separates them from a latin social template.
+        // Every shipped card guide carries this tag (a historical name: the
+        // guides are Latin-first now) — it is what separates them from a
+        // generic social template.
         push("cjk-type");
     }
     // Content words the four shipped guides split on. Kept out of the block

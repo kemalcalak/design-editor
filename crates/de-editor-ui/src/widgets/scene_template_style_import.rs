@@ -229,7 +229,7 @@ impl SceneTemplatePanel<'_> {
         let inner_w = (box_rect.size.x - BOX_PAD * 2.0).max(0.0);
         self.paint_text(
             cx,
-            self.t("assetCenter.style.importTitle", "导入 DESIGN.md"),
+            self.t("assetCenter.style.importTitle", "Import DESIGN.md"),
             Point2D::new(left, box_rect.origin.y + BOX_PAD + 18.0),
             TITLE_SIZE,
             self.theme.foreground,
@@ -240,12 +240,12 @@ impl SceneTemplatePanel<'_> {
         let hint = if self.style_import_pick_rect(panel).is_some() {
             self.t(
                 "assetCenter.style.importHintFile",
-                "选择 DESIGN.md 文件,或在下方粘贴全文",
+                "Choose a DESIGN.md file, or paste the whole document below.",
             )
         } else {
             self.t(
                 "assetCenter.style.importHint",
-                "粘贴 DESIGN.md 全文,然后确认导入",
+                "Paste the whole DESIGN.md, then confirm the import.",
             )
         };
         self.paint_text(
@@ -281,7 +281,7 @@ impl SceneTemplatePanel<'_> {
                 &truncate_to_width(
                     self.t(
                         "assetCenter.style.importSource",
-                        "可以从 styles.refero.design 等 DESIGN.md 风格库复制内容",
+                        "You can copy a style from a DESIGN.md library such as styles.refero.design.",
                     ),
                     inner_w,
                     HINT_SIZE,
@@ -297,7 +297,7 @@ impl SceneTemplatePanel<'_> {
                 cx,
                 rect,
                 &truncate_to_width(
-                    self.t("assetCenter.style.importPickFile", "选择文件…"),
+                    self.t("assetCenter.style.importPickFile", "Choose file…"),
                     (rect.size.x - 12.0).max(0.0),
                     HINT_SIZE + 1.0,
                 ),
@@ -308,14 +308,14 @@ impl SceneTemplatePanel<'_> {
         self.paint_style_import_action(
             cx,
             self.style_import_cancel_rect(panel),
-            self.t("assetCenter.style.importCancel", "取消"),
+            self.t("assetCenter.style.importCancel", "Cancel"),
             STYLE_IMPORT_CANCEL_HOVER,
             false,
         );
         self.paint_style_import_action(
             cx,
             self.style_import_confirm_rect(panel),
-            self.t("assetCenter.style.importConfirm", "导入"),
+            self.t("assetCenter.style.importConfirm", "Import"),
             STYLE_IMPORT_CONFIRM_HOVER,
             true,
         );
@@ -347,7 +347,10 @@ impl SceneTemplatePanel<'_> {
         if text.is_empty() {
             self.paint_text(
                 cx,
-                self.t("assetCenter.style.importPlaceholder", "在此粘贴 DESIGN.md"),
+                self.t(
+                    "assetCenter.style.importPlaceholder",
+                    "Paste your DESIGN.md here",
+                ),
                 Point2D::new(rect.origin.x + 10.0, rect.origin.y + 22.0),
                 TEXT_SIZE,
                 self.theme.muted_foreground,

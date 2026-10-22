@@ -67,9 +67,12 @@ fn scene_filter_and_id_lookup_agree_with_the_catalogue() {
 }
 
 #[test]
-fn search_matches_chinese_and_english_regardless_of_locale() {
+fn search_matches_the_locale_title_and_english_tags() {
     let tutorial = scene_template_by_id("screenshot-tutorial").expect("shipped");
-    assert!(tutorial.matches_query(Locale::EnUs, "教程"));
+    // The catalogue is English; a Chinese query matches through the zh-CN
+    // locale title, and the English tags match in every locale.
+    assert!(tutorial.matches_query(Locale::ZhCn, "教程"));
+    assert!(!tutorial.matches_query(Locale::EnUs, "教程"));
     assert!(tutorial.matches_query(Locale::ZhCn, "tutorial"));
     assert!(
         tutorial.matches_query(Locale::EnUs, ""),

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "App 新手引导三屏 · 3:4 单卡",
+  "name": "app-onboarding-triptych-3x4-card",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "App 新手引导三屏",
+      "name": "app-onboarding-triptych",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -61,7 +61,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -72,7 +72,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -93,9 +93,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "标签文字",
-                  "content": "新手引导 · 三屏封顶",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Onboarding · 3 Screens Max",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 600,
                   "fill": [
@@ -114,9 +114,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "三屏之内\n把你的 App 讲完",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Explain your app\nin three screens",
+              "fontFamily": "Inter",
               "fontSize": 62,
               "fontWeight": 700,
               "fill": [
@@ -133,9 +133,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "把自己的三张引导图拖进屏幕里，文案照着下面的格式改。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Drag your three onboarding screens in, then edit the copy using the format below.",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -154,7 +154,7 @@
         {
           "type": "frame",
           "id": "f40",
-          "name": "三屏",
+          "name": "three-screens",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -165,7 +165,7 @@
             {
               "type": "frame",
               "id": "f17",
-              "name": "引导屏",
+              "name": "onboarding-screen",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -176,7 +176,7 @@
                 {
                   "type": "frame",
                   "id": "f11",
-                  "name": "机身",
+                  "name": "phone-body",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -196,7 +196,7 @@
                     {
                       "type": "rectangle",
                       "id": "r10",
-                      "name": "听筒条",
+                      "name": "earpiece-bar",
                       "width": 64,
                       "height": 8,
                       "cornerRadius": 4,
@@ -210,7 +210,7 @@
                     {
                       "type": "frame",
                       "id": "f7",
-                      "name": "屏幕图位",
+                      "name": "screen-image-slot",
                       "width": "fill_container",
                       "height": 396,
                       "layout": "vertical",
@@ -228,7 +228,7 @@
                         {
                           "type": "icon_font",
                           "id": "i8",
-                          "name": "图位图标",
+                          "name": "image-slot-icon",
                           "iconFontName": "image",
                           "width": 34,
                           "height": 34,
@@ -242,9 +242,9 @@
                         {
                           "type": "text",
                           "id": "t9",
-                          "name": "图位提示",
-                          "content": "第 1 屏截图",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-hint",
+                          "content": "Screen 1",
+                          "fontFamily": "Inter",
                           "fontSize": 21,
                           "fontWeight": 600,
                           "fill": [
@@ -276,7 +276,7 @@
                 {
                   "type": "frame",
                   "id": "f15",
-                  "name": "屏标题行",
+                  "name": "screen-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -287,7 +287,7 @@
                     {
                       "type": "frame",
                       "id": "f12",
-                      "name": "屏序号",
+                      "name": "screen-number",
                       "width": 40,
                       "height": 40,
                       "layout": "horizontal",
@@ -304,7 +304,7 @@
                         {
                           "type": "text",
                           "id": "t13",
-                          "name": "序号",
+                          "name": "index",
                           "content": "1",
                           "fontFamily": "Inter",
                           "fontSize": 21,
@@ -325,9 +325,9 @@
                     {
                       "type": "text",
                       "id": "t14",
-                      "name": "屏标题",
-                      "content": "先说清你是谁",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "screen-title",
+                      "content": "Who you are",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 600,
                       "fill": [
@@ -346,9 +346,9 @@
                 {
                   "type": "text",
                   "id": "t16",
-                  "name": "屏说明",
-                  "content": "一句话讲明白这个 App 解决什么问题。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "screen-description",
+                  "content": "One line on the problem this app solves.",
+                  "fontFamily": "Inter",
                   "fontSize": 21,
                   "fontWeight": 400,
                   "fill": [
@@ -367,7 +367,7 @@
             {
               "type": "frame",
               "id": "f28",
-              "name": "引导屏",
+              "name": "onboarding-screen",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -378,7 +378,7 @@
                 {
                   "type": "frame",
                   "id": "f22",
-                  "name": "机身",
+                  "name": "phone-body",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -398,7 +398,7 @@
                     {
                       "type": "rectangle",
                       "id": "r21",
-                      "name": "听筒条",
+                      "name": "earpiece-bar",
                       "width": 64,
                       "height": 8,
                       "cornerRadius": 4,
@@ -412,7 +412,7 @@
                     {
                       "type": "frame",
                       "id": "f18",
-                      "name": "屏幕图位",
+                      "name": "screen-image-slot",
                       "width": "fill_container",
                       "height": 396,
                       "layout": "vertical",
@@ -430,7 +430,7 @@
                         {
                           "type": "icon_font",
                           "id": "i19",
-                          "name": "图位图标",
+                          "name": "image-slot-icon",
                           "iconFontName": "image",
                           "width": 34,
                           "height": 34,
@@ -444,9 +444,9 @@
                         {
                           "type": "text",
                           "id": "t20",
-                          "name": "图位提示",
-                          "content": "第 2 屏截图",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-hint",
+                          "content": "Screen 2",
+                          "fontFamily": "Inter",
                           "fontSize": 21,
                           "fontWeight": 600,
                           "fill": [
@@ -478,7 +478,7 @@
                 {
                   "type": "frame",
                   "id": "f26",
-                  "name": "屏标题行",
+                  "name": "screen-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -489,7 +489,7 @@
                     {
                       "type": "frame",
                       "id": "f23",
-                      "name": "屏序号",
+                      "name": "screen-number",
                       "width": 40,
                       "height": 40,
                       "layout": "horizontal",
@@ -506,7 +506,7 @@
                         {
                           "type": "text",
                           "id": "t24",
-                          "name": "序号",
+                          "name": "index",
                           "content": "2",
                           "fontFamily": "Inter",
                           "fontSize": 21,
@@ -527,9 +527,9 @@
                     {
                       "type": "text",
                       "id": "t25",
-                      "name": "屏标题",
-                      "content": "再给一个动作",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "screen-title",
+                      "content": "One action",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 600,
                       "fill": [
@@ -548,9 +548,9 @@
                 {
                   "type": "text",
                   "id": "t27",
-                  "name": "屏说明",
-                  "content": "只留一个按钮，别让人挑。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "screen-description",
+                  "content": "Keep one button. No choices.",
+                  "fontFamily": "Inter",
                   "fontSize": 21,
                   "fontWeight": 400,
                   "fill": [
@@ -569,7 +569,7 @@
             {
               "type": "frame",
               "id": "f39",
-              "name": "引导屏",
+              "name": "onboarding-screen",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -580,7 +580,7 @@
                 {
                   "type": "frame",
                   "id": "f33",
-                  "name": "机身",
+                  "name": "phone-body",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -600,7 +600,7 @@
                     {
                       "type": "rectangle",
                       "id": "r32",
-                      "name": "听筒条",
+                      "name": "earpiece-bar",
                       "width": 64,
                       "height": 8,
                       "cornerRadius": 4,
@@ -614,7 +614,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "屏幕图位",
+                      "name": "screen-image-slot",
                       "width": "fill_container",
                       "height": 396,
                       "layout": "vertical",
@@ -632,7 +632,7 @@
                         {
                           "type": "icon_font",
                           "id": "i30",
-                          "name": "图位图标",
+                          "name": "image-slot-icon",
                           "iconFontName": "image",
                           "width": 34,
                           "height": 34,
@@ -646,9 +646,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "图位提示",
-                          "content": "第 3 屏截图",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-hint",
+                          "content": "Screen 3",
+                          "fontFamily": "Inter",
                           "fontSize": 21,
                           "fontWeight": 600,
                           "fill": [
@@ -680,7 +680,7 @@
                 {
                   "type": "frame",
                   "id": "f37",
-                  "name": "屏标题行",
+                  "name": "screen-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -691,7 +691,7 @@
                     {
                       "type": "frame",
                       "id": "f34",
-                      "name": "屏序号",
+                      "name": "screen-number",
                       "width": 40,
                       "height": 40,
                       "layout": "horizontal",
@@ -708,7 +708,7 @@
                         {
                           "type": "text",
                           "id": "t35",
-                          "name": "序号",
+                          "name": "index",
                           "content": "3",
                           "fontFamily": "Inter",
                           "fontSize": 21,
@@ -729,9 +729,9 @@
                     {
                       "type": "text",
                       "id": "t36",
-                      "name": "屏标题",
-                      "content": "最后请求权限",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "screen-title",
+                      "content": "Permissions last",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 600,
                       "fill": [
@@ -750,9 +750,9 @@
                 {
                   "type": "text",
                   "id": "t38",
-                  "name": "屏说明",
-                  "content": "在真正要用到的那一刻才要，通过率高得多。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "screen-description",
+                  "content": "Ask the moment you need it; far more people say yes.",
+                  "fontFamily": "Inter",
                   "fontSize": 21,
                   "fontWeight": 400,
                   "fill": [
@@ -773,7 +773,7 @@
         {
           "type": "frame",
           "id": "f56",
-          "name": "规矩面板",
+          "name": "rules-panel",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -793,7 +793,7 @@
             {
               "type": "frame",
               "id": "f45",
-              "name": "规矩项",
+              "name": "rule-item",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -804,7 +804,7 @@
                 {
                   "type": "icon_font",
                   "id": "i41",
-                  "name": "规矩图标",
+                  "name": "rule-icon",
                   "iconFontName": "check",
                   "width": 24,
                   "height": 24,
@@ -818,7 +818,7 @@
                 {
                   "type": "frame",
                   "id": "f44",
-                  "name": "规矩文案",
+                  "name": "rule-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -829,9 +829,9 @@
                     {
                       "type": "text",
                       "id": "t42",
-                      "name": "规矩标题",
-                      "content": "跳过按钮一定要留",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-title",
+                      "content": "Always keep a Skip button",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 600,
                       "fill": [
@@ -848,9 +848,9 @@
                     {
                       "type": "text",
                       "id": "t43",
-                      "name": "规矩说明",
-                      "content": "藏起跳过只会让人卸载，不会让人读完。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-description",
+                      "content": "Hiding Skip gets you uninstalls, not readers.",
+                      "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": 400,
                       "fill": [
@@ -871,7 +871,7 @@
             {
               "type": "frame",
               "id": "f50",
-              "name": "规矩项",
+              "name": "rule-item",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -882,7 +882,7 @@
                 {
                   "type": "icon_font",
                   "id": "i46",
-                  "name": "规矩图标",
+                  "name": "rule-icon",
                   "iconFontName": "check",
                   "width": 24,
                   "height": 24,
@@ -896,7 +896,7 @@
                 {
                   "type": "frame",
                   "id": "f49",
-                  "name": "规矩文案",
+                  "name": "rule-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -907,9 +907,9 @@
                     {
                       "type": "text",
                       "id": "t47",
-                      "name": "规矩标题",
-                      "content": "三屏共用一套版式",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-title",
+                      "content": "One layout for all three",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 600,
                       "fill": [
@@ -926,9 +926,9 @@
                     {
                       "type": "text",
                       "id": "t48",
-                      "name": "规矩说明",
-                      "content": "换插画不换结构，翻页时视线不用重新找。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-description",
+                      "content": "Change the art, not the structure, so eyes don't hunt on each swipe.",
+                      "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": 400,
                       "fill": [
@@ -949,7 +949,7 @@
             {
               "type": "frame",
               "id": "f55",
-              "name": "规矩项",
+              "name": "rule-item",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -960,7 +960,7 @@
                 {
                   "type": "icon_font",
                   "id": "i51",
-                  "name": "规矩图标",
+                  "name": "rule-icon",
                   "iconFontName": "check",
                   "width": 24,
                   "height": 24,
@@ -974,7 +974,7 @@
                 {
                   "type": "frame",
                   "id": "f54",
-                  "name": "规矩文案",
+                  "name": "rule-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -985,9 +985,9 @@
                     {
                       "type": "text",
                       "id": "t52",
-                      "name": "规矩标题",
-                      "content": "最后一屏别放注册墙",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-title",
+                      "content": "No sign-up wall at the end",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 600,
                       "fill": [
@@ -1004,9 +1004,9 @@
                     {
                       "type": "text",
                       "id": "t53",
-                      "name": "规矩说明",
-                      "content": "先让人进去看一眼，再谈账号。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-description",
+                      "content": "Let people look around first, then ask for an account.",
+                      "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": 400,
                       "fill": [
@@ -1030,7 +1030,7 @@
         {
           "type": "frame",
           "id": "f59",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1042,9 +1042,9 @@
             {
               "type": "text",
               "id": "t57",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 23,
               "fontWeight": 600,
               "fill": [
@@ -1061,9 +1061,9 @@
             {
               "type": "text",
               "id": "t58",
-              "name": "用法提示",
-              "content": "浅灰屏幕是图片位，直接把截图拖上去",
-              "fontFamily": "Noto Sans SC",
+              "name": "usage-hint",
+              "content": "Gray screens are image slots; drop screenshots on them",
+              "fontFamily": "Inter",
               "fontSize": 21,
               "fontWeight": 400,
               "fill": [

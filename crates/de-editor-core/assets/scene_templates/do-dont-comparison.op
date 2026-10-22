@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "好坏示范双栏",
+  "name": "do-dont-two-columns",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "好坏示范双栏",
+      "name": "do-dont-two-columns",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -61,7 +61,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -72,7 +72,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -93,9 +93,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "标签文字",
-                  "content": "示范对比 · 封面标题",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Before and after · Cover titles",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -114,9 +114,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "同一件事\n两种写法",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Same idea,\ntwo headlines",
+              "fontFamily": "Inter",
               "fontSize": 78,
               "fontWeight": 700,
               "fill": [
@@ -133,9 +133,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "左边是大多数人的第一版，右边是改完之后的样子。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Left is most people's first draft. Right is the edited version.",
+              "fontFamily": "Inter",
               "fontSize": 27,
               "fontWeight": 400,
               "fill": [
@@ -154,7 +154,7 @@
         {
           "type": "frame",
           "id": "f63",
-          "name": "双栏",
+          "name": "two-columns",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -165,7 +165,7 @@
             {
               "type": "frame",
               "id": "f34",
-              "name": "栏",
+              "name": "column",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -185,7 +185,7 @@
                 {
                   "type": "frame",
                   "id": "f33",
-                  "name": "栏内容",
+                  "name": "column-content",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -196,7 +196,7 @@
                     {
                       "type": "frame",
                       "id": "f10",
-                      "name": "栏首",
+                      "name": "column-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -207,7 +207,7 @@
                         {
                           "type": "frame",
                           "id": "f7",
-                          "name": "错 · 空心徽记",
+                          "name": "dont-hollow-badge",
                           "width": 52,
                           "height": 52,
                           "layout": "horizontal",
@@ -228,7 +228,7 @@
                             {
                               "type": "icon_font",
                               "id": "i8",
-                              "name": "叉",
+                              "name": "cross",
                               "iconFontName": "x",
                               "width": 28,
                               "height": 28,
@@ -244,9 +244,9 @@
                         {
                           "type": "text",
                           "id": "t9",
-                          "name": "栏标题",
-                          "content": "常见写法",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "column-title",
+                          "content": "Typical draft",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 700,
                           "fill": [
@@ -265,7 +265,7 @@
                     {
                       "type": "frame",
                       "id": "f14",
-                      "name": "示例封面",
+                      "name": "sample-cover",
                       "width": "fill_container",
                       "height": 262,
                       "layout": "vertical",
@@ -285,9 +285,9 @@
                         {
                           "type": "text",
                           "id": "t11",
-                          "name": "示例标题",
-                          "content": "关于如何高效使用 AI 工具的一些方法分享",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "sample-title",
+                          "content": "Some thoughts on how to use AI tools more efficiently",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 500,
                           "fill": [
@@ -304,7 +304,7 @@
                         {
                           "type": "rectangle",
                           "id": "r12",
-                          "name": "示例分线",
+                          "name": "sample-divider",
                           "width": 64,
                           "height": 4,
                           "fill": [
@@ -317,9 +317,9 @@
                         {
                           "type": "text",
                           "id": "t13",
-                          "name": "示例小字",
-                          "content": "工具推荐 / 效率 / 方法论",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "sample-caption",
+                          "content": "Tools / Productivity / Methods",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -348,7 +348,7 @@
                     {
                       "type": "frame",
                       "id": "f27",
-                      "name": "判据组",
+                      "name": "criteria",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -359,7 +359,7 @@
                         {
                           "type": "frame",
                           "id": "f18",
-                          "name": "判据",
+                          "name": "criterion",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -370,7 +370,7 @@
                             {
                               "type": "frame",
                               "id": "f16",
-                              "name": "点位",
+                              "name": "dot",
                               "width": 14,
                               "height": 44,
                               "layout": "vertical",
@@ -380,7 +380,7 @@
                                 {
                                   "type": "ellipse",
                                   "id": "e15",
-                                  "name": "空心点",
+                                  "name": "hollow-dot",
                                   "width": 14,
                                   "height": 14,
                                   "fill": [],
@@ -399,9 +399,9 @@
                             {
                               "type": "text",
                               "id": "t17",
-                              "name": "判据文字",
-                              "content": "把主题当成了标题",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "criterion-text",
+                              "content": "Uses the topic as the title",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -420,7 +420,7 @@
                         {
                           "type": "frame",
                           "id": "f22",
-                          "name": "判据",
+                          "name": "criterion",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -431,7 +431,7 @@
                             {
                               "type": "frame",
                               "id": "f20",
-                              "name": "点位",
+                              "name": "dot",
                               "width": 14,
                               "height": 44,
                               "layout": "vertical",
@@ -441,7 +441,7 @@
                                 {
                                   "type": "ellipse",
                                   "id": "e19",
-                                  "name": "空心点",
+                                  "name": "hollow-dot",
                                   "width": 14,
                                   "height": 14,
                                   "fill": [],
@@ -460,9 +460,9 @@
                             {
                               "type": "text",
                               "id": "t21",
-                              "name": "判据文字",
-                              "content": "读完才知道有没有用",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "criterion-text",
+                              "content": "Payoff hides at the end",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -481,7 +481,7 @@
                         {
                           "type": "frame",
                           "id": "f26",
-                          "name": "判据",
+                          "name": "criterion",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -492,7 +492,7 @@
                             {
                               "type": "frame",
                               "id": "f24",
-                              "name": "点位",
+                              "name": "dot",
                               "width": 14,
                               "height": 44,
                               "layout": "vertical",
@@ -502,7 +502,7 @@
                                 {
                                   "type": "ellipse",
                                   "id": "e23",
-                                  "name": "空心点",
+                                  "name": "hollow-dot",
                                   "width": 14,
                                   "height": 14,
                                   "fill": [],
@@ -521,9 +521,9 @@
                             {
                               "type": "text",
                               "id": "t25",
-                              "name": "判据文字",
-                              "content": "十九个字，手机上三行",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "criterion-text",
+                              "content": "Ten words, three lines",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -544,7 +544,7 @@
                     {
                       "type": "frame",
                       "id": "f32",
-                      "name": "落点组",
+                      "name": "outcome-group",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -555,7 +555,7 @@
                         {
                           "type": "rectangle",
                           "id": "r28",
-                          "name": "落点上线",
+                          "name": "outcome-rule",
                           "width": "fill_container",
                           "height": 2,
                           "fill": [
@@ -568,7 +568,7 @@
                         {
                           "type": "frame",
                           "id": "f31",
-                          "name": "落点",
+                          "name": "outcome",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -579,7 +579,7 @@
                             {
                               "type": "icon_font",
                               "id": "i29",
-                              "name": "落点箭头",
+                              "name": "outcome-arrow",
                               "iconFontName": "corner-down-right",
                               "width": 24,
                               "height": 24,
@@ -593,9 +593,9 @@
                             {
                               "type": "text",
                               "id": "t30",
-                              "name": "落点文字",
-                              "content": "读者直接划走",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "outcome-text",
+                              "content": "Readers scroll past",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -629,7 +629,7 @@
             {
               "type": "frame",
               "id": "f62",
-              "name": "栏",
+              "name": "column",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -649,7 +649,7 @@
                 {
                   "type": "frame",
                   "id": "f61",
-                  "name": "栏内容",
+                  "name": "column-content",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -660,7 +660,7 @@
                     {
                       "type": "frame",
                       "id": "f38",
-                      "name": "栏首",
+                      "name": "column-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -671,7 +671,7 @@
                         {
                           "type": "frame",
                           "id": "f35",
-                          "name": "对 · 实心徽记",
+                          "name": "do-solid-badge",
                           "width": 52,
                           "height": 52,
                           "layout": "horizontal",
@@ -688,7 +688,7 @@
                             {
                               "type": "icon_font",
                               "id": "i36",
-                              "name": "勾",
+                              "name": "check",
                               "iconFontName": "check",
                               "width": 30,
                               "height": 30,
@@ -704,9 +704,9 @@
                         {
                           "type": "text",
                           "id": "t37",
-                          "name": "栏标题",
-                          "content": "改成这样",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "column-title",
+                          "content": "Rewrite it like this",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 700,
                           "fill": [
@@ -725,7 +725,7 @@
                     {
                       "type": "frame",
                       "id": "f42",
-                      "name": "示例封面",
+                      "name": "sample-cover",
                       "width": "fill_container",
                       "height": 262,
                       "layout": "vertical",
@@ -745,9 +745,9 @@
                         {
                           "type": "text",
                           "id": "t39",
-                          "name": "示例标题",
-                          "content": "AI 工具只留三个",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "sample-title",
+                          "content": "Keep just three AI tools",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 700,
                           "fill": [
@@ -764,7 +764,7 @@
                         {
                           "type": "rectangle",
                           "id": "r40",
-                          "name": "示例分线",
+                          "name": "sample-divider",
                           "width": 64,
                           "height": 4,
                           "fill": [
@@ -777,9 +777,9 @@
                         {
                           "type": "text",
                           "id": "t41",
-                          "name": "示例小字",
-                          "content": "一年攒下的工具清单",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "sample-caption",
+                          "content": "The list from a year of testing",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -799,7 +799,7 @@
                     {
                       "type": "frame",
                       "id": "f55",
-                      "name": "判据组",
+                      "name": "criteria",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -810,7 +810,7 @@
                         {
                           "type": "frame",
                           "id": "f46",
-                          "name": "判据",
+                          "name": "criterion",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -821,7 +821,7 @@
                             {
                               "type": "frame",
                               "id": "f44",
-                              "name": "点位",
+                              "name": "dot",
                               "width": 14,
                               "height": 44,
                               "layout": "vertical",
@@ -831,7 +831,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r43",
-                                  "name": "实心点",
+                                  "name": "solid-dot",
                                   "width": 14,
                                   "height": 14,
                                   "cornerRadius": 3,
@@ -847,9 +847,9 @@
                             {
                               "type": "text",
                               "id": "t45",
-                              "name": "判据文字",
-                              "content": "先写结论那一句",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "criterion-text",
+                              "content": "Leads with the conclusion",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 500,
                               "fill": [
@@ -868,7 +868,7 @@
                         {
                           "type": "frame",
                           "id": "f50",
-                          "name": "判据",
+                          "name": "criterion",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -879,7 +879,7 @@
                             {
                               "type": "frame",
                               "id": "f48",
-                              "name": "点位",
+                              "name": "dot",
                               "width": 14,
                               "height": 44,
                               "layout": "vertical",
@@ -889,7 +889,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r47",
-                                  "name": "实心点",
+                                  "name": "solid-dot",
                                   "width": 14,
                                   "height": 14,
                                   "cornerRadius": 3,
@@ -905,9 +905,9 @@
                             {
                               "type": "text",
                               "id": "t49",
-                              "name": "判据文字",
-                              "content": "一眼知道能拿走什么",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "criterion-text",
+                              "content": "Clear at a glance",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 500,
                               "fill": [
@@ -926,7 +926,7 @@
                         {
                           "type": "frame",
                           "id": "f54",
-                          "name": "判据",
+                          "name": "criterion",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -937,7 +937,7 @@
                             {
                               "type": "frame",
                               "id": "f52",
-                              "name": "点位",
+                              "name": "dot",
                               "width": 14,
                               "height": 44,
                               "layout": "vertical",
@@ -947,7 +947,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r51",
-                                  "name": "实心点",
+                                  "name": "solid-dot",
                                   "width": 14,
                                   "height": 14,
                                   "cornerRadius": 3,
@@ -963,9 +963,9 @@
                             {
                               "type": "text",
                               "id": "t53",
-                              "name": "判据文字",
-                              "content": "十个字以内，一行读完",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "criterion-text",
+                              "content": "Five words, one line",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 500,
                               "fill": [
@@ -986,7 +986,7 @@
                     {
                       "type": "frame",
                       "id": "f60",
-                      "name": "落点组",
+                      "name": "outcome-group",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -997,7 +997,7 @@
                         {
                           "type": "rectangle",
                           "id": "r56",
-                          "name": "落点上线",
+                          "name": "outcome-rule",
                           "width": "fill_container",
                           "height": 2,
                           "fill": [
@@ -1010,7 +1010,7 @@
                         {
                           "type": "frame",
                           "id": "f59",
-                          "name": "落点",
+                          "name": "outcome",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1021,7 +1021,7 @@
                             {
                               "type": "icon_font",
                               "id": "i57",
-                              "name": "落点箭头",
+                              "name": "outcome-arrow",
                               "iconFontName": "corner-down-right",
                               "width": 24,
                               "height": 24,
@@ -1035,9 +1035,9 @@
                             {
                               "type": "text",
                               "id": "t58",
-                              "name": "落点文字",
-                              "content": "读者点开看看",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "outcome-text",
+                              "content": "Readers tap to open",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 600,
                               "fill": [
@@ -1073,7 +1073,7 @@
         {
           "type": "frame",
           "id": "f68",
-          "name": "结语",
+          "name": "closing",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1093,9 +1093,9 @@
             {
               "type": "text",
               "id": "t64",
-              "name": "结语正文",
-              "content": "把左边那句话删到只剩结论，就是右边那句。",
-              "fontFamily": "Noto Sans SC",
+              "name": "closing-body",
+              "content": "Cut the left headline down to its conclusion and you get the right one.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 600,
               "fill": [
@@ -1112,7 +1112,7 @@
             {
               "type": "frame",
               "id": "f67",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1123,9 +1123,9 @@
                 {
                   "type": "text",
                   "id": "t65",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 600,
                   "fill": [
@@ -1142,9 +1142,9 @@
                 {
                   "type": "text",
                   "id": "t66",
-                  "name": "更新说明",
-                  "content": "每周一组能照着抄的示范",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "Weekly examples you can copy",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 400,
                   "fill": [

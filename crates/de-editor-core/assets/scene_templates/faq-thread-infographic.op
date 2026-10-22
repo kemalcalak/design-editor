@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "问答 FAQ 长图",
+  "name": "faq-infographic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "问答 FAQ 长图",
+      "name": "faq-infographic",
       "width": 1080,
       "height": 2789,
       "layout": "vertical",
@@ -67,7 +67,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "01 页头",
+          "name": "01-page-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -89,7 +89,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "胶囊",
+              "name": "pill",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -110,9 +110,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "胶囊文字",
-                  "content": "常见问题 · 六问六答",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "pill-text",
+                  "content": "FAQ · Six questions, six answers",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -131,9 +131,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "被问最多的\n六个问题",
-              "fontFamily": "Noto Sans SC",
+              "name": "main-title",
+              "content": "The six questions\nI get asked most",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -150,9 +150,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "每条都能单独读完，挑你现在正卡住的那条看就行。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Each one stands alone. Just read the one you're stuck on right now.",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 400,
               "fill": [
@@ -171,7 +171,7 @@
         {
           "type": "frame",
           "id": "f72",
-          "name": "02 问答",
+          "name": "02-faq",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -188,7 +188,7 @@
             {
               "type": "frame",
               "id": "f70",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -199,7 +199,7 @@
                 {
                   "type": "rectangle",
                   "id": "r67",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -213,9 +213,9 @@
                 {
                   "type": "text",
                   "id": "t68",
-                  "name": "区块标题",
-                  "content": "挑一条现在就想问的",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Pick the one you'd ask right now",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -232,9 +232,9 @@
                 {
                   "type": "text",
                   "id": "t69",
-                  "name": "区块说明",
-                  "content": "六条互不相欠，跳着看也行，没有先后顺序。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "The six don't depend on each other. Skip around; there's no order.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -253,7 +253,7 @@
             {
               "type": "frame",
               "id": "f71",
-              "name": "问答列表",
+              "name": "faq-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -264,7 +264,7 @@
                 {
                   "type": "frame",
                   "id": "f16",
-                  "name": "问答卡",
+                  "name": "faq-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -285,7 +285,7 @@
                     {
                       "type": "frame",
                       "id": "f10",
-                      "name": "问",
+                      "name": "question",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -296,7 +296,7 @@
                         {
                           "type": "frame",
                           "id": "f7",
-                          "name": "Q 标",
+                          "name": "q-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -313,7 +313,7 @@
                             {
                               "type": "text",
                               "id": "t8",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "Q",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -334,9 +334,9 @@
                         {
                           "type": "text",
                           "id": "t9",
-                          "name": "问句",
-                          "content": "没人看还要不要继续发？",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "question-text",
+                          "content": "No one's watching. Should I keep posting?",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -355,7 +355,7 @@
                     {
                       "type": "rectangle",
                       "id": "r15",
-                      "name": "问答分割线",
+                      "name": "faq-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -368,7 +368,7 @@
                     {
                       "type": "frame",
                       "id": "f14",
-                      "name": "答",
+                      "name": "answer",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -379,7 +379,7 @@
                         {
                           "type": "frame",
                           "id": "f11",
-                          "name": "A 标",
+                          "name": "a-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -400,7 +400,7 @@
                             {
                               "type": "text",
                               "id": "t12",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "A",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -421,9 +421,9 @@
                         {
                           "type": "text",
                           "id": "t13",
-                          "name": "答句",
-                          "content": "先定一个与播放量无关的目标：连发十期，第十期之后再决定。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "answer-text",
+                          "content": "Set a goal that has nothing to do with views: post ten episodes, then decide after the tenth.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -453,7 +453,7 @@
                 {
                   "type": "frame",
                   "id": "f26",
-                  "name": "问答卡",
+                  "name": "faq-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -474,7 +474,7 @@
                     {
                       "type": "frame",
                       "id": "f20",
-                      "name": "问",
+                      "name": "question",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -485,7 +485,7 @@
                         {
                           "type": "frame",
                           "id": "f17",
-                          "name": "Q 标",
+                          "name": "q-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -502,7 +502,7 @@
                             {
                               "type": "text",
                               "id": "t18",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "Q",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -523,9 +523,9 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "问句",
-                          "content": "多久发一次合适？",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "question-text",
+                          "content": "How often should I post?",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -544,7 +544,7 @@
                     {
                       "type": "rectangle",
                       "id": "r25",
-                      "name": "问答分割线",
+                      "name": "faq-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -557,7 +557,7 @@
                     {
                       "type": "frame",
                       "id": "f24",
-                      "name": "答",
+                      "name": "answer",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -568,7 +568,7 @@
                         {
                           "type": "frame",
                           "id": "f21",
-                          "name": "A 标",
+                          "name": "a-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -589,7 +589,7 @@
                             {
                               "type": "text",
                               "id": "t22",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "A",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -610,9 +610,9 @@
                         {
                           "type": "text",
                           "id": "t23",
-                          "name": "答句",
-                          "content": "选一个你在最忙的那一周也能做到的频率。做不到的频率会让你在第五周直接停掉。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "answer-text",
+                          "content": "Pick a pace you could keep up in your busiest week. A pace you can't keep will make you quit by week five.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -642,7 +642,7 @@
                 {
                   "type": "frame",
                   "id": "f36",
-                  "name": "问答卡",
+                  "name": "faq-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -663,7 +663,7 @@
                     {
                       "type": "frame",
                       "id": "f30",
-                      "name": "问",
+                      "name": "question",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -674,7 +674,7 @@
                         {
                           "type": "frame",
                           "id": "f27",
-                          "name": "Q 标",
+                          "name": "q-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -691,7 +691,7 @@
                             {
                               "type": "text",
                               "id": "t28",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "Q",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -712,9 +712,9 @@
                         {
                           "type": "text",
                           "id": "t29",
-                          "name": "问句",
-                          "content": "要不要先攒够素材再开始？",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "question-text",
+                          "content": "Should I stockpile content before I start?",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -733,7 +733,7 @@
                     {
                       "type": "rectangle",
                       "id": "r35",
-                      "name": "问答分割线",
+                      "name": "faq-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -746,7 +746,7 @@
                     {
                       "type": "frame",
                       "id": "f34",
-                      "name": "答",
+                      "name": "answer",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -757,7 +757,7 @@
                         {
                           "type": "frame",
                           "id": "f31",
-                          "name": "A 标",
+                          "name": "a-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -778,7 +778,7 @@
                             {
                               "type": "text",
                               "id": "t32",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "A",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -799,9 +799,9 @@
                         {
                           "type": "text",
                           "id": "t33",
-                          "name": "答句",
-                          "content": "不要。攒素材是最舒服的一种拖延，发出去之后才知道该攒什么。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "answer-text",
+                          "content": "No. Stockpiling is the comfiest kind of procrastination. You only learn what to stockpile after you post.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -831,7 +831,7 @@
                 {
                   "type": "frame",
                   "id": "f46",
-                  "name": "问答卡",
+                  "name": "faq-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -852,7 +852,7 @@
                     {
                       "type": "frame",
                       "id": "f40",
-                      "name": "问",
+                      "name": "question",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -863,7 +863,7 @@
                         {
                           "type": "frame",
                           "id": "f37",
-                          "name": "Q 标",
+                          "name": "q-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -880,7 +880,7 @@
                             {
                               "type": "text",
                               "id": "t38",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "Q",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -901,9 +901,9 @@
                         {
                           "type": "text",
                           "id": "t39",
-                          "name": "问句",
-                          "content": "封面和内容哪个更重要？",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "question-text",
+                          "content": "What matters more, the cover or the content?",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -922,7 +922,7 @@
                     {
                       "type": "rectangle",
                       "id": "r45",
-                      "name": "问答分割线",
+                      "name": "faq-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -935,7 +935,7 @@
                     {
                       "type": "frame",
                       "id": "f44",
-                      "name": "答",
+                      "name": "answer",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -946,7 +946,7 @@
                         {
                           "type": "frame",
                           "id": "f41",
-                          "name": "A 标",
+                          "name": "a-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -967,7 +967,7 @@
                             {
                               "type": "text",
                               "id": "t42",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "A",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -988,9 +988,9 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "答句",
-                          "content": "封面决定点不点进来，内容决定下次还点不点。前十期先做内容。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "answer-text",
+                          "content": "The cover decides whether they click. The content decides whether they click next time. Focus on content for the first ten.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1020,7 +1020,7 @@
                 {
                   "type": "frame",
                   "id": "f56",
-                  "name": "问答卡",
+                  "name": "faq-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1041,7 +1041,7 @@
                     {
                       "type": "frame",
                       "id": "f50",
-                      "name": "问",
+                      "name": "question",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1052,7 +1052,7 @@
                         {
                           "type": "frame",
                           "id": "f47",
-                          "name": "Q 标",
+                          "name": "q-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -1069,7 +1069,7 @@
                             {
                               "type": "text",
                               "id": "t48",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "Q",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -1090,9 +1090,9 @@
                         {
                           "type": "text",
                           "id": "t49",
-                          "name": "问句",
-                          "content": "被说得不好听怎么办？",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "question-text",
+                          "content": "What if people are mean?",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -1111,7 +1111,7 @@
                     {
                       "type": "rectangle",
                       "id": "r55",
-                      "name": "问答分割线",
+                      "name": "faq-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -1124,7 +1124,7 @@
                     {
                       "type": "frame",
                       "id": "f54",
-                      "name": "答",
+                      "name": "answer",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1135,7 +1135,7 @@
                         {
                           "type": "frame",
                           "id": "f51",
-                          "name": "A 标",
+                          "name": "a-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -1156,7 +1156,7 @@
                             {
                               "type": "text",
                               "id": "t52",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "A",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -1177,9 +1177,9 @@
                         {
                           "type": "text",
                           "id": "t53",
-                          "name": "答句",
-                          "content": "只回带具体建议的那一条，其余不回。回一条要花掉二十分钟，值不值这个时间自己算。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "answer-text",
+                          "content": "Only reply to comments with concrete suggestions. Skip the rest. Each reply costs twenty minutes; decide if it's worth it.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1209,7 +1209,7 @@
                 {
                   "type": "frame",
                   "id": "f66",
-                  "name": "问答卡",
+                  "name": "faq-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1230,7 +1230,7 @@
                     {
                       "type": "frame",
                       "id": "f60",
-                      "name": "问",
+                      "name": "question",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1241,7 +1241,7 @@
                         {
                           "type": "frame",
                           "id": "f57",
-                          "name": "Q 标",
+                          "name": "q-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -1258,7 +1258,7 @@
                             {
                               "type": "text",
                               "id": "t58",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "Q",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -1279,9 +1279,9 @@
                         {
                           "type": "text",
                           "id": "t59",
-                          "name": "问句",
-                          "content": "什么时候可以开始收费？",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "question-text",
+                          "content": "When can I start charging?",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -1300,7 +1300,7 @@
                     {
                       "type": "rectangle",
                       "id": "r65",
-                      "name": "问答分割线",
+                      "name": "faq-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -1313,7 +1313,7 @@
                     {
                       "type": "frame",
                       "id": "f64",
-                      "name": "答",
+                      "name": "answer",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1324,7 +1324,7 @@
                         {
                           "type": "frame",
                           "id": "f61",
-                          "name": "A 标",
+                          "name": "a-mark",
                           "width": 46,
                           "height": 46,
                           "layout": "horizontal",
@@ -1345,7 +1345,7 @@
                             {
                               "type": "text",
                               "id": "t62",
-                              "name": "标记字母",
+                              "name": "marker-letter",
                               "content": "A",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -1366,9 +1366,9 @@
                         {
                           "type": "text",
                           "id": "t63",
-                          "name": "答句",
-                          "content": "有人第二次主动来找你的时候。第一次可能是好奇，第二次才是需求。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "answer-text",
+                          "content": "When someone comes back to you a second time on their own. The first time might be curiosity; the second is real demand.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1402,7 +1402,7 @@
         {
           "type": "frame",
           "id": "f84",
-          "name": "03 收尾",
+          "name": "03-wrap-up",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1419,7 +1419,7 @@
             {
               "type": "frame",
               "id": "f83",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1430,7 +1430,7 @@
                 {
                   "type": "rectangle",
                   "id": "r80",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -1444,9 +1444,9 @@
                 {
                   "type": "text",
                   "id": "t81",
-                  "name": "区块标题",
-                  "content": "还有别的问题吗",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Any other questions?",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -1463,9 +1463,9 @@
                 {
                   "type": "text",
                   "id": "t82",
-                  "name": "区块说明",
-                  "content": "这张图会随问题更新，被问到第三次的会被加进来。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "This card updates as questions come in. Anything asked a third time gets added.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -1484,7 +1484,7 @@
             {
               "type": "frame",
               "id": "f79",
-              "name": "收尾面板",
+              "name": "wrap-up-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1505,7 +1505,7 @@
                 {
                   "type": "frame",
                   "id": "f75",
-                  "name": "收尾项",
+                  "name": "wrap-up-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1516,7 +1516,7 @@
                     {
                       "type": "icon_font",
                       "id": "i73",
-                      "name": "图标",
+                      "name": "icon",
                       "iconFontName": "message-square",
                       "width": 28,
                       "height": 28,
@@ -1530,9 +1530,9 @@
                     {
                       "type": "text",
                       "id": "t74",
-                      "name": "收尾文字",
-                      "content": "这六个问题占了私信的八成，其余多是这六个的变体。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "wrap-up-text",
+                      "content": "These six are 80% of my DMs; the rest are variations.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 500,
                       "fill": [
@@ -1551,7 +1551,7 @@
                 {
                   "type": "frame",
                   "id": "f78",
-                  "name": "收尾项",
+                  "name": "wrap-up-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1562,7 +1562,7 @@
                     {
                       "type": "icon_font",
                       "id": "i76",
-                      "name": "图标",
+                      "name": "icon",
                       "iconFontName": "pen-line",
                       "width": 28,
                       "height": 28,
@@ -1576,9 +1576,9 @@
                     {
                       "type": "text",
                       "id": "t77",
-                      "name": "收尾文字",
-                      "content": "还有没答上的，写在评论区 —— 下一张从被问得最多的那条开始。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "wrap-up-text",
+                      "content": "Still stuck? Comment, and the next card answers it.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 500,
                       "fill": [
@@ -1601,7 +1601,7 @@
         {
           "type": "frame",
           "id": "f89",
-          "name": "04 页脚",
+          "name": "04-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1621,9 +1621,9 @@
             {
               "type": "text",
               "id": "t85",
-              "name": "口径",
-              "content": "问题取自近半年私信，同义合并后按出现次数从多到少排。",
-              "fontFamily": "Noto Sans SC",
+              "name": "scope-note",
+              "content": "Questions taken from the past six months of DMs, merged by meaning and ranked by frequency.",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -1640,7 +1640,7 @@
             {
               "type": "frame",
               "id": "f88",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1651,9 +1651,9 @@
                 {
                   "type": "text",
                   "id": "t86",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -1670,9 +1670,9 @@
                 {
                   "type": "text",
                   "id": "t87",
-                  "name": "更新说明",
-                  "content": "每季度更新一次这张问答",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "This FAQ is updated every quarter",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

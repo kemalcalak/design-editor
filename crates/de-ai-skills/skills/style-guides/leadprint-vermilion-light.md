@@ -6,7 +6,7 @@ platform: card
 
 ## Style Scope
 
-This guide is self-contained and written for **Chinese social cards** — a swipeable series of fixed-canvas pages read on a phone, not a scrolling page and not an app screen. Apply its palette, rule system, spacing, and type treatments only when this exact guide is selected; do not pull dashboard, terminal, wellness, or SaaS patterns into it. Treat unnamed layout frames as structural by default: no fill, stroke, cornerRadius, or shadow unless the node is deliberately a masthead rule, a tinted column, a pull-quote block, or a table row. Structure comes from rules and column edges, not from cards with shadows.
+This guide is self-contained and written for **social cards** — a swipeable series of fixed-canvas pages read on a phone, not a scrolling page and not an app screen. Apply its palette, rule system, spacing, and type treatments only when this exact guide is selected; do not pull dashboard, terminal, wellness, or SaaS patterns into it. Treat unnamed layout frames as structural by default: no fill, stroke, cornerRadius, or shadow unless the node is deliberately a masthead rule, a tinted column, a pull-quote block, or a table row. Structure comes from rules and column edges, not from cards with shadows.
 
 ## Style Summary
 
@@ -26,7 +26,7 @@ Key aesthetics:
 - **Misregistration once**: the cover headline doubled in vermilion at (3, 3), under the black
 - **Rules, not cards**: heavy-over-hairline masthead, 1px column rules, tinted zebra rows
 - **No shadow, no radius above 8px**: printed matter is flat and cut square
-- **Old-Song display over Song body**: a hard-cut headline face over a publishing-grade serif
+- **Old-style display over text-serif body**: a hard-cut headline face over a publishing-grade serif
 - **Vermilion as ink and as wash**: solid for headline runs, a tinted wash for blocks carrying black text
 - **Grid visible in the outcome**: columns align hard; a hanging element is a defect
 
@@ -82,11 +82,11 @@ Vermilion appears **at most twice per card**. The masthead rule counts as one of
 
 | Role             | Family                                       | Range         | Usage                                                 |
 | ---------------- | -------------------------------------------- | ------------- | ----------------------------------------------------- |
-| Display          | Libre Caslon Text, 京华老宋体, Noto Serif SC   | 88px and up   | Mastheads, cover headlines, pull quotes               |
-| Body / Interface | Archivo, Noto Serif SC                       | 64px and down | Body, deck lines, list rows, captions, page numbers   |
+| Display          | Libre Caslon Text, DM Serif Display          | 88px and up   | Mastheads, cover headlines, pull quotes               |
+| Body / Interface | Source Serif 4, Libre Caslon Text            | 64px and down | Body, deck lines, list rows, captions, page numbers   |
 | Data / Numerals  | Archivo                                      | any           | Every figure, with tabular-nums on                    |
 
-The Latin face leads every fallback chain so digits and Latin words are set by Archivo / Libre Caslon rather than by the Chinese face's own weak Latin. 京华老宋体 is free for commercial use; the rest are OFL.
+Every chain ends in a generic `serif`, and figures in tables and data runs are always set by Archivo with `tabular-nums` on — the serifs' old-style digits are for running text only. All faces named are OFL.
 
 Body copy is a **serif**, not a sans. This is a newspaper: a sans body would be a magazine, which is a different object.
 
@@ -94,7 +94,7 @@ Body copy is a **serif**, not a sans. This is a newspaper: a sans body would be 
 
 | Level      | Size  | Font    | Weight | Tracking | Line Height | Usage                                   |
 | ---------- | ----- | ------- | ------ | -------- | ----------- | --------------------------------------- |
-| Display XL | 168px | Display | 700    | -0.01em  | 1.05        | Masthead-scale cover headline, 2-6 字   |
+| Display XL | 168px | Display | 700    | -0.01em  | 1.05        | Masthead-scale cover headline, 1-3 words |
 | Display L  | 120px | Display | 700    | -0.01em  | 1.10        | Cover headline, large numerals          |
 | Display    | 88px  | Display | 700    | 0        | 1.15        | Interior headline, pull quote           |
 | Title 1    | 64px  | Body    | 700    | 0        | 1.25        | Page title                              |
@@ -113,22 +113,22 @@ Body copy is a **serif**, not a sans. This is a newspaper: a sans body would be 
 | Semibold | 600   | Section titles and table headers                          |
 | Bold     | 700   | Page titles, display lines, and small-size vermilion runs  |
 
-No italic on Han characters — the synthesised skew deforms the strokes. Emphasis is weight, a vermilion rule under the phrase, or a dot emphasis mark, which is the native Chinese device and the most period-correct one here.
+Never a synthesised italic — the browser's skew deforms the strokes. Emphasis is weight, a vermilion rule under the phrase, or the body serif's designed italic, which is the newspaper's own device and the most period-correct one here.
 
 ### Line Height
 
 - Display (88-168px): 1.05-1.15
 - Titles (48-64px): 1.25-1.30
-- Body (36-40px): **1.70** — Han glyphs fill the em box, so Chinese body needs about 0.2 more leading than the Latin default
+- Body (36-40px): **1.70** — looser than a broadsheet because the card is read at arm's length on a phone, where a 1.4 text block closes into a grey slab
 - Captions: 1.50
 
 ### Letter Spacing
 
-Body 0.02em; titles 0; display -0.01em. Latin all-caps labels take +0.10em, the only positive tracking in the system. Never apply Latin display tracking of -0.05em to Han text.
+Body 0.02em; titles 0; display -0.01em. All-caps labels take +0.10em, the only positive tracking in the system. Never apply poster tracking of -0.05em to the display serif — Caslon's bracketed serifs collide at that setting.
 
 ### Line Length
 
-Body lines cap at **22 Han characters**. At 40px on a 920px column that is the natural break; at 36px the column must narrow to 10 of 12 columns to hold the cap. Runaway line length does more damage to readability than any type choice.
+Body lines cap at **about 45 characters**. At 40px on a 920px column that is the natural break; at 36px the column must narrow to 10 of 12 columns to hold the cap. Runaway line length does more damage to readability than any type choice. Set body ragged-right, never justified at this measure — justification at 45 characters opens rivers — and never leave a single word as a paragraph's last line.
 
 ## Spacing System
 

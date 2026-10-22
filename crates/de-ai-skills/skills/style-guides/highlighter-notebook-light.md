@@ -6,7 +6,7 @@ platform: card
 
 ## Style Scope
 
-This guide is self-contained and written for **Chinese social cards** — a swipeable series of fixed-canvas pages read on a phone, not a scrolling page and not an app screen. Apply its palette, paper language, spacing, and type treatments only when this exact guide is selected; do not borrow SaaS, dashboard, wellness, or e-commerce patterns into it. Treat unnamed layout frames as structural by default: no fill, stroke, cornerRadius, or shadow unless the node is deliberately a highlight band, a sticky note, a grid panel, or a margin rule.
+This guide is self-contained and written for **social cards** — a swipeable series of fixed-canvas pages read on a phone, not a scrolling page and not an app screen. Apply its palette, paper language, spacing, and type treatments only when this exact guide is selected; do not borrow SaaS, dashboard, wellness, or e-commerce patterns into it. Treat unnamed layout frames as structural by default: no fill, stroke, cornerRadius, or shadow unless the node is deliberately a highlight band, a sticky note, a grid panel, or a margin rule.
 
 ## Style Summary
 
@@ -23,7 +23,7 @@ Key aesthetics:
 - **Diluted fluorescents**: chroma 0.06-0.145, because paper dilutes a translucent marker
 - **The band is 55% of line height**, from 45% above baseline, hugging the words plus 8px
 - **Two highlight colours per card, maximum**
-- **Red pen circles and annotates, never sets text**: 8 characters or fewer
+- **Red pen circles and annotates, never sets text**: 3 words or fewer
 - **One sticky note per card**, with one curled corner and the only shadow in the system
 - **Margin rule at one column in from the left**, the full height of the card
 - **Rank by size and highlight, never by adding colours**
@@ -64,7 +64,7 @@ The ink ramp carries a +265° blue cast at chroma 0.022-0.032. Flattening it to 
 | Primary Accent   | #FBE76B | Highlight yellow. Carries ink at 11.62:1                          |
 | Highlight Mint   | #A5F3C0 | Highlight mint. Carries ink at 11.23:1                            |
 | Highlight Pink   | #F8C5CD | Highlight pink. Carries ink at 9.62:1                             |
-| Red Pen          | #C33939 | Circles, underlines, annotations of 8 characters or fewer (5.07:1) |
+| Red Pen          | #C33939 | Circles, underlines, annotations of 3 words or fewer (5.07:1)       |
 
 **How to use the highlights.** A band is a `rect` behind a text run: height = 55% of the line height, top edge = 45% of the line height above the baseline, width = the run's measured width plus 8px on each side, radius 4px. It never spans the full line, never spans the full column, and never sits behind a whole paragraph.
 
@@ -80,19 +80,19 @@ Red pen is a different instrument, not a fourth highlight. It draws circles and 
 
 | Role             | Family                                        | Range         | Usage                                                   |
 | ---------------- | --------------------------------------------- | ------------- | ------------------------------------------------------- |
-| Display          | Familjen Grotesk, Noto Sans SC Heavy          | 88px and up   | Every headline, big numeral, and framework label         |
-| Body / Interface | Geist, LXGW Neo XiHei, Noto Sans SC           | 64px and down | Body, deck lines, list rows, captions, page numbers      |
+| Display          | Familjen Grotesk, Outfit                      | 88px and up   | Every headline, big numeral, and framework label         |
+| Body / Interface | Geist, Inter                                  | 64px and down | Body, deck lines, list rows, captions, page numbers      |
 | Data / Numerals  | Geist                                         | any           | Every figure, with tabular-nums on                       |
 
-LXGW Neo XiHei is the body face rather than 思源黑体 on purpose: it is lighter and more open on screen, and this style's content is list-dense, so the body face is doing more work than usual. All faces named are OFL.
+Geist is the body face rather than a heavier grotesque on purpose: it is lighter and more open on screen, and this style's content is list-dense, so the body face is doing more work than usual. Outfit stands in for Familjen Grotesk at display sizes because it carries a true 900. All faces named are OFL.
 
-The Latin face leads every fallback chain so digits and Latin words are set by Geist rather than by the Chinese face's own Latin. Because this style carries checklists and metrics, `tabular-nums` is mandatory on every numeric run — without it 1 and 8 have different widths and a column of figures visibly shivers.
+Every chain ends in a generic `sans-serif`, and figures are always set by Geist. Because this style carries checklists and metrics, `tabular-nums` is mandatory on every numeric run — without it 1 and 8 have different widths and a column of figures visibly shivers.
 
 ### Type Scale
 
 | Level      | Size  | Font    | Weight | Tracking | Line Height | Usage                                     |
 | ---------- | ----- | ------- | ------ | -------- | ----------- | ----------------------------------------- |
-| Display XL | 168px | Display | 900    | -0.01em  | 1.05        | Cover headline, 2-6 characters            |
+| Display XL | 168px | Display | 900    | -0.01em  | 1.05        | Cover headline, 1-3 short words           |
 | Display L  | 120px | Display | 900    | -0.01em  | 1.10        | Cover headline, big numeral               |
 | Display    | 88px  | Display | 900    | 0        | 1.15        | Interior headline, framework label        |
 | Title 1    | 64px  | Body    | 700    | 0        | 1.25        | Page title                                |
@@ -112,22 +112,22 @@ The Latin face leads every fallback chain so digits and Latin words are set by G
 | Bold     | 700   | Page titles                                                  |
 | Heavy    | 900   | Display lines only — the whole style's contrast lives here    |
 
-The display tier at 900 against body at 400 is the primary hierarchy device, and it costs nothing to load in a variable face. No italic on Han characters; emphasis is weight, a highlight band, or a red-pen underline.
+The display tier at 900 against body at 400 is the primary hierarchy device, and it costs nothing to load in a variable face. No synthesised italic — neither face is loaded with a designed italic, so emphasis is weight, a highlight band, or a red-pen underline.
 
 ### Line Height
 
 - Display (88-168px): 1.05-1.15
 - Titles (48-64px): 1.25-1.30
-- Body (36-40px): **1.70** — Chinese needs roughly 0.2 more leading than the Latin default, and here it also leaves room for the highlight band to sit without touching the line above
+- Body (36-40px): **1.70** — looser than a printed default because list-dense copy at phone distance needs air between rows, and it leaves room for the highlight band to sit without touching the line above
 - Captions: 1.50
 
 ### Letter Spacing
 
-Body 0.02em; titles 0; display -0.01em. Latin all-caps labels +0.10em. Never apply Latin display tracking of -0.05em to Han text.
+Body 0.02em; titles 0; display -0.01em. All-caps labels +0.10em. Never tighten a 900-weight display past -0.01em — at that weight the counters are already small, and -0.05em closes them.
 
 ### Line Length
 
-Body lines cap at **22 Han characters**. At 40px on the 920px column that falls out naturally; at 36px, narrow the measure to 10 of 12 columns.
+Body lines cap at **about 45 characters** (8-9 words). At 40px on the 920px column that falls out naturally; at 36px, narrow the measure to 10 of 12 columns. Never leave a single word alone on the last line of a paragraph or list item — rewrite or rebreak until the last line carries at least two words.
 
 ## Spacing System
 
@@ -207,7 +207,7 @@ check, square, circle, arrow-right, arrow-up-right, chevron-right, pencil, bookm
 - **The band never fills the line.** Full-line-height or full-column-width highlight bands are the single most common failure of this style; they turn a pen mark into a background wash.
 - **Never saturate the fluorescents.** Screen-fluorescent chroma above 0.20 makes the palette read as a candy UI, not as marker on paper.
 - **No handwriting face for body copy.** A script face may annotate at 32px or below; it may never set a paragraph.
-- **Red pen never sets text longer than 8 characters** and never fills a shape.
+- **Red pen never sets text longer than 3 words** and never fills a shape.
 - **One marker type per card.** Numbers, checkboxes, and timeline nodes are three different systems; mixing two on one page destroys the scan pattern that makes this style worth saving.
 - **No pure black, no pure white.**
 - **No shadow anywhere except the one sticky note.**

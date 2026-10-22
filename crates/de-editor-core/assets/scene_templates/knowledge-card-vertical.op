@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "知识卡片 · 竖版 3:4",
+  "name": "knowledge-card-portrait-3x4",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -35,7 +35,7 @@
     {
       "type": "frame",
       "id": "f40",
-      "name": "知识卡片 · 竖版",
+      "name": "knowledge-card-portrait",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -57,7 +57,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "卡头",
+          "name": "card-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -68,7 +68,7 @@
             {
               "type": "frame",
               "id": "f1",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -90,9 +90,9 @@
                 {
                   "type": "text",
                   "id": "t2",
-                  "name": "标签文字",
-                  "content": "学习方法 · 01",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "How to learn · 01",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -111,9 +111,9 @@
             {
               "type": "text",
               "id": "t3",
-              "name": "主标题",
-              "content": "为什么你读了很多书\n却什么都记不住",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Read a lot,\nremember little?",
+              "fontFamily": "Inter",
               "fontSize": 88,
               "fontWeight": 700,
               "fill": [
@@ -130,7 +130,7 @@
             {
               "type": "rectangle",
               "id": "r4",
-              "name": "强调短线",
+              "name": "accent-dash",
               "width": 132,
               "height": 12,
               "cornerRadius": 6,
@@ -144,9 +144,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "不是记性差，是你少做了这一步。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Not your memory. A skipped step.",
+              "fontFamily": "Inter",
               "fontSize": 40,
               "fontWeight": 400,
               "fill": [
@@ -165,7 +165,7 @@
         {
           "type": "frame",
           "id": "f31",
-          "name": "要点列表",
+          "name": "point-list",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -176,7 +176,7 @@
             {
               "type": "frame",
               "id": "f9",
-              "name": "要点 1",
+              "name": "point-1",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -187,7 +187,7 @@
                 {
                   "type": "frame",
                   "id": "f10",
-                  "name": "序号 1",
+                  "name": "index-1",
                   "width": 64,
                   "height": 64,
                   "layout": "horizontal",
@@ -204,7 +204,7 @@
                     {
                       "type": "text",
                       "id": "t11",
-                      "name": "序号数字",
+                      "name": "index-number",
                       "content": "1",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -225,7 +225,7 @@
                 {
                   "type": "frame",
                   "id": "f12",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -236,9 +236,9 @@
                     {
                       "type": "text",
                       "id": "t7",
-                      "name": "要点标题",
-                      "content": "先提问，再翻开",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Ask first, then open",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 600,
                       "fill": [
@@ -255,9 +255,9 @@
                     {
                       "type": "text",
                       "id": "t8",
-                      "name": "要点说明",
-                      "content": "带着问题进去，信息才有地方落。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "A question gives ideas a place to land.",
+                      "fontFamily": "Inter",
                       "fontSize": 36,
                       "fontWeight": 400,
                       "fill": [
@@ -278,7 +278,7 @@
             {
               "type": "frame",
               "id": "f15",
-              "name": "要点 2",
+              "name": "point-2",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -289,7 +289,7 @@
                 {
                   "type": "frame",
                   "id": "f16",
-                  "name": "序号 2",
+                  "name": "index-2",
                   "width": 64,
                   "height": 64,
                   "layout": "horizontal",
@@ -306,7 +306,7 @@
                     {
                       "type": "text",
                       "id": "t17",
-                      "name": "序号数字",
+                      "name": "index-number",
                       "content": "2",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -327,7 +327,7 @@
                 {
                   "type": "frame",
                   "id": "f18",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -338,9 +338,9 @@
                     {
                       "type": "text",
                       "id": "t13",
-                      "name": "要点标题",
-                      "content": "合上书，先复述",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Close it, then retell",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 600,
                       "fill": [
@@ -357,9 +357,9 @@
                     {
                       "type": "text",
                       "id": "t14",
-                      "name": "要点说明",
-                      "content": "讲不出来的地方，就是没懂的地方。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "What you can't explain, you didn't get.",
+                      "fontFamily": "Inter",
                       "fontSize": 36,
                       "fontWeight": 400,
                       "fill": [
@@ -380,7 +380,7 @@
             {
               "type": "frame",
               "id": "f21",
-              "name": "要点 3",
+              "name": "point-3",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -391,7 +391,7 @@
                 {
                   "type": "frame",
                   "id": "f22",
-                  "name": "序号 3",
+                  "name": "index-3",
                   "width": 64,
                   "height": 64,
                   "layout": "horizontal",
@@ -408,7 +408,7 @@
                     {
                       "type": "text",
                       "id": "t23",
-                      "name": "序号数字",
+                      "name": "index-number",
                       "content": "3",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -429,7 +429,7 @@
                 {
                   "type": "frame",
                   "id": "f24",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -440,9 +440,9 @@
                     {
                       "type": "text",
                       "id": "t19",
-                      "name": "要点标题",
-                      "content": "一次只带走三条",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Take away just three",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 600,
                       "fill": [
@@ -459,9 +459,9 @@
                     {
                       "type": "text",
                       "id": "t20",
-                      "name": "要点说明",
-                      "content": "记住三个能用的点就够了。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "Three points you can use are plenty.",
+                      "fontFamily": "Inter",
                       "fontSize": 36,
                       "fontWeight": 400,
                       "fill": [
@@ -482,7 +482,7 @@
             {
               "type": "frame",
               "id": "f27",
-              "name": "要点 4",
+              "name": "point-4",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -493,7 +493,7 @@
                 {
                   "type": "frame",
                   "id": "f28",
-                  "name": "序号 4",
+                  "name": "index-4",
                   "width": 64,
                   "height": 64,
                   "layout": "horizontal",
@@ -510,7 +510,7 @@
                     {
                       "type": "text",
                       "id": "t29",
-                      "name": "序号数字",
+                      "name": "index-number",
                       "content": "4",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -531,7 +531,7 @@
                 {
                   "type": "frame",
                   "id": "f30",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -542,9 +542,9 @@
                     {
                       "type": "text",
                       "id": "t25",
-                      "name": "要点标题",
-                      "content": "两天之内用一次",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Use it within two days",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 600,
                       "fill": [
@@ -561,9 +561,9 @@
                     {
                       "type": "text",
                       "id": "t26",
-                      "name": "要点说明",
-                      "content": "用过一次，才算真的学过。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "Use it once and it's really yours.",
+                      "fontFamily": "Inter",
                       "fontSize": 36,
                       "fontWeight": 400,
                       "fill": [
@@ -586,7 +586,7 @@
         {
           "type": "frame",
           "id": "f39",
-          "name": "署名",
+          "name": "byline",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -597,7 +597,7 @@
             {
               "type": "rectangle",
               "id": "r38",
-              "name": "分隔线",
+              "name": "divider",
               "width": "fill_container",
               "height": 2,
               "fill": [
@@ -610,7 +610,7 @@
             {
               "type": "frame",
               "id": "f34",
-              "name": "署名行",
+              "name": "byline-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -621,7 +621,7 @@
                 {
                   "type": "frame",
                   "id": "f32",
-                  "name": "头像占位",
+                  "name": "avatar-placeholder",
                   "width": 88,
                   "height": 88,
                   "layout": "horizontal",
@@ -638,9 +638,9 @@
                     {
                       "type": "text",
                       "id": "t33",
-                      "name": "头像文字",
-                      "content": "笔",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "avatar-text",
+                      "content": "N",
+                      "fontFamily": "Inter",
                       "fontSize": 37,
                       "fontWeight": 700,
                       "fill": [
@@ -659,7 +659,7 @@
                 {
                   "type": "frame",
                   "id": "f37",
-                  "name": "署名文案",
+                  "name": "byline-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -670,9 +670,9 @@
                     {
                       "type": "text",
                       "id": "t35",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 36,
                       "fontWeight": 600,
                       "fill": [
@@ -689,9 +689,9 @@
                     {
                       "type": "text",
                       "id": "t36",
-                      "name": "一句话简介",
-                      "content": "每周更新一条可落地的学习方法",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "one-line-bio",
+                      "content": "One practical learning method, every week",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [

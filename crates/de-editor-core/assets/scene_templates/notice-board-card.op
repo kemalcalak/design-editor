@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "公告通知卡 · 铅字报刊 4:5",
+  "name": "notice-card-letterpress-4x5",
   "variables": {
     "c-newsprint": {
       "type": "color",
@@ -47,7 +47,7 @@
     {
       "type": "frame",
       "id": "f37",
-      "name": "公告通知卡 · 铅字报刊",
+      "name": "notice-card-letterpress",
       "width": 1080,
       "height": 1350,
       "layout": "none",
@@ -62,7 +62,7 @@
         {
           "type": "frame",
           "id": "f1",
-          "name": "公告卡 · 正文",
+          "name": "notice-card-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -80,7 +80,7 @@
             {
               "type": "frame",
               "id": "f13",
-              "name": "卡头",
+              "name": "card-head",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -91,7 +91,7 @@
                 {
                   "type": "frame",
                   "id": "f11",
-                  "name": "报头",
+                  "name": "masthead",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -102,7 +102,7 @@
                     {
                       "type": "frame",
                       "id": "f5",
-                      "name": "报头线 · 套印错位",
+                      "name": "masthead-rule-misregistered",
                       "width": "fill_container",
                       "height": 6,
                       "layout": "none",
@@ -111,7 +111,7 @@
                         {
                           "type": "rectangle",
                           "id": "r6",
-                          "name": "黑版",
+                          "name": "black-plate",
                           "width": "fill_container",
                           "height": 3,
                           "fill": [
@@ -126,7 +126,7 @@
                         {
                           "type": "rectangle",
                           "id": "r7",
-                          "name": "套红版",
+                          "name": "red-plate",
                           "width": "fill_container",
                           "height": 3,
                           "fill": [
@@ -143,7 +143,7 @@
                     {
                       "type": "frame",
                       "id": "f4",
-                      "name": "刊头行",
+                      "name": "masthead-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -155,9 +155,9 @@
                         {
                           "type": "text",
                           "id": "t2",
-                          "name": "刊名",
-                          "content": "馆务公告",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "masthead-name",
+                          "content": "Library Notice",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -174,9 +174,9 @@
                         {
                           "type": "text",
                           "id": "t3",
-                          "name": "日期",
-                          "content": "2026-08-09 · 第 118 期",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "date",
+                          "content": "Aug 9, 2026 · Issue 118",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -195,7 +195,7 @@
                     {
                       "type": "frame",
                       "id": "f8",
-                      "name": "报头线 · 套印错位",
+                      "name": "masthead-rule-misregistered",
                       "width": "fill_container",
                       "height": 4,
                       "layout": "none",
@@ -204,7 +204,7 @@
                         {
                           "type": "rectangle",
                           "id": "r9",
-                          "name": "黑版",
+                          "name": "black-plate",
                           "width": "fill_container",
                           "height": 1,
                           "fill": [
@@ -219,7 +219,7 @@
                         {
                           "type": "rectangle",
                           "id": "r10",
-                          "name": "套红版",
+                          "name": "red-plate",
                           "width": "fill_container",
                           "height": 1,
                           "fill": [
@@ -238,9 +238,9 @@
                 {
                   "type": "text",
                   "id": "t12",
-                  "name": "主标题",
-                  "content": "关于调整开放时间的通知",
-                  "fontFamily": "Songti SC",
+                  "name": "title",
+                  "content": "Changes to opening hours",
+                  "fontFamily": "Noto Serif",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -259,7 +259,7 @@
             {
               "type": "frame",
               "id": "f31",
-              "name": "条款列表",
+              "name": "clause-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -270,7 +270,7 @@
                 {
                   "type": "frame",
                   "id": "f18",
-                  "name": "条款 一",
+                  "name": "clause-1",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -285,9 +285,9 @@
                     {
                       "type": "text",
                       "id": "t14",
-                      "name": "编号",
-                      "content": "一",
-                      "fontFamily": "Songti SC",
+                      "name": "number",
+                      "content": "I",
+                      "fontFamily": "Noto Serif",
                       "fontSize": 48,
                       "fontWeight": 700,
                       "fill": [
@@ -304,7 +304,7 @@
                     {
                       "type": "frame",
                       "id": "f17",
-                      "name": "条款文案",
+                      "name": "clause-copy",
                       "width": 764,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -315,9 +315,9 @@
                         {
                           "type": "text",
                           "id": "t15",
-                          "name": "条目",
-                          "content": "工作日 10:00 – 21:00",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "item",
+                          "content": "Weekdays 10:00 – 21:00",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 600,
                           "fill": [
@@ -334,9 +334,9 @@
                         {
                           "type": "text",
                           "id": "t16",
-                          "name": "注解",
-                          "content": "较原时间延后一小时闭馆",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "note",
+                          "content": "Closing one hour later than before",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -357,7 +357,7 @@
                 {
                   "type": "rectangle",
                   "id": "r19",
-                  "name": "条目分隔线",
+                  "name": "item-divider",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -370,7 +370,7 @@
                 {
                   "type": "frame",
                   "id": "f24",
-                  "name": "条款 二",
+                  "name": "clause-2",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -385,9 +385,9 @@
                     {
                       "type": "text",
                       "id": "t20",
-                      "name": "编号",
-                      "content": "二",
-                      "fontFamily": "Songti SC",
+                      "name": "number",
+                      "content": "II",
+                      "fontFamily": "Noto Serif",
                       "fontSize": 48,
                       "fontWeight": 700,
                       "fill": [
@@ -404,7 +404,7 @@
                     {
                       "type": "frame",
                       "id": "f23",
-                      "name": "条款文案",
+                      "name": "clause-copy",
                       "width": 764,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -415,9 +415,9 @@
                         {
                           "type": "text",
                           "id": "t21",
-                          "name": "条目",
-                          "content": "周末 09:00 – 22:00",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "item",
+                          "content": "Weekends 09:00 – 22:00",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 600,
                           "fill": [
@@ -434,9 +434,9 @@
                         {
                           "type": "text",
                           "id": "t22",
-                          "name": "注解",
-                          "content": "周六下午为团体预约时段",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "note",
+                          "content": "Saturday afternoons reserved for group bookings",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -457,7 +457,7 @@
                 {
                   "type": "rectangle",
                   "id": "r25",
-                  "name": "条目分隔线",
+                  "name": "item-divider",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -470,7 +470,7 @@
                 {
                   "type": "frame",
                   "id": "f30",
-                  "name": "条款 三",
+                  "name": "clause-3",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -485,9 +485,9 @@
                     {
                       "type": "text",
                       "id": "t26",
-                      "name": "编号",
-                      "content": "三",
-                      "fontFamily": "Songti SC",
+                      "name": "number",
+                      "content": "III",
+                      "fontFamily": "Noto Serif",
                       "fontSize": 48,
                       "fontWeight": 700,
                       "fill": [
@@ -504,7 +504,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "条款文案",
+                      "name": "clause-copy",
                       "width": 764,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -515,9 +515,9 @@
                         {
                           "type": "text",
                           "id": "t27",
-                          "name": "条目",
-                          "content": "每月首个周一闭馆",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "item",
+                          "content": "Closed the first Monday of each month",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 600,
                           "fill": [
@@ -534,9 +534,9 @@
                         {
                           "type": "text",
                           "id": "t28",
-                          "name": "注解",
-                          "content": "设备检修，当日不接待",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "note",
+                          "content": "Maintenance day; no visitors",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -559,7 +559,7 @@
             {
               "type": "frame",
               "id": "f35",
-              "name": "落款",
+              "name": "sign-off",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -571,9 +571,9 @@
                 {
                   "type": "text",
                   "id": "t34",
-                  "name": "落款单位",
-                  "content": "城南图书馆 · 馆务办公室",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "issuer",
+                  "content": "Southside Library · Administration Office",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 500,
                   "fill": [
@@ -590,7 +590,7 @@
                 {
                   "type": "frame",
                   "id": "f32",
-                  "name": "骑缝编号",
+                  "name": "edge-number",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -615,7 +615,7 @@
                     {
                       "type": "text",
                       "id": "t33",
-                      "name": "编号文字",
+                      "name": "number-text",
                       "content": "NO. 0118",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -640,7 +640,7 @@
         {
           "type": "frame",
           "id": "f38",
-          "name": "公告通知卡 · 铅字报刊 · 装饰",
+          "name": "notice-card-letterpress-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -649,7 +649,7 @@
             {
               "type": "rectangle",
               "id": "r36",
-              "name": "栏线",
+              "name": "column-rule",
               "width": 1,
               "height": 560,
               "fill": [

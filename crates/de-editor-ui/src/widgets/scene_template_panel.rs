@@ -337,7 +337,7 @@ impl<'a> SceneTemplatePanel<'a> {
             SceneFilter::All => {
                 let translated = de_i18n::translate(self.locale, "sceneTemplate.filter.all");
                 if translated == "sceneTemplate.filter.all" {
-                    "全部"
+                    "All"
                 } else {
                     translated
                 }
