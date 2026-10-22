@@ -282,7 +282,7 @@ pub enum TemplateScene {
     /// taken in at a glance, so its whole argument has to fit one screenful.
     /// An infographic is 2.5-3x its own width and is read top to bottom, which
     /// is what lets it carry a chart, a breakdown and a conclusion in sequence.
-    /// Filing both under "卡片" would put a 4:5 social board and a 1:3 scroll
+    /// Filing both under "Cards" would put a 4:5 social board and a 1:3 scroll
     /// behind the same chip.
     Infographic,
 }
@@ -349,18 +349,18 @@ impl TemplateScene {
     /// Label shown when the catalogue key is not yet translated.
     ///
     /// Chip-sized nouns, not descriptions: the filter row is a single
-    /// non-wrapping line. `Carousel` reads "轮播" rather than "知识卡片"
-    /// because the latter is what a [`Self::Card`] chip means — two chips
+    /// non-wrapping line. `Carousel` reads "Carousel" rather than "Knowledge
+    /// cards" because the latter is what a [`Self::Card`] chip means — two chips
     /// labelled the same thing is worse than a slightly drier word.
     pub const fn title_fallback(self) -> &'static str {
         match self {
-            Self::Tutorial => "教程图",
-            Self::Comparison => "对比图",
-            Self::Carousel => "轮播",
-            Self::Slides => "PPT",
-            Self::Card => "卡片",
-            Self::Web => "网页",
-            Self::Infographic => "信息图",
+            Self::Tutorial => "Tutorials",
+            Self::Comparison => "Comparison",
+            Self::Carousel => "Carousel",
+            Self::Slides => "Slides",
+            Self::Card => "Cards",
+            Self::Web => "Web Pages",
+            Self::Infographic => "Infographics",
         }
     }
 }

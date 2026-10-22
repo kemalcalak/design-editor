@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "活动策划 deck · 公告海报 16:9",
+  "name": "event-deck-poster-16x9",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f3",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -66,7 +66,7 @@
         {
           "type": "frame",
           "id": "f2",
-          "name": "01 封面 · 正文",
+          "name": "01-cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -81,7 +81,7 @@
             {
               "type": "frame",
               "id": "f11",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -102,9 +102,9 @@
                 {
                   "type": "text",
                   "id": "t12",
-                  "name": "标签文字",
-                  "content": "2026 城市周末市集",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "2026 City Weekend Market",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -123,7 +123,7 @@
             {
               "type": "frame",
               "id": "f7",
-              "name": "封面文案",
+              "name": "cover-copy",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -134,9 +134,9 @@
                 {
                   "type": "text",
                   "id": "t5",
-                  "name": "主标题",
-                  "content": "把周末\n还给街道",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "main-title",
+                  "content": "Give the weekend\nback to the street",
+                  "fontFamily": "Inter",
                   "fontSize": 132,
                   "fontWeight": 700,
                   "fill": [
@@ -153,9 +153,9 @@
                 {
                   "type": "text",
                   "id": "t6",
-                  "name": "副标题",
-                  "content": "8 月 22–23 日 · 老码头文化广场 · 免费入场",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "subtitle",
+                  "content": "Aug 22–23 · Old Pier Plaza · Free entry",
+                  "fontFamily": "Inter",
                   "fontSize": 34,
                   "fontWeight": 500,
                   "fill": [
@@ -174,7 +174,7 @@
             {
               "type": "frame",
               "id": "f10",
-              "name": "信息条",
+              "name": "info-bar",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -195,9 +195,9 @@
                 {
                   "type": "text",
                   "id": "t8",
-                  "name": "主办",
-                  "content": "主办：某某文化 · 协办：某某社区",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "host",
+                  "content": "Hosted by Example Arts · With Example Community",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 500,
                   "fill": [
@@ -214,9 +214,9 @@
                 {
                   "type": "text",
                   "id": "t9",
-                  "name": "截止",
-                  "content": "摊主报名截止 8 月 18 日",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "deadline",
+                  "content": "Vendor sign-up closes Aug 18",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -237,7 +237,7 @@
         {
           "type": "frame",
           "id": "f4",
-          "name": "01 封面 · 装饰",
+          "name": "01-cover-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -246,7 +246,7 @@
             {
               "type": "rectangle",
               "id": "r1",
-              "name": "圆块",
+              "name": "circle-block",
               "width": 660,
               "height": 660,
               "cornerRadius": 330,
@@ -268,7 +268,7 @@
     {
       "type": "frame",
       "id": "f14",
-      "name": "02 亮点",
+      "name": "02-highlights",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -283,7 +283,7 @@
         {
           "type": "frame",
           "id": "f13",
-          "name": "02 亮点 · 正文",
+          "name": "02-highlights-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -298,7 +298,7 @@
             {
               "type": "frame",
               "id": "f37",
-              "name": "页头",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -309,7 +309,7 @@
                 {
                   "type": "rectangle",
                   "id": "r34",
-                  "name": "页首红条",
+                  "name": "header-red-bar",
                   "width": 96,
                   "height": 14,
                   "fill": [
@@ -322,9 +322,9 @@
                 {
                   "type": "text",
                   "id": "t35",
-                  "name": "页标题",
-                  "content": "为什么值得来一趟",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Why it's worth the trip",
+                  "fontFamily": "Inter",
                   "fontSize": 80,
                   "fontWeight": 700,
                   "fill": [
@@ -341,9 +341,9 @@
                 {
                   "type": "text",
                   "id": "t36",
-                  "name": "页副标题",
-                  "content": "三件事说完，剩下的留给现场。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Three reasons. The rest you'll find there.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -362,7 +362,7 @@
             {
               "type": "frame",
               "id": "f38",
-              "name": "亮点区",
+              "name": "highlights-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -374,7 +374,7 @@
                 {
                   "type": "frame",
                   "id": "f15",
-                  "name": "亮点网格",
+                  "name": "highlights-grid",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -385,7 +385,7 @@
                     {
                       "type": "frame",
                       "id": "f21",
-                      "name": "亮点栏",
+                      "name": "highlight-column",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -396,7 +396,7 @@
                         {
                           "type": "rectangle",
                           "id": "r16",
-                          "name": "栏首色块",
+                          "name": "column-color-block",
                           "width": "fill_container",
                           "height": 16,
                           "fill": [
@@ -409,7 +409,7 @@
                         {
                           "type": "icon_font",
                           "id": "i17",
-                          "name": "亮点图标",
+                          "name": "highlight-icon",
                           "iconFontName": "music",
                           "width": 52,
                           "height": 52,
@@ -423,7 +423,7 @@
                         {
                           "type": "text",
                           "id": "t18",
-                          "name": "亮点序号",
+                          "name": "highlight-number",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -442,9 +442,9 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "亮点标题",
-                          "content": "40 组独立摊主",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "highlight-title",
+                          "content": "40 indie vendors",
+                          "fontFamily": "Inter",
                           "fontSize": 46,
                           "fontWeight": 700,
                           "fill": [
@@ -461,9 +461,9 @@
                         {
                           "type": "text",
                           "id": "t20",
-                          "name": "亮点说明",
-                          "content": "手作、黑胶、旧书和现烤面包摊。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "highlight-note",
+                          "content": "Handmade goods, vinyl, used books, fresh bread.",
+                          "fontFamily": "Inter",
                           "fontSize": 29,
                           "fontWeight": 400,
                           "fill": [
@@ -482,7 +482,7 @@
                     {
                       "type": "frame",
                       "id": "f27",
-                      "name": "亮点栏",
+                      "name": "highlight-column",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -493,7 +493,7 @@
                         {
                           "type": "rectangle",
                           "id": "r22",
-                          "name": "栏首色块",
+                          "name": "column-color-block",
                           "width": "fill_container",
                           "height": 16,
                           "fill": [
@@ -506,7 +506,7 @@
                         {
                           "type": "icon_font",
                           "id": "i23",
-                          "name": "亮点图标",
+                          "name": "highlight-icon",
                           "iconFontName": "users",
                           "width": 52,
                           "height": 52,
@@ -520,7 +520,7 @@
                         {
                           "type": "text",
                           "id": "t24",
-                          "name": "亮点序号",
+                          "name": "highlight-number",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -539,9 +539,9 @@
                         {
                           "type": "text",
                           "id": "t25",
-                          "name": "亮点标题",
-                          "content": "6 场街头演出",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "highlight-title",
+                          "content": "6 street shows",
+                          "fontFamily": "Inter",
                           "fontSize": 46,
                           "fontWeight": 700,
                           "fill": [
@@ -558,9 +558,9 @@
                         {
                           "type": "text",
                           "id": "t26",
-                          "name": "亮点说明",
-                          "content": "从下午三点唱到入夜，两个舞台不重样。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "highlight-note",
+                          "content": "Music from 3 PM into the night on two stages.",
+                          "fontFamily": "Inter",
                           "fontSize": 29,
                           "fontWeight": 400,
                           "fill": [
@@ -579,7 +579,7 @@
                     {
                       "type": "frame",
                       "id": "f33",
-                      "name": "亮点栏",
+                      "name": "highlight-column",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -590,7 +590,7 @@
                         {
                           "type": "rectangle",
                           "id": "r28",
-                          "name": "栏首色块",
+                          "name": "column-color-block",
                           "width": "fill_container",
                           "height": 16,
                           "fill": [
@@ -603,7 +603,7 @@
                         {
                           "type": "icon_font",
                           "id": "i29",
-                          "name": "亮点图标",
+                          "name": "highlight-icon",
                           "iconFontName": "heart",
                           "width": 52,
                           "height": 52,
@@ -617,7 +617,7 @@
                         {
                           "type": "text",
                           "id": "t30",
-                          "name": "亮点序号",
+                          "name": "highlight-number",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -636,9 +636,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "亮点标题",
-                          "content": "带孩子也能来",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "highlight-title",
+                          "content": "Bring the kids",
+                          "fontFamily": "Inter",
                           "fontSize": 46,
                           "fontWeight": 700,
                           "fill": [
@@ -655,9 +655,9 @@
                         {
                           "type": "text",
                           "id": "t32",
-                          "name": "亮点说明",
-                          "content": "两片草地全天开放，随时能坐下来歇脚。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "highlight-note",
+                          "content": "Two lawns open all day for a sit-down break.",
+                          "fontFamily": "Inter",
                           "fontSize": 29,
                           "fontWeight": 400,
                           "fill": [
@@ -686,7 +686,7 @@
     {
       "type": "frame",
       "id": "f41",
-      "name": "03 日程",
+      "name": "03-schedule",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -701,7 +701,7 @@
         {
           "type": "frame",
           "id": "f40",
-          "name": "03 日程 · 正文",
+          "name": "03-schedule-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -716,7 +716,7 @@
             {
               "type": "frame",
               "id": "f71",
-              "name": "页头",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -727,7 +727,7 @@
                 {
                   "type": "rectangle",
                   "id": "r68",
-                  "name": "页首红条",
+                  "name": "header-red-bar",
                   "width": 96,
                   "height": 14,
                   "fill": [
@@ -740,9 +740,9 @@
                 {
                   "type": "text",
                   "id": "t69",
-                  "name": "页标题",
-                  "content": "两天的安排",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "The two days",
+                  "fontFamily": "Inter",
                   "fontSize": 80,
                   "fontWeight": 700,
                   "fill": [
@@ -759,9 +759,9 @@
                 {
                   "type": "text",
                   "id": "t70",
-                  "name": "页副标题",
-                  "content": "全程免费，工作坊需要在现场登记。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Free all weekend. Sign up for workshops on site.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -780,7 +780,7 @@
             {
               "type": "frame",
               "id": "f67",
-              "name": "日程表",
+              "name": "schedule-table",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -792,7 +792,7 @@
                 {
                   "type": "frame",
                   "id": "f46",
-                  "name": "日程行",
+                  "name": "schedule-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -812,9 +812,9 @@
                     {
                       "type": "text",
                       "id": "t43",
-                      "name": "时间",
-                      "content": "时间",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "time",
+                      "content": "Time",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 600,
                       "fill": [
@@ -831,9 +831,9 @@
                     {
                       "type": "text",
                       "id": "t44",
-                      "name": "内容",
-                      "content": "内容",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "content",
+                      "content": "What's on",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 600,
                       "fill": [
@@ -850,9 +850,9 @@
                     {
                       "type": "text",
                       "id": "t45",
-                      "name": "地点",
-                      "content": "地点",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "location",
+                      "content": "Where",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 600,
                       "fill": [
@@ -871,7 +871,7 @@
                 {
                   "type": "rectangle",
                   "id": "r47",
-                  "name": "分隔线",
+                  "name": "divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -884,7 +884,7 @@
                 {
                   "type": "frame",
                   "id": "f51",
-                  "name": "日程行",
+                  "name": "schedule-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -899,9 +899,9 @@
                     {
                       "type": "text",
                       "id": "t48",
-                      "name": "时间",
-                      "content": "周六 14:00",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "time",
+                      "content": "Sat 2:00 PM",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 500,
                       "fill": [
@@ -918,9 +918,9 @@
                     {
                       "type": "text",
                       "id": "t49",
-                      "name": "内容",
-                      "content": "开市 · 摊位全部就位",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "content",
+                      "content": "Market opens · All stalls ready",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -937,9 +937,9 @@
                     {
                       "type": "text",
                       "id": "t50",
-                      "name": "地点",
-                      "content": "中央广场",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "location",
+                      "content": "Central Plaza",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 400,
                       "fill": [
@@ -958,7 +958,7 @@
                 {
                   "type": "rectangle",
                   "id": "r52",
-                  "name": "分隔线",
+                  "name": "divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -971,7 +971,7 @@
                 {
                   "type": "frame",
                   "id": "f56",
-                  "name": "日程行",
+                  "name": "schedule-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -986,9 +986,9 @@
                     {
                       "type": "text",
                       "id": "t53",
-                      "name": "时间",
-                      "content": "周六 17:30",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "time",
+                      "content": "Sat 5:30 PM",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 500,
                       "fill": [
@@ -1005,9 +1005,9 @@
                     {
                       "type": "text",
                       "id": "t54",
-                      "name": "内容",
-                      "content": "街头演出第一场",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "content",
+                      "content": "First street show",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1024,9 +1024,9 @@
                     {
                       "type": "text",
                       "id": "t55",
-                      "name": "地点",
-                      "content": "北侧舞台",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "location",
+                      "content": "North Stage",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 400,
                       "fill": [
@@ -1045,7 +1045,7 @@
                 {
                   "type": "rectangle",
                   "id": "r57",
-                  "name": "分隔线",
+                  "name": "divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -1058,7 +1058,7 @@
                 {
                   "type": "frame",
                   "id": "f61",
-                  "name": "日程行",
+                  "name": "schedule-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1073,9 +1073,9 @@
                     {
                       "type": "text",
                       "id": "t58",
-                      "name": "时间",
-                      "content": "周日 11:00",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "time",
+                      "content": "Sun 11:00 AM",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 500,
                       "fill": [
@@ -1092,9 +1092,9 @@
                     {
                       "type": "text",
                       "id": "t59",
-                      "name": "内容",
-                      "content": "手作工作坊（需现场登记）",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "content",
+                      "content": "Craft workshops (sign up on site)",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1111,9 +1111,9 @@
                     {
                       "type": "text",
                       "id": "t60",
-                      "name": "地点",
-                      "content": "东侧长廊",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "location",
+                      "content": "East Arcade",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 400,
                       "fill": [
@@ -1132,7 +1132,7 @@
                 {
                   "type": "rectangle",
                   "id": "r62",
-                  "name": "分隔线",
+                  "name": "divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -1145,7 +1145,7 @@
                 {
                   "type": "frame",
                   "id": "f66",
-                  "name": "日程行",
+                  "name": "schedule-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1160,9 +1160,9 @@
                     {
                       "type": "text",
                       "id": "t63",
-                      "name": "时间",
-                      "content": "周日 19:00",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "time",
+                      "content": "Sun 7:00 PM",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 500,
                       "fill": [
@@ -1179,9 +1179,9 @@
                     {
                       "type": "text",
                       "id": "t64",
-                      "name": "内容",
-                      "content": "闭幕演出 · 全场合唱",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "content",
+                      "content": "Closing show · Big sing-along",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1198,9 +1198,9 @@
                     {
                       "type": "text",
                       "id": "t65",
-                      "name": "地点",
-                      "content": "中央广场",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "location",
+                      "content": "Central Plaza",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 400,
                       "fill": [
@@ -1223,7 +1223,7 @@
         {
           "type": "frame",
           "id": "f42",
-          "name": "03 日程 · 装饰",
+          "name": "03-schedule-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1232,7 +1232,7 @@
             {
               "type": "rectangle",
               "id": "r39",
-              "name": "色块",
+              "name": "color-block",
               "width": 240,
               "height": 240,
               "fill": [
@@ -1253,7 +1253,7 @@
     {
       "type": "frame",
       "id": "f74",
-      "name": "04 场地",
+      "name": "04-venue",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1268,7 +1268,7 @@
         {
           "type": "frame",
           "id": "f73",
-          "name": "04 场地 · 正文",
+          "name": "04-venue-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1283,7 +1283,7 @@
             {
               "type": "frame",
               "id": "f105",
-              "name": "页头",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1294,7 +1294,7 @@
                 {
                   "type": "rectangle",
                   "id": "r102",
-                  "name": "页首红条",
+                  "name": "header-red-bar",
                   "width": 96,
                   "height": 14,
                   "fill": [
@@ -1307,9 +1307,9 @@
                 {
                   "type": "text",
                   "id": "t103",
-                  "name": "页标题",
-                  "content": "怎么来",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Getting there",
+                  "fontFamily": "Inter",
                   "fontSize": 80,
                   "fontWeight": 700,
                   "fill": [
@@ -1326,9 +1326,9 @@
                 {
                   "type": "text",
                   "id": "t104",
-                  "name": "页副标题",
-                  "content": "地铁最省事，自驾请提前查看车库剩余车位。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Subway is easiest. Driving? Check parking first.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -1347,7 +1347,7 @@
             {
               "type": "frame",
               "id": "f101",
-              "name": "场地区",
+              "name": "venue-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "horizontal",
@@ -1358,7 +1358,7 @@
                 {
                   "type": "frame",
                   "id": "f76",
-                  "name": "地图占位",
+                  "name": "map-placeholder",
                   "width": "fill_container",
                   "height": "fill_container",
                   "layout": "vertical",
@@ -1375,7 +1375,7 @@
                     {
                       "type": "icon_font",
                       "id": "i77",
-                      "name": "定位",
+                      "name": "pin",
                       "iconFontName": "map-marker",
                       "width": 60,
                       "height": 60,
@@ -1389,9 +1389,9 @@
                     {
                       "type": "text",
                       "id": "t78",
-                      "name": "占位标题",
-                      "content": "把场地地图拖到这里",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "placeholder-title",
+                      "content": "Drop the venue map here",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -1409,9 +1409,9 @@
                     {
                       "type": "text",
                       "id": "t79",
-                      "name": "占位说明",
-                      "content": "建议 4:3，截图或手绘都行",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "placeholder-note",
+                      "content": "4:3 works best, screenshot or sketch",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -1431,7 +1431,7 @@
                 {
                   "type": "frame",
                   "id": "f80",
-                  "name": "交通",
+                  "name": "transport",
                   "width": 760,
                   "height": "fill_container",
                   "layout": "vertical",
@@ -1443,7 +1443,7 @@
                     {
                       "type": "frame",
                       "id": "f86",
-                      "name": "交通项",
+                      "name": "transport-item",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1458,7 +1458,7 @@
                         {
                           "type": "frame",
                           "id": "f81",
-                          "name": "交通图标底",
+                          "name": "transport-icon-bg",
                           "width": 76,
                           "height": 76,
                           "layout": "horizontal",
@@ -1474,7 +1474,7 @@
                             {
                               "type": "icon_font",
                               "id": "i82",
-                              "name": "交通图标",
+                              "name": "transport-icon",
                               "iconFontName": "navigation",
                               "width": 36,
                               "height": 36,
@@ -1490,7 +1490,7 @@
                         {
                           "type": "frame",
                           "id": "f85",
-                          "name": "交通文案",
+                          "name": "transport-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1501,9 +1501,9 @@
                             {
                               "type": "text",
                               "id": "t83",
-                              "name": "交通方式",
-                              "content": "地铁",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "transport-mode",
+                              "content": "Subway",
+                              "fontFamily": "Inter",
                               "fontSize": 34,
                               "fontWeight": 700,
                               "fill": [
@@ -1520,9 +1520,9 @@
                             {
                               "type": "text",
                               "id": "t84",
-                              "name": "交通说明",
-                              "content": "2 号线 老码头站 B 口，出站步行 6 分钟。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "transport-note",
+                              "content": "Line 2 to Old Pier, Exit B, 6-minute walk.",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -1543,7 +1543,7 @@
                     {
                       "type": "rectangle",
                       "id": "r87",
-                      "name": "分隔线",
+                      "name": "divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -1556,7 +1556,7 @@
                     {
                       "type": "frame",
                       "id": "f93",
-                      "name": "交通项",
+                      "name": "transport-item",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1571,7 +1571,7 @@
                         {
                           "type": "frame",
                           "id": "f88",
-                          "name": "交通图标底",
+                          "name": "transport-icon-bg",
                           "width": 76,
                           "height": 76,
                           "layout": "horizontal",
@@ -1587,7 +1587,7 @@
                             {
                               "type": "icon_font",
                               "id": "i89",
-                              "name": "交通图标",
+                              "name": "transport-icon",
                               "iconFontName": "compass",
                               "width": 36,
                               "height": 36,
@@ -1603,7 +1603,7 @@
                         {
                           "type": "frame",
                           "id": "f92",
-                          "name": "交通文案",
+                          "name": "transport-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1614,9 +1614,9 @@
                             {
                               "type": "text",
                               "id": "t90",
-                              "name": "交通方式",
-                              "content": "公交",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "transport-mode",
+                              "content": "Bus",
+                              "fontFamily": "Inter",
                               "fontSize": 34,
                               "fontWeight": 700,
                               "fill": [
@@ -1633,9 +1633,9 @@
                             {
                               "type": "text",
                               "id": "t91",
-                              "name": "交通说明",
-                              "content": "18 / 42 / 105 路，文化广场站下车即到。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "transport-note",
+                              "content": "Routes 18 / 42 / 105, get off at Pier Plaza.",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -1656,7 +1656,7 @@
                     {
                       "type": "rectangle",
                       "id": "r94",
-                      "name": "分隔线",
+                      "name": "divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -1669,7 +1669,7 @@
                     {
                       "type": "frame",
                       "id": "f100",
-                      "name": "交通项",
+                      "name": "transport-item",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1684,7 +1684,7 @@
                         {
                           "type": "frame",
                           "id": "f95",
-                          "name": "交通图标底",
+                          "name": "transport-icon-bg",
                           "width": 76,
                           "height": 76,
                           "layout": "horizontal",
@@ -1700,7 +1700,7 @@
                             {
                               "type": "icon_font",
                               "id": "i96",
-                              "name": "交通图标",
+                              "name": "transport-icon",
                               "iconFontName": "map-marker",
                               "width": 36,
                               "height": 36,
@@ -1716,7 +1716,7 @@
                         {
                           "type": "frame",
                           "id": "f99",
-                          "name": "交通文案",
+                          "name": "transport-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1727,9 +1727,9 @@
                             {
                               "type": "text",
                               "id": "t97",
-                              "name": "交通方式",
-                              "content": "自驾",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "transport-mode",
+                              "content": "Car",
+                              "fontFamily": "Inter",
                               "fontSize": 34,
                               "fontWeight": 700,
                               "fill": [
@@ -1746,9 +1746,9 @@
                             {
                               "type": "text",
                               "id": "t98",
-                              "name": "交通说明",
-                              "content": "广场地下车库，活动期间前两小时免费。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "transport-note",
+                              "content": "Plaza garage, first two hours free.",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -1775,7 +1775,7 @@
         {
           "type": "frame",
           "id": "f75",
-          "name": "04 场地 · 装饰",
+          "name": "04-venue-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1784,7 +1784,7 @@
             {
               "type": "rectangle",
               "id": "r72",
-              "name": "色块",
+              "name": "color-block",
               "width": 96,
               "height": 1080,
               "fill": [
@@ -1805,7 +1805,7 @@
     {
       "type": "frame",
       "id": "f107",
-      "name": "05 票种",
+      "name": "05-tickets",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1820,7 +1820,7 @@
         {
           "type": "frame",
           "id": "f106",
-          "name": "05 票种 · 正文",
+          "name": "05-tickets-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1835,7 +1835,7 @@
             {
               "type": "frame",
               "id": "f151",
-              "name": "页头",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1846,7 +1846,7 @@
                 {
                   "type": "rectangle",
                   "id": "r148",
-                  "name": "页首红条",
+                  "name": "header-red-bar",
                   "width": 96,
                   "height": 14,
                   "fill": [
@@ -1859,9 +1859,9 @@
                 {
                   "type": "text",
                   "id": "t149",
-                  "name": "页标题",
-                  "content": "怎么参加",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "How to join",
+                  "fontFamily": "Inter",
                   "fontSize": 80,
                   "fontWeight": 700,
                   "fill": [
@@ -1878,9 +1878,9 @@
                 {
                   "type": "text",
                   "id": "t150",
-                  "name": "页副标题",
-                  "content": "散客不用买票，工作坊和摊位需要提前登记。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "No ticket to walk in. Workshops and stalls need sign-up.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -1899,7 +1899,7 @@
             {
               "type": "frame",
               "id": "f152",
-              "name": "票种区",
+              "name": "tickets-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1911,7 +1911,7 @@
                 {
                   "type": "frame",
                   "id": "f147",
-                  "name": "票种网格",
+                  "name": "tickets-grid",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1922,7 +1922,7 @@
                     {
                       "type": "frame",
                       "id": "f120",
-                      "name": "票种栏",
+                      "name": "ticket-column",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1942,9 +1942,9 @@
                         {
                           "type": "text",
                           "id": "t108",
-                          "name": "票种名",
-                          "content": "散客入场",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "ticket-name",
+                          "content": "Walk-in",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 600,
                           "fill": [
@@ -1961,9 +1961,9 @@
                         {
                           "type": "text",
                           "id": "t109",
-                          "name": "价格",
-                          "content": "免费",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "price",
+                          "content": "Free",
+                          "fontFamily": "Inter",
                           "fontSize": 68,
                           "fontWeight": 700,
                           "fill": [
@@ -1980,7 +1980,7 @@
                         {
                           "type": "rectangle",
                           "id": "r110",
-                          "name": "价格下线",
+                          "name": "price-underline",
                           "width": "fill_container",
                           "height": 3,
                           "fill": [
@@ -1993,7 +1993,7 @@
                         {
                           "type": "frame",
                           "id": "f113",
-                          "name": "权益项",
+                          "name": "perk-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2004,7 +2004,7 @@
                             {
                               "type": "icon_font",
                               "id": "i111",
-                              "name": "对勾",
+                              "name": "checkmark",
                               "iconFontName": "check",
                               "width": 26,
                               "height": 26,
@@ -2018,9 +2018,9 @@
                             {
                               "type": "text",
                               "id": "t112",
-                              "name": "权益文字",
-                              "content": "现场扫码登记",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "perk-text",
+                              "content": "Scan in at the gate",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -2039,7 +2039,7 @@
                         {
                           "type": "frame",
                           "id": "f116",
-                          "name": "权益项",
+                          "name": "perk-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2050,7 +2050,7 @@
                             {
                               "type": "icon_font",
                               "id": "i114",
-                              "name": "对勾",
+                              "name": "checkmark",
                               "iconFontName": "check",
                               "width": 26,
                               "height": 26,
@@ -2064,9 +2064,9 @@
                             {
                               "type": "text",
                               "id": "t115",
-                              "name": "权益文字",
-                              "content": "两天均可进出",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "perk-text",
+                              "content": "Come and go both days",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -2085,7 +2085,7 @@
                         {
                           "type": "frame",
                           "id": "f119",
-                          "name": "权益项",
+                          "name": "perk-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2096,7 +2096,7 @@
                             {
                               "type": "icon_font",
                               "id": "i117",
-                              "name": "对勾",
+                              "name": "checkmark",
                               "iconFontName": "check",
                               "width": 26,
                               "height": 26,
@@ -2110,9 +2110,9 @@
                             {
                               "type": "text",
                               "id": "t118",
-                              "name": "权益文字",
-                              "content": "不含工作坊",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "perk-text",
+                              "content": "Workshops not included",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -2133,7 +2133,7 @@
                     {
                       "type": "frame",
                       "id": "f133",
-                      "name": "票种栏",
+                      "name": "ticket-column",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -2153,9 +2153,9 @@
                         {
                           "type": "text",
                           "id": "t121",
-                          "name": "票种名",
-                          "content": "工作坊套票",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "ticket-name",
+                          "content": "Workshop pass",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 600,
                           "fill": [
@@ -2172,8 +2172,8 @@
                         {
                           "type": "text",
                           "id": "t122",
-                          "name": "价格",
-                          "content": "¥ 68",
+                          "name": "price",
+                          "content": "$12",
                           "fontFamily": "Inter",
                           "fontSize": 68,
                           "fontWeight": 700,
@@ -2191,7 +2191,7 @@
                         {
                           "type": "rectangle",
                           "id": "r123",
-                          "name": "价格下线",
+                          "name": "price-underline",
                           "width": "fill_container",
                           "height": 3,
                           "fill": [
@@ -2204,7 +2204,7 @@
                         {
                           "type": "frame",
                           "id": "f126",
-                          "name": "权益项",
+                          "name": "perk-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2215,7 +2215,7 @@
                             {
                               "type": "icon_font",
                               "id": "i124",
-                              "name": "对勾",
+                              "name": "checkmark",
                               "iconFontName": "check",
                               "width": 26,
                               "height": 26,
@@ -2229,9 +2229,9 @@
                             {
                               "type": "text",
                               "id": "t125",
-                              "name": "权益文字",
-                              "content": "含两场手作工作坊",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "perk-text",
+                              "content": "Two craft workshops",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -2250,7 +2250,7 @@
                         {
                           "type": "frame",
                           "id": "f129",
-                          "name": "权益项",
+                          "name": "perk-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2261,7 +2261,7 @@
                             {
                               "type": "icon_font",
                               "id": "i127",
-                              "name": "对勾",
+                              "name": "checkmark",
                               "iconFontName": "check",
                               "width": 26,
                               "height": 26,
@@ -2275,9 +2275,9 @@
                             {
                               "type": "text",
                               "id": "t128",
-                              "name": "权益文字",
-                              "content": "材料全包",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "perk-text",
+                              "content": "All materials included",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -2296,7 +2296,7 @@
                         {
                           "type": "frame",
                           "id": "f132",
-                          "name": "权益项",
+                          "name": "perk-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2307,7 +2307,7 @@
                             {
                               "type": "icon_font",
                               "id": "i130",
-                              "name": "对勾",
+                              "name": "checkmark",
                               "iconFontName": "check",
                               "width": 26,
                               "height": 26,
@@ -2321,9 +2321,9 @@
                             {
                               "type": "text",
                               "id": "t131",
-                              "name": "权益文字",
-                              "content": "限 60 人",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "perk-text",
+                              "content": "60 spots only",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -2344,7 +2344,7 @@
                     {
                       "type": "frame",
                       "id": "f146",
-                      "name": "票种栏",
+                      "name": "ticket-column",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -2364,9 +2364,9 @@
                         {
                           "type": "text",
                           "id": "t134",
-                          "name": "票种名",
-                          "content": "摊主席位",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "ticket-name",
+                          "content": "Vendor stall",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 600,
                           "fill": [
@@ -2383,8 +2383,8 @@
                         {
                           "type": "text",
                           "id": "t135",
-                          "name": "价格",
-                          "content": "¥ 240",
+                          "name": "price",
+                          "content": "$45",
                           "fontFamily": "Inter",
                           "fontSize": 68,
                           "fontWeight": 700,
@@ -2402,7 +2402,7 @@
                         {
                           "type": "rectangle",
                           "id": "r136",
-                          "name": "价格下线",
+                          "name": "price-underline",
                           "width": "fill_container",
                           "height": 3,
                           "fill": [
@@ -2415,7 +2415,7 @@
                         {
                           "type": "frame",
                           "id": "f139",
-                          "name": "权益项",
+                          "name": "perk-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2426,7 +2426,7 @@
                             {
                               "type": "icon_font",
                               "id": "i137",
-                              "name": "对勾",
+                              "name": "checkmark",
                               "iconFontName": "check",
                               "width": 26,
                               "height": 26,
@@ -2440,9 +2440,9 @@
                             {
                               "type": "text",
                               "id": "t138",
-                              "name": "权益文字",
-                              "content": "3×3 米标准摊位",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "perk-text",
+                              "content": "10×10 ft standard stall",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -2461,7 +2461,7 @@
                         {
                           "type": "frame",
                           "id": "f142",
-                          "name": "权益项",
+                          "name": "perk-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2472,7 +2472,7 @@
                             {
                               "type": "icon_font",
                               "id": "i140",
-                              "name": "对勾",
+                              "name": "checkmark",
                               "iconFontName": "check",
                               "width": 26,
                               "height": 26,
@@ -2486,9 +2486,9 @@
                             {
                               "type": "text",
                               "id": "t141",
-                              "name": "权益文字",
-                              "content": "含桌椅与电源",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "perk-text",
+                              "content": "Table, chairs, power",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -2507,7 +2507,7 @@
                         {
                           "type": "frame",
                           "id": "f145",
-                          "name": "权益项",
+                          "name": "perk-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2518,7 +2518,7 @@
                             {
                               "type": "icon_font",
                               "id": "i143",
-                              "name": "对勾",
+                              "name": "checkmark",
                               "iconFontName": "check",
                               "width": 26,
                               "height": 26,
@@ -2532,9 +2532,9 @@
                             {
                               "type": "text",
                               "id": "t144",
-                              "name": "权益文字",
-                              "content": "需资质审核",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "perk-text",
+                              "content": "Subject to approval",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 400,
                               "fill": [
@@ -2565,7 +2565,7 @@
     {
       "type": "frame",
       "id": "f155",
-      "name": "06 结尾",
+      "name": "06-closing",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -2580,7 +2580,7 @@
         {
           "type": "frame",
           "id": "f154",
-          "name": "06 结尾 · 正文",
+          "name": "06-closing-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2595,7 +2595,7 @@
             {
               "type": "frame",
               "id": "f159",
-              "name": "结尾文案",
+              "name": "closing-copy",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2607,9 +2607,9 @@
                 {
                   "type": "text",
                   "id": "t157",
-                  "name": "结语",
-                  "content": "周六见。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-line",
+                  "content": "See you Saturday.",
+                  "fontFamily": "Inter",
                   "fontSize": 148,
                   "fontWeight": 700,
                   "fill": [
@@ -2626,9 +2626,9 @@
                 {
                   "type": "text",
                   "id": "t158",
-                  "name": "结尾说明",
-                  "content": "带上朋友，带上袋子，别带太多现金。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-note",
+                  "content": "Bring friends, bring a tote, skip the cash.",
+                  "fontFamily": "Inter",
                   "fontSize": 34,
                   "fontWeight": 400,
                   "fill": [
@@ -2647,7 +2647,7 @@
             {
               "type": "frame",
               "id": "f163",
-              "name": "联系方式",
+              "name": "contact",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2659,7 +2659,7 @@
                 {
                   "type": "frame",
                   "id": "f160",
-                  "name": "标签",
+                  "name": "tag",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2680,9 +2680,9 @@
                     {
                       "type": "text",
                       "id": "t161",
-                      "name": "标签文字",
-                      "content": "公众号：某某文化",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tag-text",
+                      "content": "Instagram: @examplearts",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 600,
                       "fill": [
@@ -2701,9 +2701,9 @@
                 {
                   "type": "text",
                   "id": "t162",
-                  "name": "电话",
-                  "content": "现场咨询 400-000-0000",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "phone",
+                  "content": "Questions (555) 000-0000",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -2724,7 +2724,7 @@
         {
           "type": "frame",
           "id": "f156",
-          "name": "06 结尾 · 装饰",
+          "name": "06-closing-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2733,7 +2733,7 @@
             {
               "type": "rectangle",
               "id": "r153",
-              "name": "圆块",
+              "name": "circle-block",
               "width": 520,
               "height": 520,
               "cornerRadius": 260,

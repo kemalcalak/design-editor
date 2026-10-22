@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "知识轮播 · 小红书 3:4 模板",
+  "name": "knowledge-carousel-3x4",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -35,7 +35,7 @@
     {
       "type": "frame",
       "id": "f22",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -57,7 +57,7 @@
         {
           "type": "frame",
           "id": "f3",
-          "name": "封面头部",
+          "name": "cover-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -68,7 +68,7 @@
             {
               "type": "frame",
               "id": "f1",
-              "name": "徽章 · 知识拆解",
+              "name": "badge-breakdown",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -90,9 +90,9 @@
                 {
                   "type": "text",
                   "id": "t2",
-                  "name": "徽章文字",
-                  "content": "知识拆解",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "badge-text",
+                  "content": "Breakdown",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -113,7 +113,7 @@
         {
           "type": "frame",
           "id": "f7",
-          "name": "封面主标题区",
+          "name": "cover-title-area",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -124,9 +124,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "封面标题",
-              "content": "把一篇长文，\n拆成五张图",
-              "fontFamily": "Noto Sans SC",
+              "name": "cover-title",
+              "content": "Turn a long read\ninto five slides",
+              "fontFamily": "Inter",
               "fontSize": 88,
               "fontWeight": 700,
               "fill": [
@@ -143,7 +143,7 @@
             {
               "type": "rectangle",
               "id": "r5",
-              "name": "强调短线",
+              "name": "accent-dash",
               "width": 132,
               "height": 12,
               "cornerRadius": 6,
@@ -157,8 +157,8 @@
             {
               "type": "text",
               "id": "t6",
-              "name": "封面副标题",
-              "content": "写得再好，没人读完也是白写。\n这套模板帮你把长文变成能划完的轮播。",
+              "name": "cover-subtitle",
+              "content": "Great writing is wasted if no one finishes it.\nThis template turns long reads into swipeable carousels.",
               "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 400,
@@ -178,7 +178,7 @@
         {
           "type": "frame",
           "id": "f18",
-          "name": "本期目录",
+          "name": "contents",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -189,9 +189,9 @@
             {
               "type": "text",
               "id": "t8",
-              "name": "目录标签",
-              "content": "本期三个论点",
-              "fontFamily": "Noto Sans SC",
+              "name": "contents-label",
+              "content": "Three points this time",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 600,
               "fill": [
@@ -208,7 +208,7 @@
             {
               "type": "frame",
               "id": "f10",
-              "name": "目录 1",
+              "name": "contents-1",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -219,7 +219,7 @@
                 {
                   "type": "text",
                   "id": "t9",
-                  "name": "目录序号",
+                  "name": "contents-number",
                   "content": "01",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -238,8 +238,8 @@
                 {
                   "type": "text",
                   "id": "t11",
-                  "name": "目录标题",
-                  "content": "先有结论，再有论据",
+                  "name": "contents-title",
+                  "content": "Conclusion first, then evidence",
                   "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 500,
@@ -259,7 +259,7 @@
             {
               "type": "frame",
               "id": "f13",
-              "name": "目录 2",
+              "name": "contents-2",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -270,7 +270,7 @@
                 {
                   "type": "text",
                   "id": "t12",
-                  "name": "目录序号",
+                  "name": "contents-number",
                   "content": "02",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -289,8 +289,8 @@
                 {
                   "type": "text",
                   "id": "t14",
-                  "name": "目录标题",
-                  "content": "一页只讲一个论点",
+                  "name": "contents-title",
+                  "content": "One point per slide",
                   "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 500,
@@ -310,7 +310,7 @@
             {
               "type": "frame",
               "id": "f16",
-              "name": "目录 3",
+              "name": "contents-3",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -321,7 +321,7 @@
                 {
                   "type": "text",
                   "id": "t15",
-                  "name": "目录序号",
+                  "name": "contents-number",
                   "content": "03",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -340,8 +340,8 @@
                 {
                   "type": "text",
                   "id": "t17",
-                  "name": "目录标题",
-                  "content": "留白比字号更重要",
+                  "name": "contents-title",
+                  "content": "White space beats font size",
                   "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 500,
@@ -363,7 +363,7 @@
         {
           "type": "frame",
           "id": "f19",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -375,8 +375,8 @@
             {
               "type": "text",
               "id": "t20",
-              "name": "页脚品牌",
-              "content": "@ 你的账号名",
+              "name": "footer-brand",
+              "content": "@ yourhandle",
               "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 500,
@@ -394,7 +394,7 @@
             {
               "type": "text",
               "id": "t21",
-              "name": "页码",
+              "name": "page-number",
               "content": "01 / 05",
               "fontFamily": "Inter",
               "fontSize": 26,
@@ -419,7 +419,7 @@
     {
       "type": "frame",
       "id": "f33",
-      "name": "02 论点 1",
+      "name": "02-point-1",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -441,7 +441,7 @@
         {
           "type": "frame",
           "id": "f27",
-          "name": "02 内容",
+          "name": "02-content",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -452,7 +452,7 @@
             {
               "type": "text",
               "id": "t23",
-              "name": "装饰序号",
+              "name": "decor-number",
               "content": "01",
               "fontFamily": "Inter",
               "fontSize": 220,
@@ -471,7 +471,7 @@
             {
               "type": "rectangle",
               "id": "r24",
-              "name": "强调短线",
+              "name": "accent-dash",
               "width": 96,
               "height": 12,
               "cornerRadius": 6,
@@ -485,9 +485,9 @@
             {
               "type": "text",
               "id": "t25",
-              "name": "论点标题",
-              "content": "先有结论，再有论据",
-              "fontFamily": "Noto Sans SC",
+              "name": "point-title",
+              "content": "Conclusion first, then evidence",
+              "fontFamily": "Inter",
               "fontSize": 72,
               "fontWeight": 700,
               "fill": [
@@ -504,9 +504,9 @@
             {
               "type": "text",
               "id": "t26",
-              "name": "论点阐述",
-              "content": "读者划到你这一页，只会给你一眼的时间。把结论放进标题，把论据留给正文，不要让人读完三行才知道你想说什么。你以为在铺垫，读者以为你没重点。",
-              "fontFamily": "Noto Sans SC",
+              "name": "point-body",
+              "content": "When readers swipe to your slide, you get one glance. Put the conclusion in the title and the evidence in the body. Don't make them read three lines to find your point. You think you're building up; they think you have no point.",
+              "fontFamily": "Inter",
               "fontSize": 34,
               "fontWeight": 400,
               "fill": [
@@ -525,7 +525,7 @@
         {
           "type": "frame",
           "id": "f28",
-          "name": "金句卡",
+          "name": "quote-card",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -557,9 +557,9 @@
             {
               "type": "text",
               "id": "t29",
-              "name": "金句",
-              "content": "标题写结论，正文写理由。",
-              "fontFamily": "Noto Sans SC",
+              "name": "quote",
+              "content": "Title says what. Body says why.",
+              "fontFamily": "Inter",
               "fontSize": 34,
               "fontWeight": 600,
               "fill": [
@@ -578,7 +578,7 @@
         {
           "type": "frame",
           "id": "f30",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -590,8 +590,8 @@
             {
               "type": "text",
               "id": "t31",
-              "name": "页脚品牌",
-              "content": "@ 你的账号名",
+              "name": "footer-brand",
+              "content": "@ yourhandle",
               "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 500,
@@ -609,7 +609,7 @@
             {
               "type": "text",
               "id": "t32",
-              "name": "页码",
+              "name": "page-number",
               "content": "02 / 05",
               "fontFamily": "Inter",
               "fontSize": 26,
@@ -634,7 +634,7 @@
     {
       "type": "frame",
       "id": "f44",
-      "name": "03 论点 2",
+      "name": "03-point-2",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -656,7 +656,7 @@
         {
           "type": "frame",
           "id": "f38",
-          "name": "03 内容",
+          "name": "03-content",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -667,7 +667,7 @@
             {
               "type": "text",
               "id": "t34",
-              "name": "装饰序号",
+              "name": "decor-number",
               "content": "02",
               "fontFamily": "Inter",
               "fontSize": 220,
@@ -686,7 +686,7 @@
             {
               "type": "rectangle",
               "id": "r35",
-              "name": "强调短线",
+              "name": "accent-dash",
               "width": 96,
               "height": 12,
               "cornerRadius": 6,
@@ -700,9 +700,9 @@
             {
               "type": "text",
               "id": "t36",
-              "name": "论点标题",
-              "content": "一页只讲一个论点",
-              "fontFamily": "Noto Sans SC",
+              "name": "point-title",
+              "content": "One point per slide",
+              "fontFamily": "Inter",
               "fontSize": 72,
               "fontWeight": 700,
               "fill": [
@@ -719,9 +719,9 @@
             {
               "type": "text",
               "id": "t37",
-              "name": "论点阐述",
-              "content": "轮播的优势是节奏，不是容量。一页塞两个论点，\n读者一个都记不住；拆成两页，两个都记得住。\n多拆一页的成本几乎为零，真正贵的是读者的耐心。",
-              "fontFamily": "Noto Sans SC",
+              "name": "point-body",
+              "content": "A carousel's strength is rhythm, not capacity.\nTwo points on one slide, readers keep neither; split them, they keep both.\nAn extra slide costs almost nothing. Reader patience is what's expensive.",
+              "fontFamily": "Inter",
               "fontSize": 34,
               "fontWeight": 400,
               "fill": [
@@ -740,7 +740,7 @@
         {
           "type": "frame",
           "id": "f39",
-          "name": "金句卡",
+          "name": "quote-card",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -772,9 +772,9 @@
             {
               "type": "text",
               "id": "t40",
-              "name": "金句",
-              "content": "讲不完，就拆下一页。",
-              "fontFamily": "Noto Sans SC",
+              "name": "quote",
+              "content": "Too much? Split to the next slide.",
+              "fontFamily": "Inter",
               "fontSize": 34,
               "fontWeight": 600,
               "fill": [
@@ -793,7 +793,7 @@
         {
           "type": "frame",
           "id": "f41",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -805,8 +805,8 @@
             {
               "type": "text",
               "id": "t42",
-              "name": "页脚品牌",
-              "content": "@ 你的账号名",
+              "name": "footer-brand",
+              "content": "@ yourhandle",
               "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 500,
@@ -824,7 +824,7 @@
             {
               "type": "text",
               "id": "t43",
-              "name": "页码",
+              "name": "page-number",
               "content": "03 / 05",
               "fontFamily": "Inter",
               "fontSize": 26,
@@ -849,7 +849,7 @@
     {
       "type": "frame",
       "id": "f55",
-      "name": "04 论点 3",
+      "name": "04-point-3",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -871,7 +871,7 @@
         {
           "type": "frame",
           "id": "f49",
-          "name": "04 内容",
+          "name": "04-content",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -882,7 +882,7 @@
             {
               "type": "text",
               "id": "t45",
-              "name": "装饰序号",
+              "name": "decor-number",
               "content": "03",
               "fontFamily": "Inter",
               "fontSize": 220,
@@ -901,7 +901,7 @@
             {
               "type": "rectangle",
               "id": "r46",
-              "name": "强调短线",
+              "name": "accent-dash",
               "width": 96,
               "height": 12,
               "cornerRadius": 6,
@@ -915,9 +915,9 @@
             {
               "type": "text",
               "id": "t47",
-              "name": "论点标题",
-              "content": "留白比字号更重要",
-              "fontFamily": "Noto Sans SC",
+              "name": "point-title",
+              "content": "White space beats font size",
+              "fontFamily": "Inter",
               "fontSize": 72,
               "fontWeight": 700,
               "fill": [
@@ -934,9 +934,9 @@
             {
               "type": "text",
               "id": "t48",
-              "name": "论点阐述",
-              "content": "想让一句话被看见，办法不是把它放大，\n而是把它周围清空。留白足够时，\n30px 的字也比挤成一堆的 60px 更醒目。",
-              "fontFamily": "Noto Sans SC",
+              "name": "point-body",
+              "content": "To make a line stand out, don't enlarge it;\nclear the space around it. With enough white space,\n30px text beats 60px crammed into a crowd.",
+              "fontFamily": "Inter",
               "fontSize": 34,
               "fontWeight": 400,
               "fill": [
@@ -955,7 +955,7 @@
         {
           "type": "frame",
           "id": "f50",
-          "name": "金句卡",
+          "name": "quote-card",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -987,9 +987,9 @@
             {
               "type": "text",
               "id": "t51",
-              "name": "金句",
-              "content": "想突出，先清空周围。",
-              "fontFamily": "Noto Sans SC",
+              "name": "quote",
+              "content": "To stand out, clear the space.",
+              "fontFamily": "Inter",
               "fontSize": 34,
               "fontWeight": 600,
               "fill": [
@@ -1008,7 +1008,7 @@
         {
           "type": "frame",
           "id": "f52",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1020,8 +1020,8 @@
             {
               "type": "text",
               "id": "t53",
-              "name": "页脚品牌",
-              "content": "@ 你的账号名",
+              "name": "footer-brand",
+              "content": "@ yourhandle",
               "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 500,
@@ -1039,7 +1039,7 @@
             {
               "type": "text",
               "id": "t54",
-              "name": "页码",
+              "name": "page-number",
               "content": "04 / 05",
               "fontFamily": "Inter",
               "fontSize": 26,
@@ -1064,7 +1064,7 @@
     {
       "type": "frame",
       "id": "f86",
-      "name": "05 总结",
+      "name": "05-recap",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -1086,7 +1086,7 @@
         {
           "type": "frame",
           "id": "f59",
-          "name": "总结头部",
+          "name": "recap-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1097,7 +1097,7 @@
             {
               "type": "frame",
               "id": "f56",
-              "name": "徽章 · 总结",
+              "name": "badge-recap",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1119,9 +1119,9 @@
                 {
                   "type": "text",
                   "id": "t57",
-                  "name": "徽章文字",
-                  "content": "总结",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "badge-text",
+                  "content": "Recap",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -1140,9 +1140,9 @@
             {
               "type": "text",
               "id": "t58",
-              "name": "总结标题",
-              "content": "三句话，\n记住这一篇。",
-              "fontFamily": "Noto Sans SC",
+              "name": "recap-heading",
+              "content": "Three lines\nto remember.",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -1161,7 +1161,7 @@
         {
           "type": "frame",
           "id": "f78",
-          "name": "回顾列表",
+          "name": "recap-list",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1172,7 +1172,7 @@
             {
               "type": "frame",
               "id": "f65",
-              "name": "回顾卡 1",
+              "name": "recap-card-1",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1193,7 +1193,7 @@
                 {
                   "type": "frame",
                   "id": "f60",
-                  "name": "回顾序号 1",
+                  "name": "recap-number-1",
                   "width": 60,
                   "height": 60,
                   "layout": "horizontal",
@@ -1210,7 +1210,7 @@
                     {
                       "type": "text",
                       "id": "t61",
-                      "name": "序号",
+                      "name": "number",
                       "content": "1",
                       "fontFamily": "Inter",
                       "fontSize": 30,
@@ -1231,7 +1231,7 @@
                 {
                   "type": "frame",
                   "id": "f64",
-                  "name": "回顾文案",
+                  "name": "recap-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1242,9 +1242,9 @@
                     {
                       "type": "text",
                       "id": "t62",
-                      "name": "回顾标题",
-                      "content": "结论前置",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "recap-title",
+                      "content": "Lead with the point",
+                      "fontFamily": "Inter",
                       "fontSize": 34,
                       "fontWeight": 600,
                       "fill": [
@@ -1261,8 +1261,8 @@
                     {
                       "type": "text",
                       "id": "t63",
-                      "name": "回顾说明",
-                      "content": "标题就是观点，别让人猜。",
+                      "name": "recap-note",
+                      "content": "The title is the take. No guessing.",
                       "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 400,
@@ -1284,7 +1284,7 @@
             {
               "type": "frame",
               "id": "f71",
-              "name": "回顾卡 2",
+              "name": "recap-card-2",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1305,7 +1305,7 @@
                 {
                   "type": "frame",
                   "id": "f66",
-                  "name": "回顾序号 2",
+                  "name": "recap-number-2",
                   "width": 60,
                   "height": 60,
                   "layout": "horizontal",
@@ -1322,7 +1322,7 @@
                     {
                       "type": "text",
                       "id": "t67",
-                      "name": "序号",
+                      "name": "number",
                       "content": "2",
                       "fontFamily": "Inter",
                       "fontSize": 30,
@@ -1343,7 +1343,7 @@
                 {
                   "type": "frame",
                   "id": "f70",
-                  "name": "回顾文案",
+                  "name": "recap-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1354,9 +1354,9 @@
                     {
                       "type": "text",
                       "id": "t68",
-                      "name": "回顾标题",
-                      "content": "一页一论点",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "recap-title",
+                      "content": "One point a slide",
+                      "fontFamily": "Inter",
                       "fontSize": 34,
                       "fontWeight": 600,
                       "fill": [
@@ -1373,8 +1373,8 @@
                     {
                       "type": "text",
                       "id": "t69",
-                      "name": "回顾说明",
-                      "content": "讲不完就拆页，别硬塞。",
+                      "name": "recap-note",
+                      "content": "Split it, don't cram it.",
                       "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 400,
@@ -1396,7 +1396,7 @@
             {
               "type": "frame",
               "id": "f77",
-              "name": "回顾卡 3",
+              "name": "recap-card-3",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1417,7 +1417,7 @@
                 {
                   "type": "frame",
                   "id": "f72",
-                  "name": "回顾序号 3",
+                  "name": "recap-number-3",
                   "width": 60,
                   "height": 60,
                   "layout": "horizontal",
@@ -1434,7 +1434,7 @@
                     {
                       "type": "text",
                       "id": "t73",
-                      "name": "序号",
+                      "name": "number",
                       "content": "3",
                       "fontFamily": "Inter",
                       "fontSize": 30,
@@ -1455,7 +1455,7 @@
                 {
                   "type": "frame",
                   "id": "f76",
-                  "name": "回顾文案",
+                  "name": "recap-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1466,9 +1466,9 @@
                     {
                       "type": "text",
                       "id": "t74",
-                      "name": "回顾标题",
-                      "content": "先留白再放大",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "recap-title",
+                      "content": "Space before size",
+                      "fontFamily": "Inter",
                       "fontSize": 34,
                       "fontWeight": 600,
                       "fill": [
@@ -1485,8 +1485,8 @@
                     {
                       "type": "text",
                       "id": "t75",
-                      "name": "回顾说明",
-                      "content": "清空周围，比放大字号有效。",
+                      "name": "recap-note",
+                      "content": "Clearing space beats bigger type.",
                       "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 400,
@@ -1510,7 +1510,7 @@
         {
           "type": "frame",
           "id": "f82",
-          "name": "关注引导卡",
+          "name": "follow-card",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1530,7 +1530,7 @@
             {
               "type": "frame",
               "id": "f81",
-              "name": "关注卡内容",
+              "name": "follow-card-content",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1541,9 +1541,9 @@
                 {
                   "type": "text",
                   "id": "t79",
-                  "name": "关注标题",
-                  "content": "觉得有用，就点个收藏",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "follow-title",
+                  "content": "Found it useful? Save it",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 700,
                   "fill": [
@@ -1560,8 +1560,8 @@
                 {
                   "type": "text",
                   "id": "t80",
-                  "name": "关注副文案",
-                  "content": "关注我，每周拆一篇长文成图。",
+                  "name": "follow-subcopy",
+                  "content": "Follow for one long read, broken down, every week.",
                   "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
@@ -1583,7 +1583,7 @@
         {
           "type": "frame",
           "id": "f83",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1595,8 +1595,8 @@
             {
               "type": "text",
               "id": "t84",
-              "name": "页脚品牌",
-              "content": "@ 你的账号名",
+              "name": "footer-brand",
+              "content": "@ yourhandle",
               "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 500,
@@ -1614,7 +1614,7 @@
             {
               "type": "text",
               "id": "t85",
-              "name": "页码",
+              "name": "page-number",
               "content": "05 / 05",
               "fontFamily": "Inter",
               "fontSize": 26,

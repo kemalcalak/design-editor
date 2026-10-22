@@ -348,8 +348,8 @@ impl AssetCenterTab {
     /// Label used when the locale table has no entry for [`Self::title_key`].
     pub fn title_fallback(self) -> &'static str {
         match self {
-            AssetCenterTab::Templates => "模板",
-            AssetCenterTab::Styles => "风格",
+            AssetCenterTab::Templates => "Templates",
+            AssetCenterTab::Styles => "Styles",
         }
     }
 }

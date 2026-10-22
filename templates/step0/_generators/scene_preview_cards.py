@@ -63,10 +63,13 @@ INSET = 20
 # 140px-wide sliver, where its masthead and hero at full width are exactly
 # what makes it recognisable.
 #
-# 多板模板一律走帧列表，**不要**拿 `<id>-overview.png` 当源：overview 是整画布
-# 导出，板与板之间的间隙和最后一行缺的格子都是画布底色，缩进卡片里就是几道黑
-# 条。帧列表这条路由 `tile()` 自己按文档底色铺画布（`background_colour` 从首帧
-# 四角取），缺的格子跟着一起变成文档底色，所以永远不会露黑。
+# Multi-board templates always go through the frame list; do **not** use
+# `<id>-overview.png` as the source. The overview is a whole-canvas export, so
+# the gaps between boards and the missing cells of the last row are canvas
+# colour, which shrinks into black bars inside the card. The frame-list route
+# has `tile()` lay its own canvas in the document background (`background_colour`
+# sampled from the first frame's corners), so missing cells take that colour too
+# and black never shows.
 CARDS = [
     ("screenshot-tutorial",
      [f"screenshot-tutorial-{index:02d}.png" for index in range(1, 6)]),

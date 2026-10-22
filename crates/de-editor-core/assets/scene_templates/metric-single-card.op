@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "数据单值卡 · 网格汉字 1:1",
+  "name": "single-metric-card-grid-1x1",
   "variables": {
     "c-white": {
       "type": "color",
@@ -31,7 +31,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "数据单值卡 · 网格汉字",
+      "name": "single-metric-card-grid",
       "width": 1080,
       "height": 1080,
       "layout": "vertical",
@@ -55,7 +55,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "卡头",
+          "name": "card-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -66,7 +66,7 @@
             {
               "type": "frame",
               "id": "f4",
-              "name": "记号行",
+              "name": "mark-row",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -77,7 +77,7 @@
                 {
                   "type": "rectangle",
                   "id": "r2",
-                  "name": "黑横杠",
+                  "name": "black-bar",
                   "width": 218,
                   "height": 10,
                   "fill": [
@@ -90,7 +90,7 @@
                 {
                   "type": "rectangle",
                   "id": "r3",
-                  "name": "信号方块",
+                  "name": "signal-square",
                   "width": 24,
                   "height": 24,
                   "fill": [
@@ -105,9 +105,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "标签",
-              "content": "季度指标 · 2026 Q2",
-              "fontFamily": "Noto Sans SC",
+              "name": "label",
+              "content": "Quarterly metric · 2026 Q2",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 500,
               "fill": [
@@ -126,7 +126,7 @@
         {
           "type": "frame",
           "id": "f9",
-          "name": "数值行",
+          "name": "value-row",
           "width": "fit_content",
           "height": "fit_content",
           "layout": "horizontal",
@@ -137,7 +137,7 @@
             {
               "type": "text",
               "id": "t7",
-              "name": "数值",
+              "name": "value",
               "content": "68",
               "fontFamily": "Inter",
               "fontSize": 168,
@@ -156,7 +156,7 @@
             {
               "type": "text",
               "id": "t8",
-              "name": "单位",
+              "name": "unit",
               "content": "%",
               "fontFamily": "Inter",
               "fontSize": 48,
@@ -177,7 +177,7 @@
         {
           "type": "frame",
           "id": "f11",
-          "name": "释义",
+          "name": "definition",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -188,9 +188,9 @@
             {
               "type": "text",
               "id": "t10",
-              "name": "解释",
-              "content": "模板起稿的人里，68% 在两周内做出了第二张图。",
-              "fontFamily": "Noto Sans SC",
+              "name": "explanation",
+              "content": "68% of people who started from a template made a second design within two weeks.",
+              "fontFamily": "Inter",
               "fontSize": 40,
               "fontWeight": 400,
               "fill": [
@@ -209,7 +209,7 @@
         {
           "type": "frame",
           "id": "f14",
-          "name": "来源",
+          "name": "source",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -220,7 +220,7 @@
             {
               "type": "rectangle",
               "id": "r12",
-              "name": "分隔线",
+              "name": "divider",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -233,9 +233,9 @@
             {
               "type": "text",
               "id": "t13",
-              "name": "来源行",
-              "content": "口径：2026-04-01 至 06-30 新建文档，按人去重。",
-              "fontFamily": "Noto Sans SC",
+              "name": "source-row",
+              "content": "Basis: new docs from Apr 1 to Jun 30, 2026, unique users.",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 400,
               "fill": [

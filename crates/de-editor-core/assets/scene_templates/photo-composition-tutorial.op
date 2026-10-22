@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "手机摄影构图教学 · 3:4 五帧",
+  "name": "phone-photo-composition-3x4-five-frames",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -43,7 +43,7 @@
     {
       "type": "frame",
       "id": "f23",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -65,7 +65,7 @@
         {
           "type": "frame",
           "id": "f4",
-          "name": "封面头",
+          "name": "cover-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -77,7 +77,7 @@
             {
               "type": "frame",
               "id": "f1",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -98,9 +98,9 @@
                 {
                   "type": "text",
                   "id": "t2",
-                  "name": "标签文字",
-                  "content": "构图 · 五分钟",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Composition · 5 min",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 700,
                   "fill": [
@@ -119,7 +119,7 @@
             {
               "type": "text",
               "id": "t3",
-              "name": "封面页码",
+              "name": "cover-page-number",
               "content": "01 / 05",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -140,7 +140,7 @@
         {
           "type": "frame",
           "id": "f19",
-          "name": "封面主体",
+          "name": "cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -152,7 +152,7 @@
             {
               "type": "frame",
               "id": "f8",
-              "name": "封面标题",
+              "name": "cover-title",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -163,9 +163,9 @@
                 {
                   "type": "text",
                   "id": "t5",
-                  "name": "标题上",
-                  "content": "同一个场景",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "title-top",
+                  "content": "Same scene.",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -182,9 +182,9 @@
                 {
                   "type": "text",
                   "id": "t6",
-                  "name": "标题下",
-                  "content": "为什么你拍得平",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "title-bottom",
+                  "content": "Why so flat?",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -201,9 +201,9 @@
                 {
                   "type": "text",
                   "id": "t7",
-                  "name": "封面副标题",
-                  "content": "不是相机的问题。三条构图法则，今天就能用上。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "cover-subtitle",
+                  "content": "It's not your camera. Three composition rules you can use today.",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -222,7 +222,7 @@
             {
               "type": "frame",
               "id": "f18",
-              "name": "法则预告区",
+              "name": "rule-preview-area",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -233,7 +233,7 @@
                 {
                   "type": "frame",
                   "id": "f11",
-                  "name": "法则预告",
+                  "name": "rule-preview",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -244,7 +244,7 @@
                     {
                       "type": "text",
                       "id": "t9",
-                      "name": "预告序号",
+                      "name": "preview-number",
                       "content": "01",
                       "fontFamily": "Inter",
                       "fontSize": 30,
@@ -263,9 +263,9 @@
                     {
                       "type": "text",
                       "id": "t10",
-                      "name": "预告名",
-                      "content": "三分法",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-name",
+                      "content": "Rule of thirds",
+                      "fontFamily": "Inter",
                       "fontSize": 34,
                       "fontWeight": 600,
                       "fill": [
@@ -284,7 +284,7 @@
                 {
                   "type": "frame",
                   "id": "f14",
-                  "name": "法则预告",
+                  "name": "rule-preview",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -295,7 +295,7 @@
                     {
                       "type": "text",
                       "id": "t12",
-                      "name": "预告序号",
+                      "name": "preview-number",
                       "content": "02",
                       "fontFamily": "Inter",
                       "fontSize": 30,
@@ -314,9 +314,9 @@
                     {
                       "type": "text",
                       "id": "t13",
-                      "name": "预告名",
-                      "content": "引导线",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-name",
+                      "content": "Leading lines",
+                      "fontFamily": "Inter",
                       "fontSize": 34,
                       "fontWeight": 600,
                       "fill": [
@@ -335,7 +335,7 @@
                 {
                   "type": "frame",
                   "id": "f17",
-                  "name": "法则预告",
+                  "name": "rule-preview",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -346,7 +346,7 @@
                     {
                       "type": "text",
                       "id": "t15",
-                      "name": "预告序号",
+                      "name": "preview-number",
                       "content": "03",
                       "fontFamily": "Inter",
                       "fontSize": 30,
@@ -365,9 +365,9 @@
                     {
                       "type": "text",
                       "id": "t16",
-                      "name": "预告名",
-                      "content": "框住主体",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-name",
+                      "content": "Frame it",
+                      "fontFamily": "Inter",
                       "fontSize": 34,
                       "fontWeight": 600,
                       "fill": [
@@ -390,7 +390,7 @@
         {
           "type": "frame",
           "id": "f22",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -402,9 +402,9 @@
             {
               "type": "text",
               "id": "t20",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -421,7 +421,7 @@
             {
               "type": "text",
               "id": "t21",
-              "name": "页码",
+              "name": "page-number",
               "content": "01 / 05",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -446,7 +446,7 @@
     {
       "type": "frame",
       "id": "f54",
-      "name": "02 三分法",
+      "name": "02-rule-of-thirds",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -468,7 +468,7 @@
         {
           "type": "frame",
           "id": "f32",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -479,7 +479,7 @@
             {
               "type": "frame",
               "id": "f30",
-              "name": "法则标题行",
+              "name": "rule-title-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -490,7 +490,7 @@
                 {
                   "type": "text",
                   "id": "t28",
-                  "name": "法则序号",
+                  "name": "rule-number",
                   "content": "01",
                   "fontFamily": "Inter",
                   "fontSize": 44,
@@ -509,9 +509,9 @@
                 {
                   "type": "text",
                   "id": "t29",
-                  "name": "法则名",
-                  "content": "三分法",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "rule-name",
+                  "content": "Rule of thirds",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -530,9 +530,9 @@
             {
               "type": "text",
               "id": "t31",
-              "name": "法则说明",
-              "content": "把画面切成九格，主体放在线上或交点上，别放正中间。",
-              "fontFamily": "Noto Sans SC",
+              "name": "rule-note",
+              "content": "Split the frame into nine. Put the subject on a line or crossing, not dead center.",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -551,7 +551,7 @@
         {
           "type": "frame",
           "id": "f50",
-          "name": "取景框",
+          "name": "viewfinder",
           "width": 936,
           "height": 819,
           "layout": "none",
@@ -562,7 +562,7 @@
             {
               "type": "rectangle",
               "id": "r24",
-              "name": "竖线",
+              "name": "vertical-line",
               "x": 312,
               "y": 0,
               "width": 4,
@@ -577,7 +577,7 @@
             {
               "type": "rectangle",
               "id": "r25",
-              "name": "竖线",
+              "name": "vertical-line",
               "x": 624,
               "y": 0,
               "width": 4,
@@ -592,7 +592,7 @@
             {
               "type": "rectangle",
               "id": "r26",
-              "name": "横线",
+              "name": "horizontal-line",
               "x": 0,
               "y": 273,
               "width": 936,
@@ -607,7 +607,7 @@
             {
               "type": "rectangle",
               "id": "r27",
-              "name": "横线",
+              "name": "horizontal-line",
               "x": 0,
               "y": 546,
               "width": 936,
@@ -622,7 +622,7 @@
             {
               "type": "frame",
               "id": "f46",
-              "name": "图片位",
+              "name": "image-slot",
               "x": 0,
               "y": 0,
               "width": 936,
@@ -641,7 +641,7 @@
                 {
                   "type": "icon_font",
                   "id": "i47",
-                  "name": "图片位图标",
+                  "name": "image-slot-icon",
                   "iconFontName": "image",
                   "width": 52,
                   "height": 52,
@@ -655,9 +655,9 @@
                 {
                   "type": "text",
                   "id": "t48",
-                  "name": "图片位提示",
-                  "content": "拖一张风景或人像进来",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "image-slot-hint",
+                  "content": "Drop in a landscape or portrait",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 600,
                   "fill": [
@@ -675,9 +675,9 @@
                 {
                   "type": "text",
                   "id": "t49",
-                  "name": "图片位规格",
-                  "content": "拖进来后参考线还在，直接对照",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "image-slot-spec",
+                  "content": "The guides stay on top to compare",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 400,
                   "fill": [
@@ -699,7 +699,7 @@
         {
           "type": "frame",
           "id": "f45",
-          "name": "要点区",
+          "name": "points-area",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -710,7 +710,7 @@
             {
               "type": "frame",
               "id": "f38",
-              "name": "要点",
+              "name": "point",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -721,7 +721,7 @@
                 {
                   "type": "frame",
                   "id": "f33",
-                  "name": "要点标记",
+                  "name": "point-marker",
                   "width": 44,
                   "height": 44,
                   "layout": "horizontal",
@@ -738,7 +738,7 @@
                     {
                       "type": "icon_font",
                       "id": "i34",
-                      "name": "要点图标",
+                      "name": "point-icon",
                       "iconFontName": "check",
                       "width": 24,
                       "height": 24,
@@ -754,7 +754,7 @@
                 {
                   "type": "frame",
                   "id": "f37",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -765,9 +765,9 @@
                     {
                       "type": "text",
                       "id": "t35",
-                      "name": "要点标题",
-                      "content": "主体压在竖线上",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Subject on a vertical",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -784,9 +784,9 @@
                     {
                       "type": "text",
                       "id": "t36",
-                      "name": "要点说明",
-                      "content": "地平线压在上横线或下横线，不居中。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "Horizon on the top or bottom line, not the middle.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -807,7 +807,7 @@
             {
               "type": "frame",
               "id": "f44",
-              "name": "要点",
+              "name": "point",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -818,7 +818,7 @@
                 {
                   "type": "frame",
                   "id": "f39",
-                  "name": "要点标记",
+                  "name": "point-marker",
                   "width": 44,
                   "height": 44,
                   "layout": "horizontal",
@@ -835,7 +835,7 @@
                     {
                       "type": "icon_font",
                       "id": "i40",
-                      "name": "要点图标",
+                      "name": "point-icon",
                       "iconFontName": "x",
                       "width": 24,
                       "height": 24,
@@ -851,7 +851,7 @@
                 {
                   "type": "frame",
                   "id": "f43",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -862,9 +862,9 @@
                     {
                       "type": "text",
                       "id": "t41",
-                      "name": "要点标题",
-                      "content": "主体钉死在正中心",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Subject pinned dead center",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -881,9 +881,9 @@
                     {
                       "type": "text",
                       "id": "t42",
-                      "name": "要点说明",
-                      "content": "对称构图另说，日常随手拍会显得呆。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "Fine for symmetry; in snapshots it looks stiff.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -906,7 +906,7 @@
         {
           "type": "frame",
           "id": "f53",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -918,9 +918,9 @@
             {
               "type": "text",
               "id": "t51",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -937,7 +937,7 @@
             {
               "type": "text",
               "id": "t52",
-              "name": "页码",
+              "name": "page-number",
               "content": "02 / 05",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -962,7 +962,7 @@
     {
       "type": "frame",
       "id": "f84",
-      "name": "03 引导线",
+      "name": "03-leading-lines",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -984,7 +984,7 @@
         {
           "type": "frame",
           "id": "f62",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -995,7 +995,7 @@
             {
               "type": "frame",
               "id": "f60",
-              "name": "法则标题行",
+              "name": "rule-title-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1006,7 +1006,7 @@
                 {
                   "type": "text",
                   "id": "t58",
-                  "name": "法则序号",
+                  "name": "rule-number",
                   "content": "02",
                   "fontFamily": "Inter",
                   "fontSize": 44,
@@ -1025,9 +1025,9 @@
                 {
                   "type": "text",
                   "id": "t59",
-                  "name": "法则名",
-                  "content": "引导线",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "rule-name",
+                  "content": "Leading lines",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -1046,9 +1046,9 @@
             {
               "type": "text",
               "id": "t61",
-              "name": "法则说明",
-              "content": "让路、栏杆、影子这些线条从画面底部指向主体。",
-              "fontFamily": "Noto Sans SC",
+              "name": "rule-note",
+              "content": "Let roads, railings and shadows run from the bottom toward the subject.",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -1067,7 +1067,7 @@
         {
           "type": "frame",
           "id": "f80",
-          "name": "取景框",
+          "name": "viewfinder",
           "width": 936,
           "height": 819,
           "layout": "none",
@@ -1078,7 +1078,7 @@
             {
               "type": "rectangle",
               "id": "r55",
-              "name": "左引导",
+              "name": "left-guide",
               "x": -129.76,
               "y": 538.5,
               "width": 727.51,
@@ -1094,7 +1094,7 @@
             {
               "type": "rectangle",
               "id": "r56",
-              "name": "右引导",
+              "name": "right-guide",
               "x": 338.24,
               "y": 538.5,
               "width": 727.51,
@@ -1110,7 +1110,7 @@
             {
               "type": "rectangle",
               "id": "r57",
-              "name": "汇合横标",
+              "name": "convergence-marker",
               "x": 424,
               "y": 262,
               "width": 88,
@@ -1125,7 +1125,7 @@
             {
               "type": "frame",
               "id": "f76",
-              "name": "图片位",
+              "name": "image-slot",
               "x": 0,
               "y": 0,
               "width": 936,
@@ -1144,7 +1144,7 @@
                 {
                   "type": "icon_font",
                   "id": "i77",
-                  "name": "图片位图标",
+                  "name": "image-slot-icon",
                   "iconFontName": "image",
                   "width": 52,
                   "height": 52,
@@ -1158,9 +1158,9 @@
                 {
                   "type": "text",
                   "id": "t78",
-                  "name": "图片位提示",
-                  "content": "拖一张有路或走廊的照片",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "image-slot-hint",
+                  "content": "Drop in a road or hallway shot",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 600,
                   "fill": [
@@ -1178,9 +1178,9 @@
                 {
                   "type": "text",
                   "id": "t79",
-                  "name": "图片位规格",
-                  "content": "拖进来后参考线还在，直接对照",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "image-slot-spec",
+                  "content": "The guides stay on top to compare",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 400,
                   "fill": [
@@ -1202,7 +1202,7 @@
         {
           "type": "frame",
           "id": "f75",
-          "name": "要点区",
+          "name": "points-area",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1213,7 +1213,7 @@
             {
               "type": "frame",
               "id": "f68",
-              "name": "要点",
+              "name": "point",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1224,7 +1224,7 @@
                 {
                   "type": "frame",
                   "id": "f63",
-                  "name": "要点标记",
+                  "name": "point-marker",
                   "width": 44,
                   "height": 44,
                   "layout": "horizontal",
@@ -1241,7 +1241,7 @@
                     {
                       "type": "icon_font",
                       "id": "i64",
-                      "name": "要点图标",
+                      "name": "point-icon",
                       "iconFontName": "check",
                       "width": 24,
                       "height": 24,
@@ -1257,7 +1257,7 @@
                 {
                   "type": "frame",
                   "id": "f67",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1268,9 +1268,9 @@
                     {
                       "type": "text",
                       "id": "t65",
-                      "name": "要点标题",
-                      "content": "蹲低一点再拍",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Crouch lower",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -1287,9 +1287,9 @@
                     {
                       "type": "text",
                       "id": "t66",
-                      "name": "要点说明",
-                      "content": "机位越低，地面的线条收得越急。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "The lower you go, the faster lines converge.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -1310,7 +1310,7 @@
             {
               "type": "frame",
               "id": "f74",
-              "name": "要点",
+              "name": "point",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1321,7 +1321,7 @@
                 {
                   "type": "frame",
                   "id": "f69",
-                  "name": "要点标记",
+                  "name": "point-marker",
                   "width": 44,
                   "height": 44,
                   "layout": "horizontal",
@@ -1338,7 +1338,7 @@
                     {
                       "type": "icon_font",
                       "id": "i70",
-                      "name": "要点图标",
+                      "name": "point-icon",
                       "iconFontName": "x",
                       "width": 24,
                       "height": 24,
@@ -1354,7 +1354,7 @@
                 {
                   "type": "frame",
                   "id": "f73",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1365,9 +1365,9 @@
                     {
                       "type": "text",
                       "id": "t71",
-                      "name": "要点标题",
-                      "content": "站直了平拍",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Shooting at eye level",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -1384,9 +1384,9 @@
                     {
                       "type": "text",
                       "id": "t72",
-                      "name": "要点说明",
-                      "content": "平视时线条被压扁，几乎没有纵深。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "Lines flatten out and depth disappears.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -1409,7 +1409,7 @@
         {
           "type": "frame",
           "id": "f83",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1421,9 +1421,9 @@
             {
               "type": "text",
               "id": "t81",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -1440,7 +1440,7 @@
             {
               "type": "text",
               "id": "t82",
-              "name": "页码",
+              "name": "page-number",
               "content": "03 / 05",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -1465,7 +1465,7 @@
     {
       "type": "frame",
       "id": "f115",
-      "name": "04 框住主体",
+      "name": "04-frame-it",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -1487,7 +1487,7 @@
         {
           "type": "frame",
           "id": "f93",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1498,7 +1498,7 @@
             {
               "type": "frame",
               "id": "f91",
-              "name": "法则标题行",
+              "name": "rule-title-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1509,7 +1509,7 @@
                 {
                   "type": "text",
                   "id": "t89",
-                  "name": "法则序号",
+                  "name": "rule-number",
                   "content": "03",
                   "fontFamily": "Inter",
                   "fontSize": 44,
@@ -1528,9 +1528,9 @@
                 {
                   "type": "text",
                   "id": "t90",
-                  "name": "法则名",
-                  "content": "框住主体",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "rule-name",
+                  "content": "Frame it",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -1549,9 +1549,9 @@
             {
               "type": "text",
               "id": "t92",
-              "name": "法则说明",
-              "content": "用门框、树枝、窗户在主体外面再套一层框。",
-              "fontFamily": "Noto Sans SC",
+              "name": "rule-note",
+              "content": "Use doorways, branches or windows as a frame around the subject.",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -1570,7 +1570,7 @@
         {
           "type": "frame",
           "id": "f111",
-          "name": "取景框",
+          "name": "viewfinder",
           "width": 936,
           "height": 819,
           "layout": "none",
@@ -1581,7 +1581,7 @@
             {
               "type": "rectangle",
               "id": "r85",
-              "name": "内框上",
+              "name": "inner-frame-top",
               "x": 96,
               "y": 96,
               "width": 744,
@@ -1596,7 +1596,7 @@
             {
               "type": "rectangle",
               "id": "r86",
-              "name": "内框下",
+              "name": "inner-frame-bottom",
               "x": 96,
               "y": 719,
               "width": 744,
@@ -1611,7 +1611,7 @@
             {
               "type": "rectangle",
               "id": "r87",
-              "name": "内框左",
+              "name": "inner-frame-left",
               "x": 96,
               "y": 96,
               "width": 4,
@@ -1626,7 +1626,7 @@
             {
               "type": "rectangle",
               "id": "r88",
-              "name": "内框右",
+              "name": "inner-frame-right",
               "x": 836,
               "y": 96,
               "width": 4,
@@ -1641,7 +1641,7 @@
             {
               "type": "frame",
               "id": "f107",
-              "name": "图片位",
+              "name": "image-slot",
               "x": 0,
               "y": 0,
               "width": 936,
@@ -1660,7 +1660,7 @@
                 {
                   "type": "icon_font",
                   "id": "i108",
-                  "name": "图片位图标",
+                  "name": "image-slot-icon",
                   "iconFontName": "image",
                   "width": 52,
                   "height": 52,
@@ -1674,9 +1674,9 @@
                 {
                   "type": "text",
                   "id": "t109",
-                  "name": "图片位提示",
-                  "content": "拖一张有门洞或树枝的照片",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "image-slot-hint",
+                  "content": "Drop in a doorway or branch shot",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 600,
                   "fill": [
@@ -1694,9 +1694,9 @@
                 {
                   "type": "text",
                   "id": "t110",
-                  "name": "图片位规格",
-                  "content": "拖进来后参考线还在，直接对照",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "image-slot-spec",
+                  "content": "The guides stay on top to compare",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 400,
                   "fill": [
@@ -1718,7 +1718,7 @@
         {
           "type": "frame",
           "id": "f106",
-          "name": "要点区",
+          "name": "points-area",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1729,7 +1729,7 @@
             {
               "type": "frame",
               "id": "f99",
-              "name": "要点",
+              "name": "point",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1740,7 +1740,7 @@
                 {
                   "type": "frame",
                   "id": "f94",
-                  "name": "要点标记",
+                  "name": "point-marker",
                   "width": 44,
                   "height": 44,
                   "layout": "horizontal",
@@ -1757,7 +1757,7 @@
                     {
                       "type": "icon_font",
                       "id": "i95",
-                      "name": "要点图标",
+                      "name": "point-icon",
                       "iconFontName": "check",
                       "width": 24,
                       "height": 24,
@@ -1773,7 +1773,7 @@
                 {
                   "type": "frame",
                   "id": "f98",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1784,9 +1784,9 @@
                     {
                       "type": "text",
                       "id": "t96",
-                      "name": "要点标题",
-                      "content": "前景压暗一点",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Darken the foreground",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -1803,9 +1803,9 @@
                     {
                       "type": "text",
                       "id": "t97",
-                      "name": "要点说明",
-                      "content": "外框暗、主体亮，视线自己就走进去了。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "Dark frame, bright subject: the eye walks right in.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -1826,7 +1826,7 @@
             {
               "type": "frame",
               "id": "f105",
-              "name": "要点",
+              "name": "point",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1837,7 +1837,7 @@
                 {
                   "type": "frame",
                   "id": "f100",
-                  "name": "要点标记",
+                  "name": "point-marker",
                   "width": 44,
                   "height": 44,
                   "layout": "horizontal",
@@ -1854,7 +1854,7 @@
                     {
                       "type": "icon_font",
                       "id": "i101",
-                      "name": "要点图标",
+                      "name": "point-icon",
                       "iconFontName": "x",
                       "width": 24,
                       "height": 24,
@@ -1870,7 +1870,7 @@
                 {
                   "type": "frame",
                   "id": "f104",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1881,9 +1881,9 @@
                     {
                       "type": "text",
                       "id": "t102",
-                      "name": "要点标题",
-                      "content": "外框喧宾夺主",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Frame steals the show",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -1900,9 +1900,9 @@
                     {
                       "type": "text",
                       "id": "t103",
-                      "name": "要点说明",
-                      "content": "外框占超过一半画面，主体就被吃掉了。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-note",
+                      "content": "If the frame fills half the shot, it swallows the subject.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -1925,7 +1925,7 @@
         {
           "type": "frame",
           "id": "f114",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1937,9 +1937,9 @@
             {
               "type": "text",
               "id": "t112",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -1956,7 +1956,7 @@
             {
               "type": "text",
               "id": "t113",
-              "name": "页码",
+              "name": "page-number",
               "content": "04 / 05",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -1981,7 +1981,7 @@
     {
       "type": "frame",
       "id": "f146",
-      "name": "05 收尾",
+      "name": "05-recap",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -2003,7 +2003,7 @@
         {
           "type": "frame",
           "id": "f119",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -2014,7 +2014,7 @@
             {
               "type": "frame",
               "id": "f116",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2035,9 +2035,9 @@
                 {
                   "type": "text",
                   "id": "t117",
-                  "name": "标签文字",
-                  "content": "收尾",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Recap",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 700,
                   "fill": [
@@ -2056,9 +2056,9 @@
             {
               "type": "text",
               "id": "t118",
-              "name": "收尾标题",
-              "content": "下次举起手机前\n先过这三句",
-              "fontFamily": "Noto Sans SC",
+              "name": "recap-title",
+              "content": "Before you raise your phone,\nrun these three",
+              "fontFamily": "Inter",
               "fontSize": 64,
               "fontWeight": 700,
               "fill": [
@@ -2077,7 +2077,7 @@
         {
           "type": "frame",
           "id": "f142",
-          "name": "收尾主体",
+          "name": "recap-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2089,7 +2089,7 @@
             {
               "type": "frame",
               "id": "f141",
-              "name": "自检区",
+              "name": "checklist-area",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2100,7 +2100,7 @@
                 {
                   "type": "frame",
                   "id": "f125",
-                  "name": "自检项",
+                  "name": "checklist-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2120,7 +2120,7 @@
                     {
                       "type": "frame",
                       "id": "f120",
-                      "name": "序号方",
+                      "name": "number-box",
                       "width": 52,
                       "height": 52,
                       "layout": "horizontal",
@@ -2137,7 +2137,7 @@
                         {
                           "type": "text",
                           "id": "t121",
-                          "name": "序号",
+                          "name": "number",
                           "content": "1",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -2158,7 +2158,7 @@
                     {
                       "type": "frame",
                       "id": "f124",
-                      "name": "自检文案",
+                      "name": "checklist-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2169,9 +2169,9 @@
                         {
                           "type": "text",
                           "id": "t122",
-                          "name": "自检标题",
-                          "content": "拍之前先决定主体是谁",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "checklist-title",
+                          "content": "Pick the subject first",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 600,
                           "fill": [
@@ -2188,9 +2188,9 @@
                         {
                           "type": "text",
                           "id": "t123",
-                          "name": "自检说明",
-                          "content": "一张只留一个主体，其余全是背景。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "checklist-note",
+                          "content": "One subject per shot; the rest is background.",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -2212,7 +2212,7 @@
                 {
                   "type": "frame",
                   "id": "f131",
-                  "name": "自检项",
+                  "name": "checklist-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2232,7 +2232,7 @@
                     {
                       "type": "frame",
                       "id": "f126",
-                      "name": "序号方",
+                      "name": "number-box",
                       "width": 52,
                       "height": 52,
                       "layout": "horizontal",
@@ -2249,7 +2249,7 @@
                         {
                           "type": "text",
                           "id": "t127",
-                          "name": "序号",
+                          "name": "number",
                           "content": "2",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -2270,7 +2270,7 @@
                     {
                       "type": "frame",
                       "id": "f130",
-                      "name": "自检文案",
+                      "name": "checklist-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2281,9 +2281,9 @@
                         {
                           "type": "text",
                           "id": "t128",
-                          "name": "自检标题",
-                          "content": "把主体挪出正中心",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "checklist-title",
+                          "content": "Move it off center",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 600,
                           "fill": [
@@ -2300,9 +2300,9 @@
                         {
                           "type": "text",
                           "id": "t129",
-                          "name": "自检说明",
-                          "content": "正中心是最安全也最平的位置。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "checklist-note",
+                          "content": "Dead center is the safest and the flattest spot.",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -2324,7 +2324,7 @@
                 {
                   "type": "frame",
                   "id": "f137",
-                  "name": "自检项",
+                  "name": "checklist-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2344,7 +2344,7 @@
                     {
                       "type": "frame",
                       "id": "f132",
-                      "name": "序号方",
+                      "name": "number-box",
                       "width": 52,
                       "height": 52,
                       "layout": "horizontal",
@@ -2361,7 +2361,7 @@
                         {
                           "type": "text",
                           "id": "t133",
-                          "name": "序号",
+                          "name": "number",
                           "content": "3",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -2382,7 +2382,7 @@
                     {
                       "type": "frame",
                       "id": "f136",
-                      "name": "自检文案",
+                      "name": "checklist-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2393,9 +2393,9 @@
                         {
                           "type": "text",
                           "id": "t134",
-                          "name": "自检标题",
-                          "content": "按快门前退后半步",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "checklist-title",
+                          "content": "Step back half a pace",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 600,
                           "fill": [
@@ -2412,9 +2412,9 @@
                         {
                           "type": "text",
                           "id": "t135",
-                          "name": "自检说明",
-                          "content": "多留出的边框，后期还能裁；裁没了补不回来。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "checklist-note",
+                          "content": "Extra margin can be cropped later; a lost edge can't come back.",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -2438,7 +2438,7 @@
             {
               "type": "frame",
               "id": "f140",
-              "name": "关注卡",
+              "name": "follow-card",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2458,9 +2458,9 @@
                 {
                   "type": "text",
                   "id": "t138",
-                  "name": "关注标题",
-                  "content": "拍完发出来",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "follow-title",
+                  "content": "Shoot it and post it",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 700,
                   "fill": [
@@ -2477,9 +2477,9 @@
                 {
                   "type": "text",
                   "id": "t139",
-                  "name": "关注副文案",
-                  "content": "评论区贴图，我挨个说说该怎么裁。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "follow-subcopy",
+                  "content": "Drop it in the comments and I'll suggest a crop.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -2501,7 +2501,7 @@
         {
           "type": "frame",
           "id": "f145",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -2513,9 +2513,9 @@
             {
               "type": "text",
               "id": "t143",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -2532,7 +2532,7 @@
             {
               "type": "text",
               "id": "t144",
-              "name": "页码",
+              "name": "page-number",
               "content": "05 / 05",
               "fontFamily": "Inter",
               "fontSize": 24,

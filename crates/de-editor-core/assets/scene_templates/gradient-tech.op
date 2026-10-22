@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "渐变科技风 · 16:9",
+  "name": "gradient-tech-16x9",
   "variables": {
     "c-grad-a": {
       "type": "color",
@@ -67,7 +67,7 @@
     {
       "type": "frame",
       "id": "f9",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -96,7 +96,7 @@
         {
           "type": "frame",
           "id": "f8",
-          "name": "01 封面 · 正文",
+          "name": "01-cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -112,7 +112,7 @@
             {
               "type": "frame",
               "id": "f11",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -157,9 +157,9 @@
                 {
                   "type": "text",
                   "id": "t12",
-                  "name": "标签文字",
-                  "content": "v3.0 · 公测",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "v3.0 · Public beta",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -178,7 +178,7 @@
             {
               "type": "frame",
               "id": "f3",
-              "name": "主张",
+              "name": "claim",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -189,9 +189,9 @@
                 {
                   "type": "text",
                   "id": "t1",
-                  "name": "主标题",
-                  "content": "让每一次调用\n都在 20 毫秒内返回",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "title",
+                  "content": "Every call\nback in under 20 ms",
+                  "fontFamily": "Inter",
                   "fontSize": 112,
                   "fontWeight": 700,
                   "fill": [
@@ -208,9 +208,9 @@
                 {
                   "type": "text",
                   "id": "t2",
-                  "name": "副标题",
-                  "content": "边缘推理网关 v3.0，现已开放公测。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "subtitle",
+                  "content": "Edge inference gateway v3.0, now in public beta.",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -229,7 +229,7 @@
             {
               "type": "frame",
               "id": "f5",
-              "name": "安装行",
+              "name": "install-row",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "vertical",
@@ -273,7 +273,7 @@
                 {
                   "type": "text",
                   "id": "t4",
-                  "name": "安装命令",
+                  "name": "install-command",
                   "content": "$ npm i -g edgegate && edgegate up",
                   "fontFamily": "Inter",
                   "fontSize": 28,
@@ -296,7 +296,7 @@
         {
           "type": "frame",
           "id": "f10",
-          "name": "01 封面 · 装饰",
+          "name": "01-cover-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -305,7 +305,7 @@
             {
               "type": "rectangle",
               "id": "r6",
-              "name": "光晕",
+              "name": "glow",
               "width": 1500,
               "height": 1500,
               "cornerRadius": 750,
@@ -333,7 +333,7 @@
             {
               "type": "rectangle",
               "id": "r7",
-              "name": "光晕",
+              "name": "glow",
               "width": 900,
               "height": 900,
               "cornerRadius": 450,
@@ -367,7 +367,7 @@
     {
       "type": "frame",
       "id": "f28",
-      "name": "02 痛点",
+      "name": "02-pain-points",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -396,7 +396,7 @@
         {
           "type": "frame",
           "id": "f27",
-          "name": "02 痛点 · 正文",
+          "name": "02-pain-points-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -412,7 +412,7 @@
             {
               "type": "frame",
               "id": "f32",
-              "name": "页头",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -423,9 +423,9 @@
                 {
                   "type": "text",
                   "id": "t30",
-                  "name": "页标题",
-                  "content": "在边缘跑推理，卡在三件事上",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Inference at the edge stalls on three things",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -442,9 +442,9 @@
                 {
                   "type": "text",
                   "id": "t31",
-                  "name": "页副标题",
-                  "content": "都不是模型的问题，是它前面那一层的问题。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "None of them is the model. It's the layer in front of it.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -463,7 +463,7 @@
             {
               "type": "frame",
               "id": "f34",
-              "name": "痛点区",
+              "name": "pain-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -475,7 +475,7 @@
                 {
                   "type": "frame",
                   "id": "f33",
-                  "name": "痛点网格",
+                  "name": "pain-grid",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -486,7 +486,7 @@
                     {
                       "type": "frame",
                       "id": "f16",
-                      "name": "痛点卡",
+                      "name": "pain-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -530,7 +530,7 @@
                         {
                           "type": "text",
                           "id": "t13",
-                          "name": "痛点序号",
+                          "name": "pain-index",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -549,9 +549,9 @@
                         {
                           "type": "text",
                           "id": "t14",
-                          "name": "痛点标题",
-                          "content": "冷启动吃掉了首包",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-title",
+                          "content": "Cold starts eat the first byte",
+                          "fontFamily": "Inter",
                           "fontSize": 36,
                           "fontWeight": 600,
                           "fill": [
@@ -568,9 +568,9 @@
                         {
                           "type": "text",
                           "id": "t15",
-                          "name": "痛点说明",
-                          "content": "函数实例每次唤醒要 800ms，用户看到的却是整整一秒的白屏。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-note",
+                          "content": "Each function wake-up takes 800 ms, and users stare at a blank screen for a full second.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -589,7 +589,7 @@
                     {
                       "type": "frame",
                       "id": "f20",
-                      "name": "痛点卡",
+                      "name": "pain-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -633,7 +633,7 @@
                         {
                           "type": "text",
                           "id": "t17",
-                          "name": "痛点序号",
+                          "name": "pain-index",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -652,9 +652,9 @@
                         {
                           "type": "text",
                           "id": "t18",
-                          "name": "痛点标题",
-                          "content": "账单没法归因",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-title",
+                          "content": "Bills you can't attribute",
+                          "fontFamily": "Inter",
                           "fontSize": 36,
                           "fontWeight": 600,
                           "fill": [
@@ -671,9 +671,9 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "痛点说明",
-                          "content": "月底一张总额，分不清哪个模型、哪条链路花掉的。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-note",
+                          "content": "One total at month end, with no way to tell which model or route spent it.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -692,7 +692,7 @@
                     {
                       "type": "frame",
                       "id": "f24",
-                      "name": "痛点卡",
+                      "name": "pain-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -736,7 +736,7 @@
                         {
                           "type": "text",
                           "id": "t21",
-                          "name": "痛点序号",
+                          "name": "pain-index",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -755,9 +755,9 @@
                         {
                           "type": "text",
                           "id": "t22",
-                          "name": "痛点标题",
-                          "content": "换云就得重写",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-title",
+                          "content": "New cloud, full rewrite",
+                          "fontFamily": "Inter",
                           "fontSize": 36,
                           "fontWeight": 600,
                           "fill": [
@@ -774,9 +774,9 @@
                         {
                           "type": "text",
                           "id": "t23",
-                          "name": "痛点说明",
-                          "content": "每家的运行时都不一样，迁移一次等于把接入层重做一遍。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pain-note",
+                          "content": "Every provider's runtime differs, so each migration means rebuilding the access layer.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -801,7 +801,7 @@
         {
           "type": "frame",
           "id": "f29",
-          "name": "02 痛点 · 装饰",
+          "name": "02-pain-points-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -810,7 +810,7 @@
             {
               "type": "rectangle",
               "id": "r25",
-              "name": "光晕",
+              "name": "glow",
               "width": 1200,
               "height": 1200,
               "cornerRadius": 600,
@@ -838,7 +838,7 @@
             {
               "type": "rectangle",
               "id": "r26",
-              "name": "光晕",
+              "name": "glow",
               "width": 900,
               "height": 900,
               "cornerRadius": 450,
@@ -872,7 +872,7 @@
     {
       "type": "frame",
       "id": "f53",
-      "name": "03 架构",
+      "name": "03-architecture",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -901,7 +901,7 @@
         {
           "type": "frame",
           "id": "f52",
-          "name": "03 架构 · 正文",
+          "name": "03-architecture-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -917,7 +917,7 @@
             {
               "type": "frame",
               "id": "f57",
-              "name": "页头",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -928,9 +928,9 @@
                 {
                   "type": "text",
                   "id": "t55",
-                  "name": "页标题",
-                  "content": "三层，一层只做一件事",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Three layers, one job each",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -947,9 +947,9 @@
                 {
                   "type": "text",
                   "id": "t56",
-                  "name": "页副标题",
-                  "content": "自上而下，每一层都能单独替换。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Top to bottom, every layer can be swapped on its own.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -968,7 +968,7 @@
             {
               "type": "frame",
               "id": "f59",
-              "name": "架构区",
+              "name": "architecture-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -980,7 +980,7 @@
                 {
                   "type": "frame",
                   "id": "f58",
-                  "name": "架构堆叠",
+                  "name": "architecture-stack",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -991,7 +991,7 @@
                     {
                       "type": "frame",
                       "id": "f39",
-                      "name": "架构层",
+                      "name": "architecture-layer",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1035,7 +1035,7 @@
                         {
                           "type": "frame",
                           "id": "f37",
-                          "name": "层头",
+                          "name": "layer-header",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1046,9 +1046,9 @@
                             {
                               "type": "text",
                               "id": "t35",
-                              "name": "层名",
-                              "content": "接入层",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "layer-name",
+                              "content": "Access layer",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -1065,7 +1065,7 @@
                             {
                               "type": "text",
                               "id": "t36",
-                              "name": "层英文名",
+                              "name": "layer-subname",
                               "content": "Gateway",
                               "fontFamily": "Inter",
                               "fontSize": 26,
@@ -1086,9 +1086,9 @@
                         {
                           "type": "text",
                           "id": "t38",
-                          "name": "层说明",
-                          "content": "一个 Anycast 入口，就近落到最快的可用区。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "layer-note",
+                          "content": "One Anycast entry point, routed to the nearest fast zone.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1107,7 +1107,7 @@
                     {
                       "type": "frame",
                       "id": "f44",
-                      "name": "架构层",
+                      "name": "architecture-layer",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1151,7 +1151,7 @@
                         {
                           "type": "frame",
                           "id": "f42",
-                          "name": "层头",
+                          "name": "layer-header",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1162,9 +1162,9 @@
                             {
                               "type": "text",
                               "id": "t40",
-                              "name": "层名",
-                              "content": "调度层",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "layer-name",
+                              "content": "Scheduling layer",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -1181,7 +1181,7 @@
                             {
                               "type": "text",
                               "id": "t41",
-                              "name": "层英文名",
+                              "name": "layer-subname",
                               "content": "Scheduler",
                               "fontFamily": "Inter",
                               "fontSize": 26,
@@ -1202,9 +1202,9 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "层说明",
-                          "content": "按延迟预算和单价实时选模型，超时自动降级。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "layer-note",
+                          "content": "Picks a model live by latency budget and price; falls back on timeout.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1223,7 +1223,7 @@
                     {
                       "type": "frame",
                       "id": "f49",
-                      "name": "架构层",
+                      "name": "architecture-layer",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1267,7 +1267,7 @@
                         {
                           "type": "frame",
                           "id": "f47",
-                          "name": "层头",
+                          "name": "layer-header",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1278,9 +1278,9 @@
                             {
                               "type": "text",
                               "id": "t45",
-                              "name": "层名",
-                              "content": "运行层",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "layer-name",
+                              "content": "Execution layer",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -1297,7 +1297,7 @@
                             {
                               "type": "text",
                               "id": "t46",
-                              "name": "层英文名",
+                              "name": "layer-subname",
                               "content": "Runtime",
                               "fontFamily": "Inter",
                               "fontSize": 26,
@@ -1318,9 +1318,9 @@
                         {
                           "type": "text",
                           "id": "t48",
-                          "name": "层说明",
-                          "content": "常驻实例池，冷启动摊薄到 3 毫秒以内。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "layer-note",
+                          "content": "A warm instance pool keeps cold starts under 3 ms.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1345,7 +1345,7 @@
         {
           "type": "frame",
           "id": "f54",
-          "name": "03 架构 · 装饰",
+          "name": "03-architecture-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1354,7 +1354,7 @@
             {
               "type": "rectangle",
               "id": "r50",
-              "name": "光晕",
+              "name": "glow",
               "width": 1300,
               "height": 1300,
               "cornerRadius": 650,
@@ -1382,7 +1382,7 @@
             {
               "type": "rectangle",
               "id": "r51",
-              "name": "光晕",
+              "name": "glow",
               "width": 820,
               "height": 820,
               "cornerRadius": 410,
@@ -1416,7 +1416,7 @@
     {
       "type": "frame",
       "id": "f94",
-      "name": "04 性能",
+      "name": "04-performance",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1445,7 +1445,7 @@
         {
           "type": "frame",
           "id": "f93",
-          "name": "04 性能 · 正文",
+          "name": "04-performance-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1461,7 +1461,7 @@
             {
               "type": "frame",
               "id": "f97",
-              "name": "页头",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1472,9 +1472,9 @@
                 {
                   "type": "text",
                   "id": "t96",
-                  "name": "页标题",
-                  "content": "数字是压测出来的，不是估的",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Load-tested numbers, not estimates",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -1493,7 +1493,7 @@
             {
               "type": "frame",
               "id": "f98",
-              "name": "性能居中",
+              "name": "performance-center",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1505,7 +1505,7 @@
                 {
                   "type": "frame",
                   "id": "f90",
-                  "name": "性能区",
+                  "name": "performance-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1516,7 +1516,7 @@
                     {
                       "type": "frame",
                       "id": "f89",
-                      "name": "性能网格",
+                      "name": "performance-grid",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1527,7 +1527,7 @@
                         {
                           "type": "frame",
                           "id": "f74",
-                          "name": "性能卡",
+                          "name": "performance-card",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1571,7 +1571,7 @@
                             {
                               "type": "frame",
                               "id": "f71",
-                              "name": "数值",
+                              "name": "value",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1582,7 +1582,7 @@
                                 {
                                   "type": "text",
                                   "id": "t68",
-                                  "name": "数值文字",
+                                  "name": "value-text",
                                   "content": "20",
                                   "fontFamily": "Inter",
                                   "fontSize": 132,
@@ -1601,7 +1601,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f70",
-                                  "name": "单位",
+                                  "name": "unit",
                                   "width": "fit_content",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1618,7 +1618,7 @@
                                     {
                                       "type": "text",
                                       "id": "t69",
-                                      "name": "单位文字",
+                                      "name": "unit-text",
                                       "content": "ms",
                                       "fontFamily": "Inter",
                                       "fontSize": 40,
@@ -1641,9 +1641,9 @@
                             {
                               "type": "text",
                               "id": "t72",
-                              "name": "指标名",
-                              "content": "P50 端到端",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "metric-name",
+                              "content": "P50 end to end",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -1660,9 +1660,9 @@
                             {
                               "type": "text",
                               "id": "t73",
-                              "name": "指标说明",
-                              "content": "含调度与网络",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "metric-note",
+                              "content": "Incl. routing and network",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -1681,7 +1681,7 @@
                         {
                           "type": "frame",
                           "id": "f81",
-                          "name": "性能卡",
+                          "name": "performance-card",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1725,7 +1725,7 @@
                             {
                               "type": "frame",
                               "id": "f78",
-                              "name": "数值",
+                              "name": "value",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1736,7 +1736,7 @@
                                 {
                                   "type": "text",
                                   "id": "t75",
-                                  "name": "数值文字",
+                                  "name": "value-text",
                                   "content": "3",
                                   "fontFamily": "Inter",
                                   "fontSize": 132,
@@ -1755,7 +1755,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f77",
-                                  "name": "单位",
+                                  "name": "unit",
                                   "width": "fit_content",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1772,7 +1772,7 @@
                                     {
                                       "type": "text",
                                       "id": "t76",
-                                      "name": "单位文字",
+                                      "name": "unit-text",
                                       "content": "ms",
                                       "fontFamily": "Inter",
                                       "fontSize": 40,
@@ -1795,9 +1795,9 @@
                             {
                               "type": "text",
                               "id": "t79",
-                              "name": "指标名",
-                              "content": "冷启动",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "metric-name",
+                              "content": "Cold start",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -1814,9 +1814,9 @@
                             {
                               "type": "text",
                               "id": "t80",
-                              "name": "指标说明",
-                              "content": "常驻池摊薄后",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "metric-note",
+                              "content": "With the warm pool",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -1835,7 +1835,7 @@
                         {
                           "type": "frame",
                           "id": "f88",
-                          "name": "性能卡",
+                          "name": "performance-card",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1879,7 +1879,7 @@
                             {
                               "type": "frame",
                               "id": "f85",
-                              "name": "数值",
+                              "name": "value",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1890,7 +1890,7 @@
                                 {
                                   "type": "text",
                                   "id": "t82",
-                                  "name": "数值文字",
+                                  "name": "value-text",
                                   "content": "62",
                                   "fontFamily": "Inter",
                                   "fontSize": 132,
@@ -1909,7 +1909,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f84",
-                                  "name": "单位",
+                                  "name": "unit",
                                   "width": "fit_content",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1926,7 +1926,7 @@
                                     {
                                       "type": "text",
                                       "id": "t83",
-                                      "name": "单位文字",
+                                      "name": "unit-text",
                                       "content": "%",
                                       "fontFamily": "Inter",
                                       "fontSize": 40,
@@ -1949,9 +1949,9 @@
                             {
                               "type": "text",
                               "id": "t86",
-                              "name": "指标名",
-                              "content": "成本下降",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "metric-name",
+                              "content": "Lower cost",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -1968,9 +1968,9 @@
                             {
                               "type": "text",
                               "id": "t87",
-                              "name": "指标说明",
-                              "content": "同等 QPS 对比自建",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "metric-note",
+                              "content": "Vs. self-hosted at equal QPS",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -1991,7 +1991,7 @@
                     {
                       "type": "frame",
                       "id": "f67",
-                      "name": "延迟对比",
+                      "name": "latency-comparison",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2035,9 +2035,9 @@
                         {
                           "type": "text",
                           "id": "t60",
-                          "name": "对比标题",
-                          "content": "端到端延迟对比",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "comparison-title",
+                          "content": "End-to-end latency",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 600,
                           "fill": [
@@ -2054,7 +2054,7 @@
                         {
                           "type": "frame",
                           "id": "f63",
-                          "name": "对比条组",
+                          "name": "comparison-bars",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2065,9 +2065,9 @@
                             {
                               "type": "text",
                               "id": "t61",
-                              "name": "条目标签",
-                              "content": "本产品 · 20ms",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "item-label",
+                              "content": "EdgeGate · 20ms",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 500,
                               "fill": [
@@ -2084,7 +2084,7 @@
                             {
                               "type": "rectangle",
                               "id": "r62",
-                              "name": "对比条",
+                              "name": "comparison-bar",
                               "width": 152,
                               "height": 16,
                               "cornerRadius": 999,
@@ -2100,7 +2100,7 @@
                         {
                           "type": "frame",
                           "id": "f66",
-                          "name": "对比条组",
+                          "name": "comparison-bars",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2111,9 +2111,9 @@
                             {
                               "type": "text",
                               "id": "t64",
-                              "name": "条目标签",
-                              "content": "自建方案 · 210ms",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "item-label",
+                              "content": "Self-hosted · 210ms",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 500,
                               "fill": [
@@ -2130,7 +2130,7 @@
                             {
                               "type": "rectangle",
                               "id": "r65",
-                              "name": "对比条",
+                              "name": "comparison-bar",
                               "width": 1600,
                               "height": 16,
                               "cornerRadius": 999,
@@ -2154,7 +2154,7 @@
         {
           "type": "frame",
           "id": "f95",
-          "name": "04 性能 · 装饰",
+          "name": "04-performance-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2163,7 +2163,7 @@
             {
               "type": "rectangle",
               "id": "r91",
-              "name": "光晕",
+              "name": "glow",
               "width": 1100,
               "height": 1100,
               "cornerRadius": 550,
@@ -2191,7 +2191,7 @@
             {
               "type": "rectangle",
               "id": "r92",
-              "name": "光晕",
+              "name": "glow",
               "width": 980,
               "height": 980,
               "cornerRadius": 490,
@@ -2225,7 +2225,7 @@
     {
       "type": "frame",
       "id": "f121",
-      "name": "05 客户",
+      "name": "05-customers",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -2254,7 +2254,7 @@
         {
           "type": "frame",
           "id": "f120",
-          "name": "05 客户 · 正文",
+          "name": "05-customers-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2270,7 +2270,7 @@
             {
               "type": "frame",
               "id": "f125",
-              "name": "页头",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2281,9 +2281,9 @@
                 {
                   "type": "text",
                   "id": "t123",
-                  "name": "页标题",
-                  "content": "已经在生产环境上跑",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Already running in production",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -2300,9 +2300,9 @@
                 {
                   "type": "text",
                   "id": "t124",
-                  "name": "页副标题",
-                  "content": "八家团队，日均 27 亿次调用。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Eight teams, 2.7 billion calls a day.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -2321,7 +2321,7 @@
             {
               "type": "frame",
               "id": "f126",
-              "name": "Logo 区",
+              "name": "logo-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2333,7 +2333,7 @@
                 {
                   "type": "frame",
                   "id": "f117",
-                  "name": "Logo 网格",
+                  "name": "logo-grid",
                   "width": "fill_container",
                   "height": 420,
                   "layout": "vertical",
@@ -2344,7 +2344,7 @@
                     {
                       "type": "frame",
                       "id": "f115",
-                      "name": "Logo 行",
+                      "name": "logo-row",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "horizontal",
@@ -2355,7 +2355,7 @@
                         {
                           "type": "frame",
                           "id": "f99",
-                          "name": "Logo 位 1",
+                          "name": "logo-slot-1",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -2396,9 +2396,9 @@
                             {
                               "type": "text",
                               "id": "t100",
-                              "name": "占位提示",
-                              "content": "拖入 Logo",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "placeholder-hint",
+                              "content": "Drop logo",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -2417,7 +2417,7 @@
                         {
                           "type": "frame",
                           "id": "f101",
-                          "name": "Logo 位 2",
+                          "name": "logo-slot-2",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -2458,9 +2458,9 @@
                             {
                               "type": "text",
                               "id": "t102",
-                              "name": "占位提示",
-                              "content": "拖入 Logo",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "placeholder-hint",
+                              "content": "Drop logo",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -2479,7 +2479,7 @@
                         {
                           "type": "frame",
                           "id": "f103",
-                          "name": "Logo 位 3",
+                          "name": "logo-slot-3",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -2520,9 +2520,9 @@
                             {
                               "type": "text",
                               "id": "t104",
-                              "name": "占位提示",
-                              "content": "拖入 Logo",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "placeholder-hint",
+                              "content": "Drop logo",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -2541,7 +2541,7 @@
                         {
                           "type": "frame",
                           "id": "f105",
-                          "name": "Logo 位 4",
+                          "name": "logo-slot-4",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -2582,9 +2582,9 @@
                             {
                               "type": "text",
                               "id": "t106",
-                              "name": "占位提示",
-                              "content": "拖入 Logo",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "placeholder-hint",
+                              "content": "Drop logo",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -2605,7 +2605,7 @@
                     {
                       "type": "frame",
                       "id": "f116",
-                      "name": "Logo 行",
+                      "name": "logo-row",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "horizontal",
@@ -2616,7 +2616,7 @@
                         {
                           "type": "frame",
                           "id": "f107",
-                          "name": "Logo 位 5",
+                          "name": "logo-slot-5",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -2657,9 +2657,9 @@
                             {
                               "type": "text",
                               "id": "t108",
-                              "name": "占位提示",
-                              "content": "拖入 Logo",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "placeholder-hint",
+                              "content": "Drop logo",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -2678,7 +2678,7 @@
                         {
                           "type": "frame",
                           "id": "f109",
-                          "name": "Logo 位 6",
+                          "name": "logo-slot-6",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -2719,9 +2719,9 @@
                             {
                               "type": "text",
                               "id": "t110",
-                              "name": "占位提示",
-                              "content": "拖入 Logo",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "placeholder-hint",
+                              "content": "Drop logo",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -2740,7 +2740,7 @@
                         {
                           "type": "frame",
                           "id": "f111",
-                          "name": "Logo 位 7",
+                          "name": "logo-slot-7",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -2781,9 +2781,9 @@
                             {
                               "type": "text",
                               "id": "t112",
-                              "name": "占位提示",
-                              "content": "拖入 Logo",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "placeholder-hint",
+                              "content": "Drop logo",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -2802,7 +2802,7 @@
                         {
                           "type": "frame",
                           "id": "f113",
-                          "name": "Logo 位 8",
+                          "name": "logo-slot-8",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -2843,9 +2843,9 @@
                             {
                               "type": "text",
                               "id": "t114",
-                              "name": "占位提示",
-                              "content": "拖入 Logo",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "placeholder-hint",
+                              "content": "Drop logo",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -2872,7 +2872,7 @@
         {
           "type": "frame",
           "id": "f122",
-          "name": "05 客户 · 装饰",
+          "name": "05-customers-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2881,7 +2881,7 @@
             {
               "type": "rectangle",
               "id": "r118",
-              "name": "光晕",
+              "name": "glow",
               "width": 1400,
               "height": 1400,
               "cornerRadius": 700,
@@ -2909,7 +2909,7 @@
             {
               "type": "rectangle",
               "id": "r119",
-              "name": "光晕",
+              "name": "glow",
               "width": 760,
               "height": 760,
               "cornerRadius": 380,
@@ -2972,7 +2972,7 @@
         {
           "type": "frame",
           "id": "f137",
-          "name": "06 CTA · 正文",
+          "name": "06-cta-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2988,7 +2988,7 @@
             {
               "type": "frame",
               "id": "f140",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -3033,9 +3033,9 @@
                 {
                   "type": "text",
                   "id": "t141",
-                  "name": "标签文字",
-                  "content": "公测开放中",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Beta open",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -3054,7 +3054,7 @@
             {
               "type": "frame",
               "id": "f129",
-              "name": "结语",
+              "name": "closing",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3065,9 +3065,9 @@
                 {
                   "type": "text",
                   "id": "t127",
-                  "name": "结语标题",
-                  "content": "十分钟接完\n剩下的交给我们",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-title",
+                  "content": "Ten minutes to set up.\nWe handle the rest.",
+                  "fontFamily": "Inter",
                   "fontSize": 96,
                   "fontWeight": 700,
                   "fill": [
@@ -3084,9 +3084,9 @@
                 {
                   "type": "text",
                   "id": "t128",
-                  "name": "结语副标题",
-                  "content": "公测期不限调用量，接入文档一页写完。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-subtitle",
+                  "content": "Unlimited calls during the beta. The docs fit on one page.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -3105,7 +3105,7 @@
             {
               "type": "frame",
               "id": "f134",
-              "name": "行动区",
+              "name": "action-area",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -3116,7 +3116,7 @@
                 {
                   "type": "frame",
                   "id": "f131",
-                  "name": "安装卡",
+                  "name": "install-card",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3160,7 +3160,7 @@
                     {
                       "type": "text",
                       "id": "t130",
-                      "name": "安装命令",
+                      "name": "install-command",
                       "content": "$ npm i -g edgegate",
                       "fontFamily": "Inter",
                       "fontSize": 28,
@@ -3181,7 +3181,7 @@
                 {
                   "type": "frame",
                   "id": "f133",
-                  "name": "文档卡",
+                  "name": "docs-card",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3225,7 +3225,7 @@
                     {
                       "type": "text",
                       "id": "t132",
-                      "name": "文档地址",
+                      "name": "docs-url",
                       "content": "docs.edgegate.dev",
                       "fontFamily": "Inter",
                       "fontSize": 28,
@@ -3250,7 +3250,7 @@
         {
           "type": "frame",
           "id": "f139",
-          "name": "06 CTA · 装饰",
+          "name": "06-cta-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -3259,7 +3259,7 @@
             {
               "type": "rectangle",
               "id": "r135",
-              "name": "光晕",
+              "name": "glow",
               "width": 1600,
               "height": 1600,
               "cornerRadius": 800,
@@ -3287,7 +3287,7 @@
             {
               "type": "rectangle",
               "id": "r136",
-              "name": "光晕",
+              "name": "glow",
               "width": 1000,
               "height": 1000,
               "cornerRadius": 500,

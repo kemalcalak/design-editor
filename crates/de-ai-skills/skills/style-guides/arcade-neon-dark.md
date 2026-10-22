@@ -6,7 +6,7 @@ platform: card
 
 ## Style Scope
 
-This guide is self-contained and written for **Chinese social cards** — a swipeable series of fixed-canvas pages read on a phone, not a scrolling page and not an app screen. Apply its palette, tube language, spacing, and type treatments only when this exact guide is selected; do not import crypto, gaming, cyberpunk, or SaaS-dark patterns into it. Treat unnamed layout frames as structural by default: no fill, stroke, cornerRadius, or shadow unless the node is deliberately a signage panel, a neon tube, a vertical signboard, or a caption rail.
+This guide is self-contained and written for **social cards** — a swipeable series of fixed-canvas pages read on a phone, not a scrolling page and not an app screen. Apply its palette, tube language, spacing, and type treatments only when this exact guide is selected; do not import crypto, gaming, cyberpunk, or SaaS-dark patterns into it. Treat unnamed layout frames as structural by default: no fill, stroke, cornerRadius, or shadow unless the node is deliberately a signage panel, a neon tube, a vertical signboard, or a caption rail.
 
 ## Style Summary
 
@@ -16,15 +16,15 @@ Neon appears **only as tube**. A colour in this style is a 2px rounded-rect stro
 
 There are three tubes: magenta, cyan, amber. **Two per card, and each appears at most twice.** A fourth colour (jade) exists and is capped at one appearance across the entire deck — the one sign on the street that's a different colour from all the others.
 
-Type is loud and Chinese. The display face is a genuine oblique Chinese sans — one of the very few that exists — and it carries every headline. It never sets body copy; its personality becomes reading friction past two lines. Body is a geometric screen sans in acrylic white at three brightnesses. The other signature device is the **vertical signboard**: a narrow 120-160px frame of stacked characters hard against the right edge of the cover, which is what shophouse signage actually does and which Latin typography structurally cannot do.
+Type is loud and condensed. The display face is a tall signage grotesque — the letterform of a lit fascia over a shop door — and it carries every headline. It never sets body copy; its compression becomes reading friction past two lines. Body is a geometric screen sans in acrylic white at three brightnesses. The other signature device is the **vertical signboard**: a narrow 120-160px frame of stacked upright capitals hard against the right edge of the cover, which is what a blade sign projecting from a shophouse wall actually does.
 
 Key aesthetics:
 
 - **Light-stained sky, not black**: `#0F1225` at chroma 0.038 — the tube needs air to glow into
 - **Neon is a stroke, never a fill**: 2px tube + a 12% radial bloom underneath, and nothing else
 - **Two tubes per card, twice each**: a third hue on one page is a bug
-- **Vertical signboard**: stacked characters in a 120-160px rail, right edge, cover only
-- **Oblique Chinese display over geometric sans body**: headline face never touches body copy
+- **Vertical signboard**: stacked upright capitals in a 120-160px rail, right edge, cover only
+- **Condensed signage display over geometric sans body**: headline face never touches body copy
 - **Acrylic white at three brightnesses**: `#E3E8EE` / `#ABB2BA` / `#757E88`
 - **Wet-street fade**: one bottom-edge linear to the deepest night, 200px tall, once per deck
 - **Panels are matte**: signage panels are flat fills with no glow — only tubes glow
@@ -84,19 +84,19 @@ Two tubes per card. Each tube colour at most twice on that card. The bloom count
 
 | Role             | Family                                    | Range         | Usage                                                    |
 | ---------------- | ----------------------------------------- | ------------- | -------------------------------------------------------- |
-| Display          | Anton, 得意黑 Smiley Sans, Noto Sans SC     | 88px and up   | Every headline, signboard, and large numeral             |
-| Body / Interface | Schibsted Grotesk, Glow Sans SC, Noto Sans SC | 64px and down | Body, deck lines, list rows, captions, page numbers |
+| Display          | Anton, Space Grotesk                      | 88px and up   | Every headline, signboard, and large numeral             |
+| Body / Interface | Schibsted Grotesk, DM Sans                | 64px and down | Body, deck lines, list rows, captions, page numbers      |
 | Data / Numerals  | Schibsted Grotesk                         | any           | Every figure, with tabular-nums on                       |
 
-得意黑 is one of the very few Chinese faces with a true designed oblique rather than a synthesised skew, which is exactly why it is here — and exactly why it must never set body copy: two lines of it and the reader is fighting the letterforms. All faces named are OFL.
+Anton is a condensed signage grotesque with a single heavy weight, which is exactly why it is here — and exactly why it must never set body copy: two lines of it and the reader is fighting the compressed counters. Space Grotesk is the fallback because it keeps the same flat-terminal, lit-letter character when Anton is unavailable. All faces named are OFL.
 
-The Latin face leads every fallback chain, so digits and Latin words are set by Anton / Schibsted Grotesk instead of by the Chinese face's own Latin.
+Every chain ends in a generic family (`sans-serif`), and figures always come from Schibsted Grotesk with `tabular-nums` on, never from the display face's proportional digits.
 
 ### Type Scale
 
 | Level      | Size  | Font    | Weight | Tracking | Line Height | Usage                                     |
 | ---------- | ----- | ------- | ------ | -------- | ----------- | ----------------------------------------- |
-| Display XL | 168px | Display | 700    | -0.01em  | 1.05        | Cover headline, 2-6 characters            |
+| Display XL | 168px | Display | 700    | -0.01em  | 1.05        | Cover headline, 1-3 short words           |
 | Display L  | 120px | Display | 700    | -0.01em  | 1.10        | Cover headline, signboard, large numerals |
 | Display    | 88px  | Display | 700    | 0        | 1.15        | Interior headline, pull quote             |
 | Title 1    | 64px  | Body    | 700    | 0        | 1.25        | Page title                                |
@@ -117,7 +117,7 @@ The Latin face leads every fallback chain, so digits and Latin words are set by 
 | Semibold | 600   | Section titles, the emphasised run inside a body line       |
 | Bold     | 700   | Page titles and every display line                          |
 
-No `font-style: italic` on Han characters, ever — 得意黑's oblique is drawn into the face, and asking the browser to skew on top of it deforms every stroke. Emphasis in body copy is weight, or a tube underscore.
+No `font-style: italic` on the display face, ever — Anton ships no designed italic, and asking the browser to synthesise a skew deforms every stroke. Emphasis in body copy is weight, or a tube underscore; turn font synthesis off globally.
 
 ### Line Height
 
@@ -128,11 +128,11 @@ No `font-style: italic` on Han characters, ever — 得意黑's oblique is drawn
 
 ### Letter Spacing
 
-Body 0.02em; titles 0; display -0.01em. Latin all-caps labels +0.10em. Never apply Latin display tracking of -0.05em to Han text.
+Body 0.02em; titles 0; display -0.01em. All-caps labels +0.10em. Never push a condensed display face past -0.01em — its counters are already tight, and -0.05em at 120px fuses letters into a solid bar.
 
 ### Vertical Setting
 
-The signboard is set with `writing-mode: vertical-rl`. Latin words and multi-digit numbers inside a vertical run must be set upright (`text-orientation: upright`, and two-digit numbers combined) or they lie on their side and break the sign.
+The signboard is set as stacked upright capitals — `writing-mode: vertical-rl` with `text-orientation: upright`, or one capital per line centred in the rail. 3-8 letters maximum, line height 0.95-1.0 so the stack reads as one sign. Multi-digit numbers inside the run must be combined into one upright cell, and the word must never be rotated 90° on its side: a sideways word is a spine label, not a sign.
 
 ## Spacing System
 
@@ -215,5 +215,5 @@ arrow-right, arrow-up-right, chevron-right, chevron-down, zap, sparkles, moon, p
 - **No glitch, no scanlines, no chrome, no circuit traces, no rain droplets.** This is a night street, not cyberpunk. Figurative sci-fi props pull it straight into the cheap register.
 - **No third tube hue on a card**, and no more than two appearances per hue.
 - **Panels never glow.** Only tubes do. A glowing card edge reads as a game UI.
-- **得意黑 never sets body copy**, and never sets anything under 88px.
+- **The display face never sets body copy**, and never sets anything under 88px.
 - **No pure black.** `#000000` anywhere removes the atmospheric layer the whole palette is built on.

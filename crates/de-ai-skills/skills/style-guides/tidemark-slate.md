@@ -79,13 +79,13 @@ The amber was pulled down from L 0.660 to **L 0.600** to buy 3.67:1. A semantic 
 
 | Role             | Family                                          | Usage                                                   |
 | ---------------- | ----------------------------------------------- | ------------------------------------------------------- |
-| Display          | Familjen Grotesk, 思源黑体 Bold                   | Cover headline and page titles                          |
-| Body             | Geist, 霞鹜新晰黑                                 | Body copy, table text, annotations, captions            |
+| Display          | Familjen Grotesk, Space Grotesk                 | Cover headline and page titles                          |
+| Body             | Geist, Inter                                    | Body copy, table text, annotations, captions            |
 | Numerals         | IBM Plex Mono                                   | **Every figure, everywhere, without exception**          |
 
-Fallback stack: display `Noto Sans SC` 700 / body `Noto Sans SC` 400 / numerals `Inter` 500 with **tabular figures on**. If the render stack cannot switch on tabular figures, numeric column widths must be written as fixed values instead — an un-tabular numeral column is a broken column.
+Fallback stack: display `Space Grotesk` 700 / body `Inter` 400 / numerals `JetBrains Mono` 500 with **tabular figures on**. If the render stack cannot switch on tabular figures, numeric column widths must be written as fixed values instead — an un-tabular numeral column is a broken column.
 
-The Latin face is written **first** in every chain. Font matching is per-character: Latin faces carry no CJK codepoints, so Han characters fall through to the Chinese face automatically. Written the other way round, the Chinese face's own mediocre Latin swallows every digit and the paired Latin face never appears.
+Every chain ends in a generic family (`sans-serif` / `monospace`). A figure that falls through to the body face's proportional digits is the same defect as an un-tabular column: the widths drift and the row stops lining up.
 
 Forcing all numerals to mono is the cheapest and highest-yield credibility device in this deck. Figures line up across tiles, across table rows, and across axis labels without a single alignment rule being written.
 
@@ -102,7 +102,7 @@ Forcing all numerals to mono is the cheapest and highest-yield credibility devic
 | Table body        | 28px     | Body     | —        | Row text, impact lines, remediation lines        |
 | Tile sub-row      | 26px     | Body     | —        | The line under a tile value                      |
 | Annotation        | 26px     | Body     | —        | Notes, explanatory copy, source lines            |
-| Tile label        | 24px     | Body     | +2 / 0   | Uppercase, above the tile value. +2 on Latin runs, **0 on CJK** |
+| Tile label        | 24px     | Body     | +2 / 0   | Uppercase, above the tile value. +2 on uppercase runs, **0 on mixed case** |
 | Page number       | 24px     | Numerals | —        | Page numbers and quarter chips                   |
 
 **The page title is 56px, one step smaller than a comparable low-density deck sets it.** That is deliberate: at this density the title has to yield to the content. A 72px title on a 16-slot page is a title that has taken space away from the thing the page exists to show.
@@ -147,7 +147,7 @@ One shadow exists in the entire deck: `0 1px 2px rgba(20,32,45,.06)`, single lay
 
 The core device, and what separates this deck from a generic KPI card. Four stacked layers inside one `slate.panel` block at radius 8:
 
-1. **Label** — 24px, uppercase, letterSpacing +2 for Latin (**0 for a CJK label**), `ink.faint`
+1. **Label** — 24px, uppercase, letterSpacing +2 (**0 if a label has to stay mixed case**, e.g. a product name), `ink.faint`
 2. **Value** — mono 64px, `ink.slate`
 3. **Scale rule** — a 2px horizontal rule spanning the full tile width, with a **3px vertical marker in `mark.tide`** placed at the target's position along that rule
 4. **Delta chip** — a `buoy.*` dot, a mono figure, and a comparison word
@@ -161,7 +161,7 @@ Tile rows are **fixed at four tiles**. Three leaves an awkward gap; five squeeze
 A strictly semantic marker. Two forms only:
 
 - **Dot** — 12px circle in `buoy.green` / `buoy.amber` / `buoy.red`
-- **Pill** — height 36, radius 18, horizontal padding 16, same three fills. The height is set by the label, not the other way round: 24px CJK at 1.4 needs a ~34px line box, so a 28px pill could only fit by shrinking the type — which is the one thing a deck may never do
+- **Pill** — height 36, radius 18, horizontal padding 16, same three fills. The height is set by the label, not the other way round: a 24px label at 1.4 needs a ~34px line box, so a 28px pill could only fit by shrinking the type — which is the one thing a deck may never do
 
 The hard rule, not a suggestion: **any row carrying a buoy dot must also carry an owner column and a due-date column.** A status with no owner and no date is an ownerless status, which is worse than no status at all. If either column cannot be filled, delete the dot.
 

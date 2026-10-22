@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "问答体轮播 · 3:4 六板",
+  "name": "qa-carousel-3x4-six-boards",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f16",
-      "name": "01 开场 · 反问切口",
+      "name": "01-opener-question",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -54,7 +54,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "开场 · 反问切口 · 内容",
+          "name": "opener-question-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -71,7 +71,7 @@
             {
               "type": "frame",
               "id": "f10",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -82,7 +82,7 @@
                 {
                   "type": "frame",
                   "id": "f9",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -94,9 +94,9 @@
                     {
                       "type": "text",
                       "id": "t7",
-                      "name": "系列名",
-                      "content": "有问必答",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Ask Anything",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -113,7 +113,7 @@
                     {
                       "type": "text",
                       "id": "t8",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "01 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -136,7 +136,7 @@
             {
               "type": "frame",
               "id": "f5",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -152,7 +152,7 @@
                 {
                   "type": "path",
                   "id": "p1",
-                  "name": "粉笔线",
+                  "name": "chalk-line",
                   "d": "M 0 1 L 184.0 0 L 368.0 1 L 552.0 0 L 736.0 1 L 920.0 0 L 736.0 4 L 552.0 5 L 368.0 4 L 184.0 5 L 0.0 4 Z",
                   "width": 920,
                   "height": 5,
@@ -166,9 +166,9 @@
                 {
                   "type": "text",
                   "id": "t2",
-                  "name": "反问句",
-                  "content": "为什么你\n听懂了却\n讲不出来？",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "hook-question",
+                  "content": "Why can you\nget it but\nnot explain it?",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -185,7 +185,7 @@
                 {
                   "type": "path",
                   "id": "p3",
-                  "name": "粉笔线",
+                  "name": "chalk-line",
                   "d": "M 0 1 L 184.0 0 L 368.0 1 L 552.0 0 L 736.0 1 L 920.0 0 L 736.0 4 L 552.0 5 L 368.0 4 L 184.0 5 L 0.0 4 Z",
                   "width": 920,
                   "height": 5,
@@ -199,9 +199,9 @@
                 {
                   "type": "text",
                   "id": "t4",
-                  "name": "副标",
-                  "content": "四个最常被问到的问题，一板一个。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "subtitle",
+                  "content": "The four questions I get most, one board each.",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 400,
                   "fill": [
@@ -220,7 +220,7 @@
             {
               "type": "frame",
               "id": "f13",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -231,7 +231,7 @@
                 {
                   "type": "path",
                   "id": "p11",
-                  "name": "粉笔线",
+                  "name": "chalk-line",
                   "d": "M 0 1 L 184.0 0 L 368.0 1 L 552.0 0 L 736.0 1 L 920.0 0 L 736.0 2 L 552.0 3 L 368.0 2 L 184.0 3 L 0.0 2 Z",
                   "width": 920,
                   "height": 3,
@@ -245,9 +245,9 @@
                 {
                   "type": "text",
                   "id": "t12",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -268,7 +268,7 @@
         {
           "type": "frame",
           "id": "f14",
-          "name": "开场 · 反问切口 · 装饰",
+          "name": "opener-question-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -277,7 +277,7 @@
             {
               "type": "rectangle",
               "id": "r15",
-              "name": "擦痕",
+              "name": "eraser-smudge",
               "width": 680,
               "height": 680,
               "cornerRadius": 340,
@@ -312,7 +312,7 @@
     {
       "type": "frame",
       "id": "f42",
-      "name": "02 Q1 · 左右对开",
+      "name": "02-q1-split",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -327,7 +327,7 @@
         {
           "type": "frame",
           "id": "f32",
-          "name": "Q1 · 左右对开 · 内容",
+          "name": "q1-split-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -344,7 +344,7 @@
             {
               "type": "frame",
               "id": "f36",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -355,7 +355,7 @@
                 {
                   "type": "frame",
                   "id": "f35",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -367,9 +367,9 @@
                     {
                       "type": "text",
                       "id": "t33",
-                      "name": "系列名",
-                      "content": "有问必答",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Ask Anything",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -386,7 +386,7 @@
                     {
                       "type": "text",
                       "id": "t34",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "02 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -407,7 +407,7 @@
                 {
                   "type": "frame",
                   "id": "f31",
-                  "name": "问号编号",
+                  "name": "question-number",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -419,7 +419,7 @@
                     {
                       "type": "text",
                       "id": "t29",
-                      "name": "问号",
+                      "name": "question-mark",
                       "content": "Q",
                       "fontFamily": "Inter",
                       "fontSize": 48,
@@ -438,7 +438,7 @@
                     {
                       "type": "text",
                       "id": "t30",
-                      "name": "问号序数",
+                      "name": "question-ordinal",
                       "content": "1",
                       "fontFamily": "Inter",
                       "fontSize": 48,
@@ -461,7 +461,7 @@
             {
               "type": "frame",
               "id": "f28",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -477,9 +477,9 @@
                 {
                   "type": "text",
                   "id": "t17",
-                  "name": "问题",
-                  "content": "先复述，还是先做笔记？",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "question",
+                  "content": "Notes or recap first?",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -496,7 +496,7 @@
                 {
                   "type": "frame",
                   "id": "f27",
-                  "name": "对开",
+                  "name": "split",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -508,7 +508,7 @@
                     {
                       "type": "frame",
                       "id": "f21",
-                      "name": "半栏 · 先做笔记",
+                      "name": "half-notes-first",
                       "width": 440,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -519,9 +519,9 @@
                         {
                           "type": "text",
                           "id": "t18",
-                          "name": "半栏标签",
-                          "content": "先做笔记",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "half-label",
+                          "content": "Notes first",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -538,9 +538,9 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "半栏句",
-                          "content": "边听边记",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "half-line",
+                          "content": "Jot as you go",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 400,
                           "fill": [
@@ -557,9 +557,9 @@
                         {
                           "type": "text",
                           "id": "t20",
-                          "name": "半栏注解",
-                          "content": "手在忙，脑子就停了。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "half-note",
+                          "content": "Busy hands, idle mind.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -578,7 +578,7 @@
                     {
                       "type": "path",
                       "id": "p22",
-                      "name": "粉笔线",
+                      "name": "chalk-line",
                       "d": "M 0 1 L 0.8 0 L 1.6 1 L 2.4 0 L 3.2 1 L 4.0 0 L 3.2 280 L 2.4 281 L 1.6 280 L 0.8 281 L 0.0 280 Z",
                       "width": 4,
                       "height": 281,
@@ -592,7 +592,7 @@
                     {
                       "type": "frame",
                       "id": "f26",
-                      "name": "半栏 · 先复述",
+                      "name": "half-recap-first",
                       "width": 440,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -603,9 +603,9 @@
                         {
                           "type": "text",
                           "id": "t23",
-                          "name": "半栏标签",
-                          "content": "先复述",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "half-label",
+                          "content": "Recap first",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -622,9 +622,9 @@
                         {
                           "type": "text",
                           "id": "t24",
-                          "name": "半栏句",
-                          "content": "听完再讲",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "half-line",
+                          "content": "Hear, then say",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -641,9 +641,9 @@
                         {
                           "type": "text",
                           "id": "t25",
-                          "name": "半栏注解",
-                          "content": "讲不出的地方就是没懂。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "half-note",
+                          "content": "Where you stall is what you missed.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -666,7 +666,7 @@
             {
               "type": "frame",
               "id": "f39",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -677,7 +677,7 @@
                 {
                   "type": "path",
                   "id": "p37",
-                  "name": "粉笔线",
+                  "name": "chalk-line",
                   "d": "M 0 1 L 184.0 0 L 368.0 1 L 552.0 0 L 736.0 1 L 920.0 0 L 736.0 2 L 552.0 3 L 368.0 2 L 184.0 3 L 0.0 2 Z",
                   "width": 920,
                   "height": 3,
@@ -691,9 +691,9 @@
                 {
                   "type": "text",
                   "id": "t38",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -714,7 +714,7 @@
         {
           "type": "frame",
           "id": "f40",
-          "name": "Q1 · 左右对开 · 装饰",
+          "name": "q1-split-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -723,7 +723,7 @@
             {
               "type": "rectangle",
               "id": "r41",
-              "name": "擦痕",
+              "name": "eraser-smudge",
               "width": 600,
               "height": 600,
               "cornerRadius": 300,
@@ -758,7 +758,7 @@
     {
       "type": "frame",
       "id": "f67",
-      "name": "03 Q2 · 段落纯排",
+      "name": "03-q2-paragraphs",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -773,7 +773,7 @@
         {
           "type": "frame",
           "id": "f57",
-          "name": "Q2 · 段落纯排 · 内容",
+          "name": "q2-paragraphs-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -790,7 +790,7 @@
             {
               "type": "frame",
               "id": "f61",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -801,7 +801,7 @@
                 {
                   "type": "frame",
                   "id": "f60",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -813,9 +813,9 @@
                     {
                       "type": "text",
                       "id": "t58",
-                      "name": "系列名",
-                      "content": "有问必答",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Ask Anything",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -832,7 +832,7 @@
                     {
                       "type": "text",
                       "id": "t59",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "03 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -853,7 +853,7 @@
                 {
                   "type": "frame",
                   "id": "f56",
-                  "name": "问号编号",
+                  "name": "question-number",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -865,7 +865,7 @@
                     {
                       "type": "text",
                       "id": "t54",
-                      "name": "问号",
+                      "name": "question-mark",
                       "content": "Q",
                       "fontFamily": "Inter",
                       "fontSize": 48,
@@ -884,7 +884,7 @@
                     {
                       "type": "text",
                       "id": "t55",
-                      "name": "问号序数",
+                      "name": "question-ordinal",
                       "content": "2",
                       "fontFamily": "Inter",
                       "fontSize": 48,
@@ -907,7 +907,7 @@
             {
               "type": "frame",
               "id": "f53",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -923,9 +923,9 @@
                 {
                   "type": "text",
                   "id": "t51",
-                  "name": "问题",
-                  "content": "听懂和会讲差在哪？",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "question",
+                  "content": "Getting it vs. explaining it?",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -942,7 +942,7 @@
                 {
                   "type": "frame",
                   "id": "f52",
-                  "name": "正文区",
+                  "name": "body-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -953,7 +953,7 @@
                     {
                       "type": "frame",
                       "id": "f46",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -965,7 +965,7 @@
                         {
                           "type": "frame",
                           "id": "f44",
-                          "name": "段首标记位",
+                          "name": "para-marker-slot",
                           "width": 18,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -976,7 +976,7 @@
                             {
                               "type": "rectangle",
                               "id": "r43",
-                              "name": "段首标记",
+                              "name": "para-marker",
                               "width": 18,
                               "height": 18,
                               "fill": [
@@ -991,9 +991,9 @@
                         {
                           "type": "text",
                           "id": "t45",
-                          "name": "正文",
-                          "content": "听懂是识别，讲出来是重建。前者只要认得出这句话对，后者要你自己把它再造一遍。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body-text",
+                          "content": "Getting it is recognition; explaining it is rebuilding. One only asks you to spot that a sentence is right; the other makes you build it again yourself.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -1012,7 +1012,7 @@
                     {
                       "type": "frame",
                       "id": "f50",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1024,7 +1024,7 @@
                         {
                           "type": "frame",
                           "id": "f48",
-                          "name": "段首标记位",
+                          "name": "para-marker-slot",
                           "width": 18,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1035,7 +1035,7 @@
                             {
                               "type": "rectangle",
                               "id": "r47",
-                              "name": "段首标记",
+                              "name": "para-marker",
                               "width": 18,
                               "height": 18,
                               "fill": [
@@ -1050,9 +1050,9 @@
                         {
                           "type": "text",
                           "id": "t49",
-                          "name": "正文",
-                          "content": "所以「听懂了」这个感觉不可靠。它测的是熟悉度而不是掌握度，两件事在脑子里根本不一样。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body-text",
+                          "content": "So the feeling of \"I get it\" can't be trusted. It measures familiarity, not mastery, and in your head those are two different things.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -1075,7 +1075,7 @@
             {
               "type": "frame",
               "id": "f64",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1086,7 +1086,7 @@
                 {
                   "type": "path",
                   "id": "p62",
-                  "name": "粉笔线",
+                  "name": "chalk-line",
                   "d": "M 0 1 L 184.0 0 L 368.0 1 L 552.0 0 L 736.0 1 L 920.0 0 L 736.0 2 L 552.0 3 L 368.0 2 L 184.0 3 L 0.0 2 Z",
                   "width": 920,
                   "height": 3,
@@ -1100,9 +1100,9 @@
                 {
                   "type": "text",
                   "id": "t63",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -1123,7 +1123,7 @@
         {
           "type": "frame",
           "id": "f65",
-          "name": "Q2 · 段落纯排 · 装饰",
+          "name": "q2-paragraphs-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1132,7 +1132,7 @@
             {
               "type": "rectangle",
               "id": "r66",
-              "name": "擦痕",
+              "name": "eraser-smudge",
               "width": 640,
               "height": 640,
               "cornerRadius": 320,
@@ -1167,7 +1167,7 @@
     {
       "type": "frame",
       "id": "f106",
-      "name": "04 Q3 · 流程箭头",
+      "name": "04-q3-flow",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -1182,7 +1182,7 @@
         {
           "type": "frame",
           "id": "f96",
-          "name": "Q3 · 流程箭头 · 内容",
+          "name": "q3-flow-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1199,7 +1199,7 @@
             {
               "type": "frame",
               "id": "f100",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1210,7 +1210,7 @@
                 {
                   "type": "frame",
                   "id": "f99",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1222,9 +1222,9 @@
                     {
                       "type": "text",
                       "id": "t97",
-                      "name": "系列名",
-                      "content": "有问必答",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Ask Anything",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1241,7 +1241,7 @@
                     {
                       "type": "text",
                       "id": "t98",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "04 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -1262,7 +1262,7 @@
                 {
                   "type": "frame",
                   "id": "f95",
-                  "name": "问号编号",
+                  "name": "question-number",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1274,7 +1274,7 @@
                     {
                       "type": "text",
                       "id": "t93",
-                      "name": "问号",
+                      "name": "question-mark",
                       "content": "Q",
                       "fontFamily": "Inter",
                       "fontSize": 48,
@@ -1293,7 +1293,7 @@
                     {
                       "type": "text",
                       "id": "t94",
-                      "name": "问号序数",
+                      "name": "question-ordinal",
                       "content": "3",
                       "fontFamily": "Inter",
                       "fontSize": 48,
@@ -1316,7 +1316,7 @@
             {
               "type": "frame",
               "id": "f92",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1332,9 +1332,9 @@
                 {
                   "type": "text",
                   "id": "t90",
-                  "name": "问题",
-                  "content": "那该怎么练？",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "question",
+                  "content": "So how do you practice?",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -1351,7 +1351,7 @@
                 {
                   "type": "frame",
                   "id": "f91",
-                  "name": "流程",
+                  "name": "flow",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1362,7 +1362,7 @@
                     {
                       "type": "frame",
                       "id": "f71",
-                      "name": "流程块 1",
+                      "name": "flow-block-1",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1382,7 +1382,7 @@
                         {
                           "type": "frame",
                           "id": "f70",
-                          "name": "流程头",
+                          "name": "flow-head",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1394,9 +1394,9 @@
                             {
                               "type": "text",
                               "id": "t68",
-                              "name": "流程字",
-                              "content": "听",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "flow-word",
+                              "content": "Hear",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -1413,9 +1413,9 @@
                             {
                               "type": "text",
                               "id": "t69",
-                              "name": "流程注解",
-                              "content": "信息进来，识别成功",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "flow-note",
+                              "content": "Info comes in, you recognize it",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -1436,7 +1436,7 @@
                     {
                       "type": "frame",
                       "id": "f73",
-                      "name": "箭头位",
+                      "name": "arrow-slot",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1448,7 +1448,7 @@
                         {
                           "type": "path",
                           "id": "p72",
-                          "name": "箭头",
+                          "name": "arrow",
                           "d": "M 0 0 L 14 22 L 28 0",
                           "width": 28,
                           "height": 22,
@@ -1468,7 +1468,7 @@
                     {
                       "type": "frame",
                       "id": "f77",
-                      "name": "流程块 2",
+                      "name": "flow-block-2",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1488,7 +1488,7 @@
                         {
                           "type": "frame",
                           "id": "f76",
-                          "name": "流程头",
+                          "name": "flow-head",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1500,9 +1500,9 @@
                             {
                               "type": "text",
                               "id": "t74",
-                              "name": "流程字",
-                              "content": "停",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "flow-word",
+                              "content": "Stop",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -1519,9 +1519,9 @@
                             {
                               "type": "text",
                               "id": "t75",
-                              "name": "流程注解",
-                              "content": "合上材料，不许再看",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "flow-note",
+                              "content": "Close the material. No peeking.",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -1542,7 +1542,7 @@
                     {
                       "type": "frame",
                       "id": "f79",
-                      "name": "箭头位",
+                      "name": "arrow-slot",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1554,7 +1554,7 @@
                         {
                           "type": "path",
                           "id": "p78",
-                          "name": "箭头",
+                          "name": "arrow",
                           "d": "M 0 0 L 14 22 L 28 0",
                           "width": 28,
                           "height": 22,
@@ -1574,7 +1574,7 @@
                     {
                       "type": "frame",
                       "id": "f83",
-                      "name": "流程块 3",
+                      "name": "flow-block-3",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1594,7 +1594,7 @@
                         {
                           "type": "frame",
                           "id": "f82",
-                          "name": "流程头",
+                          "name": "flow-head",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1606,9 +1606,9 @@
                             {
                               "type": "text",
                               "id": "t80",
-                              "name": "流程字",
-                              "content": "讲",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "flow-word",
+                              "content": "Say",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -1625,9 +1625,9 @@
                             {
                               "type": "text",
                               "id": "t81",
-                              "name": "流程注解",
-                              "content": "对着空气讲一遍",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "flow-note",
+                              "content": "Explain it out loud to no one",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -1648,7 +1648,7 @@
                     {
                       "type": "frame",
                       "id": "f85",
-                      "name": "箭头位",
+                      "name": "arrow-slot",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1660,7 +1660,7 @@
                         {
                           "type": "path",
                           "id": "p84",
-                          "name": "箭头",
+                          "name": "arrow",
                           "d": "M 0 0 L 14 22 L 28 0",
                           "width": 28,
                           "height": 22,
@@ -1680,7 +1680,7 @@
                     {
                       "type": "frame",
                       "id": "f89",
-                      "name": "流程块 4",
+                      "name": "flow-block-4",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1700,7 +1700,7 @@
                         {
                           "type": "frame",
                           "id": "f88",
-                          "name": "流程头",
+                          "name": "flow-head",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1712,9 +1712,9 @@
                             {
                               "type": "text",
                               "id": "t86",
-                              "name": "流程字",
-                              "content": "补",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "flow-word",
+                              "content": "Fill",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -1731,9 +1731,9 @@
                             {
                               "type": "text",
                               "id": "t87",
-                              "name": "流程注解",
-                              "content": "卡住的地方回去补",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "flow-note",
+                              "content": "Go back where you got stuck",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -1758,7 +1758,7 @@
             {
               "type": "frame",
               "id": "f103",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1769,7 +1769,7 @@
                 {
                   "type": "path",
                   "id": "p101",
-                  "name": "粉笔线",
+                  "name": "chalk-line",
                   "d": "M 0 1 L 184.0 0 L 368.0 1 L 552.0 0 L 736.0 1 L 920.0 0 L 736.0 2 L 552.0 3 L 368.0 2 L 184.0 3 L 0.0 2 Z",
                   "width": 920,
                   "height": 3,
@@ -1783,9 +1783,9 @@
                 {
                   "type": "text",
                   "id": "t102",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -1806,7 +1806,7 @@
         {
           "type": "frame",
           "id": "f104",
-          "name": "Q3 · 流程箭头 · 装饰",
+          "name": "q3-flow-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1815,7 +1815,7 @@
             {
               "type": "rectangle",
               "id": "r105",
-              "name": "擦痕",
+              "name": "eraser-smudge",
               "width": 600,
               "height": 600,
               "cornerRadius": 300,
@@ -1850,7 +1850,7 @@
     {
       "type": "frame",
       "id": "f132",
-      "name": "05 Q4 · 上下反差",
+      "name": "05-q4-contrast",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -1865,7 +1865,7 @@
         {
           "type": "frame",
           "id": "f122",
-          "name": "Q4 · 上下反差 · 内容",
+          "name": "q4-contrast-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1882,7 +1882,7 @@
             {
               "type": "frame",
               "id": "f126",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1893,7 +1893,7 @@
                 {
                   "type": "frame",
                   "id": "f125",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1905,9 +1905,9 @@
                     {
                       "type": "text",
                       "id": "t123",
-                      "name": "系列名",
-                      "content": "有问必答",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Ask Anything",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1924,7 +1924,7 @@
                     {
                       "type": "text",
                       "id": "t124",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "05 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -1945,7 +1945,7 @@
                 {
                   "type": "frame",
                   "id": "f121",
-                  "name": "问号编号",
+                  "name": "question-number",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1957,7 +1957,7 @@
                     {
                       "type": "text",
                       "id": "t119",
-                      "name": "问号",
+                      "name": "question-mark",
                       "content": "Q",
                       "fontFamily": "Inter",
                       "fontSize": 48,
@@ -1976,7 +1976,7 @@
                     {
                       "type": "text",
                       "id": "t120",
-                      "name": "问号序数",
+                      "name": "question-ordinal",
                       "content": "4",
                       "fontFamily": "Inter",
                       "fontSize": 48,
@@ -1999,7 +1999,7 @@
             {
               "type": "frame",
               "id": "f118",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2015,9 +2015,9 @@
                 {
                   "type": "text",
                   "id": "t107",
-                  "name": "问题",
-                  "content": "讲不出来是记性差吗？",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "question",
+                  "content": "Is it just a bad memory?",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -2034,7 +2034,7 @@
                 {
                   "type": "frame",
                   "id": "f117",
-                  "name": "上下反差",
+                  "name": "contrast",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2045,7 +2045,7 @@
                     {
                       "type": "frame",
                       "id": "f111",
-                      "name": "反差块 · 多数人以为",
+                      "name": "contrast-block-most-think",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2056,9 +2056,9 @@
                         {
                           "type": "text",
                           "id": "t108",
-                          "name": "反差标签",
-                          "content": "多数人以为",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-label",
+                          "content": "What most think",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -2075,9 +2075,9 @@
                         {
                           "type": "text",
                           "id": "t109",
-                          "name": "反差句",
-                          "content": "是我记性不好",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-line",
+                          "content": "My memory is bad",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -2094,9 +2094,9 @@
                         {
                           "type": "text",
                           "id": "t110",
-                          "name": "反差注解",
-                          "content": "于是去背，背完还是讲不出。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-note",
+                          "content": "So they memorize, and still can't explain.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -2115,7 +2115,7 @@
                     {
                       "type": "path",
                       "id": "p112",
-                      "name": "粉笔线",
+                      "name": "chalk-line",
                       "d": "M 0 1 L 184.0 0 L 368.0 1 L 552.0 0 L 736.0 1 L 920.0 0 L 736.0 4 L 552.0 5 L 368.0 4 L 184.0 5 L 0.0 4 Z",
                       "width": 920,
                       "height": 5,
@@ -2129,7 +2129,7 @@
                     {
                       "type": "frame",
                       "id": "f116",
-                      "name": "反差块 · 其实是",
+                      "name": "contrast-block-actually",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2140,9 +2140,9 @@
                         {
                           "type": "text",
                           "id": "t113",
-                          "name": "反差标签",
-                          "content": "其实是",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-label",
+                          "content": "Actually",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -2159,9 +2159,9 @@
                         {
                           "type": "text",
                           "id": "t114",
-                          "name": "反差句",
-                          "content": "是你没重建过",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-line",
+                          "content": "You never rebuilt it",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -2178,9 +2178,9 @@
                         {
                           "type": "text",
                           "id": "t115",
-                          "name": "反差注解",
-                          "content": "重建一次，它才真正变成你的。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-note",
+                          "content": "Rebuild it once, and it's truly yours.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -2203,7 +2203,7 @@
             {
               "type": "frame",
               "id": "f129",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2214,7 +2214,7 @@
                 {
                   "type": "path",
                   "id": "p127",
-                  "name": "粉笔线",
+                  "name": "chalk-line",
                   "d": "M 0 1 L 184.0 0 L 368.0 1 L 552.0 0 L 736.0 1 L 920.0 0 L 736.0 2 L 552.0 3 L 368.0 2 L 184.0 3 L 0.0 2 Z",
                   "width": 920,
                   "height": 3,
@@ -2228,9 +2228,9 @@
                 {
                   "type": "text",
                   "id": "t128",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -2251,7 +2251,7 @@
         {
           "type": "frame",
           "id": "f130",
-          "name": "Q4 · 上下反差 · 装饰",
+          "name": "q4-contrast-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2260,7 +2260,7 @@
             {
               "type": "rectangle",
               "id": "r131",
-              "name": "擦痕",
+              "name": "eraser-smudge",
               "width": 640,
               "height": 640,
               "cornerRadius": 320,
@@ -2295,7 +2295,7 @@
     {
       "type": "frame",
       "id": "f148",
-      "name": "06 收束 · 签名",
+      "name": "06-closer-signoff",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -2310,7 +2310,7 @@
         {
           "type": "frame",
           "id": "f138",
-          "name": "收束 · 签名 · 内容",
+          "name": "closer-signoff-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2327,7 +2327,7 @@
             {
               "type": "frame",
               "id": "f142",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2338,7 +2338,7 @@
                 {
                   "type": "frame",
                   "id": "f141",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2350,9 +2350,9 @@
                     {
                       "type": "text",
                       "id": "t139",
-                      "name": "系列名",
-                      "content": "有问必答",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Ask Anything",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -2369,7 +2369,7 @@
                     {
                       "type": "text",
                       "id": "t140",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "06 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -2392,7 +2392,7 @@
             {
               "type": "frame",
               "id": "f137",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2408,9 +2408,9 @@
                 {
                   "type": "text",
                   "id": "t133",
-                  "name": "收束句",
-                  "content": "合上书，\n先讲一遍。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-line",
+                  "content": "Close the book.\nSay it first.",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -2427,7 +2427,7 @@
                 {
                   "type": "frame",
                   "id": "f136",
-                  "name": "行动",
+                  "name": "action",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2438,7 +2438,7 @@
                     {
                       "type": "path",
                       "id": "p134",
-                      "name": "粉笔线",
+                      "name": "chalk-line",
                       "d": "M 0 1 L 43.6 0 L 87.2 1 L 130.8 0 L 174.4 1 L 218.0 0 L 174.4 4 L 130.8 5 L 87.2 4 L 43.6 5 L 0.0 4 Z",
                       "width": 218,
                       "height": 5,
@@ -2452,9 +2452,9 @@
                     {
                       "type": "text",
                       "id": "t135",
-                      "name": "行动说明",
-                      "content": "今天读完的那篇，现在就对着空气讲三十秒。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "action-note",
+                      "content": "Take what you read today and explain it out loud for 30 seconds, right now.",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 400,
                       "fill": [
@@ -2475,7 +2475,7 @@
             {
               "type": "frame",
               "id": "f145",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2486,7 +2486,7 @@
                 {
                   "type": "path",
                   "id": "p143",
-                  "name": "粉笔线",
+                  "name": "chalk-line",
                   "d": "M 0 1 L 184.0 0 L 368.0 1 L 552.0 0 L 736.0 1 L 920.0 0 L 736.0 2 L 552.0 3 L 368.0 2 L 184.0 3 L 0.0 2 Z",
                   "width": 920,
                   "height": 3,
@@ -2500,9 +2500,9 @@
                 {
                   "type": "text",
                   "id": "t144",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -2523,7 +2523,7 @@
         {
           "type": "frame",
           "id": "f146",
-          "name": "收束 · 签名 · 装饰",
+          "name": "closer-signoff-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2532,7 +2532,7 @@
             {
               "type": "rectangle",
               "id": "r147",
-              "name": "擦痕",
+              "name": "eraser-smudge",
               "width": 680,
               "height": 680,
               "cornerRadius": 340,

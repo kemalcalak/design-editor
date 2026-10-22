@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "教程轮播 · 3:4 六板",
+  "name": "tutorial-carousel-3x4-six-boards",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f36",
-      "name": "01 封面 · 巨字压顶",
+      "name": "01-cover-giant-type",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -54,7 +54,7 @@
         {
           "type": "group",
           "id": "g28",
-          "name": "封面 · 巨字压顶 · 胶带",
+          "name": "cover-giant-type-tape",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -64,7 +64,7 @@
             {
               "type": "path",
               "id": "p5",
-              "name": "胶带 · 杏",
+              "name": "tape-apricot",
               "d": "M 0 0 L 300 0 L 291 16.8 L 300 33.6 L 291 50.4 L 300 67.2 L 291 84.0 L 0 84 L 9 67.2 L 0 50.4 L 9 33.6 L 0 16.8 L 9 0.0 Z",
               "width": 300,
               "height": 84,
@@ -82,7 +82,7 @@
             {
               "type": "path",
               "id": "p6",
-              "name": "胶带 · 淡紫",
+              "name": "tape-lavender",
               "d": "M 0 0 L 214 0 L 205 15.2 L 214 30.4 L 205 45.6 L 214 60.8 L 205 76.0 L 0 76 L 9 60.8 L 0 45.6 L 9 30.4 L 0 15.2 L 9 0.0 Z",
               "width": 214,
               "height": 76,
@@ -102,7 +102,7 @@
         {
           "type": "frame",
           "id": "f7",
-          "name": "封面 · 巨字压顶 · 内容",
+          "name": "cover-giant-type-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -119,7 +119,7 @@
             {
               "type": "frame",
               "id": "f10",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -131,9 +131,9 @@
                 {
                   "type": "text",
                   "id": "t8",
-                  "name": "系列名",
-                  "content": "跟着做 · 六板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Follow along · 6 boards",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -150,7 +150,7 @@
                 {
                   "type": "text",
                   "id": "t9",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "01 / 06",
                   "fontFamily": "Inter",
                   "fontSize": 32,
@@ -171,7 +171,7 @@
             {
               "type": "frame",
               "id": "f4",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -187,9 +187,9 @@
                 {
                   "type": "text",
                   "id": "t1",
-                  "name": "眉标",
-                  "content": "四步整理法 · 每板一步",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "eyebrow",
+                  "content": "4-step reset · one step per board",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -206,9 +206,9 @@
                 {
                   "type": "text",
                   "id": "t2",
-                  "name": "主标",
-                  "content": "十分钟\n把桌面清空",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "main-title",
+                  "content": "Clear your desk\nin 10 minutes",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -225,9 +225,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "副标",
-                  "content": "不是收纳技巧，是一套决定东西去哪的顺序。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "subtitle",
+                  "content": "Not a storage hack. An order for deciding where things go.",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 400,
                   "fill": [
@@ -246,7 +246,7 @@
             {
               "type": "frame",
               "id": "f27",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -257,7 +257,7 @@
                 {
                   "type": "frame",
                   "id": "f25",
-                  "name": "缝线",
+                  "name": "stitch-line",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -269,7 +269,7 @@
                     {
                       "type": "rectangle",
                       "id": "r11",
-                      "name": "缝 1",
+                      "name": "stitch-1",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -282,7 +282,7 @@
                     {
                       "type": "rectangle",
                       "id": "r12",
-                      "name": "缝 2",
+                      "name": "stitch-2",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -295,7 +295,7 @@
                     {
                       "type": "rectangle",
                       "id": "r13",
-                      "name": "缝 3",
+                      "name": "stitch-3",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -308,7 +308,7 @@
                     {
                       "type": "rectangle",
                       "id": "r14",
-                      "name": "缝 4",
+                      "name": "stitch-4",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -321,7 +321,7 @@
                     {
                       "type": "rectangle",
                       "id": "r15",
-                      "name": "缝 5",
+                      "name": "stitch-5",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -334,7 +334,7 @@
                     {
                       "type": "rectangle",
                       "id": "r16",
-                      "name": "缝 6",
+                      "name": "stitch-6",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -347,7 +347,7 @@
                     {
                       "type": "rectangle",
                       "id": "r17",
-                      "name": "缝 7",
+                      "name": "stitch-7",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -360,7 +360,7 @@
                     {
                       "type": "rectangle",
                       "id": "r18",
-                      "name": "缝 8",
+                      "name": "stitch-8",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -373,7 +373,7 @@
                     {
                       "type": "rectangle",
                       "id": "r19",
-                      "name": "缝 9",
+                      "name": "stitch-9",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -386,7 +386,7 @@
                     {
                       "type": "rectangle",
                       "id": "r20",
-                      "name": "缝 10",
+                      "name": "stitch-10",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -399,7 +399,7 @@
                     {
                       "type": "rectangle",
                       "id": "r21",
-                      "name": "缝 11",
+                      "name": "stitch-11",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -412,7 +412,7 @@
                     {
                       "type": "rectangle",
                       "id": "r22",
-                      "name": "缝 12",
+                      "name": "stitch-12",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -425,7 +425,7 @@
                     {
                       "type": "rectangle",
                       "id": "r23",
-                      "name": "缝 13",
+                      "name": "stitch-13",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -438,7 +438,7 @@
                     {
                       "type": "rectangle",
                       "id": "r24",
-                      "name": "缝 14",
+                      "name": "stitch-14",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -453,9 +453,9 @@
                 {
                   "type": "text",
                   "id": "t26",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -476,7 +476,7 @@
         {
           "type": "frame",
           "id": "f29",
-          "name": "封面 · 巨字压顶 · 活页孔",
+          "name": "cover-giant-type-binder-holes",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -486,7 +486,7 @@
             {
               "type": "ellipse",
               "id": "e30",
-              "name": "活页孔 1",
+              "name": "binder-hole-1",
               "width": 28,
               "height": 28,
               "fill": [
@@ -510,7 +510,7 @@
             {
               "type": "ellipse",
               "id": "e31",
-              "name": "活页孔 2",
+              "name": "binder-hole-2",
               "width": 28,
               "height": 28,
               "fill": [
@@ -534,7 +534,7 @@
             {
               "type": "ellipse",
               "id": "e32",
-              "name": "活页孔 3",
+              "name": "binder-hole-3",
               "width": 28,
               "height": 28,
               "fill": [
@@ -558,7 +558,7 @@
             {
               "type": "ellipse",
               "id": "e33",
-              "name": "活页孔 4",
+              "name": "binder-hole-4",
               "width": 28,
               "height": 28,
               "fill": [
@@ -582,7 +582,7 @@
             {
               "type": "ellipse",
               "id": "e34",
-              "name": "活页孔 5",
+              "name": "binder-hole-5",
               "width": 28,
               "height": 28,
               "fill": [
@@ -606,7 +606,7 @@
             {
               "type": "ellipse",
               "id": "e35",
-              "name": "活页孔 6",
+              "name": "binder-hole-6",
               "width": 28,
               "height": 28,
               "fill": [
@@ -636,7 +636,7 @@
     {
       "type": "frame",
       "id": "f86",
-      "name": "02 备料 · 勾选清单",
+      "name": "02-supplies-checklist",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -651,7 +651,7 @@
         {
           "type": "group",
           "id": "g78",
-          "name": "备料 · 勾选清单 · 胶带",
+          "name": "supplies-checklist-tape",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -661,7 +661,7 @@
             {
               "type": "path",
               "id": "p56",
-              "name": "胶带 · 鼠尾草",
+              "name": "tape-sage",
               "d": "M 0 0 L 336 0 L 327 16.0 L 336 32.0 L 327 48.0 L 336 64.0 L 327 80.0 L 0 80 L 9 64.0 L 0 48.0 L 9 32.0 L 0 16.0 L 9 0.0 Z",
               "width": 336,
               "height": 80,
@@ -681,7 +681,7 @@
         {
           "type": "frame",
           "id": "f57",
-          "name": "备料 · 勾选清单 · 内容",
+          "name": "supplies-checklist-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -698,7 +698,7 @@
             {
               "type": "frame",
               "id": "f60",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -710,9 +710,9 @@
                 {
                   "type": "text",
                   "id": "t58",
-                  "name": "系列名",
-                  "content": "跟着做 · 六板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Follow along · 6 boards",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -729,7 +729,7 @@
                 {
                   "type": "text",
                   "id": "t59",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "02 / 06",
                   "fontFamily": "Inter",
                   "fontSize": 32,
@@ -750,7 +750,7 @@
             {
               "type": "frame",
               "id": "f55",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -766,9 +766,9 @@
                 {
                   "type": "text",
                   "id": "t52",
-                  "name": "小标题",
-                  "content": "开始前，先备这五样",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "subheading",
+                  "content": "Grab these five first",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -785,7 +785,7 @@
                 {
                   "type": "frame",
                   "id": "f54",
-                  "name": "备料清单",
+                  "name": "supplies-list",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -806,7 +806,7 @@
                     {
                       "type": "frame",
                       "id": "f53",
-                      "name": "清单",
+                      "name": "checklist",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -817,7 +817,7 @@
                         {
                           "type": "frame",
                           "id": "f39",
-                          "name": "清单项",
+                          "name": "checklist-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -829,7 +829,7 @@
                             {
                               "type": "rectangle",
                               "id": "r37",
-                              "name": "勾选框",
+                              "name": "checkbox",
                               "width": 36,
                               "height": 36,
                               "cornerRadius": 4,
@@ -847,9 +847,9 @@
                             {
                               "type": "text",
                               "id": "t38",
-                              "name": "清单文字",
-                              "content": "一个空纸箱，装待定的东西",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "checklist-text",
+                              "content": "An empty box for the maybes",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -868,7 +868,7 @@
                         {
                           "type": "frame",
                           "id": "f42",
-                          "name": "清单项",
+                          "name": "checklist-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -880,7 +880,7 @@
                             {
                               "type": "rectangle",
                               "id": "r40",
-                              "name": "勾选框",
+                              "name": "checkbox",
                               "width": 36,
                               "height": 36,
                               "cornerRadius": 4,
@@ -898,9 +898,9 @@
                             {
                               "type": "text",
                               "id": "t41",
-                              "name": "清单文字",
-                              "content": "一个垃圾袋，装确定要扔的",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "checklist-text",
+                              "content": "A trash bag for sure tosses",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -919,7 +919,7 @@
                         {
                           "type": "frame",
                           "id": "f45",
-                          "name": "清单项",
+                          "name": "checklist-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -931,7 +931,7 @@
                             {
                               "type": "rectangle",
                               "id": "r43",
-                              "name": "勾选框",
+                              "name": "checkbox",
                               "width": 36,
                               "height": 36,
                               "cornerRadius": 4,
@@ -949,9 +949,9 @@
                             {
                               "type": "text",
                               "id": "t44",
-                              "name": "清单文字",
-                              "content": "一块抹布，最后一步用",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "checklist-text",
+                              "content": "A cloth for the last step",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -970,7 +970,7 @@
                         {
                           "type": "frame",
                           "id": "f48",
-                          "name": "清单项",
+                          "name": "checklist-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -982,7 +982,7 @@
                             {
                               "type": "rectangle",
                               "id": "r46",
-                              "name": "勾选框",
+                              "name": "checkbox",
                               "width": 36,
                               "height": 36,
                               "cornerRadius": 4,
@@ -1000,9 +1000,9 @@
                             {
                               "type": "text",
                               "id": "t47",
-                              "name": "清单文字",
-                              "content": "一个计时器，定十分钟",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "checklist-text",
+                              "content": "A timer, set to 10 min",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -1021,7 +1021,7 @@
                         {
                           "type": "frame",
                           "id": "f51",
-                          "name": "清单项",
+                          "name": "checklist-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1033,7 +1033,7 @@
                             {
                               "type": "rectangle",
                               "id": "r49",
-                              "name": "勾选框",
+                              "name": "checkbox",
                               "width": 36,
                               "height": 36,
                               "cornerRadius": 4,
@@ -1051,9 +1051,9 @@
                             {
                               "type": "text",
                               "id": "t50",
-                              "name": "清单文字",
-                              "content": "把手机放到另一个房间",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "checklist-text",
+                              "content": "Your phone, in another room",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -1078,7 +1078,7 @@
             {
               "type": "frame",
               "id": "f77",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1089,7 +1089,7 @@
                 {
                   "type": "frame",
                   "id": "f75",
-                  "name": "缝线",
+                  "name": "stitch-line",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1101,7 +1101,7 @@
                     {
                       "type": "rectangle",
                       "id": "r61",
-                      "name": "缝 1",
+                      "name": "stitch-1",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1114,7 +1114,7 @@
                     {
                       "type": "rectangle",
                       "id": "r62",
-                      "name": "缝 2",
+                      "name": "stitch-2",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1127,7 +1127,7 @@
                     {
                       "type": "rectangle",
                       "id": "r63",
-                      "name": "缝 3",
+                      "name": "stitch-3",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1140,7 +1140,7 @@
                     {
                       "type": "rectangle",
                       "id": "r64",
-                      "name": "缝 4",
+                      "name": "stitch-4",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1153,7 +1153,7 @@
                     {
                       "type": "rectangle",
                       "id": "r65",
-                      "name": "缝 5",
+                      "name": "stitch-5",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1166,7 +1166,7 @@
                     {
                       "type": "rectangle",
                       "id": "r66",
-                      "name": "缝 6",
+                      "name": "stitch-6",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1179,7 +1179,7 @@
                     {
                       "type": "rectangle",
                       "id": "r67",
-                      "name": "缝 7",
+                      "name": "stitch-7",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1192,7 +1192,7 @@
                     {
                       "type": "rectangle",
                       "id": "r68",
-                      "name": "缝 8",
+                      "name": "stitch-8",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1205,7 +1205,7 @@
                     {
                       "type": "rectangle",
                       "id": "r69",
-                      "name": "缝 9",
+                      "name": "stitch-9",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1218,7 +1218,7 @@
                     {
                       "type": "rectangle",
                       "id": "r70",
-                      "name": "缝 10",
+                      "name": "stitch-10",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1231,7 +1231,7 @@
                     {
                       "type": "rectangle",
                       "id": "r71",
-                      "name": "缝 11",
+                      "name": "stitch-11",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1244,7 +1244,7 @@
                     {
                       "type": "rectangle",
                       "id": "r72",
-                      "name": "缝 12",
+                      "name": "stitch-12",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1257,7 +1257,7 @@
                     {
                       "type": "rectangle",
                       "id": "r73",
-                      "name": "缝 13",
+                      "name": "stitch-13",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1270,7 +1270,7 @@
                     {
                       "type": "rectangle",
                       "id": "r74",
-                      "name": "缝 14",
+                      "name": "stitch-14",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1285,9 +1285,9 @@
                 {
                   "type": "text",
                   "id": "t76",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -1308,7 +1308,7 @@
         {
           "type": "frame",
           "id": "f79",
-          "name": "备料 · 勾选清单 · 活页孔",
+          "name": "supplies-checklist-binder-holes",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1318,7 +1318,7 @@
             {
               "type": "ellipse",
               "id": "e80",
-              "name": "活页孔 1",
+              "name": "binder-hole-1",
               "width": 28,
               "height": 28,
               "fill": [
@@ -1342,7 +1342,7 @@
             {
               "type": "ellipse",
               "id": "e81",
-              "name": "活页孔 2",
+              "name": "binder-hole-2",
               "width": 28,
               "height": 28,
               "fill": [
@@ -1366,7 +1366,7 @@
             {
               "type": "ellipse",
               "id": "e82",
-              "name": "活页孔 3",
+              "name": "binder-hole-3",
               "width": 28,
               "height": 28,
               "fill": [
@@ -1390,7 +1390,7 @@
             {
               "type": "ellipse",
               "id": "e83",
-              "name": "活页孔 4",
+              "name": "binder-hole-4",
               "width": 28,
               "height": 28,
               "fill": [
@@ -1414,7 +1414,7 @@
             {
               "type": "ellipse",
               "id": "e84",
-              "name": "活页孔 5",
+              "name": "binder-hole-5",
               "width": 28,
               "height": 28,
               "fill": [
@@ -1438,7 +1438,7 @@
             {
               "type": "ellipse",
               "id": "e85",
-              "name": "活页孔 6",
+              "name": "binder-hole-6",
               "width": 28,
               "height": 28,
               "fill": [
@@ -1468,7 +1468,7 @@
     {
       "type": "frame",
       "id": "f129",
-      "name": "03 第一步 · 图注混排",
+      "name": "03-step-1-photo-caption",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -1483,7 +1483,7 @@
         {
           "type": "group",
           "id": "g121",
-          "name": "第一步 · 图注混排 · 胶带",
+          "name": "step-1-photo-caption-tape",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1493,7 +1493,7 @@
             {
               "type": "path",
               "id": "p99",
-              "name": "胶带 · 杏",
+              "name": "tape-apricot",
               "d": "M 0 0 L 262 0 L 253 15.6 L 262 31.2 L 253 46.8 L 262 62.4 L 253 78.0 L 0 78 L 9 62.4 L 0 46.8 L 9 31.2 L 0 15.6 L 9 0.0 Z",
               "width": 262,
               "height": 78,
@@ -1513,7 +1513,7 @@
         {
           "type": "frame",
           "id": "f100",
-          "name": "第一步 · 图注混排 · 内容",
+          "name": "step-1-photo-caption-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1530,7 +1530,7 @@
             {
               "type": "frame",
               "id": "f103",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1542,9 +1542,9 @@
                 {
                   "type": "text",
                   "id": "t101",
-                  "name": "系列名",
-                  "content": "跟着做 · 六板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Follow along · 6 boards",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -1561,7 +1561,7 @@
                 {
                   "type": "text",
                   "id": "t102",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "03 / 06",
                   "fontFamily": "Inter",
                   "fontSize": 32,
@@ -1582,7 +1582,7 @@
             {
               "type": "frame",
               "id": "f98",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1598,7 +1598,7 @@
                 {
                   "type": "frame",
                   "id": "f93",
-                  "name": "照片位",
+                  "name": "photo-slot",
                   "width": "fill_container",
                   "height": 580,
                   "layout": "vertical",
@@ -1616,7 +1616,7 @@
                     {
                       "type": "group",
                       "id": "g89",
-                      "name": "上传占位",
+                      "name": "upload-placeholder",
                       "width": 116,
                       "height": 120,
                       "layout": "none",
@@ -1625,7 +1625,7 @@
                         {
                           "type": "icon_font",
                           "id": "i88",
-                          "name": "上传占位 · 图标",
+                          "name": "upload-placeholder-icon",
                           "iconFontName": "upload",
                           "width": 52,
                           "height": 52,
@@ -1641,7 +1641,7 @@
                         {
                           "type": "text",
                           "id": "t87",
-                          "name": "上传占位 · 圆底",
+                          "name": "upload-placeholder-circle",
                           "content": "●",
                           "fontFamily": "Inter",
                           "fontSize": 154,
@@ -1664,7 +1664,7 @@
                     {
                       "type": "frame",
                       "id": "f92",
-                      "name": "占位说明",
+                      "name": "placeholder-hint",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1675,9 +1675,9 @@
                         {
                           "type": "text",
                           "id": "t90",
-                          "name": "占位标题",
-                          "content": "拍一张开始前的桌面",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "placeholder-title",
+                          "content": "Snap your desk before you start",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 600,
                           "fill": [
@@ -1694,9 +1694,9 @@
                         {
                           "type": "text",
                           "id": "t91",
-                          "name": "占位规格",
-                          "content": "建议 884×580 以上",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "placeholder-spec",
+                          "content": "884×580 or larger",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -1717,7 +1717,7 @@
                 {
                   "type": "frame",
                   "id": "f97",
-                  "name": "图注区",
+                  "name": "caption-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1728,9 +1728,9 @@
                     {
                       "type": "text",
                       "id": "t94",
-                      "name": "步骤标题",
-                      "content": "第一步 · 全部拿下来",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "step-title",
+                      "content": "Step 1 · Take it all off",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 700,
                       "fill": [
@@ -1747,9 +1747,9 @@
                     {
                       "type": "text",
                       "id": "t95",
-                      "name": "正文",
-                      "content": "桌面清成一块空板，连你觉得本来就该在那儿的几样也拿下来。留着的东西会替你做决定。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "body-text",
+                      "content": "Clear the desk to a blank surface, even the things you think belong there. Whatever stays ends up deciding for you.",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 400,
                       "fill": [
@@ -1766,9 +1766,9 @@
                     {
                       "type": "text",
                       "id": "t96",
-                      "name": "图注",
-                      "content": "拍下来 · 十分钟后你会想看这张",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "caption",
+                      "content": "Take the photo · you'll want it in 10 minutes",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1789,7 +1789,7 @@
             {
               "type": "frame",
               "id": "f120",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1800,7 +1800,7 @@
                 {
                   "type": "frame",
                   "id": "f118",
-                  "name": "缝线",
+                  "name": "stitch-line",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1812,7 +1812,7 @@
                     {
                       "type": "rectangle",
                       "id": "r104",
-                      "name": "缝 1",
+                      "name": "stitch-1",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1825,7 +1825,7 @@
                     {
                       "type": "rectangle",
                       "id": "r105",
-                      "name": "缝 2",
+                      "name": "stitch-2",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1838,7 +1838,7 @@
                     {
                       "type": "rectangle",
                       "id": "r106",
-                      "name": "缝 3",
+                      "name": "stitch-3",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1851,7 +1851,7 @@
                     {
                       "type": "rectangle",
                       "id": "r107",
-                      "name": "缝 4",
+                      "name": "stitch-4",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1864,7 +1864,7 @@
                     {
                       "type": "rectangle",
                       "id": "r108",
-                      "name": "缝 5",
+                      "name": "stitch-5",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1877,7 +1877,7 @@
                     {
                       "type": "rectangle",
                       "id": "r109",
-                      "name": "缝 6",
+                      "name": "stitch-6",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1890,7 +1890,7 @@
                     {
                       "type": "rectangle",
                       "id": "r110",
-                      "name": "缝 7",
+                      "name": "stitch-7",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1903,7 +1903,7 @@
                     {
                       "type": "rectangle",
                       "id": "r111",
-                      "name": "缝 8",
+                      "name": "stitch-8",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1916,7 +1916,7 @@
                     {
                       "type": "rectangle",
                       "id": "r112",
-                      "name": "缝 9",
+                      "name": "stitch-9",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1929,7 +1929,7 @@
                     {
                       "type": "rectangle",
                       "id": "r113",
-                      "name": "缝 10",
+                      "name": "stitch-10",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1942,7 +1942,7 @@
                     {
                       "type": "rectangle",
                       "id": "r114",
-                      "name": "缝 11",
+                      "name": "stitch-11",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1955,7 +1955,7 @@
                     {
                       "type": "rectangle",
                       "id": "r115",
-                      "name": "缝 12",
+                      "name": "stitch-12",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1968,7 +1968,7 @@
                     {
                       "type": "rectangle",
                       "id": "r116",
-                      "name": "缝 13",
+                      "name": "stitch-13",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1981,7 +1981,7 @@
                     {
                       "type": "rectangle",
                       "id": "r117",
-                      "name": "缝 14",
+                      "name": "stitch-14",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -1996,9 +1996,9 @@
                 {
                   "type": "text",
                   "id": "t119",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -2019,7 +2019,7 @@
         {
           "type": "frame",
           "id": "f122",
-          "name": "第一步 · 图注混排 · 活页孔",
+          "name": "step-1-photo-caption-binder-holes",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2029,7 +2029,7 @@
             {
               "type": "ellipse",
               "id": "e123",
-              "name": "活页孔 1",
+              "name": "binder-hole-1",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2053,7 +2053,7 @@
             {
               "type": "ellipse",
               "id": "e124",
-              "name": "活页孔 2",
+              "name": "binder-hole-2",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2077,7 +2077,7 @@
             {
               "type": "ellipse",
               "id": "e125",
-              "name": "活页孔 3",
+              "name": "binder-hole-3",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2101,7 +2101,7 @@
             {
               "type": "ellipse",
               "id": "e126",
-              "name": "活页孔 4",
+              "name": "binder-hole-4",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2125,7 +2125,7 @@
             {
               "type": "ellipse",
               "id": "e127",
-              "name": "活页孔 5",
+              "name": "binder-hole-5",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2149,7 +2149,7 @@
             {
               "type": "ellipse",
               "id": "e128",
-              "name": "活页孔 6",
+              "name": "binder-hole-6",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2179,7 +2179,7 @@
     {
       "type": "frame",
       "id": "f178",
-      "name": "04 递进 · 卡片阶梯",
+      "name": "04-progression-card-stairs",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -2194,7 +2194,7 @@
         {
           "type": "group",
           "id": "g170",
-          "name": "递进 · 卡片阶梯 · 胶带",
+          "name": "progression-card-stairs-tape",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2204,7 +2204,7 @@
             {
               "type": "path",
               "id": "p148",
-              "name": "胶带 · 淡紫",
+              "name": "tape-lavender",
               "d": "M 0 0 L 252 0 L 243 14.8 L 252 29.6 L 243 44.4 L 252 59.2 L 243 74.0 L 0 74 L 9 59.2 L 0 44.4 L 9 29.6 L 0 14.8 L 9 0.0 Z",
               "width": 252,
               "height": 74,
@@ -2224,7 +2224,7 @@
         {
           "type": "frame",
           "id": "f149",
-          "name": "递进 · 卡片阶梯 · 内容",
+          "name": "progression-card-stairs-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2241,7 +2241,7 @@
             {
               "type": "frame",
               "id": "f152",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2253,9 +2253,9 @@
                 {
                   "type": "text",
                   "id": "t150",
-                  "name": "系列名",
-                  "content": "跟着做 · 六板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Follow along · 6 boards",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -2272,7 +2272,7 @@
                 {
                   "type": "text",
                   "id": "t151",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "04 / 06",
                   "fontFamily": "Inter",
                   "fontSize": 32,
@@ -2293,7 +2293,7 @@
             {
               "type": "frame",
               "id": "f147",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2309,9 +2309,9 @@
                 {
                   "type": "text",
                   "id": "t145",
-                  "name": "小标题",
-                  "content": "剩下三步，一层比一层狠",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "subheading",
+                  "content": "Three more, each harder",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -2328,7 +2328,7 @@
                 {
                   "type": "frame",
                   "id": "f146",
-                  "name": "阶梯",
+                  "name": "stairs",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2339,7 +2339,7 @@
                     {
                       "type": "frame",
                       "id": "f134",
-                      "name": "阶梯行 1",
+                      "name": "stair-row-1",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2351,7 +2351,7 @@
                         {
                           "type": "frame",
                           "id": "f133",
-                          "name": "阶梯卡 1",
+                          "name": "stair-card-1",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2372,9 +2372,9 @@
                             {
                               "type": "text",
                               "id": "t130",
-                              "name": "阶梯标签",
-                              "content": "第二步",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "stair-label",
+                              "content": "Step 2",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -2391,9 +2391,9 @@
                             {
                               "type": "text",
                               "id": "t131",
-                              "name": "阶梯标题",
-                              "content": "分三堆",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "stair-title",
+                              "content": "Make three piles",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -2410,9 +2410,9 @@
                             {
                               "type": "text",
                               "id": "t132",
-                              "name": "阶梯注解",
-                              "content": "常用、待定、不要。三堆，没有第四堆。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "stair-note",
+                              "content": "Keep, maybe, toss. Three piles, never a fourth.",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -2442,7 +2442,7 @@
                     {
                       "type": "frame",
                       "id": "f139",
-                      "name": "阶梯行 2",
+                      "name": "stair-row-2",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2454,7 +2454,7 @@
                         {
                           "type": "frame",
                           "id": "f138",
-                          "name": "阶梯卡 2",
+                          "name": "stair-card-2",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2475,9 +2475,9 @@
                             {
                               "type": "text",
                               "id": "t135",
-                              "name": "阶梯标签",
-                              "content": "第三步",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "stair-label",
+                              "content": "Step 3",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -2494,9 +2494,9 @@
                             {
                               "type": "text",
                               "id": "t136",
-                              "name": "阶梯标题",
-                              "content": "先处理不要那堆",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "stair-title",
+                              "content": "Deal with toss first",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -2513,9 +2513,9 @@
                             {
                               "type": "text",
                               "id": "t137",
-                              "name": "阶梯注解",
-                              "content": "直接进垃圾袋封口，不要再看第二眼。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "stair-note",
+                              "content": "Straight into the bag, tie it, don't look twice.",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -2542,7 +2542,7 @@
                     {
                       "type": "frame",
                       "id": "f144",
-                      "name": "阶梯行 3",
+                      "name": "stair-row-3",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2554,7 +2554,7 @@
                         {
                           "type": "frame",
                           "id": "f143",
-                          "name": "阶梯卡 3",
+                          "name": "stair-card-3",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2575,9 +2575,9 @@
                             {
                               "type": "text",
                               "id": "t140",
-                              "name": "阶梯标签",
-                              "content": "第四步",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "stair-label",
+                              "content": "Step 4",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -2594,9 +2594,9 @@
                             {
                               "type": "text",
                               "id": "t141",
-                              "name": "阶梯标题",
-                              "content": "常用的才回桌面",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "stair-title",
+                              "content": "Only keeps go back",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -2613,9 +2613,9 @@
                             {
                               "type": "text",
                               "id": "t142",
-                              "name": "阶梯注解",
-                              "content": "待定那箱封好，一个月没开就扔。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "stair-note",
+                              "content": "Seal the maybe box. Unopened in a month? Toss it.",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -2646,7 +2646,7 @@
             {
               "type": "frame",
               "id": "f169",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2657,7 +2657,7 @@
                 {
                   "type": "frame",
                   "id": "f167",
-                  "name": "缝线",
+                  "name": "stitch-line",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2669,7 +2669,7 @@
                     {
                       "type": "rectangle",
                       "id": "r153",
-                      "name": "缝 1",
+                      "name": "stitch-1",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2682,7 +2682,7 @@
                     {
                       "type": "rectangle",
                       "id": "r154",
-                      "name": "缝 2",
+                      "name": "stitch-2",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2695,7 +2695,7 @@
                     {
                       "type": "rectangle",
                       "id": "r155",
-                      "name": "缝 3",
+                      "name": "stitch-3",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2708,7 +2708,7 @@
                     {
                       "type": "rectangle",
                       "id": "r156",
-                      "name": "缝 4",
+                      "name": "stitch-4",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2721,7 +2721,7 @@
                     {
                       "type": "rectangle",
                       "id": "r157",
-                      "name": "缝 5",
+                      "name": "stitch-5",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2734,7 +2734,7 @@
                     {
                       "type": "rectangle",
                       "id": "r158",
-                      "name": "缝 6",
+                      "name": "stitch-6",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2747,7 +2747,7 @@
                     {
                       "type": "rectangle",
                       "id": "r159",
-                      "name": "缝 7",
+                      "name": "stitch-7",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2760,7 +2760,7 @@
                     {
                       "type": "rectangle",
                       "id": "r160",
-                      "name": "缝 8",
+                      "name": "stitch-8",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2773,7 +2773,7 @@
                     {
                       "type": "rectangle",
                       "id": "r161",
-                      "name": "缝 9",
+                      "name": "stitch-9",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2786,7 +2786,7 @@
                     {
                       "type": "rectangle",
                       "id": "r162",
-                      "name": "缝 10",
+                      "name": "stitch-10",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2799,7 +2799,7 @@
                     {
                       "type": "rectangle",
                       "id": "r163",
-                      "name": "缝 11",
+                      "name": "stitch-11",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2812,7 +2812,7 @@
                     {
                       "type": "rectangle",
                       "id": "r164",
-                      "name": "缝 12",
+                      "name": "stitch-12",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2825,7 +2825,7 @@
                     {
                       "type": "rectangle",
                       "id": "r165",
-                      "name": "缝 13",
+                      "name": "stitch-13",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2838,7 +2838,7 @@
                     {
                       "type": "rectangle",
                       "id": "r166",
-                      "name": "缝 14",
+                      "name": "stitch-14",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -2853,9 +2853,9 @@
                 {
                   "type": "text",
                   "id": "t168",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -2876,7 +2876,7 @@
         {
           "type": "frame",
           "id": "f171",
-          "name": "递进 · 卡片阶梯 · 活页孔",
+          "name": "progression-card-stairs-binder-holes",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2886,7 +2886,7 @@
             {
               "type": "ellipse",
               "id": "e172",
-              "name": "活页孔 1",
+              "name": "binder-hole-1",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2910,7 +2910,7 @@
             {
               "type": "ellipse",
               "id": "e173",
-              "name": "活页孔 2",
+              "name": "binder-hole-2",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2934,7 +2934,7 @@
             {
               "type": "ellipse",
               "id": "e174",
-              "name": "活页孔 3",
+              "name": "binder-hole-3",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2958,7 +2958,7 @@
             {
               "type": "ellipse",
               "id": "e175",
-              "name": "活页孔 4",
+              "name": "binder-hole-4",
               "width": 28,
               "height": 28,
               "fill": [
@@ -2982,7 +2982,7 @@
             {
               "type": "ellipse",
               "id": "e176",
-              "name": "活页孔 5",
+              "name": "binder-hole-5",
               "width": 28,
               "height": 28,
               "fill": [
@@ -3006,7 +3006,7 @@
             {
               "type": "ellipse",
               "id": "e177",
-              "name": "活页孔 6",
+              "name": "binder-hole-6",
               "width": 28,
               "height": 28,
               "fill": [
@@ -3036,7 +3036,7 @@
     {
       "type": "frame",
       "id": "f214",
-      "name": "05 提醒 · 高亮切词",
+      "name": "05-reminder-highlight-word",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -3051,7 +3051,7 @@
         {
           "type": "group",
           "id": "g206",
-          "name": "提醒 · 高亮切词 · 胶带",
+          "name": "reminder-highlight-word-tape",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -3061,7 +3061,7 @@
             {
               "type": "path",
               "id": "p184",
-              "name": "胶带 · 杏",
+              "name": "tape-apricot",
               "d": "M 0 0 L 282 0 L 273 15.2 L 282 30.4 L 273 45.6 L 282 60.8 L 273 76.0 L 0 76 L 9 60.8 L 0 45.6 L 9 30.4 L 0 15.2 L 9 0.0 Z",
               "width": 282,
               "height": 76,
@@ -3081,7 +3081,7 @@
         {
           "type": "frame",
           "id": "f185",
-          "name": "提醒 · 高亮切词 · 内容",
+          "name": "reminder-highlight-word-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -3098,7 +3098,7 @@
             {
               "type": "frame",
               "id": "f188",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -3110,9 +3110,9 @@
                 {
                   "type": "text",
                   "id": "t186",
-                  "name": "系列名",
-                  "content": "跟着做 · 六板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Follow along · 6 boards",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -3129,7 +3129,7 @@
                 {
                   "type": "text",
                   "id": "t187",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "05 / 06",
                   "fontFamily": "Inter",
                   "fontSize": 32,
@@ -3150,7 +3150,7 @@
             {
               "type": "frame",
               "id": "f183",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -3166,7 +3166,7 @@
                 {
                   "type": "frame",
                   "id": "f179",
-                  "name": "被击中的词",
+                  "name": "highlighted-word",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3187,9 +3187,9 @@
                     {
                       "type": "text",
                       "id": "t180",
-                      "name": "词",
-                      "content": "待定",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "word",
+                      "content": "Maybe",
+                      "fontFamily": "Inter",
                       "fontSize": 88,
                       "fontWeight": 700,
                       "fill": [
@@ -3208,9 +3208,9 @@
                 {
                   "type": "text",
                   "id": "t181",
-                  "name": "整句",
-                  "content": "最容易漏掉的是那一箱。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "full-sentence",
+                  "content": "Don't forget that box.",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -3227,9 +3227,9 @@
                 {
                   "type": "text",
                   "id": "t182",
-                  "name": "注解",
-                  "content": "在箱子上写好日期，一个月后不用再犹豫。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "note",
+                  "content": "Write the date on it so next month there's nothing to decide.",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -3248,7 +3248,7 @@
             {
               "type": "frame",
               "id": "f205",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3259,7 +3259,7 @@
                 {
                   "type": "frame",
                   "id": "f203",
-                  "name": "缝线",
+                  "name": "stitch-line",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3271,7 +3271,7 @@
                     {
                       "type": "rectangle",
                       "id": "r189",
-                      "name": "缝 1",
+                      "name": "stitch-1",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3284,7 +3284,7 @@
                     {
                       "type": "rectangle",
                       "id": "r190",
-                      "name": "缝 2",
+                      "name": "stitch-2",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3297,7 +3297,7 @@
                     {
                       "type": "rectangle",
                       "id": "r191",
-                      "name": "缝 3",
+                      "name": "stitch-3",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3310,7 +3310,7 @@
                     {
                       "type": "rectangle",
                       "id": "r192",
-                      "name": "缝 4",
+                      "name": "stitch-4",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3323,7 +3323,7 @@
                     {
                       "type": "rectangle",
                       "id": "r193",
-                      "name": "缝 5",
+                      "name": "stitch-5",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3336,7 +3336,7 @@
                     {
                       "type": "rectangle",
                       "id": "r194",
-                      "name": "缝 6",
+                      "name": "stitch-6",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3349,7 +3349,7 @@
                     {
                       "type": "rectangle",
                       "id": "r195",
-                      "name": "缝 7",
+                      "name": "stitch-7",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3362,7 +3362,7 @@
                     {
                       "type": "rectangle",
                       "id": "r196",
-                      "name": "缝 8",
+                      "name": "stitch-8",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3375,7 +3375,7 @@
                     {
                       "type": "rectangle",
                       "id": "r197",
-                      "name": "缝 9",
+                      "name": "stitch-9",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3388,7 +3388,7 @@
                     {
                       "type": "rectangle",
                       "id": "r198",
-                      "name": "缝 10",
+                      "name": "stitch-10",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3401,7 +3401,7 @@
                     {
                       "type": "rectangle",
                       "id": "r199",
-                      "name": "缝 11",
+                      "name": "stitch-11",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3414,7 +3414,7 @@
                     {
                       "type": "rectangle",
                       "id": "r200",
-                      "name": "缝 12",
+                      "name": "stitch-12",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3427,7 +3427,7 @@
                     {
                       "type": "rectangle",
                       "id": "r201",
-                      "name": "缝 13",
+                      "name": "stitch-13",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3440,7 +3440,7 @@
                     {
                       "type": "rectangle",
                       "id": "r202",
-                      "name": "缝 14",
+                      "name": "stitch-14",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -3455,9 +3455,9 @@
                 {
                   "type": "text",
                   "id": "t204",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -3478,7 +3478,7 @@
         {
           "type": "frame",
           "id": "f207",
-          "name": "提醒 · 高亮切词 · 活页孔",
+          "name": "reminder-highlight-word-binder-holes",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -3488,7 +3488,7 @@
             {
               "type": "ellipse",
               "id": "e208",
-              "name": "活页孔 1",
+              "name": "binder-hole-1",
               "width": 28,
               "height": 28,
               "fill": [
@@ -3512,7 +3512,7 @@
             {
               "type": "ellipse",
               "id": "e209",
-              "name": "活页孔 2",
+              "name": "binder-hole-2",
               "width": 28,
               "height": 28,
               "fill": [
@@ -3536,7 +3536,7 @@
             {
               "type": "ellipse",
               "id": "e210",
-              "name": "活页孔 3",
+              "name": "binder-hole-3",
               "width": 28,
               "height": 28,
               "fill": [
@@ -3560,7 +3560,7 @@
             {
               "type": "ellipse",
               "id": "e211",
-              "name": "活页孔 4",
+              "name": "binder-hole-4",
               "width": 28,
               "height": 28,
               "fill": [
@@ -3584,7 +3584,7 @@
             {
               "type": "ellipse",
               "id": "e212",
-              "name": "活页孔 5",
+              "name": "binder-hole-5",
               "width": 28,
               "height": 28,
               "fill": [
@@ -3608,7 +3608,7 @@
             {
               "type": "ellipse",
               "id": "e213",
-              "name": "活页孔 6",
+              "name": "binder-hole-6",
               "width": 28,
               "height": 28,
               "fill": [
@@ -3638,7 +3638,7 @@
     {
       "type": "frame",
       "id": "f260",
-      "name": "06 收尾 · 三键引导",
+      "name": "06-outro-three-actions",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -3653,7 +3653,7 @@
         {
           "type": "group",
           "id": "g252",
-          "name": "收尾 · 三键引导 · 胶带",
+          "name": "outro-three-actions-tape",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -3663,7 +3663,7 @@
             {
               "type": "path",
               "id": "p230",
-              "name": "胶带 · 鼠尾草",
+              "name": "tape-sage",
               "d": "M 0 0 L 320 0 L 311 16.4 L 320 32.8 L 311 49.2 L 320 65.6 L 311 82.0 L 0 82 L 9 65.6 L 0 49.2 L 9 32.8 L 0 16.4 L 9 0.0 Z",
               "width": 320,
               "height": 82,
@@ -3683,7 +3683,7 @@
         {
           "type": "frame",
           "id": "f231",
-          "name": "收尾 · 三键引导 · 内容",
+          "name": "outro-three-actions-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -3700,7 +3700,7 @@
             {
               "type": "frame",
               "id": "f234",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -3712,9 +3712,9 @@
                 {
                   "type": "text",
                   "id": "t232",
-                  "name": "系列名",
-                  "content": "跟着做 · 六板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "series-name",
+                  "content": "Follow along · 6 boards",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -3731,7 +3731,7 @@
                 {
                   "type": "text",
                   "id": "t233",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "06 / 06",
                   "fontFamily": "Inter",
                   "fontSize": 32,
@@ -3752,7 +3752,7 @@
             {
               "type": "frame",
               "id": "f229",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -3768,9 +3768,9 @@
                 {
                   "type": "text",
                   "id": "t227",
-                  "name": "收束句",
-                  "content": "先清空，\n再决定放什么回去。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-line",
+                  "content": "Clear it all,\nthen choose.",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -3787,7 +3787,7 @@
                 {
                   "type": "frame",
                   "id": "f228",
-                  "name": "三键",
+                  "name": "three-actions",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3799,7 +3799,7 @@
                     {
                       "type": "frame",
                       "id": "f215",
-                      "name": "动作 · 收藏",
+                      "name": "action-save",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -3821,7 +3821,7 @@
                         {
                           "type": "icon_font",
                           "id": "i216",
-                          "name": "动作图标",
+                          "name": "action-icon",
                           "iconFontName": "bookmark",
                           "width": 44,
                           "height": 44,
@@ -3835,9 +3835,9 @@
                         {
                           "type": "text",
                           "id": "t217",
-                          "name": "动作名",
-                          "content": "收藏",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action-name",
+                          "content": "Save",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -3854,9 +3854,9 @@
                         {
                           "type": "text",
                           "id": "t218",
-                          "name": "动作说明",
-                          "content": "留着下次照做",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action-hint",
+                          "content": "Keep it for next time",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -3876,7 +3876,7 @@
                     {
                       "type": "frame",
                       "id": "f219",
-                      "name": "动作 · 评论",
+                      "name": "action-comment",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -3898,7 +3898,7 @@
                         {
                           "type": "icon_font",
                           "id": "i220",
-                          "name": "动作图标",
+                          "name": "action-icon",
                           "iconFontName": "message-circle",
                           "width": 44,
                           "height": 44,
@@ -3912,9 +3912,9 @@
                         {
                           "type": "text",
                           "id": "t221",
-                          "name": "动作名",
-                          "content": "评论",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action-name",
+                          "content": "Comment",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -3931,9 +3931,9 @@
                         {
                           "type": "text",
                           "id": "t222",
-                          "name": "动作说明",
-                          "content": "说说卡在第几步",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action-hint",
+                          "content": "Tell me where you got stuck",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -3953,7 +3953,7 @@
                     {
                       "type": "frame",
                       "id": "f223",
-                      "name": "动作 · 关注",
+                      "name": "action-follow",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -3975,7 +3975,7 @@
                         {
                           "type": "icon_font",
                           "id": "i224",
-                          "name": "动作图标",
+                          "name": "action-icon",
                           "iconFontName": "user-plus",
                           "width": 44,
                           "height": 44,
@@ -3989,9 +3989,9 @@
                         {
                           "type": "text",
                           "id": "t225",
-                          "name": "动作名",
-                          "content": "关注",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action-name",
+                          "content": "Follow",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -4008,9 +4008,9 @@
                         {
                           "type": "text",
                           "id": "t226",
-                          "name": "动作说明",
-                          "content": "下一板讲抽屉",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action-hint",
+                          "content": "Drawers are next",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -4034,7 +4034,7 @@
             {
               "type": "frame",
               "id": "f251",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -4045,7 +4045,7 @@
                 {
                   "type": "frame",
                   "id": "f249",
-                  "name": "缝线",
+                  "name": "stitch-line",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4057,7 +4057,7 @@
                     {
                       "type": "rectangle",
                       "id": "r235",
-                      "name": "缝 1",
+                      "name": "stitch-1",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4070,7 +4070,7 @@
                     {
                       "type": "rectangle",
                       "id": "r236",
-                      "name": "缝 2",
+                      "name": "stitch-2",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4083,7 +4083,7 @@
                     {
                       "type": "rectangle",
                       "id": "r237",
-                      "name": "缝 3",
+                      "name": "stitch-3",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4096,7 +4096,7 @@
                     {
                       "type": "rectangle",
                       "id": "r238",
-                      "name": "缝 4",
+                      "name": "stitch-4",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4109,7 +4109,7 @@
                     {
                       "type": "rectangle",
                       "id": "r239",
-                      "name": "缝 5",
+                      "name": "stitch-5",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4122,7 +4122,7 @@
                     {
                       "type": "rectangle",
                       "id": "r240",
-                      "name": "缝 6",
+                      "name": "stitch-6",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4135,7 +4135,7 @@
                     {
                       "type": "rectangle",
                       "id": "r241",
-                      "name": "缝 7",
+                      "name": "stitch-7",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4148,7 +4148,7 @@
                     {
                       "type": "rectangle",
                       "id": "r242",
-                      "name": "缝 8",
+                      "name": "stitch-8",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4161,7 +4161,7 @@
                     {
                       "type": "rectangle",
                       "id": "r243",
-                      "name": "缝 9",
+                      "name": "stitch-9",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4174,7 +4174,7 @@
                     {
                       "type": "rectangle",
                       "id": "r244",
-                      "name": "缝 10",
+                      "name": "stitch-10",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4187,7 +4187,7 @@
                     {
                       "type": "rectangle",
                       "id": "r245",
-                      "name": "缝 11",
+                      "name": "stitch-11",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4200,7 +4200,7 @@
                     {
                       "type": "rectangle",
                       "id": "r246",
-                      "name": "缝 12",
+                      "name": "stitch-12",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4213,7 +4213,7 @@
                     {
                       "type": "rectangle",
                       "id": "r247",
-                      "name": "缝 13",
+                      "name": "stitch-13",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4226,7 +4226,7 @@
                     {
                       "type": "rectangle",
                       "id": "r248",
-                      "name": "缝 14",
+                      "name": "stitch-14",
                       "width": 22,
                       "height": 3,
                       "fill": [
@@ -4241,9 +4241,9 @@
                 {
                   "type": "text",
                   "id": "t250",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -4264,7 +4264,7 @@
         {
           "type": "frame",
           "id": "f253",
-          "name": "收尾 · 三键引导 · 活页孔",
+          "name": "outro-three-actions-binder-holes",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -4274,7 +4274,7 @@
             {
               "type": "ellipse",
               "id": "e254",
-              "name": "活页孔 1",
+              "name": "binder-hole-1",
               "width": 28,
               "height": 28,
               "fill": [
@@ -4298,7 +4298,7 @@
             {
               "type": "ellipse",
               "id": "e255",
-              "name": "活页孔 2",
+              "name": "binder-hole-2",
               "width": 28,
               "height": 28,
               "fill": [
@@ -4322,7 +4322,7 @@
             {
               "type": "ellipse",
               "id": "e256",
-              "name": "活页孔 3",
+              "name": "binder-hole-3",
               "width": 28,
               "height": 28,
               "fill": [
@@ -4346,7 +4346,7 @@
             {
               "type": "ellipse",
               "id": "e257",
-              "name": "活页孔 4",
+              "name": "binder-hole-4",
               "width": 28,
               "height": 28,
               "fill": [
@@ -4370,7 +4370,7 @@
             {
               "type": "ellipse",
               "id": "e258",
-              "name": "活页孔 5",
+              "name": "binder-hole-5",
               "width": 28,
               "height": 28,
               "fill": [
@@ -4394,7 +4394,7 @@
             {
               "type": "ellipse",
               "id": "e259",
-              "name": "活页孔 6",
+              "name": "binder-hole-6",
               "width": 28,
               "height": 28,
               "fill": [

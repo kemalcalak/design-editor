@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "故事叙事轮播 · 3:4 七板",
+  "name": "story-carousel-3x4-seven-boards",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f22",
-      "name": "01 封面 · 竖排书脊",
+      "name": "01-cover-vertical-spine",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -66,7 +66,7 @@
         {
           "type": "frame",
           "id": "f12",
-          "name": "封面 · 竖排书脊 · 内容",
+          "name": "cover-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -83,7 +83,7 @@
             {
               "type": "frame",
               "id": "f17",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -94,7 +94,7 @@
                 {
                   "type": "frame",
                   "id": "f15",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -106,9 +106,9 @@
                     {
                       "type": "text",
                       "id": "t13",
-                      "name": "系列名",
-                      "content": "深夜复盘",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Late-night recap",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -125,7 +125,7 @@
                     {
                       "type": "text",
                       "id": "t14",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "01 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -146,7 +146,7 @@
                 {
                   "type": "rectangle",
                   "id": "r16",
-                  "name": "灯管细线",
+                  "name": "neon-thin-line",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -161,7 +161,7 @@
             {
               "type": "frame",
               "id": "f11",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -177,7 +177,7 @@
                 {
                   "type": "frame",
                   "id": "f10",
-                  "name": "封面版心",
+                  "name": "cover-type-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -189,7 +189,7 @@
                     {
                       "type": "frame",
                       "id": "f4",
-                      "name": "封面文案",
+                      "name": "cover-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -200,9 +200,9 @@
                         {
                           "type": "text",
                           "id": "t1",
-                          "name": "眉标",
-                          "content": "一段花了三年才说得出口的经历",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "eyebrow",
+                          "content": "A story it took three years to tell",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -219,9 +219,9 @@
                         {
                           "type": "text",
                           "id": "t2",
-                          "name": "主标",
-                          "content": "那三年\n我一直在\n还债",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "title",
+                          "content": "Three years\nof paying\nit back",
+                          "fontFamily": "Inter",
                           "fontSize": 88,
                           "fontWeight": 700,
                           "fill": [
@@ -238,9 +238,9 @@
                         {
                           "type": "text",
                           "id": "t3",
-                          "name": "副标",
-                          "content": "是把自己透支掉的那种债。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "subtitle",
+                          "content": "Debt to myself, overdrawn.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -259,7 +259,7 @@
                     {
                       "type": "frame",
                       "id": "f9",
-                      "name": "竖排招牌",
+                      "name": "vertical-sign",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -270,9 +270,9 @@
                         {
                           "type": "text",
                           "id": "t5",
-                          "name": "招牌字 1",
-                          "content": "夜",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "sign-letter-1",
+                          "content": "L",
+                          "fontFamily": "Inter",
                           "fontSize": 64,
                           "fontWeight": 700,
                           "fill": [
@@ -289,9 +289,9 @@
                         {
                           "type": "text",
                           "id": "t6",
-                          "name": "招牌字 2",
-                          "content": "里",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "sign-letter-2",
+                          "content": "A",
+                          "fontFamily": "Inter",
                           "fontSize": 64,
                           "fontWeight": 700,
                           "fill": [
@@ -308,9 +308,9 @@
                         {
                           "type": "text",
                           "id": "t7",
-                          "name": "招牌字 3",
-                          "content": "三",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "sign-letter-3",
+                          "content": "T",
+                          "fontFamily": "Inter",
                           "fontSize": 64,
                           "fontWeight": 700,
                           "fill": [
@@ -327,9 +327,9 @@
                         {
                           "type": "text",
                           "id": "t8",
-                          "name": "招牌字 4",
-                          "content": "点",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "sign-letter-4",
+                          "content": "E",
+                          "fontFamily": "Inter",
                           "fontSize": 64,
                           "fontWeight": 700,
                           "fill": [
@@ -352,7 +352,7 @@
             {
               "type": "frame",
               "id": "f20",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -364,9 +364,9 @@
                 {
                   "type": "text",
                   "id": "t18",
-                  "name": "叙事阶段",
-                  "content": "起",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "story-stage",
+                  "content": "Start",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -383,9 +383,9 @@
                 {
                   "type": "text",
                   "id": "t19",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@ yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -406,7 +406,7 @@
         {
           "type": "frame",
           "id": "f23",
-          "name": "01 封面 · 竖排书脊 · 装饰",
+          "name": "01-cover-vertical-spine-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -415,7 +415,7 @@
             {
               "type": "rectangle",
               "id": "r21",
-              "name": "雨夜反光",
+              "name": "rainy-night-glare",
               "width": 1080,
               "height": 260,
               "fill": [
@@ -447,7 +447,7 @@
     {
       "type": "frame",
       "id": "f46",
-      "name": "02 开场 · 段落纯排",
+      "name": "02-opening-paragraphs",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -462,7 +462,7 @@
         {
           "type": "frame",
           "id": "f36",
-          "name": "开场 · 段落纯排 · 内容",
+          "name": "opening-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -479,7 +479,7 @@
             {
               "type": "frame",
               "id": "f41",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -490,7 +490,7 @@
                 {
                   "type": "frame",
                   "id": "f39",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -502,9 +502,9 @@
                     {
                       "type": "text",
                       "id": "t37",
-                      "name": "系列名",
-                      "content": "深夜复盘",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Late-night recap",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -521,7 +521,7 @@
                     {
                       "type": "text",
                       "id": "t38",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "02 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -542,7 +542,7 @@
                 {
                   "type": "rectangle",
                   "id": "r40",
-                  "name": "灯管细线",
+                  "name": "neon-thin-line",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -557,7 +557,7 @@
             {
               "type": "frame",
               "id": "f35",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -573,9 +573,9 @@
                 {
                   "type": "text",
                   "id": "t33",
-                  "name": "小标题",
-                  "content": "它是怎么开始的",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "heading",
+                  "content": "How it started",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -592,7 +592,7 @@
                 {
                   "type": "frame",
                   "id": "f34",
-                  "name": "正文区",
+                  "name": "body-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -603,7 +603,7 @@
                     {
                       "type": "frame",
                       "id": "f26",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -615,7 +615,7 @@
                         {
                           "type": "rectangle",
                           "id": "r24",
-                          "name": "段首竖线",
+                          "name": "paragraph-rule",
                           "width": 4,
                           "height": 80,
                           "fill": [
@@ -628,9 +628,9 @@
                         {
                           "type": "text",
                           "id": "t25",
-                          "name": "正文",
-                          "content": "第一年我以为自己只是忙，每天最后一件事都是回消息，最早一件也是。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body-text",
+                          "content": "Year one I called it busy: messages last thing at night, first thing at dawn.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -649,7 +649,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -661,7 +661,7 @@
                         {
                           "type": "rectangle",
                           "id": "r27",
-                          "name": "段首竖线",
+                          "name": "paragraph-rule",
                           "width": 4,
                           "height": 80,
                           "fill": [
@@ -674,9 +674,9 @@
                         {
                           "type": "text",
                           "id": "t28",
-                          "name": "正文",
-                          "content": "第二年开始睡不着。不是想事情，是脑子空着也停不下来，像一台没人关的机器。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body-text",
+                          "content": "Year two, sleep went. My mind kept running on empty, a machine nobody turned off.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -695,7 +695,7 @@
                     {
                       "type": "frame",
                       "id": "f32",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -707,7 +707,7 @@
                         {
                           "type": "rectangle",
                           "id": "r30",
-                          "name": "段首竖线",
+                          "name": "paragraph-rule",
                           "width": 4,
                           "height": 80,
                           "fill": [
@@ -720,9 +720,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "正文",
-                          "content": "第三年体检报告出来，医生问我最近压力大吗。我说还行。他把单子推回来，说你自己再看一遍。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body-text",
+                          "content": "Year three, a checkup. Stressed? I said I was fine. He slid the report back: look again.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -745,7 +745,7 @@
             {
               "type": "frame",
               "id": "f44",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -757,9 +757,9 @@
                 {
                   "type": "text",
                   "id": "t42",
-                  "name": "叙事阶段",
-                  "content": "转",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "story-stage",
+                  "content": "Turn",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -776,9 +776,9 @@
                 {
                   "type": "text",
                   "id": "t43",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@ yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -799,7 +799,7 @@
         {
           "type": "frame",
           "id": "f47",
-          "name": "02 开场 · 段落纯排 · 装饰",
+          "name": "02-opening-paragraphs-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -808,7 +808,7 @@
             {
               "type": "rectangle",
               "id": "r45",
-              "name": "雨夜反光",
+              "name": "rainy-night-glare",
               "width": 1080,
               "height": 260,
               "fill": [
@@ -840,7 +840,7 @@
     {
       "type": "frame",
       "id": "f63",
-      "name": "03 切词 · 高亮",
+      "name": "03-keyword-highlight",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -855,7 +855,7 @@
         {
           "type": "frame",
           "id": "f53",
-          "name": "切词 · 高亮 · 内容",
+          "name": "keyword-highlight-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -872,7 +872,7 @@
             {
               "type": "frame",
               "id": "f58",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -883,7 +883,7 @@
                 {
                   "type": "frame",
                   "id": "f56",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -895,9 +895,9 @@
                     {
                       "type": "text",
                       "id": "t54",
-                      "name": "系列名",
-                      "content": "深夜复盘",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Late-night recap",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -914,7 +914,7 @@
                     {
                       "type": "text",
                       "id": "t55",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "03 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -935,7 +935,7 @@
                 {
                   "type": "rectangle",
                   "id": "r57",
-                  "name": "灯管细线",
+                  "name": "neon-thin-line",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -950,7 +950,7 @@
             {
               "type": "frame",
               "id": "f52",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -966,7 +966,7 @@
                 {
                   "type": "frame",
                   "id": "f48",
-                  "name": "被击中的词",
+                  "name": "struck-word",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -991,9 +991,9 @@
                     {
                       "type": "text",
                       "id": "t49",
-                      "name": "词",
-                      "content": "还行",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "word",
+                      "content": "I'm fine",
+                      "fontFamily": "Inter",
                       "fontSize": 88,
                       "fontWeight": 700,
                       "fill": [
@@ -1012,9 +1012,9 @@
                 {
                   "type": "text",
                   "id": "t50",
-                  "name": "整句",
-                  "content": "那三年我说得最多的两个字。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "full-sentence",
+                  "content": "The two words I said most in those years.",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -1031,9 +1031,9 @@
                 {
                   "type": "text",
                   "id": "t51",
-                  "name": "注解",
-                  "content": "它不是回答，是一道把人挡在外面的门。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "annotation",
+                  "content": "It wasn't an answer. It was a door that kept people out.",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -1052,7 +1052,7 @@
             {
               "type": "frame",
               "id": "f61",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1064,9 +1064,9 @@
                 {
                   "type": "text",
                   "id": "t59",
-                  "name": "叙事阶段",
-                  "content": "沉",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "story-stage",
+                  "content": "Sink",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -1083,9 +1083,9 @@
                 {
                   "type": "text",
                   "id": "t60",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@ yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -1106,7 +1106,7 @@
         {
           "type": "frame",
           "id": "f64",
-          "name": "03 切词 · 高亮 · 装饰",
+          "name": "03-keyword-highlight-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1115,7 +1115,7 @@
             {
               "type": "rectangle",
               "id": "r62",
-              "name": "雨夜反光",
+              "name": "rainy-night-glare",
               "width": 1080,
               "height": 260,
               "fill": [
@@ -1147,7 +1147,7 @@
     {
       "type": "frame",
       "id": "f87",
-      "name": "04 场景 · 图注混排",
+      "name": "04-scene-captioned",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -1162,7 +1162,7 @@
         {
           "type": "frame",
           "id": "f77",
-          "name": "场景 · 图注混排 · 内容",
+          "name": "scene-captioned-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1179,7 +1179,7 @@
             {
               "type": "frame",
               "id": "f82",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1190,7 +1190,7 @@
                 {
                   "type": "frame",
                   "id": "f80",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1202,9 +1202,9 @@
                     {
                       "type": "text",
                       "id": "t78",
-                      "name": "系列名",
-                      "content": "深夜复盘",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Late-night recap",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1221,7 +1221,7 @@
                     {
                       "type": "text",
                       "id": "t79",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "04 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -1242,7 +1242,7 @@
                 {
                   "type": "rectangle",
                   "id": "r81",
-                  "name": "灯管细线",
+                  "name": "neon-thin-line",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -1257,7 +1257,7 @@
             {
               "type": "frame",
               "id": "f76",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1273,7 +1273,7 @@
                 {
                   "type": "frame",
                   "id": "f71",
-                  "name": "照片位",
+                  "name": "photo-slot",
                   "width": "fill_container",
                   "height": 640,
                   "layout": "vertical",
@@ -1300,7 +1300,7 @@
                     {
                       "type": "group",
                       "id": "g67",
-                      "name": "上传占位",
+                      "name": "upload-slot",
                       "width": 120,
                       "height": 124,
                       "layout": "none",
@@ -1309,7 +1309,7 @@
                         {
                           "type": "icon_font",
                           "id": "i66",
-                          "name": "上传占位 · 图标",
+                          "name": "upload-slot-icon",
                           "iconFontName": "upload",
                           "width": 54,
                           "height": 54,
@@ -1325,7 +1325,7 @@
                         {
                           "type": "text",
                           "id": "t65",
-                          "name": "上传占位 · 圆底",
+                          "name": "upload-slot-circle",
                           "content": "●",
                           "fontFamily": "Inter",
                           "fontSize": 159,
@@ -1348,7 +1348,7 @@
                     {
                       "type": "frame",
                       "id": "f70",
-                      "name": "占位说明",
+                      "name": "slot-hint",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1359,9 +1359,9 @@
                         {
                           "type": "text",
                           "id": "t68",
-                          "name": "占位标题",
-                          "content": "把那张照片放这里",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "slot-title",
+                          "content": "Put that photo here",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 600,
                           "fill": [
@@ -1378,9 +1378,9 @@
                         {
                           "type": "text",
                           "id": "t69",
-                          "name": "占位规格",
-                          "content": "建议 1080×640 以上",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "slot-spec",
+                          "content": "1080×640 or larger",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -1401,7 +1401,7 @@
                 {
                   "type": "frame",
                   "id": "f75",
-                  "name": "图注区",
+                  "name": "caption-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1412,9 +1412,9 @@
                     {
                       "type": "text",
                       "id": "t72",
-                      "name": "小标题",
-                      "content": "那天晚上的便利店",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "heading",
+                      "content": "The corner store that night",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 700,
                       "fill": [
@@ -1431,9 +1431,9 @@
                     {
                       "type": "text",
                       "id": "t73",
-                      "name": "正文",
-                      "content": "我在关东煮前面站了二十分钟，什么都没买。那是三年里我第一次停下来。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "body-text",
+                      "content": "Twenty minutes at the hot food counter, buying nothing. My first stop in three years.",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 400,
                       "fill": [
@@ -1450,9 +1450,9 @@
                     {
                       "type": "text",
                       "id": "t74",
-                      "name": "图注",
-                      "content": "摄于凌晨 02:47 · 你可以换成自己的那张",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "caption",
+                      "content": "Taken at 02:47 a.m. · Swap in your own",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1473,7 +1473,7 @@
             {
               "type": "frame",
               "id": "f85",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1485,9 +1485,9 @@
                 {
                   "type": "text",
                   "id": "t83",
-                  "name": "叙事阶段",
-                  "content": "底",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "story-stage",
+                  "content": "Low",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -1504,9 +1504,9 @@
                 {
                   "type": "text",
                   "id": "t84",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@ yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -1527,7 +1527,7 @@
         {
           "type": "frame",
           "id": "f88",
-          "name": "04 场景 · 图注混排 · 装饰",
+          "name": "04-scene-captioned-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1536,7 +1536,7 @@
             {
               "type": "rectangle",
               "id": "r86",
-              "name": "雨夜反光",
+              "name": "rainy-night-glare",
               "width": 1080,
               "height": 260,
               "fill": [
@@ -1568,7 +1568,7 @@
     {
       "type": "frame",
       "id": "f129",
-      "name": "05 时间轴 · 四刻度",
+      "name": "05-timeline-four-marks",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -1583,7 +1583,7 @@
         {
           "type": "frame",
           "id": "f119",
-          "name": "时间轴 · 四刻度 · 内容",
+          "name": "timeline-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1600,7 +1600,7 @@
             {
               "type": "frame",
               "id": "f124",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1611,7 +1611,7 @@
                 {
                   "type": "frame",
                   "id": "f122",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1623,9 +1623,9 @@
                     {
                       "type": "text",
                       "id": "t120",
-                      "name": "系列名",
-                      "content": "深夜复盘",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Late-night recap",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1642,7 +1642,7 @@
                     {
                       "type": "text",
                       "id": "t121",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "05 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -1663,7 +1663,7 @@
                 {
                   "type": "rectangle",
                   "id": "r123",
-                  "name": "灯管细线",
+                  "name": "neon-thin-line",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -1678,7 +1678,7 @@
             {
               "type": "frame",
               "id": "f118",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1694,9 +1694,9 @@
                 {
                   "type": "text",
                   "id": "t116",
-                  "name": "小标题",
-                  "content": "三年，四个刻度",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "heading",
+                  "content": "Three years, four marks",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -1713,7 +1713,7 @@
                 {
                   "type": "frame",
                   "id": "f117",
-                  "name": "时间轴",
+                  "name": "timeline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1724,7 +1724,7 @@
                     {
                       "type": "frame",
                       "id": "f95",
-                      "name": "刻度",
+                      "name": "mark",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1736,7 +1736,7 @@
                         {
                           "type": "frame",
                           "id": "f91",
-                          "name": "轴位",
+                          "name": "axis-point",
                           "width": 28,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1747,7 +1747,7 @@
                             {
                               "type": "rectangle",
                               "id": "r89",
-                              "name": "节点",
+                              "name": "node",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 14,
@@ -1765,7 +1765,7 @@
                             {
                               "type": "rectangle",
                               "id": "r90",
-                              "name": "轴段",
+                              "name": "axis-segment",
                               "width": 3,
                               "height": 128,
                               "fill": [
@@ -1780,7 +1780,7 @@
                         {
                           "type": "frame",
                           "id": "f94",
-                          "name": "刻度文案",
+                          "name": "mark-copy",
                           "width": 860,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1791,9 +1791,9 @@
                             {
                               "type": "text",
                               "id": "t92",
-                              "name": "年份",
-                              "content": "第一年",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "year",
+                              "content": "Year one",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -1810,9 +1810,9 @@
                             {
                               "type": "text",
                               "id": "t93",
-                              "name": "刻度句",
-                              "content": "把加班当勋章",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "mark-line",
+                              "content": "Wore overtime like a medal",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -1833,7 +1833,7 @@
                     {
                       "type": "frame",
                       "id": "f102",
-                      "name": "刻度",
+                      "name": "mark",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1845,7 +1845,7 @@
                         {
                           "type": "frame",
                           "id": "f98",
-                          "name": "轴位",
+                          "name": "axis-point",
                           "width": 28,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1856,7 +1856,7 @@
                             {
                               "type": "rectangle",
                               "id": "r96",
-                              "name": "节点",
+                              "name": "node",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 14,
@@ -1874,7 +1874,7 @@
                             {
                               "type": "rectangle",
                               "id": "r97",
-                              "name": "轴段",
+                              "name": "axis-segment",
                               "width": 3,
                               "height": 128,
                               "fill": [
@@ -1889,7 +1889,7 @@
                         {
                           "type": "frame",
                           "id": "f101",
-                          "name": "刻度文案",
+                          "name": "mark-copy",
                           "width": 860,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1900,9 +1900,9 @@
                             {
                               "type": "text",
                               "id": "t99",
-                              "name": "年份",
-                              "content": "第二年",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "year",
+                              "content": "Year two",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -1919,9 +1919,9 @@
                             {
                               "type": "text",
                               "id": "t100",
-                              "name": "刻度句",
-                              "content": "开始靠药物入睡",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "mark-line",
+                              "content": "Needed pills to sleep",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -1942,7 +1942,7 @@
                     {
                       "type": "frame",
                       "id": "f109",
-                      "name": "刻度",
+                      "name": "mark",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1954,7 +1954,7 @@
                         {
                           "type": "frame",
                           "id": "f105",
-                          "name": "轴位",
+                          "name": "axis-point",
                           "width": 28,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1965,7 +1965,7 @@
                             {
                               "type": "rectangle",
                               "id": "r103",
-                              "name": "节点",
+                              "name": "node",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 14,
@@ -1983,7 +1983,7 @@
                             {
                               "type": "rectangle",
                               "id": "r104",
-                              "name": "轴段",
+                              "name": "axis-segment",
                               "width": 3,
                               "height": 128,
                               "fill": [
@@ -1998,7 +1998,7 @@
                         {
                           "type": "frame",
                           "id": "f108",
-                          "name": "刻度文案",
+                          "name": "mark-copy",
                           "width": 860,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2009,9 +2009,9 @@
                             {
                               "type": "text",
                               "id": "t106",
-                              "name": "年份",
-                              "content": "第三年",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "year",
+                              "content": "Year three",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -2028,9 +2028,9 @@
                             {
                               "type": "text",
                               "id": "t107",
-                              "name": "刻度句",
-                              "content": "体检单把我拦下",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "mark-line",
+                              "content": "A checkup stopped me",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -2051,7 +2051,7 @@
                     {
                       "type": "frame",
                       "id": "f115",
-                      "name": "刻度",
+                      "name": "mark",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2063,7 +2063,7 @@
                         {
                           "type": "frame",
                           "id": "f111",
-                          "name": "轴位",
+                          "name": "axis-point",
                           "width": 28,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2074,7 +2074,7 @@
                             {
                               "type": "rectangle",
                               "id": "r110",
-                              "name": "节点",
+                              "name": "node",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 14,
@@ -2099,7 +2099,7 @@
                         {
                           "type": "frame",
                           "id": "f114",
-                          "name": "刻度文案",
+                          "name": "mark-copy",
                           "width": 860,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2110,9 +2110,9 @@
                             {
                               "type": "text",
                               "id": "t112",
-                              "name": "年份",
-                              "content": "现在",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "year",
+                              "content": "Now",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -2129,9 +2129,9 @@
                             {
                               "type": "text",
                               "id": "t113",
-                              "name": "刻度句",
-                              "content": "每天六点半下班",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "mark-line",
+                              "content": "Off work at 6:30 daily",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -2156,7 +2156,7 @@
             {
               "type": "frame",
               "id": "f127",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2168,9 +2168,9 @@
                 {
                   "type": "text",
                   "id": "t125",
-                  "name": "叙事阶段",
-                  "content": "回",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "story-stage",
+                  "content": "Back",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -2187,9 +2187,9 @@
                 {
                   "type": "text",
                   "id": "t126",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@ yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -2210,7 +2210,7 @@
         {
           "type": "frame",
           "id": "f130",
-          "name": "05 时间轴 · 四刻度 · 装饰",
+          "name": "05-timeline-four-marks-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2219,7 +2219,7 @@
             {
               "type": "rectangle",
               "id": "r128",
-              "name": "雨夜反光",
+              "name": "rainy-night-glare",
               "width": 1080,
               "height": 260,
               "fill": [
@@ -2251,7 +2251,7 @@
     {
       "type": "frame",
       "id": "f145",
-      "name": "06 金句 · 满版一句",
+      "name": "06-quote-full-bleed",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -2266,7 +2266,7 @@
         {
           "type": "frame",
           "id": "f135",
-          "name": "金句 · 满版一句 · 内容",
+          "name": "quote-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2283,7 +2283,7 @@
             {
               "type": "frame",
               "id": "f140",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2294,7 +2294,7 @@
                 {
                   "type": "frame",
                   "id": "f138",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2306,9 +2306,9 @@
                     {
                       "type": "text",
                       "id": "t136",
-                      "name": "系列名",
-                      "content": "深夜复盘",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Late-night recap",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -2325,7 +2325,7 @@
                     {
                       "type": "text",
                       "id": "t137",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "06 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -2346,7 +2346,7 @@
                 {
                   "type": "rectangle",
                   "id": "r139",
-                  "name": "灯管细线",
+                  "name": "neon-thin-line",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -2361,7 +2361,7 @@
             {
               "type": "frame",
               "id": "f134",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2377,7 +2377,7 @@
                 {
                   "type": "rectangle",
                   "id": "r131",
-                  "name": "灯管短线",
+                  "name": "neon-short-line",
                   "width": 140,
                   "height": 3,
                   "fill": [
@@ -2390,9 +2390,9 @@
                 {
                   "type": "text",
                   "id": "t132",
-                  "name": "金句",
-                  "content": "撑住不是本事，\n知道何时放下才是。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "quote",
+                  "content": "Holding on isn't strength.\nKnowing when to let go is.",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -2409,9 +2409,9 @@
                 {
                   "type": "text",
                   "id": "t133",
-                  "name": "出处",
-                  "content": "写在体检报告的背面",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "attribution",
+                  "content": "Written on the back of my checkup report",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -2430,7 +2430,7 @@
             {
               "type": "frame",
               "id": "f143",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2442,9 +2442,9 @@
                 {
                   "type": "text",
                   "id": "t141",
-                  "name": "叙事阶段",
-                  "content": "悟",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "story-stage",
+                  "content": "Insight",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -2461,9 +2461,9 @@
                 {
                   "type": "text",
                   "id": "t142",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@ yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -2484,7 +2484,7 @@
         {
           "type": "frame",
           "id": "f146",
-          "name": "06 金句 · 满版一句 · 装饰",
+          "name": "06-quote-full-bleed-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2493,7 +2493,7 @@
             {
               "type": "rectangle",
               "id": "r144",
-              "name": "雨夜反光",
+              "name": "rainy-night-glare",
               "width": 1080,
               "height": 260,
               "fill": [
@@ -2525,7 +2525,7 @@
     {
       "type": "frame",
       "id": "f161",
-      "name": "07 收束 · 签名",
+      "name": "07-closing-signature",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -2540,7 +2540,7 @@
         {
           "type": "frame",
           "id": "f151",
-          "name": "收束 · 签名 · 内容",
+          "name": "closing-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2557,7 +2557,7 @@
             {
               "type": "frame",
               "id": "f156",
-              "name": "页眉",
+              "name": "header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2568,7 +2568,7 @@
                 {
                   "type": "frame",
                   "id": "f154",
-                  "name": "页眉行",
+                  "name": "header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2580,9 +2580,9 @@
                     {
                       "type": "text",
                       "id": "t152",
-                      "name": "系列名",
-                      "content": "深夜复盘",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Late-night recap",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -2599,7 +2599,7 @@
                     {
                       "type": "text",
                       "id": "t153",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "07 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -2620,7 +2620,7 @@
                 {
                   "type": "rectangle",
                   "id": "r155",
-                  "name": "灯管细线",
+                  "name": "neon-thin-line",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -2635,7 +2635,7 @@
             {
               "type": "frame",
               "id": "f150",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2651,9 +2651,9 @@
                 {
                   "type": "text",
                   "id": "t147",
-                  "name": "收束句",
-                  "content": "把「还行」换成\n一句实话。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-line",
+                  "content": "Swap \"I'm fine\"\nfor the truth.",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -2670,7 +2670,7 @@
                 {
                   "type": "frame",
                   "id": "f149",
-                  "name": "行动",
+                  "name": "action",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2695,9 +2695,9 @@
                     {
                       "type": "text",
                       "id": "t148",
-                      "name": "行动说明",
-                      "content": "今晚有人问你最近怎么样，试着不说还行。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "action-note",
+                      "content": "Tonight, when someone asks how you are, try not saying \"fine\".",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 400,
                       "fill": [
@@ -2718,7 +2718,7 @@
             {
               "type": "frame",
               "id": "f159",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2730,9 +2730,9 @@
                 {
                   "type": "text",
                   "id": "t157",
-                  "name": "叙事阶段",
-                  "content": "收",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "story-stage",
+                  "content": "End",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -2749,9 +2749,9 @@
                 {
                   "type": "text",
                   "id": "t158",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@ yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -2772,7 +2772,7 @@
         {
           "type": "frame",
           "id": "f162",
-          "name": "07 收束 · 签名 · 装饰",
+          "name": "07-closing-signature-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2781,7 +2781,7 @@
             {
               "type": "rectangle",
               "id": "r160",
-              "name": "雨夜反光",
+              "name": "rainy-night-glare",
               "width": 1080,
               "height": 260,
               "fill": [

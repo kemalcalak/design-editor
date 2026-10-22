@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "软件操作步骤卡 · 4:5 单卡",
+  "name": "software-step-card-4x5-single",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "软件操作步骤卡",
+      "name": "software-step-card",
       "width": 1080,
       "height": 1350,
       "layout": "vertical",
@@ -59,7 +59,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -70,7 +70,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "档位标签",
+              "name": "badge",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -91,9 +91,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "档位文字",
-                  "content": "操作教程 · 共 3 步",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "badge-text",
+                  "content": "Tutorial · 3 steps",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -112,9 +112,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "三步把设计稿\n导成能直接发的图",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Three steps to a\npost-ready export",
+              "fontFamily": "Inter",
               "fontSize": 64,
               "fontWeight": 700,
               "fill": [
@@ -131,9 +131,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "菜单藏得深，记住下面这条路径就够了。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "The menu is buried deep; this path is all you need to remember.",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -152,7 +152,7 @@
         {
           "type": "frame",
           "id": "f15",
-          "name": "菜单路径条",
+          "name": "menu-path-bar",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -172,7 +172,7 @@
             {
               "type": "frame",
               "id": "f7",
-              "name": "路径段",
+              "name": "path-segment",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -193,9 +193,9 @@
                 {
                   "type": "text",
                   "id": "t8",
-                  "name": "路径段文字",
-                  "content": "文件",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "path-segment-text",
+                  "content": "File",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -214,7 +214,7 @@
             {
               "type": "icon_font",
               "id": "i9",
-              "name": "路径分隔",
+              "name": "path-separator",
               "iconFontName": "chevron-right",
               "width": 22,
               "height": 22,
@@ -228,7 +228,7 @@
             {
               "type": "frame",
               "id": "f10",
-              "name": "路径段",
+              "name": "path-segment",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -249,9 +249,9 @@
                 {
                   "type": "text",
                   "id": "t11",
-                  "name": "路径段文字",
-                  "content": "导出为",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "path-segment-text",
+                  "content": "Export As",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -270,7 +270,7 @@
             {
               "type": "icon_font",
               "id": "i12",
-              "name": "路径分隔",
+              "name": "path-separator",
               "iconFontName": "chevron-right",
               "width": 22,
               "height": 22,
@@ -284,7 +284,7 @@
             {
               "type": "frame",
               "id": "f13",
-              "name": "路径段",
+              "name": "path-segment",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -305,9 +305,9 @@
                 {
                   "type": "text",
                   "id": "t14",
-                  "name": "路径段文字",
+                  "name": "path-segment-text",
                   "content": "PNG · 2x",
-                  "fontFamily": "Noto Sans SC",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -338,7 +338,7 @@
         {
           "type": "frame",
           "id": "f16",
-          "name": "截图占位",
+          "name": "screenshot-placeholder",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -365,7 +365,7 @@
             {
               "type": "icon_font",
               "id": "i17",
-              "name": "占位图标",
+              "name": "placeholder-icon",
               "iconFontName": "image",
               "width": 56,
               "height": 56,
@@ -379,9 +379,9 @@
             {
               "type": "text",
               "id": "t18",
-              "name": "占位标题",
-              "content": "把导出面板的截图拖进来",
-              "fontFamily": "Noto Sans SC",
+              "name": "placeholder-title",
+              "content": "Drop a screenshot of the export panel here",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 600,
               "fill": [
@@ -399,9 +399,9 @@
             {
               "type": "text",
               "id": "t19",
-              "name": "占位规格",
-              "content": "占位比例 2.4:1，导出前记得关掉通知",
-              "fontFamily": "Noto Sans SC",
+              "name": "placeholder-spec",
+              "content": "Slot ratio 2.4:1; turn off notifications before you capture",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -421,7 +421,7 @@
         {
           "type": "frame",
           "id": "f38",
-          "name": "步骤区",
+          "name": "steps",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -432,7 +432,7 @@
             {
               "type": "frame",
               "id": "f25",
-              "name": "步骤",
+              "name": "step",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -443,7 +443,7 @@
                 {
                   "type": "frame",
                   "id": "f20",
-                  "name": "序号底",
+                  "name": "index-bg",
                   "width": 48,
                   "height": 48,
                   "layout": "horizontal",
@@ -460,7 +460,7 @@
                     {
                       "type": "text",
                       "id": "t21",
-                      "name": "序号",
+                      "name": "index",
                       "content": "1",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -481,7 +481,7 @@
                 {
                   "type": "frame",
                   "id": "f24",
-                  "name": "步骤文案",
+                  "name": "step-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -492,9 +492,9 @@
                     {
                       "type": "text",
                       "id": "t22",
-                      "name": "步骤标题",
-                      "content": "先把画板选中，再打开导出",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "step-title",
+                      "content": "Select the artboard, then open Export",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -511,9 +511,9 @@
                     {
                       "type": "text",
                       "id": "t23",
-                      "name": "步骤说明",
-                      "content": "没选中画板时导出的是整个画布，边上会多出一圈空白。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "step-desc",
+                      "content": "With nothing selected you export the whole canvas, plus a ring of blank margin.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -534,7 +534,7 @@
             {
               "type": "frame",
               "id": "f31",
-              "name": "步骤",
+              "name": "step",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -545,7 +545,7 @@
                 {
                   "type": "frame",
                   "id": "f26",
-                  "name": "序号底",
+                  "name": "index-bg",
                   "width": 48,
                   "height": 48,
                   "layout": "horizontal",
@@ -562,7 +562,7 @@
                     {
                       "type": "text",
                       "id": "t27",
-                      "name": "序号",
+                      "name": "index",
                       "content": "2",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -583,7 +583,7 @@
                 {
                   "type": "frame",
                   "id": "f30",
-                  "name": "步骤文案",
+                  "name": "step-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -594,9 +594,9 @@
                     {
                       "type": "text",
                       "id": "t28",
-                      "name": "步骤标题",
-                      "content": "倍数选 2x，格式选 PNG",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "step-title",
+                      "content": "Scale 2x, format PNG",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -613,9 +613,9 @@
                     {
                       "type": "text",
                       "id": "t29",
-                      "name": "步骤说明",
-                      "content": "1x 发出去在手机上发虚；JPG 会把文字边缘压出灰边。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "step-desc",
+                      "content": "At 1x it looks soft on phones; JPG leaves gray fringes on text edges.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -636,7 +636,7 @@
             {
               "type": "frame",
               "id": "f37",
-              "name": "步骤",
+              "name": "step",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -647,7 +647,7 @@
                 {
                   "type": "frame",
                   "id": "f32",
-                  "name": "序号底",
+                  "name": "index-bg",
                   "width": 48,
                   "height": 48,
                   "layout": "horizontal",
@@ -664,7 +664,7 @@
                     {
                       "type": "text",
                       "id": "t33",
-                      "name": "序号",
+                      "name": "index",
                       "content": "3",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -685,7 +685,7 @@
                 {
                   "type": "frame",
                   "id": "f36",
-                  "name": "步骤文案",
+                  "name": "step-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -696,9 +696,9 @@
                     {
                       "type": "text",
                       "id": "t34",
-                      "name": "步骤标题",
-                      "content": "勾掉「包含背景」再导",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "step-title",
+                      "content": "Uncheck \"Include background\" first",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -715,9 +715,9 @@
                     {
                       "type": "text",
                       "id": "t35",
-                      "name": "步骤说明",
-                      "content": "留白交给发布平台去铺，导出时带底色会和它的底打架。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "step-desc",
+                      "content": "Let the platform supply the backdrop; a baked-in background will clash with it.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -740,7 +740,7 @@
         {
           "type": "frame",
           "id": "f41",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -752,9 +752,9 @@
             {
               "type": "text",
               "id": "t39",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -771,9 +771,9 @@
             {
               "type": "text",
               "id": "t40",
-              "name": "用法提示",
-              "content": "深色块是图片位，直接把截图拖上去",
-              "fontFamily": "Noto Sans SC",
+              "name": "usage-hint",
+              "content": "Dark blocks are image slots; drop screenshots onto them",
+              "fontFamily": "Inter",
               "fontSize": 22,
               "fontWeight": 400,
               "fill": [

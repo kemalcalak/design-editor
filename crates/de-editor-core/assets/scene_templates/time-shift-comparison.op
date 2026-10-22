@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "时间对比 一年前与现在",
+  "name": "time-shift-a-year-ago-vs-now",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "时间对比 一年前与现在",
+      "name": "time-shift-a-year-ago-vs-now",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -61,7 +61,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -72,7 +72,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -93,9 +93,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "标签文字",
-                  "content": "时间对比 · 一年",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Then vs. Now · 1 Year",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -114,9 +114,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "一年时间\n到底变了什么",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "One year later,\nwhat really changed",
+              "fontFamily": "Inter",
               "fontSize": 70,
               "fontWeight": 700,
               "fill": [
@@ -133,9 +133,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "左边是去年，右边是现在。有颜色的那一侧是当下。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Last year on the left, today on the right. The colored side is now.",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -154,7 +154,7 @@
         {
           "type": "frame",
           "id": "f58",
-          "name": "中轴",
+          "name": "center-axis",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -165,7 +165,7 @@
             {
               "type": "frame",
               "id": "f54",
-              "name": "时代行",
+              "name": "era-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -177,7 +177,7 @@
                 {
                   "type": "frame",
                   "id": "f50",
-                  "name": "左时代",
+                  "name": "left-era",
                   "width": 336,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -188,9 +188,9 @@
                     {
                       "type": "text",
                       "id": "t49",
-                      "name": "去年标签",
-                      "content": "一年前",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "last-year-label",
+                      "content": "A year ago",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -210,7 +210,7 @@
                 {
                   "type": "frame",
                   "id": "f51",
-                  "name": "轴头",
+                  "name": "axis-head",
                   "width": 200,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -222,7 +222,7 @@
                 {
                   "type": "frame",
                   "id": "f53",
-                  "name": "右时代",
+                  "name": "right-era",
                   "width": 336,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -233,9 +233,9 @@
                     {
                       "type": "text",
                       "id": "t52",
-                      "name": "现在标签",
-                      "content": "现在",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "now-label",
+                      "content": "Now",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -257,7 +257,7 @@
             {
               "type": "frame",
               "id": "f55",
-              "name": "变化列表",
+              "name": "change-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -268,7 +268,7 @@
                 {
                   "type": "frame",
                   "id": "f13",
-                  "name": "变化行",
+                  "name": "change-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -280,7 +280,7 @@
                     {
                       "type": "frame",
                       "id": "f8",
-                      "name": "去年值",
+                      "name": "last-year-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -291,8 +291,8 @@
                         {
                           "type": "text",
                           "id": "t7",
-                          "name": "去年文字",
-                          "content": "想起来才发",
+                          "name": "last-year-text",
+                          "content": "When I remembered",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
@@ -313,7 +313,7 @@
                     {
                       "type": "frame",
                       "id": "f9",
-                      "name": "轴标签",
+                      "name": "axis-label",
                       "width": 200,
                       "height": 64,
                       "layout": "horizontal",
@@ -330,9 +330,9 @@
                         {
                           "type": "text",
                           "id": "t10",
-                          "name": "轴标签文字",
-                          "content": "更新节奏",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "axis-label-text",
+                          "content": "Cadence",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 600,
                           "fill": [
@@ -352,7 +352,7 @@
                     {
                       "type": "frame",
                       "id": "f12",
-                      "name": "现在值",
+                      "name": "now-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -363,8 +363,8 @@
                         {
                           "type": "text",
                           "id": "t11",
-                          "name": "现在文字",
-                          "content": "每周三固定",
+                          "name": "now-text",
+                          "content": "Every Wednesday",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
@@ -387,7 +387,7 @@
                 {
                   "type": "frame",
                   "id": "f20",
-                  "name": "变化行",
+                  "name": "change-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -399,7 +399,7 @@
                     {
                       "type": "frame",
                       "id": "f15",
-                      "name": "去年值",
+                      "name": "last-year-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -410,8 +410,8 @@
                         {
                           "type": "text",
                           "id": "t14",
-                          "name": "去年文字",
-                          "content": "六个小时",
+                          "name": "last-year-text",
+                          "content": "Six hours",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
@@ -432,7 +432,7 @@
                     {
                       "type": "frame",
                       "id": "f16",
-                      "name": "轴标签",
+                      "name": "axis-label",
                       "width": 200,
                       "height": 64,
                       "layout": "horizontal",
@@ -449,9 +449,9 @@
                         {
                           "type": "text",
                           "id": "t17",
-                          "name": "轴标签文字",
-                          "content": "单条耗时",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "axis-label-text",
+                          "content": "Time per post",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 600,
                           "fill": [
@@ -471,7 +471,7 @@
                     {
                       "type": "frame",
                       "id": "f19",
-                      "name": "现在值",
+                      "name": "now-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -482,8 +482,8 @@
                         {
                           "type": "text",
                           "id": "t18",
-                          "name": "现在文字",
-                          "content": "九十分钟",
+                          "name": "now-text",
+                          "content": "90 minutes",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
@@ -506,7 +506,7 @@
                 {
                   "type": "frame",
                   "id": "f27",
-                  "name": "变化行",
+                  "name": "change-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -518,7 +518,7 @@
                     {
                       "type": "frame",
                       "id": "f22",
-                      "name": "去年值",
+                      "name": "last-year-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -529,8 +529,8 @@
                         {
                           "type": "text",
                           "id": "t21",
-                          "name": "去年文字",
-                          "content": "刷到什么写什么",
+                          "name": "last-year-text",
+                          "content": "Whatever came up",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
@@ -551,7 +551,7 @@
                     {
                       "type": "frame",
                       "id": "f23",
-                      "name": "轴标签",
+                      "name": "axis-label",
                       "width": 200,
                       "height": 64,
                       "layout": "horizontal",
@@ -568,9 +568,9 @@
                         {
                           "type": "text",
                           "id": "t24",
-                          "name": "轴标签文字",
-                          "content": "选题来源",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "axis-label-text",
+                          "content": "Topic source",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 600,
                           "fill": [
@@ -590,7 +590,7 @@
                     {
                       "type": "frame",
                       "id": "f26",
-                      "name": "现在值",
+                      "name": "now-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -601,8 +601,8 @@
                         {
                           "type": "text",
                           "id": "t25",
-                          "name": "现在文字",
-                          "content": "读者的提问",
+                          "name": "now-text",
+                          "content": "Reader questions",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
@@ -625,7 +625,7 @@
                 {
                   "type": "frame",
                   "id": "f34",
-                  "name": "变化行",
+                  "name": "change-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -637,7 +637,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "去年值",
+                      "name": "last-year-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -648,8 +648,8 @@
                         {
                           "type": "text",
                           "id": "t28",
-                          "name": "去年文字",
-                          "content": "每次重做",
+                          "name": "last-year-text",
+                          "content": "Redone every time",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
@@ -670,7 +670,7 @@
                     {
                       "type": "frame",
                       "id": "f30",
-                      "name": "轴标签",
+                      "name": "axis-label",
                       "width": 200,
                       "height": 64,
                       "layout": "horizontal",
@@ -687,9 +687,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "轴标签文字",
-                          "content": "封面",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "axis-label-text",
+                          "content": "Cover",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 600,
                           "fill": [
@@ -709,7 +709,7 @@
                     {
                       "type": "frame",
                       "id": "f33",
-                      "name": "现在值",
+                      "name": "now-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -720,8 +720,8 @@
                         {
                           "type": "text",
                           "id": "t32",
-                          "name": "现在文字",
-                          "content": "一套模板",
+                          "name": "now-text",
+                          "content": "One template",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
@@ -744,7 +744,7 @@
                 {
                   "type": "frame",
                   "id": "f41",
-                  "name": "变化行",
+                  "name": "change-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -756,7 +756,7 @@
                     {
                       "type": "frame",
                       "id": "f36",
-                      "name": "去年值",
+                      "name": "last-year-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -767,7 +767,7 @@
                         {
                           "type": "text",
                           "id": "t35",
-                          "name": "去年文字",
+                          "name": "last-year-text",
                           "content": "1.2%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -789,7 +789,7 @@
                     {
                       "type": "frame",
                       "id": "f37",
-                      "name": "轴标签",
+                      "name": "axis-label",
                       "width": 200,
                       "height": 64,
                       "layout": "horizontal",
@@ -806,9 +806,9 @@
                         {
                           "type": "text",
                           "id": "t38",
-                          "name": "轴标签文字",
-                          "content": "收藏率",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "axis-label-text",
+                          "content": "Save rate",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 600,
                           "fill": [
@@ -828,7 +828,7 @@
                     {
                       "type": "frame",
                       "id": "f40",
-                      "name": "现在值",
+                      "name": "now-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -839,7 +839,7 @@
                         {
                           "type": "text",
                           "id": "t39",
-                          "name": "现在文字",
+                          "name": "now-text",
                           "content": "6.8%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -863,7 +863,7 @@
                 {
                   "type": "frame",
                   "id": "f48",
-                  "name": "变化行",
+                  "name": "change-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -875,7 +875,7 @@
                     {
                       "type": "frame",
                       "id": "f43",
-                      "name": "去年值",
+                      "name": "last-year-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -886,8 +886,8 @@
                         {
                           "type": "text",
                           "id": "t42",
-                          "name": "去年文字",
-                          "content": "偶尔一两条",
+                          "name": "last-year-text",
+                          "content": "One or two, rarely",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
@@ -908,7 +908,7 @@
                     {
                       "type": "frame",
                       "id": "f44",
-                      "name": "轴标签",
+                      "name": "axis-label",
                       "width": 200,
                       "height": 64,
                       "layout": "horizontal",
@@ -925,9 +925,9 @@
                         {
                           "type": "text",
                           "id": "t45",
-                          "name": "轴标签文字",
-                          "content": "读者留言",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "axis-label-text",
+                          "content": "Comments",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 600,
                           "fill": [
@@ -947,7 +947,7 @@
                     {
                       "type": "frame",
                       "id": "f47",
-                      "name": "现在值",
+                      "name": "now-value",
                       "width": 336,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -958,8 +958,8 @@
                         {
                           "type": "text",
                           "id": "t46",
-                          "name": "现在文字",
-                          "content": "每条都有人问",
+                          "name": "now-text",
+                          "content": "Asked on every post",
                           "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
@@ -984,7 +984,7 @@
             {
               "type": "frame",
               "id": "f56",
-              "name": "中轴收尾",
+              "name": "center-axis-end",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1005,9 +1005,9 @@
                 {
                   "type": "text",
                   "id": "t57",
-                  "name": "收尾文字",
-                  "content": "六项里只有第一项是主动改的，其余五项都是它带来的。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-text",
+                  "content": "Only the first change was on purpose. The other five followed from it.",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 500,
                   "fill": [
@@ -1029,7 +1029,7 @@
         {
           "type": "frame",
           "id": "f63",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1049,9 +1049,9 @@
             {
               "type": "text",
               "id": "t59",
-              "name": "结语",
-              "content": "变的不是能力，是把哪件事固定了下来。",
-              "fontFamily": "Noto Sans SC",
+              "name": "closing-line",
+              "content": "It wasn't skill that changed. It was what I made routine.",
+              "fontFamily": "Inter",
               "fontSize": 29,
               "fontWeight": 600,
               "fill": [
@@ -1068,7 +1068,7 @@
             {
               "type": "frame",
               "id": "f62",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1080,9 +1080,9 @@
                 {
                   "type": "text",
                   "id": "t60",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 600,
                   "fill": [
@@ -1099,9 +1099,9 @@
                 {
                   "type": "text",
                   "id": "t61",
-                  "name": "更新说明",
-                  "content": "每年这个时候复盘一次",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "A look back every year around now",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 400,
                   "fill": [

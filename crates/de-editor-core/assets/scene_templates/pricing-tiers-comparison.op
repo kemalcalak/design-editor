@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "价格档位对比",
+  "name": "pricing-tiers-comparison",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -43,7 +43,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "价格档位对比",
+      "name": "pricing-tiers-comparison",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -65,7 +65,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -76,7 +76,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -97,9 +97,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "标签文字",
-                  "content": "价格档位 · 三档",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Pricing · 3 tiers",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -118,9 +118,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "多花的钱\n买到了什么",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "What the extra\nmoney gets you",
+              "fontFamily": "Inter",
               "fontSize": 72,
               "fontWeight": 700,
               "fill": [
@@ -137,9 +137,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "右边一档默认包含左边一档，只看新增的那几行就够。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Each tier includes the one to its left. Just read what's new.",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -158,7 +158,7 @@
         {
           "type": "frame",
           "id": "f99",
-          "name": "三档",
+          "name": "three-tiers",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -169,7 +169,7 @@
             {
               "type": "frame",
               "id": "f94",
-              "name": "档位行",
+              "name": "tier-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -180,7 +180,7 @@
                 {
                   "type": "frame",
                   "id": "f35",
-                  "name": "档位",
+                  "name": "tier",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -196,7 +196,7 @@
                     {
                       "type": "frame",
                       "id": "f34",
-                      "name": "档体",
+                      "name": "tier-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -213,7 +213,7 @@
                         {
                           "type": "frame",
                           "id": "f13",
-                          "name": "档头",
+                          "name": "tier-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -224,9 +224,9 @@
                             {
                               "type": "text",
                               "id": "t7",
-                              "name": "档名",
-                              "content": "免费",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tier-name",
+                              "content": "Free",
+                              "fontFamily": "Inter",
                               "fontSize": 34,
                               "fontWeight": 700,
                               "fill": [
@@ -243,7 +243,7 @@
                             {
                               "type": "frame",
                               "id": "f11",
-                              "name": "价格",
+                              "name": "price",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -254,8 +254,8 @@
                                 {
                                   "type": "text",
                                   "id": "t8",
-                                  "name": "货币",
-                                  "content": "¥",
+                                  "name": "currency",
+                                  "content": "$",
                                   "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 600,
@@ -273,7 +273,7 @@
                                 {
                                   "type": "text",
                                   "id": "t9",
-                                  "name": "金额",
+                                  "name": "amount",
                                   "content": "0",
                                   "fontFamily": "Inter",
                                   "fontSize": 62,
@@ -292,9 +292,9 @@
                                 {
                                   "type": "text",
                                   "id": "t10",
-                                  "name": "单位",
-                                  "content": "/月",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "unit",
+                                  "content": "/mo",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -313,9 +313,9 @@
                             {
                               "type": "text",
                               "id": "t12",
-                              "name": "适合谁",
-                              "content": "先试试水",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "best-for",
+                              "content": "Just trying it out",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 400,
                               "fill": [
@@ -334,7 +334,7 @@
                         {
                           "type": "rectangle",
                           "id": "r14",
-                          "name": "分线",
+                          "name": "divider",
                           "width": "fill_container",
                           "height": 2,
                           "fill": [
@@ -347,7 +347,7 @@
                         {
                           "type": "frame",
                           "id": "f15",
-                          "name": "累加标",
+                          "name": "cumulative-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -372,9 +372,9 @@
                             {
                               "type": "text",
                               "id": "t16",
-                              "name": "累加标文字",
-                              "content": "从这里开始",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "cumulative-tag-text",
+                              "content": "Start here",
+                              "fontFamily": "Inter",
                               "fontSize": 21,
                               "fontWeight": 600,
                               "fill": [
@@ -393,7 +393,7 @@
                         {
                           "type": "frame",
                           "id": "f33",
-                          "name": "包含组",
+                          "name": "includes-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -404,7 +404,7 @@
                             {
                               "type": "frame",
                               "id": "f20",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -415,7 +415,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f18",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -425,7 +425,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i17",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -441,9 +441,9 @@
                                 {
                                   "type": "text",
                                   "id": "t19",
-                                  "name": "包含项文字",
-                                  "content": "每月 10 张",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "10 images a month",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -462,7 +462,7 @@
                             {
                               "type": "frame",
                               "id": "f24",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -473,7 +473,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f22",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -483,7 +483,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i21",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -499,9 +499,9 @@
                                 {
                                   "type": "text",
                                   "id": "t23",
-                                  "name": "包含项文字",
-                                  "content": "带小水印",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "Small watermark",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -520,7 +520,7 @@
                             {
                               "type": "frame",
                               "id": "f28",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -531,7 +531,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f26",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -541,7 +541,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i25",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -557,9 +557,9 @@
                                 {
                                   "type": "text",
                                   "id": "t27",
-                                  "name": "包含项文字",
-                                  "content": "标准清晰度",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "Standard quality",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -578,7 +578,7 @@
                             {
                               "type": "frame",
                               "id": "f32",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -589,7 +589,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f30",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -599,7 +599,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i29",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -615,9 +615,9 @@
                                 {
                                   "type": "text",
                                   "id": "t31",
-                                  "name": "包含项文字",
-                                  "content": "只存七天",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "Stored for 7 days",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -652,7 +652,7 @@
                 {
                   "type": "frame",
                   "id": "f64",
-                  "name": "档位",
+                  "name": "tier",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -668,7 +668,7 @@
                     {
                       "type": "frame",
                       "id": "f63",
-                      "name": "档体",
+                      "name": "tier-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -685,7 +685,7 @@
                         {
                           "type": "frame",
                           "id": "f42",
-                          "name": "档头",
+                          "name": "tier-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -696,9 +696,9 @@
                             {
                               "type": "text",
                               "id": "t36",
-                              "name": "档名",
+                              "name": "tier-name",
                               "content": "Pro",
-                              "fontFamily": "Noto Sans SC",
+                              "fontFamily": "Inter",
                               "fontSize": 34,
                               "fontWeight": 700,
                               "fill": [
@@ -715,7 +715,7 @@
                             {
                               "type": "frame",
                               "id": "f40",
-                              "name": "价格",
+                              "name": "price",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -726,8 +726,8 @@
                                 {
                                   "type": "text",
                                   "id": "t37",
-                                  "name": "货币",
-                                  "content": "¥",
+                                  "name": "currency",
+                                  "content": "$",
                                   "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 600,
@@ -745,7 +745,7 @@
                                 {
                                   "type": "text",
                                   "id": "t38",
-                                  "name": "金额",
+                                  "name": "amount",
                                   "content": "29",
                                   "fontFamily": "Inter",
                                   "fontSize": 62,
@@ -764,9 +764,9 @@
                                 {
                                   "type": "text",
                                   "id": "t39",
-                                  "name": "单位",
-                                  "content": "/月",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "unit",
+                                  "content": "/mo",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -785,9 +785,9 @@
                             {
                               "type": "text",
                               "id": "t41",
-                              "name": "适合谁",
-                              "content": "每周都要发",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "best-for",
+                              "content": "Posting every week",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 400,
                               "fill": [
@@ -806,7 +806,7 @@
                         {
                           "type": "rectangle",
                           "id": "r43",
-                          "name": "分线",
+                          "name": "divider",
                           "width": "fill_container",
                           "height": 2,
                           "fill": [
@@ -819,7 +819,7 @@
                         {
                           "type": "frame",
                           "id": "f44",
-                          "name": "累加标",
+                          "name": "cumulative-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -844,9 +844,9 @@
                             {
                               "type": "text",
                               "id": "t45",
-                              "name": "累加标文字",
-                              "content": "含免费档全部",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "cumulative-tag-text",
+                              "content": "All of Free",
+                              "fontFamily": "Inter",
                               "fontSize": 21,
                               "fontWeight": 600,
                               "fill": [
@@ -865,7 +865,7 @@
                         {
                           "type": "frame",
                           "id": "f62",
-                          "name": "包含组",
+                          "name": "includes-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -876,7 +876,7 @@
                             {
                               "type": "frame",
                               "id": "f49",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -887,7 +887,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f47",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -897,7 +897,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i46",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -913,9 +913,9 @@
                                 {
                                   "type": "text",
                                   "id": "t48",
-                                  "name": "包含项文字",
-                                  "content": "每月 300 张",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "300 images a month",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -934,7 +934,7 @@
                             {
                               "type": "frame",
                               "id": "f53",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -945,7 +945,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f51",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -955,7 +955,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i50",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -971,9 +971,9 @@
                                 {
                                   "type": "text",
                                   "id": "t52",
-                                  "name": "包含项文字",
-                                  "content": "去掉水印",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "No watermark",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -992,7 +992,7 @@
                             {
                               "type": "frame",
                               "id": "f57",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1003,7 +1003,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f55",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -1013,7 +1013,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i54",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -1029,9 +1029,9 @@
                                 {
                                   "type": "text",
                                   "id": "t56",
-                                  "name": "包含项文字",
-                                  "content": "高清导出",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "HD export",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1050,7 +1050,7 @@
                             {
                               "type": "frame",
                               "id": "f61",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1061,7 +1061,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f59",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -1071,7 +1071,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i58",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -1087,9 +1087,9 @@
                                 {
                                   "type": "text",
                                   "id": "t60",
-                                  "name": "包含项文字",
-                                  "content": "永久保存",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "Stored forever",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1115,7 +1115,7 @@
                 {
                   "type": "frame",
                   "id": "f93",
-                  "name": "档位",
+                  "name": "tier",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1131,7 +1131,7 @@
                     {
                       "type": "frame",
                       "id": "f92",
-                      "name": "档体",
+                      "name": "tier-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1148,7 +1148,7 @@
                         {
                           "type": "frame",
                           "id": "f71",
-                          "name": "档头",
+                          "name": "tier-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1159,9 +1159,9 @@
                             {
                               "type": "text",
                               "id": "t65",
-                              "name": "档名",
-                              "content": "团队",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "tier-name",
+                              "content": "Team",
+                              "fontFamily": "Inter",
                               "fontSize": 34,
                               "fontWeight": 700,
                               "fill": [
@@ -1178,7 +1178,7 @@
                             {
                               "type": "frame",
                               "id": "f69",
-                              "name": "价格",
+                              "name": "price",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1189,8 +1189,8 @@
                                 {
                                   "type": "text",
                                   "id": "t66",
-                                  "name": "货币",
-                                  "content": "¥",
+                                  "name": "currency",
+                                  "content": "$",
                                   "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 600,
@@ -1208,7 +1208,7 @@
                                 {
                                   "type": "text",
                                   "id": "t67",
-                                  "name": "金额",
+                                  "name": "amount",
                                   "content": "99",
                                   "fontFamily": "Inter",
                                   "fontSize": 62,
@@ -1227,9 +1227,9 @@
                                 {
                                   "type": "text",
                                   "id": "t68",
-                                  "name": "单位",
-                                  "content": "/月",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "unit",
+                                  "content": "/mo",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1248,9 +1248,9 @@
                             {
                               "type": "text",
                               "id": "t70",
-                              "name": "适合谁",
-                              "content": "三个人以上",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "best-for",
+                              "content": "Three or more people",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 400,
                               "fill": [
@@ -1269,7 +1269,7 @@
                         {
                           "type": "rectangle",
                           "id": "r72",
-                          "name": "分线",
+                          "name": "divider",
                           "width": "fill_container",
                           "height": 2,
                           "fill": [
@@ -1282,7 +1282,7 @@
                         {
                           "type": "frame",
                           "id": "f73",
-                          "name": "累加标",
+                          "name": "cumulative-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1307,9 +1307,9 @@
                             {
                               "type": "text",
                               "id": "t74",
-                              "name": "累加标文字",
-                              "content": "含 Pro 全部",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "cumulative-tag-text",
+                              "content": "All of Pro",
+                              "fontFamily": "Inter",
                               "fontSize": 21,
                               "fontWeight": 600,
                               "fill": [
@@ -1328,7 +1328,7 @@
                         {
                           "type": "frame",
                           "id": "f91",
-                          "name": "包含组",
+                          "name": "includes-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1339,7 +1339,7 @@
                             {
                               "type": "frame",
                               "id": "f78",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1350,7 +1350,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f76",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -1360,7 +1360,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i75",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -1376,9 +1376,9 @@
                                 {
                                   "type": "text",
                                   "id": "t77",
-                                  "name": "包含项文字",
-                                  "content": "张数不限",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "Unlimited images",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1397,7 +1397,7 @@
                             {
                               "type": "frame",
                               "id": "f82",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1408,7 +1408,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f80",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -1418,7 +1418,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i79",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -1434,9 +1434,9 @@
                                 {
                                   "type": "text",
                                   "id": "t81",
-                                  "name": "包含项文字",
-                                  "content": "共享素材库",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "Shared asset library",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1455,7 +1455,7 @@
                             {
                               "type": "frame",
                               "id": "f86",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1466,7 +1466,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f84",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -1476,7 +1476,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i83",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -1492,9 +1492,9 @@
                                 {
                                   "type": "text",
                                   "id": "t85",
-                                  "name": "包含项文字",
-                                  "content": "成员权限",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "Member roles",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1513,7 +1513,7 @@
                             {
                               "type": "frame",
                               "id": "f90",
-                              "name": "包含项",
+                              "name": "include-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1524,7 +1524,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f88",
-                                  "name": "标位",
+                                  "name": "tag-slot",
                                   "width": 20,
                                   "height": 37,
                                   "layout": "vertical",
@@ -1534,7 +1534,7 @@
                                     {
                                       "type": "icon_font",
                                       "id": "i87",
-                                      "name": "含",
+                                      "name": "includes",
                                       "iconFontName": "check",
                                       "width": 20,
                                       "height": 20,
@@ -1550,9 +1550,9 @@
                                 {
                                   "type": "text",
                                   "id": "t89",
-                                  "name": "包含项文字",
-                                  "content": "优先答复",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "include-item-text",
+                                  "content": "Priority support",
+                                  "fontFamily": "Inter",
                                   "fontSize": 23,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1589,7 +1589,7 @@
             {
               "type": "frame",
               "id": "f98",
-              "name": "推荐说明",
+              "name": "recommendation-note",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1600,7 +1600,7 @@
                 {
                   "type": "frame",
                   "id": "f95",
-                  "name": "标签",
+                  "name": "tag",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1621,9 +1621,9 @@
                     {
                       "type": "text",
                       "id": "t96",
-                      "name": "标签文字",
-                      "content": "最多人选",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tag-text",
+                      "content": "Most popular",
+                      "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": 600,
                       "fill": [
@@ -1642,9 +1642,9 @@
                 {
                   "type": "text",
                   "id": "t97",
-                  "name": "推荐理由",
-                  "content": "中间那档是唯一一块深色——不是促销，是位置。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "recommendation-reason",
+                  "content": "The middle tier is the only dark one. Not a promo, just placement.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1665,7 +1665,7 @@
         {
           "type": "frame",
           "id": "f104",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1685,9 +1685,9 @@
             {
               "type": "text",
               "id": "t100",
-              "name": "结语",
-              "content": "先按每月要发几张挑档，再看别的。",
-              "fontFamily": "Noto Sans SC",
+              "name": "closing-line",
+              "content": "Pick by how many images you post a month, then look at the rest.",
+              "fontFamily": "Inter",
               "fontSize": 29,
               "fontWeight": 600,
               "fill": [
@@ -1704,7 +1704,7 @@
             {
               "type": "frame",
               "id": "f103",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1715,9 +1715,9 @@
                 {
                   "type": "text",
                   "id": "t101",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 600,
                   "fill": [
@@ -1734,9 +1734,9 @@
                 {
                   "type": "text",
                   "id": "t102",
-                  "name": "更新说明",
-                  "content": "价格调整会重发一版",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "Reposted whenever prices change",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 400,
                   "fill": [

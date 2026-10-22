@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "优缺点天平",
+  "name": "pros-cons-scale",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -35,7 +35,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "优缺点天平",
+      "name": "pros-cons-scale",
       "width": 1080,
       "height": 1080,
       "layout": "vertical",
@@ -57,7 +57,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -68,7 +68,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -89,9 +89,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "标签文字",
-                  "content": "利弊天平 · 全职做内容",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Trade-off scale · Going full-time creator",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -110,9 +110,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "先把两边\n都摆出来",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Put both sides\non the table",
+              "fontFamily": "Inter",
               "fontSize": 70,
               "fontWeight": 700,
               "fill": [
@@ -129,9 +129,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "八条都是真的，会同时发生。勾完再看哪边压得住。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "All eight are true, and they happen at once. Tick them, then see which side wins.",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 400,
               "fill": [
@@ -150,7 +150,7 @@
         {
           "type": "frame",
           "id": "f53",
-          "name": "天平",
+          "name": "scale",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -161,7 +161,7 @@
             {
               "type": "frame",
               "id": "f9",
-              "name": "横梁组",
+              "name": "beam-group",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -172,7 +172,7 @@
                 {
                   "type": "rectangle",
                   "id": "r8",
-                  "name": "横梁",
+                  "name": "beam",
                   "width": 860,
                   "height": 8,
                   "fill": [
@@ -185,7 +185,7 @@
                 {
                   "type": "polygon",
                   "id": "pg7",
-                  "name": "支点",
+                  "name": "fulcrum",
                   "polygonCount": 3,
                   "width": 46,
                   "height": 30,
@@ -201,7 +201,7 @@
             {
               "type": "frame",
               "id": "f52",
-              "name": "两盘",
+              "name": "two-pans",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -213,7 +213,7 @@
                 {
                   "type": "frame",
                   "id": "f30",
-                  "name": "托盘",
+                  "name": "pan",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -229,7 +229,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "盘体",
+                      "name": "pan-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -246,9 +246,9 @@
                         {
                           "type": "text",
                           "id": "t10",
-                          "name": "盘标题",
-                          "content": "值得",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pan-title",
+                          "content": "Worth it",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 700,
                           "fill": [
@@ -265,7 +265,7 @@
                         {
                           "type": "rectangle",
                           "id": "r11",
-                          "name": "盘分线",
+                          "name": "pan-divider",
                           "width": "fill_container",
                           "height": 2,
                           "fill": [
@@ -278,7 +278,7 @@
                         {
                           "type": "frame",
                           "id": "f28",
-                          "name": "条目组",
+                          "name": "item-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -289,7 +289,7 @@
                             {
                               "type": "frame",
                               "id": "f15",
-                              "name": "条目",
+                              "name": "item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -301,7 +301,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f12",
-                                  "name": "框位",
+                                  "name": "box-slot",
                                   "width": 24,
                                   "height": 42,
                                   "layout": "vertical",
@@ -311,7 +311,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r13",
-                                      "name": "勾选框",
+                                      "name": "checkbox",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -330,9 +330,9 @@
                                 {
                                   "type": "text",
                                   "id": "t14",
-                                  "name": "条目文字",
-                                  "content": "时间自己排",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "item-text",
+                                  "content": "You set your own hours",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -351,7 +351,7 @@
                             {
                               "type": "frame",
                               "id": "f19",
-                              "name": "条目",
+                              "name": "item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -363,7 +363,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f16",
-                                  "name": "框位",
+                                  "name": "box-slot",
                                   "width": 24,
                                   "height": 42,
                                   "layout": "vertical",
@@ -373,7 +373,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r17",
-                                      "name": "勾选框",
+                                      "name": "checkbox",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -392,9 +392,9 @@
                                 {
                                   "type": "text",
                                   "id": "t18",
-                                  "name": "条目文字",
-                                  "content": "做的东西是自己的",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "item-text",
+                                  "content": "What you make is yours",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -413,7 +413,7 @@
                             {
                               "type": "frame",
                               "id": "f23",
-                              "name": "条目",
+                              "name": "item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -425,7 +425,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f20",
-                                  "name": "框位",
+                                  "name": "box-slot",
                                   "width": 24,
                                   "height": 42,
                                   "layout": "vertical",
@@ -435,7 +435,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r21",
-                                      "name": "勾选框",
+                                      "name": "checkbox",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -454,9 +454,9 @@
                                 {
                                   "type": "text",
                                   "id": "t22",
-                                  "name": "条目文字",
-                                  "content": "上限没有天花板",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "item-text",
+                                  "content": "No ceiling on the upside",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -475,7 +475,7 @@
                             {
                               "type": "frame",
                               "id": "f27",
-                              "name": "条目",
+                              "name": "item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -487,7 +487,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f24",
-                                  "name": "框位",
+                                  "name": "box-slot",
                                   "width": 24,
                                   "height": 42,
                                   "layout": "vertical",
@@ -497,7 +497,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r25",
-                                      "name": "勾选框",
+                                      "name": "checkbox",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -516,9 +516,9 @@
                                 {
                                   "type": "text",
                                   "id": "t26",
-                                  "name": "条目文字",
-                                  "content": "会遇到同频的人",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "item-text",
+                                  "content": "You meet your people",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -553,7 +553,7 @@
                 {
                   "type": "frame",
                   "id": "f51",
-                  "name": "托盘",
+                  "name": "pan",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -569,7 +569,7 @@
                     {
                       "type": "frame",
                       "id": "f50",
-                      "name": "盘体",
+                      "name": "pan-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -586,9 +586,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "盘标题",
-                          "content": "代价",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pan-title",
+                          "content": "The cost",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 700,
                           "fill": [
@@ -605,7 +605,7 @@
                         {
                           "type": "rectangle",
                           "id": "r32",
-                          "name": "盘分线",
+                          "name": "pan-divider",
                           "width": "fill_container",
                           "height": 2,
                           "fill": [
@@ -618,7 +618,7 @@
                         {
                           "type": "frame",
                           "id": "f49",
-                          "name": "条目组",
+                          "name": "item-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -629,7 +629,7 @@
                             {
                               "type": "frame",
                               "id": "f36",
-                              "name": "条目",
+                              "name": "item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -641,7 +641,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f33",
-                                  "name": "框位",
+                                  "name": "box-slot",
                                   "width": 24,
                                   "height": 42,
                                   "layout": "vertical",
@@ -651,7 +651,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r34",
-                                      "name": "勾选框",
+                                      "name": "checkbox",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -670,9 +670,9 @@
                                 {
                                   "type": "text",
                                   "id": "t35",
-                                  "name": "条目文字",
-                                  "content": "前半年收入归零",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "item-text",
+                                  "content": "Zero income for six months",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -691,7 +691,7 @@
                             {
                               "type": "frame",
                               "id": "f40",
-                              "name": "条目",
+                              "name": "item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -703,7 +703,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f37",
-                                  "name": "框位",
+                                  "name": "box-slot",
                                   "width": 24,
                                   "height": 42,
                                   "layout": "vertical",
@@ -713,7 +713,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r38",
-                                      "name": "勾选框",
+                                      "name": "checkbox",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -732,9 +732,9 @@
                                 {
                                   "type": "text",
                                   "id": "t39",
-                                  "name": "条目文字",
-                                  "content": "没人替你排优先级",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "item-text",
+                                  "content": "No one sets priorities for you",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -753,7 +753,7 @@
                             {
                               "type": "frame",
                               "id": "f44",
-                              "name": "条目",
+                              "name": "item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -765,7 +765,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f41",
-                                  "name": "框位",
+                                  "name": "box-slot",
                                   "width": 24,
                                   "height": 42,
                                   "layout": "vertical",
@@ -775,7 +775,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r42",
-                                      "name": "勾选框",
+                                      "name": "checkbox",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -794,9 +794,9 @@
                                 {
                                   "type": "text",
                                   "id": "t43",
-                                  "name": "条目文字",
-                                  "content": "周末和工作日一样",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "item-text",
+                                  "content": "Weekends feel like weekdays",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -815,7 +815,7 @@
                             {
                               "type": "frame",
                               "id": "f48",
-                              "name": "条目",
+                              "name": "item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -827,7 +827,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f45",
-                                  "name": "框位",
+                                  "name": "box-slot",
                                   "width": 24,
                                   "height": 42,
                                   "layout": "vertical",
@@ -837,7 +837,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r46",
-                                      "name": "勾选框",
+                                      "name": "checkbox",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -856,9 +856,9 @@
                                 {
                                   "type": "text",
                                   "id": "t47",
-                                  "name": "条目文字",
-                                  "content": "停更就没有进账",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "item-text",
+                                  "content": "Stop posting, stop earning",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -897,7 +897,7 @@
         {
           "type": "frame",
           "id": "f58",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -917,9 +917,9 @@
             {
               "type": "text",
               "id": "t54",
-              "name": "结语",
-              "content": "两边一样多。差别是：左边是概率，右边是确定。",
-              "fontFamily": "Noto Sans SC",
+              "name": "closing-line",
+              "content": "Both sides are real. Left is a maybe; right is a given.",
+              "fontFamily": "Inter",
               "fontSize": 29,
               "fontWeight": 600,
               "fill": [
@@ -936,7 +936,7 @@
             {
               "type": "frame",
               "id": "f57",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -948,9 +948,9 @@
                 {
                   "type": "text",
                   "id": "t55",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@ yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 600,
                   "fill": [
@@ -967,9 +967,9 @@
                 {
                   "type": "text",
                   "id": "t56",
-                  "name": "更新说明",
-                  "content": "把决定拆成能勾的条目",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "Decisions, broken into checkboxes",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 400,
                   "fill": [

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "知识卡片 · 方版 1:1",
+  "name": "knowledge-card-square-1x1",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -35,7 +35,7 @@
     {
       "type": "frame",
       "id": "f71",
-      "name": "知识卡片 · 方版",
+      "name": "knowledge-card-square",
       "width": 1080,
       "height": 1080,
       "layout": "vertical",
@@ -57,7 +57,7 @@
         {
           "type": "frame",
           "id": "f46",
-          "name": "卡头",
+          "name": "card-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -68,7 +68,7 @@
             {
               "type": "frame",
               "id": "f41",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -90,9 +90,9 @@
                 {
                   "type": "text",
                   "id": "t42",
-                  "name": "标签文字",
-                  "content": "学习方法",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Study method",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -111,9 +111,9 @@
             {
               "type": "text",
               "id": "t43",
-              "name": "主标题",
-              "content": "读完就忘？\n先补上这一步",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Forget what you read?\nAdd this step",
+              "fontFamily": "Inter",
               "fontSize": 88,
               "fontWeight": 700,
               "fill": [
@@ -130,7 +130,7 @@
             {
               "type": "rectangle",
               "id": "r44",
-              "name": "强调短线",
+              "name": "accent-dash",
               "width": 112,
               "height": 10,
               "cornerRadius": 5,
@@ -144,9 +144,9 @@
             {
               "type": "text",
               "id": "t45",
-              "name": "副标题",
-              "content": "三个动作，把书里的东西真正带走。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Three moves to actually keep what you read.",
+              "fontFamily": "Inter",
               "fontSize": 40,
               "fontWeight": 400,
               "fill": [
@@ -165,7 +165,7 @@
         {
           "type": "frame",
           "id": "f62",
-          "name": "要点列表",
+          "name": "point-list",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -176,7 +176,7 @@
             {
               "type": "frame",
               "id": "f48",
-              "name": "要点 1",
+              "name": "point-1",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -187,7 +187,7 @@
                 {
                   "type": "frame",
                   "id": "f49",
-                  "name": "序号 1",
+                  "name": "number-1",
                   "width": 64,
                   "height": 64,
                   "layout": "horizontal",
@@ -204,7 +204,7 @@
                     {
                       "type": "text",
                       "id": "t50",
-                      "name": "序号数字",
+                      "name": "number-digit",
                       "content": "1",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -225,7 +225,7 @@
                 {
                   "type": "frame",
                   "id": "f51",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -236,9 +236,9 @@
                     {
                       "type": "text",
                       "id": "t47",
-                      "name": "要点标题",
-                      "content": "先提问，再翻开",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Ask first, then open",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 600,
                       "fill": [
@@ -259,7 +259,7 @@
             {
               "type": "frame",
               "id": "f53",
-              "name": "要点 2",
+              "name": "point-2",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -270,7 +270,7 @@
                 {
                   "type": "frame",
                   "id": "f54",
-                  "name": "序号 2",
+                  "name": "number-2",
                   "width": 64,
                   "height": 64,
                   "layout": "horizontal",
@@ -287,7 +287,7 @@
                     {
                       "type": "text",
                       "id": "t55",
-                      "name": "序号数字",
+                      "name": "number-digit",
                       "content": "2",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -308,7 +308,7 @@
                 {
                   "type": "frame",
                   "id": "f56",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -319,9 +319,9 @@
                     {
                       "type": "text",
                       "id": "t52",
-                      "name": "要点标题",
-                      "content": "合上书，先复述",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Close it, retell it",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 600,
                       "fill": [
@@ -342,7 +342,7 @@
             {
               "type": "frame",
               "id": "f58",
-              "name": "要点 3",
+              "name": "point-3",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -353,7 +353,7 @@
                 {
                   "type": "frame",
                   "id": "f59",
-                  "name": "序号 3",
+                  "name": "number-3",
                   "width": 64,
                   "height": 64,
                   "layout": "horizontal",
@@ -370,7 +370,7 @@
                     {
                       "type": "text",
                       "id": "t60",
-                      "name": "序号数字",
+                      "name": "number-digit",
                       "content": "3",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -391,7 +391,7 @@
                 {
                   "type": "frame",
                   "id": "f61",
-                  "name": "要点文案",
+                  "name": "point-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -402,9 +402,9 @@
                     {
                       "type": "text",
                       "id": "t57",
-                      "name": "要点标题",
-                      "content": "两天之内用一次",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "point-title",
+                      "content": "Use it within two days",
+                      "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 600,
                       "fill": [
@@ -427,7 +427,7 @@
         {
           "type": "frame",
           "id": "f70",
-          "name": "署名",
+          "name": "signature",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -438,7 +438,7 @@
             {
               "type": "rectangle",
               "id": "r69",
-              "name": "分隔线",
+              "name": "divider",
               "width": "fill_container",
               "height": 2,
               "fill": [
@@ -451,7 +451,7 @@
             {
               "type": "frame",
               "id": "f65",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -462,7 +462,7 @@
                 {
                   "type": "frame",
                   "id": "f63",
-                  "name": "头像占位",
+                  "name": "avatar-slot",
                   "width": 80,
                   "height": 80,
                   "layout": "horizontal",
@@ -479,9 +479,9 @@
                     {
                       "type": "text",
                       "id": "t64",
-                      "name": "头像文字",
-                      "content": "笔",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "avatar-text",
+                      "content": "N",
+                      "fontFamily": "Inter",
                       "fontSize": 34,
                       "fontWeight": 700,
                       "fill": [
@@ -500,7 +500,7 @@
                 {
                   "type": "frame",
                   "id": "f68",
-                  "name": "署名文案",
+                  "name": "signature-copy",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -511,9 +511,9 @@
                     {
                       "type": "text",
                       "id": "t66",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@ yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 36,
                       "fontWeight": 600,
                       "fill": [
@@ -530,9 +530,9 @@
                     {
                       "type": "text",
                       "id": "t67",
-                      "name": "一句话简介",
-                      "content": "每周更新一条可落地的学习方法",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "one-line-bio",
+                      "content": "One practical study method every week",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [

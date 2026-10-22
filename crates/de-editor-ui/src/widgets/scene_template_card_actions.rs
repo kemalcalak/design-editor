@@ -255,7 +255,7 @@ impl SceneTemplatePanel<'_> {
         ))
     }
 
-    /// "基于：极简 Keynote" — the chip's full text, or `None` when the row is
+    /// "Based on: Minimal Keynote" — the chip's full text, or `None` when the row is
     /// not working from a template.
     ///
     /// A basis whose template is no longer in the catalogue reads as no basis
@@ -271,7 +271,7 @@ impl SceneTemplatePanel<'_> {
         let template = de_editor_core::scene_template_catalog::scene_template_by_id(id)?;
         Some(format!(
             "{}{}",
-            self.t("sceneTemplate.generate.basis", "基于："),
+            self.t("sceneTemplate.generate.basis", "Based on: "),
             template.title_for_locale(self.locale)
         ))
     }

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "竖排书脊卡 · 鸣沙矿彩 3:4",
+  "name": "vertical-spine-card-mineral-pigment-3x4",
   "variables": {
     "c-wall": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f33",
-      "name": "竖排书脊卡 · 鸣沙矿彩",
+      "name": "vertical-spine-card-mineral-pigment",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -66,7 +66,7 @@
         {
           "type": "frame",
           "id": "f1",
-          "name": "书脊卡 · 正文",
+          "name": "spine-card-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "horizontal",
@@ -83,7 +83,7 @@
             {
               "type": "frame",
               "id": "f6",
-              "name": "左栏",
+              "name": "left-column",
               "width": 686,
               "height": "fill_container",
               "layout": "vertical",
@@ -95,7 +95,7 @@
                 {
                   "type": "frame",
                   "id": "f7",
-                  "name": "角标",
+                  "name": "corner-badge",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -125,9 +125,9 @@
                     {
                       "type": "text",
                       "id": "t8",
-                      "name": "角标文字",
-                      "content": "壁上 · 03",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "corner-badge-text",
+                      "content": "Murals · 03",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -146,7 +146,7 @@
                 {
                   "type": "frame",
                   "id": "f5",
-                  "name": "落款",
+                  "name": "signature",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -157,7 +157,7 @@
                     {
                       "type": "rectangle",
                       "id": "r3",
-                      "name": "朱砂短线",
+                      "name": "vermilion-dash",
                       "width": 96,
                       "height": 6,
                       "fill": [
@@ -170,9 +170,9 @@
                     {
                       "type": "text",
                       "id": "t2",
-                      "name": "副标",
-                      "content": "把一条河讲完，需要先讲清楚\n它流过的那些石头。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "subhead",
+                      "content": "To tell a river's whole story,\nfirst tell of the stones it crosses.",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 400,
                       "fill": [
@@ -189,9 +189,9 @@
                     {
                       "type": "text",
                       "id": "t4",
-                      "name": "出处",
-                      "content": "壁上 · 第三期 · 河西走廊",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "attribution",
+                      "content": "Murals · Issue 3 · Hexi Corridor",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -212,7 +212,7 @@
             {
               "type": "frame",
               "id": "f9",
-              "name": "竖排标题",
+              "name": "vertical-title",
               "width": 140,
               "height": "fit_content",
               "layout": "vertical",
@@ -223,9 +223,9 @@
                 {
                   "type": "text",
                   "id": "t10",
-                  "name": "标题字 1",
-                  "content": "山",
-                  "fontFamily": "Songti SC",
+                  "name": "title-char-1",
+                  "content": "O",
+                  "fontFamily": "Noto Serif",
                   "fontSize": 120,
                   "fontWeight": 700,
                   "fill": [
@@ -243,9 +243,9 @@
                 {
                   "type": "text",
                   "id": "t11",
-                  "name": "标题字 2",
-                  "content": "与",
-                  "fontFamily": "Songti SC",
+                  "name": "title-char-2",
+                  "content": "R",
+                  "fontFamily": "Noto Serif",
                   "fontSize": 120,
                   "fontWeight": 700,
                   "fill": [
@@ -263,9 +263,9 @@
                 {
                   "type": "text",
                   "id": "t12",
-                  "name": "标题字 3",
-                  "content": "河",
-                  "fontFamily": "Songti SC",
+                  "name": "title-char-3",
+                  "content": "I",
+                  "fontFamily": "Noto Serif",
                   "fontSize": 120,
                   "fontWeight": 700,
                   "fill": [
@@ -283,9 +283,9 @@
                 {
                   "type": "text",
                   "id": "t13",
-                  "name": "标题字 4",
-                  "content": "的",
-                  "fontFamily": "Songti SC",
+                  "name": "title-char-4",
+                  "content": "G",
+                  "fontFamily": "Noto Serif",
                   "fontSize": 120,
                   "fontWeight": 700,
                   "fill": [
@@ -303,9 +303,9 @@
                 {
                   "type": "text",
                   "id": "t14",
-                  "name": "标题字 5",
-                  "content": "来",
-                  "fontFamily": "Songti SC",
+                  "name": "title-char-5",
+                  "content": "I",
+                  "fontFamily": "Noto Serif",
                   "fontSize": 120,
                   "fontWeight": 700,
                   "fill": [
@@ -323,9 +323,9 @@
                 {
                   "type": "text",
                   "id": "t15",
-                  "name": "标题字 6",
-                  "content": "路",
-                  "fontFamily": "Songti SC",
+                  "name": "title-char-6",
+                  "content": "N",
+                  "fontFamily": "Noto Serif",
                   "fontSize": 120,
                   "fontWeight": 700,
                   "fill": [
@@ -347,7 +347,7 @@
         {
           "type": "frame",
           "id": "f34",
-          "name": "竖排书脊卡 · 鸣沙矿彩 · 装饰",
+          "name": "vertical-spine-card-mineral-pigment-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -356,7 +356,7 @@
             {
               "type": "rectangle",
               "id": "r16",
-              "name": "壁龛光",
+              "name": "niche-glow",
               "width": 1240,
               "height": 1240,
               "cornerRadius": 620,
@@ -384,7 +384,7 @@
             {
               "type": "path",
               "id": "p17",
-              "name": "剥落 1",
+              "name": "flake-1",
               "d": "M0 26 L118 0 L243 34 L299 141 L162 214 L37 176 Z",
               "width": 300,
               "height": 214,
@@ -400,7 +400,7 @@
             {
               "type": "path",
               "id": "p18",
-              "name": "剥落 2",
+              "name": "flake-2",
               "d": "M14 0 L262 41 L237 149 L96 188 L0 96 Z",
               "width": 262,
               "height": 188,
@@ -416,7 +416,7 @@
             {
               "type": "path",
               "id": "p19",
-              "name": "剥落 3",
+              "name": "flake-3",
               "d": "M31 0 L196 22 L167 118 L52 152 L0 63 Z",
               "width": 196,
               "height": 152,
@@ -432,7 +432,7 @@
             {
               "type": "path",
               "id": "p20",
-              "name": "剥落 4",
+              "name": "flake-4",
               "d": "M0 58 L96 0 L220 47 L196 176 L46 163 Z",
               "width": 220,
               "height": 176,
@@ -448,7 +448,7 @@
             {
               "type": "rectangle",
               "id": "r21",
-              "name": "矿彩颗粒 1",
+              "name": "pigment-grain-1",
               "width": 4,
               "height": 4,
               "fill": [
@@ -464,7 +464,7 @@
             {
               "type": "rectangle",
               "id": "r22",
-              "name": "矿彩颗粒 2",
+              "name": "pigment-grain-2",
               "width": 4,
               "height": 4,
               "fill": [
@@ -480,7 +480,7 @@
             {
               "type": "rectangle",
               "id": "r23",
-              "name": "矿彩颗粒 3",
+              "name": "pigment-grain-3",
               "width": 4,
               "height": 4,
               "fill": [
@@ -496,7 +496,7 @@
             {
               "type": "rectangle",
               "id": "r24",
-              "name": "矿彩颗粒 4",
+              "name": "pigment-grain-4",
               "width": 4,
               "height": 4,
               "fill": [
@@ -512,7 +512,7 @@
             {
               "type": "rectangle",
               "id": "r25",
-              "name": "矿彩颗粒 5",
+              "name": "pigment-grain-5",
               "width": 4,
               "height": 4,
               "fill": [
@@ -528,7 +528,7 @@
             {
               "type": "rectangle",
               "id": "r26",
-              "name": "矿彩颗粒 6",
+              "name": "pigment-grain-6",
               "width": 4,
               "height": 4,
               "fill": [
@@ -544,7 +544,7 @@
             {
               "type": "rectangle",
               "id": "r27",
-              "name": "矿彩颗粒 7",
+              "name": "pigment-grain-7",
               "width": 4,
               "height": 4,
               "fill": [
@@ -560,7 +560,7 @@
             {
               "type": "rectangle",
               "id": "r28",
-              "name": "矿彩颗粒 8",
+              "name": "pigment-grain-8",
               "width": 4,
               "height": 4,
               "fill": [
@@ -576,7 +576,7 @@
             {
               "type": "rectangle",
               "id": "r29",
-              "name": "矿彩颗粒 9",
+              "name": "pigment-grain-9",
               "width": 4,
               "height": 4,
               "fill": [
@@ -592,7 +592,7 @@
             {
               "type": "rectangle",
               "id": "r30",
-              "name": "矿彩颗粒 10",
+              "name": "pigment-grain-10",
               "width": 4,
               "height": 4,
               "fill": [
@@ -608,7 +608,7 @@
             {
               "type": "rectangle",
               "id": "r31",
-              "name": "矿彩颗粒 11",
+              "name": "pigment-grain-11",
               "width": 4,
               "height": 4,
               "fill": [
@@ -624,7 +624,7 @@
             {
               "type": "rectangle",
               "id": "r32",
-              "name": "矿彩颗粒 12",
+              "name": "pigment-grain-12",
               "width": 4,
               "height": 4,
               "fill": [

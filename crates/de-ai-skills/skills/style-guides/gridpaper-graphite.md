@@ -83,12 +83,12 @@ Green and amber are **never** general accents. They appear only where their sema
 
 | Role            | Family                                       | Fallback         | Usage                                            |
 | --------------- | -------------------------------------------- | ---------------- | ------------------------------------------------ |
-| Display         | 思源黑体 Bold, Geist                          | Noto Sans SC 700 | Cover title, claim titles, exhibit titles         |
-| Body            | 霞鹜新晰黑, Geist                              | Noto Sans SC 400 | Body copy, captions, sub-labels                   |
+| Display         | Geist Bold, Inter                            | Inter 700        | Cover title, claim titles, exhibit titles         |
+| Body            | Geist, Inter                                 | Inter 400        | Body copy, captions, sub-labels                   |
 | Data / Citation | IBM Plex Mono                                 | Inter 400        | Formulas, figures, step numerals, citation lines  |
-| Quotation       | Source Serif 4                                | —                | Latin pull quotes only                            |
+| Quotation       | Source Serif 4                               | —                | Pull quotes only                                  |
 
-The Latin face is written **first** in every fallback chain. Font matching is per-character: Latin faces carry no CJK codepoints, so Han characters fall through to the Chinese face automatically. Written the other way round, the Chinese face's own Latin swallows every digit and the paired Latin face never appears — which matters more here than in most styles, because this deck is full of numerals.
+Every fallback chain ends in a generic family, and every numeral routes to the mono face with tabular figures on — never to the sans's proportional digits. That matters more here than in most styles, because this deck is full of numerals: a formula, a step index, or a citation year set in the body face reads as prose instead of as apparatus.
 
 ### Type Scale
 
@@ -106,11 +106,11 @@ The page title is a **claim sentence**, not a topic label. "Method" is a topic; 
 
 Body at 30px is lower than most decks go, and it is deliberate: this style has to fit citations on the page. **30 is the floor, not the target.** If content does not fit at 30, delete content — do not go to 28.
 
-Four roles, and each has one job. Display carries titles. Body carries prose. Mono carries anything that is a number, a step index, or a reference — that is what makes the citation gutter read as apparatus rather than as more text. Source Serif 4 appears for Latin pull quotes and nowhere else.
+Four roles, and each has one job. Display carries titles. Body carries prose. Mono carries anything that is a number, a step index, or a reference — that is what makes the citation gutter read as apparatus rather than as more text. Source Serif 4 appears for pull quotes and nowhere else.
 
 ### Line Height
 
-Body runs at **1.7**. Han glyphs fill the em box top to bottom, so Chinese needs roughly 0.2 more leading than the Latin equivalent; at 1.5 the citation-dense body of this deck reads as a solid grey block.
+Body runs at **1.7** — looser than a printed default because superscript citation markers need clearance above the x-height, and at 1.5 the citation-dense body of this deck reads as a solid grey block. Body measure caps at **about 70 characters** per line; a paragraph wider than 8 of the 12 columns at 30px is past it and must narrow.
 
 ## Spacing System
 

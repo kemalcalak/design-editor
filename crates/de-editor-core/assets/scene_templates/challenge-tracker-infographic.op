@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "30 天打卡挑战长图",
+  "name": "30-day-challenge-infographic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "30 天打卡挑战长图",
+      "name": "30-day-challenge-infographic",
       "width": 1080,
       "height": 2692,
       "layout": "vertical",
@@ -67,7 +67,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -89,7 +89,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "胶囊",
+              "name": "pill",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -110,9 +110,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "胶囊文字",
-                  "content": "打卡挑战 · 30 天",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "pill-text",
+                  "content": "Challenge · 30 days",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -131,9 +131,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "三十天\n只做同一件事",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Thirty days,\none single habit",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -150,9 +150,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "把这张图存进相册，做完一天划掉一格，别的都不用记。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Save this to your photos and cross off a box each day. That's all you need to track.",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 400,
               "fill": [
@@ -171,7 +171,7 @@
         {
           "type": "frame",
           "id": "f24",
-          "name": "02 规则",
+          "name": "02-rules",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -188,7 +188,7 @@
             {
               "type": "frame",
               "id": "f23",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -199,7 +199,7 @@
                 {
                   "type": "rectangle",
                   "id": "r20",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -213,9 +213,9 @@
                 {
                   "type": "text",
                   "id": "t21",
-                  "name": "区块标题",
-                  "content": "开始之前，三条规则",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Three rules before you start",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -232,9 +232,9 @@
                 {
                   "type": "text",
                   "id": "t22",
-                  "name": "区块说明",
-                  "content": "三条都是为了「断掉那天还能接着走」写的，不是为了自律。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-desc",
+                  "content": "All three are about \"keep going after you miss a day,\" not about discipline.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -253,7 +253,7 @@
             {
               "type": "frame",
               "id": "f19",
-              "name": "规则网格",
+              "name": "rule-grid",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -264,7 +264,7 @@
                 {
                   "type": "frame",
                   "id": "f10",
-                  "name": "规则卡",
+                  "name": "rule-card",
                   "width": "fill_container",
                   "height": "fill_container",
                   "layout": "vertical",
@@ -285,7 +285,7 @@
                     {
                       "type": "icon_font",
                       "id": "i7",
-                      "name": "规则图标",
+                      "name": "rule-icon",
                       "iconFontName": "alarm-clock",
                       "width": 32,
                       "height": 32,
@@ -299,9 +299,9 @@
                     {
                       "type": "text",
                       "id": "t8",
-                      "name": "规则标题",
-                      "content": "固定同一个时间",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-title",
+                      "content": "Same time every day",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -318,9 +318,9 @@
                     {
                       "type": "text",
                       "id": "t9",
-                      "name": "规则说明",
-                      "content": "哪怕只做五分钟。时间固定了，要不要做就不用每天重想。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-desc",
+                      "content": "Even if it's five minutes. Fix the time and you stop deciding every day.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -348,7 +348,7 @@
                 {
                   "type": "frame",
                   "id": "f14",
-                  "name": "规则卡",
+                  "name": "rule-card",
                   "width": "fill_container",
                   "height": "fill_container",
                   "layout": "vertical",
@@ -369,7 +369,7 @@
                     {
                       "type": "icon_font",
                       "id": "i11",
-                      "name": "规则图标",
+                      "name": "rule-icon",
                       "iconFontName": "check",
                       "width": 32,
                       "height": 32,
@@ -383,9 +383,9 @@
                     {
                       "type": "text",
                       "id": "t12",
-                      "name": "规则标题",
-                      "content": "做完立刻划掉",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-title",
+                      "content": "Cross it off right away",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -402,9 +402,9 @@
                     {
                       "type": "text",
                       "id": "t13",
-                      "name": "规则说明",
-                      "content": "不补昨天不提前",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-desc",
+                      "content": "No catch-ups, no early ones",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -432,7 +432,7 @@
                 {
                   "type": "frame",
                   "id": "f18",
-                  "name": "规则卡",
+                  "name": "rule-card",
                   "width": "fill_container",
                   "height": "fill_container",
                   "layout": "vertical",
@@ -453,7 +453,7 @@
                     {
                       "type": "icon_font",
                       "id": "i15",
-                      "name": "规则图标",
+                      "name": "rule-icon",
                       "iconFontName": "refresh-cw",
                       "width": 32,
                       "height": 32,
@@ -467,9 +467,9 @@
                     {
                       "type": "text",
                       "id": "t16",
-                      "name": "规则标题",
-                      "content": "断了不重来",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-title",
+                      "content": "Missed? Don't restart",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 600,
                       "fill": [
@@ -486,9 +486,9 @@
                     {
                       "type": "text",
                       "id": "t17",
-                      "name": "规则说明",
-                      "content": "漏一天就往下走，别从第一天重来。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-desc",
+                      "content": "Skip a day, keep moving. Never go back to day one.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -520,7 +520,7 @@
         {
           "type": "frame",
           "id": "f95",
-          "name": "03 格子",
+          "name": "03-grid",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -537,7 +537,7 @@
             {
               "type": "frame",
               "id": "f93",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -548,7 +548,7 @@
                 {
                   "type": "rectangle",
                   "id": "r90",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -562,9 +562,9 @@
                 {
                   "type": "text",
                   "id": "t91",
-                  "name": "区块标题",
-                  "content": "三十格，一天一格",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Thirty boxes, one a day",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -581,9 +581,9 @@
                 {
                   "type": "text",
                   "id": "t92",
-                  "name": "区块说明",
-                  "content": "深色那三格是要停下来看一眼的日子，说明在下一节。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-desc",
+                  "content": "The three dark boxes are days to pause and look back. More on that below.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -602,7 +602,7 @@
             {
               "type": "frame",
               "id": "f94",
-              "name": "格子阵",
+              "name": "day-grid",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -613,7 +613,7 @@
                 {
                   "type": "frame",
                   "id": "f37",
-                  "name": "第 1 行",
+                  "name": "row-1",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -624,7 +624,7 @@
                     {
                       "type": "frame",
                       "id": "f25",
-                      "name": "第 1 天",
+                      "name": "day-1",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -650,7 +650,7 @@
                         {
                           "type": "text",
                           "id": "t26",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "1",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -671,7 +671,7 @@
                     {
                       "type": "frame",
                       "id": "f27",
-                      "name": "第 2 天",
+                      "name": "day-2",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -697,7 +697,7 @@
                         {
                           "type": "text",
                           "id": "t28",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "2",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -718,7 +718,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "第 3 天",
+                      "name": "day-3",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -744,7 +744,7 @@
                         {
                           "type": "text",
                           "id": "t30",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "3",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -765,7 +765,7 @@
                     {
                       "type": "frame",
                       "id": "f31",
-                      "name": "第 4 天",
+                      "name": "day-4",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -791,7 +791,7 @@
                         {
                           "type": "text",
                           "id": "t32",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "4",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -812,7 +812,7 @@
                     {
                       "type": "frame",
                       "id": "f33",
-                      "name": "第 5 天",
+                      "name": "day-5",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -838,7 +838,7 @@
                         {
                           "type": "text",
                           "id": "t34",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "5",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -859,7 +859,7 @@
                     {
                       "type": "frame",
                       "id": "f35",
-                      "name": "第 6 天",
+                      "name": "day-6",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -885,7 +885,7 @@
                         {
                           "type": "text",
                           "id": "t36",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "6",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -908,7 +908,7 @@
                 {
                   "type": "frame",
                   "id": "f50",
-                  "name": "第 7 行",
+                  "name": "row-7",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -919,7 +919,7 @@
                     {
                       "type": "frame",
                       "id": "f38",
-                      "name": "第 7 天",
+                      "name": "day-7",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -936,7 +936,7 @@
                         {
                           "type": "text",
                           "id": "t39",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "7",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -957,7 +957,7 @@
                     {
                       "type": "frame",
                       "id": "f40",
-                      "name": "第 8 天",
+                      "name": "day-8",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -983,7 +983,7 @@
                         {
                           "type": "text",
                           "id": "t41",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "8",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1004,7 +1004,7 @@
                     {
                       "type": "frame",
                       "id": "f42",
-                      "name": "第 9 天",
+                      "name": "day-9",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1030,7 +1030,7 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "9",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1051,7 +1051,7 @@
                     {
                       "type": "frame",
                       "id": "f44",
-                      "name": "第 10 天",
+                      "name": "day-10",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1077,7 +1077,7 @@
                         {
                           "type": "text",
                           "id": "t45",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "10",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1098,7 +1098,7 @@
                     {
                       "type": "frame",
                       "id": "f46",
-                      "name": "第 11 天",
+                      "name": "day-11",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1124,7 +1124,7 @@
                         {
                           "type": "text",
                           "id": "t47",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "11",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1145,7 +1145,7 @@
                     {
                       "type": "frame",
                       "id": "f48",
-                      "name": "第 12 天",
+                      "name": "day-12",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1171,7 +1171,7 @@
                         {
                           "type": "text",
                           "id": "t49",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "12",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1194,7 +1194,7 @@
                 {
                   "type": "frame",
                   "id": "f63",
-                  "name": "第 13 行",
+                  "name": "row-13",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1205,7 +1205,7 @@
                     {
                       "type": "frame",
                       "id": "f51",
-                      "name": "第 13 天",
+                      "name": "day-13",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1231,7 +1231,7 @@
                         {
                           "type": "text",
                           "id": "t52",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "13",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1252,7 +1252,7 @@
                     {
                       "type": "frame",
                       "id": "f53",
-                      "name": "第 14 天",
+                      "name": "day-14",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1278,7 +1278,7 @@
                         {
                           "type": "text",
                           "id": "t54",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "14",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1299,7 +1299,7 @@
                     {
                       "type": "frame",
                       "id": "f55",
-                      "name": "第 15 天",
+                      "name": "day-15",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1316,7 +1316,7 @@
                         {
                           "type": "text",
                           "id": "t56",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "15",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1337,7 +1337,7 @@
                     {
                       "type": "frame",
                       "id": "f57",
-                      "name": "第 16 天",
+                      "name": "day-16",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1363,7 +1363,7 @@
                         {
                           "type": "text",
                           "id": "t58",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "16",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1384,7 +1384,7 @@
                     {
                       "type": "frame",
                       "id": "f59",
-                      "name": "第 17 天",
+                      "name": "day-17",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1410,7 +1410,7 @@
                         {
                           "type": "text",
                           "id": "t60",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "17",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1431,7 +1431,7 @@
                     {
                       "type": "frame",
                       "id": "f61",
-                      "name": "第 18 天",
+                      "name": "day-18",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1457,7 +1457,7 @@
                         {
                           "type": "text",
                           "id": "t62",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "18",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1480,7 +1480,7 @@
                 {
                   "type": "frame",
                   "id": "f76",
-                  "name": "第 19 行",
+                  "name": "row-19",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1491,7 +1491,7 @@
                     {
                       "type": "frame",
                       "id": "f64",
-                      "name": "第 19 天",
+                      "name": "day-19",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1517,7 +1517,7 @@
                         {
                           "type": "text",
                           "id": "t65",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "19",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1538,7 +1538,7 @@
                     {
                       "type": "frame",
                       "id": "f66",
-                      "name": "第 20 天",
+                      "name": "day-20",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1564,7 +1564,7 @@
                         {
                           "type": "text",
                           "id": "t67",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "20",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1585,7 +1585,7 @@
                     {
                       "type": "frame",
                       "id": "f68",
-                      "name": "第 21 天",
+                      "name": "day-21",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1611,7 +1611,7 @@
                         {
                           "type": "text",
                           "id": "t69",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "21",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1632,7 +1632,7 @@
                     {
                       "type": "frame",
                       "id": "f70",
-                      "name": "第 22 天",
+                      "name": "day-22",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1658,7 +1658,7 @@
                         {
                           "type": "text",
                           "id": "t71",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "22",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1679,7 +1679,7 @@
                     {
                       "type": "frame",
                       "id": "f72",
-                      "name": "第 23 天",
+                      "name": "day-23",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1705,7 +1705,7 @@
                         {
                           "type": "text",
                           "id": "t73",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "23",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1726,7 +1726,7 @@
                     {
                       "type": "frame",
                       "id": "f74",
-                      "name": "第 24 天",
+                      "name": "day-24",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1752,7 +1752,7 @@
                         {
                           "type": "text",
                           "id": "t75",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "24",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1775,7 +1775,7 @@
                 {
                   "type": "frame",
                   "id": "f89",
-                  "name": "第 25 行",
+                  "name": "row-25",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1786,7 +1786,7 @@
                     {
                       "type": "frame",
                       "id": "f77",
-                      "name": "第 25 天",
+                      "name": "day-25",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1812,7 +1812,7 @@
                         {
                           "type": "text",
                           "id": "t78",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "25",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1833,7 +1833,7 @@
                     {
                       "type": "frame",
                       "id": "f79",
-                      "name": "第 26 天",
+                      "name": "day-26",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1859,7 +1859,7 @@
                         {
                           "type": "text",
                           "id": "t80",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "26",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1880,7 +1880,7 @@
                     {
                       "type": "frame",
                       "id": "f81",
-                      "name": "第 27 天",
+                      "name": "day-27",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1906,7 +1906,7 @@
                         {
                           "type": "text",
                           "id": "t82",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "27",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1927,7 +1927,7 @@
                     {
                       "type": "frame",
                       "id": "f83",
-                      "name": "第 28 天",
+                      "name": "day-28",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -1953,7 +1953,7 @@
                         {
                           "type": "text",
                           "id": "t84",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "28",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -1974,7 +1974,7 @@
                     {
                       "type": "frame",
                       "id": "f85",
-                      "name": "第 29 天",
+                      "name": "day-29",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -2000,7 +2000,7 @@
                         {
                           "type": "text",
                           "id": "t86",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "29",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -2021,7 +2021,7 @@
                     {
                       "type": "frame",
                       "id": "f87",
-                      "name": "第 30 天",
+                      "name": "day-30",
                       "width": 140,
                       "height": 120,
                       "layout": "horizontal",
@@ -2038,7 +2038,7 @@
                         {
                           "type": "text",
                           "id": "t88",
-                          "name": "日号",
+                          "name": "day-number",
                           "content": "30",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -2065,7 +2065,7 @@
         {
           "type": "frame",
           "id": "f112",
-          "name": "04 节点",
+          "name": "04-milestones",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -2082,7 +2082,7 @@
             {
               "type": "frame",
               "id": "f111",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2093,7 +2093,7 @@
                 {
                   "type": "rectangle",
                   "id": "r108",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -2107,9 +2107,9 @@
                 {
                   "type": "text",
                   "id": "t109",
-                  "name": "区块标题",
-                  "content": "三个要停一下的日子",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Three days to pause",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -2126,9 +2126,9 @@
                 {
                   "type": "text",
                   "id": "t110",
-                  "name": "区块说明",
-                  "content": "其余二十七天不需要任何说明 —— 照着做就行。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-desc",
+                  "content": "The other 27 days need no notes. Just show up.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -2147,7 +2147,7 @@
             {
               "type": "frame",
               "id": "f107",
-              "name": "节点面板",
+              "name": "milestone-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2168,7 +2168,7 @@
                 {
                   "type": "frame",
                   "id": "f98",
-                  "name": "节点项",
+                  "name": "milestone-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2179,9 +2179,9 @@
                     {
                       "type": "text",
                       "id": "t96",
-                      "name": "节点日",
-                      "content": "第 7 天",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "milestone-day",
+                      "content": "Day 7",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -2198,9 +2198,9 @@
                     {
                       "type": "text",
                       "id": "t97",
-                      "name": "节点说明",
-                      "content": "第一次想放弃通常在这天。把当天的量减到一半，但别停。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "milestone-desc",
+                      "content": "The first urge to quit. Do half, but don't stop.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -2219,7 +2219,7 @@
                 {
                   "type": "rectangle",
                   "id": "r99",
-                  "name": "节点分割线",
+                  "name": "milestone-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -2232,7 +2232,7 @@
                 {
                   "type": "frame",
                   "id": "f102",
-                  "name": "节点项",
+                  "name": "milestone-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2243,9 +2243,9 @@
                     {
                       "type": "text",
                       "id": "t100",
-                      "name": "节点日",
-                      "content": "第 15 天",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "milestone-day",
+                      "content": "Day 15",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -2262,9 +2262,9 @@
                     {
                       "type": "text",
                       "id": "t101",
-                      "name": "节点说明",
-                      "content": "过半了。回头看第 1 天做的东西，差距就是继续的理由。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "milestone-desc",
+                      "content": "Halfway. Compare with day 1; that's your reason.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -2283,7 +2283,7 @@
                 {
                   "type": "rectangle",
                   "id": "r103",
-                  "name": "节点分割线",
+                  "name": "milestone-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -2296,7 +2296,7 @@
                 {
                   "type": "frame",
                   "id": "f106",
-                  "name": "节点项",
+                  "name": "milestone-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2307,9 +2307,9 @@
                     {
                       "type": "text",
                       "id": "t104",
-                      "name": "节点日",
-                      "content": "第 30 天",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "milestone-day",
+                      "content": "Day 30",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -2326,9 +2326,9 @@
                     {
                       "type": "text",
                       "id": "t105",
-                      "name": "节点说明",
-                      "content": "挑三件这三十天做出来的东西写下来，再决定要不要续下一轮。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "milestone-desc",
+                      "content": "List three things you gained, then pick a new round.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -2351,7 +2351,7 @@
         {
           "type": "frame",
           "id": "f117",
-          "name": "05 页脚",
+          "name": "05-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -2371,9 +2371,9 @@
             {
               "type": "text",
               "id": "t113",
-              "name": "用法",
-              "content": "存图后用标注工具划格；换挑战只需改标题和三条规则。",
-              "fontFamily": "Noto Sans SC",
+              "name": "usage",
+              "content": "Save it and mark boxes with any markup tool. New challenge? Just change the title and rules.",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -2390,7 +2390,7 @@
             {
               "type": "frame",
               "id": "f116",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2401,9 +2401,9 @@
                 {
                   "type": "text",
                   "id": "t114",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -2420,9 +2420,9 @@
                 {
                   "type": "text",
                   "id": "t115",
-                  "name": "更新说明",
-                  "content": "每月开一轮新的三十天",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "A new 30-day round every month",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

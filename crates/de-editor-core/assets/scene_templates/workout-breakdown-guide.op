@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "健身动作分解长图",
+  "name": "workout-breakdown-long-graphic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "健身动作分解长图",
+      "name": "workout-breakdown-long-graphic",
       "width": 1080,
       "height": 4589,
       "layout": "vertical",
@@ -67,7 +67,7 @@
         {
           "type": "frame",
           "id": "f18",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -89,7 +89,7 @@
             {
               "type": "frame",
               "id": "f13",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -110,9 +110,9 @@
                 {
                   "type": "text",
                   "id": "t14",
-                  "name": "标签文字",
-                  "content": "居家训练 · 无器械",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Home Workout · No Gear",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -131,9 +131,9 @@
             {
               "type": "text",
               "id": "t15",
-              "name": "主标题",
-              "content": "四个动作\n把全身练一遍",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Four moves,\none full body",
+              "fontFamily": "Inter",
               "fontSize": 78,
               "fontWeight": 700,
               "fill": [
@@ -150,9 +150,9 @@
             {
               "type": "text",
               "id": "t16",
-              "name": "副标题",
-              "content": "客厅一块瑜伽垫的地方就够。参数都写在每个动作下面，照着做。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "All you need is room for a yoga mat. The numbers are under each move; just follow them.",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 400,
               "fill": [
@@ -169,7 +169,7 @@
             {
               "type": "frame",
               "id": "f17",
-              "name": "总览指标条",
+              "name": "overview-stats-bar",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -180,7 +180,7 @@
                 {
                   "type": "frame",
                   "id": "f4",
-                  "name": "总览指标",
+                  "name": "overview-stat",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -191,9 +191,9 @@
                     {
                       "type": "text",
                       "id": "t2",
-                      "name": "指标名",
-                      "content": "总时长",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "stat-label",
+                      "content": "Total time",
+                      "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": 400,
                       "fill": [
@@ -210,9 +210,9 @@
                     {
                       "type": "text",
                       "id": "t3",
-                      "name": "指标值",
-                      "content": "22 分钟",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "stat-value",
+                      "content": "22 min",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -231,7 +231,7 @@
                 {
                   "type": "rectangle",
                   "id": "r5",
-                  "name": "竖分隔",
+                  "name": "vertical-divider",
                   "width": 2,
                   "height": 46,
                   "fill": [
@@ -244,7 +244,7 @@
                 {
                   "type": "frame",
                   "id": "f8",
-                  "name": "总览指标",
+                  "name": "overview-stat",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -255,9 +255,9 @@
                     {
                       "type": "text",
                       "id": "t6",
-                      "name": "指标名",
-                      "content": "动作数",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "stat-label",
+                      "content": "Moves",
+                      "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": 400,
                       "fill": [
@@ -274,9 +274,9 @@
                     {
                       "type": "text",
                       "id": "t7",
-                      "name": "指标值",
-                      "content": "4 个",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "stat-value",
+                      "content": "4",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -295,7 +295,7 @@
                 {
                   "type": "rectangle",
                   "id": "r9",
-                  "name": "竖分隔",
+                  "name": "vertical-divider",
                   "width": 2,
                   "height": 46,
                   "fill": [
@@ -308,7 +308,7 @@
                 {
                   "type": "frame",
                   "id": "f12",
-                  "name": "总览指标",
+                  "name": "overview-stat",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -319,9 +319,9 @@
                     {
                       "type": "text",
                       "id": "t10",
-                      "name": "指标名",
-                      "content": "器械",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "stat-label",
+                      "content": "Gear",
+                      "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": 400,
                       "fill": [
@@ -338,9 +338,9 @@
                     {
                       "type": "text",
                       "id": "t11",
-                      "name": "指标值",
-                      "content": "不需要",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "stat-value",
+                      "content": "None",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -363,7 +363,7 @@
         {
           "type": "frame",
           "id": "f33",
-          "name": "02 排期",
+          "name": "02-schedule",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -380,7 +380,7 @@
             {
               "type": "frame",
               "id": "f31",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -391,7 +391,7 @@
                 {
                   "type": "rectangle",
                   "id": "r28",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -404,9 +404,9 @@
                 {
                   "type": "text",
                   "id": "t29",
-                  "name": "区块标题",
-                  "content": "一周练三次就够",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Three times a week is enough",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -423,9 +423,9 @@
                 {
                   "type": "text",
                   "id": "t30",
-                  "name": "区块说明",
-                  "content": "隔天练一次，中间那天让肌肉长回来。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-description",
+                  "content": "Train every other day; muscles rebuild on the off days.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -444,7 +444,7 @@
             {
               "type": "frame",
               "id": "f32",
-              "name": "排期条",
+              "name": "schedule-bar",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -455,7 +455,7 @@
                 {
                   "type": "frame",
                   "id": "f21",
-                  "name": "排期卡",
+                  "name": "schedule-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -475,9 +475,9 @@
                     {
                       "type": "text",
                       "id": "t19",
-                      "name": "星期",
-                      "content": "周一",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "weekday",
+                      "content": "Mon",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -494,9 +494,9 @@
                     {
                       "type": "text",
                       "id": "t20",
-                      "name": "内容",
-                      "content": "全身 A",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "content",
+                      "content": "Full body A",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 500,
                       "fill": [
@@ -525,7 +525,7 @@
                 {
                   "type": "frame",
                   "id": "f24",
-                  "name": "排期卡",
+                  "name": "schedule-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -545,9 +545,9 @@
                     {
                       "type": "text",
                       "id": "t22",
-                      "name": "星期",
-                      "content": "周三",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "weekday",
+                      "content": "Wed",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -564,9 +564,9 @@
                     {
                       "type": "text",
                       "id": "t23",
-                      "name": "内容",
-                      "content": "全身 B",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "content",
+                      "content": "Full body B",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 500,
                       "fill": [
@@ -595,7 +595,7 @@
                 {
                   "type": "frame",
                   "id": "f27",
-                  "name": "排期卡",
+                  "name": "schedule-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -615,9 +615,9 @@
                     {
                       "type": "text",
                       "id": "t25",
-                      "name": "星期",
-                      "content": "周五",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "weekday",
+                      "content": "Fri",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -634,9 +634,9 @@
                     {
                       "type": "text",
                       "id": "t26",
-                      "name": "内容",
-                      "content": "全身 A",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "content",
+                      "content": "Full body A",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 500,
                       "fill": [
@@ -669,7 +669,7 @@
         {
           "type": "frame",
           "id": "f127",
-          "name": "03 动作",
+          "name": "03-moves",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -686,7 +686,7 @@
             {
               "type": "frame",
               "id": "f37",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -697,7 +697,7 @@
                 {
                   "type": "rectangle",
                   "id": "r34",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -710,9 +710,9 @@
                 {
                   "type": "text",
                   "id": "t35",
-                  "name": "区块标题",
-                  "content": "四个动作，按顺序做",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Four moves, in order",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -729,9 +729,9 @@
                 {
                   "type": "text",
                   "id": "t36",
-                  "name": "区块说明",
-                  "content": "每个动作做完 3 组再进下一个，别串着做。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-description",
+                  "content": "Finish all 3 sets before moving on. No circuits.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -750,7 +750,7 @@
             {
               "type": "frame",
               "id": "f126",
-              "name": "动作列表",
+              "name": "move-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -761,7 +761,7 @@
                 {
                   "type": "frame",
                   "id": "f59",
-                  "name": "动作",
+                  "name": "move",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -781,7 +781,7 @@
                     {
                       "type": "frame",
                       "id": "f46",
-                      "name": "动作头",
+                      "name": "move-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -792,7 +792,7 @@
                         {
                           "type": "text",
                           "id": "t42",
-                          "name": "动作序号",
+                          "name": "move-number",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 52,
@@ -811,7 +811,7 @@
                         {
                           "type": "frame",
                           "id": "f45",
-                          "name": "动作名区",
+                          "name": "move-name-area",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -822,9 +822,9 @@
                             {
                               "type": "text",
                               "id": "t43",
-                              "name": "动作名",
-                              "content": "徒手深蹲",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "move-name",
+                              "content": "Bodyweight squat",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 700,
                               "fill": [
@@ -841,9 +841,9 @@
                             {
                               "type": "text",
                               "id": "t44",
-                              "name": "部位",
-                              "content": "腿 · 臀",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "muscle-group",
+                              "content": "Legs · Glutes",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 500,
                               "fill": [
@@ -864,7 +864,7 @@
                     {
                       "type": "frame",
                       "id": "f52",
-                      "name": "参数条",
+                      "name": "param-bar",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -884,8 +884,8 @@
                         {
                           "type": "text",
                           "id": "t47",
-                          "name": "参数值",
-                          "content": "3 组",
+                          "name": "param-value",
+                          "content": "3 sets",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -903,7 +903,7 @@
                         {
                           "type": "rectangle",
                           "id": "r48",
-                          "name": "参数分隔",
+                          "name": "param-divider",
                           "width": 2,
                           "height": 30,
                           "fill": [
@@ -916,8 +916,8 @@
                         {
                           "type": "text",
                           "id": "t49",
-                          "name": "参数值",
-                          "content": "12 次",
+                          "name": "param-value",
+                          "content": "12 reps",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -935,7 +935,7 @@
                         {
                           "type": "rectangle",
                           "id": "r50",
-                          "name": "参数分隔",
+                          "name": "param-divider",
                           "width": 2,
                           "height": 30,
                           "fill": [
@@ -948,8 +948,8 @@
                         {
                           "type": "text",
                           "id": "t51",
-                          "name": "参数值",
-                          "content": "休息 60 秒",
+                          "name": "param-value",
+                          "content": "Rest 60s",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -970,7 +970,7 @@
                     {
                       "type": "frame",
                       "id": "f38",
-                      "name": "动作图位",
+                      "name": "move-image-slot",
                       "width": "fill_container",
                       "height": 340,
                       "layout": "vertical",
@@ -988,7 +988,7 @@
                         {
                           "type": "icon_font",
                           "id": "i39",
-                          "name": "图位图标",
+                          "name": "image-slot-icon",
                           "iconFontName": "camera",
                           "width": 42,
                           "height": 42,
@@ -1002,9 +1002,9 @@
                         {
                           "type": "text",
                           "id": "t40",
-                          "name": "图位提示",
-                          "content": "深蹲最低点",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-hint",
+                          "content": "Bottom of the squat",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 600,
                           "fill": [
@@ -1022,9 +1022,9 @@
                         {
                           "type": "text",
                           "id": "t41",
-                          "name": "图位规格",
-                          "content": "拍侧面，整个人入镜",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-spec",
+                          "content": "Side view, whole body in frame",
+                          "fontFamily": "Inter",
                           "fontSize": 22,
                           "fontWeight": 400,
                           "fill": [
@@ -1044,7 +1044,7 @@
                     {
                       "type": "frame",
                       "id": "f55",
-                      "name": "要点",
+                      "name": "cue",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1055,7 +1055,7 @@
                         {
                           "type": "icon_font",
                           "id": "i53",
-                          "name": "要点图标",
+                          "name": "cue-icon",
                           "iconFontName": "check",
                           "width": 26,
                           "height": 26,
@@ -1069,9 +1069,9 @@
                         {
                           "type": "text",
                           "id": "t54",
-                          "name": "要点文字",
-                          "content": "蹲到大腿与地面平行就够，膝盖始终对准脚尖。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cue-text",
+                          "content": "Thighs parallel to the floor is enough; keep knees over toes.",
+                          "fontFamily": "Inter",
                           "fontSize": 25,
                           "fontWeight": 400,
                           "fill": [
@@ -1090,7 +1090,7 @@
                     {
                       "type": "frame",
                       "id": "f58",
-                      "name": "要点",
+                      "name": "cue",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1101,7 +1101,7 @@
                         {
                           "type": "icon_font",
                           "id": "i56",
-                          "name": "要点图标",
+                          "name": "cue-icon",
                           "iconFontName": "triangle-alert",
                           "width": 26,
                           "height": 26,
@@ -1115,9 +1115,9 @@
                         {
                           "type": "text",
                           "id": "t57",
-                          "name": "要点文字",
-                          "content": "膝盖内扣、脚跟离地——这两个一起出现就是重量给多了。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cue-text",
+                          "content": "Knees caving and heels lifting together? You're pushing too hard.",
+                          "fontFamily": "Inter",
                           "fontSize": 25,
                           "fontWeight": 400,
                           "fill": [
@@ -1148,7 +1148,7 @@
                 {
                   "type": "frame",
                   "id": "f81",
-                  "name": "动作",
+                  "name": "move",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1168,7 +1168,7 @@
                     {
                       "type": "frame",
                       "id": "f68",
-                      "name": "动作头",
+                      "name": "move-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1179,7 +1179,7 @@
                         {
                           "type": "text",
                           "id": "t64",
-                          "name": "动作序号",
+                          "name": "move-number",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 52,
@@ -1198,7 +1198,7 @@
                         {
                           "type": "frame",
                           "id": "f67",
-                          "name": "动作名区",
+                          "name": "move-name-area",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1209,9 +1209,9 @@
                             {
                               "type": "text",
                               "id": "t65",
-                              "name": "动作名",
-                              "content": "跪姿俯卧撑",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "move-name",
+                              "content": "Kneeling push-up",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 700,
                               "fill": [
@@ -1228,9 +1228,9 @@
                             {
                               "type": "text",
                               "id": "t66",
-                              "name": "部位",
-                              "content": "胸 · 三头",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "muscle-group",
+                              "content": "Chest · Triceps",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 500,
                               "fill": [
@@ -1251,7 +1251,7 @@
                     {
                       "type": "frame",
                       "id": "f74",
-                      "name": "参数条",
+                      "name": "param-bar",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1271,8 +1271,8 @@
                         {
                           "type": "text",
                           "id": "t69",
-                          "name": "参数值",
-                          "content": "3 组",
+                          "name": "param-value",
+                          "content": "3 sets",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -1290,7 +1290,7 @@
                         {
                           "type": "rectangle",
                           "id": "r70",
-                          "name": "参数分隔",
+                          "name": "param-divider",
                           "width": 2,
                           "height": 30,
                           "fill": [
@@ -1303,8 +1303,8 @@
                         {
                           "type": "text",
                           "id": "t71",
-                          "name": "参数值",
-                          "content": "10 次",
+                          "name": "param-value",
+                          "content": "10 reps",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -1322,7 +1322,7 @@
                         {
                           "type": "rectangle",
                           "id": "r72",
-                          "name": "参数分隔",
+                          "name": "param-divider",
                           "width": 2,
                           "height": 30,
                           "fill": [
@@ -1335,8 +1335,8 @@
                         {
                           "type": "text",
                           "id": "t73",
-                          "name": "参数值",
-                          "content": "休息 60 秒",
+                          "name": "param-value",
+                          "content": "Rest 60s",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -1357,7 +1357,7 @@
                     {
                       "type": "frame",
                       "id": "f60",
-                      "name": "动作图位",
+                      "name": "move-image-slot",
                       "width": "fill_container",
                       "height": 340,
                       "layout": "vertical",
@@ -1375,7 +1375,7 @@
                         {
                           "type": "icon_font",
                           "id": "i61",
-                          "name": "图位图标",
+                          "name": "image-slot-icon",
                           "iconFontName": "camera",
                           "width": 42,
                           "height": 42,
@@ -1389,9 +1389,9 @@
                         {
                           "type": "text",
                           "id": "t62",
-                          "name": "图位提示",
-                          "content": "俯卧撑下放位",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-hint",
+                          "content": "Push-up, lowered",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 600,
                           "fill": [
@@ -1409,9 +1409,9 @@
                         {
                           "type": "text",
                           "id": "t63",
-                          "name": "图位规格",
-                          "content": "拍侧面，整个人入镜",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-spec",
+                          "content": "Side view, whole body in frame",
+                          "fontFamily": "Inter",
                           "fontSize": 22,
                           "fontWeight": 400,
                           "fill": [
@@ -1431,7 +1431,7 @@
                     {
                       "type": "frame",
                       "id": "f77",
-                      "name": "要点",
+                      "name": "cue",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1442,7 +1442,7 @@
                         {
                           "type": "icon_font",
                           "id": "i75",
-                          "name": "要点图标",
+                          "name": "cue-icon",
                           "iconFontName": "check",
                           "width": 26,
                           "height": 26,
@@ -1456,9 +1456,9 @@
                         {
                           "type": "text",
                           "id": "t76",
-                          "name": "要点文字",
-                          "content": "手掌在肩膀正下方偏外一拳，下放到胸口离地一掌。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cue-text",
+                          "content": "Hands a fist past the shoulders; chest a palm off the floor.",
+                          "fontFamily": "Inter",
                           "fontSize": 25,
                           "fontWeight": 400,
                           "fill": [
@@ -1477,7 +1477,7 @@
                     {
                       "type": "frame",
                       "id": "f80",
-                      "name": "要点",
+                      "name": "cue",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1488,7 +1488,7 @@
                         {
                           "type": "icon_font",
                           "id": "i78",
-                          "name": "要点图标",
+                          "name": "cue-icon",
                           "iconFontName": "triangle-alert",
                           "width": 26,
                           "height": 26,
@@ -1502,9 +1502,9 @@
                         {
                           "type": "text",
                           "id": "t79",
-                          "name": "要点文字",
-                          "content": "塌腰撅臀。从膝盖到肩膀应该是一条直线。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cue-text",
+                          "content": "Sagging hips or a raised butt. Knees to shoulders should be one line.",
+                          "fontFamily": "Inter",
                           "fontSize": 25,
                           "fontWeight": 400,
                           "fill": [
@@ -1535,7 +1535,7 @@
                 {
                   "type": "frame",
                   "id": "f103",
-                  "name": "动作",
+                  "name": "move",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1555,7 +1555,7 @@
                     {
                       "type": "frame",
                       "id": "f90",
-                      "name": "动作头",
+                      "name": "move-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1566,7 +1566,7 @@
                         {
                           "type": "text",
                           "id": "t86",
-                          "name": "动作序号",
+                          "name": "move-number",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 52,
@@ -1585,7 +1585,7 @@
                         {
                           "type": "frame",
                           "id": "f89",
-                          "name": "动作名区",
+                          "name": "move-name-area",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1596,9 +1596,9 @@
                             {
                               "type": "text",
                               "id": "t87",
-                              "name": "动作名",
-                              "content": "臀桥",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "move-name",
+                              "content": "Glute bridge",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 700,
                               "fill": [
@@ -1615,9 +1615,9 @@
                             {
                               "type": "text",
                               "id": "t88",
-                              "name": "部位",
-                              "content": "臀 · 后链",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "muscle-group",
+                              "content": "Glutes · Posterior chain",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 500,
                               "fill": [
@@ -1638,7 +1638,7 @@
                     {
                       "type": "frame",
                       "id": "f96",
-                      "name": "参数条",
+                      "name": "param-bar",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1658,8 +1658,8 @@
                         {
                           "type": "text",
                           "id": "t91",
-                          "name": "参数值",
-                          "content": "3 组",
+                          "name": "param-value",
+                          "content": "3 sets",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -1677,7 +1677,7 @@
                         {
                           "type": "rectangle",
                           "id": "r92",
-                          "name": "参数分隔",
+                          "name": "param-divider",
                           "width": 2,
                           "height": 30,
                           "fill": [
@@ -1690,8 +1690,8 @@
                         {
                           "type": "text",
                           "id": "t93",
-                          "name": "参数值",
-                          "content": "15 次",
+                          "name": "param-value",
+                          "content": "15 reps",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -1709,7 +1709,7 @@
                         {
                           "type": "rectangle",
                           "id": "r94",
-                          "name": "参数分隔",
+                          "name": "param-divider",
                           "width": 2,
                           "height": 30,
                           "fill": [
@@ -1722,8 +1722,8 @@
                         {
                           "type": "text",
                           "id": "t95",
-                          "name": "参数值",
-                          "content": "休息 45 秒",
+                          "name": "param-value",
+                          "content": "Rest 45s",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -1744,7 +1744,7 @@
                     {
                       "type": "frame",
                       "id": "f82",
-                      "name": "动作图位",
+                      "name": "move-image-slot",
                       "width": "fill_container",
                       "height": 340,
                       "layout": "vertical",
@@ -1762,7 +1762,7 @@
                         {
                           "type": "icon_font",
                           "id": "i83",
-                          "name": "图位图标",
+                          "name": "image-slot-icon",
                           "iconFontName": "camera",
                           "width": 42,
                           "height": 42,
@@ -1776,9 +1776,9 @@
                         {
                           "type": "text",
                           "id": "t84",
-                          "name": "图位提示",
-                          "content": "臀桥顶点",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-hint",
+                          "content": "Top of the bridge",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 600,
                           "fill": [
@@ -1796,9 +1796,9 @@
                         {
                           "type": "text",
                           "id": "t85",
-                          "name": "图位规格",
-                          "content": "拍侧面，整个人入镜",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-spec",
+                          "content": "Side view, whole body in frame",
+                          "fontFamily": "Inter",
                           "fontSize": 22,
                           "fontWeight": 400,
                           "fill": [
@@ -1818,7 +1818,7 @@
                     {
                       "type": "frame",
                       "id": "f99",
-                      "name": "要点",
+                      "name": "cue",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1829,7 +1829,7 @@
                         {
                           "type": "icon_font",
                           "id": "i97",
-                          "name": "要点图标",
+                          "name": "cue-icon",
                           "iconFontName": "check",
                           "width": 26,
                           "height": 26,
@@ -1843,9 +1843,9 @@
                         {
                           "type": "text",
                           "id": "t98",
-                          "name": "要点文字",
-                          "content": "顶点停 1 秒再落，靠夹臀发力而不是靠腰顶。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cue-text",
+                          "content": "Hold 1s at the top. Squeeze the glutes; don't push with your back.",
+                          "fontFamily": "Inter",
                           "fontSize": 25,
                           "fontWeight": 400,
                           "fill": [
@@ -1864,7 +1864,7 @@
                     {
                       "type": "frame",
                       "id": "f102",
-                      "name": "要点",
+                      "name": "cue",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1875,7 +1875,7 @@
                         {
                           "type": "icon_font",
                           "id": "i100",
-                          "name": "要点图标",
+                          "name": "cue-icon",
                           "iconFontName": "triangle-alert",
                           "width": 26,
                           "height": 26,
@@ -1889,9 +1889,9 @@
                         {
                           "type": "text",
                           "id": "t101",
-                          "name": "要点文字",
-                          "content": "腰先离地。那说明在用下背代偿，臀根本没参与。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cue-text",
+                          "content": "Lower back lifts first: your back is doing the glutes' job.",
+                          "fontFamily": "Inter",
                           "fontSize": 25,
                           "fontWeight": 400,
                           "fill": [
@@ -1922,7 +1922,7 @@
                 {
                   "type": "frame",
                   "id": "f125",
-                  "name": "动作",
+                  "name": "move",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1942,7 +1942,7 @@
                     {
                       "type": "frame",
                       "id": "f112",
-                      "name": "动作头",
+                      "name": "move-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1953,7 +1953,7 @@
                         {
                           "type": "text",
                           "id": "t108",
-                          "name": "动作序号",
+                          "name": "move-number",
                           "content": "04",
                           "fontFamily": "Inter",
                           "fontSize": 52,
@@ -1972,7 +1972,7 @@
                         {
                           "type": "frame",
                           "id": "f111",
-                          "name": "动作名区",
+                          "name": "move-name-area",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1983,9 +1983,9 @@
                             {
                               "type": "text",
                               "id": "t109",
-                              "name": "动作名",
-                              "content": "平板支撑",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "move-name",
+                              "content": "Plank",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 700,
                               "fill": [
@@ -2002,9 +2002,9 @@
                             {
                               "type": "text",
                               "id": "t110",
-                              "name": "部位",
-                              "content": "核心",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "muscle-group",
+                              "content": "Core",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 500,
                               "fill": [
@@ -2025,7 +2025,7 @@
                     {
                       "type": "frame",
                       "id": "f118",
-                      "name": "参数条",
+                      "name": "param-bar",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2045,8 +2045,8 @@
                         {
                           "type": "text",
                           "id": "t113",
-                          "name": "参数值",
-                          "content": "3 组",
+                          "name": "param-value",
+                          "content": "3 sets",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -2064,7 +2064,7 @@
                         {
                           "type": "rectangle",
                           "id": "r114",
-                          "name": "参数分隔",
+                          "name": "param-divider",
                           "width": 2,
                           "height": 30,
                           "fill": [
@@ -2077,8 +2077,8 @@
                         {
                           "type": "text",
                           "id": "t115",
-                          "name": "参数值",
-                          "content": "30 秒",
+                          "name": "param-value",
+                          "content": "30s",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -2096,7 +2096,7 @@
                         {
                           "type": "rectangle",
                           "id": "r116",
-                          "name": "参数分隔",
+                          "name": "param-divider",
                           "width": 2,
                           "height": 30,
                           "fill": [
@@ -2109,8 +2109,8 @@
                         {
                           "type": "text",
                           "id": "t117",
-                          "name": "参数值",
-                          "content": "休息 45 秒",
+                          "name": "param-value",
+                          "content": "Rest 45s",
                           "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 700,
@@ -2131,7 +2131,7 @@
                     {
                       "type": "frame",
                       "id": "f104",
-                      "name": "动作图位",
+                      "name": "move-image-slot",
                       "width": "fill_container",
                       "height": 340,
                       "layout": "vertical",
@@ -2149,7 +2149,7 @@
                         {
                           "type": "icon_font",
                           "id": "i105",
-                          "name": "图位图标",
+                          "name": "image-slot-icon",
                           "iconFontName": "camera",
                           "width": 42,
                           "height": 42,
@@ -2163,9 +2163,9 @@
                         {
                           "type": "text",
                           "id": "t106",
-                          "name": "图位提示",
-                          "content": "平板支撑侧面",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-hint",
+                          "content": "Plank, side view",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 600,
                           "fill": [
@@ -2183,9 +2183,9 @@
                         {
                           "type": "text",
                           "id": "t107",
-                          "name": "图位规格",
-                          "content": "拍侧面，整个人入镜",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-slot-spec",
+                          "content": "Side view, whole body in frame",
+                          "fontFamily": "Inter",
                           "fontSize": 22,
                           "fontWeight": 400,
                           "fill": [
@@ -2205,7 +2205,7 @@
                     {
                       "type": "frame",
                       "id": "f121",
-                      "name": "要点",
+                      "name": "cue",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2216,7 +2216,7 @@
                         {
                           "type": "icon_font",
                           "id": "i119",
-                          "name": "要点图标",
+                          "name": "cue-icon",
                           "iconFontName": "check",
                           "width": 26,
                           "height": 26,
@@ -2230,9 +2230,9 @@
                         {
                           "type": "text",
                           "id": "t120",
-                          "name": "要点文字",
-                          "content": "肘在肩正下方，收腹夹臀，呼吸别憋。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cue-text",
+                          "content": "Elbows under shoulders, brace abs and glutes, keep breathing.",
+                          "fontFamily": "Inter",
                           "fontSize": 25,
                           "fontWeight": 400,
                           "fill": [
@@ -2251,7 +2251,7 @@
                     {
                       "type": "frame",
                       "id": "f124",
-                      "name": "要点",
+                      "name": "cue",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2262,7 +2262,7 @@
                         {
                           "type": "icon_font",
                           "id": "i122",
-                          "name": "要点图标",
+                          "name": "cue-icon",
                           "iconFontName": "triangle-alert",
                           "width": 26,
                           "height": 26,
@@ -2276,9 +2276,9 @@
                         {
                           "type": "text",
                           "id": "t123",
-                          "name": "要点文字",
-                          "content": "撑到抖还硬扛。姿势垮了的每一秒都在练错。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cue-text",
+                          "content": "Shaking through bad form trains the wrong thing.",
+                          "fontFamily": "Inter",
                           "fontSize": 25,
                           "fontWeight": 400,
                           "fill": [
@@ -2313,7 +2313,7 @@
         {
           "type": "frame",
           "id": "f142",
-          "name": "04 收尾",
+          "name": "04-wrap-up",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -2335,9 +2335,9 @@
             {
               "type": "text",
               "id": "t137",
-              "name": "收尾标题",
-              "content": "练之前，先看这三条",
-              "fontFamily": "Noto Sans SC",
+              "name": "wrap-up-title",
+              "content": "Read these three first",
+              "fontFamily": "Inter",
               "fontSize": 42,
               "fontWeight": 700,
               "fill": [
@@ -2354,7 +2354,7 @@
             {
               "type": "frame",
               "id": "f138",
-              "name": "提醒列表",
+              "name": "tip-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2365,7 +2365,7 @@
                 {
                   "type": "frame",
                   "id": "f130",
-                  "name": "提醒项",
+                  "name": "tip-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2376,7 +2376,7 @@
                     {
                       "type": "text",
                       "id": "t128",
-                      "name": "提醒序号",
+                      "name": "tip-number",
                       "content": "01",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -2395,9 +2395,9 @@
                     {
                       "type": "text",
                       "id": "t129",
-                      "name": "提醒文字",
-                      "content": "练之前先花 3 分钟活动踝、髋、肩，别省。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tip-text",
+                      "content": "Warm up ankles, hips and shoulders for 3 min first.",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 400,
                       "fill": [
@@ -2416,7 +2416,7 @@
                 {
                   "type": "frame",
                   "id": "f133",
-                  "name": "提醒项",
+                  "name": "tip-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2427,7 +2427,7 @@
                     {
                       "type": "text",
                       "id": "t131",
-                      "name": "提醒序号",
+                      "name": "tip-number",
                       "content": "02",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -2446,9 +2446,9 @@
                     {
                       "type": "text",
                       "id": "t132",
-                      "name": "提醒文字",
-                      "content": "动作做不满次数就减次数，不要减质量。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tip-text",
+                      "content": "Can't hit the reps? Cut reps, not form.",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 400,
                       "fill": [
@@ -2467,7 +2467,7 @@
                 {
                   "type": "frame",
                   "id": "f136",
-                  "name": "提醒项",
+                  "name": "tip-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2478,7 +2478,7 @@
                     {
                       "type": "text",
                       "id": "t134",
-                      "name": "提醒序号",
+                      "name": "tip-number",
                       "content": "03",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -2497,9 +2497,9 @@
                     {
                       "type": "text",
                       "id": "t135",
-                      "name": "提醒文字",
-                      "content": "两次训练之间至少隔一天，肌肉是在休息时长的。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tip-text",
+                      "content": "Leave at least a day between sessions. Muscle grows while you rest.",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 400,
                       "fill": [
@@ -2520,7 +2520,7 @@
             {
               "type": "frame",
               "id": "f141",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2532,9 +2532,9 @@
                 {
                   "type": "text",
                   "id": "t139",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -2551,9 +2551,9 @@
                 {
                   "type": "text",
                   "id": "t140",
-                  "name": "更新说明",
-                  "content": "每周一套能在家做的训练",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "A new home workout every week",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

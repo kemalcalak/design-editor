@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "数据故事长图",
+  "name": "data-story-long-graphic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -35,7 +35,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "数据故事长图",
+      "name": "data-story-long-graphic",
       "width": 1080,
       "height": 2711,
       "layout": "vertical",
@@ -51,7 +51,7 @@
         {
           "type": "frame",
           "id": "f11",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -68,7 +68,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "胶囊",
+              "name": "pill",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -89,9 +89,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "胶囊文字",
-                  "content": "数据故事 · 四段一条线",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "pill-text",
+                  "content": "Data story · Four steps, one line",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -110,9 +110,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "四个数字\n串成一条线",
-              "fontFamily": "Noto Sans SC",
+              "name": "main-title",
+              "content": "Four numbers,\none story",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -129,9 +129,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "每一段的分母都是上一段的结果，顺序不能换。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Each step's base is the previous step's result, so the order is fixed.",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 400,
               "fill": [
@@ -148,7 +148,7 @@
             {
               "type": "frame",
               "id": "f10",
-              "name": "章节条",
+              "name": "chapter-bar",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -159,7 +159,7 @@
                 {
                   "type": "rectangle",
                   "id": "r6",
-                  "name": "章节 1",
+                  "name": "chapter-1",
                   "width": 222,
                   "height": 8,
                   "cornerRadius": 999,
@@ -173,7 +173,7 @@
                 {
                   "type": "rectangle",
                   "id": "r7",
-                  "name": "章节 2",
+                  "name": "chapter-2",
                   "width": 222,
                   "height": 8,
                   "cornerRadius": 999,
@@ -187,7 +187,7 @@
                 {
                   "type": "rectangle",
                   "id": "r8",
-                  "name": "章节 3",
+                  "name": "chapter-3",
                   "width": 222,
                   "height": 8,
                   "cornerRadius": 999,
@@ -201,7 +201,7 @@
                 {
                   "type": "rectangle",
                   "id": "r9",
-                  "name": "章节 4",
+                  "name": "chapter-4",
                   "width": 222,
                   "height": 8,
                   "cornerRadius": 999,
@@ -219,7 +219,7 @@
         {
           "type": "frame",
           "id": "f105",
-          "name": "02 故事",
+          "name": "02-story",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -236,7 +236,7 @@
             {
               "type": "frame",
               "id": "f103",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -247,7 +247,7 @@
                 {
                   "type": "rectangle",
                   "id": "r100",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -261,9 +261,9 @@
                 {
                   "type": "text",
                   "id": "t101",
-                  "name": "区块标题",
-                  "content": "顺着往下读",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Read top to bottom",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -280,9 +280,9 @@
                 {
                   "type": "text",
                   "id": "t102",
-                  "name": "区块说明",
-                  "content": "每格代表一成。数格子就够了，不用回头对刻度。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "Each block is 10%. Just count blocks; no scale to check.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -301,7 +301,7 @@
             {
               "type": "frame",
               "id": "f104",
-              "name": "故事列表",
+              "name": "story-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -312,7 +312,7 @@
                 {
                   "type": "frame",
                   "id": "f33",
-                  "name": "故事段",
+                  "name": "story-step",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -333,7 +333,7 @@
                     {
                       "type": "frame",
                       "id": "f14",
-                      "name": "段头",
+                      "name": "step-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -344,7 +344,7 @@
                         {
                           "type": "text",
                           "id": "t12",
-                          "name": "段号",
+                          "name": "step-number",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -363,9 +363,9 @@
                         {
                           "type": "text",
                           "id": "t13",
-                          "name": "分母",
-                          "content": "点进来的人里",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "base",
+                          "content": "Of everyone who clicks in",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 500,
                           "fill": [
@@ -384,7 +384,7 @@
                     {
                       "type": "frame",
                       "id": "f17",
-                      "name": "数值行",
+                      "name": "value-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -395,7 +395,7 @@
                         {
                           "type": "text",
                           "id": "t15",
-                          "name": "数值",
+                          "name": "value",
                           "content": "30%",
                           "fontFamily": "Inter",
                           "fontSize": 72,
@@ -414,9 +414,9 @@
                         {
                           "type": "text",
                           "id": "t16",
-                          "name": "陈述",
-                          "content": "只有三成读完了第一屏，其余在前三行就离开。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "statement",
+                          "content": "only 30% finish the first screen.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -435,7 +435,7 @@
                     {
                       "type": "frame",
                       "id": "f31",
-                      "name": "方块阵",
+                      "name": "block-grid",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -446,7 +446,7 @@
                         {
                           "type": "rectangle",
                           "id": "r21",
-                          "name": "格 1",
+                          "name": "block-1",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -460,7 +460,7 @@
                         {
                           "type": "rectangle",
                           "id": "r22",
-                          "name": "格 2",
+                          "name": "block-2",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -474,7 +474,7 @@
                         {
                           "type": "rectangle",
                           "id": "r23",
-                          "name": "格 3",
+                          "name": "block-3",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -488,7 +488,7 @@
                         {
                           "type": "rectangle",
                           "id": "r24",
-                          "name": "格 4",
+                          "name": "block-4",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -502,7 +502,7 @@
                         {
                           "type": "rectangle",
                           "id": "r25",
-                          "name": "格 5",
+                          "name": "block-5",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -516,7 +516,7 @@
                         {
                           "type": "rectangle",
                           "id": "r26",
-                          "name": "格 6",
+                          "name": "block-6",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -530,7 +530,7 @@
                         {
                           "type": "rectangle",
                           "id": "r27",
-                          "name": "格 7",
+                          "name": "block-7",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -544,7 +544,7 @@
                         {
                           "type": "rectangle",
                           "id": "r28",
-                          "name": "格 8",
+                          "name": "block-8",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -558,7 +558,7 @@
                         {
                           "type": "rectangle",
                           "id": "r29",
-                          "name": "格 9",
+                          "name": "block-9",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -572,7 +572,7 @@
                         {
                           "type": "rectangle",
                           "id": "r30",
-                          "name": "格 10",
+                          "name": "block-10",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -588,7 +588,7 @@
                     {
                       "type": "rectangle",
                       "id": "r32",
-                      "name": "段内分割线",
+                      "name": "step-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -601,7 +601,7 @@
                     {
                       "type": "frame",
                       "id": "f20",
-                      "name": "所以",
+                      "name": "so",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -612,7 +612,7 @@
                         {
                           "type": "icon_font",
                           "id": "i18",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "corner-down-right",
                           "width": 26,
                           "height": 26,
@@ -626,9 +626,9 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "所以文字",
-                          "content": "第一屏决定了七成人走不走 —— 把结论放进前三行。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "so-text",
+                          "content": "Screen one loses 70%, so lead with the point.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -649,7 +649,7 @@
                 {
                   "type": "frame",
                   "id": "f55",
-                  "name": "故事段",
+                  "name": "story-step",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -670,7 +670,7 @@
                     {
                       "type": "frame",
                       "id": "f36",
-                      "name": "段头",
+                      "name": "step-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -681,7 +681,7 @@
                         {
                           "type": "text",
                           "id": "t34",
-                          "name": "段号",
+                          "name": "step-number",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -700,9 +700,9 @@
                         {
                           "type": "text",
                           "id": "t35",
-                          "name": "分母",
-                          "content": "读完第一屏的人里",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "base",
+                          "content": "Of those who finish the first screen",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 500,
                           "fill": [
@@ -721,7 +721,7 @@
                     {
                       "type": "frame",
                       "id": "f39",
-                      "name": "数值行",
+                      "name": "value-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -732,7 +732,7 @@
                         {
                           "type": "text",
                           "id": "t37",
-                          "name": "数值",
+                          "name": "value",
                           "content": "70%",
                           "fontFamily": "Inter",
                           "fontSize": 72,
@@ -751,9 +751,9 @@
                         {
                           "type": "text",
                           "id": "t38",
-                          "name": "陈述",
-                          "content": "七成会一路滑到底，中途几乎不流失。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "statement",
+                          "content": "70% scroll to the end, with almost no drop-off.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -772,7 +772,7 @@
                     {
                       "type": "frame",
                       "id": "f53",
-                      "name": "方块阵",
+                      "name": "block-grid",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -783,7 +783,7 @@
                         {
                           "type": "rectangle",
                           "id": "r43",
-                          "name": "格 1",
+                          "name": "block-1",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -797,7 +797,7 @@
                         {
                           "type": "rectangle",
                           "id": "r44",
-                          "name": "格 2",
+                          "name": "block-2",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -811,7 +811,7 @@
                         {
                           "type": "rectangle",
                           "id": "r45",
-                          "name": "格 3",
+                          "name": "block-3",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -825,7 +825,7 @@
                         {
                           "type": "rectangle",
                           "id": "r46",
-                          "name": "格 4",
+                          "name": "block-4",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -839,7 +839,7 @@
                         {
                           "type": "rectangle",
                           "id": "r47",
-                          "name": "格 5",
+                          "name": "block-5",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -853,7 +853,7 @@
                         {
                           "type": "rectangle",
                           "id": "r48",
-                          "name": "格 6",
+                          "name": "block-6",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -867,7 +867,7 @@
                         {
                           "type": "rectangle",
                           "id": "r49",
-                          "name": "格 7",
+                          "name": "block-7",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -881,7 +881,7 @@
                         {
                           "type": "rectangle",
                           "id": "r50",
-                          "name": "格 8",
+                          "name": "block-8",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -895,7 +895,7 @@
                         {
                           "type": "rectangle",
                           "id": "r51",
-                          "name": "格 9",
+                          "name": "block-9",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -909,7 +909,7 @@
                         {
                           "type": "rectangle",
                           "id": "r52",
-                          "name": "格 10",
+                          "name": "block-10",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -925,7 +925,7 @@
                     {
                       "type": "rectangle",
                       "id": "r54",
-                      "name": "段内分割线",
+                      "name": "step-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -938,7 +938,7 @@
                     {
                       "type": "frame",
                       "id": "f42",
-                      "name": "所以",
+                      "name": "so",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -949,7 +949,7 @@
                         {
                           "type": "icon_font",
                           "id": "i40",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "corner-down-right",
                           "width": 26,
                           "height": 26,
@@ -963,9 +963,9 @@
                         {
                           "type": "text",
                           "id": "t41",
-                          "name": "所以文字",
-                          "content": "中段不用再加钩子，把力气留给开头。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "so-text",
+                          "content": "The middle needs no hooks. Spend effort on the open.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -986,7 +986,7 @@
                 {
                   "type": "frame",
                   "id": "f77",
-                  "name": "故事段",
+                  "name": "story-step",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1007,7 +1007,7 @@
                     {
                       "type": "frame",
                       "id": "f58",
-                      "name": "段头",
+                      "name": "step-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1018,7 +1018,7 @@
                         {
                           "type": "text",
                           "id": "t56",
-                          "name": "段号",
+                          "name": "step-number",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -1037,9 +1037,9 @@
                         {
                           "type": "text",
                           "id": "t57",
-                          "name": "分母",
-                          "content": "滑到底的人里",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "base",
+                          "content": "Of those who reach the end",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 500,
                           "fill": [
@@ -1058,7 +1058,7 @@
                     {
                       "type": "frame",
                       "id": "f61",
-                      "name": "数值行",
+                      "name": "value-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1069,7 +1069,7 @@
                         {
                           "type": "text",
                           "id": "t59",
-                          "name": "数值",
+                          "name": "value",
                           "content": "20%",
                           "fontFamily": "Inter",
                           "fontSize": 72,
@@ -1088,9 +1088,9 @@
                         {
                           "type": "text",
                           "id": "t60",
-                          "name": "陈述",
-                          "content": "两成会点关注，其余看完就走。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "statement",
+                          "content": "20% follow; the rest read and go.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1109,7 +1109,7 @@
                     {
                       "type": "frame",
                       "id": "f75",
-                      "name": "方块阵",
+                      "name": "block-grid",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1120,7 +1120,7 @@
                         {
                           "type": "rectangle",
                           "id": "r65",
-                          "name": "格 1",
+                          "name": "block-1",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1134,7 +1134,7 @@
                         {
                           "type": "rectangle",
                           "id": "r66",
-                          "name": "格 2",
+                          "name": "block-2",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1148,7 +1148,7 @@
                         {
                           "type": "rectangle",
                           "id": "r67",
-                          "name": "格 3",
+                          "name": "block-3",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1162,7 +1162,7 @@
                         {
                           "type": "rectangle",
                           "id": "r68",
-                          "name": "格 4",
+                          "name": "block-4",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1176,7 +1176,7 @@
                         {
                           "type": "rectangle",
                           "id": "r69",
-                          "name": "格 5",
+                          "name": "block-5",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1190,7 +1190,7 @@
                         {
                           "type": "rectangle",
                           "id": "r70",
-                          "name": "格 6",
+                          "name": "block-6",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1204,7 +1204,7 @@
                         {
                           "type": "rectangle",
                           "id": "r71",
-                          "name": "格 7",
+                          "name": "block-7",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1218,7 +1218,7 @@
                         {
                           "type": "rectangle",
                           "id": "r72",
-                          "name": "格 8",
+                          "name": "block-8",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1232,7 +1232,7 @@
                         {
                           "type": "rectangle",
                           "id": "r73",
-                          "name": "格 9",
+                          "name": "block-9",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1246,7 +1246,7 @@
                         {
                           "type": "rectangle",
                           "id": "r74",
-                          "name": "格 10",
+                          "name": "block-10",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1262,7 +1262,7 @@
                     {
                       "type": "rectangle",
                       "id": "r76",
-                      "name": "段内分割线",
+                      "name": "step-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -1275,7 +1275,7 @@
                     {
                       "type": "frame",
                       "id": "f64",
-                      "name": "所以",
+                      "name": "so",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1286,7 +1286,7 @@
                         {
                           "type": "icon_font",
                           "id": "i62",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "corner-down-right",
                           "width": 26,
                           "height": 26,
@@ -1300,9 +1300,9 @@
                         {
                           "type": "text",
                           "id": "t63",
-                          "name": "所以文字",
-                          "content": "关注发生在读完之后 —— 引导语放结尾比放开头管用。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "so-text",
+                          "content": "Follows come after reading, so ask at the end.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -1323,7 +1323,7 @@
                 {
                   "type": "frame",
                   "id": "f99",
-                  "name": "故事段",
+                  "name": "story-step",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1344,7 +1344,7 @@
                     {
                       "type": "frame",
                       "id": "f80",
-                      "name": "段头",
+                      "name": "step-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1355,7 +1355,7 @@
                         {
                           "type": "text",
                           "id": "t78",
-                          "name": "段号",
+                          "name": "step-number",
                           "content": "04",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -1374,9 +1374,9 @@
                         {
                           "type": "text",
                           "id": "t79",
-                          "name": "分母",
-                          "content": "关注的人里",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "base",
+                          "content": "Of those who follow",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 500,
                           "fill": [
@@ -1395,7 +1395,7 @@
                     {
                       "type": "frame",
                       "id": "f83",
-                      "name": "数值行",
+                      "name": "value-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1406,7 +1406,7 @@
                         {
                           "type": "text",
                           "id": "t81",
-                          "name": "数值",
+                          "name": "value",
                           "content": "10%",
                           "fontFamily": "Inter",
                           "fontSize": 72,
@@ -1425,9 +1425,9 @@
                         {
                           "type": "text",
                           "id": "t82",
-                          "name": "陈述",
-                          "content": "一周内只有一成会主动再回来一次。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "statement",
+                          "content": "only 10% come back on their own within a week.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1446,7 +1446,7 @@
                     {
                       "type": "frame",
                       "id": "f97",
-                      "name": "方块阵",
+                      "name": "block-grid",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1457,7 +1457,7 @@
                         {
                           "type": "rectangle",
                           "id": "r87",
-                          "name": "格 1",
+                          "name": "block-1",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1471,7 +1471,7 @@
                         {
                           "type": "rectangle",
                           "id": "r88",
-                          "name": "格 2",
+                          "name": "block-2",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1485,7 +1485,7 @@
                         {
                           "type": "rectangle",
                           "id": "r89",
-                          "name": "格 3",
+                          "name": "block-3",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1499,7 +1499,7 @@
                         {
                           "type": "rectangle",
                           "id": "r90",
-                          "name": "格 4",
+                          "name": "block-4",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1513,7 +1513,7 @@
                         {
                           "type": "rectangle",
                           "id": "r91",
-                          "name": "格 5",
+                          "name": "block-5",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1527,7 +1527,7 @@
                         {
                           "type": "rectangle",
                           "id": "r92",
-                          "name": "格 6",
+                          "name": "block-6",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1541,7 +1541,7 @@
                         {
                           "type": "rectangle",
                           "id": "r93",
-                          "name": "格 7",
+                          "name": "block-7",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1555,7 +1555,7 @@
                         {
                           "type": "rectangle",
                           "id": "r94",
-                          "name": "格 8",
+                          "name": "block-8",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1569,7 +1569,7 @@
                         {
                           "type": "rectangle",
                           "id": "r95",
-                          "name": "格 9",
+                          "name": "block-9",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1583,7 +1583,7 @@
                         {
                           "type": "rectangle",
                           "id": "r96",
-                          "name": "格 10",
+                          "name": "block-10",
                           "width": 78,
                           "height": 26,
                           "cornerRadius": 6,
@@ -1599,7 +1599,7 @@
                     {
                       "type": "rectangle",
                       "id": "r98",
-                      "name": "段内分割线",
+                      "name": "step-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -1612,7 +1612,7 @@
                     {
                       "type": "frame",
                       "id": "f86",
-                      "name": "所以",
+                      "name": "so",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1623,7 +1623,7 @@
                         {
                           "type": "icon_font",
                           "id": "i84",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "corner-down-right",
                           "width": 26,
                           "height": 26,
@@ -1637,9 +1637,9 @@
                         {
                           "type": "text",
                           "id": "t85",
-                          "name": "所以文字",
-                          "content": "复访靠的是更新节奏，说清楚下次什么时候更。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "so-text",
+                          "content": "A steady schedule brings them back. Say when's next.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -1664,7 +1664,7 @@
         {
           "type": "frame",
           "id": "f113",
-          "name": "03 结论",
+          "name": "03-conclusion",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1681,7 +1681,7 @@
             {
               "type": "frame",
               "id": "f112",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1692,7 +1692,7 @@
                 {
                   "type": "rectangle",
                   "id": "r109",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -1706,9 +1706,9 @@
                 {
                   "type": "text",
                   "id": "t110",
-                  "name": "区块标题",
-                  "content": "四句合成一句",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Four lines, one takeaway",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -1725,9 +1725,9 @@
                 {
                   "type": "text",
                   "id": "t111",
-                  "name": "区块说明",
-                  "content": "上面每段末尾那句「所以」，合起来只剩这一条要做的事。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "Put together, the \"so\" lines above leave just one thing to do.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -1746,7 +1746,7 @@
             {
               "type": "frame",
               "id": "f108",
-              "name": "结论面板",
+              "name": "conclusion-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1767,9 +1767,9 @@
                 {
                   "type": "text",
                   "id": "t106",
-                  "name": "结论",
-                  "content": "把力气放在第一屏和更新节奏上。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "conclusion",
+                  "content": "Invest in the first screen and a steady schedule.",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -1786,9 +1786,9 @@
                 {
                   "type": "text",
                   "id": "t107",
-                  "name": "结论支撑",
-                  "content": "中间那一段自己会走完，四个数字里有两个都在说这件事。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "conclusion-support",
+                  "content": "The middle takes care of itself; two of the four numbers say so.",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -1809,7 +1809,7 @@
         {
           "type": "frame",
           "id": "f119",
-          "name": "04 页脚",
+          "name": "04-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1826,7 +1826,7 @@
             {
               "type": "rectangle",
               "id": "r114",
-              "name": "页脚上线",
+              "name": "footer-top-rule",
               "width": "fill_container",
               "height": 2,
               "fill": [
@@ -1839,9 +1839,9 @@
             {
               "type": "text",
               "id": "t115",
-              "name": "口径",
-              "content": "统计区间：近 90 天，同一人多次访问按首次计，四舍五入到一成。",
-              "fontFamily": "Noto Sans SC",
+              "name": "methodology",
+              "content": "Period: last 90 days. Repeat visits count once, rounded to the nearest 10%.",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -1858,7 +1858,7 @@
             {
               "type": "frame",
               "id": "f118",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1869,9 +1869,9 @@
                 {
                   "type": "text",
                   "id": "t116",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -1888,9 +1888,9 @@
                 {
                   "type": "text",
                   "id": "t117",
-                  "name": "更新说明",
-                  "content": "每季度重跑一次这条线",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "Rerun this line every quarter",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

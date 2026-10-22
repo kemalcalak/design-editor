@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "账簿勾格 · 竞品矩阵 deck",
+  "name": "ledger-tick-competitor-deck",
   "variables": {
     "c-paper": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f26",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -66,7 +66,7 @@
         {
           "type": "frame",
           "id": "f21",
-          "name": "01 封面 · 正文",
+          "name": "01-cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -83,7 +83,7 @@
             {
               "type": "frame",
               "id": "f22",
-              "name": "内容",
+              "name": "content",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -93,7 +93,7 @@
                 {
                   "type": "frame",
                   "id": "f20",
-                  "name": "封面文字",
+                  "name": "cover-text",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -103,7 +103,7 @@
                     {
                       "type": "frame",
                       "id": "f16",
-                      "name": "册头",
+                      "name": "masthead",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -114,9 +114,9 @@
                         {
                           "type": "text",
                           "id": "t14",
-                          "name": "册头中文",
-                          "content": "竞品能力核对",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "masthead-label",
+                          "content": "Competitor check",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 500,
                           "fill": [
@@ -133,7 +133,7 @@
                         {
                           "type": "text",
                           "id": "t15",
-                          "name": "册头周期",
+                          "name": "masthead-period",
                           "content": "· 2026 Q3",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -154,9 +154,9 @@
                     {
                       "type": "text",
                       "id": "t17",
-                      "name": "主标题",
-                      "content": "把能做与不能做\n摊在同一张账上",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "title",
+                      "content": "Can and can't,\nin one ledger",
+                      "fontFamily": "Inter",
                       "fontSize": 88,
                       "fontWeight": 700,
                       "fill": [
@@ -173,9 +173,9 @@
                     {
                       "type": "text",
                       "id": "t18",
-                      "name": "副标题",
-                      "content": "六项能力、四家产品，逐格核对。\n记号只陈述事实，不打分、不排名。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "subtitle",
+                      "content": "Six capabilities, four products, checked cell by cell.\nMarks state facts. No scores, no ranking.",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 400,
                       "fill": [
@@ -192,9 +192,9 @@
                     {
                       "type": "text",
                       "id": "t19",
-                      "name": "评估范围",
-                      "content": "评估范围：面向 50–500 人团队的客服工单系统，\n依据公开文档与试用账号实测，数据截止 2026-07-31。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "scope",
+                      "content": "Scope: help desk ticketing for teams of 50–500,\nfrom public docs and trial accounts. Data as of 2026-07-31.",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 400,
                       "fill": [
@@ -215,7 +215,7 @@
             {
               "type": "frame",
               "id": "f25",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -227,9 +227,9 @@
                 {
                   "type": "text",
                   "id": "t23",
-                  "name": "册名",
-                  "content": "客服工单系统 · 能力核对表",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "book-title",
+                  "content": "Help desk ticketing · Capability check",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -246,7 +246,7 @@
                 {
                   "type": "text",
                   "id": "t24",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "p. 1 / 7",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -269,7 +269,7 @@
         {
           "type": "frame",
           "id": "f27",
-          "name": "01 封面 · 账页格线",
+          "name": "01-cover-ledger-rules",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -278,7 +278,7 @@
             {
               "type": "rectangle",
               "id": "r10",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 2,
               "fill": [
@@ -293,7 +293,7 @@
             {
               "type": "rectangle",
               "id": "r1",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 1,
               "fill": [
@@ -308,7 +308,7 @@
             {
               "type": "rectangle",
               "id": "r2",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 1,
               "fill": [
@@ -323,7 +323,7 @@
             {
               "type": "rectangle",
               "id": "r3",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 1,
               "fill": [
@@ -338,7 +338,7 @@
             {
               "type": "rectangle",
               "id": "r4",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 1,
               "fill": [
@@ -353,7 +353,7 @@
             {
               "type": "rectangle",
               "id": "r5",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 1,
               "fill": [
@@ -368,7 +368,7 @@
             {
               "type": "rectangle",
               "id": "r6",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 1,
               "fill": [
@@ -383,7 +383,7 @@
             {
               "type": "rectangle",
               "id": "r7",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 1,
               "fill": [
@@ -398,7 +398,7 @@
             {
               "type": "rectangle",
               "id": "r8",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 1,
               "fill": [
@@ -413,7 +413,7 @@
             {
               "type": "rectangle",
               "id": "r9",
-              "name": "格线",
+              "name": "grid-line",
               "width": 760,
               "height": 1,
               "fill": [
@@ -428,7 +428,7 @@
             {
               "type": "rectangle",
               "id": "r11",
-              "name": "账格竖线",
+              "name": "ledger-vertical-rule",
               "width": 1,
               "height": 648,
               "fill": [
@@ -443,7 +443,7 @@
             {
               "type": "rectangle",
               "id": "r12",
-              "name": "账格竖线",
+              "name": "ledger-vertical-rule",
               "width": 1,
               "height": 648,
               "fill": [
@@ -458,7 +458,7 @@
             {
               "type": "rectangle",
               "id": "r13",
-              "name": "账格竖线",
+              "name": "ledger-vertical-rule",
               "width": 1,
               "height": 648,
               "fill": [
@@ -479,7 +479,7 @@
     {
       "type": "frame",
       "id": "f75",
-      "name": "02 评估口径",
+      "name": "02-criteria",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -494,7 +494,7 @@
         {
           "type": "frame",
           "id": "f70",
-          "name": "02 评估口径 · 正文",
+          "name": "02-criteria-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -511,7 +511,7 @@
             {
               "type": "frame",
               "id": "f71",
-              "name": "内容",
+              "name": "content",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -521,9 +521,9 @@
                 {
                   "type": "text",
                   "id": "t66",
-                  "name": "页标题",
-                  "content": "先说清楚每一格是怎么判的",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "How each cell is judged",
+                  "fontFamily": "Inter",
                   "fontSize": 56,
                   "fontWeight": 700,
                   "fill": [
@@ -540,9 +540,9 @@
                 {
                   "type": "text",
                   "id": "t67",
-                  "name": "口径引导",
-                  "content": "六项维度、六条口径。判定只回答「做到没做到」，不回答「做得好不好」——后者需要的证据这张表给不了。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "criteria-intro",
+                  "content": "Six dimensions, six definitions. A mark answers \"does it do this?\", not \"does it do it well?\" This table can't supply the evidence for the second.",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -559,7 +559,7 @@
                 {
                   "type": "frame",
                   "id": "f68",
-                  "name": "口径两列",
+                  "name": "criteria-columns",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -570,7 +570,7 @@
                     {
                       "type": "frame",
                       "id": "f64",
-                      "name": "口径左列",
+                      "name": "criteria-left",
                       "width": 780,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -580,7 +580,7 @@
                         {
                           "type": "frame",
                           "id": "f33",
-                          "name": "维度定义",
+                          "name": "dimension-definition",
                           "width": 780,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -590,7 +590,7 @@
                             {
                               "type": "frame",
                               "id": "f30",
-                              "name": "维度名",
+                              "name": "dimension-name",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -601,7 +601,7 @@
                                 {
                                   "type": "text",
                                   "id": "t28",
-                                  "name": "序号",
+                                  "name": "index",
                                   "content": "01",
                                   "fontFamily": "Inter",
                                   "fontSize": 24,
@@ -620,9 +620,9 @@
                                 {
                                   "type": "text",
                                   "id": "t29",
-                                  "name": "维度术语",
-                                  "content": "工单自动分派",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "dimension-term",
+                                  "content": "Auto-routing",
+                                  "fontFamily": "Inter",
                                   "fontSize": 32,
                                   "fontWeight": 600,
                                   "fill": [
@@ -641,7 +641,7 @@
                             {
                               "type": "frame",
                               "id": "f32",
-                              "name": "口径正文",
+                              "name": "criteria-body",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -657,9 +657,9 @@
                                 {
                                   "type": "text",
                                   "id": "t31",
-                                  "name": "判定口径",
-                                  "content": "按技能组、负载与优先级自动指派，\n无需人工转派即计满足。",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "criterion",
+                                  "content": "Assigns by skill group, load and priority;\nmet if no manual reassignment is needed.",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -680,7 +680,7 @@
                         {
                           "type": "frame",
                           "id": "f45",
-                          "name": "维度定义",
+                          "name": "dimension-definition",
                           "width": 780,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -690,7 +690,7 @@
                             {
                               "type": "frame",
                               "id": "f42",
-                              "name": "维度名",
+                              "name": "dimension-name",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -701,7 +701,7 @@
                                 {
                                   "type": "text",
                                   "id": "t40",
-                                  "name": "序号",
+                                  "name": "index",
                                   "content": "03",
                                   "fontFamily": "Inter",
                                   "fontSize": 24,
@@ -720,9 +720,9 @@
                                 {
                                   "type": "text",
                                   "id": "t41",
-                                  "name": "维度术语",
-                                  "content": "时效承诺",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "dimension-term",
+                                  "content": "SLA commitments",
+                                  "fontFamily": "Inter",
                                   "fontSize": 32,
                                   "fontWeight": 600,
                                   "fill": [
@@ -741,7 +741,7 @@
                             {
                               "type": "frame",
                               "id": "f44",
-                              "name": "口径正文",
+                              "name": "criteria-body",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -757,9 +757,9 @@
                                 {
                                   "type": "text",
                                   "id": "t43",
-                                  "name": "判定口径",
-                                  "content": "可按客户分级设定响应与解决时限，\n并在超时前自动触发升级。",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "criterion",
+                                  "content": "Response and fix targets per customer tier,\nwith auto-escalation before a breach.",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -780,7 +780,7 @@
                         {
                           "type": "frame",
                           "id": "f57",
-                          "name": "维度定义",
+                          "name": "dimension-definition",
                           "width": 780,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -790,7 +790,7 @@
                             {
                               "type": "frame",
                               "id": "f54",
-                              "name": "维度名",
+                              "name": "dimension-name",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -801,7 +801,7 @@
                                 {
                                   "type": "text",
                                   "id": "t52",
-                                  "name": "序号",
+                                  "name": "index",
                                   "content": "05",
                                   "fontFamily": "Inter",
                                   "fontSize": 24,
@@ -820,9 +820,9 @@
                                 {
                                   "type": "text",
                                   "id": "t53",
-                                  "name": "维度术语",
-                                  "content": "数据可导出",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "dimension-term",
+                                  "content": "Data export",
+                                  "fontFamily": "Inter",
                                   "fontSize": 32,
                                   "fontWeight": 600,
                                   "fill": [
@@ -841,7 +841,7 @@
                             {
                               "type": "frame",
                               "id": "f56",
-                              "name": "口径正文",
+                              "name": "criteria-body",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -857,9 +857,9 @@
                                 {
                                   "type": "text",
                                   "id": "t55",
-                                  "name": "判定口径",
-                                  "content": "全量工单与会话可导出为结构化文件，\n导出不限频次、不限字段。",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "criterion",
+                                  "content": "Tickets and chats export as structured files,\nwith no limits on frequency or fields.",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -882,7 +882,7 @@
                     {
                       "type": "frame",
                       "id": "f65",
-                      "name": "口径右列",
+                      "name": "criteria-right",
                       "width": 780,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -892,7 +892,7 @@
                         {
                           "type": "frame",
                           "id": "f39",
-                          "name": "维度定义",
+                          "name": "dimension-definition",
                           "width": 780,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -902,7 +902,7 @@
                             {
                               "type": "frame",
                               "id": "f36",
-                              "name": "维度名",
+                              "name": "dimension-name",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -913,7 +913,7 @@
                                 {
                                   "type": "text",
                                   "id": "t34",
-                                  "name": "序号",
+                                  "name": "index",
                                   "content": "02",
                                   "fontFamily": "Inter",
                                   "fontSize": 24,
@@ -932,9 +932,9 @@
                                 {
                                   "type": "text",
                                   "id": "t35",
-                                  "name": "维度术语",
-                                  "content": "多渠道接入",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "dimension-term",
+                                  "content": "Multichannel intake",
+                                  "fontFamily": "Inter",
                                   "fontSize": 32,
                                   "fontWeight": 600,
                                   "fill": [
@@ -953,7 +953,7 @@
                             {
                               "type": "frame",
                               "id": "f38",
-                              "name": "口径正文",
+                              "name": "criteria-body",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -969,9 +969,9 @@
                                 {
                                   "type": "text",
                                   "id": "t37",
-                                  "name": "判定口径",
-                                  "content": "邮件、网页表单、即时通讯、电话四类中，\n支持三类及以上即计满足。",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "criterion",
+                                  "content": "Of email, web form, live chat and phone,\nmet if three or more are supported.",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -992,7 +992,7 @@
                         {
                           "type": "frame",
                           "id": "f51",
-                          "name": "维度定义",
+                          "name": "dimension-definition",
                           "width": 780,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1002,7 +1002,7 @@
                             {
                               "type": "frame",
                               "id": "f48",
-                              "name": "维度名",
+                              "name": "dimension-name",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1013,7 +1013,7 @@
                                 {
                                   "type": "text",
                                   "id": "t46",
-                                  "name": "序号",
+                                  "name": "index",
                                   "content": "04",
                                   "fontFamily": "Inter",
                                   "fontSize": 24,
@@ -1032,9 +1032,9 @@
                                 {
                                   "type": "text",
                                   "id": "t47",
-                                  "name": "维度术语",
-                                  "content": "知识库联动",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "dimension-term",
+                                  "content": "Knowledge base link",
+                                  "fontFamily": "Inter",
                                   "fontSize": 32,
                                   "fontWeight": 600,
                                   "fill": [
@@ -1053,7 +1053,7 @@
                             {
                               "type": "frame",
                               "id": "f50",
-                              "name": "口径正文",
+                              "name": "criteria-body",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -1069,9 +1069,9 @@
                                 {
                                   "type": "text",
                                   "id": "t49",
-                                  "name": "判定口径",
-                                  "content": "坐席能在工单内检索并插入知识条目，\n且能把新写的条目回写。",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "criterion",
+                                  "content": "Agents search and insert articles in a ticket,\nand can write new articles back.",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1092,7 +1092,7 @@
                         {
                           "type": "frame",
                           "id": "f63",
-                          "name": "维度定义",
+                          "name": "dimension-definition",
                           "width": 780,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1102,7 +1102,7 @@
                             {
                               "type": "frame",
                               "id": "f60",
-                              "name": "维度名",
+                              "name": "dimension-name",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1113,7 +1113,7 @@
                                 {
                                   "type": "text",
                                   "id": "t58",
-                                  "name": "序号",
+                                  "name": "index",
                                   "content": "06",
                                   "fontFamily": "Inter",
                                   "fontSize": 24,
@@ -1132,9 +1132,9 @@
                                 {
                                   "type": "text",
                                   "id": "t59",
-                                  "name": "维度术语",
-                                  "content": "私有化部署",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "dimension-term",
+                                  "content": "On-prem deployment",
+                                  "fontFamily": "Inter",
                                   "fontSize": 32,
                                   "fontWeight": 600,
                                   "fill": [
@@ -1153,7 +1153,7 @@
                             {
                               "type": "frame",
                               "id": "f62",
-                              "name": "口径正文",
+                              "name": "criteria-body",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -1169,9 +1169,9 @@
                                 {
                                   "type": "text",
                                   "id": "t61",
-                                  "name": "判定口径",
-                                  "content": "可部署在客户自有服务器，\n且功能与云端版本一致。",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "criterion",
+                                  "content": "Runs on the customer's own servers,\nwith feature parity to the cloud version.",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1196,9 +1196,9 @@
                 {
                   "type": "text",
                   "id": "t69",
-                  "name": "口径脚注",
-                  "content": "口径与记号规则在评估开始前确定，评估过程中未作调整；无定义的维度不进矩阵。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "criteria-footnote",
+                  "content": "Definitions and marking rules were fixed before the review and never changed during it. No dimension enters the matrix without a definition.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1217,7 +1217,7 @@
             {
               "type": "frame",
               "id": "f74",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1229,9 +1229,9 @@
                 {
                   "type": "text",
                   "id": "t72",
-                  "name": "册名",
-                  "content": "客服工单系统 · 能力核对表",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "book-title",
+                  "content": "Help desk ticketing · Capability check",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1248,7 +1248,7 @@
                 {
                   "type": "text",
                   "id": "t73",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "p. 2 / 7",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -1275,7 +1275,7 @@
     {
       "type": "frame",
       "id": "f262",
-      "name": "03 主矩阵",
+      "name": "03-matrix",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1290,7 +1290,7 @@
         {
           "type": "frame",
           "id": "f257",
-          "name": "03 主矩阵 · 正文",
+          "name": "03-matrix-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1307,7 +1307,7 @@
             {
               "type": "frame",
               "id": "f258",
-              "name": "内容",
+              "name": "content",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1317,9 +1317,9 @@
                 {
                   "type": "text",
                   "id": "t76",
-                  "name": "页标题",
-                  "content": "六项能力，逐格核对",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Six capabilities, cell by cell",
+                  "fontFamily": "Inter",
                   "fontSize": 56,
                   "fontWeight": 700,
                   "fill": [
@@ -1336,7 +1336,7 @@
                 {
                   "type": "frame",
                   "id": "f235",
-                  "name": "主矩阵",
+                  "name": "matrix",
                   "width": 1728,
                   "height": 512,
                   "layout": "none",
@@ -1345,7 +1345,7 @@
                     {
                       "type": "frame",
                       "id": "f234",
-                      "name": "自家列外框",
+                      "name": "own-column-frame",
                       "width": 343,
                       "height": 512,
                       "layout": "none",
@@ -1365,7 +1365,7 @@
                     {
                       "type": "frame",
                       "id": "f233",
-                      "name": "表体",
+                      "name": "table-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1375,7 +1375,7 @@
                         {
                           "type": "rectangle",
                           "id": "r77",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 1728,
                           "height": 1,
                           "fill": [
@@ -1388,7 +1388,7 @@
                         {
                           "type": "frame",
                           "id": "f93",
-                          "name": "矩阵表头",
+                          "name": "matrix-header",
                           "width": "fill_container",
                           "height": 72,
                           "layout": "horizontal",
@@ -1399,7 +1399,7 @@
                             {
                               "type": "frame",
                               "id": "f78",
-                              "name": "表头 · 维度",
+                              "name": "header-dimension",
                               "width": 360,
                               "height": 72,
                               "layout": "horizontal",
@@ -1414,9 +1414,9 @@
                                 {
                                   "type": "text",
                                   "id": "t79",
-                                  "name": "表头文字",
-                                  "content": "评估维度",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "header-text",
+                                  "content": "Dimension",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 600,
                                   "fill": [
@@ -1435,7 +1435,7 @@
                             {
                               "type": "rectangle",
                               "id": "r83",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -1448,7 +1448,7 @@
                             {
                               "type": "frame",
                               "id": "f80",
-                              "name": "表头格",
+                              "name": "header-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -1465,7 +1465,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f81",
-                                  "name": "自家标记",
+                                  "name": "own-badge",
                                   "width": "fit_content",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -1486,9 +1486,9 @@
                                     {
                                       "type": "text",
                                       "id": "t82",
-                                      "name": "自家标记文字",
-                                      "content": "本产品",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "own-badge-text",
+                                      "content": "Us",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 600,
                                       "fill": [
@@ -1509,7 +1509,7 @@
                             {
                               "type": "rectangle",
                               "id": "r86",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -1522,7 +1522,7 @@
                             {
                               "type": "frame",
                               "id": "f84",
-                              "name": "表头格",
+                              "name": "header-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -1534,9 +1534,9 @@
                                 {
                                   "type": "text",
                                   "id": "t85",
-                                  "name": "表头格文字",
-                                  "content": "竞品甲",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "header-cell-text",
+                                  "content": "Rival A",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 500,
                                   "fill": [
@@ -1555,7 +1555,7 @@
                             {
                               "type": "rectangle",
                               "id": "r89",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -1568,7 +1568,7 @@
                             {
                               "type": "frame",
                               "id": "f87",
-                              "name": "表头格",
+                              "name": "header-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -1580,9 +1580,9 @@
                                 {
                                   "type": "text",
                                   "id": "t88",
-                                  "name": "表头格文字",
-                                  "content": "竞品乙",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "header-cell-text",
+                                  "content": "Rival B",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 500,
                                   "fill": [
@@ -1601,7 +1601,7 @@
                             {
                               "type": "rectangle",
                               "id": "r92",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -1614,7 +1614,7 @@
                             {
                               "type": "frame",
                               "id": "f90",
-                              "name": "表头格",
+                              "name": "header-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -1626,9 +1626,9 @@
                                 {
                                   "type": "text",
                                   "id": "t91",
-                                  "name": "表头格文字",
-                                  "content": "竞品丙",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "header-cell-text",
+                                  "content": "Rival C",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 500,
                                   "fill": [
@@ -1649,7 +1649,7 @@
                         {
                           "type": "rectangle",
                           "id": "r94",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 1728,
                           "height": 2,
                           "fill": [
@@ -1662,7 +1662,7 @@
                         {
                           "type": "frame",
                           "id": "f116",
-                          "name": "矩阵行",
+                          "name": "matrix-row",
                           "width": "fill_container",
                           "height": 72,
                           "layout": "horizontal",
@@ -1673,7 +1673,7 @@
                             {
                               "type": "frame",
                               "id": "f95",
-                              "name": "行标签",
+                              "name": "row-label",
                               "width": 360,
                               "height": 72,
                               "layout": "horizontal",
@@ -1688,9 +1688,9 @@
                                 {
                                   "type": "text",
                                   "id": "t96",
-                                  "name": "行标签文字",
-                                  "content": "工单自动分派",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "row-label-text",
+                                  "content": "Auto-routing",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 500,
                                   "fill": [
@@ -1709,7 +1709,7 @@
                             {
                               "type": "rectangle",
                               "id": "r97",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -1722,7 +1722,7 @@
                             {
                               "type": "frame",
                               "id": "f98",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -1739,7 +1739,7 @@
                                 {
                                   "type": "group",
                                   "id": "g99",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -1748,7 +1748,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r100",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -1764,7 +1764,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r101",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -1784,7 +1784,7 @@
                             {
                               "type": "rectangle",
                               "id": "r102",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -1797,7 +1797,7 @@
                             {
                               "type": "frame",
                               "id": "f103",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -1809,7 +1809,7 @@
                                 {
                                   "type": "group",
                                   "id": "g104",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -1818,7 +1818,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r105",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -1834,7 +1834,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r106",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -1854,7 +1854,7 @@
                             {
                               "type": "rectangle",
                               "id": "r107",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -1867,7 +1867,7 @@
                             {
                               "type": "frame",
                               "id": "f108",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -1879,7 +1879,7 @@
                                 {
                                   "type": "group",
                                   "id": "g111",
-                                  "name": "记号 · 部分满足",
+                                  "name": "mark-partly-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -1888,7 +1888,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r109",
-                                      "name": "半格 · 外框",
+                                      "name": "half-cell-frame",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -1907,7 +1907,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r110",
-                                      "name": "半格 · 左半",
+                                      "name": "half-cell-left",
                                       "width": 12,
                                       "height": 24,
                                       "fill": [
@@ -1926,7 +1926,7 @@
                             {
                               "type": "rectangle",
                               "id": "r112",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -1939,7 +1939,7 @@
                             {
                               "type": "frame",
                               "id": "f113",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -1951,7 +1951,7 @@
                                 {
                                   "type": "group",
                                   "id": "g115",
-                                  "name": "记号 · 不满足",
+                                  "name": "mark-not-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -1960,7 +1960,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r114",
-                                      "name": "短横",
+                                      "name": "dash",
                                       "width": 20,
                                       "height": 2,
                                       "fill": [
@@ -1981,7 +1981,7 @@
                         {
                           "type": "rectangle",
                           "id": "r117",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 1728,
                           "height": 1,
                           "fill": [
@@ -1994,7 +1994,7 @@
                         {
                           "type": "frame",
                           "id": "f140",
-                          "name": "矩阵行",
+                          "name": "matrix-row",
                           "width": "fill_container",
                           "height": 72,
                           "layout": "horizontal",
@@ -2005,7 +2005,7 @@
                             {
                               "type": "frame",
                               "id": "f118",
-                              "name": "行标签",
+                              "name": "row-label",
                               "width": 360,
                               "height": 72,
                               "layout": "horizontal",
@@ -2025,9 +2025,9 @@
                                 {
                                   "type": "text",
                                   "id": "t119",
-                                  "name": "行标签文字",
-                                  "content": "多渠道接入",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "row-label-text",
+                                  "content": "Multichannel intake",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 500,
                                   "fill": [
@@ -2046,7 +2046,7 @@
                             {
                               "type": "rectangle",
                               "id": "r120",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2059,7 +2059,7 @@
                             {
                               "type": "frame",
                               "id": "f121",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2076,7 +2076,7 @@
                                 {
                                   "type": "group",
                                   "id": "g122",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2085,7 +2085,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r123",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -2101,7 +2101,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r124",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -2121,7 +2121,7 @@
                             {
                               "type": "rectangle",
                               "id": "r125",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2134,7 +2134,7 @@
                             {
                               "type": "frame",
                               "id": "f126",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2151,7 +2151,7 @@
                                 {
                                   "type": "group",
                                   "id": "g127",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2160,7 +2160,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r128",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -2176,7 +2176,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r129",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -2196,7 +2196,7 @@
                             {
                               "type": "rectangle",
                               "id": "r130",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2209,7 +2209,7 @@
                             {
                               "type": "frame",
                               "id": "f131",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2226,7 +2226,7 @@
                                 {
                                   "type": "group",
                                   "id": "g132",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2235,7 +2235,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r133",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -2251,7 +2251,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r134",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -2271,7 +2271,7 @@
                             {
                               "type": "rectangle",
                               "id": "r135",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2284,7 +2284,7 @@
                             {
                               "type": "frame",
                               "id": "f136",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2301,7 +2301,7 @@
                                 {
                                   "type": "group",
                                   "id": "g139",
-                                  "name": "记号 · 部分满足",
+                                  "name": "mark-partly-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2310,7 +2310,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r137",
-                                      "name": "半格 · 外框",
+                                      "name": "half-cell-frame",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -2329,7 +2329,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r138",
-                                      "name": "半格 · 左半",
+                                      "name": "half-cell-left",
                                       "width": 12,
                                       "height": 24,
                                       "fill": [
@@ -2350,7 +2350,7 @@
                         {
                           "type": "rectangle",
                           "id": "r141",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 1728,
                           "height": 1,
                           "fill": [
@@ -2363,7 +2363,7 @@
                         {
                           "type": "frame",
                           "id": "f163",
-                          "name": "矩阵行",
+                          "name": "matrix-row",
                           "width": "fill_container",
                           "height": 72,
                           "layout": "horizontal",
@@ -2374,7 +2374,7 @@
                             {
                               "type": "frame",
                               "id": "f142",
-                              "name": "行标签",
+                              "name": "row-label",
                               "width": 360,
                               "height": 72,
                               "layout": "horizontal",
@@ -2389,9 +2389,9 @@
                                 {
                                   "type": "text",
                                   "id": "t143",
-                                  "name": "行标签文字",
-                                  "content": "时效承诺",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "row-label-text",
+                                  "content": "SLA commitments",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 500,
                                   "fill": [
@@ -2410,7 +2410,7 @@
                             {
                               "type": "rectangle",
                               "id": "r144",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2423,7 +2423,7 @@
                             {
                               "type": "frame",
                               "id": "f145",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2440,7 +2440,7 @@
                                 {
                                   "type": "group",
                                   "id": "g146",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2449,7 +2449,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r147",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -2465,7 +2465,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r148",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -2485,7 +2485,7 @@
                             {
                               "type": "rectangle",
                               "id": "r149",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2498,7 +2498,7 @@
                             {
                               "type": "frame",
                               "id": "f150",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2510,7 +2510,7 @@
                                 {
                                   "type": "group",
                                   "id": "g153",
-                                  "name": "记号 · 部分满足",
+                                  "name": "mark-partly-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2519,7 +2519,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r151",
-                                      "name": "半格 · 外框",
+                                      "name": "half-cell-frame",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -2538,7 +2538,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r152",
-                                      "name": "半格 · 左半",
+                                      "name": "half-cell-left",
                                       "width": 12,
                                       "height": 24,
                                       "fill": [
@@ -2557,7 +2557,7 @@
                             {
                               "type": "rectangle",
                               "id": "r154",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2570,7 +2570,7 @@
                             {
                               "type": "frame",
                               "id": "f155",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2582,7 +2582,7 @@
                                 {
                                   "type": "group",
                                   "id": "g157",
-                                  "name": "记号 · 不满足",
+                                  "name": "mark-not-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2591,7 +2591,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r156",
-                                      "name": "短横",
+                                      "name": "dash",
                                       "width": 20,
                                       "height": 2,
                                       "fill": [
@@ -2610,7 +2610,7 @@
                             {
                               "type": "rectangle",
                               "id": "r158",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2623,7 +2623,7 @@
                             {
                               "type": "frame",
                               "id": "f159",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2635,7 +2635,7 @@
                                 {
                                   "type": "group",
                                   "id": "g162",
-                                  "name": "记号 · 部分满足",
+                                  "name": "mark-partly-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2644,7 +2644,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r160",
-                                      "name": "半格 · 外框",
+                                      "name": "half-cell-frame",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -2663,7 +2663,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r161",
-                                      "name": "半格 · 左半",
+                                      "name": "half-cell-left",
                                       "width": 12,
                                       "height": 24,
                                       "fill": [
@@ -2684,7 +2684,7 @@
                         {
                           "type": "rectangle",
                           "id": "r164",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 1728,
                           "height": 1,
                           "fill": [
@@ -2697,7 +2697,7 @@
                         {
                           "type": "frame",
                           "id": "f186",
-                          "name": "矩阵行",
+                          "name": "matrix-row",
                           "width": "fill_container",
                           "height": 72,
                           "layout": "horizontal",
@@ -2708,7 +2708,7 @@
                             {
                               "type": "frame",
                               "id": "f165",
-                              "name": "行标签",
+                              "name": "row-label",
                               "width": 360,
                               "height": 72,
                               "layout": "horizontal",
@@ -2728,9 +2728,9 @@
                                 {
                                   "type": "text",
                                   "id": "t166",
-                                  "name": "行标签文字",
-                                  "content": "知识库联动",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "row-label-text",
+                                  "content": "Knowledge base link",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 500,
                                   "fill": [
@@ -2749,7 +2749,7 @@
                             {
                               "type": "rectangle",
                               "id": "r167",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2762,7 +2762,7 @@
                             {
                               "type": "frame",
                               "id": "f168",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2779,7 +2779,7 @@
                                 {
                                   "type": "group",
                                   "id": "g169",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2788,7 +2788,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r170",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -2804,7 +2804,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r171",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -2824,7 +2824,7 @@
                             {
                               "type": "rectangle",
                               "id": "r172",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2837,7 +2837,7 @@
                             {
                               "type": "frame",
                               "id": "f173",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2854,7 +2854,7 @@
                                 {
                                   "type": "group",
                                   "id": "g176",
-                                  "name": "记号 · 部分满足",
+                                  "name": "mark-partly-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2863,7 +2863,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r174",
-                                      "name": "半格 · 外框",
+                                      "name": "half-cell-frame",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -2882,7 +2882,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r175",
-                                      "name": "半格 · 左半",
+                                      "name": "half-cell-left",
                                       "width": 12,
                                       "height": 24,
                                       "fill": [
@@ -2901,7 +2901,7 @@
                             {
                               "type": "rectangle",
                               "id": "r177",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2914,7 +2914,7 @@
                             {
                               "type": "frame",
                               "id": "f178",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -2931,7 +2931,7 @@
                                 {
                                   "type": "group",
                                   "id": "g179",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -2940,7 +2940,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r180",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -2956,7 +2956,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r181",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -2976,7 +2976,7 @@
                             {
                               "type": "rectangle",
                               "id": "r182",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -2989,7 +2989,7 @@
                             {
                               "type": "frame",
                               "id": "f183",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -3006,7 +3006,7 @@
                                 {
                                   "type": "group",
                                   "id": "g185",
-                                  "name": "记号 · 不满足",
+                                  "name": "mark-not-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -3015,7 +3015,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r184",
-                                      "name": "短横",
+                                      "name": "dash",
                                       "width": 20,
                                       "height": 2,
                                       "fill": [
@@ -3036,7 +3036,7 @@
                         {
                           "type": "rectangle",
                           "id": "r187",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 1728,
                           "height": 1,
                           "fill": [
@@ -3049,7 +3049,7 @@
                         {
                           "type": "frame",
                           "id": "f210",
-                          "name": "矩阵行",
+                          "name": "matrix-row",
                           "width": "fill_container",
                           "height": 72,
                           "layout": "horizontal",
@@ -3060,7 +3060,7 @@
                             {
                               "type": "frame",
                               "id": "f188",
-                              "name": "行标签",
+                              "name": "row-label",
                               "width": 360,
                               "height": 72,
                               "layout": "horizontal",
@@ -3075,9 +3075,9 @@
                                 {
                                   "type": "text",
                                   "id": "t189",
-                                  "name": "行标签文字",
-                                  "content": "数据可导出",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "row-label-text",
+                                  "content": "Data export",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 500,
                                   "fill": [
@@ -3096,7 +3096,7 @@
                             {
                               "type": "rectangle",
                               "id": "r190",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -3109,7 +3109,7 @@
                             {
                               "type": "frame",
                               "id": "f191",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -3126,7 +3126,7 @@
                                 {
                                   "type": "group",
                                   "id": "g192",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -3135,7 +3135,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r193",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -3151,7 +3151,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r194",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -3171,7 +3171,7 @@
                             {
                               "type": "rectangle",
                               "id": "r195",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -3184,7 +3184,7 @@
                             {
                               "type": "frame",
                               "id": "f196",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -3196,7 +3196,7 @@
                                 {
                                   "type": "group",
                                   "id": "g197",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -3205,7 +3205,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r198",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -3221,7 +3221,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r199",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -3241,7 +3241,7 @@
                             {
                               "type": "rectangle",
                               "id": "r200",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -3254,7 +3254,7 @@
                             {
                               "type": "frame",
                               "id": "f201",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -3266,7 +3266,7 @@
                                 {
                                   "type": "group",
                                   "id": "g204",
-                                  "name": "记号 · 部分满足",
+                                  "name": "mark-partly-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -3275,7 +3275,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r202",
-                                      "name": "半格 · 外框",
+                                      "name": "half-cell-frame",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -3294,7 +3294,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r203",
-                                      "name": "半格 · 左半",
+                                      "name": "half-cell-left",
                                       "width": 12,
                                       "height": 24,
                                       "fill": [
@@ -3313,7 +3313,7 @@
                             {
                               "type": "rectangle",
                               "id": "r205",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -3326,7 +3326,7 @@
                             {
                               "type": "frame",
                               "id": "f206",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -3338,7 +3338,7 @@
                                 {
                                   "type": "group",
                                   "id": "g207",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -3347,7 +3347,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r208",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -3363,7 +3363,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r209",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -3385,7 +3385,7 @@
                         {
                           "type": "rectangle",
                           "id": "r211",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 1728,
                           "height": 1,
                           "fill": [
@@ -3398,7 +3398,7 @@
                         {
                           "type": "frame",
                           "id": "f232",
-                          "name": "矩阵行",
+                          "name": "matrix-row",
                           "width": "fill_container",
                           "height": 72,
                           "layout": "horizontal",
@@ -3409,7 +3409,7 @@
                             {
                               "type": "frame",
                               "id": "f212",
-                              "name": "行标签",
+                              "name": "row-label",
                               "width": 360,
                               "height": 72,
                               "layout": "horizontal",
@@ -3429,9 +3429,9 @@
                                 {
                                   "type": "text",
                                   "id": "t213",
-                                  "name": "行标签文字",
-                                  "content": "私有化部署",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "row-label-text",
+                                  "content": "On-prem deployment",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 500,
                                   "fill": [
@@ -3450,7 +3450,7 @@
                             {
                               "type": "rectangle",
                               "id": "r214",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -3463,7 +3463,7 @@
                             {
                               "type": "frame",
                               "id": "f215",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -3480,7 +3480,7 @@
                                 {
                                   "type": "group",
                                   "id": "g218",
-                                  "name": "记号 · 部分满足",
+                                  "name": "mark-partly-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -3489,7 +3489,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r216",
-                                      "name": "半格 · 外框",
+                                      "name": "half-cell-frame",
                                       "width": 24,
                                       "height": 24,
                                       "fill": [],
@@ -3508,7 +3508,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r217",
-                                      "name": "半格 · 左半",
+                                      "name": "half-cell-left",
                                       "width": 12,
                                       "height": 24,
                                       "fill": [
@@ -3527,7 +3527,7 @@
                             {
                               "type": "rectangle",
                               "id": "r219",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -3540,7 +3540,7 @@
                             {
                               "type": "frame",
                               "id": "f220",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -3557,7 +3557,7 @@
                                 {
                                   "type": "group",
                                   "id": "g222",
-                                  "name": "记号 · 不满足",
+                                  "name": "mark-not-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -3566,7 +3566,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r221",
-                                      "name": "短横",
+                                      "name": "dash",
                                       "width": 20,
                                       "height": 2,
                                       "fill": [
@@ -3585,7 +3585,7 @@
                             {
                               "type": "rectangle",
                               "id": "r223",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -3598,7 +3598,7 @@
                             {
                               "type": "frame",
                               "id": "f224",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -3615,7 +3615,7 @@
                                 {
                                   "type": "group",
                                   "id": "g226",
-                                  "name": "记号 · 不满足",
+                                  "name": "mark-not-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -3624,7 +3624,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r225",
-                                      "name": "短横",
+                                      "name": "dash",
                                       "width": 20,
                                       "height": 2,
                                       "fill": [
@@ -3643,7 +3643,7 @@
                             {
                               "type": "rectangle",
                               "id": "r227",
-                              "name": "竖格线",
+                              "name": "vertical-rule",
                               "width": 1,
                               "height": 72,
                               "fill": [
@@ -3656,7 +3656,7 @@
                             {
                               "type": "frame",
                               "id": "f228",
-                              "name": "记号格",
+                              "name": "mark-cell",
                               "width": 341,
                               "height": 72,
                               "layout": "horizontal",
@@ -3673,7 +3673,7 @@
                                 {
                                   "type": "group",
                                   "id": "g229",
-                                  "name": "记号 · 满足",
+                                  "name": "mark-met",
                                   "width": 26,
                                   "height": 26,
                                   "layout": "none",
@@ -3682,7 +3682,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r230",
-                                      "name": "勾 · 长笔",
+                                      "name": "tick-long-stroke",
                                       "width": 20.55,
                                       "height": 2.5,
                                       "fill": [
@@ -3698,7 +3698,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r231",
-                                      "name": "勾 · 短笔",
+                                      "name": "tick-short-stroke",
                                       "width": 9.9,
                                       "height": 2.5,
                                       "fill": [
@@ -3724,7 +3724,7 @@
                 {
                   "type": "frame",
                   "id": "f251",
-                  "name": "三态图例",
+                  "name": "three-state-legend",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3735,7 +3735,7 @@
                     {
                       "type": "frame",
                       "id": "f240",
-                      "name": "图例项",
+                      "name": "legend-item",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3746,7 +3746,7 @@
                         {
                           "type": "group",
                           "id": "g236",
-                          "name": "记号 · 满足",
+                          "name": "mark-met",
                           "width": 26,
                           "height": 26,
                           "layout": "none",
@@ -3755,7 +3755,7 @@
                             {
                               "type": "rectangle",
                               "id": "r237",
-                              "name": "勾 · 长笔",
+                              "name": "tick-long-stroke",
                               "width": 20.55,
                               "height": 2.5,
                               "fill": [
@@ -3771,7 +3771,7 @@
                             {
                               "type": "rectangle",
                               "id": "r238",
-                              "name": "勾 · 短笔",
+                              "name": "tick-short-stroke",
                               "width": 9.9,
                               "height": 2.5,
                               "fill": [
@@ -3789,9 +3789,9 @@
                         {
                           "type": "text",
                           "id": "t239",
-                          "name": "图例文字",
-                          "content": "满足",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "legend-text",
+                          "content": "Met",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -3810,7 +3810,7 @@
                     {
                       "type": "frame",
                       "id": "f245",
-                      "name": "图例项",
+                      "name": "legend-item",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3821,7 +3821,7 @@
                         {
                           "type": "group",
                           "id": "g243",
-                          "name": "记号 · 部分满足",
+                          "name": "mark-partly-met",
                           "width": 26,
                           "height": 26,
                           "layout": "none",
@@ -3830,7 +3830,7 @@
                             {
                               "type": "rectangle",
                               "id": "r241",
-                              "name": "半格 · 外框",
+                              "name": "half-cell-frame",
                               "width": 24,
                               "height": 24,
                               "fill": [],
@@ -3849,7 +3849,7 @@
                             {
                               "type": "rectangle",
                               "id": "r242",
-                              "name": "半格 · 左半",
+                              "name": "half-cell-left",
                               "width": 12,
                               "height": 24,
                               "fill": [
@@ -3866,9 +3866,9 @@
                         {
                           "type": "text",
                           "id": "t244",
-                          "name": "图例文字",
-                          "content": "部分满足",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "legend-text",
+                          "content": "Partly met",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -3887,7 +3887,7 @@
                     {
                       "type": "frame",
                       "id": "f249",
-                      "name": "图例项",
+                      "name": "legend-item",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3898,7 +3898,7 @@
                         {
                           "type": "group",
                           "id": "g247",
-                          "name": "记号 · 不满足",
+                          "name": "mark-not-met",
                           "width": 26,
                           "height": 26,
                           "layout": "none",
@@ -3907,7 +3907,7 @@
                             {
                               "type": "rectangle",
                               "id": "r246",
-                              "name": "短横",
+                              "name": "dash",
                               "width": 20,
                               "height": 2,
                               "fill": [
@@ -3924,9 +3924,9 @@
                         {
                           "type": "text",
                           "id": "t248",
-                          "name": "图例文字",
-                          "content": "不满足",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "legend-text",
+                          "content": "Not met",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -3945,9 +3945,9 @@
                     {
                       "type": "text",
                       "id": "t250",
-                      "name": "图例说明",
-                      "content": "记号形状可分辨，不依赖颜色；「不满足」不画叉。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "legend-note",
+                      "content": "Marks differ by shape, not color. \"Not met\" gets no cross.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -3966,7 +3966,7 @@
                 {
                   "type": "frame",
                   "id": "f256",
-                  "name": "合计",
+                  "name": "total",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3976,7 +3976,7 @@
                     {
                       "type": "rectangle",
                       "id": "r252",
-                      "name": "格线",
+                      "name": "grid-line",
                       "width": 1728,
                       "height": 1,
                       "fill": [
@@ -3989,7 +3989,7 @@
                     {
                       "type": "frame",
                       "id": "f253",
-                      "name": "双线间隙",
+                      "name": "double-rule-gap",
                       "width": 1728,
                       "height": 4,
                       "layout": "none",
@@ -3998,7 +3998,7 @@
                     {
                       "type": "rectangle",
                       "id": "r254",
-                      "name": "格线",
+                      "name": "grid-line",
                       "width": 1728,
                       "height": 2,
                       "fill": [
@@ -4011,9 +4011,9 @@
                     {
                       "type": "text",
                       "id": "t255",
-                      "name": "结论行",
-                      "content": "六项里我们满足五项，唯一的缺口是私有化部署；今天必须私有部署的客户，应当选丙。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "conclusion-line",
+                      "content": "We meet five of six. The only gap is on-prem deployment: a customer who needs on-prem today should pick C.",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 500,
                       "fill": [
@@ -4034,7 +4034,7 @@
             {
               "type": "frame",
               "id": "f261",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -4046,9 +4046,9 @@
                 {
                   "type": "text",
                   "id": "t259",
-                  "name": "册名",
-                  "content": "客服工单系统 · 能力核对表",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "book-title",
+                  "content": "Help desk ticketing · Capability check",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -4065,7 +4065,7 @@
                 {
                   "type": "text",
                   "id": "t260",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "p. 3 / 7",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -4092,7 +4092,7 @@
     {
       "type": "frame",
       "id": "f334",
-      "name": "04 分位刻度",
+      "name": "04-quartile-scale",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -4107,7 +4107,7 @@
         {
           "type": "frame",
           "id": "f329",
-          "name": "04 分位刻度 · 正文",
+          "name": "04-quartile-scale-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -4124,7 +4124,7 @@
             {
               "type": "frame",
               "id": "f330",
-              "name": "内容",
+              "name": "content",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -4134,9 +4134,9 @@
                 {
                   "type": "text",
                   "id": "t311",
-                  "name": "页标题",
-                  "content": "同类产品里，我们各自站在哪一段",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Where each of us sits in the field",
+                  "fontFamily": "Inter",
                   "fontSize": 56,
                   "fontWeight": 700,
                   "fill": [
@@ -4153,7 +4153,7 @@
                 {
                   "type": "frame",
                   "id": "f327",
-                  "name": "刻度行",
+                  "name": "scale-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4164,7 +4164,7 @@
                     {
                       "type": "frame",
                       "id": "f323",
-                      "name": "刻度头",
+                      "name": "scale-header",
                       "width": 1199,
                       "height": 28,
                       "layout": "horizontal",
@@ -4175,7 +4175,7 @@
                         {
                           "type": "frame",
                           "id": "f312",
-                          "name": "刻度名",
+                          "name": "scale-name",
                           "width": 299,
                           "height": 28,
                           "layout": "horizontal",
@@ -4187,7 +4187,7 @@
                             {
                               "type": "text",
                               "id": "t313",
-                              "name": "刻度文字",
+                              "name": "scale-text",
                               "content": "Q1",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -4208,7 +4208,7 @@
                         {
                           "type": "rectangle",
                           "id": "r314",
-                          "name": "竖格线",
+                          "name": "vertical-rule",
                           "width": 1,
                           "height": 28,
                           "fill": [
@@ -4221,7 +4221,7 @@
                         {
                           "type": "frame",
                           "id": "f315",
-                          "name": "刻度名",
+                          "name": "scale-name",
                           "width": 299,
                           "height": 28,
                           "layout": "horizontal",
@@ -4233,7 +4233,7 @@
                             {
                               "type": "text",
                               "id": "t316",
-                              "name": "刻度文字",
+                              "name": "scale-text",
                               "content": "Q2",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -4254,7 +4254,7 @@
                         {
                           "type": "rectangle",
                           "id": "r317",
-                          "name": "竖格线",
+                          "name": "vertical-rule",
                           "width": 1,
                           "height": 28,
                           "fill": [
@@ -4267,7 +4267,7 @@
                         {
                           "type": "frame",
                           "id": "f318",
-                          "name": "刻度名",
+                          "name": "scale-name",
                           "width": 299,
                           "height": 28,
                           "layout": "horizontal",
@@ -4279,7 +4279,7 @@
                             {
                               "type": "text",
                               "id": "t319",
-                              "name": "刻度文字",
+                              "name": "scale-text",
                               "content": "Q3",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -4300,7 +4300,7 @@
                         {
                           "type": "rectangle",
                           "id": "r320",
-                          "name": "竖格线",
+                          "name": "vertical-rule",
                           "width": 1,
                           "height": 28,
                           "fill": [
@@ -4313,7 +4313,7 @@
                         {
                           "type": "frame",
                           "id": "f321",
-                          "name": "刻度名",
+                          "name": "scale-name",
                           "width": 299,
                           "height": 28,
                           "layout": "horizontal",
@@ -4325,7 +4325,7 @@
                             {
                               "type": "text",
                               "id": "t322",
-                              "name": "刻度文字",
+                              "name": "scale-text",
                               "content": "Q4",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -4348,7 +4348,7 @@
                     {
                       "type": "frame",
                       "id": "f326",
-                      "name": "位置标说明",
+                      "name": "position-marker-note",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -4359,7 +4359,7 @@
                         {
                           "type": "rectangle",
                           "id": "r324",
-                          "name": "说明标",
+                          "name": "note-marker",
                           "width": 6,
                           "height": 24,
                           "fill": [
@@ -4372,9 +4372,9 @@
                         {
                           "type": "text",
                           "id": "t325",
-                          "name": "说明文字",
-                          "content": "本产品所在位置",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "note-text",
+                          "content": "Where we sit",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -4395,7 +4395,7 @@
                 {
                   "type": "frame",
                   "id": "f328",
-                  "name": "分位组列",
+                  "name": "quartile-groups",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -4405,7 +4405,7 @@
                     {
                       "type": "frame",
                       "id": "f278",
-                      "name": "分位组",
+                      "name": "quartile-group",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -4415,7 +4415,7 @@
                         {
                           "type": "frame",
                           "id": "f266",
-                          "name": "分位名",
+                          "name": "quartile-name",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -4426,9 +4426,9 @@
                             {
                               "type": "text",
                               "id": "t263",
-                              "name": "分位标题",
-                              "content": "工单首响时长",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "quartile-title",
+                              "content": "First response time",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -4445,7 +4445,7 @@
                             {
                               "type": "text",
                               "id": "t264",
-                              "name": "分位读数",
+                              "name": "quartile-reading",
                               "content": "62",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -4464,9 +4464,9 @@
                             {
                               "type": "text",
                               "id": "t265",
-                              "name": "分位单位",
-                              "content": "分位",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "quartile-unit",
+                              "content": "quartile",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 400,
                               "fill": [
@@ -4485,7 +4485,7 @@
                         {
                           "type": "frame",
                           "id": "f276",
-                          "name": "四分位条",
+                          "name": "quartile-bar",
                           "width": 1199,
                           "height": 56,
                           "layout": "none",
@@ -4494,7 +4494,7 @@
                             {
                               "type": "rectangle",
                               "id": "r275",
-                              "name": "位置标",
+                              "name": "position-marker",
                               "width": 6,
                               "height": 56,
                               "fill": [
@@ -4509,7 +4509,7 @@
                             {
                               "type": "frame",
                               "id": "f274",
-                              "name": "刻度轨",
+                              "name": "scale-track",
                               "width": 1199,
                               "height": 40,
                               "layout": "horizontal",
@@ -4520,7 +4520,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r267",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -4533,7 +4533,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r268",
-                                  "name": "竖格线",
+                                  "name": "vertical-rule",
                                   "width": 1,
                                   "height": 40,
                                   "fill": [
@@ -4546,7 +4546,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r269",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -4559,7 +4559,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r270",
-                                  "name": "竖格线",
+                                  "name": "vertical-rule",
                                   "width": 1,
                                   "height": 40,
                                   "fill": [
@@ -4572,7 +4572,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r271",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -4585,7 +4585,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r272",
-                                  "name": "竖格线",
+                                  "name": "vertical-rule",
                                   "width": 1,
                                   "height": 40,
                                   "fill": [
@@ -4598,7 +4598,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r273",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -4617,9 +4617,9 @@
                         {
                           "type": "text",
                           "id": "t277",
-                          "name": "读法",
-                          "content": "落在第三四分位：比同类的中位数快，但没有到最快的那一档。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reading",
+                          "content": "Third quartile: faster than the median, but not in the fastest band.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -4638,7 +4638,7 @@
                     {
                       "type": "frame",
                       "id": "f294",
-                      "name": "分位组",
+                      "name": "quartile-group",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -4648,7 +4648,7 @@
                         {
                           "type": "frame",
                           "id": "f282",
-                          "name": "分位名",
+                          "name": "quartile-name",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -4659,9 +4659,9 @@
                             {
                               "type": "text",
                               "id": "t279",
-                              "name": "分位标题",
-                              "content": "单座席月成本",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "quartile-title",
+                              "content": "Monthly cost per seat",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -4678,7 +4678,7 @@
                             {
                               "type": "text",
                               "id": "t280",
-                              "name": "分位读数",
+                              "name": "quartile-reading",
                               "content": "28",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -4697,9 +4697,9 @@
                             {
                               "type": "text",
                               "id": "t281",
-                              "name": "分位单位",
-                              "content": "分位",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "quartile-unit",
+                              "content": "quartile",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 400,
                               "fill": [
@@ -4718,7 +4718,7 @@
                         {
                           "type": "frame",
                           "id": "f292",
-                          "name": "四分位条",
+                          "name": "quartile-bar",
                           "width": 1199,
                           "height": 56,
                           "layout": "none",
@@ -4727,7 +4727,7 @@
                             {
                               "type": "rectangle",
                               "id": "r291",
-                              "name": "位置标",
+                              "name": "position-marker",
                               "width": 6,
                               "height": 56,
                               "fill": [
@@ -4742,7 +4742,7 @@
                             {
                               "type": "frame",
                               "id": "f290",
-                              "name": "刻度轨",
+                              "name": "scale-track",
                               "width": 1199,
                               "height": 40,
                               "layout": "horizontal",
@@ -4753,7 +4753,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r283",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -4766,7 +4766,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r284",
-                                  "name": "竖格线",
+                                  "name": "vertical-rule",
                                   "width": 1,
                                   "height": 40,
                                   "fill": [
@@ -4779,7 +4779,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r285",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -4792,7 +4792,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r286",
-                                  "name": "竖格线",
+                                  "name": "vertical-rule",
                                   "width": 1,
                                   "height": 40,
                                   "fill": [
@@ -4805,7 +4805,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r287",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -4818,7 +4818,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r288",
-                                  "name": "竖格线",
+                                  "name": "vertical-rule",
                                   "width": 1,
                                   "height": 40,
                                   "fill": [
@@ -4831,7 +4831,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r289",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -4850,9 +4850,9 @@
                         {
                           "type": "text",
                           "id": "t293",
-                          "name": "读法",
-                          "content": "落在第一四分位：自动分派省下的人力，直接反映在这一格上。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reading",
+                          "content": "First quartile: the staff time saved by auto-routing shows up right here.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -4871,7 +4871,7 @@
                     {
                       "type": "frame",
                       "id": "f310",
-                      "name": "分位组",
+                      "name": "quartile-group",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -4881,7 +4881,7 @@
                         {
                           "type": "frame",
                           "id": "f298",
-                          "name": "分位名",
+                          "name": "quartile-name",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -4892,9 +4892,9 @@
                             {
                               "type": "text",
                               "id": "t295",
-                              "name": "分位标题",
-                              "content": "私有化部署能力",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "quartile-title",
+                              "content": "On-prem capability",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -4911,7 +4911,7 @@
                             {
                               "type": "text",
                               "id": "t296",
-                              "name": "分位读数",
+                              "name": "quartile-reading",
                               "content": "12",
                               "fontFamily": "Inter",
                               "fontSize": 24,
@@ -4930,9 +4930,9 @@
                             {
                               "type": "text",
                               "id": "t297",
-                              "name": "分位单位",
-                              "content": "分位",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "quartile-unit",
+                              "content": "quartile",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 400,
                               "fill": [
@@ -4951,7 +4951,7 @@
                         {
                           "type": "frame",
                           "id": "f308",
-                          "name": "四分位条",
+                          "name": "quartile-bar",
                           "width": 1199,
                           "height": 56,
                           "layout": "none",
@@ -4960,7 +4960,7 @@
                             {
                               "type": "rectangle",
                               "id": "r307",
-                              "name": "位置标",
+                              "name": "position-marker",
                               "width": 6,
                               "height": 56,
                               "fill": [
@@ -4975,7 +4975,7 @@
                             {
                               "type": "frame",
                               "id": "f306",
-                              "name": "刻度轨",
+                              "name": "scale-track",
                               "width": 1199,
                               "height": 40,
                               "layout": "horizontal",
@@ -4986,7 +4986,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r299",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -4999,7 +4999,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r300",
-                                  "name": "竖格线",
+                                  "name": "vertical-rule",
                                   "width": 1,
                                   "height": 40,
                                   "fill": [
@@ -5012,7 +5012,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r301",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -5025,7 +5025,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r302",
-                                  "name": "竖格线",
+                                  "name": "vertical-rule",
                                   "width": 1,
                                   "height": 40,
                                   "fill": [
@@ -5038,7 +5038,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r303",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -5051,7 +5051,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r304",
-                                  "name": "竖格线",
+                                  "name": "vertical-rule",
                                   "width": 1,
                                   "height": 40,
                                   "fill": [
@@ -5064,7 +5064,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r305",
-                                  "name": "四分位段",
+                                  "name": "quartile-segment",
                                   "width": 299,
                                   "height": 40,
                                   "fill": [
@@ -5083,9 +5083,9 @@
                         {
                           "type": "text",
                           "id": "t309",
-                          "name": "读法",
-                          "content": "落在第一四分位的左端：这是我们承认的短板，排在明年一季度。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reading",
+                          "content": "Far left of the first quartile: an admitted weak spot, scheduled for Q1 next year.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -5108,7 +5108,7 @@
             {
               "type": "frame",
               "id": "f333",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -5120,9 +5120,9 @@
                 {
                   "type": "text",
                   "id": "t331",
-                  "name": "册名",
-                  "content": "客服工单系统 · 能力核对表",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "book-title",
+                  "content": "Help desk ticketing · Capability check",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -5139,7 +5139,7 @@
                 {
                   "type": "text",
                   "id": "t332",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "p. 4 / 7",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -5166,7 +5166,7 @@
     {
       "type": "frame",
       "id": "f369",
-      "name": "05 差距",
+      "name": "05-gaps",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -5181,7 +5181,7 @@
         {
           "type": "frame",
           "id": "f364",
-          "name": "05 差距 · 正文",
+          "name": "05-gaps-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -5198,7 +5198,7 @@
             {
               "type": "frame",
               "id": "f365",
-              "name": "内容",
+              "name": "content",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -5208,9 +5208,9 @@
                 {
                   "type": "text",
                   "id": "t361",
-                  "name": "页标题",
-                  "content": "三处我们还没做到的",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Three things we don't do yet",
+                  "fontFamily": "Inter",
                   "fontSize": 56,
                   "fontWeight": 700,
                   "fill": [
@@ -5227,9 +5227,9 @@
                 {
                   "type": "text",
                   "id": "t362",
-                  "name": "差距引导",
-                  "content": "差距按能被验证的方式写：现状是今天的事实，计划带月份。没有计划的差距不写进这一页，写了也只是姿态。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "gap-intro",
+                  "content": "Gaps are written so they can be checked: status is today's fact, the plan carries a date. A gap with no plan stays off this page; listing it would just be posturing.",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -5246,7 +5246,7 @@
                 {
                   "type": "frame",
                   "id": "f363",
-                  "name": "差距列",
+                  "name": "gap-list",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -5256,7 +5256,7 @@
                     {
                       "type": "frame",
                       "id": "f342",
-                      "name": "差距条",
+                      "name": "gap-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5267,7 +5267,7 @@
                         {
                           "type": "group",
                           "id": "g337",
-                          "name": "记号 · 部分满足",
+                          "name": "mark-partly-met",
                           "width": 26,
                           "height": 26,
                           "layout": "none",
@@ -5276,7 +5276,7 @@
                             {
                               "type": "rectangle",
                               "id": "r335",
-                              "name": "半格 · 外框",
+                              "name": "half-cell-frame",
                               "width": 24,
                               "height": 24,
                               "fill": [],
@@ -5295,7 +5295,7 @@
                             {
                               "type": "rectangle",
                               "id": "r336",
-                              "name": "半格 · 左半",
+                              "name": "half-cell-left",
                               "width": 12,
                               "height": 24,
                               "fill": [
@@ -5312,7 +5312,7 @@
                         {
                           "type": "frame",
                           "id": "f341",
-                          "name": "差距文字",
+                          "name": "gap-text",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -5322,9 +5322,9 @@
                             {
                               "type": "text",
                               "id": "t338",
-                              "name": "差距标题",
-                              "content": "私有化部署尚未开放",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "gap-title",
+                              "content": "No on-prem option yet",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -5341,9 +5341,9 @@
                             {
                               "type": "text",
                               "id": "t339",
-                              "name": "现状",
-                              "content": "现状：仅提供专属云，客户不能把数据放在自己机房。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status",
+                              "content": "Now: dedicated cloud only. Customers can't keep data in their own data center.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -5360,9 +5360,9 @@
                             {
                               "type": "text",
                               "id": "t340",
-                              "name": "计划",
-                              "content": "计划：2027 年一季度发布可交付的私有部署包，先对金融与医疗行业开放。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "plan",
+                              "content": "Plan: ship an on-prem package in Q1 2027, opening first to finance and healthcare.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -5383,7 +5383,7 @@
                     {
                       "type": "rectangle",
                       "id": "r343",
-                      "name": "格线",
+                      "name": "grid-line",
                       "width": 1728,
                       "height": 1,
                       "fill": [
@@ -5396,7 +5396,7 @@
                     {
                       "type": "frame",
                       "id": "f351",
-                      "name": "差距条",
+                      "name": "gap-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5407,7 +5407,7 @@
                         {
                           "type": "group",
                           "id": "g346",
-                          "name": "记号 · 部分满足",
+                          "name": "mark-partly-met",
                           "width": 26,
                           "height": 26,
                           "layout": "none",
@@ -5416,7 +5416,7 @@
                             {
                               "type": "rectangle",
                               "id": "r344",
-                              "name": "半格 · 外框",
+                              "name": "half-cell-frame",
                               "width": 24,
                               "height": 24,
                               "fill": [],
@@ -5435,7 +5435,7 @@
                             {
                               "type": "rectangle",
                               "id": "r345",
-                              "name": "半格 · 左半",
+                              "name": "half-cell-left",
                               "width": 12,
                               "height": 24,
                               "fill": [
@@ -5452,7 +5452,7 @@
                         {
                           "type": "frame",
                           "id": "f350",
-                          "name": "差距文字",
+                          "name": "gap-text",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -5462,9 +5462,9 @@
                             {
                               "type": "text",
                               "id": "t347",
-                              "name": "差距标题",
-                              "content": "电话渠道依赖第三方",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "gap-title",
+                              "content": "Phone relies on a third party",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -5481,9 +5481,9 @@
                             {
                               "type": "text",
                               "id": "t348",
-                              "name": "现状",
-                              "content": "现状：电话接入要另接一家服务商，工单里只能看到通话记录链接。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status",
+                              "content": "Now: phone needs a separate provider, and tickets only show a link to the call log.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -5500,9 +5500,9 @@
                             {
                               "type": "text",
                               "id": "t349",
-                              "name": "计划",
-                              "content": "计划：四季度完成自建话务网关，通话录音与转写直接落在工单里。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "plan",
+                              "content": "Plan: our own voice gateway in Q4, with recordings and transcripts landing in the ticket.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -5523,7 +5523,7 @@
                     {
                       "type": "rectangle",
                       "id": "r352",
-                      "name": "格线",
+                      "name": "grid-line",
                       "width": 1728,
                       "height": 1,
                       "fill": [
@@ -5536,7 +5536,7 @@
                     {
                       "type": "frame",
                       "id": "f360",
-                      "name": "差距条",
+                      "name": "gap-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5547,7 +5547,7 @@
                         {
                           "type": "group",
                           "id": "g355",
-                          "name": "记号 · 部分满足",
+                          "name": "mark-partly-met",
                           "width": 26,
                           "height": 26,
                           "layout": "none",
@@ -5556,7 +5556,7 @@
                             {
                               "type": "rectangle",
                               "id": "r353",
-                              "name": "半格 · 外框",
+                              "name": "half-cell-frame",
                               "width": 24,
                               "height": 24,
                               "fill": [],
@@ -5575,7 +5575,7 @@
                             {
                               "type": "rectangle",
                               "id": "r354",
-                              "name": "半格 · 左半",
+                              "name": "half-cell-left",
                               "width": 12,
                               "height": 24,
                               "fill": [
@@ -5592,7 +5592,7 @@
                         {
                           "type": "frame",
                           "id": "f359",
-                          "name": "差距文字",
+                          "name": "gap-text",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -5602,9 +5602,9 @@
                             {
                               "type": "text",
                               "id": "t356",
-                              "name": "差距标题",
-                              "content": "知识库回写要管理员确认",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "gap-title",
+                              "content": "KB write-back needs admin sign-off",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 600,
                               "fill": [
@@ -5621,9 +5621,9 @@
                             {
                               "type": "text",
                               "id": "t357",
-                              "name": "现状",
-                              "content": "现状：坐席写的新条目需要管理员审核后才进知识库，平均滞后 2 天。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status",
+                              "content": "Now: new agent articles wait for admin review before going live, 2 days on average.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -5640,9 +5640,9 @@
                             {
                               "type": "text",
                               "id": "t358",
-                              "name": "计划",
-                              "content": "计划：三季度上线分级权限，高级坐席可直接发布，审核转为抽查。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "plan",
+                              "content": "Plan: tiered permissions in Q3. Senior agents publish directly; review becomes spot checks.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -5667,7 +5667,7 @@
             {
               "type": "frame",
               "id": "f368",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -5679,9 +5679,9 @@
                 {
                   "type": "text",
                   "id": "t366",
-                  "name": "册名",
-                  "content": "客服工单系统 · 能力核对表",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "book-title",
+                  "content": "Help desk ticketing · Capability check",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -5698,7 +5698,7 @@
                 {
                   "type": "text",
                   "id": "t367",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "p. 5 / 7",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -5725,7 +5725,7 @@
     {
       "type": "frame",
       "id": "f410",
-      "name": "06 优势",
+      "name": "06-strengths",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -5740,7 +5740,7 @@
         {
           "type": "frame",
           "id": "f405",
-          "name": "06 优势 · 正文",
+          "name": "06-strengths-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -5757,7 +5757,7 @@
             {
               "type": "frame",
               "id": "f406",
-              "name": "内容",
+              "name": "content",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -5767,9 +5767,9 @@
                 {
                   "type": "text",
                   "id": "t402",
-                  "name": "页标题",
-                  "content": "三处我们做到了，并且能被验证",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Three things we do, and can prove",
+                  "fontFamily": "Inter",
                   "fontSize": 56,
                   "fontWeight": 700,
                   "fill": [
@@ -5786,9 +5786,9 @@
                 {
                   "type": "text",
                   "id": "t403",
-                  "name": "优势引导",
-                  "content": "每一条都配一个可复核的数字；没有数字的优势不写进这一页。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "strength-intro",
+                  "content": "Each one comes with a number you can check. A strength with no number stays off this page.",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -5805,7 +5805,7 @@
                 {
                   "type": "frame",
                   "id": "f404",
-                  "name": "优势三列",
+                  "name": "strength-columns",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -5816,7 +5816,7 @@
                     {
                       "type": "frame",
                       "id": "f379",
-                      "name": "优势列",
+                      "name": "strength-column",
                       "width": 532,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -5826,7 +5826,7 @@
                         {
                           "type": "group",
                           "id": "g370",
-                          "name": "记号 · 满足",
+                          "name": "mark-met",
                           "width": 26,
                           "height": 26,
                           "layout": "none",
@@ -5835,7 +5835,7 @@
                             {
                               "type": "rectangle",
                               "id": "r371",
-                              "name": "勾 · 长笔",
+                              "name": "tick-long-stroke",
                               "width": 20.55,
                               "height": 2.5,
                               "fill": [
@@ -5851,7 +5851,7 @@
                             {
                               "type": "rectangle",
                               "id": "r372",
-                              "name": "勾 · 短笔",
+                              "name": "tick-short-stroke",
                               "width": 9.9,
                               "height": 2.5,
                               "fill": [
@@ -5869,9 +5869,9 @@
                         {
                           "type": "text",
                           "id": "t373",
-                          "name": "优势标题",
-                          "content": "自动分派命中率",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "strength-title",
+                          "content": "Auto-routing hit rate",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -5888,9 +5888,9 @@
                         {
                           "type": "text",
                           "id": "t374",
-                          "name": "说明",
-                          "content": "工单进队列后按技能组\n与实时负载自动指派，\n不需要人工转派。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "description",
+                          "content": "Queued tickets are assigned\nby skill group and live load,\nwith no manual reassignment.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -5907,7 +5907,7 @@
                         {
                           "type": "rectangle",
                           "id": "r375",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 72,
                           "height": 2,
                           "fill": [
@@ -5920,7 +5920,7 @@
                         {
                           "type": "frame",
                           "id": "f378",
-                          "name": "证据行",
+                          "name": "evidence-row",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -5931,9 +5931,9 @@
                             {
                               "type": "text",
                               "id": "t376",
-                              "name": "证据标签",
-                              "content": "证据",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence-label",
+                              "content": "Evidence",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -5950,9 +5950,9 @@
                             {
                               "type": "text",
                               "id": "t377",
-                              "name": "证据",
-                              "content": "试用期 3200 单，\n人工转派 47 单，占 1.5%。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence",
+                              "content": "3,200 tickets in the trial,\n47 reassigned by hand: 1.5%.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -5973,7 +5973,7 @@
                     {
                       "type": "rectangle",
                       "id": "r380",
-                      "name": "竖格线",
+                      "name": "vertical-rule",
                       "width": 1,
                       "height": 392,
                       "fill": [
@@ -5986,7 +5986,7 @@
                     {
                       "type": "frame",
                       "id": "f390",
-                      "name": "优势列",
+                      "name": "strength-column",
                       "width": 532,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -5996,7 +5996,7 @@
                         {
                           "type": "group",
                           "id": "g381",
-                          "name": "记号 · 满足",
+                          "name": "mark-met",
                           "width": 26,
                           "height": 26,
                           "layout": "none",
@@ -6005,7 +6005,7 @@
                             {
                               "type": "rectangle",
                               "id": "r382",
-                              "name": "勾 · 长笔",
+                              "name": "tick-long-stroke",
                               "width": 20.55,
                               "height": 2.5,
                               "fill": [
@@ -6021,7 +6021,7 @@
                             {
                               "type": "rectangle",
                               "id": "r383",
-                              "name": "勾 · 短笔",
+                              "name": "tick-short-stroke",
                               "width": 9.9,
                               "height": 2.5,
                               "fill": [
@@ -6039,9 +6039,9 @@
                         {
                           "type": "text",
                           "id": "t384",
-                          "name": "优势标题",
-                          "content": "导出不设限",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "strength-title",
+                          "content": "Unlimited export",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -6058,9 +6058,9 @@
                         {
                           "type": "text",
                           "id": "t385",
-                          "name": "说明",
-                          "content": "全量工单、会话与附件\n元数据可随时导出为\n结构化文件。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "description",
+                          "content": "All tickets, chats and\nattachment metadata export\nto structured files anytime.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -6077,7 +6077,7 @@
                         {
                           "type": "rectangle",
                           "id": "r386",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 72,
                           "height": 2,
                           "fill": [
@@ -6090,7 +6090,7 @@
                         {
                           "type": "frame",
                           "id": "f389",
-                          "name": "证据行",
+                          "name": "evidence-row",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -6101,9 +6101,9 @@
                             {
                               "type": "text",
                               "id": "t387",
-                              "name": "证据标签",
-                              "content": "证据",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence-label",
+                              "content": "Evidence",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -6120,9 +6120,9 @@
                             {
                               "type": "text",
                               "id": "t388",
-                              "name": "证据",
-                              "content": "单次导出 12 万条耗时 96 秒，\n字段与后台完全一致。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence",
+                              "content": "120K records exported in 96 s,\nfields match the admin view.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -6143,7 +6143,7 @@
                     {
                       "type": "rectangle",
                       "id": "r391",
-                      "name": "竖格线",
+                      "name": "vertical-rule",
                       "width": 1,
                       "height": 392,
                       "fill": [
@@ -6156,7 +6156,7 @@
                     {
                       "type": "frame",
                       "id": "f401",
-                      "name": "优势列",
+                      "name": "strength-column",
                       "width": 532,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -6166,7 +6166,7 @@
                         {
                           "type": "group",
                           "id": "g392",
-                          "name": "记号 · 满足",
+                          "name": "mark-met",
                           "width": 26,
                           "height": 26,
                           "layout": "none",
@@ -6175,7 +6175,7 @@
                             {
                               "type": "rectangle",
                               "id": "r393",
-                              "name": "勾 · 长笔",
+                              "name": "tick-long-stroke",
                               "width": 20.55,
                               "height": 2.5,
                               "fill": [
@@ -6191,7 +6191,7 @@
                             {
                               "type": "rectangle",
                               "id": "r394",
-                              "name": "勾 · 短笔",
+                              "name": "tick-short-stroke",
                               "width": 9.9,
                               "height": 2.5,
                               "fill": [
@@ -6209,9 +6209,9 @@
                         {
                           "type": "text",
                           "id": "t395",
-                          "name": "优势标题",
-                          "content": "超时前先升级",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "strength-title",
+                          "content": "Escalate before the breach",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -6228,9 +6228,9 @@
                         {
                           "type": "text",
                           "id": "t396",
-                          "name": "说明",
-                          "content": "按客户分级设定时限，\n剩余两成时长时自动\n升级到组长。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "description",
+                          "content": "Targets set per customer tier;\nat 20% time remaining it\nescalates to the team lead.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -6247,7 +6247,7 @@
                         {
                           "type": "rectangle",
                           "id": "r397",
-                          "name": "格线",
+                          "name": "grid-line",
                           "width": 72,
                           "height": 2,
                           "fill": [
@@ -6260,7 +6260,7 @@
                         {
                           "type": "frame",
                           "id": "f400",
-                          "name": "证据行",
+                          "name": "evidence-row",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -6271,9 +6271,9 @@
                             {
                               "type": "text",
                               "id": "t398",
-                              "name": "证据标签",
-                              "content": "证据",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence-label",
+                              "content": "Evidence",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 500,
                               "fill": [
@@ -6290,9 +6290,9 @@
                             {
                               "type": "text",
                               "id": "t399",
-                              "name": "证据",
-                              "content": "首响超时率从 8.4% 降到 2.1%，\n已连续两个季度。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence",
+                              "content": "Breaches down 8.4% → 2.1%,\ntwo quarters running.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -6317,7 +6317,7 @@
             {
               "type": "frame",
               "id": "f409",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -6329,9 +6329,9 @@
                 {
                   "type": "text",
                   "id": "t407",
-                  "name": "册名",
-                  "content": "客服工单系统 · 能力核对表",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "book-title",
+                  "content": "Help desk ticketing · Capability check",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -6348,7 +6348,7 @@
                 {
                   "type": "text",
                   "id": "t408",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "p. 6 / 7",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -6375,7 +6375,7 @@
     {
       "type": "frame",
       "id": "f434",
-      "name": "07 结论",
+      "name": "07-conclusion",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -6390,7 +6390,7 @@
         {
           "type": "frame",
           "id": "f428",
-          "name": "07 结论 · 正文",
+          "name": "07-conclusion-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -6407,7 +6407,7 @@
             {
               "type": "frame",
               "id": "f433",
-              "name": "留白撑子",
+              "name": "spacer",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "none",
@@ -6416,7 +6416,7 @@
             {
               "type": "frame",
               "id": "f429",
-              "name": "内容",
+              "name": "content",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -6426,9 +6426,9 @@
                 {
                   "type": "text",
                   "id": "t420",
-                  "name": "页标题",
-                  "content": "这张账读完之后",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "After reading the ledger",
+                  "fontFamily": "Inter",
                   "fontSize": 56,
                   "fontWeight": 700,
                   "fill": [
@@ -6445,9 +6445,9 @@
                 {
                   "type": "text",
                   "id": "t421",
-                  "name": "总判断",
-                  "content": "能力上的差距只有一处，\n而它恰好决定了一类客户能不能签。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "verdict",
+                  "content": "There is only one capability gap,\nand it decides whether a whole segment signs.",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 600,
                   "fill": [
@@ -6464,7 +6464,7 @@
                 {
                   "type": "frame",
                   "id": "f425",
-                  "name": "结论合计线",
+                  "name": "conclusion-total-rule",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -6474,7 +6474,7 @@
                     {
                       "type": "rectangle",
                       "id": "r422",
-                      "name": "格线",
+                      "name": "grid-line",
                       "width": 1728,
                       "height": 1,
                       "fill": [
@@ -6487,7 +6487,7 @@
                     {
                       "type": "frame",
                       "id": "f423",
-                      "name": "双线间隙",
+                      "name": "double-rule-gap",
                       "width": 1728,
                       "height": 4,
                       "layout": "none",
@@ -6496,7 +6496,7 @@
                     {
                       "type": "rectangle",
                       "id": "r424",
-                      "name": "格线",
+                      "name": "grid-line",
                       "width": 1728,
                       "height": 2,
                       "fill": [
@@ -6511,7 +6511,7 @@
                 {
                   "type": "frame",
                   "id": "f426",
-                  "name": "动作列",
+                  "name": "action-list",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -6521,7 +6521,7 @@
                     {
                       "type": "frame",
                       "id": "f413",
-                      "name": "动作条",
+                      "name": "action-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -6532,7 +6532,7 @@
                         {
                           "type": "text",
                           "id": "t411",
-                          "name": "序号",
+                          "name": "index",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -6551,9 +6551,9 @@
                         {
                           "type": "text",
                           "id": "t412",
-                          "name": "动作",
-                          "content": "把私有化部署排进 2027 年一季度的交付计划，本月给出范围。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action",
+                          "content": "Put on-prem into the Q1 2027 delivery plan and scope it this month.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -6572,7 +6572,7 @@
                     {
                       "type": "frame",
                       "id": "f416",
-                      "name": "动作条",
+                      "name": "action-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -6583,7 +6583,7 @@
                         {
                           "type": "text",
                           "id": "t414",
-                          "name": "序号",
+                          "name": "index",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -6602,9 +6602,9 @@
                         {
                           "type": "text",
                           "id": "t415",
-                          "name": "动作",
-                          "content": "在报价单里写明电话渠道当前依赖第三方，不含糊带过。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action",
+                          "content": "State plainly in quotes that phone currently relies on a third party.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -6623,7 +6623,7 @@
                     {
                       "type": "frame",
                       "id": "f419",
-                      "name": "动作条",
+                      "name": "action-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -6634,7 +6634,7 @@
                         {
                           "type": "text",
                           "id": "t417",
-                          "name": "序号",
+                          "name": "index",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -6653,9 +6653,9 @@
                         {
                           "type": "text",
                           "id": "t418",
-                          "name": "动作",
-                          "content": "把这张核对表随合同附送，三个月更新一次，口径不变。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action",
+                          "content": "Attach this checklist to contracts and update it quarterly, same definitions.",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -6676,9 +6676,9 @@
                 {
                   "type": "text",
                   "id": "t427",
-                  "name": "来源脚注",
-                  "content": "来源：各产品公开文档与试用账号实测，数据截止 2026-07-31；口径见第 2 页，逐格记号见第 3 页。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "source-footnote",
+                  "content": "Source: public product docs and trial-account tests, data as of 2026-07-31. Definitions on page 2, cell marks on page 3.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -6697,7 +6697,7 @@
             {
               "type": "frame",
               "id": "f432",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -6709,9 +6709,9 @@
                 {
                   "type": "text",
                   "id": "t430",
-                  "name": "册名",
-                  "content": "客服工单系统 · 能力核对表",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "book-title",
+                  "content": "Help desk ticketing · Capability check",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -6728,7 +6728,7 @@
                 {
                   "type": "text",
                   "id": "t431",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "p. 7 / 7",
                   "fontFamily": "Inter",
                   "fontSize": 24,

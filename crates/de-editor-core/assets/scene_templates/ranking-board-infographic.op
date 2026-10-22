@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "榜单 TOP N 长图",
+  "name": "top-n-ranking-long-graphic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "榜单 TOP N 长图",
+      "name": "top-n-ranking-long-graphic",
       "width": 1080,
       "height": 3154,
       "layout": "vertical",
@@ -55,7 +55,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -77,7 +77,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "胶囊",
+              "name": "pill",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -98,9 +98,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "胶囊文字",
-                  "content": "年度榜单 · TOP 8",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "pill-text",
+                  "content": "Yearly list · TOP 8",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 600,
                   "fill": [
@@ -119,9 +119,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "用满一年\n还留着的八个",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Eight tools still\nhere after a year",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -138,9 +138,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "评选口径写在图片最下方，可直接对着这张单子抄。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "The ranking rules are at the bottom. Feel free to copy the whole list.",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 400,
               "fill": [
@@ -159,7 +159,7 @@
         {
           "type": "frame",
           "id": "f36",
-          "name": "02 前三",
+          "name": "02-top-three",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -176,7 +176,7 @@
             {
               "type": "frame",
               "id": "f34",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -187,7 +187,7 @@
                 {
                   "type": "rectangle",
                   "id": "r31",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -201,9 +201,9 @@
                 {
                   "type": "text",
                   "id": "t32",
-                  "name": "区块标题",
-                  "content": "先看前三",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "The top three",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -220,9 +220,9 @@
                 {
                   "type": "text",
                   "id": "t33",
-                  "name": "区块说明",
-                  "content": "这三个每天都会打开。少了任何一个，当天的流程就断一截。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-intro",
+                  "content": "I open these every day. Lose any one and the day's workflow breaks.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -241,7 +241,7 @@
             {
               "type": "frame",
               "id": "f35",
-              "name": "前三列表",
+              "name": "top-three-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -252,7 +252,7 @@
                 {
                   "type": "frame",
                   "id": "f14",
-                  "name": "榜首卡 01",
+                  "name": "top-card-01",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -273,7 +273,7 @@
                     {
                       "type": "frame",
                       "id": "f7",
-                      "name": "徽章 01",
+                      "name": "badge-01",
                       "width": 78,
                       "height": 78,
                       "layout": "horizontal",
@@ -290,7 +290,7 @@
                         {
                           "type": "text",
                           "id": "t8",
-                          "name": "名次数字",
+                          "name": "rank-number",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -311,7 +311,7 @@
                     {
                       "type": "frame",
                       "id": "f13",
-                      "name": "榜首文案",
+                      "name": "top-card-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -322,9 +322,9 @@
                         {
                           "type": "text",
                           "id": "t9",
-                          "name": "名称",
-                          "content": "手机自带的备忘录",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "name",
+                          "content": "Your phone's notes app",
+                          "fontFamily": "Inter",
                           "fontSize": 36,
                           "fontWeight": 600,
                           "fill": [
@@ -341,9 +341,9 @@
                         {
                           "type": "text",
                           "id": "t10",
-                          "name": "理由",
-                          "content": "记选题。能最快打开的那个才有用，别为它换软件。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reason",
+                          "content": "For capturing ideas. The fastest one to open wins, so don't switch apps for it.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -360,7 +360,7 @@
                         {
                           "type": "frame",
                           "id": "f11",
-                          "name": "胶囊",
+                          "name": "pill",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -381,9 +381,9 @@
                             {
                               "type": "text",
                               "id": "t12",
-                              "name": "胶囊文字",
-                              "content": "每天",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "pill-text",
+                              "content": "Daily",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -415,7 +415,7 @@
                 {
                   "type": "frame",
                   "id": "f22",
-                  "name": "榜首卡 02",
+                  "name": "top-card-02",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -436,7 +436,7 @@
                     {
                       "type": "frame",
                       "id": "f15",
-                      "name": "徽章 02",
+                      "name": "badge-02",
                       "width": 78,
                       "height": 78,
                       "layout": "horizontal",
@@ -453,7 +453,7 @@
                         {
                           "type": "text",
                           "id": "t16",
-                          "name": "名次数字",
+                          "name": "rank-number",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -474,7 +474,7 @@
                     {
                       "type": "frame",
                       "id": "f21",
-                      "name": "榜首文案",
+                      "name": "top-card-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -485,9 +485,9 @@
                         {
                           "type": "text",
                           "id": "t17",
-                          "name": "名称",
-                          "content": "一个全文可搜的笔记本",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "name",
+                          "content": "A fully searchable notebook",
+                          "fontFamily": "Inter",
                           "fontSize": 36,
                           "fontWeight": 600,
                           "fill": [
@@ -504,9 +504,9 @@
                         {
                           "type": "text",
                           "id": "t18",
-                          "name": "理由",
-                          "content": "找三个月前写过的那句话。搜不到的笔记等于没写。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reason",
+                          "content": "For finding that line from three months ago. A note you can't search might as well not exist.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -523,7 +523,7 @@
                         {
                           "type": "frame",
                           "id": "f19",
-                          "name": "胶囊",
+                          "name": "pill",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -544,9 +544,9 @@
                             {
                               "type": "text",
                               "id": "t20",
-                              "name": "胶囊文字",
-                              "content": "每天",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "pill-text",
+                              "content": "Daily",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -578,7 +578,7 @@
                 {
                   "type": "frame",
                   "id": "f30",
-                  "name": "榜首卡 03",
+                  "name": "top-card-03",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -599,7 +599,7 @@
                     {
                       "type": "frame",
                       "id": "f23",
-                      "name": "徽章 03",
+                      "name": "badge-03",
                       "width": 78,
                       "height": 78,
                       "layout": "horizontal",
@@ -616,7 +616,7 @@
                         {
                           "type": "text",
                           "id": "t24",
-                          "name": "名次数字",
+                          "name": "rank-number",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 34,
@@ -637,7 +637,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "榜首文案",
+                      "name": "top-card-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -648,9 +648,9 @@
                         {
                           "type": "text",
                           "id": "t25",
-                          "name": "名称",
-                          "content": "计时器",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "name",
+                          "content": "A timer",
+                          "fontFamily": "Inter",
                           "fontSize": 36,
                           "fontWeight": 600,
                           "fill": [
@@ -667,9 +667,9 @@
                         {
                           "type": "text",
                           "id": "t26",
-                          "name": "理由",
-                          "content": "开工前先按 25 分钟。难的是开始，不是坚持。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reason",
+                          "content": "Set it for 25 minutes before you start. Starting is the hard part, not keeping going.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -686,7 +686,7 @@
                         {
                           "type": "frame",
                           "id": "f27",
-                          "name": "胶囊",
+                          "name": "pill",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -707,9 +707,9 @@
                             {
                               "type": "text",
                               "id": "t28",
-                              "name": "胶囊文字",
-                              "content": "每天",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "pill-text",
+                              "content": "Daily",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -745,7 +745,7 @@
         {
           "type": "frame",
           "id": "f86",
-          "name": "03 其余",
+          "name": "03-the-rest",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -762,7 +762,7 @@
             {
               "type": "frame",
               "id": "f85",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -773,7 +773,7 @@
                 {
                   "type": "rectangle",
                   "id": "r82",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -787,9 +787,9 @@
                 {
                   "type": "text",
                   "id": "t83",
-                  "name": "区块标题",
-                  "content": "第四到第八",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Four through eight",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -806,9 +806,9 @@
                 {
                   "type": "text",
                   "id": "t84",
-                  "name": "区块说明",
-                  "content": "这五个不是每天用，但每次用都省下一段整块的时间。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-intro",
+                  "content": "Not daily drivers, but each one saves a real block of time when you need it.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -827,7 +827,7 @@
             {
               "type": "frame",
               "id": "f81",
-              "name": "其余列表",
+              "name": "rest-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -848,7 +848,7 @@
                 {
                   "type": "frame",
                   "id": "f44",
-                  "name": "条目 04",
+                  "name": "entry-04",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -859,7 +859,7 @@
                     {
                       "type": "frame",
                       "id": "f37",
-                      "name": "徽章 04",
+                      "name": "badge-04",
                       "width": 56,
                       "height": 56,
                       "layout": "horizontal",
@@ -880,7 +880,7 @@
                         {
                           "type": "text",
                           "id": "t38",
-                          "name": "名次数字",
+                          "name": "rank-number",
                           "content": "04",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -901,7 +901,7 @@
                     {
                       "type": "frame",
                       "id": "f43",
-                      "name": "条目文案",
+                      "name": "entry-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -912,7 +912,7 @@
                         {
                           "type": "frame",
                           "id": "f41",
-                          "name": "条目标题行",
+                          "name": "entry-title-row",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -923,9 +923,9 @@
                             {
                               "type": "text",
                               "id": "t39",
-                              "name": "名称",
-                              "content": "一个固定的起稿模板",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "name",
+                              "content": "A go-to draft template",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -942,9 +942,9 @@
                             {
                               "type": "text",
                               "id": "t40",
-                              "name": "频次",
-                              "content": "每周",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "frequency",
+                              "content": "Weekly",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 500,
                               "fill": [
@@ -963,9 +963,9 @@
                         {
                           "type": "text",
                           "id": "t42",
-                          "name": "理由",
-                          "content": "新建都从它开始，署名和出处就不会再漏。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reason",
+                          "content": "Start every new piece from it and you'll never miss a credit or source again.",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -986,7 +986,7 @@
                 {
                   "type": "rectangle",
                   "id": "r45",
-                  "name": "条目分割线",
+                  "name": "entry-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -999,7 +999,7 @@
                 {
                   "type": "frame",
                   "id": "f53",
-                  "name": "条目 05",
+                  "name": "entry-05",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1010,7 +1010,7 @@
                     {
                       "type": "frame",
                       "id": "f46",
-                      "name": "徽章 05",
+                      "name": "badge-05",
                       "width": 56,
                       "height": 56,
                       "layout": "horizontal",
@@ -1031,7 +1031,7 @@
                         {
                           "type": "text",
                           "id": "t47",
-                          "name": "名次数字",
+                          "name": "rank-number",
                           "content": "05",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -1052,7 +1052,7 @@
                     {
                       "type": "frame",
                       "id": "f52",
-                      "name": "条目文案",
+                      "name": "entry-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1063,7 +1063,7 @@
                         {
                           "type": "frame",
                           "id": "f50",
-                          "name": "条目标题行",
+                          "name": "entry-title-row",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1074,9 +1074,9 @@
                             {
                               "type": "text",
                               "id": "t48",
-                              "name": "名称",
-                              "content": "截图标注工具",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "name",
+                              "content": "Screenshot markup tool",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -1093,9 +1093,9 @@
                             {
                               "type": "text",
                               "id": "t49",
-                              "name": "频次",
-                              "content": "每周",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "frequency",
+                              "content": "Weekly",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 500,
                               "fill": [
@@ -1114,9 +1114,9 @@
                         {
                           "type": "text",
                           "id": "t51",
-                          "name": "理由",
-                          "content": "回问题时直接圈出来，比打三行字快。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reason",
+                          "content": "Circle the thing when you reply. Faster than typing three lines.",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -1137,7 +1137,7 @@
                 {
                   "type": "rectangle",
                   "id": "r54",
-                  "name": "条目分割线",
+                  "name": "entry-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -1150,7 +1150,7 @@
                 {
                   "type": "frame",
                   "id": "f62",
-                  "name": "条目 06",
+                  "name": "entry-06",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1161,7 +1161,7 @@
                     {
                       "type": "frame",
                       "id": "f55",
-                      "name": "徽章 06",
+                      "name": "badge-06",
                       "width": 56,
                       "height": 56,
                       "layout": "horizontal",
@@ -1182,7 +1182,7 @@
                         {
                           "type": "text",
                           "id": "t56",
-                          "name": "名次数字",
+                          "name": "rank-number",
                           "content": "06",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -1203,7 +1203,7 @@
                     {
                       "type": "frame",
                       "id": "f61",
-                      "name": "条目文案",
+                      "name": "entry-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1214,7 +1214,7 @@
                         {
                           "type": "frame",
                           "id": "f59",
-                          "name": "条目标题行",
+                          "name": "entry-title-row",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1225,9 +1225,9 @@
                             {
                               "type": "text",
                               "id": "t57",
-                              "name": "名称",
-                              "content": "剪贴板历史",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "name",
+                              "content": "Clipboard history",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -1244,9 +1244,9 @@
                             {
                               "type": "text",
                               "id": "t58",
-                              "name": "频次",
-                              "content": "每周",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "frequency",
+                              "content": "Weekly",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 500,
                               "fill": [
@@ -1265,9 +1265,9 @@
                         {
                           "type": "text",
                           "id": "t60",
-                          "name": "理由",
-                          "content": "找回十分钟前复制的那段，不用回去重翻一遍。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reason",
+                          "content": "Get back what you copied ten minutes ago without digging for it again.",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -1288,7 +1288,7 @@
                 {
                   "type": "rectangle",
                   "id": "r63",
-                  "name": "条目分割线",
+                  "name": "entry-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -1301,7 +1301,7 @@
                 {
                   "type": "frame",
                   "id": "f71",
-                  "name": "条目 07",
+                  "name": "entry-07",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1312,7 +1312,7 @@
                     {
                       "type": "frame",
                       "id": "f64",
-                      "name": "徽章 07",
+                      "name": "badge-07",
                       "width": 56,
                       "height": 56,
                       "layout": "horizontal",
@@ -1333,7 +1333,7 @@
                         {
                           "type": "text",
                           "id": "t65",
-                          "name": "名次数字",
+                          "name": "rank-number",
                           "content": "07",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -1354,7 +1354,7 @@
                     {
                       "type": "frame",
                       "id": "f70",
-                      "name": "条目文案",
+                      "name": "entry-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1365,7 +1365,7 @@
                         {
                           "type": "frame",
                           "id": "f68",
-                          "name": "条目标题行",
+                          "name": "entry-title-row",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1376,9 +1376,9 @@
                             {
                               "type": "text",
                               "id": "t66",
-                              "name": "名称",
-                              "content": "稍后读的收件箱",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "name",
+                              "content": "A read-later inbox",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -1395,9 +1395,9 @@
                             {
                               "type": "text",
                               "id": "t67",
-                              "name": "频次",
-                              "content": "每周",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "frequency",
+                              "content": "Weekly",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 500,
                               "fill": [
@@ -1416,9 +1416,9 @@
                         {
                           "type": "text",
                           "id": "t69",
-                          "name": "理由",
-                          "content": "看到就丢进去，当天不读。它防的是分心，不是遗忘。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reason",
+                          "content": "Drop things in and don't read them that day. It guards against distraction, not forgetting.",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -1439,7 +1439,7 @@
                 {
                   "type": "rectangle",
                   "id": "r72",
-                  "name": "条目分割线",
+                  "name": "entry-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -1452,7 +1452,7 @@
                 {
                   "type": "frame",
                   "id": "f80",
-                  "name": "条目 08",
+                  "name": "entry-08",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1463,7 +1463,7 @@
                     {
                       "type": "frame",
                       "id": "f73",
-                      "name": "徽章 08",
+                      "name": "badge-08",
                       "width": 56,
                       "height": 56,
                       "layout": "horizontal",
@@ -1484,7 +1484,7 @@
                         {
                           "type": "text",
                           "id": "t74",
-                          "name": "名次数字",
+                          "name": "rank-number",
                           "content": "08",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -1505,7 +1505,7 @@
                     {
                       "type": "frame",
                       "id": "f79",
-                      "name": "条目文案",
+                      "name": "entry-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1516,7 +1516,7 @@
                         {
                           "type": "frame",
                           "id": "f77",
-                          "name": "条目标题行",
+                          "name": "entry-title-row",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1527,9 +1527,9 @@
                             {
                               "type": "text",
                               "id": "t75",
-                              "name": "名称",
-                              "content": "纸和笔",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "name",
+                              "content": "Pen and paper",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -1546,9 +1546,9 @@
                             {
                               "type": "text",
                               "id": "t76",
-                              "name": "频次",
-                              "content": "每月",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "frequency",
+                              "content": "Monthly",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 500,
                               "fill": [
@@ -1567,9 +1567,9 @@
                         {
                           "type": "text",
                           "id": "t78",
-                          "name": "理由",
-                          "content": "想不清楚就关掉屏幕。列不出三条，说明还没想明白。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reason",
+                          "content": "When you're stuck, close the screen. Can't list three points? You haven't figured it out yet.",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -1603,7 +1603,7 @@
         {
           "type": "frame",
           "id": "f101",
-          "name": "04 口径",
+          "name": "04-criteria",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1620,7 +1620,7 @@
             {
               "type": "frame",
               "id": "f100",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1631,7 +1631,7 @@
                 {
                   "type": "rectangle",
                   "id": "r97",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -1645,9 +1645,9 @@
                 {
                   "type": "text",
                   "id": "t98",
-                  "name": "区块标题",
-                  "content": "这个榜是怎么排的",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "How this list was ranked",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -1664,9 +1664,9 @@
                 {
                   "type": "text",
                   "id": "t99",
-                  "name": "区块说明",
-                  "content": "先说清楚规则，再看名次 —— 不写口径的榜单是广告。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-intro",
+                  "content": "Rules first, rankings second. A list without rules is just an ad.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -1685,7 +1685,7 @@
             {
               "type": "frame",
               "id": "f96",
-              "name": "口径面板",
+              "name": "criteria-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1706,7 +1706,7 @@
                 {
                   "type": "frame",
                   "id": "f89",
-                  "name": "口径项",
+                  "name": "criteria-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1717,7 +1717,7 @@
                     {
                       "type": "icon_font",
                       "id": "i87",
-                      "name": "图标",
+                      "name": "icon",
                       "iconFontName": "calendar-check",
                       "width": 28,
                       "height": 28,
@@ -1731,9 +1731,9 @@
                     {
                       "type": "text",
                       "id": "t88",
-                      "name": "口径文字",
-                      "content": "连续用满 12 个月才进榜，试用期一律不算。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "criteria-text",
+                      "content": "Only tools used 12 months straight. No free trials.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 500,
                       "fill": [
@@ -1752,7 +1752,7 @@
                 {
                   "type": "frame",
                   "id": "f92",
-                  "name": "口径项",
+                  "name": "criteria-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1763,7 +1763,7 @@
                     {
                       "type": "icon_font",
                       "id": "i90",
-                      "name": "图标",
+                      "name": "icon",
                       "iconFontName": "list-ordered",
                       "width": 28,
                       "height": 28,
@@ -1777,9 +1777,9 @@
                     {
                       "type": "text",
                       "id": "t91",
-                      "name": "口径文字",
-                      "content": "按打开次数排，不按付费金额排。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "criteria-text",
+                      "content": "Ranked by how often I open them, not by what they cost.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 500,
                       "fill": [
@@ -1798,7 +1798,7 @@
                 {
                   "type": "frame",
                   "id": "f95",
-                  "name": "口径项",
+                  "name": "criteria-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1809,7 +1809,7 @@
                     {
                       "type": "icon_font",
                       "id": "i93",
-                      "name": "图标",
+                      "name": "icon",
                       "iconFontName": "filter",
                       "width": 28,
                       "height": 28,
@@ -1823,9 +1823,9 @@
                     {
                       "type": "text",
                       "id": "t94",
-                      "name": "口径文字",
-                      "content": "同类只留一个 —— 留下的那个是最后活下来的。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "criteria-text",
+                      "content": "One per category: the one that survived.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 500,
                       "fill": [
@@ -1848,7 +1848,7 @@
         {
           "type": "frame",
           "id": "f106",
-          "name": "05 页脚",
+          "name": "05-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1868,9 +1868,9 @@
             {
               "type": "text",
               "id": "t102",
-              "name": "说明",
-              "content": "统计区间：2025-08 至 2026-07，按每日打开次数取中位数。",
-              "fontFamily": "Noto Sans SC",
+              "name": "note",
+              "content": "Period: Aug 2025 to Jul 2026, ranked by median daily opens.",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -1887,7 +1887,7 @@
             {
               "type": "frame",
               "id": "f105",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1898,9 +1898,9 @@
                 {
                   "type": "text",
                   "id": "t103",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -1917,9 +1917,9 @@
                 {
                   "type": "text",
                   "id": "t104",
-                  "name": "更新说明",
-                  "content": "每年更新一次这张榜",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "Updated once a year",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

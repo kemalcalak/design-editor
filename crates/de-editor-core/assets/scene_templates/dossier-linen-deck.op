@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "卷宗亚麻 · 文档备忘 deck",
+  "name": "dossier-linen-memo-deck",
   "variables": {
     "c-linen": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f27",
-      "name": "01 文件首页",
+      "name": "01-cover",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -54,7 +54,7 @@
         {
           "type": "frame",
           "id": "f15",
-          "name": "01 文件首页 · 正文",
+          "name": "01-cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -71,7 +71,7 @@
             {
               "type": "frame",
               "id": "f21",
-              "name": "正文块",
+              "name": "body-block",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -87,7 +87,7 @@
                 {
                   "type": "frame",
                   "id": "f20",
-                  "name": "页眉",
+                  "name": "page-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -99,7 +99,7 @@
                     {
                       "type": "text",
                       "id": "t16",
-                      "name": "文档代号",
+                      "name": "doc-code",
                       "content": "OPS-2026-041",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -118,7 +118,7 @@
                     {
                       "type": "frame",
                       "id": "f19",
-                      "name": "骑缝页标",
+                      "name": "edge-page-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -129,7 +129,7 @@
                         {
                           "type": "text",
                           "id": "t17",
-                          "name": "页标",
+                          "name": "page-tag",
                           "content": "p. 1 / 8",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -148,7 +148,7 @@
                         {
                           "type": "rectangle",
                           "id": "r18",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 48,
                           "height": 1,
                           "fill": [
@@ -167,7 +167,7 @@
             {
               "type": "frame",
               "id": "f14",
-              "name": "正文块",
+              "name": "body-block",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -183,7 +183,7 @@
                 {
                   "type": "rectangle",
                   "id": "r2",
-                  "name": "细线",
+                  "name": "hairline",
                   "width": 1584,
                   "height": 2,
                   "fill": [
@@ -196,9 +196,9 @@
                 {
                   "type": "text",
                   "id": "t1",
-                  "name": "文档标题",
-                  "content": "把门店巡检从抽查\n改为全量记录",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "doc-title",
+                  "content": "Move store inspections from\nspot checks to full records",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 600,
                   "fill": [
@@ -215,9 +215,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "摘要",
-                  "content": "巡检是我们唯一能在事故发生前拿到的一手信息。\n过去两年它以人工抽查的方式运行，覆盖到的门店不足四成，\n上报的问题在纸质表单与工作群之间流转，闭环时长无从统计。\n本备忘给出三个方案的取舍、所需投入，\n以及三项需要在本月内批复的事项。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "summary",
+                  "content": "Inspection is our only first-hand view before incidents.\nTwo years of manual spot checks reached under 40% of stores;\nreports bounce between paper and chat, and fixes go untimed.\nThis memo weighs three options and what each needs,\nand lists three items that need sign-off this month.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -234,7 +234,7 @@
                 {
                   "type": "frame",
                   "id": "f13",
-                  "name": "签发信息",
+                  "name": "issue-info",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -244,7 +244,7 @@
                     {
                       "type": "frame",
                       "id": "f6",
-                      "name": "元信息行",
+                      "name": "meta-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -255,9 +255,9 @@
                         {
                           "type": "text",
                           "id": "t4",
-                          "name": "元信息标签",
-                          "content": "收件人",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "meta-label",
+                          "content": "To",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -274,9 +274,9 @@
                         {
                           "type": "text",
                           "id": "t5",
-                          "name": "元信息值",
-                          "content": "运营中心 · 门店运营组 · 信息技术部",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "meta-value",
+                          "content": "Operations · Store Ops · IT",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 500,
                           "fill": [
@@ -295,7 +295,7 @@
                     {
                       "type": "frame",
                       "id": "f9",
-                      "name": "元信息行",
+                      "name": "meta-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -306,9 +306,9 @@
                         {
                           "type": "text",
                           "id": "t7",
-                          "name": "元信息标签",
-                          "content": "签发日期",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "meta-label",
+                          "content": "Issued",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -325,7 +325,7 @@
                         {
                           "type": "text",
                           "id": "t8",
-                          "name": "元信息值",
+                          "name": "meta-value",
                           "content": "2026-08-09",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -346,7 +346,7 @@
                     {
                       "type": "frame",
                       "id": "f12",
-                      "name": "元信息行",
+                      "name": "meta-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -357,9 +357,9 @@
                         {
                           "type": "text",
                           "id": "t10",
-                          "name": "元信息标签",
-                          "content": "密级",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "meta-label",
+                          "content": "Classification",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -376,9 +376,9 @@
                         {
                           "type": "text",
                           "id": "t11",
-                          "name": "元信息值",
-                          "content": "内部 · 限项目组",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "meta-value",
+                          "content": "Internal · Project team only",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 500,
                           "fill": [
@@ -403,7 +403,7 @@
         {
           "type": "frame",
           "id": "f22",
-          "name": "01 文件首页 · 装订",
+          "name": "01-cover-binding",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -412,7 +412,7 @@
             {
               "type": "rectangle",
               "id": "r23",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -436,7 +436,7 @@
             {
               "type": "rectangle",
               "id": "r24",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -460,7 +460,7 @@
             {
               "type": "rectangle",
               "id": "r25",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -484,7 +484,7 @@
             {
               "type": "rectangle",
               "id": "r26",
-              "name": "装订线",
+              "name": "binding-line",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -505,7 +505,7 @@
     {
       "type": "frame",
       "id": "f57",
-      "name": "02 背景",
+      "name": "02-background",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -520,7 +520,7 @@
         {
           "type": "frame",
           "id": "f45",
-          "name": "02 背景 · 正文",
+          "name": "02-background-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -537,7 +537,7 @@
             {
               "type": "frame",
               "id": "f51",
-              "name": "正文块",
+              "name": "body-block",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -553,7 +553,7 @@
                 {
                   "type": "frame",
                   "id": "f50",
-                  "name": "页眉",
+                  "name": "page-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -565,7 +565,7 @@
                     {
                       "type": "text",
                       "id": "t46",
-                      "name": "文档代号",
+                      "name": "doc-code",
                       "content": "OPS-2026-041",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -584,7 +584,7 @@
                     {
                       "type": "frame",
                       "id": "f49",
-                      "name": "骑缝页标",
+                      "name": "edge-page-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -595,7 +595,7 @@
                         {
                           "type": "text",
                           "id": "t47",
-                          "name": "页标",
+                          "name": "page-tag",
                           "content": "p. 2 / 8",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -614,7 +614,7 @@
                         {
                           "type": "rectangle",
                           "id": "r48",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 48,
                           "height": 1,
                           "fill": [
@@ -633,7 +633,7 @@
             {
               "type": "frame",
               "id": "f44",
-              "name": "节",
+              "name": "section",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -643,7 +643,7 @@
                 {
                   "type": "frame",
                   "id": "f42",
-                  "name": "节标题行",
+                  "name": "section-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -654,7 +654,7 @@
                     {
                       "type": "text",
                       "id": "t40",
-                      "name": "节号",
+                      "name": "section-number",
                       "content": "§1",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -674,9 +674,9 @@
                     {
                       "type": "text",
                       "id": "t41",
-                      "name": "节标题",
-                      "content": "背景与问题",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-title",
+                      "content": "Background and problem",
+                      "fontFamily": "Inter",
                       "fontSize": 44,
                       "fontWeight": 600,
                       "fill": [
@@ -695,7 +695,7 @@
                 {
                   "type": "frame",
                   "id": "f43",
-                  "name": "节内容",
+                  "name": "section-content",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -705,7 +705,7 @@
                     {
                       "type": "frame",
                       "id": "f31",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -716,7 +716,7 @@
                         {
                           "type": "text",
                           "id": "t29",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§1.1",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -736,7 +736,7 @@
                         {
                           "type": "frame",
                           "id": "f30",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -746,9 +746,9 @@
                             {
                               "type": "text",
                               "id": "t28",
-                              "name": "正文",
-                              "content": "人工抽查按片区轮换，每家门店平均 47 天才被巡到一次。\n到店的检查项由巡检员当场手写，回办公室再录入系统，\n两个环节之间平均隔了 1.8 天，照片与表单常常对不上号。\n抽查本身没有错，错的是把抽查的结果当成了全量的结论。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "body",
+                              "content": "Spot checks rotate by region; a store is seen every 47 days.\nInspectors handwrite findings on site and key them in later,\na 1.8-day gap on average, so photos and forms often don't match.\nSpot checks aren't wrong; treating them as the whole picture is.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -769,7 +769,7 @@
                     {
                       "type": "frame",
                       "id": "f35",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -780,7 +780,7 @@
                         {
                           "type": "text",
                           "id": "t33",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§1.2",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -800,7 +800,7 @@
                         {
                           "type": "frame",
                           "id": "f34",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -810,9 +810,9 @@
                             {
                               "type": "text",
                               "id": "t32",
-                              "name": "正文",
-                              "content": "问题上报走工作群，群里同时还有排班、报修与日常通知。\n信息一旦被后面的消息顶下去，就等于没有发生过。\n上季度共 1342 条上报，能追溯到闭环记录的只有 611 条。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "body",
+                              "content": "Issues are reported in a group chat that also carries\nrotas, repairs and notices. Once a report scrolls away, it's gone.\nOf 1,342 reports last quarter, only 611 trace to a closed fix.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -833,7 +833,7 @@
                     {
                       "type": "frame",
                       "id": "f39",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -844,7 +844,7 @@
                         {
                           "type": "text",
                           "id": "t37",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§1.3",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -864,7 +864,7 @@
                         {
                           "type": "frame",
                           "id": "f38",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -874,9 +874,9 @@
                             {
                               "type": "text",
                               "id": "t36",
-                              "name": "正文",
-                              "content": "各区域对同一个检查项的判定尺度并不一致：\n华东把冷链温度超标记为一般问题，华南记为严重问题，\n汇总到集团时，两者被加在了同一个数字里。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "body",
+                              "content": "Regions don't grade the same check the same way:\nEast logs a cold-chain temperature breach as minor, South as severe,\nand at group level both land in the same number.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -903,7 +903,7 @@
         {
           "type": "frame",
           "id": "f52",
-          "name": "02 背景 · 装订",
+          "name": "02-background-binding",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -912,7 +912,7 @@
             {
               "type": "rectangle",
               "id": "r53",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -936,7 +936,7 @@
             {
               "type": "rectangle",
               "id": "r54",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -960,7 +960,7 @@
             {
               "type": "rectangle",
               "id": "r55",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -984,7 +984,7 @@
             {
               "type": "rectangle",
               "id": "r56",
-              "name": "装订线",
+              "name": "binding-line",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1005,7 +1005,7 @@
     {
       "type": "frame",
       "id": "f163",
-      "name": "03 现状数据",
+      "name": "03-current-data",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1020,7 +1020,7 @@
         {
           "type": "frame",
           "id": "f151",
-          "name": "03 现状数据 · 正文",
+          "name": "03-current-data-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1037,7 +1037,7 @@
             {
               "type": "frame",
               "id": "f157",
-              "name": "正文块",
+              "name": "body-block",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1053,7 +1053,7 @@
                 {
                   "type": "frame",
                   "id": "f156",
-                  "name": "页眉",
+                  "name": "page-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1065,7 +1065,7 @@
                     {
                       "type": "text",
                       "id": "t152",
-                      "name": "文档代号",
+                      "name": "doc-code",
                       "content": "OPS-2026-041",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -1084,7 +1084,7 @@
                     {
                       "type": "frame",
                       "id": "f155",
-                      "name": "骑缝页标",
+                      "name": "edge-page-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1095,7 +1095,7 @@
                         {
                           "type": "text",
                           "id": "t153",
-                          "name": "页标",
+                          "name": "page-tag",
                           "content": "p. 3 / 8",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -1114,7 +1114,7 @@
                         {
                           "type": "rectangle",
                           "id": "r154",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 48,
                           "height": 1,
                           "fill": [
@@ -1133,7 +1133,7 @@
             {
               "type": "frame",
               "id": "f150",
-              "name": "节",
+              "name": "section",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1143,7 +1143,7 @@
                 {
                   "type": "frame",
                   "id": "f148",
-                  "name": "节标题行",
+                  "name": "section-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1154,7 +1154,7 @@
                     {
                       "type": "text",
                       "id": "t146",
-                      "name": "节号",
+                      "name": "section-number",
                       "content": "§2",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -1174,9 +1174,9 @@
                     {
                       "type": "text",
                       "id": "t147",
-                      "name": "节标题",
-                      "content": "现状：五个片区的四项读数",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-title",
+                      "content": "Today: four readings across five regions",
+                      "fontFamily": "Inter",
                       "fontSize": 44,
                       "fontWeight": 600,
                       "fill": [
@@ -1195,7 +1195,7 @@
                 {
                   "type": "frame",
                   "id": "f149",
-                  "name": "节内容",
+                  "name": "section-content",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1205,7 +1205,7 @@
                     {
                       "type": "frame",
                       "id": "f141",
-                      "name": "正文块",
+                      "name": "body-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1221,7 +1221,7 @@
                         {
                           "type": "frame",
                           "id": "f139",
-                          "name": "表格",
+                          "name": "table",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1231,7 +1231,7 @@
                             {
                               "type": "rectangle",
                               "id": "r68",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1584,
                               "height": 2,
                               "fill": [
@@ -1244,7 +1244,7 @@
                             {
                               "type": "frame",
                               "id": "f69",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1255,7 +1255,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f58",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 388,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1269,9 +1269,9 @@
                                     {
                                       "type": "text",
                                       "id": "t59",
-                                      "name": "单元格文字",
-                                      "content": "片区",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Region",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 600,
                                       "fill": [
@@ -1290,7 +1290,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f60",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 300,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1304,9 +1304,9 @@
                                     {
                                       "type": "text",
                                       "id": "t61",
-                                      "name": "单元格文字",
-                                      "content": "月均巡检次数",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Visits / mo",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 600,
                                       "fill": [
@@ -1326,7 +1326,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f62",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1340,9 +1340,9 @@
                                     {
                                       "type": "text",
                                       "id": "t63",
-                                      "name": "单元格文字",
-                                      "content": "上报条数",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Reports",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 600,
                                       "fill": [
@@ -1362,7 +1362,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f64",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1376,9 +1376,9 @@
                                     {
                                       "type": "text",
                                       "id": "t65",
-                                      "name": "单元格文字",
-                                      "content": "闭环率（%）",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Closed (%)",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 600,
                                       "fill": [
@@ -1398,7 +1398,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f66",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 320,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1412,9 +1412,9 @@
                                     {
                                       "type": "text",
                                       "id": "t67",
-                                      "name": "单元格文字",
-                                      "content": "闭环时长（天）",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Days to close",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 600,
                                       "fill": [
@@ -1436,7 +1436,7 @@
                             {
                               "type": "rectangle",
                               "id": "r70",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1584,
                               "height": 1,
                               "fill": [
@@ -1449,7 +1449,7 @@
                             {
                               "type": "frame",
                               "id": "f81",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1465,7 +1465,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f71",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 388,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1479,9 +1479,9 @@
                                     {
                                       "type": "text",
                                       "id": "t72",
-                                      "name": "单元格文字",
-                                      "content": "华东",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "East",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1500,7 +1500,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f73",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 300,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1514,7 +1514,7 @@
                                     {
                                       "type": "text",
                                       "id": "t74",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "412",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1536,7 +1536,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f75",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1550,7 +1550,7 @@
                                     {
                                       "type": "text",
                                       "id": "t76",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "386",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1572,7 +1572,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f77",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1586,7 +1586,7 @@
                                     {
                                       "type": "text",
                                       "id": "t78",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "46",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1608,7 +1608,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f79",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 320,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1622,7 +1622,7 @@
                                     {
                                       "type": "text",
                                       "id": "t80",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "5.2",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1646,7 +1646,7 @@
                             {
                               "type": "frame",
                               "id": "f92",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1657,7 +1657,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f82",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 388,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1671,9 +1671,9 @@
                                     {
                                       "type": "text",
                                       "id": "t83",
-                                      "name": "单元格文字",
-                                      "content": "华南",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "South",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1692,7 +1692,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f84",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 300,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1706,7 +1706,7 @@
                                     {
                                       "type": "text",
                                       "id": "t85",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "358",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1728,7 +1728,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f86",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1742,7 +1742,7 @@
                                     {
                                       "type": "text",
                                       "id": "t87",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "341",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1764,7 +1764,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f88",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1778,7 +1778,7 @@
                                     {
                                       "type": "text",
                                       "id": "t89",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "51",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1800,7 +1800,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f90",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 320,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1814,7 +1814,7 @@
                                     {
                                       "type": "text",
                                       "id": "t91",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "4.6",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1838,7 +1838,7 @@
                             {
                               "type": "frame",
                               "id": "f103",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1854,7 +1854,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f93",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 388,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1868,9 +1868,9 @@
                                     {
                                       "type": "text",
                                       "id": "t94",
-                                      "name": "单元格文字",
-                                      "content": "华北",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "North",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1889,7 +1889,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f95",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 300,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1903,7 +1903,7 @@
                                     {
                                       "type": "text",
                                       "id": "t96",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "296",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1925,7 +1925,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f97",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1939,7 +1939,7 @@
                                     {
                                       "type": "text",
                                       "id": "t98",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "302",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1961,7 +1961,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f99",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1975,7 +1975,7 @@
                                     {
                                       "type": "text",
                                       "id": "t100",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "39",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1997,7 +1997,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f101",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 320,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2011,7 +2011,7 @@
                                     {
                                       "type": "text",
                                       "id": "t102",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "6.8",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2035,7 +2035,7 @@
                             {
                               "type": "frame",
                               "id": "f114",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -2046,7 +2046,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f104",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 388,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2060,9 +2060,9 @@
                                     {
                                       "type": "text",
                                       "id": "t105",
-                                      "name": "单元格文字",
-                                      "content": "西南",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Southwest",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -2081,7 +2081,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f106",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 300,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2095,7 +2095,7 @@
                                     {
                                       "type": "text",
                                       "id": "t107",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "187",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2117,7 +2117,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f108",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2131,7 +2131,7 @@
                                     {
                                       "type": "text",
                                       "id": "t109",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "154",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2153,7 +2153,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f110",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2167,7 +2167,7 @@
                                     {
                                       "type": "text",
                                       "id": "t111",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "44",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2189,7 +2189,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f112",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 320,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2203,7 +2203,7 @@
                                     {
                                       "type": "text",
                                       "id": "t113",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "5.9",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2227,7 +2227,7 @@
                             {
                               "type": "frame",
                               "id": "f125",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -2243,7 +2243,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f115",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 388,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2257,9 +2257,9 @@
                                     {
                                       "type": "text",
                                       "id": "t116",
-                                      "name": "单元格文字",
-                                      "content": "东北",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Northeast",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -2278,7 +2278,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f117",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 300,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2292,7 +2292,7 @@
                                     {
                                       "type": "text",
                                       "id": "t118",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "121",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2314,7 +2314,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f119",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2328,7 +2328,7 @@
                                     {
                                       "type": "text",
                                       "id": "t120",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "98",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2350,7 +2350,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f121",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2364,7 +2364,7 @@
                                     {
                                       "type": "text",
                                       "id": "t122",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "33",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2386,7 +2386,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f123",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 320,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2400,7 +2400,7 @@
                                     {
                                       "type": "text",
                                       "id": "t124",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "8.1",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2424,7 +2424,7 @@
                             {
                               "type": "rectangle",
                               "id": "r126",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1584,
                               "height": 2,
                               "fill": [
@@ -2437,7 +2437,7 @@
                             {
                               "type": "frame",
                               "id": "f137",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -2448,7 +2448,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f127",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 388,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2462,9 +2462,9 @@
                                     {
                                       "type": "text",
                                       "id": "t128",
-                                      "name": "单元格文字",
-                                      "content": "全国",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Total",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 600,
                                       "fill": [
@@ -2483,7 +2483,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f129",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 300,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2497,7 +2497,7 @@
                                     {
                                       "type": "text",
                                       "id": "t130",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "1374",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2519,7 +2519,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f131",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2533,7 +2533,7 @@
                                     {
                                       "type": "text",
                                       "id": "t132",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "1281",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2555,7 +2555,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f133",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 280,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2569,7 +2569,7 @@
                                     {
                                       "type": "text",
                                       "id": "t134",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "44",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2591,7 +2591,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f135",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 320,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2605,7 +2605,7 @@
                                     {
                                       "type": "text",
                                       "id": "t136",
-                                      "name": "单元格文字",
+                                      "name": "cell-text",
                                       "content": "5.9",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2629,7 +2629,7 @@
                             {
                               "type": "rectangle",
                               "id": "r138",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1584,
                               "height": 1,
                               "fill": [
@@ -2644,9 +2644,9 @@
                         {
                           "type": "text",
                           "id": "t140",
-                          "name": "来源行",
-                          "content": "数据来源：巡检系统 2026 年第二季度导出；判定口径见 §1.3。闭环率按「有整改记录且经复核」计，与月报一致。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "source-line",
+                          "content": "Source: inspection system export, Q2 2026; grading rules in §1.3. Closure counts only fixes with a reviewed record, matching the monthly report.",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -2665,7 +2665,7 @@
                     {
                       "type": "frame",
                       "id": "f145",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2676,7 +2676,7 @@
                         {
                           "type": "text",
                           "id": "t143",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§2.1",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -2696,7 +2696,7 @@
                         {
                           "type": "frame",
                           "id": "f144",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2706,9 +2706,9 @@
                             {
                               "type": "text",
                               "id": "t142",
-                              "name": "正文",
-                              "content": "巡检次数与上报条数几乎同步下降，闭环率却没有跟着走：\n东北片区巡到的次数最少，闭环时长反而最长 8.1 天。\n这说明瓶颈不在巡得够不够勤，而在巡完之后没人接得住。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "body",
+                              "content": "Visits and reports fall almost in step; closure rate doesn't.\nNortheast gets the fewest visits yet the longest close: 8.1 days.\nThe bottleneck isn't how often we visit; it's who picks up after.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -2735,7 +2735,7 @@
         {
           "type": "frame",
           "id": "f158",
-          "name": "03 现状数据 · 装订",
+          "name": "03-current-data-binding",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2744,7 +2744,7 @@
             {
               "type": "rectangle",
               "id": "r159",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -2768,7 +2768,7 @@
             {
               "type": "rectangle",
               "id": "r160",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -2792,7 +2792,7 @@
             {
               "type": "rectangle",
               "id": "r161",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -2816,7 +2816,7 @@
             {
               "type": "rectangle",
               "id": "r162",
-              "name": "装订线",
+              "name": "binding-line",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2837,7 +2837,7 @@
     {
       "type": "frame",
       "id": "f193",
-      "name": "04 分析",
+      "name": "04-analysis",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -2852,7 +2852,7 @@
         {
           "type": "frame",
           "id": "f181",
-          "name": "04 分析 · 正文",
+          "name": "04-analysis-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2869,7 +2869,7 @@
             {
               "type": "frame",
               "id": "f187",
-              "name": "正文块",
+              "name": "body-block",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2885,7 +2885,7 @@
                 {
                   "type": "frame",
                   "id": "f186",
-                  "name": "页眉",
+                  "name": "page-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2897,7 +2897,7 @@
                     {
                       "type": "text",
                       "id": "t182",
-                      "name": "文档代号",
+                      "name": "doc-code",
                       "content": "OPS-2026-041",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -2916,7 +2916,7 @@
                     {
                       "type": "frame",
                       "id": "f185",
-                      "name": "骑缝页标",
+                      "name": "edge-page-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2927,7 +2927,7 @@
                         {
                           "type": "text",
                           "id": "t183",
-                          "name": "页标",
+                          "name": "page-tag",
                           "content": "p. 4 / 8",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -2946,7 +2946,7 @@
                         {
                           "type": "rectangle",
                           "id": "r184",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 48,
                           "height": 1,
                           "fill": [
@@ -2965,7 +2965,7 @@
             {
               "type": "frame",
               "id": "f180",
-              "name": "节",
+              "name": "section",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2975,7 +2975,7 @@
                 {
                   "type": "frame",
                   "id": "f178",
-                  "name": "节标题行",
+                  "name": "section-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2986,7 +2986,7 @@
                     {
                       "type": "text",
                       "id": "t176",
-                      "name": "节号",
+                      "name": "section-number",
                       "content": "§3",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -3006,9 +3006,9 @@
                     {
                       "type": "text",
                       "id": "t177",
-                      "name": "节标题",
-                      "content": "为什么抽查救不回来",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-title",
+                      "content": "Why spot checks can't fix this",
+                      "fontFamily": "Inter",
                       "fontSize": 44,
                       "fontWeight": 600,
                       "fill": [
@@ -3027,7 +3027,7 @@
                 {
                   "type": "frame",
                   "id": "f179",
-                  "name": "节内容",
+                  "name": "section-content",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3037,7 +3037,7 @@
                     {
                       "type": "frame",
                       "id": "f170",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3048,7 +3048,7 @@
                         {
                           "type": "text",
                           "id": "t168",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§3.1",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -3068,7 +3068,7 @@
                         {
                           "type": "frame",
                           "id": "f169",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3078,9 +3078,9 @@
                             {
                               "type": "text",
                               "id": "t167",
-                              "name": "正文",
-                              "content": "抽查的样本由排班决定，而排班避开了最难去的那些门店。\n越是偏远、越是人手紧的门店，被巡到的间隔越长，\n于是问题最多的地方，恰好是我们了解得最少的地方。\n这不是执行不力，是抽样方法自带的偏差。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "body",
+                              "content": "Rotas set the sample, and rotas skip the hardest-to-reach stores.\nThe more remote or short-staffed a store, the longer between visits,\nso the stores with the most issues are the ones we know least.\nThat's not poor execution; it's bias built into the sampling.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -3101,7 +3101,7 @@
                     {
                       "type": "frame",
                       "id": "f174",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3112,7 +3112,7 @@
                         {
                           "type": "text",
                           "id": "t172",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§3.2",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -3132,7 +3132,7 @@
                         {
                           "type": "frame",
                           "id": "f173",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3142,9 +3142,9 @@
                             {
                               "type": "text",
                               "id": "t171",
-                              "name": "正文",
-                              "content": "闭环率停在 44%，不是因为没人整改，\n而是因为整改完成后没有一个必须回填的动作。\n没有回填，就没有记录；没有记录，复算就无从谈起。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "body",
+                              "content": "Closure sits at 44% not because no one fixes things,\nbut because nothing requires logging the fix once it's done.\nNo log, no record; no record, nothing to recount.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -3165,7 +3165,7 @@
                     {
                       "type": "frame",
                       "id": "f175",
-                      "name": "正文块",
+                      "name": "body-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -3181,7 +3181,7 @@
                         {
                           "type": "frame",
                           "id": "f166",
-                          "name": "引文块",
+                          "name": "quote-block",
                           "width": 1200,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3200,9 +3200,9 @@
                             {
                               "type": "text",
                               "id": "t164",
-                              "name": "引文",
-                              "content": "我们不缺巡检，缺的是能被复算的巡检。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "quote",
+                              "content": "We're not short of inspections, just ones we can recount.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -3219,9 +3219,9 @@
                             {
                               "type": "text",
                               "id": "t165",
-                              "name": "引文出处",
-                              "content": "—— 华东区运营负责人，6 月复盘会记录",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "quote-source",
+                              "content": "— East region ops lead, June review notes",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -3248,7 +3248,7 @@
         {
           "type": "frame",
           "id": "f188",
-          "name": "04 分析 · 装订",
+          "name": "04-analysis-binding",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -3257,7 +3257,7 @@
             {
               "type": "rectangle",
               "id": "r189",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -3281,7 +3281,7 @@
             {
               "type": "rectangle",
               "id": "r190",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -3305,7 +3305,7 @@
             {
               "type": "rectangle",
               "id": "r191",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -3329,7 +3329,7 @@
             {
               "type": "rectangle",
               "id": "r192",
-              "name": "装订线",
+              "name": "binding-line",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3350,7 +3350,7 @@
     {
       "type": "frame",
       "id": "f285",
-      "name": "05 方案对比",
+      "name": "05-options",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -3365,7 +3365,7 @@
         {
           "type": "frame",
           "id": "f273",
-          "name": "05 方案对比 · 正文",
+          "name": "05-options-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -3382,7 +3382,7 @@
             {
               "type": "frame",
               "id": "f279",
-              "name": "正文块",
+              "name": "body-block",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3398,7 +3398,7 @@
                 {
                   "type": "frame",
                   "id": "f278",
-                  "name": "页眉",
+                  "name": "page-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3410,7 +3410,7 @@
                     {
                       "type": "text",
                       "id": "t274",
-                      "name": "文档代号",
+                      "name": "doc-code",
                       "content": "OPS-2026-041",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -3429,7 +3429,7 @@
                     {
                       "type": "frame",
                       "id": "f277",
-                      "name": "骑缝页标",
+                      "name": "edge-page-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -3440,7 +3440,7 @@
                         {
                           "type": "text",
                           "id": "t275",
-                          "name": "页标",
+                          "name": "page-tag",
                           "content": "p. 5 / 8",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -3459,7 +3459,7 @@
                         {
                           "type": "rectangle",
                           "id": "r276",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 48,
                           "height": 1,
                           "fill": [
@@ -3478,7 +3478,7 @@
             {
               "type": "frame",
               "id": "f272",
-              "name": "节",
+              "name": "section",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3488,7 +3488,7 @@
                 {
                   "type": "frame",
                   "id": "f270",
-                  "name": "节标题行",
+                  "name": "section-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3499,7 +3499,7 @@
                     {
                       "type": "text",
                       "id": "t268",
-                      "name": "节号",
+                      "name": "section-number",
                       "content": "§4",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -3519,9 +3519,9 @@
                     {
                       "type": "text",
                       "id": "t269",
-                      "name": "节标题",
-                      "content": "三个方案，按同一组维度逐行回答",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-title",
+                      "content": "Three options, answered row by row on the same terms",
+                      "fontFamily": "Inter",
                       "fontSize": 44,
                       "fontWeight": 600,
                       "fill": [
@@ -3540,7 +3540,7 @@
                 {
                   "type": "frame",
                   "id": "f271",
-                  "name": "节内容",
+                  "name": "section-content",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3550,7 +3550,7 @@
                     {
                       "type": "frame",
                       "id": "f263",
-                      "name": "正文块",
+                      "name": "body-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -3566,7 +3566,7 @@
                         {
                           "type": "frame",
                           "id": "f261",
-                          "name": "表格",
+                          "name": "table",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3576,7 +3576,7 @@
                             {
                               "type": "rectangle",
                               "id": "r202",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1584,
                               "height": 2,
                               "fill": [
@@ -3589,7 +3589,7 @@
                             {
                               "type": "frame",
                               "id": "f203",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -3600,7 +3600,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f194",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 384,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3614,9 +3614,9 @@
                                     {
                                       "type": "text",
                                       "id": "t195",
-                                      "name": "单元格文字",
-                                      "content": "评估维度",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Criterion",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 600,
                                       "fill": [
@@ -3635,7 +3635,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f196",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3649,9 +3649,9 @@
                                     {
                                       "type": "text",
                                       "id": "t197",
-                                      "name": "单元格文字",
-                                      "content": "甲 · 扩编巡检员",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "A · Hire inspectors",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 600,
                                       "fill": [
@@ -3670,7 +3670,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f198",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3684,9 +3684,9 @@
                                     {
                                       "type": "text",
                                       "id": "t199",
-                                      "name": "单元格文字",
-                                      "content": "乙 · 外包第三方",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "B · Outsource",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 600,
                                       "fill": [
@@ -3705,7 +3705,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f200",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3719,9 +3719,9 @@
                                     {
                                       "type": "text",
                                       "id": "t201",
-                                      "name": "单元格文字",
-                                      "content": "丙 · 自检加抽核",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "C · Self-check + audit",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 600,
                                       "fill": [
@@ -3742,7 +3742,7 @@
                             {
                               "type": "rectangle",
                               "id": "r204",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1584,
                               "height": 1,
                               "fill": [
@@ -3755,7 +3755,7 @@
                             {
                               "type": "frame",
                               "id": "f213",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -3771,7 +3771,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f205",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 384,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3785,9 +3785,9 @@
                                     {
                                       "type": "text",
                                       "id": "t206",
-                                      "name": "单元格文字",
-                                      "content": "覆盖率",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Coverage",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -3806,7 +3806,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f207",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3820,9 +3820,9 @@
                                     {
                                       "type": "text",
                                       "id": "t208",
-                                      "name": "单元格文字",
-                                      "content": "提升有限",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Limited gain",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -3841,7 +3841,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f209",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3855,9 +3855,9 @@
                                     {
                                       "type": "text",
                                       "id": "t210",
-                                      "name": "单元格文字",
-                                      "content": "可达九成",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Up to 90%",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -3876,7 +3876,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f211",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3890,9 +3890,9 @@
                                     {
                                       "type": "text",
                                       "id": "t212",
-                                      "name": "单元格文字",
-                                      "content": "全量覆盖",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Full coverage",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -3913,7 +3913,7 @@
                             {
                               "type": "frame",
                               "id": "f222",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -3924,7 +3924,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f214",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 384,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3938,9 +3938,9 @@
                                     {
                                       "type": "text",
                                       "id": "t215",
-                                      "name": "单元格文字",
-                                      "content": "单店月成本",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Cost / store / mo",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -3959,7 +3959,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f216",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -3973,9 +3973,9 @@
                                     {
                                       "type": "text",
                                       "id": "t217",
-                                      "name": "单元格文字",
-                                      "content": "高",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "High",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -3994,7 +3994,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f218",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4008,9 +4008,9 @@
                                     {
                                       "type": "text",
                                       "id": "t219",
-                                      "name": "单元格文字",
-                                      "content": "中",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Medium",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4029,7 +4029,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f220",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4043,9 +4043,9 @@
                                     {
                                       "type": "text",
                                       "id": "t221",
-                                      "name": "单元格文字",
-                                      "content": "低",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Low",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4066,7 +4066,7 @@
                             {
                               "type": "frame",
                               "id": "f231",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -4082,7 +4082,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f223",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 384,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4096,9 +4096,9 @@
                                     {
                                       "type": "text",
                                       "id": "t224",
-                                      "name": "单元格文字",
-                                      "content": "落地周期",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Time to launch",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4117,7 +4117,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f225",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4131,9 +4131,9 @@
                                     {
                                       "type": "text",
                                       "id": "t226",
-                                      "name": "单元格文字",
-                                      "content": "三个月",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "3 months",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4152,7 +4152,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f227",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4166,9 +4166,9 @@
                                     {
                                       "type": "text",
                                       "id": "t228",
-                                      "name": "单元格文字",
-                                      "content": "六周",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "6 weeks",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4187,7 +4187,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f229",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4201,9 +4201,9 @@
                                     {
                                       "type": "text",
                                       "id": "t230",
-                                      "name": "单元格文字",
-                                      "content": "十周",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "10 weeks",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4224,7 +4224,7 @@
                             {
                               "type": "frame",
                               "id": "f240",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -4235,7 +4235,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f232",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 384,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4249,9 +4249,9 @@
                                     {
                                       "type": "text",
                                       "id": "t233",
-                                      "name": "单元格文字",
-                                      "content": "数据一致性",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Data consistency",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4270,7 +4270,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f234",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4284,9 +4284,9 @@
                                     {
                                       "type": "text",
                                       "id": "t235",
-                                      "name": "单元格文字",
-                                      "content": "依赖个人经验",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Relies on individuals",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4305,7 +4305,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f236",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4319,9 +4319,9 @@
                                     {
                                       "type": "text",
                                       "id": "t237",
-                                      "name": "单元格文字",
-                                      "content": "依赖合同条款",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Relies on the contract",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4340,7 +4340,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f238",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4354,9 +4354,9 @@
                                     {
                                       "type": "text",
                                       "id": "t239",
-                                      "name": "单元格文字",
-                                      "content": "由系统约束",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Enforced by the system",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4377,7 +4377,7 @@
                             {
                               "type": "frame",
                               "id": "f249",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -4393,7 +4393,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f241",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 384,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4407,9 +4407,9 @@
                                     {
                                       "type": "text",
                                       "id": "t242",
-                                      "name": "单元格文字",
-                                      "content": "主要风险",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Main risk",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4428,7 +4428,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f243",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4442,9 +4442,9 @@
                                     {
                                       "type": "text",
                                       "id": "t244",
-                                      "name": "单元格文字",
-                                      "content": "招聘周期偏长",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Slow hiring",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4463,7 +4463,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f245",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4477,9 +4477,9 @@
                                     {
                                       "type": "text",
                                       "id": "t246",
-                                      "name": "单元格文字",
-                                      "content": "数据不在自己手里",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "We don't own the data",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4498,7 +4498,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f247",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4512,9 +4512,9 @@
                                     {
                                       "type": "text",
                                       "id": "t248",
-                                      "name": "单元格文字",
-                                      "content": "需要门店配合",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Needs store buy-in",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4535,7 +4535,7 @@
                             {
                               "type": "rectangle",
                               "id": "r250",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1584,
                               "height": 2,
                               "fill": [
@@ -4548,7 +4548,7 @@
                             {
                               "type": "frame",
                               "id": "f259",
-                              "name": "表行",
+                              "name": "table-row",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -4559,7 +4559,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f251",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 384,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4573,9 +4573,9 @@
                                     {
                                       "type": "text",
                                       "id": "t252",
-                                      "name": "单元格文字",
-                                      "content": "结论",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Verdict",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 600,
                                       "fill": [
@@ -4594,7 +4594,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f253",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4608,9 +4608,9 @@
                                     {
                                       "type": "text",
                                       "id": "t254",
-                                      "name": "单元格文字",
-                                      "content": "不建议",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Not advised",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 600,
                                       "fill": [
@@ -4629,7 +4629,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f255",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4643,9 +4643,9 @@
                                     {
                                       "type": "text",
                                       "id": "t256",
-                                      "name": "单元格文字",
-                                      "content": "备选",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Fallback",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 600,
                                       "fill": [
@@ -4664,7 +4664,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f257",
-                                  "name": "单元格",
+                                  "name": "cell",
                                   "width": 396,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -4678,9 +4678,9 @@
                                     {
                                       "type": "text",
                                       "id": "t258",
-                                      "name": "单元格文字",
-                                      "content": "推荐",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "cell-text",
+                                      "content": "Recommended",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 600,
                                       "fill": [
@@ -4701,7 +4701,7 @@
                             {
                               "type": "rectangle",
                               "id": "r260",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1584,
                               "height": 1,
                               "fill": [
@@ -4716,9 +4716,9 @@
                         {
                           "type": "text",
                           "id": "t262",
-                          "name": "推荐说明",
-                          "content": "推荐方案丙。它是三者里唯一让「记录」成为流程副产品的一个，其余两个都还要靠人记得去做。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "recommendation-note",
+                          "content": "We recommend option C. It is the only one that makes the record a by-product of the process; the other two still depend on someone remembering.",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -4737,7 +4737,7 @@
                     {
                       "type": "frame",
                       "id": "f267",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -4748,7 +4748,7 @@
                         {
                           "type": "text",
                           "id": "t265",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§4.1",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -4768,7 +4768,7 @@
                         {
                           "type": "frame",
                           "id": "f266",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4778,9 +4778,9 @@
                             {
                               "type": "text",
                               "id": "t264",
-                              "name": "正文",
-                              "content": "成本按 240 家门店试算：甲需增编 11 人，年支出约 190 万；\n乙的报价随门店数线性上涨，丙在第二年起低于两者的一半。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "body",
+                              "content": "Costed at 240 stores: A needs 11 new hires, about $270K a year;\nB's quote scales with store count; from year two, C costs under half of either.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -4807,7 +4807,7 @@
         {
           "type": "frame",
           "id": "f280",
-          "name": "05 方案对比 · 装订",
+          "name": "05-options-binding",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -4816,7 +4816,7 @@
             {
               "type": "rectangle",
               "id": "r281",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -4840,7 +4840,7 @@
             {
               "type": "rectangle",
               "id": "r282",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -4864,7 +4864,7 @@
             {
               "type": "rectangle",
               "id": "r283",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -4888,7 +4888,7 @@
             {
               "type": "rectangle",
               "id": "r284",
-              "name": "装订线",
+              "name": "binding-line",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4909,7 +4909,7 @@
     {
       "type": "frame",
       "id": "f313",
-      "name": "06 逆向叙述",
+      "name": "06-working-backwards",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -4924,7 +4924,7 @@
         {
           "type": "frame",
           "id": "f301",
-          "name": "06 逆向叙述 · 正文",
+          "name": "06-working-backwards-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -4941,7 +4941,7 @@
             {
               "type": "frame",
               "id": "f307",
-              "name": "正文块",
+              "name": "body-block",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -4957,7 +4957,7 @@
                 {
                   "type": "frame",
                   "id": "f306",
-                  "name": "页眉",
+                  "name": "page-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4969,7 +4969,7 @@
                     {
                       "type": "text",
                       "id": "t302",
-                      "name": "文档代号",
+                      "name": "doc-code",
                       "content": "OPS-2026-041",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -4988,7 +4988,7 @@
                     {
                       "type": "frame",
                       "id": "f305",
-                      "name": "骑缝页标",
+                      "name": "edge-page-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -4999,7 +4999,7 @@
                         {
                           "type": "text",
                           "id": "t303",
-                          "name": "页标",
+                          "name": "page-tag",
                           "content": "p. 6 / 8",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5018,7 +5018,7 @@
                         {
                           "type": "rectangle",
                           "id": "r304",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 48,
                           "height": 1,
                           "fill": [
@@ -5037,7 +5037,7 @@
             {
               "type": "frame",
               "id": "f300",
-              "name": "节",
+              "name": "section",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -5047,7 +5047,7 @@
                 {
                   "type": "frame",
                   "id": "f298",
-                  "name": "节标题行",
+                  "name": "section-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -5058,7 +5058,7 @@
                     {
                       "type": "text",
                       "id": "t296",
-                      "name": "节号",
+                      "name": "section-number",
                       "content": "§5",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -5078,9 +5078,9 @@
                     {
                       "type": "text",
                       "id": "t297",
-                      "name": "节标题",
-                      "content": "若此事已成",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-title",
+                      "content": "Imagine it's done",
+                      "fontFamily": "Inter",
                       "fontSize": 44,
                       "fontWeight": 600,
                       "fill": [
@@ -5099,7 +5099,7 @@
                 {
                   "type": "frame",
                   "id": "f299",
-                  "name": "节内容",
+                  "name": "section-content",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -5109,7 +5109,7 @@
                     {
                       "type": "frame",
                       "id": "f293",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5120,7 +5120,7 @@
                         {
                           "type": "text",
                           "id": "t291",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§5.1",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5140,7 +5140,7 @@
                         {
                           "type": "frame",
                           "id": "f292",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -5150,9 +5150,9 @@
                             {
                               "type": "text",
                               "id": "t290",
-                              "name": "正文",
-                              "content": "到明年三月，每家门店在每个自然周都会留下完整的巡检记录。\n记录不再依赖谁记得拍照，而是由流程本身产生：\n检查项没有勾完，当天的巡检就不算结束。\n区域经理在周一早晨看到的不是一份汇总表，\n而是上周所有未闭环问题按门店排开的清单。\n我们不再讨论覆盖率，因为覆盖率恒等于百分之百；\n要讨论的是闭环时长，以及它为什么在某些门店偏长。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "body",
+                              "content": "By next March, every store logs a full inspection every week.\nNo one has to remember the photos; the process makes the record:\nif the checklist isn't finished, that day's inspection isn't done.\nOn Monday morning, regional managers won't see a summary sheet\nbut every open issue from last week, listed store by store.\nWe'll stop talking about coverage, since it's always 100%;\nwe'll talk about time to close, and why some stores run long.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -5173,7 +5173,7 @@
                     {
                       "type": "frame",
                       "id": "f295",
-                      "name": "正文块",
+                      "name": "body-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -5189,7 +5189,7 @@
                         {
                           "type": "frame",
                           "id": "f294",
-                          "name": "署名行",
+                          "name": "credit-row",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -5200,7 +5200,7 @@
                             {
                               "type": "rectangle",
                               "id": "r289",
-                              "name": "引语竖线",
+                              "name": "pull-quote-rule",
                               "width": 2,
                               "height": 132,
                               "fill": [
@@ -5213,7 +5213,7 @@
                             {
                               "type": "frame",
                               "id": "f288",
-                              "name": "署名引语",
+                              "name": "credited-quote",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -5229,9 +5229,9 @@
                                 {
                                   "type": "text",
                                   "id": "t286",
-                                  "name": "引语",
-                                  "content": "把巡检做成一件不需要提醒的事，\n是这次改造真正的目标。",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "pull-quote",
+                                  "content": "Making inspection something no one needs reminding of\nis the real goal of this change.",
+                                  "fontFamily": "Inter",
                                   "fontSize": 30,
                                   "fontWeight": 500,
                                   "fill": [
@@ -5248,9 +5248,9 @@
                                 {
                                   "type": "text",
                                   "id": "t287",
-                                  "name": "引语署名",
-                                  "content": "—— 项目组，2026 年 8 月",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "pull-quote-credit",
+                                  "content": "— Project team, August 2026",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -5279,7 +5279,7 @@
         {
           "type": "frame",
           "id": "f308",
-          "name": "06 逆向叙述 · 装订",
+          "name": "06-working-backwards-binding",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -5288,7 +5288,7 @@
             {
               "type": "rectangle",
               "id": "r309",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -5312,7 +5312,7 @@
             {
               "type": "rectangle",
               "id": "r310",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -5336,7 +5336,7 @@
             {
               "type": "rectangle",
               "id": "r311",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -5360,7 +5360,7 @@
             {
               "type": "rectangle",
               "id": "r312",
-              "name": "装订线",
+              "name": "binding-line",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5381,7 +5381,7 @@
     {
       "type": "frame",
       "id": "f357",
-      "name": "07 疑问",
+      "name": "07-questions",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -5396,7 +5396,7 @@
         {
           "type": "frame",
           "id": "f345",
-          "name": "07 疑问 · 正文",
+          "name": "07-questions-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -5413,7 +5413,7 @@
             {
               "type": "frame",
               "id": "f351",
-              "name": "正文块",
+              "name": "body-block",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -5429,7 +5429,7 @@
                 {
                   "type": "frame",
                   "id": "f350",
-                  "name": "页眉",
+                  "name": "page-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -5441,7 +5441,7 @@
                     {
                       "type": "text",
                       "id": "t346",
-                      "name": "文档代号",
+                      "name": "doc-code",
                       "content": "OPS-2026-041",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -5460,7 +5460,7 @@
                     {
                       "type": "frame",
                       "id": "f349",
-                      "name": "骑缝页标",
+                      "name": "edge-page-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -5471,7 +5471,7 @@
                         {
                           "type": "text",
                           "id": "t347",
-                          "name": "页标",
+                          "name": "page-tag",
                           "content": "p. 7 / 8",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5490,7 +5490,7 @@
                         {
                           "type": "rectangle",
                           "id": "r348",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 48,
                           "height": 1,
                           "fill": [
@@ -5509,7 +5509,7 @@
             {
               "type": "frame",
               "id": "f344",
-              "name": "节",
+              "name": "section",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -5519,7 +5519,7 @@
                 {
                   "type": "frame",
                   "id": "f342",
-                  "name": "节标题行",
+                  "name": "section-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -5530,7 +5530,7 @@
                     {
                       "type": "text",
                       "id": "t340",
-                      "name": "节号",
+                      "name": "section-number",
                       "content": "§6",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -5550,9 +5550,9 @@
                     {
                       "type": "text",
                       "id": "t341",
-                      "name": "节标题",
-                      "content": "已经被问到的四个问题",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-title",
+                      "content": "Four questions we've already heard",
+                      "fontFamily": "Inter",
                       "fontSize": 44,
                       "fontWeight": 600,
                       "fill": [
@@ -5571,7 +5571,7 @@
                 {
                   "type": "frame",
                   "id": "f343",
-                  "name": "节内容",
+                  "name": "section-content",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -5581,7 +5581,7 @@
                     {
                       "type": "frame",
                       "id": "f318",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5592,7 +5592,7 @@
                         {
                           "type": "text",
                           "id": "t316",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§6.1",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5612,7 +5612,7 @@
                         {
                           "type": "frame",
                           "id": "f317",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -5622,9 +5622,9 @@
                             {
                               "type": "text",
                               "id": "t314",
-                              "name": "问",
-                              "content": "问：全量记录会不会把巡检变成打卡？",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "question",
+                              "content": "Q: Won't full records turn inspection into box-ticking?",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -5641,9 +5641,9 @@
                             {
                               "type": "text",
                               "id": "t315",
-                              "name": "答",
-                              "content": "不会。检查项从 42 项压到 18 项，每项都要有照片或读数支撑，\n勾选式的应付会在抽核环节被直接退回。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "answer",
+                              "content": "No. The checklist drops from 42 items to 18, each needing a photo\nor reading; box-ticking gets sent straight back at audit.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -5664,7 +5664,7 @@
                     {
                       "type": "frame",
                       "id": "f320",
-                      "name": "正文块",
+                      "name": "body-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -5680,7 +5680,7 @@
                         {
                           "type": "rectangle",
                           "id": "r319",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 1584,
                           "height": 1,
                           "fill": [
@@ -5695,7 +5695,7 @@
                     {
                       "type": "frame",
                       "id": "f325",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5706,7 +5706,7 @@
                         {
                           "type": "text",
                           "id": "t323",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§6.2",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5726,7 +5726,7 @@
                         {
                           "type": "frame",
                           "id": "f324",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -5736,9 +5736,9 @@
                             {
                               "type": "text",
                               "id": "t321",
-                              "name": "问",
-                              "content": "问：门店自检的结果可信吗？",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "question",
+                              "content": "Q: Can we trust stores' self-checks?",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -5755,9 +5755,9 @@
                             {
                               "type": "text",
                               "id": "t322",
-                              "name": "答",
-                              "content": "抽核比例定在 15%，由区域经理随机指定，结果与自检并列存档。\n连续两次抽核不一致的门店，恢复为人工巡检。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "answer",
+                              "content": "15% are audited, picked at random by regional managers and filed alongside.\nTwo mismatched audits in a row put a store back on manual checks.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -5778,7 +5778,7 @@
                     {
                       "type": "frame",
                       "id": "f327",
-                      "name": "正文块",
+                      "name": "body-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -5794,7 +5794,7 @@
                         {
                           "type": "rectangle",
                           "id": "r326",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 1584,
                           "height": 1,
                           "fill": [
@@ -5809,7 +5809,7 @@
                     {
                       "type": "frame",
                       "id": "f332",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5820,7 +5820,7 @@
                         {
                           "type": "text",
                           "id": "t330",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§6.3",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5840,7 +5840,7 @@
                         {
                           "type": "frame",
                           "id": "f331",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -5850,9 +5850,9 @@
                             {
                               "type": "text",
                               "id": "t328",
-                              "name": "问",
-                              "content": "问：需要门店多花多少时间？",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "question",
+                              "content": "Q: How much extra time does it cost stores?",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -5869,9 +5869,9 @@
                             {
                               "type": "text",
                               "id": "t329",
-                              "name": "答",
-                              "content": "单次自检 12 分钟，比现行的纸质表单少 4 分钟。\n时间省在录入上，不省在检查上。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "answer",
+                              "content": "A self-check takes 12 minutes, 4 fewer than today's paper form.\nThe time comes off data entry, not off the inspection.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -5892,7 +5892,7 @@
                     {
                       "type": "frame",
                       "id": "f334",
-                      "name": "正文块",
+                      "name": "body-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -5908,7 +5908,7 @@
                         {
                           "type": "rectangle",
                           "id": "r333",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 1584,
                           "height": 1,
                           "fill": [
@@ -5923,7 +5923,7 @@
                     {
                       "type": "frame",
                       "id": "f339",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5934,7 +5934,7 @@
                         {
                           "type": "text",
                           "id": "t337",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§6.4",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5954,7 +5954,7 @@
                         {
                           "type": "frame",
                           "id": "f338",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -5964,9 +5964,9 @@
                             {
                               "type": "text",
                               "id": "t335",
-                              "name": "问",
-                              "content": "问：这套记录会被用来考核门店吗？",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "question",
+                              "content": "Q: Will these records be used to grade stores?",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 600,
                               "fill": [
@@ -5983,9 +5983,9 @@
                             {
                               "type": "text",
                               "id": "t336",
-                              "name": "答",
-                              "content": "前两个季度只用于发现问题，不进考核。\n考核口径需要另行讨论，不在本备忘的范围内。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "answer",
+                              "content": "For the first two quarters they only surface issues, not scores.\nHow to grade stores is a separate discussion, outside this memo.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -6012,7 +6012,7 @@
         {
           "type": "frame",
           "id": "f352",
-          "name": "07 疑问 · 装订",
+          "name": "07-questions-binding",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -6021,7 +6021,7 @@
             {
               "type": "rectangle",
               "id": "r353",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -6045,7 +6045,7 @@
             {
               "type": "rectangle",
               "id": "r354",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -6069,7 +6069,7 @@
             {
               "type": "rectangle",
               "id": "r355",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -6093,7 +6093,7 @@
             {
               "type": "rectangle",
               "id": "r356",
-              "name": "装订线",
+              "name": "binding-line",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -6114,7 +6114,7 @@
     {
       "type": "frame",
       "id": "f412",
-      "name": "08 决议",
+      "name": "08-decisions",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -6129,7 +6129,7 @@
         {
           "type": "frame",
           "id": "f400",
-          "name": "08 决议 · 正文",
+          "name": "08-decisions-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -6146,7 +6146,7 @@
             {
               "type": "frame",
               "id": "f406",
-              "name": "正文块",
+              "name": "body-block",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -6162,7 +6162,7 @@
                 {
                   "type": "frame",
                   "id": "f405",
-                  "name": "页眉",
+                  "name": "page-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -6174,7 +6174,7 @@
                     {
                       "type": "text",
                       "id": "t401",
-                      "name": "文档代号",
+                      "name": "doc-code",
                       "content": "OPS-2026-041",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -6193,7 +6193,7 @@
                     {
                       "type": "frame",
                       "id": "f404",
-                      "name": "骑缝页标",
+                      "name": "edge-page-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -6204,7 +6204,7 @@
                         {
                           "type": "text",
                           "id": "t402",
-                          "name": "页标",
+                          "name": "page-tag",
                           "content": "p. 8 / 8",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -6223,7 +6223,7 @@
                         {
                           "type": "rectangle",
                           "id": "r403",
-                          "name": "细线",
+                          "name": "hairline",
                           "width": 48,
                           "height": 1,
                           "fill": [
@@ -6242,7 +6242,7 @@
             {
               "type": "frame",
               "id": "f399",
-              "name": "节",
+              "name": "section",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -6252,7 +6252,7 @@
                 {
                   "type": "frame",
                   "id": "f397",
-                  "name": "节标题行",
+                  "name": "section-title-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -6263,7 +6263,7 @@
                     {
                       "type": "text",
                       "id": "t395",
-                      "name": "节号",
+                      "name": "section-number",
                       "content": "§7",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -6283,9 +6283,9 @@
                     {
                       "type": "text",
                       "id": "t396",
-                      "name": "节标题",
-                      "content": "待批准事项",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-title",
+                      "content": "For approval",
+                      "fontFamily": "Inter",
                       "fontSize": 44,
                       "fontWeight": 600,
                       "fill": [
@@ -6304,7 +6304,7 @@
                 {
                   "type": "frame",
                   "id": "f398",
-                  "name": "节内容",
+                  "name": "section-content",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -6314,7 +6314,7 @@
                     {
                       "type": "frame",
                       "id": "f390",
-                      "name": "正文块",
+                      "name": "body-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -6330,7 +6330,7 @@
                         {
                           "type": "frame",
                           "id": "f384",
-                          "name": "决策块",
+                          "name": "decision-block",
                           "width": 1200,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -6349,7 +6349,7 @@
                             {
                               "type": "frame",
                               "id": "f365",
-                              "name": "待批准事项",
+                              "name": "approval-items",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -6359,7 +6359,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f360",
-                                  "name": "事项行",
+                                  "name": "item-row",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -6370,7 +6370,7 @@
                                     {
                                       "type": "text",
                                       "id": "t358",
-                                      "name": "事项序号",
+                                      "name": "item-number",
                                       "content": "1",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -6389,9 +6389,9 @@
                                     {
                                       "type": "text",
                                       "id": "t359",
-                                      "name": "事项",
-                                      "content": "批准方案丙，在华东与华南两区先行试点。",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "item",
+                                      "content": "Approve option C, piloting in the East and South regions first.",
+                                      "fontFamily": "Inter",
                                       "fontSize": 30,
                                       "fontWeight": 400,
                                       "fill": [
@@ -6410,7 +6410,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f364",
-                                  "name": "责任行",
+                                  "name": "owner-row",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -6427,9 +6427,9 @@
                                     {
                                       "type": "text",
                                       "id": "t361",
-                                      "name": "决策人",
-                                      "content": "决策人 运营中心 · 周敏",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "decision-owner",
+                                      "content": "Owner: Operations · Megan Cole",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 400,
                                       "fill": [
@@ -6446,9 +6446,9 @@
                                     {
                                       "type": "text",
                                       "id": "t362",
-                                      "name": "期限标签",
-                                      "content": "期限",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "due-label",
+                                      "content": "Due",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 400,
                                       "fill": [
@@ -6465,7 +6465,7 @@
                                     {
                                       "type": "text",
                                       "id": "t363",
-                                      "name": "期限日期",
+                                      "name": "due-date",
                                       "content": "2026-08-20",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -6488,7 +6488,7 @@
                             {
                               "type": "rectangle",
                               "id": "r366",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1120,
                               "height": 1,
                               "fill": [
@@ -6501,7 +6501,7 @@
                             {
                               "type": "frame",
                               "id": "f374",
-                              "name": "待批准事项",
+                              "name": "approval-items",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -6511,7 +6511,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f369",
-                                  "name": "事项行",
+                                  "name": "item-row",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -6522,7 +6522,7 @@
                                     {
                                       "type": "text",
                                       "id": "t367",
-                                      "name": "事项序号",
+                                      "name": "item-number",
                                       "content": "2",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -6541,9 +6541,9 @@
                                     {
                                       "type": "text",
                                       "id": "t368",
-                                      "name": "事项",
-                                      "content": "批准巡检系统改造预算 86 万元，分两期拨付。",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "item",
+                                      "content": "Approve an inspection system budget of $120K, paid in two tranches.",
+                                      "fontFamily": "Inter",
                                       "fontSize": 30,
                                       "fontWeight": 400,
                                       "fill": [
@@ -6562,7 +6562,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f373",
-                                  "name": "责任行",
+                                  "name": "owner-row",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -6579,9 +6579,9 @@
                                     {
                                       "type": "text",
                                       "id": "t370",
-                                      "name": "决策人",
-                                      "content": "决策人 财务部 · 陈立",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "decision-owner",
+                                      "content": "Owner: Finance · Daniel Reed",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 400,
                                       "fill": [
@@ -6598,9 +6598,9 @@
                                     {
                                       "type": "text",
                                       "id": "t371",
-                                      "name": "期限标签",
-                                      "content": "期限",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "due-label",
+                                      "content": "Due",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 400,
                                       "fill": [
@@ -6617,7 +6617,7 @@
                                     {
                                       "type": "text",
                                       "id": "t372",
-                                      "name": "期限日期",
+                                      "name": "due-date",
                                       "content": "2026-08-27",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -6640,7 +6640,7 @@
                             {
                               "type": "rectangle",
                               "id": "r375",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 1120,
                               "height": 1,
                               "fill": [
@@ -6653,7 +6653,7 @@
                             {
                               "type": "frame",
                               "id": "f383",
-                              "name": "待批准事项",
+                              "name": "approval-items",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -6663,7 +6663,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f378",
-                                  "name": "事项行",
+                                  "name": "item-row",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -6674,7 +6674,7 @@
                                     {
                                       "type": "text",
                                       "id": "t376",
-                                      "name": "事项序号",
+                                      "name": "item-number",
                                       "content": "3",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -6693,9 +6693,9 @@
                                     {
                                       "type": "text",
                                       "id": "t377",
-                                      "name": "事项",
-                                      "content": "批准抽核比例与退回规则写入门店运营手册。",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "item",
+                                      "content": "Approve adding the audit ratio and return rules to the store ops manual.",
+                                      "fontFamily": "Inter",
                                       "fontSize": 30,
                                       "fontWeight": 400,
                                       "fill": [
@@ -6714,7 +6714,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f382",
-                                  "name": "责任行",
+                                  "name": "owner-row",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -6731,9 +6731,9 @@
                                     {
                                       "type": "text",
                                       "id": "t379",
-                                      "name": "决策人",
-                                      "content": "决策人 门店运营组 · 李哲",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "decision-owner",
+                                      "content": "Owner: Store Ops · Leo Park",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 400,
                                       "fill": [
@@ -6750,9 +6750,9 @@
                                     {
                                       "type": "text",
                                       "id": "t380",
-                                      "name": "期限标签",
-                                      "content": "期限",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "due-label",
+                                      "content": "Due",
+                                      "fontFamily": "Inter",
                                       "fontSize": 26,
                                       "fontWeight": 400,
                                       "fill": [
@@ -6769,7 +6769,7 @@
                                     {
                                       "type": "text",
                                       "id": "t381",
-                                      "name": "期限日期",
+                                      "name": "due-date",
                                       "content": "2026-09-10",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -6794,7 +6794,7 @@
                         {
                           "type": "frame",
                           "id": "f389",
-                          "name": "签署位",
+                          "name": "signature-slot",
                           "width": 480,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -6804,7 +6804,7 @@
                             {
                               "type": "rectangle",
                               "id": "r385",
-                              "name": "细线",
+                              "name": "hairline",
                               "width": 480,
                               "height": 1,
                               "fill": [
@@ -6817,7 +6817,7 @@
                             {
                               "type": "frame",
                               "id": "f388",
-                              "name": "签署标签",
+                              "name": "sign-label",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -6828,9 +6828,9 @@
                                 {
                                   "type": "text",
                                   "id": "t386",
-                                  "name": "签署",
-                                  "content": "批准签署",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "sign-off",
+                                  "content": "Approved by",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -6847,9 +6847,9 @@
                                 {
                                   "type": "text",
                                   "id": "t387",
-                                  "name": "签署日期",
-                                  "content": "日期",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "sign-date",
+                                  "content": "Date",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 400,
                                   "fill": [
@@ -6872,7 +6872,7 @@
                     {
                       "type": "frame",
                       "id": "f394",
-                      "name": "编号段",
+                      "name": "numbered-para",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -6883,7 +6883,7 @@
                         {
                           "type": "text",
                           "id": "t392",
-                          "name": "段号",
+                          "name": "para-number",
                           "content": "§7.1",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -6903,7 +6903,7 @@
                         {
                           "type": "frame",
                           "id": "f393",
-                          "name": "段落",
+                          "name": "paragraph",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -6913,9 +6913,9 @@
                             {
                               "type": "text",
                               "id": "t391",
-                              "name": "正文",
-                              "content": "三项批复完成后，本备忘归档为定稿并抄送三个部门；\n未获批复的部分按原流程继续执行，下一次复核安排在 11 月。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "body",
+                              "content": "Once all three are signed, this memo is filed as final and sent to all three teams;\nanything not approved runs as today until the November review.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -6942,7 +6942,7 @@
         {
           "type": "frame",
           "id": "f407",
-          "name": "08 决议 · 装订",
+          "name": "08-decisions-binding",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -6951,7 +6951,7 @@
             {
               "type": "rectangle",
               "id": "r408",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -6975,7 +6975,7 @@
             {
               "type": "rectangle",
               "id": "r409",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -6999,7 +6999,7 @@
             {
               "type": "rectangle",
               "id": "r410",
-              "name": "装订孔",
+              "name": "binding-hole",
               "width": 12,
               "height": 12,
               "fill": [
@@ -7023,7 +7023,7 @@
             {
               "type": "rectangle",
               "id": "r411",
-              "name": "装订线",
+              "name": "binding-line",
               "width": 2,
               "height": 1080,
               "fill": [

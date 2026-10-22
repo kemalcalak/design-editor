@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "三方案横评长图",
+  "name": "three-way-comparison-long-graphic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "三方案横评长图",
+      "name": "three-way-comparison-long-graphic",
       "width": 1080,
       "height": 1886,
       "layout": "vertical",
@@ -67,7 +67,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -89,7 +89,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -110,9 +110,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "标签文字",
-                  "content": "三方案横评 · 建站",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "3-way comparison · Websites",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -131,9 +131,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "同一个网站\n三条路",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "One website,\nthree routes",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -150,9 +150,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "先看第一行那句处境——哪一句是你，就从哪一列读起。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Read each column's first line. Pick the one that's you.",
+              "fontFamily": "Inter",
               "fontSize": 27,
               "fontWeight": 400,
               "fill": [
@@ -171,7 +171,7 @@
         {
           "type": "frame",
           "id": "f91",
-          "name": "02 三列",
+          "name": "02-three-columns",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -188,7 +188,7 @@
             {
               "type": "frame",
               "id": "f85",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -199,7 +199,7 @@
                 {
                   "type": "rectangle",
                   "id": "r82",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -212,9 +212,9 @@
                 {
                   "type": "text",
                   "id": "t83",
-                  "name": "区块标题",
-                  "content": "三列并排",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Side by side",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -231,9 +231,9 @@
                 {
                   "type": "text",
                   "id": "t84",
-                  "name": "区块说明",
-                  "content": "中间那列不是最好的，是最多人最后落到的那一条。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "The middle column isn't the best. It's where most people end up.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -252,7 +252,7 @@
             {
               "type": "frame",
               "id": "f86",
-              "name": "方案行",
+              "name": "option-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -263,7 +263,7 @@
                 {
                   "type": "frame",
                   "id": "f31",
-                  "name": "方案列",
+                  "name": "option-column",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -279,7 +279,7 @@
                     {
                       "type": "rectangle",
                       "id": "r7",
-                      "name": "顶条",
+                      "name": "top-bar",
                       "width": "fill_container",
                       "height": 8,
                       "fill": [
@@ -292,7 +292,7 @@
                     {
                       "type": "frame",
                       "id": "f30",
-                      "name": "列体",
+                      "name": "column-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -309,7 +309,7 @@
                         {
                           "type": "frame",
                           "id": "f11",
-                          "name": "列头",
+                          "name": "column-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -320,9 +320,9 @@
                             {
                               "type": "text",
                               "id": "t8",
-                              "name": "处境",
-                              "content": "今晚就要上线",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "situation",
+                              "content": "Launching tonight",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -339,9 +339,9 @@
                             {
                               "type": "text",
                               "id": "t9",
-                              "name": "方案名",
-                              "content": "套模板",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "option-name",
+                              "content": "Template",
+                              "fontFamily": "Inter",
                               "fontSize": 38,
                               "fontWeight": 700,
                               "fill": [
@@ -358,8 +358,8 @@
                             {
                               "type": "text",
                               "id": "t10",
-                              "name": "上手时间",
-                              "content": "上手 半小时",
+                              "name": "ramp-up-time",
+                              "content": "Ramp-up: 30 min",
                               "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 400,
@@ -379,7 +379,7 @@
                         {
                           "type": "frame",
                           "id": "f24",
-                          "name": "要点组",
+                          "name": "point-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -390,7 +390,7 @@
                             {
                               "type": "frame",
                               "id": "f15",
-                              "name": "要点",
+                              "name": "point",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -401,7 +401,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f13",
-                                  "name": "点位",
+                                  "name": "dot",
                                   "width": 10,
                                   "height": 41,
                                   "layout": "vertical",
@@ -411,7 +411,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r12",
-                                      "name": "要点点",
+                                      "name": "point-dot",
                                       "width": 10,
                                       "height": 10,
                                       "cornerRadius": 2,
@@ -427,9 +427,9 @@
                                 {
                                   "type": "text",
                                   "id": "t14",
-                                  "name": "要点文字",
-                                  "content": "改文案就能发",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "point-text",
+                                  "content": "Swap text, publish",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -448,7 +448,7 @@
                             {
                               "type": "frame",
                               "id": "f19",
-                              "name": "要点",
+                              "name": "point",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -459,7 +459,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f17",
-                                  "name": "点位",
+                                  "name": "dot",
                                   "width": 10,
                                   "height": 41,
                                   "layout": "vertical",
@@ -469,7 +469,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r16",
-                                      "name": "要点点",
+                                      "name": "point-dot",
                                       "width": 10,
                                       "height": 10,
                                       "cornerRadius": 2,
@@ -485,9 +485,9 @@
                                 {
                                   "type": "text",
                                   "id": "t18",
-                                  "name": "要点文字",
-                                  "content": "版式已经定好",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "point-text",
+                                  "content": "Layout is fixed",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -506,7 +506,7 @@
                             {
                               "type": "frame",
                               "id": "f23",
-                              "name": "要点",
+                              "name": "point",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -517,7 +517,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f21",
-                                  "name": "点位",
+                                  "name": "dot",
                                   "width": 10,
                                   "height": 41,
                                   "layout": "vertical",
@@ -527,7 +527,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r20",
-                                      "name": "要点点",
+                                      "name": "point-dot",
                                       "width": 10,
                                       "height": 10,
                                       "cornerRadius": 2,
@@ -543,9 +543,9 @@
                                 {
                                   "type": "text",
                                   "id": "t22",
-                                  "name": "要点文字",
-                                  "content": "换风格要重来",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "point-text",
+                                  "content": "New look, start over",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -566,7 +566,7 @@
                         {
                           "type": "frame",
                           "id": "f29",
-                          "name": "自由度",
+                          "name": "freedom",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -577,7 +577,7 @@
                             {
                               "type": "frame",
                               "id": "f28",
-                              "name": "自由度头",
+                              "name": "freedom-header",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -588,9 +588,9 @@
                                 {
                                   "type": "text",
                                   "id": "t27",
-                                  "name": "自由度名",
-                                  "content": "改动自由度",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "freedom-label",
+                                  "content": "Freedom to change",
+                                  "fontFamily": "Inter",
                                   "fontSize": 22,
                                   "fontWeight": 500,
                                   "fill": [
@@ -609,7 +609,7 @@
                             {
                               "type": "frame",
                               "id": "f25",
-                              "name": "自由度轨",
+                              "name": "freedom-track",
                               "width": "fill_container",
                               "height": 10,
                               "layout": "horizontal",
@@ -626,7 +626,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r26",
-                                  "name": "自由度值",
+                                  "name": "freedom-value",
                                   "width": 73,
                                   "height": 10,
                                   "cornerRadius": 999,
@@ -659,7 +659,7 @@
                 {
                   "type": "frame",
                   "id": "f56",
-                  "name": "方案列",
+                  "name": "option-column",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -675,7 +675,7 @@
                     {
                       "type": "rectangle",
                       "id": "r32",
-                      "name": "顶条",
+                      "name": "top-bar",
                       "width": "fill_container",
                       "height": 8,
                       "fill": [
@@ -688,7 +688,7 @@
                     {
                       "type": "frame",
                       "id": "f55",
-                      "name": "列体",
+                      "name": "column-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -705,7 +705,7 @@
                         {
                           "type": "frame",
                           "id": "f36",
-                          "name": "列头",
+                          "name": "column-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -716,9 +716,9 @@
                             {
                               "type": "text",
                               "id": "t33",
-                              "name": "处境",
-                              "content": "大多数人在这",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "situation",
+                              "content": "Most people land here",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -735,9 +735,9 @@
                             {
                               "type": "text",
                               "id": "t34",
-                              "name": "方案名",
-                              "content": "低代码",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "option-name",
+                              "content": "Low-code",
+                              "fontFamily": "Inter",
                               "fontSize": 38,
                               "fontWeight": 700,
                               "fill": [
@@ -754,8 +754,8 @@
                             {
                               "type": "text",
                               "id": "t35",
-                              "name": "上手时间",
-                              "content": "上手 两天",
+                              "name": "ramp-up-time",
+                              "content": "Ramp-up: 2 days",
                               "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 400,
@@ -775,7 +775,7 @@
                         {
                           "type": "frame",
                           "id": "f49",
-                          "name": "要点组",
+                          "name": "point-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -786,7 +786,7 @@
                             {
                               "type": "frame",
                               "id": "f40",
-                              "name": "要点",
+                              "name": "point",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -797,7 +797,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f38",
-                                  "name": "点位",
+                                  "name": "dot",
                                   "width": 10,
                                   "height": 41,
                                   "layout": "vertical",
@@ -807,7 +807,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r37",
-                                      "name": "要点点",
+                                      "name": "point-dot",
                                       "width": 10,
                                       "height": 10,
                                       "cornerRadius": 2,
@@ -823,9 +823,9 @@
                                 {
                                   "type": "text",
                                   "id": "t39",
-                                  "name": "要点文字",
-                                  "content": "拖拽自己排版",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "point-text",
+                                  "content": "Drag-and-drop",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -844,7 +844,7 @@
                             {
                               "type": "frame",
                               "id": "f44",
-                              "name": "要点",
+                              "name": "point",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -855,7 +855,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f42",
-                                  "name": "点位",
+                                  "name": "dot",
                                   "width": 10,
                                   "height": 41,
                                   "layout": "vertical",
@@ -865,7 +865,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r41",
-                                      "name": "要点点",
+                                      "name": "point-dot",
                                       "width": 10,
                                       "height": 10,
                                       "cornerRadius": 2,
@@ -881,9 +881,9 @@
                                 {
                                   "type": "text",
                                   "id": "t43",
-                                  "name": "要点文字",
-                                  "content": "能接自己的数据",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "point-text",
+                                  "content": "Plug in your data",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -902,7 +902,7 @@
                             {
                               "type": "frame",
                               "id": "f48",
-                              "name": "要点",
+                              "name": "point",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -913,7 +913,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f46",
-                                  "name": "点位",
+                                  "name": "dot",
                                   "width": 10,
                                   "height": 41,
                                   "layout": "vertical",
@@ -923,7 +923,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r45",
-                                      "name": "要点点",
+                                      "name": "point-dot",
                                       "width": 10,
                                       "height": 10,
                                       "cornerRadius": 2,
@@ -939,9 +939,9 @@
                                 {
                                   "type": "text",
                                   "id": "t47",
-                                  "name": "要点文字",
-                                  "content": "复杂交互仍要码",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "point-text",
+                                  "content": "Complex UI = code",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -962,7 +962,7 @@
                         {
                           "type": "frame",
                           "id": "f54",
-                          "name": "自由度",
+                          "name": "freedom",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -973,7 +973,7 @@
                             {
                               "type": "frame",
                               "id": "f53",
-                              "name": "自由度头",
+                              "name": "freedom-header",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -984,9 +984,9 @@
                                 {
                                   "type": "text",
                                   "id": "t52",
-                                  "name": "自由度名",
-                                  "content": "改动自由度",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "freedom-label",
+                                  "content": "Freedom to change",
+                                  "fontFamily": "Inter",
                                   "fontSize": 22,
                                   "fontWeight": 500,
                                   "fill": [
@@ -1005,7 +1005,7 @@
                             {
                               "type": "frame",
                               "id": "f50",
-                              "name": "自由度轨",
+                              "name": "freedom-track",
                               "width": "fill_container",
                               "height": 10,
                               "layout": "horizontal",
@@ -1022,7 +1022,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r51",
-                                  "name": "自由度值",
+                                  "name": "freedom-value",
                                   "width": 162,
                                   "height": 10,
                                   "cornerRadius": 999,
@@ -1046,7 +1046,7 @@
                 {
                   "type": "frame",
                   "id": "f81",
-                  "name": "方案列",
+                  "name": "option-column",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1062,7 +1062,7 @@
                     {
                       "type": "rectangle",
                       "id": "r57",
-                      "name": "顶条",
+                      "name": "top-bar",
                       "width": "fill_container",
                       "height": 8,
                       "fill": [
@@ -1075,7 +1075,7 @@
                     {
                       "type": "frame",
                       "id": "f80",
-                      "name": "列体",
+                      "name": "column-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1092,7 +1092,7 @@
                         {
                           "type": "frame",
                           "id": "f61",
-                          "name": "列头",
+                          "name": "column-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1103,9 +1103,9 @@
                             {
                               "type": "text",
                               "id": "t58",
-                              "name": "处境",
-                              "content": "要养三年以上",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "situation",
+                              "content": "In it for 3+ years",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -1122,9 +1122,9 @@
                             {
                               "type": "text",
                               "id": "t59",
-                              "name": "方案名",
-                              "content": "自己写",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "option-name",
+                              "content": "Code it",
+                              "fontFamily": "Inter",
                               "fontSize": 38,
                               "fontWeight": 700,
                               "fill": [
@@ -1141,8 +1141,8 @@
                             {
                               "type": "text",
                               "id": "t60",
-                              "name": "上手时间",
-                              "content": "上手 两周起",
+                              "name": "ramp-up-time",
+                              "content": "Ramp-up: 2+ weeks",
                               "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 400,
@@ -1162,7 +1162,7 @@
                         {
                           "type": "frame",
                           "id": "f74",
-                          "name": "要点组",
+                          "name": "point-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1173,7 +1173,7 @@
                             {
                               "type": "frame",
                               "id": "f65",
-                              "name": "要点",
+                              "name": "point",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1184,7 +1184,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f63",
-                                  "name": "点位",
+                                  "name": "dot",
                                   "width": 10,
                                   "height": 41,
                                   "layout": "vertical",
@@ -1194,7 +1194,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r62",
-                                      "name": "要点点",
+                                      "name": "point-dot",
                                       "width": 10,
                                       "height": 10,
                                       "cornerRadius": 2,
@@ -1210,9 +1210,9 @@
                                 {
                                   "type": "text",
                                   "id": "t64",
-                                  "name": "要点文字",
-                                  "content": "想怎么改就怎么改",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "point-text",
+                                  "content": "Change anything",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1231,7 +1231,7 @@
                             {
                               "type": "frame",
                               "id": "f69",
-                              "name": "要点",
+                              "name": "point",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1242,7 +1242,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f67",
-                                  "name": "点位",
+                                  "name": "dot",
                                   "width": 10,
                                   "height": 41,
                                   "layout": "vertical",
@@ -1252,7 +1252,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r66",
-                                      "name": "要点点",
+                                      "name": "point-dot",
                                       "width": 10,
                                       "height": 10,
                                       "cornerRadius": 2,
@@ -1268,9 +1268,9 @@
                                 {
                                   "type": "text",
                                   "id": "t68",
-                                  "name": "要点文字",
-                                  "content": "性能自己说了算",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "point-text",
+                                  "content": "You own speed",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1289,7 +1289,7 @@
                             {
                               "type": "frame",
                               "id": "f73",
-                              "name": "要点",
+                              "name": "point",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1300,7 +1300,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f71",
-                                  "name": "点位",
+                                  "name": "dot",
                                   "width": 10,
                                   "height": 41,
                                   "layout": "vertical",
@@ -1310,7 +1310,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r70",
-                                      "name": "要点点",
+                                      "name": "point-dot",
                                       "width": 10,
                                       "height": 10,
                                       "cornerRadius": 2,
@@ -1326,9 +1326,9 @@
                                 {
                                   "type": "text",
                                   "id": "t72",
-                                  "name": "要点文字",
-                                  "content": "每加一页都要人",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "point-text",
+                                  "content": "Dev per page",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1349,7 +1349,7 @@
                         {
                           "type": "frame",
                           "id": "f79",
-                          "name": "自由度",
+                          "name": "freedom",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1360,7 +1360,7 @@
                             {
                               "type": "frame",
                               "id": "f78",
-                              "name": "自由度头",
+                              "name": "freedom-header",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1371,9 +1371,9 @@
                                 {
                                   "type": "text",
                                   "id": "t77",
-                                  "name": "自由度名",
-                                  "content": "改动自由度",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "freedom-label",
+                                  "content": "Freedom to change",
+                                  "fontFamily": "Inter",
                                   "fontSize": 22,
                                   "fontWeight": 500,
                                   "fill": [
@@ -1392,7 +1392,7 @@
                             {
                               "type": "frame",
                               "id": "f75",
-                              "name": "自由度轨",
+                              "name": "freedom-track",
                               "width": "fill_container",
                               "height": 10,
                               "layout": "horizontal",
@@ -1409,7 +1409,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r76",
-                                  "name": "自由度值",
+                                  "name": "freedom-value",
                                   "width": 262,
                                   "height": 10,
                                   "cornerRadius": 999,
@@ -1444,7 +1444,7 @@
             {
               "type": "frame",
               "id": "f90",
-              "name": "推荐说明",
+              "name": "pick-note",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1455,7 +1455,7 @@
                 {
                   "type": "frame",
                   "id": "f87",
-                  "name": "标签",
+                  "name": "tag",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1476,9 +1476,9 @@
                     {
                       "type": "text",
                       "id": "t88",
-                      "name": "标签文字",
-                      "content": "推荐",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tag-text",
+                      "content": "Pick",
+                      "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": 600,
                       "fill": [
@@ -1497,9 +1497,9 @@
                 {
                   "type": "text",
                   "id": "t89",
-                  "name": "推荐理由",
-                  "content": "琥珀色在这张图里只代表一件事：大多数人最后选了它。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "pick-reason",
+                  "content": "Amber means one thing here: it's what most people end up choosing.",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 400,
                   "fill": [
@@ -1520,7 +1520,7 @@
         {
           "type": "frame",
           "id": "f109",
-          "name": "03 怎么选",
+          "name": "03-how-to-choose",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1537,7 +1537,7 @@
             {
               "type": "frame",
               "id": "f108",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1548,7 +1548,7 @@
                 {
                   "type": "rectangle",
                   "id": "r105",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -1561,9 +1561,9 @@
                 {
                   "type": "text",
                   "id": "t106",
-                  "name": "区块标题",
-                  "content": "三句话对号入座",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Find yourself in one line",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -1580,9 +1580,9 @@
                 {
                   "type": "text",
                   "id": "t107",
-                  "name": "区块说明",
-                  "content": "不用比完三列，先回答你属于哪一句。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "No need to compare all three. Just pick the line that fits you.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -1601,7 +1601,7 @@
             {
               "type": "frame",
               "id": "f104",
-              "name": "选择面板",
+              "name": "choice-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1621,7 +1621,7 @@
                 {
                   "type": "frame",
                   "id": "f95",
-                  "name": "选择项",
+                  "name": "choice-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1632,9 +1632,9 @@
                     {
                       "type": "text",
                       "id": "t92",
-                      "name": "条件",
-                      "content": "只做这一次",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "condition",
+                      "content": "A one-off site",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -1651,7 +1651,7 @@
                     {
                       "type": "icon_font",
                       "id": "i93",
-                      "name": "指向",
+                      "name": "pointer",
                       "iconFontName": "arrow-right",
                       "width": 24,
                       "height": 24,
@@ -1665,9 +1665,9 @@
                     {
                       "type": "text",
                       "id": "t94",
-                      "name": "答案",
-                      "content": "套模板",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "answer",
+                      "content": "Template",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -1686,7 +1686,7 @@
                 {
                   "type": "frame",
                   "id": "f99",
-                  "name": "选择项",
+                  "name": "choice-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1697,9 +1697,9 @@
                     {
                       "type": "text",
                       "id": "t96",
-                      "name": "条件",
-                      "content": "要持续更新内容",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "condition",
+                      "content": "Content keeps changing",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -1716,7 +1716,7 @@
                     {
                       "type": "icon_font",
                       "id": "i97",
-                      "name": "指向",
+                      "name": "pointer",
                       "iconFontName": "arrow-right",
                       "width": 24,
                       "height": 24,
@@ -1730,9 +1730,9 @@
                     {
                       "type": "text",
                       "id": "t98",
-                      "name": "答案",
-                      "content": "低代码",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "answer",
+                      "content": "Low-code",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -1751,7 +1751,7 @@
                 {
                   "type": "frame",
                   "id": "f103",
-                  "name": "选择项",
+                  "name": "choice-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1762,9 +1762,9 @@
                     {
                       "type": "text",
                       "id": "t100",
-                      "name": "条件",
-                      "content": "产品本身就是它",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "condition",
+                      "content": "The site is the product",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -1781,7 +1781,7 @@
                     {
                       "type": "icon_font",
                       "id": "i101",
-                      "name": "指向",
+                      "name": "pointer",
                       "iconFontName": "arrow-right",
                       "width": 24,
                       "height": 24,
@@ -1795,9 +1795,9 @@
                     {
                       "type": "text",
                       "id": "t102",
-                      "name": "答案",
-                      "content": "自己写",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "answer",
+                      "content": "Code it",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -1820,7 +1820,7 @@
         {
           "type": "frame",
           "id": "f114",
-          "name": "04 页脚",
+          "name": "04-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1840,9 +1840,9 @@
             {
               "type": "text",
               "id": "t110",
-              "name": "结语",
-              "content": "选错的代价不是钱，是三个月后要重做一遍。",
-              "fontFamily": "Noto Sans SC",
+              "name": "closing",
+              "content": "Choosing wrong doesn't cost money. It costs a rebuild three months later.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 600,
               "fill": [
@@ -1859,7 +1859,7 @@
             {
               "type": "frame",
               "id": "f113",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1870,9 +1870,9 @@
                 {
                   "type": "text",
                   "id": "t111",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -1889,9 +1889,9 @@
                 {
                   "type": "text",
                   "id": "t112",
-                  "name": "更新说明",
-                  "content": "每周一张能照着选的横评",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "A weekly comparison you can choose from",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

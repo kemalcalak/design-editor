@@ -697,7 +697,30 @@ fn height_only_text_resize_does_not_change_text_growth() {
 }
 
 #[test]
-fn resizing_text_with_explicit_growth_keeps_it() {
+fn resizing_text_with_fixed_growth_keeps_it() {
+    let mut t = text("t1", "Title", 0.0, 0.0, 100.0, 20.0, "Hello");
+    if let PenNode::Text(tn) = &mut t {
+        tn.text_growth = Some(TextGrowth::FixedWidthHeight);
+    }
+    let mut s = state_with(vec![t]);
+    s.set_single_selection(NodeId::new("t1"));
+    s.set_selected_bounds(DocRect {
+        x: 0.0,
+        y: 0.0,
+        w: 160.0,
+        h: 20.0,
+    });
+    let n = find_node(s.active_children(), &NodeId::new("t1")).unwrap();
+    match n {
+        PenNode::Text(t) => assert_eq!(t.text_growth, Some(TextGrowth::FixedWidthHeight)),
+        other => panic!("expected text node, got {other:?}"),
+    }
+}
+
+/// Layout ignores a numeric width on an `auto` text, so a width resize must
+/// switch it to `fixed-width` or the box would snap back.
+#[test]
+fn resizing_auto_growth_text_switches_it_to_fixed_width() {
     let mut t = text("t1", "Title", 0.0, 0.0, 100.0, 20.0, "Hello");
     if let PenNode::Text(tn) = &mut t {
         tn.text_growth = Some(TextGrowth::Auto);
@@ -711,8 +734,35 @@ fn resizing_text_with_explicit_growth_keeps_it() {
         h: 20.0,
     });
     let n = find_node(s.active_children(), &NodeId::new("t1")).unwrap();
+    assert_eq!(n.width_px(), Some(160.0));
     match n {
-        PenNode::Text(t) => assert_eq!(t.text_growth, Some(TextGrowth::Auto)),
+        PenNode::Text(t) => assert_eq!(t.text_growth, Some(TextGrowth::FixedWidth)),
         other => panic!("expected text node, got {other:?}"),
     }
+}
+
+/// A stale x/y on a flex child is ignored by layout, so a left/top resize
+/// must not write a new (equally dead) position onto it.
+#[test]
+fn flow_child_with_stale_position_resize_keeps_position_untouched() {
+    let mut child = flow_rect("child", "Child", 80.0, 40.0);
+    child.base_mut().x = Some(5.0);
+    child.base_mut().y = Some(6.0);
+    let f = flex_frame("root", "Stack", 0.0, 0.0, 200.0, 200.0, vec![child]);
+    let mut s = state_with(vec![f]);
+    s.set_single_selection(NodeId::new("child"));
+    s.resize_selected_bounds(
+        DocRect {
+            x: 100.0,
+            y: 100.0,
+            w: 120.0,
+            h: 40.0,
+        },
+        ResizeAxes::Width,
+        Some(100.0),
+        Some(100.0),
+    );
+    let child = find_node(s.active_children(), &NodeId::new("child")).unwrap();
+    assert_eq!((child.base().x, child.base().y), (Some(5.0), Some(6.0)));
+    assert_eq!(child.width_px(), Some(120.0));
 }

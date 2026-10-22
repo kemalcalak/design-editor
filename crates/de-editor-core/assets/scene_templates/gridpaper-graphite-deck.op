@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "方格石墨 · 学术答辩档",
+  "name": "gridpaper-graphite-academic-deck",
   "variables": {
     "c-paper": {
       "type": "color",
@@ -47,7 +47,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -62,7 +62,7 @@
         {
           "type": "rectangle",
           "id": "r2",
-          "name": "起始短线",
+          "name": "lead-dash",
           "width": 48,
           "height": 6,
           "fill": [
@@ -77,7 +77,7 @@
         {
           "type": "frame",
           "id": "f4",
-          "name": "主标",
+          "name": "main-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -90,9 +90,9 @@
             {
               "type": "text",
               "id": "t3",
-              "name": "主标题",
-              "content": "夜间照明强度与城市鸟类\n鸣唱起始时间的关系",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Night lighting and dawn\nsong onset in city birds",
+              "fontFamily": "Inter",
               "fontSize": 84,
               "fontWeight": 700,
               "fill": [
@@ -111,7 +111,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "副标",
+          "name": "subtitle-block",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -124,9 +124,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "三座城市 24 个样点、两个繁殖季的同步声学与照度监测",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Paired acoustic and light monitoring at 24 sites in three cities over two breeding seasons",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -145,7 +145,7 @@
         {
           "type": "frame",
           "id": "f10",
-          "name": "落款",
+          "name": "byline",
           "width": 1680,
           "height": "fit_content",
           "layout": "horizontal",
@@ -158,9 +158,9 @@
             {
               "type": "text",
               "id": "t7",
-              "name": "作者",
-              "content": "陆停云 · 沈砚秋",
-              "fontFamily": "Noto Sans SC",
+              "name": "authors",
+              "content": "Laura Hayes · Owen Mercer",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -177,9 +177,9 @@
             {
               "type": "text",
               "id": "t8",
-              "name": "单位",
-              "content": "城市生态研究所 · 声景实验室",
-              "fontFamily": "Noto Sans SC",
+              "name": "affiliation",
+              "content": "Institute of Urban Ecology · Soundscape Lab",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -196,7 +196,7 @@
             {
               "type": "text",
               "id": "t9",
-              "name": "日期",
+              "name": "date",
               "content": "2026.08",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -217,7 +217,7 @@
         {
           "type": "rectangle",
           "id": "r11",
-          "name": "细线",
+          "name": "rule",
           "width": 1680,
           "height": 1,
           "fill": [
@@ -232,7 +232,7 @@
         {
           "type": "frame",
           "id": "f13",
-          "name": "页码",
+          "name": "page-number",
           "width": 200,
           "height": "fit_content",
           "layout": "vertical",
@@ -245,7 +245,7 @@
             {
               "type": "text",
               "id": "t12",
-              "name": "页码",
+              "name": "page-number",
               "content": "1 / 8",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -267,7 +267,7 @@
         {
           "type": "rectangle",
           "id": "r14",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -282,7 +282,7 @@
         {
           "type": "rectangle",
           "id": "r15",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -297,7 +297,7 @@
         {
           "type": "rectangle",
           "id": "r16",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -312,7 +312,7 @@
         {
           "type": "rectangle",
           "id": "r17",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -327,7 +327,7 @@
         {
           "type": "rectangle",
           "id": "r18",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -342,7 +342,7 @@
         {
           "type": "rectangle",
           "id": "r19",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -357,7 +357,7 @@
         {
           "type": "rectangle",
           "id": "r20",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -372,7 +372,7 @@
         {
           "type": "rectangle",
           "id": "r21",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -387,7 +387,7 @@
         {
           "type": "rectangle",
           "id": "r22",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -402,7 +402,7 @@
         {
           "type": "rectangle",
           "id": "r23",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -417,7 +417,7 @@
         {
           "type": "rectangle",
           "id": "r24",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -432,7 +432,7 @@
         {
           "type": "rectangle",
           "id": "r25",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -447,7 +447,7 @@
         {
           "type": "rectangle",
           "id": "r26",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -462,7 +462,7 @@
         {
           "type": "rectangle",
           "id": "r27",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -477,7 +477,7 @@
         {
           "type": "rectangle",
           "id": "r28",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -492,7 +492,7 @@
         {
           "type": "rectangle",
           "id": "r29",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -507,7 +507,7 @@
         {
           "type": "rectangle",
           "id": "r30",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -522,7 +522,7 @@
         {
           "type": "rectangle",
           "id": "r31",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -537,7 +537,7 @@
         {
           "type": "rectangle",
           "id": "r32",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -552,7 +552,7 @@
         {
           "type": "rectangle",
           "id": "r33",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -567,7 +567,7 @@
         {
           "type": "rectangle",
           "id": "r34",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -582,7 +582,7 @@
         {
           "type": "rectangle",
           "id": "r35",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -597,7 +597,7 @@
         {
           "type": "rectangle",
           "id": "r36",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -612,7 +612,7 @@
         {
           "type": "rectangle",
           "id": "r37",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -627,7 +627,7 @@
         {
           "type": "rectangle",
           "id": "r38",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -642,7 +642,7 @@
         {
           "type": "rectangle",
           "id": "r39",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -657,7 +657,7 @@
         {
           "type": "rectangle",
           "id": "r40",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -672,7 +672,7 @@
         {
           "type": "rectangle",
           "id": "r41",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -687,7 +687,7 @@
         {
           "type": "rectangle",
           "id": "r42",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -702,7 +702,7 @@
         {
           "type": "rectangle",
           "id": "r43",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -717,7 +717,7 @@
         {
           "type": "rectangle",
           "id": "r44",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -732,7 +732,7 @@
         {
           "type": "rectangle",
           "id": "r45",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -747,7 +747,7 @@
         {
           "type": "rectangle",
           "id": "r46",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -762,7 +762,7 @@
         {
           "type": "rectangle",
           "id": "r47",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -777,7 +777,7 @@
         {
           "type": "rectangle",
           "id": "r48",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -792,7 +792,7 @@
         {
           "type": "rectangle",
           "id": "r49",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -807,7 +807,7 @@
         {
           "type": "rectangle",
           "id": "r50",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -822,7 +822,7 @@
         {
           "type": "rectangle",
           "id": "r51",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -837,7 +837,7 @@
         {
           "type": "rectangle",
           "id": "r52",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -852,7 +852,7 @@
         {
           "type": "rectangle",
           "id": "r53",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -867,7 +867,7 @@
         {
           "type": "rectangle",
           "id": "r54",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -882,7 +882,7 @@
         {
           "type": "rectangle",
           "id": "r55",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -897,7 +897,7 @@
         {
           "type": "rectangle",
           "id": "r56",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -912,7 +912,7 @@
         {
           "type": "rectangle",
           "id": "r57",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -927,7 +927,7 @@
         {
           "type": "rectangle",
           "id": "r58",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -942,7 +942,7 @@
         {
           "type": "rectangle",
           "id": "r59",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -957,7 +957,7 @@
         {
           "type": "rectangle",
           "id": "r60",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -972,7 +972,7 @@
         {
           "type": "rectangle",
           "id": "r61",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -987,7 +987,7 @@
         {
           "type": "rectangle",
           "id": "r62",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1002,7 +1002,7 @@
         {
           "type": "rectangle",
           "id": "r63",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1017,7 +1017,7 @@
         {
           "type": "rectangle",
           "id": "r64",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1032,7 +1032,7 @@
         {
           "type": "rectangle",
           "id": "r65",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1047,7 +1047,7 @@
         {
           "type": "rectangle",
           "id": "r66",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1062,7 +1062,7 @@
         {
           "type": "rectangle",
           "id": "r67",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1077,7 +1077,7 @@
         {
           "type": "rectangle",
           "id": "r68",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1092,7 +1092,7 @@
         {
           "type": "rectangle",
           "id": "r69",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1107,7 +1107,7 @@
         {
           "type": "rectangle",
           "id": "r70",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1122,7 +1122,7 @@
         {
           "type": "rectangle",
           "id": "r71",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1137,7 +1137,7 @@
         {
           "type": "rectangle",
           "id": "r72",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1152,7 +1152,7 @@
         {
           "type": "rectangle",
           "id": "r73",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1167,7 +1167,7 @@
         {
           "type": "rectangle",
           "id": "r74",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1182,7 +1182,7 @@
         {
           "type": "rectangle",
           "id": "r75",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1197,7 +1197,7 @@
         {
           "type": "rectangle",
           "id": "r76",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -1216,7 +1216,7 @@
     {
       "type": "frame",
       "id": "f77",
-      "name": "02 问题与缺口",
+      "name": "02-problem-and-gap",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1231,7 +1231,7 @@
         {
           "type": "frame",
           "id": "f79",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -1244,9 +1244,9 @@
             {
               "type": "text",
               "id": "t78",
-              "name": "标题",
-              "content": "已有研究说明照明推迟了觅食，\n却没有回答鸣唱是否同步位移",
-              "fontFamily": "Noto Sans SC",
+              "name": "heading",
+              "content": "We know light shifts foraging,\nbut not whether song shifts too",
+              "fontFamily": "Inter",
               "fontSize": 60,
               "fontWeight": 700,
               "fill": [
@@ -1265,7 +1265,7 @@
         {
           "type": "frame",
           "id": "f83",
-          "name": "缺口 01",
+          "name": "gap-01",
           "width": 528,
           "height": "fit_content",
           "layout": "vertical",
@@ -1278,7 +1278,7 @@
             {
               "type": "text",
               "id": "t80",
-              "name": "序号",
+              "name": "index",
               "content": "01",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -1297,9 +1297,9 @@
             {
               "type": "text",
               "id": "t81",
-              "name": "小标题",
-              "content": "夜间照明仍在扩张",
-              "fontFamily": "Noto Sans SC",
+              "name": "subheading",
+              "content": "Night lighting keeps spreading",
+              "fontFamily": "Inter",
               "fontSize": 36,
               "fontWeight": 600,
               "fill": [
@@ -1316,9 +1316,9 @@
             {
               "type": "text",
               "id": "t82",
-              "name": "说明",
-              "content": "全球人工夜间照明面积每年\n增长约百分之二。三座城市的\n地面照度中位数十年间由\n5 lux 升至 12 lux。",
-              "fontFamily": "Noto Sans SC",
+              "name": "body",
+              "content": "Artificially lit area grows\nabout 2% a year worldwide.\nIn our three cities, median\nground light rose 5 to 12 lux.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -1337,7 +1337,7 @@
         {
           "type": "frame",
           "id": "f87",
-          "name": "缺口 02",
+          "name": "gap-02",
           "width": 528,
           "height": "fit_content",
           "layout": "vertical",
@@ -1350,7 +1350,7 @@
             {
               "type": "text",
               "id": "t84",
-              "name": "序号",
+              "name": "index",
               "content": "02",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -1369,9 +1369,9 @@
             {
               "type": "text",
               "id": "t85",
-              "name": "小标题",
-              "content": "觅食有数据，鸣唱没有",
-              "fontFamily": "Noto Sans SC",
+              "name": "subheading",
+              "content": "Foraging has data, song doesn't",
+              "fontFamily": "Inter",
               "fontSize": 36,
               "fontWeight": 600,
               "fill": [
@@ -1388,9 +1388,9 @@
             {
               "type": "text",
               "id": "t86",
-              "name": "说明",
-              "content": "既有工作集中在觅食与迁徙\n时序；鸣唱起始时间只有零散\n记录，且多数未同步测量样\n点的实际照度。",
-              "fontFamily": "Noto Sans SC",
+              "name": "body",
+              "content": "Past work tracks foraging\nand migration timing. Song\nonset is patchy, and rarely\nmeasured with on-site light.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -1409,7 +1409,7 @@
         {
           "type": "frame",
           "id": "f91",
-          "name": "缺口 03",
+          "name": "gap-03",
           "width": 528,
           "height": "fit_content",
           "layout": "vertical",
@@ -1422,7 +1422,7 @@
             {
               "type": "text",
               "id": "t88",
-              "name": "序号",
+              "name": "index",
               "content": "03",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -1441,9 +1441,9 @@
             {
               "type": "text",
               "id": "t89",
-              "name": "小标题",
-              "content": "把两者同点同时量",
-              "fontFamily": "Noto Sans SC",
+              "name": "subheading",
+              "content": "Measure both, same place, same time",
+              "fontFamily": "Inter",
               "fontSize": 36,
               "fontWeight": 600,
               "fill": [
@@ -1460,9 +1460,9 @@
             {
               "type": "text",
               "id": "t90",
-              "name": "说明",
-              "content": "本研究在同一样点同步记录\n地面照度与鸣唱起始时间，\n给出两者的剂量—反应关系，\n而不是相关系数。",
-              "fontFamily": "Noto Sans SC",
+              "name": "body",
+              "content": "We log ground light and song\nonset together at each site\nand report a dose-response\ncurve, not a correlation.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -1481,7 +1481,7 @@
         {
           "type": "rectangle",
           "id": "r92",
-          "name": "细线",
+          "name": "rule",
           "width": 1680,
           "height": 1,
           "fill": [
@@ -1496,7 +1496,7 @@
         {
           "type": "frame",
           "id": "f94",
-          "name": "引证槽",
+          "name": "citation-slot",
           "width": 1240,
           "height": "fit_content",
           "layout": "vertical",
@@ -1509,9 +1509,9 @@
             {
               "type": "text",
               "id": "t93",
-              "name": "引证",
-              "content": "[1] 陈黎 等，2024，城市生态学报，41(3): 217–229",
-              "fontFamily": "Noto Sans SC",
+              "name": "citation",
+              "content": "[1] Chen L. et al., 2024, Journal of Urban Ecology, 41(3): 217–229",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -1530,7 +1530,7 @@
         {
           "type": "frame",
           "id": "f96",
-          "name": "页码",
+          "name": "page-number",
           "width": 200,
           "height": "fit_content",
           "layout": "vertical",
@@ -1543,7 +1543,7 @@
             {
               "type": "text",
               "id": "t95",
-              "name": "页码",
+              "name": "page-number",
               "content": "2 / 8",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -1565,7 +1565,7 @@
         {
           "type": "rectangle",
           "id": "r97",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1580,7 +1580,7 @@
         {
           "type": "rectangle",
           "id": "r98",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1595,7 +1595,7 @@
         {
           "type": "rectangle",
           "id": "r99",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1610,7 +1610,7 @@
         {
           "type": "rectangle",
           "id": "r100",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1625,7 +1625,7 @@
         {
           "type": "rectangle",
           "id": "r101",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1640,7 +1640,7 @@
         {
           "type": "rectangle",
           "id": "r102",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1655,7 +1655,7 @@
         {
           "type": "rectangle",
           "id": "r103",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1670,7 +1670,7 @@
         {
           "type": "rectangle",
           "id": "r104",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1685,7 +1685,7 @@
         {
           "type": "rectangle",
           "id": "r105",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1700,7 +1700,7 @@
         {
           "type": "rectangle",
           "id": "r106",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1715,7 +1715,7 @@
         {
           "type": "rectangle",
           "id": "r107",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1730,7 +1730,7 @@
         {
           "type": "rectangle",
           "id": "r108",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1745,7 +1745,7 @@
         {
           "type": "rectangle",
           "id": "r109",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1760,7 +1760,7 @@
         {
           "type": "rectangle",
           "id": "r110",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1775,7 +1775,7 @@
         {
           "type": "rectangle",
           "id": "r111",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1790,7 +1790,7 @@
         {
           "type": "rectangle",
           "id": "r112",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1805,7 +1805,7 @@
         {
           "type": "rectangle",
           "id": "r113",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1820,7 +1820,7 @@
         {
           "type": "rectangle",
           "id": "r114",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1835,7 +1835,7 @@
         {
           "type": "rectangle",
           "id": "r115",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1850,7 +1850,7 @@
         {
           "type": "rectangle",
           "id": "r116",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1865,7 +1865,7 @@
         {
           "type": "rectangle",
           "id": "r117",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1880,7 +1880,7 @@
         {
           "type": "rectangle",
           "id": "r118",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1895,7 +1895,7 @@
         {
           "type": "rectangle",
           "id": "r119",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1910,7 +1910,7 @@
         {
           "type": "rectangle",
           "id": "r120",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1925,7 +1925,7 @@
         {
           "type": "rectangle",
           "id": "r121",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1940,7 +1940,7 @@
         {
           "type": "rectangle",
           "id": "r122",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1955,7 +1955,7 @@
         {
           "type": "rectangle",
           "id": "r123",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1970,7 +1970,7 @@
         {
           "type": "rectangle",
           "id": "r124",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -1985,7 +1985,7 @@
         {
           "type": "rectangle",
           "id": "r125",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2000,7 +2000,7 @@
         {
           "type": "rectangle",
           "id": "r126",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2015,7 +2015,7 @@
         {
           "type": "rectangle",
           "id": "r127",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2030,7 +2030,7 @@
         {
           "type": "rectangle",
           "id": "r128",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2045,7 +2045,7 @@
         {
           "type": "rectangle",
           "id": "r129",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2060,7 +2060,7 @@
         {
           "type": "rectangle",
           "id": "r130",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2075,7 +2075,7 @@
         {
           "type": "rectangle",
           "id": "r131",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2090,7 +2090,7 @@
         {
           "type": "rectangle",
           "id": "r132",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2105,7 +2105,7 @@
         {
           "type": "rectangle",
           "id": "r133",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2120,7 +2120,7 @@
         {
           "type": "rectangle",
           "id": "r134",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2135,7 +2135,7 @@
         {
           "type": "rectangle",
           "id": "r135",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2150,7 +2150,7 @@
         {
           "type": "rectangle",
           "id": "r136",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -2165,7 +2165,7 @@
         {
           "type": "rectangle",
           "id": "r137",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2180,7 +2180,7 @@
         {
           "type": "rectangle",
           "id": "r138",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2195,7 +2195,7 @@
         {
           "type": "rectangle",
           "id": "r139",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2210,7 +2210,7 @@
         {
           "type": "rectangle",
           "id": "r140",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2225,7 +2225,7 @@
         {
           "type": "rectangle",
           "id": "r141",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2240,7 +2240,7 @@
         {
           "type": "rectangle",
           "id": "r142",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2255,7 +2255,7 @@
         {
           "type": "rectangle",
           "id": "r143",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2270,7 +2270,7 @@
         {
           "type": "rectangle",
           "id": "r144",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2285,7 +2285,7 @@
         {
           "type": "rectangle",
           "id": "r145",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2300,7 +2300,7 @@
         {
           "type": "rectangle",
           "id": "r146",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2315,7 +2315,7 @@
         {
           "type": "rectangle",
           "id": "r147",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2330,7 +2330,7 @@
         {
           "type": "rectangle",
           "id": "r148",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2345,7 +2345,7 @@
         {
           "type": "rectangle",
           "id": "r149",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2360,7 +2360,7 @@
         {
           "type": "rectangle",
           "id": "r150",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2375,7 +2375,7 @@
         {
           "type": "rectangle",
           "id": "r151",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2390,7 +2390,7 @@
         {
           "type": "rectangle",
           "id": "r152",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2405,7 +2405,7 @@
         {
           "type": "rectangle",
           "id": "r153",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2420,7 +2420,7 @@
         {
           "type": "rectangle",
           "id": "r154",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2435,7 +2435,7 @@
         {
           "type": "rectangle",
           "id": "r155",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2450,7 +2450,7 @@
         {
           "type": "rectangle",
           "id": "r156",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2465,7 +2465,7 @@
         {
           "type": "rectangle",
           "id": "r157",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2480,7 +2480,7 @@
         {
           "type": "rectangle",
           "id": "r158",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2495,7 +2495,7 @@
         {
           "type": "rectangle",
           "id": "r159",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -2514,7 +2514,7 @@
     {
       "type": "frame",
       "id": "f160",
-      "name": "03 方法",
+      "name": "03-methods",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -2529,7 +2529,7 @@
         {
           "type": "frame",
           "id": "f162",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -2542,9 +2542,9 @@
             {
               "type": "text",
               "id": "t161",
-              "name": "标题",
-              "content": "在同一样点上把照度与鸣唱起始时间同步记录",
-              "fontFamily": "Noto Sans SC",
+              "name": "heading",
+              "content": "Light and song onset, recorded together at every site",
+              "fontFamily": "Inter",
               "fontSize": 60,
               "fontWeight": 700,
               "fill": [
@@ -2563,7 +2563,7 @@
         {
           "type": "frame",
           "id": "f165",
-          "name": "标签舌 · 定义 · 方法",
+          "name": "tab-label-definitions-methods",
           "width": 208,
           "height": 40,
           "layout": "none",
@@ -2574,9 +2574,9 @@
             {
               "type": "text",
               "id": "t164",
-              "name": "标签舌 · 字",
-              "content": "定义 · 方法",
-              "fontFamily": "Noto Sans SC",
+              "name": "tab-label-text",
+              "content": "Methods",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -2595,7 +2595,7 @@
             {
               "type": "path",
               "id": "p163",
-              "name": "标签舌 · 形",
+              "name": "tab-label-shape",
               "d": "M12 0 L208 0 L208 40 L0 40 Z",
               "width": 208,
               "height": 40,
@@ -2613,7 +2613,7 @@
         {
           "type": "frame",
           "id": "f167",
-          "name": "方法块",
+          "name": "methods-block",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -2635,9 +2635,9 @@
             {
               "type": "text",
               "id": "t166",
-              "name": "方法陈述",
-              "content": "本文把「鸣唱起始时间」定义为日落次日拂晓、样点上出现的第一段持续两秒以上的种内鸣唱；\n「地面照度」取记录仪水平面上一米处的照度中位数。两个量都在同一样点、同一夜内取得。",
-              "fontFamily": "Noto Sans SC",
+              "name": "methods-statement",
+              "content": "\"Song onset\" is the first song bout lasting over two seconds at a site at dawn after sunset;\n\"ground light\" is the median illuminance 1 m above the recorder. Both come from the same site, same night.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -2656,7 +2656,7 @@
         {
           "type": "frame",
           "id": "f187",
-          "name": "流程",
+          "name": "process",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -2669,7 +2669,7 @@
             {
               "type": "frame",
               "id": "f171",
-              "name": "步骤 01",
+              "name": "step-01",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2684,7 +2684,7 @@
                 {
                   "type": "text",
                   "id": "t168",
-                  "name": "序号",
+                  "name": "index",
                   "content": "01",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -2703,9 +2703,9 @@
                 {
                   "type": "text",
                   "id": "t169",
-                  "name": "步骤名",
-                  "content": "布点与配对",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "step-name",
+                  "content": "Sites & pairing",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 600,
                   "fill": [
@@ -2722,9 +2722,9 @@
                 {
                   "type": "text",
                   "id": "t170",
-                  "name": "步骤说明",
-                  "content": "八个样点覆盖 0.5 至 50 lux，亮暗成对",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "step-body",
+                  "content": "Eight sites span 0.5 to 50 lux, in bright-dark pairs",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -2743,7 +2743,7 @@
             {
               "type": "rectangle",
               "id": "r172",
-              "name": "步间细线",
+              "name": "step-rule",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -2756,7 +2756,7 @@
             {
               "type": "frame",
               "id": "f176",
-              "name": "步骤 02",
+              "name": "step-02",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2771,7 +2771,7 @@
                 {
                   "type": "text",
                   "id": "t173",
-                  "name": "序号",
+                  "name": "index",
                   "content": "02",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -2790,9 +2790,9 @@
                 {
                   "type": "text",
                   "id": "t174",
-                  "name": "步骤名",
-                  "content": "同步测量",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "step-name",
+                  "content": "Paired logging",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 600,
                   "fill": [
@@ -2809,9 +2809,9 @@
                 {
                   "type": "text",
                   "id": "t175",
-                  "name": "步骤说明",
-                  "content": "声学记录仪与照度计同点同夜同步记录",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "step-body",
+                  "content": "Audio recorder and light meter log together, same site, same night",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -2830,7 +2830,7 @@
             {
               "type": "rectangle",
               "id": "r177",
-              "name": "步间细线",
+              "name": "step-rule",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -2843,7 +2843,7 @@
             {
               "type": "frame",
               "id": "f181",
-              "name": "步骤 03",
+              "name": "step-03",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2858,7 +2858,7 @@
                 {
                   "type": "text",
                   "id": "t178",
-                  "name": "序号",
+                  "name": "index",
                   "content": "03",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -2877,9 +2877,9 @@
                 {
                   "type": "text",
                   "id": "t179",
-                  "name": "步骤名",
-                  "content": "起始时间判读",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "step-name",
+                  "content": "Onset scoring",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 600,
                   "fill": [
@@ -2896,9 +2896,9 @@
                 {
                   "type": "text",
                   "id": "t180",
-                  "name": "步骤说明",
-                  "content": "两名判读者独立标注，分歧交第三人裁定",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "step-body",
+                  "content": "Two scorers label independently; a third settles disagreements",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -2917,7 +2917,7 @@
             {
               "type": "rectangle",
               "id": "r182",
-              "name": "步间细线",
+              "name": "step-rule",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -2930,7 +2930,7 @@
             {
               "type": "frame",
               "id": "f186",
-              "name": "步骤 04",
+              "name": "step-04",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2945,7 +2945,7 @@
                 {
                   "type": "text",
                   "id": "t183",
-                  "name": "序号",
+                  "name": "index",
                   "content": "04",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -2964,9 +2964,9 @@
                 {
                   "type": "text",
                   "id": "t184",
-                  "name": "步骤名",
-                  "content": "统计模型",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "step-name",
+                  "content": "Statistical model",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 600,
                   "fill": [
@@ -2983,9 +2983,9 @@
                 {
                   "type": "text",
                   "id": "t185",
-                  "name": "步骤说明",
-                  "content": "混合线性模型，照度取对数，控温度与云量",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "step-body",
+                  "content": "Linear mixed model, log light, controlling for temperature and cloud",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -3006,7 +3006,7 @@
         {
           "type": "rectangle",
           "id": "r188",
-          "name": "细线",
+          "name": "rule",
           "width": 1680,
           "height": 1,
           "fill": [
@@ -3021,7 +3021,7 @@
         {
           "type": "frame",
           "id": "f190",
-          "name": "引证槽",
+          "name": "citation-slot",
           "width": 1240,
           "height": "fit_content",
           "layout": "vertical",
@@ -3034,9 +3034,9 @@
             {
               "type": "text",
               "id": "t189",
-              "name": "引证",
-              "content": "[2] 方沐 等，2023，动物行为学报，18(2): 96–108",
-              "fontFamily": "Noto Sans SC",
+              "name": "citation",
+              "content": "[2] Fang M. et al., 2023, Animal Behaviour Letters, 18(2): 96–108",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -3055,7 +3055,7 @@
         {
           "type": "frame",
           "id": "f192",
-          "name": "页码",
+          "name": "page-number",
           "width": 200,
           "height": "fit_content",
           "layout": "vertical",
@@ -3068,7 +3068,7 @@
             {
               "type": "text",
               "id": "t191",
-              "name": "页码",
+              "name": "page-number",
               "content": "3 / 8",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -3090,7 +3090,7 @@
         {
           "type": "rectangle",
           "id": "r193",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3105,7 +3105,7 @@
         {
           "type": "rectangle",
           "id": "r194",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3120,7 +3120,7 @@
         {
           "type": "rectangle",
           "id": "r195",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3135,7 +3135,7 @@
         {
           "type": "rectangle",
           "id": "r196",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3150,7 +3150,7 @@
         {
           "type": "rectangle",
           "id": "r197",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3165,7 +3165,7 @@
         {
           "type": "rectangle",
           "id": "r198",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3180,7 +3180,7 @@
         {
           "type": "rectangle",
           "id": "r199",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3195,7 +3195,7 @@
         {
           "type": "rectangle",
           "id": "r200",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3210,7 +3210,7 @@
         {
           "type": "rectangle",
           "id": "r201",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3225,7 +3225,7 @@
         {
           "type": "rectangle",
           "id": "r202",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3240,7 +3240,7 @@
         {
           "type": "rectangle",
           "id": "r203",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3255,7 +3255,7 @@
         {
           "type": "rectangle",
           "id": "r204",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3270,7 +3270,7 @@
         {
           "type": "rectangle",
           "id": "r205",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3285,7 +3285,7 @@
         {
           "type": "rectangle",
           "id": "r206",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3300,7 +3300,7 @@
         {
           "type": "rectangle",
           "id": "r207",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3315,7 +3315,7 @@
         {
           "type": "rectangle",
           "id": "r208",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3330,7 +3330,7 @@
         {
           "type": "rectangle",
           "id": "r209",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3345,7 +3345,7 @@
         {
           "type": "rectangle",
           "id": "r210",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3360,7 +3360,7 @@
         {
           "type": "rectangle",
           "id": "r211",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3375,7 +3375,7 @@
         {
           "type": "rectangle",
           "id": "r212",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3390,7 +3390,7 @@
         {
           "type": "rectangle",
           "id": "r213",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3405,7 +3405,7 @@
         {
           "type": "rectangle",
           "id": "r214",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3420,7 +3420,7 @@
         {
           "type": "rectangle",
           "id": "r215",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3435,7 +3435,7 @@
         {
           "type": "rectangle",
           "id": "r216",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3450,7 +3450,7 @@
         {
           "type": "rectangle",
           "id": "r217",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3465,7 +3465,7 @@
         {
           "type": "rectangle",
           "id": "r218",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3480,7 +3480,7 @@
         {
           "type": "rectangle",
           "id": "r219",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3495,7 +3495,7 @@
         {
           "type": "rectangle",
           "id": "r220",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3510,7 +3510,7 @@
         {
           "type": "rectangle",
           "id": "r221",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3525,7 +3525,7 @@
         {
           "type": "rectangle",
           "id": "r222",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3540,7 +3540,7 @@
         {
           "type": "rectangle",
           "id": "r223",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3555,7 +3555,7 @@
         {
           "type": "rectangle",
           "id": "r224",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3570,7 +3570,7 @@
         {
           "type": "rectangle",
           "id": "r225",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3585,7 +3585,7 @@
         {
           "type": "rectangle",
           "id": "r226",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3600,7 +3600,7 @@
         {
           "type": "rectangle",
           "id": "r227",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3615,7 +3615,7 @@
         {
           "type": "rectangle",
           "id": "r228",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3630,7 +3630,7 @@
         {
           "type": "rectangle",
           "id": "r229",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3645,7 +3645,7 @@
         {
           "type": "rectangle",
           "id": "r230",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3660,7 +3660,7 @@
         {
           "type": "rectangle",
           "id": "r231",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3675,7 +3675,7 @@
         {
           "type": "rectangle",
           "id": "r232",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -3690,7 +3690,7 @@
         {
           "type": "rectangle",
           "id": "r233",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3705,7 +3705,7 @@
         {
           "type": "rectangle",
           "id": "r234",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3720,7 +3720,7 @@
         {
           "type": "rectangle",
           "id": "r235",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3735,7 +3735,7 @@
         {
           "type": "rectangle",
           "id": "r236",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3750,7 +3750,7 @@
         {
           "type": "rectangle",
           "id": "r237",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3765,7 +3765,7 @@
         {
           "type": "rectangle",
           "id": "r238",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3780,7 +3780,7 @@
         {
           "type": "rectangle",
           "id": "r239",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3795,7 +3795,7 @@
         {
           "type": "rectangle",
           "id": "r240",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3810,7 +3810,7 @@
         {
           "type": "rectangle",
           "id": "r241",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3825,7 +3825,7 @@
         {
           "type": "rectangle",
           "id": "r242",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3840,7 +3840,7 @@
         {
           "type": "rectangle",
           "id": "r243",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3855,7 +3855,7 @@
         {
           "type": "rectangle",
           "id": "r244",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3870,7 +3870,7 @@
         {
           "type": "rectangle",
           "id": "r245",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3885,7 +3885,7 @@
         {
           "type": "rectangle",
           "id": "r246",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3900,7 +3900,7 @@
         {
           "type": "rectangle",
           "id": "r247",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3915,7 +3915,7 @@
         {
           "type": "rectangle",
           "id": "r248",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3930,7 +3930,7 @@
         {
           "type": "rectangle",
           "id": "r249",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3945,7 +3945,7 @@
         {
           "type": "rectangle",
           "id": "r250",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3960,7 +3960,7 @@
         {
           "type": "rectangle",
           "id": "r251",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3975,7 +3975,7 @@
         {
           "type": "rectangle",
           "id": "r252",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -3990,7 +3990,7 @@
         {
           "type": "rectangle",
           "id": "r253",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -4005,7 +4005,7 @@
         {
           "type": "rectangle",
           "id": "r254",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -4020,7 +4020,7 @@
         {
           "type": "rectangle",
           "id": "r255",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -4039,7 +4039,7 @@
     {
       "type": "frame",
       "id": "f256",
-      "name": "04 结果 · 图",
+      "name": "04-results-chart",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -4054,7 +4054,7 @@
         {
           "type": "frame",
           "id": "f258",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -4067,9 +4067,9 @@
             {
               "type": "text",
               "id": "t257",
-              "name": "标题",
-              "content": "照度每上升十倍，鸣唱起始时间提前约九分钟",
-              "fontFamily": "Noto Sans SC",
+              "name": "heading",
+              "content": "Every tenfold rise in light moves song onset 9 minutes earlier",
+              "fontFamily": "Inter",
               "fontSize": 60,
               "fontWeight": 700,
               "fill": [
@@ -4088,7 +4088,7 @@
         {
           "type": "rectangle",
           "id": "r259",
-          "name": "柱 0.5 lux",
+          "name": "bar-0.5-lux",
           "width": 144,
           "height": 25,
           "fill": [
@@ -4103,7 +4103,7 @@
         {
           "type": "frame",
           "id": "f261",
-          "name": "柱值 0.5 lux",
+          "name": "bar-value-0.5-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4116,7 +4116,7 @@
             {
               "type": "text",
               "id": "t260",
-              "name": "数值",
+              "name": "value",
               "content": "2.1",
               "fontFamily": "Inter",
               "fontSize": 30,
@@ -4138,7 +4138,7 @@
         {
           "type": "frame",
           "id": "f263",
-          "name": "轴标 0.5 lux",
+          "name": "axis-label-0.5-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4151,7 +4151,7 @@
             {
               "type": "text",
               "id": "t262",
-              "name": "轴标",
+              "name": "axis-label",
               "content": "0.5 lux",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -4173,7 +4173,7 @@
         {
           "type": "rectangle",
           "id": "r264",
-          "name": "柱 1 lux",
+          "name": "bar-1-lux",
           "width": 144,
           "height": 70,
           "fill": [
@@ -4188,7 +4188,7 @@
         {
           "type": "frame",
           "id": "f266",
-          "name": "柱值 1 lux",
+          "name": "bar-value-1-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4201,7 +4201,7 @@
             {
               "type": "text",
               "id": "t265",
-              "name": "数值",
+              "name": "value",
               "content": "5.8",
               "fontFamily": "Inter",
               "fontSize": 30,
@@ -4223,7 +4223,7 @@
         {
           "type": "frame",
           "id": "f268",
-          "name": "轴标 1 lux",
+          "name": "axis-label-1-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4236,7 +4236,7 @@
             {
               "type": "text",
               "id": "t267",
-              "name": "轴标",
+              "name": "axis-label",
               "content": "1 lux",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -4258,7 +4258,7 @@
         {
           "type": "rectangle",
           "id": "r269",
-          "name": "柱 5 lux",
+          "name": "bar-5-lux",
           "width": 144,
           "height": 163,
           "fill": [
@@ -4273,7 +4273,7 @@
         {
           "type": "frame",
           "id": "f271",
-          "name": "柱值 5 lux",
+          "name": "bar-value-5-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4286,7 +4286,7 @@
             {
               "type": "text",
               "id": "t270",
-              "name": "数值",
+              "name": "value",
               "content": "13.6",
               "fontFamily": "Inter",
               "fontSize": 30,
@@ -4308,7 +4308,7 @@
         {
           "type": "frame",
           "id": "f273",
-          "name": "轴标 5 lux",
+          "name": "axis-label-5-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4321,7 +4321,7 @@
             {
               "type": "text",
               "id": "t272",
-              "name": "轴标",
+              "name": "axis-label",
               "content": "5 lux",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -4343,7 +4343,7 @@
         {
           "type": "rectangle",
           "id": "r274",
-          "name": "柱 20 lux",
+          "name": "bar-20-lux",
           "width": 144,
           "height": 269,
           "fill": [
@@ -4358,7 +4358,7 @@
         {
           "type": "frame",
           "id": "f276",
-          "name": "柱值 20 lux",
+          "name": "bar-value-20-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4371,7 +4371,7 @@
             {
               "type": "text",
               "id": "t275",
-              "name": "数值",
+              "name": "value",
               "content": "22.4",
               "fontFamily": "Inter",
               "fontSize": 30,
@@ -4393,7 +4393,7 @@
         {
           "type": "frame",
           "id": "f278",
-          "name": "轴标 20 lux",
+          "name": "axis-label-20-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4406,7 +4406,7 @@
             {
               "type": "text",
               "id": "t277",
-              "name": "轴标",
+              "name": "axis-label",
               "content": "20 lux",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -4428,7 +4428,7 @@
         {
           "type": "rectangle",
           "id": "r279",
-          "name": "柱 50 lux",
+          "name": "bar-50-lux",
           "width": 144,
           "height": 371,
           "fill": [
@@ -4443,7 +4443,7 @@
         {
           "type": "frame",
           "id": "f281",
-          "name": "柱值 50 lux",
+          "name": "bar-value-50-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4456,7 +4456,7 @@
             {
               "type": "text",
               "id": "t280",
-              "name": "数值",
+              "name": "value",
               "content": "30.9",
               "fontFamily": "Inter",
               "fontSize": 30,
@@ -4478,7 +4478,7 @@
         {
           "type": "frame",
           "id": "f283",
-          "name": "轴标 50 lux",
+          "name": "axis-label-50-lux",
           "width": 144,
           "height": "fit_content",
           "layout": "vertical",
@@ -4491,7 +4491,7 @@
             {
               "type": "text",
               "id": "t282",
-              "name": "轴标",
+              "name": "axis-label",
               "content": "50 lux",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -4513,7 +4513,7 @@
         {
           "type": "rectangle",
           "id": "r284",
-          "name": "细线",
+          "name": "rule",
           "width": 960,
           "height": 2,
           "fill": [
@@ -4528,7 +4528,7 @@
         {
           "type": "frame",
           "id": "f286",
-          "name": "图注双联",
+          "name": "caption-pair",
           "width": 960,
           "height": "fit_content",
           "layout": "vertical",
@@ -4542,8 +4542,8 @@
               "type": "text",
               "id": "t285",
               "name": "so-what",
-              "content": "提前量在 5 lux 之后加速，说明存在阈值而非线性响应；\n照明规划的着力点因此在低照度段，不在总量。",
-              "fontFamily": "Noto Sans SC",
+              "content": "The shift speeds up past 5 lux: a threshold, not a linear response.\nLighting policy should target the low end, not total output.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -4562,7 +4562,7 @@
         {
           "type": "frame",
           "id": "f288",
-          "name": "解读标题",
+          "name": "reading-title",
           "width": 672,
           "height": "fit_content",
           "layout": "vertical",
@@ -4575,9 +4575,9 @@
             {
               "type": "text",
               "id": "t287",
-              "name": "解读标题",
-              "content": "阈值出现在\n城市常见照度区间内",
-              "fontFamily": "Noto Sans SC",
+              "name": "reading-title",
+              "content": "The threshold sits in\neveryday city light levels",
+              "fontFamily": "Inter",
               "fontSize": 36,
               "fontWeight": 600,
               "fill": [
@@ -4596,7 +4596,7 @@
         {
           "type": "frame",
           "id": "f290",
-          "name": "解读一",
+          "name": "reading-1",
           "width": 672,
           "height": "fit_content",
           "layout": "vertical",
@@ -4609,9 +4609,9 @@
             {
               "type": "text",
               "id": "t289",
-              "name": "解读一",
-              "content": "0.5 与 1 lux 之间差异不显著；\n5 lux 起提前量增幅变陡，\n而 5 至 20 lux 正是三座城市\n住宅区道路照明的常见区间。",
-              "fontFamily": "Noto Sans SC",
+              "name": "reading-1",
+              "content": "0.5 vs 1 lux: no real difference.\nFrom 5 lux the shift steepens,\nand 5 to 20 lux is typical for\nresidential streets in all three.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -4630,7 +4630,7 @@
         {
           "type": "frame",
           "id": "f292",
-          "name": "解读二",
+          "name": "reading-2",
           "width": 672,
           "height": "fit_content",
           "layout": "vertical",
@@ -4643,9 +4643,9 @@
             {
               "type": "text",
               "id": "t291",
-              "name": "解读二",
-              "content": "把照度压到 5 lux 以下，提前量\n的中位数回到十分钟以内 ——\n这是本文唯一可操作的阈值。",
-              "fontFamily": "Noto Sans SC",
+              "name": "reading-2",
+              "content": "Keep light under 5 lux and the\nmedian shift drops below 10 min,\nthe one actionable threshold here.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -4664,7 +4664,7 @@
         {
           "type": "rectangle",
           "id": "r293",
-          "name": "细线",
+          "name": "rule",
           "width": 1680,
           "height": 1,
           "fill": [
@@ -4679,7 +4679,7 @@
         {
           "type": "frame",
           "id": "f295",
-          "name": "引证槽",
+          "name": "citation-slot",
           "width": 1240,
           "height": "fit_content",
           "layout": "vertical",
@@ -4692,9 +4692,9 @@
             {
               "type": "text",
               "id": "t294",
-              "name": "引证",
-              "content": "[3] 照度与声学原始数据，城市生态研究所声景实验室，2026",
-              "fontFamily": "Noto Sans SC",
+              "name": "citation",
+              "content": "[3] Raw light and acoustic data, Soundscape Lab, Institute of Urban Ecology, 2026",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -4713,7 +4713,7 @@
         {
           "type": "frame",
           "id": "f297",
-          "name": "页码",
+          "name": "page-number",
           "width": 200,
           "height": "fit_content",
           "layout": "vertical",
@@ -4726,7 +4726,7 @@
             {
               "type": "text",
               "id": "t296",
-              "name": "页码",
+              "name": "page-number",
               "content": "4 / 8",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -4748,7 +4748,7 @@
         {
           "type": "rectangle",
           "id": "r298",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4763,7 +4763,7 @@
         {
           "type": "rectangle",
           "id": "r299",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4778,7 +4778,7 @@
         {
           "type": "rectangle",
           "id": "r300",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4793,7 +4793,7 @@
         {
           "type": "rectangle",
           "id": "r301",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4808,7 +4808,7 @@
         {
           "type": "rectangle",
           "id": "r302",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4823,7 +4823,7 @@
         {
           "type": "rectangle",
           "id": "r303",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4838,7 +4838,7 @@
         {
           "type": "rectangle",
           "id": "r304",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4853,7 +4853,7 @@
         {
           "type": "rectangle",
           "id": "r305",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4868,7 +4868,7 @@
         {
           "type": "rectangle",
           "id": "r306",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4883,7 +4883,7 @@
         {
           "type": "rectangle",
           "id": "r307",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4898,7 +4898,7 @@
         {
           "type": "rectangle",
           "id": "r308",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4913,7 +4913,7 @@
         {
           "type": "rectangle",
           "id": "r309",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4928,7 +4928,7 @@
         {
           "type": "rectangle",
           "id": "r310",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4943,7 +4943,7 @@
         {
           "type": "rectangle",
           "id": "r311",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4958,7 +4958,7 @@
         {
           "type": "rectangle",
           "id": "r312",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4973,7 +4973,7 @@
         {
           "type": "rectangle",
           "id": "r313",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -4988,7 +4988,7 @@
         {
           "type": "rectangle",
           "id": "r314",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5003,7 +5003,7 @@
         {
           "type": "rectangle",
           "id": "r315",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5018,7 +5018,7 @@
         {
           "type": "rectangle",
           "id": "r316",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5033,7 +5033,7 @@
         {
           "type": "rectangle",
           "id": "r317",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5048,7 +5048,7 @@
         {
           "type": "rectangle",
           "id": "r318",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5063,7 +5063,7 @@
         {
           "type": "rectangle",
           "id": "r319",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5078,7 +5078,7 @@
         {
           "type": "rectangle",
           "id": "r320",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5093,7 +5093,7 @@
         {
           "type": "rectangle",
           "id": "r321",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5108,7 +5108,7 @@
         {
           "type": "rectangle",
           "id": "r322",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5123,7 +5123,7 @@
         {
           "type": "rectangle",
           "id": "r323",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5138,7 +5138,7 @@
         {
           "type": "rectangle",
           "id": "r324",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5153,7 +5153,7 @@
         {
           "type": "rectangle",
           "id": "r325",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5168,7 +5168,7 @@
         {
           "type": "rectangle",
           "id": "r326",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5183,7 +5183,7 @@
         {
           "type": "rectangle",
           "id": "r327",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5198,7 +5198,7 @@
         {
           "type": "rectangle",
           "id": "r328",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5213,7 +5213,7 @@
         {
           "type": "rectangle",
           "id": "r329",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5228,7 +5228,7 @@
         {
           "type": "rectangle",
           "id": "r330",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5243,7 +5243,7 @@
         {
           "type": "rectangle",
           "id": "r331",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5258,7 +5258,7 @@
         {
           "type": "rectangle",
           "id": "r332",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5273,7 +5273,7 @@
         {
           "type": "rectangle",
           "id": "r333",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5288,7 +5288,7 @@
         {
           "type": "rectangle",
           "id": "r334",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5303,7 +5303,7 @@
         {
           "type": "rectangle",
           "id": "r335",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5318,7 +5318,7 @@
         {
           "type": "rectangle",
           "id": "r336",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5333,7 +5333,7 @@
         {
           "type": "rectangle",
           "id": "r337",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -5348,7 +5348,7 @@
         {
           "type": "rectangle",
           "id": "r338",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5363,7 +5363,7 @@
         {
           "type": "rectangle",
           "id": "r339",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5378,7 +5378,7 @@
         {
           "type": "rectangle",
           "id": "r340",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5393,7 +5393,7 @@
         {
           "type": "rectangle",
           "id": "r341",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5408,7 +5408,7 @@
         {
           "type": "rectangle",
           "id": "r342",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5423,7 +5423,7 @@
         {
           "type": "rectangle",
           "id": "r343",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5438,7 +5438,7 @@
         {
           "type": "rectangle",
           "id": "r344",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5453,7 +5453,7 @@
         {
           "type": "rectangle",
           "id": "r345",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5468,7 +5468,7 @@
         {
           "type": "rectangle",
           "id": "r346",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5483,7 +5483,7 @@
         {
           "type": "rectangle",
           "id": "r347",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5498,7 +5498,7 @@
         {
           "type": "rectangle",
           "id": "r348",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5513,7 +5513,7 @@
         {
           "type": "rectangle",
           "id": "r349",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5528,7 +5528,7 @@
         {
           "type": "rectangle",
           "id": "r350",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5543,7 +5543,7 @@
         {
           "type": "rectangle",
           "id": "r351",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5558,7 +5558,7 @@
         {
           "type": "rectangle",
           "id": "r352",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5573,7 +5573,7 @@
         {
           "type": "rectangle",
           "id": "r353",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5588,7 +5588,7 @@
         {
           "type": "rectangle",
           "id": "r354",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5603,7 +5603,7 @@
         {
           "type": "rectangle",
           "id": "r355",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5618,7 +5618,7 @@
         {
           "type": "rectangle",
           "id": "r356",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5633,7 +5633,7 @@
         {
           "type": "rectangle",
           "id": "r357",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5648,7 +5648,7 @@
         {
           "type": "rectangle",
           "id": "r358",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5663,7 +5663,7 @@
         {
           "type": "rectangle",
           "id": "r359",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5678,7 +5678,7 @@
         {
           "type": "rectangle",
           "id": "r360",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -5697,7 +5697,7 @@
     {
       "type": "frame",
       "id": "f361",
-      "name": "05 结果 · 表",
+      "name": "05-results-table",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -5712,7 +5712,7 @@
         {
           "type": "frame",
           "id": "f363",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -5725,9 +5725,9 @@
             {
               "type": "text",
               "id": "t362",
-              "name": "标题",
-              "content": "分档统计给出的提前量与照度呈单调关系",
-              "fontFamily": "Noto Sans SC",
+              "name": "heading",
+              "content": "By light band, the shift rises steadily with lux",
+              "fontFamily": "Inter",
               "fontSize": 60,
               "fontWeight": 700,
               "fill": [
@@ -5746,7 +5746,7 @@
         {
           "type": "frame",
           "id": "f405",
-          "name": "表格",
+          "name": "table",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -5759,7 +5759,7 @@
             {
               "type": "frame",
               "id": "f369",
-              "name": "表头",
+              "name": "table-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -5774,9 +5774,9 @@
                 {
                   "type": "text",
                   "id": "t364",
-                  "name": "表头 · 格",
-                  "content": "照度档（lux）",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-header-cell",
+                  "content": "Light band (lux)",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 600,
                   "fill": [
@@ -5794,9 +5794,9 @@
                 {
                   "type": "text",
                   "id": "t365",
-                  "name": "表头 · 格",
-                  "content": "样点数",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-header-cell",
+                  "content": "Sites",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 600,
                   "fill": [
@@ -5814,9 +5814,9 @@
                 {
                   "type": "text",
                   "id": "t366",
-                  "name": "表头 · 格",
-                  "content": "提前量中位数（分）",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-header-cell",
+                  "content": "Median shift (min)",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 600,
                   "fill": [
@@ -5834,9 +5834,9 @@
                 {
                   "type": "text",
                   "id": "t367",
-                  "name": "表头 · 格",
-                  "content": "四分位距",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-header-cell",
+                  "content": "IQR",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 600,
                   "fill": [
@@ -5854,9 +5854,9 @@
                 {
                   "type": "text",
                   "id": "t368",
-                  "name": "表头 · 格",
-                  "content": "p 值",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "table-header-cell",
+                  "content": "p-value",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 600,
                   "fill": [
@@ -5876,7 +5876,7 @@
             {
               "type": "rectangle",
               "id": "r370",
-              "name": "表头线",
+              "name": "table-header-rule",
               "width": "fill_container",
               "height": 2,
               "fill": [
@@ -5889,7 +5889,7 @@
             {
               "type": "frame",
               "id": "f376",
-              "name": "表行 1",
+              "name": "table-row-1",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -5904,7 +5904,7 @@
                 {
                   "type": "text",
                   "id": "t371",
-                  "name": "表行 1 · 格",
+                  "name": "table-row-1-cell",
                   "content": "0.5 – 1",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -5924,7 +5924,7 @@
                 {
                   "type": "text",
                   "id": "t372",
-                  "name": "表行 1 · 格",
+                  "name": "table-row-1-cell",
                   "content": "5",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -5944,7 +5944,7 @@
                 {
                   "type": "text",
                   "id": "t373",
-                  "name": "表行 1 · 格",
+                  "name": "table-row-1-cell",
                   "content": "2.1",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -5964,7 +5964,7 @@
                 {
                   "type": "text",
                   "id": "t374",
-                  "name": "表行 1 · 格",
+                  "name": "table-row-1-cell",
                   "content": "1.4",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -5984,7 +5984,7 @@
                 {
                   "type": "text",
                   "id": "t375",
-                  "name": "表行 1 · 格",
+                  "name": "table-row-1-cell",
                   "content": "0.31",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6006,7 +6006,7 @@
             {
               "type": "rectangle",
               "id": "r377",
-              "name": "行间细线",
+              "name": "row-rule",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -6019,7 +6019,7 @@
             {
               "type": "frame",
               "id": "f383",
-              "name": "表行 2",
+              "name": "table-row-2",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -6039,7 +6039,7 @@
                 {
                   "type": "text",
                   "id": "t378",
-                  "name": "表行 2 · 格",
+                  "name": "table-row-2-cell",
                   "content": "1 – 5",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6059,7 +6059,7 @@
                 {
                   "type": "text",
                   "id": "t379",
-                  "name": "表行 2 · 格",
+                  "name": "table-row-2-cell",
                   "content": "5",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6079,7 +6079,7 @@
                 {
                   "type": "text",
                   "id": "t380",
-                  "name": "表行 2 · 格",
+                  "name": "table-row-2-cell",
                   "content": "5.8",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6099,7 +6099,7 @@
                 {
                   "type": "text",
                   "id": "t381",
-                  "name": "表行 2 · 格",
+                  "name": "table-row-2-cell",
                   "content": "2.0",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6119,7 +6119,7 @@
                 {
                   "type": "text",
                   "id": "t382",
-                  "name": "表行 2 · 格",
+                  "name": "table-row-2-cell",
                   "content": "0.04",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6141,7 +6141,7 @@
             {
               "type": "rectangle",
               "id": "r384",
-              "name": "行间细线",
+              "name": "row-rule",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -6154,7 +6154,7 @@
             {
               "type": "frame",
               "id": "f390",
-              "name": "表行 3",
+              "name": "table-row-3",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -6169,7 +6169,7 @@
                 {
                   "type": "text",
                   "id": "t385",
-                  "name": "表行 3 · 格",
+                  "name": "table-row-3-cell",
                   "content": "5 – 15",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6189,7 +6189,7 @@
                 {
                   "type": "text",
                   "id": "t386",
-                  "name": "表行 3 · 格",
+                  "name": "table-row-3-cell",
                   "content": "5",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6209,7 +6209,7 @@
                 {
                   "type": "text",
                   "id": "t387",
-                  "name": "表行 3 · 格",
+                  "name": "table-row-3-cell",
                   "content": "13.6",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6229,7 +6229,7 @@
                 {
                   "type": "text",
                   "id": "t388",
-                  "name": "表行 3 · 格",
+                  "name": "table-row-3-cell",
                   "content": "3.1",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6249,7 +6249,7 @@
                 {
                   "type": "text",
                   "id": "t389",
-                  "name": "表行 3 · 格",
+                  "name": "table-row-3-cell",
                   "content": "< 0.01",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6271,7 +6271,7 @@
             {
               "type": "rectangle",
               "id": "r391",
-              "name": "行间细线",
+              "name": "row-rule",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -6284,7 +6284,7 @@
             {
               "type": "frame",
               "id": "f397",
-              "name": "表行 4",
+              "name": "table-row-4",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -6304,7 +6304,7 @@
                 {
                   "type": "text",
                   "id": "t392",
-                  "name": "表行 4 · 格",
+                  "name": "table-row-4-cell",
                   "content": "15 – 30",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6324,7 +6324,7 @@
                 {
                   "type": "text",
                   "id": "t393",
-                  "name": "表行 4 · 格",
+                  "name": "table-row-4-cell",
                   "content": "5",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6344,7 +6344,7 @@
                 {
                   "type": "text",
                   "id": "t394",
-                  "name": "表行 4 · 格",
+                  "name": "table-row-4-cell",
                   "content": "22.4",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6364,7 +6364,7 @@
                 {
                   "type": "text",
                   "id": "t395",
-                  "name": "表行 4 · 格",
+                  "name": "table-row-4-cell",
                   "content": "3.8",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6384,7 +6384,7 @@
                 {
                   "type": "text",
                   "id": "t396",
-                  "name": "表行 4 · 格",
+                  "name": "table-row-4-cell",
                   "content": "< 0.01",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6406,7 +6406,7 @@
             {
               "type": "rectangle",
               "id": "r398",
-              "name": "行间细线",
+              "name": "row-rule",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -6419,7 +6419,7 @@
             {
               "type": "frame",
               "id": "f404",
-              "name": "表行 5",
+              "name": "table-row-5",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -6434,7 +6434,7 @@
                 {
                   "type": "text",
                   "id": "t399",
-                  "name": "表行 5 · 格",
+                  "name": "table-row-5-cell",
                   "content": "30 – 50",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6454,7 +6454,7 @@
                 {
                   "type": "text",
                   "id": "t400",
-                  "name": "表行 5 · 格",
+                  "name": "table-row-5-cell",
                   "content": "4",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6474,7 +6474,7 @@
                 {
                   "type": "text",
                   "id": "t401",
-                  "name": "表行 5 · 格",
+                  "name": "table-row-5-cell",
                   "content": "30.9",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6494,7 +6494,7 @@
                 {
                   "type": "text",
                   "id": "t402",
-                  "name": "表行 5 · 格",
+                  "name": "table-row-5-cell",
                   "content": "4.6",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6514,7 +6514,7 @@
                 {
                   "type": "text",
                   "id": "t403",
-                  "name": "表行 5 · 格",
+                  "name": "table-row-5-cell",
                   "content": "< 0.01",
                   "fontFamily": "Inter",
                   "fontSize": 30,
@@ -6538,7 +6538,7 @@
         {
           "type": "rectangle",
           "id": "r406",
-          "name": "细线",
+          "name": "rule",
           "width": 1680,
           "height": 2,
           "fill": [
@@ -6553,7 +6553,7 @@
         {
           "type": "frame",
           "id": "f408",
-          "name": "图注双联",
+          "name": "caption-pair",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -6567,8 +6567,8 @@
               "type": "text",
               "id": "t407",
               "name": "so-what",
-              "content": "1 至 5 lux 之间 p 值跨过 0.05，这一档是统计上的分界，也是照明规范该写的那个数。",
-              "fontFamily": "Noto Sans SC",
+              "content": "Between 1 and 5 lux, p crosses 0.05. That band is the statistical cutoff, and the number lighting codes should use.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -6587,7 +6587,7 @@
         {
           "type": "rectangle",
           "id": "r409",
-          "name": "细线",
+          "name": "rule",
           "width": 1680,
           "height": 1,
           "fill": [
@@ -6602,7 +6602,7 @@
         {
           "type": "frame",
           "id": "f411",
-          "name": "引证槽",
+          "name": "citation-slot",
           "width": 1240,
           "height": "fit_content",
           "layout": "vertical",
@@ -6615,9 +6615,9 @@
             {
               "type": "text",
               "id": "t410",
-              "name": "引证",
-              "content": "[3] 照度与声学原始数据，城市生态研究所声景实验室，2026",
-              "fontFamily": "Noto Sans SC",
+              "name": "citation",
+              "content": "[3] Raw light and acoustic data, Soundscape Lab, Institute of Urban Ecology, 2026",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -6636,7 +6636,7 @@
         {
           "type": "frame",
           "id": "f413",
-          "name": "页码",
+          "name": "page-number",
           "width": 200,
           "height": "fit_content",
           "layout": "vertical",
@@ -6649,7 +6649,7 @@
             {
               "type": "text",
               "id": "t412",
-              "name": "页码",
+              "name": "page-number",
               "content": "5 / 8",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -6671,7 +6671,7 @@
         {
           "type": "rectangle",
           "id": "r414",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6686,7 +6686,7 @@
         {
           "type": "rectangle",
           "id": "r415",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6701,7 +6701,7 @@
         {
           "type": "rectangle",
           "id": "r416",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6716,7 +6716,7 @@
         {
           "type": "rectangle",
           "id": "r417",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6731,7 +6731,7 @@
         {
           "type": "rectangle",
           "id": "r418",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6746,7 +6746,7 @@
         {
           "type": "rectangle",
           "id": "r419",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6761,7 +6761,7 @@
         {
           "type": "rectangle",
           "id": "r420",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6776,7 +6776,7 @@
         {
           "type": "rectangle",
           "id": "r421",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6791,7 +6791,7 @@
         {
           "type": "rectangle",
           "id": "r422",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6806,7 +6806,7 @@
         {
           "type": "rectangle",
           "id": "r423",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6821,7 +6821,7 @@
         {
           "type": "rectangle",
           "id": "r424",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6836,7 +6836,7 @@
         {
           "type": "rectangle",
           "id": "r425",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6851,7 +6851,7 @@
         {
           "type": "rectangle",
           "id": "r426",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6866,7 +6866,7 @@
         {
           "type": "rectangle",
           "id": "r427",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6881,7 +6881,7 @@
         {
           "type": "rectangle",
           "id": "r428",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6896,7 +6896,7 @@
         {
           "type": "rectangle",
           "id": "r429",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6911,7 +6911,7 @@
         {
           "type": "rectangle",
           "id": "r430",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6926,7 +6926,7 @@
         {
           "type": "rectangle",
           "id": "r431",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6941,7 +6941,7 @@
         {
           "type": "rectangle",
           "id": "r432",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6956,7 +6956,7 @@
         {
           "type": "rectangle",
           "id": "r433",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6971,7 +6971,7 @@
         {
           "type": "rectangle",
           "id": "r434",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -6986,7 +6986,7 @@
         {
           "type": "rectangle",
           "id": "r435",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7001,7 +7001,7 @@
         {
           "type": "rectangle",
           "id": "r436",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7016,7 +7016,7 @@
         {
           "type": "rectangle",
           "id": "r437",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7031,7 +7031,7 @@
         {
           "type": "rectangle",
           "id": "r438",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7046,7 +7046,7 @@
         {
           "type": "rectangle",
           "id": "r439",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7061,7 +7061,7 @@
         {
           "type": "rectangle",
           "id": "r440",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7076,7 +7076,7 @@
         {
           "type": "rectangle",
           "id": "r441",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7091,7 +7091,7 @@
         {
           "type": "rectangle",
           "id": "r442",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7106,7 +7106,7 @@
         {
           "type": "rectangle",
           "id": "r443",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7121,7 +7121,7 @@
         {
           "type": "rectangle",
           "id": "r444",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7136,7 +7136,7 @@
         {
           "type": "rectangle",
           "id": "r445",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7151,7 +7151,7 @@
         {
           "type": "rectangle",
           "id": "r446",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7166,7 +7166,7 @@
         {
           "type": "rectangle",
           "id": "r447",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7181,7 +7181,7 @@
         {
           "type": "rectangle",
           "id": "r448",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7196,7 +7196,7 @@
         {
           "type": "rectangle",
           "id": "r449",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7211,7 +7211,7 @@
         {
           "type": "rectangle",
           "id": "r450",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7226,7 +7226,7 @@
         {
           "type": "rectangle",
           "id": "r451",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7241,7 +7241,7 @@
         {
           "type": "rectangle",
           "id": "r452",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7256,7 +7256,7 @@
         {
           "type": "rectangle",
           "id": "r453",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -7271,7 +7271,7 @@
         {
           "type": "rectangle",
           "id": "r454",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7286,7 +7286,7 @@
         {
           "type": "rectangle",
           "id": "r455",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7301,7 +7301,7 @@
         {
           "type": "rectangle",
           "id": "r456",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7316,7 +7316,7 @@
         {
           "type": "rectangle",
           "id": "r457",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7331,7 +7331,7 @@
         {
           "type": "rectangle",
           "id": "r458",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7346,7 +7346,7 @@
         {
           "type": "rectangle",
           "id": "r459",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7361,7 +7361,7 @@
         {
           "type": "rectangle",
           "id": "r460",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7376,7 +7376,7 @@
         {
           "type": "rectangle",
           "id": "r461",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7391,7 +7391,7 @@
         {
           "type": "rectangle",
           "id": "r462",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7406,7 +7406,7 @@
         {
           "type": "rectangle",
           "id": "r463",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7421,7 +7421,7 @@
         {
           "type": "rectangle",
           "id": "r464",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7436,7 +7436,7 @@
         {
           "type": "rectangle",
           "id": "r465",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7451,7 +7451,7 @@
         {
           "type": "rectangle",
           "id": "r466",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7466,7 +7466,7 @@
         {
           "type": "rectangle",
           "id": "r467",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7481,7 +7481,7 @@
         {
           "type": "rectangle",
           "id": "r468",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7496,7 +7496,7 @@
         {
           "type": "rectangle",
           "id": "r469",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7511,7 +7511,7 @@
         {
           "type": "rectangle",
           "id": "r470",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7526,7 +7526,7 @@
         {
           "type": "rectangle",
           "id": "r471",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7541,7 +7541,7 @@
         {
           "type": "rectangle",
           "id": "r472",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7556,7 +7556,7 @@
         {
           "type": "rectangle",
           "id": "r473",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7571,7 +7571,7 @@
         {
           "type": "rectangle",
           "id": "r474",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7586,7 +7586,7 @@
         {
           "type": "rectangle",
           "id": "r475",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7601,7 +7601,7 @@
         {
           "type": "rectangle",
           "id": "r476",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -7620,7 +7620,7 @@
     {
       "type": "frame",
       "id": "f477",
-      "name": "06 局限",
+      "name": "06-limitations",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -7635,7 +7635,7 @@
         {
           "type": "frame",
           "id": "f479",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -7648,9 +7648,9 @@
             {
               "type": "text",
               "id": "t478",
-              "name": "标题",
-              "content": "三个条件限制了这个结论能推广到多远",
-              "fontFamily": "Noto Sans SC",
+              "name": "heading",
+              "content": "Three limits on how far this result travels",
+              "fontFamily": "Inter",
               "fontSize": 60,
               "fontWeight": 700,
               "fill": [
@@ -7669,7 +7669,7 @@
         {
           "type": "frame",
           "id": "f482",
-          "name": "标签舌 · 局限 01",
+          "name": "tab-label-limit-01",
           "width": 168,
           "height": 40,
           "layout": "none",
@@ -7680,9 +7680,9 @@
             {
               "type": "text",
               "id": "t481",
-              "name": "标签舌 · 字",
-              "content": "局限 01",
-              "fontFamily": "Noto Sans SC",
+              "name": "tab-label-text",
+              "content": "Limit 01",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -7701,7 +7701,7 @@
             {
               "type": "path",
               "id": "p480",
-              "name": "标签舌 · 形",
+              "name": "tab-label-shape",
               "d": "M12 0 L168 0 L168 40 L0 40 Z",
               "width": 168,
               "height": 40,
@@ -7719,7 +7719,7 @@
         {
           "type": "frame",
           "id": "f485",
-          "name": "局限 1",
+          "name": "limit-1",
           "width": 528,
           "height": "fit_content",
           "layout": "vertical",
@@ -7732,9 +7732,9 @@
             {
               "type": "text",
               "id": "t483",
-              "name": "局限标题",
-              "content": "样本偏在温带",
-              "fontFamily": "Noto Sans SC",
+              "name": "limit-title",
+              "content": "Temperate sites only",
+              "fontFamily": "Inter",
               "fontSize": 36,
               "fontWeight": 600,
               "fill": [
@@ -7751,9 +7751,9 @@
             {
               "type": "text",
               "id": "t484",
-              "name": "局限说明",
-              "content": "三座城市都位于北纬三十\n到四十度之间。热带与高\n纬度城市的鸣唱物候受日\n长驱动更强，不宜外推。",
-              "fontFamily": "Noto Sans SC",
+              "name": "limit-body",
+              "content": "All three cities sit between\n30° and 40° N. In tropical or\nhigh-latitude cities, day length\ndrives song more. Don't extrapolate.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -7772,7 +7772,7 @@
         {
           "type": "frame",
           "id": "f488",
-          "name": "标签舌 · 局限 02",
+          "name": "tab-label-limit-02",
           "width": 168,
           "height": 40,
           "layout": "none",
@@ -7783,9 +7783,9 @@
             {
               "type": "text",
               "id": "t487",
-              "name": "标签舌 · 字",
-              "content": "局限 02",
-              "fontFamily": "Noto Sans SC",
+              "name": "tab-label-text",
+              "content": "Limit 02",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -7804,7 +7804,7 @@
             {
               "type": "path",
               "id": "p486",
-              "name": "标签舌 · 形",
+              "name": "tab-label-shape",
               "d": "M12 0 L168 0 L168 40 L0 40 Z",
               "width": 168,
               "height": 40,
@@ -7822,7 +7822,7 @@
         {
           "type": "frame",
           "id": "f491",
-          "name": "局限 2",
+          "name": "limit-2",
           "width": 528,
           "height": "fit_content",
           "layout": "vertical",
@@ -7835,9 +7835,9 @@
             {
               "type": "text",
               "id": "t489",
-              "name": "局限标题",
-              "content": "只覆盖六个物种",
-              "fontFamily": "Noto Sans SC",
+              "name": "limit-title",
+              "content": "Only six species",
+              "fontFamily": "Inter",
               "fontSize": 36,
               "fontWeight": 600,
               "fill": [
@@ -7854,9 +7854,9 @@
             {
               "type": "text",
               "id": "t490",
-              "name": "局限说明",
-              "content": "六个物种约占样点内个体\n的七成，剩下三成、尤其\n是夜行性种类的响应仍是\n空白。",
-              "fontFamily": "Noto Sans SC",
+              "name": "limit-body",
+              "content": "Six species make up about\n70% of birds at our sites.\nThe rest, nocturnal species\nespecially, remain unknown.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -7875,7 +7875,7 @@
         {
           "type": "frame",
           "id": "f494",
-          "name": "标签舌 · 局限 03",
+          "name": "tab-label-limit-03",
           "width": 168,
           "height": 40,
           "layout": "none",
@@ -7886,9 +7886,9 @@
             {
               "type": "text",
               "id": "t493",
-              "name": "标签舌 · 字",
-              "content": "局限 03",
-              "fontFamily": "Noto Sans SC",
+              "name": "tab-label-text",
+              "content": "Limit 03",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -7907,7 +7907,7 @@
             {
               "type": "path",
               "id": "p492",
-              "name": "标签舌 · 形",
+              "name": "tab-label-shape",
               "d": "M12 0 L168 0 L168 40 L0 40 Z",
               "width": 168,
               "height": 40,
@@ -7925,7 +7925,7 @@
         {
           "type": "frame",
           "id": "f497",
-          "name": "局限 3",
+          "name": "limit-3",
           "width": 528,
           "height": "fit_content",
           "layout": "vertical",
@@ -7938,9 +7938,9 @@
             {
               "type": "text",
               "id": "t495",
-              "name": "局限标题",
-              "content": "照度不等于光谱",
-              "fontFamily": "Noto Sans SC",
+              "name": "limit-title",
+              "content": "Lux is not spectrum",
+              "fontFamily": "Inter",
               "fontSize": 36,
               "fontWeight": 600,
               "fill": [
@@ -7957,9 +7957,9 @@
             {
               "type": "text",
               "id": "t496",
-              "name": "局限说明",
-              "content": "本文只记录了照度，未区\n分光谱成分。蓝光占比可\n能才是更直接的驱动量，\n这需要另一组实验。",
-              "fontFamily": "Noto Sans SC",
+              "name": "limit-body",
+              "content": "We logged illuminance only,\nnot spectrum. The blue-light\nshare may be the real driver,\nwhich needs its own study.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -7978,7 +7978,7 @@
         {
           "type": "frame",
           "id": "f499",
-          "name": "适用范围",
+          "name": "scope",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -7991,9 +7991,9 @@
             {
               "type": "text",
               "id": "t498",
-              "name": "适用范围",
-              "content": "这三条都不改变结论的方向，只限定它的适用范围：温带、六个物种、以照度为自变量。",
-              "fontFamily": "Noto Sans SC",
+              "name": "scope",
+              "content": "None of these flips the result; they only bound it: temperate cities, six species, illuminance as the predictor.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -8012,7 +8012,7 @@
         {
           "type": "rectangle",
           "id": "r500",
-          "name": "细线",
+          "name": "rule",
           "width": 1680,
           "height": 1,
           "fill": [
@@ -8027,7 +8027,7 @@
         {
           "type": "frame",
           "id": "f502",
-          "name": "引证槽",
+          "name": "citation-slot",
           "width": 1240,
           "height": "fit_content",
           "layout": "vertical",
@@ -8040,9 +8040,9 @@
             {
               "type": "text",
               "id": "t501",
-              "name": "引证",
-              "content": "[4] 韦知远，2025，光生物学与物候，7(1): 33–48",
-              "fontFamily": "Noto Sans SC",
+              "name": "citation",
+              "content": "[4] Webb J., 2025, Photobiology & Phenology, 7(1): 33–48",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -8061,7 +8061,7 @@
         {
           "type": "frame",
           "id": "f504",
-          "name": "页码",
+          "name": "page-number",
           "width": 200,
           "height": "fit_content",
           "layout": "vertical",
@@ -8074,7 +8074,7 @@
             {
               "type": "text",
               "id": "t503",
-              "name": "页码",
+              "name": "page-number",
               "content": "6 / 8",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -8096,7 +8096,7 @@
         {
           "type": "rectangle",
           "id": "r505",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8111,7 +8111,7 @@
         {
           "type": "rectangle",
           "id": "r506",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8126,7 +8126,7 @@
         {
           "type": "rectangle",
           "id": "r507",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8141,7 +8141,7 @@
         {
           "type": "rectangle",
           "id": "r508",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8156,7 +8156,7 @@
         {
           "type": "rectangle",
           "id": "r509",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8171,7 +8171,7 @@
         {
           "type": "rectangle",
           "id": "r510",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8186,7 +8186,7 @@
         {
           "type": "rectangle",
           "id": "r511",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8201,7 +8201,7 @@
         {
           "type": "rectangle",
           "id": "r512",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8216,7 +8216,7 @@
         {
           "type": "rectangle",
           "id": "r513",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8231,7 +8231,7 @@
         {
           "type": "rectangle",
           "id": "r514",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8246,7 +8246,7 @@
         {
           "type": "rectangle",
           "id": "r515",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8261,7 +8261,7 @@
         {
           "type": "rectangle",
           "id": "r516",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8276,7 +8276,7 @@
         {
           "type": "rectangle",
           "id": "r517",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8291,7 +8291,7 @@
         {
           "type": "rectangle",
           "id": "r518",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8306,7 +8306,7 @@
         {
           "type": "rectangle",
           "id": "r519",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8321,7 +8321,7 @@
         {
           "type": "rectangle",
           "id": "r520",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8336,7 +8336,7 @@
         {
           "type": "rectangle",
           "id": "r521",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8351,7 +8351,7 @@
         {
           "type": "rectangle",
           "id": "r522",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8366,7 +8366,7 @@
         {
           "type": "rectangle",
           "id": "r523",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8381,7 +8381,7 @@
         {
           "type": "rectangle",
           "id": "r524",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8396,7 +8396,7 @@
         {
           "type": "rectangle",
           "id": "r525",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8411,7 +8411,7 @@
         {
           "type": "rectangle",
           "id": "r526",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8426,7 +8426,7 @@
         {
           "type": "rectangle",
           "id": "r527",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8441,7 +8441,7 @@
         {
           "type": "rectangle",
           "id": "r528",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8456,7 +8456,7 @@
         {
           "type": "rectangle",
           "id": "r529",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8471,7 +8471,7 @@
         {
           "type": "rectangle",
           "id": "r530",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8486,7 +8486,7 @@
         {
           "type": "rectangle",
           "id": "r531",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8501,7 +8501,7 @@
         {
           "type": "rectangle",
           "id": "r532",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8516,7 +8516,7 @@
         {
           "type": "rectangle",
           "id": "r533",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8531,7 +8531,7 @@
         {
           "type": "rectangle",
           "id": "r534",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8546,7 +8546,7 @@
         {
           "type": "rectangle",
           "id": "r535",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8561,7 +8561,7 @@
         {
           "type": "rectangle",
           "id": "r536",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8576,7 +8576,7 @@
         {
           "type": "rectangle",
           "id": "r537",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8591,7 +8591,7 @@
         {
           "type": "rectangle",
           "id": "r538",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8606,7 +8606,7 @@
         {
           "type": "rectangle",
           "id": "r539",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8621,7 +8621,7 @@
         {
           "type": "rectangle",
           "id": "r540",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8636,7 +8636,7 @@
         {
           "type": "rectangle",
           "id": "r541",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8651,7 +8651,7 @@
         {
           "type": "rectangle",
           "id": "r542",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8666,7 +8666,7 @@
         {
           "type": "rectangle",
           "id": "r543",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8681,7 +8681,7 @@
         {
           "type": "rectangle",
           "id": "r544",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -8696,7 +8696,7 @@
         {
           "type": "rectangle",
           "id": "r545",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8711,7 +8711,7 @@
         {
           "type": "rectangle",
           "id": "r546",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8726,7 +8726,7 @@
         {
           "type": "rectangle",
           "id": "r547",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8741,7 +8741,7 @@
         {
           "type": "rectangle",
           "id": "r548",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8756,7 +8756,7 @@
         {
           "type": "rectangle",
           "id": "r549",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8771,7 +8771,7 @@
         {
           "type": "rectangle",
           "id": "r550",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8786,7 +8786,7 @@
         {
           "type": "rectangle",
           "id": "r551",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8801,7 +8801,7 @@
         {
           "type": "rectangle",
           "id": "r552",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8816,7 +8816,7 @@
         {
           "type": "rectangle",
           "id": "r553",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8831,7 +8831,7 @@
         {
           "type": "rectangle",
           "id": "r554",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8846,7 +8846,7 @@
         {
           "type": "rectangle",
           "id": "r555",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8861,7 +8861,7 @@
         {
           "type": "rectangle",
           "id": "r556",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8876,7 +8876,7 @@
         {
           "type": "rectangle",
           "id": "r557",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8891,7 +8891,7 @@
         {
           "type": "rectangle",
           "id": "r558",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8906,7 +8906,7 @@
         {
           "type": "rectangle",
           "id": "r559",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8921,7 +8921,7 @@
         {
           "type": "rectangle",
           "id": "r560",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8936,7 +8936,7 @@
         {
           "type": "rectangle",
           "id": "r561",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8951,7 +8951,7 @@
         {
           "type": "rectangle",
           "id": "r562",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8966,7 +8966,7 @@
         {
           "type": "rectangle",
           "id": "r563",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8981,7 +8981,7 @@
         {
           "type": "rectangle",
           "id": "r564",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -8996,7 +8996,7 @@
         {
           "type": "rectangle",
           "id": "r565",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -9011,7 +9011,7 @@
         {
           "type": "rectangle",
           "id": "r566",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -9026,7 +9026,7 @@
         {
           "type": "rectangle",
           "id": "r567",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -9045,7 +9045,7 @@
     {
       "type": "frame",
       "id": "f568",
-      "name": "07 结论",
+      "name": "07-conclusions",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -9060,7 +9060,7 @@
         {
           "type": "frame",
           "id": "f571",
-          "name": "标签舌 · 结果 · 结论",
+          "name": "tab-label-results-conclusions",
           "width": 192,
           "height": 40,
           "layout": "none",
@@ -9071,9 +9071,9 @@
             {
               "type": "text",
               "id": "t570",
-              "name": "标签舌 · 字",
-              "content": "结果 · 结论",
-              "fontFamily": "Noto Sans SC",
+              "name": "tab-label-text",
+              "content": "Results",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -9092,7 +9092,7 @@
             {
               "type": "path",
               "id": "p569",
-              "name": "标签舌 · 形",
+              "name": "tab-label-shape",
               "d": "M12 0 L192 0 L192 40 L0 40 Z",
               "width": 192,
               "height": 40,
@@ -9110,7 +9110,7 @@
         {
           "type": "frame",
           "id": "f573",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -9123,9 +9123,9 @@
             {
               "type": "text",
               "id": "t572",
-              "name": "标题",
-              "content": "把灯调暗两档，可以把鸣唱提前量压回十分钟以内",
-              "fontFamily": "Noto Sans SC",
+              "name": "heading",
+              "content": "Dim the lights two bands and the shift falls under 10 minutes",
+              "fontFamily": "Inter",
               "fontSize": 60,
               "fontWeight": 700,
               "fill": [
@@ -9144,7 +9144,7 @@
         {
           "type": "frame",
           "id": "f585",
-          "name": "结论列表",
+          "name": "conclusion-list",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -9157,7 +9157,7 @@
             {
               "type": "frame",
               "id": "f576",
-              "name": "结论 1",
+              "name": "conclusion-1",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -9172,7 +9172,7 @@
                 {
                   "type": "text",
                   "id": "t574",
-                  "name": "序号",
+                  "name": "index",
                   "content": "01",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -9191,9 +9191,9 @@
                 {
                   "type": "text",
                   "id": "t575",
-                  "name": "结论",
-                  "content": "照度与鸣唱提前量之间是单调的剂量—反应关系",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "conclusion",
+                  "content": "Light and song shift follow a monotonic dose-response curve",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 500,
                   "fill": [
@@ -9212,7 +9212,7 @@
             {
               "type": "rectangle",
               "id": "r577",
-              "name": "条间细线",
+              "name": "bar-rule",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -9225,7 +9225,7 @@
             {
               "type": "frame",
               "id": "f580",
-              "name": "结论 2",
+              "name": "conclusion-2",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -9240,7 +9240,7 @@
                 {
                   "type": "text",
                   "id": "t578",
-                  "name": "序号",
+                  "name": "index",
                   "content": "02",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -9259,9 +9259,9 @@
                 {
                   "type": "text",
                   "id": "t579",
-                  "name": "结论",
-                  "content": "把地面照度压到 5 lux 以下，提前量回到十分钟以内",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "conclusion",
+                  "content": "Below 5 lux ground light, the shift returns to under 10 minutes",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 500,
                   "fill": [
@@ -9280,7 +9280,7 @@
             {
               "type": "rectangle",
               "id": "r581",
-              "name": "条间细线",
+              "name": "bar-rule",
               "width": "fill_container",
               "height": 1,
               "fill": [
@@ -9293,7 +9293,7 @@
             {
               "type": "frame",
               "id": "f584",
-              "name": "结论 3",
+              "name": "conclusion-3",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -9308,7 +9308,7 @@
                 {
                   "type": "text",
                   "id": "t582",
-                  "name": "序号",
+                  "name": "index",
                   "content": "03",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -9327,9 +9327,9 @@
                 {
                   "type": "text",
                   "id": "t583",
-                  "name": "结论",
-                  "content": "调整灯具遮光角比压低总功率更省电，也更有效",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "conclusion",
+                  "content": "Adjusting fixture cutoff angles saves more power than cutting wattage, and works better",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 500,
                   "fill": [
@@ -9350,7 +9350,7 @@
         {
           "type": "frame",
           "id": "f587",
-          "name": "意义",
+          "name": "implication",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -9363,9 +9363,9 @@
             {
               "type": "text",
               "id": "t586",
-              "name": "意义",
-              "content": "这意味着城市照明规划可以不必在道路亮度与生态成本之间二选一：\n把同样的流明压低照射角、留在路面上，两个目标能同时达成。",
-              "fontFamily": "Noto Sans SC",
+              "name": "implication",
+              "content": "City lighting doesn't have to choose between bright roads and ecology:\naim the same lumens lower and keep them on the road, and both goals are met.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 400,
               "fill": [
@@ -9384,7 +9384,7 @@
         {
           "type": "rectangle",
           "id": "r588",
-          "name": "细线",
+          "name": "rule",
           "width": 1680,
           "height": 1,
           "fill": [
@@ -9399,7 +9399,7 @@
         {
           "type": "frame",
           "id": "f590",
-          "name": "页码",
+          "name": "page-number",
           "width": 200,
           "height": "fit_content",
           "layout": "vertical",
@@ -9412,7 +9412,7 @@
             {
               "type": "text",
               "id": "t589",
-              "name": "页码",
+              "name": "page-number",
               "content": "7 / 8",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -9434,7 +9434,7 @@
         {
           "type": "rectangle",
           "id": "r591",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9449,7 +9449,7 @@
         {
           "type": "rectangle",
           "id": "r592",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9464,7 +9464,7 @@
         {
           "type": "rectangle",
           "id": "r593",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9479,7 +9479,7 @@
         {
           "type": "rectangle",
           "id": "r594",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9494,7 +9494,7 @@
         {
           "type": "rectangle",
           "id": "r595",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9509,7 +9509,7 @@
         {
           "type": "rectangle",
           "id": "r596",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9524,7 +9524,7 @@
         {
           "type": "rectangle",
           "id": "r597",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9539,7 +9539,7 @@
         {
           "type": "rectangle",
           "id": "r598",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9554,7 +9554,7 @@
         {
           "type": "rectangle",
           "id": "r599",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9569,7 +9569,7 @@
         {
           "type": "rectangle",
           "id": "r600",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9584,7 +9584,7 @@
         {
           "type": "rectangle",
           "id": "r601",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9599,7 +9599,7 @@
         {
           "type": "rectangle",
           "id": "r602",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9614,7 +9614,7 @@
         {
           "type": "rectangle",
           "id": "r603",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9629,7 +9629,7 @@
         {
           "type": "rectangle",
           "id": "r604",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9644,7 +9644,7 @@
         {
           "type": "rectangle",
           "id": "r605",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9659,7 +9659,7 @@
         {
           "type": "rectangle",
           "id": "r606",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9674,7 +9674,7 @@
         {
           "type": "rectangle",
           "id": "r607",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9689,7 +9689,7 @@
         {
           "type": "rectangle",
           "id": "r608",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9704,7 +9704,7 @@
         {
           "type": "rectangle",
           "id": "r609",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9719,7 +9719,7 @@
         {
           "type": "rectangle",
           "id": "r610",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9734,7 +9734,7 @@
         {
           "type": "rectangle",
           "id": "r611",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9749,7 +9749,7 @@
         {
           "type": "rectangle",
           "id": "r612",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9764,7 +9764,7 @@
         {
           "type": "rectangle",
           "id": "r613",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9779,7 +9779,7 @@
         {
           "type": "rectangle",
           "id": "r614",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9794,7 +9794,7 @@
         {
           "type": "rectangle",
           "id": "r615",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9809,7 +9809,7 @@
         {
           "type": "rectangle",
           "id": "r616",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9824,7 +9824,7 @@
         {
           "type": "rectangle",
           "id": "r617",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9839,7 +9839,7 @@
         {
           "type": "rectangle",
           "id": "r618",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9854,7 +9854,7 @@
         {
           "type": "rectangle",
           "id": "r619",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9869,7 +9869,7 @@
         {
           "type": "rectangle",
           "id": "r620",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9884,7 +9884,7 @@
         {
           "type": "rectangle",
           "id": "r621",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9899,7 +9899,7 @@
         {
           "type": "rectangle",
           "id": "r622",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9914,7 +9914,7 @@
         {
           "type": "rectangle",
           "id": "r623",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9929,7 +9929,7 @@
         {
           "type": "rectangle",
           "id": "r624",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9944,7 +9944,7 @@
         {
           "type": "rectangle",
           "id": "r625",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9959,7 +9959,7 @@
         {
           "type": "rectangle",
           "id": "r626",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9974,7 +9974,7 @@
         {
           "type": "rectangle",
           "id": "r627",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -9989,7 +9989,7 @@
         {
           "type": "rectangle",
           "id": "r628",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -10004,7 +10004,7 @@
         {
           "type": "rectangle",
           "id": "r629",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -10019,7 +10019,7 @@
         {
           "type": "rectangle",
           "id": "r630",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -10034,7 +10034,7 @@
         {
           "type": "rectangle",
           "id": "r631",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10049,7 +10049,7 @@
         {
           "type": "rectangle",
           "id": "r632",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10064,7 +10064,7 @@
         {
           "type": "rectangle",
           "id": "r633",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10079,7 +10079,7 @@
         {
           "type": "rectangle",
           "id": "r634",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10094,7 +10094,7 @@
         {
           "type": "rectangle",
           "id": "r635",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10109,7 +10109,7 @@
         {
           "type": "rectangle",
           "id": "r636",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10124,7 +10124,7 @@
         {
           "type": "rectangle",
           "id": "r637",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10139,7 +10139,7 @@
         {
           "type": "rectangle",
           "id": "r638",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10154,7 +10154,7 @@
         {
           "type": "rectangle",
           "id": "r639",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10169,7 +10169,7 @@
         {
           "type": "rectangle",
           "id": "r640",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10184,7 +10184,7 @@
         {
           "type": "rectangle",
           "id": "r641",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10199,7 +10199,7 @@
         {
           "type": "rectangle",
           "id": "r642",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10214,7 +10214,7 @@
         {
           "type": "rectangle",
           "id": "r643",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10229,7 +10229,7 @@
         {
           "type": "rectangle",
           "id": "r644",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10244,7 +10244,7 @@
         {
           "type": "rectangle",
           "id": "r645",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10259,7 +10259,7 @@
         {
           "type": "rectangle",
           "id": "r646",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10274,7 +10274,7 @@
         {
           "type": "rectangle",
           "id": "r647",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10289,7 +10289,7 @@
         {
           "type": "rectangle",
           "id": "r648",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10304,7 +10304,7 @@
         {
           "type": "rectangle",
           "id": "r649",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10319,7 +10319,7 @@
         {
           "type": "rectangle",
           "id": "r650",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10334,7 +10334,7 @@
         {
           "type": "rectangle",
           "id": "r651",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10349,7 +10349,7 @@
         {
           "type": "rectangle",
           "id": "r652",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10364,7 +10364,7 @@
         {
           "type": "rectangle",
           "id": "r653",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -10383,7 +10383,7 @@
     {
       "type": "frame",
       "id": "f654",
-      "name": "08 引用",
+      "name": "08-references",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -10398,7 +10398,7 @@
         {
           "type": "frame",
           "id": "f656",
-          "name": "页标题",
+          "name": "page-title",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -10411,9 +10411,9 @@
             {
               "type": "text",
               "id": "t655",
-              "name": "标题",
-              "content": "引用文献",
-              "fontFamily": "Noto Sans SC",
+              "name": "heading",
+              "content": "References",
+              "fontFamily": "Inter",
               "fontSize": 36,
               "fontWeight": 600,
               "fill": [
@@ -10432,7 +10432,7 @@
         {
           "type": "frame",
           "id": "f659",
-          "name": "引用 1",
+          "name": "ref-1",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10445,9 +10445,9 @@
             {
               "type": "text",
               "id": "t657",
-              "name": "引用 · 作者",
-              "content": "[1] 陈黎，周砚，2024",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[1] Chen L., Zhou Y., 2024",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10464,9 +10464,9 @@
             {
               "type": "text",
               "id": "t658",
-              "name": "引用 · 出处",
-              "content": "城市生态学报，41(3): 217–229",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Journal of Urban Ecology, 41(3): 217–229",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10485,7 +10485,7 @@
         {
           "type": "frame",
           "id": "f662",
-          "name": "引用 2",
+          "name": "ref-2",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10498,9 +10498,9 @@
             {
               "type": "text",
               "id": "t660",
-              "name": "引用 · 作者",
-              "content": "[2] 方沐，柯砚池，2023",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[2] Fang M., Kerr Y., 2023",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10517,9 +10517,9 @@
             {
               "type": "text",
               "id": "t661",
-              "name": "引用 · 出处",
-              "content": "动物行为学报，18(2): 96–108",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Animal Behaviour Letters, 18(2): 96–108",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10538,7 +10538,7 @@
         {
           "type": "frame",
           "id": "f665",
-          "name": "引用 3",
+          "name": "ref-3",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10551,9 +10551,9 @@
             {
               "type": "text",
               "id": "t663",
-              "name": "引用 · 作者",
-              "content": "[3] 声景实验室，2026",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[3] Soundscape Lab, 2026",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10570,9 +10570,9 @@
             {
               "type": "text",
               "id": "t664",
-              "name": "引用 · 出处",
-              "content": "内部数据集 SL-26-04",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Internal dataset SL-26-04",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10591,7 +10591,7 @@
         {
           "type": "frame",
           "id": "f668",
-          "name": "引用 4",
+          "name": "ref-4",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10604,9 +10604,9 @@
             {
               "type": "text",
               "id": "t666",
-              "name": "引用 · 作者",
-              "content": "[4] 韦知远，2025",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[4] Webb J., 2025",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10623,9 +10623,9 @@
             {
               "type": "text",
               "id": "t667",
-              "name": "引用 · 出处",
-              "content": "光生物学与物候，7(1): 33–48",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Photobiology & Phenology, 7(1): 33–48",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10644,7 +10644,7 @@
         {
           "type": "frame",
           "id": "f671",
-          "name": "引用 5",
+          "name": "ref-5",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10657,9 +10657,9 @@
             {
               "type": "text",
               "id": "t669",
-              "name": "引用 · 作者",
-              "content": "[5] 苏槿，2022",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[5] Sutton J., 2022",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10676,9 +10676,9 @@
             {
               "type": "text",
               "id": "t670",
-              "name": "引用 · 出处",
-              "content": "声景与城市，3(4): 51–66",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Soundscape & City, 3(4): 51–66",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10697,7 +10697,7 @@
         {
           "type": "frame",
           "id": "f674",
-          "name": "引用 6",
+          "name": "ref-6",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10710,9 +10710,9 @@
             {
               "type": "text",
               "id": "t672",
-              "name": "引用 · 作者",
-              "content": "[6] 何砚舟，罗青，2021",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[6] Hale Y., Ross Q., 2021",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10729,9 +10729,9 @@
             {
               "type": "text",
               "id": "t673",
-              "name": "引用 · 出处",
-              "content": "鸟类学研究，12(2): 140–152",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Ornithology Research, 12(2): 140–152",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10750,7 +10750,7 @@
         {
           "type": "frame",
           "id": "f677",
-          "name": "引用 7",
+          "name": "ref-7",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10763,9 +10763,9 @@
             {
               "type": "text",
               "id": "t675",
-              "name": "引用 · 作者",
-              "content": "[7] 池屿，2024",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[7] Chi Y., 2024",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10782,9 +10782,9 @@
             {
               "type": "text",
               "id": "t676",
-              "name": "引用 · 出处",
-              "content": "照明工程学报，35(6): 88–97",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Lighting Engineering Journal, 35(6): 88–97",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10803,7 +10803,7 @@
         {
           "type": "frame",
           "id": "f680",
-          "name": "引用 8",
+          "name": "ref-8",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10816,9 +10816,9 @@
             {
               "type": "text",
               "id": "t678",
-              "name": "引用 · 作者",
-              "content": "[8] 林停舟，2023",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[8] Lin T., 2023",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10835,9 +10835,9 @@
             {
               "type": "text",
               "id": "t679",
-              "name": "引用 · 出处",
-              "content": "生态学杂志，42(9): 2201–2213",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Journal of Ecology Studies, 42(9): 2201–2213",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10856,7 +10856,7 @@
         {
           "type": "frame",
           "id": "f683",
-          "name": "引用 9",
+          "name": "ref-9",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10869,9 +10869,9 @@
             {
               "type": "text",
               "id": "t681",
-              "name": "引用 · 作者",
-              "content": "[9] 邬砚，2020",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[9] Wu Y., 2020",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10888,9 +10888,9 @@
             {
               "type": "text",
               "id": "t682",
-              "name": "引用 · 出处",
-              "content": "城市环境与健康，9(3): 12–24",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Urban Environment & Health, 9(3): 12–24",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10909,7 +10909,7 @@
         {
           "type": "frame",
           "id": "f686",
-          "name": "引用 10",
+          "name": "ref-10",
           "width": 816,
           "height": "fit_content",
           "layout": "vertical",
@@ -10922,9 +10922,9 @@
             {
               "type": "text",
               "id": "t684",
-              "name": "引用 · 作者",
-              "content": "[10] 谢岚溪，2025",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-authors",
+              "content": "[10] Shaw L., 2025",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -10941,9 +10941,9 @@
             {
               "type": "text",
               "id": "t685",
-              "name": "引用 · 出处",
-              "content": "夜间生态学评论，2(1): 5–19",
-              "fontFamily": "Noto Sans SC",
+              "name": "ref-source",
+              "content": "Night Ecology Review, 2(1): 5–19",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10962,7 +10962,7 @@
         {
           "type": "frame",
           "id": "f688",
-          "name": "联系",
+          "name": "contact",
           "width": 1680,
           "height": "fit_content",
           "layout": "vertical",
@@ -10975,9 +10975,9 @@
             {
               "type": "text",
               "id": "t687",
-              "name": "联系",
-              "content": "通信作者：陆停云（城市生态研究所 · 声景实验室）",
-              "fontFamily": "Noto Sans SC",
+              "name": "contact",
+              "content": "Corresponding author: Laura Hayes (Institute of Urban Ecology · Soundscape Lab)",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -10996,7 +10996,7 @@
         {
           "type": "rectangle",
           "id": "r689",
-          "name": "细线",
+          "name": "rule",
           "width": 1680,
           "height": 1,
           "fill": [
@@ -11011,7 +11011,7 @@
         {
           "type": "frame",
           "id": "f691",
-          "name": "页码",
+          "name": "page-number",
           "width": 200,
           "height": "fit_content",
           "layout": "vertical",
@@ -11024,7 +11024,7 @@
             {
               "type": "text",
               "id": "t690",
-              "name": "页码",
+              "name": "page-number",
               "content": "8 / 8",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -11046,7 +11046,7 @@
         {
           "type": "rectangle",
           "id": "r692",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11061,7 +11061,7 @@
         {
           "type": "rectangle",
           "id": "r693",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11076,7 +11076,7 @@
         {
           "type": "rectangle",
           "id": "r694",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11091,7 +11091,7 @@
         {
           "type": "rectangle",
           "id": "r695",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11106,7 +11106,7 @@
         {
           "type": "rectangle",
           "id": "r696",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11121,7 +11121,7 @@
         {
           "type": "rectangle",
           "id": "r697",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11136,7 +11136,7 @@
         {
           "type": "rectangle",
           "id": "r698",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11151,7 +11151,7 @@
         {
           "type": "rectangle",
           "id": "r699",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11166,7 +11166,7 @@
         {
           "type": "rectangle",
           "id": "r700",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11181,7 +11181,7 @@
         {
           "type": "rectangle",
           "id": "r701",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11196,7 +11196,7 @@
         {
           "type": "rectangle",
           "id": "r702",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11211,7 +11211,7 @@
         {
           "type": "rectangle",
           "id": "r703",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11226,7 +11226,7 @@
         {
           "type": "rectangle",
           "id": "r704",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11241,7 +11241,7 @@
         {
           "type": "rectangle",
           "id": "r705",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11256,7 +11256,7 @@
         {
           "type": "rectangle",
           "id": "r706",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11271,7 +11271,7 @@
         {
           "type": "rectangle",
           "id": "r707",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11286,7 +11286,7 @@
         {
           "type": "rectangle",
           "id": "r708",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11301,7 +11301,7 @@
         {
           "type": "rectangle",
           "id": "r709",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11316,7 +11316,7 @@
         {
           "type": "rectangle",
           "id": "r710",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11331,7 +11331,7 @@
         {
           "type": "rectangle",
           "id": "r711",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11346,7 +11346,7 @@
         {
           "type": "rectangle",
           "id": "r712",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11361,7 +11361,7 @@
         {
           "type": "rectangle",
           "id": "r713",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11376,7 +11376,7 @@
         {
           "type": "rectangle",
           "id": "r714",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11391,7 +11391,7 @@
         {
           "type": "rectangle",
           "id": "r715",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11406,7 +11406,7 @@
         {
           "type": "rectangle",
           "id": "r716",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11421,7 +11421,7 @@
         {
           "type": "rectangle",
           "id": "r717",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11436,7 +11436,7 @@
         {
           "type": "rectangle",
           "id": "r718",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11451,7 +11451,7 @@
         {
           "type": "rectangle",
           "id": "r719",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11466,7 +11466,7 @@
         {
           "type": "rectangle",
           "id": "r720",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11481,7 +11481,7 @@
         {
           "type": "rectangle",
           "id": "r721",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11496,7 +11496,7 @@
         {
           "type": "rectangle",
           "id": "r722",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11511,7 +11511,7 @@
         {
           "type": "rectangle",
           "id": "r723",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11526,7 +11526,7 @@
         {
           "type": "rectangle",
           "id": "r724",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11541,7 +11541,7 @@
         {
           "type": "rectangle",
           "id": "r725",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11556,7 +11556,7 @@
         {
           "type": "rectangle",
           "id": "r726",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11571,7 +11571,7 @@
         {
           "type": "rectangle",
           "id": "r727",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11586,7 +11586,7 @@
         {
           "type": "rectangle",
           "id": "r728",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11601,7 +11601,7 @@
         {
           "type": "rectangle",
           "id": "r729",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11616,7 +11616,7 @@
         {
           "type": "rectangle",
           "id": "r730",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11631,7 +11631,7 @@
         {
           "type": "rectangle",
           "id": "r731",
-          "name": "格线 · 竖",
+          "name": "grid-line-vertical",
           "width": 1,
           "height": 1080,
           "fill": [
@@ -11646,7 +11646,7 @@
         {
           "type": "rectangle",
           "id": "r732",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11661,7 +11661,7 @@
         {
           "type": "rectangle",
           "id": "r733",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11676,7 +11676,7 @@
         {
           "type": "rectangle",
           "id": "r734",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11691,7 +11691,7 @@
         {
           "type": "rectangle",
           "id": "r735",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11706,7 +11706,7 @@
         {
           "type": "rectangle",
           "id": "r736",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11721,7 +11721,7 @@
         {
           "type": "rectangle",
           "id": "r737",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11736,7 +11736,7 @@
         {
           "type": "rectangle",
           "id": "r738",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11751,7 +11751,7 @@
         {
           "type": "rectangle",
           "id": "r739",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11766,7 +11766,7 @@
         {
           "type": "rectangle",
           "id": "r740",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11781,7 +11781,7 @@
         {
           "type": "rectangle",
           "id": "r741",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11796,7 +11796,7 @@
         {
           "type": "rectangle",
           "id": "r742",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11811,7 +11811,7 @@
         {
           "type": "rectangle",
           "id": "r743",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11826,7 +11826,7 @@
         {
           "type": "rectangle",
           "id": "r744",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11841,7 +11841,7 @@
         {
           "type": "rectangle",
           "id": "r745",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11856,7 +11856,7 @@
         {
           "type": "rectangle",
           "id": "r746",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11871,7 +11871,7 @@
         {
           "type": "rectangle",
           "id": "r747",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11886,7 +11886,7 @@
         {
           "type": "rectangle",
           "id": "r748",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11901,7 +11901,7 @@
         {
           "type": "rectangle",
           "id": "r749",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11916,7 +11916,7 @@
         {
           "type": "rectangle",
           "id": "r750",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11931,7 +11931,7 @@
         {
           "type": "rectangle",
           "id": "r751",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11946,7 +11946,7 @@
         {
           "type": "rectangle",
           "id": "r752",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11961,7 +11961,7 @@
         {
           "type": "rectangle",
           "id": "r753",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
@@ -11976,7 +11976,7 @@
         {
           "type": "rectangle",
           "id": "r754",
-          "name": "格线 · 横",
+          "name": "grid-line-horizontal",
           "width": 1920,
           "height": 1,
           "fill": [
