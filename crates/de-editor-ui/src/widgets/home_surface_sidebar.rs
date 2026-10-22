@@ -47,9 +47,13 @@ pub(super) fn paint_sidebar(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, lay
         p.border,
     );
 
-    // Brand: the accent mark, plus the wordmark beside it when there is
-    // room for one.
-    cx.backend.fill_round_rect(layout.brand_mark, 5.0, p.accent);
+    // Brand: the logo, plus the wordmark beside it when there is room
+    // for one.
+    crate::widgets::design_editor_mark::paint_design_editor_mark(
+        cx.backend,
+        layout.brand_mark.origin,
+        layout.brand_mark.size.x,
+    );
     if !layout.rail {
         draw_text_weighted(
             cx,

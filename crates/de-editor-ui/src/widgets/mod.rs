@@ -238,6 +238,7 @@ mod icons_data;
 // not lucide stroke art). Sourced verbatim from `apps/web/src/
 // components/icons/*-logo.tsx`.
 pub mod brand_icons;
+pub mod design_editor_mark;
 
 // Step 4 — extra editor-chrome widgets (TS app parity).
 pub mod agent_settings_acp;
