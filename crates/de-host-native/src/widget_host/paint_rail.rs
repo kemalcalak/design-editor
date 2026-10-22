@@ -8,9 +8,8 @@ use de_editor_ui::Point2D;
 
 impl WidgetHostNative {
     /// The left rail (slides navigator, Pages + Layers tree, or the
-    /// Chat tab's column). Painted BEFORE the canvas on the desktop
-    /// (the rail pushes the canvas) and AFTER it in mobile layout (the
-    /// rail overlays the canvas).
+    /// Chat tab's column). Painted BEFORE the canvas (the rail pushes
+    /// the canvas).
     pub(in crate::widget_host) fn paint_left_rail(
         &mut self,
         frame: &mut NativeFrameBackend<'_>,
@@ -42,7 +41,7 @@ impl WidgetHostNative {
             && slides_panel.is_none()
             && de_editor_ui::widgets::slides_panel_flow::chat_tab_active(&self.editor_state);
         if chat_owns_rail {
-            let panel = self.layers_content_rect(viewport_width, viewport_height);
+            let panel = self.layers_content_rect(viewport_height);
             use de_editor_ui::RenderBackend;
             frame.fill_rect(panel, self.theme.card);
             // The dock always shows the EXPANDED chat — a minimized bar
@@ -52,7 +51,7 @@ impl WidgetHostNative {
             if self.editor_state.chat.is_minimized() {
                 self.editor_state.chat.expand();
             }
-            if let Some(tabs) = self.slides_tab_row(viewport_width, viewport_height) {
+            if let Some(tabs) = self.slides_tab_row(viewport_height) {
                 self.paint_slides_tab_row(frame, &tabs);
             }
         }
@@ -61,7 +60,7 @@ impl WidgetHostNative {
             // the drop-indicator line during a drag-to-reorder.
             // The rail is the tab row's leftovers when a tab row shows,
             // so paint and hit-test both start from the same rect.
-            let layer_panel_rect = self.layers_content_rect(viewport_width, viewport_height);
+            let layer_panel_rect = self.layers_content_rect(viewport_height);
             // Build the panel for paint. While a drag is active,
             // exclude the source's subtree so the rendered row stack
             // mirrors the post-commit layout — both the visible rows
@@ -130,7 +129,7 @@ impl WidgetHostNative {
             // The tab row heads the rail in BOTH tabs — it is how the
             // user gets back to the slides — so it paints over the
             // layer tree's own card background here.
-            if let Some(tabs) = self.slides_tab_row(viewport_width, viewport_height) {
+            if let Some(tabs) = self.slides_tab_row(viewport_height) {
                 self.paint_slides_tab_row(frame, &tabs);
             }
         }
@@ -148,10 +147,7 @@ impl WidgetHostNative {
         frame: &mut NativeFrameBackend<'_>,
         viewport_height: f32,
     ) {
-        if !self.editor_state.editor_ui.sidebar_open
-            || self.editor_state.editor_ui.touch_chrome()
-            || self.editor_state.editor_ui.preview.mode
-        {
+        if !self.editor_state.editor_ui.sidebar_open || self.editor_state.editor_ui.preview.mode {
             return;
         }
         use de_editor_ui::RenderBackend;

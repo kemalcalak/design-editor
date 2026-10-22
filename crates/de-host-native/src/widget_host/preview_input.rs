@@ -21,8 +21,7 @@ impl WidgetHostNative {
     /// The factual timestamp for the live-preview pointer event being
     /// dispatched: the scoped event time when a timestamped entry
     /// variant (`apply_press_at` / `apply_cursor_move_at` /
-    /// `apply_release_with_viewport_at` / `cancel_native_touch_gestures_at`)
-    /// supplied one, else the host's global clock (`now_ms`). The
+    /// `apply_release_with_viewport_at`) supplied one, else the host's global clock (`now_ms`). The
     /// global clock and the event time are deliberately independent:
     /// an out-of-order event (frame at 2000, Down at 950) keeps the
     /// clock at 2000 while the Swipe recognizer measures the factual
@@ -35,7 +34,7 @@ impl WidgetHostNative {
     /// preview runtime. CLONED out of `PreviewSession` — the runtime's
     /// state is interior-mutable, so production callers never receive a
     /// reference into it. Compiled only when the `testing` feature is
-    /// enabled (de-engine-ffi / de-host-native test builds).
+    /// enabled (de-host-native test builds).
     #[cfg(feature = "testing")]
     pub fn preview_app_state_value_for_test(
         &self,

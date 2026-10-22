@@ -15,13 +15,7 @@ impl WidgetHostNative {
         x: f32,
         y: f32,
     ) {
-        if self.editor_state.editor_ui.touch_chrome() {
-            let settings = &mut self.editor_state.editor_ui.agent_settings;
-            settings.builtin_model_menu_hover = None;
-            settings.builtin_preset_menu_hover = None;
-        } else {
-            self.update_agent_settings_hover(x, y);
-        }
+        self.update_agent_settings_hover(x, y);
     }
 
     /// Scroll the chat transcript message list when a wheel / trackpad
@@ -30,10 +24,6 @@ impl WidgetHostNative {
     /// the model-picker's clamp: the offset rides `[0, max]`, and
     /// reaching the bottom re-pins the transcript to auto-follow new
     /// streamed content.
-    ///
-    /// `pub(in crate::widget_host)` so the mobile one-finger transcript
-    /// gesture (`touch_panel_gesture.rs`) drives the exact same
-    /// clamp + pin-to-bottom implementation the wheel path uses.
     pub(in crate::widget_host) fn try_scroll_chat_transcript(
         &mut self,
         x: f32,
@@ -147,7 +137,7 @@ impl WidgetHostNative {
             self.refresh_agent_settings_hover_after_scroll(x, y);
             self.mark_dirty();
         }
-        changed || !self.editor_state.editor_ui.touch_chrome()
+        true
     }
 
     fn try_scroll_agent_preset_menu(
@@ -219,15 +209,6 @@ impl WidgetHostNative {
             .scroll_by(-delta_y, max_scroll, 0.0);
         let changed = (self.editor_state.editor_ui.agent_settings.scroll_y.offset - before).abs()
             > f32::EPSILON;
-        let menu_open = self
-            .editor_state
-            .editor_ui
-            .agent_settings
-            .builtin_model_menu_open
-            .is_some();
-        let menu_revealed = menu_open
-            && self.ensure_focused_agent_settings_visible(viewport_width, viewport_height);
-        let changed = changed || menu_revealed;
         if changed {
             self.refresh_agent_settings_hover_after_scroll(x, y);
             self.mark_dirty();
@@ -315,7 +296,6 @@ impl WidgetHostNative {
         y: f32,
         delta_x: f32,
         delta_y: f32,
-        viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
         if !self.layers_panel_visible() {
@@ -335,7 +315,7 @@ impl WidgetHostNative {
             }
             return true;
         }
-        let rect = self.layers_content_rect(viewport_width, viewport_height);
+        let rect = self.layers_content_rect(viewport_height);
         let panel = self.layer_panel();
         let Some(dirty) = scroll_flow::scroll_layer_panel(
             &mut self.editor_state,
@@ -355,10 +335,9 @@ impl WidgetHostNative {
 
     pub(in crate::widget_host) fn scroll_layer_panel_selection_into_view(
         &mut self,
-        viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
-        let rect = self.layers_content_rect(viewport_width, viewport_height);
+        let rect = self.layers_content_rect(viewport_height);
         let panel = self.layer_panel();
         if !scroll_flow::reveal_layer_panel_selection(&mut self.editor_state, &panel, rect) {
             return false;
@@ -453,7 +432,7 @@ impl WidgetHostNative {
         viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
-        let cancelled = self.cancel_native_touch_gestures();
+        let cancelled = self.cancel_pointer_gestures();
         let handled = self.apply_wheel_inner(x, y, delta_y, viewport_width, viewport_height, false);
         handled || cancelled
     }
@@ -467,7 +446,7 @@ impl WidgetHostNative {
         viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
-        let cancelled = self.cancel_native_touch_gestures();
+        let cancelled = self.cancel_pointer_gestures();
         let handled = self.apply_wheel_inner(x, y, delta_y, viewport_width, viewport_height, true);
         handled || cancelled
     }
@@ -630,10 +609,7 @@ impl WidgetHostNative {
         } else {
             (0.0, delta_y)
         };
-        if self.try_scroll_layer_panel(x, y, layer_dx, layer_dy, viewport_width, viewport_height) {
-            return true;
-        }
-        if self.mobile_sheet_owns_point(Point2D::new(x, y), viewport_width, viewport_height) {
+        if self.try_scroll_layer_panel(x, y, layer_dx, layer_dy, viewport_height) {
             return true;
         }
         // A device frame owns every wheel over the canvas. Branch on

@@ -83,7 +83,7 @@ impl SceneTemplatePanel<'_> {
     /// The text area a pasted document lands in.
     pub fn style_import_text_rect(&self, panel: Rect) -> Rect {
         let box_rect = self.style_import_rect(panel);
-        let button_h = self.style_import_action_height();
+        let button_h = 32.0;
         let top = box_rect.origin.y + BOX_PAD + 30.0 + 22.0;
         let bottom = box_rect.origin.y + box_rect.size.y - BOX_PAD - button_h - 12.0 - 20.0;
         Rect::xywh(
@@ -97,7 +97,7 @@ impl SceneTemplatePanel<'_> {
     /// The confirm button, bottom-right.
     pub fn style_import_confirm_rect(&self, panel: Rect) -> Rect {
         let box_rect = self.style_import_rect(panel);
-        let button_h = self.style_import_action_height();
+        let button_h = 32.0;
         Rect::xywh(
             box_rect.origin.x + box_rect.size.x - BOX_PAD - BUTTON_W,
             box_rect.origin.y + box_rect.size.y - BOX_PAD - button_h,
@@ -113,7 +113,7 @@ impl SceneTemplatePanel<'_> {
             confirm.origin.x - BUTTON_GAP - BUTTON_W,
             confirm.origin.y,
             BUTTON_W,
-            self.style_import_action_height(),
+            32.0,
         )
     }
 
@@ -138,9 +138,9 @@ impl SceneTemplatePanel<'_> {
         }
         Some(Rect::xywh(
             left,
-            box_rect.origin.y + box_rect.size.y - BOX_PAD - self.style_import_action_height(),
+            box_rect.origin.y + box_rect.size.y - BOX_PAD - 32.0,
             width,
-            self.style_import_action_height(),
+            32.0,
         ))
     }
 
@@ -267,10 +267,7 @@ impl SceneTemplatePanel<'_> {
         // hint rather than sharing the button row: the row now starts with the
         // "choose file" button on the left, which is exactly where the message
         // used to be painted.
-        let status_y = box_rect.origin.y + box_rect.size.y
-            - BOX_PAD
-            - self.style_import_action_height()
-            - 14.0;
+        let status_y = box_rect.origin.y + box_rect.size.y - BOX_PAD - 32.0 - 14.0;
         match self.state.editor_ui.scene_template_center.import.error_key {
             Some(key) => self.paint_text(
                 cx,

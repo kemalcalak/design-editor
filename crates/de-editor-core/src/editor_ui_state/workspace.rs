@@ -329,12 +329,8 @@ impl EditorUiState {
     /// professional editor's Chat tab. THE one predicate answering "is
     /// the chat pinned into a column?": the press tiers that inert the
     /// panel's floating controls and the shared click flow both read
-    /// this and nothing else. Touch chrome never pins — it hosts the
-    /// chat as its own bottom sheet.
+    /// this and nothing else.
     pub fn chat_pinned(&self) -> bool {
-        if self.touch_chrome() {
-            return false;
-        }
         if self.workspace.visible {
             return self.sidebar_open;
         }
@@ -344,13 +340,13 @@ impl EditorUiState {
     /// Whether the chat shows nothing but its composer, docked at the
     /// canvas floor.
     ///
-    /// True on desktop chrome whenever the conversation's home — the
+    /// True whenever the conversation's home — the
     /// rail's Agent tab — is not the tab on show. The full transcript
     /// then has exactly one place to live, and what sits over the canvas
     /// is a launcher: type into it, or open it, and the rail switches to
     /// the Agent tab where the conversation actually happens.
     pub fn chat_composer_only(&self) -> bool {
-        if self.touch_chrome() || self.workspace.visible || self.preview.mode {
+        if self.workspace.visible || self.preview.mode {
             return false;
         }
         !self.chat_pinned()

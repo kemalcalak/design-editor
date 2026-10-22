@@ -5,9 +5,8 @@ name: Rust release artifacts
 # tarballs, publishes the web SDK packages to npm, publishes a GitHub
 # prerelease, then updates the Homebrew tap and Scoop bucket.
 #
-# Desktop installers, Android APK/AAB, web/SDK/VSIX assets, and package-manager
-# updates are attached to the GitHub release. The protected iOS job uploads to
-# App Store Connect / TestFlight and intentionally produces no GitHub asset.
+# Desktop installers, web/SDK/VSIX assets, and package-manager updates are
+# attached to the GitHub release.
 # Desktop artifact map:
 #   macOS   Design-Editor-<v>-<arch>-mac.dmg        signed/notarized app bundle
 #           de-cli-<label>.tar.gz                standalone CLI
@@ -37,12 +36,6 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      ios_app_store_only:
-        description: Run only the iOS App Store / TestFlight lane
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: read
@@ -98,75 +91,6 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "source_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
-  ios-app-store:
-    name: iOS App Store / TestFlight
-    needs: version
-    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.ios_app_store_only == true)
-    runs-on: macos-26
-    timeout-minutes: 120
-    environment: testflight
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout the exact release source without credentials
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          ref: ${{ needs.version.outputs.source_sha }}
-          submodules: recursive
-
-      - name: Prepare the pinned iOS release runner
-        id: ios_release
-        shell: bash
-        env:
-          DESIGN_EDITOR_RELEASE_SHA: ${{ needs.version.outputs.source_sha }}
-          DESIGN_EDITOR_RELEASE_VERSION: ${{ needs.version.outputs.version }}
-        run: scripts/prepare-ios-app-store-runner.sh
-
-      - name: Validate protected production release configuration
-        shell: bash
-        env:
-          RELAY_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-          RELAY_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
-        run: |
-          set -euo pipefail
-          relay_cn=$RELAY_CN
-          relay_global=$RELAY_GLOBAL
-          unset RELAY_CN RELAY_GLOBAL
-          printf '%s\0%s\0' "$relay_cn" "$relay_global" \
-            | python3 tools/check-collab-bootstrap-urls.py
-          echo "Validated the protected production release configuration."
-
-      - name: Publish the collaboration-enabled build to TestFlight
-        shell: bash
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          IOS_BUILD_NUMBER: ${{ steps.ios_release.outputs.build_number }}
-          IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
-          IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
-          IOS_MARKETING_VERSION: ${{ steps.ios_release.outputs.version }}
-          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
-          OP_AUTH_ARTIFACT_ROOT: ${{ github.workspace }}/crates/de-auth-bridge/prebuilt
-          XCODEGEN_BIN: ${{ steps.ios_release.outputs.xcodegen_binary }}
-        run: scripts/publish-ios-testflight.sh
-
-  android-release:
-    name: Android APK / AAB
-    needs: version
-    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
-    permissions:
-      contents: read
-    uses: ./.github/workflows/android-release.yml
-    secrets:
-      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-      DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
-
   build:
     name: ${{ matrix.label }}
     needs: version
@@ -174,7 +98,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
-    if: (github.event_name == 'workflow_dispatch' && inputs.ios_app_store_only == false) || (startsWith(github.ref, 'refs/tags/v') && github.event_name != 'workflow_dispatch')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     env:
       DE_VERSION: ${{ needs.version.outputs.version }}
       HAS_APPLE_CERTIFICATE: ${{ secrets.CSC_LINK != '' && secrets.CSC_KEY_PASSWORD != '' && secrets.APPLE_ID != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && 'true' || 'false' }}
@@ -615,7 +539,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    if: startsWith(github.ref, 'refs/tags/v')
     env:
       DE_VERSION: ${{ needs.version.outputs.version }}
     outputs:
@@ -669,7 +593,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    if: startsWith(github.ref, 'refs/tags/v')
     env:
       DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
@@ -779,7 +703,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    if: startsWith(github.ref, 'refs/tags/v')
     env:
       DE_VERSION: ${{ needs.version.outputs.version }}
     steps:
@@ -919,10 +843,10 @@ jobs:
 
   release-draft:
     name: Create / update GitHub prerelease
-    needs: [version, android-release, build, web-docker, sdk-packages, vsix]
+    needs: [version, build, web-docker, sdk-packages, vsix]
     environment: release-production
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    if: startsWith(github.ref, 'refs/tags/v')
     # id-token + attestations power the build-provenance step below; the
     # job-level block overrides the workflow defaults, so contents/PR write
     # must be restated for the release upload and Nix manifest PR.
@@ -1118,7 +1042,7 @@ jobs:
     permissions:
       contents: read
       actions: read
-    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name != 'workflow_dispatch' || inputs.ios_app_store_only == false)
+    if: startsWith(github.ref, 'refs/tags/v')
     env:
       DE_VERSION: ${{ needs.version.outputs.version }}
       HOMEBREW_TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'ZSeven-W/homebrew-design-editor' }}

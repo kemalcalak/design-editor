@@ -101,7 +101,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "git.header.overflowCloseRepo" => "Tutup repositori",
         "git.header.overflowRemoteSettings" => "Pengaturan remote…",
         "git.header.overflowSshKeys" => "Kunci SSH…",
-        "git.header.overflowMoreActions" => "Tindakan lainnya",
         "git.history.empty" => "Belum ada riwayat",
         "git.history.autosaveGroup_one" => "1 auto-save",
         "git.history.autosaveGroup_other" => "{{count}} auto-save",

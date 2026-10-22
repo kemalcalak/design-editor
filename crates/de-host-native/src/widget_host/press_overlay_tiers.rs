@@ -21,9 +21,6 @@ impl WidgetHostNative {
         &mut self,
         ctx: &PressCtx,
     ) -> Option<bool> {
-        if self.preview_slideshow_active() && self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         let (x, y) = (ctx.x, ctx.y);
         let viewport_width = ctx.viewport_width;
         let viewport_height = ctx.viewport_height;
@@ -166,9 +163,6 @@ impl WidgetHostNative {
         &mut self,
         ctx: &PressCtx,
     ) -> Option<bool> {
-        if self.preview_slideshow_active() && self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         let (x, y) = (ctx.x, ctx.y);
         let viewport_width = ctx.viewport_width;
         let viewport_height = ctx.viewport_height;
@@ -176,13 +170,12 @@ impl WidgetHostNative {
         // modal within the dropdown tier: a press outside closes and is
         // swallowed, while a row/button only queues a runtime-owned action.
         if self.editor_state.editor_ui.collab.panel.open
-            && !((self.editor_state.editor_ui.account_ui_available
-                || self.editor_state.editor_ui.touch_chrome())
+            && !(self.editor_state.editor_ui.account_ui_available
                 && self.editor_state.editor_ui.login_modal_open)
         {
             if let Some(panel) = CollabPanel::for_editor_ui(&self.editor_state.editor_ui) {
                 let panel_rect =
-                    de_editor_ui::widgets::touch_overlay_geometry::collaboration_panel_rect(
+                    de_editor_ui::widgets::host_overlay_geometry::collaboration_panel_rect(
                         &self.editor_state,
                         &panel,
                         viewport_width,
@@ -256,8 +249,7 @@ impl WidgetHostNative {
             self.dispatch_figma_import_press(x, y, viewport_width, viewport_height);
             return Some(true);
         }
-        if (self.editor_state.editor_ui.account_ui_available
-            || self.editor_state.editor_ui.touch_chrome())
+        if self.editor_state.editor_ui.account_ui_available
             && self.editor_state.editor_ui.login_modal_open
         {
             self.close_image_popovers_for_higher_overlay();

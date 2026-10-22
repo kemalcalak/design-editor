@@ -12,8 +12,9 @@ use super::scene_template_card_actions::{
 };
 use super::scene_template_panel::{
     filter_hover_token, tab_hover_token, SceneTemplatePanel, CHIP_RADIUS, CONTROL_RADIUS,
-    GENERATE_HINT_SIZE, GENERATE_INPUT_PAD_X, GENERATE_TEXT_SIZE, SCENE_TEMPLATE_CLOSE_HOVER,
-    SCENE_TEMPLATE_GENERATE_HOVER, SEARCH_PAD_X, SEARCH_TEXT_SIZE, TITLE_SIZE,
+    GENERATE_HINT_SIZE, GENERATE_INPUT_PAD_X, GENERATE_TEXT_SIZE, HEADER_H,
+    SCENE_TEMPLATE_CLOSE_HOVER, SCENE_TEMPLATE_GENERATE_HOVER, SEARCH_PAD_X, SEARCH_TEXT_SIZE,
+    TITLE_SIZE,
 };
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::prompt_center_panel::estimated_text_width;
@@ -86,12 +87,7 @@ impl SceneTemplatePanel<'_> {
             Point2D::new(
                 content.origin.x,
                 jian_widgets::centered_text_baseline_y(
-                    Rect::xywh(
-                        content.origin.x,
-                        panel.origin.y,
-                        content.size.x,
-                        self.header_height_for(panel),
-                    ),
+                    Rect::xywh(content.origin.x, panel.origin.y, content.size.x, HEADER_H),
                     TITLE_SIZE,
                 ),
             ),
@@ -99,7 +95,7 @@ impl SceneTemplatePanel<'_> {
             self.theme.foreground,
         );
 
-        let close = self.close_rect_for(panel);
+        let close = Self::close_rect(panel);
         jian_widgets::components::icon_button::IconButton {
             icon_paths: Icon::Close.paths(),
             hovered: self.state.editor_ui.scene_template_center.hover
@@ -117,18 +113,13 @@ impl SceneTemplatePanel<'_> {
         );
 
         cx.backend.fill_rect(
-            Rect::xywh(
-                panel.origin.x,
-                panel.origin.y + self.header_height_for(panel),
-                panel.size.x,
-                1.0,
-            ),
+            Rect::xywh(panel.origin.x, panel.origin.y + HEADER_H, panel.size.x, 1.0),
             self.theme.border,
         );
     }
 
     fn paint_search(&self, cx: &mut PaintCx<'_>, panel: Rect) {
-        let rect = self.search_rect_for(panel);
+        let rect = Self::search_rect(panel);
         self.paint_field_frame(cx, rect, Icon::Search);
         paint_text_input_view(
             cx,

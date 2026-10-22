@@ -101,7 +101,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "git.header.overflowCloseRepo" => "ปิดที่เก็บ",
         "git.header.overflowRemoteSettings" => "การตั้งค่ารีโมต…",
         "git.header.overflowSshKeys" => "คีย์ SSH…",
-        "git.header.overflowMoreActions" => "การดำเนินการเพิ่มเติม",
         "git.history.empty" => "ไม่มีประวัติ",
         "git.history.autosaveGroup_one" => "บันทึกอัตโนมัติ 1 รายการ",
         "git.history.autosaveGroup_other" => "บันทึกอัตโนมัติ {{count}} รายการ",

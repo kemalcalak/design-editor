@@ -57,10 +57,6 @@ pub enum ExportError {
     /// Skia's encoder failed for the requested format ("PNG" / "JPEG" /
     /// "WEBP").
     Encode { format: &'static str },
-    /// The selected build deliberately omits an optional encoder. Mobile
-    /// release archives omit WebP, so callers must not fall through to a
-    /// generic Skia encode failure.
-    UnsupportedFormat { format: &'static str },
     /// Skia's PDF backend closed the document without emitting any bytes.
     PdfEncoderEmpty,
     /// A multi-node PDF export was asked for an empty id list.
@@ -113,9 +109,6 @@ impl fmt::Display for ExportError {
             ),
             ExportError::SurfaceAlloc => f.write_str("alloc surface"),
             ExportError::Encode { format } => write!(f, "encode {format} failed"),
-            ExportError::UnsupportedFormat { format } => {
-                write!(f, "{format} export is not supported by this build")
-            }
             ExportError::PdfEncoderEmpty => f.write_str("PDF encoder returned no bytes"),
             ExportError::NoNodeIdsRequested => f.write_str("no node ids provided"),
             ExportError::NoRequestedNodesPaint => {

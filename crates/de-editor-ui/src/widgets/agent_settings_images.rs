@@ -47,12 +47,8 @@ pub enum ImagesHit {
     None,
 }
 
-pub(super) fn responsive_content_height(
-    settings: &AgentSettings,
-    content_w: f32,
-    touch: bool,
-) -> f32 {
-    content_height_for_ui(settings, content_w, touch)
+pub(super) fn responsive_content_height(settings: &AgentSettings) -> f32 {
+    content_height_for_ui(settings)
 }
 
 /// Unscrolled rect for the active Images-tab input. Kept at the module
@@ -61,7 +57,6 @@ pub(super) fn focused_input_rect_for_ui(
     content: Rect,
     settings: &AgentSettings,
     focus: SettingsFocus,
-    touch: bool,
 ) -> Option<Rect> {
     match focus {
         SettingsFocus::ImageSearch(field) if settings.images_advanced_open => {
@@ -69,14 +64,12 @@ pub(super) fn focused_input_rect_for_ui(
                 ImageSearchField::ClientId => 0,
                 ImageSearchField::ClientSecret => 1,
             };
-            Some(search_field_rect_for_ui(content, index, touch))
+            Some(search_field_rect_for_ui(content, index))
         }
         SettingsFocus::ImageGenProfile { index, field } => {
             settings.image_gen_profiles.get(index)?;
-            let row = profile_row_rect_for_ui(content, settings, index, touch);
-            Some(profile_input_rect_for_ui(
-                row, settings, index, field, touch,
-            ))
+            let row = profile_row_rect_for_ui(content, settings, index);
+            Some(profile_input_rect_for_ui(row, field))
         }
         _ => None,
     }
@@ -87,7 +80,7 @@ pub(super) fn focused_input_rect_for_ui(
 /// without reaching the right-aligned Test button.
 #[cfg(test)]
 pub(super) fn register_link_rect(content: Rect) -> Rect {
-    register_link_rect_for_ui(content, false)
+    register_link_rect_for_ui(content)
 }
 
 fn has_search_credentials(settings: &AgentSettings) -> bool {
@@ -146,181 +139,18 @@ mod touch_tests {
         settings
     }
 
-    fn center(rect: Rect) -> Point2D {
-        Point2D::new(
-            rect.origin.x + rect.size.x / 2.0,
-            rect.origin.y + rect.size.y / 2.0,
-        )
-    }
-
-    fn assert_touch_rect(rect: Rect, label: &str) {
-        assert!(
-            rect.size.x >= 44.0 && rect.size.y >= 44.0,
-            "{label} must have a 44pt touch target, got {rect:?}"
-        );
-    }
-
-    fn assert_above(a: Rect, b: Rect, label: &str) {
-        assert!(
-            a.origin.y + a.size.y <= b.origin.y + 0.01,
-            "{label} must not overlap: {a:?} / {b:?}"
-        );
-    }
-
-    #[test]
-    fn compact_390_stacks_search_and_profile_actions_at_touch_size() {
-        let settings = settings_with_expanded_profile(false);
-        let content = Rect::xywh(16.0, 80.0, 358.0, 0.0);
-
-        let advanced = advanced_toggle_rect_for_ui(content, true);
-        let client_id = search_field_rect_for_ui(content, 0, true);
-        let secret = search_field_rect_for_ui(content, 1, true);
-        let register = register_link_rect_for_ui(content, true);
-        let search_test = test_btn_rect_for_ui(content, &settings, true);
-        let add = add_btn_rect_for_ui(content, &settings, true);
-        for (rect, label) in [
-            (advanced, "advanced"),
-            (client_id, "client id"),
-            (secret, "client secret"),
-            (register, "register link"),
-            (search_test, "search test"),
-            (add, "add profile"),
-        ] {
-            assert_touch_rect(rect, label);
-        }
-        assert_above(client_id, secret, "search fields");
-        assert_above(secret, register, "secret and register link");
-        assert_above(register, search_test, "compact register and test rows");
-
-        let row = profile_row_rect_for_ui(content, &settings, 0, true);
-        let active = profile_active_target_rect(row, true);
-        let remove = profile_remove_rect_for_ui(row, true);
-        let header = profile_header_rect_for_ui(row, true);
-        assert_touch_rect(active, "active profile");
-        assert_touch_rect(remove, "remove profile");
-        assert_touch_rect(header, "profile header");
-
-        let provider = profile_provider_rect_for_ui(row, &settings, 0, true);
-        let api = profile_input_rect_for_ui(row, &settings, 0, ImageGenField::ApiKey, true);
-        let test = profile_test_btn_rect_for_ui(row, &settings, 0, true);
-        let model = profile_input_rect_for_ui(row, &settings, 0, ImageGenField::Model, true);
-        for (rect, label) in [
-            (provider, "provider"),
-            (api, "api key"),
-            (test, "profile test"),
-            (model, "model"),
-        ] {
-            assert_touch_rect(rect, label);
-        }
-        assert!(api.size.x > 280.0, "API input should retain compact width");
-        assert_above(api, test, "API input and test action");
-        assert_above(test, model, "test action and model input");
-
-        assert_eq!(
-            hit_test_for_ui(content, &settings, center(api), true),
-            ImagesHit::FocusGenConfig {
-                index: 0,
-                field: ImageGenField::ApiKey
-            }
-        );
-        assert_eq!(
-            hit_test_for_ui(content, &settings, center(provider), true),
-            ImagesHit::ToggleGenProviderMenu(0)
-        );
-    }
-
-    #[test]
-    fn medium_834_keeps_side_by_side_search_action_and_44pt_profile_controls() {
-        let settings = settings_with_expanded_profile(false);
-        let content = Rect::xywh(80.0, 180.0, 680.0, 0.0);
-        let register = register_link_rect_for_ui(content, true);
-        let test = test_btn_rect_for_ui(content, &settings, true);
-        assert_touch_rect(register, "register link");
-        assert_touch_rect(test, "search test");
-        assert!(
-            register.origin.x + register.size.x <= test.origin.x,
-            "medium search actions should not overlap"
-        );
-
-        let row = profile_row_rect_for_ui(content, &settings, 0, true);
-        for field in image_gen_fields() {
-            assert_touch_rect(
-                profile_input_rect_for_ui(row, &settings, 0, field, true),
-                "profile input",
-            );
-        }
-        assert_eq!(
-            hit_test_for_ui(
-                content,
-                &settings,
-                center(profile_remove_rect_for_ui(row, true)),
-                true,
-            ),
-            ImagesHit::RemoveGenConfig(0)
-        );
-    }
-
-    #[test]
-    fn touch_provider_menu_rows_shift_following_fields_and_content_height() {
-        let closed = settings_with_expanded_profile(false);
-        let open = settings_with_expanded_profile(true);
-        let content = Rect::xywh(16.0, 80.0, 358.0, 0.0);
-        let closed_row = profile_row_rect_for_ui(content, &closed, 0, true);
-        let open_row = profile_row_rect_for_ui(content, &open, 0, true);
-
-        // One 44 px row per entry of `ImageGenProvider::ALL`. The Atlas
-        // Cloud provider took the list from four to five, so the
-        // expanded profile grew 176 → 220; the constant here is the
-        // list's length, not a free number.
-        const EXPANDED_H: f32 = 44.0 * ImageGenProvider::ALL.len() as f32;
-        assert_eq!(open_row.size.y - closed_row.size.y, EXPANDED_H);
-        assert_eq!(
-            content_height_for_ui(&open, content.size.x, true)
-                - content_height_for_ui(&closed, content.size.x, true),
-            EXPANDED_H
-        );
-        let api = profile_input_rect_for_ui(open_row, &open, 0, ImageGenField::ApiKey, true);
-        for (option_index, expected) in ImageGenProvider::ALL.iter().enumerate() {
-            let option =
-                profile_provider_option_rect_for_ui(open_row, &open, 0, option_index, true);
-            assert_touch_rect(option, "provider option");
-            assert_eq!(
-                hit_test_for_ui(content, &open, center(option), true),
-                ImagesHit::SelectGenProvider {
-                    index: 0,
-                    provider: *expected
-                }
-            );
-            assert_above(option, api, "provider menu and following API input");
-        }
-        let last = profile_provider_option_rect_for_ui(open_row, &open, 0, 3, true);
-        assert_above(last, api, "complete provider menu and API input");
-        let base_url = profile_input_rect_for_ui(open_row, &open, 0, ImageGenField::BaseUrl, true);
-        assert!(
-            base_url.origin.y + base_url.size.y <= open_row.origin.y + open_row.size.y,
-            "expanded profile must contain its final field"
-        );
-    }
-
     #[test]
     fn desktop_geometry_keeps_legacy_pixel_density() {
         let settings = settings_with_expanded_profile(true);
         let content = Rect::xywh(40.0, 80.0, 760.0, 0.0);
-        assert_eq!(advanced_toggle_rect_for_ui(content, false).size.y, 24.0);
-        assert_eq!(search_field_rect_for_ui(content, 0, false).size.y, 36.0);
-        assert_eq!(add_btn_rect_for_ui(content, &settings, false).size.y, 28.0);
-        let row = profile_row_rect_for_ui(content, &settings, 0, false);
-        assert_eq!(profile_header_rect_for_ui(row, false).size.y, 32.0);
+        assert_eq!(advanced_toggle_rect_for_ui(content).size.y, 24.0);
+        assert_eq!(search_field_rect_for_ui(content, 0).size.y, 36.0);
+        assert_eq!(add_btn_rect_for_ui(content, &settings).size.y, 28.0);
+        let row = profile_row_rect_for_ui(content, &settings, 0);
+        assert_eq!(profile_header_rect_for_ui(row).size.y, 32.0);
+        assert_eq!(profile_provider_option_rect_for_ui(row, 0).size.y, 24.0);
         assert_eq!(
-            profile_provider_option_rect_for_ui(row, &settings, 0, 0, false)
-                .size
-                .y,
-            24.0
-        );
-        assert_eq!(
-            profile_input_rect_for_ui(row, &settings, 0, ImageGenField::Name, false)
-                .size
-                .y,
+            profile_input_rect_for_ui(row, ImageGenField::Name).size.y,
             24.0
         );
     }

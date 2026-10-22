@@ -101,7 +101,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "git.header.overflowCloseRepo" => "Repository schließen",
         "git.header.overflowRemoteSettings" => "Remote-Einstellungen…",
         "git.header.overflowSshKeys" => "SSH-Schlüssel…",
-        "git.header.overflowMoreActions" => "Weitere Aktionen",
         "git.history.empty" => "Noch kein Verlauf",
         "git.history.autosaveGroup_one" => "1 Auto-Speicherung",
         "git.history.autosaveGroup_other" => "{{count}} Auto-Speicherungen",

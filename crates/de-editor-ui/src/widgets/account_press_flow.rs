@@ -108,7 +108,7 @@ pub fn press_account_menu(
         return AccountMenuPress::Vanished;
     };
     let menu_rect =
-        crate::widgets::touch_overlay_geometry::account_menu_rect(state, &menu, viewport_width);
+        crate::widgets::host_overlay_geometry::account_menu_rect(state, &menu, viewport_width);
     let point = Point2D::new(x, y);
     match menu.hit_test(menu_rect, point) {
         Some(AccountMenuRow::Settings) => {

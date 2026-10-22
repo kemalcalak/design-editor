@@ -170,17 +170,13 @@ pub fn display_font_family(value: &str) -> &str {
 
 pub const FONT_PICKER_ROW_H: f32 = 24.0;
 pub const FONT_PICKER_SEARCH_H: f32 = 28.0;
-const TOUCH_FONT_PICKER_ROW_H: f32 = 44.0;
-const TOUCH_FONT_PICKER_SEARCH_H: f32 = 44.0;
 const GROUP_HEADER_H: f32 = 16.0;
-const TOUCH_GROUP_HEADER_H: f32 = 28.0;
 const NO_RESULTS_H: f32 = 40.0;
 const LIST_PAD_Y: f32 = 4.0;
 /// The bottom "Import font…" action row height.
 const IMPORT_ACTION_H: f32 = 28.0;
 /// Side of the inline remove-x hit square on an imported entry row.
 const REMOVE_X_SIZE: f32 = 16.0;
-const TOUCH_REMOVE_X_SIZE: f32 = 44.0;
 /// Desktop list viewport cap. Touch keeps the same 288-point popup cap while
 /// accounting for its taller search field.
 #[cfg(test)]
@@ -212,7 +208,6 @@ pub struct FontPickerLayout {
     pub viewport: Rect,
     pub max_scroll: f32,
     pub rows: Vec<(FontPickerRow, Rect)>,
-    pub touch_controls: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -227,7 +222,7 @@ pub enum FontPickerAction {
 fn family_trigger_rect(panel_rect: Rect, visible: VisibleSections) -> Option<Rect> {
     let text_y = crate::widgets::property_panel_text::text_section_top(panel_rect, visible)?;
     let y = text_y
-        + crate::widgets::property_panel_text::text_layout_block_height(visible.touch_controls)
+        + crate::widgets::property_panel_text::text_layout_block_height()
         + crate::widgets::property_panel_inputs::SECTION_HEADER_HEIGHT;
     Some(Rect {
         origin: Point2D::new(panel_rect.origin.x + PAD_X, y),
@@ -253,7 +248,6 @@ pub fn font_picker_layout(
         allow_import,
         true,
         scroll,
-        visible.touch_controls,
     ))
 }
 
@@ -278,7 +272,6 @@ pub fn font_picker_layout_at(
         allow_import,
         allow_remove,
         scroll,
-        false,
     )
 }
 
@@ -293,7 +286,6 @@ pub fn font_picker_layout_at_for_ui(
     allow_import: bool,
     allow_remove: bool,
     scroll: f32,
-    touch_controls: bool,
 ) -> FontPickerLayout {
     font_picker_layout_at_with_density(
         trigger,
@@ -303,7 +295,6 @@ pub fn font_picker_layout_at_for_ui(
         allow_import,
         allow_remove,
         scroll,
-        touch_controls,
     )
 }
 
@@ -316,33 +307,12 @@ fn font_picker_layout_at_with_density(
     allow_import: bool,
     allow_remove: bool,
     scroll: f32,
-    touch_controls: bool,
 ) -> FontPickerLayout {
-    let row_h = if touch_controls {
-        TOUCH_FONT_PICKER_ROW_H
-    } else {
-        FONT_PICKER_ROW_H
-    };
-    let search_h = if touch_controls {
-        TOUCH_FONT_PICKER_SEARCH_H
-    } else {
-        FONT_PICKER_SEARCH_H
-    };
-    let import_h = if touch_controls {
-        TOUCH_FONT_PICKER_ROW_H
-    } else {
-        IMPORT_ACTION_H
-    };
-    let remove_size = if touch_controls {
-        TOUCH_REMOVE_X_SIZE
-    } else {
-        REMOVE_X_SIZE
-    };
-    let group_header_h = if touch_controls {
-        TOUCH_GROUP_HEADER_H
-    } else {
-        GROUP_HEADER_H
-    };
+    let row_h = FONT_PICKER_ROW_H;
+    let search_h = FONT_PICKER_SEARCH_H;
+    let import_h = IMPORT_ACTION_H;
+    let remove_size = REMOVE_X_SIZE;
+    let group_header_h = GROUP_HEADER_H;
     // Walk the list content (unscrolled, y from 0). Groups render in
     // Imported → Bundled → System order, matching `font_picker_entries`.
     let imported_count = entries.iter().filter(|e| e.imported).count();
@@ -461,7 +431,6 @@ fn font_picker_layout_at_with_density(
         viewport,
         max_scroll,
         rows,
-        touch_controls,
     }
 }
 

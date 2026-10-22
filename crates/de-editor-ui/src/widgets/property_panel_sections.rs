@@ -96,8 +96,6 @@ pub struct TabStripState {
     pub active: de_editor_core::PropertyTab,
     pub hover: Option<de_editor_core::PropertyTab>,
     pub show_interact: bool,
-    pub show_code: bool,
-    pub touch_controls: bool,
 }
 
 impl PropertyLabels {
@@ -274,12 +272,10 @@ pub fn tab_strip_rects(
     x: f32,
     y: f32,
     show_interact: bool,
-    show_code: bool,
-    touch_controls: bool,
 ) -> Vec<(de_editor_core::PropertyTab, Rect)> {
     use de_editor_core::PropertyTab;
     let pad = 14.0;
-    let tab_height = if touch_controls { 30.0 } else { 26.0 };
+    let tab_height = 26.0;
     let tab_y = y + (TAB_HEIGHT - tab_height) / 2.0;
     let mut cursor_x = x + pad;
     let mut rects = Vec::with_capacity(3);
@@ -303,16 +299,14 @@ pub fn tab_strip_rects(
         ));
         cursor_x += interact_w + 6.0;
     }
-    if show_code {
-        let code_w = (tab_label_width(labels.tab_code) + 24.0).max(48.0);
-        rects.push((
-            PropertyTab::Code,
-            Rect {
-                origin: Point2D::new(cursor_x, tab_y),
-                size: Point2D::new(code_w, tab_height),
-            },
-        ));
-    }
+    let code_w = (tab_label_width(labels.tab_code) + 24.0).max(48.0);
+    rects.push((
+        PropertyTab::Code,
+        Rect {
+            origin: Point2D::new(cursor_x, tab_y),
+            size: Point2D::new(code_w, tab_height),
+        },
+    ));
     rects
 }
 
@@ -327,10 +321,8 @@ pub fn tab_strip_hit(
     y: f32,
     point: Point2D,
     show_interact: bool,
-    show_code: bool,
-    touch_controls: bool,
 ) -> Option<de_editor_core::PropertyTab> {
-    tab_strip_rects(labels, x, y, show_interact, show_code, touch_controls)
+    tab_strip_rects(labels, x, y, show_interact)
         .into_iter()
         .find(|(_, rect)| rect.contains(point))
         .map(|(tab, _)| tab)
@@ -355,14 +347,7 @@ pub fn paint_tab_strip(
             PropertyTab::Code => labels.tab_code,
         }
     };
-    for (tab, rect) in tab_strip_rects(
-        labels,
-        x,
-        y,
-        state.show_interact,
-        state.show_code,
-        state.touch_controls,
-    ) {
+    for (tab, rect) in tab_strip_rects(labels, x, y, state.show_interact) {
         let is_active = tab == active;
         let is_hovered = hover == Some(tab) && !is_active;
         if is_active || is_hovered {
@@ -597,7 +582,6 @@ pub fn paint_size_section(
     labels: &PropertyLabels,
     flags: SizeFlags,
     show_clip_content: bool,
-    touch_controls: bool,
     x: f32,
     y: f32,
     width: f32,
@@ -643,7 +627,7 @@ pub fn paint_size_section(
         edit.now_ms,
     );
     y += INPUT_HEIGHT + 10.0;
-    let row_h = crate::widgets::property_panel_inputs::size_check_row_height(touch_controls);
+    let row_h = crate::widgets::property_panel_inputs::size_check_row_height();
     paint_check_row(
         cx,
         theme,
@@ -719,9 +703,8 @@ fn paint_check_row(
     checked: bool,
     row_h: f32,
 ) {
-    let touch_controls = row_h > crate::widgets::property_panel_inputs::SIZE_CHECK_ROW_HEIGHT;
-    let box_size = crate::widgets::property_panel_inputs::size_check_box_size(touch_controls);
-    let label_x = crate::widgets::property_panel_inputs::size_check_label_offset(touch_controls);
+    let box_size = crate::widgets::property_panel_inputs::size_check_box_size();
+    let label_x = crate::widgets::property_panel_inputs::size_check_label_offset();
     let box_rect = Rect {
         origin: Point2D::new(x, y + (row_h - box_size) / 2.0),
         size: Point2D::new(box_size, box_size),

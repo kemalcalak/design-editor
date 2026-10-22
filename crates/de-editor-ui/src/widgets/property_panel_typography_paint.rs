@@ -96,7 +96,6 @@ pub fn paint_font_picker_at(
         import_hover,
         active_family,
         now_ms,
-        false,
     );
 }
 
@@ -118,7 +117,6 @@ pub fn paint_font_picker_at_for_ui(
     import_hover: bool,
     active_family: &str,
     now_ms: u64,
-    touch_controls: bool,
 ) {
     if !state.open {
         return;
@@ -131,7 +129,6 @@ pub fn paint_font_picker_at_for_ui(
         allow_import,
         allow_remove,
         state.scroll.offset,
-        touch_controls,
     );
     paint_font_picker_layout(
         cx,
@@ -160,11 +157,10 @@ fn paint_font_picker_layout(
     now_ms: u64,
     layout: &FontPickerLayout,
 ) {
-    let touch = layout.touch_controls;
-    let body_font = if touch { 15.0 } else { 11.0 };
-    let secondary_font = if touch { 14.0 } else { 11.0 };
-    let group_font = if touch { 14.0 } else { 9.0 };
-    let icon_size = if touch { 16.0 } else { 12.0 };
+    let body_font = 11.0;
+    let secondary_font = 11.0;
+    let group_font = 9.0;
+    let icon_size = 12.0;
     cx.backend.fill_round_rect(layout.popup, 8.0, theme.popover);
     cx.backend
         .stroke_round_rect(layout.popup, 8.0, theme.border, 1.0);
@@ -175,15 +171,12 @@ fn paint_font_picker_layout(
     draw_icon(
         cx.backend,
         Icon::Search,
-        Point2D::new(
-            s.origin.x + if touch { 12.0 } else { 8.0 },
-            s.origin.y + (s.size.y - icon_size) / 2.0,
-        ),
+        Point2D::new(s.origin.x + 8.0, s.origin.y + (s.size.y - icon_size) / 2.0),
         icon_size,
         theme.muted_foreground,
         1.5,
     );
-    let text_x = s.origin.x + if touch { 38.0 } else { 26.0 };
+    let text_x = s.origin.x + 26.0;
     let baseline = jian_widgets::centered_text_baseline_y(s, body_font);
     // Draft + placeholder + caret render through the unified jian TextInputView
     // (family-aware caret, no hand-rolled drift). The buffer is rebuilt from the
@@ -321,7 +314,7 @@ fn paint_font_picker_layout(
                 cx.backend.draw_text(
                     &label,
                     Point2D::new(
-                        rect.origin.x + PAD_X + if touch { 24.0 } else { 18.0 },
+                        rect.origin.x + PAD_X + 18.0,
                         jian_widgets::centered_text_baseline_y(*rect, body_font),
                     ),
                 );
@@ -354,7 +347,7 @@ fn paint_font_picker_layout(
                 });
                 let check_x = is_active.then(|| {
                     remove.map_or_else(
-                        || rect.origin.x + rect.size.x - if touch { 30.0 } else { 20.0 },
+                        || rect.origin.x + rect.size.x - 20.0,
                         |remove| remove.origin.x - icon_size - 8.0,
                     )
                 });

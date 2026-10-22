@@ -46,7 +46,6 @@ impl WidgetHostNative {
         x: f32,
         y: f32,
         text_edit_was_active: bool,
-        viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
         let Some(resolved) = core_drag::resolve_canvas_press(
@@ -78,7 +77,7 @@ impl WidgetHostNative {
             if core_drag::jump_to_deepest_text_edit(&mut self.editor_state, &hit_path) {
                 self.editor_state.ui.text_edit_input.touch(self.now_ms);
                 self.last_hover_probe = None;
-                self.scroll_layer_panel_selection_into_view(viewport_width, viewport_height);
+                self.scroll_layer_panel_selection_into_view(viewport_height);
                 self.mark_dirty();
                 return true;
             }
@@ -91,7 +90,7 @@ impl WidgetHostNative {
                 // The native 3 px probe cache would otherwise retain the old
                 // level until the mouse moved again.
                 self.last_hover_probe = None;
-                self.scroll_layer_panel_selection_into_view(viewport_width, viewport_height);
+                self.scroll_layer_panel_selection_into_view(viewport_height);
                 self.mark_dirty();
                 return true;
             }
@@ -110,7 +109,7 @@ impl WidgetHostNative {
             self.shift_held,
             &hit_path,
         );
-        self.scroll_layer_panel_selection_into_view(viewport_width, viewport_height);
+        self.scroll_layer_panel_selection_into_view(viewport_height);
         if should_start_drag {
             self.start_node_drag(x, y);
         }

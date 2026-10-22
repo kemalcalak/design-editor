@@ -34,7 +34,7 @@ crates/
 ├── de-editor-core/       Canonical `.op` (PenDocument) editor state + EditorCommand + design-variable resolution
 ├── de-editor-ui/         Platform-free widgets + RenderBackend facade (wasm32-clean)
 ├── de-editor-host-core/  Transport-free host state machines shared by all hosts
-├── de-host-native/       Native host lib (winit + skia-safe GL) — desktop + mobile
+├── de-host-native/       Native host lib (winit + skia-safe GL) — desktop
 ├── de-host-web/          Browser bundle: wasm32 cdylib, CanvasKit renderer
 ├── de-host-desktop/      Desktop binary `design-editor`; also the `--serve-web` daemon
 ├── de-host-services/     Headless serve-web / MCP daemon lib (shared by desktop + web-server)

@@ -1,16 +1,16 @@
 //! Read-only hit-test seam for collaboration-aware undo/redo dispatch.
 //!
 //! `WidgetHostNative` intentionally does not own a collaboration runtime.
-//! Mobile embedders ask this seam before the ordinary press ladder so active
+//! Embedders ask this seam before the ordinary press ladder so active
 //! sessions can route history to the runtime without teaching widgets about
 //! transport actors.
 
-use de_editor_ui::widgets::{MobileAppBar, MobileAppBarHit, Toolbar, ToolbarAction, ToolbarHit};
+use de_editor_ui::widgets::{Toolbar, ToolbarAction, ToolbarHit};
 use de_editor_ui::Point2D;
 
 use super::WidgetHostNative;
 
-/// Collaboration-aware history action hit by mobile/embedded chrome.
+/// Collaboration-aware history action hit by embedded chrome.
 ///
 /// The concrete collaboration runtime stays outside this crate. Embedders use
 /// this result to route undo/redo to selective collaboration history before
@@ -22,7 +22,7 @@ pub enum CollabHistoryAction {
 }
 
 impl WidgetHostNative {
-    /// Resolve an undo/redo button at `point`, using the exact app-bar/toolbar
+    /// Resolve an undo/redo button at `point`, using the exact toolbar
     /// geometry and hit-test routines used by the press ladder.
     pub fn collab_history_action_at(
         &self,
@@ -35,18 +35,6 @@ impl WidgetHostNative {
             return None;
         }
         let point = Point2D::new(x, y);
-        if self.editor_state.editor_ui.touch_chrome() {
-            let bar = MobileAppBar::for_editor(&self.editor_state);
-            let rect = de_editor_ui::widgets::host_canvas_geometry::touch_app_bar_rect(
-                &self.editor_state,
-                viewport_width,
-            );
-            return match bar.hit_test(rect, point) {
-                Some(MobileAppBarHit::Undo) => Some(CollabHistoryAction::Undo),
-                Some(MobileAppBarHit::Redo) => Some(CollabHistoryAction::Redo),
-                _ => None,
-            };
-        }
 
         let rect = self.toolbar_rect(viewport_width, viewport_height);
         match Toolbar::for_editor(&self.editor_state).hit_test(rect, point) {
@@ -81,16 +69,6 @@ mod tests {
             }
         }
         None
-    }
-
-    #[test]
-    fn compact_app_bar_exposes_both_history_actions() {
-        let mut host = WidgetHostNative::new();
-        let ui = &mut host.editor_state_mut().editor_ui;
-        ui.touch = true;
-        ui.size_class = de_editor_core::size_class::EditorSizeClass::Compact;
-        assert!(find_action(&host, 390.0, 844.0, CollabHistoryAction::Undo).is_some());
-        assert!(find_action(&host, 390.0, 844.0, CollabHistoryAction::Redo).is_some());
     }
 
     #[test]

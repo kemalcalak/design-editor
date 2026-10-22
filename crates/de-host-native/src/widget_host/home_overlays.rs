@@ -41,7 +41,7 @@ impl WidgetHostNative {
         }
         let login_open = {
             let ui = &self.editor_state.editor_ui;
-            ui.login_modal_open && (ui.account_ui_available || ui.touch_chrome())
+            ui.login_modal_open && ui.account_ui_available
         };
         if login_open {
             self.dispatch_login_modal_press(x, y, viewport_width, viewport_height);
@@ -104,7 +104,7 @@ impl WidgetHostNative {
         viewport_height: f32,
     ) {
         let ui = &self.editor_state.editor_ui;
-        if !((ui.account_ui_available || ui.touch_chrome()) && ui.login_modal_open) {
+        if !(ui.account_ui_available && ui.login_modal_open) {
             return;
         }
         use de_editor_ui::widgets::login_modal::LoginModal;

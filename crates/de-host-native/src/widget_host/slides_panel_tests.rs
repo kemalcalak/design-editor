@@ -9,7 +9,6 @@
 use super::WidgetHostNative;
 use de_editor_core::preview_slideshow::active_page_boards;
 use de_editor_core::scene_template_catalog::TemplateScene;
-use de_editor_core::size_class::{EditorSizeClass, MobileSheetKind};
 use de_editor_core::{EditorState, LeftPanelTab, SlidesPanelTarget};
 use de_editor_ui::Point2D;
 use std::sync::{LazyLock, Mutex, MutexGuard};
@@ -91,7 +90,7 @@ fn any_document_with_boards_gets_the_slides_tab() {
         .expect("a deck shows the slides tab");
     assert_eq!(slides.chips.len(), 3);
     assert_eq!(slides.chips[1].name, "议程");
-    assert!(deck.slides_tab_row(VW, VH).is_some());
+    assert!(deck.slides_tab_row(VH).is_some());
 
     // The same three boards with no scenario recorded: an ordinary
     // design page still gets the navigator, which is the whole point of
@@ -101,7 +100,7 @@ fn any_document_with_boards_gets_the_slides_tab() {
         .slides_panel_frame(VW, VH)
         .expect("an untagged page with boards still lists them");
     assert_eq!(listed.chips.len(), 3);
-    assert!(ordinary.slides_tab_row(VW, VH).is_some());
+    assert!(ordinary.slides_tab_row(VH).is_some());
 }
 
 #[test]
@@ -117,12 +116,12 @@ fn a_page_with_no_boards_has_nothing_to_list_and_shows_no_tab() {
     // every document. What a board-less page must not offer is the
     // SLIDES tab, so the row comes back with a zero-width slides rect
     // and a stale Slides selection cannot strand the rail.
-    let row = empty.slides_tab_row(VW, VH).expect("the rail always tabs");
+    let row = empty.slides_tab_row(VH).expect("the rail always tabs");
     assert_eq!(row.slides.size.x, 0.0, "no slides tab without boards");
     assert!(row.chat.size.x > 0.0 && row.layers.size.x > 0.0);
     assert!(empty.slides_panel_frame(VW, VH).is_none());
     assert_eq!(
-        empty.layers_content_rect(VW, VH).origin.y,
+        empty.layers_content_rect(VH).origin.y,
         row.row.origin.y + row.row.size.y,
         "and the layer tree starts under the tab row"
     );
@@ -190,7 +189,7 @@ fn a_collapsed_sidebar_has_no_slides_tab_at_all() {
     let mut host = host_with(Some(TemplateScene::Slides));
     host.editor_state.editor_ui.sidebar_open = false;
     assert!(host.slides_panel_frame(VW, VH).is_none());
-    assert!(host.slides_tab_row(VW, VH).is_none());
+    assert!(host.slides_tab_row(VH).is_none());
 }
 
 #[test]
@@ -204,7 +203,7 @@ fn presenting_hides_the_rail_and_it_eats_no_clicks() {
         host.slides_panel_frame(VW, VH).is_none(),
         "the presentation owns the screen"
     );
-    assert!(host.slides_tab_row(VW, VH).is_none());
+    assert!(host.slides_tab_row(VH).is_none());
     // A press where a row used to be reaches the presentation.
     let before = host
         .editor_state
@@ -307,7 +306,7 @@ fn the_footer_button_starts_the_presentation() {
 fn the_tab_row_switches_the_rail_both_ways() {
     let _guard = test_lock();
     let mut host = host_with(Some(TemplateScene::Slides));
-    let tabs = host.slides_tab_row(VW, VH).expect("tab row");
+    let tabs = host.slides_tab_row(VH).expect("tab row");
     let layers_tab = Point2D::new(
         tabs.layers.origin.x + tabs.layers.size.x / 2.0,
         tabs.layers.origin.y + tabs.layers.size.y / 2.0,
@@ -343,103 +342,9 @@ fn the_layer_tree_starts_below_the_tab_row() {
     let _guard = test_lock();
     let mut deck = host_with(Some(TemplateScene::Slides));
     deck.editor_state.editor_ui.slides_panel.tab = LeftPanelTab::Layers;
-    let tabs = deck.slides_tab_row(VW, VH).expect("tab row");
-    let content = deck.layers_content_rect(VW, VH);
+    let tabs = deck.slides_tab_row(VH).expect("tab row");
+    let content = deck.layers_content_rect(VH);
     assert_eq!(content.origin.y, tabs.row.origin.y + tabs.row.size.y);
-}
-
-#[test]
-fn touch_layers_sheet_uses_one_visible_rect_for_tabs_layout_and_input() {
-    let _guard = test_lock();
-    for (size_class, viewport_w, viewport_h) in [
-        (EditorSizeClass::Compact, 390.0, 844.0),
-        (EditorSizeClass::Medium, 834.0, 1_112.0),
-    ] {
-        let mut host = host_with(Some(TemplateScene::Slides));
-        {
-            let ui = &mut host.editor_state.editor_ui;
-            ui.touch = true;
-            ui.size_class = size_class;
-            ui.sidebar_open = false;
-            ui.mobile_sheet = None;
-        }
-        host.last_viewport_w = viewport_w;
-        host.last_viewport_h = viewport_h;
-
-        assert!(host.slides_tab_row(viewport_w, viewport_h).is_none());
-        assert!(host.slides_panel_frame(viewport_w, viewport_h).is_none());
-        assert!(
-            !host.slides_panel_press(20.0, 80.0, viewport_w, viewport_h),
-            "a closed touch rail has no invisible tab targets"
-        );
-
-        host.editor_state.editor_ui.mobile_sheet = Some(MobileSheetKind::Layers);
-        let sheet = host.mobile_sheet_rect(viewport_w, viewport_h, MobileSheetKind::Layers);
-        let body = de_editor_ui::widgets::mobile_chrome::sheet_content_rect(sheet);
-        let tabs = host
-            .slides_tab_row(viewport_w, viewport_h)
-            .expect("an open touch Layers sheet shows navigator tabs");
-        assert_eq!(tabs.row.origin, body.origin);
-        assert!(tabs.layers.size.x >= 44.0 && tabs.layers.size.y >= 44.0);
-        assert!(tabs.slides.size.x >= 44.0 && tabs.slides.size.y >= 44.0);
-        for rect in [tabs.row, tabs.layers, tabs.slides] {
-            assert!(
-                sheet.contains(rect.origin)
-                    && sheet.contains(Point2D::new(
-                        rect.origin.x + rect.size.x,
-                        rect.origin.y + rect.size.y,
-                    )),
-                "visible tab geometry stays inside the sheet: {rect:?} vs {sheet:?}"
-            );
-        }
-
-        let slides = host
-            .slides_panel_frame(viewport_w, viewport_h)
-            .expect("Slides owns the open sheet body");
-        assert_eq!(slides.layout.panel, body);
-        assert_eq!(slides.layout.tabs, tabs);
-
-        // This is where the pre-sheet rail put its tab. On Medium it is
-        // hidden behind the title band; on Compact it is outside the sheet.
-        // Neither paint nor scroll uses it, so input must not use it either.
-        let legacy_panel = de_editor_ui::widgets::host_canvas_geometry::layer_panel_rect(
-            &host.editor_state,
-            viewport_h,
-        );
-        let legacy_tabs =
-            de_editor_ui::widgets::slides_panel_flow::tab_row(&host.editor_state, legacy_panel)
-                .expect("fixture has boards");
-        let hidden_point = Point2D::new(
-            legacy_tabs.layers.origin.x + legacy_tabs.layers.size.x / 2.0,
-            legacy_tabs.layers.origin.y + legacy_tabs.layers.size.y / 2.0,
-        );
-        assert!(!body.contains(hidden_point));
-        assert!(!host.slides_panel_press(hidden_point.x, hidden_point.y, viewport_w, viewport_h,));
-        assert_eq!(
-            host.slides_panel_scroll(hidden_point, -80.0, viewport_w, viewport_h),
-            None,
-            "the old invisible rail geometry does not own scrolling"
-        );
-
-        let visible_layers = Point2D::new(
-            tabs.layers.origin.x + tabs.layers.size.x / 2.0,
-            tabs.layers.origin.y + tabs.layers.size.y / 2.0,
-        );
-        assert!(host.slides_panel_press(
-            visible_layers.x,
-            visible_layers.y,
-            viewport_w,
-            viewport_h,
-        ));
-        assert!(host.slides_panel_release(viewport_w, viewport_h));
-        assert_eq!(
-            host.editor_state.editor_ui.slides_panel.tab,
-            LeftPanelTab::Layers
-        );
-        let layer_content = host.layers_content_rect(viewport_w, viewport_h);
-        assert_eq!(layer_content.origin.y, tabs.row.origin.y + tabs.row.size.y);
-        assert!(sheet.contains(layer_content.origin));
-    }
 }
 
 #[test]

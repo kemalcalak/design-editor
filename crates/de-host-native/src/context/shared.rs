@@ -2,10 +2,7 @@
 //!
 //! Per spec v19 §3.2-§3.5 the context follows a strict `Option<>` field
 //! pattern so `teardown` is idempotent (repeated calls collapse to no-op
-//! via `Option::take`). Lifecycle hooks (`on_pause` / `on_resume` /
-//! `on_low_memory`) match Android + iOS contracts; on desktop they are
-//! no-ops but stay in the public API so Step 1f mobile entries land
-//! without breaking changes.
+//! via `Option::take`). `on_low_memory` drops Skia's GPU resource cache.
 
 use std::sync::Arc;
 
@@ -14,7 +11,7 @@ use crate::context::provider::{GlContextProvider, GlutinProvider, ProviderError}
 /// Errors raised by [`SharedSkiaContext`].
 #[derive(Debug, thiserror::Error)]
 pub enum SharedSkiaError {
-    /// Wrapped GL provider error (glutin / EGL / EAGL).
+    /// Wrapped GL provider error (glutin / EGL).
     #[error(transparent)]
     Provider(#[from] ProviderError),
     /// Skia could not load a GL `Interface` (driver did not expose
@@ -71,16 +68,14 @@ pub struct SharedSkiaContext {
     surface: Option<skia_safe::Surface>,
     /// glow handle. v19.1 mini-patch landed (spec frozen at
     /// design-editor-docs commit 526791f, §3.2): `Option<Arc<...>>` so
-    /// `teardown`, `inert_for_lifecycle_test`, and mobile `on_pause`
-    /// can drop the loader function table alongside the surface.
+    /// `teardown` and `inert_for_lifecycle_test` can drop the loader function table alongside the surface.
     glow_handle: Option<Arc<glow::Context>>,
     config: SurfaceConfig,
 }
 
 impl SharedSkiaContext {
     /// Generic constructor accepting any `GlContextProvider`. Used by
-    /// headless tests (EGL pbuffer provider) and mobile providers in
-    /// Step 1f.
+    /// headless tests (EGL pbuffer provider).
     ///
     /// Phase A Gate round 2 BLOCK 1 fix — single-arg signature aligned
     /// to spec v19.1 §3.3: `SharedSkiaContext::new(provider) -> Result<Self>`.
@@ -288,46 +283,6 @@ impl SharedSkiaContext {
     }
 
     // ── Lifecycle hooks ────────────────────────────────────────────────
-
-    /// Background entry. On Android / iOS the surface must be dropped
-    /// before this returns; the system reclaims the underlying native
-    /// window. Desktop is a no-op. Idempotent.
-    ///
-    /// Phase A Gate round 2 BLOCK 2(b) fix — also drop `glow_handle`
-    /// on mobile targets, per spec v19.1 §3.4. The EGL/EAGL context
-    /// behind the loader function table becomes invalid the moment
-    /// the activity backgrounds, so retaining the `Arc` would leave a
-    /// dangling pointer set inside `glow::Context`. `on_resume` re-
-    /// fetches a fresh handle from the provider after window reattach.
-    #[tracing::instrument(skip(self))]
-    pub fn on_pause(&mut self) -> SharedSkiaResult<()> {
-        tracing::trace!("on_pause");
-        #[cfg(any(target_os = "android", target_os = "ios"))]
-        {
-            if let Some(s) = self.surface.take() {
-                drop(s);
-            }
-            // Drop the glow handle alongside the surface — the
-            // backing GL context is being torn down by the system.
-            self.glow_handle.take();
-        }
-        Ok(())
-    }
-
-    /// Foreground re-entry. On Android / iOS the caller passes a fresh
-    /// `HasWindowHandle` so the provider can attach the new native
-    /// window; Step 1f wires the actual rebuild. Desktop is a no-op.
-    /// Idempotent.
-    #[tracing::instrument(skip(self, _new_window))]
-    pub fn on_resume(
-        &mut self,
-        _new_window: Option<&dyn raw_window_handle::HasWindowHandle>,
-    ) -> SharedSkiaResult<()> {
-        tracing::trace!("on_resume");
-        // Step 1f mobile implementation: provider.attach_window(handle)
-        // + rebuild_surface. Desktop has nothing to restore.
-        Ok(())
-    }
 
     /// System-memory-pressure hook. Drops Skia's GPU resource cache to
     /// release texture memory; idempotent and safe across teardown.

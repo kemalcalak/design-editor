@@ -36,7 +36,7 @@ impl WidgetHostNative {
         y: f32,
         over_topmost: bool,
     ) -> bool {
-        let new_hover = if over_topmost || self.editor_state.editor_ui.touch_chrome() {
+        let new_hover = if over_topmost {
             None
         } else {
             self.refresh_layout_scene();

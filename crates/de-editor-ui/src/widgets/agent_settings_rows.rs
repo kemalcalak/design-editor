@@ -34,8 +34,6 @@ pub(super) const SETTINGS_FONT_FAMILY: &str = crate::widgets::home_surface::SANS
 /// section header for the page, not a poster for it.
 pub(super) const INTRO_TITLE_FONT: f32 = 16.0;
 pub(super) const INTRO_DESC_FONT: f32 = 12.0;
-const TOUCH_INTRO_TITLE_FONT: f32 = 17.0;
-const TOUCH_INTRO_DESC_FONT: f32 = 14.0;
 /// Clear space above the title's ascender, and below the block's last
 /// descender before the first row.
 const INTRO_TOP_PAD: f32 = 2.0;
@@ -73,17 +71,10 @@ struct IntroMetrics {
     desc_font: f32,
 }
 
-const fn intro_metrics(touch: bool) -> IntroMetrics {
-    if touch {
-        IntroMetrics {
-            title_font: TOUCH_INTRO_TITLE_FONT,
-            desc_font: TOUCH_INTRO_DESC_FONT,
-        }
-    } else {
-        IntroMetrics {
-            title_font: INTRO_TITLE_FONT,
-            desc_font: INTRO_DESC_FONT,
-        }
+const fn intro_metrics() -> IntroMetrics {
+    IntroMetrics {
+        title_font: INTRO_TITLE_FONT,
+        desc_font: INTRO_DESC_FONT,
     }
 }
 
@@ -168,14 +159,14 @@ pub(super) fn measure_settings_text(cx: &mut PaintCx<'_>, text: &str, font_size:
 /// top to the first row below it. One source for paint, hit-test, and the
 /// content-height walk on every tab.
 pub(super) const fn tab_intro_height(has_desc: bool) -> f32 {
-    tab_intro_height_for_ui(has_desc, false)
+    tab_intro_height_for_ui(has_desc)
 }
 
 /// Density-aware intro height. Touch paint and all body offsets consume this
 /// same calculation so increasing legibility cannot make the following rows
 /// overlap the intro.
-pub(super) const fn tab_intro_height_for_ui(has_desc: bool, touch: bool) -> f32 {
-    let metrics = intro_metrics(touch);
+pub(super) const fn tab_intro_height_for_ui(has_desc: bool) -> f32 {
+    let metrics = intro_metrics();
     if has_desc {
         intro_desc_baseline(metrics) + metrics.desc_font * DESCENT_RATIO + INTRO_BOTTOM_GAP
     } else {
@@ -193,7 +184,7 @@ pub(super) fn paint_tab_intro(
     title: &str,
     desc: Option<&str>,
 ) {
-    paint_tab_intro_for_ui(cx, theme, content, title, desc, false);
+    paint_tab_intro_for_ui(cx, theme, content, title, desc);
 }
 
 /// Density-aware tab intro paint. Desktop keeps the legacy 15/12 typography;
@@ -205,9 +196,8 @@ pub(super) fn paint_tab_intro_for_ui(
     content: Rect,
     title: &str,
     desc: Option<&str>,
-    touch: bool,
 ) {
-    let metrics = intro_metrics(touch);
+    let metrics = intro_metrics();
     let title_text = fit_text(cx, title, content.size.x, metrics.title_font);
     let title_layout = TextLayout::single_run(
         &title_text,
@@ -563,15 +553,10 @@ mod tests {
     }
 
     #[test]
-    fn intro_density_preserves_desktop_and_expands_touch_geometry() {
-        assert_eq!(tab_intro_height_for_ui(true, false), tab_intro_height(true));
-        assert_eq!(
-            tab_intro_height_for_ui(false, false),
-            tab_intro_height(false)
-        );
+    fn intro_height_for_ui_matches_the_desktop_geometry() {
+        assert_eq!(tab_intro_height_for_ui(true), tab_intro_height(true));
+        assert_eq!(tab_intro_height_for_ui(false), tab_intro_height(false));
         assert_eq!(tab_intro_height(true), 49.0);
-        assert!((tab_intro_height_for_ui(true, true) - 52.0).abs() < 0.01);
-        assert!(tab_intro_height_for_ui(false, true) > tab_intro_height(false));
     }
 
     #[test]
@@ -642,33 +627,6 @@ mod fit_tests {
         assert!(
             painted <= 100.0,
             "fitted width {painted} must fit the 100px column in the PAINTED family"
-        );
-    }
-
-    #[test]
-    fn touch_intro_paint_uses_17_and_14_point_metrics_inside_its_height() {
-        let content = Rect::xywh(12.0, 20.0, 320.0, 200.0);
-        let mut backend = FamilyGapBackend::default();
-        let mut cx = PaintCx {
-            backend: &mut backend,
-        };
-
-        paint_tab_intro_for_ui(
-            &mut cx,
-            &crate::theme::Theme::dark(),
-            content,
-            "Title",
-            Some("Description"),
-            true,
-        );
-
-        assert_eq!(backend.runs.len(), 2);
-        assert_eq!(backend.runs[0].font_size, TOUCH_INTRO_TITLE_FONT);
-        assert_eq!(backend.runs[1].font_size, TOUCH_INTRO_DESC_FONT);
-        let desc_ink_bottom = backend.runs[1].origin.y + TOUCH_INTRO_DESC_FONT * DESCENT_RATIO;
-        assert!(
-            desc_ink_bottom
-                <= content.origin.y + tab_intro_height_for_ui(true, true) - INTRO_BOTTOM_GAP
         );
     }
 

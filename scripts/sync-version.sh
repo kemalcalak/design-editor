@@ -25,15 +25,6 @@ if ! (cd "$repo_root" && \
     exit 1
 fi
 
-if ! android_version_metadata=$("$repo_root/scripts/android-version.sh" "$repo_root/Cargo.toml"); then
-    printf 'sync-version: Android version metadata validation failed\n' >&2
-    exit 1
-fi
-android_version_code=$(printf '%s\n' "$android_version_metadata" |
-    sed -n 's/^versionCode=//p')
-printf 'sync-version: Android package version is %s (versionCode %s)\n' \
-    "$canonical_version" "$android_version_code"
-
 if ! (cd "$repo_root/packages" && bun run sync-version); then
     printf 'sync-version: package version synchronization failed\n' >&2
     exit 1

@@ -83,19 +83,15 @@ pub fn slides_tab_label_key(state: &EditorState) -> &'static str {
 
 /// Whether the left rail shows its tab row for this document.
 ///
-/// The desktop row is ALWAYS there: 对话 and 图层 exist for every
-/// document, so the rail is a three-tab (or, without boards, two-tab)
-/// surface even on a pristine starter file. Only the 幻灯片 TAB is
-/// board-gated — see [`slides_tab_available`]. Touch keeps the older
-/// rule (row only when there are boards): its rail is a Layers sheet
-/// and its chat is a bottom sheet, so a boardless touch document would
-/// get a row with nothing to switch to.
+/// The row is ALWAYS there: 对话 and 图层 exist for every document, so
+/// the rail is a three-tab (or, without boards, two-tab) surface even on
+/// a pristine starter file. Only the 幻灯片 TAB is board-gated — see
+/// [`slides_tab_available`].
 ///
 /// Presenting hides it along with the whole rail, so this answers
 /// `false` there too and no host can paint tabs over a presentation.
 pub fn tab_row_visible(state: &EditorState) -> bool {
     !state.editor_ui.preview.mode
-        && (!state.editor_ui.touch_chrome() || slides_tab_available(state))
 }
 
 /// Whether this document has a slides tab to offer — the old meaning
@@ -155,11 +151,7 @@ fn tabs_for_state(state: &EditorState, panel: Rect) -> SlidesPanelTabs {
         LeftPanelTab::Chat if !desc.chat_available => LeftPanelTab::Layers,
         tab => tab,
     };
-    if state.editor_ui.touch_chrome() {
-        SlidesPanelTabs::new_touch(panel, active, &desc)
-    } else {
-        SlidesPanelTabs::new(panel, active, &desc)
-    }
+    SlidesPanelTabs::new(panel, active, &desc)
 }
 
 /// The rail rect the Layers tree gets: the whole panel, less the tab

@@ -234,7 +234,6 @@ impl EditorUiState {
         self.figma_import_in_progress = false;
         self.file_drop_active = false;
         self.file_drop_target = None;
-        self.save_name_dialog.close();
 
         self.agent_settings_open = false;
         self.agent_settings_drag = None;
@@ -489,7 +488,6 @@ mod tests {
         ui.figma_import_page_select.open = true;
         ui.file_drop_active = true;
         ui.file_drop_target = Some(crate::NodeId::new("n1"));
-        ui.save_name_dialog.open_with("draft", false, 1);
         ui.prompt_center.open = false;
         ui.prompt_center.save_open = true;
         ui.scene_template_center.open = false;
@@ -521,7 +519,6 @@ mod tests {
         let ui = &state.editor_ui;
         assert!(!ui.figma_import_in_progress && ui.figma_import_pages.is_empty());
         assert!(!ui.file_drop_active && ui.file_drop_target.is_none());
-        assert!(!ui.save_name_dialog.open);
         assert!(!ui.prompt_center.save_open && !ui.scene_template_center.import.open);
         assert!(ui.shape_picker.hover.is_none() && ui.shape_picker.pressed.is_none());
         assert!(ui.hovered_layer_id.is_none() && ui.pressed_button.is_none());

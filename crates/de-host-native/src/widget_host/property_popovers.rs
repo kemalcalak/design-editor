@@ -45,7 +45,6 @@ impl WidgetHostNative {
                     ui.property_caret_anchor_ms = self.now_ms;
                     ui.property_draft_select_all = false;
                     self.editor_state.chat.focused = false;
-                    self.reveal_property_keyboard_owner();
                     self.mark_dirty();
                     return true;
                 }

@@ -8,9 +8,9 @@
 //! accumulated calls / text / stop state once the stream ends.
 //!
 //! Moved here from `de-host-services/src/chat_agent_loop/{openai,anthropic}.rs`
-//! (which re-export them unchanged) so the desktop / daemon agent loop and the
-//! mobile FFI design loop (`de-engine-ffi`) accumulate the wire protocol
-//! through ONE implementation instead of drifting copies — the same migration
+//! (which re-export them unchanged) so the desktop / daemon agent loop
+//! accumulates the wire protocol through ONE implementation instead of
+//! drifting copies — the same migration
 //! `chat_sse`'s plain parsers already made. Byte-level transports (reqwest
 //! pumps, retry ladders) stay host-side.
 //!

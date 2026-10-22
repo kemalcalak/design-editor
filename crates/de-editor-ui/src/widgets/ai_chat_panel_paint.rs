@@ -132,9 +132,8 @@ pub(crate) fn paint_panel_body_chrome(cx: &mut PaintCx<'_>, theme: &Theme, rect:
 ///   • tip line 2: "Drop image / text file to chat or via 📎"
 ///
 /// `content_bottom` is where the bottom-anchored composer block begins
-/// (`AIChatPlaceholder::empty_state_region`'s bottom edge). A compact touch
-/// sheet shrunk by the software keyboard may not have room for the full
-/// stack: pills that don't fully fit are dropped, and the optional tip
+/// (`AIChatPlaceholder::empty_state_region`'s bottom edge). A short panel
+/// may not have room for the full stack: pills that don't fully fit are dropped, and the optional tip
 /// lines drop out before the pills do — nothing may overlap the composer.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn paint_examples(

@@ -46,8 +46,8 @@ codegen = [
 design = ["dep:de-orchestrator"]
 # File-backed user settings persistence (`settings.json` load / save /
 # fingerprint). Non-default and NOT wasm32-clean (`dirs` + real file IO):
-# enabled by de-host-services (desktop + web daemon) and de-engine-ffi
-# (mobile shells), never by the browser host.
+# enabled by de-host-services (desktop + web daemon), never by the browser
+# host.
 settings-io = [
   "dep:dirs",
   "dep:sys-locale",

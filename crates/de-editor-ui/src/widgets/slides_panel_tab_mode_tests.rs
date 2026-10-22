@@ -6,10 +6,6 @@
 
 use super::*;
 
-fn touch_tabs_of(width: f32, active: LeftPanelTab, row: &SlidesTabRow<'static>) -> SlidesPanelTabs {
-    SlidesPanelTabs::new_touch(rail(width), active, row)
-}
-
 /// The row's geometry and hit-test at the two ends of the drag range:
 /// three tabs at 240 (text mode in English) and at 440, every tab still
 /// its own click target in row order.
@@ -116,33 +112,6 @@ fn a_boardless_document_drops_the_slides_tab_not_the_row() {
         Some(SlidesPanelTarget::LayersTab)
     );
     assert_eq!(tabs.hit(Point2D::new(236.0, mid_y)), None);
-}
-
-#[test]
-fn touch_icon_tabs_keep_full_44_point_targets() {
-    for active in [LeftPanelTab::Layers, LeftPanelTab::Slides] {
-        let tabs = touch_tabs_of(180.0, active, &TOUCH_ROW);
-        assert!(tabs.compact, "Vietnamese labels use icon mode at 180pt");
-        assert_eq!(
-            tabs.chat,
-            Rect::ZERO,
-            "touch never offers the chat tab in its rail"
-        );
-        for rect in [tabs.layers, tabs.slides] {
-            assert!(
-                rect.size.x >= 44.0 && rect.size.y >= 44.0,
-                "every painted touch tab stays at least 44x44: {rect:?}"
-            );
-            assert!(
-                tabs.row.contains(rect.origin)
-                    && tabs.row.contains(Point2D::new(
-                        rect.origin.x + rect.size.x,
-                        rect.origin.y + rect.size.y,
-                    )),
-                "the full target stays inside the visible row: {rect:?}"
-            );
-        }
-    }
 }
 
 #[test]

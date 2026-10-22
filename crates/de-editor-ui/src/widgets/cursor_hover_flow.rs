@@ -108,7 +108,7 @@ pub fn account_menu_hover(state: &mut EditorState, viewport_w: f32, point: Point
     use crate::widgets::account_menu::AccountMenu;
     let new_hover = AccountMenu::for_editor_ui(&state.editor_ui).and_then(|menu| {
         let panel =
-            crate::widgets::touch_overlay_geometry::account_menu_rect(state, &menu, viewport_w);
+            crate::widgets::host_overlay_geometry::account_menu_rect(state, &menu, viewport_w);
         menu.row_at(panel, point)
     });
     let changed = new_hover != state.editor_ui.account_menu_hover;
@@ -229,7 +229,7 @@ pub fn code_panel_hover(
     let on_code_tab = eligible
         && state.property_panel_visible()
         && matches!(
-            state.editor_ui.effective_property_tab(),
+            state.editor_ui.property_tab,
             de_editor_core::PropertyTab::Code
         );
     let right_edge = property_rect.origin.x + property_rect.size.x;

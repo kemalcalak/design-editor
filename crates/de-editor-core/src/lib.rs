@@ -76,7 +76,6 @@ pub mod edit_transaction;
 pub mod editor_toast;
 pub mod home_mcp_setup;
 pub mod home_thumbnail;
-pub mod size_class;
 // Runtime-fetched product assets for the browser bundle (native embeds them).
 pub mod editor_ui_state;
 pub mod export_batch;
@@ -139,7 +138,6 @@ pub mod ref_resolve;
 pub mod rename;
 pub mod render_backend;
 pub mod request_snapshot;
-pub mod save_name_keyboard;
 pub mod scene_template_append;
 pub mod scene_template_catalog;
 pub mod scene_template_keyboard;
@@ -365,8 +363,8 @@ pub use editor_ui_state::{
     PreviewDeviceKind, PromptCenterFocus, PromptCenterState, PromptFilter, PropertyTab, RecentFile,
     RecentView, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus, SizeToggleState,
     SlidesDrag, SlidesPanelState, SlidesPanelTarget, StyleImportState, TaskDraft, ThemeMode,
-    UpdateStatus, VariableRowFocus, WindowControlRequest, CHAT_TAB_MIN_WIDTH,
-    LAYER_PANEL_MAX_WIDTH, LAYER_PANEL_MIN_WIDTH,
+    UpdateStatus, VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH,
+    LAYER_PANEL_MIN_WIDTH,
 };
 pub use export_dialog_state::ExportDialogButton;
 pub use export_quick_menu_state::ExportQuickRow;

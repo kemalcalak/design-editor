@@ -36,9 +36,6 @@ mod agent_settings_geometry;
 mod agent_settings_image_gen_tests;
 #[cfg(test)]
 mod agent_settings_tests;
-mod agent_settings_touch;
-#[cfg(test)]
-mod agent_settings_touch_tests;
 mod ai_chat_geometry;
 #[cfg(test)]
 mod ai_chat_minimized_tests;
@@ -156,8 +153,6 @@ mod keyboard_delete;
 mod keyboard_escape;
 mod keyboard_send;
 mod missing_fonts_dispatch;
-#[cfg(test)]
-mod mobile_touch_tests;
 mod mode_transition_host;
 #[cfg(test)]
 mod overlay_cursor_tests;
@@ -167,7 +162,6 @@ mod page_switch_center_tests;
 mod paint;
 mod paint_chrome_menus;
 mod paint_floating_panels;
-mod paint_mobile;
 mod paint_pan_cache;
 mod paint_rail;
 mod paint_topmost_overlays;
@@ -180,6 +174,7 @@ mod panel_history_tests;
 mod pen_press;
 #[cfg(test)]
 mod pen_press_tests;
+mod pointer_cancel;
 mod press;
 mod press_canvas_tiers;
 mod press_chrome_tiers;
@@ -213,8 +208,6 @@ mod prompt_center_press;
 #[cfg(test)]
 mod property_compositing_tests;
 mod property_dispatch;
-#[cfg(test)]
-mod property_keyboard_occlusion_tests;
 mod property_layout_dispatch;
 #[cfg(test)]
 mod property_panel_interactions_tests;
@@ -232,8 +225,6 @@ mod scene_template_host_tests;
 mod scene_template_ime_tests;
 mod scene_template_install;
 mod scene_template_press;
-#[cfg(test)]
-mod scene_template_touch_tests;
 mod screen_switcher;
 #[cfg(all(test, not(target_os = "windows")))]
 mod screen_switcher_tests;
@@ -265,9 +256,6 @@ mod toolbar_hover;
 mod top_bar_home_tests;
 #[cfg(test)]
 mod top_bar_tooltip_tests;
-mod touch_panel_gesture;
-#[cfg(test)]
-mod touch_panel_gesture_tests;
 #[cfg(test)]
 mod variables_panel_add_tests;
 mod variables_panel_commit;
@@ -280,8 +268,6 @@ mod variables_panel_tests;
 mod variables_panel_ux_tests;
 mod variables_preset_press;
 mod viewport_fit;
-#[cfg(test)]
-mod window_control_tests;
 mod workspace;
 mod workspace_paint;
 
@@ -348,12 +334,6 @@ pub struct WidgetHostNative {
     /// Active canvas pan-drag state — left-button press → motion
     /// → release.
     pub(in crate::widget_host) drag: Option<DragState>,
-    /// Pending one-finger gestures: touch Agent Settings body (release
-    /// commits, slop promotes to scroll) and touch Property / Layers / Slides
-    /// surfaces (stationary release replays the press, slop scrolls).
-    pub(in crate::widget_host) agent_settings_touch_gesture:
-        Option<agent_settings_touch::AgentSettingsTouchGesture>,
-    pub(in crate::widget_host) touch_panel_gesture: Option<touch_panel_gesture::TouchPanelGesture>,
     /// True while Space is held — transient pan mode (TS parity):
     /// canvas presses pan regardless of the active tool.
     pub(in crate::widget_host) space_pan: bool,
@@ -530,7 +510,6 @@ pub struct WidgetHostNative {
     pub(in crate::widget_host) toast_rect: Option<de_editor_ui::Rect>,
     pub(in crate::widget_host) last_viewport_w: f32,
     pub(in crate::widget_host) last_viewport_h: f32,
-    pub(in crate::widget_host) keyboard_occlusion: f32,
     /// Live canvas Preview (Play) session — `Some` while
     /// `editor_state.editor_ui.preview.mode` is set. Owns the jian
     /// `Runtime` (host-local; `!Send`). Built on enter from the
@@ -555,8 +534,8 @@ pub struct WidgetHostNative {
     pub(in crate::widget_host) preview_pressed_pids: Vec<u32>,
     /// Scoped factual timestamp (ms) of the pointer event currently
     /// being routed by a timestamped entry variant (`apply_press_at` /
-    /// `apply_cursor_move_at` / `apply_release_with_viewport_at` /
-    /// `cancel_native_touch_gestures_at`). The live-preview pointer
+    /// `apply_cursor_move_at` / `apply_release_with_viewport_at`). The
+    /// live-preview pointer
     /// path stamps `PointerEvent.t_ms` with this exact value while the
     /// host's GLOBAL clock (`now_ms`) advances independently and only
     /// ever forward — an out-of-order event (frame at 2000, Down at

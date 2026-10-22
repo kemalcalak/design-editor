@@ -30,8 +30,7 @@ impl WidgetHostNative {
             return true;
         }
         let ui = &self.editor_state.ui;
-        self.editor_state.editor_ui.save_name_dialog.open
-            || self.editor_state.editor_ui.collab_join_input_active()
+        self.editor_state.editor_ui.collab_join_input_active()
             || ui.layer_rename.is_some()
             || ui.text_editing.is_some()
             || ui.property_focus.is_some()
@@ -350,16 +349,9 @@ impl WidgetHostNative {
     ) -> Option<usize> {
         if !self.editor_state.property_panel_visible()
             || !matches!(
-                self.editor_state.editor_ui.effective_property_tab(),
+                self.editor_state.editor_ui.property_tab,
                 de_editor_core::PropertyTab::Code
             )
-        {
-            return None;
-        }
-        if self.editor_state.editor_ui.touch_chrome()
-            && !self.editor_state.editor_ui.expanded_touch_layout()
-            && self.editor_state.editor_ui.mobile_sheet
-                != Some(de_editor_core::size_class::MobileSheetKind::Properties)
         {
             return None;
         }
@@ -579,12 +571,6 @@ impl WidgetHostNative {
     }
 
     fn apply_cursor_move_inner(&mut self, x: f32, y: f32) -> bool {
-        if let Some(changed) = self.update_agent_settings_touch_gesture(x, y) {
-            return changed;
-        }
-        if let Some(changed) = self.update_touch_panel_gesture(x, y) {
-            return changed;
-        }
         // The Home-anchored model picker hovers above the takeover —
         // its hover pass runs before Home's.
         if let Some(consumed) =

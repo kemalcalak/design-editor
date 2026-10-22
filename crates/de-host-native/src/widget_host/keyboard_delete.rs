@@ -28,15 +28,6 @@ impl WidgetHostNative {
             // Settings modal over Home: fall through so its own input
             // arm in the ladder below takes the key.
         }
-        // Save-name dialog first — same modal priority as `apply_text`.
-        if let Some(changed) =
-            de_editor_core::save_name_keyboard::backspace(&mut self.editor_state, self.now_ms)
-        {
-            if changed {
-                self.mark_dirty();
-            }
-            return true;
-        }
         if let Some(changed) = shared::prompt_center_backspace(&mut self.editor_state, self.now_ms)
         {
             if changed {
@@ -287,14 +278,6 @@ impl WidgetHostNative {
     pub fn apply_delete(&mut self) -> bool {
         if let Some(changed) = self.home_delete() {
             return changed;
-        }
-        if let Some(changed) =
-            de_editor_core::save_name_keyboard::delete_forward(&mut self.editor_state, self.now_ms)
-        {
-            if changed {
-                self.mark_dirty();
-            }
-            return true;
         }
         if let Some(changed) =
             shared::prompt_center_delete_forward(&mut self.editor_state, self.now_ms)

@@ -86,8 +86,7 @@ impl WidgetHostNative {
         }
         // Sign-in modal — owns the cursor while open. Hover the close
         // `✕` + the primary sign-in button.
-        if (self.editor_state.editor_ui.account_ui_available
-            || self.editor_state.editor_ui.touch_chrome())
+        if self.editor_state.editor_ui.account_ui_available
             && self.editor_state.editor_ui.login_modal_open
         {
             let changed = hover_flow::login_modal_hover(

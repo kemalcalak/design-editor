@@ -11,12 +11,6 @@ impl WidgetHostNative {
     /// Escape — priority cascade: rename → property → pickers →
     /// chat → selection. One layer per press.
     pub fn apply_escape(&mut self) -> bool {
-        // Transient pointer capture is the topmost interaction layer. Escape
-        // cancels it without replaying a delayed tap or committing a reorder.
-        if self.editor_state.editor_ui.touch_chrome() && self.cancel_native_touch_gestures() {
-            self.mark_dirty();
-            return true;
-        }
         // The result view is retired; the workspace is not a takeover,
         // so Escape in it walks the ordinary ladder (chat focus first,
         // then selection).
@@ -46,12 +40,6 @@ impl WidgetHostNative {
         // and returns to the design surface.
         if self.preview.is_some() {
             self.exit_preview();
-            return true;
-        }
-        // The save-name dialog is modal: Escape cancels it and nothing else.
-        if self.editor_state.editor_ui.save_name_dialog.open {
-            self.editor_state.editor_ui.save_name_dialog.close();
-            self.mark_dirty();
             return true;
         }
         if self.editor_state.editor_ui.escape_scene_template_center() {
@@ -190,7 +178,6 @@ impl WidgetHostNative {
             return true;
         }
         if self.editor_state.editor_ui.escape_agent_settings_modal() {
-            self.cancel_agent_settings_touch_gesture();
             self.mark_dirty();
             return true;
         }

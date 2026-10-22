@@ -57,8 +57,6 @@ pub struct LoginModal {
     /// In-flight device-login progress — takes precedence over the
     /// security note and the stub hint.
     flow_status: Option<de_editor_core::LoginFlowStatus>,
-    touch: bool,
-    sign_in_enabled: bool,
     hover: Option<LoginModalButton>,
     pressed: Option<LoginModalButton>,
 }
@@ -71,9 +69,6 @@ impl LoginModal {
             locale: state.editor_ui.effective_locale(),
             stub_hint_shown: state.editor_ui.login_modal_stub_hint_shown,
             flow_status: state.editor_ui.login_modal_status,
-            touch: state.editor_ui.touch_chrome(),
-            sign_in_enabled: !state.editor_ui.touch_chrome()
-                || state.editor_ui.account_ui_available,
             hover: state.editor_ui.login_modal_hover,
             pressed: match state.editor_ui.pressed_button {
                 Some(de_editor_core::ButtonPressTarget::LoginModal(button)) => Some(button),
@@ -83,39 +78,28 @@ impl LoginModal {
     }
 
     pub fn rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
-        if !self.touch {
-            let x = ((viewport_w - MODAL_WIDTH) / 2.0).max(16.0);
-            let y = ((viewport_h - MODAL_HEIGHT) / 2.0).max(crate::widgets::TOP_BAR_HEIGHT + 16.0);
-            return Rect::xywh(x, y, MODAL_WIDTH, MODAL_HEIGHT);
-        }
-        // The same modal is used by 320/390pt phones. Keep a 16pt horizontal
-        // gutter and centre vertically inside the safe-area-local viewport;
-        // requiring a desktop TopBar gutter here pushed the 306pt card out of
-        // a 320pt landscape phone.
-        let width = MODAL_WIDTH.min((viewport_w - 32.0).max(0.0));
-        let height = MODAL_HEIGHT.min((viewport_h - 16.0).max(0.0));
-        let x = ((viewport_w - width) / 2.0).max(0.0);
-        let y = ((viewport_h - height) / 2.0).max(0.0);
-        Rect::xywh(x, y, width, height)
+        let x = ((viewport_w - MODAL_WIDTH) / 2.0).max(16.0);
+        let y = ((viewport_h - MODAL_HEIGHT) / 2.0).max(crate::widgets::TOP_BAR_HEIGHT + 16.0);
+        Rect::xywh(x, y, MODAL_WIDTH, MODAL_HEIGHT)
     }
 
     pub fn hit_test(&self, panel: Rect, point: Point2D) -> LoginModalHit {
         if !panel.contains(point) {
             return LoginModalHit::Outside;
         }
-        if close_rect(panel, self.touch).contains(point) {
+        if close_rect(panel).contains(point) {
             return LoginModalHit::Close;
         }
-        if self.sign_in_enabled && sign_in_rect(panel).contains(point) {
+        if sign_in_rect(panel).contains(point) {
             return LoginModalHit::SignIn;
         }
         LoginModalHit::Inside
     }
 }
 
-fn close_rect(panel: Rect, touch: bool) -> Rect {
-    let size = if touch { 44.0 } else { CLOSE_SIZE };
-    let inset = if touch { 8.0 } else { 16.0 };
+fn close_rect(panel: Rect) -> Rect {
+    let size = CLOSE_SIZE;
+    let inset = 16.0;
     Rect::xywh(
         panel.origin.x + panel.size.x - inset - size,
         panel.origin.y + inset,
@@ -291,7 +275,7 @@ impl Widget for LoginModal {
             1.0,
         );
 
-        let close = close_rect(rect, self.touch);
+        let close = close_rect(rect);
         jian_widgets::components::icon_button::IconButton {
             icon_paths: Icon::Close.paths(),
             hovered: self.hover == Some(LoginModalButton::Close),
@@ -334,7 +318,7 @@ impl Widget for LoginModal {
             &self.theme,
             self.locale,
             rect,
-            self.sign_in_enabled,
+            true,
             self.hover == Some(LoginModalButton::SignIn),
             self.pressed == Some(LoginModalButton::SignIn),
         );
@@ -359,10 +343,6 @@ impl Widget for LoginModal {
 #[path = "login_modal_paint.rs"]
 mod paint;
 use paint::{paint_primary_action, paint_status_note};
-
-#[cfg(test)]
-#[path = "login_modal_touch_tests.rs"]
-mod touch_tests;
 
 #[cfg(test)]
 mod tests {
@@ -461,7 +441,7 @@ mod tests {
     fn interactive_rects_are_inside_panel_and_do_not_overlap() {
         let modal = LoginModal::for_editor(&EditorState::new());
         let panel = modal.rect(800.0, 600.0);
-        let close = close_rect(panel, modal.touch);
+        let close = close_rect(panel);
         let sign_in = sign_in_rect(panel);
         let status = status_rect(panel);
 
@@ -481,7 +461,7 @@ mod tests {
         let modal = LoginModal::for_editor(&EditorState::new());
         let panel = modal.rect(800.0, 600.0);
         let sign_in = sign_in_rect(panel);
-        let close = close_rect(panel, modal.touch);
+        let close = close_rect(panel);
 
         assert_eq!(
             modal.hit_test(

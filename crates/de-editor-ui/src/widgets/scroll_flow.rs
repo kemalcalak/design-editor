@@ -9,7 +9,6 @@
 //! stay host-side because they are derived from host viewport
 //! bookkeeping, so callers pass them in.
 
-use de_editor_core::size_class::MobileSheetKind;
 use de_editor_core::EditorState;
 
 use crate::util::scroll_by_max;
@@ -209,37 +208,24 @@ pub fn scroll_property_panel_body_2d(
         return None;
     }
     if matches!(
-        state.editor_ui.effective_property_tab(),
+        state.editor_ui.property_tab,
         de_editor_core::PropertyTab::Code
     ) {
-        let logical_rect = panel.logical_rect(property_rect);
-        let logical_point = panel.logical_point(property_rect, point);
         // Code tab: a wheel over the framework strip scrolls it
         // horizontally (it's a single row), not the panel vertically.
-        let touch_controls = state.editor_ui.touch_chrome();
         let (band_top, band_bottom) =
-            property_panel_code::framework_row_band_for(logical_rect.origin.y, touch_controls);
-        if logical_point.y >= band_top && logical_point.y <= band_bottom {
-            let max = panel.physical_length(property_panel_code::framework_row_overflow_for(
-                logical_rect.size.x,
-                touch_controls,
-            ));
+            property_panel_code::framework_row_band_for(property_rect.origin.y);
+        if point.y >= band_top && point.y <= band_bottom {
+            let max = property_panel_code::framework_row_overflow_for(property_rect.size.x);
             let strip_delta = if delta_x != 0.0 { delta_x } else { delta_y };
             let cg = &mut state.codegen;
             return Some(scroll_by_max(&mut cg.framework_scroll, -strip_delta, max));
         }
-        let mut logical_codegen = state.codegen.clone();
-        logical_codegen.framework_scroll.offset =
-            panel.logical_length(logical_codegen.framework_scroll.offset);
-        logical_codegen.code_scroll.offset =
-            panel.logical_length(logical_codegen.code_scroll.offset);
-        if property_panel_code::code_preview_rect(logical_rect, &logical_codegen)
-            .is_some_and(|rect| rect.contains(logical_point))
+        if property_panel_code::code_preview_rect(property_rect, &state.codegen)
+            .is_some_and(|rect| rect.contains(point))
         {
-            let max = panel.physical_length(
-                property_panel_code::code_preview_max_scroll(logical_rect, &logical_codegen)
-                    .unwrap_or(0.0),
-            );
+            let max = property_panel_code::code_preview_max_scroll(property_rect, &state.codegen)
+                .unwrap_or(0.0);
             let cg = &mut state.codegen;
             return Some(scroll_by_max(&mut cg.code_scroll, -delta_y, max));
         }
@@ -401,6 +387,4 @@ fn rebuild_layer_items_for_reveal(
 
 fn layer_panel_surface_open(state: &EditorState) -> bool {
     state.editor_ui.sidebar_open
-        || (state.editor_ui.touch_chrome()
-            && state.editor_ui.mobile_sheet == Some(MobileSheetKind::Layers))
 }

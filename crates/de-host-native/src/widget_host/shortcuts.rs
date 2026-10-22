@@ -185,10 +185,6 @@ impl WidgetHostNative {
         if self.home_select_all() {
             return true;
         }
-        if de_editor_core::save_name_keyboard::select_all(&mut self.editor_state, self.now_ms) {
-            self.mark_dirty();
-            return true;
-        }
         if self.editor_state.editor_ui.collab_join_input_active() {
             if de_editor_ui::widgets::collab_ui::join_address_select_all(
                 &mut self.editor_state.editor_ui,
@@ -409,13 +405,7 @@ impl WidgetHostNative {
         self.commit_variable_row_focus_if_any();
         use de_editor_core::PropertyTab;
         let ui = &mut self.editor_state.editor_ui;
-        if !ui.code_property_tab_available() {
-            if ui.set_property_tab(PropertyTab::Design) {
-                self.mark_dirty();
-            }
-            return true;
-        }
-        let next = match ui.effective_property_tab() {
+        let next = match ui.property_tab {
             PropertyTab::Design => PropertyTab::Code,
             PropertyTab::Interact => PropertyTab::Code,
             PropertyTab::Code => PropertyTab::Design,
@@ -546,7 +536,6 @@ impl WidgetHostNative {
 
     /// Cmd+, — open / close the floating agent-settings modal.
     pub fn apply_toggle_agent_settings(&mut self) -> bool {
-        self.cancel_agent_settings_touch_gesture();
         self.commit_variable_row_focus_if_any();
         self.editor_state.editor_ui.blur_collab_join_input();
         let opening = !self.editor_state.editor_ui.agent_settings_open;
@@ -590,7 +579,6 @@ impl WidgetHostNative {
     /// Native menu commands use this instead of toggling so a command can
     /// reveal its live status even when Settings is already open elsewhere.
     pub fn apply_open_agent_settings_tab(&mut self, tab: AgentSettingsTab) -> bool {
-        self.cancel_agent_settings_touch_gesture();
         self.commit_variable_row_focus_if_any();
         self.editor_state.editor_ui.blur_collab_join_input();
         self.release_property_keyboard_owner();

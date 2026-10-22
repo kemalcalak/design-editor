@@ -269,13 +269,12 @@ impl WidgetHostNative {
     ) -> Option<(Rect, Option<de_editor_core::CollabPanelHover>)> {
         let ui = &self.editor_state.editor_ui;
         CollabPanel::for_editor_ui(ui).map(|panel| {
-            let panel_rect =
-                de_editor_ui::widgets::touch_overlay_geometry::collaboration_panel_rect(
-                    &self.editor_state,
-                    &panel,
-                    self.last_viewport_w,
-                    self.last_viewport_h,
-                );
+            let panel_rect = de_editor_ui::widgets::host_overlay_geometry::collaboration_panel_rect(
+                &self.editor_state,
+                &panel,
+                self.last_viewport_w,
+                self.last_viewport_h,
+            );
             (panel_rect, panel.hover_at(panel_rect, point))
         })
     }

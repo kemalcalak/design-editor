@@ -654,7 +654,3 @@ mod tests;
 #[cfg(test)]
 #[path = "collab_panel_region_tests.rs"]
 mod region_tests;
-
-#[cfg(test)]
-#[path = "collab_panel_touch_tests.rs"]
-mod touch_tests;

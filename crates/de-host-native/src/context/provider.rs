@@ -1,14 +1,11 @@
 //! GL context provider abstraction (spec v19 §3.1).
 //!
 //! Trait abstraction over the GL stack so `SharedSkiaContext` is reusable
-//! across desktop (glutin) and mobile (EAGL / Android EGL — Step 1f). The
-//! trait deliberately does **not** carry a `Send` bound: glutin's
+//! across GL backends. The trait deliberately does **not** carry a `Send` bound: glutin's
 //! `PossiblyCurrentContext` is `!Send` (thread-current binding), and the
 //! shell event loop runs on the main thread.
 //!
-//! Step 1a ships only [`GlutinProvider`] (desktop). iOS / Android stubs
-//! exist as compile-time placeholders so the public API surface is frozen
-//! before Step 1f real implementations land.
+//! The only implementation is [`GlutinProvider`] (desktop).
 
 #[cfg(feature = "gl-host")]
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
@@ -18,7 +15,7 @@ use std::sync::Arc;
 /// Errors raised by GL context providers.
 #[derive(Debug, thiserror::Error)]
 pub enum ProviderError {
-    /// Underlying glutin / EGL / EAGL error wrapped as a string for
+    /// Underlying glutin / EGL error wrapped as a string for
     /// cross-platform uniformity (each backend uses different error types).
     #[error("GL context provider failed: {0}")]
     Failure(String),
@@ -32,9 +29,7 @@ pub enum ProviderError {
 
 impl ProviderError {
     /// Wrap any `Error` impl into a `ProviderError::Failure`. Used by the
-    /// desktop `GlutinProvider` to convert glutin / glutin-winit errors;
-    /// `cfg(any(...))`-gated to silence `dead_code` on iOS / Android where
-    /// no in-tree caller exists yet (Step 1f mobile providers will use it).
+    /// desktop `GlutinProvider` to convert glutin / glutin-winit errors.
     #[cfg(feature = "gl-host")]
     #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
     pub(crate) fn from_error<E: Error>(err: E) -> Self {
@@ -46,9 +41,7 @@ impl ProviderError {
     /// `pub` (not `pub(crate)`) so out-of-tree provider implementations
     /// — notably the Linux EGL pbuffer test helper in
     /// `tests/common/mod.rs` — can produce typed provider errors with
-    /// the same diagnostic shape as `from_error`. Mobile providers
-    /// landing in Step 1f will rely on this for `unimplemented!()` →
-    /// real-error transitions too. (Codex Phase A Gate round 1
+    /// the same diagnostic shape as `from_error`. (Codex Phase A Gate round 1
     /// BLOCK 1: previously `pub(crate)` blocked Linux integration
     /// test compilation.)
     pub fn from_msg(msg: impl Into<String>) -> Self {
@@ -63,9 +56,9 @@ pub type ProviderResult<T> = Result<T, ProviderError>;
 /// surface. Implementations must be safe to call `make_current` /
 /// `swap_buffers` repeatedly on the same thread.
 ///
-/// **No `Send` bound** — `PossiblyCurrentContext` and EAGL contexts are
-/// thread-bound; `SharedSkiaContext` is intended to live on the main
-/// thread alongside winit's `EventLoop` (or the iOS/Android UI thread).
+/// **No `Send` bound** — `PossiblyCurrentContext` is thread-bound;
+/// `SharedSkiaContext` is intended to live on the main thread alongside
+/// winit's `EventLoop`.
 pub trait GlContextProvider {
     /// Make this provider's GL context current on the calling thread.
     fn make_current(&mut self) -> ProviderResult<()>;
@@ -83,9 +76,8 @@ pub trait GlContextProvider {
     /// `SharedSkiaContext::resize` before the Skia surface is rebuilt.
     ///
     /// v19.1 mini-patch landed (spec frozen at design-editor-docs
-    /// commit 526791f, §3.1): mobile surface-recreate (Step 1f Android
-    /// `on_resume`) and desktop window resize both require the GL
-    /// surface to be rebuilt before Skia rewraps the FBO.
+    /// commit 526791f, §3.1): a window resize requires the GL surface
+    /// to be rebuilt before Skia rewraps the FBO.
     fn resize(&mut self, width: u32, height: u32) -> ProviderResult<()>;
 
     /// The default framebuffer object id of the presentation surface.
@@ -94,10 +86,9 @@ pub trait GlContextProvider {
     ///
     /// v19.1 mini-patch landed (spec frozen at design-editor-docs
     /// commit 526791f, §3.1). **Required method, no default body**
-    /// (Phase A Gate round 2 CONCERN 1 fix): Step 1f mobile
-    /// implementations must explicitly specify — iOS EAGL needs the
-    /// non-zero CAEAGLLayer-backed FBO; an inherited default would
-    /// silently route Skia's `wrap_backend_render_target` to FBO 0
+    /// (Phase A Gate round 2 CONCERN 1 fix): every implementation must
+    /// state its FBO explicitly; an inherited default would silently
+    /// route Skia's `wrap_backend_render_target` to FBO 0
     /// and produce a black screen at runtime.
     fn default_framebuffer_id(&self) -> u32;
 
@@ -435,68 +426,6 @@ impl GlContextProvider for GlutinProvider {
             drop(c);
         }
         Ok(())
-    }
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// Mobile: stubs (Step 1f real implementations)
-// ────────────────────────────────────────────────────────────────────────────
-
-/// iOS GL provider — placeholder. Step 1f wires CAEAGLLayer or Metal-translated.
-#[cfg(target_os = "ios")]
-pub struct EaglProvider;
-
-#[cfg(target_os = "ios")]
-impl GlContextProvider for EaglProvider {
-    fn make_current(&mut self) -> ProviderResult<()> {
-        unimplemented!("Step 1f")
-    }
-    fn swap_buffers(&mut self) -> ProviderResult<()> {
-        unimplemented!("Step 1f")
-    }
-    fn glow(&self) -> Arc<glow::Context> {
-        unimplemented!("Step 1f")
-    }
-    fn resize(&mut self, _width: u32, _height: u32) -> ProviderResult<()> {
-        unimplemented!("Step 1f")
-    }
-    /// CAEAGLLayer-backed FBO is non-zero; Step 1f must thread the
-    /// real FBO id (Phase A Gate round 2 CONCERN 1 fix — explicit
-    /// override required, no trait default body).
-    fn default_framebuffer_id(&self) -> u32 {
-        unimplemented!("Step 1f")
-    }
-    fn release(&mut self) -> ProviderResult<()> {
-        unimplemented!("Step 1f")
-    }
-}
-
-/// Android GL provider — placeholder. Step 1f wires ANativeWindow + EGL.
-#[cfg(target_os = "android")]
-pub struct AndroidEglProvider;
-
-#[cfg(target_os = "android")]
-impl GlContextProvider for AndroidEglProvider {
-    fn make_current(&mut self) -> ProviderResult<()> {
-        unimplemented!("Step 1f")
-    }
-    fn swap_buffers(&mut self) -> ProviderResult<()> {
-        unimplemented!("Step 1f")
-    }
-    fn glow(&self) -> Arc<glow::Context> {
-        unimplemented!("Step 1f")
-    }
-    fn resize(&mut self, _width: u32, _height: u32) -> ProviderResult<()> {
-        unimplemented!("Step 1f")
-    }
-    /// EGL window default FBO = 0 (per spec §3.1 line 136).
-    /// Phase A Gate round 2 CONCERN 1 fix — explicit override required,
-    /// no trait default body.
-    fn default_framebuffer_id(&self) -> u32 {
-        0
-    }
-    fn release(&mut self) -> ProviderResult<()> {
-        unimplemented!("Step 1f")
     }
 }
 

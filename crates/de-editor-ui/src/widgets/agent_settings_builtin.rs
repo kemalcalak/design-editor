@@ -2,14 +2,12 @@
 
 use crate::theme::Theme;
 use crate::widgets::agent_settings_builtin_layout::{
-    add_provider_rect, add_provider_touch_target, card_height_for_ui, card_rect, compact_edit_rect,
-    compact_remove_rect, compact_switch_rect, compact_touch_edit_rect, compact_touch_edit_target,
-    compact_touch_remove_rect, compact_touch_remove_target, compact_touch_switch_rect,
-    compact_touch_switch_target, draft_card_height_for_ui,
+    add_provider_rect, card_height_for_ui, card_rect, compact_edit_rect, compact_remove_rect,
+    compact_switch_rect, draft_card_height_for_ui,
     editing_delete_rect as agent_settings_builtin_layout_delete_rect,
     editing_save_rect as agent_settings_builtin_layout_save_rect, expanded_card_height_for_ui,
-    field_input_rect_for_ui, is_editing, sync_error_height, touch_empty_cta_rect, CARD_GAP,
-    EMPTY_HEIGHT, HEADER_HEIGHT, SUBTITLE_HEIGHT, TOUCH_EMPTY_CARD_H,
+    field_input_rect_for_ui, is_editing, sync_error_height, CARD_GAP, EMPTY_HEIGHT, HEADER_HEIGHT,
+    SUBTITLE_HEIGHT,
 };
 use crate::widgets::agent_settings_builtin_parts;
 use crate::widgets::agent_settings_form_actions::{
@@ -73,27 +71,23 @@ pub enum BuiltinHit {
 }
 
 pub fn content_height(settings: &AgentSettings) -> f32 {
-    content_height_for_ui(settings, false)
+    content_height_for_ui(settings)
 }
 
-pub fn content_height_for_ui(settings: &AgentSettings, touch: bool) -> f32 {
+pub fn content_height_for_ui(settings: &AgentSettings) -> f32 {
     let has_draft = settings.builtin_agent_draft.is_some();
     let list_h = if settings.builtin_agents.is_empty() && !has_draft {
-        if touch {
-            TOUCH_EMPTY_CARD_H
-        } else {
-            EMPTY_HEIGHT
-        }
+        EMPTY_HEIGHT
     } else {
         let saved_h: f32 = settings
             .builtin_agents
             .iter()
             .enumerate()
-            .map(|(index, _)| card_height_for_ui(settings, index, touch) + CARD_GAP)
+            .map(|(index, _)| card_height_for_ui(settings, index) + CARD_GAP)
             .sum();
         saved_h
             + if has_draft {
-                draft_card_height_for_ui(settings, touch) + CARD_GAP
+                draft_card_height_for_ui(settings) + CARD_GAP
             } else {
                 0.0
             }
@@ -102,36 +96,8 @@ pub fn content_height_for_ui(settings: &AgentSettings, touch: bool) -> f32 {
 }
 
 pub fn hit_test(content: Rect, settings: &AgentSettings, point: Point2D) -> BuiltinHit {
-    hit_test_with_touch(content, settings, point, false)
-}
-
-pub fn hit_test_for_ui(
-    content: Rect,
-    settings: &AgentSettings,
-    ui: &EditorUiState,
-    point: Point2D,
-) -> BuiltinHit {
-    hit_test_with_touch(content, settings, point, ui.touch_chrome())
-}
-
-fn hit_test_with_touch(
-    content: Rect,
-    settings: &AgentSettings,
-    point: Point2D,
-    touch: bool,
-) -> BuiltinHit {
     let y = agents_body_top(content);
-    let empty = settings.builtin_agents.is_empty() && settings.builtin_agent_draft.is_none();
-    let add_target = if touch && empty {
-        touch_empty_cta_rect(
-            content,
-            y + HEADER_HEIGHT + SUBTITLE_HEIGHT + sync_error_height(settings),
-        )
-    } else if touch {
-        add_provider_touch_target(content, y)
-    } else {
-        add_provider_rect(content, y)
-    };
+    let add_target = add_provider_rect(content, y);
     if add_target.contains(point) {
         return BuiltinHit::AddProvider;
     }
@@ -141,10 +107,10 @@ fn hit_test_with_touch(
             content.origin.x,
             card_y,
             content.size.x,
-            card_height_for_ui(settings, index, touch),
+            card_height_for_ui(settings, index),
         );
         if is_editing(settings, index) {
-            if (agent_settings_builtin_parts::provider_select_rect(card, touch)).contains(point) {
+            if (agent_settings_builtin_parts::provider_select_rect(card)).contains(point) {
                 return BuiltinHit::TogglePresetMenu(Some(index));
             }
             if settings.builtin_preset_menu_open == Some(BuiltinAgentPresetMenuTarget::Agent(index))
@@ -153,7 +119,6 @@ fn hit_test_with_touch(
                     card,
                     point,
                     settings.builtin_preset_menu_scroll.offset,
-                    touch,
                 ) {
                     return BuiltinHit::SelectPreset {
                         index: Some(index),
@@ -167,7 +132,6 @@ fn hit_test_with_touch(
                     card,
                     Some(index),
                     point,
-                    touch,
                 ) {
                     if settings
                         .builtin_model_catalog_options(&agent.id)
@@ -181,8 +145,7 @@ fn hit_test_with_touch(
                     }
                 }
             }
-            if agent_settings_builtin_parts::kind_toggle_target(agent, card, point, touch).is_some()
-            {
+            if agent_settings_builtin_parts::kind_toggle_target(agent, card, point).is_some() {
                 return BuiltinHit::ToggleKind(index);
             }
             for (row, field) in [
@@ -197,7 +160,7 @@ fn hit_test_with_touch(
                 if field == BuiltinAgentField::BaseUrl && !agent.base_url_editable() {
                     continue;
                 }
-                let input = field_input_rect_for_ui(settings, card, Some(index), row, touch);
+                let input = field_input_rect_for_ui(settings, card, Some(index), row);
                 if !input.contains(point) {
                     continue;
                 }
@@ -205,25 +168,19 @@ fn hit_test_with_touch(
                     // The right edge is the dropdown trigger; the rest of
                     // the field stays a plain focus target (which opens
                     // the menu as well — see the press arms).
-                    let chevron_w = if touch { 44.0 } else { 24.0 };
+                    let chevron_w = 24.0;
                     if point.x >= input.origin.x + input.size.x - chevron_w {
                         return BuiltinHit::ToggleModelMenu(Some(index));
                     }
                 }
                 return BuiltinHit::Focus { index, field };
             }
-            if agent_settings_builtin_layout_save_rect(card, touch).contains(point) {
+            if agent_settings_builtin_layout_save_rect(card).contains(point) {
                 return BuiltinHit::SaveEditing(index);
             }
-            if agent_settings_builtin_layout_delete_rect(card, touch).contains(point) {
+            if agent_settings_builtin_layout_delete_rect(card).contains(point) {
                 return BuiltinHit::Remove(index);
             }
-        } else if touch && compact_touch_switch_target(card).contains(point) {
-            return BuiltinHit::ToggleEnabled(index);
-        } else if touch && compact_touch_edit_target(card).contains(point) {
-            return BuiltinHit::Edit(index);
-        } else if touch && compact_touch_remove_target(card).contains(point) {
-            return BuiltinHit::Remove(index);
         } else if compact_switch_rect(card).contains(point) {
             return BuiltinHit::ToggleEnabled(index);
         } else if settings.hover_builtin_agent == index && (compact_edit_rect(card)).contains(point)
@@ -241,9 +198,9 @@ fn hit_test_with_touch(
             content.origin.x,
             card_y,
             content.size.x,
-            draft_card_height_for_ui(settings, touch),
+            draft_card_height_for_ui(settings),
         );
-        if (agent_settings_builtin_parts::provider_select_rect(card, touch)).contains(point) {
+        if (agent_settings_builtin_parts::provider_select_rect(card)).contains(point) {
             return BuiltinHit::TogglePresetMenu(None);
         }
         if settings.builtin_preset_menu_open == Some(BuiltinAgentPresetMenuTarget::Draft) {
@@ -251,7 +208,6 @@ fn hit_test_with_touch(
                 card,
                 point,
                 settings.builtin_preset_menu_scroll.offset,
-                touch,
             ) {
                 return BuiltinHit::SelectPreset {
                     index: None,
@@ -261,7 +217,7 @@ fn hit_test_with_touch(
         }
         if settings.builtin_model_menu_open == Some(BuiltinModelMenuTarget::Draft) {
             if let Some(row) = crate::widgets::agent_settings_builtin_model_menu::model_row_at(
-                settings, card, None, point, touch,
+                settings, card, None, point,
             ) {
                 if settings
                     .builtin_model_catalog_options_for(&BuiltinModelCatalogTarget::Draft)
@@ -272,7 +228,7 @@ fn hit_test_with_touch(
                 }
             }
         }
-        if agent_settings_builtin_parts::kind_toggle_target(agent, card, point, touch).is_some() {
+        if agent_settings_builtin_parts::kind_toggle_target(agent, card, point).is_some() {
             return BuiltinHit::ToggleDraftKind;
         }
         for (row, field) in [
@@ -287,23 +243,23 @@ fn hit_test_with_touch(
             if field == BuiltinAgentField::BaseUrl && !agent.base_url_editable() {
                 continue;
             }
-            let input = field_input_rect_for_ui(settings, card, None, row, touch);
+            let input = field_input_rect_for_ui(settings, card, None, row);
             if !input.contains(point) {
                 continue;
             }
             if field == BuiltinAgentField::Model {
-                let chevron_w = if touch { 44.0 } else { 24.0 };
+                let chevron_w = 24.0;
                 if point.x >= input.origin.x + input.size.x - chevron_w {
                     return BuiltinHit::ToggleModelMenu(None);
                 }
             }
             return BuiltinHit::FocusDraft(field);
         }
-        let form_h = expanded_card_height_for_ui(settings, None, touch);
-        if (save_button_rect_for_ui(card, form_h, touch)).contains(point) {
+        let form_h = expanded_card_height_for_ui(settings, None);
+        if (save_button_rect_for_ui(card, form_h)).contains(point) {
             return BuiltinHit::SaveDraft;
         }
-        if (cancel_button_rect_for_ui(card, form_h, touch)).contains(point) {
+        if (cancel_button_rect_for_ui(card, form_h)).contains(point) {
             return BuiltinHit::CancelDraft;
         }
     }
@@ -311,21 +267,16 @@ fn hit_test_with_touch(
 }
 
 pub fn card_at(content: Rect, settings: &AgentSettings, point: Point2D) -> Option<usize> {
-    card_at_for_ui(content, settings, point, false)
+    card_at_for_ui(content, settings, point)
 }
 
-pub fn card_at_for_ui(
-    content: Rect,
-    settings: &AgentSettings,
-    point: Point2D,
-    touch: bool,
-) -> Option<usize> {
+pub fn card_at_for_ui(content: Rect, settings: &AgentSettings, point: Point2D) -> Option<usize> {
     settings_form::card_index_at(
         content.origin.x,
         content.size.x,
         agents_body_top(content) + HEADER_HEIGHT + SUBTITLE_HEIGHT + sync_error_height(settings),
         CARD_GAP,
-        (0..settings.builtin_agents.len()).map(|index| card_height_for_ui(settings, index, touch)),
+        (0..settings.builtin_agents.len()).map(|index| card_height_for_ui(settings, index)),
         point,
     )
 }
@@ -335,21 +286,19 @@ pub fn preset_hover_at(
     settings: &AgentSettings,
     point: Point2D,
 ) -> Option<BuiltinAgentPresetKey> {
-    preset_hover_at_for_ui(content, settings, point, false)
+    preset_hover_at_for_ui(content, settings, point)
 }
 
 pub fn preset_hover_at_for_ui(
     content: Rect,
     settings: &AgentSettings,
     point: Point2D,
-    touch: bool,
 ) -> Option<BuiltinAgentPresetKey> {
-    let card = open_preset_menu_card(content, settings, point, touch)?;
+    let card = open_preset_menu_card(content, settings, point)?;
     agent_settings_builtin_parts::preset_hover_at(
         card,
         point,
         settings.builtin_preset_menu_scroll.offset,
-        touch,
     )
 }
 
@@ -358,25 +307,19 @@ pub fn preset_scroll_max_at(
     settings: &AgentSettings,
     point: Point2D,
 ) -> Option<f32> {
-    preset_scroll_max_at_for_ui(content, settings, point, false)
+    preset_scroll_max_at_for_ui(content, settings, point)
 }
 
 pub fn preset_scroll_max_at_for_ui(
     content: Rect,
     settings: &AgentSettings,
     point: Point2D,
-    touch: bool,
 ) -> Option<f32> {
-    let _ = open_preset_menu_card(content, settings, point, touch)?;
-    Some(agent_settings_builtin_parts::preset_scroll_max(touch))
+    let _ = open_preset_menu_card(content, settings, point)?;
+    Some(agent_settings_builtin_parts::preset_scroll_max())
 }
 
-fn open_preset_menu_card(
-    content: Rect,
-    settings: &AgentSettings,
-    point: Point2D,
-    touch: bool,
-) -> Option<Rect> {
+fn open_preset_menu_card(content: Rect, settings: &AgentSettings, point: Point2D) -> Option<Rect> {
     let mut card_y =
         agents_body_top(content) + HEADER_HEIGHT + SUBTITLE_HEIGHT + sync_error_height(settings);
     for (index, _) in settings.builtin_agents.iter().enumerate() {
@@ -384,10 +327,10 @@ fn open_preset_menu_card(
             content.origin.x,
             card_y,
             content.size.x,
-            card_height_for_ui(settings, index, touch),
+            card_height_for_ui(settings, index),
         );
         if settings.builtin_preset_menu_open == Some(BuiltinAgentPresetMenuTarget::Agent(index))
-            && agent_settings_builtin_parts::preset_menu_contains(card, point, touch)
+            && agent_settings_builtin_parts::preset_menu_contains(card, point)
         {
             return Some(card);
         }
@@ -400,9 +343,9 @@ fn open_preset_menu_card(
             content.origin.x,
             card_y,
             content.size.x,
-            draft_card_height_for_ui(settings, touch),
+            draft_card_height_for_ui(settings),
         );
-        if agent_settings_builtin_parts::preset_menu_contains(card, point, touch) {
+        if agent_settings_builtin_parts::preset_menu_contains(card, point) {
             return Some(card);
         }
     }
@@ -412,12 +355,7 @@ fn open_preset_menu_card(
 /// Card whose model dropdown is open AND contains `point` — the same
 /// y-walk the preset version uses, so hover and scroll routing agree
 /// with paint on where the open menu actually is.
-fn open_model_menu_card(
-    content: Rect,
-    settings: &AgentSettings,
-    point: Point2D,
-    touch: bool,
-) -> Option<Rect> {
+fn open_model_menu_card(content: Rect, settings: &AgentSettings, point: Point2D) -> Option<Rect> {
     let mut card_y =
         agents_body_top(content) + HEADER_HEIGHT + SUBTITLE_HEIGHT + sync_error_height(settings);
     for (index, _) in settings.builtin_agents.iter().enumerate() {
@@ -425,14 +363,13 @@ fn open_model_menu_card(
             content.origin.x,
             card_y,
             content.size.x,
-            card_height_for_ui(settings, index, touch),
+            card_height_for_ui(settings, index),
         );
         if crate::widgets::agent_settings_builtin_model_menu::model_menu_contains(
             settings,
             card,
             Some(index),
             point,
-            touch,
         ) {
             return Some(card);
         }
@@ -443,10 +380,10 @@ fn open_model_menu_card(
             content.origin.x,
             card_y,
             content.size.x,
-            draft_card_height_for_ui(settings, touch),
+            draft_card_height_for_ui(settings),
         );
         if crate::widgets::agent_settings_builtin_model_menu::model_menu_contains(
-            settings, card, None, point, touch,
+            settings, card, None, point,
         ) {
             return Some(card);
         }
@@ -459,18 +396,15 @@ pub fn model_hover_at_for_ui(
     content: Rect,
     settings: &AgentSettings,
     point: Point2D,
-    touch: bool,
 ) -> Option<usize> {
-    let card = open_model_menu_card(content, settings, point, touch)?;
+    let card = open_model_menu_card(content, settings, point)?;
     let index = settings
         .builtin_model_menu_open
         .map(|target| match target {
             BuiltinModelMenuTarget::Agent(index) => Some(index),
             BuiltinModelMenuTarget::Draft => None,
         })?;
-    crate::widgets::agent_settings_builtin_model_menu::model_row_at(
-        settings, card, index, point, touch,
-    )
+    crate::widgets::agent_settings_builtin_model_menu::model_row_at(settings, card, index, point)
 }
 
 /// Scroll cap for the model menu under the cursor — `None` when the
@@ -479,18 +413,15 @@ pub fn model_scroll_max_at_for_ui(
     content: Rect,
     settings: &AgentSettings,
     point: Point2D,
-    touch: bool,
 ) -> Option<f32> {
-    let _card = open_model_menu_card(content, settings, point, touch)?;
+    let _card = open_model_menu_card(content, settings, point)?;
     let index = settings
         .builtin_model_menu_open
         .map(|target| match target {
             BuiltinModelMenuTarget::Agent(index) => Some(index),
             BuiltinModelMenuTarget::Draft => None,
         })?;
-    Some(
-        crate::widgets::agent_settings_builtin_model_menu::model_scroll_max(settings, index, touch),
-    )
+    Some(crate::widgets::agent_settings_builtin_model_menu::model_scroll_max(settings, index))
 }
 
 pub fn paint_builtin_section(
@@ -503,11 +434,7 @@ pub fn paint_builtin_section(
     now_ms: u64,
 ) -> f32 {
     let empty = settings.builtin_agents.is_empty() && settings.builtin_agent_draft.is_none();
-    let header_action = if ui.touch_chrome() && empty {
-        ""
-    } else {
-        t_settings(ui, "settings.agents.addProvider")
-    };
+    let header_action = t_settings(ui, "settings.agents.addProvider");
     let mut y = paint_header(
         cx,
         theme,
@@ -518,7 +445,7 @@ pub fn paint_builtin_section(
             y,
             w: content.size.x,
         },
-        settings.hover_add_provider && !(ui.touch_chrome() && empty),
+        settings.hover_add_provider,
         ui.button_pressed(ButtonPressTarget::AgentSettings(
             AgentSettingsButton::AddProvider,
         )),
@@ -544,9 +471,6 @@ pub fn paint_builtin_section(
             .draw_text(&layout, Point2D::new(content.origin.x, y + 14.0));
         y += sync_error_height(settings);
     }
-    if empty && ui.touch_chrome() {
-        return crate::widgets::agent_settings_builtin_empty::paint(cx, theme, ui, content, y);
-    }
     if empty {
         return settings_form::paint_empty(
             cx,
@@ -562,7 +486,7 @@ pub fn paint_builtin_section(
             content.origin.x,
             y,
             content.size.x,
-            card_height_for_ui(settings, index, ui.touch_chrome()),
+            card_height_for_ui(settings, index),
         );
         paint_builtin_agent_card(cx, theme, settings, ui, agent, index, card, now_ms);
         y += card.size.y + CARD_GAP;
@@ -572,12 +496,12 @@ pub fn paint_builtin_section(
             content.origin.x,
             y,
             content.size.x,
-            draft_card_height_for_ui(settings, ui.touch_chrome()),
+            draft_card_height_for_ui(settings),
         );
         crate::widgets::agent_settings_builtin_form::paint_builtin_agent_form(
             cx, theme, settings, ui, draft, None, card, now_ms,
         );
-        let form_h = expanded_card_height_for_ui(settings, None, ui.touch_chrome());
+        let form_h = expanded_card_height_for_ui(settings, None);
         paint_form_actions_for_ui(
             cx,
             theme,
@@ -591,7 +515,6 @@ pub fn paint_builtin_section(
             ui.button_pressed(ButtonPressTarget::AgentSettings(
                 AgentSettingsButton::BuiltinSaveDraft,
             )),
-            ui.touch_chrome(),
         );
         y += card.size.y + CARD_GAP;
     }
@@ -703,11 +626,7 @@ fn paint_compact_builtin_agent_card(
     let text_x = card.origin.x + ROW_TEXT_X;
     // Everything to the right of the text column: switch, then the two
     // hover actions, plus their gaps and the row's own inset.
-    let switch_rect = if ui.touch_chrome() {
-        compact_touch_switch_rect(card)
-    } else {
-        compact_switch_rect(card)
-    };
+    let switch_rect = compact_switch_rect(card);
     let reserved = card.origin.x + card.size.x - switch_rect.origin.x;
     paint_row_label_above_status_at(cx, theme, card, text_x, &agent.display_name, reserved);
 
@@ -736,17 +655,9 @@ fn paint_compact_builtin_agent_card(
     );
 
     paint_settings_switch(cx, theme, switch_rect, agent.enabled);
-    if hovered || ui.touch_chrome() {
-        let edit_rect = if ui.touch_chrome() {
-            compact_touch_edit_rect(card)
-        } else {
-            compact_edit_rect(card)
-        };
-        let remove_rect = if ui.touch_chrome() {
-            compact_touch_remove_rect(card)
-        } else {
-            compact_remove_rect(card)
-        };
+    if hovered {
+        let edit_rect = compact_edit_rect(card);
+        let remove_rect = compact_remove_rect(card);
         paint_action(
             cx,
             theme,

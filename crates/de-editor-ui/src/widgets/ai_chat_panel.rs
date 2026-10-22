@@ -116,9 +116,6 @@ pub struct AIChatPlaceholder<'a> {
     /// has no window to drag or maximize, so the header spends that room
     /// on the session selector instead.
     pub column_pinned: bool,
-    /// Touch chrome hosts the chat as a sheet, which still collapses to
-    /// its header — so the chevron lives on there, and only there.
-    pub touch_sheet: bool,
     /// Composer-only mode: the rail is showing another tab, so the chat
     /// shows nothing but its input box docked at the canvas floor. The
     /// conversation has exactly ONE home (the Agent tab); this is the
@@ -231,7 +228,6 @@ impl<'a> AIChatPlaceholder<'a> {
                 _ => None,
             },
             column_pinned: ui.chat_pinned(),
-            touch_sheet: ui.touch_chrome(),
             composer_only: ui.chat_composer_only(),
             header_hover: ui.chat_header_hover,
             footer_hover: ui.chat_footer_hover,
@@ -457,8 +453,7 @@ impl<'a> AIChatPlaceholder<'a> {
 
     /// Region available to the empty-state suggestion stack: everything
     /// between the header divider and the bottom-anchored composer block.
-    /// Compact touch sheets shrink with the software keyboard, so this is
-    /// what keeps the hint / example pills / tip lines from running into
+    /// A short panel rect is what keeps the hint / example pills / tip lines from running into
     /// the composer — paint clips to it and pills that do not fully fit
     /// are dropped (see `paint_examples`).
     pub fn empty_state_region(&self, rect: Rect) -> Rect {
@@ -513,33 +508,6 @@ impl<'a> AIChatPlaceholder<'a> {
         Rect {
             origin: Point2D::new(rect.origin.x + PAD, bottom - height),
             size: Point2D::new(rect.size.x - PAD * 2.0, height),
-        }
-    }
-
-    /// Collapse-toggle hit area in the expanded header.
-    ///
-    /// With multi-tab layout: the tab bodies produce `SwitchTab` hits, so
-    /// ToggleCollapse is now scoped to just the chevron icon (18×18 px at
-    /// the far left). The hit rect is slightly generous (18×26 to match the
-    /// row height) so it is easy to click.
-    ///
-    /// In single-tab mode the user can still click the single active tab to
-    /// collapse via the tab's `SwitchTab(0)` being harmless (already active),
-    /// but the chevron is always the canonical collapse affordance.
-    pub(crate) fn expanded_header_title_rect(&self, rect: Rect) -> Rect {
-        use crate::widgets::ai_chat_panel_header::CHEVRON_W;
-        // Desktop has no collapsed state left to toggle, so the chevron
-        // is neither painted nor clickable there.
-        if !self.touch_sheet {
-            return Rect::ZERO;
-        }
-        let chevron_h = 26.0; // generous hit target matching the pill height
-        Rect {
-            origin: Point2D::new(
-                rect.origin.x + PAD,
-                rect.origin.y + (HEADER_HEIGHT - chevron_h) / 2.0,
-            ),
-            size: Point2D::new(CHEVRON_W, chevron_h),
         }
     }
 

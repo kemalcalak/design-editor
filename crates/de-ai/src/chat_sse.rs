@@ -4,9 +4,8 @@
 //! OpenAI-compatible `/chat/completions` stream) maps to at most one
 //! [`ChatDelta`]. These helpers moved here from
 //! `de-host-services/src/chat_builtin_http_wire.rs` (which re-exports them
-//! unchanged) so the mobile FFI chat pump (`de-engine-ffi`) and the desktop /
-//! daemon transports parse the wire protocol from ONE implementation instead
-//! of drifting copies. Byte-level transports (reqwest response pumps, retry
+//! unchanged) so every transport parses the wire protocol from ONE
+//! implementation instead of drifting copies. Byte-level transports (reqwest response pumps, retry
 //! ladders) stay host-side — this module is pure `&str -> Option<ChatDelta>`.
 
 use serde_json::Value;

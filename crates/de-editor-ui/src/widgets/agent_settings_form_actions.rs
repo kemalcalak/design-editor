@@ -11,8 +11,6 @@ use jian_widgets::components::button::{Button, ButtonVariant};
 
 const FORM_BTN_W: f32 = 68.0;
 const FORM_BTN_H: f32 = 26.0;
-const TOUCH_FORM_BTN_W: f32 = 92.0;
-const TOUCH_FORM_BTN_H: f32 = 44.0;
 
 #[allow(clippy::too_many_arguments)]
 pub fn paint_form_actions(
@@ -34,7 +32,6 @@ pub fn paint_form_actions(
         can_save,
         cancel_pressed,
         save_pressed,
-        false,
     );
 }
 
@@ -48,43 +45,36 @@ pub fn paint_form_actions_for_ui(
     can_save: bool,
     cancel_pressed: bool,
     save_pressed: bool,
-    touch: bool,
 ) {
     paint_text_button(
         cx,
         theme,
-        cancel_button_rect_for_ui(card, form_h, touch),
+        cancel_button_rect_for_ui(card, form_h),
         t_settings(ui, "common.cancel"),
         ButtonVariant::Outline,
         true,
         cancel_pressed,
-        touch,
     );
     paint_text_button(
         cx,
         theme,
-        save_button_rect_for_ui(card, form_h, touch),
+        save_button_rect_for_ui(card, form_h),
         t_settings(ui, "common.save"),
         ButtonVariant::Primary,
         can_save,
         save_pressed,
-        touch,
     );
 }
 
 pub fn save_button_rect(card: Rect, form_h: f32) -> Rect {
-    save_button_rect_for_ui(card, form_h, false)
+    save_button_rect_for_ui(card, form_h)
 }
 
-pub fn save_button_rect_for_ui(card: Rect, form_h: f32, touch: bool) -> Rect {
-    let (width, height, bottom_pad) = if touch {
-        (TOUCH_FORM_BTN_W, TOUCH_FORM_BTN_H, 8.0)
-    } else {
-        (FORM_BTN_W, FORM_BTN_H, 5.0)
-    };
+pub fn save_button_rect_for_ui(card: Rect, form_h: f32) -> Rect {
+    let (width, height, bottom_pad) = (FORM_BTN_W, FORM_BTN_H, 5.0);
     Rect {
         origin: Point2D::new(
-            card.origin.x + card.size.x - if touch { 16.0 } else { 12.0 } - width,
+            card.origin.x + card.size.x - 12.0 - width,
             card.origin.y + form_h + bottom_pad,
         ),
         size: Point2D::new(width, height),
@@ -92,19 +82,17 @@ pub fn save_button_rect_for_ui(card: Rect, form_h: f32, touch: bool) -> Rect {
 }
 
 pub fn cancel_button_rect(card: Rect, form_h: f32) -> Rect {
-    cancel_button_rect_for_ui(card, form_h, false)
+    cancel_button_rect_for_ui(card, form_h)
 }
 
-pub fn cancel_button_rect_for_ui(card: Rect, form_h: f32, touch: bool) -> Rect {
-    let width = if touch { TOUCH_FORM_BTN_W } else { FORM_BTN_W };
+pub fn cancel_button_rect_for_ui(card: Rect, form_h: f32) -> Rect {
+    let width = FORM_BTN_W;
     Rect {
         origin: Point2D::new(
-            save_button_rect_for_ui(card, form_h, touch).origin.x
-                - if touch { 12.0 } else { 8.0 }
-                - width,
-            save_button_rect_for_ui(card, form_h, touch).origin.y,
+            save_button_rect_for_ui(card, form_h).origin.x - 8.0 - width,
+            save_button_rect_for_ui(card, form_h).origin.y,
         ),
-        size: Point2D::new(width, if touch { TOUCH_FORM_BTN_H } else { FORM_BTN_H }),
+        size: Point2D::new(width, FORM_BTN_H),
     }
 }
 
@@ -117,7 +105,6 @@ fn paint_text_button(
     variant: ButtonVariant,
     enabled: bool,
     pressed: bool,
-    touch: bool,
 ) {
     let is_primary = matches!(variant, ButtonVariant::Primary);
     // A disabled primary CTA renders as a neutral Outline (border + no fill →
@@ -134,7 +121,7 @@ fn paint_text_button(
         enabled,
         hovered: !is_primary,
         pressed,
-        font_size: if touch { 15.0 } else { 11.0 },
+        font_size: 11.0,
     }
     .paint(cx.backend, rect, &tokens_from_theme(theme));
     if is_primary && enabled && pressed {
@@ -145,7 +132,7 @@ fn paint_text_button(
         (_, true) => theme.foreground,
         _ => theme.muted_foreground,
     };
-    let font_size = if touch { 15.0 } else { 11.0 };
+    let font_size = 11.0;
     let tw = text_metrics::measure_chrome(cx.backend, label, font_size);
     draw_text(
         cx,
@@ -153,11 +140,7 @@ fn paint_text_button(
         font_size,
         fg,
         rect.origin.x + (rect.size.x - tw) / 2.0,
-        if touch {
-            jian_widgets::centered_text_baseline_y(rect, font_size)
-        } else {
-            rect.origin.y + 17.0
-        },
+        rect.origin.y + 17.0,
     );
 }
 

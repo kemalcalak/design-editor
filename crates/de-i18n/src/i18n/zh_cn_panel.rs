@@ -95,7 +95,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "collab.action.confirmOwner" => "加入此会话",
         "collab.action.rejectOwner" => "不加入",
         "collab.error.ownerNotConfirmed" => "你未确认主持人，因此未载入任何内容。",
-        "sceneTemplate.title" => "场景模板",
         "sceneTemplate.searchPlaceholder" => "搜索场景或模板",
         "sceneTemplate.empty" => "没有匹配的模板",
         "sceneTemplate.frames" => "{{count}} 页",
@@ -631,7 +630,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "slidesPanel.exportPdf" => "导出 PDF",
         "slidesPanel.exportAllSlides" => "导出全部幻灯片",
         "slidesPanel.exportSelectedSlides" => "导出所选幻灯片（{{count}}）",
-        "settings.tab.ai" => "AI",
         "settings.agents.heroSubtitle" => {
             "Design Editor 直接驱动本地 CLI Agent 与 API 服务商，连接任意一个即可开始生成设计。"
         }

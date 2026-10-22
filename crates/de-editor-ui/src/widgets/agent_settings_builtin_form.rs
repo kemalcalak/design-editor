@@ -30,29 +30,20 @@ pub(super) fn paint_builtin_agent_form(
     card: Rect,
     now_ms: u64,
 ) {
-    let touch = ui.touch_chrome();
     Card {
         fill: Some(theme.muted),
         border: Some(theme.border),
-        radius: if touch { 14.0 } else { 10.0 },
+        radius: 10.0,
     }
     .paint(cx.backend, card, &tokens_from_theme(theme));
-    paint_identity(cx, theme, settings, ui, agent, index, card, touch);
-    agent_settings_builtin_parts::paint_kind_toggle(
-        cx,
-        theme,
-        agent,
-        card,
-        t_settings(ui, "builtin.apiFormat"),
-        touch,
-    );
+    paint_identity(cx, theme, settings, ui, agent, index, card);
+    agent_settings_builtin_parts::paint_kind_toggle(cx, theme, agent, card);
     agent_settings_builtin_parts::paint_provider_select(
         cx,
         theme,
         agent,
         card,
         t_settings(ui, "builtin.provider"),
-        touch,
     );
     for (row, field) in [
         BuiltinAgentField::DisplayName,
@@ -67,17 +58,17 @@ pub(super) fn paint_builtin_agent_form(
             cx, theme, settings, ui, agent, index, field, row, card, now_ms,
         );
     }
-    agent_settings_builtin_parts::paint_preset_menu(cx, theme, settings, agent, index, card, touch);
-    model_menu::paint_model_menu(cx, theme, settings, ui, agent, index, card, touch);
+    agent_settings_builtin_parts::paint_preset_menu(cx, theme, settings, agent, index, card);
+    model_menu::paint_model_menu(cx, theme, settings, ui, agent, index, card);
     // The expanded editing form ends in an action row: a primary Save
     // button (commit + collapse) with a small trailing delete square —
     // deletion stays reachable in the open form, but no longer reads as
     // the form's main action.
     if index.is_some() {
-        let save = crate::widgets::agent_settings_builtin_layout::editing_save_rect(card, touch);
+        let save = crate::widgets::agent_settings_builtin_layout::editing_save_rect(card);
         cx.backend.fill_round_rect(save, 10.0, theme.accent);
         let label = t_settings(ui, "common.save");
-        let font = if touch { 15.0 } else { 12.0 };
+        let font = 12.0;
         let text_w = crate::widgets::text_metrics::measure_chrome(cx.backend, label, font);
         draw_text(
             cx,
@@ -87,11 +78,11 @@ pub(super) fn paint_builtin_agent_form(
             save.origin.x + (save.size.x - text_w) / 2.0,
             jian_widgets::centered_text_baseline_y(save, font),
         );
-        let rect = crate::widgets::agent_settings_builtin_layout::editing_delete_rect(card, touch);
+        let rect = crate::widgets::agent_settings_builtin_layout::editing_delete_rect(card);
         let danger = theme.destructive;
         cx.backend
             .stroke_round_rect(rect, 10.0, danger.with_alpha(0.55), 1.0);
-        let icon_size = if touch { 20.0 } else { 14.0 };
+        let icon_size = 14.0;
         draw_icon(
             cx.backend,
             Icon::Trash,
@@ -115,23 +106,18 @@ fn paint_identity(
     agent: &BuiltinAgentConfig,
     index: Option<usize>,
     card: Rect,
-    touch: bool,
 ) {
-    let avatar_size = if touch { 36.0 } else { 28.0 };
+    let avatar_size = 28.0;
     let avatar = Rect {
-        origin: Point2D::new(
-            card.origin.x + if touch { 16.0 } else { 12.0 },
-            card.origin.y + if touch { 12.0 } else { 10.0 },
-        ),
+        origin: Point2D::new(card.origin.x + 12.0, card.origin.y + 10.0),
         size: Point2D::new(avatar_size, avatar_size),
     };
-    cx.backend
-        .fill_round_rect(avatar, if touch { 10.0 } else { 6.0 }, theme.background);
+    cx.backend.fill_round_rect(avatar, 6.0, theme.background);
     let logo = match agent.kind {
         BuiltinAgentKind::Anthropic => BrandLogo::Claude,
         BuiltinAgentKind::OpenAiCompat => BrandLogo::OpenAI,
     };
-    let logo_size = if touch { 20.0 } else { 16.0 };
+    let logo_size = 16.0;
     paint_brand_logo(
         cx.backend,
         logo,
@@ -145,11 +131,7 @@ fn paint_identity(
     let api_key = effective_field_text(settings, ui, agent, index, BuiltinAgentField::ApiKey);
     let model = effective_field_text(settings, ui, agent, index, BuiltinAgentField::Model);
     let ready = agent.enabled && !api_key.trim().is_empty() && !model.trim().is_empty();
-    let status_size = if touch { 14.0 } else { 11.0 };
-    let status_band = Rect {
-        origin: Point2D::new(card.origin.x, card.origin.y + if touch { 8.0 } else { 6.0 }),
-        size: Point2D::new(card.size.x, 44.0),
-    };
+    let status_size = 11.0;
     let status = if api_key.trim().is_empty() {
         t_settings(ui, "builtin.errorApiKeyEmpty")
     } else if model.trim().is_empty() {
@@ -159,12 +141,7 @@ fn paint_identity(
     } else {
         ""
     };
-    let status = ellipsize(
-        cx,
-        status,
-        (card.size.x - if touch { 80.0 } else { 64.0 }).max(0.0),
-        status_size,
-    );
+    let status = ellipsize(cx, status, (card.size.x - 64.0).max(0.0), status_size);
     if !status.is_empty() {
         draw_text(
             cx,
@@ -175,12 +152,8 @@ fn paint_identity(
             } else {
                 theme.muted_foreground
             },
-            card.origin.x + if touch { 64.0 } else { 48.0 },
-            if touch {
-                jian_widgets::centered_text_baseline_y(status_band, status_size)
-            } else {
-                card.origin.y + 28.0
-            },
+            card.origin.x + 48.0,
+            card.origin.y + 28.0,
         );
     }
 }
@@ -220,34 +193,32 @@ fn paint_field(
         BuiltinAgentField::Model => t_settings(ui, "builtin.model"),
         BuiltinAgentField::BaseUrl => t_settings(ui, "builtin.baseUrl"),
     };
-    let touch = ui.touch_chrome();
-    let input = field_input_rect_for_ui(settings, card, index, row, touch);
+    let input = field_input_rect_for_ui(settings, card, index, row);
     let editable = field != BuiltinAgentField::BaseUrl || agent.base_url_editable();
-    let value_size = if touch { 15.0 } else { 11.0 };
-    let text_x = input.origin.x + if touch { 12.0 } else { 6.0 };
-    let trailing = if touch { 44.0 } else { 24.0 };
+    let value_size = 11.0;
+    let text_x = input.origin.x + 6.0;
+    let trailing = 24.0;
     let painted_focused = if field == BuiltinAgentField::Model && focused {
         settings_form::paint_field_chrome_for_ui(
             cx,
             theme,
             label,
-            card.origin.x + if touch { 16.0 } else { 12.0 },
+            card.origin.x + 12.0,
             input.origin.y + 16.0,
             input,
             true,
-            touch,
         );
-        let text_rect = agent_settings_caret::model_text_area_rect(input, touch);
+        let text_rect = agent_settings_caret::model_text_area_rect(input);
         agent_settings_caret::paint_settings_text_area(
             cx,
             theme,
             ui,
             text_rect,
-            agent_settings_caret::model_text_font_size(touch),
-            agent_settings_caret::model_text_pad_x(touch),
+            agent_settings_caret::model_text_font_size(),
+            agent_settings_caret::model_text_pad_x(),
             now_ms,
             t_settings(ui, "builtin.modelsOnePerLine"),
-            agent_settings_caret::model_text_max_visible_lines(touch),
+            agent_settings_caret::model_text_max_visible_lines(),
         );
         true
     } else {
@@ -256,13 +227,12 @@ fn paint_field(
             theme,
             ui,
             label,
-            card.origin.x + if touch { 16.0 } else { 12.0 },
+            card.origin.x + 12.0,
             input.origin.y + 16.0,
             input,
             focused,
             "",
             now_ms,
-            touch,
         )
     };
     if field == BuiltinAgentField::Model {
@@ -270,8 +240,8 @@ fn paint_field(
         // stays free-text, the dropdown lists discovered models.
         let menu_open = settings.builtin_model_menu_open == Some(model_menu::menu_target(index))
             && model_menu::model_menu_visible(settings);
-        let icon_size = if touch { 18.0 } else { 12.0 };
-        let pad = if touch { 12.0 } else { 6.0 };
+        let icon_size = 12.0;
+        let pad = 6.0;
         draw_icon(
             cx.backend,
             if menu_open {
@@ -296,9 +266,7 @@ fn paint_field(
         value.as_ref(),
         input.size.x
             - if field == BuiltinAgentField::Model {
-                trailing + if touch { 12.0 } else { 6.0 }
-            } else if touch {
-                24.0
+                trailing + 6.0
             } else {
                 12.0
             },
@@ -314,11 +282,7 @@ fn paint_field(
             theme.muted_foreground
         },
         text_x,
-        if touch {
-            jian_widgets::centered_text_baseline_y(input, value_size)
-        } else {
-            input.origin.y + 16.0
-        },
+        input.origin.y + 16.0,
     );
 }
 

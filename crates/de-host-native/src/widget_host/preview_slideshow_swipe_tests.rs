@@ -1,8 +1,7 @@
-//! Focused native-host coverage for slideshow touch navigation.
+//! Focused native-host coverage for slideshow swipe navigation.
 
 use super::super::WidgetHostNative;
 use de_editor_core::scene_template_catalog::TemplateScene;
-use de_editor_core::size_class::EditorSizeClass;
 use de_editor_core::EditorState;
 use de_editor_ui::Point2D;
 
@@ -31,8 +30,6 @@ fn presenting_host() -> WidgetHostNative {
         .value;
     let mut state = EditorState::from_document(document);
     state.editor_ui.scenario = Some(TemplateScene::Slides);
-    state.editor_ui.touch = true;
-    state.editor_ui.size_class = EditorSizeClass::Compact;
     let mut host = WidgetHostNative::new();
     host.install_imported_state(state);
     host.last_viewport_w = VIEWPORT_W;
@@ -99,29 +96,5 @@ fn short_vertical_and_diagonal_drags_do_not_change_slides() {
 
     // A near-diagonal drag is intentionally ambiguous and also stays put.
     drag(&mut host, start, Point2D::new(-80.0, 72.0));
-    assert_eq!(board_on_screen(&host).as_deref(), Some("slide-1"));
-}
-
-#[test]
-fn system_cancel_discards_an_armed_swipe_and_its_late_release() {
-    let mut host = presenting_host();
-    let start = board_point(&host);
-
-    host.apply_cursor_move(start.x, start.y);
-    host.apply_press(start.x, start.y, VIEWPORT_W, VIEWPORT_H);
-    host.apply_cursor_move(start.x - 100.0, start.y + 4.0);
-    assert!(host.slideshow_press_screen.is_some(), "swipe is armed");
-
-    assert!(host.cancel_native_touch_gestures());
-    assert!(
-        host.slideshow_press_screen.is_none(),
-        "cancel clears slideshow capture"
-    );
-    assert_eq!(board_on_screen(&host).as_deref(), Some("slide-1"));
-
-    assert!(
-        !host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H),
-        "a late platform Up has no cancelled gesture to commit"
-    );
     assert_eq!(board_on_screen(&host).as_deref(), Some("slide-1"));
 }

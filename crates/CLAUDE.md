@@ -35,10 +35,7 @@ crates/
 ├── de-editor-host-core/  Transport-free host state machines shared by all hosts
 ├── de-collab/            Open, transport-free collaboration protocol + canonical hash + exact document apply (wasm32-clean)
 ├── de-collab-host/       Host-agnostic collaboration session runtime (`CollabRuntime` + `CollabHost`); desktop and the serve-web daemon both drive it
-├── de-host-native/       Native host lib: WidgetHostNative + skia-safe GL backend (desktop + mobile)
-├── de-engine-ffi/        Player C ABI: embed the canvas in iOS / Android shells (metal / gl / raster surfaces)
-├── de-engine-jni/        Android JNI marshalling layer for de-engine-ffi (engine thread, registry, callbacks)
-├── de-engine-napi/       OpenHarmony (OHOS) Node-API layer → `libdesign_editor.so`; reuses de-engine-jni's engine thread + registry, everything else target-gated on `target_env = "ohos"` (see its README for the ArkTS API table)
+├── de-host-native/       Native host lib: WidgetHostNative + skia-safe GL backend (desktop)
 ├── de-host-web/          Browser bundle entry: wasm32-unknown-unknown cdylib, CanvasKit renderer
 ├── de-host-desktop/      Desktop binary `design-editor` (winit + skia-safe GL); also the `--serve-web` daemon
 ├── de-cli/               `de` command-line tool
@@ -62,7 +59,7 @@ a local `parse_hex` / `escape_json` again.
 
 ## Key invariants
 
-- **de-host-native tests need `--features gl-host`.** `gl-host` is a non-default feature (keeps `skia-safe/gl` out of mobile builds), and the entire `widget_host` module is gated behind it — a default-feature `cargo test -p de-host-native` runs 55 tests instead of 676 and gives ZERO coverage of `widget_host/` changes. Always test native with `--features gl-host`.
+- **de-host-native tests need `--features gl-host`.** `gl-host` is a non-default feature (keeps `skia-safe/gl` out of the raster build used by de-host-services), and the entire `widget_host` module is gated behind it — a default-feature `cargo test -p de-host-native` runs 55 tests instead of 676 and gives ZERO coverage of `widget_host/` changes. Always test native with `--features gl-host`.
 
 - **de-editor-ui (widgets) stays wasm32-clean** (spec v19 §1.2). No skia-safe / winit / accesskit_winit. The `RenderBackend` trait is the only seam between widget code and platform.
 - **Widget code lives in de-editor-ui only.** Hosts (de-host-native `widget_host.rs`, de-host-web `widget_host.rs`) are the ONLY files allowed to call `de_editor_ui::widgets::*`. Boundary script: `tools/check-widget-boundary.sh`.
@@ -145,7 +142,7 @@ Mutators on `Document`:
 | LayerContextMenu  | Right-click overlay on layer rows + page tabs (Rename / Duplicate / Delete / Group / Ungroup / Lock / Hide; subset on page tabs)     | `layer_context_menu.rs`                                                                                                                 |
 | AgentSettings     | Cmd+, modal — 880×640 with sidebar nav (Agents / MCP / Images / System) + scrollable right pane                                      | `agent_settings_panel.rs` + `agent_settings_{i18n,images,mcp,system}.rs`                                                                |
 | theme             | shadcn-dark palette tokens (incl. `canvas_surface`)                                                                                  | `theme.rs`                                                                                                                              |
-| i18n              | 15 canonical locale catalogs, 1,679 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
+| i18n              | 15 canonical locale catalogs, 1,788 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
 
 ## Theme + i18n
 
@@ -156,7 +153,7 @@ Mutators on `Document`:
 - 15 supported locales (matches TS dropdown order): EnUs / ZhCn / ZhTw / Ja / Ko / Fr / Es / De / Pt / Ru / Hi / Tr / Th / Vi / Id. Each carries a `display_name()` (English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Français / Español / Deutsch / Português / Русский / हिन्दी / Türkçe / ไทย / Tiếng Việt / Bahasa Indonesia).
 - TopBar Globe-button is a 44 px-wide compound (globe + chevron-down) opening a `LocalePicker` dropdown. Native applies a clicked locale immediately; web closes the picker but keeps the old locale while an uninstalled runtime catalog is pending, then mutates `Document.ui.locale` once the JSON is ready. Clicking outside (or the Globe again) closes silently. The picker paints as the top-most overlay so it covers chat / status / canvas.
 - Multi-script chrome strings (한국어 / हिन्दी / ไทย / Tiếng Việt) render against per-codepoint typeface lookups (`FontMgr::match_family_style_character` cached per `i32` in `NativeBackend`), with each string broken into contiguous-typeface segments before draw.
-- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,679 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,679-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
+- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,788 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,788-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
 
   **Adding a new key: put it in `<locale>_collab.rs` (the terminal overflow shard), in all 15 locales.** The main tables sit at or just under the repo's 800-line ceiling (`zh_cn.rs` is exactly 800, `en.rs` 798), so a new entry there does not fit — the `_panel` shards exist precisely to absorb overflow and have room. Only edit a main or `_git` table when you are changing the wording of a key that already lives there. Then bump the expected count in `catalog_integrity_tests.rs` and run:
 

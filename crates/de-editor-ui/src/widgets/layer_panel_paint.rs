@@ -10,7 +10,7 @@ use jian_core::text_input::TextInputState;
 
 use super::layer_panel::LayerItem;
 use super::layer_panel_metrics::{
-    glyph_rect_in, layer_action_targets, layer_drag_target, layer_node_icon_x, LayerPanelMetrics,
+    glyph_rect_in, layer_action_targets, layer_node_icon_x, LayerPanelMetrics,
 };
 
 pub(super) const ROW_FONT: f32 = 13.0;
@@ -85,44 +85,10 @@ pub(super) fn layer_action_gutter_left(row: Rect) -> f32 {
     eye_x - 8.0
 }
 
-pub(super) fn layer_action_gutter_left_with_metrics(row: Rect, metrics: LayerPanelMetrics) -> f32 {
-    if metrics.touch {
-        layer_drag_target(row, metrics)
-            .expect("touch rows have a reorder target")
-            .origin
-            .x
-    } else {
-        layer_action_gutter_left(row)
-    }
-}
-
-/// Six-dot grip centered in the dedicated touch reorder target.
-pub(super) fn paint_layer_drag_handle(cx: &mut PaintCx<'_>, target: Option<Rect>, color: Color) {
-    let Some(target) = target else { return };
-    const DOT: f32 = 3.0;
-    const STEP_X: f32 = 8.0;
-    const STEP_Y: f32 = 7.0;
-    let left = target.origin.x + (target.size.x - DOT - STEP_X) / 2.0;
-    let top = target.origin.y + (target.size.y - DOT - STEP_Y * 2.0) / 2.0;
-    for row in 0..3 {
-        for column in 0..2 {
-            cx.backend.fill_round_rect(
-                Rect {
-                    origin: Point2D::new(left + column as f32 * STEP_X, top + row as f32 * STEP_Y),
-                    size: Point2D::new(DOT, DOT),
-                },
-                DOT / 2.0,
-                color,
-            );
-        }
-    }
-}
-
 #[allow(clippy::too_many_arguments)]
 pub(super) fn paint_layer_action_backing(
     cx: &mut PaintCx<'_>,
     row: Rect,
-    metrics: LayerPanelMetrics,
     theme: &Theme,
     selected: bool,
     hovered: bool,
@@ -131,7 +97,7 @@ pub(super) fn paint_layer_action_backing(
     if !visible {
         return;
     }
-    let gutter_left = layer_action_gutter_left_with_metrics(row, metrics);
+    let gutter_left = layer_action_gutter_left(row);
     let backing = Rect {
         origin: Point2D::new(gutter_left, row.origin.y),
         size: Point2D::new(row.origin.x + row.size.x - gutter_left, row.size.y),
@@ -144,15 +110,11 @@ pub(super) fn paint_layer_action_backing(
     }
 }
 
-pub(super) fn layer_content_clip_rect_with_metrics(
-    row: Rect,
-    renaming: bool,
-    metrics: LayerPanelMetrics,
-) -> Rect {
+pub(super) fn layer_content_clip_rect_with_metrics(row: Rect, renaming: bool) -> Rect {
     let right_edge = if renaming {
         row.origin.x + row.size.x - 8.0
     } else {
-        layer_action_gutter_left_with_metrics(row, metrics)
+        layer_action_gutter_left(row)
     };
     Rect {
         origin: row.origin,
@@ -165,10 +127,9 @@ pub(super) fn layer_label_available_width_with_metrics(
     label_x: f32,
     horizontal_offset: f32,
     renaming: bool,
-    metrics: LayerPanelMetrics,
 ) -> f32 {
     let screen_label_x = label_x - horizontal_offset;
-    let clip = layer_content_clip_rect_with_metrics(row, renaming, metrics);
+    let clip = layer_content_clip_rect_with_metrics(row, renaming);
     let right_edge = clip.origin.x + clip.size.x - if renaming { 2.0 } else { 0.0 };
     (right_edge - screen_label_x).max(0.0)
 }
@@ -199,14 +160,10 @@ pub(super) fn paint_drag_ghost(
     };
     cx.backend.save();
     cx.backend
-        .clip_rect(layer_content_clip_rect_with_metrics(row, false, metrics));
+        .clip_rect(layer_content_clip_rect_with_metrics(row, false));
     let indent = metrics.row_pad_x + ghost.depth as f32 * 12.0;
-    let icon_x = layer_node_icon_x(row, indent, metrics);
-    let icon_y = if metrics.touch {
-        row.origin.y + (row.size.y - metrics.glyph_size) / 2.0
-    } else {
-        row.origin.y + 6.0
-    };
+    let icon_x = layer_node_icon_x(row, indent);
+    let icon_y = row.origin.y + 6.0;
     draw_icon(
         cx.backend,
         ghost.icon,
@@ -215,8 +172,8 @@ pub(super) fn paint_drag_ghost(
         fg,
         1.4,
     );
-    let label_x = icon_x + metrics.glyph_size + if metrics.touch { 8.0 } else { 6.0 };
-    let available_w = layer_label_available_width_with_metrics(row, label_x, 0.0, false, metrics);
+    let label_x = icon_x + metrics.glyph_size + 6.0;
+    let available_w = layer_label_available_width_with_metrics(row, label_x, 0.0, false);
     let display = truncate_to_fit_measured(cx.backend, &ghost.label, metrics.row_font, available_w);
     let label = TextLayout::single_run(
         &display,
@@ -225,11 +182,7 @@ pub(super) fn paint_drag_ghost(
         (fg).to_jian(),
         Point2D::new(0.0, 0.0),
     );
-    let baseline = if metrics.touch {
-        jian_widgets::centered_text_baseline_y(row, metrics.row_font)
-    } else {
-        row.origin.y + 17.0
-    };
+    let baseline = row.origin.y + 17.0;
     cx.backend
         .draw_text(&label, Point2D::new(label_x, baseline));
     cx.backend.restore();
@@ -289,11 +242,7 @@ pub(super) fn paint_rename_input_with_metrics(
         rect,
         metrics.row_font,
         2.0,
-        if metrics.touch {
-            jian_widgets::centered_text_baseline_y(rect, metrics.row_font)
-        } else {
-            row_y + 17.0
-        },
+        row_y + 17.0,
         now_ms,
     );
     // Subtle underline indicates edit mode without the heavy ring.
@@ -309,14 +258,9 @@ pub(super) fn paint_section_header_with_metrics(
     theme: &Theme,
     x: f32,
     y: f32,
-    width: f32,
     label: &str,
     metrics: LayerPanelMetrics,
 ) {
-    let header = Rect {
-        origin: Point2D::new(x, y),
-        size: Point2D::new(width, metrics.section_header_height),
-    };
     let header_text = TextLayout::single_run(
         label,
         "system-ui",
@@ -324,11 +268,7 @@ pub(super) fn paint_section_header_with_metrics(
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
     );
-    let baseline = if metrics.touch {
-        jian_widgets::centered_text_baseline_y(header, metrics.header_font)
-    } else {
-        y + 19.0
-    };
+    let baseline = y + 19.0;
     cx.backend
         .draw_text(&header_text, Point2D::new(x + metrics.row_pad_x, baseline));
 }

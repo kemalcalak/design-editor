@@ -156,12 +156,10 @@ impl WidgetHostNative {
             .commit_composition(self.now_ms);
         self.commit_property_focus_if_any();
 
-        self.cancel_native_touch_gestures();
-        self.cancel_agent_settings_touch_gesture();
+        self.cancel_pointer_gestures();
         self.blur_text_inputs_on_blank_press();
         self.release_property_keyboard_owner();
         self.close_image_popovers_for_higher_overlay();
-        self.dismiss_mobile_surface();
 
         let figma_owned = self.editor_state.editor_ui.import_source
             == de_editor_core::figma_import_state::ImportSource::Figma

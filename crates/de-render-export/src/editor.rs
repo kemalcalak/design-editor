@@ -1,4 +1,4 @@
-//! Editor-state export dispatch shared by desktop and mobile shells.
+//! Editor-state export dispatch.
 
 use std::path::Path;
 
@@ -74,9 +74,6 @@ pub fn export_editor_state_to_path(
 
 fn render_configured(state: &EditorState) -> Result<(&'static str, Vec<u8>), ExportError> {
     let format = state.editor_ui.export_format;
-    if format == ExportFormat::Webp && cfg!(any(target_os = "ios", target_os = "android")) {
-        return Err(ExportError::UnsupportedFormat { format: "WEBP" });
-    }
     if format == ExportFormat::Pdf {
         let bytes = if state.editor_ui.scenario == Some(TemplateScene::Slides) {
             render_deck_pdf_bytes(state)?
@@ -171,30 +168,5 @@ mod tests {
         let pdf = artifact(ExportFormat::Pdf);
         assert!(pdf.bytes.starts_with(b"%PDF-"));
         assert_eq!(pdf.file_name, "mobile.pdf");
-    }
-
-    #[cfg(any(target_os = "ios", target_os = "android"))]
-    #[test]
-    fn mobile_default_reports_webp_as_unsupported_before_rendering() {
-        let mut state = state();
-        state.editor_ui.export_format = ExportFormat::Webp;
-        let err = export_editor_state(&state, &EditorExportScope::Configured).unwrap_err();
-        assert_eq!(err, ExportError::UnsupportedFormat { format: "WEBP" });
-        assert_eq!(
-            err.to_string(),
-            "WEBP export is not supported by this build"
-        );
-    }
-
-    #[cfg(not(any(target_os = "ios", target_os = "android")))]
-    #[test]
-    fn desktop_keeps_the_historical_webp_encoder_path() {
-        let mut state = state();
-        state.editor_ui.export_format = ExportFormat::Webp;
-        let result = export_editor_state(&state, &EditorExportScope::Configured);
-        assert!(
-            !matches!(result, Err(ExportError::UnsupportedFormat { .. })),
-            "desktop must continue asking Skia to encode WebP"
-        );
     }
 }

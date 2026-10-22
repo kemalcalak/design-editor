@@ -289,7 +289,6 @@ impl WidgetHostNative {
             .reset_for_new_document();
         de_pen_loader::apply_editor_meta_or_legacy_fallback(&mut self.editor_state, editor_meta);
         self.editor_state.editor_ui.file_name_display = file_name;
-        self.editor_state.editor_ui.mobile_sheet = None;
         self.editor_state.editor_ui.pending_file_action = None;
         self.editor_state.mark_saved_revision();
 

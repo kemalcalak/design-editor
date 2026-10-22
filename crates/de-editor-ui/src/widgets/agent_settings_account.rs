@@ -55,19 +55,12 @@ fn action_btn_rect(card: Rect) -> Rect {
     }
 }
 
-fn action_btn_target(card: Rect, touch: bool) -> Rect {
-    let visual = action_btn_rect(card);
-    if !touch {
-        return visual;
-    }
-    Rect {
-        origin: Point2D::new(visual.origin.x, card.origin.y + (CARD_H - 44.0) / 2.0),
-        size: Point2D::new(visual.size.x, 44.0),
-    }
+fn action_btn_target(card: Rect) -> Rect {
+    action_btn_rect(card)
 }
 
 pub fn hit_test(content: Rect, ui: &EditorUiState, scrolled: Point2D) -> AccountTabHit {
-    if !action_btn_target(card_rect(content), ui.touch_chrome()).contains(scrolled) {
+    if !action_btn_target(card_rect(content)).contains(scrolled) {
         return AccountTabHit::None;
     }
     if ui.account.is_signed_in() {
@@ -396,26 +389,6 @@ mod tests {
             username: "kayshen".into(),
         };
         assert_eq!(hit_test(content, &ui, center), AccountTabHit::SignOut);
-    }
-
-    #[test]
-    fn touch_account_action_has_a_44_point_target() {
-        let content = Rect::xywh(16.0, 120.0, 288.0, 400.0);
-        let target = action_btn_target(card_rect(content), true);
-        let ui = EditorUiState {
-            touch: true,
-            ..EditorUiState::default()
-        };
-
-        assert_eq!(target.size.y, 44.0);
-        assert_eq!(
-            hit_test(
-                content,
-                &ui,
-                Point2D::new(target.origin.x + 1.0, target.origin.y + 1.0)
-            ),
-            AccountTabHit::SignIn
-        );
     }
 
     #[test]

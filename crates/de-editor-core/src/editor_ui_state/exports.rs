@@ -2,7 +2,7 @@
 
 pub use super::chrome::{
     DesignMdRequest, EmbedHost, FileAction, PencilCursorStyle, RecentFile, ThemeMode,
-    ThemePresetIo, UpdateStatus, WindowControlRequest, RECENT_FILE_CAP,
+    ThemePresetIo, UpdateStatus, RECENT_FILE_CAP,
 };
 pub use super::git_panel::{
     CloneField, CloneFormState, CommitDiffPatch, CommitDiffSummary, CommitDiffView,
@@ -12,8 +12,8 @@ pub use super::git_panel::{
 };
 pub use super::groups::{
     AssetCenterTab, CustomPrompt, DesignMdPanelState, PreviewState, PromptCenterFocus,
-    PromptCenterState, PromptFilter, SaveNameDialogState, SceneFilter, SceneTemplateCenterState,
-    SceneTemplateFocus, SizeToggleState, StyleImportState,
+    PromptCenterState, PromptFilter, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus,
+    SizeToggleState, StyleImportState,
 };
 pub use super::home::{
     EntrySurface, HomeCopyTarget, HomeFamily, HomeHit, HomeSize, HomeState, HomeTemplate,

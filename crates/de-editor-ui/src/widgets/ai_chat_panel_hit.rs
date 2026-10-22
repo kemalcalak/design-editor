@@ -95,10 +95,6 @@ impl<'a> AIChatPlaceholder<'a> {
                 }
             }
         } else {
-            // Expanded: chevron + "New Chat" title group toggles collapse.
-            if (self.expanded_header_title_rect(rect)).contains(point) {
-                return Some(AIChatHit::ToggleCollapse);
-            }
             // Hit rects must mirror the paint geometry exactly.
             // Constants live in `ai_chat_panel_header` (imported above):
             //   NEW_CHAT_D = 28, MAXIMIZE_GAP = 6, MAXIMIZE_W = 18, HEADER_HEIGHT = 36

@@ -163,7 +163,7 @@ fn layer_drag_to_reorder_commits_on_release_with_threshold_move() {
     // The rail's tree no longer starts at the window's top bar: the tab
     // row (对话 / 图层 / 幻灯片) sits above it, so measure from the
     // rail's live CONTENT rect.
-    let content_top = host.layers_content_rect(viewport_w, viewport_h).origin.y;
+    let content_top = host.layers_content_rect(viewport_h).origin.y;
     let layers_top =
         content_top + 8.0 + section_header_h + page_row_h + section_gap + section_header_h;
     let row_y = |i: usize| layers_top + (i as f32) * row_h + row_h / 2.0;
@@ -204,13 +204,8 @@ fn layer_drag_below_activation_threshold_is_a_click_not_a_reorder() {
     let row_x = host.editor_state().editor_ui.layer_panel_width / 2.0;
     let viewport_w = 1440.0;
     let viewport_h = 900.0;
-    let row_y_first = host.layers_content_rect(viewport_w, viewport_h).origin.y
-        + 8.0
-        + 28.0
-        + 32.0
-        + 8.0
-        + 28.0
-        + 14.0;
+    let row_y_first =
+        host.layers_content_rect(viewport_h).origin.y + 8.0 + 28.0 + 32.0 + 8.0 + 28.0 + 14.0;
     host.apply_press(row_x, row_y_first, viewport_w, viewport_h);
     host.apply_cursor_move(row_x, row_y_first + 2.0);
     assert!(
@@ -307,13 +302,8 @@ fn layer_context_group_preserves_multi_selection_and_groups() {
     let viewport_w = 1440.0;
     let viewport_h = 900.0;
     let row_x = host.editor_state().editor_ui.layer_panel_width / 2.0;
-    let first_row_y = host.layers_content_rect(viewport_w, viewport_h).origin.y
-        + 8.0
-        + 28.0
-        + 32.0
-        + 8.0
-        + 28.0
-        + 14.0;
+    let first_row_y =
+        host.layers_content_rect(viewport_h).origin.y + 8.0 + 28.0 + 32.0 + 8.0 + 28.0 + 14.0;
     assert!(host.apply_right_press(row_x, first_row_y, viewport_w, viewport_h));
     assert_eq!(
         host.editor_state().selection.set.len(),

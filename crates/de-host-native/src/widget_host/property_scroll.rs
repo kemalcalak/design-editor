@@ -35,13 +35,6 @@ impl WidgetHostNative {
         let Some(panel) = PropertyPanel::for_selection_at(&self.editor_state, self.now_ms) else {
             return false;
         };
-        if self.editor_state.editor_ui.touch_chrome()
-            && !self.editor_state.editor_ui.expanded_touch_layout()
-            && self.editor_state.editor_ui.mobile_sheet
-                != Some(de_editor_core::size_class::MobileSheetKind::Properties)
-        {
-            return false;
-        }
         let property_rect = self.property_rect(viewport_width, viewport_height);
         let point = Point2D::new(x, y);
         // This compact popup has no internal scroll but still owns events over

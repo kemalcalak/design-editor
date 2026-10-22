@@ -31,9 +31,6 @@ impl WidgetHostNative {
     /// True when the cursor is over either resize gutter — used by
     /// the runner to set `CursorIcon::EwResize`. None = no gutter.
     pub fn panel_resize_hover(&self, x: f32, y: f32, viewport_w: f32) -> Option<PanelResizeKind> {
-        if self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         // While the workspace is docked, the dock's own 5 px handle owns
         // the column's edge (and runs at a HIGHER press tier than this
         // gutter) — a second gutter over the same pixels would only race
@@ -507,7 +504,7 @@ impl WidgetHostNative {
             && x >= 0.0
             && x <= panel_w
         {
-            let layer_rect = self.layers_content_rect(viewport_w, viewport_h);
+            let layer_rect = self.layers_content_rect(viewport_h);
             let panel = self.layer_panel();
             match panel.hit_test(layer_rect, point) {
                 Some(LayerPanelHit::Layer(id))
@@ -597,9 +594,6 @@ impl WidgetHostNative {
         viewport_w: f32,
         viewport_h: f32,
     ) -> Option<Rect> {
-        if self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         canvas_geometry::status_bar_rect(&self.editor_state, viewport_w, viewport_h)
     }
 
@@ -705,9 +699,6 @@ impl WidgetHostNative {
         viewport_w: f32,
         viewport_h: f32,
     ) -> Option<de_editor_ui::widgets::AlignToolbarHit> {
-        if self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         use de_editor_ui::widgets::AlignToolbar;
         let canvas_region =
             canvas_geometry::canvas_rect(&self.editor_state, viewport_w, viewport_h);

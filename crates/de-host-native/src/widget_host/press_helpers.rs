@@ -144,10 +144,6 @@ impl WidgetHostNative {
             }
         }
         self.finish_agent_settings_press(outcome);
-        self.ensure_focused_agent_settings_visible(vw, vh);
-        if !self.editor_state.editor_ui.agent_settings_open {
-            self.cancel_agent_settings_touch_gesture();
-        }
         self.mark_dirty();
         true
     }

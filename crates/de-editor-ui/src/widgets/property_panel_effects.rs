@@ -14,7 +14,6 @@ use de_editor_core::PropertyFocus;
 
 pub const EFFECT_ROW_HEIGHT: f32 = 36.0;
 pub const EFFECT_ROW_GAP: f32 = 6.0;
-const TOUCH_EFFECT_ACTION_SIZE: f32 = 30.0;
 
 #[derive(Debug, Clone, Copy)]
 pub struct EffectRowRects {
@@ -25,13 +24,9 @@ pub struct EffectRowRects {
     pub remove: Rect,
 }
 
-pub fn effect_row_rects(x: f32, y: f32, width: f32, touch_controls: bool) -> EffectRowRects {
+pub fn effect_row_rects(x: f32, y: f32, width: f32) -> EffectRowRects {
     let row = Rect::xywh(x + PAD_X, y, width - PAD_X * 2.0, EFFECT_ROW_HEIGHT);
-    let action_size = if touch_controls {
-        TOUCH_EFFECT_ACTION_SIZE
-    } else {
-        24.0
-    };
+    let action_size = 24.0;
     let action_y = y + (EFFECT_ROW_HEIGHT - action_size) / 2.0;
     let remove = Rect::xywh(
         row.origin.x + row.size.x - action_size - 2.0,
@@ -46,7 +41,7 @@ pub fn effect_row_rects(x: f32, y: f32, width: f32, touch_controls: bool) -> Eff
         action_size,
     );
     let value = Rect::xywh(eye.origin.x - 42.0, y + 4.0, 38.0, 28.0);
-    let slider_h = if touch_controls { 30.0 } else { 20.0 };
+    let slider_h = 20.0;
     let slider = Rect::xywh(
         value.origin.x - 58.0,
         y + (EFFECT_ROW_HEIGHT - slider_h) / 2.0,
@@ -73,7 +68,6 @@ pub fn paint_effects_section(
     labels: &PropertyLabels,
     effects: &[EffectSummary],
     edit: &EditContext<'_>,
-    touch_controls: bool,
     x: f32,
     y: f32,
     width: f32,
@@ -83,18 +77,7 @@ pub fn paint_effects_section(
         row_y += 8.0;
     } else {
         for (index, effect) in effects.iter().enumerate() {
-            paint_effect_row(
-                cx,
-                theme,
-                labels,
-                effect,
-                index,
-                edit,
-                touch_controls,
-                x,
-                row_y,
-                width,
-            );
+            paint_effect_row(cx, theme, labels, effect, index, edit, x, row_y, width);
             row_y += EFFECT_ROW_HEIGHT + EFFECT_ROW_GAP;
         }
     }
@@ -210,12 +193,11 @@ fn paint_effect_row(
     effect: &EffectSummary,
     index: usize,
     edit: &EditContext<'_>,
-    touch_controls: bool,
     x: f32,
     y: f32,
     width: f32,
 ) {
-    let rects = effect_row_rects(x, y, width, touch_controls);
+    let rects = effect_row_rects(x, y, width);
     cx.backend.fill_round_rect(rects.row, 8.0, theme.muted);
     cx.backend
         .stroke_round_rect(rects.row, 8.0, theme.border, 1.0);

@@ -1,19 +1,17 @@
 # de-chat-agent — the builtin-provider agent tool loop + canvas/design tool
-# surface, factored out of de-host-services so the mobile FFI hosts
-# (de-engine-ffi) run the SAME design pipeline the desktop runs instead of a
-# drifting port. de-host-services re-exports every moved item under its old
-# paths, so desktop/daemon call sites are unchanged.
+# surface, factored out of de-host-services. de-host-services re-exports every
+# moved item under its old paths, so desktop/daemon call sites are unchanged.
 #
 # Dependency charter: native-only (reqwest/tokio transports), but free of the
 # daemon-only closure (no process spawn, no de-auth-bridge, no ACP, no PDF
-# skia) so iOS / Android / OHOS editor builds can link it.
+# skia).
 [package]
 name = "de-chat-agent"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Design Editor builtin-provider agent tool loop + canvas/design tool surface (shared by desktop, daemon, and mobile hosts)"
+description = "Design Editor builtin-provider agent tool loop + canvas/design tool surface (shared by the desktop and daemon hosts)"
 
 [lib]
 name = "de_chat_agent"

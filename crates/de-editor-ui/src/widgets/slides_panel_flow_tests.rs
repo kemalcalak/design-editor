@@ -107,13 +107,6 @@ fn presenting_hides_the_row_and_an_empty_desktop_deck_keeps_it() {
     let tabs = tab_row(&empty, PANEL).expect("the row outlives the boards");
     assert_eq!(tabs.slides, crate::Rect::ZERO, "no slides pill to click");
     assert!(tabs.chat.size.x > 0.0);
-
-    // Touch keeps the older rule: its rail is a Layers sheet and its
-    // chat is a bottom sheet, so a boardless touch document shows no
-    // row at all.
-    let mut touch_empty = deck_state(r#"{"version":"1.0.0","children":[]}"#);
-    touch_empty.editor_ui.touch = true;
-    assert!(!tab_row_visible(&touch_empty));
 }
 
 #[test]
@@ -130,20 +123,6 @@ fn the_rail_body_starts_below_the_tab_row() {
     assert_eq!(
         content.origin.y,
         PANEL.origin.y + crate::widgets::slides_panel::SLIDES_TAB_ROW_HEIGHT
-    );
-}
-
-#[test]
-fn touch_tabs_have_44_point_targets_and_shift_content_together() {
-    let mut deck = deck_state(THREE_BOARDS);
-    deck.editor_ui.touch = true;
-    let tabs = tab_row(&deck, PANEL).expect("deck has touch tabs");
-    assert_eq!(tabs.row.size.y, 52.0);
-    assert_eq!(tabs.layers.size.y, 44.0);
-    assert_eq!(tabs.slides.size.y, 44.0);
-    assert_eq!(
-        layers_content_rect(&deck, PANEL).origin.y,
-        PANEL.origin.y + 52.0
     );
 }
 

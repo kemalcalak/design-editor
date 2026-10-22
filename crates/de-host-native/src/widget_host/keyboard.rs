@@ -28,16 +28,6 @@ impl WidgetHostNative {
             }
             return true;
         }
-        // The mobile save-name dialog is fully modal — it owns every
-        // keystroke while open, above every other input surface.
-        if let Some(changed) =
-            de_editor_core::save_name_keyboard::text(&mut self.editor_state, c, self.now_ms)
-        {
-            if changed {
-                self.mark_dirty();
-            }
-            return true;
-        }
         if let Some(changed) = shared::prompt_center_text(&mut self.editor_state, c, self.now_ms) {
             if changed {
                 self.mark_dirty();

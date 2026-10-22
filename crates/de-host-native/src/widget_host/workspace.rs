@@ -40,7 +40,7 @@ impl WidgetHostNative {
         viewport_width: f32,
         viewport_height: f32,
     ) -> Option<bool> {
-        if !self.workspace_visible() || self.editor_state.editor_ui.touch_chrome() {
+        if !self.workspace_visible() {
             return None;
         }
         let surface = WorkspaceSurface::for_editor_at(&self.editor_state, self.now_ms)?;
@@ -295,7 +295,7 @@ impl WidgetHostNative {
         viewport_w: f32,
         viewport_h: f32,
     ) -> Option<bool> {
-        if !self.workspace_visible() || self.editor_state.editor_ui.touch_chrome() {
+        if !self.workspace_visible() {
             return None;
         }
         // A live dock drag follows the cursor even off the handle.

@@ -114,15 +114,6 @@ fn toolbar_height(toolbar: &Toolbar, dpi: f32) -> f32 {
 /// Shape-picker dropdown rect — anchored to the right of the toolbar's
 /// shape slot, clamped so it never overhangs the canvas right edge.
 pub fn shape_picker_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
-    // Mobile: anchored above the dock's Shape slot, centered.
-    if state.editor_ui.touch_chrome() {
-        let dock = super::host_canvas_geometry::touch_dock_rect(state, viewport_w, viewport_h);
-        let x = ((viewport_w - SHAPE_PICKER_WIDTH) / 2.0).max(4.0);
-        return Rect {
-            origin: Point2D::new(x, dock.origin.y - ShapePicker::panel_height() - 8.0),
-            size: Point2D::new(SHAPE_PICKER_WIDTH, ShapePicker::panel_height()),
-        };
-    }
     let (cx0, _cy, cw, _ch) = canvas_region(state, viewport_w, viewport_h);
     let toolbar = Toolbar::for_editor(state);
     let toolbar_rect = Rect {
@@ -306,9 +297,7 @@ pub fn prompt_center_panel_rect(
 }
 
 /// Asset Center rect — inset by [`SCENE_TEMPLATE_GALLERY_INSET`] from the
-/// usable host viewport. Desktop keeps the persistent top bar clear; touch
-/// hosts hand the gallery the full safe-area-adjusted viewport because their
-/// desktop top bar is not painted.
+/// host viewport, keeping the persistent top bar clear.
 ///
 /// Unlike the Prompt Center it has no intrinsic size. It is a gallery: the
 /// bigger the window, the bigger the previews, because everything inside
@@ -334,11 +323,7 @@ pub fn scene_template_panel_rect(
         return None;
     }
     let available_w = viewport_w.max(0.0);
-    let top = if state.editor_ui.touch_chrome() {
-        0.0
-    } else {
-        TOP_BAR_HEIGHT
-    };
+    let top = TOP_BAR_HEIGHT;
     let available_h = (viewport_h - top).max(0.0);
     let inset = SCENE_TEMPLATE_GALLERY_INSET
         .min(available_w / 8.0)
@@ -396,3 +381,36 @@ pub fn icon_picker_panel_rect(
 #[cfg(test)]
 #[path = "host_overlay_geometry_tests.rs"]
 mod host_overlay_geometry_tests;
+
+/// Signed-in account dropdown rect, hung from the TopBar account button and
+/// clamped inside the viewport.
+pub fn account_menu_rect(
+    state: &EditorState,
+    menu: &crate::widgets::account_menu::AccountMenu<'_>,
+    viewport_w: f32,
+) -> Rect {
+    let top_bar = Rect::xywh(0.0, 0.0, viewport_w, TOP_BAR_HEIGHT);
+    let anchor = TopBar::for_editor_ui(&state.editor_ui).account_button_rect(top_bar);
+    let mut rect = menu.rect_at(anchor);
+    let max_x = (viewport_w - rect.size.x - 8.0).max(8.0);
+    rect.origin.x = rect.origin.x.clamp(8.0, max_x);
+    rect
+}
+
+/// Collaboration panel rect, hung from the TopBar collaboration chip.
+pub fn collaboration_panel_rect(
+    state: &EditorState,
+    panel: &crate::widgets::CollabPanel<'_>,
+    viewport_w: f32,
+    viewport_h: f32,
+) -> Rect {
+    let top_bar = Rect::xywh(0.0, 0.0, viewport_w, TOP_BAR_HEIGHT);
+    let anchor = TopBar::for_editor_ui(&state.editor_ui).collaboration_chip_rect_estimated(top_bar);
+    panel.rect_at(
+        anchor,
+        Rect {
+            origin: Point2D::ZERO,
+            size: Point2D::new(viewport_w, viewport_h),
+        },
+    )
+}

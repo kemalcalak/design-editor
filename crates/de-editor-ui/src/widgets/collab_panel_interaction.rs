@@ -216,11 +216,7 @@ impl CollabPanel<'_> {
     }
 
     pub(super) fn action_height(&self) -> f32 {
-        if self.ui.touch_chrome() {
-            44.0
-        } else {
-            ACTION_HEIGHT
-        }
+        ACTION_HEIGHT
     }
 
     /// Visible body area. Actions stay fixed at the bottom; when viewport
@@ -312,21 +308,12 @@ impl CollabPanel<'_> {
     }
 
     pub(super) fn close_rect(&self, panel: Rect) -> Rect {
-        if self.ui.touch_chrome() {
-            Rect::xywh(
-                panel.origin.x + panel.size.x - 44.0,
-                panel.origin.y,
-                44.0,
-                44.0,
-            )
-        } else {
-            Rect::xywh(
-                panel.origin.x + panel.size.x - 38.0,
-                panel.origin.y + 8.0,
-                30.0,
-                28.0,
-            )
-        }
+        Rect::xywh(
+            panel.origin.x + panel.size.x - 38.0,
+            panel.origin.y + 8.0,
+            30.0,
+            28.0,
+        )
     }
 
     pub(super) fn address_rect(&self, panel: Rect, y: f32) -> Rect {
