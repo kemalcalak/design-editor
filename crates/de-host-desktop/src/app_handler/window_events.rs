@@ -10,6 +10,9 @@ use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
 
 impl DesktopApp {
+    /// The window's close (traffic light or TopBar dot). Closing a
+    /// document returns to Home; closing Home itself quits. Cmd+Q
+    /// always quits through `MenuAction::Quit`.
     pub(super) fn on_close_requested(&mut self, event_loop: &ActiveEventLoop) {
         // Finalize-lifecycle invariant (0718-1-k3-1 postmortem): the
         // process exiting must not silently drop an in-flight,
@@ -27,11 +30,34 @@ impl DesktopApp {
             "teardown-backstop",
         );
         // The unsaved-changes prompt can abort the close.
-        if self.confirm_close() {
-            self.host.flush_settings_input();
-            de_host_services::settings_io::save(self.host.editor_state());
-            event_loop.exit();
+        if !self.confirm_close() {
+            return;
         }
+        self.host.flush_settings_input();
+        de_host_services::settings_io::save(self.host.editor_state());
+        match crate::app_state::close_target(self.host.home_visible()) {
+            crate::app_state::CloseTarget::Quit => event_loop.exit(),
+            crate::app_state::CloseTarget::Home => self.close_document_to_home(),
+        }
+    }
+
+    /// Swap in a fresh document (File > New's path, so the chat and any
+    /// import session reset with it) and show Home over it. Home is not
+    /// dismissible here: Escape must not land on the blank starter page
+    /// as if it were the document just closed.
+    fn close_document_to_home(&mut self) {
+        let outcome = persistence::run_action(
+            de_editor_core::editor_ui_state::FileAction::New,
+            &mut self.host,
+            &mut self.current_path,
+            self.window.as_ref(),
+        );
+        if outcome == de_host_services::doc_io::ActionOutcome::Saved {
+            self.mark_document_saved();
+        }
+        self.host.editor_state_mut().editor_ui.home.show(false);
+        self.host.mark_editor_state_dirty();
+        self.request_redraw(true);
     }
 
     pub(super) fn on_resized(&mut self, event_loop: &ActiveEventLoop, size: PhysicalSize<u32>) {

@@ -7,7 +7,7 @@
 //! skipping its post-event epilogue — return `false` here; the
 //! dispatcher turns that back into the same early return.
 
-use crate::{chat_attachment, chat_session, figma_import_session, frame, persistence, DesktopApp};
+use crate::{chat_attachment, figma_import_session, frame, persistence, DesktopApp};
 use winit::dpi::PhysicalPosition;
 use winit::event::MouseScrollDelta;
 use winit::event_loop::ActiveEventLoop;
@@ -131,24 +131,9 @@ impl DesktopApp {
             let p = Point2D::new(self.cursor_x, self.cursor_y);
             if let Some(ctl) = tb.window_control_at(tb_rect, p) {
                 match ctl {
-                    WindowControl::Close => {
-                        // Mirror `WindowEvent::CloseRequested`:
-                        // finalize-lifecycle invariant BEFORE the
-                        // unsaved-changes prompt (same ordering
-                        // rationale as that handler), the prompt can
-                        // abort, and settings flush + save before
-                        // exit — a bare `exit()` would drop work.
-                        chat_session::finalize_design_session_if_needed(
-                            &mut self.host,
-                            &self.current_chat,
-                            "teardown-backstop",
-                        );
-                        if self.confirm_close() {
-                            self.host.flush_settings_input();
-                            de_host_services::settings_io::save(self.host.editor_state());
-                            event_loop.exit();
-                        }
-                    }
+                    // Same path as `WindowEvent::CloseRequested`, so the
+                    // dot and the traffic light can't drift apart.
+                    WindowControl::Close => self.on_close_requested(event_loop),
                     WindowControl::Minimize => {
                         if let Some(w) = self.window.as_ref() {
                             w.set_minimized(true);

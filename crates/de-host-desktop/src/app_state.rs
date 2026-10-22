@@ -21,6 +21,24 @@ pub(crate) fn should_show_home(
     !initial_file && entry_surface == de_editor_core::EntrySurface::Home
 }
 
+/// Where the window's close button leads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum CloseTarget {
+    /// Leave the document for Home.
+    Home,
+    /// Quit the app.
+    Quit,
+}
+
+/// Closing a document returns to Home; closing Home quits.
+pub(crate) fn close_target(home_visible: bool) -> CloseTarget {
+    if home_visible {
+        CloseTarget::Quit
+    } else {
+        CloseTarget::Home
+    }
+}
+
 impl DesktopApp {
     pub(crate) fn new(initial_file: Option<PathBuf>) -> Self {
         // (The brand-logo catalog is registered once in `main` before any render
@@ -570,8 +588,18 @@ impl DesktopApp {
 
 #[cfg(test)]
 mod home_routing_tests {
-    use super::should_show_home;
+    use super::{close_target, should_show_home, CloseTarget};
     use de_editor_core::EntrySurface;
+
+    #[test]
+    fn closing_a_document_returns_to_home() {
+        assert_eq!(close_target(false), CloseTarget::Home);
+    }
+
+    #[test]
+    fn closing_home_quits() {
+        assert_eq!(close_target(true), CloseTarget::Quit);
+    }
 
     #[test]
     fn no_file_and_home_preference_show_the_drafting_table() {
