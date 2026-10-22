@@ -20,13 +20,16 @@
 //! | `agent_settings/config_types.rs`| built-in / ACP / image-gen value types |
 //! | `agent_settings/mutators.rs`    | `impl AgentSettings` mutators        |
 
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use crate::agent_settings_builtin_presets::BuiltinAgentPresetKey;
 pub use crate::chat::AgentProvider;
 
+mod agents_selection;
 mod config_types;
 mod mutators;
+
+pub use agents_selection::AgentsEntry;
 
 pub use config_types::{
     normalize_builtin_models, AcpAgentConfig, AcpConnectionType, BuiltinAgentConfig,
@@ -347,6 +350,15 @@ pub struct AgentSettings {
     pub hover_acp_preset: Option<usize>,
     /// Sidebar nav item under the cursor; `None` = no hover.
     pub hover_nav: Option<AgentSettingsTab>,
+    /// Agents tab: the list row the detail pane shows. Read it through
+    /// `resolved_agents_entry`, which falls back when the row is gone.
+    pub agents_selected: Option<AgentsEntry>,
+    /// Agents tab: the selected provider's API key is shown in clear.
+    /// Runtime only; selecting another row masks it again.
+    pub api_key_revealed: bool,
+    /// Models the user unticked per CLI agent, indexed like `connected`
+    /// (`AgentProvider::ALL`). Persisted; every model starts visible.
+    pub cli_hidden_models: [BTreeSet<String>; 7],
     /// Latest browser→daemon credential-sync failure worth showing (web
     /// host only; transient, never persisted). `None` = last sync ok.
     pub web_credential_sync_error: Option<String>,
@@ -417,6 +429,9 @@ impl Default for AgentSettings {
             hover_add_acp_agent: false,
             hover_acp_preset: None,
             hover_nav: None,
+            agents_selected: None,
+            api_key_revealed: false,
+            cli_hidden_models: Default::default(),
             web_credential_sync_error: None,
         }
     }

@@ -17,11 +17,11 @@ use de_editor_core::{
 // this crate so the desktop `settings.json` and the browser
 // `web_settings` snapshots cannot drift field-by-field.
 use crate::settings_payload::{
-    builtin_agent_from_payload, builtin_agent_to_payload, dedupe_builtin_agents,
-    image_gen_profile_from_payload, image_gen_profile_to_payload, migrate_mcp_cli_flags,
-    next_builtin_agent_id, next_image_gen_profile_id, openverse_oauth_to_payload, str_to_theme,
-    theme_to_str, BuiltinAgentPayload, ImageGenProfilePayload, OpenverseOAuthPayload,
-    RecentFilePayload,
+    builtin_agent_from_payload, builtin_agent_to_payload, cli_hidden_models_from_payload,
+    cli_hidden_models_to_payload, dedupe_builtin_agents, image_gen_profile_from_payload,
+    image_gen_profile_to_payload, migrate_mcp_cli_flags, next_builtin_agent_id,
+    next_image_gen_profile_id, openverse_oauth_to_payload, str_to_theme, theme_to_str,
+    BuiltinAgentPayload, ImageGenProfilePayload, OpenverseOAuthPayload, RecentFilePayload,
 };
 use de_i18n::Locale;
 use serde::{Deserialize, Serialize};
@@ -66,6 +66,7 @@ pub struct Fingerprint {
     auto_update_enabled: bool,
     experimental_features_enabled: bool,
     connected: [bool; 7],
+    cli_hidden_models: [std::collections::BTreeSet<String>; 7],
     builtin_agents: Vec<BuiltinAgentConfig>,
     acp_agents: Vec<AcpAgentConfig>,
     image_gen_profiles: Vec<ImageGenProfile>,
@@ -91,6 +92,7 @@ pub fn fingerprint(state: &EditorState) -> Fingerprint {
         auto_update_enabled: eui.agent_settings.auto_update_enabled,
         experimental_features_enabled: eui.agent_settings.experimental_features_enabled,
         connected: eui.agent_settings.connected,
+        cli_hidden_models: eui.agent_settings.cli_hidden_models.clone(),
         builtin_agents: eui.agent_settings.builtin_agents.clone(),
         acp_agents: eui.agent_settings.acp_agents.clone(),
         image_gen_profiles: eui.agent_settings.image_gen_profiles.clone(),
@@ -181,6 +183,9 @@ struct SettingsPayload {
     /// Restored on launch so the chat model picker survives a restart.
     #[serde(default)]
     connected: Option<Vec<bool>>,
+    /// CLI agent models the user unticked, by provider name (#26 D6).
+    #[serde(default)]
+    cli_hidden_models: Option<std::collections::BTreeMap<String, Vec<String>>>,
     #[serde(default)]
     builtin_agents: Option<Vec<BuiltinAgentPayload>>,
     #[serde(default)]
@@ -271,6 +276,9 @@ fn to_payload(state: &EditorState) -> SettingsPayload {
         auto_update_enabled: Some(eui.agent_settings.auto_update_enabled),
         experimental_features_enabled: Some(eui.agent_settings.experimental_features_enabled),
         connected: Some(eui.agent_settings.connected.to_vec()),
+        cli_hidden_models: Some(cli_hidden_models_to_payload(
+            &eui.agent_settings.cli_hidden_models,
+        )),
         builtin_agents: Some(
             eui.agent_settings
                 .builtin_agents
@@ -352,6 +360,9 @@ fn apply_payload_with_options(
     }
     if let Some(c) = payload.connected {
         eui.agent_settings.connected = migrate_connected_provider_flags(c);
+    }
+    if let Some(hidden) = payload.cli_hidden_models {
+        eui.agent_settings.cli_hidden_models = cli_hidden_models_from_payload(hidden);
     }
     if let Some(agents) = payload.builtin_agents {
         let agents = agents
@@ -773,3 +784,7 @@ mod settings_io_guard_tests;
 #[cfg(test)]
 #[path = "settings_io_chat_model_tests.rs"]
 mod settings_io_chat_model_tests;
+
+#[cfg(test)]
+#[path = "settings_io_cli_hidden_tests.rs"]
+mod settings_io_cli_hidden_tests;

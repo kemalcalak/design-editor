@@ -37,6 +37,11 @@ impl EditorState {
             .cloned();
         let connected = self.editor_ui.agent_settings.verified_connected_mask();
         self.chat.rebuild_available_models(&connected);
+        // Models unticked on a CLI agent's settings page (D6) leave the picker.
+        let settings = &self.editor_ui.agent_settings;
+        self.chat
+            .available_models
+            .retain(|entry| !settings.cli_model_hidden(entry.provider, &entry.value));
 
         let builtin_entries = self
             .editor_ui
