@@ -705,3 +705,54 @@ fn export_frames_writes_one_image_per_top_level_frame() {
     }
     let _ = std::fs::remove_dir_all(&directory);
 }
+
+#[test]
+fn read_only_stdio_session_leaves_the_file_byte_identical() {
+    // A shipped template: loading and re-serialising it normalises values,
+    // so any save during a read-only session shows up as changed bytes.
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../de-editor-core/assets/scene_templates/price-tier-card.op");
+    let original = std::fs::read(&source).expect("read template");
+    let path = std::env::temp_dir().join(format!(
+        "design-editor-mcp-read-only-{}-{}.op",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock")
+            .as_nanos()
+    ));
+    std::fs::write(&path, &original).expect("seed document");
+
+    let mut state = load_editor_state(&path).expect("load document");
+    let session = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#,
+        r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"snapshot_layout","arguments":{}}}"#,
+    ]
+    .join("\n");
+    let mut input = std::io::Cursor::new(format!("{session}\n").into_bytes());
+    let mut output = Vec::new();
+    // Zero idle threshold: auto-finalize is as eager as it can be, so only
+    // the absence of a write keeps EOF from finalizing and saving.
+    let mut auto = auto_finalize::AutoFinalize::for_test(std::time::Duration::ZERO);
+    let shutdown = std::sync::atomic::AtomicBool::new(false);
+    auto_finalize::run_stdio_session(
+        &mut input,
+        &mut output,
+        &mut state,
+        &path,
+        &mut auto,
+        &shutdown,
+    )
+    .expect("stdio session");
+
+    let output = String::from_utf8_lossy(&output);
+    assert!(output.contains(r#""id":2"#), "{output}");
+    assert!(!output.contains(r#""isError":true"#), "{output}");
+    let after = std::fs::read(&path).expect("read document after session");
+    let _ = std::fs::remove_file(&path);
+    assert!(
+        after == original,
+        "a read-only MCP session must not rewrite the .op file"
+    );
+}
