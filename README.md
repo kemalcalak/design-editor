@@ -27,6 +27,16 @@
 - **Local-first.** No account, no cloud, no telemetry. Rust and Skia, on macOS and Windows.
 - **Design as code.** Open `.op` documents, Figma / SVG / web import, export to images, decks and React, SwiftUI, Flutter and more.
 
+## Where it comes from
+
+Design Editor is a fork of [OpenPencil](https://github.com/ZSeven-W/openpencil) by ZSeven-W (MIT), and we are grateful for the editor it builds on.
+
+We are reshaping it into a focused tool for designing with AI agents:
+
+- **Local-first:** accounts, real-time collaboration, cloud storage and the mobile players are removed; nothing needs a server.
+- **Agent-first:** a Pencil-style workflow where agents build on the live canvas over MCP and the in-app chat uses your own model or local agents.
+- **Desktop-focused:** macOS and Windows, with automatic releases and a cleaner, calmer interface.
+
 ## Project
 
 [Roadmap](https://github.com/kemalcalak/design-editor/issues) · [Releases](https://github.com/kemalcalak/design-editor/releases) · [Contributing](./CONTRIBUTING.md) · [Security](./SECURITY.md) · [Skills for agents](https://github.com/kemalcalak/design-editor-skill) · [MIT License](./LICENSE)
