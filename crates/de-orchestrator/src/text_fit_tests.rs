@@ -213,10 +213,12 @@ fn cleanup_records_the_repair_under_text_fit() {
             "type": "text",
             "id": "text",
             "content": "$52,480.16",
+            // No `textGrowth`: the authored 370px width pins the measured
+            // overflow independently of the platform's fonts (an `auto`
+            // text would hug its content instead).
             "width": 370,
             "height": 52,
-            "fontSize": 52,
-            "textGrowth": "auto"
+            "fontSize": 52
         }]
     });
     let node: PenNode = serde_json::from_value(tree).expect("fixture parses");

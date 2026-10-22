@@ -397,9 +397,8 @@ impl EditorState {
     /// px. Containers carry their subtree (child coords are parent-
     /// relative); an ancestor-already-in-set dedup stops descendants
     /// shifting twice. A child of an auto-layout (flex) parent is
-    /// engine-positioned; materializing x/y here flips it to
-    /// `Position::Absolute` in jian-core and detaches it from flex
-    /// flow, so such a node is skipped (a free drag of it is a no-op).
+    /// engine-positioned and jian-core ignores a written x/y on it, so
+    /// such a node is skipped (a free drag of it is a no-op).
     ///
     /// Single recursive walk over `active_children` (Task 10):
     /// previously this ran three full-tree walks (`is_flow_child_of_flex`

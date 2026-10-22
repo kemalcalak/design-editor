@@ -130,7 +130,7 @@ impl EditorState {
             node.base_mut().y = Some(ny as f64);
         }
         if let Some(nw) = width {
-            node.set_width_px(nw as f64);
+            node.set_authored_width_px(nw as f64);
         }
         if let Some(nh) = height {
             node.set_height_px(nh as f64);

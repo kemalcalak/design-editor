@@ -101,10 +101,11 @@ pub fn parent_of(children: &[PenNode], target: &NodeId) -> Option<NodeId> {
     None
 }
 
-/// A child participates in its parent's auto-layout flow only when the parent
-/// is flex and the child has no explicit position. Jian treats either `x` or
-/// `y` as an absolute-position contract, so overlays inside a flex container
-/// must still accept parent-relative left/top resize writes.
+/// A child participates in its parent's auto-layout flow unless it is an
+/// explicitly positioned overlay or constrained node: jian ignores a stale
+/// `x` / `y` on any other flex child, so writing one would be dead. Keep in
+/// sync with jian-core's `layout::flow_child::keeps_absolute`. Overlays inside
+/// a flex container must still accept parent-relative left/top resize writes.
 fn selected_is_flow_child(children: &[PenNode], target: &NodeId) -> bool {
     let Some((Some(parent_id), _)) = walkers::find_parent_and_index(children, target) else {
         return false;
@@ -115,7 +116,10 @@ fn selected_is_flow_child(children: &[PenNode], target: &NodeId) -> bool {
     let Some(node) = walkers::find_node(children, target) else {
         return false;
     };
-    parent.is_auto_layout_container() && node.base().x.is_none() && node.base().y.is_none()
+    let base = node.base();
+    let absolute = (base.role.as_deref() == Some("overlay") || base.constraints.is_some())
+        && (base.x.is_some() || base.y.is_some());
+    parent.is_auto_layout_container() && !absolute
 }
 
 impl EditorState {
@@ -164,7 +168,7 @@ impl EditorState {
                 }
             }
             if axes.width() && bounds.w.is_finite() && bounds.w > 0.0 {
-                node.set_width_px(bounds.w);
+                node.set_authored_width_px(bounds.w);
                 wrote = true;
             }
             if axes.height() && bounds.h.is_finite() && bounds.h > 0.0 {
