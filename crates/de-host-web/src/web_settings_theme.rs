@@ -1,43 +1,39 @@
-//! Theme is a **device** preference, not an account one.
+//! Theme is a **device** preference, stored under its own key.
 //!
-//! Everything else in `web_settings` is partitioned by signed-in subject: an
-//! MCP port, a recent-file list and a provider profile belong to the person,
-//! and account B must never see account A's. Theme is the odd one out. Light
-//! or dark is a property of the screen you are sitting at — the room's light,
-//! the display, the time of day — and it does not change because someone else
-//! signed in on the same laptop. That is now the product decision, so theme
-//! moves out of the partitioned `SettingsPayload` semantics and into its own
-//! **unpartitioned** key.
+//! Everything else in `web_settings` lives in the single legacy settings blob
+//! (`<key>::anon`): an MCP port, a recent-file list, a provider profile. Theme
+//! is the odd one out. Light or dark is a property of the screen you are
+//! sitting at — the room's light, the display, the time of day — so it lives
+//! under a separate, **unsuffixed** device key instead of inside that blob.
 //!
-//! ## Why a separate key rather than an unpartitioned payload
+//! ## Why a separate key rather than a blob field
 //!
-//! `SettingsPayload` is account-scoped by construction. Splitting one field
-//! into a tiny key of its own makes the device/account boundary visible in
-//! storage itself, rather than encoded in which fields of a shared blob a
-//! reader is allowed to trust.
+//! A tiny key of its own makes the device preference visible in storage
+//! itself, rather than encoded in which fields of a shared blob a reader is
+//! allowed to trust, and lets it be saved even when the blob is unwritable.
 //!
-//! ## Compatibility: the payload keeps its `theme` field, write-only
+//! ## Compatibility: the blob keeps its `theme` field, write-only
 //!
-//! The per-account payload still *writes* `theme` and no longer *reads* it
-//! (except once, as the migration source below). Dropping the write would be
-//! cheaper but costs a real user something: an older build reads theme only
-//! from the payload, so a downgrade — or a second tab still running the old
-//! bundle — would silently snap back to the default. One redundant string per
-//! account blob is a good trade for that.
+//! The settings blob still *writes* `theme` and no longer *reads* it (except
+//! once, as the migration source below). Dropping the write would be cheaper
+//! but costs a real user something: an older build reads theme only from the
+//! blob, so a downgrade — or a second tab still running the old bundle —
+//! would silently snap back to the default. One redundant string in the blob
+//! is a good trade for that.
 //!
 //! ## Migration
 //!
-//! First run after the upgrade has no device key. The theme in the partition
-//! that just loaded is then adopted as the device theme and written out, so
-//! the user's existing choice carries over instead of resetting to default.
+//! First run after the upgrade has no device key. The theme in the settings
+//! blob that just loaded is then adopted as the device theme and written out,
+//! so the user's existing choice carries over instead of resetting to default.
 
 use de_editor_core::{EditorState, ThemeMode};
 use de_editor_host_core::settings_payload::{str_to_theme, theme_to_str};
 
 use crate::web_storage::storage_get;
 
-/// Device-level theme key. Deliberately carries **no** `::<subject>` suffix —
-/// that suffix is what makes a key account-scoped.
+/// Device-level theme key. Deliberately carries **no** `::anon` suffix — that
+/// suffix marks the keys of the legacy settings blob.
 const DEVICE_THEME_KEY: &str = "design-editor-rust-web-theme";
 
 /// Why a device-theme write did not land.
@@ -109,12 +105,12 @@ pub(crate) fn parse_device_theme(raw: Option<&str>) -> Option<ThemeMode> {
     }
 }
 
-/// Resolve the theme for a freshly loaded partition.
+/// Resolve the theme for a freshly loaded settings blob.
 ///
-/// `payload_theme` is whatever the account blob carried, which is used ONLY
+/// `payload_theme` is whatever the settings blob carried, which is used ONLY
 /// when this device has no theme of its own — the one-time adoption of
-/// pre-split data. Once the device key exists the account blob's copy is
-/// ignored on every subsequent read.
+/// pre-split data. Once the device key exists the blob's copy is ignored on
+/// every subsequent read.
 ///
 /// Returns the theme now in force.
 pub(crate) fn resolve(
@@ -125,12 +121,10 @@ pub(crate) fn resolve(
     device_theme.or(payload_theme).unwrap_or(default_theme)
 }
 
-/// Apply the device theme to `state` after a partition load.
+/// Apply the device theme to `state` after the settings blob loads.
 ///
-/// Called on mount and on every account switch. The switch case is the point
-/// of the whole exercise: the partition reload resets and re-applies every
-/// account-scoped field, and this puts the device's theme back on top so the
-/// screen does not flip when a different person signs in.
+/// Called once, on mount (`canvaskit/mount.rs`): the blob load applies every
+/// stored field, and this puts the device's theme on top of it.
 pub(crate) fn apply_after_load(state: &mut EditorState, payload_theme: Option<ThemeMode>) {
     let default_theme = de_editor_core::EditorUiState::default().theme_mode;
     let resolved = resolve(stored_device_theme(), payload_theme, default_theme);
@@ -140,9 +134,9 @@ pub(crate) fn apply_after_load(state: &mut EditorState, payload_theme: Option<Th
 /// Persist the theme if it differs from what this session last wrote.
 ///
 /// Deliberately NOT behind the settings fingerprint. That fingerprint is
-/// `None` whenever the partition blob is unwritable (an unsupported stored
+/// `None` whenever the settings blob is unwritable (an unsupported stored
 /// version fails closed), and a device preference must not be collateral
-/// damage of an account blob the tab refuses to touch — that is exactly the
+/// damage of a blob the tab refuses to touch — that is exactly the
 /// shape of the "reset and then never saves again" regression this codebase
 /// has already paid for once.
 pub(crate) fn save_if_changed(state: &EditorState) -> Result<bool, DeviceThemeError> {
@@ -172,8 +166,7 @@ where
 
 /// Forget what this session wrote, so the next save re-persists.
 ///
-/// Only tests need it: nothing in the product invalidates a device preference,
-/// which is the entire difference between it and an account-scoped one.
+/// Only tests need it: nothing in the product invalidates a device preference.
 #[cfg(test)]
 pub(crate) fn reset_last_written_for_test() {
     LAST_WRITTEN.with(|slot| slot.set(None));
@@ -239,9 +232,9 @@ mod tests {
     }
 
     #[test]
-    fn the_device_key_carries_no_account_partition() {
-        // The `::<subject>` suffix is what makes a key account-scoped; a
-        // device preference must not have one, or it is not device-level.
+    fn the_device_key_carries_no_blob_suffix() {
+        // The `::anon` suffix marks the settings blob's keys; the device
+        // preference must not share it, or it is not a separate key.
         assert!(!DEVICE_THEME_KEY.contains("::"));
         assert_ne!(DEVICE_THEME_KEY, super::super::settings_storage_key());
     }
@@ -259,7 +252,7 @@ mod tests {
     }
 
     #[test]
-    fn a_device_theme_wins_over_whatever_the_account_blob_says() {
+    fn a_device_theme_wins_over_whatever_the_settings_blob_says() {
         assert_eq!(
             resolve(
                 Some(ThemeMode::Dark),
@@ -271,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn existing_account_data_is_adopted_when_the_device_has_no_theme_yet() {
+    fn existing_blob_theme_is_adopted_when_the_device_has_no_theme_yet() {
         // The migration: first run after the upgrade has no device key, so the
         // user's existing choice carries over instead of resetting.
         assert_eq!(

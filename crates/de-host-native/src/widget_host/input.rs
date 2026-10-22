@@ -58,9 +58,7 @@ impl WidgetHostNative {
             || self.editor_state.editor_ui.icon_picker.open
             || self.editor_state.editor_ui.prompt_center.open
             // The Asset Center owns the keyboard while a visible field has
-            // explicit focus. Desktop opens search-focused; touch waits for a
-            // field tap so opening the gallery cannot raise the software
-            // keyboard over its cards. Its
+            // explicit focus. Opens search-focused. Its
             // absence here is what left the gallery unable to take IME input:
             // `text_input_focus_active` reads this list, and a `false` there
             // makes the desktop shell call `set_ime_allowed(false)`, so the

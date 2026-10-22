@@ -327,92 +327,6 @@ self_test() {
     printf 'pinned-release-tools.sh: checksum rejection self-test passed.\n'
 }
 
-install_binaryen() {
-    local install_root=$1 version=version_123
-    local expected=e959f2170af4c20c552e9de3a0253704d6a9d2766e8fdb88e4d6ac4bae9388fe
-    local temporary archive destination member
-    [[ -d $install_root && ! -L $install_root ]] || {
-        printf 'error: Binaryen install root must be an existing regular directory\n' >&2
-        exit 1
-    }
-    temporary=$(mktemp -d)
-    archive=$temporary/binaryen.tar.gz
-    destination=$install_root/binaryen-$version
-    [[ ! -e $destination && ! -L $destination ]] || {
-        printf 'error: refusing to replace existing Binaryen directory: %s\n' "$destination" >&2
-        exit 1
-    }
-    download_verified \
-        "https://github.com/WebAssembly/binaryen/releases/download/$version/binaryen-$version-x86_64-linux.tar.gz" \
-        "$expected" "$archive"
-    while IFS= read -r member; do
-        [[ $member == "binaryen-$version/"* && $member != *'../'* && $member != /* ]] || {
-            printf 'error: unsafe Binaryen archive member: %s\n' "$member" >&2
-            exit 1
-        }
-    done < <(tar -tzf "$archive")
-    tar -xzf "$archive" -C "$install_root"
-    [[ -x $destination/bin/wasm-opt && ! -L $destination/bin/wasm-opt ]] || {
-        printf 'error: verified Binaryen archive lacks wasm-opt\n' >&2
-        exit 1
-    }
-    rm -rf "$temporary"
-    "$destination/bin/wasm-opt" --version
-    if [[ -n ${GITHUB_PATH:-} ]]; then
-        printf '%s\n' "$destination/bin" >> "$GITHUB_PATH"
-    else
-        printf '%s\n' "$destination/bin"
-    fi
-}
-
-download_appimage_tools() {
-    local architecture=$1 tool_output=$2 runtime_output=$3
-    local tool_sha runtime_sha
-    case $architecture in
-        x86_64)
-            tool_sha=ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
-            runtime_sha=2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d
-            ;;
-        aarch64)
-            tool_sha=f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158
-            runtime_sha=00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444
-            ;;
-        *)
-            printf 'error: unsupported AppImage architecture: %s\n' "$architecture" >&2
-            exit 1
-            ;;
-    esac
-    [[ $tool_output != "$runtime_output" ]] || {
-        printf 'error: AppImage tool and runtime outputs must differ\n' >&2
-        exit 1
-    }
-    download_verified \
-        "https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-$architecture.AppImage" \
-        "$tool_sha" "$tool_output"
-    download_verified \
-        "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-$architecture" \
-        "$runtime_sha" "$runtime_output"
-    chmod 0755 "$tool_output"
-    chmod 0644 "$runtime_output"
-}
-
-install_buildx() {
-    local output=$1
-    local expected=48af8a397ebd60178778bf63611dbcebe5f5e7a9be90eb9147b24b9587455778
-    [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || {
-        printf 'error: the pinned Buildx asset is only for Linux x86_64\n' >&2
-        exit 1
-    }
-    download_verified \
-        https://github.com/docker/buildx/releases/download/v0.36.1/buildx-v0.36.1.linux-amd64 \
-        "$expected" "$output"
-    chmod 0755 "$output"
-    [[ $("$output" version) == "github.com/docker/buildx v0.36.1 "* ]] || {
-        printf 'error: downloaded Buildx reports an unexpected version\n' >&2
-        exit 1
-    }
-}
-
 install_bun() {
     local install_root=$1
     local expected=951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f
@@ -515,43 +429,6 @@ install_ripgrep() {
     fi
 }
 
-install_node() {
-    local install_root=$1
-    local expected=cc47fc6eb872f905f48c85397856e8a097b2020bb65b394e728af606bfb6e1a9
-    local temporary archive member
-    [[ ! -e $install_root && ! -L $install_root ]] || {
-        printf 'error: refusing to replace existing Node directory: %s\n' "$install_root" >&2
-        exit 1
-    }
-    temporary=$(mktemp -d)
-    archive=$temporary/node.tar.gz
-    download_verified \
-        https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz \
-        "$expected" "$archive"
-    while IFS= read -r member; do
-        [[ $member == ./* && $member != *'../'* ]] || {
-            printf 'error: unsafe Node archive member: %s\n' "$member" >&2
-            exit 1
-        }
-    done < <(tar -tzf "$archive")
-    mkdir -p "$install_root"
-    tar -xzf "$archive" -C "$install_root"
-    [[ -x $install_root/bin/node && ! -L $install_root/bin/node ]] || {
-        printf 'error: verified Node archive lacks a regular node binary\n' >&2
-        exit 1
-    }
-    [[ $("$install_root/bin/node" --version) == v20.20.2 ]] || {
-        printf 'error: downloaded Node reports an unexpected version\n' >&2
-        exit 1
-    }
-    rm -rf "$temporary"
-    if [[ -n ${GITHUB_PATH:-} ]]; then
-        printf '%s\n' "$install_root/bin" >> "$GITHUB_PATH"
-    else
-        printf '%s\n' "$install_root/bin"
-    fi
-}
-
 install_skia_archive() {
     local profile=$1 target=$2 cache_dir=$3
     local metadata key expected archive cache_url
@@ -590,21 +467,6 @@ case ${1-} in
         [[ $# -eq 1 ]] || { printf 'usage: %s --self-test\n' "$0" >&2; exit 2; }
         self_test
         ;;
-    binaryen)
-        [[ $# -eq 2 ]] || { printf 'usage: %s binaryen INSTALL_ROOT\n' "$0" >&2; exit 2; }
-        install_binaryen "$2"
-        ;;
-    appimage)
-        [[ $# -eq 4 ]] || {
-            printf 'usage: %s appimage ARCH TOOL_OUTPUT RUNTIME_OUTPUT\n' "$0" >&2
-            exit 2
-        }
-        download_appimage_tools "$2" "$3" "$4"
-        ;;
-    buildx)
-        [[ $# -eq 2 ]] || { printf 'usage: %s buildx OUTPUT\n' "$0" >&2; exit 2; }
-        install_buildx "$2"
-        ;;
     bun)
         [[ $# -eq 2 ]] || { printf 'usage: %s bun INSTALL_ROOT\n' "$0" >&2; exit 2; }
         install_bun "$2"
@@ -612,10 +474,6 @@ case ${1-} in
     ripgrep)
         [[ $# -eq 2 ]] || { printf 'usage: %s ripgrep INSTALL_ROOT\n' "$0" >&2; exit 2; }
         install_ripgrep "$2"
-        ;;
-    node)
-        [[ $# -eq 2 ]] || { printf 'usage: %s node INSTALL_ROOT\n' "$0" >&2; exit 2; }
-        install_node "$2"
         ;;
     cargo-cli)
         [[ $# -eq 3 ]] || {
@@ -636,7 +494,7 @@ case ${1-} in
         verify_staged_skia_archive "$2" "$3" "$4"
         ;;
     *)
-        printf 'usage: %s {--self-test|binaryen|appimage|buildx|bun|ripgrep|node|cargo-cli|skia|verify-skia} ...\n' "$0" >&2
+        printf 'usage: %s {--self-test|bun|ripgrep|cargo-cli|skia|verify-skia} ...\n' "$0" >&2
         exit 2
         ;;
 esac

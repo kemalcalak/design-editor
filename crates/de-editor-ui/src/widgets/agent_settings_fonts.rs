@@ -377,4 +377,4 @@ fn paint_section_title(cx: &mut PaintCx<'_>, theme: &Theme, title: &str, x: f32,
 
 #[cfg(test)]
 #[path = "agent_settings_fonts_tests.rs"]
-mod touch_tests;
+mod tab_tests;

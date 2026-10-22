@@ -121,11 +121,12 @@ jobs:
           [[ "$GITHUB_REF" == refs/heads/main ]]
           version=$(scripts/workspace-version.sh)
           echo "version=$version" >> "$GITHUB_OUTPUT"
-  checks:
+  rust-check:
     needs: version
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo checks
+    uses: ./.github/workflows/rust-check.yml
+  version-sync:
+    needs: version
+    uses: ./.github/workflows/version-sync.yml
   build:
 __BUILD_NEEDS__
     runs-on: ubuntu-latest
@@ -152,7 +153,7 @@ SCRIPT
 
     awk -v dependency_mode="$dependency_mode" -v publish_version="$publish_version" '
         $0 == "__BUILD_NEEDS__" {
-            if (dependency_mode == "required") print "    needs: [version, checks]"
+            if (dependency_mode == "required") print "    needs: [version, rust-check, version-sync]"
             next
         }
         {

@@ -102,10 +102,9 @@ pub fn paint_provider_select(
     let input = provider_select_rect(card);
     let label_size = 11.0;
     let label_y = input.origin.y + 16.0;
-    let provider_label = provider_label.to_string();
     draw_text(
         cx,
-        &provider_label,
+        provider_label,
         label_size,
         theme.muted_foreground,
         card.origin.x + 12.0,
@@ -416,15 +415,15 @@ mod tests {
             kind_rect(card).origin.y + 12.0,
         );
         assert_eq!(kind_toggle_target(&anthropic, card, openai_half), None);
-        let touch_kind = kind_rect(card);
+        let kind = kind_rect(card);
         assert_eq!(
             kind_toggle_target(
                 &anthropic,
                 card,
-                Point2D::new(touch_kind.origin.x + 44.0, touch_kind.origin.y + 22.0),
+                Point2D::new(kind.origin.x + 44.0, kind.origin.y + 22.0),
             ),
             None,
-            "a single supported API format must stay read-only on touch"
+            "a single supported API format must stay read-only"
         );
 
         let openai = BuiltinAgentConfig {

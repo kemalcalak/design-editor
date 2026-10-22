@@ -141,14 +141,29 @@ impl DesktopApp {
         }
         // The reconnect replay runs one silent probe per remembered
         // provider; queue the next one as each outcome lands.
-        if let Some(next) = self.provider_reconnect_queue.pop() {
-            self.host
-                .editor_state_mut()
-                .editor_ui
-                .agent_settings
-                .begin_provider_connect(next);
-        }
+        self.advance_reconnect_queue();
         true
+    }
+
+    /// Start the next queued reconnect probe, unless the user's own
+    /// Connect request already holds the single request seam — then the
+    /// queue waits for that probe to land. Mirrors the guard in
+    /// `restore_remembered_connections`: a queued provider whose card left
+    /// `Idle` (the user connected it meanwhile) is skipped, and
+    /// `begin_provider_connect` would otherwise overwrite the seam and
+    /// strand the explicit card in `Probing`.
+    fn advance_reconnect_queue(&mut self) {
+        if self.provider_connect_pending() {
+            return;
+        }
+        let settings = &mut self.host.editor_state_mut().editor_ui.agent_settings;
+        while let Some(next) = self.provider_reconnect_queue.pop() {
+            let index = AgentSettings::provider_index(next);
+            if settings.provider_connection[index].phase == ProviderConnectPhase::Idle {
+                settings.begin_provider_connect(next);
+                return;
+            }
+        }
     }
 
     /// Drop providers the user explicitly disconnected from the store —
@@ -699,5 +714,56 @@ mod remembered_connection_tests {
             ProviderConnectPhase::Probing,
             "the queued provider must be marked in-flight, or its outcome is dropped"
         );
+    }
+
+    #[test]
+    fn a_landing_replay_probe_keeps_the_users_explicit_connect_request() {
+        let _store = super::lock_connect_store();
+        // Replay is probing Claude with OpenCode queued; the user presses
+        // Connect on Copilot. Claude's landing must not hand the request
+        // seam to OpenCode, or Copilot's card stays in Probing forever.
+        let mut app = DesktopApp::new(None);
+        reset_settings(&mut app);
+        app.provider_reconnect_queue = vec![AgentProvider::OpenCode];
+        app.host
+            .editor_state_mut()
+            .editor_ui
+            .agent_settings
+            .begin_provider_connect(AgentProvider::ClaudeCode);
+        app.host
+            .editor_state_mut()
+            .editor_ui
+            .agent_settings
+            .pending_provider_connect = None;
+        let (job, tx) = ProviderConnectJob::pending_for_test(AgentProvider::ClaudeCode);
+        app.provider_connect_job = Some(job);
+        app.host
+            .editor_state_mut()
+            .editor_ui
+            .agent_settings
+            .begin_provider_connect(AgentProvider::GithubCopilot);
+        tx.send(ProbeOutcome {
+            connected: false,
+            error: Some("not authenticated".into()),
+            ..ProbeOutcome::default()
+        })
+        .unwrap();
+
+        assert!(app.drain_provider_connect());
+        let settings = &app.host.editor_state().editor_ui.agent_settings;
+        assert_eq!(
+            app.provider_connect_job
+                .as_ref()
+                .map(ProviderConnectJob::provider),
+            Some(AgentProvider::GithubCopilot),
+            "the user's explicit request is the probe that runs next"
+        );
+        assert_eq!(
+            settings.provider_connection[AgentSettings::provider_index(AgentProvider::OpenCode)]
+                .phase,
+            ProviderConnectPhase::Idle,
+            "the queued provider waits its turn"
+        );
+        assert_eq!(app.provider_reconnect_queue, vec![AgentProvider::OpenCode]);
     }
 }

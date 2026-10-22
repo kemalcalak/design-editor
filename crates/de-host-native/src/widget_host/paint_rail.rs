@@ -16,8 +16,8 @@ impl WidgetHostNative {
         viewport_width: f32,
         viewport_height: f32,
     ) {
-        // 3. The visible left rail — either a persistent sidebar or the
-        //    open touch Layers sheet, and never while presenting. It shows
+        // 3. The visible left rail — the persistent sidebar, never while
+        //    presenting. It shows
         //    the deck's slides navigator (which OWNS the rail when it is
         //    on show), the Chat tab's column (the pinned chat paints over
         //    it in the ordinary chat pass, but the rail keeps its card

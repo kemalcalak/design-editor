@@ -121,35 +121,6 @@ pub(crate) fn paint_field_frame(
     placeholder: &str,
     now_ms: u64,
 ) -> bool {
-    paint_field_frame_for_ui(
-        cx,
-        theme,
-        ui,
-        label,
-        label_x,
-        label_y,
-        input,
-        focused,
-        placeholder,
-        now_ms,
-    )
-}
-
-/// Touch-density variant of [`paint_field_frame`]. The visible field and its
-/// text scale together while the desktop wrapper above stays pixel-identical.
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn paint_field_frame_for_ui(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    ui: &EditorUiState,
-    label: &str,
-    label_x: f32,
-    label_y: f32,
-    input: Rect,
-    focused: bool,
-    placeholder: &str,
-    now_ms: u64,
-) -> bool {
     paint_field_chrome_for_ui(cx, theme, label, label_x, label_y, input, focused);
     if focused {
         let value_size = 11.0;

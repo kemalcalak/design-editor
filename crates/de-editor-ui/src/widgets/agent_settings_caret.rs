@@ -54,7 +54,7 @@ pub(super) fn model_text_byte_offset_at(
 fn single_line_metrics(focus: SettingsFocus) -> Option<(f32, f32)> {
     use de_editor_core::agent_settings::BuiltinAgentField;
     match focus {
-        // `settings_form::paint_field_frame_for_ui`.
+        // `settings_form::paint_field_frame`.
         SettingsFocus::BuiltinAgent { field, .. } | SettingsFocus::BuiltinAgentDraft(field) => {
             (field != BuiltinAgentField::Model).then_some((11.0, 6.0))
         }

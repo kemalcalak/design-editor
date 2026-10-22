@@ -217,11 +217,10 @@ struct SettingsPayload {
 /// Resolve the platform-specific settings path. `None` when no
 /// usable config base exists — load/save become silent no-ops.
 ///
-/// An embedded shell selects its private
-/// app-sandbox directory through `de_config_store::configure_user_root`
-/// before engine construction; `settings.json` then lives next to the
-/// other per-user config files in that root. Desktop never configures an
-/// explicit root and uses the platform config directory.
+/// A supervisor-selected config root (the `--serve-web` `config_root`,
+/// installed through `de_config_store::configure_user_root`) wins;
+/// `settings.json` then lives next to the other per-user config files in
+/// that root. Without one, the platform config directory is used.
 fn settings_path() -> Option<PathBuf> {
     if let Some(root) = de_config_store::configured_user_root() {
         return Some(root.join(FILE_NAME));

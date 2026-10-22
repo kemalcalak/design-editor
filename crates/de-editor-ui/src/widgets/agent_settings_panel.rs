@@ -338,8 +338,8 @@ impl<'a> AgentSettingsPanel<'a> {
         }
     }
 
-    /// Resolved responsive geometry shared by paint, hit-testing, scrolling,
-    /// and host gesture code.
+    /// Resolved modal geometry shared by paint, hit-testing, scrolling, and
+    /// host gesture code.
     pub fn resolved_layout(&self, panel: Rect) -> AgentSettingsLayout {
         AgentSettingsLayout::resolve(panel, self.navigation_tabs().len())
     }

@@ -1,4 +1,4 @@
-//! Expanded built-in provider form with separate desktop and touch density.
+//! Expanded built-in provider form.
 
 use crate::theme::Theme;
 use crate::widgets::agent_settings_builtin_layout::field_input_rect_for_ui;
@@ -222,7 +222,7 @@ fn paint_field(
         );
         true
     } else {
-        settings_form::paint_field_frame_for_ui(
+        settings_form::paint_field_frame(
             cx,
             theme,
             ui,

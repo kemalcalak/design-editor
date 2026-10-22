@@ -11,7 +11,7 @@ pub(crate) struct CredentialLoad {
     pub(crate) loaded: bool,
     pub(crate) write_pending: bool,
     pub(super) unsupported_version: bool,
-    /// Theme carried by the account blob that was just read.
+    /// Theme carried by the settings blob that was just read.
     ///
     /// Only the device-theme migration consumes it — the first run after the
     /// split adopts it so a user's existing choice is not reset. Once the
@@ -180,9 +180,8 @@ where
             }
         }
         StoredCredentialSource::None => {
-            // No stored credentials for THIS partition. Clearing is the point:
-            // after an account switch the in-memory state still holds the
-            // previous account's API keys, and an empty partition must mean
+            // No stored credentials. Clearing is the point: a load replaces
+            // the in-memory state, so an empty credential blob must mean
             // "no keys", not "keep whatever was there". At mount the state is
             // fresh, so this is a no-op for the local daemon.
             clear_local_credentials(state);

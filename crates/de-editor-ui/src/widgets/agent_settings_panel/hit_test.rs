@@ -14,7 +14,7 @@ fn secondary_card_pad() -> f32 {
 }
 
 fn secondary_hero_height() -> f32 {
-    crate::widgets::agent_settings_rows::tab_intro_height_for_ui(SECONDARY_HEADING_HAS_DESC)
+    crate::widgets::agent_settings_rows::tab_intro_height(SECONDARY_HEADING_HAS_DESC)
 }
 
 impl AgentSettingsPanel<'_> {

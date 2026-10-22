@@ -490,8 +490,9 @@ fn parse_live_mcp_port<I: Iterator<Item = String>>(args: I) -> Option<u16> {
     None
 }
 
-/// Pop a native dialog offering to open the download page when a
-/// newer release is found. Yes opens the GitHub releases page.
+/// Pop a native dialog offering the update when a newer release is
+/// found. Yes downloads and opens the platform installer (the releases
+/// page is the fallback).
 fn prompt_update_available(locale: de_editor_core::Locale, version: &str) {
     let body = de_i18n::translate(locale, "dialog.updateBody")
         .replace("{{version}}", version)

@@ -139,8 +139,7 @@ pub(super) fn hero_body_rect(content: Rect) -> Rect {
 }
 
 pub(super) fn hero_body_rect_for_ui(content: Rect) -> Rect {
-    let dy =
-        crate::widgets::agent_settings_rows::tab_intro_height_for_ui(SECONDARY_HEADING_HAS_DESC);
+    let dy = crate::widgets::agent_settings_rows::tab_intro_height(SECONDARY_HEADING_HAS_DESC);
     // Desktop (Settings v2) sets these tabs' bodies on a card: the body
     // sits inside it, inset by the card padding.
     let inset_x = crate::widgets::agent_settings_rows::CARD_INSET_X;
@@ -163,7 +162,7 @@ pub(super) const SECONDARY_CARD_PAD_Y: f32 = 12.0;
 /// The desktop card behind a secondary tab's body of `body_h`.
 pub(super) fn secondary_card_rect(content: Rect, body_h: f32) -> Rect {
     let top = content.origin.y
-        + crate::widgets::agent_settings_rows::tab_intro_height_for_ui(SECONDARY_HEADING_HAS_DESC);
+        + crate::widgets::agent_settings_rows::tab_intro_height(SECONDARY_HEADING_HAS_DESC);
     Rect {
         origin: Point2D::new(content.origin.x, top),
         size: Point2D::new(content.size.x, body_h + 2.0 * SECONDARY_CARD_PAD_Y),

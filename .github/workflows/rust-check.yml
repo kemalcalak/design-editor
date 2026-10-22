@@ -22,6 +22,8 @@ on:
       - 'tools/check-file-line-cap.sh'
       - '.github/workflows/rust-release.yml'
       - '.github/workflows/rust-check.yml'
+  # The release workflow runs these checks on the commit it releases.
+  workflow_call:
   push:
     branches: [main]
     paths:
@@ -45,7 +47,10 @@ on:
 # One run per PR (or per branch push); a newer push to a PR cancels the
 # older run. Pushes to main are never cancelled.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Inside the release workflow's `workflow_call`, github.workflow is the
+  # caller's name: give each called run its own group so it never queues
+  # behind (or is cancelled by) a regular push run of this workflow.
+  group: rust-check-${{ github.workflow == 'Rust check (native)' && (github.event.pull_request.number || github.ref) || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:

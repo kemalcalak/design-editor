@@ -11,8 +11,9 @@
 //! thread (never the UI thread); the runner drains the outcome with
 //! [`UpdateProbe::poll`] and writes it into
 //! `EditorUiState::update_status` (rendered by the settings System
-//! tab). When a newer release is found the runner offers to open
-//! the download page via [`open_url`].
+//! tab). When a newer release is found the runner offers to download
+//! and open the platform installer via [`download_and_open_installer`],
+//! falling back to the releases page.
 //!
 //! Every failure mode (offline, rate-limited, malformed JSON)
 //! degrades to `UpdateStatus::Error` — the probe never panics and

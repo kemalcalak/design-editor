@@ -94,15 +94,6 @@ impl CodegenSession {
         Self::start_with_model(provider, input, framework, None)
     }
 
-    /// Fallible production entry point for starting a code-generation worker.
-    pub fn try_start(
-        provider: Box<dyn ChatProvider>,
-        input: CodegenInput,
-        framework: Framework,
-    ) -> Result<Self, CodegenStartError> {
-        Self::try_start_with_model(provider, input, framework, None)
-    }
-
     /// Spawn a worker and forward the selected CLI model to every planning,
     /// chunk, and assembly request. Codegen uses several independent model
     /// turns, so applying the selection only to the first request is not

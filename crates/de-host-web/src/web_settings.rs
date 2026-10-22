@@ -282,7 +282,7 @@ fn locale_for_persistence(eui: &de_editor_core::EditorUiState) -> Locale {
     eui.locale_persistence_override.unwrap_or(eui.locale)
 }
 
-/// The theme a stored account blob carries, for the one-time device-theme
+/// The theme a stored settings blob carries, for the one-time device-theme
 /// migration. `None` for an unreadable or version-mismatched blob, which is
 /// the same answer as "carried no theme".
 pub(crate) fn payload_theme_of(raw: Option<&str>) -> Option<ThemeMode> {
@@ -299,7 +299,7 @@ fn apply_payload(state: &mut EditorState, payload: SettingsPayload) {
     }
     let eui = &mut state.editor_ui;
     // `payload.theme` is deliberately NOT applied: theme is device-level, and
-    // reading it here would let the incoming account's blob flip the screen.
+    // reading it here would let a reloaded blob flip the screen.
     // The field is still WRITTEN (see `to_payload`) so an older build — or an
     // older tab still running — keeps finding a theme where it expects one.
     // Its one remaining read is the migration in `theme::apply_after_load`,

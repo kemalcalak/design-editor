@@ -77,7 +77,7 @@ impl CodegenResults {
 /// Cancel and retire a session captured against a superseded document.
 ///
 /// Returns `true` only when a stale session was removed. This is useful both
-/// before a new launch and from render-free mobile background pumps.
+/// before a new launch and from a pump that runs without rendering.
 pub fn retire_stale_codegen_session(
     current: &mut Option<CodegenSession>,
     live_identity: CodegenDocumentIdentity,

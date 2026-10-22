@@ -542,7 +542,7 @@ require_workflow_job_regex version \
     '^[[:space:]]*echo[[:space:]]+"version=\$version"[[:space:]]+>>[[:space:]]+"\$GITHUB_OUTPUT"[[:space:]]*$' \
     'release preflight must write the canonical version to GITHUB_OUTPUT'
 require_workflow_job_regex build \
-    '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*checks\][[:space:]]*$' \
+    '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*rust-check,[[:space:]]*version-sync\][[:space:]]*$' \
     'build must wait for the version preflight and the required checks'
 require_workflow_job_regex publish \
     '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*build\][[:space:]]*$' \

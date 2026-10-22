@@ -1,8 +1,8 @@
 //! Host-policy adapter for portable built-in-provider model discovery.
 //!
 //! Authentication, provider URL construction, response bounds, and catalog
-//! parsing live in `de-builtin-model-discovery` so desktop and mobile use the
-//! same implementation. This wrapper adds the web daemon's connect-time DNS
+//! parsing live in `de-builtin-model-discovery` so every host uses the same
+//! implementation. This wrapper adds the web daemon's connect-time DNS
 //! screening for browser-originated credentials.
 
 use de_editor_core::BuiltinAgentConfig;

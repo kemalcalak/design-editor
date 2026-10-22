@@ -6,8 +6,8 @@ use crate::{prompt_update_available, DesktopApp};
 
 impl DesktopApp {
     /// Drain the background auto-update probe into `update_status`.
-    /// When the probe reports a newer release, offer to open the
-    /// download page — once per check.
+    /// When the probe reports a newer release, offer to download and
+    /// open the installer — once per check.
     pub(crate) fn poll_update_probe(&mut self) -> bool {
         let Some(status) = self.update_probe.poll() else {
             return false;

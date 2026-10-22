@@ -47,12 +47,14 @@ pub enum ImagesHit {
     None,
 }
 
+/// Scroll-content height of the Images tab for `settings` — shared by the
+/// panel's paint and hit-test scroll clamps.
 pub(super) fn responsive_content_height(settings: &AgentSettings) -> f32 {
     content_height_for_ui(settings)
 }
 
 /// Unscrolled rect for the active Images-tab input. Kept at the module
-/// boundary so callers do not depend on the private responsive layout spine.
+/// boundary so callers do not depend on the private layout spine.
 pub(super) fn focused_input_rect_for_ui(
     content: Rect,
     settings: &AgentSettings,
@@ -119,7 +121,7 @@ fn is_editing_profile(settings: &AgentSettings, index: usize) -> bool {
 }
 
 #[cfg(test)]
-mod touch_tests {
+mod geometry_tests {
     use super::*;
 
     fn settings_with_expanded_profile(menu_open: bool) -> AgentSettings {

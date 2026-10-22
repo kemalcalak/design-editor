@@ -209,7 +209,6 @@ mod scene_state;
 mod scene_template_host_tests;
 #[cfg(test)]
 mod scene_template_ime_tests;
-mod scene_template_install;
 mod scene_template_press;
 mod screen_switcher;
 #[cfg(all(test, not(target_os = "windows")))]

@@ -224,7 +224,7 @@ fn paint_secondary_hero(
         "settings.images" => ("settings.tab.images", "settings.images.heroSubtitle"),
         _ => ("settings.tab.fonts", "settings.fonts.heroSubtitle"),
     };
-    crate::widgets::agent_settings_rows::paint_tab_intro_for_ui(
+    crate::widgets::agent_settings_rows::paint_tab_intro(
         cx,
         theme,
         content,

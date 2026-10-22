@@ -35,9 +35,7 @@ impl WidgetHost {
                 && self.editor_state.editor_ui.agent_settings.focus.is_some())
             || self.editor_state.editor_ui.icon_picker.open
             || self.editor_state.editor_ui.prompt_center.open
-            // Desktop opens with search active; touch waits for an explicit
-            // field tap so the hidden DOM input cannot raise the software
-            // keyboard over the gallery on entry.
+            // Opens with search active, so the gallery takes typing at once.
             || self.editor_state.editor_ui.scene_template_center.input_active()
             || self.editor_state.editor_ui.chat_model_picker.open
             || self.editor_state.editor_ui.component_browser_open
