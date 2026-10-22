@@ -54,7 +54,7 @@ pub async fn public_https_client(
 
 /// Build the account-avatar-only variant that can traverse a Clash-style
 /// fake-IP TUN. Callers must establish that the URL belongs to the local
-/// authenticated account; remote collaboration data must use
+/// authenticated account; any other remote data must use
 /// [`public_https_client`].
 pub async fn tunnel_compatible_account_asset_client(
     url: &reqwest::Url,

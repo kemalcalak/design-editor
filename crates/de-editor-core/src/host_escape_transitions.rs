@@ -343,10 +343,6 @@ impl EditorUiState {
 
         self.layer_context_menu = None;
         self.slides_panel.clear_pointer();
-        self.collab.panel.open = false;
-        self.collab.panel.join_address_focused = false;
-        self.collab.panel.join_input.reset_transient();
-        self.collab.panel.hover = None;
         self.missing_fonts_modal_open = false;
         self.missing_fonts_hover = None;
         self.html_import_diagnostics_open = false;

@@ -70,16 +70,6 @@ mod chat_style_card_tests;
 mod click;
 #[cfg(test)]
 mod codegen_framework_tests;
-pub mod collab_history_hit;
-#[cfg(feature = "collab-host")]
-mod collab_host_impl;
-#[cfg(test)]
-mod collab_input_tests;
-#[cfg(test)]
-mod collaboration_id_tests;
-#[cfg(test)]
-mod collaboration_install_tests;
-mod collaboration_policy;
 mod color_picker_press;
 mod component_browser_press;
 mod cursor_hint;
@@ -444,10 +434,6 @@ pub struct WidgetHostNative {
     /// Bumped past the highest sample id so new + sample nodes
     /// never collide on the same key.
     pub(in crate::widget_host) next_node_id: u64,
-    /// Session-owned allocator for collaboration-authored ids. Standalone
-    /// paths keep using `next_node_id`; while this is `Some`, every supported
-    /// document creation path must use this allocator instead.
-    pub(in crate::widget_host) collab_id_allocator: Option<de_editor_core::DocumentIdAllocator>,
     /// Host-supplied frame timestamp in milliseconds. Focused
     /// `TextInputState`s use this for caret blink. The
     /// inspector_window runner refreshes this once per

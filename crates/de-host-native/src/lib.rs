@@ -44,8 +44,8 @@ pub mod boolean_ops;
 #[cfg(feature = "gl-host")]
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod canvas_view_stub;
-// The editor-UI composition host. Its GUI-runner glue (collab session
-// runtime, preview auto-wire) is gl-host-gated inside.
+// The editor-UI composition host. Its GUI-runner glue (preview auto-wire)
+// is gl-host-gated inside.
 #[cfg(feature = "widget-host")]
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod widget_host;

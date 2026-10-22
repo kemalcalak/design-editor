@@ -65,9 +65,6 @@ impl WidgetHostNative {
         }
         // Activation happened on cursor move, but permissions can change
         // before release. The commit sink must fail closed as well.
-        if !self.collab_allows_document_mutation(de_editor_core::CollabDocumentMutation::NodeMove) {
-            return true;
-        }
         self.refresh_layout_scene();
         if self
             .layout_scene
@@ -171,26 +168,6 @@ impl WidgetHostNative {
         let layer_rect = self.layers_content_rect(viewport_height);
         let panel = self.layer_panel();
         if let Some(hit) = panel.hit_test(layer_rect, Point2D::new(x, y)) {
-            let mutation = match &hit {
-                de_editor_ui::widgets::LayerPanelHit::ToggleHidden(_)
-                | de_editor_ui::widgets::LayerPanelHit::ToggleLocked(_) => {
-                    Some(de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::VisibilityAndLocking,
-                    ))
-                }
-                de_editor_ui::widgets::LayerPanelHit::AddPage
-                | de_editor_ui::widgets::LayerPanelHit::DeletePage(_) => {
-                    Some(de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::PageStructure,
-                    ))
-                }
-                de_editor_ui::widgets::LayerPanelHit::Page(_)
-                | de_editor_ui::widgets::LayerPanelHit::Layer(_)
-                | de_editor_ui::widgets::LayerPanelHit::ToggleCollapsed(_) => None,
-            };
-            if mutation.is_some_and(|mutation| !self.collab_allows_document_mutation(mutation)) {
-                return true;
-            }
             return match press_flow::apply_layer_panel_click(
                 &mut self.editor_state,
                 hit,

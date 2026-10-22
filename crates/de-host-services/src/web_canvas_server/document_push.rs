@@ -33,8 +33,8 @@ impl PendingDocumentPush {
 
 impl Drop for PendingDocumentPush {
     /// Release the pending thumbnail seed of a push that was parsed and then
-    /// dropped — a stale `baseVersion`, a collaboration refusal, or a
-    /// connection that went away between parse and install.
+    /// dropped — a stale `baseVersion` or a connection that went away between
+    /// parse and install.
     ///
     /// `load_canonical` registers the seed in a process-global side table
     /// keyed by the document, and only an activation consumes it. A push that
@@ -119,43 +119,13 @@ pub(crate) fn document_push_reply(
             })
             .to_string(),
         },
-        Err(error) => collab_aware_error_reply(&error),
+        Err(error) => error_reply(&error),
     }
 }
 
-#[cfg(test)]
-pub(crate) fn collab_aware_error_reply_for_test(error: &WebCanvasError) -> WebReply {
-    collab_aware_error_reply(error)
-}
-
-pub(super) fn collab_aware_error_reply(error: &WebCanvasError) -> WebReply {
-    // An ingest rejection must carry the authoritative version: it is what the
-    // browser refetches from, and without it the conflict recovery never runs.
-    if let WebCanvasError::IngestRejected(_, version) = error {
-        return WebReply {
-            status: error.http_status(),
-            body: serde_json::json!({
-                "ok": false,
-                "error": error.error_code().unwrap_or("version-conflict"),
-                "version": version,
-                "message": error.to_string(),
-            })
-            .to_string(),
-        };
-    }
-    match error.error_code() {
-        Some(code) => WebReply {
-            status: error.http_status(),
-            body: serde_json::json!({
-                "ok": false,
-                "error": code,
-                "message": error.to_string(),
-            })
-            .to_string(),
-        },
-        None => WebReply {
-            status: error.http_status(),
-            body: crate::mcp_serve::rest_error_body(&error.to_string()),
-        },
+pub(super) fn error_reply(error: &WebCanvasError) -> WebReply {
+    WebReply {
+        status: error.http_status(),
+        body: crate::mcp_serve::rest_error_body(&error.to_string()),
     }
 }

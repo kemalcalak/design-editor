@@ -5,8 +5,8 @@
 //! and `geometry.rs::update_dropdown_hover`; lives in a sibling module
 //! so the spine file stays lean.
 
-use de_editor_ui::widgets::{CollabPanel, PropertyPanel, TopBar, TOP_BAR_HEIGHT};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::PropertyPanel;
+use de_editor_ui::Point2D;
 
 use super::WidgetHost;
 
@@ -297,16 +297,7 @@ impl WidgetHost {
                 *upper_hover_changed |= changed;
             }
         }
-        // Collaboration paints above the remaining dropdown/property
-        // overlays. Defer this point until path/layer menus have had first
-        // refusal in the caller.
         let point = Point2D::new(x, y);
-        if self
-            .collab_panel_probe_at(point)
-            .is_some_and(|(rect, _)| rect.contains(point))
-        {
-            return false;
-        }
         let over_dropdown =
             self.over_dropdown_overlay(x, y, self.last_viewport_w, self.last_viewport_h);
         let property_rect = de_editor_ui::Rect {
@@ -362,58 +353,6 @@ impl WidgetHost {
             }
         }
         false
-    }
-
-    /// Collaboration is below path/layer menus and top-most floating panels,
-    /// but above the property/status/chat/canvas layers handled afterward.
-    pub(in crate::widget_host) fn apply_collab_panel_cursor_move(
-        &mut self,
-        x: f32,
-        y: f32,
-        chat_or_picker_owns_point: bool,
-        upper_hover_changed: &mut bool,
-    ) -> bool {
-        if !self.editor_state.editor_ui.collab.panel.open {
-            return false;
-        }
-        let point = Point2D::new(x, y);
-        let probe = self.collab_panel_probe_at(point);
-        let Some((panel_rect, new_hover)) = probe else {
-            return false;
-        };
-        let changed = new_hover != self.editor_state.editor_ui.collab.panel.hover;
-        if changed {
-            self.editor_state.editor_ui.collab.panel.hover = new_hover;
-            self.mark_dirty();
-        }
-        if panel_rect.contains(point) {
-            self.clear_hover_below_collab_panel();
-            return true;
-        }
-        if changed {
-            if chat_or_picker_owns_point {
-                *upper_hover_changed = true;
-            } else {
-                return true;
-            }
-        }
-        false
-    }
-
-    fn collab_panel_probe_at(
-        &self,
-        point: Point2D,
-    ) -> Option<(Rect, Option<de_editor_core::CollabPanelHover>)> {
-        let ui = &self.editor_state.editor_ui;
-        CollabPanel::for_editor_ui(ui).map(|panel| {
-            let top_bar_rect = Rect::xywh(0.0, 0.0, self.last_viewport_w, TOP_BAR_HEIGHT);
-            let top_bar = TopBar::for_editor_ui(ui).with_traffic_controls(false);
-            let panel_rect = panel.rect_at(
-                top_bar.collaboration_chip_rect_estimated(top_bar_rect),
-                Rect::xywh(0.0, 0.0, self.last_viewport_w, self.last_viewport_h),
-            );
-            (panel_rect, panel.hover_at(panel_rect, point))
-        })
     }
 
     fn clear_hover_under_dropdown_overlay(

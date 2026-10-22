@@ -1,7 +1,6 @@
 //! Admission control for the live-GUI MCP endpoint (`127.0.0.1:<port>/mcp`).
 //!
-//! The live endpoint drives the on-screen document, and during a
-//! collaboration session that document is the SHARED one. The gate here is
+//! The live endpoint drives the on-screen document. The gate here is
 //! browser screening — it closes the DNS-rebinding path that would let any
 //! web page on the machine reach this endpoint.
 //!
@@ -22,8 +21,7 @@
 //! online multi-tenant daemon is a SEPARATE request loop that authenticates
 //! per account (`web_canvas_server::RequestAuth`, a `Bearer` token the hub
 //! introspects), so relaxing this endpoint does not touch online auth.
-//! `CollabGatePolicy` still runs on the UI thread for each apply and decides
-//! what a session permits. `design-editor/shutdown` keeps its own body-carried
+//! `design-editor/shutdown` keeps its own body-carried
 //! token check (`mcp_serve::shutdown_request_id`), unchanged.
 //!
 //! Deliberately still tokenless too: `OPTIONS` preflight, and the stateless

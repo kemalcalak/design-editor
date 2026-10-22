@@ -25,36 +25,6 @@ impl WidgetHostNative {
         action: de_editor_ui::widgets::layer_context_menu::LayerContextAction,
         target: de_editor_core::ui_draft::LayerContextTarget,
     ) {
-        use de_editor_core::{
-            CollabDocumentMutation as Mutation, CollabNodeField as Field,
-            CollabUnsupportedFeature as Unsupported,
-        };
-        use de_editor_ui::widgets::layer_context_menu::LayerContextAction as Action;
-
-        let mutation = match action {
-            Action::RenameLayer => Mutation::NodeProperty(Field::Name),
-            Action::Duplicate => Mutation::Unsupported(Unsupported::Duplicate),
-            Action::Delete => Mutation::NodeDelete,
-            Action::GroupSelection => Mutation::Group,
-            Action::BooleanUnion
-            | Action::BooleanSubtract
-            | Action::BooleanIntersect
-            | Action::BooleanExclude => Mutation::Unsupported(Unsupported::NodeReplacement),
-            Action::CreateComponent | Action::DetachComponent | Action::DetachInstance => {
-                Mutation::Unsupported(Unsupported::Components)
-            }
-            Action::ToggleLock | Action::ToggleVisibility => {
-                Mutation::Unsupported(Unsupported::VisibilityAndLocking)
-            }
-            Action::RenamePage
-            | Action::DuplicatePage
-            | Action::MovePageUp
-            | Action::MovePageDown
-            | Action::DeletePage => Mutation::Unsupported(Unsupported::PageStructure),
-        };
-        if !self.collab_allows_document_mutation(mutation) {
-            return;
-        }
         match press_flow::apply_layer_context_action(
             &mut self.editor_state,
             &mut self.next_node_id,
@@ -206,30 +176,8 @@ impl WidgetHostNative {
             return consumed;
         }
         // Blur-commit rename + text-edit; track to repaint on click.
-        let rename_mutation =
-            self.editor_state
-                .ui
-                .layer_rename
-                .as_ref()
-                .map(|rename| match &rename.target {
-                    de_editor_core::ui_draft::LayerContextTarget::Layer(_) => {
-                        de_editor_core::CollabDocumentMutation::NodeProperty(
-                            de_editor_core::CollabNodeField::Name,
-                        )
-                    }
-                    de_editor_core::ui_draft::LayerContextTarget::Page(_) => {
-                        de_editor_core::CollabDocumentMutation::Unsupported(
-                            de_editor_core::CollabUnsupportedFeature::PageStructure,
-                        )
-                    }
-                });
-        let rename_committed = match rename_mutation {
-            Some(mutation) if !self.collab_allows_document_mutation(mutation) => {
-                self.editor_state.rename_cancel()
-            }
-            Some(_) => self.editor_state.rename_commit(),
-            None => false,
-        };
+        let rename_committed =
+            self.editor_state.ui.layer_rename.is_some() && self.editor_state.rename_commit();
         let text_edit_was_active = self.editor_state.ui.text_editing.is_some();
         // EXCEPTION to commit-on-press: a press INSIDE the edited
         // text node places the caret instead of committing (TS

@@ -245,11 +245,6 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
     // daemon restored (shared with the desktop GUI), then drive login
     // flows through the daemon's `/api/auth/*` proxy.
     crate::web_auth_sync::start(&inner);
-    // Collaboration relay. Starts here rather than inside the sync-reset
-    // completion because it neither reads nor writes the document — it drives
-    // `editor_ui.collab` only — and the panel should report availability as
-    // soon as the daemon can answer, not one bootstrap later.
-    crate::collab_sync::start(&inner);
     // 4. Reset the daemon's transient sync document, THEN emit the managed
     //    `ready` reply and start the live-sync ticks. The reset must complete
     //    FIRST for two reasons:

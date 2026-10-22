@@ -1,10 +1,8 @@
-//! End-to-end guards for the two paths that own the editor toast in the
-//! browser host: the online conflict auto-accept raises it, and an account
-//! switch clears it.
+//! End-to-end guard for the account-switch path that clears the editor toast
+//! in the browser host.
 //!
-//! These drive the real functions against a real `WidgetHost` rather than
-//! asserting on source text — the toast exists precisely because nobody was
-//! watching this path, so its wiring has to be exercised, not pinned.
+//! It drives the real function against a real `WidgetHost` rather than
+//! asserting on source text.
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -14,7 +12,7 @@ use wasm_bindgen::JsValue;
 use crate::repaint_ctx::RepaintContext;
 use crate::widget_host::WidgetHost;
 
-/// Minimal host context: everything the conflict + identity paths touch is
+/// Minimal host context: everything the identity path touches is
 /// `host_mut().editor_state_mut()` plus a repaint tally.
 struct ToastContext {
     host: WidgetHost,
@@ -77,71 +75,22 @@ fn toast_key(inner: &Rc<RefCell<ToastContext>>) -> Option<String> {
 }
 
 #[test]
-fn an_online_conflict_accept_raises_the_recovery_toast() {
-    let inner = context();
-    // The online daemon is the sequencer — the deployment where the
-    // collaboration panel that would otherwise carry this notice is
-    // structurally unreachable.
-    super::live_sync_conflict::set_server_authoritative_for_test(true);
-
-    assert!(super::live_sync_conflict::preserve_local_document(
-        &inner, 1_000
-    ));
-
-    assert_eq!(
-        toast_key(&inner).as_deref(),
-        Some("collab.status.localEditPreserved"),
-        "the user must be told their document was replaced and how to get it back"
-    );
-    let level = inner
-        .borrow()
-        .host
-        .editor_state()
-        .editor_ui
-        .editor_toast
-        .as_ref()
-        .map(|toast| toast.level);
-    assert_eq!(
-        level,
-        Some(de_editor_core::editor_toast::EditorToastLevel::Warn),
-        "a document replaced under the user is not an Info-level event"
-    );
-}
-
-#[test]
-fn a_session_deployment_leaves_the_toast_alone() {
-    // Desktop / LAN sessions show the same sentence in the collaboration
-    // panel's notice strip. Raising a toast as well would say it twice.
-    let inner = context();
-    super::live_sync_conflict::set_server_authoritative_for_test(false);
-
-    assert!(super::live_sync_conflict::preserve_local_document(
-        &inner, 1_000
-    ));
-
-    assert_eq!(toast_key(&inner), None);
-    assert!(
-        inner
-            .borrow()
-            .host
-            .editor_state()
-            .editor_ui
-            .collab
-            .notice
-            .is_some(),
-        "the panel notice is still raised on every deployment"
-    );
-}
-
-#[test]
 fn switching_accounts_clears_a_toast_raised_for_the_previous_one() {
-    // A toast names an undo that belongs to the previous account's document.
-    // Leaving it up would show one user a sentence about another user's data.
+    // A toast describes something that happened to the previous account's
+    // document. Leaving it up would show one user a sentence about another
+    // user's data.
     let inner = context();
-    super::live_sync_conflict::set_server_authoritative_for_test(true);
-    assert!(super::live_sync_conflict::preserve_local_document(
-        &inner, 1_000
-    ));
+    inner
+        .borrow_mut()
+        .host
+        .editor_state_mut()
+        .editor_ui
+        .show_toast(
+            "menu.saveAsTemplate.saved",
+            Vec::new(),
+            de_editor_core::editor_toast::EditorToastLevel::Info,
+            1_000,
+        );
     assert!(
         toast_key(&inner).is_some(),
         "a toast is up before the switch"

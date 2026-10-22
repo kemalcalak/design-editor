@@ -439,7 +439,7 @@ fn sync_account_avatar<C: RepaintContext + 'static>(
     }
 
     ACCOUNT_AVATAR_INSTALLED.with(|installed| installed.borrow_mut().take());
-    let _ = de_editor_ui::collab_avatar_runtime::register_account_avatar_url(None);
+    let _ = de_editor_ui::account_avatar_runtime::register_account_avatar_url(None);
     ACCOUNT_AVATAR_IN_FLIGHT.with(|in_flight| {
         *in_flight.borrow_mut() = Some(revision.clone());
     });
@@ -478,7 +478,7 @@ fn sync_account_avatar<C: RepaintContext + 'static>(
             }) else {
                 return;
             };
-            if !de_editor_ui::collab_avatar_runtime::install_account_avatar_bytes(
+            if !de_editor_ui::account_avatar_runtime::install_account_avatar_bytes(
                 &expected, encoded,
             ) {
                 return;
@@ -498,7 +498,7 @@ fn sync_account_avatar<C: RepaintContext + 'static>(
 
 fn clear_account_avatar_sync_state() {
     clear_account_avatar_revision_latches();
-    let _ = de_editor_ui::collab_avatar_runtime::register_account_avatar_url(None);
+    let _ = de_editor_ui::account_avatar_runtime::register_account_avatar_url(None);
 }
 
 fn clear_account_avatar_revision_latches() {

@@ -365,13 +365,11 @@ fn get_version_is_a_cheap_change_probe() {
     let mut s = fresh_state();
     let r = handle_web_canvas_request("GET", "/api/mcp/version", "", &mut s);
     assert!(r.status.starts_with("200"));
-    // `collabSeq` rides along so one poll covers both document and
-    // collaboration changes; `version` keeps its exact spelling and position.
-    assert_eq!(r.body, r#"{"version":0,"collabSeq":0}"#);
+    assert_eq!(r.body, r#"{"version":0}"#);
     // A document mutation bumps the probed version.
     let _ = handle_web_canvas_request("POST", "/api/mcp/document", SYNC_BODY, &mut s);
     let r2 = handle_web_canvas_request("GET", "/api/mcp/version", "", &mut s);
-    assert_eq!(r2.body, r#"{"version":1,"collabSeq":0}"#);
+    assert_eq!(r2.body, r#"{"version":1}"#);
 }
 
 #[test]

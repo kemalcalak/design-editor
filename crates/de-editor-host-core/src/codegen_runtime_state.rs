@@ -10,8 +10,8 @@ use crate::codegen_session::{CodegenDelta, CodegenSession};
 /// The components are the concrete host's whole-state epoch,
 /// [`de_editor_core::EditorState`]'s document generation, and
 /// [`de_editor_core::codegen::CodegenState::document_reset_epoch`]. The third
-/// value covers collaboration installs/rollbacks that intentionally preserve
-/// the broader editor document generation.
+/// value covers document resets that intentionally preserve the broader
+/// editor document generation.
 pub type CodegenDocumentIdentity = (u64, u64, u64);
 
 /// The completed result kept host-side for Download.

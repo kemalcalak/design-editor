@@ -315,8 +315,8 @@ pub fn deep_clone_with_new_ids(
 
 /// Typed standalone form of [`deep_clone_with_new_ids`].
 ///
-/// New code should prefer [`deep_clone_with_allocator`] so a session-owned
-/// collaboration namespace can flow through the whole subtree.
+/// New code should prefer [`deep_clone_with_allocator`] so one
+/// caller-owned allocator can flow through the whole subtree.
 pub fn try_deep_clone_with_new_ids(
     node: &PenNode,
     next_id: &mut u64,

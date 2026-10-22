@@ -110,24 +110,6 @@ impl ServeMode {
         self.is_online()
     }
 
-    /// Collaboration actions that resolve a caller-named socket address or
-    /// enumerate the host's LAN (`StartLan` / `BeginDiscovery` /
-    /// `JoinDiscovered` / `JoinAddress`). On a public origin those are an
-    /// SSRF and an internal-network probe.
-    pub const fn allows_caller_named_collab_network(self) -> bool {
-        !self.is_online()
-    }
-
-    /// Whether relay collaboration may be offered at all.
-    ///
-    /// A relay session needs a device ticket, and the bridge runtime holds
-    /// one per process — so an online daemon cannot mint per-account
-    /// tickets. Availability is forced to unavailable and the panel stays a
-    /// pure projection until M4 brings up in-service (Tier 1) sessions.
-    pub const fn allows_relay_collaboration(self) -> bool {
-        !self.is_online()
-    }
-
     /// Whether a loaded document may publish its embedded image thumbnails
     /// into the renderer's thumbnail registry.
     ///
@@ -236,9 +218,6 @@ pub(super) fn rest_scope_required(
 pub enum OnlineRouteRefusal {
     /// A route that reads or writes the daemon host's filesystem.
     LocalFileAccess,
-    /// A collaboration action that opens a connection to something the
-    /// caller named, or enumerates the host's network.
-    CallerNamedNetwork,
 }
 
 impl OnlineRouteRefusal {
@@ -246,7 +225,6 @@ impl OnlineRouteRefusal {
     pub const fn code(self) -> &'static str {
         match self {
             Self::LocalFileAccess => "online-local-file-disabled",
-            Self::CallerNamedNetwork => "online-network-action-disabled",
         }
     }
 
@@ -261,10 +239,6 @@ impl std::fmt::Display for OnlineRouteRefusal {
             Self::LocalFileAccess => {
                 f.write_str("local file access is disabled on this deployment")
             }
-            Self::CallerNamedNetwork => f.write_str(
-                "collaboration actions that reach a caller-named address are disabled on this \
-                 deployment",
-            ),
         }
     }
 }
@@ -299,8 +273,6 @@ mod tests {
             assert!(mode.allows_generic_shutdown(), "{mode:?}");
             assert!(mode.allows_document_reset(), "{mode:?}");
             assert!(!mode.sync_reset_is_noop(), "{mode:?}");
-            assert!(mode.allows_caller_named_collab_network(), "{mode:?}");
-            assert!(mode.allows_relay_collaboration(), "{mode:?}");
             assert!(mode.allows_image_thumb_registry(), "{mode:?}");
             assert!(!mode.is_online(), "{mode:?}");
         }
@@ -318,8 +290,6 @@ mod tests {
         assert!(!mode.allows_generic_shutdown());
         assert!(!mode.allows_document_reset());
         assert!(mode.sync_reset_is_noop());
-        assert!(!mode.allows_caller_named_collab_network());
-        assert!(!mode.allows_relay_collaboration());
         assert!(!mode.allows_image_thumb_registry());
     }
 

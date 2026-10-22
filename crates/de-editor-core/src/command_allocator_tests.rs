@@ -4,23 +4,28 @@
 
 use crate::command::{BatchInsertItem, EditorCommand};
 use crate::test_support::{frame, rect, sample, state_with};
-use crate::{
-    collect_document_ids, DocumentIdAllocator, EditorState, IdAllocError, NodeId, PeerNamespace,
-    Tool,
-};
+use crate::{collect_document_ids, DocumentIdAllocator, EditorState, IdAllocError, NodeId, Tool};
 use std::collections::HashSet;
 
-fn namespaced() -> DocumentIdAllocator {
-    DocumentIdAllocator::namespaced(PeerNamespace::try_from("audit").unwrap(), 0)
+/// Counter far above any id the fixtures carry, so an id minted from the
+/// supplied allocator is distinguishable from one minted by a fresh
+/// document-derived allocator.
+const SUPPLIED_COUNTER_FLOOR: u64 = 1_000_000;
+
+fn supplied() -> DocumentIdAllocator {
+    DocumentIdAllocator::sequential(SUPPLIED_COUNTER_FLOOR)
 }
 
-fn assert_new_ids_are_namespaced(before: &HashSet<NodeId>, state: &EditorState) {
+fn assert_new_ids_come_from_supplied(before: &HashSet<NodeId>, state: &EditorState) {
     let after = collect_document_ids(&state.doc);
     let fresh: Vec<&NodeId> = after.difference(before).collect();
     assert!(!fresh.is_empty(), "test command did not mint an id");
     assert!(
-        fresh.iter().all(|id| id.as_str().starts_with("c_audit_")),
-        "non-session ids were minted: {fresh:?}",
+        fresh.iter().all(|id| {
+            crate::walkers::parse_n_id(id.as_str())
+                .is_some_and(|counter| counter >= SUPPLIED_COUNTER_FLOOR)
+        }),
+        "ids not minted by the supplied allocator: {fresh:?}",
     );
 }
 
@@ -52,7 +57,7 @@ fn insert_command(name: &str) -> EditorCommand {
 }
 
 #[test]
-fn raw_and_batch_commands_share_the_supplied_namespace() {
+fn raw_and_batch_commands_share_the_supplied_allocator() {
     let mut state = state_with(vec![
         rect("n1", "Replace me", 0.0, 0.0, 10.0, 10.0),
         frame(
@@ -66,7 +71,7 @@ fn raw_and_batch_commands_share_the_supplied_namespace() {
         ),
     ]);
     let before = collect_document_ids(&state.doc);
-    let mut allocator = namespaced();
+    let mut allocator = supplied();
 
     let commands = [
         insert_command("Inserted"),
@@ -127,17 +132,17 @@ fn raw_and_batch_commands_share_the_supplied_namespace() {
         assert!(state.apply_with_allocator(command, &mut allocator).unwrap());
     }
 
-    assert_new_ids_are_namespaced(&before, &state);
+    assert_new_ids_come_from_supplied(&before, &state);
 }
 
 #[test]
-fn selection_page_and_import_commands_share_the_supplied_namespace() {
+fn selection_page_and_import_commands_share_the_supplied_allocator() {
     let mut state = state_with(vec![
         rect("n1", "A", 0.0, 0.0, 10.0, 10.0),
         rect("n2", "B", 20.0, 0.0, 10.0, 10.0),
     ]);
     let before = collect_document_ids(&state.doc);
-    let mut allocator = namespaced();
+    let mut allocator = supplied();
     state.selection.set = vec![NodeId::new("n1"), NodeId::new("n2")];
     state.selection.anchor = NodeId::new("n2");
 
@@ -188,15 +193,15 @@ fn selection_page_and_import_commands_share_the_supplied_namespace() {
         )
         .unwrap());
 
-    assert_new_ids_are_namespaced(&before, &state);
+    assert_new_ids_come_from_supplied(&before, &state);
 }
 
 #[test]
-fn component_conversion_uikit_and_refine_commands_use_the_namespace() {
+fn component_conversion_uikit_and_refine_commands_use_the_supplied_allocator() {
     let mut component_state = sample();
     assert!(component_state.create_component_from_node(&NodeId::new("n10"), "Hero"));
     let component_before = collect_document_ids(&component_state.doc);
-    let mut component_allocator = namespaced();
+    let mut component_allocator = supplied();
     assert!(component_state
         .apply_with_allocator(
             EditorCommand::InstantiateComponent {
@@ -205,11 +210,11 @@ fn component_conversion_uikit_and_refine_commands_use_the_namespace() {
             &mut component_allocator,
         )
         .unwrap());
-    assert_new_ids_are_namespaced(&component_before, &component_state);
+    assert_new_ids_come_from_supplied(&component_before, &component_state);
 
     let mut kit_state = EditorState::new();
     let kit_before = collect_document_ids(&kit_state.doc);
-    let mut kit_allocator = namespaced();
+    let mut kit_allocator = supplied();
     assert!(kit_state
         .apply_with_allocator(
             EditorCommand::InstantiateKitComponent {
@@ -224,7 +229,7 @@ fn component_conversion_uikit_and_refine_commands_use_the_namespace() {
             &mut kit_allocator,
         )
         .unwrap());
-    assert_new_ids_are_namespaced(&kit_before, &kit_state);
+    assert_new_ids_come_from_supplied(&kit_before, &kit_state);
 
     for command in [
         EditorCommand::UpsertScreen {
@@ -259,9 +264,9 @@ fn component_conversion_uikit_and_refine_commands_use_the_namespace() {
     ] {
         let mut state = EditorState::new();
         let before = collect_document_ids(&state.doc);
-        let mut allocator = namespaced();
+        let mut allocator = supplied();
         assert!(state.apply_with_allocator(command, &mut allocator).unwrap());
-        assert_new_ids_are_namespaced(&before, &state);
+        assert_new_ids_come_from_supplied(&before, &state);
     }
 
     let mut refine_state = state_with(vec![frame(
@@ -277,7 +282,7 @@ fn component_conversion_uikit_and_refine_commands_use_the_namespace() {
         ],
     )]);
     let refine_before = collect_document_ids(&refine_state.doc);
-    let mut refine_allocator = namespaced();
+    let mut refine_allocator = supplied();
     assert!(refine_state
         .apply_with_allocator(
             EditorCommand::RefineDesign {
@@ -288,14 +293,14 @@ fn component_conversion_uikit_and_refine_commands_use_the_namespace() {
             &mut refine_allocator,
         )
         .unwrap());
-    assert_new_ids_are_namespaced(&refine_before, &refine_state);
+    assert_new_ids_come_from_supplied(&refine_before, &refine_state);
 }
 
 #[test]
-fn host_creation_seams_share_the_supplied_namespace() {
+fn host_creation_seams_share_the_supplied_allocator() {
     let mut state = EditorState::new();
     let before = collect_document_ids(&state.doc);
-    let mut allocator = namespaced();
+    let mut allocator = supplied();
     let first = state
         .create_node_for_tool_with_allocator(Tool::Pen, &mut allocator, 0.0, 0.0, 10.0, 10.0)
         .unwrap()
@@ -332,7 +337,7 @@ fn host_creation_seams_share_the_supplied_namespace() {
         .unwrap()
         .unwrap();
 
-    assert_new_ids_are_namespaced(&before, &state);
+    assert_new_ids_come_from_supplied(&before, &state);
 }
 
 #[test]
@@ -341,8 +346,7 @@ fn apply_batch_rolls_back_on_late_allocator_exhaustion() {
     let before_doc = state.doc.clone();
     let before_history = state.history.clone();
     let before_revision = state.revision;
-    let mut allocator =
-        DocumentIdAllocator::namespaced(PeerNamespace::try_from("audit").unwrap(), u64::MAX - 1);
+    let mut allocator = DocumentIdAllocator::sequential(u64::MAX - 1);
 
     assert_eq!(
         state.apply_with_allocator(
@@ -408,5 +412,5 @@ fn command_dispatch_has_no_legacy_allocator_escape_hatch() {
     }
 
     // InsertAuthoredSubtree is intentionally absent: it preserves
-    // caller-authored ids and the collaboration gate rejects that bulk path.
+    // caller-authored ids instead of minting fresh ones.
 }

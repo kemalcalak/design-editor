@@ -30,11 +30,5 @@
     <string>vi</string>
     <string>id</string>
   </array>
-  <key>NSLocalNetworkUsageDescription</key>
-  <string>Design Editor uses your local network to discover and connect to collaboration sessions you start or join.</string>
-  <key>NSBonjourServices</key>
-  <array>
-    <string>_design-editor-collab._tcp</string>
-  </array>
 </dict>
 </plist>

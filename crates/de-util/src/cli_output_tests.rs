@@ -78,7 +78,7 @@ fn credential_shaped_assignments_lose_their_values() {
 #[test]
 fn bare_credential_tokens_are_dropped_without_a_key_name() {
     for token in [
-        // Assembled at compile time so the collab boundary gate's source
+        // Assembled at compile time so a source
         // scan for high-signal credential shapes does not flag the fixture.
         concat!("sk-ant-api03-", "fakefakefake"),
         "ghp_fakefakefakefakefake",

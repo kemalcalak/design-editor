@@ -35,15 +35,11 @@ widget-host = ["dep:accesskit"]
 # live preview runtime hands out CLONED app-state snapshots — never a
 # reference into its interior-mutable state in production.
 testing = ["de-preview-core/testing"]
-# Collaboration/editor actor seam. This deliberately does not enable winit,
-# glutin, or desktop GL: `WidgetHostNative` only implements the host trait
-# consumed by `de-collab-host`.
-collab-host = ["widget-host", "dep:de-collab-host"]
 # Desktop GUI host stack (winit + glutin + skia-safe GL + jian-host-desktop
 # glue) on top of the widget host. The orchestrator (AI preview wiring) stays
-# desktop-only; collaboration is exposed separately through `collab-host`.
+# desktop-only.
 gl-host = [
-  "collab-host",
+  "widget-host",
   "skia-safe/gl",
   "dep:glutin",
   "dep:winit",
@@ -86,19 +82,13 @@ serde_json = { workspace = true }
 # `de_editor_core::EditorState`. The host derives a read-only paint
 # `Document` from it each frame (see `widget_host.rs`).
 de-editor-core = { path = "../de-editor-core" }
-# Transport-neutral collaboration/editor actor seam. Default host-core
-# features pull AI/design integrations, none of which the native cache adapter
-# needs.
+# Transport-free host state machines. Default host-core features pull
+# AI/design integrations, none of which the native cache adapter needs.
 de-editor-host-core = { path = "../de-editor-host-core", default-features = false }
 # Device-login client bridge — links the proprietary prebuilt library when
 # one exists for the target, else compiles an inert stub (login hidden).
 de-auth-bridge = { path = "../de-auth-bridge" }
 de-i18n = { path = "../de-i18n" }
-# Collaboration runtime — this crate only supplies the `CollabHost` impl for
-# `WidgetHostNative` (the orphan rule requires it to live in one of the two
-# defining crates). Optional + behind `collab-host`; desktop's `gl-host` opts
-# in, while raster-only service builds do not pull the transport stack.
-de-collab-host = { path = "../de-collab-host", optional = true }
 
 # Native-only deps cfg-gated outside wasm32. This is critical (resolves codex round 2 B1 BLOCK):
 # without cfg-gate, cargo would fetch + run skia-safe's build.rs (which fails on wasm32),

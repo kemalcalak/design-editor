@@ -147,7 +147,7 @@ pub fn fill_images(state: &mut EditorState, config: &ImageFillConfig, dump: bool
             }
         } else if dump {
             eprintln!(
-                "[SMOKE] image apply failed: node_id={} (collab gate or node gone)",
+                "[SMOKE] image apply failed: node_id={} (node gone or url unchanged)",
                 target.node_id
             );
         }

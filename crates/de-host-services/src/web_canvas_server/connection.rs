@@ -258,25 +258,6 @@ pub(super) fn dispatch<S: Read + Write>(
         )?;
         return Ok(false);
     }
-    // Collaboration participant avatar proxy: same shape as the account proxy
-    // above — bounded public HTTPS I/O on this connection thread, off the
-    // editor-state mutex, so a roster URL never reaches the browser. It reads
-    // a process-global registry that only a live relay session populates, so
-    // it is gated with relay collaboration itself rather than left to answer
-    // one account out of another account's roster.
-    if req.method == "POST"
-        && req.path == de_editor_core::collab_routes::AVATAR
-        && ctx.mode.allows_relay_collaboration()
-    {
-        let reply = crate::collab_avatar_proxy::avatar(&req.body);
-        crate::mcp_serve::write_mcp_http_response_with_origin(
-            stream,
-            reply.status,
-            &reply.body,
-            cors_origin,
-        )?;
-        return Ok(false);
-    }
     // Device-login begin: waits (per-connection thread, off the state
     // lock) for the pairing's verification URI so the popup can navigate
     // straight from this response — handled here rather than in the
@@ -515,14 +496,6 @@ pub(super) fn dispatch<S: Read + Write>(
         let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
         let before = guard.version;
         let mut applied_any = false;
-        // The gateway. Snapshotted before dispatch because the applier only
-        // borrows the editor, and `Copy` + the held state lock make the
-        // snapshot exact for the whole message. Desktop refuses MCP document
-        // mutations during a live session (`mcp_live.rs`); the daemon has to
-        // give the same answer or an MCP client would fork the shared document
-        // out from under the peers.
-        let policy = guard.collab_policy();
-        let mut refused: Option<de_editor_core::CollabGateReason> = None;
         // Mechanical passthrough only — this daemon (`--serve-web`/`de
         // start`) is a SEPARATE request loop from `mcp_live.rs`'s
         // `McpLiveServer` (desktop `--live-mcp`), not the same struct;
@@ -535,12 +508,6 @@ pub(super) fn dispatch<S: Read + Write>(
             &req.body,
             ctx.mcp_profile,
             |_tool_name, editor, cmd| {
-                if let Err(reason) =
-                    policy.check_command(cmd, de_editor_core::CollabEditSource::Mcp)
-                {
-                    refused = Some(reason);
-                    return false;
-                }
                 let ok = editor.apply(cmd.clone());
                 if ok {
                     crate::mcp_serve::run_write_repairs_after_apply(editor);
@@ -550,22 +517,12 @@ pub(super) fn dispatch<S: Read + Write>(
             },
         )?
         .unwrap_or_default();
-        if let Some(reason) = refused {
-            // Same surfacing as the desktop live-MCP path: the tool acks
-            // "not applied" and the panel explains why, so a refusal is never
-            // a silent no-op.
-            guard.editor.editor_ui.collab.set_notice(
-                reason.notice_kind(),
-                crate::design_agent_tools::reveal_now_millis(),
-            );
-            guard.collab.bump_seq();
-        }
         if applied_any {
             guard.version += 1;
         }
         // Atomic bump+broadcast under the state lock (see the REST path) so SSE
         // version events stay monotonic across concurrent mutations.
-        if guard.version != before || refused.is_some() {
+        if guard.version != before {
             hub.broadcast(guard.sse_tick());
         }
         response
@@ -616,7 +573,7 @@ pub(super) fn admit_mutation<'a>(ctx: &ConnCtx<'a>, is_write: bool) -> MutationA
 
 /// Stream Server-Sent Events to a subscribed client: write the SSE headers,
 /// emit the current tick immediately (initial sync), then forward each
-/// bump from `rx` as a `data: {"version":N,"collabSeq":M}` event. A periodic
+/// bump from `rx` as a `data: {"version":N}` event. A periodic
 /// heartbeat comment keeps the connection alive AND detects a disconnected
 /// client (the write fails once the socket is gone). Returns when the client
 /// disconnects (write error) or the hub is dropped.
@@ -661,15 +618,9 @@ pub(super) fn serve_sse<S: Write>(
     }
 }
 
-/// Format + write one SSE `data:` event carrying both sequence numbers.
-///
-/// `version` stays the first field and keeps its exact spelling, so a client
-/// written against the original payload keeps parsing this one.
+/// Format + write one SSE `data:` event carrying the sequence number.
 pub(super) fn write_sse_event<S: Write>(stream: &mut S, tick: SseTick) -> Result<()> {
-    let event = format!(
-        "data: {{\"version\":{},\"collabSeq\":{}}}\n\n",
-        tick.version, tick.collab_seq
-    );
+    let event = format!("data: {{\"version\":{}}}\n\n", tick.version);
     stream
         .write_all(event.as_bytes())
         .map_err(|e| WebCanvasError::Transport(format!("sse write: {e}")))?;

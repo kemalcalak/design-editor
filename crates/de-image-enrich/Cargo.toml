@@ -13,7 +13,7 @@ path = "src/lib.rs"
 [dependencies]
 # Canonical node/schema types the slot predicates walk.
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
-# EditorState + walkers + collab gating for the write-back half.
+# EditorState + walkers for the write-back half.
 de-editor-core = { path = "../de-editor-core" }
 # Layout-scene input for scene-aware target collection.
 de-editor-ui = { path = "../de-editor-ui" }

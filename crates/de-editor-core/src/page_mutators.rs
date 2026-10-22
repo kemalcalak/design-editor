@@ -163,7 +163,7 @@ impl EditorState {
             .flatten()
     }
 
-    /// Allocator-aware page insertion used by collaboration sessions.
+    /// Allocator-aware page insertion used by the command dispatch path.
     pub fn add_page_with_allocator(
         &mut self,
         name: Option<String>,
@@ -335,7 +335,7 @@ impl EditorState {
             .flatten()
     }
 
-    /// Allocator-aware page duplication used by collaboration sessions.
+    /// Allocator-aware page duplication used by the command dispatch path.
     pub fn duplicate_page_with_allocator(
         &mut self,
         idx: usize,

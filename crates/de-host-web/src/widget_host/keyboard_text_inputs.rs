@@ -8,8 +8,7 @@ impl WidgetHost {
     /// duplicates / nudges / reorders nodes.
     pub(crate) fn input_active(&self) -> bool {
         let ui = &self.editor_state.ui;
-        self.editor_state.editor_ui.collab_join_input_active()
-            || ui.layer_rename.is_some()
+        ui.layer_rename.is_some()
             || ui.text_editing.is_some()
             || ui.property_focus.is_some()
             || self.editor_state.editor_ui.effect_param_focus.is_some()
@@ -56,8 +55,7 @@ impl WidgetHost {
     /// popover layered above it.
     pub(crate) fn non_chat_input_owns_keyboard(&self) -> bool {
         let editor_ui = &self.editor_state.editor_ui;
-        if editor_ui.collab_join_input_active()
-            || editor_ui.font_picker.open
+        if editor_ui.font_picker.open
             || editor_ui.image_panel.search_open
             || editor_ui.image_panel.generate_open
             || self.variables_search_active()

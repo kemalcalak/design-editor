@@ -186,7 +186,7 @@ pub(super) fn rest_reply(response: &str) -> (&'static str, String) {
 /// Handle `POST /api/import/web-snapshot`: the request body IS the
 /// extractor's snapshot JSON. Runs the `import_web_snapshot` tool through
 /// the same snapshot/apply round-trip the JSON-RPC path uses, so the
-/// insert lands on the UI thread under the usual `CollabGatePolicy`.
+/// insert lands on the UI thread like every other MCP apply.
 ///
 /// `cors_origin` is the one origin the boundary accepted for this request
 /// (`admission::cors_origin_for`); every reply below echoes exactly that

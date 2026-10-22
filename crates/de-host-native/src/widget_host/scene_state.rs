@@ -148,82 +148,6 @@ impl WidgetHostNative {
         self.editor_state_dirty = true;
     }
 
-    /// Switch all collaboration-supported creation paths to one
-    /// owner-assigned namespace, resuming above ids already in the document.
-    pub fn enable_collaboration_ids(
-        &mut self,
-        namespace: de_editor_core::PeerNamespace,
-    ) -> Result<(), de_editor_core::IdAllocError> {
-        self.collab_id_allocator = Some(
-            de_editor_core::DocumentIdAllocator::namespaced_for_document(
-                &self.editor_state.doc,
-                namespace,
-            )?,
-        );
-        Ok(())
-    }
-
-    /// Return to the unchanged standalone `n{counter}` allocation policy.
-    pub fn disable_collaboration_ids(&mut self) {
-        self.collab_id_allocator = None;
-        if let Ok(next) = de_editor_core::next_sequential_counter(&self.editor_state.doc) {
-            self.next_node_id = self.next_node_id.max(next);
-        }
-    }
-
-    pub fn collaboration_id_next_counter(&self) -> Option<u64> {
-        self.collab_id_allocator
-            .as_ref()
-            .map(de_editor_core::DocumentIdAllocator::next_counter)
-    }
-
-    /// Atomically install an already-verified collaboration document.
-    ///
-    /// Protocol validation and canonical-hash verification happen before this
-    /// host seam. The editor performs its own neutral identity validation
-    /// before swapping the document, so a rejected install leaves both the
-    /// editor and every host cache untouched.
-    pub fn install_collaboration_document(
-        &mut self,
-        document: jian_ops_schema::PenDocument,
-        origin: de_editor_core::EditOrigin,
-    ) -> Result<de_editor_core::DocumentInstallReport, de_editor_core::DocumentInstallError> {
-        let report = self
-            .editor_state
-            .install_verified_document(document, origin)?;
-
-        // A full snapshot supersedes the previous document lifetime. Remote
-        // commits and replay stay within the same lifetime so epoch-guarded
-        // async work is not discarded after every collaboration operation.
-        if origin == de_editor_core::EditOrigin::Snapshot {
-            self.document_epoch = self.document_epoch.wrapping_add(1);
-            self.force_rotate_layer_panel_owner();
-            if let Some(de_editor_core::DocumentIdAllocator::Namespaced(allocator)) =
-                self.collab_id_allocator.as_ref()
-            {
-                let namespace = allocator.namespace().clone();
-                let allocator = de_editor_core::DocumentIdAllocator::namespaced_for_document(
-                    &self.editor_state.doc,
-                    namespace.clone(),
-                )
-                .unwrap_or_else(|_| {
-                    // A snapshot may legitimately contain this peer's
-                    // final u64 id. Keep the session readable and make the
-                    // next creation fail with typed exhaustion instead of
-                    // rejecting an otherwise valid authoritative snapshot.
-                    de_editor_core::DocumentIdAllocator::namespaced(namespace, u64::MAX)
-                });
-                self.collab_id_allocator = Some(allocator);
-            }
-        }
-
-        self.layout_transition = None;
-        self.scene_cache.invalidate();
-        self.editor_state_dirty = true;
-        self.drop_pan_cache();
-        Ok(report)
-    }
-
     /// The current document epoch — bumped on every whole-document
     /// replacement (Open / New / import), never on save or in-place
     /// edit. Async work captures this at dispatch and re-checks it
@@ -240,9 +164,6 @@ impl WidgetHostNative {
     /// (`install_imported_state` is the import-specific analogue and
     /// bumps the epoch itself.)
     pub fn replace_editor_state(&mut self, state: de_editor_core::EditorState) -> bool {
-        if !self.collab_allows_user_action(de_editor_core::CollabGateAction::ReplaceDocument) {
-            return false;
-        }
         self.drop_preview_runtime();
         self.editor_state = state;
         self.editor_state.editor_ui.exit_preview();
@@ -264,18 +185,13 @@ impl WidgetHostNative {
 
     /// Install a user-opened `.op` document while retaining app and touch
     /// chrome owned by the live host. The caller must fully parse and validate
-    /// the payload before entering this seam; a collaboration rejection leaves
-    /// the current document and every derived cache untouched.
+    /// the payload before entering this seam.
     pub fn install_open_document(
         &mut self,
         document: jian_ops_schema::PenDocument,
         editor_meta: Option<de_pen_loader::EditorMeta>,
         file_name: Option<String>,
-    ) -> Result<(), Box<jian_ops_schema::PenDocument>> {
-        if !self.collab_allows_user_action(de_editor_core::CollabGateAction::ReplaceDocument) {
-            return Err(Box::new(document));
-        }
-
+    ) {
         self.drop_preview_runtime();
         // `replace_document` deliberately preserves editor chrome and app
         // preferences while clearing every document-scoped draft and stale id.
@@ -299,7 +215,6 @@ impl WidgetHostNative {
         self.editor_state_dirty = true;
         self.drop_pan_cache();
         self.arm_missing_fonts_detection();
-        Ok(())
     }
 
     /// Swap in a blank starter page for a brief launched from Studio
@@ -313,12 +228,7 @@ impl WidgetHostNative {
     /// design's conversation as its own history.
     pub fn start_fresh_document_for_home(&mut self) -> bool {
         let starter = de_editor_core::EditorState::starter();
-        if self
-            .install_open_document(starter.doc.clone(), None, None)
-            .is_err()
-        {
-            return false;
-        }
+        self.install_open_document(starter.doc.clone(), None, None);
         self.editor_state.chat.new_chat();
         true
     }
@@ -343,14 +253,6 @@ impl WidgetHostNative {
     where
         F: FnOnce() + Send + 'static,
     {
-        if !self.collab_allows_document_mutation_from(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-            ),
-            de_editor_core::CollabEditSource::Import,
-        ) {
-            return false;
-        }
         let imported_document_dirty = state.editor_ui.document_dirty;
         // The preview runtime (if any) was built from the document being
         // replaced; drop it before the shell UI is cloned so the retained
@@ -424,23 +326,5 @@ impl WidgetHostNative {
         self.editor_state_dirty = true;
         self.arm_missing_fonts_detection();
         true
-    }
-}
-
-impl de_editor_host_core::collab::CollaborationEditorHost for WidgetHostNative {
-    fn editor_state(&self) -> &de_editor_core::EditorState {
-        WidgetHostNative::editor_state(self)
-    }
-
-    fn editor_state_mut(&mut self) -> &mut de_editor_core::EditorState {
-        WidgetHostNative::editor_state_mut(self)
-    }
-
-    fn install_collaboration_document(
-        &mut self,
-        document: jian_ops_schema::PenDocument,
-        origin: de_editor_core::EditOrigin,
-    ) -> Result<de_editor_core::DocumentInstallReport, de_editor_core::DocumentInstallError> {
-        WidgetHostNative::install_collaboration_document(self, document, origin)
     }
 }

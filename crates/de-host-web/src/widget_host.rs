@@ -81,10 +81,6 @@ mod chrome_menu_press;
 mod click;
 #[cfg(test)]
 mod codegen_framework_tests;
-#[cfg(test)]
-mod collab_id_alloc_tests;
-#[cfg(test)]
-mod collab_input_tests;
 mod color_picker_press;
 mod component_browser_press;
 mod cursor_input;
@@ -347,12 +343,6 @@ pub struct WidgetHost {
     /// nodes never collide on the same key. Matches the native
     /// host's allocator.
     pub(in crate::widget_host) next_node_id: u64,
-    /// Owner-assigned id allocator, set while a collaboration session is live.
-    ///
-    /// The protocol replays node ids verbatim, so a peer minting from the
-    /// private `next_node_id` counter would eventually agree on an id for two
-    /// different nodes. `None` restores the standalone policy.
-    pub(in crate::widget_host) collab_id_allocator: Option<de_editor_core::DocumentIdAllocator>,
     /// Whether the shift key is currently held. The DOM listener
     /// updates this from every keyboard / mouse event so apply_press
     /// can branch on shift+click for multi-select. Matches the

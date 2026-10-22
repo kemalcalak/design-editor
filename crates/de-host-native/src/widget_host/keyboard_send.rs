@@ -59,16 +59,6 @@ impl WidgetHostNative {
         if self.preview.is_some() {
             return self.preview_dispatch_key("Enter", false);
         }
-        if self.editor_state.editor_ui.collab_join_input_active() {
-            let queued = de_editor_ui::widgets::collab_ui::join_address_submit(
-                &mut self.editor_state.editor_ui,
-            )
-            .unwrap_or(false);
-            if queued {
-                self.mark_dirty();
-            }
-            return true;
-        }
         // The image popover is painted above every editor input. Submit or
         // swallow Enter before consulting any independently stale focus below.
         if self.apply_image_panel_send() {
@@ -78,12 +68,14 @@ impl WidgetHostNative {
             return true;
         }
         if self.editor_state.color_picker_hex_focused() {
-            self.collab_blur_color_picker_inputs();
+            self.editor_state.color_picker_blur_hex();
+            self.editor_state.color_picker_blur_rgb();
             self.mark_dirty();
             return true;
         }
         if self.editor_state.color_picker_rgb_focused() {
-            self.collab_blur_color_picker_inputs();
+            self.editor_state.color_picker_blur_hex();
+            self.editor_state.color_picker_blur_rgb();
             self.mark_dirty();
             return true;
         }
@@ -191,29 +183,6 @@ impl WidgetHostNative {
             return true;
         }
         if self.editor_state.ui.layer_rename.is_some() {
-            let mutation = match self
-                .editor_state
-                .ui
-                .layer_rename
-                .as_ref()
-                .map(|rename| &rename.target)
-            {
-                Some(de_editor_core::ui_draft::LayerContextTarget::Layer(_)) => {
-                    de_editor_core::CollabDocumentMutation::NodeProperty(
-                        de_editor_core::CollabNodeField::Name,
-                    )
-                }
-                Some(de_editor_core::ui_draft::LayerContextTarget::Page(_)) => {
-                    de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::PageStructure,
-                    )
-                }
-                None => return false,
-            };
-            if !self.collab_allows_document_mutation(mutation) {
-                let _ = self.editor_state.rename_cancel();
-                return true;
-            }
             let ok = self.editor_state.rename_commit();
             if ok {
                 self.mark_dirty();
@@ -224,13 +193,6 @@ impl WidgetHostNative {
             // Enter INSERTS a newline (TS textarea parity) — only
             // Escape / outside click commit the session. Swallow the
             // key either way so it never falls through to chat send.
-            if !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::NodeProperty(
-                    de_editor_core::CollabNodeField::Content,
-                ),
-            ) {
-                return true;
-            }
             if self.editor_state.text_edit_insert("\n", self.now_ms) {
                 self.mark_dirty();
             }

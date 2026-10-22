@@ -64,10 +64,9 @@ pub(crate) fn reset_for_new_identity<C: RepaintContext + 'static>(inner: &Rc<Ref
         // Back to the same starter a fresh tab paints, so nothing of the
         // previous account survives on screen.
         state.replace_document(de_editor_core::EditorState::starter().doc);
-        state.editor_ui.collab = de_editor_core::CollabUiState::default();
         // A toast describes something that happened to the PREVIOUS account's
         // document. Leaving it up would show one user a sentence about another
-        // user's data, and name an undo that no longer has anything to undo.
+        // user's data.
         state.editor_ui.dismiss_toast();
         context.host_mut().mark_editor_state_dirty();
         // Do not repaint between subject change and partition reload. The
@@ -75,7 +74,6 @@ pub(crate) fn reset_for_new_identity<C: RepaintContext + 'static>(inner: &Rc<Ref
         // afterward; an intermediate frame would run persistence under the new
         // subject while the old partition's settings are still in memory.
     }
-    crate::collab_sync::reset_for_new_identity();
     // Queued and in-flight credential uploads belong to the previous account;
     // letting them land would push its API keys into the new account's tenant.
     // `reset` drops the queue and the retry timer. It does NOT re-tag the
@@ -86,11 +84,5 @@ pub(crate) fn reset_for_new_identity<C: RepaintContext + 'static>(inner: &Rc<Ref
     // read at completion time would compare the new epoch against itself and
     // let the stale upload through.
     crate::web_credential_sync::reset();
-    // The id allocator lives on the host, so it is torn down here where the
-    // borrow is already held. B1's namespace latch alone was not enough: the
-    // allocator itself would keep minting in the previous account's namespace.
-    if let Ok(mut context) = inner.try_borrow_mut() {
-        crate::collab_sync::reset_id_allocation(context.host_mut());
-    }
     clear_auth_invalid();
 }

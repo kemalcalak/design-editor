@@ -250,14 +250,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
             "3:4, आठ पट: आँकड़ों वाले पट ठंडे, अनुभव वाले पट गर्म, बारी-बारी।"
         }
         "fileMenu.newFromTemplate" => "टेम्पलेट से नया बनाएँ",
-        "collab.ownerConfirm.title" => "पुष्टि करें कि आप किससे जुड़ रहे हैं",
-        "collab.ownerConfirm.hint" => "इस सत्र से अभी तक कुछ भी लोड नहीं हुआ है।",
-        "collab.ownerConfirm.account" => "सत्यापित खाता",
-        "collab.ownerConfirm.device" => "सत्यापित डिवाइस",
-        "collab.ownerConfirm.claimedName" => "इस खाते द्वारा चुना गया नाम (सत्यापित नहीं)",
-        "collab.action.confirmOwner" => "इस सत्र में शामिल हों",
-        "collab.action.rejectOwner" => "शामिल न हों",
-        "collab.error.ownerNotConfirmed" => "आपने होस्ट की पुष्टि नहीं की, इसलिए कुछ भी लोड नहीं हुआ।",
         "fileMenu.exportSlideshowHtml" => "स्लाइडशो HTML निर्यात करें...",
         "fileMenu.exportPptx" => "PowerPoint निर्यात करें...",
         "dialog.slideshowHtmlTitle" => "स्लाइडशो निर्यात करें",
@@ -717,7 +709,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "tooltip.topbar.file" => "फ़ाइल",
         "tooltip.topbar.import" => "आयात",
         "tooltip.topbar.language" => "भाषा",
-        "tooltip.topbar.collaboration" => "सहयोग",
         "tooltip.topbar.preview" => "पूर्वावलोकन",
         "tooltip.topbar.exitPreview" => "पूर्वावलोकन बंद करें",
         "tooltip.topbar.account" => "खाता",

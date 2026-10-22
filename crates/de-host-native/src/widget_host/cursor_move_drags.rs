@@ -54,30 +54,12 @@ impl WidgetHostNative {
         x: f32,
         y: f32,
     ) -> Option<bool> {
-        if self.rotate_drag.is_some()
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::NodeProperty(
-                    de_editor_core::CollabNodeField::Rotation,
-                ),
-            )
-        {
-            self.rotate_drag = None;
-            return Some(true);
-        }
         if let Some(drag) = self.rotate_drag {
             self.refresh_layout_scene();
             let cursor_angle = (y - drag.center_screen_y).atan2(x - drag.center_screen_x);
             let new_rotation = drag.start_rotation + (cursor_angle - drag.start_cursor_angle);
             self.editor_state.set_selected_rotation(new_rotation);
             self.finish_live_rotation_update(new_rotation);
-            return Some(true);
-        }
-        if self.handle_drag.is_some()
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::NodePropertyBatch,
-            )
-        {
-            self.handle_drag = None;
             return Some(true);
         }
         if let Some(drag) = self.handle_drag {
@@ -101,14 +83,6 @@ impl WidgetHostNative {
                 new_y,
             );
             self.finish_live_bounds_update(new_bounds, patch_scene);
-            return Some(true);
-        }
-        if self.create_drag.is_some()
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::NodePropertyBatch,
-            )
-        {
-            self.create_drag = None;
             return Some(true);
         }
         if let Some(drag) = self.create_drag {
@@ -139,14 +113,6 @@ impl WidgetHostNative {
         }
         // Ellipse arc-handle drag: recompute arc geometry from the cursor.
         if self.arc_handle_drag.is_some() {
-            if !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::UnsupportedNodeProperty,
-                ),
-            ) {
-                self.arc_handle_drag = None;
-                return Some(true);
-            }
             let doc = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);
             let (id, handle, start, already_moved) = {
                 let d = self.arc_handle_drag.as_ref().unwrap();
@@ -174,17 +140,6 @@ impl WidgetHostNative {
         }
         if self.layer_drag.is_some() {
             let activation_threshold = 4.0;
-            let should_activate = self.layer_drag.as_ref().is_some_and(|drag| {
-                !drag.active && (y - drag.start_y).abs() > activation_threshold
-            });
-            if should_activate
-                && !self.collab_allows_document_mutation(
-                    de_editor_core::CollabDocumentMutation::NodeMove,
-                )
-            {
-                self.layer_drag = None;
-                return Some(true);
-            }
             self.refresh_layout_scene();
             let source_id = self.layer_drag.as_ref().unwrap().source.clone();
             let still_present = self

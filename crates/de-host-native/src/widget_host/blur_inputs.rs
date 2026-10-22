@@ -21,7 +21,6 @@ impl WidgetHostNative {
             || eui.effect_param_focus.is_some()
             || eui.variables_theme_rename_axis.is_some()
             || eui.variables_variant_rename_value.is_some()
-            || eui.collab.panel.join_address_focused
             // #20: preset dropdown's save-as-name input.
             || eui.preset_name_input_active()
             || self.variables_search_active()
@@ -51,9 +50,6 @@ impl WidgetHostNative {
         self.commit_property_focus_if_any();
         // Settings-modal inputs (MCP port, agent / image-gen fields).
         self.commit_settings_focus_if_any();
-        // Collaboration Join field has no committed draft; a blank press or
-        // higher surface simply drops its caret, including stale focus.
-        self.editor_state.editor_ui.blur_collab_join_input();
         // Git-panel inputs — focus flags drop, drafts persist.
         let _ = self.editor_state.editor_ui.git_panel.defocus_text_inputs();
         // Chat input + its model-picker popover (mirrors the

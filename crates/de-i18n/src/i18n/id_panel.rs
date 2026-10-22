@@ -234,16 +234,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.yearreviewMineralCarousel.title" => "Karusel Rekap Tahunan",
         "sceneTemplate.item.yearreviewMineralCarousel.summary" => "3:4, delapan papan: papan angka bernuansa dingin, papan renungan bernuansa hangat, berselang-seling.",
         "fileMenu.newFromTemplate" => "Buat dari templat",
-        "collab.ownerConfirm.title" => "Konfirmasi siapa yang Anda ikuti",
-        "collab.ownerConfirm.hint" => "Belum ada apa pun dari sesi ini yang dimuat.",
-        "collab.ownerConfirm.account" => "Akun terverifikasi",
-        "collab.ownerConfirm.device" => "Perangkat terverifikasi",
-        "collab.ownerConfirm.claimedName" => "Nama pilihan akun ini (belum terverifikasi)",
-        "collab.action.confirmOwner" => "Gabung sesi ini",
-        "collab.action.rejectOwner" => "Jangan gabung",
-        "collab.error.ownerNotConfirmed" => {
-            "Anda tidak mengonfirmasi host, jadi tidak ada yang dimuat."
-        }
         "fileMenu.exportSlideshowHtml" => "Ekspor tayangan slide HTML...",
         "fileMenu.exportPptx" => "Ekspor PowerPoint...",
         "dialog.slideshowHtmlTitle" => "Ekspor tayangan slide",
@@ -683,7 +673,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "tooltip.topbar.file" => "Berkas",
         "tooltip.topbar.import" => "Impor",
         "tooltip.topbar.language" => "Bahasa",
-        "tooltip.topbar.collaboration" => "Kolaborasi",
         "tooltip.topbar.preview" => "Pratinjau",
         "tooltip.topbar.exitPreview" => "Keluar dari pratinjau",
         "tooltip.topbar.account" => "Akun",

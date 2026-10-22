@@ -1,6 +1,6 @@
 //! Current-account avatar overlay shared by account-facing widgets.
 
-use crate::collab_avatar_runtime::account_avatar_image;
+use crate::account_avatar_runtime::account_avatar_image;
 use crate::widgets::canvas_viewport_image::{note_pending_decode, required_raster_edge};
 use crate::widgets::PaintCx;
 use crate::{ImageDrawMode, Rect};
@@ -48,9 +48,9 @@ pub(super) fn paint_account_avatar_image(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::collab_avatar_runtime::{
-        complete_collab_avatar_request, lock_collab_avatar_registry_for_tests,
-        register_account_avatar_url, take_collab_avatar_requests,
+    use crate::account_avatar_runtime::{
+        complete_account_avatar_request, lock_account_avatar_registry_for_tests,
+        register_account_avatar_url, take_account_avatar_requests,
     };
     use crate::{Color, Point2D, RenderBackend, TextLayout};
 
@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn ready_profile_image_overlays_the_initials_fallback() {
-        let _guard = lock_collab_avatar_registry_for_tests();
+        let _guard = lock_account_avatar_registry_for_tests();
         assert!(register_account_avatar_url(Some(
             "https://cdn.example/account.png"
         )));
@@ -128,8 +128,11 @@ mod tests {
         };
 
         assert!(!paint_account_avatar_image(&mut cx, &account, rect));
-        let request = take_collab_avatar_requests(1).pop().unwrap();
-        assert!(complete_collab_avatar_request(&request, Some(png_header())));
+        let request = take_account_avatar_requests(1).pop().unwrap();
+        assert!(complete_account_avatar_request(
+            &request,
+            Some(png_header())
+        ));
         assert!(paint_account_avatar_image(&mut cx, &account, rect));
         assert_eq!(backend.image_draws, 1);
         assert_eq!(backend.decode_edges, vec![128]);
@@ -137,7 +140,7 @@ mod tests {
 
     #[test]
     fn absent_or_unsafe_url_keeps_the_initials_fallback() {
-        let _guard = lock_collab_avatar_registry_for_tests();
+        let _guard = lock_account_avatar_registry_for_tests();
         let rect = Rect::xywh(0.0, 0.0, 20.0, 20.0);
         let mut backend = AvatarBackend::default();
         let mut cx = PaintCx {
@@ -153,7 +156,7 @@ mod tests {
             "http://127.0.0.1/avatar.png"
         )));
         assert!(!paint_account_avatar_image(&mut cx, &account(), rect));
-        assert!(take_collab_avatar_requests(1).is_empty());
+        assert!(take_account_avatar_requests(1).is_empty());
         assert_eq!(backend.image_draws, 0);
     }
 }

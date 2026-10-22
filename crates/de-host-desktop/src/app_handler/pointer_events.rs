@@ -12,20 +12,6 @@ use winit::dpi::PhysicalPosition;
 use winit::event::MouseScrollDelta;
 use winit::event_loop::ActiveEventLoop;
 
-fn dispatch_background_save_as_if_required(
-    outcome: &de_host_services::doc_io::ActionOutcome,
-    schedule: impl FnOnce() -> bool,
-) -> bool {
-    if !matches!(
-        outcome,
-        de_host_services::doc_io::ActionOutcome::SaveAsForkRequired
-    ) {
-        return false;
-    }
-    let _ = schedule();
-    true
-}
-
 impl DesktopApp {
     pub(super) fn on_cursor_moved(&mut self, position: PhysicalPosition<f64>) -> bool {
         self.cursor_x = position.x as f32 / self.dpi;
@@ -196,10 +182,6 @@ impl DesktopApp {
                 return false;
             }
         }
-        // One pointer gesture is one collaboration transaction. The runtime
-        // snapshots immediately before the host can mutate the document;
-        // ordered remote frames queue until the matching release below.
-        self.collab_runtime.begin_local_edit(&mut self.host);
         let consumed = self.host.apply_press(
             self.cursor_x,
             self.cursor_y,
@@ -314,44 +296,37 @@ impl DesktopApp {
                         &mut self.current_path,
                         self.window.as_ref(),
                     );
-                    if !dispatch_background_save_as_if_required(&outcome, || {
-                        self.request_background_save_as()
-                    }) {
-                        match outcome {
-                            // `mark_document_saved` cancels any
-                            // in-flight Figma import internally, so a
-                            // stale worker can't overwrite the fresh
-                            // document when its result lands.
-                            de_host_services::doc_io::ActionOutcome::Saved => {
-                                self.mark_document_saved()
-                            }
-                            // User picked a `.fig`; confirm its output,
-                            // then replace any prior import session and let
-                            // `pump` apply the document once parsing finishes.
-                            de_host_services::doc_io::ActionOutcome::FigmaImportStarted(path) => {
-                                let _ = self.begin_figma_import(path);
-                            }
-                            de_host_services::doc_io::ActionOutcome::FigmaImportSelection(
-                                selection,
-                            ) => {
-                                if figma_import_session::finish_selection(
-                                    &mut self.host,
-                                    &mut self.current_figma_import,
-                                    selection,
-                                ) {
-                                    self.request_redraw(true);
-                                }
-                            }
-                            // User picked a saved page or ZIP project; same
-                            // background session discipline as the Figma branch.
-                            de_host_services::doc_io::ActionOutcome::HtmlImportStarted(path) => {
-                                let _ = self.begin_html_import(path);
-                            }
-                            de_host_services::doc_io::ActionOutcome::SaveAsForkRequired => {
-                                unreachable!("required Save As fork was dispatched above")
-                            }
-                            de_host_services::doc_io::ActionOutcome::Noop => {}
+                    match outcome {
+                        // `mark_document_saved` cancels any
+                        // in-flight Figma import internally, so a
+                        // stale worker can't overwrite the fresh
+                        // document when its result lands.
+                        de_host_services::doc_io::ActionOutcome::Saved => {
+                            self.mark_document_saved()
                         }
+                        // User picked a `.fig`; confirm its output,
+                        // then replace any prior import session and let
+                        // `pump` apply the document once parsing finishes.
+                        de_host_services::doc_io::ActionOutcome::FigmaImportStarted(path) => {
+                            let _ = self.begin_figma_import(path);
+                        }
+                        de_host_services::doc_io::ActionOutcome::FigmaImportSelection(
+                            selection,
+                        ) => {
+                            if figma_import_session::finish_selection(
+                                &mut self.host,
+                                &mut self.current_figma_import,
+                                selection,
+                            ) {
+                                self.request_redraw(true);
+                            }
+                        }
+                        // User picked a saved page or ZIP project; same
+                        // background session discipline as the Figma branch.
+                        de_host_services::doc_io::ActionOutcome::HtmlImportStarted(path) => {
+                            let _ = self.begin_html_import(path);
+                        }
+                        de_host_services::doc_io::ActionOutcome::Noop => {}
                     }
                 }
             }
@@ -403,20 +378,6 @@ impl DesktopApp {
         }
     }
 
-    /// Close a gesture whose release never arrives.
-    ///
-    /// A native modal or a focus switch can swallow the left-button release.
-    /// The redraw pass gates collaboration draining on the gesture's capture,
-    /// so leaving it open would starve a queued action (an admission approval,
-    /// for example) until some later unrelated click happened to close it.
-    pub(super) fn on_focus_lost(&mut self) {
-        if !self.collab_runtime.local_edit_in_flight() {
-            return;
-        }
-        self.collab_runtime.finish_local_edit(&mut self.host);
-        self.request_redraw(true);
-    }
-
     pub(super) fn on_left_release(&mut self) {
         // Drain pending cursor moves before release so drag-end commits final position.
         if self.drain_pending_cursor_move() {
@@ -425,20 +386,8 @@ impl DesktopApp {
         let consumed = self
             .host
             .apply_release_with_viewport(self.viewport_width, self.viewport_height);
-        self.collab_runtime.finish_local_edit(&mut self.host);
         self.sync_native_ime();
-        // The redraw pass defers collaboration actions queued mid-gesture
-        // until the capture closes, so a release that leaves one pending must
-        // schedule the frame that drains it — even when the release itself
-        // changed nothing on screen.
-        let drain_pending = self
-            .host
-            .editor_state()
-            .editor_ui
-            .collab
-            .pending_action
-            .is_some();
-        if consumed || drain_pending {
+        if consumed {
             self.request_redraw(true);
         }
     }
@@ -493,43 +442,5 @@ impl DesktopApp {
         if consumed {
             self.request_redraw(true);
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::dispatch_background_save_as_if_required;
-    use de_host_services::doc_io::ActionOutcome;
-
-    #[test]
-    fn typed_save_as_fork_outcome_invokes_the_background_dispatcher() {
-        let mut scheduled = 0;
-        assert!(dispatch_background_save_as_if_required(
-            &ActionOutcome::SaveAsForkRequired,
-            || {
-                scheduled += 1;
-                true
-            }
-        ));
-        assert_eq!(scheduled, 1);
-        assert!(dispatch_background_save_as_if_required(
-            &ActionOutcome::SaveAsForkRequired,
-            || {
-                scheduled += 1;
-                false
-            }
-        ));
-        assert_eq!(
-            scheduled, 2,
-            "picker cancellation is still a handled dispatch, not a sync fallback"
-        );
-        assert!(!dispatch_background_save_as_if_required(
-            &ActionOutcome::Noop,
-            || {
-                scheduled += 1;
-                true
-            }
-        ));
-        assert_eq!(scheduled, 2);
     }
 }

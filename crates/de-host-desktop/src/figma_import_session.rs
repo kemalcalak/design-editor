@@ -544,23 +544,6 @@ pub fn cancel(host: &mut WidgetHostNative, session: &mut Option<FigmaImportSessi
     }
 }
 
-/// Collaboration transition barrier for a standalone import.
-///
-/// Cancellation alone is insufficient because conversion may already be
-/// between its final token check and atomic publication. Waiting for the
-/// serialized worker gate keeps that publication entirely on the standalone
-/// side of the transition.
-pub fn cancel_and_wait_before_collaboration(
-    host: &mut WidgetHostNative,
-    session: &mut Option<FigmaImportSession>,
-) {
-    if session.is_none() {
-        return;
-    }
-    cancel(host, session);
-    worker_control::wait_until_idle();
-}
-
 /// Outcome of `pump` — used by the caller to decide whether to mark
 /// the next frame dirty and whether to reset the document-path state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -30,8 +30,7 @@ impl WidgetHostNative {
             return true;
         }
         let ui = &self.editor_state.ui;
-        self.editor_state.editor_ui.collab_join_input_active()
-            || ui.layer_rename.is_some()
+        ui.layer_rename.is_some()
             || ui.text_editing.is_some()
             || ui.property_focus.is_some()
             || self.editor_state.editor_ui.variable_row_focus.is_some()
@@ -81,7 +80,6 @@ impl WidgetHostNative {
 
     pub fn settings_focus_active(&self) -> bool {
         self.editor_state.editor_ui.agent_settings.focus.is_some()
-            || self.editor_state.editor_ui.collab_join_input_active()
     }
 
     /// Whether the variables-panel search input owns the keyboard.
@@ -224,42 +222,13 @@ impl WidgetHostNative {
             // Once direct manipulation starts, the cursor owns the dragged
             // node's position exactly.
             self.layout_transition = None;
-            let mutation = if self.alt_held {
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::Duplicate,
-                )
-            } else {
-                de_editor_core::CollabDocumentMutation::NodeMove
-            };
-            if !self.collab_allows_document_mutation(mutation) {
-                self.node_drag = None;
-                return Some(true);
-            }
-            let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-                de_editor_core::host_drag_transitions::activate_node_drag_with_allocator(
-                    &mut self.editor_state,
-                    allocator,
-                    self.alt_held,
-                    total_dx,
-                    total_dy,
-                )
-            } else {
-                Ok(de_editor_core::host_drag_transitions::activate_node_drag(
-                    &mut self.editor_state,
-                    &mut self.next_node_id,
-                    self.alt_held,
-                    total_dx,
-                    total_dy,
-                ))
-            };
-            let activation = match result {
-                Ok(activation) => activation,
-                Err(error) => {
-                    self.node_drag = None;
-                    self.show_collab_id_error(error);
-                    return Some(true);
-                }
-            };
+            let activation = de_editor_core::host_drag_transitions::activate_node_drag(
+                &mut self.editor_state,
+                &mut self.next_node_id,
+                self.alt_held,
+                total_dx,
+                total_dy,
+            );
             if activation.duplicated {
                 self.option_drag_source_ids = activation.option_drag_source_ids;
                 // The drag snapshot already advanced the revision before the
@@ -285,17 +254,6 @@ impl WidgetHostNative {
         let dx = (x - prev_screen_x) / zoom;
         let dy = (y - prev_screen_y) / zoom;
         if dx != 0.0 || dy != 0.0 {
-            // Re-check at the mutation sink. A role downgrade, disconnect, or
-            // session end can arrive after the drag crossed its threshold.
-            if !self
-                .collab_allows_document_mutation(de_editor_core::CollabDocumentMutation::NodeMove)
-            {
-                self.node_drag = None;
-                self.canvas_drop_index = None;
-                self.editor_state.editor_ui.active_guides.clear();
-                self.editor_state.editor_ui.canvas_drop_indicator = None;
-                return Some(true);
-            }
             if let Some(drag) = self.node_drag.as_mut() {
                 drag.last_screen_x = x;
                 drag.last_screen_y = y;

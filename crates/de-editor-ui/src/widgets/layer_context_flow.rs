@@ -4,7 +4,7 @@
 
 use de_editor_core::host_press_transitions as core_press;
 use de_editor_core::ui_draft::LayerContextTarget;
-use de_editor_core::{BooleanOp, EditorState, IdAllocError, IdAllocator};
+use de_editor_core::{BooleanOp, EditorState};
 
 use crate::widgets::layer_context_menu::LayerContextAction;
 
@@ -22,16 +22,6 @@ pub enum LayerContextStep {
     Refit,
 }
 
-/// Id-minting policy for the context-menu dispatch. Duplicate is the only
-/// row that mints ids, so both hosts share one body instead of forking the
-/// whole match per policy.
-enum LayerContextIds<'a> {
-    /// Standalone `n{counter}` allocation off the host counter.
-    Sequential(&'a mut u64),
-    /// Collaboration session allocation from an owner-assigned namespace.
-    Allocator(&'a mut dyn IdAllocator),
-}
-
 /// Layer / page context-menu row dispatch.
 pub fn apply_layer_context_action(
     state: &mut EditorState,
@@ -40,72 +30,17 @@ pub fn apply_layer_context_action(
     target: LayerContextTarget,
     now_ms: u64,
 ) -> LayerContextStep {
-    // The sequential policy is infallible: `duplicate_selected` already
-    // swallows an exhausted id space as a no-op, so the error arm below
-    // is unreachable from here.
-    apply_layer_context_ids(
-        state,
-        &mut LayerContextIds::Sequential(next_node_id),
-        action,
-        target,
-        now_ms,
-    )
-    .unwrap_or(LayerContextStep::Done)
-}
-
-/// Allocator-aware form of [`apply_layer_context_action`] — every fresh id
-/// comes from the collaboration session's namespace. Only the Duplicate row
-/// allocates, so it is the only source of an error.
-pub fn apply_layer_context_action_with_allocator(
-    state: &mut EditorState,
-    allocator: &mut dyn IdAllocator,
-    action: LayerContextAction,
-    target: LayerContextTarget,
-    now_ms: u64,
-) -> Result<LayerContextStep, IdAllocError> {
-    apply_layer_context_ids(
-        state,
-        &mut LayerContextIds::Allocator(allocator),
-        action,
-        target,
-        now_ms,
-    )
-}
-
-fn apply_layer_context_ids(
-    state: &mut EditorState,
-    ids: &mut LayerContextIds<'_>,
-    action: LayerContextAction,
-    target: LayerContextTarget,
-    now_ms: u64,
-) -> Result<LayerContextStep, IdAllocError> {
     use LayerContextAction as A;
     use LayerContextTarget as T;
-    let step = match (action, target) {
+    match (action, target) {
         (A::Duplicate, T::Layer(id)) => {
             // Act on the whole multi-selection when the right-clicked
             // row is part of it; otherwise retarget to just this row.
             if !state.is_selected(&id) {
                 state.set_single_selection(id);
             }
-            match ids {
-                LayerContextIds::Sequential(next_node_id) => {
-                    state.commit_history();
-                    let _ = state.duplicate_selected(next_node_id, 10.0);
-                }
-                LayerContextIds::Allocator(allocator) => {
-                    // Snapshot before the mutation but push it only once the
-                    // clone lands, so an exhausted namespace cannot leave a
-                    // no-op entry on the undo stack.
-                    let snapshot = state.snapshot_for_history();
-                    if state
-                        .duplicate_selected_with_allocator(*allocator, 10.0)?
-                        .is_some()
-                    {
-                        state.history_push_past(snapshot);
-                    }
-                }
-            }
+            state.commit_history();
+            let _ = state.duplicate_selected(next_node_id, 10.0);
             LayerContextStep::Done
         }
         (A::Delete, T::Layer(id)) => {
@@ -199,6 +134,5 @@ fn apply_layer_context_ids(
         }
         // Mismatched action/target — no-op.
         _ => LayerContextStep::Done,
-    };
-    Ok(step)
+    }
 }

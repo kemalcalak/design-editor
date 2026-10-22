@@ -131,7 +131,7 @@ impl ImageDecodeHost {
             for pending in batch {
                 let id = pending.id;
                 let Some(bytes) = cached_bytes_for(id).or_else(|| {
-                    de_editor_ui::collab_avatar_runtime::cached_collab_avatar_bytes(id)
+                    de_editor_ui::account_avatar_runtime::cached_account_avatar_bytes(id)
                 }) else {
                     mark_decode_done(id);
                     discarded += 1;
@@ -349,24 +349,21 @@ mod tests {
     #[test]
     fn worker_uses_the_bounded_avatar_cache_without_gui_decode() {
         let _decode_guard = super::lock_decode_test_registry();
-        let _avatar_guard = crate::collab_avatar_host::lock_avatar_test_registry();
+        let _avatar_guard = crate::account_avatar_host::lock_avatar_test_registry();
         reset_decode_registry();
-        let key = "avatar-decode-participant";
+        use de_editor_ui::account_avatar_runtime as avatar;
         let url = "https://cdn.example/avatar-decode.png";
-        de_editor_ui::collab_avatar_runtime::begin_collab_avatar_generation(0xDEC0);
-        assert!(de_editor_ui::collab_avatar_runtime::register_collab_avatar_url(key, Some(url)));
-        assert!(de_editor_ui::collab_avatar_runtime::collab_avatar_image(key).is_none());
-        let request = de_editor_ui::collab_avatar_runtime::take_collab_avatar_requests(1)
+        assert!(avatar::register_account_avatar_url(None));
+        assert!(avatar::register_account_avatar_url(Some(url)));
+        assert!(avatar::account_avatar_image().is_none());
+        let request = avatar::take_account_avatar_requests(1)
             .pop()
             .expect("avatar request queued");
-        assert!(
-            de_editor_ui::collab_avatar_runtime::complete_collab_avatar_request(
-                &request,
-                Some(encode_test_png())
-            )
-        );
-        let image = de_editor_ui::collab_avatar_runtime::collab_avatar_image(key)
-            .expect("avatar bytes are ready");
+        assert!(avatar::complete_account_avatar_request(
+            &request,
+            Some(encode_test_png())
+        ));
+        let image = avatar::account_avatar_image().expect("avatar bytes are ready");
         note_pending_decode(image.image_id, 64);
 
         let mut host = ImageDecodeHost::new();

@@ -286,7 +286,7 @@ pub fn apply_agent_settings_hit(
         }
         AgentSettingsHit::SignOutAccount => {
             state.editor_ui.account = AccountState::Anonymous;
-            let _ = crate::collab_avatar_runtime::register_account_avatar_url(None);
+            let _ = crate::account_avatar_runtime::register_account_avatar_url(None);
             SettingsPressOutcome::effect(SettingsPress::SignOut)
         }
         AgentSettingsHit::FocusMcpPort => {

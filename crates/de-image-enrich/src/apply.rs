@@ -6,10 +6,7 @@
 //! `src`, a placeholder frame's / rectangle's authored image fill, or a fresh
 //! crop-mode image fill when the slot carried none.
 
-use de_editor_core::{
-    walkers, CollabDocumentMutation, CollabEditSource, CollabGateAction, CollabGateReason,
-    CollabUnsupportedFeature, EditorState, NodeId,
-};
+use de_editor_core::{walkers, EditorState, NodeId};
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::style::{ImageFillBody, ImageFillMode, PenFill};
 
@@ -25,31 +22,15 @@ use crate::targets::{
 /// bound query stays on the node for manual re-search.
 pub const SEARCH_FAILED_PLACEHOLDER_SRC: &str = "placeholder://image-search-failed";
 
-/// The collaboration gate every automatic enrichment write must pass.
-/// Automatic enrichment is an external-asset mutation, which M1 does not
-/// admit into a bound collaboration document.
-pub fn collaboration_image_result_gate(state: &EditorState) -> Result<(), CollabGateReason> {
-    state.editor_ui.collab.gate(
-        CollabGateAction::Document(CollabDocumentMutation::Unsupported(
-            CollabUnsupportedFeature::ExternalAssets,
-        )),
-        CollabEditSource::ExternalSync,
-    )
-}
-
 /// Land a resolved stock-search url onto the target node in place.
 ///
 /// `Image` nodes get their `src`; a still-unfilled placeholder frame or
 /// rectangle (or a container whose only fill is an image fill with an empty
 /// url) gets the url in place — an already-authored image-fill body keeps its
 /// mode / crop / adjustments, a slot without one gets a fresh crop-mode image
-/// fill and its children cleared. Returns `false` when the write was refused
-/// (collaboration gate), the node vanished, or the url was already there.
+/// fill and its children cleared. Returns `false` when the node vanished or the url
+/// was already there.
 pub fn apply_result(state: &mut EditorState, node_id: &NodeId, url: &str) -> bool {
-    if let Err(reason) = collaboration_image_result_gate(state) {
-        state.editor_ui.collab.set_notice(reason.notice_kind(), 0);
-        return false;
-    }
     let url = url.trim();
     if url.is_empty() {
         return false;

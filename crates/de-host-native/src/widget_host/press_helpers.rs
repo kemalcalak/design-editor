@@ -11,8 +11,6 @@
 use super::WidgetHostNative;
 use de_editor_core::agent_settings::ImageGenField;
 use de_editor_core::host_settings_commit::SettingsCommitScope;
-use de_editor_ui::widgets::agent_settings_fonts::FontsHit;
-use de_editor_ui::widgets::agent_settings_panel::AgentSettingsHit;
 use de_editor_ui::widgets::agent_settings_press_flow::{
     self as settings_flow, SettingsPress, SettingsPressOutcome,
 };
@@ -41,46 +39,18 @@ impl WidgetHostNative {
         doc_point: Point2D,
     ) -> Option<de_editor_core::NodeId> {
         let tool = self.editor_state.tool;
-        let allowed = if matches!(tool, de_editor_core::Tool::Pen) {
-            self.collab_allows_pen_path_mutation()
-        } else {
-            self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::BasicNodeInsert,
-            )
-        };
-        if !allowed {
-            return None;
-        }
         // Click-create default size: Text needs room for its
         // placeholder glyphs; shape tools start 1×1 so a drag
         // immediately sizes the node to the cursor.
         let (init_w, init_h) = create_initial_size_for_tool(tool);
-        let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            self.editor_state.create_node_for_tool_with_allocator(
-                tool,
-                allocator,
-                doc_point.x as f64,
-                doc_point.y as f64,
-                init_w,
-                init_h,
-            )
-        } else {
-            Ok(self.editor_state.create_node_for_tool(
-                tool,
-                &mut self.next_node_id,
-                doc_point.x as f64,
-                doc_point.y as f64,
-                init_w,
-                init_h,
-            ))
-        };
-        let id = match result {
-            Ok(id) => id,
-            Err(error) => {
-                self.show_collab_id_error(error);
-                return None;
-            }
-        };
+        let id = self.editor_state.create_node_for_tool(
+            tool,
+            &mut self.next_node_id,
+            doc_point.x as f64,
+            doc_point.y as f64,
+            init_w,
+            init_h,
+        );
         if id.is_some() {
             self.mark_dirty();
         }
@@ -111,15 +81,6 @@ impl WidgetHostNative {
             None
         };
         drop(panel);
-        if matches!(hit, AgentSettingsHit::Fonts(FontsHit::SelectFont(_)))
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::Typography,
-                ),
-            )
-        {
-            return true;
-        }
         let outcome = settings_flow::apply_agent_settings_hit(
             &mut self.editor_state,
             hit,

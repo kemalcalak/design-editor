@@ -33,9 +33,6 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         if self.poll_mcp_server() {
             self.request_redraw(true);
         }
-        if self.collab_runtime.poll(&mut self.host) {
-            self.request_redraw(true);
-        }
         if self.mcp_shutdown_requested() {
             // Finalize-lifecycle invariant (0718-1-k3-1 postmortem) — see
             // `chat_session::finalize_design_session_if_needed`'s doc
@@ -399,11 +396,6 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                     event_loop.exit();
                 }
             }
-            DesktopEvent::CollabWake => {
-                if self.collab_runtime.poll(&mut self.host) {
-                    self.request_redraw(true);
-                }
-            }
             DesktopEvent::ImageDecodeReady => {
                 self.request_redraw(true);
             }
@@ -508,7 +500,6 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                 button: MouseButton::Left,
                 ..
             } => self.on_left_release(),
-            WindowEvent::Focused(false) => self.on_focus_lost(),
             WindowEvent::MouseWheel { delta, .. } => self.on_mouse_wheel(delta),
             WindowEvent::PinchGesture { delta, .. } => self.on_pinch_gesture(delta),
             // CJK composition: preedit updates paint through the
@@ -575,8 +566,6 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
     }
 
     fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
-        // Queue an authenticated Bye before transport workers are stopped.
-        self.collab_runtime.leave(&mut self.host);
         // macOS Cmd+Q / Alt+F4 / WM-close can deliver `exiting` without
         // `CloseRequested`; flush MCP port draft before snapshotting so
         // a focused-but-uncommitted edit isn't silently dropped.

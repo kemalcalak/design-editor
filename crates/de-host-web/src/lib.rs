@@ -51,9 +51,6 @@ mod video_overlay;
 // Daemon device-login relay (action drain + login-status poll + popup).
 #[cfg(feature = "canvaskit")]
 mod live_sync_glue;
-// The recovery stash behind an online auto-accept.
-#[cfg(feature = "canvaskit")]
-mod live_sync_recovery;
 #[cfg(feature = "canvaskit")]
 mod web_auth_sync;
 // Opens the hub portal's per-account MCP-token page in a new tab from the
@@ -61,9 +58,6 @@ mod web_auth_sync;
 // canvaskit widget host calls it, so it shares that gate.
 #[cfg(feature = "canvaskit")]
 mod web_mcp_tokens;
-// Daemon collaboration relay (action drain + projection pull + presence).
-#[cfg(feature = "canvaskit")]
-mod collab_sync;
 // Shared daemon base-URL resolution (page origin when served by the daemon,
 // localhost fallback for the dev smoke page).
 #[cfg(feature = "canvaskit")]
@@ -113,9 +107,6 @@ mod iconify_web;
 // Runtime fetch for the product assets the wasm bundle omits.
 #[cfg(feature = "canvaskit")]
 mod web_asset_fetch;
-// Runtime fetch for collaboration-peer avatars via the daemon proxy.
-#[cfg(feature = "canvaskit")]
-mod collab_avatar_fetch;
 // Web chat session — drains `chat.pending_send` / Stop / New Chat and streams
 // real standard-mode turns through the daemon's `/api/ai/standard` route.
 #[cfg(feature = "canvaskit")]

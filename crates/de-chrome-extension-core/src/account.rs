@@ -87,13 +87,11 @@ pub const REQUEST_TIMEOUT_MS: u32 = 8_000;
 
 /// Which regional deployment the account lives in.
 ///
-/// Mirrors the product's own built-in dual-region design
-/// (`CollabRelayRegion` in `de-editor-core`, `RelayRegion` on the collab
-/// wire) down to the persisted spelling, so a user who picked "China" for
-/// collaboration sees the same word here.
+/// Mirrors the product's own built-in dual-region design down to the
+/// persisted spelling.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Region {
-    /// China. The product's default, matching `CollabRelayRegion::default()`.
+    /// China. The product's default.
     #[default]
     Cn,
     /// Everywhere else.
@@ -101,7 +99,7 @@ pub enum Region {
 }
 
 impl Region {
-    /// Persisted spelling, shared with the collaboration bootstrap document.
+    /// Persisted spelling.
     pub fn as_str(self) -> &'static str {
         match self {
             Region::Cn => "cn",

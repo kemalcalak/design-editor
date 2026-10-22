@@ -28,12 +28,9 @@ mcp-debug-tools = ["de-mcp/debug-tools"]
 # Production release lane: a missing reviewed binary cache must fail instead
 # of silently compiling or downloading an unreviewed Skia build.
 pinned-skia-binaries = ["skia-safe/no-compile"]
-# Local-only collaboration development against an external private ABI-v2
-# archive. Release builds are rejected by de-auth-bridge's build script.
-dev-op-auth-abi-v2 = [
-  "de-auth-bridge/dev-abi-v2",
-  "de-collab-host/dev-op-auth-abi-v2",
-]
+# Local-only development against an external private ABI-v2 archive.
+# Release builds are rejected by de-auth-bridge's build script.
+dev-op-auth-abi-v2 = ["de-auth-bridge/dev-abi-v2"]
 
 # File-association metadata for `cargo-bundle` (`cargo bundle`). This
 # declares Design Editor as the OS-level handler for `.op` / `.pen`
@@ -102,21 +99,6 @@ de-editor-host-core = { path = "../de-editor-host-core" }
 de-config-store = { path = "../de-config-store" }
 # Device-login bridge (prebuilt proprietary library or inert stub).
 de-auth-bridge = { path = "../de-auth-bridge" }
-# Open collaboration protocol + the native Noise/TCP/mDNS transport. The
-# production ticket issuer remains behind de-auth-bridge's private ABI; this
-# host only consumes opaque tickets and verifies them against the pinned,
-# public JWKS endpoint.
-de-collab = { path = "../de-collab" }
-# The collaboration runtime itself (owner/guest actors, relay bootstrap,
-# ticket verifier). `src/collab_runtime.rs` is the desktop shim over it.
-de-collab-host = { path = "../de-collab-host" }
-de-collab-transport = { path = "../de-collab-transport", features = ["mdns"] }
-de-collab-relay-client = { path = "../de-collab-relay-client" }
-de-collab-relay-control-plane = { path = "../de-collab-relay-control-plane" }
-de-collab-relay-protocol = { path = "../de-collab-relay-protocol" }
-ed25519-dalek = { version = "2.2", default-features = false, features = ["std"] }
-sha2 = "0.10"
-zeroize = "1"
 # D′ architecture: pre-validation adapter translates PlannedFix → EditorCommand.
 de-design-lint = { path = "../de-design-lint" }
 # AI code-generation pipeline. The `ai` feature compiles the pull-based
@@ -286,11 +268,7 @@ tokio = { version = "1", default-features = false, features = [
   "time",
 ] }
 futures = { version = "0.3", default-features = false, features = ["std"] }
-getrandom = "0.3"
 thiserror = { workspace = true }
-socket2 = "0.6"
-subtle = "2.6"
-if-addrs = "0.13"
 
 # Native menu bar (`src/menu.rs`). winit owns the window but has no
 # menu primitive, so `muda` builds the NSMenu and routes selections
@@ -348,6 +326,3 @@ accesskit_unix = "0.22"
 # image API decodes PNG to RGBA, which would force the editor to encode
 # the same screenshot back to PNG before it can build the image data URL.
 wl-clipboard-rs = "0.9"
-
-[dev-dependencies]
-static_assertions = "1"

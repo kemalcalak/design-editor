@@ -44,13 +44,6 @@ pub(crate) fn drain_pending_scene_template_generate(
     let Some(prompt) = scene_generate_prompt(scene, locale, &topic) else {
         return false;
     };
-    // Replacing the document runs the same collaboration gate as File > New.
-    if !host.gate_collaboration_action(
-        de_editor_core::CollabGateAction::ReplaceDocument,
-        de_editor_core::CollabEditSource::User,
-    ) {
-        return false;
-    }
 
     let mut state = EditorState::starter();
     preserve_app_preferences(host.editor_state(), &mut state);

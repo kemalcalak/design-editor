@@ -66,10 +66,7 @@ fn every_tenant_owns_its_own_broadcast_hub() {
     let a_sub = a.hub().subscribe();
     let b_sub = b.hub().subscribe();
 
-    a.hub().broadcast(SseTick {
-        version: 5,
-        collab_seq: 0,
-    });
+    a.hub().broadcast(SseTick { version: 5 });
 
     assert_eq!(a_sub.pending().expect("A hears its own bump").version, 5);
     assert!(

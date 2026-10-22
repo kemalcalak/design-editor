@@ -359,11 +359,6 @@ fn a_read_scope_token_cannot_reach_the_specially_dispatched_write_routes() {
         ("POST", "/api/ai/standard", "{}"),
         ("POST", "/api/ai/stream", "{}"),
         ("POST", "/api/figma/convert", "{}"),
-        (
-            "POST",
-            de_editor_core::collab_routes::ACTION,
-            r#"{"type":"openCreate"}"#,
-        ),
     ] {
         let response = serve(
             &registry,
@@ -400,7 +395,7 @@ fn a_read_scope_token_may_still_subscribe_to_the_event_stream() {
     let response = serve(
         &registry(),
         &scoped_verifier(),
-        Request::new("GET", de_editor_core::collab_routes::STATE).with_bearer("tokR"),
+        Request::new("GET", "/api/mcp/version").with_bearer("tokR"),
     );
     assert_eq!(status_line(&response), "HTTP/1.1 200 OK", "{response}");
 }

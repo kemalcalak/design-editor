@@ -133,9 +133,6 @@ impl WidgetHost {
         let top_bar = self.top_bar();
         if let Some(hit) = top_bar.hit_test(top_bar_rect, Point2D::new(x, y)) {
             self.close_image_popovers_for_higher_overlay();
-            // A TopBar destination replaces the collaboration Join caret.
-            // Clear even stale focus so reopening Join cannot resurrect it.
-            self.editor_state.editor_ui.blur_collab_join_input();
             self.commit_property_family_focus_if_any();
             let pressed = de_editor_ui::widgets::editor_state_ext::topbar_button_hover(hit);
             self.editor_state.editor_ui.pressed_button =
@@ -160,7 +157,6 @@ impl WidgetHost {
                 | TopBarHit::ToggleTheme
                 | TopBarHit::ToggleLocale
                 | TopBarHit::OpenAgentSettings
-                | TopBarHit::Collaboration
                 | TopBarHit::ToggleFileMenu
                 | TopBarHit::OpenExportMenu
                 | TopBarHit::OpenAssetCenter

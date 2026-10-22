@@ -105,14 +105,6 @@ impl WidgetHostNative {
                 self.editor_state.editor_ui.figma_import_hover = None;
             }
             FigmaImportHit::DropZone => {
-                if !self.collab_allows_document_mutation_from(
-                    de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-                    ),
-                    de_editor_core::CollabEditSource::Import,
-                ) {
-                    return;
-                }
                 use de_editor_core::figma_import_state::ImportSource;
                 self.editor_state.editor_ui.pending_file_action =
                     Some(match self.editor_state.editor_ui.import_source {
@@ -123,14 +115,6 @@ impl WidgetHostNative {
                 self.editor_state.editor_ui.figma_import_hover = None;
             }
             FigmaImportHit::Page(index) => {
-                if !self.collab_allows_document_mutation_from(
-                    de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-                    ),
-                    de_editor_core::CollabEditSource::Import,
-                ) {
-                    return;
-                }
                 self.editor_state.editor_ui.pending_file_action =
                     Some(FileAction::FinishFigmaImport(
                         de_editor_core::FigmaImportSelection::Page(index),
@@ -139,14 +123,6 @@ impl WidgetHostNative {
                 self.editor_state.editor_ui.figma_import_hover = None;
             }
             FigmaImportHit::ImportAll => {
-                if !self.collab_allows_document_mutation_from(
-                    de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-                    ),
-                    de_editor_core::CollabEditSource::Import,
-                ) {
-                    return;
-                }
                 self.editor_state.editor_ui.pending_file_action = Some(
                     FileAction::FinishFigmaImport(de_editor_core::FigmaImportSelection::All),
                 );
@@ -190,30 +166,6 @@ impl WidgetHostNative {
                 let Some(choice) = menu.choice_for_row(row) else {
                     return;
                 };
-                let gate_action = match choice {
-                    FileMenuChoice::Home => de_editor_core::CollabGateAction::LocalUi,
-                    FileMenuChoice::NewFile
-                    | FileMenuChoice::OpenFile
-                    | FileMenuChoice::OpenRecent(_) => {
-                        de_editor_core::CollabGateAction::ReplaceDocument
-                    }
-                    FileMenuChoice::Save => de_editor_core::CollabGateAction::SaveShared,
-                    FileMenuChoice::SaveAs => de_editor_core::CollabGateAction::SaveFork,
-                    FileMenuChoice::SaveAsTemplate => de_editor_core::CollabGateAction::LocalUi,
-                    FileMenuChoice::ExportImage
-                    | FileMenuChoice::ExportAllFrames
-                    | FileMenuChoice::ExportSlideshowHtml
-                    | FileMenuChoice::ExportPptx
-                    | FileMenuChoice::ClearRecent
-                    // Opening the centre only shows a panel; the document is
-                    // replaced later, and that step re-runs the gate itself.
-                    | FileMenuChoice::NewFromTemplate => de_editor_core::CollabGateAction::LocalUi,
-                };
-                if !self.collab_allows_user_action(gate_action) {
-                    self.editor_state.editor_ui.file_menu_open = false;
-                    self.editor_state.editor_ui.file_menu.hover = None;
-                    return;
-                }
                 if choice == FileMenuChoice::NewFromTemplate {
                     self.editor_state
                         .editor_ui
@@ -266,10 +218,6 @@ impl WidgetHostNative {
 
     /// Export quick-menu press dispatcher. The row → `FileAction` walk is
     /// shared with the web host; only the blur / repaint tail is native.
-    ///
-    /// No collaboration gate: every row is a `CollabGateAction::LocalUi`
-    /// export, exactly as the file-menu dispatcher classifies the same
-    /// choices, and that action is admitted unconditionally.
     pub(in crate::widget_host) fn dispatch_export_quick_menu_press(
         &mut self,
         x: f32,
@@ -301,18 +249,6 @@ impl WidgetHostNative {
     /// editable value box). Parses the shared draft and writes it
     /// via `SetEffectParam`; a non-numeric draft is discarded.
     pub(in crate::widget_host) fn commit_effect_param_focus_if_any(&mut self) {
-        if self.editor_state.editor_ui.effect_param_focus.is_some()
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::Effects,
-                ),
-            )
-        {
-            if commit::discard_effect_param_focus(&mut self.editor_state) {
-                self.mark_dirty();
-            }
-            return;
-        }
         if commit::commit_effect_param_focus(&mut self.editor_state) {
             self.mark_dirty();
         }
@@ -323,14 +259,6 @@ impl WidgetHostNative {
         self.commit_variables_panel_header_focus_if_any();
         self.commit_variable_row_focus_if_any();
         self.commit_effect_param_focus_if_any();
-        if let Some(focus) = self.editor_state.ui.property_focus {
-            if !self.collab_allows_document_mutation(focus.collab_document_mutation()) {
-                if commit::discard_property_focus(&mut self.editor_state) {
-                    self.mark_dirty();
-                }
-                return;
-            }
-        }
         if commit::commit_property_focus(&mut self.editor_state) {
             self.mark_dirty();
         }

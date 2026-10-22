@@ -18,7 +18,7 @@
 #   4. Backfills the Info.plist with CFBundleName / CFBundleIdentifier
 #      / CFBundleIconFile / CFBundleShortVersionString /
 #      CFBundleDocumentTypes (with UTI binding) /
-#      UTImportedTypeDeclarations / local-network privacy metadata.
+#      UTImportedTypeDeclarations.
 #   5. Copies the icon into Resources/.
 #   6. Re-registers the bundle with LaunchServices so Finder picks up
 #      the .fig binding.
@@ -49,8 +49,6 @@
 set -euo pipefail
 
 WS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck disable=SC1091
-source "$WS_ROOT/tools/macos-local-network-plist.sh"
 CANONICAL_VERSION="$("$WS_ROOT/scripts/workspace-version.sh")"
 APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [[ "$APP_VERSION" != "$CANONICAL_VERSION" ]]; then
@@ -187,10 +185,6 @@ echo "==> patching Info.plist (name, identifier, icon, doc-types, UTI)"
   -c "Add :UTImportedTypeDeclarations:0:UTTypeTagSpecification:public.mime-type array" \
   -c "Add :UTImportedTypeDeclarations:0:UTTypeTagSpecification:public.mime-type:0 string application/x-figma" \
   "$PLIST"
-
-echo "==> patching local-network privacy and Bonjour service metadata"
-design_editor_apply_macos_local_network_plist "$PLIST"
-bash "$WS_ROOT/tools/check-macos-bundle-plist.sh" "$PLIST"
 
 echo "==> copying icon into Resources/"
 mkdir -p "$APP/Contents/Resources"

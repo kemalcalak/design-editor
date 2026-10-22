@@ -5,7 +5,7 @@
 //! motion.
 
 use crate::{
-    collab_avatar_host, figma_import_session, git_session, html_import_session, image_decode_host,
+    account_avatar_host, figma_import_session, git_session, html_import_session, image_decode_host,
     image_panel_host, image_search_session, ime_window, init_auth_runtime, kit_persistence,
     persistence, prompt_center_store, remote_image_host, save_session, single_instance,
     theme_preset_host, update_check, DesktopApp, PaintedPageIdentity, INITIAL_VIEWPORT_H,
@@ -150,7 +150,6 @@ impl DesktopApp {
             rotate_cursor: None,
             current_path: None,
             save_session: save_session::SaveSession::new(),
-            collab_fork_saves: Vec::new(),
             error: None,
             design_loop_indicator: None,
             design_session_indicator: None,
@@ -173,11 +172,10 @@ impl DesktopApp {
             image_search: image_search_session::ImageSearchSession::new(),
             image_panel: image_panel_host::ImagePanelJobs::new(),
             remote_images: remote_image_host::RemoteImageSession::new(),
-            collab_avatars: collab_avatar_host::CollabAvatarHost::new(),
+            account_avatar: account_avatar_host::AccountAvatarHost::new(),
             image_decodes: image_decode_host::ImageDecodeHost::new(),
             home_thumbnails: crate::home_thumbnails::HomeThumbnails::default(),
             mcp_wake_proxy: None,
-            collab_runtime: crate::collab_runtime::DesktopCollabRuntime::new(),
             forwarded_files: single_instance::ForwardQueue::default(),
             iconify_job: None,
             kit_browser_open_persisted,
@@ -366,12 +364,6 @@ impl DesktopApp {
     /// Confirm the adjacent `.op` destination before disturbing any active
     /// import. Cancel therefore leaves the current worker and document intact.
     pub(crate) fn begin_figma_import(&mut self, path: PathBuf) -> bool {
-        if !self.host.gate_collaboration_action(
-            de_editor_core::CollabGateAction::ReplaceDocument,
-            de_editor_core::CollabEditSource::Import,
-        ) {
-            return false;
-        }
         if self
             .current_figma_import
             .as_ref()
@@ -393,14 +385,8 @@ impl DesktopApp {
         true
     }
 
-    /// Start an HTML/ZIP whole-document import after a current-phase gate.
+    /// Start an HTML/ZIP whole-document import.
     pub(crate) fn begin_html_import(&mut self, path: PathBuf) -> bool {
-        if !self.host.gate_collaboration_action(
-            de_editor_core::CollabGateAction::ReplaceDocument,
-            de_editor_core::CollabEditSource::Import,
-        ) {
-            return false;
-        }
         figma_import_session::cancel(&mut self.host, &mut self.current_figma_import);
         html_import_session::cancel(&mut self.host, &mut self.current_html_import);
         self.current_html_import = Some(html_import_session::spawn(&mut self.host, path));

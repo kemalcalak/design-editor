@@ -11,7 +11,6 @@ jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema", optional 
 de-ai = { path = "../de-ai", optional = true }
 de-ai-skills = { path = "../de-ai-skills", optional = true }
 de-codegen = { path = "../de-codegen", features = ["ai"], optional = true }
-de-collab = { path = "../de-collab" }
 # `settings-io` only: the explicit app-sandbox config root selected by
 # embedded (mobile) shells decides where `settings.json` lives.
 de-config-store = { path = "../de-config-store", optional = true }

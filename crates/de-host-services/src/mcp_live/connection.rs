@@ -243,10 +243,8 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     // Gate 2 (see `admission.rs`): everything from here down reads or writes
     // the live document — every `tools/call`, not just the write ones. The
     // `Host`/`Origin` boundary above is the only gate the local desktop and a
-    // self-hosted serve-web daemon apply; `CollabGatePolicy` (which still runs
-    // on the UI thread for each apply) decides what a session permits. The
-    // online multi-tenant daemon authenticates per account in its own request
-    // loop, not here.
+    // self-hosted serve-web daemon apply. The online multi-tenant daemon
+    // authenticates per account in its own request loop, not here.
     // Everything below observes or mutates shared state — the live
     // `EditorState` OR a `--file` document on disk (a read-modify-write).
     // Serialize it under one lock so snapshots stay coherent, concurrent live

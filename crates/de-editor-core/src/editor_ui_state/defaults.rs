@@ -32,7 +32,6 @@ impl Default for EditorUiState {
             host_locale_override: None,
             locale_picker: jian_widgets::components::select::SelectState::default(),
             preferred_agent_team_size: 1,
-            collab: Default::default(),
             file_menu_open: false,
             file_menu: Default::default(),
             export_quick_menu_open: false,

@@ -176,8 +176,8 @@ impl std::error::Error for TenantError {}
 
 /// One account's live document authority.
 pub struct Tenant {
-    /// This account's editor, version counter and collaboration state — the
-    /// exact structure the single-user daemon keeps, one per account.
+    /// This account's editor and version counter — the exact structure the
+    /// single-user daemon keeps, one per account.
     pub(crate) state: Mutex<WebCanvasState>,
     /// This account's SSE subscribers. Separate per tenant so a version bump
     /// is only ever broadcast to the account that caused it.

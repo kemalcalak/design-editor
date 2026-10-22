@@ -49,11 +49,6 @@ impl CkInner {
             crate::iconify_web::ensure_core_catalog();
         }
         crate::web_asset_fetch::drain_pending();
-        // Collaboration-peer avatars: drain what the roster paint enqueued and
-        // fetch it through the daemon proxy (a wasm page cannot reach the CDN
-        // directly). Bounded per frame; empty and cheap outside a session. The
-        // self-account avatar is NOT handled here — `web_auth_sync` owns it.
-        crate::collab_avatar_fetch::drain_pending();
         // A template clicked before its document arrived is instantiated here,
         // the frame after the fetch lands. No-op on every other frame and on
         // native, where the document was already in the binary.
@@ -305,19 +300,10 @@ pub(super) fn start_bootstrap_reset(
     let on_reset: std::rc::Rc<dyn Fn(u16, String)> = {
         let complete = complete.clone();
         let base = base.clone();
-        std::rc::Rc::new(move |status: u16, body: String| {
+        std::rc::Rc::new(move |_status: u16, body: String| {
             // The daemon answers `{"ok":true,...}` for both a fresh reset and a
             // peer-skipped one (`"skipped":true`) — either is completion.
             if body.contains("\"ok\":true") {
-                complete();
-                return;
-            }
-            // A live collaboration session owns this document, so the daemon
-            // refuses to reset it (409 `collab-active`). That is a deliberate
-            // answer, not a failure: resetting is exactly the wrong thing to do
-            // to a document peers are editing. Retrying would only ask again
-            // and warn about a daemon that is working correctly.
-            if status == 409 {
                 complete();
                 return;
             }

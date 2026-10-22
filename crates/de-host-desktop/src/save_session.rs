@@ -19,7 +19,7 @@ use crate::DesktopEvent;
 mod error;
 pub(crate) use error::SaveError;
 
-#[must_use = "the enqueue outcome determines whether a Save As acquired fork authority"]
+#[must_use = "the enqueue outcome says whether the save was accepted"]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum EnqueueOutcome {
     Started,
@@ -399,32 +399,8 @@ impl SaveSession {
 }
 
 impl crate::DesktopApp {
-    /// Complete every standalone document writer before Start/Join/Retry may
-    /// bind the document to collaboration. This is a phase-transition barrier:
-    /// no old Save/Save As or adjacent Figma publication can land after the
-    /// shared identity becomes active.
-    pub(crate) fn settle_document_io_before_collaboration(&mut self) {
-        let _ = self.finish_background_saves();
-        crate::figma_import_session::cancel_and_wait_before_collaboration(
-            &mut self.host,
-            &mut self.current_figma_import,
-        );
-        crate::html_import_session::cancel(&mut self.host, &mut self.current_html_import);
-    }
-
     /// Queue Cmd+S without running JSON serialization on the winit thread.
     pub(crate) fn request_background_save(&mut self) -> bool {
-        let gate = if self.current_path.is_some() {
-            de_editor_core::CollabGateAction::SaveShared
-        } else {
-            de_editor_core::CollabGateAction::SaveFork
-        };
-        if !self
-            .host
-            .gate_collaboration_action(gate, de_editor_core::CollabEditSource::User)
-        {
-            return false;
-        }
         let document_epoch = self.host.document_epoch();
         let path = self
             .save_session
@@ -451,44 +427,10 @@ impl crate::DesktopApp {
     /// Show the native picker synchronously, then queue only the expensive
     /// snapshot serialization and disk write.
     pub(crate) fn request_background_save_as(&mut self) -> bool {
-        if !self.host.gate_collaboration_action(
-            de_editor_core::CollabGateAction::SaveFork,
-            de_editor_core::CollabEditSource::User,
-        ) {
-            return false;
-        }
-        let collaboration_bound =
-            crate::persistence::requires_background_save_as_fork(self.host.editor_state());
         let Some(path) = crate::persistence::pick_save_as_path(self.host.editor_state()) else {
             return false;
         };
-        if collaboration_bound
-            && !collaboration_fork_target_is_safe(self.current_path.as_deref(), &path)
-        {
-            let detail =
-                "Save As must use a different, resolvable path while collaboration is active.";
-            eprintln!(
-                "[save] rejected collaboration fork target {}: {detail}",
-                path.display()
-            );
-            crate::persistence::show_error_dialog_public(
-                &self.host,
-                de_host_services::doc_io::ErrorKind::Save,
-                Some(&path),
-                detail,
-            );
-            return false;
-        }
-        let identity = (
-            self.host.document_epoch(),
-            self.host.editor_state().document_generation(),
-            self.host.editor_state().document_revision(),
-            path.clone(),
-        );
-        let outcome = self.enqueue_background_save(path, true);
-        if collaboration_bound {
-            return self.confirm_collaboration_fork_enqueue(identity, outcome);
-        }
+        let _ = self.enqueue_background_save(path, true);
         true
     }
 
@@ -512,35 +454,6 @@ impl crate::DesktopApp {
         };
         eprintln!("[save] request {outcome:?}");
         outcome
-    }
-
-    /// Register leave authority only for the exact Save-As request that was
-    /// accepted by `SaveSession`. `AlreadyPending` is not fresh authority: it
-    /// is valid only when the same fork was registered by its original
-    /// accepted enqueue.
-    fn confirm_collaboration_fork_enqueue(
-        &mut self,
-        identity: (u64, u64, u64, PathBuf),
-        outcome: EnqueueOutcome,
-    ) -> bool {
-        match outcome {
-            EnqueueOutcome::Started | EnqueueOutcome::Queued => {
-                if !self.collab_fork_saves.contains(&identity) {
-                    self.collab_fork_saves.push(identity);
-                }
-                true
-            }
-            EnqueueOutcome::AlreadyPending => {
-                let registered = self.collab_fork_saves.contains(&identity);
-                if !registered {
-                    eprintln!(
-                        "[save] refused unregistered pending save as collaboration fork: {}",
-                        identity.3.display()
-                    );
-                }
-                registered
-            }
-        }
     }
 
     /// Drain one non-blocking completion after `DesktopEvent::SaveReady`.
@@ -578,19 +491,6 @@ impl crate::DesktopApp {
             revision,
             result,
         } = completion;
-        let fork = self
-            .collab_fork_saves
-            .iter()
-            .position(|candidate| {
-                candidate.0 == document_epoch
-                    && candidate.1 == generation
-                    && candidate.2 == revision
-                    && candidate.3 == path
-            })
-            .map(|index| {
-                self.collab_fork_saves.remove(index);
-            })
-            .is_some();
         if let Err(error) = result {
             eprintln!("[save] {}: {error}", path.display());
             crate::persistence::show_error_dialog_public(
@@ -639,25 +539,6 @@ impl crate::DesktopApp {
         self.host.mark_editor_state_dirty();
         self.image_search.reset();
         self.rebind_git_session_for_current_path();
-        if fork {
-            // Leaving rotates the collab avatar generation (de-collab-host's
-            // `advance_generation`), which evicts every cached avatar byte
-            // from the process-global registry in de-editor-ui. de-collab-host
-            // guards its own tests against that, but its `#[cfg(test)]` guard
-            // is compiled OUT when this binary links it as a dependency —
-            // `cfg(test)` is only active for a crate's own test build. So the
-            // guard must live here, in the crate whose test binary actually
-            // runs this path: without it, a fork-save test's rotation landed
-            // between the image_decode_host avatar test's
-            // `note_pending_decode` and its first `pump`, evicted the avatar
-            // bytes, and the pump discarded the queued id as byte-less
-            // (linux-aarch64 CI, reproduced deterministically in a container
-            // by widening that window). Reentrant per thread; compiled out of
-            // production builds.
-            #[cfg(test)]
-            let _avatar_guard = crate::collab_avatar_host::lock_avatar_test_registry();
-            self.collab_runtime.leave(&mut self.host);
-        }
         true
     }
 }
@@ -681,13 +562,9 @@ fn can_copy_clean_bound_op(state: &EditorState, source: &Path, target: &Path) ->
             .is_some_and(|extension| extension.eq_ignore_ascii_case("op"))
 }
 
-fn collaboration_fork_target_is_safe(current_path: Option<&Path>, target: &Path) -> bool {
-    current_path.is_none_or(|current| paths_provably_distinct(current, target))
-}
-
 /// Resolve an existing path, or a not-yet-created leaf below an existing
 /// directory, to an absolute comparison identity. Ambiguous paths fail closed:
-/// a collaboration fork must prove that it cannot overwrite the shared path.
+/// a clean copy must prove that it cannot overwrite its own source.
 fn path_comparison_identity(path: &Path) -> Option<PathBuf> {
     match std::fs::canonicalize(path) {
         Ok(canonical) => return Some(canonical),
@@ -720,8 +597,8 @@ fn paths_provably_distinct(left: &Path, right: &Path) -> bool {
 fn paths_differ_on_platform(left: &Path, right: &Path) -> bool {
     // Conservatively reject case-only changes on the platforms commonly
     // backed by case-insensitive filesystems. Existing case-sensitive paths
-    // still canonicalize above; this may reject a valid fork but cannot let an
-    // equivalent shared path through.
+    // still canonicalize above; this may reject a valid copy but cannot let an
+    // equivalent source path through.
     !left
         .to_string_lossy()
         .eq_ignore_ascii_case(&right.to_string_lossy())

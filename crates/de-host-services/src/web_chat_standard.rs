@@ -223,23 +223,10 @@ pub fn stream_standard_turn<W: Write>(
     {
         let tick = {
             let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
-            // Through the gateway like every other daemon write: during a live
-            // session this housekeeping edit would be an unsequenced AI write.
-            // Skipping it only means the starter frame stays, which is strictly
-            // better than forking the shared document.
-            let gated = guard
-                .gate_daemon_mutation(
-                    de_editor_core::CollabGateAction::Document(
-                        de_editor_core::CollabDocumentMutation::NodeDelete,
-                    ),
-                    de_editor_core::CollabEditSource::Ai,
-                )
-                .is_ok();
-            // Also a document commit, so it needs the same instant of
-            // admission; a closed barrier simply skips the clear.
+            // A document commit, so it needs the same instant of admission as
+            // every other write; a closed barrier simply skips the clear.
             let starter_clear_pass = admit_document_write(write_barrier).ok();
-            if gated
-                && starter_clear_pass.is_some()
+            if starter_clear_pass.is_some()
                 && clear_live_starter_frame_for_design(&mut guard).is_some()
             {
                 snapshot = guard.editor.clone();
@@ -340,16 +327,6 @@ fn apply_request_snapshot(
             let loaded = de_pen_loader::load_canonical(doc_json)
                 .map_err(|e| WebChatStandardError::Document(e.to_string()))?;
             if guard.editor.doc != loaded.value {
-                // A whole-document swap during a live session is exactly what
-                // the collaboration protocol cannot sequence, so the gateway
-                // refuses it here rather than letting the AI route silently
-                // replace what peers are editing.
-                guard
-                    .gate_daemon_mutation(
-                        de_editor_core::CollabGateAction::ReplaceDocument,
-                        de_editor_core::CollabEditSource::Ai,
-                    )
-                    .map_err(WebChatStandardError::CollabRefused)?;
                 // The one instant this turn touches the document; refused
                 // outright once shutdown has closed the barrier.
                 let _write_pass = admit_document_write(write_barrier)?;
@@ -515,39 +492,25 @@ fn stream_modify_route<W: Write>(
         write_delta_event(out, &format!("\n{full_response}"))?;
         let (applied, tick) = {
             let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
-            // `apply_design_modification` writes a batch straight into the
-            // editor, so the gate runs before it rather than per command.
-            if guard
-                .gate_daemon_mutation(
-                    de_editor_core::CollabGateAction::Document(
-                        de_editor_core::CollabDocumentMutation::NodePropertyBatch,
-                    ),
-                    de_editor_core::CollabEditSource::Ai,
-                )
-                .is_err()
-            {
-                (0, None)
+            // Shutting down: the reply still streams, the document is left
+            // exactly as the flush will find it.
+            let admitted = admit_document_write(write_barrier).ok();
+            let (count, mutated) = if admitted.is_none() {
+                (0, false)
             } else {
-                // Shutting down: the reply still streams, the document is left
-                // exactly as the flush will find it.
-                let admitted = admit_document_write(write_barrier).ok();
-                let (count, mutated) = if admitted.is_none() {
-                    (0, false)
-                } else {
-                    crate::chat_canvas_tools::apply_design_modification(
-                        &mut guard.editor,
-                        &nodes,
-                        &target_frame_ids,
-                    )
-                };
-                let tick = if mutated {
-                    guard.version += 1;
-                    Some(guard.sse_tick())
-                } else {
-                    None
-                };
-                (count, tick)
-            }
+                crate::chat_canvas_tools::apply_design_modification(
+                    &mut guard.editor,
+                    &nodes,
+                    &target_frame_ids,
+                )
+            };
+            let tick = if mutated {
+                guard.version += 1;
+                Some(guard.sse_tick())
+            } else {
+                None
+            };
+            (count, tick)
         };
         if let Some(tick) = tick {
             hub.broadcast(tick);
@@ -760,9 +723,7 @@ impl DocSink for WebDesignDocSink<'_> {
         };
         let (applied, tick, snapshot) = {
             let mut guard = self.state.lock().unwrap_or_else(|p| p.into_inner());
-            let applied = guard
-                .apply_gated(cmd, de_editor_core::CollabEditSource::Ai)
-                .unwrap_or(false);
+            let applied = guard.editor.apply(cmd);
             let tick = if applied {
                 crate::design_session::fit_design_viewport_to_content(
                     &mut guard.editor,

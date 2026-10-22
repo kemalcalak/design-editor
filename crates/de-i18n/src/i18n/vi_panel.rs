@@ -246,14 +246,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
             "3:4, tám bảng: bảng con số lạnh, bảng cảm nhận ấm, xen kẽ nhau."
         }
         "fileMenu.newFromTemplate" => "Tạo mới từ mẫu",
-        "collab.ownerConfirm.title" => "Xác nhận bạn đang tham gia phiên của ai",
-        "collab.ownerConfirm.hint" => "Chưa có nội dung nào của phiên này được tải.",
-        "collab.ownerConfirm.account" => "Tài khoản đã xác minh",
-        "collab.ownerConfirm.device" => "Thiết bị đã xác minh",
-        "collab.ownerConfirm.claimedName" => "Tên do tài khoản này tự đặt (chưa xác minh)",
-        "collab.action.confirmOwner" => "Tham gia phiên này",
-        "collab.action.rejectOwner" => "Không tham gia",
-        "collab.error.ownerNotConfirmed" => "Bạn chưa xác nhận chủ phiên nên không tải gì cả.",
         "fileMenu.exportSlideshowHtml" => "Xuất trình chiếu HTML...",
         "fileMenu.exportPptx" => "Xuất PowerPoint...",
         "dialog.slideshowHtmlTitle" => "Xuất trình chiếu",
@@ -705,7 +697,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "tooltip.topbar.file" => "Tệp",
         "tooltip.topbar.import" => "Nhập",
         "tooltip.topbar.language" => "Ngôn ngữ",
-        "tooltip.topbar.collaboration" => "Cộng tác",
         "tooltip.topbar.preview" => "Xem trước",
         "tooltip.topbar.exitPreview" => "Thoát xem trước",
         "tooltip.topbar.account" => "Tài khoản",

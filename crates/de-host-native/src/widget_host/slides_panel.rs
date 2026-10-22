@@ -398,9 +398,6 @@ impl WidgetHostNative {
     /// the shared deck reorder so the rail can never write the deck order
     /// differently from the presentation that reads it.
     fn apply_slides_reorder(&mut self, board_id: &str, to: usize) {
-        if !self.collab_allows_document_mutation(de_editor_core::CollabDocumentMutation::NodeMove) {
-            return;
-        }
         de_editor_ui::widgets::deck_boards::apply_reorder(&mut self.editor_state, board_id, to);
     }
 

@@ -124,36 +124,7 @@ impl WidgetHost {
         if self.input_active() {
             return false;
         }
-        // `duplicate_selection` has no allocator twin, so a collaboration
-        // session drives `duplicate_selected_with_allocator` directly and
-        // pushes the undo snapshot by hand (native parity —
-        // `de-host-native/src/widget_host/keyboard_delete.rs`).
-        let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            if self.editor_state.selection.is_empty() {
-                Ok(None)
-            } else {
-                let snapshot = self.editor_state.snapshot_for_history();
-                let result = self
-                    .editor_state
-                    .duplicate_selected_with_allocator(allocator, 10.0);
-                if result.as_ref().is_ok_and(Option::is_some) {
-                    self.editor_state.history_push_past(snapshot);
-                }
-                result
-            }
-        } else {
-            Ok(
-                shared::duplicate_selection(&mut self.editor_state, &mut self.next_node_id)
-                    .then_some(self.editor_state.selection.anchor.clone()),
-            )
-        };
-        let dup = match result {
-            Ok(id) => id.is_some(),
-            Err(error) => {
-                self.show_collab_id_error(error);
-                return true;
-            }
-        };
+        let dup = shared::duplicate_selection(&mut self.editor_state, &mut self.next_node_id);
         if dup {
             self.mark_dirty();
         }
@@ -209,16 +180,6 @@ impl WidgetHost {
     }
 
     fn apply_input_select_all(&mut self) -> bool {
-        if self.editor_state.editor_ui.collab_join_input_active() {
-            if de_editor_ui::widgets::collab_ui::join_address_select_all(
-                &mut self.editor_state.editor_ui,
-                self.now_ms,
-            ) == Some(true)
-            {
-                self.mark_dirty();
-            }
-            return true;
-        }
         if self.apply_image_panel_select_all() {
             return true;
         }
@@ -447,40 +408,10 @@ impl WidgetHost {
         if self.input_active() {
             return false;
         }
-        // Same shape as `apply_duplicate`: no allocator twin for the
-        // shared helper, so the collaboration path calls the allocator
-        // mutator and pushes history itself.
-        let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            if self.editor_state.clipboard.is_empty() {
-                Ok(Vec::new())
-            } else {
-                let snapshot = self.editor_state.snapshot_for_history();
-                let result = self
-                    .editor_state
-                    .paste_clipboard_with_allocator(allocator, 10.0);
-                if result.as_ref().is_ok_and(|ids| !ids.is_empty()) {
-                    self.editor_state.history_push_past(snapshot);
-                }
-                result
-            }
-        } else {
-            let pasted = shared::paste_clipboard_at_default_offset(
-                &mut self.editor_state,
-                &mut self.next_node_id,
-            );
-            Ok(if pasted {
-                vec![self.editor_state.selection.anchor.clone()]
-            } else {
-                Vec::new()
-            })
-        };
-        let pasted = match result {
-            Ok(ids) => !ids.is_empty(),
-            Err(error) => {
-                self.show_collab_id_error(error);
-                return true;
-            }
-        };
+        let pasted = shared::paste_clipboard_at_default_offset(
+            &mut self.editor_state,
+            &mut self.next_node_id,
+        );
         if pasted {
             self.mark_dirty();
         }
@@ -488,10 +419,7 @@ impl WidgetHost {
     }
 
     pub fn apply_undo(&mut self) -> bool {
-        if self.editor_state.editor_ui.collab_join_input_active()
-            || self.editor_state.ui.layer_rename.is_some()
-            || self.editor_state.chat.focused
-        {
+        if self.editor_state.ui.layer_rename.is_some() || self.editor_state.chat.focused {
             return false;
         }
         if self.editor_state.undo() {
@@ -503,10 +431,7 @@ impl WidgetHost {
     }
 
     pub fn apply_redo(&mut self) -> bool {
-        if self.editor_state.editor_ui.collab_join_input_active()
-            || self.editor_state.ui.layer_rename.is_some()
-            || self.editor_state.chat.focused
-        {
+        if self.editor_state.ui.layer_rename.is_some() || self.editor_state.chat.focused {
             return false;
         }
         if self.editor_state.redo() {
@@ -547,11 +472,6 @@ impl WidgetHost {
             return false;
         }
         if self.editor_state.editor_ui.prompt_center.open {
-            return true;
-        }
-        // The collaboration invite field must keep ownership of editor
-        // shortcuts while the user is typing.
-        if self.editor_state.editor_ui.collab_join_input_active() {
             return true;
         }
         if key.eq_ignore_ascii_case("k") {

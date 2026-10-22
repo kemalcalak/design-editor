@@ -268,14 +268,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
             "3:4 แปดแผ่น แผ่นตัวเลขโทนเย็น แผ่นความรู้สึกโทนอุ่น สลับกันไป"
         }
         "fileMenu.newFromTemplate" => "สร้างใหม่จากเทมเพลต",
-        "collab.ownerConfirm.title" => "ยืนยันว่าคุณกำลังเข้าร่วมกับใคร",
-        "collab.ownerConfirm.hint" => "ยังไม่มีเนื้อหาใดจากเซสชันนี้ถูกโหลด",
-        "collab.ownerConfirm.account" => "บัญชีที่ยืนยันแล้ว",
-        "collab.ownerConfirm.device" => "อุปกรณ์ที่ยืนยันแล้ว",
-        "collab.ownerConfirm.claimedName" => "ชื่อที่บัญชีนี้ตั้งเอง (ยังไม่ยืนยัน)",
-        "collab.action.confirmOwner" => "เข้าร่วมเซสชันนี้",
-        "collab.action.rejectOwner" => "ไม่เข้าร่วม",
-        "collab.error.ownerNotConfirmed" => "คุณไม่ได้ยืนยันผู้จัด จึงไม่มีการโหลดข้อมูลใด",
         "fileMenu.exportSlideshowHtml" => "ส่งออกสไลด์โชว์เป็น HTML...",
         "fileMenu.exportPptx" => "ส่งออกเป็น PowerPoint...",
         "dialog.slideshowHtmlTitle" => "ส่งออกสไลด์โชว์",
@@ -701,7 +693,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "tooltip.topbar.file" => "ไฟล์",
         "tooltip.topbar.import" => "นำเข้า",
         "tooltip.topbar.language" => "ภาษา",
-        "tooltip.topbar.collaboration" => "การทำงานร่วมกัน",
         "tooltip.topbar.preview" => "ตัวอย่าง",
         "tooltip.topbar.exitPreview" => "ออกจากตัวอย่าง",
         "tooltip.topbar.account" => "บัญชี",

@@ -396,21 +396,3 @@ pub fn account_menu_rect(
     rect.origin.x = rect.origin.x.clamp(8.0, max_x);
     rect
 }
-
-/// Collaboration panel rect, hung from the TopBar collaboration chip.
-pub fn collaboration_panel_rect(
-    state: &EditorState,
-    panel: &crate::widgets::CollabPanel<'_>,
-    viewport_w: f32,
-    viewport_h: f32,
-) -> Rect {
-    let top_bar = Rect::xywh(0.0, 0.0, viewport_w, TOP_BAR_HEIGHT);
-    let anchor = TopBar::for_editor_ui(&state.editor_ui).collaboration_chip_rect_estimated(top_bar);
-    panel.rect_at(
-        anchor,
-        Rect {
-            origin: Point2D::ZERO,
-            size: Point2D::new(viewport_w, viewport_h),
-        },
-    )
-}

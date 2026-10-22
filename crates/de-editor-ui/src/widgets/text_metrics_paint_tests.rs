@@ -206,7 +206,6 @@ fn top_bar_holds_the_bar_in_the_painted_family() {
             ..Default::default()
         };
         ui.locale = locale;
-        ui.collab.availability = de_editor_core::CollabAvailability::Ready;
         let bar = TopBar::for_editor_ui(&ui);
         let rect = Rect {
             origin: Point2D::ZERO,

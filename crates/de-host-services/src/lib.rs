@@ -53,8 +53,6 @@ pub mod cli_probe_error;
 mod cli_probe_support;
 pub mod cli_provider_probe;
 mod cli_resolver_windows;
-pub(crate) mod collab_avatar_proxy;
-pub mod collab_blocking;
 mod copilot_sdk_probe;
 #[cfg(test)]
 mod design_agent_reflow_tests;

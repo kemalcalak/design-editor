@@ -37,7 +37,6 @@ fn regions_round_trip_their_persisted_spelling() {
 
 #[test]
 fn an_unknown_or_absent_region_is_china_the_product_default() {
-    // Matches `CollabRelayRegion::default()`, so the two surfaces agree.
     assert_eq!(Region::default(), Region::Cn);
     for raw in ["", "  ", "CN", "Global", "eu", "null", "undefined"] {
         assert_eq!(Region::from_stored(raw), Region::Cn, "for {raw:?}");

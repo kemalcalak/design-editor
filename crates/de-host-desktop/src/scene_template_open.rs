@@ -63,14 +63,6 @@ pub(crate) fn drain_pending_scene_template(
     if !de_editor_core::blank_starter::active_page_is_blank_starter(host.editor_state()) {
         return append_scene_template(host, &template_id, &source, current_path, window);
     }
-    // Replacing the document runs the same collaboration gate as File > New;
-    // the panel's own press only opened a panel, which needed no gate.
-    if !host.gate_collaboration_action(
-        de_editor_core::CollabGateAction::ReplaceDocument,
-        de_editor_core::CollabEditSource::User,
-    ) {
-        return false;
-    }
     let locale = host.editor_state().editor_ui.locale;
     let mut state = match de_host_services::doc_io::load_editor_state_from_source(&source, locale) {
         Ok(state) => state,
@@ -106,19 +98,6 @@ fn append_scene_template(
     current_path: &Option<PathBuf>,
     window: Option<&winit::window::Window>,
 ) -> bool {
-    // A template arrives as a batch of subtrees plus the variables they
-    // reference — neither of which the collaboration protocol can express, so
-    // a shared session refuses it rather than diverging the peers.
-    if !host.gate_collaboration_action(
-        de_editor_core::CollabGateAction::Document(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::BulkWrite,
-            ),
-        ),
-        de_editor_core::CollabEditSource::User,
-    ) {
-        return false;
-    }
     let Some(boards) = template_boards(source, template_id) else {
         eprintln!("[template] {template_id}: embedded document did not parse");
         return false;

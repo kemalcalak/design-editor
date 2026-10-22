@@ -28,25 +28,24 @@ if rg -U -n --pcre2 \
   exit 1
 fi
 
-for file in \
-  crates/de-collab-host/src/jwks.rs \
-  crates/de-collab-host/src/runtime/relay_bootstrap.rs \
-  crates/de-collab-relay-control-plane/src/http_client.rs; do
-  if ! rg -U -q 'Client::builder\(\)\s*\.use_rustls_tls\(\)' "$file"; then
-    echo "error: $file must pin its aliased reqwest Client builder to rustls" >&2
-    exit 1
-  fi
-done
-
-if rg -n 'connect_async(_with_config)?\(' \
-  crates/de-acp/src/client.rs crates/de-collab-relay-client/src/session.rs; then
+if rg -n 'connect_async(_with_config)?\(' crates/de-acp/src/client.rs; then
   echo "error: WebSocket clients must pass an explicit rustls Connector" >&2
   exit 1
 fi
 
-for file in crates/de-acp/src/client.rs crates/de-collab-relay-client/src/session.rs; do
+for file in crates/de-acp/src/client.rs; do
   if ! rg -q 'connect_async_tls_with_config' "$file"; then
     echo "error: $file is missing the explicit TLS connector path" >&2
+    exit 1
+  fi
+done
+
+# Public HTTPS dials (user-configured AI endpoints, avatars) must bypass
+# ambient proxies and pin the DNS answer they validated, so a hostile resolver
+# or proxy cannot redirect a credentialed request.
+for literal in '.no_proxy()' '.resolve_to_addrs'; do
+  if ! rg -q -F "$literal" crates/de-chat-agent/src/provider_dial.rs; then
+    echo "error: crates/de-chat-agent/src/provider_dial.rs must keep $literal" >&2
     exit 1
   fi
 done

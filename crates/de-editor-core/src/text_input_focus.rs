@@ -63,11 +63,6 @@ impl EditorState {
         if self.editor_ui.chat_model_picker.open {
             return Some(&self.editor_ui.chat_model_picker_input);
         }
-        // The collaboration Join field rides the visibility-aware focus
-        // predicate so a stale bit never claims blink/clipboard ownership.
-        if self.editor_ui.collab_join_input_active() {
-            return Some(&self.editor_ui.collab.panel.join_input);
-        }
         if self.chat.focused {
             return Some(&self.chat.input);
         }
@@ -138,9 +133,6 @@ impl EditorState {
         }
         if self.editor_ui.chat_model_picker.open {
             return Some(&mut self.editor_ui.chat_model_picker_input);
-        }
-        if self.editor_ui.collab_join_input_active() {
-            return Some(&mut self.editor_ui.collab.panel.join_input);
         }
         if self.chat.focused {
             return Some(&mut self.chat.input);

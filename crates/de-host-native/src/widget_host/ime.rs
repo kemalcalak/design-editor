@@ -78,15 +78,6 @@ impl WidgetHostNative {
             return had;
         }
         if self.editor_state.ui.text_editing.is_some() {
-            if !text.is_empty()
-                && !self.collab_allows_document_mutation(
-                    de_editor_core::CollabDocumentMutation::NodeProperty(
-                        de_editor_core::CollabNodeField::Content,
-                    ),
-                )
-            {
-                return true;
-            }
             let changed = if text.is_empty() {
                 self.editor_state.text_edit_clear_composition()
             } else {
@@ -172,15 +163,6 @@ impl WidgetHostNative {
             return self.apply_settings_text_payload(text);
         }
         if self.editor_state.ui.text_editing.is_some() {
-            if !text.is_empty()
-                && !self.collab_allows_document_mutation(
-                    de_editor_core::CollabDocumentMutation::NodeProperty(
-                        de_editor_core::CollabNodeField::Content,
-                    ),
-                )
-            {
-                return true;
-            }
             let consumed = if text.is_empty() {
                 self.editor_state.text_edit_clear_composition()
             } else {

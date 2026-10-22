@@ -151,7 +151,7 @@ impl WidgetHostNative {
         let avatar_revision = avatar_source_revision(avatar_url.as_deref());
         let avatar_changed = self.auth_account_avatar_revision != Some(avatar_revision);
         if avatar_changed {
-            let _ = de_editor_ui::collab_avatar_runtime::register_account_avatar_url(
+            let _ = de_editor_ui::account_avatar_runtime::register_account_avatar_url(
                 avatar_url.as_deref(),
             );
             self.auth_account_avatar_revision = Some(avatar_revision);
@@ -253,7 +253,7 @@ impl WidgetHostNative {
                     self.editor_state.editor_ui.account = AccountState::Anonymous;
                 }
                 if avatar_changed {
-                    let _ = de_editor_ui::collab_avatar_runtime::register_account_avatar_url(None);
+                    let _ = de_editor_ui::account_avatar_runtime::register_account_avatar_url(None);
                 }
                 account_changed || avatar_changed
             }
@@ -308,7 +308,7 @@ impl WidgetHostNative {
     pub(in crate::widget_host) fn forget_auth_session_profile(&mut self) {
         self.auth_session_refresh_deadline = None;
         self.auth_account_avatar_revision = None;
-        let _ = de_editor_ui::collab_avatar_runtime::register_account_avatar_url(None);
+        let _ = de_editor_ui::account_avatar_runtime::register_account_avatar_url(None);
     }
 }
 
@@ -363,11 +363,11 @@ mod tests {
     fn forgetting_a_session_clears_avatar_work_and_comparison_state() {
         let mut host = WidgetHostNative::new();
         assert!(
-            de_editor_ui::collab_avatar_runtime::register_account_avatar_url(Some(
+            de_editor_ui::account_avatar_runtime::register_account_avatar_url(Some(
                 "https://cdn.example/profile.png",
             ))
         );
-        assert!(de_editor_ui::collab_avatar_runtime::has_pending_collab_avatar_requests());
+        assert!(de_editor_ui::account_avatar_runtime::has_pending_account_avatar_requests());
         host.auth_account_avatar_revision = Some(avatar_source_revision(Some(
             "https://cdn.example/profile.png",
         )));
@@ -377,7 +377,7 @@ mod tests {
 
         assert!(host.auth_account_avatar_revision.is_none());
         assert!(!host.auth_flow_active());
-        assert!(!de_editor_ui::collab_avatar_runtime::has_pending_collab_avatar_requests());
+        assert!(!de_editor_ui::account_avatar_runtime::has_pending_account_avatar_requests());
     }
 
     #[test]

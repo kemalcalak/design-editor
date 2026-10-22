@@ -17,7 +17,7 @@
 //! query describes them, and whether the slot's acquisition mode is stock
 //! search or AI generation. `apply` owns the write-back: how a resolved url
 //! lands on an image node, a placeholder frame, or an empty image-fill
-//! container, gated by the collaboration external-assets rule.
+//! container.
 
 mod apply;
 mod fallback_policy;
@@ -25,7 +25,7 @@ mod fallback_policy;
 pub mod net;
 mod targets;
 
-pub use apply::{apply_result, collaboration_image_result_gate};
+pub use apply::apply_result;
 pub use fallback_policy::{
     apply_image_fallback_policy_to_node, fallback_request_mode, fallback_search_query_for_host,
     icon_name_for_query, image_fallback_policy, image_fallback_policy_with_widths,

@@ -230,8 +230,6 @@ jobs:
         shell: bash
         env:
           DESIGN_EDITOR_RELEASE_TARGET: ${{ matrix.target }}
-          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_CN }}
-          DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL: ${{ secrets.DESIGN_EDITOR_BUILD_COLLAB_BOOTSTRAP_URL_GLOBAL }}
         run: scripts/build-rust-release-host.sh
       - name: Package archives (unix)
         if: matrix.archive == 'tar.gz'
@@ -294,8 +292,6 @@ jobs:
             export MACOS_SIGN_IDENTITY
           fi
           bash scripts/bundle-macos.sh
-          bash tools/check-macos-bundle-plist.sh \
-            "target/${{ matrix.target }}/release/bundle/osx/Design Editor.app/Contents/Info.plist"
       - name: Notarize macOS app
         if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true'
         shell: bash

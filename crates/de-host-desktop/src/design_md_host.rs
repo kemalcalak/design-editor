@@ -342,16 +342,6 @@ impl DesktopApp {
     /// Pick a `.md` file, parse it into a `DesignMdSpec`, and bind it
     /// to the open document (undoable).
     fn import_design_md(&mut self, locale: de_editor_core::Locale) -> bool {
-        if !self.host.gate_collaboration_action(
-            de_editor_core::CollabGateAction::Document(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::RootMetadata,
-                ),
-            ),
-            de_editor_core::CollabEditSource::Import,
-        ) {
-            return true;
-        }
         let picked = rfd::FileDialog::new()
             .set_title(de_i18n::translate(locale, "designMd.import"))
             .add_filter("Markdown", &["md", "markdown"])
@@ -366,18 +356,6 @@ impl DesktopApp {
                 return false;
             }
         };
-        // The native picker yielded the event loop; re-check the live role
-        // immediately before the document sink.
-        if !self.host.gate_collaboration_action(
-            de_editor_core::CollabGateAction::Document(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::RootMetadata,
-                ),
-            ),
-            de_editor_core::CollabEditSource::Import,
-        ) {
-            return true;
-        }
         let spec = de_editor_core::parse_design_md(&markdown);
         // Snapshot first so the import is a single undo step.
         let snap = self.host.editor_state().snapshot_for_history();
@@ -478,16 +456,6 @@ impl DesktopApp {
     }
 
     fn apply_generated_design_md(&mut self, markdown: String) {
-        if !self.host.gate_collaboration_action(
-            de_editor_core::CollabGateAction::Document(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::RootMetadata,
-                ),
-            ),
-            de_editor_core::CollabEditSource::Ai,
-        ) {
-            return;
-        }
         let spec = de_editor_core::parse_design_md(&markdown);
         let snap = self.host.editor_state().snapshot_for_history();
         let state = self.host.editor_state_mut();

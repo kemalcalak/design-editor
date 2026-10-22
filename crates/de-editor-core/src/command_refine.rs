@@ -20,7 +20,7 @@ pub struct RefineFix {
 }
 
 impl EditorState {
-    /// Allocator-aware document refine used by command collaboration paths.
+    /// Allocator-aware document refine used by the command dispatch path.
     pub(crate) fn cmd_refine_design_with_allocator(
         &mut self,
         root_id: &NodeId,

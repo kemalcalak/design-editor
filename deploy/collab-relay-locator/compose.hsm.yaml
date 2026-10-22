@@ -1,5 +1,0 @@
-services:
-  locator:
-    depends_on:
-      locator-hsm:
-        condition: service_healthy

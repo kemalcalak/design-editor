@@ -42,16 +42,6 @@ const PEN_DOUBLE_CLICK_MS: u64 = 400;
 const PEN_DOUBLE_CLICK_PX: f32 = 4.0;
 
 impl WidgetHostNative {
-    /// Pen authoring and committed-path anchor edits change `anchors`, `d`,
-    /// and `closed`. Those fields are intentionally outside the M1
-    /// deterministic property-diff set, so every native entry point uses one
-    /// typed fail-closed policy seam while collaboration is bound.
-    pub(in crate::widget_host) fn collab_allows_pen_path_mutation(&mut self) -> bool {
-        self.collab_allows_document_mutation(de_editor_core::CollabDocumentMutation::Unsupported(
-            de_editor_core::CollabUnsupportedFeature::UnsupportedNodeProperty,
-        ))
-    }
-
     /// Canvas press with the Pen tool active. Order mirrors TS:
     /// anchor-edit hit first (idle pen only), then close-path /
     /// double-click-finish / add-anchor for an in-flight session.
@@ -62,9 +52,6 @@ impl WidgetHostNative {
         viewport_w: f32,
         viewport_h: f32,
     ) -> bool {
-        if !self.collab_allows_pen_path_mutation() {
-            return true;
-        }
         if self.editor_state.ui.pen_in_progress.is_none()
             && self.try_path_anchor_press(x, y, viewport_w, viewport_h)
         {
@@ -98,18 +85,9 @@ impl WidgetHostNative {
             // 3. Plain press appends an anchor (+ arms the handle drag).
             self.editor_state.add_pen_point(doc);
         } else {
-            let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-                self.editor_state
-                    .start_pen_path_with_allocator(allocator, doc)
-            } else {
-                Ok(self
-                    .editor_state
-                    .start_pen_path(&mut self.next_node_id, doc))
-            };
-            if let Err(error) = result {
-                self.show_collab_id_error(error);
-                return true;
-            }
+            let _ = self
+                .editor_state
+                .start_pen_path(&mut self.next_node_id, doc);
         }
         self.editor_state.ui.pen_last_press = Some((self.now_ms, x, y));
         self.mark_dirty();
@@ -132,9 +110,6 @@ impl WidgetHostNative {
         else {
             return false;
         };
-        if !self.collab_allows_pen_path_mutation() {
-            return true;
-        }
         let doc_point = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);
         let ec_id = de_editor_core::NodeId::new(&node_id);
         let scene_node = self
@@ -200,10 +175,6 @@ impl WidgetHostNative {
         use super::AnchorDragTarget;
         if self.path_anchor_drag.is_none() {
             return false;
-        }
-        if !self.collab_allows_pen_path_mutation() {
-            self.path_anchor_drag = None;
-            return true;
         }
         let doc = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);
         let (id, idx, target, anchor_doc, start, grab, shift, already_moved) = {
@@ -294,9 +265,6 @@ impl WidgetHostNative {
     /// updates.
     pub(in crate::widget_host) fn apply_pen_cursor_move(&mut self, x: f32, y: f32) -> Option<bool> {
         self.editor_state.ui.pen_in_progress.as_ref()?;
-        if self.editor_state.ui.pen_dragging_handle && !self.collab_allows_pen_path_mutation() {
-            return Some(true);
-        }
         let doc = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);
         if self.editor_state.ui.pen_dragging_handle {
             let _ = self
@@ -324,9 +292,6 @@ impl WidgetHostNative {
     /// `None` when no session is active.
     pub(in crate::widget_host) fn apply_pen_enter(&mut self) -> Option<bool> {
         self.editor_state.ui.pen_in_progress.as_ref()?;
-        if !self.collab_allows_pen_path_mutation() {
-            return Some(true);
-        }
         let ok = self.editor_state.finish_pen_path();
         if ok {
             self.mark_dirty();
@@ -340,9 +305,6 @@ impl WidgetHostNative {
     pub(in crate::widget_host) fn apply_pen_backspace(&mut self) -> bool {
         if self.editor_state.ui.pen_in_progress.is_none() {
             return false;
-        }
-        if !self.collab_allows_pen_path_mutation() {
-            return true;
         }
         let handled = self.editor_state.pen_backspace();
         if handled {
@@ -362,10 +324,6 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
-        if self.editor_state.ui.pen_in_progress.is_some() && !self.collab_allows_pen_path_mutation()
-        {
-            return true;
-        }
         if self.editor_state.cancel_pen_path() {
             self.editor_state.tool = de_editor_core::Tool::Select;
             self.mark_dirty();
@@ -381,12 +339,6 @@ impl WidgetHostNative {
         &mut self,
         new_tool: de_editor_core::Tool,
     ) -> bool {
-        if !matches!(new_tool, de_editor_core::Tool::Pen)
-            && self.editor_state.ui.pen_in_progress.is_some()
-            && !self.collab_allows_pen_path_mutation()
-        {
-            return false;
-        }
         if !matches!(new_tool, de_editor_core::Tool::Pen) {
             let _ = self.editor_state.cancel_pen_path();
         }
@@ -459,10 +411,6 @@ impl WidgetHostNative {
         let Some(action) = action else {
             return true;
         };
-        if !self.collab_allows_pen_path_mutation() {
-            self.editor_state.ui.path_anchor_menu = None;
-            return true;
-        }
         use jian_ops_schema::node::PenPathPointType as P;
         let id = state.node_id.clone();
         let idx = state.anchor_index;

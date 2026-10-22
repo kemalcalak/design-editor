@@ -24,8 +24,6 @@
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# shellcheck source=macos-local-network-plist.sh
-. "$ROOT/tools/macos-local-network-plist.sh"
 CANONICAL_VERSION="$("$ROOT/scripts/workspace-version.sh")"
 APP_VERSION="${DESIGN_EDITOR_VERSION:-$CANONICAL_VERSION}"
 if [ "$APP_VERSION" != "$CANONICAL_VERSION" ]; then
@@ -93,10 +91,6 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </dict>
 </plist>
 PLIST
-
-PLIST="$APP/Contents/Info.plist"
-design_editor_apply_macos_local_network_plist "$PLIST"
-bash "$ROOT/tools/check-macos-bundle-plist.sh" "$PLIST"
 
 echo "bundle-macos: assembled $APP (bundle id $BUNDLE_ID)"
 

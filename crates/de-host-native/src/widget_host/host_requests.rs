@@ -26,13 +26,6 @@ impl WidgetHostNative {
         else {
             return false;
         };
-        if !self.collab_allows_document_mutation(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::UIKit,
-            ),
-        ) {
-            return true;
-        }
         let dims = self
             .editor_state
             .ui_kits
@@ -47,29 +40,10 @@ impl WidgetHostNative {
             canvas_geometry::canvas_centre_doc_point(&self.editor_state, viewport_w, viewport_h);
         let dx = doc.x as f64 - cw_comp / 2.0;
         let dy = doc.y as f64 - ch_comp / 2.0;
-        let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            self.editor_state
-                .instantiate_kit_component_under_parent_with_allocator(
-                    &kit_id,
-                    &comp_id,
-                    &de_editor_core::NodeId::NONE,
-                    dx,
-                    dy,
-                    None,
-                    allocator,
-                )
-        } else {
-            Ok(self
-                .editor_state
-                .instantiate_kit_component(&kit_id, &comp_id, dx, dy))
-        };
-        let inserted = match result {
-            Ok(id) => id.is_some(),
-            Err(error) => {
-                self.show_collab_id_error(error);
-                return true;
-            }
-        };
+        let inserted = self
+            .editor_state
+            .instantiate_kit_component(&kit_id, &comp_id, dx, dy)
+            .is_some();
         if inserted {
             self.mark_dirty();
             true
@@ -90,13 +64,6 @@ impl WidgetHostNative {
         use de_editor_core::PenNodeExt;
         if nodes.is_empty() {
             return false;
-        }
-        if !self.collab_allows_document_mutation(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-            ),
-        ) {
-            return true;
         }
         // Union of the incoming roots' own bounds — the paste centres
         // this box on the canvas viewport centre.
@@ -127,22 +94,11 @@ impl WidgetHostNative {
         let mut new_ids = Vec::with_capacity(nodes.len());
         let mut clones = Vec::with_capacity(nodes.len());
         for node in &nodes {
-            let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-                de_editor_core::walkers::deep_clone_with_allocator(node, allocator, &mut taken)
-            } else {
-                Ok(de_editor_core::walkers::deep_clone_with_new_ids(
-                    node,
-                    &mut self.next_node_id,
-                    &mut taken,
-                ))
-            };
-            let mut clone = match result {
-                Ok(clone) => clone,
-                Err(error) => {
-                    self.show_collab_id_error(error);
-                    return true;
-                }
-            };
+            let mut clone = de_editor_core::walkers::deep_clone_with_new_ids(
+                node,
+                &mut self.next_node_id,
+                &mut taken,
+            );
             de_editor_core::walkers::translate_subtree(&mut clone, dx, dy);
             new_ids.push(de_editor_core::NodeId::new(clone.base().id.clone()));
             clones.push(clone);

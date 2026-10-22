@@ -29,10 +29,8 @@ node_modules/**
 **/*.jks
 **/*.keystore
 **/*.kdbx
-**/relay-x25519-keys*.json
 **/*private-keys*.json
 **/*private_keys*.json
-**/locator-signing-key*.json
 **/.ssh
 **/.ssh/**
 **/.npmrc

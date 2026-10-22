@@ -143,9 +143,6 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
             guard.allow_origins = allow_origins;
         }
     }
-    // The collaboration pump. It observes `shutdown` itself, so it retires
-    // within one tick of the daemon being asked to stop.
-    collab_driver::spawn(&state, &hub, &shutdown);
     for stream in listener.incoming() {
         if shutdown.load(Ordering::Acquire) {
             break;

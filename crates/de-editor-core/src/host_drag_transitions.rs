@@ -234,16 +234,15 @@ pub fn activate_node_drag_with_allocator(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::id_allocator::{NamespacedIdAllocator, PeerNamespace};
+    use crate::id_allocator::SequentialIdAllocator;
     use crate::test_support::{rect, state_with};
 
     #[test]
-    fn allocator_aware_alt_drag_uses_session_namespace() {
+    fn allocator_aware_alt_drag_uses_the_supplied_allocator() {
         let mut state = state_with(vec![rect("n1", "Rectangle", 1.0, 2.0, 10.0, 10.0)]);
         state.set_single_selection(NodeId::new("n1"));
         state.editor_ui.last_canvas_click = Some((NodeId::new("n1"), 10));
-        let namespace = PeerNamespace::try_from("drag-peer").unwrap();
-        let mut allocator = NamespacedIdAllocator::new(namespace, 0);
+        let mut allocator = SequentialIdAllocator::new(500);
 
         let activation =
             activate_node_drag_with_allocator(&mut state, &mut allocator, true, 3.0, 4.0).unwrap();
@@ -251,7 +250,7 @@ mod tests {
         assert!(activation.duplicated);
         assert_eq!(activation.option_drag_source_ids, vec![NodeId::new("n1")]);
         assert_eq!(state.selection.set.len(), 1);
-        assert!(state.selection.anchor.as_str().starts_with("c_drag-peer_"));
+        assert_eq!(state.selection.anchor, NodeId::new("n500"));
         assert!(state.editor_ui.last_canvas_click.is_none());
     }
 
@@ -263,8 +262,7 @@ mod tests {
         let before_doc = state.doc.clone();
         let before_selection = state.selection.clone();
         let before_click = state.editor_ui.last_canvas_click.clone();
-        let namespace = PeerNamespace::try_from("drag-peer").unwrap();
-        let mut allocator = NamespacedIdAllocator::new(namespace, u64::MAX);
+        let mut allocator = SequentialIdAllocator::new(u64::MAX);
 
         let result = activate_node_drag_with_allocator(&mut state, &mut allocator, true, 3.0, 4.0);
 

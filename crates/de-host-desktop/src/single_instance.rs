@@ -70,8 +70,8 @@ pub struct PrimaryHandle {
 
 /// Run the gate. `initial_file` is the document parsed from argv, if any.
 /// Resolve the guard port. Debug builds accept `DESIGN_EDITOR_DEV_INSTANCE_PORT`
-/// so a second dev instance can run side-by-side (e.g. collaboration testing
-/// with two accounts via two `HOME` directories); release builds keep the
+/// so a second dev instance can run side-by-side (e.g. testing with two
+/// accounts via two `HOME` directories); release builds keep the
 /// fixed port so end users always get single-instance behaviour.
 fn instance_port() -> u16 {
     #[cfg(any(test, debug_assertions))]

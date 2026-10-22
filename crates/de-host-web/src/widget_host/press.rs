@@ -63,29 +63,13 @@ impl WidgetHost {
         action: de_editor_ui::widgets::layer_context_menu::LayerContextAction,
         target: de_editor_core::ui_draft::LayerContextTarget,
     ) {
-        let step = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            match press_flow::apply_layer_context_action_with_allocator(
-                &mut self.editor_state,
-                allocator,
-                action,
-                target,
-                self.now_ms,
-            ) {
-                Ok(step) => step,
-                Err(error) => {
-                    self.show_collab_id_error(error);
-                    return;
-                }
-            }
-        } else {
-            press_flow::apply_layer_context_action(
-                &mut self.editor_state,
-                &mut self.next_node_id,
-                action,
-                target,
-                self.now_ms,
-            )
-        };
+        let step = press_flow::apply_layer_context_action(
+            &mut self.editor_state,
+            &mut self.next_node_id,
+            action,
+            target,
+            self.now_ms,
+        );
         match step {
             LayerContextStep::Done => {}
             LayerContextStep::Group => {

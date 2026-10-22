@@ -67,16 +67,6 @@ pub(crate) fn finalize_design_session_if_needed(
     if !session.is_design_loop() || session.loop_finalized() {
         return;
     }
-    if !host.gate_collaboration_action(
-        de_editor_core::CollabGateAction::Document(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::BulkWrite,
-            ),
-        ),
-        de_editor_core::CollabEditSource::Ai,
-    ) {
-        return;
-    }
     let state = host.editor_state_mut();
     de_orchestrator::apply_loop_finalize(state);
     // Same promise-delivery marking the normal finalize op gets (see
@@ -228,28 +218,6 @@ fn agent_message_index(
         })
 }
 
-fn allow_ai_bulk_write(host: &mut WidgetHostNative) -> bool {
-    host.gate_collaboration_action(
-        de_editor_core::CollabGateAction::Document(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::BulkWrite,
-            ),
-        ),
-        de_editor_core::CollabEditSource::Ai,
-    )
-}
-
-fn collaboration_ai_rejection() -> ChatToolResult {
-    ChatToolResult {
-        content: serde_json::json!({
-            "success": false,
-            "error": "AI document mutation is unavailable during collaboration"
-        })
-        .to_string(),
-        is_error: true,
-    }
-}
-
 /// Execute one pump cycle's captured canvas tool requests against the live
 /// `EditorState`.
 ///
@@ -291,18 +259,6 @@ fn execute_tool_requests(
                 .ok()
                 .and_then(|v| v.get("checkOnly").and_then(|b| b.as_bool()))
                 .unwrap_or(false);
-            if !check_only && !allow_ai_bulk_write(host) {
-                let result = collaboration_ai_rejection();
-                let state = host.editor_state_mut();
-                changed |= attach_tool_result_to_transcript_with(
-                    state.chat.run_tab_mut(running_tab),
-                    &req.name,
-                    &result,
-                    agent_identity,
-                );
-                let _ = req.ack.send(result);
-                continue;
-            }
             let state = host.editor_state_mut();
             // The quality tally is a by-product of the REAL finalize only —
             // the `checkOnly` probe runs no repair pass, so it must report an
@@ -389,21 +345,6 @@ fn execute_tool_requests(
                 .to_string(),
                 is_error: false,
             });
-            continue;
-        }
-        // AI/MCP document tools are intentionally disabled while a shared
-        // session is bound. Re-check at the UI-thread sink because this
-        // request may have been produced before a Start/Join transition.
-        if !allow_ai_bulk_write(host) {
-            let result = collaboration_ai_rejection();
-            let state = host.editor_state_mut();
-            changed |= attach_tool_result_to_transcript_with(
-                state.chat.run_tab_mut(running_tab),
-                &req.name,
-                &result,
-                agent_identity,
-            );
-            let _ = req.ack.send(result);
             continue;
         }
         let state = host.editor_state_mut();

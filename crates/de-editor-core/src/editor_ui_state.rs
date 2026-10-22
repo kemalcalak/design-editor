@@ -95,12 +95,6 @@ pub struct EditorUiState {
     /// to `1` (serde default), matching `ChatState::default().agent_team_size`.
     pub preferred_agent_team_size: u32,
 
-    // --- Collaboration ---------------------------------------------
-    /// Sanitized collaboration display state shared by native and web
-    /// widgets. Transport handles, tickets, subjects, and device ids never
-    /// enter this paint-state projection.
-    pub collab: crate::collab_ui_state::CollabUiState,
-
     // --- File menu --------------------------------------------------
     /// File-menu dropdown open (anchored under folder + chevron).
     pub file_menu_open: bool,

@@ -11,6 +11,7 @@
 )]
 
 mod a11y;
+mod account_avatar_host;
 mod acp_agent_probe_host;
 mod agent_connect_store;
 mod app_handler;
@@ -26,8 +27,6 @@ mod clipboard;
 mod codegen_export;
 mod codegen_input;
 mod codegen_session;
-mod collab_avatar_host;
-mod collab_runtime;
 mod commit_diff_host;
 mod commit_diff_semantic;
 mod cursor_icon;
@@ -135,9 +134,6 @@ type PendingHtmlPaste = (u64, std::sync::mpsc::Receiver<HtmlPasteResult>);
 #[derive(Clone, Copy, Debug)]
 enum DesktopEvent {
     McpWake,
-    /// A bounded collaboration network worker queued typed input for the
-    /// GUI-owned session/editor actor.
-    CollabWake,
     /// A background image decode completed and can be installed.
     ImageDecodeReady,
     /// A second launch forwarded a document to this instance (see
@@ -227,9 +223,6 @@ struct DesktopApp {
     /// saves serialized prevents an older snapshot from committing after a
     /// newer Save request to the same path.
     save_session: save_session::SaveSession,
-    /// Generation-scoped Save-As requests started while collaboration was
-    /// bound. A successful live acknowledgement detaches into the saved fork.
-    collab_fork_saves: Vec<(u64, u64, u64, PathBuf)>,
     error: Option<SharedSkiaError>,
     /// Design-loop canvas indicator — tracks the active agent epoch,
     /// colour/name identity, and initial frame set. `None` when no
@@ -322,18 +315,15 @@ struct DesktopApp {
     /// canvas painter recorded as cache misses — fetched bytes land in
     /// the painter's shared byte cache so the next frame draws them.
     remote_images: remote_image_host::RemoteImageSession,
-    /// Verified collaboration profile images. Encoded bytes remain in an
+    /// The signed-in account's profile image. Encoded bytes remain in an
     /// ephemeral bounded UI cache and never enter the document.
-    collab_avatars: collab_avatar_host::CollabAvatarHost,
+    account_avatar: account_avatar_host::AccountAvatarHost,
     /// Two-thread local image raster decode pool.
     image_decodes: image_decode_host::ImageDecodeHost,
     /// Loads Home's Recent thumbnails into the image cache.
     home_thumbnails: home_thumbnails::HomeThumbnails,
     /// Cross-thread wake handle used by live MCP connection threads.
     mcp_wake_proxy: Option<EventLoopProxy<DesktopEvent>>,
-    /// Collaboration session/editor actor. Sockets remain on bounded network
-    /// workers; this field is touched only by the winit GUI thread.
-    collab_runtime: collab_runtime::DesktopCollabRuntime,
     /// Paths forwarded by second-launch processes (`single_instance`),
     /// drained on the UI thread by `drain_forwarded_files`.
     forwarded_files: single_instance::ForwardQueue,
@@ -667,13 +657,8 @@ fn main() {
     let mcp_wake_proxy = event_loop.create_proxy();
     // Give the non-bundled binary a proper Dock name + icon.
     macos_app::apply();
-    // The collaboration runtime drives async relay/JWKS work from sync code;
-    // install the bridge before any session can start.
-    collab_runtime::install_blocking_executor();
     let mut app = DesktopApp::new(initial_file);
     app.image_decodes.set_wake_proxy(mcp_wake_proxy.clone());
-    app.collab_runtime
-        .set_wake_notifier(collab_runtime::wake_notifier(mcp_wake_proxy.clone()));
     app.mcp_wake_proxy = Some(mcp_wake_proxy);
     // Start accepting forwarded opens from second launches, sharing the queue
     // the UI thread drains in `drain_forwarded_files`.

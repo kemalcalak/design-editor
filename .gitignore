@@ -18,17 +18,13 @@ scripts/ab-corpus/runs/
 
 docs/
 # Keep internal planning documents ignored, but publish the reviewed
-# collaboration security contract with the open implementation.
+# security notes.
 !/docs/
 /docs/*
 !/docs/security/
 /docs/security/*
-!/docs/security/p2p-collaboration-threat-model.md
 !/docs/security/antivirus-false-positives.md
 !/docs/security/code-signing-policy.md
-!/docs/testing/
-/docs/testing/*
-!/docs/testing/p2p-collaboration-platform-acceptance.md
 
 # The bare `docs/` pattern above also shadows this test-fixture dir, which
 # MUST be tracked (the CI diagnostics-golden drift guard reads it).
@@ -59,11 +55,9 @@ Cargo.lock.merge-conflict
 /crates/*/target
 /vendor/agent/target
 
-# Never stage local collaboration/HSM private-key containers.
-**/relay-x25519-keys*.json
+# Never stage local private-key containers.
 **/*private-keys*.json
 **/*private_keys*.json
-**/locator-signing-key*.json
 
 tools/__pycache__/
 __pycache__/

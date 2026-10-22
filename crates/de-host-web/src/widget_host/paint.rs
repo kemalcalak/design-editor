@@ -553,27 +553,6 @@ impl WidgetHost {
             picker.paint(&mut cx, picker_rect);
         }
 
-        // Shared collaboration popover. Web builds normally keep the
-        // capability unavailable for M1, but the real surface is present for
-        // future satellite hosts and never reaches native transport APIs.
-        if let Some(panel) = de_editor_ui::widgets::CollabPanel::for_editor_ui_at(
-            &self.editor_state.editor_ui,
-            self.now_ms,
-        ) {
-            let top_bar =
-                de_editor_ui::widgets::TopBar::for_editor_ui(&self.editor_state.editor_ui)
-                    .with_traffic_controls(false);
-            let anchor = top_bar.collaboration_chip_rect_estimated(top_bar_rect);
-            let panel_rect = panel.rect_at(
-                anchor,
-                Rect::xywh(0.0, 0.0, viewport_width, viewport_height),
-            );
-            let mut cx = PaintCx {
-                backend: &mut *backend,
-            };
-            panel.paint(&mut cx, panel_rect);
-        }
-
         // Menus, modals, floating panels and the top-most notices —
         // z-order above everything painted so far. Split into its own
         // method purely to keep this file under the repo's 800-line cap;

@@ -81,32 +81,6 @@ pub fn mirror_variable_row_input_legacy(state: &mut EditorState, select_all: boo
 // ─── Focus predicates ──────────────────────────────────────────────────
 
 impl EditorUiState {
-    /// Whether the visible collaboration Join field owns the keyboard.
-    ///
-    /// The focus bit alone is insufficient: an async phase transition or an
-    /// externally dismissed panel can leave it stale. Hosts use this
-    /// visibility-aware predicate for shortcuts, clipboard, and IME focus.
-    pub fn collab_join_input_active(&self) -> bool {
-        self.collab.availability == crate::CollabAvailability::Ready
-            && matches!(
-                self.collab.phase,
-                crate::CollabConnectionPhase::Idle | crate::CollabConnectionPhase::Discovering
-            )
-            && self.collab.panel.open
-            && self.collab.panel.view == crate::CollabPanelView::Join
-            && self.collab.panel.join_address_focused
-    }
-
-    /// Drop even a stale Join-field focus bit when another surface takes
-    /// over. The input's selection collapses with it so a later refocus
-    /// never resurrects a destructive replace-on-type state.
-    pub fn blur_collab_join_input(&mut self) -> bool {
-        let input = &mut self.collab.panel.join_input;
-        let end = input.text().len();
-        input.set_caret(end, 0);
-        std::mem::take(&mut self.collab.panel.join_address_focused)
-    }
-
     /// Whether a variables-panel theme-axis / variant header rename
     /// draft owns the keyboard.
     pub fn variables_header_rename_active(&self) -> bool {
@@ -640,13 +614,12 @@ pub fn select_all_focused_input(state: &mut EditorState, now_ms: u64) -> bool {
 /// Host-resolved surfaces (font picker, image popovers, settings, Git)
 /// are checked host-side before this predicate.
 pub fn delete_owned_by_chrome_input(state: &EditorState) -> bool {
-    state.editor_ui.collab_join_input_active()
-        // The settings-modal input routes Delete in an earlier arm
-        // (`host_ui_transitions::settings_delete_forward`); listed here so
-        // reordering the arms cannot reopen the node-destroying
-        // fall-through — a Delete while the API-key field is focused used
-        // to silently remove the selected node behind the modal.
-        || state.editor_ui.agent_settings.focus.is_some()
+    // The settings-modal input routes Delete in an earlier arm
+    // (`host_ui_transitions::settings_delete_forward`); listed here so
+    // reordering the arms cannot reopen the node-destroying
+    // fall-through — a Delete while the API-key field is focused used
+    // to silently remove the selected node behind the modal.
+    state.editor_ui.agent_settings.focus.is_some()
         || state.ui.property_focus.is_some()
         || state.editor_ui.effect_param_focus.is_some()
         || state.editor_ui.variable_row_focus.is_some()

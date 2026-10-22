@@ -126,7 +126,7 @@ pub fn press_account_menu(
         Some(AccountMenuRow::SignOut) => {
             close_account_menu(state);
             state.editor_ui.account = AccountState::Anonymous;
-            let _ = crate::collab_avatar_runtime::register_account_avatar_url(None);
+            let _ = crate::account_avatar_runtime::register_account_avatar_url(None);
             AccountMenuPress::SignOut
         }
         None => {

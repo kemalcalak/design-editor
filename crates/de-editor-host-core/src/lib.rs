@@ -10,7 +10,6 @@ pub mod codegen_export;
 pub mod codegen_runtime_state;
 #[cfg(feature = "codegen")]
 pub mod codegen_session;
-pub mod collab;
 #[cfg(feature = "design")]
 pub mod design;
 #[cfg(feature = "settings-io")]

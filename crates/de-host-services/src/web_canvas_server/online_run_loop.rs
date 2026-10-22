@@ -19,17 +19,6 @@
 //!
 //! Nothing between steps 1 and 4 reads or writes any account's state, so an
 //! unauthenticated caller can reach exactly the bytes the CDN would serve.
-//!
-//! ## What this loop does not run
-//!
-//! No collaboration driver. Relay collaboration needs a per-account device
-//! ticket and the bridge holds one per process, so
-//! `ServeMode::allows_relay_collaboration` is false online and every tenant's
-//! availability stays at its default `Unavailable` — which is exactly what a
-//! never-ticked runtime reports. M4 brings up in-service (Tier 1) sessions,
-//! at which point the driver becomes per-tenant: it will walk the registry's
-//! leased tenants (or run one lazy thread per live session) rather than
-//! pumping a single global state. That is the extension point.
 
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;

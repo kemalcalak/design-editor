@@ -1,6 +1,6 @@
-//! SSRF-safe fetch and validation for authenticated profile avatars.
+//! SSRF-safe fetch and validation for the authenticated account's avatar.
 
-use de_editor_ui::collab_avatar_runtime::{
+use de_editor_ui::account_avatar_runtime::{
     MAX_AVATAR_ENCODED_BYTES, MAX_AVATAR_SOURCE_EDGE_PX, MAX_AVATAR_SOURCE_PIXELS,
 };
 use hmac::{Hmac, Mac};
@@ -60,39 +60,23 @@ pub fn profile_avatar_revision(url: &str) -> Result<String, ProfileAvatarFetchEr
     Ok(format!("{:x}", mac.finalize().into_bytes()))
 }
 
-/// Blocking entry point for desktop workers and serve-web connection threads.
-pub fn fetch_profile_avatar_blocking(url: &str) -> Result<Vec<u8>, ProfileAvatarFetchError> {
-    crate::chat_runtime::block_on_anywhere(fetch_profile_avatar(url, false))
-}
-
-/// Blocking fetch for the locally authenticated account's profile image.
+/// Blocking fetch for the locally authenticated account's profile image, for
+/// desktop workers and serve-web connection threads.
 ///
-/// Unlike remote collaboration profiles, this source may traverse a
-/// Clash-style fake-IP TUN when the hostname resolves exclusively into RFC
-/// 2544 space.
+/// This source may traverse a Clash-style fake-IP TUN when the hostname
+/// resolves exclusively into RFC 2544 space.
 pub fn fetch_account_avatar_blocking(url: &str) -> Result<Vec<u8>, ProfileAvatarFetchError> {
-    crate::chat_runtime::block_on_anywhere(fetch_profile_avatar(url, true))
+    crate::chat_runtime::block_on_anywhere(fetch_account_avatar(url))
 }
 
-async fn fetch_profile_avatar(
-    url: &str,
-    allow_account_tunnel: bool,
-) -> Result<Vec<u8>, ProfileAvatarFetchError> {
+async fn fetch_account_avatar(url: &str) -> Result<Vec<u8>, ProfileAvatarFetchError> {
     let mut url = parse_avatar_url(url)?;
     for redirect_count in 0..=MAX_REDIRECTS {
-        let client = if allow_account_tunnel {
-            with_timeout(
-                REQUEST_TIMEOUT,
-                crate::public_https_client::tunnel_compatible_account_asset_client(&url),
-            )
-            .await?
-        } else {
-            with_timeout(
-                REQUEST_TIMEOUT,
-                crate::public_https_client::public_https_client(&url),
-            )
-            .await?
-        }
+        let client = with_timeout(
+            REQUEST_TIMEOUT,
+            crate::public_https_client::tunnel_compatible_account_asset_client(&url),
+        )
+        .await?
         .map_err(|_| ProfileAvatarFetchError::DialRejected)?;
         let mut response = client
             .get(url.clone())
@@ -250,7 +234,7 @@ mod tests {
             "https://[fe80::1]/avatar.png",
         ] {
             assert_eq!(
-                fetch_profile_avatar_blocking(url),
+                fetch_account_avatar_blocking(url),
                 Err(ProfileAvatarFetchError::DialRejected),
                 "{url}"
             );

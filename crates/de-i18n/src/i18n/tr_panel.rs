@@ -230,14 +230,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
             "3:4, sekiz pano: sayı panoları serin, duygu panoları sıcak, dönüşümlü ilerler."
         }
         "fileMenu.newFromTemplate" => "Şablondan yeni oluştur",
-        "collab.ownerConfirm.title" => "Kime katıldığınızı onaylayın",
-        "collab.ownerConfirm.hint" => "Bu oturumdan henüz hiçbir şey yüklenmedi.",
-        "collab.ownerConfirm.account" => "Doğrulanmış hesap",
-        "collab.ownerConfirm.device" => "Doğrulanmış cihaz",
-        "collab.ownerConfirm.claimedName" => "Bu hesabın seçtiği ad (doğrulanmadı)",
-        "collab.action.confirmOwner" => "Bu oturuma katıl",
-        "collab.action.rejectOwner" => "Katılma",
-        "collab.error.ownerNotConfirmed" => "Sunucuyu onaylamadınız, bu yüzden hiçbir şey yüklenmedi.",
         "fileMenu.exportSlideshowHtml" => "Slayt gösterisini HTML olarak dışa aktar...",
         "fileMenu.exportPptx" => "PowerPoint olarak dışa aktar...",
         "dialog.slideshowHtmlTitle" => "Slayt gösterisini dışa aktar",
@@ -685,7 +677,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "tooltip.topbar.file" => "Dosya",
         "tooltip.topbar.import" => "İçe aktar",
         "tooltip.topbar.language" => "Dil",
-        "tooltip.topbar.collaboration" => "İş birliği",
         "tooltip.topbar.preview" => "Önizleme",
         "tooltip.topbar.exitPreview" => "Önizlemeden çık",
         "tooltip.topbar.account" => "Hesap",

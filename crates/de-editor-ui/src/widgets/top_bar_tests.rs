@@ -130,8 +130,6 @@ fn title_group_center_is_independent_of_asymmetric_chrome() {
     crowded.connected = [true; 7];
     crowded.mcp_count = 8;
     crowded.account_button_visible = true;
-    crowded.collab.visible = true;
-    crowded.collab.label = "Connected".to_string();
 
     for bar in [&compact, &crowded] {
         let layout = bar.title_layout(rect, title_test_width);
@@ -292,32 +290,6 @@ fn for_editor_ui_picks_up_button_press() {
     let bar = TopBar::for_editor_ui(&ui);
     assert!(bar.is_pressed(de_editor_core::TopBarButton::ToggleTheme));
     assert!(!bar.is_pressed(de_editor_core::TopBarButton::ToggleSidebar));
-}
-
-#[test]
-fn collaboration_chip_is_a_real_hit_target_only_when_available() {
-    let rect = Rect {
-        origin: Point2D::ZERO,
-        size: Point2D::new(1200.0, TOP_BAR_HEIGHT),
-    };
-    let hidden = TopBar::for_editor_ui(&EditorUiState::default());
-    assert!(!hidden.collab.visible);
-
-    let mut ui = EditorUiState::default();
-    ui.collab.availability = de_editor_core::CollabAvailability::Ready;
-    let bar = TopBar::for_editor_ui(&ui);
-    let chip = bar.collaboration_chip_rect_estimated(rect);
-    assert!(chip.size.x > 0.0);
-    assert_eq!(
-        bar.hit_test(
-            rect,
-            Point2D::new(
-                chip.origin.x + chip.size.x / 2.0,
-                chip.origin.y + chip.size.y / 2.0,
-            ),
-        ),
-        Some(TopBarHit::Collaboration)
-    );
 }
 
 #[test]

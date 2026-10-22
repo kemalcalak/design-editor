@@ -51,7 +51,7 @@ WASM_OPT_CANDIDATE_FEATURES=(
 # Ceiling for the CanvasKit production bundle's gzipped wasm. It is far above
 # the retired skia raster path's 1 MiB (spec §6) because this bundle carries the
 # FULL app logic absorbed from the skia path (codegen AI pipeline, Figma parser,
-# AI/live-sync, collaboration) plus the remaining embedded product assets —
+# AI/live-sync) plus the remaining embedded product assets —
 # scene-template .op documents, the iconify core catalog, and the AI skill
 # corpus.
 #

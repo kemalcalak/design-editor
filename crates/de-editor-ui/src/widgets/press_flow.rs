@@ -20,9 +20,7 @@ use crate::widgets::{
 };
 use crate::{Point2D, Rect};
 
-pub use super::layer_context_flow::{
-    apply_layer_context_action, apply_layer_context_action_with_allocator, LayerContextStep,
-};
+pub use super::layer_context_flow::{apply_layer_context_action, LayerContextStep};
 pub use super::prompt_center_press_flow::press_prompt_center;
 pub use super::scene_template_press_flow::{
     fail_style_import_unreadable, hover_scene_template_center, import_style_guide_text,
@@ -271,9 +269,6 @@ pub fn press_export_quick_menu(
 /// PDF is the one row that skips a dialog — it sets the format the export
 /// dialog would have set and commits straight to the save picker, because
 /// picking PDF *is* the choice the dialog would have asked for.
-///
-/// No collaboration gate here: every export maps to
-/// `CollabGateAction::LocalUi`, which the policy admits unconditionally.
 pub fn apply_export_quick_row(state: &mut EditorState, row: ExportQuickRow) {
     use de_editor_core::editor_ui_state::{ExportFormat, FileAction};
     let action = match row {
@@ -396,28 +391,6 @@ pub fn apply_shared_top_bar_hit(
         }
         TopBarHit::OpenAgentSettings => {
             state.editor_ui.agent_settings_open = true;
-            state.chat.blur_input(now_ms);
-            TopBarPress::Handled
-        }
-        TopBarHit::Collaboration => {
-            let phase = state.editor_ui.collab.phase;
-            let panel = &mut state.editor_ui.collab.panel;
-            panel.open = !panel.open;
-            panel.hover = None;
-            if panel.open {
-                panel.view = if phase.is_authenticated() {
-                    de_editor_core::CollabPanelView::Session
-                } else if phase == de_editor_core::CollabConnectionPhase::Discovering {
-                    de_editor_core::CollabPanelView::Join
-                } else {
-                    de_editor_core::CollabPanelView::Home
-                };
-                state.editor_ui.file_menu_open = false;
-                state.editor_ui.import_menu_open = false;
-                state.editor_ui.import_menu.open = false;
-                core_press::close_locale_picker(&mut state.editor_ui);
-                state.editor_ui.account_menu_open = false;
-            }
             state.chat.blur_input(now_ms);
             TopBarPress::Handled
         }

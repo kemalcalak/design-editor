@@ -255,9 +255,7 @@ impl WidgetHost {
                     if let Some(chip) = slides.chips.get(from) {
                         // The shared deck reorder, so the rail can never
                         // write the deck order differently from the
-                        // presentation that reads it. No collaboration
-                        // gate here, unlike native's twin: the web host
-                        // carries no collaboration session at all.
+                        // presentation that reads it.
                         de_editor_ui::widgets::deck_boards::apply_reorder(
                             &mut self.editor_state,
                             &chip.id.clone(),

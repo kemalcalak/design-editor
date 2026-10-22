@@ -51,12 +51,14 @@ impl WidgetHostNative {
             return true;
         }
         if self.editor_state.color_picker_hex_focused() {
-            self.collab_blur_color_picker_inputs();
+            self.editor_state.color_picker_blur_hex();
+            self.editor_state.color_picker_blur_rgb();
             self.mark_dirty();
             return true;
         }
         if self.editor_state.color_picker_rgb_focused() {
-            self.collab_blur_color_picker_inputs();
+            self.editor_state.color_picker_blur_hex();
+            self.editor_state.color_picker_blur_rgb();
             self.mark_dirty();
             return true;
         }

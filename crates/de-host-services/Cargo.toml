@@ -16,13 +16,10 @@ default = []
 mcp-debug-tools = ["de-mcp/debug-tools", "de-chat-agent/mcp-debug-tools"]
 # Production release lane; forwarded by de-host-web-server.
 pinned-skia-binaries = ["skia-safe/no-compile"]
-# Dev-only collaboration tickets for the serve-web daemon, mirroring
-# de-host-desktop's flag of the same name: links the locally built ABI-v2
-# op-auth archive (debug profile only; see de-auth-bridge/README).
-dev-op-auth-abi-v2 = [
-  "de-auth-bridge/dev-abi-v2",
-  "de-collab-host/dev-op-auth-abi-v2",
-]
+# Dev-only: links the locally built ABI-v2 op-auth archive for the serve-web
+# daemon, mirroring de-host-desktop's flag of the same name (debug profile
+# only; see de-auth-bridge/README).
+dev-op-auth-abi-v2 = ["de-auth-bridge/dev-abi-v2"]
 
 [dependencies]
 # --- workspace path deps (the headless daemon's closure; modules land in
@@ -62,10 +59,6 @@ de-util = { path = "../de-util" }
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 agent = { path = "../../vendor/agent/crates/agent", default-features = false }
 anthropic-agent-sdk = { path = "../../vendor/anthropic-agent-sdk" }
-# Collaboration runtime — the daemon runs the same owner/guest actors the
-# desktop GUI runs, so a browser client gets real sessions instead of a
-# permanently `Unavailable` panel.
-de-collab-host = { path = "../de-collab-host" }
 
 # --- external (crates.io / forks) ---
 # Keep the product's explicit installed-CLI contract; the SDK's default
@@ -115,8 +108,3 @@ skia-safe = { version = "0.97.0", default-features = false, features = [
 libc = "0.2"
 
 [dev-dependencies]
-# Controlled collaboration fixtures so the collab_state tests can drive the
-# real begin -> install -> reject/fail path instead of asserting on a
-# hand-built outcome value. Dev-only: the normal dependency above (line 53)
-# stays feature-free, so nothing ships with `test-support` compiled in.
-de-collab-host = { path = "../de-collab-host", features = ["test-support"] }

@@ -116,8 +116,8 @@ pub(crate) fn builtin_provider_with_tools(
     // agent silently lose insert/update/move/delete whenever the user
     // chatted without a Frame selected (e.g. right after opening a file),
     // which read as "modification tools randomly drop". Mutation safety is
-    // enforced at the execution sink (`execute_tool_requests`'s
-    // collaboration gate + per-tool validation), not by hiding definitions.
+    // enforced at the execution sink (`execute_tool_requests`'s per-tool
+    // validation), not by hiding definitions.
     let provider = provider.with_canvas_tools(chat_tool_defs(), Arc::new(executor));
     Some((Box::new(provider), tool_rx))
 }

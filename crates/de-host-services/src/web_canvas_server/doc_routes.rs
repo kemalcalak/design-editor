@@ -7,23 +7,6 @@
 use super::*;
 
 pub(super) fn open_recent_file(body: &str, state: &mut WebCanvasState) -> WebReply {
-    // Swapping the open document out from under a live session would leave the
-    // peers editing a document this daemon no longer has. Refused for every
-    // source once a session exists; a no-op when there is none.
-    if let Err(refusal) = state.gate_daemon_mutation(
-        de_editor_core::CollabGateAction::ReplaceDocument,
-        de_editor_core::CollabEditSource::ExternalSync,
-    ) {
-        return WebReply {
-            status: refusal.http_status(),
-            body: serde_json::json!({
-                "ok": false,
-                "error": refusal.code(),
-                "message": refusal.to_string(),
-            })
-            .to_string(),
-        };
-    }
     let parsed: Option<serde_json::Value> = serde_json::from_str(body).ok();
     let Some(path_s) = parsed
         .as_ref()

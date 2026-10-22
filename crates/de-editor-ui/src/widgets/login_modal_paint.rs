@@ -1,8 +1,7 @@
 //! The sign-in modal's two painted blocks: the primary browser action
 //! and the security / status note beneath it.
 //!
-//! Sibling of `login_modal.rs`, split out at the 800-line cap the collab
-//! security-boundary check enforces over this crate.
+//! Sibling of `login_modal.rs`, split out at the 800-line cap.
 
 use super::*;
 
