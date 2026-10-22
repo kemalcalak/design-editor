@@ -1,10 +1,9 @@
 [submodule "vendor/agent"]
 	path = vendor/agent
-	url = https://github.com/ZSeven-W/agent-rs.git
+	url = https://github.com/kemalcalak/agent-rs.git
 [submodule "vendor/jian"]
 	path = vendor/jian
-	url = https://github.com/ZSeven-W/jian.git
+	url = https://github.com/kemalcalak/jian.git
 [submodule "vendor/casement"]
 	path = vendor/casement
-	url = https://github.com/ZSeven-W/casement.git
-	branch = op-file-open
+	url = https://github.com/kemalcalak/casement.git
