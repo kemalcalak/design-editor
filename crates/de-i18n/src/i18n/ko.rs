@@ -567,7 +567,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "포트",
         "settings.mcp.start" => "시작",
         "settings.mcp.stop" => "중지",
-        "settings.mcp.terminalIntegrations" => "터미널 MCP 통합",
         "settings.mcp.terminalSubtitle1" => "MCP 통합은 터미널을 다시 시작한 후 적용됩니다.",
         "settings.mcp.terminalSubtitle2" => "Design Editor 업그레이드 후 호환성을 위해 MCP 통합을 다시 설치하세요.",
         "settings.images.search" => "이미지 검색",

@@ -9,7 +9,7 @@ fn layout_1440_900(family: HomeFamily, collapsed: bool, boards: usize) -> Worksp
 
 #[test]
 fn app_layout_docks_the_canvas_beside_the_320_chat() {
-    let layout = layout_1440_900(HomeFamily::AppUi, false, 4);
+    let layout = layout_1440_900(HomeFamily::MobileApp, false, 4);
     assert_eq!(layout.header, Rect::xywh(0.0, 0.0, 1440.0, 64.0));
     assert_eq!(
         layout.toolbar,
@@ -28,7 +28,7 @@ fn app_layout_docks_the_canvas_beside_the_320_chat() {
 
 #[test]
 fn deck_layout_sits_the_canvas_above_the_strip() {
-    let layout = layout_1440_900(HomeFamily::Presentation, false, 5);
+    let layout = layout_1440_900(HomeFamily::Slides, false, 5);
     let strip = layout.strip.expect("presentation paints the strip");
     assert_eq!(strip, Rect::xywh(320.0, 790.0, 1120.0, 110.0));
     assert_eq!(
@@ -42,7 +42,7 @@ fn deck_layout_sits_the_canvas_above_the_strip() {
 
 #[test]
 fn collapsed_dock_gives_the_canvas_the_full_width() {
-    let layout = layout_1440_900(HomeFamily::AppUi, true, 3);
+    let layout = layout_1440_900(HomeFamily::MobileApp, true, 3);
     assert_eq!(layout.dock, None);
     assert_eq!(layout.dock_handle, None);
     assert_eq!(layout.canvas.origin.x, 0.0);
@@ -51,7 +51,7 @@ fn collapsed_dock_gives_the_canvas_the_full_width() {
 
 #[test]
 fn narrow_viewport_keeps_the_same_band_structure() {
-    let layout = layout_for(1180.0, 820.0, HomeFamily::Web, 320.0, false, 1);
+    let layout = layout_for(1180.0, 820.0, HomeFamily::LandingPage, 320.0, false, 1);
     assert_eq!(layout.header.size.y, 64.0);
     assert_eq!(layout.toolbar, Rect::xywh(320.0, 64.0, 860.0, 44.0));
     assert_eq!(layout.canvas, Rect::xywh(320.0, 108.0, 860.0, 712.0));
@@ -60,7 +60,7 @@ fn narrow_viewport_keeps_the_same_band_structure() {
 
 #[test]
 fn header_actions_stay_right_aligned() {
-    let layout = layout_1440_900(HomeFamily::AppUi, false, 2);
+    let layout = layout_1440_900(HomeFamily::MobileApp, false, 2);
     assert_eq!(
         layout.professional.origin.x + layout.professional.size.x,
         1440.0 - 14.0
@@ -118,11 +118,11 @@ fn surface_hit(
 
 #[test]
 fn hit_test_resolves_the_chrome_targets() {
-    let layout = layout_1440_900(HomeFamily::AppUi, false, 4);
+    let layout = layout_1440_900(HomeFamily::MobileApp, false, 4);
     let at = |rect: Rect| Point2D::new(rect.origin.x + 2.0, rect.origin.y + 2.0);
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -132,7 +132,7 @@ fn hit_test_resolves_the_chrome_targets() {
     );
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -142,7 +142,7 @@ fn hit_test_resolves_the_chrome_targets() {
     );
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -152,7 +152,7 @@ fn hit_test_resolves_the_chrome_targets() {
     );
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -162,7 +162,7 @@ fn hit_test_resolves_the_chrome_targets() {
     );
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -172,7 +172,7 @@ fn hit_test_resolves_the_chrome_targets() {
     );
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -182,7 +182,7 @@ fn hit_test_resolves_the_chrome_targets() {
     );
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -192,7 +192,7 @@ fn hit_test_resolves_the_chrome_targets() {
     );
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -204,71 +204,41 @@ fn hit_test_resolves_the_chrome_targets() {
 
 #[test]
 fn hit_test_resolves_the_deck_strip_targets() {
-    let layout = layout_1440_900(HomeFamily::Presentation, false, 5);
+    let layout = layout_1440_900(HomeFamily::Slides, false, 5);
     let view = WorkspaceView::Single { index: 0 };
     let at = |rect: Rect| Point2D::new(rect.origin.x + 2.0, rect.origin.y + 2.0);
     assert_eq!(
-        surface_hit(
-            HomeFamily::Presentation,
-            view,
-            false,
-            5,
-            at(layout.thumbs[2])
-        ),
+        surface_hit(HomeFamily::Slides, view, false, 5, at(layout.thumbs[2])),
         Some(WorkspaceHit::Thumb(2))
     );
     assert_eq!(
-        surface_hit(
-            HomeFamily::Presentation,
-            view,
-            false,
-            5,
-            at(layout.overview)
-        ),
+        surface_hit(HomeFamily::Slides, view, false, 5, at(layout.overview)),
         Some(WorkspaceHit::Overview)
     );
     assert_eq!(
-        surface_hit(
-            HomeFamily::Presentation,
-            view,
-            false,
-            5,
-            at(layout.play.unwrap())
-        ),
+        surface_hit(HomeFamily::Slides, view, false, 5, at(layout.play.unwrap())),
         Some(WorkspaceHit::Play)
     );
     assert_eq!(
-        surface_hit(
-            HomeFamily::Presentation,
-            view,
-            false,
-            5,
-            at(layout.prev.unwrap())
-        ),
+        surface_hit(HomeFamily::Slides, view, false, 5, at(layout.prev.unwrap())),
         Some(WorkspaceHit::Prev)
     );
     assert_eq!(
-        surface_hit(
-            HomeFamily::Presentation,
-            view,
-            false,
-            5,
-            at(layout.next.unwrap())
-        ),
+        surface_hit(HomeFamily::Slides, view, false, 5, at(layout.next.unwrap())),
         Some(WorkspaceHit::Next)
     );
 }
 
 #[test]
 fn canvas_and_dock_points_fall_through_to_lower_tiers() {
-    let layout = layout_1440_900(HomeFamily::AppUi, false, 4);
+    let layout = layout_1440_900(HomeFamily::MobileApp, false, 4);
     let canvas_point = Point2D::new(
         layout.canvas.origin.x + 100.0,
         layout.canvas.origin.y + 100.0,
     );
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -280,7 +250,7 @@ fn canvas_and_dock_points_fall_through_to_lower_tiers() {
     let chat_point = Point2D::new(160.0, 400.0);
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -292,7 +262,7 @@ fn canvas_and_dock_points_fall_through_to_lower_tiers() {
     let handle = layout.dock_handle.unwrap();
     assert_eq!(
         surface_hit(
-            HomeFamily::AppUi,
+            HomeFamily::MobileApp,
             WorkspaceView::AllBoards,
             false,
             4,
@@ -383,7 +353,7 @@ fn the_strip_tiles_share_the_thumbnail_rows_geometry() {
     editor.editor_ui.workspace = de_editor_core::WorkspaceState {
         visible: true,
         active: true,
-        family: HomeFamily::Presentation,
+        family: HomeFamily::Slides,
         ..de_editor_core::WorkspaceState::default()
     };
     let surface = WorkspaceSurface::for_editor_at(&editor, 0).expect("workspace visible");

@@ -177,8 +177,19 @@ impl DesktopApp {
                 return false;
             }
             // A press on the bar that hits none of the app's
-            // own buttons is a window-drag grab.
-            if tb.hit_test(tb_rect, p).is_none() {
+            // own buttons is a window-drag grab. Home paints its own
+            // chrome under the strip, so it answers for itself.
+            let drag = if self.host.home_visible() {
+                self.host.home_window_drag_at(
+                    self.cursor_x,
+                    self.cursor_y,
+                    self.viewport_width,
+                    self.viewport_height,
+                )
+            } else {
+                tb.hit_test(tb_rect, p).is_none()
+            };
+            if drag {
                 if let Some(w) = self.window.as_ref() {
                     let _ = w.drag_window();
                 }
@@ -403,25 +414,6 @@ impl DesktopApp {
             return;
         }
         self.collab_runtime.finish_local_edit(&mut self.host);
-        self.request_redraw(true);
-    }
-
-    /// First time the window is actually visible: re-arm the Home
-    /// entrance clock. The first paint (which stamps it) runs while the
-    /// window is still off screen during start-up, so without this the
-    /// choreography has already finished by the time the user sees Home.
-    /// Later focus / occlusion changes never replay it.
-    pub(crate) fn on_window_shown(&mut self) {
-        if self.window_shown_once {
-            return;
-        }
-        self.window_shown_once = true;
-        let home = &mut self.host.editor_state_mut().editor_ui.home;
-        if !home.visible {
-            return;
-        }
-        home.shown_at_ms = 0;
-        self.host.mark_editor_state_dirty();
         self.request_redraw(true);
     }
 

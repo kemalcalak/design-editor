@@ -59,13 +59,6 @@ pub(super) const EMPTY_BLOCK_H: f32 = 64.0;
 /// modal's bottom edge at full scroll and reads as clipped.
 pub(super) const CONTENT_TAIL_PAD: f32 = 24.0;
 
-/// Top tab strip: inset from the panel top, pill height, gap between
-/// pills, and the gap from the strip down to the scrollable body.
-pub(super) const TAB_BAR_TOP: f32 = 14.0;
-pub(super) const TAB_HEIGHT: f32 = 30.0;
-pub(super) const TAB_GAP: f32 = 4.0;
-pub(super) const TAB_TO_CONTENT: f32 = 18.0;
-
 /// Horizontal inset from the modal edge to the content column.
 pub(super) const CONTENT_PAD_X: f32 = 28.0;
 /// Clear space between the content column's bottom and the modal edge.

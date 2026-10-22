@@ -227,6 +227,8 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
                 if let Ok(mut identity) = client_identity.lock() {
                     *identity = Some((name, MCP_CLIENT_COLOR.to_string()));
                 }
+                // An idle window must repaint to name the new client.
+                wake_ui();
             }
             return write_json_rpc_response(stream, &resp);
         }

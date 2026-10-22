@@ -26,12 +26,13 @@ use crate::{Point2D, Rect, TextLayout};
 /// The font family every string in this modal is DRAWN with. Measurement
 /// has to name it too — see [`fit_text`]. Aliases the workspace-wide chrome
 /// family so the modal cannot drift from the rest of the editor.
-pub(super) const SETTINGS_FONT_FAMILY: &str = crate::widgets::text_metrics::CHROME_FONT_FAMILY;
+/// Settings paints in Home's UI face (bundled on desktop and web).
+pub(super) const SETTINGS_FONT_FAMILY: &str = crate::widgets::home_surface::SANS;
 
 /// Tab intro: a section-sized title with one optional muted line under
 /// it. Deliberately the same size as a section title — the intro IS a
 /// section header for the page, not a poster for it.
-pub(super) const INTRO_TITLE_FONT: f32 = 15.0;
+pub(super) const INTRO_TITLE_FONT: f32 = 16.0;
 pub(super) const INTRO_DESC_FONT: f32 = 12.0;
 const TOUCH_INTRO_TITLE_FONT: f32 = 17.0;
 const TOUCH_INTRO_DESC_FONT: f32 = 14.0;
@@ -141,9 +142,6 @@ pub(super) const fn row_height(lines: RowLines) -> f32 {
     }
 }
 
-/// Uniform stride for the lists whose rows are all single-line (the MCP
-/// CLI toggles). Mixed lists must walk [`row_rect_in`] instead.
-pub(super) const ROW_HEIGHT: f32 = ROW_H_ONE_LINE;
 pub(super) use crate::widgets::agent_settings_metrics::{SECTION_GAP, SECTION_HEADER_H};
 /// Footnote line under a row list (the `*` caveat under the CLI toggles).
 pub(super) const FOOTNOTE_H: f32 = 24.0;
@@ -217,7 +215,8 @@ pub(super) fn paint_tab_intro_for_ui(
         metrics.title_font,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
-    );
+    )
+    .with_font_weight(700);
     cx.backend.draw_text(
         &title_layout,
         Point2D::new(
@@ -273,14 +272,6 @@ pub(super) fn section_title_baseline(band_top: f32) -> f32 {
     band_top + (SECTION_HEADER_H - ink) / 2.0 + SECTION_TITLE_FONT * ASCENT_RATIO
 }
 
-/// Full-width row `index` in a list of uniform single-line rows.
-pub(super) fn row_rect(content: Rect, top: f32, index: usize) -> Rect {
-    Rect {
-        origin: Point2D::new(content.origin.x, top + index as f32 * ROW_HEIGHT),
-        size: Point2D::new(content.size.x, ROW_HEIGHT),
-    }
-}
-
 /// Row `index` in a list whose rows differ in height. Sums the boxes
 /// ahead of it, so paint and hit-test walk the same ladder and a row can
 /// never be laid out at a height other than the one its content needs.
@@ -299,6 +290,28 @@ pub(super) fn row_rect_in(content: Rect, top: f32, kinds: &[RowLines], index: us
 }
 
 /// Total height of a mixed-height row list.
+/// Settings v2 groups a tab's rows on a card: the rows sit this far in
+/// from the card's edges.
+pub(super) const CARD_INSET_X: f32 = 16.0;
+
+/// The column rows lay out in when they sit on a card spanning `content`.
+pub(super) fn card_rows_content(content: Rect) -> Rect {
+    Rect {
+        origin: Point2D::new(content.origin.x + CARD_INSET_X, content.origin.y),
+        size: Point2D::new(
+            (content.size.x - 2.0 * CARD_INSET_X).max(0.0),
+            content.size.y,
+        ),
+    }
+}
+
+/// The card under a run of rows: page-background fill, hairline, 10 px
+/// corners.
+pub(super) fn paint_row_card(cx: &mut PaintCx<'_>, theme: &Theme, card: Rect) {
+    cx.backend.fill_round_rect(card, 10.0, theme.background);
+    cx.backend.stroke_round_rect(card, 10.0, theme.border, 1.0);
+}
+
 pub(super) fn rows_block_height(kinds: &[RowLines]) -> f32 {
     kinds.iter().map(|kind| row_height(*kind)).sum()
 }
@@ -556,7 +569,7 @@ mod tests {
             tab_intro_height_for_ui(false, false),
             tab_intro_height(false)
         );
-        assert_eq!(tab_intro_height(true), 48.0);
+        assert_eq!(tab_intro_height(true), 49.0);
         assert!((tab_intro_height_for_ui(true, true) - 52.0).abs() < 0.01);
         assert!(tab_intro_height_for_ui(false, true) > tab_intro_height(false));
     }

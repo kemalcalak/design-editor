@@ -1,9 +1,11 @@
-//! Home surface input routing for the native widget host.
+//! Home surface input routing for the native widget host: hit-test the
+//! surface, then map each target onto the existing editor action.
 
 use super::WidgetHostNative;
-use de_editor_core::{EntrySurface, HomeDevice, HomeFamily, HomeHit, InfoKind, SlideRatio};
-use de_editor_ui::widgets::HomeSurface;
-use de_editor_ui::Point2D;
+use de_editor_core::home_mcp_setup::home_mcp_manual_snippet;
+use de_editor_core::{AgentSettingsTab, FileAction, HomeCopyTarget, HomeHit, HomeTemplate};
+use de_editor_ui::widgets::{HomeSurface, TopBar, TOP_BAR_HEIGHT};
+use de_editor_ui::{Point2D, Rect};
 
 impl WidgetHostNative {
     pub fn home_visible(&self) -> bool {
@@ -22,178 +24,139 @@ impl WidgetHostNative {
         }
         let point = Point2D::new(x, y);
         let home = HomeSurface::for_editor_at(&self.editor_state, self.now_ms)?;
+        let on_popover = home.popover_contains(viewport_width, viewport_height, point);
         let hit = home.hit_test(viewport_width, viewport_height, point);
         drop(home);
+        let state = &mut self.editor_state.editor_ui.home;
+        // A press outside the open popovers only closes them — including
+        // a press on the control that opened one, which reads as a toggle.
+        if (state.size_menu_open || state.mcp_popover_open) && !on_popover {
+            state.close_popovers();
+            self.mark_dirty();
+            return Some(true);
+        }
         let Some(hit) = hit else {
-            // A press outside the 更多 popover closes it, like the
-            // prototype's document-level click handler.
-            if self.editor_state.editor_ui.home.more_open {
-                self.editor_state.editor_ui.home.more_open = false;
-                self.mark_dirty();
-            }
             return Some(true);
         };
-        self.editor_state.editor_ui.home.pressed = Some(hit);
-        if self.editor_state.editor_ui.home.more_open
-            && !matches!(hit, HomeHit::More | HomeHit::MoreItem(_))
+        if state.mcp_agent_menu_open && !matches!(hit, HomeHit::McpAgent(_) | HomeHit::McpAgentMore)
         {
-            self.editor_state.editor_ui.home.more_open = false;
+            state.mcp_agent_menu_open = false;
         }
-        match hit {
-            HomeHit::Sheet => {
-                let caret = self.editor_state.editor_ui.home.input.text().len();
-                self.editor_state
-                    .editor_ui
-                    .home
-                    .set_caret(caret, self.now_ms);
-            }
-            HomeHit::Tab(family) | HomeHit::MoreItem(family) => {
-                self.editor_state
-                    .editor_ui
-                    .home
-                    .set_task(family, self.now_ms);
-            }
-            HomeHit::More => {
-                let open = !self.editor_state.editor_ui.home.more_open;
-                self.editor_state.editor_ui.home.more_open = open;
-            }
-            HomeHit::Segment(index) => {
-                let home = &mut self.editor_state.editor_ui.home;
-                match home.task {
-                    HomeFamily::AppUi => home.set_device(match index {
-                        1 => HomeDevice::Desktop,
-                        _ => HomeDevice::Mobile,
-                    }),
-                    HomeFamily::Presentation => home.set_ratio(match index {
-                        1 => SlideRatio::Classic43,
-                        _ => SlideRatio::Wide169,
-                    }),
-                    HomeFamily::Infographic => home.set_info_kind(match index {
-                        2 => InfoKind::Comparison,
-                        1 => InfoKind::Flow,
-                        _ => InfoKind::Data,
-                    }),
-                    _ => {}
-                }
-                home.art_switched_at_ms = self.now_ms.max(1);
-            }
-            HomeHit::Attachment => {
-                // The existing chat attachment picker is the one M1-supported
-                // image-input path. It opens from the desktop event drain;
-                // the staged list it produces is the composer's source of truth.
-                self.editor_state.chat.pending_attachment_pick = true;
-            }
-            HomeHit::UseExample => {
-                let home = HomeSurface::for_editor_at(&self.editor_state, self.now_ms)?;
-                let example = home.example_prompt().to_string();
-                drop(home);
-                self.editor_state.editor_ui.home.use_example(&example);
-            }
-            HomeHit::BackToWorkspace => {
-                // The same footer rect, the workspace-active reading:
-                // drop the Home takeover and take the workspace back
-                // (state, view, and phase were all kept).
-                self.editor_state.editor_ui.home.hide();
-                self.editor_state.editor_ui.workspace.reenter(self.now_ms);
-            }
-            HomeHit::ReplaceKeep => {
-                self.editor_state.editor_ui.home.keep_draft();
-            }
-            HomeHit::ReplaceConfirm => {
-                let home = HomeSurface::for_editor_at(&self.editor_state, self.now_ms)?;
-                let example = home.example_prompt().to_string();
-                drop(home);
-                self.editor_state
-                    .editor_ui
-                    .home
-                    .confirm_replace_example(&example);
-            }
-            HomeHit::ExploreCard(family) => {
-                let home = HomeSurface::for_editor_at(&self.editor_state, self.now_ms)?;
-                let example = home.example_prompt_for(family).to_string();
-                drop(home);
-                let home = &mut self.editor_state.editor_ui.home;
-                home.set_task(family, self.now_ms);
-                home.use_example(&example);
-            }
-            HomeHit::Professional => {
-                self.editor_state.editor_ui.home.hide();
-                self.editor_state.editor_ui.entry_surface = EntrySurface::Canvas;
-            }
-            HomeHit::ModelChip => {
-                if !self.editor_state.has_usable_chat_agent() {
-                    // Nothing can answer yet — the chip becomes the
-                    // connect card instead of a picker over an empty
-                    // catalog.
-                    self.editor_state.editor_ui.home.connect_card_open = true;
-                } else {
-                    // Same open path the chat panel's model pill takes.
-                    let opening = self.editor_state.editor_ui.toggle_chat_model_picker();
-                    if opening {
-                        self.editor_state.rebuild_chat_models();
-                        self.editor_state.editor_ui.close_parallel_agents_picker();
-                        self.editor_state
-                            .editor_ui
-                            .chat_model_picker_input
-                            .touch(self.now_ms);
-                    }
-                }
-            }
-            HomeHit::ConnectFreeTier => {
-                self.editor_state.editor_ui.home.connect_card_open = false;
-                // TODO(hosted-quota): the free tier becomes its own
-                // hosted-quota sign-up later; for now it opens the plain
-                // sign-in modal.
-                if self.editor_state.editor_ui.account_ui_available {
-                    self.editor_state.editor_ui.login_modal_open = true;
-                    self.editor_state.editor_ui.login_modal_hover = None;
-                }
-            }
-            HomeHit::ConnectApiKey | HomeHit::ConnectCli => {
-                self.editor_state.editor_ui.home.connect_card_open = false;
-                self.editor_state.editor_ui.agent_settings_open = true;
-                self.editor_state.editor_ui.agent_settings.tab =
-                    de_editor_core::AgentSettingsTab::Agents;
-            }
-            HomeHit::ConnectClose => {
-                self.editor_state.editor_ui.home.connect_card_open = false;
-            }
-            HomeHit::Send => {
-                if !self.editor_state.has_usable_chat_agent() {
-                    // The send would fail silently — open the connect
-                    // card instead of queueing a dead turn.
-                    self.editor_state.editor_ui.home.connect_card_open = true;
-                } else {
-                    self.queue_home_send();
-                }
-            }
-            HomeHit::NewCanvas => {
-                self.editor_state.editor_ui.pending_file_action =
-                    Some(de_editor_core::FileAction::New);
-            }
-            HomeHit::Account => {
-                // Same two destinations the professional TopBar's avatar
-                // opens — signed in goes to the account menu, signed out
-                // to the login modal. Routed through one place so the two
-                // entry points cannot answer differently.
-                self.open_account_entry();
-            }
-            HomeHit::OpenFile => {
-                self.editor_state.editor_ui.pending_file_action =
-                    Some(de_editor_core::FileAction::Open);
-            }
-            HomeHit::Recent(index) => {
-                if index < self.editor_state.editor_ui.recent_files.len() {
-                    self.editor_state.editor_ui.pending_file_action =
-                        Some(de_editor_core::FileAction::OpenRecent(index));
-                }
-            }
-            HomeHit::ReferenceLink | HomeHit::Figma => {
-                // Visible but disabled in M1; the tooltip explains why.
-            }
-        }
+        state.pressed = Some(hit);
+        self.apply_home_hit(hit);
         self.mark_dirty();
         Some(true)
+    }
+
+    /// Run the editor action behind one Home target.
+    fn apply_home_hit(&mut self, hit: HomeHit) {
+        let now_ms = self.now_ms;
+        let ui = &mut self.editor_state.editor_ui;
+        match hit {
+            HomeHit::Sheet => {
+                let caret = ui.home.input.text().len();
+                ui.home.set_caret(caret, now_ms);
+            }
+            HomeHit::Kind(family) => {
+                ui.home.set_task(family);
+            }
+            HomeHit::SizeChip => {
+                ui.home.size_menu_open = !ui.home.size_menu_open;
+            }
+            HomeHit::SizeOption(size) => ui.home.set_size(size),
+            HomeHit::SizeMenuInside | HomeHit::McpInside => {}
+            HomeHit::Attach => {
+                // The chat attachment picker is the one image-input path.
+                // It opens from the desktop event drain; the staged list it
+                // produces is the composer's source of truth.
+                self.editor_state.chat.pending_attachment_pick = true;
+            }
+            HomeHit::ImportScreenshot => {
+                // Pick the screenshot and say what to do with it; a brief
+                // the user already typed is left alone.
+                if ui.home.draft.trim().is_empty() {
+                    let prompt =
+                        de_i18n::translate(ui.effective_locale(), "home.import.screenshotPrompt");
+                    ui.home.set_draft(prompt);
+                }
+                self.editor_state.chat.pending_attachment_pick = true;
+            }
+            HomeHit::ModelChip => {
+                // Same open path the chat panel's model pill takes.
+                if ui.toggle_chat_model_picker() {
+                    self.editor_state.rebuild_chat_models();
+                    let ui = &mut self.editor_state.editor_ui;
+                    ui.close_parallel_agents_picker();
+                    ui.chat_model_picker_input.touch(now_ms);
+                }
+            }
+            HomeHit::AddProvider => open_settings(ui, Some(AgentSettingsTab::Agents)),
+            // Without a provider the button is greyed out and does nothing;
+            // the "Add a model provider" link beside it is the way forward.
+            HomeHit::Send => {
+                self.queue_home_send();
+            }
+            HomeHit::ImportFigma => ui.pending_file_action = Some(FileAction::ImportFigma),
+            HomeHit::ImportWeb => ui.pending_file_action = Some(FileAction::ImportHtml),
+            HomeHit::Recent(index) => {
+                if index < ui.recent_files.len() {
+                    ui.pending_file_action = Some(FileAction::OpenRecent(index));
+                }
+            }
+            HomeHit::RecentView(view) => ui.home.recent_view = view,
+            HomeHit::NavRecents => ui.home.scroll_y = 0.0,
+            HomeHit::NavOpenFile | HomeHit::OpenFile => {
+                ui.pending_file_action = Some(FileAction::Open);
+            }
+            HomeHit::NewFile => ui.pending_file_action = Some(FileAction::New),
+            HomeHit::Locale => de_editor_core::host_press_transitions::toggle_locale_picker(ui),
+            HomeHit::NavDesignSystems | HomeHit::NavSceneTemplates => {
+                // A template opens on a fresh document: the host's New
+                // handler installs it, then applies the parked template.
+                ui.home.pending_template = Some(if hit == HomeHit::NavDesignSystems {
+                    HomeTemplate::DesignSystems
+                } else {
+                    HomeTemplate::SceneTemplates
+                });
+                ui.pending_file_action = Some(FileAction::New);
+            }
+            HomeHit::NavSettings => open_settings(ui, None),
+            HomeHit::McpCard => {
+                ui.home.mcp_popover_open = !ui.home.mcp_popover_open;
+                ui.home.mcp_agent_menu_open = false;
+            }
+            HomeHit::McpCopyEndpoint => {
+                let url = ui.agent_settings.mcp_endpoint_url();
+                ui.home.copied = Some((HomeCopyTarget::Endpoint, now_ms.max(1)));
+                self.editor_state.chat.queue_copy_text(url);
+            }
+            HomeHit::McpCopySnippet => {
+                let snippet = home_mcp_manual_snippet(
+                    ui.home.mcp_agent,
+                    &ui.agent_settings.mcp_endpoint_url(),
+                );
+                ui.home.copied = Some((HomeCopyTarget::Snippet, now_ms.max(1)));
+                self.editor_state.chat.queue_copy_text(snippet);
+            }
+            HomeHit::McpAgent(cli) => {
+                ui.home.mcp_agent = cli;
+                ui.home.mcp_agent_menu_open = false;
+            }
+            HomeHit::McpAgentMore => {
+                ui.home.mcp_agent_menu_open = !ui.home.mcp_agent_menu_open;
+            }
+            HomeHit::McpSetUp | HomeHit::McpRemove => {
+                // The same slot the Settings ▸ MCP toggle flips; the desktop
+                // reconciles the agent's config file after this event.
+                ui.agent_settings
+                    .set_mcp_cli_enabled(ui.home.mcp_agent, hit == HomeHit::McpSetUp);
+            }
+            HomeHit::McpStart => ui.agent_settings.mcp_server.running = true,
+            HomeHit::McpSettings => {
+                ui.home.close_popovers();
+                open_settings(ui, Some(AgentSettingsTab::Mcp));
+            }
+        }
     }
 
     pub(in crate::widget_host) fn cursor_move_home(
@@ -206,96 +169,95 @@ impl WidgetHostNative {
         if !self.home_visible() {
             return None;
         }
+        let point = Point2D::new(x, y);
         let home = HomeSurface::for_editor_at(&self.editor_state, self.now_ms)?;
-        let next = home.hit_test(viewport_width, viewport_height, Point2D::new(x, y));
-        if self.editor_state.editor_ui.home.hover == next {
+        let next = home.hit_test(viewport_width, viewport_height, point);
+        drop(home);
+        // Home paints the window-control dots in the same strip as the
+        // editor TopBar; hovering them reveals their glyphs there too.
+        let strip = Rect::xywh(0.0, 0.0, viewport_width, TOP_BAR_HEIGHT);
+        let traffic = TopBar::traffic_cluster_rect(strip).contains(point);
+        let ui = &mut self.editor_state.editor_ui;
+        if ui.home.hover == next && ui.topbar_traffic_hover == traffic {
             return Some(true);
         }
-        let previous = self.editor_state.editor_ui.home.hover;
-        let card_of = |hit: Option<HomeHit>| match hit {
-            Some(HomeHit::ExploreCard(family)) => Some(family),
-            _ => None,
-        };
-        let (from, to) = (card_of(previous), card_of(next));
-        if from.is_some() || to.is_some() {
-            self.editor_state
-                .editor_ui
-                .home
-                .stamp_card_hover(from, self.now_ms);
-        }
-        self.editor_state.editor_ui.home.hover = next;
+        ui.home.hover = next;
+        ui.topbar_traffic_hover = traffic;
         self.mark_dirty();
         Some(true)
     }
 
-    /// Open the account entry: the menu when signed in, the login modal
-    /// when not. ONE answer for the two surfaces that offer it (the
-    /// professional TopBar's avatar and Home's), so a first-run user
-    /// cannot find a way in on one screen and a different one on the
-    /// other. Returns whether the host has an account gate at all.
-    pub(in crate::widget_host) fn open_account_entry(&mut self) -> bool {
-        if !self.editor_state.editor_ui.account_ui_available {
+    /// Whether a press at `(x, y)` should drag the borderless window:
+    /// Home's title strip outside every Home control and popover. While
+    /// an overlay Home opened is up (Settings, sign-in, the language menu,
+    /// the model picker, which can reach the strip) the press is theirs.
+    pub fn home_window_drag_at(
+        &self,
+        x: f32,
+        y: f32,
+        viewport_width: f32,
+        viewport_height: f32,
+    ) -> bool {
+        let ui = &self.editor_state.editor_ui;
+        if ui.agent_settings_open
+            || ui.login_modal_open
+            || ui.locale_picker.open
+            || ui.chat_model_picker.open
+        {
             return false;
         }
-        if self.editor_state.editor_ui.account.is_signed_in() {
-            self.editor_state.editor_ui.account_menu_open = true;
-            self.editor_state.editor_ui.account_menu_hover = None;
-        } else {
-            self.editor_state.editor_ui.login_modal_open = true;
-            self.editor_state.editor_ui.login_modal_hover = None;
-        }
-        self.mark_dirty();
-        true
+        HomeSurface::for_editor_at(&self.editor_state, self.now_ms).is_some_and(|home| {
+            home.window_drag_at(viewport_width, viewport_height, Point2D::new(x, y))
+        })
     }
 
+    /// Queue Home's brief as a generation turn. Refused (returns false)
+    /// while no agent can answer it, the same rule that greys Send out.
     pub(in crate::widget_host) fn queue_home_send(&mut self) -> bool {
+        if !self.editor_state.has_usable_chat_agent() {
+            return false;
+        }
         let Some(prompt) = self.editor_state.editor_ui.home.generation_prompt() else {
             return false;
         };
         // A brief started from Home is a NEW deliverable, so it needs a
         // page of its own. Without this the run appends to whatever the
         // last one drew and the two designs share a canvas, a deck strip
-        // and a transcript (measured 2026-09-13: a 演示文稿 brief landed
-        // its 5 slides beside the previous coffee app's 3 screens, and
-        // the strip listed all 8 as one deck). A page that is still the
-        // untouched starter has nothing to protect, so the very first
-        // run keeps the document it was launched on.
+        // and a transcript. A page that is still the untouched starter has
+        // nothing to protect, so the very first run keeps the document it
+        // was launched on.
         if !de_editor_core::blank_starter::active_page_is_blank_starter(&self.editor_state) {
             self.start_fresh_document_for_home();
         }
         // Open the generation workspace on the SAME document: the chat
         // pins into the dock and the canvas renders the boards the run
-        // produces. Family, brief, and the task's options are captured
-        // now because Home is about to hide. `run_epoch = 0` until the
-        // desktop launch stamps the live agent epoch.
+        // produces. Kind, brief, and size are captured now because Home is
+        // about to hide. `run_epoch = 0` until the desktop launch stamps
+        // the live agent epoch.
         let family = self.editor_state.editor_ui.home.task;
         let brief = self.editor_state.editor_ui.home.draft.trim().to_string();
         let options = self.editor_state.editor_ui.home.task_draft().clone();
         let previous_tool = Some(self.editor_state.tool);
-        {
-            // The workspace opener also opens the LEFT PANEL on the
-            // Chat tab (the one-time width bump included) — the dock is
-            // the rail, so a run always lands with its conversation
-            // visible and Professional Editing keeps it that way.
-            self.editor_state.editor_ui.open_workspace_for_generation(
-                family,
-                brief,
-                options,
-                0,
-                self.now_ms,
-                previous_tool,
-            );
-        }
+        // The workspace opener also opens the LEFT PANEL on the Chat tab
+        // (the one-time width bump included) — the dock is the rail, so a
+        // run always lands with its conversation visible.
+        self.editor_state.editor_ui.open_workspace_for_generation(
+            family,
+            brief,
+            options,
+            0,
+            self.now_ms,
+            previous_tool,
+        );
         // Pan-only viewing while the workspace owns the canvas; the
-        // previous tool is restored on 专业编辑.
+        // previous tool is restored on Professional Editing.
         self.editor_state.tool = de_editor_core::Tool::Hand;
         self.editor_state.editor_ui.home.hide();
         self.editor_state.chat.focus_input_at_end(self.now_ms);
         self.editor_state.chat.set_input_text(prompt);
         // Home briefs are whole-design requests — pin the turn to the
-        // orchestrator pipeline (reasoning-budget models finish there;
-        // the design-agent loop burns their budget thinking). The
-        // desktop launcher consumes the route on the next drain.
+        // orchestrator pipeline. The desktop launcher consumes the route
+        // on the next drain.
         self.editor_state.chat.launch_route = de_editor_core::LaunchRoute::Orchestrator;
         let sent = self.editor_state.chat.begin_send();
         self.editor_state.chat.focused = false;
@@ -387,173 +349,30 @@ impl WidgetHostNative {
         self.mark_dirty();
         true
     }
+
+    /// Escape's Home rung: popovers, then Home itself when it was opened
+    /// over a document (a running workspace takes the view back).
+    pub(in crate::widget_host) fn escape_home(&mut self) -> bool {
+        let ui = &mut self.editor_state.editor_ui;
+        if !ui.home.visible || !ui.home.escape() {
+            return false;
+        }
+        if !ui.home.visible && ui.workspace.active {
+            ui.workspace.reenter(self.now_ms);
+        }
+        self.mark_dirty();
+        true
+    }
+}
+
+/// Open the Settings modal, optionally on one tab.
+fn open_settings(ui: &mut de_editor_core::EditorUiState, tab: Option<AgentSettingsTab>) {
+    ui.agent_settings_open = true;
+    if let Some(tab) = tab {
+        ui.agent_settings.tab = tab;
+    }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    const W: f32 = 1440.0;
-    const H: f32 = 900.0;
-
-    /// Paint one Home frame into a fresh raster surface (the same harness
-    /// shape the pan-cache tests use) so the stamping in `paint` runs.
-    fn paint_home_once(host: &mut WidgetHostNative) {
-        let mut backend = crate::backend::NativeBackend::with_dpi(1.0);
-        let mut surface =
-            skia_safe::surfaces::raster_n32_premul((320, 240)).expect("raster surface allocated");
-        surface.canvas().clear(skia_safe::Color::WHITE);
-        let mut frame = crate::backend::NativeFrameBackend::new(&mut backend, surface.canvas());
-        host.paint(&mut frame, 320.0, 240.0);
-    }
-
-    #[test]
-    fn painting_home_stamps_the_entrance_clock_and_hiding_resets_it() {
-        let mut host = WidgetHostNative::new();
-        host.editor_state.editor_ui.home.visible = true;
-        host.set_now_ms(5_000);
-        paint_home_once(&mut host);
-        assert_eq!(host.editor_state().editor_ui.home.shown_at_ms, 5_000);
-
-        host.editor_state_mut().editor_ui.home.hide();
-        assert_eq!(
-            host.editor_state().editor_ui.home.shown_at_ms,
-            0,
-            "hiding resets the stamp so the next show animates again"
-        );
-
-        host.editor_state_mut().editor_ui.home.visible = true;
-        host.set_now_ms(20_000);
-        paint_home_once(&mut host);
-        assert_eq!(host.editor_state().editor_ui.home.shown_at_ms, 20_000);
-    }
-
-    #[test]
-    fn home_typing_and_enter_queue_the_wrapped_chat_turn() {
-        let mut host = WidgetHostNative::new();
-        host.editor_state_mut().editor_ui.home.visible = true;
-        for character in "取餐预约".chars() {
-            assert!(host.apply_text(character));
-        }
-        assert_eq!(host.editor_state().editor_ui.home.draft, "取餐预约");
-        assert_eq!(
-            host.editor_state().editor_ui.home.task_draft().text,
-            "取餐预约",
-            "typing lands in the active task's draft"
-        );
-        let expected = host
-            .editor_state()
-            .editor_ui
-            .home
-            .generation_prompt()
-            .unwrap();
-        assert!(host.apply_send());
-        assert!(!host.home_visible());
-        assert_eq!(
-            host.editor_state().chat.pending_send.as_deref(),
-            Some(expected.as_str())
-        );
-        assert_eq!(host.editor_state().chat.messages[0].content, expected);
-    }
-
-    #[test]
-    fn switching_tabs_and_back_restores_each_task_draft() {
-        let mut host = WidgetHostNative::new();
-        host.editor_state_mut().editor_ui.home.visible = true;
-        for character in "取餐预约".chars() {
-            assert!(host.apply_text(character));
-        }
-        let home = HomeSurface::for_editor(host.editor_state()).expect("home");
-        let layout = home.layout(W, H);
-        let poster_tab = center(layout.tabs[6]);
-        assert!(host.apply_press(poster_tab.x, poster_tab.y, W, H));
-        assert_eq!(
-            host.editor_state().editor_ui.home.task,
-            HomeFamily::EventPoster
-        );
-        assert!(host.editor_state().editor_ui.home.draft.is_empty());
-        let home = HomeSurface::for_editor(host.editor_state()).expect("home");
-        let layout = home.layout(W, H);
-        let app_tab = center(layout.tabs[0]);
-        assert!(host.apply_press(app_tab.x, app_tab.y, W, H));
-        assert_eq!(host.editor_state().editor_ui.home.draft, "取餐预约");
-    }
-
-    #[test]
-    fn send_with_an_empty_draft_is_a_noop() {
-        let mut host = WidgetHostNative::new();
-        host.editor_state_mut().editor_ui.home.visible = true;
-        let home = HomeSurface::for_editor(host.editor_state()).expect("home");
-        let send = center(home.layout(W, H).send);
-        assert!(host.apply_press(send.x, send.y, W, H));
-        assert!(
-            host.editor_state().chat.pending_send.is_none(),
-            "an empty draft queues nothing"
-        );
-        assert!(
-            host.editor_state().editor_ui.home.connect_card_open,
-            "with no usable agent the connect card opens instead"
-        );
-    }
-
-    #[test]
-    fn using_the_example_fills_the_draft() {
-        let mut host = WidgetHostNative::new();
-        host.editor_state_mut().editor_ui.home.visible = true;
-        let expected = {
-            let home = HomeSurface::for_editor(host.editor_state()).expect("home");
-            home.example_prompt().to_string()
-        };
-        let use_example = {
-            let home = HomeSurface::for_editor(host.editor_state()).expect("home");
-            center(home.layout(W, H).use_example)
-        };
-        assert!(host.apply_press(use_example.x, use_example.y, W, H));
-        assert_eq!(host.editor_state().editor_ui.home.draft, expected);
-    }
-
-    #[test]
-    fn a_busy_draft_arms_the_inline_replace_strip() {
-        let mut host = WidgetHostNative::new();
-        host.editor_state_mut().editor_ui.home.visible = true;
-        host.editor_state_mut()
-            .editor_ui
-            .home
-            .set_draft("我自己的需求");
-        let home = HomeSurface::for_editor(host.editor_state()).expect("home");
-        let expected = home.example_prompt().to_string();
-        let layout = home.layout(W, H);
-        let use_example = center(layout.use_example);
-        assert!(host.apply_press(use_example.x, use_example.y, W, H));
-        assert!(host.editor_state().editor_ui.home.replace_pending);
-        assert_eq!(host.editor_state().editor_ui.home.draft, "我自己的需求");
-        // 使用示例 replaces the draft via the strip.
-        let home = HomeSurface::for_editor(host.editor_state()).expect("home");
-        let layout = home.layout(W, H);
-        let confirm = center(layout.replace_use);
-        assert!(host.apply_press(confirm.x, confirm.y, W, H));
-        assert!(!host.editor_state().editor_ui.home.replace_pending);
-        assert_eq!(host.editor_state().editor_ui.home.draft, expected);
-    }
-
-    #[test]
-    fn professional_mode_hides_home_and_sets_canvas_preference() {
-        let mut host = WidgetHostNative::new();
-        host.editor_state_mut().editor_ui.home.visible = true;
-        let home = HomeSurface::for_editor(host.editor_state()).expect("home");
-        let rect = home.layout(W, H).professional;
-        assert!(host.apply_press(rect.origin.x + 4.0, rect.origin.y + 4.0, W, H));
-        assert!(!host.home_visible());
-        assert_eq!(
-            host.editor_state().editor_ui.entry_surface,
-            EntrySurface::Canvas
-        );
-    }
-
-    fn center(rect: de_editor_ui::Rect) -> Point2D {
-        Point2D::new(
-            rect.origin.x + rect.size.x / 2.0,
-            rect.origin.y + rect.size.y / 2.0,
-        )
-    }
-}
+#[path = "home_tests.rs"]
+mod tests;

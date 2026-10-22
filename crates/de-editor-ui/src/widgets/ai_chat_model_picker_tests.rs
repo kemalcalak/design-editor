@@ -320,13 +320,10 @@ fn pressed_model_row_paints_studio_pressed_pill() {
         backend: &mut backend,
     };
     let row_y = rect.origin.y + MODEL_SEARCH_H + MODEL_PICKER_PAD_Y + MODEL_GROUP_H;
-    // Studio restyle: the pressed row now paints the picker's own
-    // pressed token on the 6 px-inset radius-8 pill. Previously the
-    // shared select feedback wash at a 4 px inset / radius 6 with
-    // `theme.button_hover × 1.8`; the dark pressed token is now
-    // derived from `theme.muted`.
+    // The pressed row paints the picker's own pressed token — Home's
+    // dark `subtle` wash — on the 6 px-inset radius-8 pill.
     let expected_rect = model_row_pill_rect(rect, row_y);
-    let expected = theme.muted;
+    let expected = crate::widgets::home_surface::HomePalette::dark().subtle;
 
     paint_model_picker(
         &mut cx,
@@ -344,7 +341,7 @@ fn pressed_model_row_paints_studio_pressed_pill() {
         backend.fills.iter().any(|(fill, radius, color)| {
             *fill == expected_rect && (*radius - 8.0).abs() < 0.01 && color_close(*color, expected)
         }),
-        "pressed model row should paint the Studio pressed pill"
+        "pressed model row should paint the subtle pressed pill"
     );
 }
 
@@ -569,14 +566,14 @@ fn selected_row_pill_stays_inside_popover_at_minimum_width() {
     let check_top = row_y + (MODEL_ROW_H - 14.0) / 2.0;
     assert!(check_top >= pill.origin.y - 0.01);
     assert!(check_top + 14.0 <= pill.origin.y + pill.size.y + 0.01);
-    // The light-theme selected fill is the Studio `#EAF2FF` pill at
-    // radius 8, painted at exactly the pill rect.
-    let studio_selected = Color::rgb_u8(0xEA, 0xF2, 0xFF);
+    // The light-theme selected fill is Home's `subtle` wash at radius 8,
+    // painted at exactly the pill rect.
+    let studio_selected = crate::widgets::home_surface::HomePalette::light().subtle;
     assert!(
         backend.fills.iter().any(|(fill, radius, color)| {
             *fill == pill && (*radius - 8.0).abs() < 0.01 && color_close(*color, studio_selected)
         }),
-        "selected row should paint the Studio selected pill"
+        "selected row should paint the subtle selected pill"
     );
 }
 

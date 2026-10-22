@@ -60,7 +60,7 @@ fn host_with_boards_preserving(
 
 #[test]
 fn the_chat_panel_pins_into_the_dock_rect() {
-    let host = host_with_boards(HomeFamily::AppUi, 3);
+    let host = host_with_boards(HomeFamily::MobileApp, 3);
     let rect = host.ai_chat_rect(W, H).expect("pinned chat rect");
     assert_eq!(rect.origin.x, 0.0);
     assert_eq!(rect.origin.y, 64.0);
@@ -71,7 +71,7 @@ fn the_chat_panel_pins_into_the_dock_rect() {
     assert_eq!(rect.size.y, H - 64.0);
 
     // Collapsing the dock (the toolbar toggle) hides the chat entirely.
-    let mut collapsed = host_with_boards(HomeFamily::AppUi, 3);
+    let mut collapsed = host_with_boards(HomeFamily::MobileApp, 3);
     collapsed.editor_state_mut().editor_ui.sidebar_open = false;
     assert_eq!(collapsed.ai_chat_rect(W, H), None);
     let (x, _, w, _) = collapsed.canvas_region(W, H);
@@ -83,7 +83,7 @@ fn the_chat_panel_pins_into_the_dock_rect() {
 /// a floating one over the canvas.
 #[test]
 fn the_chat_tab_pins_the_chat_into_the_left_rail() {
-    let mut host = host_with_boards(HomeFamily::AppUi, 3);
+    let mut host = host_with_boards(HomeFamily::MobileApp, 3);
     host.editor_state_mut()
         .editor_ui
         .workspace
@@ -130,16 +130,16 @@ fn the_chat_tab_pins_the_chat_into_the_left_rail() {
 
 #[test]
 fn the_canvas_region_starts_at_the_dock() {
-    let host = host_with_boards(HomeFamily::AppUi, 3);
+    let host = host_with_boards(HomeFamily::MobileApp, 3);
     let (x, y, w, h) = host.canvas_region(W, H);
     assert_eq!((x, y, w, h), (320.0, 108.0, 1120.0, 792.0));
 
-    let deck = host_with_boards(HomeFamily::Presentation, 3);
+    let deck = host_with_boards(HomeFamily::Slides, 3);
     let (x, y, _, h) = deck.canvas_region(W, H);
     assert_eq!((x, y), (320.0, 108.0));
     assert_eq!(h, 682.0, "the deck strip reserves the bottom 110 px");
 
-    let mut collapsed = host_with_boards(HomeFamily::AppUi, 3);
+    let mut collapsed = host_with_boards(HomeFamily::MobileApp, 3);
     collapsed.editor_state_mut().editor_ui.sidebar_open = false;
     let (x, _, w, _) = collapsed.canvas_region(W, H);
     assert_eq!(
@@ -151,7 +151,7 @@ fn the_canvas_region_starts_at_the_dock() {
 
 #[test]
 fn pressing_professional_hides_the_workspace_and_restores_the_tool() {
-    let mut host = host_with_boards(HomeFamily::AppUi, 3);
+    let mut host = host_with_boards(HomeFamily::MobileApp, 3);
     let professional = {
         let surface =
             de_editor_ui::widgets::WorkspaceSurface::for_editor_at(host.editor_state(), 0)
@@ -176,7 +176,7 @@ fn pressing_professional_hides_the_workspace_and_restores_the_tool() {
 
 #[test]
 fn pressing_back_shows_home_and_keeps_the_workspace_active() {
-    let mut host = host_with_boards(HomeFamily::AppUi, 3);
+    let mut host = host_with_boards(HomeFamily::MobileApp, 3);
     let back = {
         let surface =
             de_editor_ui::widgets::WorkspaceSurface::for_editor_at(host.editor_state(), 0)
@@ -199,16 +199,12 @@ fn pressing_back_shows_home_and_keeps_the_workspace_active() {
 }
 
 #[test]
-fn home_footer_returns_to_the_live_workspace() {
-    let mut host = host_with_boards(HomeFamily::AppUi, 3);
+fn escape_on_home_returns_to_the_live_workspace() {
+    let mut host = host_with_boards(HomeFamily::MobileApp, 3);
     host.editor_state_mut().editor_ui.workspace.phase = WorkspacePhase::Done;
-    host.editor_state_mut().editor_ui.home.visible = true;
-    let link = {
-        let home = de_editor_ui::widgets::HomeSurface::for_editor_at(host.editor_state(), 0)
-            .expect("home");
-        home.layout(W, H).use_example
-    };
-    assert!(host.apply_press(link.origin.x + 4.0, link.origin.y + 4.0, W, H));
+    // The workspace's back button opens Home over the running document.
+    host.editor_state_mut().editor_ui.home.show(true);
+    assert!(host.apply_escape());
     assert!(!host.editor_state().editor_ui.home.visible);
     let workspace = &host.editor_state().editor_ui.workspace;
     assert!(workspace.visible);
@@ -217,7 +213,7 @@ fn home_footer_returns_to_the_live_workspace() {
 
 #[test]
 fn a_deck_family_frames_board_two_from_its_thumbnail() {
-    let mut host = host_with_boards(HomeFamily::Presentation, 3);
+    let mut host = host_with_boards(HomeFamily::Slides, 3);
     host.editor_state_mut().editor_ui.workspace.view = WorkspaceView::Single { index: 0 };
     host.refresh_layout_scene();
     host.fit_content_to_viewport(W, H);
@@ -243,7 +239,7 @@ fn a_deck_family_frames_board_two_from_its_thumbnail() {
 
 #[test]
 fn the_dock_handle_drag_clamps_the_width() {
-    let mut host = host_with_boards(HomeFamily::AppUi, 3);
+    let mut host = host_with_boards(HomeFamily::MobileApp, 3);
     let handle = {
         let surface =
             de_editor_ui::widgets::WorkspaceSurface::for_editor_at(host.editor_state(), 0)
@@ -269,7 +265,7 @@ fn the_dock_handle_drag_clamps_the_width() {
 
 #[test]
 fn generation_pump_refits_allboards_once_per_new_count() {
-    let mut host = host_with_boards(HomeFamily::AppUi, 2);
+    let mut host = host_with_boards(HomeFamily::MobileApp, 2);
     host.editor_state_mut().editor_ui.workspace.view = WorkspaceView::AllBoards;
     assert!(host.pump_workspace_generation(W, H, true));
     assert_eq!(
@@ -311,8 +307,23 @@ fn a_second_home_brief_starts_on_a_fresh_page() {
     // it must not append to whatever the previous run drew, or the two
     // deliverables share a canvas, a deck strip and a transcript.
     let mut host = WidgetHostNative::new();
+    // Home refuses a brief nothing can answer; give it a ready agent.
+    host.editor_state_mut()
+        .editor_ui
+        .agent_settings
+        .builtin_agents
+        .push(de_editor_core::BuiltinAgentConfig {
+            id: "builtin-1".into(),
+            preset: de_editor_core::BuiltinAgentPresetKey::Custom,
+            display_name: "MiniMax".into(),
+            kind: de_editor_core::BuiltinAgentKind::OpenAiCompat,
+            api_key: "sk-test".into(),
+            models: vec!["MiniMax-M2.7".into()],
+            base_url: "http://localhost:9".into(),
+            enabled: true,
+        });
     host.editor_state_mut().editor_ui.home.visible = true;
-    host.editor_state_mut().editor_ui.home.task = HomeFamily::AppUi;
+    host.editor_state_mut().editor_ui.home.task = HomeFamily::MobileApp;
     host.editor_state_mut()
         .editor_ui
         .home
@@ -322,7 +333,7 @@ fn a_second_home_brief_starts_on_a_fresh_page() {
     // brief of a different family.
     host.editor_state_mut().editor_ui.workspace.visible = false;
     host.editor_state_mut().editor_ui.home.visible = true;
-    host.editor_state_mut().editor_ui.home.task = HomeFamily::Presentation;
+    host.editor_state_mut().editor_ui.home.task = HomeFamily::Slides;
     host.editor_state_mut()
         .editor_ui
         .home
@@ -332,6 +343,6 @@ fn a_second_home_brief_starts_on_a_fresh_page() {
     assert!(host.queue_home_send(), "second brief sends");
     assert_eq!(
         host.editor_state().editor_ui.workspace.family,
-        HomeFamily::Presentation
+        HomeFamily::Slides
     );
 }

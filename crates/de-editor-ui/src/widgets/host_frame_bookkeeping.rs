@@ -171,19 +171,18 @@ pub fn base_animation_deadline_ms(
     if let Some(deadline) = state.editor_ui.workspace.entrance_deadline_ms(now_ms) {
         next = earliest(next, deadline);
     }
-    // Same reason for the Home entrance choreography: the staggered rise
-    // and the underline draw run on their own clock, so the scheduler
-    // must keep frames coming until the whole window has played out.
-    if let Some(deadline) = state.editor_ui.home.entrance_deadline_ms(now_ms) {
+    // Home's "Copied" acknowledgement reverts on its own clock.
+    if let Some(deadline) = state.editor_ui.home.copied_deadline_ms(now_ms) {
         next = earliest(next, deadline);
     }
-    // The explore-card hover lift (300 ms in and out) and the example
-    // art crossfade run on the same clock.
-    if let Some(deadline) = state.editor_ui.home.hover_lift_deadline_ms(now_ms) {
-        next = earliest(next, deadline);
-    }
-    if let Some(deadline) = state.editor_ui.home.art_deadline_ms(now_ms) {
-        next = earliest(next, deadline);
+    // So do the Settings ▸ MCP copy chips.
+    if state.editor_ui.agent_settings_open {
+        if let Some(deadline) = crate::widgets::agent_settings_mcp::copy_feedback_deadline_ms(
+            &state.editor_ui.agent_settings,
+            now_ms,
+        ) {
+            next = earliest(next, deadline);
+        }
     }
     // A time-driven shader fill on screen animates without any input, so
     // the scheduler keeps frames coming for as long as one is painted.

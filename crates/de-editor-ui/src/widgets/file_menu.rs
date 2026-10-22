@@ -402,7 +402,7 @@ fn file_name(path: &str) -> String {
         .unwrap_or_else(|| path.to_string())
 }
 
-fn format_age(ui: &EditorUiState, elapsed_secs: u64) -> String {
+pub(crate) fn format_age(ui: &EditorUiState, elapsed_secs: u64) -> String {
     let locale = ui.effective_locale();
     if elapsed_secs < 60 {
         de_i18n::translate(locale, "fileMenu.justNow").to_string()

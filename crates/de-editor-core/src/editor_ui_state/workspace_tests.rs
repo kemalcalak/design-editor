@@ -20,39 +20,31 @@ fn opened(family: HomeFamily, epoch: u64) -> WorkspaceState {
 
 #[test]
 fn view_defaults_per_family() {
+    for family in [
+        HomeFamily::MobileApp,
+        HomeFamily::WebApp,
+        HomeFamily::Dashboard,
+        HomeFamily::Other,
+    ] {
+        assert_eq!(
+            WorkspaceView::default_for(family),
+            WorkspaceView::AllBoards,
+            "{family:?}"
+        );
+    }
     assert_eq!(
-        WorkspaceView::default_for(HomeFamily::AppUi),
-        WorkspaceView::AllBoards
-    );
-    assert_eq!(
-        WorkspaceView::default_for(HomeFamily::KnowledgeCards),
-        WorkspaceView::AllBoards
-    );
-    assert_eq!(
-        WorkspaceView::default_for(HomeFamily::ScreenshotTutorial),
-        WorkspaceView::AllBoards
-    );
-    assert_eq!(
-        WorkspaceView::default_for(HomeFamily::EventPoster),
-        WorkspaceView::AllBoards
-    );
-    assert_eq!(
-        WorkspaceView::default_for(HomeFamily::Presentation),
+        WorkspaceView::default_for(HomeFamily::Slides),
         WorkspaceView::Single { index: 0 }
     );
     assert_eq!(
-        WorkspaceView::default_for(HomeFamily::Web),
-        WorkspaceView::LongPage
-    );
-    assert_eq!(
-        WorkspaceView::default_for(HomeFamily::Infographic),
+        WorkspaceView::default_for(HomeFamily::LandingPage),
         WorkspaceView::LongPage
     );
 }
 
 #[test]
 fn open_takes_the_stage_with_the_run_facts() {
-    let workspace = opened(HomeFamily::Presentation, 7);
+    let workspace = opened(HomeFamily::Slides, 7);
     assert!(workspace.active);
     assert!(workspace.visible);
     assert_eq!(workspace.phase, WorkspacePhase::Generating);
@@ -64,7 +56,7 @@ fn open_takes_the_stage_with_the_run_facts() {
 
 #[test]
 fn mark_done_on_the_idle_edge_with_a_matching_epoch() {
-    let mut workspace = opened(HomeFamily::AppUi, 7);
+    let mut workspace = opened(HomeFamily::MobileApp, 7);
     assert!(workspace.mark_done(7));
     assert_eq!(workspace.phase, WorkspacePhase::Done);
     // Terminal phases are sticky — a second edge changes nothing.
@@ -75,19 +67,19 @@ fn mark_done_on_the_idle_edge_with_a_matching_epoch() {
 
 #[test]
 fn mark_done_with_a_stale_epoch_is_ignored() {
-    let mut workspace = opened(HomeFamily::AppUi, 7);
+    let mut workspace = opened(HomeFamily::MobileApp, 7);
     assert!(!workspace.mark_done(3), "a stale epoch must not finish us");
     assert_eq!(workspace.phase, WorkspacePhase::Generating);
     // ...while an unstamped workspace accepts any epoch (the launch has
     // not identified the run yet).
-    let mut unstamped = opened(HomeFamily::AppUi, 0);
+    let mut unstamped = opened(HomeFamily::MobileApp, 0);
     assert!(unstamped.mark_done(3));
     assert_eq!(unstamped.phase, WorkspacePhase::Done);
 }
 
 #[test]
 fn stop_is_sticky_against_the_late_idle_edge() {
-    let mut workspace = opened(HomeFamily::AppUi, 7);
+    let mut workspace = opened(HomeFamily::MobileApp, 7);
     assert!(workspace.mark_stopped(7));
     assert_eq!(workspace.phase, WorkspacePhase::Stopped);
     assert!(
@@ -100,14 +92,14 @@ fn stop_is_sticky_against_the_late_idle_edge() {
 
 #[test]
 fn a_stale_epoch_cannot_stop_a_newer_run_either() {
-    let mut workspace = opened(HomeFamily::AppUi, 7);
+    let mut workspace = opened(HomeFamily::MobileApp, 7);
     assert!(!workspace.mark_stopped(3));
     assert_eq!(workspace.phase, WorkspacePhase::Generating);
 }
 
 #[test]
 fn failure_only_lands_from_generating() {
-    let mut workspace = opened(HomeFamily::AppUi, 7);
+    let mut workspace = opened(HomeFamily::MobileApp, 7);
     assert!(workspace.mark_failed(7));
     assert_eq!(workspace.phase, WorkspacePhase::Failed);
     assert!(!workspace.mark_done(7));
@@ -116,7 +108,7 @@ fn failure_only_lands_from_generating() {
 
 #[test]
 fn a_retry_resumes_generating_with_the_new_epoch() {
-    let mut workspace = opened(HomeFamily::AppUi, 7);
+    let mut workspace = opened(HomeFamily::MobileApp, 7);
     workspace.mark_failed(7);
     workspace.resume_generating(9);
     assert_eq!(workspace.phase, WorkspacePhase::Generating);
@@ -138,7 +130,7 @@ fn dock_width_clamps_into_the_drag_range() {
         ..crate::EditorUiState::default()
     };
     ui.open_workspace_for_generation(
-        HomeFamily::AppUi,
+        HomeFamily::MobileApp,
         "取餐预约，3 个页面",
         TaskDraft::default(),
         7,
@@ -154,7 +146,7 @@ fn dock_width_clamps_into_the_drag_range() {
 
 #[test]
 fn professional_and_reenter_round_trip_keeps_the_facts() {
-    let mut workspace = opened(HomeFamily::Presentation, 7);
+    let mut workspace = opened(HomeFamily::Slides, 7);
     workspace.view = WorkspaceView::Single { index: 2 };
     workspace.phase = WorkspacePhase::Done;
     workspace.enter_professional();
@@ -181,7 +173,7 @@ fn professional_and_reenter_round_trip_keeps_the_facts() {
 fn the_workspace_round_trip_preserves_the_panel_tab_and_width() {
     let mut state = crate::EditorState::new();
     state.editor_ui.open_workspace_for_generation(
-        HomeFamily::AppUi,
+        HomeFamily::MobileApp,
         "做一个咖啡点单 App",
         TaskDraft::default(),
         7,
@@ -218,7 +210,7 @@ fn the_workspace_round_trip_preserves_the_panel_tab_and_width() {
 
 #[test]
 fn selection_steps_and_clamps_within_the_deck() {
-    let mut workspace = opened(HomeFamily::Presentation, 7);
+    let mut workspace = opened(HomeFamily::Slides, 7);
     workspace.view = WorkspaceView::Single { index: 0 };
     assert!(workspace.step_selected(1, 5));
     assert_eq!(workspace.selected, 1);
@@ -240,7 +232,7 @@ fn selection_steps_and_clamps_within_the_deck() {
 
 #[test]
 fn a_document_swap_clears_every_transient_flag() {
-    let mut workspace = opened(HomeFamily::AppUi, 7);
+    let mut workspace = opened(HomeFamily::MobileApp, 7);
     workspace.mark_done(7);
     workspace.reset_for_new_document();
     assert!(!workspace.active);
@@ -257,7 +249,7 @@ fn entrance_deadline_spans_the_window_and_settles() {
     let mut workspace = WorkspaceState::default();
     assert_eq!(workspace.entrance_deadline_ms(0), None);
     workspace.open_for_generation(
-        HomeFamily::AppUi,
+        HomeFamily::MobileApp,
         "brief",
         TaskDraft::default(),
         0,

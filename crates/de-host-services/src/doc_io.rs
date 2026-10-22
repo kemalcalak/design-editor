@@ -246,6 +246,11 @@ pub fn preserve_app_preferences(previous: &EditorState, next: &mut EditorState) 
     next.editor_ui.locale = previous.editor_ui.locale;
     next.editor_ui.entry_surface = previous.editor_ui.entry_surface;
     next.editor_ui.recent_files = previous.editor_ui.recent_files.clone();
+    // Home's saved Recent view and the live MCP client outlive the
+    // document they were seen on.
+    next.editor_ui.home.recent_view = previous.editor_ui.home.recent_view;
+    next.editor_ui.home.mcp_agent = previous.editor_ui.home.mcp_agent;
+    next.editor_ui.home.mcp_client = previous.editor_ui.home.mcp_client.clone();
     next.editor_ui.font_import_supported = previous.editor_ui.font_import_supported;
     next.editor_ui.batch_frame_export_supported = previous.editor_ui.batch_frame_export_supported;
     next.editor_ui.scene_template_center.save_current_supported = previous

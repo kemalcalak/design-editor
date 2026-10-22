@@ -2,8 +2,8 @@
 //! takeover.
 //!
 //! Home is a full-surface takeover (see `paint.rs` / `press.rs`), but the
-//! things it opens — the agent-settings modal, the sign-in modal, the
-//! Home-anchored chat model picker — must sit above it. This module is
+//! things it opens — the agent-settings modal and the Home-anchored chat
+//! model picker — must sit above it. This module is
 //! their seam: it runs ahead of `press_home` in the press ladder and
 //! after the Home paint, mirroring the z-order those overlays hold over
 //! the rest of the editor (modals above dropdowns, exactly like
@@ -31,43 +31,48 @@ impl WidgetHostNative {
         if !self.home_visible() {
             return None;
         }
-        let (settings_open, login_open, account_menu_open, account_ui) = {
-            let ui = &self.editor_state.editor_ui;
-            (
-                ui.agent_settings_open,
-                ui.login_modal_open && (ui.account_ui_available || ui.touch_chrome()),
-                ui.account_menu_open && ui.account_ui_available,
-                ui.chat_model_picker.open,
-            )
-        };
         // Same z-order as the normal path: the settings modal (tier 1),
-        // then the sign-in modal (tier 2), then the model picker.
-        if settings_open {
+        // then the sign-in modal Settings ▸ Account opens, then the locale
+        // dropdown, then the model picker.
+        if self.editor_state.editor_ui.agent_settings_open {
             return self
                 .dispatch_agent_settings_press(x, y, viewport_width, viewport_height)
                 .then_some(true);
         }
+        let login_open = {
+            let ui = &self.editor_state.editor_ui;
+            ui.login_modal_open && (ui.account_ui_available || ui.touch_chrome())
+        };
         if login_open {
             self.dispatch_login_modal_press(x, y, viewport_width, viewport_height);
             return Some(true);
         }
-        // The signed-in half of what Home's avatar opens. Without this
-        // the menu painted and then swallowed nothing: every press fell
-        // through to the surface underneath and the menu never closed.
-        if account_menu_open {
-            self.dispatch_account_menu_press(x, y, viewport_width, viewport_height);
+        if self.editor_state.editor_ui.locale_picker.open {
+            let panel = self.locale_picker_rect(viewport_width);
+            let point = Point2D::new(x, y);
+            if let de_editor_ui::widgets::press_flow::LocalePickerPress::Outside =
+                de_editor_ui::widgets::press_flow::press_locale_picker(
+                    &mut self.editor_state,
+                    panel,
+                    point,
+                )
+            {
+                de_editor_core::host_press_transitions::close_locale_picker(
+                    &mut self.editor_state.editor_ui,
+                );
+            }
+            self.mark_dirty();
             return Some(true);
         }
-        if account_ui {
+        if self.editor_state.editor_ui.chat_model_picker.open {
             return self.press_home_model_picker(x, y, viewport_width, viewport_height);
         }
         None
     }
 
     /// Paint the Home-opened overlays above the takeover: the agent-
-    /// settings modal, the sign-in modal, the signed-in account menu,
-    /// then the Home-anchored model picker with its trailing
-    /// connect-more row.
+    /// settings modal, the sign-in modal, the language menu, then the
+    /// Home-anchored model picker.
     pub(in crate::widget_host) fn paint_home_overlays(
         &mut self,
         frame: &mut NativeFrameBackend<'_>,
@@ -79,41 +84,19 @@ impl WidgetHostNative {
         }
         self.paint_agent_settings_modal_overlay(frame, viewport_width, viewport_height);
         self.paint_login_modal_overlay(frame, viewport_width, viewport_height);
-        self.paint_account_menu_overlay(frame, viewport_width, viewport_height);
+        if self.editor_state.editor_ui.locale_picker.open {
+            let rect = self.locale_picker_rect(viewport_width);
+            let picker =
+                de_editor_ui::widgets::LocalePicker::for_editor_ui(&self.editor_state.editor_ui);
+            let mut cx = PaintCx {
+                backend: &mut *frame,
+            };
+            picker.paint(&mut cx, rect);
+        }
         self.paint_home_model_picker(frame, viewport_width, viewport_height);
     }
 
-    /// The signed-in account dropdown. Home paints it for the same
-    /// reason it paints the sign-in modal: its avatar opens one of the
-    /// two, and a takeover that draws only the signed-OUT half leaves a
-    /// signed-in user clicking an avatar that does nothing.
-    pub(in crate::widget_host) fn paint_account_menu_overlay(
-        &self,
-        frame: &mut NativeFrameBackend<'_>,
-        viewport_width: f32,
-        _viewport_height: f32,
-    ) {
-        let ui = &self.editor_state.editor_ui;
-        if !ui.account_ui_available || !ui.account_menu_open {
-            return;
-        }
-        use de_editor_ui::widgets::account_menu::AccountMenu;
-        let Some(menu) = AccountMenu::for_editor_ui(ui) else {
-            return;
-        };
-        let menu_rect = de_editor_ui::widgets::touch_overlay_geometry::account_menu_rect(
-            &self.editor_state,
-            &menu,
-            viewport_width,
-        );
-        let mut cx = de_editor_ui::widgets::PaintCx {
-            backend: &mut *frame,
-        };
-        menu.paint(&mut cx, menu_rect);
-    }
-
-    /// The sign-in modal: full-viewport scrim + centred card. Extracted
-    /// from the normal-path paint so Home can share the exact card.
+    /// The sign-in modal: full-viewport scrim + centred card.
     pub(in crate::widget_host) fn paint_login_modal_overlay(
         &self,
         frame: &mut NativeFrameBackend<'_>,
@@ -169,7 +152,7 @@ impl WidgetHostNative {
         panel.paint(&mut cx, panel_rect);
     }
 
-    /// The Home-anchored picker card + its "接入更多模型…" row.
+    /// The Home-anchored picker card.
     fn paint_home_model_picker(
         &mut self,
         frame: &mut NativeFrameBackend<'_>,
@@ -290,10 +273,27 @@ impl WidgetHostNative {
         viewport_width: f32,
         viewport_height: f32,
     ) -> Option<bool> {
-        if !self.home_visible() || !self.editor_state.editor_ui.chat_model_picker.open {
+        if !self.home_visible() {
             return None;
         }
         let point = Point2D::new(x, y);
+        if self.editor_state.editor_ui.locale_picker.open {
+            use de_editor_ui::widgets::locale_picker::{LocalePicker, SelectHit};
+            let panel = self.locale_picker_rect(viewport_width);
+            let picker = LocalePicker::for_editor_ui(&self.editor_state.editor_ui);
+            let hover = match picker.hit_popup(panel, point) {
+                SelectHit::Row(idx) => Some(idx),
+                SelectHit::Inside | SelectHit::Outside => None,
+            };
+            if hover != self.editor_state.editor_ui.locale_picker.hover {
+                self.editor_state.editor_ui.locale_picker.hover = hover;
+                self.mark_dirty();
+            }
+            return Some(true);
+        }
+        if !self.editor_state.editor_ui.chat_model_picker.open {
+            return None;
+        }
         let Some(card) = self.home_model_picker_geometry(viewport_width, viewport_height) else {
             return Some(true);
         };

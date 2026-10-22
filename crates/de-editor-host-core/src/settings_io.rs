@@ -72,6 +72,7 @@ pub struct Fingerprint {
     active_image_gen_profile_id: Option<String>,
     preferred_agent_team_size: u32,
     entry_surface: de_editor_core::EntrySurface,
+    home_recent_view: de_editor_core::RecentView,
     chat_agent: String,
     chat_model: String,
 }
@@ -96,6 +97,7 @@ pub fn fingerprint(state: &EditorState) -> Fingerprint {
         active_image_gen_profile_id: eui.agent_settings.active_image_gen_profile_id.clone(),
         preferred_agent_team_size: eui.preferred_agent_team_size,
         entry_surface: eui.entry_surface,
+        home_recent_view: eui.home.recent_view,
         chat_agent: selected_chat_agent_name(eui),
         chat_model: selected_chat_model_value(state),
     }
@@ -199,6 +201,9 @@ struct SettingsPayload {
     /// First-launch surface; older settings default to Home.
     #[serde(default)]
     entry_surface: Option<String>,
+    /// Home's Recent grid / list choice; older settings show the grid.
+    #[serde(default)]
+    home_recent_view: Option<String>,
     /// The chat agent's stable provider name (see
     /// `selected_chat_agent_name`); older settings keep index 0.
     #[serde(default)]
@@ -305,6 +310,7 @@ fn to_payload(state: &EditorState) -> SettingsPayload {
         ),
         preferred_agent_team_size: Some(eui.preferred_agent_team_size),
         entry_surface: Some(eui.entry_surface.as_str().into()),
+        home_recent_view: Some(eui.home.recent_view.as_str().into()),
         chat_agent: Some(selected_chat_agent_name(eui)),
         chat_model: Some(selected_chat_model_value(state)),
     }
@@ -419,6 +425,9 @@ fn apply_payload_with_options(
     }
     if let Some(surface) = payload.entry_surface.as_deref() {
         eui.entry_surface = de_editor_core::EntrySurface::from_str(surface);
+    }
+    if let Some(view) = payload.home_recent_view.as_deref() {
+        eui.home.recent_view = de_editor_core::RecentView::from_str(view);
     }
     // Restore the chat agent by name — `rebuild_chat_models` further
     // down re-derives the model catalog against this selection.

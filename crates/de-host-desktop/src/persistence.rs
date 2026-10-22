@@ -96,6 +96,11 @@ pub fn handle_save(
             }
             Ok(()) => {
                 crate::settings_io::touch_recent(host, &path);
+                crate::home_thumbnails::write_after_save(
+                    host,
+                    &path,
+                    crate::home_thumbnails::ThumbnailWrite::Always,
+                );
                 set_display_name(host, Some(&path));
                 host.editor_state_mut().mark_saved_revision();
                 return SaveActionOutcome::Saved;
@@ -172,6 +177,11 @@ fn handle_save_as_with(
     match save(host.editor_state()) {
         Ok(Some(path)) => {
             crate::settings_io::touch_recent(host, &path);
+            crate::home_thumbnails::write_after_save(
+                host,
+                &path,
+                crate::home_thumbnails::ThumbnailWrite::Always,
+            );
             // Mirror handle_save: refresh the in-chrome file name too, not
             // just the OS window title — without this, first Save As writes
             // the file but the TopBar keeps showing "Untitled".
@@ -250,6 +260,12 @@ pub fn handle_open(
         Ok(Some(bound_path)) => {
             fit_loaded_document(host, window);
             crate::settings_io::touch_recent(host, &bound_path);
+            // A file saved by an older build has no thumbnail yet.
+            crate::home_thumbnails::write_after_save(
+                host,
+                &bound_path,
+                crate::home_thumbnails::ThumbnailWrite::IfMissing,
+            );
             *current_path = Some(bound_path);
             refresh_title(current_path, window);
             true
@@ -274,6 +290,12 @@ pub fn open_path(
         Ok(Some(bound_path)) => {
             fit_loaded_document(host, window);
             crate::settings_io::touch_recent(host, &bound_path);
+            // A file saved by an older build has no thumbnail yet.
+            crate::home_thumbnails::write_after_save(
+                host,
+                &bound_path,
+                crate::home_thumbnails::ThumbnailWrite::IfMissing,
+            );
             *current_path = Some(bound_path);
             refresh_title(current_path, window);
             true
@@ -382,11 +404,25 @@ pub fn run_action(
                 de_editor_core::CollabGateAction::ReplaceDocument,
                 de_editor_core::CollabEditSource::User,
             ) {
+                // A refused New drops the template it was meant to open, so
+                // a later, unrelated New does not open it out of nowhere.
+                host.editor_state_mut().editor_ui.home.pending_template = None;
                 return ActionOutcome::Noop;
             }
             let mut state = EditorState::starter();
             preserve_app_preferences(host.editor_state(), &mut state);
             state.editor_ui.home.hide();
+            // A Home template entry asked for this fresh document; open its
+            // panel on the replacement state.
+            if let Some(template) = host
+                .editor_state_mut()
+                .editor_ui
+                .home
+                .pending_template
+                .take()
+            {
+                state.editor_ui.apply_home_template(template, host.now_ms());
+            }
             if !host.replace_editor_state(state) {
                 return ActionOutcome::Noop;
             }
@@ -404,7 +440,8 @@ pub fn run_action(
         }
         FileAction::Home => {
             host.editor_state_mut().editor_ui.entry_surface = de_editor_core::EntrySurface::Home;
-            host.editor_state_mut().editor_ui.home.visible = true;
+            // Opened over the current document, so Escape returns to it.
+            host.editor_state_mut().editor_ui.home.show(true);
             host.mark_editor_state_dirty();
             ActionOutcome::Noop
         }

@@ -1,178 +1,336 @@
-//! MCP tab of the settings modal.
+//! MCP tab of the settings modal (issue #22, Settings v2).
 //!
-//! Layout follows the modal's shared language (`agent_settings_rows`):
-//! a compact tab intro, then borderless full-width rows separated by
-//! hairlines.
-//! The server lives on one row, each CLI integration on its own row with
-//! a switch, and the endpoint JSON sits under a "custom configuration"
-//! section header carrying the copy action. None of the write behaviour
-//! changed with the reshuffle — a toggled row still writes the same MCP
-//! endpoint into the same CLI config file.
+//! Top to bottom: the tab intro, a server card (status, endpoint + Copy,
+//! port, Start / Stop), the AGENTS list — one row per external agent with
+//! Set up / Remove and an expandable manual snippet — and the last MCP
+//! client that connected. Set up flips the same `mcp_cli_enabled` slot the
+//! Home "Connect an agent" popover does, and the desktop reconciles the
+//! agent's config file after the event, so both surfaces stay one switch.
+//!
+//! Geometry and hit-testing live here; painting is in
+//! `agent_settings_mcp_paint.rs`.
 
-use crate::theme::Theme;
-use crate::widgets::agent_settings_caret::paint_settings_input_view;
-use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_metrics::CONTENT_TAIL_PAD;
-use crate::widgets::agent_settings_rows::{
-    fit_text, measure_settings_text, paint_footnote, paint_row_hairline, paint_row_label,
-    paint_row_label_above_status, paint_row_status_line, paint_section_title, paint_tab_intro,
-    row_control_rect, row_height, row_rect, tab_intro_height, RowLines, FOOTNOTE_H, ROW_HEIGHT,
-    SECTION_GAP, SECTION_HEADER_H, SETTINGS_FONT_FAMILY,
-};
-use crate::widgets::agent_settings_switch::{
-    paint_settings_switch, SETTINGS_SWITCH_H, SETTINGS_SWITCH_W,
-};
-use crate::widgets::icons::{draw_icon, Icon};
-use crate::widgets::PaintCx;
-use crate::{Point2D, Rect, TextLayout};
-use de_editor_core::agent_settings::{AgentSettings, McpCli, SettingsFocus};
-use de_editor_core::editor_ui_state::EditorUiState;
-use de_editor_core::{AgentSettingsButton, ButtonPressTarget};
+use crate::widgets::agent_settings_rows::{tab_intro_height, SECTION_GAP, SECTION_HEADER_H};
+use crate::{Point2D, Rect};
+use de_editor_core::agent_settings::{AgentSettings, McpCli};
+use de_editor_core::home_mcp_setup::{home_mcp_manual_snippet, wrap_snippet};
 
-const CLIENT_CONFIG_COPY_FEEDBACK_MS: u64 = 2_000;
-const BTN_W: f32 = 72.0;
-const BTN_H: f32 = 28.0;
-const PORT_FIELD_W: f32 = 64.0;
-const PORT_FIELD_H: f32 = 28.0;
-const COPY_BTN_W: f32 = 132.0;
-const COPY_BTN_H: f32 = 28.0;
-const COPY_BTN_ICON: f32 = 13.0;
-/// Description line plus the monospace endpoint line under the custom
-/// configuration header.
-const CONFIG_BODY_H: f32 = 46.0;
-/// Width the server row reserves on its right for port label + field +
-/// the Start/Stop button.
-const SERVER_CONTROLS_W: f32 = 208.0;
-const SECTION_ICON: f32 = 14.0;
+#[path = "agent_settings_mcp_paint.rs"]
+mod paint;
+pub(super) use paint::paint_mcp_tab;
 
-/// The MCP tab opens with the shared intro: title plus one muted line.
 const INTRO_HAS_DESC: bool = true;
+const CARD_H: f32 = 72.0;
+const CARD_PAD: f32 = 16.0;
+const BTN_W: f32 = 72.0;
+const BTN_H: f32 = 30.0;
+const PORT_FIELD_W: f32 = 64.0;
+const PORT_FIELD_H: f32 = 30.0;
+pub(super) const ENDPOINT_FONT: f32 = 11.5;
+const ENDPOINT_COPY_W: f32 = 58.0;
+const ENDPOINT_COPY_H: f32 = 22.0;
+pub(super) const ROW_H: f32 = 46.0;
+/// Rows the collapsed list shows before "Show N more".
+pub(super) const COLLAPSED_ROWS: usize = 6;
+const MORE_ROW_H: f32 = 34.0;
+const ACTION_H: f32 = 28.0;
+const SET_UP_W: f32 = 80.0;
+const REMOVE_W: f32 = 76.0;
+pub(super) const SNIPPET_FONT: f32 = 11.0;
+pub(super) const SNIPPET_LINE: f32 = 17.6;
+const SNIPPET_PAD_LEFT: f32 = 40.0;
+const SNIPPET_COPY_W: f32 = 64.0;
+const SNIPPET_COPY_H: f32 = 26.0;
+const CONNECTED_H: f32 = 20.0;
+/// Same span as Home's acknowledgement, so the two read alike.
+pub(super) const COPY_FEEDBACK_MS: u64 = de_editor_core::HOME_COPIED_MS;
+
+/// Build capability: the agent list writes MCP endpoints into external
+/// CLI config files (`~/.claude.json` etc.) via the desktop MCP runtime.
+/// The web host has no consumer — hide the list there instead of painting
+/// controls that silently do nothing.
+const CLI_INTEGRATIONS_PLATFORM: bool = !cfg!(target_arch = "wasm32");
+
+/// Whether the agent list exists on this surface at all: build capability
+/// AND the runtime host capability (`EditorUiState::external_cli_available`
+/// — mobile shells cannot spawn subprocess CLIs).
+pub(super) fn cli_integrations_visible(external_cli_available: bool) -> bool {
+    CLI_INTEGRATIONS_PLATFORM && external_cli_available
+}
 
 fn body_top(content: Rect) -> f32 {
     content.origin.y + tab_intro_height(INTRO_HAS_DESC)
 }
 
-/// The server row carries a status line under its label, so it takes the
-/// two-line box; the CLI toggles below are label-only.
-const SERVER_ROW_LINES: RowLines = RowLines::Two;
+pub(super) fn server_card_rect(content: Rect) -> Rect {
+    Rect::xywh(content.origin.x, body_top(content), content.size.x, CARD_H)
+}
 
-pub(super) fn server_row_rect(content: Rect) -> Rect {
-    Rect {
-        origin: Point2D::new(content.origin.x, body_top(content)),
-        size: Point2D::new(content.size.x, row_height(SERVER_ROW_LINES)),
+pub(super) fn server_button_rect(content: Rect) -> Rect {
+    let card = server_card_rect(content);
+    Rect::xywh(
+        card.origin.x + card.size.x - CARD_PAD - BTN_W,
+        card.origin.y + (CARD_H - BTN_H) / 2.0,
+        BTN_W,
+        BTN_H,
+    )
+}
+
+pub(super) fn port_field_rect(content: Rect) -> Rect {
+    let btn = server_button_rect(content);
+    Rect::xywh(
+        btn.origin.x - 8.0 - PORT_FIELD_W,
+        btn.origin.y,
+        PORT_FIELD_W,
+        PORT_FIELD_H,
+    )
+}
+
+/// The endpoint line's baseline-row box inside the server card.
+pub(super) fn endpoint_rect(content: Rect) -> Rect {
+    let card = server_card_rect(content);
+    Rect::xywh(
+        card.origin.x + CARD_PAD,
+        card.origin.y + 40.0,
+        card.size.x / 2.0,
+        20.0,
+    )
+}
+
+/// The endpoint's Copy chip, just after the (monospace, so exactly
+/// measurable) endpoint text.
+pub(super) fn endpoint_copy_rect(content: Rect, endpoint: &str) -> Rect {
+    let line = endpoint_rect(content);
+    let text_w = endpoint.chars().count() as f32 * ENDPOINT_FONT * 0.6;
+    Rect::xywh(
+        line.origin.x + text_w + 10.0,
+        line.origin.y + (line.size.y - ENDPOINT_COPY_H) / 2.0,
+        ENDPOINT_COPY_W,
+        ENDPOINT_COPY_H,
+    )
+}
+
+/// Kept under its old name for the hosts' hover plumbing: the endpoint
+/// Copy chip is the tab's one copy-config action now.
+pub(super) fn client_config_copy_button_rect(content: Rect, settings: &AgentSettings) -> Rect {
+    endpoint_copy_rect(content, &settings.mcp_endpoint_url())
+}
+
+pub(super) fn agents_header_top(content: Rect) -> f32 {
+    server_card_rect(content).origin.y + CARD_H + SECTION_GAP
+}
+
+/// Kept under its old name: the layout tests anchor the list to it.
+#[cfg(test)]
+pub(super) fn integrations_top(content: Rect) -> f32 {
+    agents_header_top(content)
+}
+
+fn list_top(content: Rect) -> f32 {
+    agents_header_top(content) + SECTION_HEADER_H
+}
+
+/// The agents the list shows, in Settings row order.
+pub(super) fn visible_agents(settings: &AgentSettings) -> &'static [McpCli] {
+    if settings.mcp_show_all_agents {
+        &McpCli::DISPLAY
+    } else {
+        &McpCli::DISPLAY[..COLLAPSED_ROWS]
     }
 }
 
-pub(super) fn integrations_top(content: Rect) -> f32 {
-    body_top(content) + row_height(SERVER_ROW_LINES) + SECTION_GAP
+/// The snippet column count for the expanded row, from the box width.
+fn snippet_columns(content: Rect) -> usize {
+    let box_w = content.size.x - SNIPPET_PAD_LEFT - 14.0 - 20.0 - SNIPPET_COPY_W - 8.0;
+    (box_w / (SNIPPET_FONT * 0.6)).floor() as usize
 }
 
+pub(super) fn snippet_lines(content: Rect, settings: &AgentSettings, cli: McpCli) -> Vec<String> {
+    wrap_snippet(
+        &home_mcp_manual_snippet(cli, &settings.mcp_endpoint_url()),
+        snippet_columns(content),
+    )
+}
+
+fn snippet_box_h(lines: usize) -> f32 {
+    (lines as f32 * SNIPPET_LINE + 16.0).max(36.0)
+}
+
+/// One agent's block: the 46 px row plus, when expanded, its snippet.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(super) struct AgentRow {
+    pub cli: McpCli,
+    pub row: Rect,
+    /// The snippet box (zero when collapsed).
+    pub snippet: Rect,
+    pub action: Rect,
+    pub snippet_copy: Rect,
+}
+
+pub(super) fn agent_rows(content: Rect, settings: &AgentSettings) -> Vec<AgentRow> {
+    let mut y = list_top(content);
+    let x = content.origin.x;
+    let w = content.size.x;
+    visible_agents(settings)
+        .iter()
+        .map(|cli| {
+            let row = Rect::xywh(x, y, w, ROW_H);
+            let enabled = settings.mcp_cli_enabled[cli.index()];
+            let action_w = if enabled { REMOVE_W } else { SET_UP_W };
+            let action = Rect::xywh(
+                x + w - 14.0 - action_w,
+                y + (ROW_H - ACTION_H) / 2.0,
+                action_w,
+                ACTION_H,
+            );
+            y += ROW_H;
+            let (snippet, snippet_copy) = if settings.mcp_expanded_agent == Some(*cli) {
+                let lines = snippet_lines(content, settings, *cli).len();
+                let h = snippet_box_h(lines);
+                let rect = Rect::xywh(x + SNIPPET_PAD_LEFT, y, w - SNIPPET_PAD_LEFT - 14.0, h);
+                y += h + 14.0;
+                (
+                    rect,
+                    Rect::xywh(
+                        rect.origin.x + rect.size.x - 8.0 - SNIPPET_COPY_W,
+                        rect.origin.y + 5.0,
+                        SNIPPET_COPY_W,
+                        SNIPPET_COPY_H,
+                    ),
+                )
+            } else {
+                (Rect::ZERO, Rect::ZERO)
+            };
+            AgentRow {
+                cli: *cli,
+                row,
+                snippet,
+                action,
+                snippet_copy,
+            }
+        })
+        .collect()
+}
+
+/// The list's outer frame, including the "Show N more" row.
+pub(super) fn list_frame(content: Rect, settings: &AgentSettings) -> Rect {
+    let top = list_top(content);
+    Rect::xywh(
+        content.origin.x,
+        top,
+        content.size.x,
+        list_bottom(content, settings) - top,
+    )
+}
+
+fn rows_bottom(content: Rect, settings: &AgentSettings) -> f32 {
+    agent_rows(content, settings)
+        .last()
+        .map(|last| {
+            if last.snippet.size.y > 0.0 {
+                last.snippet.origin.y + last.snippet.size.y + 14.0
+            } else {
+                last.row.origin.y + ROW_H
+            }
+        })
+        .unwrap_or_else(|| list_top(content))
+}
+
+/// The "Show N more agents" / "Show fewer" toggle row.
+pub(super) fn show_more_rect(content: Rect, settings: &AgentSettings) -> Rect {
+    Rect::xywh(
+        content.origin.x,
+        rows_bottom(content, settings),
+        content.size.x,
+        MORE_ROW_H,
+    )
+}
+
+fn list_bottom(content: Rect, settings: &AgentSettings) -> f32 {
+    let more = show_more_rect(content, settings);
+    more.origin.y + more.size.y
+}
+
+/// The CONNECTED line under the list (or under the card on hosts without
+/// the list).
+pub(super) fn connected_rect(
+    content: Rect,
+    settings: &AgentSettings,
+    external_cli_available: bool,
+) -> Rect {
+    let y = if cli_integrations_visible(external_cli_available) {
+        list_bottom(content, settings) + 16.0
+    } else {
+        server_card_rect(content).origin.y + CARD_H + 16.0
+    };
+    Rect::xywh(content.origin.x, y, content.size.x, CONNECTED_H)
+}
+
+/// Row 0's box, for the layout tests that walk rows.
+#[cfg(test)]
 pub(super) fn cli_row_rect(content: Rect, index: usize) -> Rect {
-    row_rect(content, integrations_top(content) + SECTION_HEADER_H, index)
-}
-
-fn integrations_block_h() -> f32 {
-    SECTION_HEADER_H + McpCli::DISPLAY.len() as f32 * ROW_HEIGHT + FOOTNOTE_H
+    Rect::xywh(
+        content.origin.x,
+        list_top(content) + index as f32 * ROW_H,
+        content.size.x,
+        ROW_H,
+    )
 }
 
 /// Row boxes for this tab, paired with their line count — walked by the
 /// traversal layout test.
 #[cfg(test)]
-pub(super) fn row_boxes(content: Rect, external_cli_available: bool) -> Vec<(Rect, RowLines)> {
-    let mut boxes = vec![(server_row_rect(content), SERVER_ROW_LINES)];
+pub(super) fn row_boxes(
+    content: Rect,
+    external_cli_available: bool,
+) -> Vec<(Rect, crate::widgets::agent_settings_rows::RowLines)> {
+    use crate::widgets::agent_settings_rows::RowLines;
+    let settings = AgentSettings::default();
+    let mut boxes = vec![(server_card_rect(content), RowLines::Two)];
     if cli_integrations_visible(external_cli_available) {
-        boxes.extend((0..McpCli::DISPLAY.len()).map(|i| (cli_row_rect(content, i), RowLines::One)));
+        boxes.extend(
+            agent_rows(content, &settings)
+                .into_iter()
+                .map(|row| (row.row, RowLines::Two)),
+        );
     }
     boxes
 }
 
-/// The endpoint JSON only exists once a server is listening (or the embed
-/// host manages one), so its section appears with it.
-fn has_client_config(settings: &AgentSettings) -> bool {
-    settings.mcp_host_managed() || settings.mcp_server.running
-}
-
-/// Top of the custom-configuration section. Its *visibility* depends on
-/// whether a server is listening (`has_client_config`), but its position
-/// does not, so callers gate and place independently. It DOES move up by
-/// the whole integrations block when that block is hidden.
-pub(super) fn custom_config_top(content: Rect, external_cli_available: bool) -> f32 {
-    let mut y = body_top(content) + row_height(SERVER_ROW_LINES);
-    if cli_integrations_visible(external_cli_available) {
-        y += SECTION_GAP + integrations_block_h();
-    }
-    y + SECTION_GAP
-}
-
 pub(super) fn content_height(settings: &AgentSettings, external_cli_available: bool) -> f32 {
-    let mut h = tab_intro_height(INTRO_HAS_DESC) + row_height(SERVER_ROW_LINES);
-    if cli_integrations_visible(external_cli_available) {
-        h += SECTION_GAP + integrations_block_h();
-    }
-    if has_client_config(settings) {
-        h += SECTION_GAP + SECTION_HEADER_H + CONFIG_BODY_H;
-    }
-    h + CONTENT_TAIL_PAD
+    content_height_at(settings, external_cli_available, 600.0)
+}
+
+/// The tab's height when laid out `width` wide: an expanded snippet wraps
+/// onto more lines in a narrow window.
+pub(super) fn content_height_at(
+    settings: &AgentSettings,
+    external_cli_available: bool,
+    width: f32,
+) -> f32 {
+    let origin = Rect::xywh(0.0, 0.0, width, 0.0);
+    connected_rect(origin, settings, external_cli_available)
+        .origin
+        .y
+        + CONNECTED_H
+        - origin.origin.y
+        + CONTENT_TAIL_PAD
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum McpHit {
     ToggleServer,
+    /// Set up / Remove on an agent row (flips its config slot).
     ToggleCli(McpCli),
+    /// The endpoint's Copy chip.
     CopyClientConfig,
     FocusPort,
+    /// A press on an agent row outside its action: expand / collapse.
+    ExpandCli(McpCli),
+    CopySnippet(McpCli),
+    ToggleShowAll,
     None,
-}
-
-pub(super) fn server_button_rect(content: Rect) -> Rect {
-    row_control_rect(server_row_rect(content), BTN_W, BTN_H)
-}
-
-pub(super) fn port_field_rect(content: Rect) -> Rect {
-    let btn = server_button_rect(content);
-    let row = server_row_rect(content);
-    Rect {
-        origin: Point2D::new(
-            btn.origin.x - 8.0 - PORT_FIELD_W,
-            // Centre in the row's OWN box. Centring on the one-line stride
-            // left the field riding high in a two-line row.
-            row.origin.y + (row.size.y - PORT_FIELD_H) / 2.0,
-        ),
-        size: Point2D::new(PORT_FIELD_W, PORT_FIELD_H),
-    }
-}
-
-pub(super) fn client_config_copy_button_rect(content: Rect, external_cli_available: bool) -> Rect {
-    let header = Rect {
-        origin: Point2D::new(
-            content.origin.x,
-            custom_config_top(content, external_cli_available),
-        ),
-        size: Point2D::new(content.size.x, SECTION_HEADER_H),
-    };
-    row_control_rect(header, COPY_BTN_W, COPY_BTN_H)
-}
-
-/// Build capability: the CLI-integration toggles write MCP endpoints
-/// into external CLI config files (`~/.claude.json` etc.) via the
-/// desktop MCP runtime (`mcp_integrations.rs`). The web host has no
-/// consumer — hide the list there instead of painting toggles that
-/// silently do nothing (same pattern as `GIT_BUTTON_AVAILABLE`).
-const CLI_INTEGRATIONS_PLATFORM: bool = !cfg!(target_arch = "wasm32");
-
-/// Whether the terminal-integration list exists on this surface at all.
-/// Build capability AND the runtime host capability
-/// [`EditorUiState::external_cli_available`] — mobile shells (iOS /
-/// Android / HarmonyOS) cannot spawn subprocess CLIs, so writing an MCP
-/// endpoint into a CLI config there would configure a client that can
-/// never run.
-///
-/// Every geometry fn on this tab that walks past the block takes the raw
-/// `external_cli_available` bool and resolves it here, so paint, hit-test
-/// and the content-height walk cannot disagree about whether the block
-/// occupies space.
-pub(super) fn cli_integrations_visible(external_cli_available: bool) -> bool {
-    CLI_INTEGRATIONS_PLATFORM && external_cli_available
 }
 
 pub fn hit_test(
@@ -182,390 +340,57 @@ pub fn hit_test(
     external_cli_available: bool,
 ) -> McpHit {
     // Host-managed (embed): the extension owns the lifecycle — no
-    // start/stop, no port editing; the config section always copies.
+    // start/stop, no port editing; the endpoint still copies.
     let host_managed = settings.mcp_host_managed();
-    if !host_managed && (server_button_rect(content)).contains(scrolled) {
+    if !host_managed && server_button_rect(content).contains(scrolled) {
         return McpHit::ToggleServer;
     }
-    if has_client_config(settings)
-        && (client_config_copy_button_rect(content, external_cli_available)).contains(scrolled)
-    {
+    if client_config_copy_button_rect(content, settings).contains(scrolled) {
         return McpHit::CopyClientConfig;
     }
-    if !host_managed
-        && !settings.mcp_server.running
-        && (port_field_rect(content)).contains(scrolled)
+    if !host_managed && !settings.mcp_server.running && port_field_rect(content).contains(scrolled)
     {
         return McpHit::FocusPort;
     }
-    if cli_integrations_visible(external_cli_available) {
-        // Row order is `McpCli::DISPLAY`; paint below walks the same array
-        // with the same rect math, so a click always lands on the CLI that
-        // was painted there.
-        for (i, cli) in McpCli::DISPLAY.iter().enumerate() {
-            if (cli_row_rect(content, i)).contains(scrolled) {
-                return McpHit::ToggleCli(*cli);
-            }
+    if !cli_integrations_visible(external_cli_available) {
+        return McpHit::None;
+    }
+    for row in agent_rows(content, settings) {
+        if row.action.contains(scrolled) {
+            return McpHit::ToggleCli(row.cli);
         }
+        if row.snippet_copy.contains(scrolled) {
+            return McpHit::CopySnippet(row.cli);
+        }
+        if row.row.contains(scrolled) {
+            return McpHit::ExpandCli(row.cli);
+        }
+    }
+    if show_more_rect(content, settings).contains(scrolled) {
+        return McpHit::ToggleShowAll;
     }
     McpHit::None
 }
 
-pub(super) fn paint_mcp_tab(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    settings: &AgentSettings,
-    ui: &EditorUiState,
-    content: Rect,
-    now_ms: u64,
-    external_cli_available: bool,
-) {
-    paint_tab_intro(
-        cx,
-        theme,
-        content,
-        t_settings(ui, "settings.mcp.heroTitle"),
-        Some(t_settings(ui, "settings.mcp.heroSubtitle")),
-    );
-    paint_server_row(cx, theme, settings, ui, content, now_ms);
-
-    if cli_integrations_visible(external_cli_available) {
-        let top = integrations_top(content);
-        paint_section_header(
-            cx,
-            theme,
-            content,
-            top,
-            Icon::Terminal,
-            t_settings(ui, "settings.mcp.terminalIntegrations"),
-        );
-        let last = McpCli::DISPLAY.len() - 1;
-        for (i, cli) in McpCli::DISPLAY.iter().enumerate() {
-            let row = cli_row_rect(content, i);
-            paint_row_label(cx, theme, row, cli.label(), None, SETTINGS_SWITCH_W + 16.0);
-            paint_settings_switch(
-                cx,
-                theme,
-                row_control_rect(row, SETTINGS_SWITCH_W, SETTINGS_SWITCH_H),
-                // Toggle state is stored positionally in append-only
-                // `McpCli::ALL` order; the displayed row is `DISPLAY` order.
-                settings.mcp_cli_enabled[cli.index()],
-            );
-            if i != last {
-                paint_row_hairline(cx, theme, row);
-            }
-        }
-        paint_footnote(
-            cx,
-            theme,
-            content,
-            cli_row_rect(content, last).origin.y + ROW_HEIGHT,
-            t_settings(ui, "settings.mcp.terminalFootnote"),
-        );
-    }
-
-    paint_custom_config(
-        cx,
-        theme,
-        settings,
-        ui,
-        content,
-        now_ms,
-        external_cli_available,
-    );
+/// Whether a copy acknowledgement started at `copied_at` still shows.
+pub(super) fn copy_feedback_active(copied_at: Option<u64>, now_ms: u64) -> bool {
+    copied_at.is_some_and(|at| now_ms.saturating_sub(at) < COPY_FEEDBACK_MS)
 }
 
-/// Section header: glyph + title on the left, optional action on the
-/// right. Shared shape between the integrations list and the custom
-/// configuration block.
-fn paint_section_header(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    content: Rect,
-    y: f32,
-    icon: Icon,
-    title: &str,
-) {
-    draw_icon(
-        cx.backend,
-        icon,
-        Point2D::new(
-            content.origin.x,
-            y + (SECTION_HEADER_H - SECTION_ICON) / 2.0,
-        ),
-        SECTION_ICON,
-        theme.muted_foreground,
-        1.6,
-    );
-    paint_section_title(cx, theme, content.origin.x + SECTION_ICON + 8.0, y, title);
+/// When the Settings ▸ MCP "Copied" chips revert, so the frame loop wakes
+/// for it instead of waiting on the next input event.
+pub fn copy_feedback_deadline_ms(settings: &AgentSettings, now_ms: u64) -> Option<u64> {
+    [
+        settings.mcp_client_config_copied_at_ms,
+        settings.mcp_snippet_copied_at_ms,
+    ]
+    .into_iter()
+    .flatten()
+    .map(|at| at.saturating_add(COPY_FEEDBACK_MS))
+    .filter(|deadline| *deadline > now_ms)
+    .min()
 }
 
-fn paint_server_row(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    settings: &AgentSettings,
-    ui: &EditorUiState,
-    content: Rect,
-    now_ms: u64,
-) {
-    let row = server_row_rect(content);
-    // Host-managed (embed): the extension's proxy is alive by the time any
-    // editor mounts — the row reads always-running at the host's port.
-    let host_managed = settings.mcp_host_managed();
-    let running = host_managed || settings.mcp_server.running;
-    let status_text = if running {
-        t_settings(ui, "settings.mcp.running")
-    } else {
-        t_settings(ui, "settings.mcp.stopped")
-    };
-    paint_row_label_above_status(
-        cx,
-        theme,
-        row,
-        t_settings(ui, "settings.mcp.server"),
-        SERVER_CONTROLS_W,
-    );
-    // The status line carries a leading dot, matching the auto-update row
-    // on the System tab, so "is this thing on" reads the same way in both
-    // places. Drawn here rather than through `paint_row_label`'s
-    // description slot, which has no room for the dot.
-    paint_row_status_line(
-        cx,
-        row,
-        status_text,
-        if running {
-            theme.status_success
-        } else {
-            theme.muted_foreground
-        },
-    );
-    paint_row_hairline(cx, theme, row);
-
-    let btn = server_button_rect(content);
-    let port_label_text = t_settings(ui, "settings.mcp.port");
-    let port_label_text = fit_text(cx, port_label_text, 80.0, 11.0);
-    let port_label_w = measure_settings_text(cx, &port_label_text, 11.0);
-    let port_field = port_field_rect(content);
-    let mid_y = port_field.origin.y + port_field.size.y / 2.0;
-    let port_label = TextLayout::single_run(
-        &port_label_text,
-        SETTINGS_FONT_FAMILY,
-        11.0,
-        (theme.muted_foreground).to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend.draw_text(
-        &port_label,
-        Point2D::new(port_field.origin.x - 8.0 - port_label_w, mid_y + 4.0),
-    );
-    let port_editable = !running && !host_managed;
-    let focused = port_editable && matches!(settings.focus, Some(SettingsFocus::McpPort));
-    let port_str = if focused {
-        ui.settings_input.text().to_owned()
-    } else if host_managed {
-        settings
-            .embed_mcp_port_text()
-            .unwrap_or_default()
-            .to_owned()
-    } else {
-        format!("{}", settings.mcp_server.port)
-    };
-    let (border_color, border_w) = if focused {
-        (theme.primary, 1.5)
-    } else {
-        (theme.border, 1.0)
-    };
-    cx.backend
-        .stroke_round_rect(port_field, 6.0, border_color, border_w);
-    let port_w = measure_settings_text(cx, &port_str, 12.0);
-    let port_layout = TextLayout::single_run(
-        &port_str,
-        SETTINGS_FONT_FAMILY,
-        12.0,
-        (if port_editable {
-            theme.foreground
-        } else {
-            theme.muted_foreground
-        })
-        .to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    let port_x = port_field.origin.x + (PORT_FIELD_W - port_w) / 2.0;
-    let port_y = port_field.origin.y + PORT_FIELD_H / 2.0 + 5.0;
-    if focused {
-        paint_settings_input_view(
-            cx,
-            theme,
-            ui,
-            port_field,
-            12.0,
-            port_x - port_field.origin.x,
-            port_y,
-            now_ms,
-            "",
-        );
-    } else {
-        cx.backend
-            .draw_text(&port_layout, Point2D::new(port_x, port_y));
-    }
-
-    // Host-managed: no start/stop affordance — the extension owns the
-    // lifecycle (hit_test skips ToggleServer under the same gate).
-    if host_managed {
-        return;
-    }
-    let btn_bg = if running { theme.muted } else { theme.primary };
-    let btn_fg = if running {
-        theme.foreground
-    } else {
-        theme.primary_foreground
-    };
-    cx.backend.fill_round_rect(btn, 6.0, btn_bg);
-    crate::widgets::button::paint_ghost_button_feedback(
-        cx.backend,
-        theme,
-        btn,
-        settings.hover_mcp_server_button,
-        ui.button_pressed(ButtonPressTarget::AgentSettings(
-            AgentSettingsButton::McpServer,
-        )),
-    );
-    if running {
-        cx.backend.stroke_round_rect(btn, 6.0, theme.border, 1.0);
-    }
-    let btn_label = if running {
-        t_settings(ui, "settings.mcp.stop")
-    } else {
-        t_settings(ui, "settings.mcp.start")
-    };
-    let btn_label = fit_text(cx, btn_label, BTN_W - 8.0, 12.0);
-    let btn_label_w = measure_settings_text(cx, &btn_label, 12.0);
-    let lay = TextLayout::single_run(
-        &btn_label,
-        SETTINGS_FONT_FAMILY,
-        12.0,
-        (btn_fg).to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend.draw_text(
-        &lay,
-        Point2D::new(
-            btn.origin.x + (BTN_W - btn_label_w) / 2.0,
-            btn.origin.y + BTN_H / 2.0 + 5.0,
-        ),
-    );
-}
-
-#[allow(clippy::too_many_arguments)]
-fn paint_custom_config(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    settings: &AgentSettings,
-    ui: &EditorUiState,
-    content: Rect,
-    now_ms: u64,
-    external_cli_available: bool,
-) {
-    if !has_client_config(settings) {
-        return;
-    }
-    let top = custom_config_top(content, external_cli_available);
-    paint_section_header(
-        cx,
-        theme,
-        content,
-        top,
-        Icon::Settings,
-        t_settings(ui, "settings.mcp.customConfigTitle"),
-    );
-
-    let copy = client_config_copy_button_rect(content, external_cli_available);
-    let copied = mcp_client_config_copy_feedback_active(settings, now_ms);
-    cx.backend.fill_round_rect(copy, 6.0, theme.muted);
-    cx.backend.stroke_round_rect(copy, 6.0, theme.border, 1.0);
-    crate::widgets::button::paint_ghost_button_feedback(
-        cx.backend,
-        theme,
-        copy,
-        settings.hover_mcp_client_config_copy,
-        ui.button_pressed(ButtonPressTarget::AgentSettings(
-            AgentSettingsButton::McpClientConfigCopy,
-        )),
-    );
-    let (icon, icon_color) = if copied {
-        (Icon::Check, theme.status_success)
-    } else {
-        (Icon::Copy, theme.foreground)
-    };
-    let copy_label = fit_text(
-        cx,
-        t_settings(ui, "settings.mcp.copyConfig"),
-        COPY_BTN_W - COPY_BTN_ICON - 8.0 - 16.0,
-        12.0,
-    );
-    let copy_label_w = measure_settings_text(cx, &copy_label, 12.0);
-    let group_w = COPY_BTN_ICON + 8.0 + copy_label_w;
-    let icon_x = copy.origin.x + (COPY_BTN_W - group_w) / 2.0;
-    draw_icon(
-        cx.backend,
-        icon,
-        Point2D::new(icon_x, copy.origin.y + (COPY_BTN_H - COPY_BTN_ICON) / 2.0),
-        COPY_BTN_ICON,
-        icon_color,
-        1.5,
-    );
-    let copy_layout = TextLayout::single_run(
-        &copy_label,
-        SETTINGS_FONT_FAMILY,
-        12.0,
-        (theme.foreground).to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend.draw_text(
-        &copy_layout,
-        Point2D::new(
-            icon_x + COPY_BTN_ICON + 8.0,
-            copy.origin.y + COPY_BTN_H / 2.0 + 4.0,
-        ),
-    );
-
-    let body_y = top + SECTION_HEADER_H;
-    let desc = fit_text(
-        cx,
-        t_settings(ui, "settings.mcp.customConfigDesc"),
-        content.size.x,
-        12.0,
-    );
-    let desc_layout = TextLayout::single_run(
-        &desc,
-        SETTINGS_FONT_FAMILY,
-        12.0,
-        (theme.muted_foreground).to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend
-        .draw_text(&desc_layout, Point2D::new(content.origin.x, body_y + 14.0));
-
-    let config = settings.mcp_client_config_display_text();
-    // Drawn as a monospace run, so it must be fitted against monospace —
-    // the family-blind default would under-report it just like the hero.
-    let config = crate::util::ellipsize_to_width(&config, content.size.x, |s| {
-        cx.backend.measure_text_family(s, 11.0, "monospace")
-    });
-    let config_lay = TextLayout::single_run(
-        &config,
-        "monospace",
-        11.0,
-        (theme.muted_foreground).to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend
-        .draw_text(&config_lay, Point2D::new(content.origin.x, body_y + 36.0));
-}
-
-fn mcp_client_config_copy_feedback_active(settings: &AgentSettings, now_ms: u64) -> bool {
-    settings
-        .mcp_client_config_copied_at_ms
-        .map(|copied_at| now_ms.saturating_sub(copied_at) < CLIENT_CONFIG_COPY_FEEDBACK_MS)
-        .unwrap_or(false)
-}
+#[cfg(test)]
+#[path = "agent_settings_mcp_tests.rs"]
+mod tests;

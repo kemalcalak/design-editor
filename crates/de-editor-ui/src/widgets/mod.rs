@@ -50,7 +50,7 @@ mod layer_panel_touch_tests;
 mod layer_panel_walkers;
 pub mod path_anchor_context_menu;
 pub mod prompt_center_panel;
-pub use home_surface::{home_enter, HomeEnterBlock, HomeLayout, HomeSurface, HOME_TOPBAR_H};
+pub use home_surface::{HomeLayout, HomeSurface, HOME_TOPBAR_H};
 pub mod workspace_surface;
 pub use workspace_surface::{
     family_has_strip, family_views, layout_for as workspace_layout_for, workspace_enter,
@@ -505,7 +505,7 @@ pub use slides_panel_actions::{
 };
 pub use status_bar::{StatusBar, STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH};
 pub use top_bar::{TopBar, TopBarHit, TOP_BAR_HEIGHT};
-pub use top_bar_window_control::WindowControl;
+pub use top_bar_window_control::{paint_window_control_dots, WindowControl};
 // Re-export panel/toolbar width constants + hit enums so the host
 // can size them consistently and route hits.
 pub use layer_panel::{DropPosition, DropTarget, LayerPanelHit, LAYER_PANEL_WIDTH};

@@ -620,7 +620,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.mcp.port" => "Port",
         "settings.mcp.start" => "Start",
         "settings.mcp.stop" => "Stop",
-        "settings.mcp.terminalIntegrations" => "Terminal MCP integrations",
         "settings.mcp.terminalSubtitle1" => "MCP integrations take effect after restarting the terminal.",
         "settings.mcp.terminalSubtitle2" => "After upgrading Design Editor, please reinstall MCP integrations for compatibility.",
         "settings.images.search" => "Image Search",

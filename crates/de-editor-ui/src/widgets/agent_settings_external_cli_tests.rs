@@ -16,7 +16,6 @@
 use crate::widgets::agent_settings_panel::{
     content_viewport, mcp_copy_config_button, AgentSettingsHit, AgentSettingsPanel,
 };
-use crate::widgets::agent_settings_rows::{FOOTNOTE_H, ROW_HEIGHT, SECTION_GAP, SECTION_HEADER_H};
 use crate::widgets::test_capture_backend::CaptureBackend;
 use crate::widgets::{PaintCx, Widget};
 use crate::{Point2D, Rect};
@@ -346,6 +345,8 @@ fn mcp_state(external_cli_available: bool) -> EditorState {
 #[test]
 fn desktop_mcp_tab_still_offers_every_cli_toggle() {
     let mut state = mcp_state(true);
+    // The collapsed list shows six agents; "Show more" reveals the rest.
+    state.editor_ui.agent_settings.mcp_show_all_agents = true;
     let hits = reachable_hits(&mut state);
 
     let mut toggles = cli_toggle_hits(&hits);
@@ -354,7 +355,7 @@ fn desktop_mcp_tab_still_offers_every_cli_toggle() {
     expected.sort_by_key(|cli| cli.index());
     assert_eq!(
         toggles, expected,
-        "the desktop toggle grid must stay byte-identical"
+        "every agent stays reachable from the MCP tab"
     );
 }
 
@@ -397,35 +398,23 @@ fn hiding_external_clis_removes_every_mcp_cli_toggle_but_keeps_the_server_card()
 }
 
 #[test]
-fn hidden_mcp_toggles_shift_the_custom_config_section_up_by_exactly_their_height() {
+fn hidden_agent_list_lifts_only_what_sits_below_it() {
     let with_clis = mcp_state(true);
     let without_clis = mcp_state(false);
     let rect = panel_rect(&with_clis);
     assert_eq!(rect, panel_rect(&without_clis), "the shell must not move");
 
-    let copy_with = mcp_copy_config_button(rect, true);
-    let copy_without = mcp_copy_config_button(rect, false);
-    assert_eq!(copy_with.origin.x, copy_without.origin.x);
-    assert_eq!(copy_with.size, copy_without.size);
-
-    // Section header + one row per displayed CLI + the footnote, plus the
-    // gap that separated the block from what follows it.
-    let hidden_block =
-        SECTION_GAP + SECTION_HEADER_H + McpCli::DISPLAY.len() as f32 * ROW_HEIGHT + FOOTNOTE_H;
-    assert!(
-        (copy_with.origin.y - copy_without.origin.y - hidden_block).abs() < 0.01,
-        "content below the hidden toggle grid must shift up by exactly {hidden_block}, \
-         not {}",
-        copy_with.origin.y - copy_without.origin.y
+    // The endpoint Copy chip lives in the server card, above the list.
+    let settings = &with_clis.editor_ui.agent_settings;
+    assert_eq!(
+        mcp_copy_config_button(rect, settings),
+        mcp_copy_config_button(rect, &without_clis.editor_ui.agent_settings)
     );
-
-    // The content height gives back the same amount.
-    let height_with = AgentSettingsPanel::for_editor(&with_clis).content_total_height();
-    let height_without = AgentSettingsPanel::for_editor(&without_clis).content_total_height();
+    let height_with = crate::widgets::agent_settings_mcp::content_height(settings, true);
+    let height_without = crate::widgets::agent_settings_mcp::content_height(settings, false);
     assert!(
-        (height_with - height_without - hidden_block).abs() < 0.01,
-        "the scroll range must shrink by the same {hidden_block}, not {}",
-        height_with - height_without
+        height_without < height_with,
+        "the scroll range shrinks without the agent list"
     );
 }
 

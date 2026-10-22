@@ -469,8 +469,17 @@ impl WidgetHostNative {
         overlay_geometry::close_import_menu(&mut self.editor_state);
     }
 
+    /// Under Home's language button while Home is up (Home paints its own
+    /// top bar), else under the TopBar globe.
     pub(in crate::widget_host) fn locale_picker_rect(&self, viewport_w: f32) -> Rect {
-        overlay_geometry::locale_picker_rect(&self.editor_state, viewport_w)
+        // The button depends only on the width, so any height works.
+        match de_editor_ui::widgets::HomeSurface::for_editor(&self.editor_state) {
+            Some(home) => overlay_geometry::locale_picker_rect_under(
+                home.layout(viewport_w, 900.0).locale_button,
+                viewport_w,
+            ),
+            None => overlay_geometry::locale_picker_rect(&self.editor_state, viewport_w),
+        }
     }
 
     /// The floating AlignToolbar's rect, or `None` when fewer than two

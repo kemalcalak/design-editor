@@ -14,7 +14,7 @@ fn mcp_running_client_config_paints_copy_icon_like_ts() {
     let rect = panel.rect(1200.0, 800.0);
     let copy = crate::widgets::agent_settings_mcp::client_config_copy_button_rect(
         crate::widgets::agent_settings_panel::content_viewport(rect),
-        state.editor_ui.external_cli_available,
+        &state.editor_ui.agent_settings,
     );
     let mut backend = CaptureBackend::default();
     let mut cx = PaintCx {
@@ -27,7 +27,7 @@ fn mcp_running_client_config_paints_copy_icon_like_ts() {
         backend
             .icon_strokes
             .iter()
-            .any(|(at, size, _)| (*size - 13.0).abs() < 0.01 && copy.contains(*at)),
+            .any(|(at, size, _)| (*size - 12.0).abs() < 0.01 && copy.contains(*at)),
         "the custom-configuration section should carry a copy glyph in its action button"
     );
 }
@@ -106,7 +106,7 @@ fn mcp_running_client_config_copy_icon_is_clickable() {
     let content = crate::widgets::agent_settings_panel::content_viewport(rect);
     let copy = crate::widgets::agent_settings_mcp::client_config_copy_button_rect(
         content,
-        state.editor_ui.external_cli_available,
+        &state.editor_ui.agent_settings,
     );
     // The custom-configuration section sits below the twelve CLI rows, so
     // scroll it into view before pressing its action.
@@ -152,20 +152,17 @@ fn mcp_port_field_is_not_focusable_while_server_is_running() {
 }
 
 #[test]
-fn mcp_running_server_exposes_client_config_height() {
-    let mut stopped_state = EditorState::default();
-    stopped_state.editor_ui.agent_settings.tab = AgentSettingsTab::Mcp;
-    let stopped = AgentSettingsPanel::for_editor(&stopped_state).content_total_height();
+fn showing_every_mcp_agent_makes_the_tab_taller() {
+    let mut collapsed = EditorState::default();
+    collapsed.editor_ui.agent_settings.tab = AgentSettingsTab::Mcp;
+    let short = AgentSettingsPanel::for_editor(&collapsed).content_total_height();
 
-    let mut running_state = EditorState::default();
-    running_state.editor_ui.agent_settings.tab = AgentSettingsTab::Mcp;
-    running_state.editor_ui.agent_settings.mcp_server.running = true;
-    let running = AgentSettingsPanel::for_editor(&running_state).content_total_height();
+    let mut full = EditorState::default();
+    full.editor_ui.agent_settings.tab = AgentSettingsTab::Mcp;
+    full.editor_ui.agent_settings.mcp_show_all_agents = true;
+    let tall = AgentSettingsPanel::for_editor(&full).content_total_height();
 
-    assert!(
-        running > stopped,
-        "running MCP server should reserve space for the HTTP client config row"
-    );
+    assert!(tall > short, "the full agent list needs more scroll range");
 }
 
 #[test]

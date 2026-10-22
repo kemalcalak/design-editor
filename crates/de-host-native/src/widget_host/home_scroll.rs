@@ -1,7 +1,8 @@
-//! Wheel and trackpad scrolling for the Studio Home page stack.
+//! Wheel and trackpad scrolling for the Home page column.
 
 use super::WidgetHostNative;
-use de_editor_ui::widgets::home_surface::{model_chip_width, HomeSurface, HOME_TOPBAR_H};
+use de_editor_ui::widgets::home_surface::HOME_TOPBAR_H;
+use de_editor_ui::widgets::HomeSurface;
 
 impl WidgetHostNative {
     pub(in crate::widget_host) fn try_scroll_home(
@@ -12,21 +13,20 @@ impl WidgetHostNative {
         viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
-        if !self.home_visible() {
+        // A modal Home opened scrolls itself (Settings ▸ MCP's agent list,
+        // the Images and Fonts tabs); the column under it stays put.
+        if !self.home_visible() || self.editor_state.editor_ui.agent_settings_open {
             return false;
         }
-        // The top bar stays pinned; anything below it scrolls the page.
-        if y < HOME_TOPBAR_H {
+        // The top bar stays pinned; the sidebar does not scroll.
+        let Some(home) = HomeSurface::for_editor_at(&self.editor_state, self.now_ms) else {
             return false;
+        };
+        let layout = home.layout(viewport_width, viewport_height);
+        if y < HOME_TOPBAR_H || x < layout.sidebar.size.x {
+            return true;
         }
-        let _ = x;
-        let label = de_editor_ui::widgets::home_surface::model_chip_label(&self.editor_state);
-        let max_scroll = HomeSurface::max_scroll_for(
-            viewport_width,
-            viewport_height,
-            self.editor_state.editor_ui.home.task,
-            model_chip_width(&label),
-        );
+        let max_scroll = home.max_scroll(viewport_width, viewport_height);
         let home = &mut self.editor_state.editor_ui.home;
         let next = (home.scroll_y - delta_y).clamp(0.0, max_scroll);
         if (next - home.scroll_y).abs() > f32::EPSILON {

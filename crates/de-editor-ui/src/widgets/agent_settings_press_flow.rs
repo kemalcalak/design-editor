@@ -166,12 +166,9 @@ pub fn apply_agent_settings_hit(
             // `mcp_cli_enabled` is indexed by `McpCli::ALL` order; the row
             // this hit came from is `McpCli::DISPLAY` order, so resolve the
             // storage slot through `McpCli::index`.
-            let idx = cli.index();
             let settings = &mut state.editor_ui.agent_settings;
-            settings.mcp_cli_enabled[idx] ^= true;
-            if settings.mcp_cli_enabled[idx] {
-                settings.mcp_server.running = true;
-            }
+            let enabled = settings.mcp_cli_enabled[cli.index()];
+            settings.set_mcp_cli_enabled(cli, !enabled);
             SettingsPressOutcome::handled()
         }
         AgentSettingsHit::CopyMcpClientConfig => {
@@ -180,11 +177,37 @@ pub fn apply_agent_settings_hit(
                 .editor_ui
                 .agent_settings
                 .mcp_client_config_copied_at_ms = Some(now_ms);
-            let config = state
-                .editor_ui
-                .agent_settings
-                .mcp_client_config_clipboard_text();
-            SettingsPressOutcome::effect(SettingsPress::CopyText(config))
+            // The card's Copy chip copies the endpoint itself — what every
+            // agent's config (and the manual snippets below it) points at.
+            let url = state.editor_ui.agent_settings.mcp_endpoint_url();
+            SettingsPressOutcome::effect(SettingsPress::CopyText(url))
+        }
+        AgentSettingsHit::ExpandMcpCli(cli) => {
+            let settings = &mut state.editor_ui.agent_settings;
+            settings.mcp_expanded_agent = (settings.mcp_expanded_agent != Some(cli)).then_some(cli);
+            SettingsPressOutcome::handled()
+        }
+        AgentSettingsHit::CopyMcpSnippet(cli) => {
+            let settings = &mut state.editor_ui.agent_settings;
+            settings.mcp_snippet_copied_at_ms = Some(now_ms.max(1));
+            let snippet = de_editor_core::home_mcp_setup::home_mcp_manual_snippet(
+                cli,
+                &settings.mcp_endpoint_url(),
+            );
+            SettingsPressOutcome::effect(SettingsPress::CopyText(snippet))
+        }
+        AgentSettingsHit::ToggleMcpShowAll => {
+            let settings = &mut state.editor_ui.agent_settings;
+            settings.mcp_show_all_agents ^= true;
+            // A collapsed list must not keep a hidden row expanded.
+            if !settings.mcp_show_all_agents
+                && settings.mcp_expanded_agent.is_some_and(|cli| {
+                    !crate::widgets::agent_settings_mcp::visible_agents(settings).contains(&cli)
+                })
+            {
+                settings.mcp_expanded_agent = None;
+            }
+            SettingsPressOutcome::handled()
         }
         AgentSettingsHit::Fonts(hit) => apply_fonts_hit(state, hit),
         AgentSettingsHit::ToggleImagesAdvanced => {

@@ -14,7 +14,6 @@ use crate::widgets::agent_settings_panel_geometry::{
     PROVIDER_SECTION_HEADER_H,
 };
 use crate::widgets::agent_settings_system::{self, SystemHit};
-use crate::widgets::editor_state_ext::theme_for;
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::{PaintCx, Widget, WidgetId};
 use crate::{Point2D, Rect, TextLayout};
@@ -52,17 +51,13 @@ use crate::widgets::agent_settings_metrics as metrics;
 
 pub(super) const PAD: f32 = metrics::CONTENT_PAD_X;
 pub(super) const CONTENT_BOTTOM_PAD: f32 = metrics::CONTENT_PAD_BOTTOM;
-/// Horizontal tab strip: inset from the panel top, pill height, and the
-/// per-pill width band. Pills share one width so the hit-test geometry
-/// stays measurement-free (paint centres icon + label inside).
-pub(super) const TAB_BAR_TOP: f32 = metrics::TAB_BAR_TOP;
-pub(super) const TAB_HEIGHT: f32 = metrics::TAB_HEIGHT;
-pub(super) const TAB_GAP: f32 = metrics::TAB_GAP;
-pub(super) const TAB_MAX_WIDTH: f32 = 116.0;
-pub(super) const TAB_MIN_WIDTH: f32 = 72.0;
-/// Fixed header band: `TAB_BAR_TOP` + `TAB_HEIGHT` + the gap down to the
-/// scrollable body.
-pub(super) const HEADER_HEIGHT: f32 = TAB_BAR_TOP + TAB_HEIGHT + metrics::TAB_TO_CONTENT;
+/// Desktop: the left navigation rail's width, and the inset from the
+/// panel top to the scrollable body (the tab's own title sits in the body).
+pub(super) const NAV_W: f32 = 200.0;
+pub(super) const NAV_TITLE_H: f32 = 56.0;
+pub(super) const NAV_ITEM_H: f32 = 34.0;
+pub(super) const NAV_ITEM_GAP: f32 = 2.0;
+pub(super) const HEADER_HEIGHT: f32 = 22.0;
 /// Total vertical inset between the panel rect and its scrollable
 /// content viewport. Hosts subtract this from the panel height to derive
 /// the scroll viewport (`content_rect` height) instead of hardcoding it.
@@ -133,12 +128,10 @@ pub fn mcp_server_button(panel: Rect) -> Rect {
     agent_settings_mcp::server_button_rect(content_rect(panel))
 }
 
-/// MCP tab: the "Copy MCP config" action in the custom-configuration
-/// section header. Its y depends on whether the terminal-integration
-/// list sits above it, so callers pass the host's
-/// [`EditorUiState::external_cli_available`] capability.
-pub fn mcp_copy_config_button(panel: Rect, external_cli_available: bool) -> Rect {
-    agent_settings_mcp::client_config_copy_button_rect(content_rect(panel), external_cli_available)
+/// MCP tab: the endpoint's Copy chip in the server card. It sits right
+/// after the endpoint text, so it needs the settings that pick the URL.
+pub fn mcp_copy_config_button(panel: Rect, settings: &AgentSettings) -> Rect {
+    agent_settings_mcp::client_config_copy_button_rect(content_rect(panel), settings)
 }
 
 /// System tab: the switch on the Auto-update row.
@@ -308,6 +301,10 @@ pub enum AgentSettingsHit {
     ToggleMcpServer,
     ToggleMcpCli(McpCli),
     CopyMcpClientConfig,
+    /// Expand / collapse an MCP agent row's manual snippet.
+    ExpandMcpCli(McpCli),
+    CopyMcpSnippet(McpCli),
+    ToggleMcpShowAll,
     ToggleImagesAdvanced,
     FocusSearchField(ImageSearchField),
     OpenImageRegisterLink,
@@ -355,7 +352,9 @@ impl<'a> AgentSettingsPanel<'a> {
     pub fn for_editor_at(state: &'a EditorState, now_ms: u64) -> Self {
         Self {
             id: WidgetId::new(5200),
-            theme: theme_for(&state.editor_ui),
+            theme: crate::widgets::home_surface::settings_theme(
+                state.editor_ui.effective_theme_mode(),
+            ),
             settings: state.editor_ui.agent_settings.clone(),
             now_ms,
             mode: mode_for_ui(&state.editor_ui, AgentSettingsPanelMode::Full),
@@ -370,7 +369,9 @@ impl<'a> AgentSettingsPanel<'a> {
     pub fn for_web_editor_at(state: &'a EditorState, now_ms: u64) -> Self {
         Self {
             id: WidgetId::new(5200),
-            theme: theme_for(&state.editor_ui),
+            theme: crate::widgets::home_surface::settings_theme(
+                state.editor_ui.effective_theme_mode(),
+            ),
             settings: state.editor_ui.agent_settings.clone(),
             now_ms,
             mode: mode_for_ui(&state.editor_ui, AgentSettingsPanelMode::WebBuiltinOnly),
@@ -435,7 +436,16 @@ impl<'a> AgentSettingsPanel<'a> {
     }
 
     pub fn max_scroll(&self, panel: Rect) -> f32 {
-        (self.content_total_height() - self.resolved_content_viewport(panel).size.y).max(0.0)
+        let content = self.resolved_content_viewport(panel);
+        let total = match self.mode.active_tab(&self.settings, self.ui) {
+            AgentSettingsTab::Mcp => crate::widgets::agent_settings_mcp::content_height_at(
+                &self.settings,
+                self.ui.external_cli_available,
+                content.size.x,
+            ),
+            _ => self.content_total_height(),
+        };
+        (total - content.size.y).max(0.0)
     }
 
     pub fn effective_scroll(&self, panel: Rect) -> f32 {

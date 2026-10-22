@@ -163,14 +163,16 @@ impl DesktopApp {
     }
 
     pub(crate) fn poll_mcp_server(&mut self) -> bool {
-        let (outcome, pending_design_md) = {
+        let (outcome, pending_design_md, client) = {
             let Some(server) = self.mcp_server.as_mut() else {
-                return false;
+                // No server, no connected agent.
+                return self.sync_home_mcp_client(None);
             };
             let outcome = server.pump(self.host.editor_state_mut());
             let pending_design_md = server.take_pending_design_md_request();
-            (outcome, pending_design_md)
+            (outcome, pending_design_md, server.client_name())
         };
+        let client_changed = self.sync_home_mcp_client(client);
         // Provider execution is deliberately outside the UI/server borrow and
         // on its own worker. This request contains bounded extension evidence,
         // not a snapshot of (or mutation to) the live document.
@@ -204,7 +206,19 @@ impl DesktopApp {
             // Rotate the owner so the next paint rebuilds the rows.
             self.host.force_rotate_layer_panel_owner();
         }
-        outcome.repaint
+        outcome.repaint || client_changed
+    }
+
+    /// Mirror the live server's connected client into Home's MCP card and
+    /// Settings ▸ MCP. Returns whether it changed (a repaint is due).
+    fn sync_home_mcp_client(&mut self, client: Option<String>) -> bool {
+        let home = &mut self.host.editor_state_mut().editor_ui.home;
+        if home.mcp_client == client {
+            return false;
+        }
+        home.mcp_client = client;
+        self.host.mark_editor_state_dirty();
+        true
     }
 
     /// A live MCP client edited the document: drop the Home overlay so the
@@ -307,6 +321,16 @@ impl DesktopApp {
 #[cfg(test)]
 mod dirty_tests {
     use super::*;
+
+    #[test]
+    fn a_stopped_server_clears_the_connected_client() {
+        let mut app = DesktopApp::new(None);
+        app.mcp_server = None;
+        app.host.editor_state_mut().editor_ui.home.mcp_client = Some("Codex".into());
+        assert!(app.poll_mcp_server(), "clearing the client repaints");
+        assert_eq!(app.host.editor_state().editor_ui.home.mcp_client, None);
+        assert!(!app.poll_mcp_server(), "nothing changed the second time");
+    }
 
     #[test]
     fn external_replace_is_dirty_even_though_replace_document_resets_revision() {

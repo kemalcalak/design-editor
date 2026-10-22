@@ -728,4 +728,21 @@ impl WidgetHostNative {
         // Inside the sheet but off any row — consume the press.
         Some(true)
     }
+
+    /// Open the account entry: the menu when signed in, the login modal
+    /// when not. Returns whether the host has an account gate at all.
+    pub(in crate::widget_host) fn open_account_entry(&mut self) -> bool {
+        if !self.editor_state.editor_ui.account_ui_available {
+            return false;
+        }
+        if self.editor_state.editor_ui.account.is_signed_in() {
+            self.editor_state.editor_ui.account_menu_open = true;
+            self.editor_state.editor_ui.account_menu_hover = None;
+        } else {
+            self.editor_state.editor_ui.login_modal_open = true;
+            self.editor_state.editor_ui.login_modal_hover = None;
+        }
+        self.mark_dirty();
+        true
+    }
 }

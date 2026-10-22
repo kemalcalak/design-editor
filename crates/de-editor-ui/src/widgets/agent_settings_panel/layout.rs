@@ -49,24 +49,24 @@ impl AgentSettingsLayout {
                 surface: panel,
                 header: Rect {
                     origin: panel.origin,
-                    size: Point2D::new(panel.size.x, super::HEADER_HEIGHT),
+                    size: Point2D::new(super::NAV_W, super::NAV_TITLE_H),
                 },
                 navigation: Rect {
                     origin: Point2D::new(
-                        panel.origin.x + super::PAD,
-                        panel.origin.y + super::TAB_BAR_TOP,
+                        panel.origin.x + 10.0,
+                        panel.origin.y + super::NAV_TITLE_H,
                     ),
                     size: Point2D::new(
-                        (panel.size.x - super::PAD * 2.0).max(0.0),
-                        super::TAB_HEIGHT,
+                        super::NAV_W - 20.0,
+                        tab_count.max(1) as f32 * (super::NAV_ITEM_H + super::NAV_ITEM_GAP),
                     ),
                 },
                 content: content_rect(panel),
                 close_target: close,
                 close_icon: close,
                 kind: AgentSettingsSurfaceKind::Desktop,
-                vertical_navigation: false,
-                navigation_columns: tab_count.max(1),
+                vertical_navigation: true,
+                navigation_columns: 1,
             };
         }
 

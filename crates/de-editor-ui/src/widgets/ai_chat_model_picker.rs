@@ -2,10 +2,10 @@
 //! popover that lists saved models grouped by provider.
 //! Mirrors the TS `ai-chat-model-selector.tsx` `ModelDropdown`
 //! (search row + grouped rows + selected check / qualifiers),
-//! restyled to the Studio design language: a 12 px-radius card
-//! with a soft ink shadow, 36 px rows with an 18 px provider mark
-//! and a right-aligned qualifier line, a filled selected pill,
-//! and an "添加模型" footer action.
+//! restyled to the Home v2 language: a 12 px-radius card on the Home
+//! palette, rows with an 18 px provider mark and the model name in the
+//! mono face, a filled selected pill, and an "Add a model provider"
+//! footer action.
 //!
 //! This file owns the layout, scroll and hit-test contract; the
 //! painting lives in the sibling `ai_chat_model_picker_paint.rs`,
@@ -73,7 +73,7 @@ enum Row {
         label: String,
     },
     /// Selectable model — carries its index into the flat list.
-    Model { idx: usize, first_in_group: bool },
+    Model { idx: usize },
 }
 
 fn normalized_query(search: &str) -> String {
@@ -166,15 +166,8 @@ fn walk_rows(models: &[ModelEntry], search: &str, top: f32, mut f: impl FnMut(&R
             MODEL_GROUP_H,
         );
         y += MODEL_GROUP_H;
-        for (group_row, idx) in group.into_iter().enumerate() {
-            f(
-                &Row::Model {
-                    idx,
-                    first_in_group: group_row == 0,
-                },
-                y,
-                MODEL_ROW_H,
-            );
+        for idx in group {
+            f(&Row::Model { idx }, y, MODEL_ROW_H);
             y += MODEL_ROW_H;
         }
     }

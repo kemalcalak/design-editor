@@ -249,7 +249,7 @@ fn drain_stop_request_marks_a_generating_workspace_stopped() {
         editor.chat.stop_streaming();
         // A Home-launched generation just opened the workspace.
         editor.editor_ui.workspace.open_for_generation(
-            de_editor_core::HomeFamily::AppUi,
+            de_editor_core::HomeFamily::MobileApp,
             "取餐预约，3 个页面",
             de_editor_core::TaskDraft::default(),
             0,

@@ -11,8 +11,7 @@ use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect};
 use de_editor_core::{
-    HomeDevice, HomeFamily, InfoKind, WorkspaceHit, WorkspacePhase, WorkspaceView,
-    WORKSPACE_TOOLBAR_H,
+    HomeFamily, WorkspaceHit, WorkspacePhase, WorkspaceView, WORKSPACE_TOOLBAR_H,
 };
 
 const SANS: &str = "system-ui";
@@ -67,31 +66,9 @@ fn tr(locale: de_i18n::Locale, key: &'static str) -> &'static str {
     de_i18n::translate(locale, key)
 }
 
-/// The subtitle's options segment: 手机/电脑, 16:9/4:3, 数据/流程/对比.
-fn options_label(
-    locale: de_i18n::Locale,
-    family: HomeFamily,
-    options: &de_editor_core::TaskDraft,
-) -> &'static str {
-    match family {
-        HomeFamily::AppUi => {
-            if options.device == HomeDevice::Desktop {
-                tr(locale, "home.segment.desktop")
-            } else {
-                tr(locale, "home.segment.mobile")
-            }
-        }
-        HomeFamily::Presentation => match options.ratio {
-            de_editor_core::SlideRatio::Wide169 => tr(locale, "home.segment.wide"),
-            de_editor_core::SlideRatio::Classic43 => tr(locale, "home.segment.classic"),
-        },
-        HomeFamily::Infographic => match options.info_kind {
-            InfoKind::Data => tr(locale, "home.segment.infoData"),
-            InfoKind::Flow => tr(locale, "home.segment.infoFlow"),
-            InfoKind::Comparison => tr(locale, "home.segment.infoCompare"),
-        },
-        _ => "",
-    }
+/// The subtitle's options segment: the size the brief asked for.
+fn options_label(locale: de_i18n::Locale, options: &de_editor_core::TaskDraft) -> String {
+    crate::widgets::home_surface::size_chip_label(locale, options.size)
 }
 
 fn phase_key(phase: WorkspacePhase) -> &'static str {
@@ -103,16 +80,15 @@ fn phase_key(phase: WorkspacePhase) -> &'static str {
     }
 }
 
-/// One family's short name through the shared `home.task.*` keys.
+/// One family's short name through the shared `home.kind.*` keys.
 fn family_label(locale: de_i18n::Locale, family: HomeFamily) -> &'static str {
     let key: &'static str = match family {
-        HomeFamily::AppUi => "home.task.app.name",
-        HomeFamily::Web => "home.task.web.name",
-        HomeFamily::Presentation => "home.task.presentation.name",
-        HomeFamily::KnowledgeCards => "home.task.knowledge.name",
-        HomeFamily::ScreenshotTutorial => "home.task.tutorial.name",
-        HomeFamily::Infographic => "home.task.infographic.name",
-        HomeFamily::EventPoster => "home.task.poster.name",
+        HomeFamily::LandingPage => "home.kind.landing",
+        HomeFamily::MobileApp => "home.kind.mobile",
+        HomeFamily::WebApp => "home.kind.webapp",
+        HomeFamily::Slides => "home.kind.slides",
+        HomeFamily::Dashboard => "home.kind.dashboard",
+        HomeFamily::Other => "home.kind.other",
     };
     tr(locale, key)
 }
@@ -122,7 +98,7 @@ fn view_label(locale: de_i18n::Locale, family: HomeFamily, view: WorkspaceView) 
     match view {
         WorkspaceView::AllBoards => tr(locale, "workspace.view.all"),
         WorkspaceView::Single { .. } => {
-            if family == HomeFamily::Presentation {
+            if family == HomeFamily::Slides {
                 tr(locale, "workspace.view.singlePage")
             } else {
                 tr(locale, "workspace.view.singleScreen")
@@ -253,12 +229,12 @@ fn paint_header(
         palette.ink,
         650,
     );
-    let options = options_label(locale, surface.state.family, &surface.state.options);
+    let options = options_label(locale, &surface.state.options);
     let phase = tr(locale, phase_key(surface.state.phase));
     let mut subtitle = family_label(locale, surface.state.family).to_string();
     if !options.is_empty() {
         subtitle.push_str(" · ");
-        subtitle.push_str(options);
+        subtitle.push_str(&options);
     }
     subtitle.push_str(" · ");
     subtitle.push_str(phase);

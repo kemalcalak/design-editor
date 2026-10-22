@@ -737,3 +737,23 @@ fn back_to_back_batch_design_calls_coalesce_into_one_epoch_while_reveals_drain()
 fn reveal_now_millis_for_test() -> u64 {
     crate::design_agent_tools::reveal_now_millis()
 }
+
+#[test]
+fn client_name_reports_the_initialize_identity() {
+    let (_req_tx, req_rx) = mpsc::channel();
+    let (stop_tx, _stop_rx) = mpsc::channel();
+    let identity = Arc::new(Mutex::new(None));
+    let server = McpLiveServer {
+        port: 0,
+        token: "test-token".to_string(),
+        quit_flag: Arc::new(AtomicBool::new(false)),
+        req_rx,
+        stop_tx,
+        client_identity: Arc::clone(&identity),
+        last_mcp_epoch: 0,
+        pending_design_md: VecDeque::new(),
+    };
+    assert_eq!(server.client_name(), None);
+    *identity.lock().unwrap() = Some(("Claude Code".to_string(), "#8A8F98".to_string()));
+    assert_eq!(server.client_name().as_deref(), Some("Claude Code"));
+}

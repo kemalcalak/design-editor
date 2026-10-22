@@ -1,4 +1,4 @@
-//! Tests for the Studio Home state module.
+//! Tests for the Home state module.
 
 use super::*;
 
@@ -16,326 +16,188 @@ fn entry_surface_round_trips_wire_values() {
 }
 
 #[test]
-fn seven_tasks_round_trip_their_ids_in_tab_order() {
-    assert_eq!(HomeFamily::ALL.len(), 7);
+fn six_kinds_round_trip_their_ids_in_chip_order() {
+    assert_eq!(HomeFamily::ALL.len(), 6);
     for family in HomeFamily::ALL {
         assert_eq!(HomeFamily::from_id(family.id()), Some(family));
     }
-    assert_eq!(HomeFamily::from_id("app"), Some(HomeFamily::AppUi));
-    assert_eq!(HomeFamily::from_id("poster"), Some(HomeFamily::EventPoster));
-    assert_eq!(HomeFamily::from_id("retired-family"), None);
-    assert_eq!(HomeFamily::ALL[0], HomeFamily::AppUi);
-    assert_eq!(HomeFamily::ALL[1], HomeFamily::Web);
-    assert_eq!(HomeFamily::ALL[2], HomeFamily::Presentation);
+    assert_eq!(HomeFamily::ALL[0], HomeFamily::LandingPage);
+    assert_eq!(HomeFamily::ALL[5], HomeFamily::Other);
+    assert_eq!(HomeFamily::from_id("poster"), None);
 }
 
 #[test]
-fn default_state_selects_the_app_task_with_empty_drafts() {
+fn each_kind_starts_on_its_default_size_from_its_own_menu() {
     let home = HomeState::default();
-    assert_eq!(home.task, HomeFamily::AppUi);
-    assert!(home.draft.is_empty());
-    assert!(home.drafts.iter().all(|draft| draft.text.is_empty()));
-    assert_eq!(home.task_draft().device, HomeDevice::Mobile);
-    assert!(!home.visible);
-}
-
-#[test]
-fn switching_tasks_keeps_each_draft_text_and_options() {
-    let mut home = HomeState::default();
-    for character in "取餐预约".chars() {
-        home.insert_text(&character.to_string(), 1_000);
+    for family in HomeFamily::ALL {
+        let size = home.draft_for(family).size;
+        assert_eq!(size, family.default_size());
+        assert!(family.sizes().contains(&size), "{family:?}");
     }
-    home.set_device(HomeDevice::Desktop);
-    assert!(home.set_task(HomeFamily::Presentation, 2_000));
-    assert!(
-        home.draft.is_empty(),
-        "the new task starts from its own draft"
-    );
-    home.set_ratio(SlideRatio::Classic43);
-    home.insert_text("五页产品介绍", 2_100);
-    // Round-trip back: the first task kept its text and device.
-    assert!(home.set_task(HomeFamily::AppUi, 3_000));
-    assert_eq!(home.draft, "取餐预约");
-    assert_eq!(home.task_draft().device, HomeDevice::Desktop);
-    assert!(home.set_task(HomeFamily::Presentation, 4_000));
-    assert_eq!(home.draft, "五页产品介绍");
-    assert_eq!(home.task_draft().ratio, SlideRatio::Classic43);
-    // Re-selecting the same task is a no-op that keeps the draft.
-    assert!(!home.set_task(HomeFamily::Presentation, 5_000));
-    assert_eq!(home.draft, "五页产品介绍");
+    assert_eq!(HomeFamily::MobileApp.default_size(), HomeSize::Mobile390);
+    assert_eq!(HomeFamily::Slides.default_size(), HomeSize::Slide169);
+    assert!(HomeFamily::Slides.sizes().iter().all(|s| s.is_slide()));
+    assert!(HomeFamily::Dashboard.sizes().iter().all(|s| !s.is_slide()));
 }
 
 #[test]
-fn info_kind_options_survive_task_switches() {
-    let mut home = HomeState::default();
-    home.set_task(HomeFamily::Infographic, 1_000);
-    home.set_info_kind(InfoKind::Comparison);
-    home.set_task(HomeFamily::Web, 2_000);
-    home.set_task(HomeFamily::Infographic, 3_000);
-    assert_eq!(home.task_draft().info_kind, InfoKind::Comparison);
-}
-
-#[test]
-fn use_example_fills_an_empty_draft_and_confirms_a_busy_one() {
-    let mut home = HomeState::default();
-    assert!(home.use_example("做一个咖啡点单 App"));
-    assert_eq!(home.draft, "做一个咖啡点单 App");
-    assert!(!home.replace_pending);
-    // The same example is idempotent.
-    assert!(home.use_example("做一个咖啡点单 App"));
-    // A differing draft arms the inline confirm strip instead.
-    home.set_draft("我自己的需求");
-    assert!(!home.use_example("做一个咖啡点单 App"));
-    assert!(home.replace_pending);
-    assert_eq!(
-        home.draft, "我自己的需求",
-        "the draft survives until confirmed"
-    );
-    // 保留 keeps the draft; 使用示例 replaces it.
-    home.keep_draft();
-    assert!(!home.replace_pending);
-    assert_eq!(home.draft, "我自己的需求");
-    assert!(!home.use_example("做一个咖啡点单 App"));
-    home.confirm_replace_example("做一个咖啡点单 App");
-    assert_eq!(home.draft, "做一个咖啡点单 App");
-}
-
-#[test]
-fn hide_drops_pointer_state_and_resets_the_entrance_stamp() {
+fn set_size_keeps_per_kind_choices_and_rejects_foreign_sizes() {
     let mut home = HomeState {
-        visible: true,
-        shown_at_ms: 5_000,
-        hover: Some(HomeHit::Send),
-        pressed: Some(HomeHit::Send),
-        connect_card_open: true,
-        more_open: true,
-        replace_pending: true,
+        size_menu_open: true,
         ..HomeState::default()
     };
-    home.hide();
-    assert!(!home.visible);
-    assert_eq!(home.hover, None);
-    assert_eq!(home.pressed, None);
-    assert_eq!(home.shown_at_ms, 0, "the next show must animate again");
-    assert!(!home.connect_card_open, "the modal card must not survive");
-    assert!(!home.more_open);
-    assert!(!home.replace_pending);
+    home.set_size(HomeSize::Tablet768);
+    assert!(!home.size_menu_open);
+    assert_eq!(home.task_draft().size, HomeSize::Tablet768);
+    home.set_size(HomeSize::Slide43);
+    assert_eq!(
+        home.task_draft().size,
+        HomeSize::Tablet768,
+        "not a page size"
+    );
+    home.set_task(HomeFamily::Slides);
+    home.set_size(HomeSize::Slide43);
+    home.set_task(HomeFamily::LandingPage);
+    assert_eq!(home.task_draft().size, HomeSize::Tablet768);
+    assert_eq!(home.draft_for(HomeFamily::Slides).size, HomeSize::Slide43);
 }
 
 #[test]
-fn entrance_deadline_frames_only_inside_the_window() {
+fn switching_kinds_keeps_each_draft() {
     let mut home = HomeState::default();
-    assert_eq!(home.entrance_deadline_ms(5_000), None, "hidden");
-    home.visible = true;
-    assert_eq!(home.entrance_deadline_ms(5_000), None, "not stamped yet");
-    home.shown_at_ms = 5_000;
-    assert_eq!(home.entrance_deadline_ms(5_000), Some(5_016));
-    assert_eq!(
-        home.entrance_deadline_ms(5_000 + HOME_ENTER_WINDOW_MS - 1),
-        Some(5_000 + HOME_ENTER_WINDOW_MS - 1 + HOME_ENTER_FRAME_MS)
-    );
-    assert_eq!(
-        home.entrance_deadline_ms(5_000 + HOME_ENTER_WINDOW_MS),
-        None,
-        "settled"
-    );
-}
-
-#[test]
-fn art_switch_restarts_the_crossfade_window() {
-    let mut home = HomeState::default();
-    assert_eq!(home.art_deadline_ms(1_000), None);
-    home.visible = true;
-    home.set_task(HomeFamily::Web, 2_000);
-    assert_eq!(home.art_switched_at_ms, 2_000);
-    assert_eq!(home.art_deadline_ms(2_000), Some(2_016));
-    assert_eq!(
-        home.art_deadline_ms(2_000 + HOME_ART_SWITCH_MS - 1),
-        Some(2_315)
-    );
-    assert_eq!(home.art_deadline_ms(2_000 + HOME_ART_SWITCH_MS), None);
-}
-
-#[test]
-fn every_task_wraps_a_non_empty_draft_with_its_key_phrase() {
-    let phrases: [(HomeFamily, &str); 7] = [
-        (HomeFamily::AppUi, "手机 App 界面（mobile app，375×812）"),
-        (HomeFamily::Web, "纵向滚动网站页面（landing page"),
-        (HomeFamily::Presentation, "PPT 演示文稿（slides"),
-        (HomeFamily::KnowledgeCards, "图文卡片（card，竖版 3:4"),
-        (HomeFamily::ScreenshotTutorial, "截图教程图文（card"),
-        (HomeFamily::Infographic, "信息图长图（card"),
-        (HomeFamily::EventPoster, "活动海报（card"),
-    ];
-    for (family, phrase) in phrases {
-        let prompt = family
-            .generation_prompt(&TaskDraft {
-                text: "  取餐预约  ".into(),
-                ..TaskDraft::default()
-            })
-            .unwrap_or_else(|| panic!("{family:?} wraps"));
-        assert!(prompt.contains(phrase), "{family:?}: {prompt}");
-        assert!(prompt.contains("取餐预约"), "{family:?} keeps the draft");
-    }
-    // An empty draft never queues a turn.
-    for family in HomeFamily::ALL {
-        assert!(family.generation_prompt(&TaskDraft::default()).is_none());
-    }
-}
-
-#[test]
-fn app_desktop_wrapper_names_the_desktop_contract() {
-    let prompt = HomeFamily::AppUi.generation_prompt(&TaskDraft {
-        text: "门店工作台".into(),
-        device: HomeDevice::Desktop,
-        ..TaskDraft::default()
-    });
-    assert!(prompt
-        .as_deref()
-        .is_some_and(|p| p.contains("桌面端应用界面（desktop app")));
-    assert!(prompt.as_deref().is_some_and(|p| p.contains("门店工作台")));
-}
-
-#[test]
-fn presentation_wrapper_reads_the_page_count_from_the_draft() {
-    let wrap = |text: &str| {
-        HomeFamily::Presentation
-            .generation_prompt(&TaskDraft {
-                text: text.into(),
-                ..TaskDraft::default()
-            })
-            .unwrap()
-    };
-    assert!(wrap("产品介绍").contains("5 页"), "default is five pages");
-    assert!(wrap("做一份 8 页的介绍").contains("8 页"));
-    assert!(wrap("10 页路演").contains("10 页"));
+    home.insert_text("coffee app", 1);
+    assert!(home.set_task(HomeFamily::Slides));
+    assert!(home.draft.is_empty());
+    home.insert_text("pitch", 2);
+    home.set_task(HomeFamily::LandingPage);
+    assert_eq!(home.draft, "coffee app");
+    assert_eq!(home.draft_for(HomeFamily::Slides).text, "pitch");
     assert!(
-        wrap("第 2026 季度汇报").contains("5 页"),
-        "years are not page counts"
+        !home.set_task(HomeFamily::LandingPage),
+        "same kind is a no-op"
     );
-    // The named ratio follows the segmented choice.
-    assert!(wrap("介绍").contains("16:9"));
-    let classic = HomeFamily::Presentation.generation_prompt(&TaskDraft {
-        text: "介绍".into(),
-        ratio: SlideRatio::Classic43,
-        ..TaskDraft::default()
-    });
-    assert!(classic.unwrap().contains("4:3"));
 }
 
 #[test]
-fn infographic_wrapper_names_the_active_kind() {
-    for (kind, label) in [
-        (InfoKind::Data, "数据"),
-        (InfoKind::Flow, "流程"),
-        (InfoKind::Comparison, "对比"),
-    ] {
-        let prompt = HomeFamily::Infographic
-            .generation_prompt(&TaskDraft {
-                text: "整理这些信息".into(),
-                info_kind: kind,
-                ..TaskDraft::default()
-            })
-            .unwrap();
-        assert!(prompt.contains(&format!("{label}信息图长图")), "{prompt}");
-    }
+fn empty_drafts_produce_no_prompt() {
+    let mut home = HomeState::default();
+    assert!(home.generation_prompt().is_none());
+    home.set_draft("   ");
+    assert!(home.generation_prompt().is_none());
 }
 
-/// The wrappers are the only thing telling `detect_design_type` what
-/// artboard each Home task needs — a wrapper that loses its trigger
-/// words silently hands the launch path the wrong design type.
 #[test]
-fn orchestrator_detection_classifies_every_task_wrapper() {
-    let draft = TaskDraft {
-        text: "咖啡点单，三个页面".into(),
-        ..TaskDraft::default()
-    };
+fn contracts_carry_the_brief_the_size_and_a_detector_keyword() {
     let cases = [
-        (
-            HomeFamily::AppUi.generation_prompt(&draft).unwrap(),
-            de_orchestrator::DesignType::MobileScreen,
-        ),
-        (
-            HomeFamily::AppUi
-                .generation_prompt(&TaskDraft {
-                    device: HomeDevice::Desktop,
-                    ..draft.clone()
-                })
-                .unwrap(),
-            de_orchestrator::DesignType::DesktopScreen,
-        ),
-        (
-            HomeFamily::Web.generation_prompt(&draft).unwrap(),
-            de_orchestrator::DesignType::LandingPage,
-        ),
-        (
-            HomeFamily::Presentation.generation_prompt(&draft).unwrap(),
-            de_orchestrator::DesignType::Slides,
-        ),
-        (
-            HomeFamily::KnowledgeCards
-                .generation_prompt(&draft)
-                .unwrap(),
-            de_orchestrator::DesignType::Card,
-        ),
-        (
-            HomeFamily::ScreenshotTutorial
-                .generation_prompt(&draft)
-                .unwrap(),
-            de_orchestrator::DesignType::Card,
-        ),
-        (
-            HomeFamily::Infographic.generation_prompt(&draft).unwrap(),
-            de_orchestrator::DesignType::Card,
-        ),
-        (
-            HomeFamily::EventPoster.generation_prompt(&draft).unwrap(),
-            de_orchestrator::DesignType::Card,
-        ),
+        (HomeFamily::LandingPage, "landing page"),
+        (HomeFamily::MobileApp, "mobile app"),
+        (HomeFamily::WebApp, "workspace"),
+        (HomeFamily::Slides, "presentation deck"),
+        (HomeFamily::Dashboard, "dashboard"),
     ];
-    for (prompt, expected) in cases {
-        assert_eq!(
-            de_orchestrator::detect_design_type(&prompt).type_,
-            expected,
-            "{prompt}"
+    for (family, keyword) in cases {
+        let draft = TaskDraft {
+            text: "a bakery".into(),
+            size: family.default_size(),
+        };
+        let prompt = family.generation_prompt(&draft).expect("prompt");
+        assert!(prompt.contains(keyword), "{family:?}: {prompt}");
+        assert!(prompt.ends_with("Brief: a bakery"), "{family:?}: {prompt}");
+        assert!(
+            prompt.contains(family.default_size().prompt_text()),
+            "{family:?}: {prompt}"
         );
     }
 }
 
 #[test]
-fn the_hover_stamp_names_the_leaving_card_and_schedules_frames() {
-    let mut home = HomeState {
+fn something_else_sends_the_brief_first_with_only_the_size_line() {
+    let draft = TaskDraft {
+        text: "a pricing card".into(),
+        size: HomeSize::Tablet768,
+    };
+    let prompt = HomeFamily::Other.generation_prompt(&draft).unwrap();
+    assert!(prompt.starts_with("a pricing card"));
+    assert!(prompt.contains("tablet, 768 px wide"));
+}
+
+#[test]
+fn slides_contract_reads_the_slide_count_from_the_brief() {
+    let draft = |text: &str| TaskDraft {
+        text: text.into(),
+        size: HomeSize::Slide169,
+    };
+    let prompt = HomeFamily::Slides.generation_prompt(&draft("8 slides on bees"));
+    assert!(prompt.unwrap().starts_with("Design a 8-slide"));
+    let prompt = HomeFamily::Slides.generation_prompt(&draft("bees"));
+    assert!(prompt.unwrap().starts_with("Design a 5-slide"));
+}
+
+#[test]
+fn escape_peels_popovers_then_leaves_only_a_dismissible_home() {
+    let mut home = HomeState::default();
+    home.show(false);
+    home.mcp_popover_open = true;
+    home.mcp_agent_menu_open = true;
+    assert!(home.escape());
+    assert!(home.mcp_popover_open, "the ▾ menu closes first");
+    assert!(home.escape());
+    assert!(!home.mcp_popover_open);
+    assert!(!home.escape(), "launch Home has nothing to return to");
+    assert!(home.visible);
+
+    home.show(true);
+    assert!(home.escape());
+    assert!(!home.visible);
+}
+
+#[test]
+fn copied_label_times_out() {
+    let home = HomeState {
         visible: true,
+        copied: Some((HomeCopyTarget::Endpoint, 1_000)),
         ..HomeState::default()
     };
-    assert_eq!(home.hover_lift_deadline_ms(1_000), None);
-    home.stamp_card_hover(Some(HomeFamily::EventPoster), 1_000);
-    assert_eq!(home.card_hover_leaving, Some(HomeFamily::EventPoster));
+    assert!(home.copied_recently(HomeCopyTarget::Endpoint, 1_200));
+    assert!(!home.copied_recently(HomeCopyTarget::Snippet, 1_200));
+    assert!(!home.copied_recently(HomeCopyTarget::Endpoint, 1_000 + HOME_COPIED_MS));
+    assert_eq!(home.copied_deadline_ms(1_200), Some(1_000 + HOME_COPIED_MS));
+    assert_eq!(home.copied_deadline_ms(1_000 + HOME_COPIED_MS), None);
+}
+
+#[test]
+fn recent_view_round_trips_wire_values() {
     assert_eq!(
-        home.hover_lift_deadline_ms(1_100),
-        Some(1_100 + HOME_ENTER_FRAME_MS)
+        RecentView::from_str(RecentView::List.as_str()),
+        RecentView::List
     );
-    assert_eq!(
-        home.hover_lift_deadline_ms(1_000 + HOME_HOVER_LIFT_MS),
-        None
-    );
-    home.hide();
-    assert_eq!(home.card_hover_since_ms, 0);
-    assert_eq!(home.card_hover_leaving, None);
+    assert_eq!(RecentView::from_str("grid"), RecentView::Grid);
+    assert_eq!(RecentView::from_str("bogus"), RecentView::Grid);
+}
+
+#[test]
+fn templates_open_their_panel_on_the_ui_state() {
+    let mut ui = crate::EditorUiState {
+        variables_panel_open: true,
+        ..crate::EditorUiState::default()
+    };
+    ui.apply_home_template(HomeTemplate::DesignSystems, 1);
+    assert!(ui.design_md_panel.open);
+    assert!(!ui.variables_panel_open);
+    ui.apply_home_template(HomeTemplate::SceneTemplates, 1);
+    assert!(ui.scene_template_center.open);
 }
 
 #[test]
 fn an_external_edit_hides_home_only_when_it_is_showing() {
     let mut home = HomeState {
         visible: true,
-        shown_at_ms: 1_000,
-        connect_card_open: true,
+        mcp_popover_open: true,
         ..HomeState::default()
     };
     assert!(home.reveal_for_external_edit());
     assert!(!home.visible);
-    assert_eq!(home.shown_at_ms, 0);
-    assert!(!home.connect_card_open);
+    assert!(!home.mcp_popover_open);
     assert!(
         !home.reveal_for_external_edit(),
         "a hidden Home reports no change"

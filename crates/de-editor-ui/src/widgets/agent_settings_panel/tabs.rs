@@ -39,7 +39,9 @@ pub(super) fn paint_tab_strip(
         if selected {
             cx.backend.fill_round_rect(
                 pill,
-                if layout.vertical_navigation {
+                if layout.kind == AgentSettingsSurfaceKind::Desktop {
+                    8.0
+                } else if layout.vertical_navigation {
                     12.0
                 } else {
                     pill.size.y / 2.0
@@ -49,7 +51,9 @@ pub(super) fn paint_tab_strip(
         } else if hovered {
             cx.backend.fill_round_rect(
                 pill,
-                if layout.vertical_navigation {
+                if layout.kind == AgentSettingsSurfaceKind::Desktop {
+                    8.0
+                } else if layout.vertical_navigation {
                     12.0
                 } else {
                     pill.size.y / 2.0
@@ -75,7 +79,7 @@ pub(super) fn paint_tab_strip(
         let label_w = measure_settings_text(cx, &label, TAB_LABEL_FONT);
         let group_w = TAB_ICON_SIZE + TAB_ICON_GAP + label_w;
         let icon_x = if layout.vertical_navigation {
-            pill.origin.x + 14.0
+            pill.origin.x + 10.0
         } else {
             pill.origin.x + (pill.size.x - group_w) / 2.0
         };
