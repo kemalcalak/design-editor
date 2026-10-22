@@ -3,7 +3,8 @@
 //! machine and ACP agents on the left; the right pane edits whichever
 //! entry is selected here.
 
-use super::AgentSettings;
+use super::{AcpConnectionType, AgentSettings};
+use crate::acp_agent_presets::acp_agent_preset;
 use crate::chat::AgentProvider;
 
 /// One row of the Agents tab list. Built-in and ACP rows are keyed by id,
@@ -51,14 +52,59 @@ impl AgentSettings {
     }
 
     /// Show `entry` in the detail pane. The key goes back under its mask
-    /// and the old entry's dropdowns close with it.
+    /// and the old entry's dropdowns and checklist scroll reset with it.
     pub fn select_agents_entry(&mut self, entry: AgentsEntry) {
         self.agents_selected = Some(entry);
         self.api_key_revealed = false;
+        self.builtin_model_menu_scroll.offset = 0.0;
         self.builtin_preset_menu_open = None;
         self.builtin_preset_menu_hover = None;
         self.builtin_model_menu_open = None;
         self.builtin_model_menu_hover = None;
+    }
+
+    /// Fill the ACP draft from a quick-add preset, or clear it back to a
+    /// blank local command for `None` ("Custom"). The draft stays a draft:
+    /// saving it goes through the ordinary add path.
+    pub fn fill_acp_draft_from_preset(&mut self, preset_id: Option<&str>) {
+        let preset = preset_id.and_then(acp_agent_preset);
+        let blank_name = format!("ACP Agent {}", self.next_acp_agent_id.max(1));
+        let Some(draft) = self.acp_agent_draft.as_mut() else {
+            return;
+        };
+        draft.connection_type = AcpConnectionType::Local;
+        draft.url = None;
+        match preset {
+            Some(preset) => {
+                draft.display_name = preset.display_name.to_string();
+                draft.command = preset.command.to_string();
+                draft.args = preset.args.iter().map(|arg| arg.to_string()).collect();
+            }
+            None => {
+                draft.display_name = blank_name;
+                draft.command.clear();
+                draft.args.clear();
+            }
+        }
+    }
+
+    /// Switch an ACP agent (`Some(index)`) or the draft between a local
+    /// command and a remote URL. A saved agent drops its live connection,
+    /// which belonged to the old transport.
+    pub fn set_acp_connection_type(&mut self, index: Option<usize>, kind: AcpConnectionType) {
+        let agent = match index {
+            Some(index) => self.acp_agents.get_mut(index),
+            None => self.acp_agent_draft.as_mut(),
+        };
+        let Some(agent) = agent else { return };
+        if agent.connection_type == kind {
+            return;
+        }
+        agent.connection_type = kind;
+        let id = agent.id.clone();
+        if index.is_some() {
+            self.invalidate_acp_agent_connection(&id);
+        }
     }
 
     /// Whether the user unticked `model` for a CLI agent (D6).
@@ -147,6 +193,32 @@ mod tests {
         };
         settings.select_agents_entry(AgentsEntry::BuiltinDraft);
         assert!(!settings.api_key_revealed);
+    }
+
+    #[test]
+    fn the_acp_draft_fills_from_a_preset_and_clears_for_custom() {
+        let mut settings = AgentSettings::default();
+        settings.begin_acp_agent_draft();
+        settings.fill_acp_draft_from_preset(Some("qwen-code"));
+        let draft = settings.acp_agent_draft.as_ref().unwrap();
+        assert_eq!(draft.command, "qwen");
+        assert_eq!(draft.args, ["--acp"]);
+        settings.fill_acp_draft_from_preset(None);
+        let draft = settings.acp_agent_draft.as_ref().unwrap();
+        assert!(draft.command.is_empty() && draft.args.is_empty());
+    }
+
+    #[test]
+    fn switching_a_saved_agent_to_remote_drops_its_connection() {
+        let mut settings = AgentSettings::default();
+        let index = settings.add_acp_agent_preset("kimi").unwrap();
+        settings.acp_agents[index].connected = true;
+        settings.set_acp_connection_type(Some(index), AcpConnectionType::Remote);
+        assert_eq!(
+            settings.acp_agents[index].connection_type,
+            AcpConnectionType::Remote
+        );
+        assert!(!settings.acp_agents[index].connected);
     }
 
     #[test]

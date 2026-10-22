@@ -26,6 +26,58 @@ fn close_press_sets_and_release_clears_agent_settings_button() {
     assert_eq!(host.editor_state.editor_ui.pressed_button, None);
 }
 
+/// Press wherever the web panel resolves to `hit`, scrolling the body
+/// down the way a user would. Panics when no scroll offset shows it.
+pub(super) fn press_hit(host: &mut WidgetHost, hit: AgentSettingsHit) -> bool {
+    let mut scroll = 0.0_f32;
+    loop {
+        host.editor_state.editor_ui.agent_settings.scroll_y.offset = scroll;
+        let (point, max) = {
+            let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
+            let rect = panel.rect(1200.0, 800.0);
+            (panel.point_for_hit(rect, hit), panel.max_scroll(rect))
+        };
+        if let Some(point) = point {
+            return host.dispatch_agent_settings_press(point.x, point.y, 1200.0, 800.0);
+        }
+        if scroll >= max {
+            panic!("no scroll offset shows a control that resolves to {hit:?}");
+        }
+        scroll = (scroll + 24.0).min(max);
+    }
+}
+
+/// Every hit reachable anywhere in the web panel's body, across scroll.
+pub(super) fn reachable_hits(host: &mut WidgetHost) -> Vec<AgentSettingsHit> {
+    let mut hits = Vec::new();
+    let mut scroll = 0.0_f32;
+    loop {
+        host.editor_state.editor_ui.agent_settings.scroll_y.offset = scroll;
+        let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
+        let rect = panel.rect(1200.0, 800.0);
+        let content = panel.resolved_content_viewport(rect);
+        let mut y = content.origin.y + 2.0;
+        while y < content.origin.y + content.size.y {
+            let mut x = content.origin.x + 2.0;
+            while x < content.origin.x + content.size.x {
+                let hit = panel.hit_test(rect, Point2D::new(x, y));
+                if !hits.contains(&hit) {
+                    hits.push(hit);
+                }
+                x += 6.0;
+            }
+            y += 6.0;
+        }
+        let max = panel.max_scroll(rect);
+        if scroll >= max {
+            break;
+        }
+        scroll = (scroll + 24.0).min(max);
+    }
+    host.editor_state.editor_ui.agent_settings.scroll_y.offset = 0.0;
+    hits
+}
+
 fn first_hit_point(
     panel: &AgentSettingsPanel<'_>,
     rect: de_editor_ui::Rect,
@@ -129,23 +181,10 @@ fn toggling_builtin_kind_commits_focused_api_key_draft() {
         .settings_input
         .set_text("sk-web");
 
-    let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
-    let rect = panel.rect(1200.0, 800.0);
-    let content_x = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .x;
-    let content_y = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .y;
-    let content_w = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .size
-        .x;
-    let first_card_y =
-        content_y + de_editor_ui::widgets::agent_settings_panel::AGENTS_HERO_HEIGHT + 28.0 + 28.0;
-    let kind_x = content_x + content_w - 172.0 + 120.0;
-    let kind_y = first_card_y + 22.0;
-
-    assert!(host.dispatch_agent_settings_press(kind_x, kind_y, 1200.0, 800.0));
+    assert!(press_hit(
+        &mut host,
+        AgentSettingsHit::ToggleBuiltinAgentKind(0)
+    ));
 
     let agent = &host.editor_state.editor_ui.agent_settings.builtin_agents[0];
     assert_eq!(agent.api_key, "sk-web");
@@ -157,25 +196,11 @@ fn toggling_builtin_kind_commits_focused_api_key_draft() {
 }
 
 #[test]
-fn add_provider_opens_unsaved_builtin_agent_draft() {
+fn add_custom_endpoint_opens_unsaved_builtin_agent_draft() {
     let mut host = WidgetHost::new();
     host.set_now_ms(1234);
 
-    let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
-    let rect = panel.rect(1200.0, 800.0);
-    let content_x = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .x;
-    let content_y = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .y;
-    let content_w = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .size
-        .x;
-    let add_x = content_x + content_w - 48.0;
-    let add_y = content_y + de_editor_ui::widgets::agent_settings_panel::AGENTS_HERO_HEIGHT + 12.0;
-
-    assert!(host.dispatch_agent_settings_press(add_x, add_y, 1200.0, 800.0));
+    assert!(press_hit(&mut host, AgentSettingsHit::AddProvider));
     assert_eq!(
         host.editor_state.editor_ui.pressed_button,
         Some(ButtonPressTarget::AgentSettings(
@@ -188,9 +213,8 @@ fn add_provider_opens_unsaved_builtin_agent_draft() {
     assert!(settings.builtin_agent_draft.is_some());
     assert_eq!(
         settings.focus,
-        Some(SettingsFocus::BuiltinAgentDraft(BuiltinAgentField::ApiKey))
+        Some(SettingsFocus::BuiltinAgentDraft(BuiltinAgentField::BaseUrl))
     );
-    assert_eq!(host.editor_state.editor_ui.settings_input.text(), "");
     assert_eq!(
         host.editor_state
             .editor_ui
@@ -204,64 +228,37 @@ fn add_provider_opens_unsaved_builtin_agent_draft() {
 }
 
 #[test]
-fn web_add_acp_agent_control_is_hidden() {
+fn the_web_agents_tab_offers_no_acp_or_cli_controls() {
     let mut host = WidgetHost::new();
-    let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
-    let rect = panel.rect(1200.0, 800.0);
-    let content_x = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .x;
-    let content_y = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .y;
-    let content_w = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .size
-        .x;
-    let add_x = content_x + content_w - 12.0 - 48.0;
-    let add_y = content_y
-        + de_editor_ui::widgets::agent_settings_panel::AGENTS_HERO_HEIGHT
-        + 120.0
-        + 28.0
-        + 12.0;
-
-    assert_eq!(
-        panel.hit_test(rect, Point2D::new(add_x, add_y)),
-        AgentSettingsHit::Inside
+    let hits = reachable_hits(&mut host);
+    assert!(
+        !hits.iter().any(|hit| matches!(
+            hit,
+            AgentSettingsHit::AddAcpAgent
+                | AgentSettingsHit::SelectCliEntry(_)
+                | AgentSettingsHit::SelectAcpEntry(_)
+                | AgentSettingsHit::Connect(_)
+        )),
+        "the browser cannot run local agents: {hits:?}"
     );
-    assert!(host.dispatch_agent_settings_press(add_x, add_y, 1200.0, 800.0));
-
-    let settings = &host.editor_state.editor_ui.agent_settings;
-    assert!(settings.acp_agents.is_empty());
-    assert!(settings.acp_agent_draft.is_none());
-    assert_eq!(settings.focus, None);
-    assert_eq!(host.editor_state.editor_ui.pressed_button, None);
+    assert!(hits.contains(&AgentSettingsHit::AddProvider));
 }
 
 #[test]
-fn builtin_provider_menu_selects_ts_preset_for_draft() {
+fn builtin_provider_select_retargets_the_draft_preset() {
     let mut host = WidgetHost::new();
-    let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
-    let rect = panel.rect(1200.0, 800.0);
-    let content_x = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .x;
-    let content_y = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .y;
-    let content_w = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .size
-        .x;
-    let add_x = content_x + content_w - 48.0;
-    let add_y = content_y + de_editor_ui::widgets::agent_settings_panel::AGENTS_HERO_HEIGHT + 12.0;
-
-    assert!(host.dispatch_agent_settings_press(add_x, add_y, 1200.0, 800.0));
-    let card_y =
-        content_y + de_editor_ui::widgets::agent_settings_panel::AGENTS_HERO_HEIGHT + 28.0 + 28.0;
-    let provider_x = content_x + 68.0 + 24.0;
-    let provider_y = card_y + 60.0;
-    assert!(host.dispatch_agent_settings_press(provider_x, provider_y, 1200.0, 800.0));
-    let minimax_y = card_y + 76.0 + 4.0 + 5.0 * 24.0 + 12.0;
-    assert!(host.dispatch_agent_settings_press(provider_x, minimax_y, 1200.0, 800.0));
+    assert!(press_hit(&mut host, AgentSettingsHit::AddProvider));
+    assert!(press_hit(
+        &mut host,
+        AgentSettingsHit::ToggleBuiltinAgentPresetMenu(None)
+    ));
+    assert!(press_hit(
+        &mut host,
+        AgentSettingsHit::SelectBuiltinAgentPreset {
+            index: None,
+            preset: de_editor_core::BuiltinAgentPresetKey::MiniMax,
+        }
+    ));
 
     let draft = host
         .editor_state
@@ -279,29 +276,17 @@ fn builtin_provider_menu_selects_ts_preset_for_draft() {
 #[test]
 fn save_builtin_agent_draft_persists_provider() {
     let mut host = WidgetHost::new();
-    let panel = AgentSettingsPanel::for_web_editor(&host.editor_state);
-    let rect = panel.rect(1200.0, 800.0);
-    let content_x = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .x;
-    let content_y = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .origin
-        .y;
-    let content_w = de_editor_ui::widgets::agent_settings_panel::content_viewport(rect)
-        .size
-        .x;
-    let add_x = content_x + content_w - 48.0;
-    let add_y = content_y + de_editor_ui::widgets::agent_settings_panel::AGENTS_HERO_HEIGHT + 12.0;
-
-    assert!(host.dispatch_agent_settings_press(add_x, add_y, 1200.0, 800.0));
+    assert!(press_hit(
+        &mut host,
+        AgentSettingsHit::SelectApiPreset(de_editor_core::BuiltinAgentPresetKey::Anthropic)
+    ));
     for c in "sk-web".chars() {
         assert!(host.apply_text(c));
     }
-    let card_y =
-        content_y + de_editor_ui::widgets::agent_settings_panel::AGENTS_HERO_HEIGHT + 28.0 + 28.0;
-    let save_x = content_x + content_w - 12.0 - 34.0;
-    let save_y = card_y + 196.0 + 18.0;
-    assert!(host.dispatch_agent_settings_press(save_x, save_y, 1200.0, 800.0));
+    assert!(press_hit(
+        &mut host,
+        AgentSettingsHit::SaveBuiltinAgentDraft
+    ));
 
     let settings = &host.editor_state.editor_ui.agent_settings;
     assert_eq!(settings.builtin_agents.len(), 1);

@@ -6,8 +6,8 @@
 //! the repo's 800-line cap.
 
 use de_editor_core::agent_settings::{
-    AcpAgentField, BuiltinAgentField, BuiltinAgentPresetMenuTarget, ImageGenField, ImageTestStatus,
-    SettingsFocus,
+    AcpAgentField, AgentsEntry, BuiltinAgentField, BuiltinAgentPresetMenuTarget, ImageGenField,
+    ImageTestStatus, SettingsFocus,
 };
 use de_editor_core::host_settings_commit::{commit_settings_focus, SettingsCommitScope};
 use de_editor_core::EditorState;
@@ -110,20 +110,11 @@ pub(crate) fn apply_entry_hit(
         AgentSettingsHit::FocusBuiltinAgent { index, field } => {
             commit(state);
             focus_builtin_agent(state, index, field, now_ms);
-            if field == BuiltinAgentField::Model {
-                // Focusing the Model field opens its discovered-model
-                // dropdown (combobox behaviour); discovery queues only
-                // when the runtime catalog is actually due.
-                open_builtin_model_menu(state, Some(index), now_ms);
-            }
             SettingsPressOutcome::handled()
         }
         AgentSettingsHit::FocusBuiltinAgentDraft(field) => {
             commit(state);
             focus_builtin_agent_draft(state, field, now_ms);
-            if field == BuiltinAgentField::Model {
-                open_builtin_model_menu(state, None, now_ms);
-            }
             SettingsPressOutcome::handled()
         }
         AgentSettingsHit::ToggleBuiltinAgentKind(index) => {
@@ -148,92 +139,44 @@ pub(crate) fn apply_entry_hit(
             }
             SettingsPressOutcome::handled()
         }
-        AgentSettingsHit::ToggleBuiltinModelMenu(index) => {
-            // Decide visibility BEFORE the commit — commit moves the
-            // settings focus, which is what the visibility predicate
-            // keys on.
-            let target = crate::widgets::agent_settings_builtin_model_menu::menu_target(index);
-            let was_open = state.editor_ui.agent_settings.builtin_model_menu_open == Some(target)
-                && crate::widgets::agent_settings_builtin_model_menu::model_menu_visible(
-                    &state.editor_ui.agent_settings,
-                );
-            commit(state);
-            if was_open {
-                let settings = &mut state.editor_ui.agent_settings;
-                settings.builtin_model_menu_open = None;
-                settings.builtin_model_menu_scroll.offset = 0.0;
-                settings.builtin_model_menu_hover = None;
-                // Keep the Model field focused after closing the
-                // dropdown so typing continues from the value.
-                match index {
-                    Some(index) => {
-                        focus_builtin_agent(state, index, BuiltinAgentField::Model, now_ms)
-                    }
-                    None => focus_builtin_agent_draft(state, BuiltinAgentField::Model, now_ms),
-                }
-            } else {
-                match index {
-                    Some(index) => {
-                        focus_builtin_agent(state, index, BuiltinAgentField::Model, now_ms)
-                    }
-                    None => focus_builtin_agent_draft(state, BuiltinAgentField::Model, now_ms),
-                }
-                open_builtin_model_menu(state, index, now_ms);
-            }
-            SettingsPressOutcome::handled()
-        }
         AgentSettingsHit::SelectBuiltinModel { index, row } => {
-            // Resolve the pressed row against the same catalog the menu
+            // Resolve the pressed row against the same rows the checklist
             // painted — hit-test and press run on the same frame, so the
             // row index is stable. Resolve before commit because an operator
             // takeover may rotate a browser-owned provider id and invalidate
             // its old runtime catalog.
             let model_id = {
                 let settings = &state.editor_ui.agent_settings;
-                match index {
+                let entry = match index {
                     Some(index) => settings
                         .builtin_agents
                         .get(index)
-                        .and_then(|agent| {
-                            settings.builtin_model_catalog_options(&agent.id).get(row)
-                        })
-                        .map(|option| option.id.clone()),
-                    None => settings
-                        .builtin_model_catalog_options_for(
-                            &de_editor_core::BuiltinModelCatalogTarget::Draft,
-                        )
-                        .get(row)
-                        .map(|option| option.id.clone()),
-                }
+                        .map(|agent| AgentsEntry::Builtin(agent.id.clone())),
+                    None => Some(AgentsEntry::BuiltinDraft),
+                };
+                entry
+                    .and_then(|entry| {
+                        crate::widgets::agent_settings_api_detail::api_target(settings, &entry)
+                    })
+                    .and_then(|target| {
+                        crate::widgets::agent_settings_api_detail::model_rows(settings, target)
+                            .into_iter()
+                            .nth(row)
+                    })
             };
             commit(state);
             if let Some(model_id) = model_id {
                 let settings = &mut state.editor_ui.agent_settings;
-                match index {
-                    Some(index) => {
-                        if let Some(agent) = settings.builtin_agents.get_mut(index) {
-                            agent.toggle_model(&model_id);
-                        }
-                    }
-                    None => {
-                        if let Some(agent) = settings.builtin_agent_draft.as_mut() {
-                            agent.toggle_model(&model_id);
-                        }
-                    }
+                let agent = match index {
+                    Some(index) => settings.builtin_agents.get_mut(index),
+                    None => settings.builtin_agent_draft.as_mut(),
+                };
+                if let Some(agent) = agent {
+                    agent.toggle_model(&model_id);
                 }
                 if index.is_some() {
                     state.rebuild_chat_models();
                 }
-                // A catalog row is a checkbox, not a single-select action.
-                // Keep both the multiline Model editor and the menu open so
-                // desktop and touch users can choose several rows in one pass.
-                match index {
-                    Some(index) => {
-                        focus_builtin_agent(state, index, BuiltinAgentField::Model, now_ms)
-                    }
-                    None => focus_builtin_agent_draft(state, BuiltinAgentField::Model, now_ms),
-                }
-                open_builtin_model_menu(state, index, now_ms);
             }
             SettingsPressOutcome::handled()
         }
@@ -296,11 +239,6 @@ pub(crate) fn apply_entry_hit(
             queue_builtin_discovery(state, index, now_ms);
             SettingsPressOutcome::handled()
         }
-        AgentSettingsHit::EditBuiltinAgent(index) => {
-            commit(state);
-            focus_builtin_agent(state, index, BuiltinAgentField::DisplayName, now_ms);
-            SettingsPressOutcome::handled()
-        }
         AgentSettingsHit::SaveBuiltinAgentEditing(index) => {
             // Commit any focused draft, then drop focus so the expanded
             // form collapses; a fresh key or base URL warrants a model
@@ -322,12 +260,6 @@ pub(crate) fn apply_entry_hit(
                 clear_focus(state);
                 state.rebuild_chat_models();
             }
-            SettingsPressOutcome::handled()
-        }
-        AgentSettingsHit::AddProvider => {
-            commit(state);
-            state.editor_ui.agent_settings.begin_builtin_agent_draft();
-            focus_builtin_agent_draft(state, BuiltinAgentField::ApiKey, now_ms);
             SettingsPressOutcome::handled()
         }
         AgentSettingsHit::SaveBuiltinAgentDraft => {
@@ -363,11 +295,6 @@ pub(crate) fn apply_entry_hit(
         AgentSettingsHit::FocusAcpAgentDraft(field) => {
             commit(state);
             focus_acp_agent_draft(state, field, now_ms);
-            SettingsPressOutcome::handled()
-        }
-        AgentSettingsHit::EditAcpAgent(index) => {
-            commit(state);
-            focus_acp_agent(state, index, AcpAgentField::DisplayName, now_ms);
             SettingsPressOutcome::handled()
         }
         AgentSettingsHit::RemoveAcpAgent(index) => {
@@ -420,42 +347,6 @@ pub(crate) fn apply_entry_hit(
             }
             SettingsPressOutcome::handled()
         }
-        AgentSettingsHit::AddAcpPreset(row) => {
-            commit(state);
-            // The row index is positional over the *visible* presets, so
-            // resolve it to a slug before mutating — adding one row hides
-            // it and renumbers everything after it.
-            let preset_id = state
-                .editor_ui
-                .agent_settings
-                .visible_acp_presets()
-                .get(row)
-                .map(|preset| preset.id);
-            if let Some(preset_id) = preset_id {
-                if let Some(index) = state
-                    .editor_ui
-                    .agent_settings
-                    .add_acp_agent_preset(preset_id)
-                {
-                    // Straight into the ordinary handshake — a preset that
-                    // stopped at "saved" would leave the user to hunt for
-                    // the Connect button they just implicitly asked for.
-                    state
-                        .editor_ui
-                        .agent_settings
-                        .begin_acp_agent_connect(index);
-                    state.editor_ui.agent_settings.hover_acp_preset = None;
-                    state.rebuild_chat_models();
-                }
-            }
-            SettingsPressOutcome::handled()
-        }
-        AgentSettingsHit::AddAcpAgent => {
-            commit(state);
-            state.editor_ui.agent_settings.begin_acp_agent_draft();
-            focus_acp_agent_draft(state, AcpAgentField::Command, now_ms);
-            SettingsPressOutcome::handled()
-        }
         AgentSettingsHit::SaveAcpAgentDraft => {
             commit(state);
             if state
@@ -465,6 +356,17 @@ pub(crate) fn apply_entry_hit(
                 .is_some()
             {
                 clear_focus(state);
+                // "Add agent" goes straight into the handshake, like the
+                // old quick-add rows did.
+                let index = state.editor_ui.agent_settings.acp_agents.len() - 1;
+                if state
+                    .editor_ui
+                    .agent_settings
+                    .begin_acp_agent_connect(index)
+                    .is_some()
+                {
+                    state.rebuild_chat_models();
+                }
             } else {
                 let field = state
                     .editor_ui
@@ -485,6 +387,22 @@ pub(crate) fn apply_entry_hit(
         // Every remaining variant is handled by the caller. Spelled out
         // rather than `_` so a new hit variant is a compile error in one
         // of the two halves instead of a silent no-op.
+        // The list and detail arms (#26).
+        AgentSettingsHit::AddProvider
+        | AgentSettingsHit::AddAcpAgent
+        | AgentSettingsHit::SelectBuiltinEntry(_)
+        | AgentSettingsHit::SelectApiPreset(_)
+        | AgentSettingsHit::SelectCliEntry(_)
+        | AgentSettingsHit::SelectAcpEntry(_)
+        | AgentSettingsHit::ToggleApiKeyReveal
+        | AgentSettingsHit::FetchBuiltinModels(_)
+        | AgentSettingsHit::RecheckProvider(_)
+        | AgentSettingsHit::ToggleCliModel { .. }
+        | AgentSettingsHit::SelectAcpPreset(_)
+        | AgentSettingsHit::SetAcpConnection { .. } => {
+            crate::widgets::agent_settings_press_agents::apply_agents_hit(state, hit, scope, now_ms)
+                .unwrap_or_else(SettingsPressOutcome::handled)
+        }
         AgentSettingsHit::Close
         | AgentSettingsHit::Outside
         | AgentSettingsHit::Inside
@@ -509,50 +427,6 @@ pub(crate) fn apply_entry_hit(
             debug_assert!(false, "handled by apply_agent_settings_hit");
             SettingsPressOutcome::handled()
         }
-    }
-}
-
-/// Open (or keep open) the model dropdown for `index` — saved agent or
-/// add-provider draft — and queue model discovery when the runtime
-/// catalog for that credential is due. Discovery deliberately needs
-/// credentials only: a not-yet-configured provider skips the fetch and
-/// the menu falls back to free-text entry.
-fn open_builtin_model_menu(state: &mut EditorState, index: Option<usize>, now_ms: u64) {
-    {
-        let settings = &mut state.editor_ui.agent_settings;
-        settings.builtin_preset_menu_open = None;
-        settings.builtin_preset_menu_scroll.offset = 0.0;
-        settings.builtin_preset_menu_hover = None;
-        let target = crate::widgets::agent_settings_builtin_model_menu::menu_target(index);
-        if settings.builtin_model_menu_open != Some(target)
-            || !crate::widgets::agent_settings_builtin_model_menu::model_menu_visible(settings)
-        {
-            settings.builtin_model_menu_open = Some(target);
-            settings.builtin_model_menu_scroll.offset = 0.0;
-            settings.builtin_model_menu_hover = None;
-        }
-    }
-    queue_builtin_model_discovery(state, index, now_ms);
-}
-
-/// Queue a gated discovery request for the card's catalog target: the
-/// saved agent's id, or the draft. Unconfigured targets are skipped by
-/// `begin_builtin_model_catalog_refresh_if_due`.
-fn queue_builtin_model_discovery(state: &mut EditorState, index: Option<usize>, now_ms: u64) {
-    let target = match index {
-        Some(index) => state
-            .editor_ui
-            .agent_settings
-            .builtin_agents
-            .get(index)
-            .map(|agent| de_editor_core::BuiltinModelCatalogTarget::Agent(agent.id.clone())),
-        None => Some(de_editor_core::BuiltinModelCatalogTarget::Draft),
-    };
-    if let Some(target) = target {
-        let _ = state
-            .editor_ui
-            .agent_settings
-            .begin_builtin_model_catalog_refresh_if_due(target, now_ms);
     }
 }
 
@@ -592,13 +466,7 @@ mod tests {
             SettingsCommitScope::Browser,
             55,
         );
-        // Re-open the saved provider for editing and type a new key.
-        let _ = apply_entry_hit(
-            &mut state,
-            AgentSettingsHit::EditBuiltinAgent(0),
-            SettingsCommitScope::Browser,
-            56,
-        );
+        // Type a new key into the saved provider.
         focus_builtin_agent(&mut state, 0, BuiltinAgentField::ApiKey, 57);
         state.editor_ui.settings_input.set_text("sk-rotated");
 
@@ -614,7 +482,7 @@ mod tests {
             state.editor_ui.agent_settings.builtin_agents[0].api_key,
             "sk-rotated"
         );
-        // Focus dropped => the expanded editing form collapses.
+        // Save drops the field focus.
         assert!(state.editor_ui.agent_settings.focus.is_none());
     }
 

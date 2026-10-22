@@ -8,24 +8,21 @@ use jian_widgets::components::text_area::TextArea;
 use jian_widgets::components::text_input::TextInputView;
 use jian_widgets::Tokens;
 
+/// The Agents tab's model editor fills its whole box (#26).
 pub(super) fn model_text_area_rect(input: Rect) -> Rect {
-    let trailing = 24.0;
-    Rect {
-        origin: input.origin,
-        size: crate::Point2D::new((input.size.x - trailing).max(0.0), input.size.y),
-    }
+    input
 }
 
 pub(super) fn model_text_font_size() -> f32 {
-    11.0
+    crate::widgets::agent_settings_detail_chrome::VALUE_FONT
 }
 
 pub(super) fn model_text_pad_x() -> f32 {
-    6.0
+    crate::widgets::agent_settings_detail_chrome::INPUT_PAD_X
 }
 
 pub(super) fn model_text_max_visible_lines() -> usize {
-    3
+    4
 }
 
 /// Map a click/tap in the focused provider Model editor back to the source
@@ -46,25 +43,31 @@ pub(super) fn model_text_byte_offset_at(
     )
 }
 
+fn detail_input_metrics() -> (f32, f32) {
+    use crate::widgets::agent_settings_detail_chrome::{INPUT_PAD_X, VALUE_FONT};
+    (VALUE_FONT, INPUT_PAD_X)
+}
+
 /// `(font_size, pad_x)` for the focused SINGLE-LINE settings input,
 /// matching each surface's paint site. `None` marks a focus whose text is
-/// not left-aligned single-line (`McpPort` centers its digits) or which
-/// paints without an input-rect geometry (ACP fields) — those keep the
-/// caret-at-end behavior rather than risking a wrong mapping.
+/// not left-aligned single-line (`McpPort` centers its digits, the ACP
+/// environment is multiline) — those keep the caret-at-end behavior
+/// rather than risking a wrong mapping.
 fn single_line_metrics(focus: SettingsFocus) -> Option<(f32, f32)> {
     use de_editor_core::agent_settings::BuiltinAgentField;
     match focus {
-        // `settings_form::paint_field_frame`.
+        // `agent_settings_detail_chrome` inputs (#26).
         SettingsFocus::BuiltinAgent { field, .. } | SettingsFocus::BuiltinAgentDraft(field) => {
-            (field != BuiltinAgentField::Model).then_some((11.0, 6.0))
+            (field != BuiltinAgentField::Model).then_some(detail_input_metrics())
         }
+        SettingsFocus::AcpAgent { field, .. } | SettingsFocus::AcpAgentDraft(field) => (field
+            != de_editor_core::agent_settings::AcpAgentField::Env)
+            .then_some(detail_input_metrics()),
         // `agent_settings_images_parts::paint_search_input_row`.
         SettingsFocus::ImageSearch(_) => Some((13.0, 12.0)),
         // `agent_settings_images_parts` gen-profile field paint.
         SettingsFocus::ImageGenProfile { .. } => Some((11.0, 6.0)),
-        SettingsFocus::McpPort
-        | SettingsFocus::AcpAgent { .. }
-        | SettingsFocus::AcpAgentDraft(_) => None,
+        SettingsFocus::McpPort => None,
     }
 }
 
@@ -113,6 +116,36 @@ pub(super) fn paint_settings_input_view(
     now_ms: u64,
     placeholder: &str,
 ) {
+    paint_settings_input_view_masked(
+        cx,
+        theme,
+        ui,
+        rect,
+        font_size,
+        pad_x,
+        text_baseline_y,
+        now_ms,
+        placeholder,
+        None,
+    );
+}
+
+/// [`paint_settings_input_view`] with a display mask (the API key field
+/// shows bullets until it is revealed). The mask keeps one display char
+/// per source char, as `TextInputView` requires.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn paint_settings_input_view_masked(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    ui: &EditorUiState,
+    rect: Rect,
+    font_size: f32,
+    pad_x: f32,
+    text_baseline_y: f32,
+    now_ms: u64,
+    placeholder: &str,
+    mask: Option<&dyn Fn(&str) -> String>,
+) {
     let view = TextInputView {
         state: &ui.settings_input,
         placeholder,
@@ -121,7 +154,7 @@ pub(super) fn paint_settings_input_view(
         now_ms,
         pad_x,
         baseline_delta_y: 0.0,
-        mask: None,
+        mask,
     };
     let text_top_y = rect.origin.y + (rect.size.y - font_size) / 2.0;
     let mut backend = BaselineAdjustingBackend {

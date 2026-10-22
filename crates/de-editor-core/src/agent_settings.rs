@@ -353,6 +353,9 @@ pub struct AgentSettings {
     /// Agents tab: the list row the detail pane shows. Read it through
     /// `resolved_agents_entry`, which falls back when the row is gone.
     pub agents_selected: Option<AgentsEntry>,
+    /// Agents tab: index of the hovered list line (see the widget's
+    /// `list_rows`); `None` = no hover.
+    pub hover_agents_row: Option<usize>,
     /// Agents tab: the selected provider's API key is shown in clear.
     /// Runtime only; selecting another row masks it again.
     pub api_key_revealed: bool,
@@ -430,6 +433,7 @@ impl Default for AgentSettings {
             hover_acp_preset: None,
             hover_nav: None,
             agents_selected: None,
+            hover_agents_row: None,
             api_key_revealed: false,
             cli_hidden_models: Default::default(),
             web_credential_sync_error: None,

@@ -49,12 +49,31 @@ fn agent_settings_images_metrics(host: &WidgetHostNative) -> (f32, f32, f32) {
     (body.origin.x, body.origin.y, body.size.x)
 }
 
-fn acp_header_y(content_y: f32) -> f32 {
-    content_y + de_editor_ui::widgets::agent_settings_panel::AGENTS_HERO_HEIGHT + 120.0 + 28.0
-}
-
-fn acp_card_y(content_y: f32) -> f32 {
-    acp_header_y(content_y) + 28.0 + 28.0
+/// Press wherever the panel resolves to `hit`, scrolling the body down
+/// the way a user would when the control sits below the fold. Panics when
+/// no scroll offset shows it, so a control that moved out of reach fails
+/// loudly instead of the press landing somewhere else.
+pub(super) fn press_hit(host: &mut WidgetHostNative, hit: AgentSettingsHit) -> bool {
+    let mut scroll = 0.0_f32;
+    loop {
+        host.editor_state_mut()
+            .editor_ui
+            .agent_settings
+            .scroll_y
+            .offset = scroll;
+        let (point, max) = {
+            let panel = AgentSettingsPanel::for_editor(host.editor_state());
+            let rect = panel.rect(VIEWPORT_W, VIEWPORT_H);
+            (panel.point_for_hit(rect, hit), panel.max_scroll(rect))
+        };
+        if let Some(point) = point {
+            return host.dispatch_agent_settings_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H);
+        }
+        if scroll >= max {
+            panic!("no scroll offset shows a control that resolves to {hit:?}");
+        }
+        scroll = (scroll + 24.0).min(max);
+    }
 }
 
 fn experimental_switch_y(host: &WidgetHostNative, x: f32) -> f32 {

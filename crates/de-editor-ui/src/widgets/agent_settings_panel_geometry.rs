@@ -2,29 +2,11 @@
 
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_panel::{
-    AGENTS_HERO_HEIGHT, CARD_GAP, CARD_HEIGHT, CONNECT_BTN_H, CONNECT_BTN_W, CONTENT_BOTTOM_PAD,
-    HEADER_HEIGHT, NAV_ITEM_GAP, NAV_ITEM_H, NAV_TITLE_H, NAV_W, PAD, SECTION_GAP,
-    STATUS_PILL_HEIGHT, STATUS_PILL_SLOT,
+    CONTENT_BOTTOM_PAD, HEADER_HEIGHT, NAV_ITEM_GAP, NAV_ITEM_H, NAV_TITLE_H, NAV_W, PAD,
 };
-use crate::widgets::{agent_settings_acp, agent_settings_builtin};
 use crate::{Point2D, Rect};
-use de_editor_core::agent_settings::{AgentSettings, AgentSettingsTab};
+use de_editor_core::agent_settings::AgentSettingsTab;
 use de_editor_core::editor_ui_state::EditorUiState;
-
-const DISCONNECT_BTN_W: f32 = 88.0;
-/// Inner inset of a provider row (avatar on the left, status pill on the
-/// right sit this far in from the row edges).
-const ROW_INSET: f32 = crate::widgets::agent_settings_metrics::ROW_PAD_X;
-/// Gap between the row's action button and the status-pill slot.
-const ROW_ACTION_GAP: f32 = 12.0;
-/// The external-provider list's own section header, between the ACP
-/// section and the first provider row. Paint and the row ladder below
-/// both step over exactly this — they used to disagree by 4 px, which put
-/// every provider row's hit box below the row you could see.
-pub(super) const PROVIDER_SECTION_HEADER_H: f32 =
-    crate::widgets::agent_settings_metrics::SECTION_HEADER_H;
-/// Muted hint under a connected Claude Code row.
-pub(super) const CLAUDE_HINT_H: f32 = 24.0;
 
 pub(super) fn tab_i18n_label(ui: &EditorUiState, tab: AgentSettingsTab) -> &'static str {
     match tab {
@@ -33,36 +15,6 @@ pub(super) fn tab_i18n_label(ui: &EditorUiState, tab: AgentSettingsTab) -> &'sta
         AgentSettingsTab::Images => t_settings(ui, "settings.tab.images"),
         AgentSettingsTab::Fonts => t_settings(ui, "settings.tab.fonts"),
         AgentSettingsTab::System => t_settings(ui, "settings.tab.system"),
-    }
-}
-
-/// Action button on a provider row. It sits to the LEFT of the status
-/// pill slot, so the pill stays visible while Connect / Disconnect is
-/// offered.
-fn row_action_rect(card: Rect, w: f32) -> Rect {
-    Rect {
-        origin: Point2D::new(
-            card.origin.x + card.size.x - ROW_INSET - STATUS_PILL_SLOT - ROW_ACTION_GAP - w,
-            card.origin.y + (CARD_HEIGHT - CONNECT_BTN_H) / 2.0,
-        ),
-        size: Point2D::new(w, CONNECT_BTN_H),
-    }
-}
-
-pub(super) fn disconnect_btn_rect_at(card: Rect) -> Rect {
-    row_action_rect(card, DISCONNECT_BTN_W)
-}
-
-/// Fixed slot the status pill is right-aligned inside. Paint hugs the
-/// pill to its label within this rect; hit-test never needs the pill
-/// (it is a status readout, not a control).
-pub(super) fn status_pill_slot_rect_at(card: Rect) -> Rect {
-    Rect {
-        origin: Point2D::new(
-            card.origin.x + card.size.x - ROW_INSET - STATUS_PILL_SLOT,
-            card.origin.y + (CARD_HEIGHT - STATUS_PILL_HEIGHT) / 2.0,
-        ),
-        size: Point2D::new(STATUS_PILL_SLOT, STATUS_PILL_HEIGHT),
     }
 }
 
@@ -119,13 +71,6 @@ pub(super) fn close_rect(panel: Rect) -> Rect {
     }
 }
 
-/// First y of the Agents tab body — everything below the tab intro
-/// (section-sized title + one muted line). Single source for paint,
-/// hit-test, and the content-height walk.
-pub(super) fn agents_body_top(content: Rect) -> f32 {
-    content.origin.y + AGENTS_HERO_HEIGHT
-}
-
 /// Images / Fonts take the same intro every other tab does,
 /// with one muted line.
 pub(super) const SECONDARY_HEADING_HAS_DESC: bool = true;
@@ -167,40 +112,4 @@ pub(super) fn secondary_card_rect(content: Rect, body_h: f32) -> Rect {
         origin: Point2D::new(content.origin.x, top),
         size: Point2D::new(content.size.x, body_h + 2.0 * SECONDARY_CARD_PAD_Y),
     }
-}
-
-pub(super) fn acp_section_y(content: Rect, settings: &AgentSettings) -> f32 {
-    agents_body_top(content) + agent_settings_builtin::content_height(settings) + SECTION_GAP
-}
-
-pub(super) fn agent_card_rect_at(x: f32, y: f32, w: f32) -> Rect {
-    Rect {
-        origin: Point2D::new(x, y),
-        size: Point2D::new(w, CARD_HEIGHT),
-    }
-}
-
-pub(super) fn connect_btn_rect_at(card: Rect) -> Rect {
-    row_action_rect(card, CONNECT_BTN_W)
-}
-
-/// Y of the first external-provider row: past the built-in and ACP
-/// sections and past the provider list's own header.
-pub(super) fn provider_rows_top(content: Rect, settings: &AgentSettings) -> f32 {
-    acp_section_y(content, settings)
-        + agent_settings_acp::content_height(settings)
-        + SECTION_GAP
-        + PROVIDER_SECTION_HEADER_H
-}
-
-pub(super) fn agent_card_rect_in(panel: Rect, index: usize, settings: &AgentSettings) -> Rect {
-    let content = content_rect(panel);
-    let mut y = provider_rows_top(content, settings);
-    for i in 0..index {
-        y += CARD_HEIGHT + CARD_GAP;
-        if i == 0 && settings.provider_verified_connected_at(0) {
-            y += CLAUDE_HINT_H;
-        }
-    }
-    agent_card_rect_at(content.origin.x, y, content.size.x)
 }

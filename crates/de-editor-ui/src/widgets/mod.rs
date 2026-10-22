@@ -241,33 +241,23 @@ pub mod brand_icons;
 pub mod design_editor_mark;
 
 // Step 4 — extra editor-chrome widgets (TS app parity).
-pub mod agent_settings_acp;
-mod agent_settings_acp_helpers;
-mod agent_settings_acp_presets;
-pub mod agent_settings_builtin;
-mod agent_settings_builtin_form;
-mod agent_settings_builtin_layout;
-mod agent_settings_builtin_model_menu;
-mod agent_settings_builtin_parts;
-#[cfg(test)]
-mod agent_settings_builtin_tests;
+mod agent_settings_acp_detail;
+mod agent_settings_agents;
+mod agent_settings_agents_list;
+mod agent_settings_api_detail;
 mod agent_settings_caret;
-#[cfg(test)]
-mod agent_settings_compact_action_tests;
+mod agent_settings_cli_detail;
 #[cfg(test)]
 mod agent_settings_connect_tests;
 #[cfg(test)]
 mod agent_settings_density_tests;
+mod agent_settings_detail_chrome;
 #[cfg(test)]
 mod agent_settings_embed_tests;
 #[cfg(test)]
 mod agent_settings_external_cli_tests;
 mod agent_settings_focus_geometry;
 pub mod agent_settings_fonts;
-#[cfg(test)]
-mod agent_settings_form_action_tests;
-mod agent_settings_form_actions;
-mod agent_settings_header_action;
 pub mod agent_settings_i18n;
 pub mod agent_settings_images;
 mod agent_settings_images_parts;
@@ -276,13 +266,11 @@ mod agent_settings_images_profile_tests;
 pub mod agent_settings_mcp;
 mod agent_settings_metrics;
 pub mod agent_settings_panel;
-mod agent_settings_panel_card;
 mod agent_settings_panel_geometry;
 #[cfg(test)]
 mod agent_settings_panel_tests;
+mod agent_settings_press_agents;
 pub mod agent_settings_press_entries;
-#[cfg(test)]
-mod agent_settings_press_entries_model_menu_tests;
 pub mod agent_settings_press_flow;
 pub mod agent_settings_press_focus;
 #[cfg(test)]
@@ -387,7 +375,6 @@ pub mod missing_fonts_panel;
 pub mod property_panel_color_variables;
 #[cfg(test)]
 mod property_panel_color_variables_tests;
-pub(crate) mod settings_form;
 pub mod shape_picker;
 pub mod slides_panel;
 pub mod slides_panel_actions;

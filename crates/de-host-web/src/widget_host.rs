@@ -43,9 +43,7 @@ mod a11y_bridge;
 #[cfg(test)]
 mod agent_settings_acp_press_tests;
 #[cfg(test)]
-mod agent_settings_compact_press_tests;
-#[cfg(test)]
-mod agent_settings_form_press_tests;
+mod agent_settings_button_press_tests;
 mod agent_settings_hover;
 mod agent_settings_mcp_server;
 #[cfg(test)]

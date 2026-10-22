@@ -120,10 +120,9 @@ fn locale_picker_wheel_scrolls_select_state_without_zooming_canvas() {
 
 #[test]
 fn model_menu_wheel_recomputes_the_stationary_pointer_hover() {
-    use de_editor_core::agent_settings::BuiltinModelMenuTarget;
     use de_editor_core::{
-        BuiltinAgentField, BuiltinAgentKind, BuiltinModelCatalogRefreshOutcome,
-        BuiltinModelCatalogTarget, BuiltinModelOption, SettingsFocus,
+        BuiltinAgentKind, BuiltinModelCatalogRefreshOutcome, BuiltinModelCatalogTarget,
+        BuiltinModelOption,
     };
 
     const VIEWPORT_W: f32 = 1200.0;
@@ -169,15 +168,7 @@ fn model_menu_wheel_recomputes_the_stationary_pointer_hover() {
                     .collect(),
             },
         ));
-    {
-        let settings = &mut host.editor_state_mut().editor_ui.agent_settings;
-        settings.focus = Some(SettingsFocus::BuiltinAgent {
-            index: 0,
-            field: BuiltinAgentField::Model,
-        });
-        settings.builtin_model_menu_open = Some(BuiltinModelMenuTarget::Agent(0));
-    }
-
+    // The catalog lands in the detail pane's model checklist (#26).
     let point = {
         let panel = de_editor_ui::widgets::agent_settings_panel::AgentSettingsPanel::for_editor(
             host.editor_state(),
@@ -208,8 +199,8 @@ fn model_menu_wheel_recomputes_the_stationary_pointer_hover() {
     assert_eq!(settings.builtin_model_menu_scroll.offset, 48.0);
     assert_eq!(
         settings.builtin_model_menu_hover,
-        Some(2),
-        "the same screen point now covers the third model row"
+        Some(1),
+        "the point sat on the first row's top edge; 48 px over 30 px rows lands on the second"
     );
 }
 

@@ -15,10 +15,7 @@ impl WidgetHostNative {
         let point = Point2D::new(x, y);
         let (
             new_nav,
-            new_card,
-            new_builtin,
-            new_acp,
-            new_acp_preset,
+            new_agents_row,
             new_preset_hover,
             new_model_hover,
             new_close_hover,
@@ -41,25 +38,8 @@ impl WidgetHostNative {
             let tab = self.editor_state.editor_ui.agent_settings.tab;
             let is_agents = matches!(tab, AgentSettingsTab::Agents);
             let is_images = matches!(tab, AgentSettingsTab::Images);
-            let card = if is_agents {
-                panel.card_at(panel_rect, point).unwrap_or(usize::MAX)
-            } else {
-                usize::MAX
-            };
-            let builtin = if is_agents {
-                panel
-                    .builtin_card_at(panel_rect, point)
-                    .unwrap_or(usize::MAX)
-            } else {
-                usize::MAX
-            };
-            let acp = if is_agents {
-                panel.acp_card_at(panel_rect, point).unwrap_or(usize::MAX)
-            } else {
-                usize::MAX
-            };
-            let acp_preset = if is_agents {
-                panel.acp_preset_at(panel_rect, point)
+            let agents_row = if is_agents {
+                panel.agents_row_at(panel_rect, point)
             } else {
                 None
             };
@@ -155,10 +135,7 @@ impl WidgetHostNative {
             };
             (
                 nav,
-                card,
-                builtin,
-                acp,
-                acp_preset,
+                agents_row,
                 preset_hover,
                 model_hover,
                 close_hover,
@@ -181,29 +158,8 @@ impl WidgetHostNative {
             self.editor_state.editor_ui.agent_settings.hover_nav = new_nav;
             changed = true;
         }
-        if new_card != self.editor_state.editor_ui.agent_settings.hover_provider {
-            self.editor_state.editor_ui.agent_settings.hover_provider = new_card;
-            changed = true;
-        }
-        if new_builtin
-            != self
-                .editor_state
-                .editor_ui
-                .agent_settings
-                .hover_builtin_agent
-        {
-            self.editor_state
-                .editor_ui
-                .agent_settings
-                .hover_builtin_agent = new_builtin;
-            changed = true;
-        }
-        if new_acp != self.editor_state.editor_ui.agent_settings.hover_acp_agent {
-            self.editor_state.editor_ui.agent_settings.hover_acp_agent = new_acp;
-            changed = true;
-        }
-        if new_acp_preset != self.editor_state.editor_ui.agent_settings.hover_acp_preset {
-            self.editor_state.editor_ui.agent_settings.hover_acp_preset = new_acp_preset;
+        if new_agents_row != self.editor_state.editor_ui.agent_settings.hover_agents_row {
+            self.editor_state.editor_ui.agent_settings.hover_agents_row = new_agents_row;
             changed = true;
         }
         if new_preset_hover

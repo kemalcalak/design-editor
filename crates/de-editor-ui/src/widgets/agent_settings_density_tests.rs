@@ -14,15 +14,12 @@
 use crate::widgets::agent_settings_metrics::{
     CONTENT_TAIL_PAD, ROW_H_ONE_LINE, ROW_H_TWO_LINE, SECTION_GAP,
 };
-use crate::widgets::agent_settings_panel::{
-    content_viewport, AgentSettingsPanel, AGENTS_HERO_HEIGHT,
-};
-use crate::widgets::agent_settings_panel_geometry::agent_card_rect_in;
+use crate::widgets::agent_settings_panel::{AgentSettingsPanel, AGENTS_HERO_HEIGHT};
 use crate::widgets::agent_settings_rows::{
     row_height, tab_intro_height, RowLines, ASCENT_RATIO, DESCENT_RATIO, ROW_DESC_FONT,
     ROW_LABEL_BASELINE, ROW_LABEL_FONT, ROW_SECOND_LINE_BASELINE,
 };
-use de_editor_core::agent_settings::{AgentProvider, AgentSettings, AgentSettingsTab};
+use de_editor_core::agent_settings::{AgentSettings, AgentSettingsTab};
 use de_editor_core::EditorState;
 
 /// Ceiling for a tab's opening block. The shipped hero was 96 px — a
@@ -102,122 +99,25 @@ fn the_two_lines_of_a_two_line_row_never_share_ink() {
 }
 
 #[test]
-fn the_last_provider_row_keeps_a_bottom_margin_inside_the_scroll_range() {
-    // At full scroll the last row must not sit flush against the modal's
-    // bottom edge. Equivalent statement, and the one that does not need a
-    // scroll simulation: the reported content height reaches past the last
-    // row by at least one tail pad.
-    for connected in [false, true] {
-        let mut state = EditorState::default();
-        state.editor_ui.agent_settings.tab = AgentSettingsTab::Agents;
-        if connected {
-            // The Claude row grows a hint line when it is connected, and
-            // the height walk has to step over that too.
-            state.editor_ui.agent_settings.connected[0] = true;
-            state.editor_ui.agent_settings.provider_connection[0].phase =
-                de_editor_core::agent_settings::ProviderConnectPhase::Connected;
-        }
-        let panel = AgentSettingsPanel::for_editor(&state);
-        let rect = panel.rect(1400.0, 1000.0);
-        let content = content_viewport(rect);
-        let settings: AgentSettings = state.editor_ui.agent_settings.clone();
-
-        let last = agent_card_rect_in(rect, AgentProvider::ALL.len() - 1, &settings);
-        let used = last.origin.y + last.size.y - content.origin.y;
-        let total = panel.content_total_height();
-
-        assert!(
-            total >= used + CONTENT_TAIL_PAD - 0.01,
-            "connected={connected}: the scroll range ends {}px past the last provider row, \
-             under the {CONTENT_TAIL_PAD}px bottom margin every tab reserves",
-            total - used
-        );
-        // …and it must not overshoot either, or the tab scrolls into
-        // empty space below its own content.
-        assert!(
-            total <= used + CONTENT_TAIL_PAD + SECTION_GAP,
-            "connected={connected}: the scroll range runs {}px past the last row — \
-             the height walk and the row ladder have drifted apart",
-            total - used
-        );
-    }
-}
-
-#[test]
-fn the_provider_row_ladder_agrees_with_what_paint_walks() {
-    // Paint steps: ACP section, one section gap, one section header, then
-    // rows. The hit-test ladder used to step 32 px for that header while
-    // paint stepped 28, so every provider row's click target sat four
-    // pixels below the row you could see — invisible in isolation, and
-    // exactly the kind of thing only a paint-vs-geometry comparison finds.
-    //
-    // Each provider row but the last strokes a hairline along its own
-    // bottom edge, so those strokes are where paint thinks the rows are.
+fn the_agents_list_keeps_a_bottom_margin_inside_the_scroll_range() {
+    // At full scroll the list's last button must not sit flush against the
+    // modal's bottom edge: the reported content height reaches past the
+    // list by at least one tail pad, and not by more than a section gap.
     let mut state = EditorState::default();
     state.editor_ui.agent_settings.tab = AgentSettingsTab::Agents;
     let panel = AgentSettingsPanel::for_editor(&state);
-    let rect = panel.rect(1400.0, 1000.0);
     let settings: AgentSettings = state.editor_ui.agent_settings.clone();
-    let mut backend = LineCapture::default();
-    {
-        let mut cx = crate::widgets::PaintCx {
-            backend: &mut backend,
-        };
-        crate::widgets::Widget::paint(&panel, &mut cx, rect);
-    }
-
-    let first = agent_card_rect_in(rect, 0, &settings);
-    let second = agent_card_rect_in(rect, 1, &settings);
-    assert_eq!(
-        second.origin.y - first.origin.y,
-        ROW_H_TWO_LINE,
-        "provider rows must tile flush — the hairline between them is the gap"
+    let used = AGENTS_HERO_HEIGHT
+        + crate::widgets::agent_settings_agents_list::list_height(&settings, true);
+    let total = panel.content_total_height();
+    assert!(
+        total >= used + CONTENT_TAIL_PAD - 0.01,
+        "the scroll range ends {}px past the list, under the {CONTENT_TAIL_PAD}px margin",
+        total - used
     );
-
-    for i in 0..AgentProvider::ALL.len() - 1 {
-        let row = agent_card_rect_in(rect, i, &settings);
-        let bottom = row.origin.y + row.size.y;
-        assert!(
-            backend
-                .lines
-                .iter()
-                .any(|(from, to)| (from.y - bottom).abs() < 0.01
-                    && (from.x - row.origin.x).abs() < 0.01
-                    && (to.x - (row.origin.x + row.size.x)).abs() < 0.01),
-            "no separator painted at provider row {i}'s bottom edge ({bottom}) — \
-             paint and the row ladder disagree about where the rows are"
-        );
-    }
-}
-
-/// Records the hairlines the modal strokes, so a test can ask where paint
-/// actually put a row instead of trusting the same ladder twice.
-#[derive(Default)]
-struct LineCapture {
-    lines: Vec<(crate::Point2D, crate::Point2D)>,
-}
-
-impl crate::RenderBackend for LineCapture {
-    fn begin_frame(&mut self) {}
-    fn end_frame(&mut self) {}
-    fn fill_rect(&mut self, _: crate::Rect, _: crate::Color) {}
-    fn stroke_rect(&mut self, _: crate::Rect, _: crate::Color, _: f32) {}
-    fn draw_text(&mut self, _: &crate::TextLayout, _: crate::Point2D) {}
-    fn clip_rect(&mut self, _: crate::Rect) {}
-    fn stroke_line(&mut self, from: crate::Point2D, to: crate::Point2D, _: crate::Color, _: f32) {
-        self.lines.push((from, to));
-    }
-    fn fill_round_rect(&mut self, _: crate::Rect, _: f32, _: crate::Color) {}
-    fn stroke_round_rect(&mut self, _: crate::Rect, _: f32, _: crate::Color, _: f32) {}
-    fn stroke_svg_path(&mut self, _: &str, _: crate::Point2D, _: f32, _: crate::Color, _: f32) {}
-    fn save(&mut self) {}
-    fn restore(&mut self) {}
-    fn translate(&mut self, _: crate::Point2D) {}
-    fn resize(&mut self, _: u32, _: u32) {}
-    fn dpi_scale(&self) -> f32 {
-        1.0
-    }
-    fn measure_text(&mut self, text: &str, font_size: f32) -> f32 {
-        text.chars().count() as f32 * font_size * 0.55
-    }
+    assert!(
+        total <= used + CONTENT_TAIL_PAD + SECTION_GAP,
+        "the scroll range runs {}px past the list into empty space",
+        total - used
+    );
 }
