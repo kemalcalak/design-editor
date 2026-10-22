@@ -9,14 +9,10 @@ use crate::widgets::icons::Icon;
 use crate::widgets::{PaintCx, Widget};
 use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
 use de_editor_core::agent_settings::{
-    AcpAgentField, AgentProvider, AgentSettingsTab, BuiltinAgentField, ImageSearchField,
-    ImageTestStatus, SettingsFocus,
+    AgentSettingsTab, ImageSearchField, ImageTestStatus, SettingsFocus,
 };
 use de_editor_core::{AgentSettingsButton, ButtonPressTarget, EditorState};
 
-mod acp_agents;
-mod acp_presets;
-mod builtin_agents;
 mod chrome;
 mod images_tab;
 mod mcp_tab;

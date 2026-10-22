@@ -22,11 +22,9 @@ fn desktop_settings_host() -> WidgetHostNative {
     host
 }
 
-/// Screen point over the API-key input of the expanded card for agent 0.
-/// The card must already be expanded (a `BuiltinAgent { index: 0, .. }`
-/// focus) — the row rect is identical whichever field of the card holds
-/// focus, so probing it through `focused_input_rect` with a temporary
-/// ApiKey focus matches what paint lays out.
+/// Screen point over agent 0's API-key input in the detail pane, probed
+/// through `focused_input_rect` with a temporary ApiKey focus so it
+/// matches what paint lays out.
 fn api_key_field_point(host: &mut WidgetHostNative, vw: f32, vh: f32) -> Point2D {
     let restore = host.editor_state().editor_ui.agent_settings.focus;
     host.editor_state_mut().editor_ui.agent_settings.focus = Some(SettingsFocus::BuiltinAgent {
@@ -39,11 +37,11 @@ fn api_key_field_point(host: &mut WidgetHostNative, vw: f32, vh: f32) -> Point2D
             .focused_input_rect(panel_rect)
             .expect("expanded card exposes the api-key input");
         input.origin.y -= panel.effective_scroll(panel_rect);
-        // Press near the right edge: tap-to-caret honors the pressed x, so
-        // this parks the caret at the end and the typing/backspace ladders
-        // below operate on the tail like they used to.
+        // Press near the right edge, left of the reveal eye: tap-to-caret
+        // honors the pressed x, so this parks the caret at the end and the
+        // typing/backspace ladders below operate on the tail.
         Point2D::new(
-            input.origin.x + input.size.x - 10.0,
+            input.origin.x + input.size.x - 48.0,
             input.origin.y + input.size.y / 2.0,
         )
     };
@@ -52,8 +50,7 @@ fn api_key_field_point(host: &mut WidgetHostNative, vw: f32, vh: f32) -> Point2D
 }
 
 fn press_api_key_field(host: &mut WidgetHostNative, vw: f32, vh: f32) {
-    // Enter the edit form the way the product does: the card's edit
-    // press focuses DisplayName and expands the card.
+    // Start from another field of the same provider holding focus.
     host.editor_state_mut().editor_ui.agent_settings.focus = Some(SettingsFocus::BuiltinAgent {
         index: 0,
         field: BuiltinAgentField::DisplayName,

@@ -2,12 +2,9 @@
 //! out of `ai_chat_panel.rs` to keep that file under the 800-line cap.
 //! Pure geometry; the painting half stays in `ai_chat_panel.rs`.
 
-use super::ai_chat_panel::{AIChatPlaceholder, HEADER_HEIGHT, PAD, RESIZE_CORNER, RESIZE_GUTTER};
+use super::ai_chat_panel::{AIChatPlaceholder, RESIZE_CORNER, RESIZE_GUTTER};
 use crate::widgets::ai_chat_hit::{AIChatHit, ChatCursorProbe, ChatResizeEdge};
 use crate::widgets::ai_chat_panel_controls::attachment_row_hit;
-use crate::widgets::ai_chat_panel_header::{
-    tab_hit_at, tab_row_rects, MAXIMIZE_GAP, MAXIMIZE_W, NEW_CHAT_D,
-};
 use crate::widgets::ai_chat_panel_paint::example_card_rects;
 use crate::widgets::ai_chat_transcript_cache::CanonicalTranscript;
 use crate::{Point2D, Rect};
@@ -24,6 +21,19 @@ impl<'a> AIChatPlaceholder<'a> {
             return None;
         }
         let picker = self.model_picker_bounds(rect)?;
+        if let Some(provider) = crate::widgets::ai_chat_model_picker::offline_agent_at(
+            self.model_picker,
+            picker,
+            point,
+            &self.state.available_models,
+            &self.offline_agents,
+            self.model_picker_input.text(),
+        ) {
+            return Some(AIChatHit::ConnectAgent(provider));
+        }
+        if crate::widgets::ai_chat_model_picker::footer_rect(picker).contains(point) {
+            return Some(AIChatHit::OpenProviderSettings);
+        }
         if crate::widgets::ai_chat_model_picker::search_clear_hit(
             picker,
             point,
@@ -36,6 +46,7 @@ impl<'a> AIChatPlaceholder<'a> {
             picker,
             point,
             &self.state.available_models,
+            &self.offline_agents,
             self.model_picker_input.text(),
         ) {
             jian_widgets::components::select::SelectHit::Row(idx) => {
@@ -64,6 +75,9 @@ impl<'a> AIChatPlaceholder<'a> {
         canonical: Option<&CanonicalTranscript>,
     ) -> Option<AIChatHit> {
         if let Some(hit) = self.open_model_picker_hit(rect, point) {
+            return Some(hit);
+        }
+        if let Some(hit) = self.open_menu_hit(rect, point) {
             return Some(hit);
         }
         if let Some(edge) = self.resize_edge_at(rect, point) {
@@ -95,46 +109,16 @@ impl<'a> AIChatPlaceholder<'a> {
                 }
             }
         } else {
-            // Hit rects must mirror the paint geometry exactly.
-            // Constants live in `ai_chat_panel_header` (imported above):
-            //   NEW_CHAT_D = 28, MAXIMIZE_GAP = 6, MAXIMIZE_W = 18, HEADER_HEIGHT = 36
-            let right_edge = rect.origin.x + rect.size.x - PAD;
-            let header_icon_y = rect.origin.y + (HEADER_HEIGHT - MAXIMIZE_W) / 2.0;
-            // New-chat circle (far right).
-            let new_chat_rect = Rect {
-                origin: Point2D::new(
-                    right_edge - NEW_CHAT_D,
-                    rect.origin.y + (HEADER_HEIGHT - NEW_CHAT_D) / 2.0,
-                ),
-                size: Point2D::new(NEW_CHAT_D, NEW_CHAT_D),
-            };
-            if (new_chat_rect).contains(point) {
+            // Hit rects come from the same `header_layout` paint reads.
+            let header = self.header(rect);
+            if header.new_chat.contains(point) {
                 return Some(AIChatHit::NewChat);
             }
-            // Maximize / minimize icon (just left of new-chat).
-            let maximize_rect = Rect {
-                origin: Point2D::new(
-                    right_edge - NEW_CHAT_D - MAXIMIZE_GAP - MAXIMIZE_W,
-                    header_icon_y,
-                ),
-                size: Point2D::new(MAXIMIZE_W, MAXIMIZE_W),
-            };
-            if !self.column_pinned && (maximize_rect).contains(point) {
+            if header.maximize.is_some_and(|m| m.contains(point)) {
                 return Some(AIChatHit::ToggleMaximize);
             }
-            // Tab row — between chevron and maximize button.
-            // Returns SwitchTab(i) for a tab body click; CloseTab(i) for the × glyph.
-            let tab_count = self.tabs_snapshot.len();
-            if tab_count > 0 {
-                if let Some((tab_idx, over_close)) =
-                    tab_hit_at(rect, tab_count, point, self.tab_hover, self.column_pinned)
-                {
-                    return Some(if over_close {
-                        AIChatHit::CloseTab(tab_idx)
-                    } else {
-                        AIChatHit::SwitchTab(tab_idx)
-                    });
-                }
+            if header.select.contains(point) {
+                return Some(AIChatHit::ToggleSessionMenu);
             }
         }
         // Must match `paint` exactly: paint draws the separator at
@@ -150,36 +134,6 @@ impl<'a> AIChatPlaceholder<'a> {
         // press normally.
         if self.model_picker.open {
             return Some(AIChatHit::ToggleModelPicker);
-        }
-        // Parallel-agents picker — when open, behaves modally: a row click
-        // sets the multiplier; any other click closes the picker.
-        if self.parallel_agents_picker_open {
-            let footer = self.footer_layout(rect, input_rect, {
-                let attach_h = self.attachment_row_h();
-                input_rect.origin.y
-                    + self.chip_row_h()
-                    + self.input_area_height_for_rect(rect)
-                    + attach_h
-            });
-            if let Some(picker) = self.parallel_agents_picker_rect(rect, &footer) {
-                if picker.contains(point) {
-                    // Hit inside picker — check which row.
-                    let rows_top = picker.origin.y + 32.0;
-                    for i in 1..=crate::widgets::ai_chat_panel_footer::PARALLEL_AGENTS_COUNT {
-                        let row_y = rows_top
-                            + (i - 1) as f32
-                                * crate::widgets::ai_chat_panel_footer::PARALLEL_AGENTS_ROW_H_PUB;
-                        if point.y >= row_y
-                            && point.y < row_y + crate::widgets::ai_chat_panel_footer::PARALLEL_AGENTS_ROW_H_PUB
-                        {
-                            return Some(AIChatHit::SetParallelAgents(i));
-                        }
-                    }
-                    return Some(AIChatHit::Inside);
-                }
-            }
-            // Click outside the picker — close it.
-            return Some(AIChatHit::ToggleParallelAgentsPicker);
         }
         if (input_rect).contains(point) {
             // Pre-flight MCP notice — the actual topmost band when it shows,
@@ -201,11 +155,13 @@ impl<'a> AIChatPlaceholder<'a> {
             // chips share the row, so both ✕ targets are probed here — the
             // rects come from the same `chip_row` paint draws from.
             let chip_row_h = self.chip_row_h();
-            let text_top = input_rect.origin.y + chip_row_h;
+            let chip_bottom = input_rect.origin.y + chip_row_h;
+            let text_area = self.input_text_rect(rect);
+            let text_top = text_area.origin.y;
             let attach_top = text_top + input_area_h;
             let attach_h = self.attachment_row_h();
             let toolbar_top = attach_top + attach_h;
-            if chip_row_h > 0.0 && point.y < text_top {
+            if chip_row_h > 0.0 && point.y < chip_bottom {
                 if self
                     .style_receipt_clear_rect(input_rect)
                     .is_some_and(|clear| clear.contains(point))
@@ -227,10 +183,6 @@ impl<'a> AIChatPlaceholder<'a> {
                 if self.state.input.text().is_empty() {
                     return Some(AIChatHit::FocusInput);
                 }
-                let text_area = Rect {
-                    origin: Point2D::new(input_rect.origin.x, text_top),
-                    size: Point2D::new(input_rect.size.x, input_area_h),
-                };
                 let offset = crate::widgets::ai_chat_input_text::input_text_offset_at(
                     self.state, text_area, point,
                 )
@@ -241,8 +193,8 @@ impl<'a> AIChatPlaceholder<'a> {
             // are staged; a chip click removes that attachment.
             if attach_h > 0.0 && point.y >= attach_top && point.y < toolbar_top {
                 let row = Rect {
-                    origin: Point2D::new(input_rect.origin.x, attach_top),
-                    size: Point2D::new(input_rect.size.x, attach_h),
+                    origin: Point2D::new(text_area.origin.x, attach_top),
+                    size: Point2D::new(text_area.size.x, attach_h),
                 };
                 if let Some(hit) =
                     attachment_row_hit(row, point, self.state.pending_attachments.len())
@@ -251,60 +203,27 @@ impl<'a> AIChatPlaceholder<'a> {
                 }
                 return Some(AIChatHit::FocusInput);
             }
-            // Bottom toolbar strip (#27 layout):
-            //   model pill | library | ⚡ speed | 📎 attach | ◻ stop / ↑ send
+            // The card's bottom row: "+" | model chip | send / stop.
             if point.y >= toolbar_top {
-                let footer = self.footer_layout(rect, input_rect, toolbar_top);
+                let footer = self.footer_layout(rect);
                 let streaming = self.is_streaming();
-                if (footer.model).contains(point) {
-                    return Some(if can_use_model {
+                if footer.plus.contains(point) {
+                    return Some(AIChatHit::TogglePlusMenu);
+                }
+                if footer.model.size.x > 0.0 && footer.model.contains(point) {
+                    return Some(if !self.usable_agent {
+                        AIChatHit::OpenProviderSettings
+                    } else if can_use_model {
                         AIChatHit::ToggleModelPicker
                     } else {
                         AIChatHit::FocusInput
                     });
                 }
-                if (footer.prompt_center).contains(point) {
-                    return Some(AIChatHit::OpenPromptCenter);
-                }
-                // Live even while streaming, unlike the ⚡ chip beside it: the
-                // mode is read when a turn LAUNCHES, so a click here sets what
-                // the next turn does — which is exactly what a user reaching
-                // for it during a long think means.
-                //
-                // The width guard is load-bearing: `Rect::contains` is
-                // inclusive on both edges, so a dropped (zero-width) slot
-                // still swallows the single column of pixels at its origin.
-                if footer.thinking.size.x > 0.0 && (footer.thinking).contains(point) {
-                    return Some(AIChatHit::CycleThinking);
-                }
-                if (footer.speed).contains(point) {
-                    // The ⚡ chip is now the Parallel Agents chip (#32).
-                    // While streaming the chip is inert (parity with old effort chip).
-                    return Some(if streaming {
-                        AIChatHit::Inside
-                    } else {
-                        AIChatHit::ToggleParallelAgentsPicker
-                    });
-                }
-                // agent_team is laid out zero-width — kept for schema compat.
-                // `Rect::contains` is inclusive on both edges, so that is NOT
-                // enough to make it inert: it still owns the pixel column at
-                // its origin. Same explicit width guard as the thinking slot.
-                if footer.agent_team.size.x > 0.0 && (footer.agent_team).contains(point) {
-                    return Some(AIChatHit::CycleAgentTeam);
-                }
-                if (footer.attach).contains(point) {
-                    return Some(if streaming {
-                        AIChatHit::Inside
-                    } else {
-                        AIChatHit::AddAttachment
-                    });
-                }
-                // Stop circle — only a live target while streaming.
-                if streaming && (footer.stop).contains(point) {
+                // Stop shares the send slot and is live only while streaming.
+                if streaming && footer.stop.contains(point) {
                     return Some(AIChatHit::Stop);
                 }
-                if (footer.send).contains(point) {
+                if footer.send.contains(point) {
                     return Some(
                         if can_use_model
                             && !streaming
@@ -579,61 +498,25 @@ impl<'a> AIChatPlaceholder<'a> {
         rect: Rect,
         point: Point2D,
     ) -> Option<de_editor_core::ChatFooterButton> {
-        if self.state.is_minimized() || self.model_picker.open {
+        if (self.state.is_minimized() && !self.composer_only) || self.model_picker.open {
             return None;
         }
-        let input_rect = self.input_rect(rect);
-        if !(input_rect).contains(point) {
+        if point.y < self.toolbar_top(rect) || !self.composer_card(rect).contains(point) {
             return None;
         }
-        let attach_h = self.attachment_row_h();
-        // The chip row sits at the top of the input block — hover math must
-        // reserve it like paint does, or every footer band shifts up by the
-        // row height whenever a style is pinned or a selection is active.
-        let toolbar_top = input_rect.origin.y
-            + self.chip_row_h()
-            + self.input_area_height_for_rect(rect)
-            + attach_h;
-        if point.y < toolbar_top {
-            return None;
-        }
-        let footer = self.footer_layout(rect, input_rect, toolbar_top);
+        let footer = self.footer_layout(rect);
         let streaming = self.is_streaming();
-        if !self.state.available_models.is_empty() && (footer.model).contains(point) {
+        if footer.plus.contains(point) {
+            return Some(de_editor_core::ChatFooterButton::PlusMenu);
+        }
+        if footer.model.size.x > 0.0 && footer.model.contains(point) {
             return Some(de_editor_core::ChatFooterButton::ModelPicker);
         }
-        if (footer.prompt_center).contains(point) {
-            return Some(de_editor_core::ChatFooterButton::PromptCenter);
-        }
-        // Same zero-width guard as the press path — see `hit_test`.
-        if footer.thinking.size.x > 0.0 && (footer.thinking).contains(point) {
-            return Some(de_editor_core::ChatFooterButton::ThinkingMode);
-        }
-        if (footer.speed).contains(point) {
-            return Some(de_editor_core::ChatFooterButton::SpeedChip);
-        }
-        // agent_team is zero-width, which does NOT make it inert on its own —
-        // see the press path. This is the branch the gap was reachable
-        // through: the model-pill check above is gated on having models, so
-        // with none connected the pill stopped shadowing the column and a
-        // hover was reported for a chip that is never painted.
-        if footer.agent_team.size.x > 0.0 && (footer.agent_team).contains(point) {
-            return Some(de_editor_core::ChatFooterButton::AgentTeam);
-        }
-        if !streaming && (footer.attach).contains(point) {
-            return Some(de_editor_core::ChatFooterButton::AddAttachment);
-        }
-        if streaming && (footer.stop).contains(point) {
+        if streaming && footer.stop.contains(point) {
             return Some(de_editor_core::ChatFooterButton::Stop);
         }
-        if (footer.send).contains(point) {
-            // #42: stop shares this slot and is matched above while streaming, so
-            // reaching here means we're idle — the circle is the Send button.
-            return if !self.state.available_models.is_empty() {
-                Some(de_editor_core::ChatFooterButton::Send)
-            } else {
-                None
-            };
+        if footer.send.contains(point) && !self.state.available_models.is_empty() {
+            return Some(de_editor_core::ChatFooterButton::Send);
         }
         None
     }
@@ -652,51 +535,5 @@ impl<'a> AIChatPlaceholder<'a> {
             crate::widgets::ai_chat_panel_paint::example_card_fits(card, content_bottom)
                 && (*card).contains(point)
         })
-    }
-
-    /// Return the index of the tab the cursor is over (for the host to
-    /// store in `EditorUiState.chat_tab_hover`). Returns `None` when the
-    /// panel is collapsed or the cursor is not in the tab row zone.
-    pub fn tab_hover_at(&self, rect: Rect, point: Point2D) -> Option<usize> {
-        if self.state.is_minimized() {
-            return None;
-        }
-        let tab_count = self.tabs_snapshot.len();
-        if tab_count == 0 {
-            return None;
-        }
-        // Iterate tab rects and check containment — same layout as `tab_hit_at`
-        // but ignores the × sub-rect (hover is per-tab-body, not sub-element).
-        let rects = tab_row_rects(rect, tab_count, self.column_pinned);
-        rects.iter().position(|tr| tr.body.contains(point))
-    }
-
-    /// Return which row (1–6) of the open Parallel Agents picker the cursor
-    /// is over. Returns `None` when the picker is closed or the cursor is
-    /// outside the picker rect. Used by the host to update
-    /// `EditorUiState::parallel_agents_picker_hover`.
-    pub fn parallel_agents_picker_hover_at(&self, rect: Rect, point: Point2D) -> Option<u32> {
-        if !self.parallel_agents_picker_open || self.state.is_minimized() {
-            return None;
-        }
-        let input_rect = self.input_rect(rect);
-        let attach_h = self.attachment_row_h();
-        let toolbar_top = input_rect.origin.y + self.input_area_height_for_rect(rect) + attach_h;
-        let footer = self.footer_layout(rect, input_rect, toolbar_top);
-        let picker = crate::widgets::ai_chat_panel_footer::parallel_agents_picker_rect(&footer);
-        if !picker.contains(point) {
-            return None;
-        }
-        let rows_top = picker.origin.y + 32.0;
-        for i in 1..=crate::widgets::ai_chat_panel_footer::PARALLEL_AGENTS_COUNT {
-            let row_y = rows_top
-                + (i - 1) as f32 * crate::widgets::ai_chat_panel_footer::PARALLEL_AGENTS_ROW_H_PUB;
-            if point.y >= row_y
-                && point.y < row_y + crate::widgets::ai_chat_panel_footer::PARALLEL_AGENTS_ROW_H_PUB
-            {
-                return Some(i);
-            }
-        }
-        None
     }
 }

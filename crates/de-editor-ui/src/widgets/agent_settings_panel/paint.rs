@@ -5,35 +5,9 @@
 //! `agent_settings_panel.rs` to keep every file under the 800-line cap.
 
 use super::*;
-use crate::widgets::text_metrics;
-
-pub(super) fn agents_content_height(settings: &AgentSettings, mode: AgentSettingsPanelMode) -> f32 {
-    let builtin = AGENTS_HERO_HEIGHT + agent_settings_builtin::content_height_for_ui(settings);
-    if !mode.shows_external_agents() {
-        return builtin + CONTENT_TAIL_PAD;
-    }
-    // Walk the same ladder the row geometry does, so the scroll range
-    // always ends one tail pad under the last provider row instead of
-    // flush against it (or, as it once did, four pixels short of it).
-    // `provider_rows_top` reads only its argument's `origin.y`, so a rect
-    // at the origin turns it into a pure offset from the content top.
-    let at_origin = Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(0.0, 0.0),
-    };
-    let last = AgentProvider::DISPLAY.len() - 1;
-    provider_rows_top(at_origin, settings)
-        + last as f32 * (CARD_HEIGHT + CARD_GAP)
-        + CARD_HEIGHT
-        + if settings.provider_verified_connected_at(0) {
-            CLAUDE_HINT_H
-        } else {
-            0.0
-        }
-        + CONTENT_TAIL_PAD
-}
 
 struct PanelPaintArgs<'a> {
+    agents: crate::widgets::agent_settings_agents::AgentsTab<'a>,
     theme: &'a Theme,
     settings: &'a AgentSettings,
     ui: &'a EditorUiState,
@@ -64,6 +38,7 @@ impl<'a> Widget for AgentSettingsPanel<'a> {
             cx,
             rect,
             PanelPaintArgs {
+                agents: self.agents_tab(),
                 theme: &self.theme,
                 settings: &self.settings,
                 ui: self.ui,
@@ -95,6 +70,7 @@ impl<'a> Widget for AgentSettingsPanel<'a> {
 
 fn paint_panel(cx: &mut PaintCx<'_>, panel: Rect, args: PanelPaintArgs<'_>) {
     let PanelPaintArgs {
+        agents,
         theme,
         settings,
         ui,
@@ -135,7 +111,13 @@ fn paint_panel(cx: &mut PaintCx<'_>, panel: Rect, args: PanelPaintArgs<'_>) {
     cx.backend.translate(Point2D::new(0.0, -scroll));
     match mode.active_tab(settings) {
         AgentSettingsTab::Agents => {
-            paint_agents_tab(cx, theme, settings, ui, content_rect, now_ms, mode)
+            super::hero::paint_agents_hero(cx, theme, ui, content_rect);
+            agents.paint(
+                cx,
+                theme,
+                super::hit_test::agents_body(content_rect),
+                now_ms,
+            );
         }
         AgentSettingsTab::Mcp => {
             agent_settings_mcp::paint_mcp_tab(cx, theme, settings, ui, content_rect, now_ms)
@@ -256,97 +238,6 @@ fn paint_close(
         theme.foreground,
         2.0,
     );
-}
-
-fn paint_agents_tab(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    settings: &AgentSettings,
-    ui: &EditorUiState,
-    content: Rect,
-    now_ms: u64,
-    mode: AgentSettingsPanelMode,
-) {
-    super::hero::paint_agents_hero(cx, theme, ui, content);
-    let mut y = agents_body_top(content);
-    y = agent_settings_builtin::paint_builtin_section(cx, theme, settings, ui, content, y, now_ms);
-    if !mode.shows_external_agents() {
-        return;
-    }
-    y += SECTION_GAP;
-    y = agent_settings_acp::paint_acp_section(cx, theme, settings, ui, content, y, now_ms);
-    y += SECTION_GAP;
-
-    y = paint_section_header(
-        cx,
-        theme,
-        t_settings(ui, "settings.agents.title"),
-        "",
-        content.origin.x,
-        y,
-        content.size.x,
-    );
-    for provider in AgentProvider::DISPLAY {
-        let card = agent_card_rect_at(content.origin.x, y, content.size.x);
-        // `index` is the ALL storage index (connect state); the card
-        // list itself walks DISPLAY order.
-        let index = AgentSettings::provider_index(provider);
-        paint_agent_card(cx, theme, settings, ui, provider, card, index);
-        y += CARD_HEIGHT + CARD_GAP;
-        if matches!(provider, AgentProvider::ClaudeCode)
-            && settings.provider_verified_connected_at(index)
-        {
-            let hint = TextLayout::single_run(
-                t_settings(ui, "settings.agents.claudeHint"),
-                "system-ui",
-                12.0,
-                (theme.muted_foreground).to_jian(),
-                Point2D::new(0.0, 0.0),
-            );
-            cx.backend
-                .draw_text(&hint, Point2D::new(content.origin.x, y + 15.0));
-            y += CLAUDE_HINT_H;
-        }
-    }
-}
-
-fn paint_section_header(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    title: &str,
-    action: &str,
-    x: f32,
-    y: f32,
-    w: f32,
-) -> f32 {
-    paint_section_header_inset(cx, theme, title, action, x, y, w, 0.0)
-}
-
-#[allow(clippy::too_many_arguments)]
-fn paint_section_header_inset(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    title: &str,
-    action: &str,
-    x: f32,
-    y: f32,
-    w: f32,
-    right_inset: f32,
-) -> f32 {
-    crate::widgets::agent_settings_rows::paint_section_title(cx, theme, x, y, title);
-    if !action.is_empty() {
-        let action_w = text_metrics::measure_chrome(cx.backend, action, 12.0);
-        let act = TextLayout::single_run(
-            action,
-            "system-ui",
-            12.0,
-            (theme.primary).to_jian(),
-            Point2D::new(0.0, 0.0),
-        );
-        cx.backend
-            .draw_text(&act, Point2D::new(x + w - right_inset - action_w, y + 18.0));
-    }
-    y + PROVIDER_SECTION_HEADER_H
 }
 
 pub fn drag_for_hit(

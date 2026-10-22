@@ -107,22 +107,18 @@ fn paint_transcript_keeps_user_answer_bubble_background() {
 }
 
 #[test]
-fn streaming_message_with_no_text_yields_a_typing_bubble() {
+fn streaming_message_with_no_text_yields_a_status_line() {
     let msgs = vec![ChatMessage::assistant_streaming()];
     let items = build_transcript(&msgs, body(), de_editor_core::Locale::EnUs);
     assert_eq!(items.len(), 1);
     assert!(items[0].streaming);
-    let bubble = items[0].bubble.as_ref().expect("typing bubble present");
-    assert!(bubble.typing, "empty in-flight message shows typing dots");
-    assert!(bubble.lines.is_empty());
-    assert!(
-        bubble.rect.size.x < 120.0,
-        "TS renders the empty streaming state as a compact w-fit pill"
-    );
+    assert!(items[0].bubble.is_none(), "no placeholder bubble (#26)");
+    let status = items[0].status.as_ref().expect("live status line");
+    assert_eq!(status.label, "Working…");
 }
 
 #[test]
-fn paint_streaming_empty_assistant_shows_thinking_pill_label() {
+fn paint_streaming_empty_assistant_shows_the_working_line() {
     let messages = [ChatMessage::assistant_streaming()];
     let mut backend = TranscriptPaintBackend::default();
     let mut cx = PaintCx {
@@ -138,18 +134,16 @@ fn paint_streaming_empty_assistant_shows_thinking_pill_label() {
         de_editor_core::Locale::EnUs,
     );
 
-    assert_eq!(backend.round_rects.len(), 1);
-    let (pill, radius) = backend.round_rects[0];
-    assert!(pill.size.x < 120.0, "typing pill should not be full width");
-    assert!(
-        (radius - pill.size.y / 2.0).abs() < 1e-4,
-        "TS uses rounded-full for the streaming pill"
-    );
-    assert!(
-        backend.texts.iter().any(|text| text == "Thinking"),
-        "TS shows the Thinking label before the animated dots"
-    );
-    assert_eq!(backend.ovals, 3);
+    assert!(backend.round_rects.is_empty(), "no pill");
+    assert!(backend.texts.iter().any(|text| text == "Working…"));
+    assert_eq!(backend.ovals, 1, "one status dot");
+}
+
+#[test]
+fn a_finished_message_has_no_status_line() {
+    let msgs = vec![ChatMessage::assistant("done")];
+    let items = build_transcript(&msgs, body(), de_editor_core::Locale::EnUs);
+    assert!(items[0].status.is_none());
 }
 
 #[test]

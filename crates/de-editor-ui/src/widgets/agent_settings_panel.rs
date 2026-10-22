@@ -1,16 +1,10 @@
 use crate::theme::Theme;
-use crate::widgets::agent_settings_acp::{self, AcpHit};
-use crate::widgets::agent_settings_builtin::{self, BuiltinHit};
 use crate::widgets::agent_settings_fonts::{self, FontsHit};
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_images::{self, ImagesHit};
 use crate::widgets::agent_settings_mcp::{self, McpHit};
-use crate::widgets::agent_settings_panel_card::paint_agent_card;
 use crate::widgets::agent_settings_panel_geometry::{
-    acp_section_y, agent_card_rect_at, agent_card_rect_in, agents_body_top, close_rect,
-    connect_btn_rect_at, content_rect, disconnect_btn_rect_at, hero_body_rect,
-    hero_body_rect_for_ui, provider_rows_top, tab_i18n_label, CLAUDE_HINT_H,
-    PROVIDER_SECTION_HEADER_H,
+    close_rect, content_rect, hero_body_rect, hero_body_rect_for_ui, tab_i18n_label,
 };
 use crate::widgets::agent_settings_system::{self, SystemHit};
 use crate::widgets::icons::{draw_icon, Icon};
@@ -61,27 +55,7 @@ pub(super) const HEADER_HEIGHT: f32 = 22.0;
 /// content viewport. Hosts subtract this from the panel height to derive
 /// the scroll viewport (`content_rect` height) instead of hardcoding it.
 pub const CONTENT_VERTICAL_INSET: f32 = HEADER_HEIGHT + CONTENT_BOTTOM_PAD;
-pub(super) const SECTION_GAP: f32 = metrics::SECTION_GAP;
 pub(super) const CONTENT_TAIL_PAD: f32 = metrics::CONTENT_TAIL_PAD;
-/// Provider rows carry a name over a status subtitle, so they take the
-/// modal's two-line row box — the same one the MCP server row and the
-/// System auto-update row use. Hairline-separated list rows sit flush
-/// against each other: the separator IS the gap.
-pub(super) const CARD_HEIGHT: f32 = metrics::ROW_H_TWO_LINE;
-pub(super) const CARD_GAP: f32 = 0.0;
-pub(super) const CONNECT_BTN_W: f32 = 84.0;
-pub(super) const CONNECT_BTN_H: f32 = 28.0;
-pub(super) const AVATAR_SIZE: f32 = metrics::ROW_AVATAR;
-pub(super) const AVATAR_ICON: f32 = 20.0;
-pub(super) const NAME_FONT: f32 = crate::widgets::agent_settings_rows::ROW_LABEL_FONT;
-pub(super) const SUB_FONT: f32 = crate::widgets::agent_settings_rows::ROW_DESC_FONT;
-/// Width reserved at the right edge of a provider row for the status
-/// pill. The painted pill hugs its label and is right-aligned inside the
-/// slot; the slot itself is fixed so hit-test geometry needs no text
-/// measurement.
-pub(super) const STATUS_PILL_SLOT: f32 = 140.0;
-pub(super) const STATUS_PILL_HEIGHT: f32 = 24.0;
-pub(super) const STATUS_PILL_FONT: f32 = 12.0;
 /// Agents-tab intro block (title + provider roll) above the first
 /// section — the vertical offset from the content viewport's top to the
 /// first section header. Public so host tests can anchor to it; it must
@@ -103,23 +77,6 @@ pub fn content_viewport(panel: Rect) -> Rect {
 /// body, so this is the rect they — and anything testing them — must use.
 pub fn secondary_tab_body(panel: Rect) -> Rect {
     hero_body_rect(content_rect(panel))
-}
-
-/// Agents tab: the external-provider row boxes, paired with their line
-/// count — walked by the traversal layout audit.
-#[cfg(test)]
-pub(super) fn provider_row_boxes(
-    panel: Rect,
-) -> Vec<(Rect, crate::widgets::agent_settings_rows::RowLines)> {
-    let settings = AgentSettings::default();
-    (0..AgentProvider::ALL.len())
-        .map(|i| {
-            (
-                agent_card_rect_in(panel, i, &settings),
-                crate::widgets::agent_settings_rows::RowLines::Two,
-            )
-        })
-        .collect()
 }
 
 /// MCP tab: the server Start/Stop button.
@@ -174,9 +131,8 @@ impl AgentSettingsPanelMode {
         }
     }
 
-    /// Whether the Agents tab paints the external-CLI half of the tab —
-    /// the ACP section and the provider card list, plus the section
-    /// headers that only exist to add or connect one.
+    /// Whether the Agents tab lists the agents on this machine — the CLI
+    /// agents, the ACP agents and "Add ACP agent" — and their detail panes.
     ///
     /// Paint, hit-test, hover, and the content-height walk all read this
     /// one predicate so a hidden block leaves no live hit rect behind it.
@@ -198,7 +154,31 @@ pub enum AgentSettingsHit {
     Close,
     SelectTab(AgentSettingsTab),
     Connect(AgentProvider),
+    /// "Add custom endpoint": a draft on the Custom preset.
     AddProvider,
+    /// Agents tab list rows (#26).
+    SelectBuiltinEntry(usize),
+    /// A featured preset not set up yet: a draft on that preset.
+    SelectApiPreset(BuiltinAgentPresetKey),
+    SelectCliEntry(AgentProvider),
+    SelectAcpEntry(usize),
+    ToggleApiKeyReveal,
+    /// Force a catalog refresh for a saved provider or the draft.
+    FetchBuiltinModels(Option<usize>),
+    /// Probe a CLI agent again without disconnecting it first.
+    RecheckProvider(AgentProvider),
+    /// Tick or untick a CLI agent's model — positional over the agent's
+    /// discovered models for the same frame.
+    ToggleCliModel {
+        provider: AgentProvider,
+        row: usize,
+    },
+    /// Fill the ACP draft from a preset (`None` = Custom).
+    SelectAcpPreset(Option<usize>),
+    SetAcpConnection {
+        index: Option<usize>,
+        kind: de_editor_core::agent_settings::AcpConnectionType,
+    },
     FocusBuiltinAgent {
         index: usize,
         field: BuiltinAgentField,
@@ -211,25 +191,20 @@ pub enum AgentSettingsHit {
         index: Option<usize>,
         preset: BuiltinAgentPresetKey,
     },
-    ToggleBuiltinModelMenu(Option<usize>),
-    /// Model-dropdown row pressed — positional index into the card's
-    /// runtime catalog, resolved to the model id by the press arm so
-    /// this enum stays `Copy`.
-    SelectBuiltinModel {
+    /// Model checklist row pressed — positional index into the pane's
+    /// rows (saved models, then the catalog's others), resolved to the
+    /// model id by the press arm so this enum stays `Copy`.
+    ToggleBuiltinModel {
         index: Option<usize>,
         row: usize,
     },
     SaveBuiltinAgentDraft,
-    /// Commit the expanded editing form's drafts and collapse the card.
+    /// Commit the focused field of a saved provider and refresh its catalog.
     SaveBuiltinAgentEditing(usize),
     CancelBuiltinAgentDraft,
     ToggleBuiltinAgentEnabled(usize),
-    EditBuiltinAgent(usize),
     RemoveBuiltinAgent(usize),
     AddAcpAgent,
-    /// Quick-add row pressed — positional index into
-    /// `AgentSettings::visible_acp_presets` for the same frame.
-    AddAcpPreset(usize),
     FocusAcpAgent {
         index: usize,
         field: AcpAgentField,
@@ -237,7 +212,6 @@ pub enum AgentSettingsHit {
     FocusAcpAgentDraft(AcpAgentField),
     SaveAcpAgentDraft,
     CancelAcpAgentDraft,
-    EditAcpAgent(usize),
     RemoveAcpAgent(usize),
     ToggleAcpConnected(usize),
     ToggleMcpServer,
@@ -282,6 +256,8 @@ pub struct AgentSettingsPanel<'a> {
     pub now_ms: u64,
     mode: AgentSettingsPanelMode,
     ui: &'a EditorUiState,
+    /// CLI agents' discovered models, for their checklists.
+    discovered: &'a [de_editor_core::ModelEntry],
 }
 
 impl<'a> AgentSettingsPanel<'a> {
@@ -299,6 +275,7 @@ impl<'a> AgentSettingsPanel<'a> {
             now_ms,
             mode: mode_for_ui(&state.editor_ui, AgentSettingsPanelMode::Full),
             ui: &state.editor_ui,
+            discovered: &state.chat.discovered_models,
         }
     }
 
@@ -316,6 +293,7 @@ impl<'a> AgentSettingsPanel<'a> {
             now_ms,
             mode: mode_for_ui(&state.editor_ui, AgentSettingsPanelMode::WebBuiltinOnly),
             ui: &state.editor_ui,
+            discovered: &state.chat.discovered_models,
         }
     }
 
@@ -373,6 +351,16 @@ impl<'a> AgentSettingsPanel<'a> {
 
     pub fn active_tab(&self) -> AgentSettingsTab {
         self.mode.active_tab(&self.settings)
+    }
+
+    /// The Agents tab body for this frame.
+    pub(crate) fn agents_tab(&self) -> crate::widgets::agent_settings_agents::AgentsTab<'_> {
+        crate::widgets::agent_settings_agents::AgentsTab {
+            settings: &self.settings,
+            ui: self.ui,
+            discovered: self.discovered,
+            external: self.mode.shows_external_agents(),
+        }
     }
 }
 

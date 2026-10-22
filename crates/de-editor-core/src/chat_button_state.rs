@@ -18,24 +18,19 @@ pub enum ChatHeaderButton {
     ToggleMaximize,
     /// Plus glyph in the header — starts a new chat.
     NewChat,
+    /// Session select — opens the list of this file's chats.
+    SessionMenu,
 }
 
 /// Which footer control of the AI chat panel the cursor is over.
 /// `None` on `EditorUiState.chat_footer_hover` = no hover wash.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChatFooterButton {
-    /// Prompt-library button — opens the Prompt Center.
-    PromptCenter,
-    /// Bottom-left model chip — opens the model picker.
+    /// The "+" button — opens the menu holding attach, the style library,
+    /// the thinking mode and the parallel-agents count.
+    PlusMenu,
+    /// "model · provider" chip — opens the model picker.
     ModelPicker,
-    /// Speed/effort chip (⚡ + label) — cycles the effort level.
-    SpeedChip,
-    /// Thinking-mode button (🧠) — cycles Adaptive → Disabled → Enabled.
-    ThinkingMode,
-    /// Compact Agent Team size chip in the bottom toolbar.
-    AgentTeam,
-    /// Paperclip attachment button.
-    AddAttachment,
     /// Send button in its normal idle state.
     Send,
     /// Stop button shown while a response streams.

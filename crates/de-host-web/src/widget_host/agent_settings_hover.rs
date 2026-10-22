@@ -19,8 +19,6 @@ impl WidgetHost {
             close_hover,
             server_hover,
             copy_hover,
-            add_provider_hover,
-            add_acp_hover,
             image_search_test_hover,
             image_search_register_link_hover,
             image_add_hover,
@@ -31,7 +29,7 @@ impl WidgetHost {
             image_provider_option_hover,
             new_hover,
             new_model_hover,
-            acp_preset_hover,
+            agents_row_hover,
         ) = {
             let panel = AgentSettingsPanel::for_web_editor(&self.editor_state);
             let panel_rect = panel.rect(self.last_viewport_w, self.last_viewport_h);
@@ -53,8 +51,6 @@ impl WidgetHost {
                 self.editor_state.editor_ui.agent_settings.tab,
                 AgentSettingsTab::Mcp
             ) && matches!(hit, AgentSettingsHit::ToggleMcpServer);
-            let add_provider_hover = is_agents && matches!(hit, AgentSettingsHit::AddProvider);
-            let add_acp_hover = is_agents && matches!(hit, AgentSettingsHit::AddAcpAgent);
             let image_search_test_hover =
                 is_images && panel.image_search_test_button_hover_at(panel_rect, point);
             let image_search_register_link_hover =
@@ -101,19 +97,16 @@ impl WidgetHost {
                 None
             };
             let new_hover = panel.builtin_preset_hover_at(panel_rect, point);
-            let new_model_hover = panel.builtin_model_hover_at(panel_rect, point);
-            // The whole quick-add row is one hit target, so the press hit
-            // already names the hovered row — no second geometry walk.
-            let acp_preset_hover = match hit {
-                AgentSettingsHit::AddAcpPreset(index) if is_agents => Some(index),
-                _ => None,
+            let new_model_hover = panel.agents_checklist_hover_at(panel_rect, point);
+            let agents_row_hover = if is_agents {
+                panel.agents_row_at(panel_rect, point)
+            } else {
+                None
             };
             (
                 close_hover,
                 server_hover,
                 copy_hover,
-                add_provider_hover,
-                add_acp_hover,
                 image_search_test_hover,
                 image_search_register_link_hover,
                 image_add_hover,
@@ -124,12 +117,12 @@ impl WidgetHost {
                 image_provider_option_hover,
                 new_hover,
                 new_model_hover,
-                acp_preset_hover,
+                agents_row_hover,
             )
         };
         let mut changed = false;
-        if acp_preset_hover != self.editor_state.editor_ui.agent_settings.hover_acp_preset {
-            self.editor_state.editor_ui.agent_settings.hover_acp_preset = acp_preset_hover;
+        if agents_row_hover != self.editor_state.editor_ui.agent_settings.hover_agents_row {
+            self.editor_state.editor_ui.agent_settings.hover_agents_row = agents_row_hover;
             changed = true;
         }
         if close_hover
@@ -189,38 +182,12 @@ impl WidgetHost {
                 .editor_state
                 .editor_ui
                 .agent_settings
-                .builtin_model_menu_hover
+                .agents_checklist_hover
         {
             self.editor_state
                 .editor_ui
                 .agent_settings
-                .builtin_model_menu_hover = new_model_hover;
-            changed = true;
-        }
-        if add_provider_hover
-            != self
-                .editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_provider
-        {
-            self.editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_provider = add_provider_hover;
-            changed = true;
-        }
-        if add_acp_hover
-            != self
-                .editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_acp_agent
-        {
-            self.editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_acp_agent = add_acp_hover;
+                .agents_checklist_hover = new_model_hover;
             changed = true;
         }
         if image_search_test_hover

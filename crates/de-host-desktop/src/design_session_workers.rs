@@ -565,7 +565,7 @@ pub(super) fn stop_design_messages(messages: &mut [ChatMessage], locale: Locale)
                 ChatActivityStatus::Pending | ChatActivityStatus::Running
             )
         });
-        changed |= mark_active_activities_error(&mut messages[index], detail);
+        changed |= mark_active_activities_stopped(&mut messages[index], detail);
         if messages[index].design_worker_group.is_some() && had_active {
             let terminal =
                 worker_stopped_narration(locale, messages[index].design_worker_screen.as_deref());
@@ -580,6 +580,19 @@ pub(super) fn stop_design_messages(messages: &mut [ChatMessage], locale: Locale)
 }
 
 fn mark_active_activities_error(message: &mut ChatMessage, detail: &str) -> bool {
+    mark_active_activities(message, detail, ChatActivityStatus::Error)
+}
+
+/// The user pressed Stop: unfinished rows end as `Stopped`, not as errors.
+fn mark_active_activities_stopped(message: &mut ChatMessage, detail: &str) -> bool {
+    mark_active_activities(message, detail, ChatActivityStatus::Stopped)
+}
+
+fn mark_active_activities(
+    message: &mut ChatMessage,
+    detail: &str,
+    terminal: ChatActivityStatus,
+) -> bool {
     let mut changed = false;
     for activity in &mut message.activities {
         if matches!(
@@ -587,9 +600,8 @@ fn mark_active_activities_error(message: &mut ChatMessage, detail: &str) -> bool
             ChatActivityStatus::Pending | ChatActivityStatus::Running
         ) {
             let next_detail = Some(detail.to_owned());
-            changed |=
-                activity.status != ChatActivityStatus::Error || activity.detail != next_detail;
-            activity.status = ChatActivityStatus::Error;
+            changed |= activity.status != terminal || activity.detail != next_detail;
+            activity.status = terminal;
             activity.detail = next_detail;
         }
     }

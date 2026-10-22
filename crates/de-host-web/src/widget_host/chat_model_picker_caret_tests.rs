@@ -99,10 +99,16 @@ fn opening_model_picker_clears_covered_hover_before_next_cursor_move() {
     let chat_rect = host
         .ai_chat_rect(viewport_w, viewport_h)
         .expect("chat rect");
+    // The chip opens the picker only when an agent can answer; without one
+    // it is the "Add a model provider" link.
+    host.editor_state.editor_ui.agent_settings.connected[0] = true;
     let panel = AIChatPlaceholder::from_editor(&host.editor_state);
-    let y = chat_rect.origin.y + chat_rect.size.y - 19.0;
-    let model_point = (chat_rect.origin.x as i32..=(chat_rect.origin.x + chat_rect.size.x) as i32)
-        .map(|x| Point2D::new(x as f32, y))
+    let bottom = chat_rect.origin.y + chat_rect.size.y;
+    let model_point = (0..60)
+        .flat_map(|dy| {
+            (chat_rect.origin.x as i32..=(chat_rect.origin.x + chat_rect.size.x) as i32)
+                .map(move |x| Point2D::new(x as f32, bottom - dy as f32))
+        })
         .find(|point| panel.hit_test(chat_rect, *point) == Some(AIChatHit::ToggleModelPicker))
         .expect("model picker chip");
     {

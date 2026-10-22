@@ -85,6 +85,9 @@ pub struct Theme {
     /// in both themes, with dedicated foreground for contrast.
     pub user_bubble: Color,
     pub user_bubble_foreground: Color,
+    /// Third text tone, quieter than `muted_foreground`: hints, inline
+    /// details and status lines (Home's `text_3`).
+    pub muted_subtle: Color,
     /// Success green for the ✓ ring on completed tool/step cards
     /// (#27 reference: ~#3FB950, matches GitHub's success green).
     pub status_success: Color,
@@ -130,6 +133,7 @@ impl Theme {
             canvas_surface: rgb(0x1b, 0x1b, 0x1b),
             user_bubble: rgb(0x50, 0x52, 0x60),
             user_bubble_foreground: rgb(0xff, 0xff, 0xff),
+            muted_subtle: rgb(0x6e, 0x71, 0x7b),
             // GitHub-style success green ~#3FB950 for completed ✓ rings.
             status_success: rgb(0x3f, 0xb9, 0x50),
             // Warning amber is the same in both themes (amber-500).
@@ -170,6 +174,7 @@ impl Theme {
             canvas_surface: rgb(0xf3, 0xf3, 0xf3),
             user_bubble: rgb(0x5f, 0x62, 0x70),
             user_bubble_foreground: rgb(0xff, 0xff, 0xff),
+            muted_subtle: rgb(0x88, 0x8b, 0x95),
             // Success green is the same in both themes.
             status_success: rgb(0x3f, 0xb9, 0x50),
             // Warning amber is the same in both themes (amber-500).

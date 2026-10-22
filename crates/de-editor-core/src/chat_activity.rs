@@ -12,6 +12,9 @@ pub enum ChatActivityStatus {
     Running,
     Done,
     Error,
+    /// The user stopped the turn before this activity finished. Not a
+    /// failure: the transcript shows it quietly, collapsed.
+    Stopped,
 }
 
 /// One stable activity row in an assistant message.

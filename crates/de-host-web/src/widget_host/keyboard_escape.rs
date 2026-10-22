@@ -203,6 +203,10 @@ impl WidgetHost {
         if self.exit_image_crop_edit() {
             return true;
         }
+        if self.editor_state.editor_ui.escape_chat_menus() {
+            self.mark_dirty();
+            return true;
+        }
         if self.editor_state.editor_ui.escape_chat_model_picker() {
             self.mark_dirty();
             return true;

@@ -43,9 +43,6 @@ const INTRO_LINE_GAP: f32 = 3.0;
 
 pub(super) const ROW_LABEL_FONT: f32 = 14.0;
 pub(super) const ROW_DESC_FONT: f32 = 12.0;
-/// Section titles sit a step under row labels and take the muted colour:
-/// they name a group, they do not compete with it.
-pub(super) const SECTION_TITLE_FONT: f32 = 13.0;
 
 /// Nominal vertical metrics as a fraction of font size. Row geometry has
 /// to be computable without a backend (hit-test paths have no painter),
@@ -192,34 +189,6 @@ pub(super) fn paint_tab_intro(
         &layout,
         Point2D::new(content.origin.x, content.origin.y + intro_desc_baseline()),
     );
-}
-
-/// Section title inside the [`SECTION_HEADER_H`] band starting at `y` —
-/// small, muted, vertically centred. One primitive so the four surfaces
-/// that open a section (Agents providers, built-in agents, ACP agents,
-/// MCP integrations) cannot disagree about its size or colour.
-pub(super) fn paint_section_title(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    x: f32,
-    y: f32,
-    title: &str,
-) {
-    let layout = TextLayout::single_run(
-        title,
-        SETTINGS_FONT_FAMILY,
-        SECTION_TITLE_FONT,
-        (theme.muted_foreground).to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend
-        .draw_text(&layout, Point2D::new(x, section_title_baseline(y)));
-}
-
-/// Baseline a section title sits on, given the top of its header band.
-pub(super) fn section_title_baseline(band_top: f32) -> f32 {
-    let ink = SECTION_TITLE_FONT * (ASCENT_RATIO + DESCENT_RATIO);
-    band_top + (SECTION_HEADER_H - ink) / 2.0 + SECTION_TITLE_FONT * ASCENT_RATIO
 }
 
 /// Row `index` in a list whose rows differ in height. Sums the boxes
@@ -416,22 +385,6 @@ pub(super) fn paint_row_status_line(
     color: crate::Color,
 ) {
     paint_row_status_line_at(cx, row, row.origin.x, text, color);
-}
-
-/// [`paint_row_status_line`] with an indented text column, fitted to
-/// `budget` so a long status can't run under the row's right-hand
-/// control.
-pub(super) fn paint_row_status_line_at_fitted(
-    cx: &mut PaintCx<'_>,
-    row: Rect,
-    text_x: f32,
-    text: &str,
-    color: crate::Color,
-    reserved: f32,
-) {
-    let budget = (row_text_budget(row, text_x, reserved) - STATUS_DOT - 7.0).max(0.0);
-    let text = fit_text(cx, text, budget, ROW_DESC_FONT);
-    paint_row_status_line_at(cx, row, text_x, &text, color);
 }
 
 fn paint_row_status_line_at(

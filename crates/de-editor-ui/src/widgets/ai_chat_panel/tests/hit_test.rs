@@ -110,16 +110,20 @@ fn short_panel_drops_occluded_example_pills_from_hit_testing() {
 }
 
 #[test]
-fn no_model_disables_model_picker_toggle() {
+fn no_agent_turns_the_model_chip_into_the_provider_link() {
     let mut s = EditorState::new();
     // The expanded panel only exists where the conversation lives:
     // the rail's Agent tab. Elsewhere the chat is composer-only.
     s.editor_ui.enter_chat_tab();
     let panel = AIChatPlaceholder::from_editor(&s);
     let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let p = Point2D::new(PAD + 8.0, toolbar_center_y());
+    let model = panel.footer_layout(rect).model;
+    let p = Point2D::new(model.origin.x + 8.0, model.origin.y + model.size.y / 2.0);
 
-    assert_eq!(panel.hit_test(rect, p), Some(AIChatHit::FocusInput));
+    assert_eq!(
+        panel.hit_test(rect, p),
+        Some(AIChatHit::OpenProviderSettings)
+    );
 }
 
 #[test]
@@ -176,116 +180,6 @@ fn streaming_textarea_click_is_consumed_without_focusing_like_ts_disabled_input(
 }
 
 #[test]
-fn streaming_attachment_button_is_consumed_without_opening_picker_like_ts() {
-    // While streaming, clicking the attach button should be consumed (Inside),
-    // NOT open the attachment picker — same behaviour as the TS disabled input.
-    // #38: attach is now right-aligned (left of stop/send); use footer rect for robustness.
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    s.chat
-        .messages
-        .push(de_editor_core::ChatMessage::assistant_streaming());
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let input = panel.input_rect(rect);
-    let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-    let footer = panel.footer_layout(rect, input, toolbar_top);
-    let attach_center = Point2D::new(
-        footer.attach.origin.x + footer.attach.size.x / 2.0,
-        footer.attach.origin.y + footer.attach.size.y / 2.0,
-    );
-
-    assert_eq!(panel.hit_test(rect, attach_center), Some(AIChatHit::Inside));
-}
-
-#[test]
-fn hit_test_resolves_bottom_toolbar_actions() {
-    // #38: ⚡/📎/🎨 cluster is now right-aligned (left of stop/send).
-    // Use footer_layout rects for robustness instead of hardcoded coords.
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    seed_available_model(&mut s);
-    s.chat.set_input_text("design a login page");
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let y = toolbar_center_y();
-    let input = panel.input_rect(rect);
-    let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-    let footer = panel.footer_layout(rect, input, toolbar_top);
-
-    // model pill center (x=PAD+8 = 24, in range 16..196)
-    assert_eq!(
-        panel.hit_test(rect, Point2D::new(PAD + 8.0, y)),
-        Some(AIChatHit::ToggleModelPicker)
-    );
-    let prompt_center = Point2D::new(
-        footer.prompt_center.origin.x + footer.prompt_center.size.x / 2.0,
-        y,
-    );
-    assert_eq!(
-        panel.hit_test(rect, prompt_center),
-        Some(AIChatHit::OpenPromptCenter)
-    );
-    // attach: use the footer rect center (now right-aligned, #38)
-    let attach_center = Point2D::new(footer.attach.origin.x + footer.attach.size.x / 2.0, y);
-    assert_eq!(
-        panel.hit_test(rect, attach_center),
-        Some(AIChatHit::AddAttachment)
-    );
-    // send: right_edge-circle(28) center at right_edge-14.
-    assert_eq!(
-        panel.hit_test(rect, Point2D::new(AI_CHAT_WIDTH - PAD - 14.0, y)),
-        Some(AIChatHit::Send)
-    );
-}
-
-#[test]
-fn footer_hover_maps_bottom_toolbar_actions() {
-    // #38: ⚡/📎/🎨 cluster is now right-aligned (left of stop/send).
-    // Use footer_layout rects for robustness instead of hardcoded coords.
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    seed_available_model(&mut s);
-    s.chat.set_input_text("design a login page");
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let y = toolbar_center_y();
-    let input = panel.input_rect(rect);
-    let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-    let footer = panel.footer_layout(rect, input, toolbar_top);
-
-    assert_eq!(
-        panel.footer_hover_at(rect, Point2D::new(PAD + 8.0, y)),
-        Some(de_editor_core::ChatFooterButton::ModelPicker)
-    );
-    let prompt_center = Point2D::new(
-        footer.prompt_center.origin.x + footer.prompt_center.size.x / 2.0,
-        y,
-    );
-    assert_eq!(
-        panel.footer_hover_at(rect, prompt_center),
-        Some(de_editor_core::ChatFooterButton::PromptCenter)
-    );
-    // attach: use footer rect center (now right-aligned, #38)
-    let attach_center = Point2D::new(footer.attach.origin.x + footer.attach.size.x / 2.0, y);
-    assert_eq!(
-        panel.footer_hover_at(rect, attach_center),
-        Some(de_editor_core::ChatFooterButton::AddAttachment)
-    );
-    // send center at right_edge - 14 = AI_CHAT_WIDTH - PAD - 14.
-    assert_eq!(
-        panel.footer_hover_at(rect, Point2D::new(AI_CHAT_WIDTH - PAD - 14.0, y)),
-        Some(de_editor_core::ChatFooterButton::Send)
-    );
-}
-
-#[test]
 fn example_hover_maps_quick_action_cards() {
     let mut s = EditorState::new();
     // The expanded panel only exists where the conversation lives:
@@ -301,38 +195,6 @@ fn example_hover_maps_quick_action_cards() {
     );
 
     assert_eq!(panel.example_hover_at(rect, p), Some(1));
-}
-
-#[test]
-fn footer_speed_chip_is_clickable_and_opens_parallel_agents_picker() {
-    // old→new (#32): the ⚡ chip is now the Parallel Agents chip — it opens the
-    // "PARALLEL AGENTS" picker on click (ToggleParallelAgentsPicker), not CycleEffort.
-    // Hover state still maps to SpeedChip for the button-wash.
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    seed_available_model(&mut s);
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let input = panel.input_rect(rect);
-    let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-    let footer = panel.footer_layout(rect, input, toolbar_top);
-    let point = Point2D::new(
-        footer.speed.origin.x + footer.speed.size.x / 2.0,
-        footer.speed.origin.y + footer.speed.size.y / 2.0,
-    );
-
-    // old→new: CycleEffort → ToggleParallelAgentsPicker
-    assert_eq!(
-        panel.hit_test(rect, point),
-        Some(AIChatHit::ToggleParallelAgentsPicker)
-    );
-    // Hover state stays SpeedChip (drives button-wash on the chip).
-    assert_eq!(
-        panel.footer_hover_at(rect, point),
-        Some(de_editor_core::ChatFooterButton::SpeedChip)
-    );
 }
 
 #[test]
@@ -482,19 +344,15 @@ fn the_pinned_panel_header_is_not_a_drag_handle() {
 }
 
 #[test]
-fn hit_test_header_tab_body_returns_switch_tab() {
-    // old→new (MT.2 tab row): clicking inside the tab row now returns
-    // SwitchTab(0) for the single default tab, not ToggleCollapse.
-    // ToggleCollapse is now scoped to the chevron icon only.
+fn hit_test_session_select_opens_the_session_list() {
     let mut s = EditorState::new();
     // The expanded panel only exists where the conversation lives:
     // the rail's Agent tab. Elsewhere the chat is composer-only.
     s.editor_ui.enter_chat_tab();
     let panel = AIChatPlaceholder::from_editor(&s);
     let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    // Click at x=PAD+64 (well inside the tab zone, past the chevron).
-    let p = Point2D::new(PAD + 64.0, 18.0);
-    assert_eq!(panel.hit_test(rect, p), Some(AIChatHit::SwitchTab(0)));
+    let p = Point2D::new(PAD + 64.0, HEADER_HEIGHT / 2.0);
+    assert_eq!(panel.hit_test(rect, p), Some(AIChatHit::ToggleSessionMenu));
 }
 
 #[test]

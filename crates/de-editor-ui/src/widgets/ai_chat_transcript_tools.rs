@@ -13,11 +13,10 @@ use crate::{Point2D, Rect, TextLayout};
 
 const GROUP_HEADER_H: f32 = 22.0;
 /// Compact activity-card header shared with CLI progress rows.
-const CARD_HEADER_H: f32 = 28.0;
-pub(crate) const CARD_GAP: f32 = 4.0;
-const CARD_PAD_X: f32 = 8.0;
+const CARD_HEADER_H: f32 = 30.0;
+pub(crate) const CARD_GAP: f32 = 0.0;
 const CARD_PAD_Y: f32 = 6.0;
-const CARD_LINE_H: f32 = 14.0;
+const CARD_LINE_H: f32 = 16.0;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ToolLevel {
     Read,
@@ -50,10 +49,6 @@ impl ToolLevel {
             _ => Self::from_name(name),
         }
     }
-
-    fn default_open(self) -> bool {
-        matches!(self, Self::Modify | Self::Delete | Self::Orchestrate)
-    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -67,6 +62,9 @@ pub(crate) struct ToolCallCard {
     /// toggle the wrong call's expand override.
     pub index: usize,
     pub name: String,
+    /// Short subject read off the call (node, count, size), shown after the
+    /// verb on the row.
+    detail: Option<String>,
     source: Option<String>,
     status: String,
     level: ToolLevel,
@@ -184,6 +182,7 @@ pub(crate) fn build_tool_panel(
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ToolCardFields {
+    detail: Option<String>,
     source: Option<String>,
     status: String,
     result: Option<String>,
@@ -197,6 +196,7 @@ impl ToolCardFields {
         let compact: String = raw_args.split_whitespace().collect::<Vec<_>>().join(" ");
         let Ok(value) = serde_json::from_str::<Value>(&compact) else {
             return Self {
+                detail: None,
                 source: None,
                 status: default_status.to_string(),
                 result: None,
@@ -207,6 +207,7 @@ impl ToolCardFields {
         };
         let Some(obj) = value.as_object() else {
             return Self {
+                detail: None,
                 source: None,
                 status: default_status.to_string(),
                 result: None,
@@ -235,8 +236,19 @@ impl ToolCardFields {
             .or_else(|| status_from_result(result_value))
             .unwrap_or_else(|| default_status.to_string());
         let args = obj.get("args").map(compact_json).unwrap_or(compact);
+        // Some hosts wrap the call as {args, result, status}; others pass the
+        // tool's own arguments directly.
+        // Raw JSON is no subject: only a plain-text result stands in.
+        let detail = call_subject(obj.get("args").unwrap_or(&value)).or_else(|| {
+            result
+                .as_deref()
+                .map(str::trim)
+                .filter(|r| !r.is_empty() && !r.starts_with(['{', '[']))
+                .map(|r| r.chars().take(60).collect())
+        });
 
         Self {
+            detail,
             source,
             status,
             result,
@@ -258,13 +270,15 @@ fn layout_tool_card(
 ) -> (ToolCallCard, f32) {
     const MAX_BODY_LINES: usize = 8;
     let fields = ToolCardFields::from_call(&call.name, &call.args, default_status);
-    let expanded = expanded_override.unwrap_or_else(|| fields.level.default_open());
+    // Rows start closed (#26): the verb and subject say what happened; a
+    // failed call opens so its error is on screen.
+    let result_failed = fields.status == "error" || fields.result_failed;
+    let expanded = expanded_override.unwrap_or(result_failed);
     let arg_lines = if expanded && !fields.args.is_empty() {
         prefixed_wrapped_lines("Args", &fields.args, budget, MAX_BODY_LINES)
     } else {
         Vec::new()
     };
-    let result_failed = fields.status == "error" || fields.result_failed;
     let result_lines = if expanded {
         fields
             .result
@@ -291,6 +305,7 @@ fn layout_tool_card(
             expanded,
             index: 0,
             name: call.name.clone(),
+            detail: fields.detail,
             source: fields.source,
             status: fields.status,
             level: fields.level,
@@ -317,6 +332,54 @@ fn prefixed_wrapped_lines(label: &str, text: &str, budget: u32, max_lines: usize
         lines.push("…".to_string());
     }
     lines
+}
+
+/// The subject of a call, read off its arguments: the node or page it
+/// names, how many nodes it carries, the size it sets — joined with " · ".
+fn call_subject(args: &Value) -> Option<String> {
+    let obj = args.as_object()?;
+    let mut parts: Vec<String> = Vec::new();
+    for key in [
+        "name", "title", "label", "page", "id", "node_id", "nodeId", "parent", "parentId",
+    ] {
+        if let Some(text) = obj
+            .get(key)
+            .and_then(Value::as_str)
+            .filter(|t| !t.trim().is_empty())
+        {
+            parts.push(text.to_string());
+            break;
+        }
+    }
+    for key in ["nodes", "ids", "operations", "children"] {
+        if let Some(count) = obj.get(key).and_then(Value::as_array).map(Vec::len) {
+            parts.push(format!(
+                "{count} {}",
+                if count == 1 { "node" } else { "nodes" }
+            ));
+            break;
+        }
+    }
+    let number = |key: &str| obj.get(key).and_then(Value::as_f64);
+    if let (Some(w), Some(h)) = (number("width"), number("height")) {
+        parts.push(format!("{} × {}", w.round(), h.round()));
+    }
+    (!parts.is_empty()).then(|| parts.join(" · "))
+}
+
+/// Drop the panel's header band and pull its rows up into its place
+/// (#26: tool calls read as a plain list, with no "N tool calls" header).
+/// Returns the height removed.
+pub(crate) fn strip_panel_header(panel: &mut ToolPanel) -> f32 {
+    let dy = panel.header.size.y;
+    panel.header.size.y = 0.0;
+    panel.body.origin.y -= dy;
+    for card in &mut panel.cards {
+        card.rect.origin.y -= dy;
+        card.header.origin.y -= dy;
+        card.body.origin.y -= dy;
+    }
+    dy
 }
 
 fn compact_json(value: &Value) -> String {
@@ -377,13 +440,34 @@ pub(crate) fn paint_tool_panel(
     if panel.header.size.y > 0.0 {
         paint_tool_panel_header(cx, theme, panel);
     }
+    // Back-to-back cards share one bordered list (#26).
+    let mut list: Option<Rect> = None;
+    for card in &panel.cards {
+        list = Some(match list {
+            Some(l) if (l.origin.y + l.size.y - card.rect.origin.y).abs() < 0.5 => Rect::xywh(
+                l.origin.x,
+                l.origin.y,
+                l.size.x,
+                card.rect.origin.y + card.rect.size.y - l.origin.y,
+            ),
+            Some(l) => {
+                cx.backend.stroke_round_rect(l, 8.0, theme.border, 1.0);
+                card.rect
+            }
+            None => card.rect,
+        });
+    }
+    if let Some(l) = list {
+        cx.backend.stroke_round_rect(l, 8.0, theme.border, 1.0);
+    }
     for card in &panel.cards {
         paint_tool_card(cx, theme, card, now_ms);
     }
 }
 
+/// The panel's header reads like the thinking block's (#26): a chevron
+/// and a quiet label, no surface.
 fn paint_tool_panel_header(cx: &mut PaintCx<'_>, theme: &Theme, panel: &ToolPanel) {
-    cx.backend.fill_round_rect(panel.header, 6.0, theme.muted);
     let icon = if panel.collapsed {
         Icon::ChevronRight
     } else {
@@ -393,32 +477,32 @@ fn paint_tool_panel_header(cx: &mut PaintCx<'_>, theme: &Theme, panel: &ToolPane
         cx.backend,
         icon,
         Point2D::new(
-            panel.header.origin.x + 6.0,
-            panel.header.origin.y + (GROUP_HEADER_H - 14.0) / 2.0,
+            panel.header.origin.x,
+            panel.header.origin.y + (GROUP_HEADER_H - 12.0) / 2.0,
         ),
-        14.0,
-        theme.muted_foreground,
-        1.5,
+        12.0,
+        theme.muted_subtle,
+        1.6,
     );
     draw_line(
         cx,
         &panel.label,
-        panel.header.origin.x + 26.0,
-        panel.header.origin.y + GROUP_HEADER_H / 2.0 + 4.0,
-        11.0,
-        theme.muted_foreground,
+        panel.header.origin.x + 18.0,
+        panel.header.origin.y + GROUP_HEADER_H / 2.0 + 12.0 * 0.35,
+        12.0,
+        theme.muted_subtle,
     );
 }
 
 fn paint_tool_card(cx: &mut PaintCx<'_>, theme: &Theme, card: &ToolCallCard, now_ms: u64) {
-    let mut bg = theme.card;
-    let mut border = theme.border;
-    if card.level == ToolLevel::Delete {
-        border = theme.destructive;
+    // A destructive call stands out from the list it sits in.
+    let surface = (card.level == ToolLevel::Delete).then(|| {
+        let mut border = theme.destructive;
         border.a *= 0.35;
-        bg = theme.destructive;
+        let mut bg = theme.destructive;
         bg.a *= 0.08;
-    }
+        (bg, border)
+    });
     let text_color = if card.level == ToolLevel::Delete {
         theme.destructive
     } else {
@@ -437,8 +521,8 @@ fn paint_tool_card(cx: &mut PaintCx<'_>, theme: &Theme, card: &ToolCallCard, now
     let source_reserve = card
         .source
         .as_deref()
-        .map(|source| source_badge_width(source) + 48.0)
-        .unwrap_or(40.0);
+        .map(|source| source_badge_width(source) + 60.0)
+        .unwrap_or(52.0);
     paint_activity_chrome(
         cx,
         theme,
@@ -447,8 +531,9 @@ fn paint_tool_card(cx: &mut PaintCx<'_>, theme: &Theme, card: &ToolCallCard, now
             header: card.header,
             label: verb_for_tool(&card.name),
             label_color: text_color,
-            background: bg,
-            border,
+            detail: (!card.expanded).then_some(card.detail.as_deref()).flatten(),
+            icon: Some(super::ai_chat_tool_icons::icon_for_tool(&card.name)),
+            surface,
             status,
             expanded: Some(card.expanded),
             right_reserve: source_reserve,
@@ -462,29 +547,19 @@ fn paint_tool_card(cx: &mut PaintCx<'_>, theme: &Theme, card: &ToolCallCard, now
     }
 
     if card.body.size.y > 0.0 {
-        cx.backend.stroke_line(
-            Point2D::new(card.body.origin.x, card.body.origin.y),
-            Point2D::new(card.body.origin.x + card.body.size.x, card.body.origin.y),
-            theme.border,
-            1.0,
-        );
         cx.backend.save();
         cx.backend.clip_rect(card.body);
-        let mut baseline = card.body.origin.y + CARD_PAD_Y + 9.0;
+        let mut baseline = card.body.origin.y + CARD_PAD_Y + 10.0;
+        // Indented to the label, under the row's glyph.
+        let text_x =
+            card.body.origin.x + 12.0 + super::ai_chat_transcript_activity::ICON_GLYPH + 8.0;
         for line in card.arg_lines.iter().chain(card.result_lines.iter()) {
             let color = if card.result_failed && line.starts_with("Result:") {
                 theme.destructive
             } else {
-                theme.muted_foreground
+                theme.muted_subtle
             };
-            draw_line(
-                cx,
-                line,
-                card.body.origin.x + CARD_PAD_X,
-                baseline,
-                10.0,
-                color,
-            );
+            draw_line(cx, line, text_x, baseline, 11.0, color);
             baseline += CARD_LINE_H;
         }
         cx.backend.restore();
@@ -494,7 +569,7 @@ fn paint_tool_card(cx: &mut PaintCx<'_>, theme: &Theme, card: &ToolCallCard, now
 fn paint_source_badge(cx: &mut PaintCx<'_>, theme: &Theme, card: &ToolCallCard, source: &str) {
     let badge_w = source_badge_width(source);
     let badge = Rect::xywh(
-        card.header.origin.x + card.header.size.x - badge_w - 40.0,
+        card.header.origin.x + card.header.size.x - badge_w - 52.0,
         card.header.origin.y + (CARD_HEADER_H - 12.0) / 2.0,
         badge_w,
         12.0,
@@ -529,7 +604,7 @@ fn draw_line(
 ) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        crate::widgets::home_surface::SANS,
         size,
         (color).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -577,7 +652,7 @@ mod tests {
     }
 
     #[test]
-    fn expanded_tool_card_paints_ts_body_separator() {
+    fn an_open_tool_row_has_no_separator_inside_its_list() {
         let mut backend = StatusIconBackend::default();
         let mut cx = PaintCx {
             backend: &mut backend,
@@ -587,15 +662,7 @@ mod tests {
 
         paint_tool_card(&mut cx, &theme, &card, 0);
 
-        assert_eq!(
-            backend.separator_lines,
-            vec![(
-                Point2D::new(card.body.origin.x, card.body.origin.y),
-                Point2D::new(card.body.origin.x + card.body.size.x, card.body.origin.y),
-                theme.border,
-                1.0,
-            )]
-        );
+        assert!(backend.separator_lines.is_empty());
     }
 
     #[test]
@@ -647,6 +714,7 @@ mod tests {
             expanded: false,
             index: 0,
             name: "update_node".into(),
+            detail: None,
             source: None,
             status: status.into(),
             level: ToolLevel::Modify,
@@ -664,6 +732,7 @@ mod tests {
             expanded: true,
             index: 0,
             name: "update_node".into(),
+            detail: None,
             source: None,
             status: "done".into(),
             level: ToolLevel::Modify,

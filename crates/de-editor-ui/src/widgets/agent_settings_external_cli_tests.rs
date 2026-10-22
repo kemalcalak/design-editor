@@ -1,9 +1,9 @@
 //! Settings-modal coverage for the external-CLI surfaces: the Agents
-//! tab's provider card list and ACP section, and the MCP tab's
+//! tab's list (CLI agents and the ACP add button), and the MCP tab's
 //! terminal-integration list. Every host that paints the modal can run
 //! agent CLIs, so each surface must stay reachable — every provider keeps
-//! a Connect target, a hover target, and a painted name, and every CLI
-//! keeps its MCP toggle.
+//! a list row, a hover target, and a painted name, and every CLI keeps
+//! its MCP toggle.
 
 use crate::widgets::agent_settings_panel::{AgentSettingsHit, AgentSettingsPanel};
 use crate::widgets::test_capture_backend::CaptureBackend;
@@ -72,9 +72,9 @@ fn reachable_hits(state: &mut EditorState) -> Vec<AgentSettingsHit> {
     hits
 }
 
-/// Every provider card the modal offers a hover target for, across the
-/// scroll range — the hover ladder's own view of the card list.
-fn hovered_card_indices(state: &mut EditorState) -> Vec<usize> {
+/// Every Agents list line the modal offers a hover target for, across
+/// the scroll range — the hover ladder's own view of the list.
+fn hovered_row_indices(state: &mut EditorState) -> Vec<usize> {
     let rect = panel_rect(state);
     let max_scroll = AgentSettingsPanel::for_editor(state).max_scroll(rect);
     let restore = state.editor_ui.agent_settings.scroll_y.offset;
@@ -89,7 +89,7 @@ fn hovered_card_indices(state: &mut EditorState) -> Vec<usize> {
             while y <= content.origin.y + content.size.y {
                 let mut x = content.origin.x;
                 while x <= content.origin.x + content.size.x {
-                    if let Some(index) = panel.card_at(rect, Point2D::new(x, y)) {
+                    if let Some(index) = panel.agents_row_at(rect, Point2D::new(x, y)) {
                         if !cards.contains(&index) {
                             cards.push(index);
                         }
@@ -135,10 +135,10 @@ fn painted_texts(state: &mut EditorState) -> Vec<String> {
     texts
 }
 
-fn connect_hits(hits: &[AgentSettingsHit]) -> Vec<AgentProvider> {
+fn cli_row_hits(hits: &[AgentSettingsHit]) -> Vec<AgentProvider> {
     hits.iter()
         .filter_map(|hit| match hit {
-            AgentSettingsHit::Connect(provider) => Some(*provider),
+            AgentSettingsHit::SelectCliEntry(provider) => Some(*provider),
             _ => None,
         })
         .collect()
@@ -158,15 +158,20 @@ fn cli_toggle_hits(hits: &[AgentSettingsHit]) -> Vec<McpCli> {
 // ---------------------------------------------------------------------
 
 #[test]
-fn agents_tab_offers_every_external_provider_card() {
+fn agents_tab_offers_every_external_provider_row() {
     let mut state = state_for(AgentSettingsTab::Agents);
     let hits = reachable_hits(&mut state);
 
-    let mut connects = connect_hits(&hits);
-    connects.sort_by_key(|provider| provider.index());
+    let mut rows = cli_row_hits(&hits);
+    rows.sort_by_key(|provider| provider.index());
     let mut expected = AgentProvider::ALL.to_vec();
     expected.sort_by_key(|provider| provider.index());
-    assert_eq!(connects, expected, "every provider keeps a Connect target");
+    assert_eq!(rows, expected, "every provider keeps a list row");
+    assert!(
+        hits.iter()
+            .any(|hit| matches!(hit, AgentSettingsHit::Connect(_))),
+        "the selected agent's detail offers Connect"
+    );
     assert!(
         hits.contains(&AgentSettingsHit::AddAcpAgent),
         "the ACP section's add action belongs to the external-CLI half"
@@ -178,12 +183,26 @@ fn agents_tab_offers_every_external_provider_card() {
 }
 
 #[test]
-fn every_provider_card_has_a_hover_target() {
+fn every_list_row_has_a_hover_target() {
     let mut state = state_for(AgentSettingsTab::Agents);
+    let settings = state.editor_ui.agent_settings.clone();
+    let pressable = crate::widgets::agent_settings_agents_list::list_rows(
+        Rect::xywh(0.0, 0.0, 220.0, 0.0),
+        &settings,
+        true,
+    )
+    .iter()
+    .filter(|(item, _)| {
+        !matches!(
+            item,
+            crate::widgets::agent_settings_agents_list::ListItem::Section(_)
+        )
+    })
+    .count();
     assert_eq!(
-        hovered_card_indices(&mut state).len(),
-        AgentProvider::ALL.len(),
-        "hover covers every card"
+        hovered_row_indices(&mut state).len(),
+        pressable,
+        "hover covers every list row"
     );
 }
 

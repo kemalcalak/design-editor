@@ -535,12 +535,14 @@ impl WidgetHost {
         // transcript once, this avoids rebuilding translated labels and tabs
         // for each sub-control.
         let mut style_chip_hover = false;
+        let mut plus_hover = None;
         let (chat_probe, chat_tab_hover, chat_footer_hover, parallel_hover, example_hover) =
             if let Some(chat_rect) = self.ai_chat_rect(self.last_viewport_w, self.last_viewport_h) {
                 use de_editor_ui::widgets::AIChatPlaceholder;
                 let panel = AIChatPlaceholder::from_editor_at(&self.editor_state, self.now_ms)
                     .owned_by(self.chat_panel_owner);
                 style_chip_hover = panel.style_chip_hover_at(chat_rect, point);
+                plus_hover = panel.plus_menu_hover_at(chat_rect, point);
                 (
                     Some(panel.cursor_probe(chat_rect, point)),
                     panel.tab_hover_at(chat_rect, point),
@@ -576,6 +578,7 @@ impl WidgetHost {
         // Same gate: a clock started under a higher surface would time out into
         // a card floating over it.
         let style_chip_hover = style_chip_hover && !over_topmost && !align_owns_point;
+        let plus_hover = plus_hover.filter(|_| !over_topmost && !align_owns_point);
         let design_hover = if !over_topmost && !align_owns_point {
             chat_probe
                 .as_ref()
@@ -604,6 +607,10 @@ impl WidgetHost {
             }
             if parallel_hover != ui.parallel_agents_picker_hover {
                 ui.parallel_agents_picker_hover = parallel_hover;
+                chat_hover_changed = true;
+            }
+            if plus_hover != ui.chat_plus_menu_hover {
+                ui.chat_plus_menu_hover = plus_hover;
                 chat_hover_changed = true;
             }
             if example_hover != ui.chat_example_hover {

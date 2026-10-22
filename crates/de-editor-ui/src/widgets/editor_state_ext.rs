@@ -107,11 +107,9 @@ pub fn agent_settings_button(
         W::Close => Some(O::Close),
         W::AddProvider => Some(O::AddProvider),
         W::AddAcpAgent => Some(O::AddAcpAgent),
-        W::EditBuiltinAgent(index) => Some(O::BuiltinEdit(index)),
         W::RemoveBuiltinAgent(index) => Some(O::BuiltinRemove(index)),
         W::SaveBuiltinAgentDraft => Some(O::BuiltinSaveDraft),
         W::CancelBuiltinAgentDraft => Some(O::BuiltinCancelDraft),
-        W::EditAcpAgent(index) => Some(O::AcpEdit(index)),
         W::RemoveAcpAgent(index) => Some(O::AcpRemove(index)),
         W::ToggleAcpConnected(index) => Some(O::AcpConnection(index)),
         W::SaveAcpAgentDraft => Some(O::AcpSaveDraft),
@@ -248,6 +246,7 @@ pub fn chat_header_hover(
         W::ToggleCollapse => Some(O::ToggleCollapse),
         W::ToggleMaximize => Some(O::ToggleMaximize),
         W::NewChat => Some(O::NewChat),
+        W::ToggleSessionMenu => Some(O::SessionMenu),
         _ => None,
     }
 }

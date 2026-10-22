@@ -66,6 +66,13 @@ pub struct ChatMessage {
     pub completion: Option<ChatCompletion>,
     /// Images the user attached to this message.
     pub images: Vec<ChatImage>,
+    /// When the first reasoning text arrived (host clock, ms). Set by
+    /// [`ChatMessage::note_thinking_clock`].
+    pub thinking_started_ms: Option<u64>,
+    /// How long the assistant reasoned before it started answering, for
+    /// the transcript's "Thought for Ns". `None` while it is still
+    /// thinking, or when the turn never reported reasoning.
+    pub thinking_ms: Option<u64>,
     /// Collapsed state of the thinking block (default collapsed).
     pub thinking_collapsed: bool,
     /// Collapsed state of the tool-calls panel (default collapsed).
@@ -117,6 +124,8 @@ impl ChatMessage {
             activities: Vec::new(),
             completion: None,
             images: Vec::new(),
+            thinking_started_ms: None,
+            thinking_ms: None,
             thinking_collapsed: true,
             tools_collapsed: true,
             tool_call_expanded_overrides: Vec::new(),
@@ -143,6 +152,8 @@ impl ChatMessage {
             activities: Vec::new(),
             completion: None,
             images: Vec::new(),
+            thinking_started_ms: None,
+            thinking_ms: None,
             thinking_collapsed: true,
             tools_collapsed: true,
             tool_call_expanded_overrides: Vec::new(),
@@ -156,6 +167,23 @@ impl ChatMessage {
         }
     }
 
+    /// Advance the reasoning clock after the host folded new deltas into
+    /// this message: the first reasoning text starts it, and the first
+    /// sign the assistant moved on (answer text, a tool call, or the turn
+    /// ending) stops it. Hosts call this with their own clock after every
+    /// poll; the clock never restarts once stopped.
+    pub fn note_thinking_clock(&mut self, now_ms: u64) {
+        if self.thinking.trim().is_empty() || self.thinking_ms.is_some() {
+            return;
+        }
+        let started = *self.thinking_started_ms.get_or_insert(now_ms);
+        let moved_on =
+            !self.content.trim().is_empty() || !self.tool_calls.is_empty() || !self.streaming;
+        if moved_on {
+            self.thinking_ms = Some(now_ms.saturating_sub(started));
+        }
+    }
+
     /// An empty assistant bubble for a turn that is about to stream —
     /// provider deltas append into it and `streaming` clears on `Done`.
     pub fn assistant_streaming() -> Self {
@@ -163,5 +191,50 @@ impl ChatMessage {
             streaming: true,
             ..Self::assistant("")
         }
+    }
+}
+
+#[cfg(test)]
+mod thinking_clock_tests {
+    use super::*;
+
+    #[test]
+    fn the_clock_runs_from_the_first_thought_to_the_first_answer() {
+        let mut msg = ChatMessage::assistant_streaming();
+        msg.note_thinking_clock(1_000);
+        assert_eq!(msg.thinking_started_ms, None, "no reasoning yet");
+        msg.thinking.push_str("Planning the layout");
+        msg.note_thinking_clock(2_000);
+        assert_eq!(msg.thinking_started_ms, Some(2_000));
+        assert_eq!(msg.thinking_ms, None, "still thinking");
+        msg.thinking.push_str(" and the palette");
+        msg.note_thinking_clock(5_000);
+        assert_eq!(msg.thinking_ms, None);
+        msg.content.push_str("I'll set up a frame.");
+        msg.note_thinking_clock(8_000);
+        assert_eq!(msg.thinking_ms, Some(6_000));
+        msg.note_thinking_clock(20_000);
+        assert_eq!(msg.thinking_ms, Some(6_000), "the clock never restarts");
+    }
+
+    #[test]
+    fn a_tool_call_or_the_end_of_the_turn_also_stops_the_clock() {
+        let mut msg = ChatMessage::assistant_streaming();
+        msg.thinking.push_str("Checking the canvas");
+        msg.note_thinking_clock(100);
+        msg.tool_calls.push(ChatToolCall {
+            name: "get_selection".into(),
+            args: "{}".into(),
+            content_offset: None,
+        });
+        msg.note_thinking_clock(1_600);
+        assert_eq!(msg.thinking_ms, Some(1_500));
+
+        let mut quiet = ChatMessage::assistant_streaming();
+        quiet.thinking.push_str("Hmm");
+        quiet.note_thinking_clock(0);
+        quiet.streaming = false;
+        quiet.note_thinking_clock(3_000);
+        assert_eq!(quiet.thinking_ms, Some(3_000));
     }
 }

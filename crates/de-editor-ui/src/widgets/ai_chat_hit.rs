@@ -29,6 +29,12 @@ pub enum AIChatHit {
     ToggleMaximize,
     /// Click on the plus affordance in the header.
     NewChat,
+    /// Click on the session select — opens / closes the list of chats.
+    ToggleSessionMenu,
+    /// Click on the composer's "+" — opens / closes its menu. The menu's
+    /// rows resolve to the hits they stand for (`AddAttachment`,
+    /// `OpenPromptCenter`, `CycleThinking`, `ToggleParallelAgentsPicker`).
+    TogglePlusMenu,
     /// Click on the model chip (bottom-left of the input toolbar) —
     /// host toggles `ui.chat_model_picker.open` to open / close the
     /// model dropdown.
@@ -51,6 +57,12 @@ pub enum AIChatHit {
     CycleEffort,
     /// Click on the prompt-library button — opens the Prompt Center.
     OpenPromptCenter,
+    /// The "Add a model provider" link that stands in for the model chip
+    /// when nothing can answer — opens Settings on the Agents tab.
+    OpenProviderSettings,
+    /// "Connect" on an installed agent's row in the model picker — the
+    /// same probe Settings' Connect runs.
+    ConnectAgent(de_editor_core::chat::AgentProvider),
     /// The pre-flight MCP notice above the input — opens Settings on the MCP
     /// tab so the missing integration is one click from the warning.
     OpenMcpSettings,

@@ -1,8 +1,7 @@
 use super::WidgetHost;
-use de_editor_core::agent_settings::BuiltinModelMenuTarget;
 use de_editor_core::{
-    BuiltinAgentField, BuiltinAgentKind, BuiltinModelCatalogRefreshOutcome,
-    BuiltinModelCatalogTarget, BuiltinModelOption, SettingsFocus, Tool,
+    BuiltinAgentKind, BuiltinModelCatalogRefreshOutcome, BuiltinModelCatalogTarget,
+    BuiltinModelOption, Tool,
 };
 use de_editor_ui::Point2D;
 
@@ -156,15 +155,7 @@ fn trackpad_pan_over_model_menu_scrolls_menu_before_settings_body() {
                     .collect(),
             },
         ));
-    host.editor_state.editor_ui.agent_settings.focus = Some(SettingsFocus::BuiltinAgent {
-        index: 0,
-        field: BuiltinAgentField::Model,
-    });
-    host.editor_state
-        .editor_ui
-        .agent_settings
-        .builtin_model_menu_open = Some(BuiltinModelMenuTarget::Agent(0));
-
+    // The catalog lands in the detail pane's model checklist (#26).
     let point = {
         let panel = de_editor_ui::widgets::agent_settings_panel::AgentSettingsPanel::for_web_editor(
             &host.editor_state,
@@ -176,16 +167,16 @@ fn trackpad_pan_over_model_menu_scrolls_menu_before_settings_body() {
             .map(|row| Point2D::new(x, content.origin.y + row as f32 + 0.5))
             .find(|point| {
                 panel
-                    .builtin_model_scroll_max_at(rect, *point)
+                    .agents_checklist_scroll_max_at(rect, *point)
                     .is_some_and(|max| max > 0.0)
             })
-            .expect("open model menu is inside settings viewport")
+            .expect("model checklist is inside settings viewport")
     };
 
     assert!(host.apply_pan_gesture(point.x, point.y, -0.5, -48.0, VIEWPORT_W, VIEWPORT_H,));
 
     let settings = &host.editor_state.editor_ui.agent_settings;
-    assert!(settings.builtin_model_menu_scroll.offset > 0.0);
+    assert!(settings.agents_checklist_scroll.offset > 0.0);
     assert_eq!(settings.scroll_y.offset, 0.0);
     assert_eq!(host.editor_state.viewport.pan_x, 0.0);
     assert_eq!(host.editor_state.viewport.pan_y, 0.0);

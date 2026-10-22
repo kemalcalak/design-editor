@@ -132,6 +132,18 @@ impl EditorUiState {
         self.close_prompt_center()
     }
 
+    /// Close the chat's session list, "+" menu or parallel-agents picker.
+    pub fn escape_chat_menus(&mut self) -> bool {
+        if !self.chat_session_menu_open
+            && !self.chat_plus_menu_open
+            && !self.parallel_agents_picker_open
+        {
+            return false;
+        }
+        self.close_chat_menus();
+        true
+    }
+
     /// Close the chat model picker dropdown.
     pub fn escape_chat_model_picker(&mut self) -> bool {
         if !self.chat_model_picker.open {
@@ -240,8 +252,7 @@ impl EditorUiState {
         self.agent_settings.focus = None;
         self.agent_settings.builtin_preset_menu_open = None;
         self.agent_settings.builtin_preset_menu_hover = None;
-        self.agent_settings.builtin_model_menu_open = None;
-        self.agent_settings.builtin_model_menu_hover = None;
+        self.agent_settings.agents_checklist_hover = None;
         self.agent_settings.image_gen_provider_menu_open = None;
         self.agent_settings.hover_image_gen_provider_option = None;
         self.agent_settings.hover_agent_settings_close = false;
@@ -254,12 +265,8 @@ impl EditorUiState {
         self.agent_settings.hover_image_gen_profile_remove = None;
         self.agent_settings.hover_image_gen_profile_provider = None;
         self.agent_settings.hover_image_gen_profile_test = None;
-        self.agent_settings.hover_provider = usize::MAX;
-        self.agent_settings.hover_builtin_agent = usize::MAX;
-        self.agent_settings.hover_acp_agent = usize::MAX;
-        self.agent_settings.hover_add_provider = false;
-        self.agent_settings.hover_add_acp_agent = false;
-        self.agent_settings.hover_acp_preset = None;
+        self.agent_settings.hover_agents_row = None;
+        self.agent_settings.agents_checklist_hover = None;
         self.agent_settings.hover_nav = None;
         self.settings_input.reset_transient();
 
@@ -269,6 +276,9 @@ impl EditorUiState {
         self.close_chat_model_picker();
         self.parallel_agents_picker_open = false;
         self.parallel_agents_picker_hover = None;
+        self.chat_session_menu_open = false;
+        self.chat_plus_menu_open = false;
+        self.chat_plus_menu_hover = None;
         self.fill_type_picker = Default::default();
         self.fill_type_picker_index = 0;
         self.compositing_picker = Default::default();

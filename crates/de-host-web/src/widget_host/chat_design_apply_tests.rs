@@ -14,7 +14,7 @@ fn expanded_design_message() -> ChatMessage {
 
 fn apply_button_point(chat_rect: de_editor_ui::Rect) -> (f32, f32) {
     let body_x = chat_rect.origin.x + 16.0;
-    let body_top = chat_rect.origin.y + 36.0;
+    let body_top = chat_rect.origin.y + 48.0;
     let body_w = chat_rect.size.x - 32.0;
     let one_line_code_preview_h = 8.0 * 2.0 + 13.0;
     let apply_y = body_top + 32.0 + 4.0 + one_line_code_preview_h + 16.0;

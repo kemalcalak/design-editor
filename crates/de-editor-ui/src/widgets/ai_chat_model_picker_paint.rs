@@ -10,9 +10,8 @@
 //! add a model provider.
 
 use super::{
-    model_list_rect, model_row_pill_rect, paint_provider_logo, search_field_rect,
-    visible_model_indices, walk_rows, Row, MODEL_EMPTY_H, MODEL_FOOTER_H, MODEL_GROUP_H,
-    MODEL_PICKER_PAD_Y, MODEL_ROW_H,
+    has_rows, model_list_rect, model_row_pill_rect, search_field_rect, walk_rows, Row,
+    MODEL_EMPTY_H, MODEL_FOOTER_H, MODEL_GROUP_H, MODEL_PICKER_PAD_Y, MODEL_ROW_H,
 };
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
@@ -20,7 +19,7 @@ use crate::widgets::property_panel_text_input::paint_text_input_view_value;
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
-use de_editor_core::chat::ModelEntry;
+use de_editor_core::chat::{AgentProvider, ModelEntry};
 use de_editor_core::Locale;
 use jian_core::text_input::TextInputState;
 use jian_widgets::components::select::SelectState;
@@ -31,8 +30,7 @@ const POPOVER_RADIUS: f32 = 12.0;
 const PILL_RADIUS: f32 = 8.0;
 /// Left inset shared by every row's content (mark, labels, glyphs).
 const ROW_INSET_X: f32 = 12.0;
-/// Provider mark size inside a row and its gap to the name.
-const ROW_LOGO: f32 = 18.0;
+/// Gap between a glyph and the text after it.
 const ROW_TEXT_GAP: f32 = 10.0;
 /// Right inset of the qualifier line on a plain row.
 const ROW_RIGHT_INSET: f32 = 12.0;
@@ -126,7 +124,9 @@ pub(crate) fn fit_row_text(
     name: &str,
     detail: Option<&str>,
 ) -> RowTextLabel {
-    let name_x = rect.origin.x + ROW_INSET_X + ROW_LOGO + ROW_TEXT_GAP;
+    // #26 rows carry the model id alone; the group header names the
+    // provider.
+    let name_x = rect.origin.x + ROW_INSET_X;
     let detail_w = detail
         .map(|d| text_metrics::measure_chrome(backend, d, DETAIL_SIZE))
         .unwrap_or(0.0);
@@ -165,6 +165,7 @@ pub fn paint_model_picker(
     theme: &Theme,
     rect: Rect,
     models: &[ModelEntry],
+    offline: &[AgentProvider],
     selected: usize,
     state: &SelectState,
     input: &TextInputState,
@@ -193,7 +194,7 @@ pub fn paint_model_picker(
         .stroke_round_rect(rect, POPOVER_RADIUS, tokens.border, 1.0);
     paint_search_row(cx, theme, &tokens, rect, input, now_ms, locale);
     let list_rect = model_list_rect(rect);
-    if visible_model_indices(models, search).is_empty() {
+    if !has_rows(models, offline, search) {
         let empty = de_i18n::translate(locale, "ai.noModelsFound");
         let layout = TextLayout::single_run(
             empty,
@@ -218,32 +219,45 @@ pub fn paint_model_picker(
         cx.backend.save();
         cx.backend.clip_rect(list_rect);
         cx.backend.translate(Point2D::new(0.0, -scroll));
-        walk_rows(models, search, list_rect.origin.y, |row, y, h| match row {
-            Row::Header { first_group, label } => {
-                paint_group_header(cx, &tokens, rect, y, *first_group, label);
-            }
-            Row::Model { idx } => {
-                paint_model_row(
-                    cx,
-                    &tokens,
-                    rect,
-                    models,
-                    *idx,
-                    selected,
-                    state.hover,
-                    state.pressed,
-                    y,
-                    h,
-                );
-            }
-        });
+        walk_rows(
+            models,
+            offline,
+            search,
+            list_rect.origin.y,
+            |row, y, h| match row {
+                Row::Header {
+                    first_group,
+                    label,
+                    tag,
+                } => {
+                    paint_group_header(cx, &tokens, rect, y, *first_group, label, tag);
+                }
+                Row::Offline { provider } => {
+                    paint_offline_row(cx, &tokens, rect, *provider, y, locale);
+                }
+                Row::Model { idx } => {
+                    paint_model_row(
+                        cx,
+                        &tokens,
+                        rect,
+                        models,
+                        *idx,
+                        selected,
+                        state.hover,
+                        state.pressed,
+                        y,
+                        h,
+                    );
+                }
+            },
+        );
         cx.backend.restore();
 
         // Scrollbar thumb — drawn after `restore()` so it sits in
         // unscrolled card space. Shown only when the content
         // overflows; its length stays proportional to the visible
         // fraction of the list.
-        let content_h = super::picker_list_height(models, search);
+        let content_h = super::picker_list_height(models, offline, search);
         let view_h = list_rect.size.y;
         let track_h = (view_h - 8.0).max(0.0);
         if let Some(thumb_geom) = (jian_core::scroll::ScrollState { offset: scroll })
@@ -271,6 +285,7 @@ fn paint_group_header(
     y: f32,
     first_group: bool,
     label: &str,
+    tag: &str,
 ) {
     if !first_group {
         cx.backend.fill_rect(
@@ -301,6 +316,87 @@ fn paint_group_header(
             GROUP_LABEL_WEIGHT,
         ) + GROUP_TRACKING;
     }
+    // The source tag (API / CLI / ACP) at the right edge, outlined.
+    let tag_w = text_metrics::measure_chrome_weighted(cx.backend, tag, 9.0, 600) + 10.0;
+    let tag_rect = Rect::xywh(
+        rect.origin.x + rect.size.x - ROW_INSET_X - tag_w,
+        y + (MODEL_GROUP_H - 15.0) / 2.0,
+        tag_w,
+        15.0,
+    );
+    cx.backend
+        .stroke_round_rect(tag_rect, 4.0, tokens.hairline, 1.0);
+    let tag_layout = TextLayout::single_run(
+        tag,
+        crate::widgets::home_surface::SANS,
+        9.0,
+        (tokens.muted).to_jian(),
+        Point2D::new(0.0, 0.0),
+    )
+    .with_font_weight(600);
+    cx.backend.draw_text(
+        &tag_layout,
+        Point2D::new(
+            tag_rect.origin.x + 5.0,
+            jian_widgets::centered_text_baseline_y(tag_rect, 9.0),
+        ),
+    );
+}
+
+/// An installed agent that is not connected: terminal glyph, "<Agent> · not
+/// connected" in the quiet tone, and an accent "Connect" at the right.
+fn paint_offline_row(
+    cx: &mut PaintCx<'_>,
+    tokens: &PickerTokens,
+    rect: Rect,
+    provider: AgentProvider,
+    y: f32,
+    locale: Locale,
+) {
+    let row = Rect::xywh(rect.origin.x, y, rect.size.x, MODEL_ROW_H);
+    let baseline = jian_widgets::centered_text_baseline_y(row, 12.0);
+    draw_icon(
+        cx.backend,
+        Icon::Terminal,
+        Point2D::new(rect.origin.x + ROW_INSET_X, y + (MODEL_ROW_H - 13.0) / 2.0),
+        13.0,
+        tokens.muted,
+        1.5,
+    );
+    let connect = de_i18n::translate(locale, "chat.picker.connect");
+    let connect_w = text_metrics::measure_chrome_weighted(cx.backend, connect, 12.0, 600);
+    let connect_x = rect.origin.x + rect.size.x - ROW_INSET_X - 8.0 - connect_w;
+    let text_x = rect.origin.x + ROW_INSET_X + 13.0 + ROW_TEXT_GAP;
+    let label = format!(
+        "{} · {}",
+        provider.name(),
+        de_i18n::translate(locale, "chat.picker.notConnected")
+    );
+    let label = text_metrics::fit_chrome(
+        cx.backend,
+        &label,
+        (connect_x - 8.0 - text_x).max(0.0),
+        12.0,
+    );
+    let layout = TextLayout::single_run(
+        &label,
+        crate::widgets::home_surface::SANS,
+        12.0,
+        (tokens.muted).to_jian(),
+        Point2D::new(0.0, 0.0),
+    );
+    cx.backend
+        .draw_text(&layout, Point2D::new(text_x, baseline));
+    let connect_layout = TextLayout::single_run(
+        connect,
+        crate::widgets::home_surface::SANS,
+        12.0,
+        (tokens.action_blue).to_jian(),
+        Point2D::new(0.0, 0.0),
+    )
+    .with_font_weight(600);
+    cx.backend
+        .draw_text(&connect_layout, Point2D::new(connect_x, baseline));
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -329,19 +425,6 @@ fn paint_model_row(
             .fill_round_rect(pill, PILL_RADIUS, tokens.hover_fill);
     }
     let entry = models.get(idx);
-    // Provider mark — the builtin / ACP key/plug state moved from
-    // the header glyph to the qualifier line, so every row shows its
-    // provider's mark.
-    let logo_y = y + (MODEL_ROW_H - ROW_LOGO) / 2.0;
-    if let Some(entry) = entry {
-        paint_provider_logo(
-            cx,
-            entry.provider,
-            Point2D::new(rect.origin.x + ROW_INSET_X, logo_y),
-            ROW_LOGO,
-            tokens.muted,
-        );
-    }
     // v2 rows carry the name only; the provider is the group heading.
     let detail: Option<String> = None;
     let label = fit_row_text(
@@ -480,7 +563,7 @@ fn paint_footer_row(cx: &mut PaintCx<'_>, tokens: &PickerTokens, rect: Rect, loc
     );
     draw_icon(
         cx.backend,
-        Icon::Plus,
+        Icon::Settings,
         Point2D::new(
             rect.origin.x + ROW_INSET_X,
             top + (MODEL_FOOTER_H - FOOTER_GLYPH) / 2.0,
@@ -489,7 +572,7 @@ fn paint_footer_row(cx: &mut PaintCx<'_>, tokens: &PickerTokens, rect: Rect, loc
         tokens.ink,
         1.6,
     );
-    let label = de_i18n::translate(locale, "home.model.addProvider");
+    let label = de_i18n::translate(locale, "chat.picker.manage");
     let row = Rect {
         origin: Point2D::new(rect.origin.x, top),
         size: Point2D::new(rect.size.x, MODEL_FOOTER_H),

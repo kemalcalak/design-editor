@@ -681,6 +681,10 @@ mod page_paint_identity_tests;
 #[cfg(test)]
 mod keyboard_shortcut_tests;
 
+#[cfg(test)]
+#[path = "settings_proof_sheet_tests.rs"]
+mod settings_proof_sheet_tests;
+
 // Serializes tests that touch the process-global `agent_indicators`
 // registry against tests that assert an exact animation deadline. The
 // registry is shared across every test in this binary running in

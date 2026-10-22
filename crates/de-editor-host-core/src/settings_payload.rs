@@ -292,6 +292,42 @@ pub fn str_to_theme(s: &str) -> ThemeMode {
     }
 }
 
+/// Per-CLI-agent hidden models (#26 D6), keyed by the provider's stable
+/// name like `chat_agent` rather than by its `AgentProvider::ALL` index.
+/// Agents with nothing hidden are left out of the file.
+pub fn cli_hidden_models_to_payload(
+    hidden: &[std::collections::BTreeSet<String>; 7],
+) -> std::collections::BTreeMap<String, Vec<String>> {
+    de_editor_core::AgentProvider::ALL
+        .iter()
+        .zip(hidden)
+        .filter(|(_, models)| !models.is_empty())
+        .map(|(provider, models)| {
+            (
+                provider.name().to_string(),
+                models.iter().cloned().collect(),
+            )
+        })
+        .collect()
+}
+
+/// Inverse of [`cli_hidden_models_to_payload`]; names this build does not
+/// know (a provider renamed or removed) are dropped.
+pub fn cli_hidden_models_from_payload(
+    payload: std::collections::BTreeMap<String, Vec<String>>,
+) -> [std::collections::BTreeSet<String>; 7] {
+    let mut hidden: [std::collections::BTreeSet<String>; 7] = Default::default();
+    for (name, models) in payload {
+        if let Some(provider) = de_editor_core::AgentProvider::ALL
+            .iter()
+            .find(|provider| provider.name() == name)
+        {
+            hidden[provider.index()].extend(models);
+        }
+    }
+    hidden
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -103,11 +103,11 @@ fn no_chip_means_the_row_takes_no_height_and_no_rects() {
 
     assert_eq!(panel.chip_row_h(), 0.0);
     assert_eq!(panel.chip_row(input_rect), ChipRowLayout::default());
-    // The input text starts at the very top of the block — no empty band.
+    // The composer card starts at the very top of the block — no empty band.
     assert_eq!(
-        panel.input_text_rect(PANEL).origin.y,
+        panel.composer_card(PANEL).origin.y,
         input_rect.origin.y,
-        "an absent row must not leave whitespace above the textarea"
+        "an absent row must not leave whitespace above the composer"
     );
 }
 

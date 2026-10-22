@@ -34,13 +34,15 @@ fn attachment_button_queues_web_file_picker_like_native() {
     let chat_rect = host
         .ai_chat_rect(viewport_w, viewport_h)
         .expect("chat panel visible");
-    // Footer right cluster: ⚡ speed | 📎 attach | ↑ send (the inert palette
-    // slot is gone). The 📎 attach icon centres at `size.x - 60`.
-    let attach = Point2D::new(
-        chat_rect.origin.x + chat_rect.size.x - 60.0,
-        chat_rect.origin.y + chat_rect.size.y - 19.0,
-    );
+    // Attach lives in the composer's "+" menu (#26): "+" sits at the card's
+    // left, 34 px above the panel bottom; the menu opens upward from it and
+    // its first row (Attach file) centres 176 px above the bottom.
+    let bottom = chat_rect.origin.y + chat_rect.size.y;
+    let plus = Point2D::new(chat_rect.origin.x + 37.0, bottom - 34.0);
+    let attach = Point2D::new(chat_rect.origin.x + 64.0, bottom - 176.0);
 
+    assert!(host.apply_click(plus.x, plus.y, viewport_w, viewport_h));
+    assert!(host.editor_state.editor_ui.chat_plus_menu_open);
     assert!(host.apply_click(attach.x, attach.y, viewport_w, viewport_h));
     assert!(host.editor_state.chat.pending_attachment_pick);
 }

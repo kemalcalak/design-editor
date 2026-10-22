@@ -89,6 +89,7 @@ impl WidgetHostNative {
             chat_tab_hover,
             chat_footer_hover,
             parallel_hover,
+            plus_hover,
             example_hover,
             style_chip_hover,
         ) = if let Some(chat_rect) = self.ai_chat_rect(self.last_viewport_w, self.last_viewport_h) {
@@ -100,11 +101,12 @@ impl WidgetHostNative {
                 panel.tab_hover_at(chat_rect, point),
                 panel.footer_hover_at(chat_rect, point),
                 panel.parallel_agents_picker_hover_at(chat_rect, point),
+                panel.plus_menu_hover_at(chat_rect, point),
                 panel.example_hover_at(chat_rect, point),
                 panel.style_chip_hover_at(chat_rect, point),
             )
         } else {
-            (None, None, None, None, None, false)
+            (None, None, None, None, None, None, false)
         };
         // `cursor_probe.hit` is the authoritative Chat ownership result: it is
         // Some for every painted body point and for the invisible resize
@@ -138,6 +140,12 @@ impl WidgetHostNative {
         // Parallel-agents picker row hover — drives the highlight wash inside the overlay.
         if parallel_hover != self.editor_state.editor_ui.parallel_agents_picker_hover {
             self.editor_state.editor_ui.parallel_agents_picker_hover = parallel_hover;
+            chat_hover_changed = true;
+        }
+        // Like web's: a row under a higher surface must not light up.
+        let plus_hover = plus_hover.filter(|_| !over_topmost);
+        if plus_hover != self.editor_state.editor_ui.chat_plus_menu_hover {
+            self.editor_state.editor_ui.chat_plus_menu_hover = plus_hover;
             chat_hover_changed = true;
         }
         if example_hover != self.editor_state.editor_ui.chat_example_hover {

@@ -15,6 +15,16 @@ pub(crate) fn verb_for_tool(name: &str) -> &str {
         "export_nodes" => "Exported",
         "spawn_agents" => "Spawned agents",
         "ToolSearch" => "Loaded tools",
+        "insert_node" | "batch_insert" => "Inserted nodes",
+        "update_node" | "replace_node" => "Updated node",
+        "move_node" => "Moved node",
+        "copy_node" => "Copied node",
+        "delete_node" => "Deleted node",
+        "get_selection" => "Read selection",
+        "get_node" | "get_node_children" => "Read node",
+        "get_document_info" => "Read document",
+        "add_page" => "Added page",
+        "import_svg" => "Imported SVG",
         _ => name,
     }
 }
@@ -40,6 +50,10 @@ mod tests {
             ("export_nodes", "Exported"),
             ("spawn_agents", "Spawned agents"),
             ("ToolSearch", "Loaded tools"),
+            ("insert_node", "Inserted nodes"),
+            ("update_node", "Updated node"),
+            ("delete_node", "Deleted node"),
+            ("get_selection", "Read selection"),
         ];
 
         for (name, expected) in cases {

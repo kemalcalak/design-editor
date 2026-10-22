@@ -475,6 +475,7 @@ impl EditorUiState {
     pub fn toggle_chat_model_picker(&mut self) -> bool {
         let opening = !self.chat_model_picker.open;
         self.close_chat_model_picker();
+        self.close_chat_menus();
         if opening {
             self.chat_model_picker.open = true;
         }
@@ -504,6 +505,39 @@ impl EditorUiState {
             self.parallel_agents_picker_hover = None;
         }
         opening
+    }
+
+    /// Toggle the session select's list of chats. Opening it closes every
+    /// other chat dropdown: only one may be open at a time.
+    pub fn toggle_chat_session_menu(&mut self) -> bool {
+        let opening = !self.chat_session_menu_open;
+        self.close_chat_menus();
+        self.close_chat_model_picker();
+        self.chat_session_menu_open = opening;
+        opening
+    }
+
+    /// Toggle the composer's "+" menu, closing every other chat dropdown.
+    pub fn toggle_chat_plus_menu(&mut self) -> bool {
+        let opening = !self.chat_plus_menu_open;
+        self.close_chat_menus();
+        self.close_chat_model_picker();
+        self.chat_plus_menu_open = opening;
+        opening
+    }
+
+    /// Close the session list, the "+" menu and the parallel-agents
+    /// picker. Returns `true` when something changed.
+    pub fn close_chat_menus(&mut self) -> bool {
+        let changed = self.chat_session_menu_open
+            || self.chat_plus_menu_open
+            || self.chat_plus_menu_hover.is_some()
+            || self.chat_tab_hover.is_some();
+        self.chat_session_menu_open = false;
+        self.chat_plus_menu_open = false;
+        self.chat_plus_menu_hover = None;
+        self.chat_tab_hover = None;
+        self.close_parallel_agents_picker() || changed
     }
 
     /// Close the Parallel Agents picker and clear all interaction state.

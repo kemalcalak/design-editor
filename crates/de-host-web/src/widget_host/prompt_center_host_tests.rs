@@ -28,7 +28,7 @@ fn prompt_center_padding_owns_cursor_and_clears_lower_hover() {
     host.editor_state.editor_ui.canvas_hover_node = Some(NodeId::new("covered-canvas-node"));
     host.editor_state.editor_ui.hovered_layer_id = Some(NodeId::new("covered-layer-row"));
     host.editor_state.editor_ui.property_action_hover = Some(2);
-    host.editor_state.editor_ui.chat_footer_hover = Some(ChatFooterButton::PromptCenter);
+    host.editor_state.editor_ui.chat_footer_hover = Some(ChatFooterButton::PlusMenu);
     host.editor_state.editor_ui.component_browser_open = true;
     host.editor_state.editor_ui.component_browser_hover = Some(ComponentBrowserButton::Close);
 

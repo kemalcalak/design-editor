@@ -23,6 +23,7 @@ pub(super) fn validate_payload_fields(raw: &serde_json::Value) -> Result<()> {
             "auto_update_enabled",
             "experimental_features_enabled",
             "connected",
+            "cli_hidden_models",
             "builtin_agents",
             "acp_agents",
             "image_gen_profiles",

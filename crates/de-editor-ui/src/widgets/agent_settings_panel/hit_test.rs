@@ -3,8 +3,22 @@
 //! `*_at` hover probes and content-height maths. Carved off
 //! `agent_settings_panel.rs` to keep every file under the 800-line cap.
 
-use super::paint::agents_content_height;
 use super::*;
+
+/// The Agents body under the tab intro.
+pub(super) fn agents_body(content: Rect) -> Rect {
+    Rect::xywh(
+        content.origin.x,
+        content.origin.y + AGENTS_HERO_HEIGHT,
+        content.size.x,
+        (content.size.y - AGENTS_HERO_HEIGHT).max(0.0),
+    )
+}
+
+/// The Agents body width the content-height walk assumes: the detail
+/// pane's field heights do not depend on width, only the list column
+/// is fixed, so any full-size width gives the same height.
+const AGENTS_BODY_REFERENCE_W: f32 = 704.0;
 use crate::widgets::agent_settings_panel_geometry::SECONDARY_HEADING_HAS_DESC;
 use de_editor_core::agent_settings::SettingsFocus;
 
@@ -22,6 +36,10 @@ impl AgentSettingsPanel<'_> {
     /// Hosts subtract [`Self::effective_scroll`] before comparing it with the
     /// visible content viewport.
     pub fn focused_input_rect(&self, panel: Rect) -> Option<Rect> {
+        if self.active_tab() == AgentSettingsTab::Agents {
+            let body = agents_body(self.resolved_content_viewport(panel));
+            return self.agents_tab().focused_input_rect(body);
+        }
         crate::widgets::agent_settings_focus_geometry::focused_input_rect(
             self.resolved_content_viewport(panel),
             &self.settings,
@@ -104,90 +122,7 @@ impl AgentSettingsPanel<'_> {
         let content = layout.content;
         match active_tab {
             AgentSettingsTab::Agents => {
-                match agent_settings_builtin::hit_test(content, &self.settings, scrolled) {
-                    BuiltinHit::AddProvider => return AgentSettingsHit::AddProvider,
-                    BuiltinHit::Focus { index, field } => {
-                        return AgentSettingsHit::FocusBuiltinAgent { index, field };
-                    }
-                    BuiltinHit::FocusDraft(field) => {
-                        return AgentSettingsHit::FocusBuiltinAgentDraft(field);
-                    }
-                    BuiltinHit::ToggleKind(index) => {
-                        return AgentSettingsHit::ToggleBuiltinAgentKind(index);
-                    }
-                    BuiltinHit::ToggleDraftKind => {
-                        return AgentSettingsHit::ToggleBuiltinAgentDraftKind;
-                    }
-                    BuiltinHit::TogglePresetMenu(index) => {
-                        return AgentSettingsHit::ToggleBuiltinAgentPresetMenu(index);
-                    }
-                    BuiltinHit::SelectPreset { index, preset } => {
-                        return AgentSettingsHit::SelectBuiltinAgentPreset { index, preset };
-                    }
-                    BuiltinHit::ToggleModelMenu(index) => {
-                        return AgentSettingsHit::ToggleBuiltinModelMenu(index);
-                    }
-                    BuiltinHit::SelectModel { index, row } => {
-                        return AgentSettingsHit::SelectBuiltinModel { index, row };
-                    }
-                    BuiltinHit::SaveDraft => return AgentSettingsHit::SaveBuiltinAgentDraft,
-                    BuiltinHit::SaveEditing(index) => {
-                        return AgentSettingsHit::SaveBuiltinAgentEditing(index);
-                    }
-                    BuiltinHit::CancelDraft => return AgentSettingsHit::CancelBuiltinAgentDraft,
-                    BuiltinHit::ToggleEnabled(index) => {
-                        return AgentSettingsHit::ToggleBuiltinAgentEnabled(index);
-                    }
-                    BuiltinHit::Edit(index) => {
-                        return AgentSettingsHit::EditBuiltinAgent(index);
-                    }
-                    BuiltinHit::Remove(index) => {
-                        return AgentSettingsHit::RemoveBuiltinAgent(index);
-                    }
-                    BuiltinHit::None => {}
-                }
-                if !self.mode.shows_external_agents() {
-                    return AgentSettingsHit::Inside;
-                }
-                let acp_y = acp_section_y(content, &self.settings);
-                match agent_settings_acp::hit_test(content, &self.settings, scrolled, acp_y) {
-                    AcpHit::AddAgent => return AgentSettingsHit::AddAcpAgent,
-                    AcpHit::AddPreset(index) => {
-                        return AgentSettingsHit::AddAcpPreset(index);
-                    }
-                    AcpHit::Focus { index, field } => {
-                        return AgentSettingsHit::FocusAcpAgent { index, field };
-                    }
-                    AcpHit::FocusDraft(field) => {
-                        return AgentSettingsHit::FocusAcpAgentDraft(field)
-                    }
-                    AcpHit::SaveDraft => return AgentSettingsHit::SaveAcpAgentDraft,
-                    AcpHit::CancelDraft => return AgentSettingsHit::CancelAcpAgentDraft,
-                    AcpHit::Edit(index) => return AgentSettingsHit::EditAcpAgent(index),
-                    AcpHit::Remove(index) => return AgentSettingsHit::RemoveAcpAgent(index),
-                    AcpHit::ToggleConnected(index) => {
-                        return AgentSettingsHit::ToggleAcpConnected(index);
-                    }
-                    AcpHit::None => {}
-                }
-                for (row, provider) in AgentProvider::DISPLAY.iter().enumerate() {
-                    let card = agent_card_rect_in(panel, row, &self.settings);
-                    if !(card).contains(scrolled) {
-                        continue;
-                    }
-                    // Connect state is indexed by AgentProvider::ALL
-                    // (the append-only persistence layout), not by the
-                    // DISPLAY row position.
-                    let index = AgentSettings::provider_index(*provider);
-                    if self.settings.provider_verified_connected_at(index) {
-                        let disc = disconnect_btn_rect_at(card);
-                        if (disc).contains(scrolled) {
-                            return AgentSettingsHit::Connect(*provider);
-                        }
-                    } else if (connect_btn_rect_at(card)).contains(scrolled) {
-                        return AgentSettingsHit::Connect(*provider);
-                    }
-                }
+                return self.agents_tab().hit(agents_body(content), scrolled);
             }
             AgentSettingsTab::Mcp => {
                 match agent_settings_mcp::hit_test(content, &self.settings, scrolled) {
@@ -265,6 +200,31 @@ impl AgentSettingsPanel<'_> {
         AgentSettingsHit::Inside
     }
 
+    /// A screen point inside the visible body where a press resolves to
+    /// `hit`, at the current scroll — `None` when nothing visible does.
+    /// Lets host tests press a control by what it does instead of copying
+    /// the geometry that places it. It probes the body on a 4 px grid, so
+    /// it is for tests and tooling, never a per-frame path; it stays `pub`
+    /// because the host crates' tests cannot see a `cfg(test)` item here.
+    #[doc(hidden)]
+    pub fn point_for_hit(&self, panel: Rect, hit: AgentSettingsHit) -> Option<Point2D> {
+        const STEP: f32 = 4.0;
+        let content = self.resolved_content_viewport(panel);
+        let mut y = content.origin.y + STEP / 2.0;
+        while y < content.origin.y + content.size.y {
+            let mut x = content.origin.x + STEP / 2.0;
+            while x < content.origin.x + content.size.x {
+                let point = Point2D::new(x, y);
+                if self.hit_test(panel, point) == hit {
+                    return Some(point);
+                }
+                x += STEP;
+            }
+            y += STEP;
+        }
+        None
+    }
+
     pub fn nav_at(&self, panel: Rect, point: Point2D) -> Option<AgentSettingsTab> {
         let layout = self.resolved_layout(panel);
         let tabs = self.mode.visible_tabs();
@@ -276,104 +236,52 @@ impl AgentSettingsPanel<'_> {
         None
     }
 
-    pub fn card_at(&self, panel: Rect, point: Point2D) -> Option<usize> {
-        let layout = self.resolved_layout(panel);
-        if !layout.content.contains(point) {
-            return None;
-        }
-        if !self.mode.shows_external_agents() {
-            return None;
-        }
-        let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
-        // Returns the ALL storage index of the hovered card — rows walk
-        // DISPLAY order, state reads/writes ALL order.
-        AgentProvider::DISPLAY
-            .iter()
-            .enumerate()
-            .find(|(row, _)| (agent_card_rect_in(panel, *row, &self.settings)).contains(scrolled))
-            .map(|(_, provider)| AgentSettings::provider_index(*provider))
-    }
-
-    pub fn builtin_card_at(&self, panel: Rect, point: Point2D) -> Option<usize> {
+    /// Agents tab: the scrolled point when `point` is inside the body,
+    /// and the tab is the Agents one.
+    fn agents_point(&self, panel: Rect, point: Point2D) -> Option<Point2D> {
         let content = self.resolved_content_viewport(panel);
-        if !content.contains(point) {
-            return None;
-        }
-        let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
-        agent_settings_builtin::card_at_for_ui(content, &self.settings, scrolled)
+        (content.contains(point) && self.active_tab() == AgentSettingsTab::Agents)
+            .then(|| Point2D::new(point.x, point.y + self.effective_scroll(panel)))
     }
 
-    pub fn acp_card_at(&self, panel: Rect, point: Point2D) -> Option<usize> {
-        let content = self.resolved_content_viewport(panel);
-        if !content.contains(point) {
-            return None;
-        }
-        if !self.mode.shows_external_agents() {
-            return None;
-        }
-        let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
-        let section_y = acp_section_y(content, &self.settings);
-        agent_settings_acp::card_at(content, &self.settings, scrolled, section_y)
+    /// Agents tab: the hovered list line's index (see `hover_agents_row`).
+    pub fn agents_row_at(&self, panel: Rect, point: Point2D) -> Option<usize> {
+        let scrolled = self.agents_point(panel, point)?;
+        let body = agents_body(self.resolved_content_viewport(panel));
+        self.agents_tab().row_at(body, scrolled)
     }
 
-    /// Visible quick-add preset row under `point`, for the hosts' hover
-    /// ladder. Same geometry contract as [`Self::acp_card_at`].
-    pub fn acp_preset_at(&self, panel: Rect, point: Point2D) -> Option<usize> {
-        let content = self.resolved_content_viewport(panel);
-        if !content.contains(point) {
-            return None;
-        }
-        if !self.mode.shows_external_agents() {
-            return None;
-        }
-        let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
-        let section_y = acp_section_y(content, &self.settings);
-        agent_settings_acp::preset_row_at(content, &self.settings, scrolled, section_y)
-    }
-
+    /// Agents tab: the hovered row of the draft's provider dropdown.
     pub fn builtin_preset_hover_at(
         &self,
         panel: Rect,
         point: Point2D,
     ) -> Option<BuiltinAgentPresetKey> {
-        let content = self.resolved_content_viewport(panel);
-        if !content.contains(point) {
-            return None;
-        }
-        let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
-        agent_settings_builtin::preset_hover_at_for_ui(content, &self.settings, scrolled)
+        let scrolled = self.agents_point(panel, point)?;
+        let body = agents_body(self.resolved_content_viewport(panel));
+        self.agents_tab().preset_hover_at(body, scrolled)
     }
 
+    /// Wheel-scroll cap for the provider dropdown under `point`.
     pub fn builtin_preset_scroll_max_at(&self, panel: Rect, point: Point2D) -> Option<f32> {
-        let content = self.resolved_content_viewport(panel);
-        if !content.contains(point) {
-            return None;
-        }
-        let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
-        agent_settings_builtin::preset_scroll_max_at_for_ui(content, &self.settings, scrolled)
+        let scrolled = self.agents_point(panel, point)?;
+        let body = agents_body(self.resolved_content_viewport(panel));
+        self.agents_tab().preset_scroll_max_at(body, scrolled)
     }
 
-    /// Hovered model-dropdown row under `point`, mirroring
-    /// [`Self::builtin_preset_hover_at`] for the built-in form's Model
-    /// combobox menu.
-    pub fn builtin_model_hover_at(&self, panel: Rect, point: Point2D) -> Option<usize> {
-        let content = self.resolved_content_viewport(panel);
-        if !content.contains(point) {
-            return None;
-        }
-        let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
-        agent_settings_builtin::model_hover_at_for_ui(content, &self.settings, scrolled)
+    /// Agents tab: the hovered row of the detail's model checklist.
+    pub fn agents_checklist_hover_at(&self, panel: Rect, point: Point2D) -> Option<usize> {
+        let scrolled = self.agents_point(panel, point)?;
+        let body = agents_body(self.resolved_content_viewport(panel));
+        self.agents_tab().model_row_at(body, scrolled)
     }
 
-    /// Wheel-scroll cap for the model dropdown under `point`; `None`
-    /// when the cursor is not over an open model menu.
-    pub fn builtin_model_scroll_max_at(&self, panel: Rect, point: Point2D) -> Option<f32> {
-        let content = self.resolved_content_viewport(panel);
-        if !content.contains(point) {
-            return None;
-        }
-        let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
-        agent_settings_builtin::model_scroll_max_at_for_ui(content, &self.settings, scrolled)
+    /// Wheel-scroll cap for the model checklist under `point`; `None`
+    /// when the cursor is not over one.
+    pub fn agents_checklist_scroll_max_at(&self, panel: Rect, point: Point2D) -> Option<f32> {
+        let scrolled = self.agents_point(panel, point)?;
+        let body = agents_body(self.resolved_content_viewport(panel));
+        self.agents_tab().model_scroll_max_at(body, scrolled)
     }
 
     pub fn image_search_test_button_hover_at(&self, panel: Rect, point: Point2D) -> bool {
@@ -421,7 +329,12 @@ impl AgentSettingsPanel<'_> {
 
     pub fn content_total_height(&self) -> f32 {
         match self.mode.active_tab(&self.settings) {
-            AgentSettingsTab::Agents => agents_content_height(&self.settings, self.mode),
+            AgentSettingsTab::Agents => {
+                let tab = self.agents_tab();
+                // Only the body's width matters for the walk.
+                let body = Rect::xywh(0.0, 0.0, AGENTS_BODY_REFERENCE_W, 0.0);
+                AGENTS_HERO_HEIGHT + tab.body_height(body) + CONTENT_TAIL_PAD
+            }
             AgentSettingsTab::Mcp => agent_settings_mcp::content_height(&self.settings),
             AgentSettingsTab::Images => {
                 secondary_hero_height()

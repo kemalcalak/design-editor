@@ -48,18 +48,78 @@ const MODEL_EMPTY_H: f32 = 44.0;
 
 /// Painted height of the dropdown for `models` — the content height
 /// clamped to [`MODEL_PICKER_MAX_H`].
-pub fn picker_view_height(models: &[ModelEntry], search: &str) -> f32 {
-    picker_content_height(models, search).min(MODEL_PICKER_MAX_H)
+pub fn picker_view_height(models: &[ModelEntry], offline: &[AgentProvider], search: &str) -> f32 {
+    picker_content_height(models, offline, search).min(MODEL_PICKER_MAX_H)
 }
 
 /// Largest valid scroll offset for `models` — `0` when the content
 /// already fits inside [`MODEL_PICKER_MAX_H`]. The search strip and
 /// the footer are fixed chrome, so only the list band between them
 /// scrolls.
-pub fn max_picker_scroll(models: &[ModelEntry], search: &str) -> f32 {
+pub fn max_picker_scroll(models: &[ModelEntry], offline: &[AgentProvider], search: &str) -> f32 {
     let view_list_h =
-        (picker_view_height(models, search) - MODEL_SEARCH_H - MODEL_FOOTER_H).max(0.0);
-    (picker_list_height(models, search) - view_list_h).max(0.0)
+        (picker_view_height(models, offline, search) - MODEL_SEARCH_H - MODEL_FOOTER_H).max(0.0);
+    (picker_list_height(models, offline, search) - view_list_h).max(0.0)
+}
+
+/// CLI agents installed on this machine (their models were discovered)
+/// that the user has not connected: the picker lists them under the
+/// connected groups with a Connect action (#26).
+pub fn offline_agents(state: &de_editor_core::EditorState) -> Vec<AgentProvider> {
+    let connected = &state.editor_ui.agent_settings.connected;
+    AgentProvider::DISPLAY
+        .into_iter()
+        .filter(|provider| !connected[provider.index()])
+        .filter(|provider| {
+            state
+                .chat
+                .discovered_models
+                .iter()
+                .any(|m| m.provider == *provider && !is_builtin(m) && !is_acp(m))
+        })
+        .collect()
+}
+
+fn visible_offline(offline: &[AgentProvider], search: &str) -> Vec<AgentProvider> {
+    let q = normalized_query(search);
+    offline
+        .iter()
+        .copied()
+        .filter(|p| q.is_empty() || p.name().to_lowercase().contains(&q))
+        .collect()
+}
+
+/// Where a model comes from, in the order the picker lists the groups.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum GroupKind {
+    Api,
+    Cli,
+    Acp,
+}
+
+impl GroupKind {
+    fn of(entry: &ModelEntry) -> Self {
+        if is_builtin(entry) {
+            GroupKind::Api
+        } else if is_acp(entry) {
+            GroupKind::Acp
+        } else {
+            GroupKind::Cli
+        }
+    }
+
+    fn tag(self) -> &'static str {
+        match self {
+            GroupKind::Api => "API",
+            GroupKind::Cli => "CLI",
+            GroupKind::Acp => "ACP",
+        }
+    }
+}
+
+/// The tag a group header carries at its right edge.
+pub(crate) fn group_tag(entry: &ModelEntry) -> &'static str {
+    GroupKind::of(entry).tag()
 }
 
 /// One laid-out row in the dropdown.
@@ -71,9 +131,13 @@ enum Row {
         /// hairline above them.
         first_group: bool,
         label: String,
+        /// "API" / "CLI" / "ACP".
+        tag: &'static str,
     },
     /// Selectable model — carries its index into the flat list.
     Model { idx: usize },
+    /// An installed agent that is not connected yet, with Connect.
+    Offline { provider: AgentProvider },
 }
 
 fn normalized_query(search: &str) -> String {
@@ -118,7 +182,7 @@ fn searchable_group_label(entry: &ModelEntry) -> Option<String> {
                     .then(|| "Anthropic (API Key)".to_string())
             });
     }
-    Some(provider_label(entry.provider).to_string())
+    Some(entry.provider.name().to_string())
 }
 
 pub fn visible_model_indices(models: &[ModelEntry], search: &str) -> Vec<usize> {
@@ -130,7 +194,10 @@ pub fn visible_model_indices(models: &[ModelEntry], search: &str) -> Vec<usize> 
         .collect()
 }
 
-fn grouped_visible_model_indices(models: &[ModelEntry], search: &str) -> Vec<Vec<usize>> {
+pub(crate) fn grouped_visible_model_indices(
+    models: &[ModelEntry],
+    search: &str,
+) -> Vec<Vec<usize>> {
     let visible = visible_model_indices(models, search);
     let mut groups: Vec<Vec<usize>> = Vec::new();
     for idx in visible {
@@ -143,13 +210,22 @@ fn grouped_visible_model_indices(models: &[ModelEntry], search: &str) -> Vec<Vec
             groups.push(vec![idx]);
         }
     }
+    // API providers first, then agents on this machine, then ACP agents;
+    // first-seen order within each.
+    groups.sort_by_key(|group| GroupKind::of(&models[group[0]]));
     groups
 }
 
 /// Walk the dropdown row layout, invoking `f(row, y, height)` for
 /// each row top-to-bottom starting at `top`. Paint and hit-test
 /// both drive off this so they never drift apart.
-fn walk_rows(models: &[ModelEntry], search: &str, top: f32, mut f: impl FnMut(&Row, f32, f32)) {
+fn walk_rows(
+    models: &[ModelEntry],
+    offline: &[AgentProvider],
+    search: &str,
+    top: f32,
+    mut f: impl FnMut(&Row, f32, f32),
+) {
     let mut y = top + MODEL_PICKER_PAD_Y;
     for (group_idx, group) in grouped_visible_model_indices(models, search)
         .into_iter()
@@ -161,6 +237,7 @@ fn walk_rows(models: &[ModelEntry], search: &str, top: f32, mut f: impl FnMut(&R
             &Row::Header {
                 first_group: group_idx == 0,
                 label: group_label_for_entry(entry),
+                tag: group_tag(entry),
             },
             y,
             MODEL_GROUP_H,
@@ -171,23 +248,38 @@ fn walk_rows(models: &[ModelEntry], search: &str, top: f32, mut f: impl FnMut(&R
             y += MODEL_ROW_H;
         }
     }
+    for provider in visible_offline(offline, search) {
+        f(&Row::Offline { provider }, y, MODEL_ROW_H);
+        y += MODEL_ROW_H;
+    }
 }
 
 /// Total dropdown height for `models` (search strip + group headers
 /// + rows + the top/bottom list padding + the footer action row).
-pub fn picker_content_height(models: &[ModelEntry], search: &str) -> f32 {
-    MODEL_SEARCH_H + picker_list_height(models, search) + MODEL_FOOTER_H
+pub fn picker_content_height(
+    models: &[ModelEntry],
+    offline: &[AgentProvider],
+    search: &str,
+) -> f32 {
+    MODEL_SEARCH_H + picker_list_height(models, offline, search) + MODEL_FOOTER_H
 }
 
-fn picker_list_height(models: &[ModelEntry], search: &str) -> f32 {
+fn picker_list_height(models: &[ModelEntry], offline: &[AgentProvider], search: &str) -> f32 {
     let groups = grouped_visible_model_indices(models, search);
-    if groups.is_empty() {
+    let offline_count = visible_offline(offline, search).len();
+    if groups.is_empty() && offline_count == 0 {
         return MODEL_EMPTY_H;
     }
     let model_count: usize = groups.iter().map(Vec::len).sum();
     groups.len() as f32 * MODEL_GROUP_H
-        + model_count as f32 * MODEL_ROW_H
+        + (model_count + offline_count) as f32 * MODEL_ROW_H
         + MODEL_PICKER_PAD_Y * 2.0
+}
+
+/// Whether the list has anything to show (models or offline agents).
+fn has_rows(models: &[ModelEntry], offline: &[AgentProvider], search: &str) -> bool {
+    !visible_model_indices(models, search).is_empty()
+        || !visible_offline(offline, search).is_empty()
 }
 
 /// Map a click inside the dropdown `rect` to the index of the
@@ -199,6 +291,7 @@ pub fn model_at(
     rect: Rect,
     point: Point2D,
     models: &[ModelEntry],
+    offline: &[AgentProvider],
     scroll: f32,
     search: &str,
 ) -> Option<usize> {
@@ -207,7 +300,7 @@ pub fn model_at(
         scroll: jian_core::scroll::ScrollState { offset: scroll },
         ..Default::default()
     };
-    match model_picker_hit(&state, rect, point, models, search) {
+    match model_picker_hit(&state, rect, point, models, offline, search) {
         SelectHit::Row(index) => Some(index),
         SelectHit::Inside | SelectHit::Outside => None,
     }
@@ -221,6 +314,7 @@ pub fn model_picker_hit(
     rect: Rect,
     point: Point2D,
     models: &[ModelEntry],
+    offline: &[AgentProvider],
     search: &str,
 ) -> SelectHit {
     if !state.open {
@@ -245,6 +339,7 @@ pub fn model_picker_hit(
     let list_bottom = list_rect.origin.y + list_rect.size.y;
     walk_rows(
         models,
+        offline,
         search,
         list_rect.origin.y - state.scroll.offset,
         |row, y, h| {
@@ -255,12 +350,55 @@ pub fn model_picker_hit(
             {
                 hit = match row {
                     Row::Model { idx, .. } => SelectHit::Row(*idx),
-                    Row::Header { .. } => SelectHit::Inside,
+                    Row::Header { .. } | Row::Offline { .. } => SelectHit::Inside,
                 };
             }
         },
     );
     hit
+}
+
+/// The offline agent whose row (and so whose Connect) is under `point`.
+pub fn offline_agent_at(
+    state: &SelectState,
+    rect: Rect,
+    point: Point2D,
+    models: &[ModelEntry],
+    offline: &[AgentProvider],
+    search: &str,
+) -> Option<AgentProvider> {
+    if !state.open || !rect.contains(point) {
+        return None;
+    }
+    let list_rect = model_list_rect(rect);
+    if !list_rect.contains(point) {
+        return None;
+    }
+    let mut found = None;
+    walk_rows(
+        models,
+        offline,
+        search,
+        list_rect.origin.y - state.scroll.offset,
+        |row, y, h| {
+            if let Row::Offline { provider } = row {
+                if point.y >= y && point.y < y + h {
+                    found = Some(*provider);
+                }
+            }
+        },
+    );
+    found
+}
+
+/// The footer row ("Manage providers & agents…").
+pub fn footer_rect(rect: Rect) -> Rect {
+    Rect::xywh(
+        rect.origin.x,
+        rect.origin.y + rect.size.y - MODEL_FOOTER_H,
+        rect.size.x,
+        MODEL_FOOTER_H,
+    )
 }
 
 pub fn search_clear_hit(rect: Rect, point: Point2D, search: &str) -> bool {
@@ -304,19 +442,6 @@ pub(crate) fn model_row_pill_rect(rect: Rect, row_y: f32) -> Rect {
         origin: Point2D::new(rect.origin.x + 6.0, row_y + 3.0),
         size: Point2D::new((rect.size.x - 12.0).max(0.0), MODEL_ROW_H - 6.0),
     }
-}
-
-pub(crate) fn paint_key_glyph(cx: &mut PaintCx<'_>, top_left: Point2D, size: f32, color: Color) {
-    // Use the real lucide `Key` glyph (TS renders `<Key/>`) rather than a
-    // hand-rolled ring+shaft approximation.
-    crate::widgets::icons::draw_icon(
-        cx.backend,
-        crate::widgets::icons::Icon::Key,
-        top_left,
-        size,
-        color,
-        1.4,
-    );
 }
 
 /// Paint a provider's brand logo into a `size × size` square.
@@ -400,5 +525,9 @@ pub(super) fn group_label_for_entry(entry: &ModelEntry) -> String {
             return label.to_uppercase();
         }
     }
-    group_label(entry.provider, is_builtin(entry)).to_string()
+    if is_builtin(entry) {
+        return group_label(entry.provider, true).to_string();
+    }
+    // An agent CLI on this machine reads by its own name (#26).
+    entry.provider.name().to_uppercase()
 }

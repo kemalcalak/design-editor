@@ -389,7 +389,21 @@ pub(crate) fn apply_event_to_chat(chat: &mut ChatState, evt: &AiEvent) -> bool {
         }
         AiEvent::Done => msg.streaming = false,
     }
+    msg.note_thinking_clock(chat_clock_ms());
     terminal
+}
+
+/// The clock "Thought for Ns" is measured on. Native test builds of this
+/// crate have no browser clock and read 0 (durations collapse to 0 s).
+fn chat_clock_ms() -> u64 {
+    #[cfg(target_arch = "wasm32")]
+    {
+        js_sys::Date::now() as u64
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        0
+    }
 }
 
 #[cfg(test)]

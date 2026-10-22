@@ -23,9 +23,7 @@ fn default_settings_are_quiescent() {
     assert_eq!(s.mcp_server.port, 3100);
     assert!(s.auto_update_enabled);
     assert!(s.focus.is_none());
-    assert_eq!(s.hover_provider, usize::MAX);
-    assert_eq!(s.hover_builtin_agent, usize::MAX);
-    assert_eq!(s.hover_acp_agent, usize::MAX);
+    assert_eq!(s.hover_agents_row, None);
 }
 
 #[test]

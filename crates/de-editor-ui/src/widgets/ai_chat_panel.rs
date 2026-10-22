@@ -6,14 +6,10 @@ pub(crate) use crate::widgets::ai_chat_panel_controls::chat_neutral_feedback_col
 pub(crate) use crate::widgets::ai_chat_panel_controls::chat_neutral_hover_color;
 use crate::widgets::ai_chat_panel_controls::{paint_attachment_row, ATTACHMENT_ROW_HEIGHT};
 use crate::widgets::ai_chat_panel_footer::paint_bottom_toolbar;
-use crate::widgets::ai_chat_panel_header::{
-    paint_header_tabs, paint_new_chat_tooltip, MAXIMIZE_GAP, MAXIMIZE_W, NEW_CHAT_D,
-};
-use crate::widgets::ai_chat_panel_paint::{
-    paint_examples, paint_panel_body_chrome, paint_panel_surface,
-};
-use crate::widgets::editor_state_ext::{theme_for, translate};
-use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::ai_chat_panel_paint::paint_panel_surface;
+use crate::widgets::editor_state_ext::translate;
+use crate::widgets::home_surface::{settings_theme, HomePalette};
+use crate::widgets::icons::Icon;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Point2D, Rect};
 use de_editor_core::chat::ChatState;
@@ -27,7 +23,15 @@ pub const AI_CHAT_MIN_WIDTH: f32 = 280.0;
 pub const AI_CHAT_MIN_HEIGHT: f32 = 250.0;
 pub const AI_CHAT_MAX_RATIO: f32 = 0.8;
 pub(crate) const PAD: f32 = 16.0;
-pub(crate) const HEADER_HEIGHT: f32 = 36.0;
+/// The session row: select + New, with a hairline under it (#26).
+pub(crate) const HEADER_HEIGHT: f32 = 48.0;
+/// Gap between the composer card and the panel's sides and bottom.
+pub(crate) const COMPOSER_MARGIN: f32 = 12.0;
+/// Space inside the composer card above the text.
+pub(crate) const COMPOSER_PAD_TOP: f32 = 6.0;
+/// Horizontal inset of the text area inside the card (the text area adds
+/// its own 8 px, so text sits 12 px in, as in the frames).
+pub(crate) const COMPOSER_TEXT_INSET: f32 = 4.0;
 pub(crate) const RESIZE_GUTTER: f32 = 4.0;
 pub(crate) const RESIZE_CORNER: f32 = 12.0;
 pub(crate) const INPUT_AREA_HEIGHT: f32 = 56.0;
@@ -41,7 +45,8 @@ pub(crate) const COMPOSER_HEADER_HEIGHT: f32 = 30.0;
 /// hand it a roomy one and let the composer keep its natural size.
 pub(crate) const COMPOSER_ONLY_PROBE_H: f32 = 600.0;
 #[cfg(test)]
-const INPUT_BASE_HEIGHT: f32 = INPUT_AREA_HEIGHT + INPUT_TOOLBAR_HEIGHT;
+const INPUT_BASE_HEIGHT: f32 =
+    COMPOSER_PAD_TOP + INPUT_AREA_HEIGHT + INPUT_TOOLBAR_HEIGHT + COMPOSER_MARGIN;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // subtitle/emoji retained for parity with card schema; not painted yet
@@ -53,46 +58,56 @@ pub(crate) struct ExampleCard {
 }
 
 pub(crate) fn example_cards(locale: de_editor_core::Locale) -> [ExampleCard; 4] {
-    let t = |key: &'static str| de_i18n::translate(locale, key).to_string();
-    // Pills show only the title as a single-line label; subtitle and emoji are
-    // retained in the struct for potential future use but are not painted (#33 restyle).
+    // A prompt row shows the prompt itself; clicking it fills the input
+    // with the same words (#26).
     [
-        ExampleCard {
-            title: t("ai.quickAction.travelApp"),
-            subtitle: String::new(),
-            prompt: t("ai.quickAction.travelAppPrompt"),
-            emoji: "",
-        },
-        ExampleCard {
-            title: t("ai.quickAction.dashboard"),
-            subtitle: String::new(),
-            prompt: t("ai.quickAction.dashboardPrompt"),
-            emoji: "",
-        },
-        ExampleCard {
-            title: t("ai.quickAction.coffeeShop"),
-            subtitle: String::new(),
-            prompt: t("ai.quickAction.coffeeShopPrompt"),
-            emoji: "",
-        },
-        ExampleCard {
-            title: t("ai.quickAction.barbershop"),
-            subtitle: String::new(),
-            prompt: t("ai.quickAction.barbershopPrompt"),
-            emoji: "",
-        },
+        "chat.prompt.pricing",
+        "chat.prompt.onboarding",
+        "chat.prompt.dashboard",
+        "chat.prompt.deck",
     ]
+    .map(|key| {
+        let prompt = de_i18n::translate(locale, key).to_string();
+        ExampleCard {
+            title: prompt.clone(),
+            subtitle: String::new(),
+            prompt,
+            emoji: "",
+        }
+    })
 }
 
 pub struct AIChatPlaceholder<'a> {
     pub id: WidgetId,
+    /// Home's tokens mapped onto the editor theme slots (#26), so the
+    /// transcript and controls the redesign has not reached yet share
+    /// the new surfaces.
     pub theme: Theme,
+    /// Home v2 tokens the redesigned chrome paints with directly.
+    pub(crate) palette: HomePalette,
     pub state: &'a ChatState,
     pub now_ms: u64,
     pub label_start_with_ai: String,
     pub label_input_placeholder: String,
     pub label_tip_select_elements: String,
     pub label_no_models: String,
+    /// Localised "New" on the session row.
+    pub(crate) label_new: String,
+    /// The MCP endpoint agents connect to, for the empty state's tip.
+    pub(crate) mcp_endpoint: String,
+    /// Whether any agent or provider can answer a turn; without one the
+    /// model chip becomes Home's "Add a model provider" link.
+    pub(crate) usable_agent: bool,
+    /// "model · provider" for the selected model.
+    pub(crate) model_chip_label: String,
+    /// Installed agent CLIs not connected yet: the model picker offers
+    /// them with Connect (#26).
+    pub(crate) offline_agents: Vec<de_editor_core::chat::AgentProvider>,
+    /// Whether the session select's list is open.
+    pub(crate) session_menu_open: bool,
+    /// Whether the composer's "+" menu is open, and its hovered row.
+    pub(crate) plus_menu_open: bool,
+    pub(crate) plus_menu_hover: Option<u8>,
     /// Number of currently selected canvas nodes.
     /// Kept for future affordances; paint tests verify it is seeded correctly.
     #[allow(dead_code)]
@@ -208,13 +223,22 @@ impl<'a> AIChatPlaceholder<'a> {
         let active_tab_index = state.chat.active_index();
         Self {
             id: WidgetId::new(7000),
-            theme: theme_for(ui),
+            theme: settings_theme(ui.effective_theme_mode()),
+            palette: HomePalette::for_mode(ui.effective_theme_mode()),
             state: &state.chat,
             now_ms,
-            label_start_with_ai: translate(ui, "ai.tryExample").to_string(),
-            label_input_placeholder: translate(ui, "ai.designWithAgent").to_string(),
+            label_start_with_ai: translate(ui, "chat.empty.title").to_string(),
+            label_input_placeholder: translate(ui, "chat.placeholder").to_string(),
+            label_new: translate(ui, "chat.new").to_string(),
+            mcp_endpoint: ui.agent_settings.mcp_endpoint_url(),
+            usable_agent: state.has_usable_chat_agent(),
+            model_chip_label: crate::widgets::home_surface::model_chip_label(state),
+            offline_agents: crate::widgets::ai_chat_model_picker::offline_agents(state),
+            session_menu_open: ui.chat_session_menu_open,
+            plus_menu_open: ui.chat_plus_menu_open,
+            plus_menu_hover: ui.chat_plus_menu_hover,
             label_tip_select_elements: translate(ui, "ai.tipSelectElements").to_string(),
-            label_no_models: translate(ui, "ai.noModelsConnected").to_string(),
+            label_no_models: translate(ui, "home.model.addProvider").to_string(),
             selected_count: state.selection_count(),
             selected_label: selection_chip_label_for_state(state),
             style_receipt: crate::widgets::ai_chat_style_receipt::StyleReceipt::for_state(state),
@@ -315,7 +339,7 @@ impl<'a> AIChatPlaceholder<'a> {
     /// The input block with the notice row (if any) already taken off the top,
     /// so every row below it lands in the same place whether or not the notice
     /// is showing.
-    fn input_rows_rect(&self, rect: Rect) -> Rect {
+    pub(crate) fn input_rows_rect(&self, rect: Rect) -> Rect {
         let input = self.input_rect(rect);
         let offset = self.mcp_notice_row_h();
         Rect {
@@ -423,16 +447,33 @@ impl<'a> AIChatPlaceholder<'a> {
     }
 
     pub(crate) fn input_area_height_for_width(&self, panel_w: f32, panel_h: f32) -> f32 {
-        let input_w = (panel_w - PAD * 2.0).max(0.0);
+        let input_w = (panel_w - COMPOSER_MARGIN * 2.0 - COMPOSER_TEXT_INSET * 2.0).max(0.0);
         self.input_area_height_for_input_width(input_w, panel_h)
     }
 
     pub(crate) fn input_height_for_width(&self, panel_w: f32, panel_h: f32) -> f32 {
         self.mcp_notice_row_h()
             + self.chip_row_h()
+            + COMPOSER_PAD_TOP
             + self.input_area_height_for_width(panel_w, panel_h)
             + INPUT_TOOLBAR_HEIGHT
             + self.attachment_row_h()
+            + COMPOSER_MARGIN
+    }
+
+    /// The composer card: the text, any staged attachments and the
+    /// "+ · model · send" row, below the notice and chip rows.
+    pub(crate) fn composer_card(&self, rect: Rect) -> Rect {
+        let rows = self.input_rows_rect(rect);
+        let top = rows.origin.y + self.chip_row_h();
+        let bottom = rows.origin.y + rows.size.y - COMPOSER_MARGIN;
+        Rect::xywh(rows.origin.x, top, rows.size.x, (bottom - top).max(0.0))
+    }
+
+    /// Top of the "+ · model · send" row inside the composer card.
+    pub(crate) fn toolbar_top(&self, rect: Rect) -> f32 {
+        let text = self.input_text_rect(rect);
+        text.origin.y + text.size.y + self.attachment_row_h()
     }
 
     pub(crate) fn input_area_height_for_rect(&self, rect: Rect) -> f32 {
@@ -443,7 +484,7 @@ impl<'a> AIChatPlaceholder<'a> {
         self.input_height_for_width(rect.size.x, rect.size.y)
     }
 
-    fn maximize_icon(&self) -> Icon {
+    pub(crate) fn maximize_icon(&self) -> Icon {
         [Icon::Maximize, Icon::Minimize][self.state.maximized as usize]
     }
 
@@ -495,20 +536,31 @@ impl<'a> AIChatPlaceholder<'a> {
             .max(0.0)
     }
 
-    pub(crate) fn model_picker_rect(&self, rect: Rect, input_rect: Rect) -> Rect {
+    /// The model picker, opening upward from the composer and right-aligned
+    /// with it, at Home's picker width when the panel has room.
+    pub(crate) fn model_picker_rect(&self, rect: Rect, _input_rect: Rect) -> Rect {
         let height = crate::widgets::ai_chat_model_picker::picker_view_height(
             &self.state.available_models,
+            &self.offline_agents,
             self.model_picker_input.text(),
         );
-        let toolbar_top = input_rect.origin.y
-            + self.chip_row_h()
-            + self.input_area_height_for_rect(rect)
-            + self.attachment_row_h();
-        let bottom = toolbar_top - 4.0;
-        Rect {
-            origin: Point2D::new(rect.origin.x + PAD, bottom - height),
-            size: Point2D::new(rect.size.x - PAD * 2.0, height),
-        }
+        let card = self.composer_card(rect);
+        let width = card
+            .size
+            .x
+            .min(crate::widgets::home_surface::HOME_MODEL_PICKER_W);
+        // Above the composer. In a short window it slides down rather than
+        // leave the screen: pinned into the rail it stops at the rail's top
+        // (just under the top bar); the floating panel and the composer-only
+        // card are overlays, so their picker may leave them but stops at the
+        // window's top.
+        let above = card.origin.y - 6.0 - height;
+        let top = if self.column_pinned {
+            above.max(rect.origin.y)
+        } else {
+            above.max(0.0)
+        };
+        Rect::xywh(card.origin.x + card.size.x - width, top, width, height)
     }
 
     pub fn model_picker_bounds(&self, rect: Rect) -> Option<Rect> {
@@ -517,20 +569,6 @@ impl<'a> AIChatPlaceholder<'a> {
         }
         let input_rect = self.input_rect(rect);
         Some(self.model_picker_rect(rect, input_rect))
-    }
-
-    /// Bounding rect of the Parallel Agents picker dropdown overlay.
-    /// The picker lists 6 rows of "Nx" (N=1..=6) above the speed chip.
-    /// `None` when the picker is closed.
-    pub(crate) fn parallel_agents_picker_rect(
-        &self,
-        _rect: Rect,
-        footer: &FooterLayout,
-    ) -> Option<Rect> {
-        if !self.parallel_agents_picker_open {
-            return None;
-        }
-        Some(crate::widgets::ai_chat_panel_footer::parallel_agents_picker_rect(footer))
     }
 
     /// Height the composer-only card wants at `width`: the composer
@@ -553,21 +591,24 @@ impl<'a> AIChatPlaceholder<'a> {
         let input_h = self.input_height_for_rect(rect);
         Rect {
             origin: Point2D::new(
-                rect.origin.x + PAD,
-                rect.origin.y + rect.size.y - input_h + 1.0,
+                rect.origin.x + COMPOSER_MARGIN,
+                rect.origin.y + rect.size.y - input_h,
             ),
-            size: Point2D::new(rect.size.x - PAD * 2.0, input_h),
+            size: Point2D::new(rect.size.x - COMPOSER_MARGIN * 2.0, input_h),
         }
     }
 
     pub fn input_text_rect(&self, rect: Rect) -> Rect {
-        let input_block = self.input_rows_rect(rect);
+        let card = self.composer_card(rect);
         Rect {
             origin: Point2D::new(
-                input_block.origin.x,
-                input_block.origin.y + self.chip_row_h(),
+                card.origin.x + COMPOSER_TEXT_INSET,
+                card.origin.y + COMPOSER_PAD_TOP,
             ),
-            size: Point2D::new(input_block.size.x, self.input_area_height_for_rect(rect)),
+            size: Point2D::new(
+                (card.size.x - COMPOSER_TEXT_INSET * 2.0).max(0.0),
+                self.input_area_height_for_rect(rect),
+            ),
         }
     }
 
@@ -637,26 +678,17 @@ fn selection_chip_label_for_state(state: &EditorState) -> Option<String> {
     }
 }
 
+/// The composer card's bottom row (#26): "+" on the left, then the
+/// "model · provider" chip and the round send / stop button on the right.
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct FooterLayout {
-    /// Model picker pill — left anchor of the toolbar.
+    /// "+" — opens the menu with attach, library, thinking and agents.
+    pub(crate) plus: Rect,
+    /// "model · provider" chip, or the "Add a model provider" link.
     pub(crate) model: Rect,
-    /// Prompt-library button — opens the Prompt Center.
-    pub(crate) prompt_center: Rect,
-    /// Thinking-mode toggle — 🧠 icon, cycles Adaptive/Disabled/Enabled.
-    /// Zero-width when the row is too narrow to hold it (see
-    /// `footer_layout`); `contains()` is then always false.
-    pub(crate) thinking: Rect,
-    /// Speed/effort chip — ⚡ icon + effort label in gold, no bg.
-    /// Retained next to the model pill; clicking cycles effort level.
-    pub(crate) speed: Rect,
-    /// Agent-team size chip — kept for backward compat / future use.
-    pub(crate) agent_team: Rect,
-    /// Paperclip attach button — bare icon, muted.
-    pub(crate) attach: Rect,
-    /// Stop circle — shown only while a turn streams.
+    /// Stop — shares the send slot while a turn streams.
     pub(crate) stop: Rect,
-    /// Send/stop circle — the primary action button.
+    /// Round send button.
     pub(crate) send: Rect,
 }
 

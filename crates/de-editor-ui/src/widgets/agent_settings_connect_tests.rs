@@ -1,14 +1,11 @@
-//! Provider-card connect-lifecycle rendering tests — the probe
-//! states ported from the TS providers tab
-//! (`agent-settings-providers-tab.tsx:242-269`).
+//! CLI agent connect-lifecycle rendering on the Agents tab (#26): the
+//! list row's status line and the selected agent's status card follow
+//! the probe, not the persisted `connected` flag.
 
-use crate::widgets::agent_settings_panel::{
-    content_viewport, AgentSettingsHit, AgentSettingsPanel,
-};
-use crate::widgets::agent_settings_panel_geometry::{agent_card_rect_in, connect_btn_rect_at};
+use crate::widgets::agent_settings_panel::AgentSettingsPanel;
 use crate::widgets::{PaintCx, Widget};
 use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
-use de_editor_core::agent_settings::{AcpAgentConnectOutcome, ProviderConnectPhase};
+use de_editor_core::agent_settings::{AgentsEntry, ProviderConnectPhase};
 use de_editor_core::{AgentProvider, EditorState};
 
 /// Capture backend recording every text run's content + color so
@@ -56,183 +53,63 @@ fn paint_panel(state: &mut EditorState) -> TextCapture {
     backend
 }
 
-fn find_text<'a>(
-    capture: &'a TextCapture,
-    needle: &str,
-) -> Option<&'a (String, jian_core::scene::Color)> {
-    capture.texts.iter().find(|(text, _)| text.contains(needle))
+fn has_text(capture: &TextCapture, needle: &str) -> bool {
+    capture.texts.iter().any(|(text, _)| text.contains(needle))
 }
 
-#[test]
-fn probing_card_paints_connecting_status() {
-    let mut state = EditorState::default();
-    state.editor_ui.agent_settings.provider_connection[0].phase = ProviderConnectPhase::Probing;
-    let capture = paint_panel(&mut state);
-    assert!(
-        find_text(&capture, "Connecting…").is_some(),
-        "probing card should show the Connecting… status line"
-    );
-    // The Connect button label swaps for the in-flight marker
-    // (a standalone "…" run).
-    assert!(capture.texts.iter().any(|(text, _)| text == "…"));
-}
-
-#[test]
-fn connected_card_paints_probe_connection_info_in_green() {
+/// Codex selected, with its probe in `phase`.
+fn codex_state(phase: ProviderConnectPhase) -> EditorState {
     let mut state = EditorState::default();
     let settings = &mut state.editor_ui.agent_settings;
-    settings.connected[0] = true;
-    settings.provider_connection[0].phase = ProviderConnectPhase::Connected;
-    settings.provider_connection[0].info = Some("Connected via pro (a@b.c)".to_string());
-    let capture = paint_panel(&mut state);
-    let (_, color) = find_text(&capture, "✓ Connected via pro (a@b.c)")
-        .expect("probe connectionInfo should replace the static subtitle");
-    let green = (crate::theme::Theme::dark().status_success).to_jian();
-    assert_eq!(*color, green, "connected info renders in the success green");
-}
-
-#[test]
-fn persisted_connected_flag_without_probe_does_not_paint_connected_state() {
-    let mut state = EditorState::default();
-    let settings = &mut state.editor_ui.agent_settings;
-    settings.connected[0] = true;
-    settings.provider_connection[0].phase = ProviderConnectPhase::Idle;
-
-    let capture = paint_panel(&mut state);
-
-    assert!(
-        find_text(&capture, "✓").is_none(),
-        "a stale persisted connected flag without a verified probe must not paint as connected"
-    );
-    assert!(
-        find_text(&capture, "Connect").is_some(),
-        "unverified providers should still show the Connect action"
-    );
-}
-
-#[test]
-fn acp_stale_connected_flag_without_probe_does_not_paint_disconnect_state() {
-    let mut state = EditorState::default();
-    let settings = &mut state.editor_ui.agent_settings;
-    settings.add_acp_agent();
-    settings.acp_agents[0].display_name = "Claude Code".into();
-    settings.acp_agents[0].command = "claude".into();
-    settings.acp_agents[0].connected = true;
-
-    let capture = paint_panel(&mut state);
-
-    assert!(
-        find_text(&capture, "Disconnect").is_none(),
-        "a stale ACP connected flag must not paint a verified connected action"
-    );
-
+    settings.select_agents_entry(AgentsEntry::Cli(AgentProvider::CodexCli));
+    settings.provider_connection[AgentProvider::CodexCli.index()].phase = phase;
     state
-        .editor_ui
-        .agent_settings
-        .apply_acp_agent_connect_outcome(
-            "acp-1",
-            AcpAgentConnectOutcome {
-                connected: true,
-                info: Some("Claude Code".into()),
-                error: None,
-            },
-        );
-    let capture = paint_panel(&mut state);
-    assert!(
-        find_text(&capture, "Disconnect").is_some(),
-        "a successful ACP probe should paint the disconnect action"
-    );
 }
 
 #[test]
-fn failed_probe_paints_error_in_destructive_red() {
-    let mut state = EditorState::default();
-    let settings = &mut state.editor_ui.agent_settings;
-    settings.provider_connection[3].phase = ProviderConnectPhase::Error;
-    settings.provider_connection[3].error =
-        Some("Not authenticated. Run \"copilot login\" first.".to_string());
+fn a_probing_agent_reads_as_checking() {
+    let mut state = codex_state(ProviderConnectPhase::Probing);
     let capture = paint_panel(&mut state);
-    let (_, color) =
-        find_text(&capture, "Not authenticated").expect("probe error should paint on the card");
-    let destructive = (crate::theme::Theme::dark().destructive).to_jian();
-    assert_eq!(*color, destructive);
+    assert!(has_text(&capture, "CLI · Checking status…"), "list row");
+    assert!(has_text(&capture, "Checking status…"), "status card");
 }
 
 #[test]
-fn not_installed_card_paints_amber_install_guidance() {
-    let mut state = EditorState::default();
-    let settings = &mut state.editor_ui.agent_settings;
-    settings.provider_connection[1].phase = ProviderConnectPhase::Error;
-    settings.provider_connection[1].not_installed = true;
-    settings.provider_connection[1].install_command =
-        Some("npm install -g @openai/codex".to_string());
+fn a_connected_agent_shows_its_probe_info_and_version() {
+    let mut state = codex_state(ProviderConnectPhase::Connected);
+    let index = AgentProvider::CodexCli.index();
+    state.editor_ui.agent_settings.connected[index] = true;
+    let connection = &mut state.editor_ui.agent_settings.provider_connection[index];
+    connection.info = Some("Signed in as a@b.c".into());
+    connection.version = Some("v2.1.4".into());
     let capture = paint_panel(&mut state);
-    let (text, color) = find_text(&capture, "Not installed")
-        .expect("not-installed card should show install guidance");
-    // The row reserves its right edge for the status pill plus the action
-    // button, so a long install command may ellipsize at the tail; the
-    // actionable prefix must still paint so the user knows what to run.
-    assert!(
-        text.contains("npm install -g @openai/codex"),
-        "guidance line should carry the install command prefix, got: {text}"
-    );
-    let amber = (crate::theme::Theme::dark().status_warning).to_jian();
-    assert_eq!(*color, amber);
+    assert!(has_text(&capture, "Connected · v2.1.4"));
+    assert!(has_text(&capture, "Signed in as a@b.c"));
+    assert!(has_text(&capture, "Disconnect"));
 }
 
 #[test]
-fn connected_card_with_warning_paints_amber_warning() {
-    let mut state = EditorState::default();
-    let settings = &mut state.editor_ui.agent_settings;
-    settings.connected[1] = true;
-    settings.provider_connection[1].phase = ProviderConnectPhase::Connected;
-    settings.provider_connection[1].info = Some("Connected via Codex CLI".to_string());
-    settings.provider_connection[1].warning =
-        Some("No models found. Try running codex once to populate the model cache.".to_string());
+fn a_persisted_flag_without_a_probe_is_not_connected() {
+    let mut state = codex_state(ProviderConnectPhase::Idle);
+    state.editor_ui.agent_settings.connected[AgentProvider::CodexCli.index()] = true;
     let capture = paint_panel(&mut state);
-    // Single-line card: the actionable warning wins over the green
-    // info line (TS renders both on separate lines).
-    let (_, color) =
-        find_text(&capture, "No models found").expect("warning should paint on the card");
-    let amber = (crate::theme::Theme::dark().status_warning).to_jian();
-    assert_eq!(*color, amber);
-    assert!(find_text(&capture, "✓ Connected via Codex CLI").is_none());
+    assert!(has_text(&capture, "CLI · Not connected"));
+    assert!(!has_text(&capture, "Disconnect"));
 }
 
 #[test]
-fn long_status_line_truncates_with_ellipsis() {
-    let mut state = EditorState::default();
-    let settings = &mut state.editor_ui.agent_settings;
-    settings.provider_connection[0].phase = ProviderConnectPhase::Error;
-    settings.provider_connection[0].error = Some("x".repeat(400));
-    let capture = paint_panel(&mut state);
-    let (text, _) = capture
-        .texts
-        .iter()
-        .find(|(text, _)| text.starts_with("xxx"))
-        .expect("truncated error should still paint");
-    assert!(text.ends_with('…'), "overflowing status must truncate");
-    assert!(text.chars().count() < 400);
-}
+fn a_failed_probe_paints_its_error_and_a_missing_cli_its_install_line() {
+    let mut state = codex_state(ProviderConnectPhase::Error);
+    state.editor_ui.agent_settings.provider_connection[AgentProvider::CodexCli.index()].error =
+        Some("auth expired".into());
+    assert!(has_text(&paint_panel(&mut state), "auth expired"));
 
-#[test]
-fn connect_button_hit_still_resolves_for_idle_card() {
-    let mut state = EditorState::default();
-    let rect = AgentSettingsPanel::for_editor(&state).rect(1200.0, 800.0);
-    let card = agent_card_rect_in(rect, 0, &state.editor_ui.agent_settings);
-    // The external-provider list sits below the fold, so scroll it to the
-    // top of the body and press the button at its resulting screen rect.
-    let offset = card.origin.y - content_viewport(rect).origin.y;
-    state.editor_ui.agent_settings.scroll_y.offset = offset;
-    let panel = AgentSettingsPanel::for_editor(&state);
-    let effective_scroll = panel.effective_scroll(rect);
-    let btn = connect_btn_rect_at(card);
-    let point = Point2D::new(
-        btn.origin.x + btn.size.x / 2.0,
-        btn.origin.y + btn.size.y / 2.0 - effective_scroll,
-    );
-    assert_eq!(
-        panel.hit_test(rect, point),
-        AgentSettingsHit::Connect(AgentProvider::ClaudeCode)
-    );
+    let mut state = codex_state(ProviderConnectPhase::Error);
+    let connection =
+        &mut state.editor_ui.agent_settings.provider_connection[AgentProvider::CodexCli.index()];
+    connection.not_installed = true;
+    connection.install_command = Some("npm i -g @openai/codex".into());
+    let capture = paint_panel(&mut state);
+    assert!(has_text(&capture, "Not installed"));
+    assert!(has_text(&capture, "npm i -g @openai/codex"));
 }

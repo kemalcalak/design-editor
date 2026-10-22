@@ -32,6 +32,7 @@ impl WidgetHost {
             picker,
             Point2D::new(x, y),
             &self.editor_state.chat.available_models,
+            &de_editor_ui::widgets::ai_chat_model_picker::offline_agents(&self.editor_state),
             self.editor_state.editor_ui.chat_model_picker_input.text(),
         ) {
             SelectHit::Row(index) => Some(index),

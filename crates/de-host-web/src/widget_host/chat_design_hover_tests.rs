@@ -74,7 +74,7 @@ fn cursor_move_tracks_hovered_design_json_card_for_copy_reveal() {
     // Stamp with the host's real owner, mirroring production: `design_block_hover_at`
     // resolves the transcript cache, which debug-asserts against the UNOWNED sentinel.
     let panel = AIChatPlaceholder::from_editor(&host.editor_state).owned_by(host.chat_panel_owner);
-    let point = Point2D::new(chat_rect.origin.x + 24.0, chat_rect.origin.y + 52.0);
+    let point = Point2D::new(chat_rect.origin.x + 24.0, chat_rect.origin.y + 64.0);
     assert_eq!(panel.design_block_hover_at(chat_rect, point), Some((0, 0)));
 
     assert!(host.apply_cursor_move(point.x, point.y));
@@ -102,17 +102,17 @@ fn cursor_move_tracks_chat_footer_buttons() {
     host.last_viewport_w = viewport_w;
     host.last_viewport_h = viewport_h;
     let chat_rect = host.ai_chat_rect(viewport_w, viewport_h).unwrap();
-    // Footer right cluster: ⚡ speed | 📎 attach | ↑ send, laid out
-    // right-to-left (the inert palette slot is gone). The attach icon
-    // centres at `size.x - 60` (send centre ≈ -30). The input text must
-    // stay single-line — a wrapped line lifts the whole footer band.
+    // The composer card's bottom row (#26): "+" at the card's left, the
+    // round send at its right. The card sits 12 px in from the panel's
+    // sides and bottom; the row's centre is 34 px above the bottom edge.
+    // The input text must stay single-line — a wrapped line lifts the row.
     let attach = Point2D::new(
-        chat_rect.origin.x + chat_rect.size.x - 60.0,
-        chat_rect.origin.y + chat_rect.size.y - 19.0,
+        chat_rect.origin.x + 37.0,
+        chat_rect.origin.y + chat_rect.size.y - 34.0,
     );
     let send = Point2D::new(
-        chat_rect.origin.x + chat_rect.size.x - 28.0,
-        chat_rect.origin.y + chat_rect.size.y - 19.0,
+        chat_rect.origin.x + chat_rect.size.x - 38.0,
+        chat_rect.origin.y + chat_rect.size.y - 34.0,
     );
 
     host.editor_state.editor_ui.canvas_hover_node = Some(NodeId::new("stale-canvas"));
@@ -124,7 +124,7 @@ fn cursor_move_tracks_chat_footer_buttons() {
     assert!(host.apply_cursor_move(attach.x, attach.y));
     assert_eq!(
         host.editor_state.editor_ui.chat_footer_hover,
-        Some(de_editor_core::ChatFooterButton::AddAttachment)
+        Some(de_editor_core::ChatFooterButton::PlusMenu)
     );
     assert_eq!(host.editor_state.editor_ui.canvas_hover_node, None);
     assert_eq!(host.editor_state.editor_ui.property_action_hover, None);

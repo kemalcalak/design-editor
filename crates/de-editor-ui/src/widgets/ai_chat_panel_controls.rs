@@ -117,25 +117,6 @@ pub fn paint_attachment_row(
     }
 }
 
-/// Draw a single text label — shared by the AI-chat panel paint paths.
-pub(crate) fn draw_label(
-    cx: &mut PaintCx<'_>,
-    text: &str,
-    size: f32,
-    color: Color,
-    x: f32,
-    y: f32,
-) {
-    let label = TextLayout::single_run(
-        text,
-        "system-ui",
-        size,
-        (color).to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend.draw_text(&label, Point2D::new(x, y));
-}
-
 /// Neutral hover wash color for the chat panel's borderless controls.
 /// Used in paint tests to verify hover tint values.
 #[cfg_attr(not(test), allow(dead_code))]

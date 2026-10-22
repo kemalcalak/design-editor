@@ -42,7 +42,7 @@ fn web_model_editor_click_places_caret_on_an_earlier_visible_line() {
     assert!(host.dispatch_agent_settings_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H,));
     assert_eq!(
         host.editor_state.editor_ui.settings_input.caret(),
-        "model-a\nmodel-b\n".len(),
-        "the first of three visible desktop rows is model-c"
+        "model-a\n".len(),
+        "the first of the four visible rows is model-b"
     );
 }

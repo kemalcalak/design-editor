@@ -93,6 +93,8 @@ fn cursor_move_sets_chat_tab_hover_when_over_tab() {
     // else the chat is composer-only, so put the rail on its home.
     host.editor_state_mut().editor_ui.enter_chat_tab();
     host.editor_state_mut().chat.new_tab(); // now 2 tabs
+                                            // The chats are listed in the session select's dropdown (#26).
+    host.editor_state_mut().editor_ui.chat_session_menu_open = true;
     let viewport_w = 1440.0_f32;
     let viewport_h = 900.0_f32;
     host.last_viewport_w = viewport_w;
@@ -101,13 +103,9 @@ fn cursor_move_sets_chat_tab_hover_when_over_tab() {
     let chat_rect = host.ai_chat_rect(viewport_w, viewport_h).unwrap();
 
     // Verify that `tab_hover_at` agrees with our probe point before wiring.
-    // Tab 0 body starts at tab_row_left = rect.origin.x + PAD (16 px from the
-    // panel left edge) and spans TAB_MAX_W (120 px), so x = +92 lands inside
-    // it with margin on both sides; y = rect.origin.y + HEADER_HEIGHT / 2.
-    let over_tab0 = Point2D::new(
-        chat_rect.origin.x + 92.0, // inside tab 0's body [16, 136)
-        chat_rect.origin.y + 18.0, // header mid
-    );
+    // The select spans y 8..40 of the 48px session row; the list hangs 4px
+    // under it with 4px padding, so its first 32px row centres at y = 64.
+    let over_tab0 = Point2D::new(chat_rect.origin.x + 92.0, chat_rect.origin.y + 64.0);
     let panel = AIChatPlaceholder::from_editor(host.editor_state());
     assert_eq!(
         panel.tab_hover_at(chat_rect, over_tab0),
@@ -154,7 +152,7 @@ fn cursor_move_tracks_hovered_design_json_card_for_copy_reveal() {
     // Stamp with the host's real owner, mirroring production: `design_block_hover_at`
     // resolves the transcript cache, which debug-asserts against the UNOWNED sentinel.
     let panel = AIChatPlaceholder::from_editor(host.editor_state()).owned_by(host.chat_panel_owner);
-    let point = Point2D::new(chat_rect.origin.x + 24.0, chat_rect.origin.y + 52.0);
+    let point = Point2D::new(chat_rect.origin.x + 24.0, chat_rect.origin.y + 64.0);
     assert_eq!(panel.design_block_hover_at(chat_rect, point), Some((0, 0)));
 
     assert!(host.apply_cursor_move(point.x, point.y));
@@ -185,25 +183,23 @@ fn cursor_move_tracks_chat_footer_buttons() {
     host.last_viewport_w = viewport_w;
     host.last_viewport_h = viewport_h;
     let chat_rect = host.ai_chat_rect(viewport_w, viewport_h).unwrap();
-    // Footer right cluster, laid out right-to-left from the panel edge:
-    // ⚡ speed | 📎 attach | ↑ send (the inert palette slot is gone). With
-    // PAD=16, a 28px send circle, 4px gaps and 24px icon buttons, the attach
-    // icon centres at `size.x - 60` (send centre ≈ -30). The input text must
-    // stay single-line at the panel's real inner width — a wrapped line adds
-    // 20px to the input area and shifts the whole footer band up.
+    // The composer card's bottom row (#26): "+" at the card's left, the
+    // round send at its right. The card sits 12 px in from the panel's
+    // sides and bottom; the row's centre is 34 px above the bottom edge.
+    // The input text must stay single-line — a wrapped line lifts the row.
     let attach = Point2D::new(
-        chat_rect.origin.x + chat_rect.size.x - 60.0,
-        chat_rect.origin.y + chat_rect.size.y - 19.0,
+        chat_rect.origin.x + 37.0,
+        chat_rect.origin.y + chat_rect.size.y - 34.0,
     );
     let send = Point2D::new(
-        chat_rect.origin.x + chat_rect.size.x - 28.0,
-        chat_rect.origin.y + chat_rect.size.y - 19.0,
+        chat_rect.origin.x + chat_rect.size.x - 38.0,
+        chat_rect.origin.y + chat_rect.size.y - 34.0,
     );
 
     assert!(host.apply_cursor_move(attach.x, attach.y));
     assert_eq!(
         host.editor_state().editor_ui.chat_footer_hover,
-        Some(de_editor_core::ChatFooterButton::AddAttachment)
+        Some(de_editor_core::ChatFooterButton::PlusMenu)
     );
 
     assert!(host.apply_cursor_move(send.x, send.y));
@@ -232,11 +228,10 @@ fn cursor_move_tracks_quick_action_card_hover() {
     host.last_viewport_w = viewport_w;
     host.last_viewport_h = viewport_h;
     let chat_rect = host.ai_chat_rect(viewport_w, viewport_h).unwrap();
-    let over_first = Point2D::new(chat_rect.origin.x + 100.0, chat_rect.origin.y + 104.0);
-    // The quick-action pills are now full-width and vertically stacked (#33/#43):
-    // four 40px pills with 8px gaps start ~86px below the panel top, so the
-    // stack reaches ~270px. y=260 lands on pill index 3; a point truly "off the
-    // cards" must sit below the last pill.
+    let over_first = Point2D::new(chat_rect.origin.x + 100.0, chat_rect.origin.y + 125.0);
+    // The prompt rows (#26): four 36px rows with 8px gaps starting 110px below
+    // the panel top, so the stack ends at 278px; a point truly "off the
+    // cards" must sit below the last row.
     let off_cards = Point2D::new(chat_rect.origin.x + 24.0, chat_rect.origin.y + 280.0);
 
     assert!(host.apply_cursor_move(over_first.x, over_first.y));
@@ -304,7 +299,7 @@ fn chat_control_hover_and_lower_cleanup_happen_in_the_same_move() {
     let chat_rect = host
         .ai_chat_rect(viewport_w, viewport_h)
         .expect("chat rect");
-    let point = Point2D::new(chat_rect.origin.x + 100.0, chat_rect.origin.y + 104.0);
+    let point = Point2D::new(chat_rect.origin.x + 100.0, chat_rect.origin.y + 125.0);
     host.editor_state_mut().editor_ui.canvas_hover_node = Some(NodeId::new("stale-canvas"));
     host.last_hover_probe = Some((point.x, point.y));
 

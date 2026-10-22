@@ -199,14 +199,6 @@ fn system_rows_keep_their_text_inside_their_boxes() {
 }
 
 #[test]
-fn agents_provider_rows_keep_their_text_inside_their_boxes() {
-    let state = state_for(AgentSettingsTab::Agents);
-    let (rect, runs) = painted_runs(&state);
-    let boxes = crate::widgets::agent_settings_panel::provider_row_boxes(rect);
-    audit("Agents providers", &boxes, &runs);
-}
-
-#[test]
 fn a_section_header_leaves_its_first_row_clear() {
     // The MCP integrations header is the one that shipped clipping the
     // Claude Code row under it. Assert the general contract: no run in the

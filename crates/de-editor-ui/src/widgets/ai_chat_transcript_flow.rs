@@ -111,6 +111,8 @@ pub(crate) fn build_activity_flow(
                     .failed_subtasks
                     .iter()
                     .any(|p| p.subtask_id == msg.activities[index].id);
+            let stopped =
+                parsed.status == Some(super::ai_chat_transcript_steps::ParsedStepStatus::Stopped);
             steps.push(ActionStep {
                 rect: Rect::xywh(x, y, width, height),
                 source_index,
@@ -120,6 +122,7 @@ pub(crate) fn build_activity_flow(
                 done,
                 active,
                 failed,
+                stopped,
                 retryable,
             });
             y += height + ACTION_STEP_GAP;
@@ -211,9 +214,7 @@ pub(crate) fn build_flow(
         if let Some(mut panel) = panel {
             // Headerless: zero the header band build_tool_panel reserved and
             // pull the cards up into its place.
-            let header_h = panel.header.size.y;
-            panel.header.size.y = 0.0;
-            shift_panel_up(&mut panel, header_h);
+            let header_h = super::ai_chat_transcript_tools::strip_panel_header(&mut panel);
             // The panel builder trails the last card with TWO CARD_GAPs (one
             // from the per-card loop, one closing the body); drop both so
             // FLOW_GAP alone sets the distance.
@@ -248,19 +249,9 @@ fn push_prose(
         rect: Rect::xywh(x, *y, width, h),
         lines: wrap_units(visible, budget),
         rich,
-        typing: false,
     });
     *y += h + FLOW_GAP;
     *y
-}
-
-fn shift_panel_up(panel: &mut ToolPanel, dy: f32) {
-    panel.body.origin.y -= dy;
-    for card in &mut panel.cards {
-        card.rect.origin.y -= dy;
-        card.header.origin.y -= dy;
-        card.body.origin.y -= dy;
-    }
 }
 
 /// Floor a stamped byte offset to the nearest char boundary (defensive: the

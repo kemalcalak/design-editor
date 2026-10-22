@@ -216,6 +216,8 @@ fn fingerprint_messages(messages: &[ChatMessage]) -> u64 {
         // Only the thumbnail count feeds layout; the bytes are painted from the
         // live slice, so hashing the length is both sufficient and cheap.
         m.images.len().hash(&mut h);
+        // "Thought for Ns" reads the stopped clock.
+        m.thinking_ms.hash(&mut h);
         m.thinking_collapsed.hash(&mut h);
         m.tools_collapsed.hash(&mut h);
         m.tool_call_expanded_overrides.hash(&mut h);

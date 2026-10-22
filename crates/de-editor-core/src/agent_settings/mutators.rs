@@ -6,8 +6,8 @@
 use std::collections::BTreeMap;
 
 use super::{
-    normalize_builtin_models, AcpAgentConfig, AcpConnectionType, AgentSettings, BuiltinAgentConfig,
-    BuiltinAgentKind, ImageGenProfile, ImageGenProvider, ImageTestStatus,
+    normalize_builtin_models, AcpAgentConfig, AcpConnectionType, AgentSettings, AgentsEntry,
+    BuiltinAgentConfig, BuiltinAgentKind, ImageGenProfile, ImageGenProvider, ImageTestStatus,
 };
 use crate::acp_agent_presets::{
     acp_agent_preset, matches_preset_transport, AcpAgentPreset, AcpPresetAvailability,
@@ -38,9 +38,14 @@ impl AgentSettings {
             self.builtin_agents.iter().map(|agent| agent.id.as_str()),
         );
         self.invalidate_builtin_model_catalog_for_agent(&old_id);
-        self.builtin_agents[index].id = format!("builtin-{next}");
+        let new_id = format!("builtin-{next}");
+        self.builtin_agents[index].id = new_id.clone();
         self.next_builtin_agent_id = next.saturating_add(1);
-        debug_assert_ne!(self.builtin_agents[index].id, old_id);
+        debug_assert_ne!(new_id, old_id);
+        // The Agents tab selects by id: keep it on the provider being edited.
+        if self.agents_selected == Some(AgentsEntry::Builtin(old_id)) {
+            self.agents_selected = Some(AgentsEntry::Builtin(new_id));
+        }
         true
     }
 
@@ -96,6 +101,7 @@ impl AgentSettings {
     }
 
     pub fn begin_builtin_agent_draft(&mut self) {
+        self.select_agents_entry(AgentsEntry::BuiltinDraft);
         if self.builtin_agent_draft.is_some() {
             return;
         }
@@ -152,14 +158,16 @@ impl AgentSettings {
         self.invalidate_builtin_model_catalog(
             &crate::agent_settings_builtin_models::BuiltinModelCatalogTarget::Draft,
         );
-        Some(self.add_builtin_agent_configs_with_preset(
+        let id = self.add_builtin_agent_configs_with_preset(
             draft.display_name,
             draft.api_key,
             draft.models,
             draft.kind,
             draft.base_url,
             Some(draft.preset),
-        ))
+        );
+        self.select_agents_entry(AgentsEntry::Builtin(id.clone()));
+        Some(id)
     }
 
     pub fn cancel_builtin_agent_draft(&mut self) {
@@ -297,6 +305,7 @@ impl AgentSettings {
     }
 
     pub fn begin_acp_agent_draft(&mut self) {
+        self.select_agents_entry(AgentsEntry::AcpDraft);
         if self.acp_agent_draft.is_some() {
             return;
         }
@@ -323,7 +332,7 @@ impl AgentSettings {
             return None;
         }
         let draft = self.acp_agent_draft.take()?;
-        Some(self.add_acp_agent_config(
+        let id = self.add_acp_agent_config(
             draft.display_name,
             draft.connection_type,
             draft.command,
@@ -331,7 +340,9 @@ impl AgentSettings {
             draft.env,
             draft.url,
             draft.enabled,
-        ))
+        );
+        self.select_agents_entry(AgentsEntry::Acp(id.clone()));
+        Some(id)
     }
 
     pub fn cancel_acp_agent_draft(&mut self) {
@@ -418,6 +429,7 @@ impl AgentSettings {
             enabled: true,
             connected: false,
         });
+        self.select_agents_entry(AgentsEntry::Acp(preset.id.to_string()));
         Some(self.acp_agents.len() - 1)
     }
 

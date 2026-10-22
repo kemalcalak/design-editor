@@ -9,6 +9,29 @@ use super::*;
 /// Scan the panel's bottom band for the first point whose hit-test
 /// resolves to `want`. The footer's controls move with the live
 /// layout, so tests must resolve them from geometry, not constants.
+/// Scan the whole panel for a point that resolves to `want`.
+fn scan_panel_for_hit(
+    host: &WidgetHostNative,
+    rect: de_editor_ui::Rect,
+    want: de_editor_ui::widgets::AIChatHit,
+) -> Option<de_editor_ui::Point2D> {
+    let panel = de_editor_ui::widgets::AIChatPlaceholder::from_editor(host.editor_state())
+        .owned_by(host.chat_panel_owner);
+    let mut y = rect.origin.y;
+    while y < rect.origin.y + rect.size.y {
+        let mut x = rect.origin.x;
+        while x < rect.origin.x + rect.size.x {
+            let p = de_editor_ui::Point2D::new(x, y);
+            if panel.hit_test(rect, p) == Some(want.clone()) {
+                return Some(p);
+            }
+            x += 4.0;
+        }
+        y += 4.0;
+    }
+    None
+}
+
 fn scan_footer_for_hit(
     host: &WidgetHostNative,
     rect: de_editor_ui::Rect,
@@ -290,57 +313,35 @@ fn ai_chat_stop_click_keeps_transcript_and_queues_abort() {
 
 #[test]
 fn ai_chat_agent_team_click_sets_team_size_via_parallel_agents_picker() {
-    // #32: the ⚡ footer chip no longer cycles the team size on click — it
-    // opens the Parallel Agents picker, and clicking a row (1x–6x) sets
-    // `agent_team_size`. Drive that two-step flow through the real hit-test
+    // #26: the parallel-agents count lives in the composer's "+" menu: "+"
+    // opens the menu, its row opens the 1x–6x picker, and a picker row sets
+    // `agent_team_size`. Drive the whole flow through the real hit-test
     // routing (probe with `hit_test`, then click the resolved points).
     use de_editor_ui::widgets::AIChatHit;
     let mut host = WidgetHostNative::new();
     // The expanded chat panel lives in the rail's Agent tab; anywhere
     // else the chat is composer-only, so put the rail on its home.
     host.editor_state_mut().editor_ui.enter_chat_tab();
-    host.editor_state_mut()
-        .chat
-        .available_models
-        .push(de_editor_core::chat::ModelEntry::new(
-            de_editor_core::chat::AgentProvider::CodexCli,
-            "gpt-5",
-            "GPT-5",
-        ));
-    let viewport_w = 1200.0;
-    let viewport_h = 800.0;
+    let (viewport_w, viewport_h) = (1200.0, 800.0);
     host.last_viewport_w = viewport_w;
     host.last_viewport_h = viewport_h;
     let rect = host.ai_chat_rect(viewport_w, viewport_h).unwrap();
 
-    // Locate the ⚡ speed chip in the live footer band and click it to
-    // open the picker (the footer row is bottom-anchored in the rail's
-    // tall column, so it is scanned, not assumed at a fixed y).
-    let speed_point = scan_footer_for_hit(&host, rect, AIChatHit::ToggleParallelAgentsPicker)
-        .expect("footer speed chip should be hittable");
-    assert!(host.apply_click(speed_point.x, speed_point.y, viewport_w, viewport_h));
-    assert!(host.editor_state().editor_ui.parallel_agents_picker_open);
-
-    // With the picker open, find and click the "2x" row.
-    let panel = de_editor_ui::widgets::AIChatPlaceholder::from_editor(host.editor_state());
-    let mut row_point = None;
-    let mut ry = rect.origin.y;
-    'scan: while ry < rect.origin.y + rect.size.y {
-        let mut rx = rect.origin.x;
-        while rx < rect.origin.x + rect.size.x {
-            let p = de_editor_ui::Point2D::new(rx, ry);
-            if panel.hit_test(rect, p) == Some(AIChatHit::SetParallelAgents(2)) {
-                row_point = Some(p);
-                break 'scan;
-            }
-            rx += 2.0;
-        }
-        ry += 2.0;
+    for (want, label) in [
+        (AIChatHit::TogglePlusMenu, "the \"+\" button"),
+        (
+            AIChatHit::ToggleParallelAgentsPicker,
+            "the menu's parallel-agents row",
+        ),
+        (AIChatHit::SetParallelAgents(2), "the picker's 2x row"),
+    ] {
+        let point = scan_panel_for_hit(&host, rect, want)
+            .unwrap_or_else(|| panic!("{label} should be hittable"));
+        assert!(host.apply_click(point.x, point.y, viewport_w, viewport_h));
     }
-    let row_point = row_point.expect("parallel agents picker row 2 should be hittable");
-    assert!(host.apply_click(row_point.x, row_point.y, viewport_w, viewport_h));
     assert_eq!(host.editor_state().chat.agent_team_size, 2);
     assert!(!host.editor_state().editor_ui.parallel_agents_picker_open);
+    assert!(!host.editor_state().editor_ui.chat_plus_menu_open);
 }
 
 #[test]
@@ -369,25 +370,27 @@ fn ai_chat_streaming_textarea_click_does_not_focus_disabled_input() {
 
 #[test]
 fn ai_chat_streaming_attachment_click_does_not_open_picker() {
-    // The attach glyph is inert while streaming (its hit reads as blank
-    // panel), so its rect is resolved on an identical NOT-streaming
+    // The "+" menu's attach row is inert while streaming (its hit reads as
+    // blank menu), so its rect is resolved on an identical NOT-streaming
     // twin and the very same point is pressed on the streaming host.
     let mut twin = WidgetHostNative::new();
     twin.editor_state_mut().editor_ui.enter_chat_tab();
+    twin.editor_state_mut().editor_ui.chat_plus_menu_open = true;
     let twin_rect = twin
         .ai_chat_rect(1200.0, 800.0)
         .expect("chat panel visible");
-    let attach = scan_footer_for_hit(
+    let attach = scan_panel_for_hit(
         &twin,
         twin_rect,
         de_editor_ui::widgets::AIChatHit::AddAttachment,
     )
-    .expect("attach glyph should be hittable when idle");
+    .expect("attach row should be hittable when idle");
 
     let mut host = WidgetHostNative::new();
     // The expanded chat panel lives in the rail's Agent tab; anywhere
     // else the chat is composer-only, so put the rail on its home.
     host.editor_state_mut().editor_ui.enter_chat_tab();
+    host.editor_state_mut().editor_ui.chat_plus_menu_open = true;
     host.editor_state_mut()
         .chat
         .messages
@@ -395,17 +398,13 @@ fn ai_chat_streaming_attachment_click_does_not_open_picker() {
     let rect = host
         .ai_chat_rect(1200.0, 800.0)
         .expect("chat panel visible");
-    assert_eq!(rect, twin_rect, "streaming must not move the footer");
+    assert_eq!(rect, twin_rect, "streaming must not move the composer");
 
     assert!(host.apply_click(attach.x, attach.y, 1200.0, 800.0));
 
     assert!(!host.editor_state().chat.pending_attachment_pick);
 }
 
-/// Sending from the composer card starts the conversation where the
-/// conversation lives: the rail switches to its Agent tab and the turn
-/// launches there — the reply must never stream into a card that
-/// cannot show it.
 #[test]
 fn sending_from_the_composer_card_lands_the_rail_on_the_agent_tab() {
     let mut host = WidgetHostNative::new();

@@ -40,13 +40,14 @@ pub fn home_model_picker_rects(
     layout: &HomeLayout,
     viewport_w: f32,
     models: &[ModelEntry],
+    offline: &[de_editor_core::chat::AgentProvider],
     search: &str,
 ) -> Option<Rect> {
     let chip = layout.model_chip;
     if chip.size.x <= 0.0 {
         return None;
     }
-    let height = picker_view_height(models, search);
+    let height = picker_view_height(models, offline, search);
     let bottom = chip.origin.y - HOME_MODEL_PICKER_GAP;
     let top = (bottom - height).max(8.0);
     let x = (chip.origin.x + chip.size.x - HOME_MODEL_PICKER_W)

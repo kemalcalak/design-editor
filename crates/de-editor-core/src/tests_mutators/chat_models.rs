@@ -81,6 +81,35 @@ fn rebuild_chat_models_syncs_agent_to_selected_model_provider() {
 }
 
 #[test]
+fn rebuild_chat_models_drops_cli_models_the_user_unticked() {
+    let mut s = sample();
+    s.chat.discovered_models = vec![
+        crate::ModelEntry::new(crate::AgentProvider::CodexCli, "gpt-5.5", "GPT-5.5"),
+        crate::ModelEntry::new(
+            crate::AgentProvider::CodexCli,
+            "gpt-5.5-mini",
+            "GPT-5.5 mini",
+        ),
+    ];
+    s.editor_ui.agent_settings.connected = [false, true, false, false, false, false, false];
+    s.editor_ui.agent_settings.provider_connection[1].phase =
+        crate::agent_settings::ProviderConnectPhase::Connected;
+    s.editor_ui
+        .agent_settings
+        .toggle_cli_model_hidden(crate::AgentProvider::CodexCli, "gpt-5.5");
+
+    s.rebuild_chat_models();
+
+    let values: Vec<_> = s
+        .chat
+        .available_models
+        .iter()
+        .map(|entry| entry.value.as_str())
+        .collect();
+    assert_eq!(values, ["gpt-5.5-mini"]);
+}
+
+#[test]
 fn rebuild_chat_models_does_not_invent_cli_models_without_discovery() {
     let mut s = sample();
     s.chat.discovered_models.clear();

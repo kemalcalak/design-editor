@@ -14,19 +14,6 @@
 //! a specific control (a 36 px switch, a 96 px button), which is that
 //! control's business, not the layout's.
 
-/// Horizontal inset from the content column to a row's leading glyph and
-/// to its trailing control. The whole modal's "row padding".
-pub(super) const ROW_PAD_X: f32 = 16.0;
-
-/// Leading avatar / brand badge on a list row, and the gap from it to the
-/// text column.
-pub(super) const ROW_AVATAR: f32 = 34.0;
-pub(super) const ROW_AVATAR_GAP: f32 = 14.0;
-
-/// Where a row's text column starts, measured from the row's left edge.
-/// Rows without an avatar start their text at the row edge itself.
-pub(super) const ROW_TEXT_X: f32 = ROW_PAD_X + ROW_AVATAR + ROW_AVATAR_GAP;
-
 /// Clear space a row keeps between its text and whatever control sits on
 /// the right, so a long label ellipsizes instead of colliding.
 pub(super) const ROW_TEXT_GAP: f32 = 16.0;
@@ -49,11 +36,6 @@ pub(super) const SECTION_GAP: f32 = 24.0;
 /// Band a section header (title, optional trailing action) occupies
 /// before its first row.
 pub(super) const SECTION_HEADER_H: f32 = 28.0;
-/// Muted one-line subtitle under a section header.
-pub(super) const SECTION_SUBTITLE_H: f32 = 28.0;
-/// Centred "nothing configured yet" hint standing in for an empty list.
-pub(super) const EMPTY_BLOCK_H: f32 = 64.0;
-
 /// Clear space every tab reserves under its last row when reporting its
 /// scrollable height. Without it the final row sits flush against the
 /// modal's bottom edge at full scroll and reads as clipped.

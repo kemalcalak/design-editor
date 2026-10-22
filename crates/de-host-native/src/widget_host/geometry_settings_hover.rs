@@ -15,17 +15,12 @@ impl WidgetHostNative {
         let point = Point2D::new(x, y);
         let (
             new_nav,
-            new_card,
-            new_builtin,
-            new_acp,
-            new_acp_preset,
+            new_agents_row,
             new_preset_hover,
             new_model_hover,
             new_close_hover,
             new_server_hover,
             new_copy_hover,
-            new_add_provider_hover,
-            new_add_acp_hover,
             new_image_search_test_hover,
             new_image_search_register_link_hover,
             new_image_add_hover,
@@ -41,25 +36,8 @@ impl WidgetHostNative {
             let tab = self.editor_state.editor_ui.agent_settings.tab;
             let is_agents = matches!(tab, AgentSettingsTab::Agents);
             let is_images = matches!(tab, AgentSettingsTab::Images);
-            let card = if is_agents {
-                panel.card_at(panel_rect, point).unwrap_or(usize::MAX)
-            } else {
-                usize::MAX
-            };
-            let builtin = if is_agents {
-                panel
-                    .builtin_card_at(panel_rect, point)
-                    .unwrap_or(usize::MAX)
-            } else {
-                usize::MAX
-            };
-            let acp = if is_agents {
-                panel.acp_card_at(panel_rect, point).unwrap_or(usize::MAX)
-            } else {
-                usize::MAX
-            };
-            let acp_preset = if is_agents {
-                panel.acp_preset_at(panel_rect, point)
+            let agents_row = if is_agents {
+                panel.agents_row_at(panel_rect, point)
             } else {
                 None
             };
@@ -69,7 +47,7 @@ impl WidgetHostNative {
                 None
             };
             let model_hover = if is_agents {
-                panel.builtin_model_hover_at(panel_rect, point)
+                panel.agents_checklist_hover_at(panel_rect, point)
             } else {
                 None
             };
@@ -87,16 +65,6 @@ impl WidgetHostNative {
                 && matches!(
                     hit,
                     de_editor_ui::widgets::agent_settings_panel::AgentSettingsHit::ToggleMcpServer
-                );
-            let add_provider_hover = is_agents
-                && matches!(
-                    hit,
-                    de_editor_ui::widgets::agent_settings_panel::AgentSettingsHit::AddProvider
-                );
-            let add_acp_hover = is_agents
-                && matches!(
-                    hit,
-                    de_editor_ui::widgets::agent_settings_panel::AgentSettingsHit::AddAcpAgent
                 );
             let image_search_test_hover =
                 is_images && panel.image_search_test_button_hover_at(panel_rect, point);
@@ -155,17 +123,12 @@ impl WidgetHostNative {
             };
             (
                 nav,
-                card,
-                builtin,
-                acp,
-                acp_preset,
+                agents_row,
                 preset_hover,
                 model_hover,
                 close_hover,
                 server_hover,
                 copy_hover,
-                add_provider_hover,
-                add_acp_hover,
                 image_search_test_hover,
                 image_search_register_link_hover,
                 image_add_hover,
@@ -181,29 +144,8 @@ impl WidgetHostNative {
             self.editor_state.editor_ui.agent_settings.hover_nav = new_nav;
             changed = true;
         }
-        if new_card != self.editor_state.editor_ui.agent_settings.hover_provider {
-            self.editor_state.editor_ui.agent_settings.hover_provider = new_card;
-            changed = true;
-        }
-        if new_builtin
-            != self
-                .editor_state
-                .editor_ui
-                .agent_settings
-                .hover_builtin_agent
-        {
-            self.editor_state
-                .editor_ui
-                .agent_settings
-                .hover_builtin_agent = new_builtin;
-            changed = true;
-        }
-        if new_acp != self.editor_state.editor_ui.agent_settings.hover_acp_agent {
-            self.editor_state.editor_ui.agent_settings.hover_acp_agent = new_acp;
-            changed = true;
-        }
-        if new_acp_preset != self.editor_state.editor_ui.agent_settings.hover_acp_preset {
-            self.editor_state.editor_ui.agent_settings.hover_acp_preset = new_acp_preset;
+        if new_agents_row != self.editor_state.editor_ui.agent_settings.hover_agents_row {
+            self.editor_state.editor_ui.agent_settings.hover_agents_row = new_agents_row;
             changed = true;
         }
         if new_preset_hover
@@ -224,12 +166,12 @@ impl WidgetHostNative {
                 .editor_state
                 .editor_ui
                 .agent_settings
-                .builtin_model_menu_hover
+                .agents_checklist_hover
         {
             self.editor_state
                 .editor_ui
                 .agent_settings
-                .builtin_model_menu_hover = new_model_hover;
+                .agents_checklist_hover = new_model_hover;
             changed = true;
         }
         if new_close_hover
@@ -269,32 +211,6 @@ impl WidgetHostNative {
                 .editor_ui
                 .agent_settings
                 .hover_mcp_server_button = new_server_hover;
-            changed = true;
-        }
-        if new_add_provider_hover
-            != self
-                .editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_provider
-        {
-            self.editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_provider = new_add_provider_hover;
-            changed = true;
-        }
-        if new_add_acp_hover
-            != self
-                .editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_acp_agent
-        {
-            self.editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_acp_agent = new_add_acp_hover;
             changed = true;
         }
         if new_image_search_test_hover
