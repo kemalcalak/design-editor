@@ -5,14 +5,19 @@
 
 use super::super::*;
 
-/// Y-coordinate of the textarea's vertical center.
+/// Y-coordinate of the textarea's vertical center (no notice, chips or
+/// attachments).
 pub(in crate::widgets) fn textarea_center_y() -> f32 {
-    AI_CHAT_HEIGHT - INPUT_BASE_HEIGHT + 1.0 + INPUT_AREA_HEIGHT / 2.0
+    AI_CHAT_HEIGHT - INPUT_BASE_HEIGHT + COMPOSER_PAD_TOP + INPUT_AREA_HEIGHT / 2.0
 }
 
-/// Y-coordinate of the bottom toolbar's vertical center.
+/// Y-coordinate of the composer's bottom row (same assumptions).
 pub(in crate::widgets) fn toolbar_center_y() -> f32 {
-    AI_CHAT_HEIGHT - INPUT_BASE_HEIGHT + 1.0 + INPUT_AREA_HEIGHT + INPUT_TOOLBAR_HEIGHT / 2.0
+    AI_CHAT_HEIGHT - INPUT_BASE_HEIGHT
+        + COMPOSER_PAD_TOP
+        + INPUT_AREA_HEIGHT
+        + INPUT_TOOLBAR_HEIGHT / 2.0
+        - 2.0
 }
 
 pub(in crate::widgets) fn seed_available_model(s: &mut EditorState) {

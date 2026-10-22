@@ -306,19 +306,6 @@ pub(crate) fn model_row_pill_rect(rect: Rect, row_y: f32) -> Rect {
     }
 }
 
-pub(crate) fn paint_key_glyph(cx: &mut PaintCx<'_>, top_left: Point2D, size: f32, color: Color) {
-    // Use the real lucide `Key` glyph (TS renders `<Key/>`) rather than a
-    // hand-rolled ring+shaft approximation.
-    crate::widgets::icons::draw_icon(
-        cx.backend,
-        crate::widgets::icons::Icon::Key,
-        top_left,
-        size,
-        color,
-        1.4,
-    );
-}
-
 /// Paint a provider's brand logo into a `size × size` square.
 /// OpenCode has no single-path logo, so it routes through the
 /// multi-primitive `paint_opencode_logo`.

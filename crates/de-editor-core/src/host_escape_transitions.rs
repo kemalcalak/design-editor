@@ -132,6 +132,18 @@ impl EditorUiState {
         self.close_prompt_center()
     }
 
+    /// Close the chat's session list, "+" menu or parallel-agents picker.
+    pub fn escape_chat_menus(&mut self) -> bool {
+        if !self.chat_session_menu_open
+            && !self.chat_plus_menu_open
+            && !self.parallel_agents_picker_open
+        {
+            return false;
+        }
+        self.close_chat_menus();
+        true
+    }
+
     /// Close the chat model picker dropdown.
     pub fn escape_chat_model_picker(&mut self) -> bool {
         if !self.chat_model_picker.open {
@@ -269,6 +281,9 @@ impl EditorUiState {
         self.close_chat_model_picker();
         self.parallel_agents_picker_open = false;
         self.parallel_agents_picker_hover = None;
+        self.chat_session_menu_open = false;
+        self.chat_plus_menu_open = false;
+        self.chat_plus_menu_hover = None;
         self.fill_type_picker = Default::default();
         self.fill_type_picker_index = 0;
         self.compositing_picker = Default::default();

@@ -6,6 +6,9 @@
 
 use super::*;
 
+/// Corner radius of the composer card.
+const COMPOSER_RADIUS: f32 = 12.0;
+
 impl<'a> Widget for AIChatPlaceholder<'a> {
     fn id(&self) -> WidgetId {
         self.id
@@ -35,38 +38,14 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
             return;
         }
 
-        // A pinned chat sits ON the rail, so it must not paint a floating
-        // card under itself: the rounded border ran off the rail's right
-        // edge and read as a broken box around the session row. The rail
-        // is the ground; fill it flat and leave the edges to the rail.
+        // Pinned, the chat IS the rail's Agent tab: the page background,
+        // no card around it. Floating, it is a card over the canvas.
         if self.column_pinned {
-            cx.backend.fill_rect(rect, self.theme.card);
+            cx.backend.fill_rect(rect, self.palette.bg);
         } else {
             paint_panel_surface(cx, &self.theme, rect);
         }
         let can_use_model = !self.state.available_models.is_empty();
-        let input_h = self.input_height_for_rect(rect);
-        let sep_y = rect.origin.y + rect.size.y - input_h;
-        // The body chrome is the header hairline, the transcript wash and
-        // the divider above the composer. A composer-only card has none
-        // of those above it — painting them drew a rule across an empty
-        // card.
-        // Pinned, the rail already bounds the panel, so the header's own
-        // hairline is a second rule inside one surface — Pencil separates
-        // its session row from the body with space alone. The composer
-        // card has no body above it at all.
-        if !self.composer_only && !self.column_pinned {
-            paint_panel_body_chrome(cx, &self.theme, rect, sep_y);
-        } else if self.column_pinned {
-            // The divider ABOVE the composer stays: it is the one edge
-            // that keeps a long transcript from running into the input.
-            crate::widgets::ai_chat_panel_paint::paint_composer_divider(
-                cx,
-                &self.theme,
-                rect,
-                sep_y,
-            );
-        }
 
         // Composer-only: the rail is showing another tab, so the card
         // over the canvas is the input box and nothing else. Unfocused
@@ -86,113 +65,60 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
                 );
             }
         } else {
-            // Expanded header (MT.2 tab-row restyle):
-            //   [session selector] … [maximize (floating only)] [new-chat ⊕]
-            use de_editor_core::ChatHeaderButton;
-            // Vertical center of all header icons (18px icons in 36px header).
-            let header_icon_y = rect.origin.y + (HEADER_HEIGHT - 18.0) / 2.0;
-            let right_edge = rect.origin.x + rect.size.x - PAD;
-            let tokens = crate::widgets::button::tokens_from_theme(&self.theme);
-
-            // There is no collapse chevron: the conversation's one home is
-            // the rail's Agent tab, so there is no header-only middle state
-            // to toggle into.
-            // --- New-chat "+" circular button (far right, 28px circle) ---
-            const NEW_CHAT_R: f32 = NEW_CHAT_D / 2.0;
-            let new_chat_rect = Rect {
-                origin: Point2D::new(
-                    right_edge - NEW_CHAT_D,
-                    rect.origin.y + (HEADER_HEIGHT - NEW_CHAT_D) / 2.0,
-                ),
-                size: Point2D::new(NEW_CHAT_D, NEW_CHAT_D),
-            };
-            let new_chat_hovered = self.header_hover == Some(ChatHeaderButton::NewChat);
-            let new_chat_pressed = self.header_pressed == Some(ChatHeaderButton::NewChat);
-            let new_chat_fill = if new_chat_pressed {
-                chat_neutral_feedback_color(&self.theme, true)
-            } else if new_chat_hovered {
-                chat_neutral_feedback_color(&self.theme, false)
-            } else {
-                self.theme.secondary
-            };
-            cx.backend
-                .fill_round_rect(new_chat_rect, NEW_CHAT_R, new_chat_fill);
-            cx.backend
-                .stroke_round_rect(new_chat_rect, NEW_CHAT_R, self.theme.border, 1.0);
-            draw_icon(
-                cx.backend,
-                Icon::Plus,
-                Point2D::new(
-                    new_chat_rect.origin.x + (NEW_CHAT_D - 14.0) / 2.0,
-                    new_chat_rect.origin.y + (NEW_CHAT_D - 14.0) / 2.0,
-                ),
-                14.0,
-                self.theme.muted_foreground,
-                1.4,
-            );
-            // --- Maximize / minimize icon (just left of new-chat) ---
-            // Pinned into a column there is no window to maximize, and a
-            // control that cannot do anything is exactly the kind of thing
-            // that makes the conversation read as a floating panel parked in
-            // the rail rather than the rail's own Agent tab.
-            let maximize_x = right_edge - NEW_CHAT_D - MAXIMIZE_GAP - MAXIMIZE_W;
-            if !self.column_pinned {
-                jian_widgets::components::icon_button::IconButton {
-                    icon_paths: self.maximize_icon().paths(),
-                    hovered: self.header_hover == Some(ChatHeaderButton::ToggleMaximize),
-                    pressed: self.header_pressed == Some(ChatHeaderButton::ToggleMaximize),
-                    active: false,
-                    enabled: true,
-                    icon_size: MAXIMIZE_W,
-                    stroke_width: 1.4,
-                }
-                .paint(
-                    cx.backend,
-                    Rect {
-                        origin: Point2D::new(maximize_x, header_icon_y),
-                        size: Point2D::new(MAXIMIZE_W, MAXIMIZE_W),
-                    },
-                    &tokens,
-                );
-            }
-
-            // --- Tab row (between chevron and maximize) ---
-            // Replaces the single active-chat pill from 5.3.
-            let is_running = self.state.agents_running.0 > 0;
-            paint_header_tabs(
+            let header = self.header(rect);
+            crate::widgets::ai_chat_panel_header::paint_session_header(
                 cx,
-                &self.theme,
+                &self.palette,
                 rect,
-                &self.tabs_snapshot,
-                self.active_tab_index,
-                self.tab_hover,
-                is_running,
-                self.now_ms,
-                self.column_pinned,
+                &header,
+                &crate::widgets::ai_chat_panel_header::SessionHeader {
+                    title: &self.state.title,
+                    new_label: &self.label_new,
+                    menu_open: self.session_menu_open,
+                    running: self.state.agents_running.0 > 0,
+                    maximize_icon: self.maximize_icon(),
+                    hover: self.header_hover,
+                    pressed: self.header_pressed,
+                    now_ms: self.now_ms,
+                },
             );
 
             if self.state.messages.is_empty() {
-                // The empty-state stack is laid out from the top while the
-                // composer block is bottom-anchored; on a keyboard-shrunk
-                // compact sheet the two can meet. Clip to the region between
-                // them and hand the painter its bottom so pills / tips that
-                // don't fit are dropped instead of overlapping the composer.
+                // The empty state is laid out from the top while the
+                // composer block is bottom-anchored; clip to the region
+                // between them so nothing overlaps the composer.
                 let region = self.empty_state_region(rect);
+                let t = |key| de_i18n::translate(self.locale, key);
                 cx.backend.save();
                 cx.backend.clip_rect(region);
-                paint_examples(
+                crate::widgets::ai_chat_panel_paint::paint_empty_state(
                     cx,
-                    &self.theme,
+                    &self.palette,
                     rect,
-                    &self.label_start_with_ai,
-                    &self.label_tip_select_elements,
-                    &self.examples,
-                    // Examples stay enabled without a connected model (#43) — clicking
-                    // one fills the input; only streaming disables them.
-                    self.is_streaming(),
-                    self.example_hover,
-                    self.example_pressed,
-                    region.origin.y + region.size.y,
+                    &crate::widgets::ai_chat_panel_paint::EmptyState {
+                        title: &self.label_start_with_ai,
+                        examples: &self.examples,
+                        tips: [
+                            (
+                                t("chat.tip.agent.title"),
+                                t("chat.tip.agent.body").to_string(),
+                            ),
+                            (
+                                t("chat.tip.attach.title"),
+                                t("chat.tip.attach.body").to_string(),
+                            ),
+                            (
+                                t("chat.tip.mcp.title"),
+                                t("chat.tip.mcp.body").replace("{endpoint}", &self.mcp_endpoint),
+                            ),
+                        ],
+                        // Prompts stay enabled without a connected model (#43) —
+                        // clicking one fills the input; only streaming disables them.
+                        disabled: self.is_streaming(),
+                        hover: self.example_hover,
+                        pressed: self.example_pressed,
+                        content_bottom: region.origin.y + region.size.y,
+                    },
                 );
                 cx.backend.restore();
             } else {
@@ -226,36 +152,36 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
                 );
             }
         }
-        let input_block_rect = self.input_rect(rect);
         // Above even the chips: a turn that cannot start at all outranks
         // anything describing what the turn would do.
-        let notice_h = self.mcp_notice_row_h();
         if let (Some(row), Some(label)) = (self.mcp_notice_row(rect), self.mcp_notice.as_deref()) {
             crate::widgets::ai_chat_mcp_notice::paint_mcp_notice(cx, row, self.theme, label);
         }
-        let rows_rect = Rect {
-            origin: Point2D::new(
-                input_block_rect.origin.x,
-                input_block_rect.origin.y + notice_h,
-            ),
-            size: Point2D::new(
-                input_block_rect.size.x,
-                (input_block_rect.size.y - notice_h).max(0.0),
-            ),
-        };
-        // Above everything else in the input block: the chips describe the
-        // next turn and what it is aimed at, not the turn's content.
-        crate::widgets::ai_chat_chip_row::paint_chip_row(cx, &self.theme, self, rows_rect);
-        let chip_row_h = self.chip_row_h();
-        let input_rect = Rect {
-            origin: Point2D::new(rect.origin.x + PAD, sep_y + 1.0 + notice_h + chip_row_h),
-            size: Point2D::new(
-                rect.size.x - PAD * 2.0,
-                self.input_area_height_for_rect(rect),
-            ),
-        };
-        let input_area_h = input_rect.size.y;
+        // The chips describe the next turn and what it is aimed at; they sit
+        // above the composer card, not inside it.
+        crate::widgets::ai_chat_chip_row::paint_chip_row(
+            cx,
+            &self.theme,
+            self,
+            self.input_rows_rect(rect),
+        );
 
+        // The composer card.
+        let card = self.composer_card(rect);
+        cx.backend
+            .fill_round_rect(card, COMPOSER_RADIUS, self.palette.surface);
+        cx.backend.stroke_round_rect(
+            card,
+            COMPOSER_RADIUS,
+            if self.state.focused {
+                crate::widgets::home_surface::fade(self.palette.accent, 0.6)
+            } else {
+                self.palette.border
+            },
+            1.0,
+        );
+        let input_rect = self.input_text_rect(rect);
+        let input_area_h = input_rect.size.y;
         crate::widgets::ai_chat_input_text::paint_input_text_area(
             cx,
             &self.theme,
@@ -266,8 +192,8 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
             &self.label_input_placeholder,
         );
 
-        // Staged-attachment strip — between the textarea and the
-        // controls row, present only when attachments are staged.
+        // Staged-attachment strip — between the text and the bottom row,
+        // present only when attachments are staged.
         let attach_h = self.attachment_row_h();
         if attach_h > 0.0 {
             let attach_rect = Rect {
@@ -277,18 +203,14 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
             paint_attachment_row(cx, &self.theme, attach_rect, self.state);
         }
 
-        // Bottom toolbar (#27) — single row:
-        //   model pill | ⚡ speed chip | 📎 attach | [gap] | ◻ stop | ↑ send
-        let toolbar_y = input_rect.origin.y + input_area_h + attach_h;
-        let toolbar_center_y = toolbar_y + INPUT_TOOLBAR_HEIGHT / 2.0;
-        let footer = self.footer_layout(rect, self.input_rect(rect), toolbar_y);
+        let footer = self.footer_layout(rect);
         let streaming = self.is_streaming();
         let send_active = can_use_model
             && (!self.state.input.text().trim().is_empty()
                 || !self.state.pending_attachments.is_empty());
-        paint_bottom_toolbar(cx, self, &footer, toolbar_center_y, streaming, send_active);
+        paint_bottom_toolbar(cx, self, &footer, streaming, send_active);
 
-        // Model-picker dropdown paints above other panel content.
+        // Dropdowns paint above everything else in the panel.
         if let Some(picker) = self.model_picker_bounds(rect) {
             crate::widgets::ai_chat_model_picker::paint_model_picker(
                 cx,
@@ -302,8 +224,31 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
                 self.locale,
             );
         }
-
-        // Parallel-agents picker paints last (top-most overlay).
+        if let Some(menu) = self.session_menu_bounds(rect) {
+            let titles: Vec<String> = self.tabs_snapshot.iter().map(|t| t.title.clone()).collect();
+            crate::widgets::ai_chat_session_menu::paint_session_menu(
+                cx,
+                &self.palette,
+                menu,
+                &titles,
+                self.active_tab_index,
+                self.tab_hover,
+            );
+        }
+        if let Some(menu) = self.plus_menu_bounds(rect) {
+            crate::widgets::ai_chat_plus_menu::paint_plus_menu(
+                cx,
+                &self.palette,
+                menu,
+                &crate::widgets::ai_chat_plus_menu::PlusMenu {
+                    thinking: self.state.thinking_mode,
+                    agent_team_size: self.state.agent_team_size,
+                    streaming,
+                    hover: self.plus_menu_hover,
+                    locale: self.locale,
+                },
+            );
+        }
         if self.parallel_agents_picker_open {
             crate::widgets::ai_chat_panel_footer::paint_parallel_agents_picker(
                 cx,
@@ -314,46 +259,12 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
             );
         }
 
-        // "New Chat Cmd+T" tooltip paints after transcript and overlays so it
-        // cannot be covered by message bubbles below the header. The
-        // composer-only card has no such button to describe.
-        if !self.composer_only
-            && self.header_hover == Some(de_editor_core::ChatHeaderButton::NewChat)
-        {
-            paint_new_chat_tooltip(cx, &self.theme, rect);
-        }
-
-        // Thinking-toggle tooltip — the button is a bare glyph with three
-        // states, so the tooltip is where "what does this do, and what is it
-        // set to right now" is actually answered. Painted last, above the
-        // input block it hangs over, and clamped to the panel so a narrow
-        // panel doesn't push the label off its own edge.
-        if self.footer_hover == Some(de_editor_core::ChatFooterButton::ThinkingMode)
-            && footer.thinking.size.x > 0.0
-        {
-            let label = de_i18n::translate(
-                self.locale,
-                crate::widgets::ai_chat_thinking_toggle::thinking_tooltip_key(
-                    self.state.thinking_mode,
-                ),
-            );
-            crate::widgets::tooltip::paint_tooltip(
-                cx,
-                &self.theme,
-                footer.thinking,
-                label,
-                None,
-                crate::widgets::tooltip::TooltipPlacement::Above,
-                Some((rect.origin.x + 4.0, rect.origin.x + rect.size.x - 4.0)),
-            );
-        }
-
         // Pinned-style detail card — last of all, so it hangs over the input
         // block, and anchored ABOVE its chip so the ✕ on that row stays both
         // visible and clickable. Present only once the dwell has elapsed; the
         // resolve that builds it is gated on the same clock.
         if let Some(card) = self.style_card.as_ref() {
-            if let Some(chip) = self.chip_row(input_block_rect).style {
+            if let Some(chip) = self.chip_row(self.input_rows_rect(rect)).style {
                 crate::widgets::ai_chat_style_card::paint_style_card(
                     cx,
                     &self.theme,

@@ -2,7 +2,7 @@
 //! checklist geometry, tool-card / design-block toggles, and paint
 //! assertions. Split out of `tests.rs` at the 800-line cap.
 
-use super::tests::{has_fill_rect, toolbar_center_y, PanelPaintBackend};
+use super::tests::PanelPaintBackend;
 use super::*;
 use crate::widgets::ai_chat_hit::AIChatHit;
 
@@ -107,93 +107,6 @@ fn hit_test_resolves_design_block_copy_button() {
     assert_eq!(
         panel.hit_test(rect, p),
         Some(AIChatHit::CopyDesignBlock(code.to_string()))
-    );
-}
-
-#[test]
-fn paint_model_chip_uses_key_glyph_for_builtin_model() {
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    s.chat
-        .available_models
-        .push(de_editor_core::chat::ModelEntry::builtin_with_display_name(
-            de_editor_core::chat::AgentProvider::CodexCli,
-            "builtin-minimax",
-            "MiniMax",
-            "builtin:builtin-minimax:MiniMax-M2.7",
-            "MiniMax-M2.7",
-        ));
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let mut backend = PanelPaintBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    // In #27 layout the logo sits 8px inside the pill left edge (pill starts at PAD).
-    let key_top_left = Point2D::new(
-        rect.origin.x + PAD + 8.0,
-        rect.origin.y + toolbar_center_y() - 7.0,
-    );
-    let key_strokes = backend
-        .svg_strokes
-        .iter()
-        .filter(|(top_left, size, _, _)| {
-            (top_left.x - key_top_left.x).abs() < 0.01
-                && (top_left.y - key_top_left.y).abs() < 0.01
-                && (*size - 14.0).abs() < 0.01
-        })
-        .count();
-
-    assert_eq!(
-        key_strokes,
-        crate::widgets::icons::Icon::Key.paths().len(),
-        "built-in selected model chip should paint the TS-style Key glyph"
-    );
-}
-
-#[test]
-fn paint_draws_header_divider_and_message_body_background() {
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(10.0, 20.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let input_h = INPUT_BASE_HEIGHT;
-    let sep_y = rect.origin.y + rect.size.y - input_h;
-    let mut backend = PanelPaintBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    // Pinned into the rail the panel keeps ONE rule, the one above the
-    // composer: the rail already bounds it, so the header hairline and
-    // the transcript wash would be a second border inside one surface.
-    assert!(
-        !has_fill_rect(
-            &backend.fills,
-            Rect::xywh(
-                rect.origin.x + 1.0,
-                rect.origin.y + HEADER_HEIGHT,
-                rect.size.x - 2.0,
-                1.0
-            )
-        ),
-        "no header hairline in the rail"
-    );
-    assert!(
-        has_fill_rect(
-            &backend.fills,
-            Rect::xywh(rect.origin.x + 1.0, sep_y, rect.size.x - 2.0, 1.0)
-        ),
-        "the composer still has its rule"
     );
 }
 

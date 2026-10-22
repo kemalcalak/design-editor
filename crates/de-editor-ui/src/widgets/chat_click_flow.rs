@@ -65,13 +65,8 @@ pub fn chat_button_press_target(hit: &AIChatHit) -> Option<ButtonPressTarget> {
         return Some(ButtonPressTarget::ChatExample(*index));
     }
     let footer = match hit {
-        AIChatHit::OpenPromptCenter => ChatFooterButton::PromptCenter,
+        AIChatHit::TogglePlusMenu => ChatFooterButton::PlusMenu,
         AIChatHit::ToggleModelPicker => ChatFooterButton::ModelPicker,
-        // The ⚡ chip is now the Parallel Agents chip — pressed state uses SpeedChip.
-        AIChatHit::ToggleParallelAgentsPicker => ChatFooterButton::SpeedChip,
-        AIChatHit::CycleAgentTeam => ChatFooterButton::AgentTeam,
-        AIChatHit::CycleThinking => ChatFooterButton::ThinkingMode,
-        AIChatHit::AddAttachment => ChatFooterButton::AddAttachment,
         AIChatHit::Send => ChatFooterButton::Send,
         AIChatHit::Stop => ChatFooterButton::Stop,
         _ => return None,
@@ -178,10 +173,19 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
             state.chat.new_tab();
             state.chat.pending_new_chat = true;
             state.editor_ui.close_chat_model_picker();
+            state.editor_ui.close_chat_menus();
             // Session set mutated: the host rotates the transcript-cache
             // owner NOW so a pre-paint pointer move can't cross-pair the
             // old tab's geometry with the new tab's messages.
             ChatClickStep::RotateChatOwner
+        }
+        AIChatHit::ToggleSessionMenu => {
+            state.editor_ui.toggle_chat_session_menu();
+            ChatClickStep::Dirty
+        }
+        AIChatHit::TogglePlusMenu => {
+            state.editor_ui.toggle_chat_plus_menu();
+            ChatClickStep::Dirty
         }
         AIChatHit::ToggleModelPicker => {
             let opening = state.editor_ui.toggle_chat_model_picker();
@@ -190,8 +194,6 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
                 // in provider settings. Rebuild locally when it opens; model
                 // discovery belongs exclusively to the settings workflow.
                 state.rebuild_chat_models();
-                // Close the parallel-agents picker when model picker opens.
-                state.editor_ui.close_parallel_agents_picker();
                 state.editor_ui.chat_model_picker_input.touch(now_ms);
             }
             ChatClickStep::ModelPickerToggled { opening }
@@ -220,6 +222,8 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
             ChatClickStep::Clean
         }
         AIChatHit::CycleThinking => {
+            // A "+" menu row: the menu stays open so the new mode reads
+            // on the row that was just clicked.
             state.chat.cycle_thinking_mode();
             ChatClickStep::Dirty
         }
@@ -228,6 +232,7 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
             ChatClickStep::Dirty
         }
         AIChatHit::OpenPromptCenter => {
+            state.editor_ui.close_chat_menus();
             state.editor_ui.open_prompt_center(now_ms);
             ChatClickStep::Dirty
         }
@@ -239,17 +244,26 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
             state.editor_ui.agent_settings_open = true;
             ChatClickStep::Dirty
         }
+        AIChatHit::OpenProviderSettings => {
+            // Same destination as Home's "Add a model provider" link.
+            state.editor_ui.agent_settings.tab =
+                de_editor_core::agent_settings::AgentSettingsTab::Agents;
+            state.editor_ui.agent_settings_open = true;
+            ChatClickStep::Dirty
+        }
         AIChatHit::CycleAgentTeam => {
             state.cycle_agent_team_size();
             ChatClickStep::Dirty
         }
         AIChatHit::ToggleParallelAgentsPicker => {
-            // Toggle the Parallel Agents picker open/closed.
-            // Also closes the model picker when opening this one.
-            if !state.editor_ui.parallel_agents_picker_open {
-                state.editor_ui.close_chat_model_picker();
+            // Opened from its "+" menu row, closed by any press outside
+            // it. It replaces the menu: one chat dropdown at a time.
+            let opening = !state.editor_ui.parallel_agents_picker_open;
+            state.editor_ui.close_chat_menus();
+            state.editor_ui.close_chat_model_picker();
+            if opening {
+                state.editor_ui.toggle_parallel_agents_picker();
             }
-            state.editor_ui.toggle_parallel_agents_picker();
             ChatClickStep::Dirty
         }
         AIChatHit::SetParallelAgents(n) => {
@@ -264,6 +278,7 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
             // file picker, and stages the chosen file via
             // `ChatState::add_attachment`.
             state.chat.pending_attachment_pick = true;
+            state.editor_ui.close_chat_menus();
             ChatClickStep::Dirty
         }
         AIChatHit::RemoveAttachment(idx) => {
@@ -332,6 +347,7 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
             state.chat.switch_to(idx);
             state.rebuild_chat_models();
             state.editor_ui.close_chat_model_picker();
+            state.editor_ui.close_chat_menus();
             // Active session changed: the host rotates the transcript-cache
             // owner synchronously so a pointer move arriving before the next
             // paint reads None instead of pairing the previous tab's cached

@@ -330,7 +330,7 @@ fn the_composer_card_header_opens_the_agent_tab_and_closes_the_model_picker() {
 }
 
 #[test]
-fn chat_model_picker_visible_over_topbar_wins_press() {
+fn chat_model_picker_in_a_short_window_stays_on_screen_and_wins_press() {
     let mut host = WidgetHostNative::new();
     // The expanded chat panel lives in the rail's Agent tab; anywhere
     // else the chat is composer-only, so put the rail on its home.
@@ -338,25 +338,21 @@ fn chat_model_picker_visible_over_topbar_wins_press() {
     seed_many_chat_models(&mut host, 10);
     host.set_now_ms(456);
     host.editor_state_mut().editor_ui.chat_model_picker.open = true;
-    // A SHORT viewport is the one desktop shape where the capped picker
-    // still climbs past the rail top into the top bar's band: the rail
-    // body is only as tall as the window, and the picker is 288 px.
-    // The floating panel that used to reach up here on its own is
-    // retired — this is the remaining route, and the press precedence
-    // it always guarded still applies.
-    let viewport = (1200.0, 360.0);
+    // The desktop's shortest window: the capped 288 px picker cannot fit
+    // above the composer, so it slides down over it and keeps its search
+    // strip inside the rail instead of climbing past the window top.
+    let viewport = (1200.0, 400.0);
     let chat = host.ai_chat_rect(viewport.0, viewport.1).unwrap();
     let panel = AIChatPlaceholder::from_editor(host.editor_state());
     let picker = panel.model_picker_bounds(chat).unwrap();
     assert!(
-        picker.origin.y < de_editor_ui::widgets::TOP_BAR_HEIGHT,
-        "fixture must put the picker's search strip over the top bar"
+        picker.origin.y >= chat.origin.y,
+        "picker stays inside the rail"
     );
-    let search_top = picker.origin.y.max(0.0);
-    let search_bottom = (picker.origin.y + ai_chat_model_picker::MODEL_SEARCH_H)
-        .min(de_editor_ui::widgets::TOP_BAR_HEIGHT);
-    assert!(search_top < search_bottom);
-    let point = Point2D::new(picker.origin.x + 24.0, (search_top + search_bottom) / 2.0);
+    let point = Point2D::new(
+        picker.origin.x + 24.0,
+        picker.origin.y + ai_chat_model_picker::MODEL_SEARCH_H / 2.0,
+    );
     assert_eq!(
         panel.hit_test(chat, point),
         Some(de_editor_ui::widgets::AIChatHit::FocusModelSearch)

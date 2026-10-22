@@ -248,6 +248,7 @@ pub fn chat_header_hover(
         W::ToggleCollapse => Some(O::ToggleCollapse),
         W::ToggleMaximize => Some(O::ToggleMaximize),
         W::NewChat => Some(O::NewChat),
+        W::ToggleSessionMenu => Some(O::SessionMenu),
         _ => None,
     }
 }

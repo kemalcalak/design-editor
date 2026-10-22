@@ -257,24 +257,16 @@ fn chat_hit_test_prioritizes_picker_outside_panel_and_over_header_resize() {
     );
 
     // The capped 10-model popup covers both the header and the north resize
-    // gutter. Its visible rows must win over the hidden controls underneath.
-    // Probe y's moved with the Studio metrics (header 22→26, rows 28→36,
-    // list pad 6→8 shift the first rows down 6 px inside the same capped
-    // card): the old chat.y+18 / chat.y pair landed both probes on row 0.
-    assert_eq!(
-        panel.hit_test(
-            chat,
-            Point2D::new(chat.origin.x + 25.0, chat.origin.y + 34.0)
-        ),
-        Some(AIChatHit::SelectModel(1))
-    );
-    assert_eq!(
-        panel.hit_test(
-            chat,
-            Point2D::new(chat.origin.x + 25.0, chat.origin.y - 2.0)
-        ),
-        Some(AIChatHit::SelectModel(0))
-    );
+    // gutter. Its visible rows must win over the hidden controls underneath
+    // (the session select there, and the resize edge).
+    for y in [chat.origin.y + 34.0, chat.origin.y - 2.0] {
+        let probe = Point2D::new(picker.origin.x + 25.0, y);
+        assert!(picker.contains(probe));
+        assert!(
+            matches!(panel.hit_test(chat, probe), Some(AIChatHit::SelectModel(_))),
+            "a picker row at y={y} must win over the header and resize gutter"
+        );
+    }
 }
 
 #[test]

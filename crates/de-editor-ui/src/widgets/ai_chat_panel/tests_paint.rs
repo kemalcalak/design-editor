@@ -3,7 +3,7 @@
 //! emitted draw ops. Sibling of `tests.rs`, split to keep both files
 //! under the 800-line cap.
 
-use super::tests::{seed_available_model, toolbar_center_y};
+use super::tests::{has_fill_rect, seed_available_model};
 use super::*;
 
 pub(in super::super) fn assert_close(actual: f32, expected: f32) {
@@ -33,7 +33,7 @@ fn paint_header_uses_auto_generated_chat_title() {
     // The expanded panel only exists where the conversation lives:
     // the rail's Agent tab. Elsewhere the chat is composer-only.
     s.editor_ui.enter_chat_tab();
-    s.chat.title = "现代移动端登录页面".into();
+    s.chat.title = "Pricing page".into();
     let panel = AIChatPlaceholder::from_editor(&s);
     let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
     let mut backend = PanelPaintBackend::default();
@@ -43,26 +43,20 @@ fn paint_header_uses_auto_generated_chat_title() {
 
     panel.paint(&mut cx, rect);
 
-    // old→new (MT.2 tab row): tab title font is now TAB_FONT_SIZE = 12px
-    // (was 13px in the single active pill from #27 restyle). The tab row
-    // always renders the active tab title — possibly ellipsized when the
-    // title is longer than the tab width. We check that a text run whose
-    // content starts with the title prefix appears at TAB_FONT_SIZE.
-    let tab_font = crate::widgets::ai_chat_panel_header::TAB_FONT_SIZE;
+    let select = panel.header(rect).select;
     assert!(
         backend
             .texts
             .iter()
-            .any(|(text, size, _, _)| text.starts_with("现代移动端")
-                && (*size - tab_font).abs() < 1e-4),
-        "expanded header tab row should render the current chat title at TAB_FONT_SIZE={tab_font}"
+            .any(|(text, _, _, at)| text == "Pricing page"
+                && at.x > select.origin.x
+                && at.x < select.origin.x + select.size.x),
+        "the session select shows the chat's title"
     );
 }
 
 #[test]
 fn paint_quick_action_card_hover_adds_visible_feedback() {
-    // old→new (#33): pills use EXAMPLE_PILL_RADIUS (~20px) not 8px.
-    // old→new (#37): pills now use EXAMPLE_PILL_RADIUS=14px (compact).
     let mut s = EditorState::new();
     // The expanded panel only exists where the conversation lives:
     // the rail's Agent tab. Elsewhere the chat is composer-only.
@@ -80,19 +74,17 @@ fn paint_quick_action_card_hover_adds_visible_feedback() {
     panel.paint(&mut cx, rect);
 
     assert!(
-        backend.round_rects.iter().any(|(r, radius, color)| {
-            rect_close(*r, cards[0])
-                && *radius >= 12.0
-                && color_close(*color, panel.theme.button_hover)
-        }),
-        "hovered quick-action pill should paint a visible hover wash with large radius"
+        backend
+            .round_rects
+            .iter()
+            .any(|(r, _, color)| rect_close(*r, cards[0])
+                && color_close(*color, panel.palette.subtle)),
+        "the hover prompt row should paint the subtle wash"
     );
 }
 
 #[test]
 fn paint_quick_action_card_pressed_uses_shared_feedback() {
-    // old→new (#33): pills use EXAMPLE_PILL_RADIUS (~20px) not 8px.
-    // old→new (#37): pills now use EXAMPLE_PILL_RADIUS=14px (compact).
     let mut s = EditorState::new();
     // The expanded panel only exists where the conversation lives:
     // the rail's Agent tab. Elsewhere the chat is composer-only.
@@ -102,10 +94,6 @@ fn paint_quick_action_card_pressed_uses_shared_feedback() {
     let panel = AIChatPlaceholder::from_editor(&s);
     let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
     let cards = crate::widgets::ai_chat_panel_paint::example_card_rects(rect);
-    let expected = panel
-        .theme
-        .button_hover
-        .with_alpha(panel.theme.button_hover.a * 1.8);
     let mut backend = PanelPaintBackend::default();
     let mut cx = PaintCx {
         backend: &mut backend,
@@ -114,77 +102,12 @@ fn paint_quick_action_card_pressed_uses_shared_feedback() {
     panel.paint(&mut cx, rect);
 
     assert!(
-        backend.round_rects.iter().any(|(r, radius, color)| {
-            rect_close(*r, cards[0]) && *radius >= 12.0 && color_close(*color, expected)
-        }),
-        "pressed quick-action pill should paint the shared pressed feedback token with large radius"
-    );
-}
-
-#[test]
-fn paint_new_chat_tooltip_after_transcript_bubbles() {
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    s.editor_ui.chat_header_hover = Some(de_editor_core::ChatHeaderButton::NewChat);
-    s.chat
-        .messages
-        .push(de_editor_core::ChatMessage::user("Design the KPI row"));
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let body = panel.body_rect(rect);
-    let user_bubble =
-        crate::widgets::ai_chat_transcript::build_transcript(&s.chat.messages, body, panel.locale)
-            [0]
-        .bubble
-        .as_ref()
-        .expect("user bubble")
-        .rect;
-    let tooltip = crate::widgets::ai_chat_panel_header::new_chat_tooltip_rect(rect);
-    let tooltip_bg = crate::Color {
-        r: 0.12,
-        g: 0.12,
-        b: 0.14,
-        a: 0.97,
-    };
-    let mut backend = PanelPaintBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    let user_bubble_op = backend
-        .ops
-        .iter()
-        .position(|op| {
-            matches!(
-                op,
-                PanelPaintOp::FillRoundRect { rect, radius, color }
-                    if rect_close(*rect, user_bubble)
-                        && (*radius - 14.0).abs() < 0.01
-                        && color_close(*color, panel.theme.user_bubble)
-            )
-        })
-        .expect("user transcript bubble painted");
-    let tooltip_op = backend
-        .ops
-        .iter()
-        .position(|op| {
-            matches!(
-                op,
-                PanelPaintOp::FillRoundRect { rect, radius, color }
-                    if rect_close(*rect, tooltip)
-                        && (*radius - 6.0).abs() < 0.01
-                        && color_close(*color, tooltip_bg)
-            )
-        })
-        .expect("new-chat tooltip painted");
-
-    assert!(
-        tooltip_op > user_bubble_op,
-        "tooltip fill op index {tooltip_op} must be after transcript bubble index {user_bubble_op}"
+        backend
+            .round_rects
+            .iter()
+            .any(|(r, _, color)| rect_close(*r, cards[0])
+                && color_close(*color, panel.palette.subtle)),
+        "the pressed prompt row should paint the subtle wash"
     );
 }
 
@@ -210,9 +133,7 @@ fn paint_send_button_hover_adds_visible_feedback() {
         };
         panel.paint(&mut cx, rect);
         // Use footer_layout to get the exact rect rather than hardcoding.
-        let input = panel.input_rect(rect);
-        let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-        let footer = panel.footer_layout(rect, input, toolbar_top);
+        let footer = panel.footer_layout(rect);
         backend
             .round_rects
             .iter()
@@ -258,304 +179,97 @@ fn from_editor_picks_up_chat_button_press_targets() {
 }
 
 #[test]
-fn paint_footer_neutral_hovers_use_visible_feedback() {
-    // #27 restyle: model pill and speed/attach have hover washes; send
-    // is now a filled circle (bg always present).
-    // Test the subset that emit a neutral wash rect on hover.
-    let cases = [
+fn paint_footer_hovers_use_the_subtle_wash() {
+    for hover in [
+        de_editor_core::ChatFooterButton::PlusMenu,
         de_editor_core::ChatFooterButton::ModelPicker,
-        de_editor_core::ChatFooterButton::PromptCenter,
-        de_editor_core::ChatFooterButton::SpeedChip,
-        de_editor_core::ChatFooterButton::ThinkingMode,
-        de_editor_core::ChatFooterButton::AddAttachment,
-    ];
-
-    for hover in cases {
+    ] {
         let mut s = EditorState::new();
         // The expanded panel only exists where the conversation lives:
         // the rail's Agent tab. Elsewhere the chat is composer-only.
         s.editor_ui.enter_chat_tab();
         seed_available_model(&mut s);
         s.editor_ui.chat_footer_hover = Some(hover);
-        let panel = AIChatPlaceholder::from_editor(&s);
+        let mut panel = AIChatPlaceholder::from_editor(&s);
+        panel.usable_agent = true;
         let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-        let input = panel.input_rect(rect);
-        let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-        let footer = panel.footer_layout(rect, input, toolbar_top);
-        // old→new: AgentTeam removed (zero-width in #27); Send is always
-        // a filled circle so its hover is a bg-alpha change, not a separate wash.
+        let footer = panel.footer_layout(rect);
         let target = match hover {
-            de_editor_core::ChatFooterButton::PromptCenter => footer.prompt_center,
-            de_editor_core::ChatFooterButton::ModelPicker => footer.model,
-            de_editor_core::ChatFooterButton::SpeedChip => footer.speed,
-            de_editor_core::ChatFooterButton::ThinkingMode => footer.thinking,
-            de_editor_core::ChatFooterButton::AgentTeam => footer.agent_team,
-            de_editor_core::ChatFooterButton::AddAttachment => footer.attach,
-            de_editor_core::ChatFooterButton::Send => footer.send,
-            de_editor_core::ChatFooterButton::Stop => unreachable!(),
+            de_editor_core::ChatFooterButton::PlusMenu => footer.plus,
+            _ => footer.model,
         };
         let mut backend = PanelPaintBackend::default();
         let mut cx = PaintCx {
             backend: &mut backend,
         };
-
         panel.paint(&mut cx, rect);
-
         assert!(
-            backend.round_rects.iter().any(|(r, _, color)| {
-                rect_close(*r, target)
-                    && !color_close(*color, panel.theme.muted)
-                    && color.a > panel.theme.button_hover.a + 0.01
-            }),
-            "{hover:?} hover should paint a visible neutral wash"
+            backend
+                .round_rects
+                .iter()
+                .any(|(r, _, color)| rect_close(*r, target)
+                    && color_close(*color, panel.palette.subtle)),
+            "{hover:?} hover should paint the subtle wash on its own control"
         );
     }
 }
 
 #[test]
-fn paint_model_picker_hover_stays_inside_model_chip() {
+fn paint_session_row_shows_the_chat_title_and_new() {
     let mut s = EditorState::new();
     // The expanded panel only exists where the conversation lives:
     // the rail's Agent tab. Elsewhere the chat is composer-only.
     s.editor_ui.enter_chat_tab();
-    seed_available_model(&mut s);
-    s.editor_ui.chat_footer_hover = Some(de_editor_core::ChatFooterButton::ModelPicker);
     let panel = AIChatPlaceholder::from_editor(&s);
     let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let input = panel.input_rect(rect);
-    let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-    let footer = panel.footer_layout(rect, input, toolbar_top);
     let mut backend = PanelPaintBackend::default();
     let mut cx = PaintCx {
         backend: &mut backend,
     };
-
     panel.paint(&mut cx, rect);
-
-    let hover = backend
-        .round_rects
-        .iter()
-        .find(|(r, _, color)| {
-            rect_close(*r, footer.model)
-                && color_close(*color, chat_neutral_hover_color(&panel.theme))
-        })
-        .expect("model picker hover should paint a visible wash");
-
-    // old→new (#38): ⚡ chip is now RIGHT-aligned; model hover rect must stay
-    // within the model pill bounds (does not extend to the speed chip).
-    assert!(
-        hover.0.origin.x + hover.0.size.x <= footer.model.origin.x + footer.model.size.x + 0.01,
-        "model hover rect should stay within the model pill bounds"
-    );
-    // Model right edge stays well before the speed chip (now right-aligned).
-    assert!(
-        footer.model.origin.x + footer.model.size.x < footer.speed.origin.x,
-        "model pill right edge must be left of the speed chip (#38)"
-    );
-}
-
-#[test]
-fn footer_speed_chip_paints_agent_team_size_after_zap_icon() {
-    // old→new (#32): the ⚡ chip now shows "{N}x" (agent_team_size) instead of the
-    // effort level label. old test was footer_speed_chip_paints_effort_label_after_zap_icon.
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    seed_available_model(&mut s);
-    // Set a non-default value to confirm it's the agent_team_size being painted.
-    s.chat.agent_team_size = 3;
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let input = panel.input_rect(rect);
-    let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-    let footer = panel.footer_layout(rect, input, toolbar_top);
-    let mut backend = PanelPaintBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    // The "{N}x" label should appear right of the ⚡ icon origin (x = speed.origin + 19).
-    let agents_lbl = "3x";
-    let (_, _, _, label_origin) = backend
+    let in_header = |y: f32| y > 0.0 && y < HEADER_HEIGHT;
+    assert!(backend
         .texts
         .iter()
-        .find(|(text, _, _, _)| text == agents_lbl)
-        .expect("footer should paint agent_team_size label (e.g. '3x') inside speed chip");
-    // Label must be to the right of the speed chip start and within the chip.
-    assert!(
-        label_origin.x > footer.speed.origin.x,
-        "agents label must be right of the chip origin"
-    );
-    assert!(
-        label_origin.x < footer.speed.origin.x + footer.speed.size.x + 4.0,
-        "agents label must stay within the chip bounds (got x={}, chip right={})",
-        label_origin.x,
-        footer.speed.origin.x + footer.speed.size.x
-    );
+        .any(|(t, _, _, at)| t == &s.chat.title && in_header(at.y)));
+    assert!(backend
+        .texts
+        .iter()
+        .any(|(t, _, _, at)| t == &panel.label_new && in_header(at.y)));
 }
 
 #[test]
-fn footer_agent_team_chip_is_zero_width_in_27_layout() {
-    // old test: footer_agent_team_chip_uses_comfortable_pill_spacing
-    // old→new: #27 removes the agent-team chip from the visible toolbar;
-    // the speed chip (⚡ + effort label) takes its visual role.
-    // The agent_team rect is retained in FooterLayout for round-trip
-    // compatibility but has zero width so contains() never fires.
+fn model_chip_shows_model_and_provider_or_the_provider_link() {
     let mut s = EditorState::new();
     // The expanded panel only exists where the conversation lives:
     // the rail's Agent tab. Elsewhere the chat is composer-only.
     s.editor_ui.enter_chat_tab();
     seed_available_model(&mut s);
-    s.chat.agent_team_size = 2;
-    let panel = AIChatPlaceholder::from_editor(&s);
     let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let input = panel.input_rect(rect);
-    let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-    let footer = panel.footer_layout(rect, input, toolbar_top);
-
-    assert_close(footer.agent_team.size.x, 0.0);
-    // Speed chip is now the effort indicator; it follows the model pill.
-    assert!(footer.speed.size.x > 0.0);
-    assert!(footer.speed.origin.x > footer.model.origin.x + footer.model.size.x);
-}
-
-#[test]
-fn footer_model_dropdown_keeps_short_model_name_readable() {
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    s.chat
-        .available_models
-        .push(de_editor_core::chat::ModelEntry::new(
-            de_editor_core::chat::AgentProvider::CodexCli,
-            "haiku",
-            "Haiku",
-        ));
-    s.selection.set = vec![de_editor_core::NodeId::new("n1")];
-    s.selection.anchor = de_editor_core::NodeId::new("n1");
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let input = panel.input_rect(rect);
-    let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-    let footer = panel.footer_layout(rect, input, toolbar_top);
-    let mut backend = PanelPaintBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
+    let paint = |panel: &AIChatPlaceholder<'_>| {
+        let mut backend = PanelPaintBackend::default();
+        let mut cx = PaintCx {
+            backend: &mut backend,
+        };
+        panel.paint(&mut cx, rect);
+        backend.texts
     };
-
-    panel.paint(&mut cx, rect);
-
-    assert!(
-        footer.model.size.x >= 96.0,
-        "short model names still need a comfortable dropdown width"
-    );
-    assert!(
-        backend.texts.iter().any(|(text, _, _, _)| text == "Haiku"),
-        "short model name should not truncate inside the dropdown"
-    );
-}
-
-#[test]
-fn footer_toolbar_labels_align_and_model_label_leaves_chevron_room() {
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    s.chat
-        .available_models
-        .push(de_editor_core::chat::ModelEntry::new(
-            de_editor_core::chat::AgentProvider::CodexCli,
-            "default",
-            "Default (recommended)",
-        ));
-    s.selection.set = vec![de_editor_core::NodeId::new("n1")];
-    s.selection.anchor = de_editor_core::NodeId::new("n1");
+    // No agent can answer: the chip is Home's "Add a model provider" link.
     let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let input = panel.input_rect(rect);
-    let toolbar_top = input.origin.y + INPUT_AREA_HEIGHT;
-    let toolbar_center = toolbar_center_y();
-    let footer = panel.footer_layout(rect, input, toolbar_top);
-    assert!(
-        footer.model.size.x >= 128.0,
-        "model dropdown should be wide enough to show a recognizable model name"
-    );
-    let mut backend = PanelPaintBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    let (painted_model, model_size, _, model_origin) = backend
-        .texts
+    assert!(paint(&panel)
         .iter()
-        .find(|(text, _, _, _)| text.starts_with("Default") && text.ends_with('…'))
-        .expect("overflowing model label should truncate with an ellipsis");
-    let model_right = model_origin.x + footer_label_width(painted_model, *model_size);
-    let chevron_left = footer.model.origin.x + footer.model.size.x - 16.0;
-    assert!(
-        model_right <= chevron_left - 4.0,
-        "model label should leave room for chevron; label right={model_right}, chevron={chevron_left}"
-    );
-
-    // old→new (#32): the effort label was replaced by the agent_team_size "{N}x" label.
-    // old→new (#27): "1x" agent_team chip and "已选择 1 个" selected count were removed.
-    // Both the model label and the "{N}x" chip label must be vertically centered.
-    let agents_lbl = format!("{}x", s.chat.agent_team_size);
-    for label in [painted_model.as_str(), agents_lbl.as_str()] {
-        let (_, size, _, origin) = backend
-            .texts
-            .iter()
-            .find(|(text, _, _, _)| text == label)
-            .expect("footer label should paint");
-        let visual_center = origin.y - size * 0.35;
-        assert!(
-            (visual_center - toolbar_center).abs() <= 1.0,
-            "{label} should be vertically centered; text center={visual_center}, toolbar={toolbar_center}"
-        );
-    }
-}
-
-#[test]
-fn paint_expanded_header_active_tab_pill_is_painted() {
-    // old→new (MT.2 tab row): ToggleCollapse hover no longer paints a wash across
-    // the whole title area — hovering the chevron only changes the chevron icon
-    // color. Instead the tab row always paints the active tab with a filled pill.
-    // This test verifies: with one tab (default), the active tab pill is painted
-    // inside the tab zone (x >= tab_row_left, y in header range).
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let mut backend = PanelPaintBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    let tab_left = crate::widgets::ai_chat_panel_header::tab_row_left(rect);
-    let tab_h = 26.0; // PILL_H
-    let tab_radius = 8.0; // PILL_RADIUS
-                          // Active tab pill: a round-rect with PILL_RADIUS inside the tab zone,
-                          // filled with theme.secondary. Verify at least one such rect is painted.
-    assert!(
-        backend.round_rects.iter().any(|(r, radius, color)| {
-            r.origin.x >= tab_left - 0.01
-                && r.origin.x < tab_left + 200.0     // within the tab zone
-                && (r.size.y - tab_h).abs() < 0.01   // exact pill height
-                && (*radius - tab_radius).abs() < 0.01
-                && color_close(*color, panel.theme.secondary)
-        }),
-        "active tab pill must be painted inside the tab zone with PILL_H={tab_h} and theme.secondary fill"
-    );
+        .any(|(t, ..)| t == &panel.label_no_models));
+    // With one, it reads "model · provider", inside the chip.
+    let mut panel = AIChatPlaceholder::from_editor(&s);
+    panel.usable_agent = true;
+    panel.model_chip_label = "GPT-5 · Codex CLI".to_string();
+    let footer = panel.footer_layout(rect);
+    let texts = paint(&panel);
+    let (_, _, _, at) = texts
+        .iter()
+        .find(|(t, ..)| t.starts_with("GPT-5"))
+        .expect("chip label painted");
+    assert!(at.x >= footer.model.origin.x && at.x < footer.model.origin.x + footer.model.size.x);
 }
 
 #[derive(Default)]
@@ -566,16 +280,6 @@ struct PanelPaintBackend {
     svg_strokes: Vec<(Point2D, f32, crate::Color, f32)>,
     svg_paths: Vec<String>,
     stroke_lines: usize,
-    ops: Vec<PanelPaintOp>,
-}
-
-#[derive(Debug, Clone, Copy)]
-enum PanelPaintOp {
-    FillRoundRect {
-        rect: Rect,
-        radius: f32,
-        color: crate::Color,
-    },
 }
 
 impl crate::RenderBackend for PanelPaintBackend {
@@ -600,11 +304,6 @@ impl crate::RenderBackend for PanelPaintBackend {
     }
     fn fill_round_rect(&mut self, rect: Rect, radius: f32, color: crate::Color) {
         self.round_rects.push((rect, radius, color));
-        self.ops.push(PanelPaintOp::FillRoundRect {
-            rect,
-            radius,
-            color,
-        });
     }
     fn stroke_round_rect(&mut self, _: Rect, _: f32, _: crate::Color, _: f32) {}
     fn stroke_svg_path(
@@ -625,57 +324,13 @@ impl crate::RenderBackend for PanelPaintBackend {
 }
 
 #[test]
-fn paint_model_chip_uses_key_glyph_for_builtin_model() {
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    s.chat
-        .available_models
-        .push(de_editor_core::chat::ModelEntry::builtin_with_display_name(
-            de_editor_core::chat::AgentProvider::CodexCli,
-            "builtin-minimax",
-            "MiniMax",
-            "builtin:builtin-minimax:MiniMax-M2.7",
-            "MiniMax-M2.7",
-        ));
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let mut backend = PanelPaintBackend::default();
-    let mut cx = PaintCx {
-        backend: &mut backend,
-    };
-
-    panel.paint(&mut cx, rect);
-
-    let key_paths = crate::widgets::icons::Icon::Key.paths();
-    assert!(
-        key_paths
-            .iter()
-            .all(|kp| backend.svg_paths.iter().any(|p| p == kp)),
-        "built-in selected model chip should paint the lucide Key glyph"
-    );
-}
-
-fn has_fill_rect(fills: &[(Rect, crate::Color)], expected: Rect) -> bool {
-    fills.iter().any(|(rect, _)| {
-        (rect.origin.x - expected.origin.x).abs() < 1e-4
-            && (rect.origin.y - expected.origin.y).abs() < 1e-4
-            && (rect.size.x - expected.size.x).abs() < 1e-4
-            && (rect.size.y - expected.size.y).abs() < 1e-4
-    })
-}
-
-#[test]
-fn paint_draws_header_divider_and_message_body_background() {
+fn paint_draws_the_session_row_rule_and_the_composer_card() {
     let mut s = EditorState::new();
     // The expanded panel only exists where the conversation lives:
     // the rail's Agent tab. Elsewhere the chat is composer-only.
     s.editor_ui.enter_chat_tab();
     let panel = AIChatPlaceholder::from_editor(&s);
     let rect = Rect::xywh(10.0, 20.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    let input_h = INPUT_BASE_HEIGHT;
-    let sep_y = rect.origin.y + rect.size.y - input_h;
     let mut backend = PanelPaintBackend::default();
     let mut cx = PaintCx {
         backend: &mut backend,
@@ -683,26 +338,24 @@ fn paint_draws_header_divider_and_message_body_background() {
 
     panel.paint(&mut cx, rect);
 
-    // Pinned into the rail the panel keeps ONE rule, the one above the
-    // composer: the rail already bounds it, so the header hairline and
-    // the transcript wash would be a second border inside one surface.
-    assert!(
-        !has_fill_rect(
-            &backend.fills,
-            Rect::xywh(
-                rect.origin.x + 1.0,
-                rect.origin.y + HEADER_HEIGHT,
-                rect.size.x - 2.0,
-                1.0
-            )
-        ),
-        "no header hairline in the rail"
-    );
+    // Pinned into the rail, the panel is the page background with one rule
+    // under the session row (#26), and the composer is a card, not a rule.
+    assert!(has_fill_rect(&backend.fills, rect), "rail background");
     assert!(
         has_fill_rect(
             &backend.fills,
-            Rect::xywh(rect.origin.x + 1.0, sep_y, rect.size.x - 2.0, 1.0)
+            Rect::xywh(
+                rect.origin.x,
+                rect.origin.y + HEADER_HEIGHT - 1.0,
+                rect.size.x,
+                1.0
+            )
         ),
-        "the composer still has its rule"
+        "the session row's hairline"
     );
+    let card = panel.composer_card(rect);
+    assert!(backend
+        .round_rects
+        .iter()
+        .any(|(r, _, c)| rect_close(*r, card) && color_close(*c, panel.palette.surface)));
 }

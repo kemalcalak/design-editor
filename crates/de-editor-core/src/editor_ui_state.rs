@@ -269,9 +269,15 @@ pub struct EditorUiState {
     pub chat_header_hover: Option<crate::chat_button_state::ChatHeaderButton>,
     /// Which bottom-toolbar chat control the cursor is over.
     pub chat_footer_hover: Option<crate::chat_button_state::ChatFooterButton>,
-    /// Index of the tab-row tab the cursor is over — drives the × close glyph
-    /// and hover wash on inactive tabs. `None` when not hovering any tab.
+    /// Index of the session-menu row the cursor is over — drives the row
+    /// wash and its × close glyph. `None` when not hovering any row.
     pub chat_tab_hover: Option<usize>,
+    /// Whether the session select's list of chats is open.
+    pub chat_session_menu_open: bool,
+    /// Whether the composer's "+" menu is open.
+    pub chat_plus_menu_open: bool,
+    /// Which "+" menu row the cursor is over.
+    pub chat_plus_menu_hover: Option<u8>,
     /// When the cursor came to rest on the pinned-style chip — the dwell clock
     /// its detail card waits out.
     ///
