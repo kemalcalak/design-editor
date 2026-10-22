@@ -461,6 +461,17 @@ impl EditorUiState {
         changed
     }
 
+    /// Whether a surface that shows agent-CLI provider state is on screen:
+    /// the chat model picker, or the Settings modal on its Agents tab.
+    /// Desktop defers its CLI probes (model discovery and the remembered
+    /// connection replay) until this first turns true, so a launch that
+    /// never looks at agents never spawns a CLI.
+    pub fn shows_cli_provider_state(&self) -> bool {
+        self.chat_model_picker.open
+            || (self.agent_settings_open
+                && self.agent_settings.tab == crate::agent_settings::AgentSettingsTab::Agents)
+    }
+
     pub fn toggle_chat_model_picker(&mut self) -> bool {
         let opening = !self.chat_model_picker.open;
         self.close_chat_model_picker();

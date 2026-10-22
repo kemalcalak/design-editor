@@ -7,13 +7,9 @@
 use super::*;
 use crate::widgets::text_metrics;
 
-pub(super) fn agents_content_height(
-    settings: &AgentSettings,
-    mode: AgentSettingsPanelMode,
-    ui: &EditorUiState,
-) -> f32 {
+pub(super) fn agents_content_height(settings: &AgentSettings, mode: AgentSettingsPanelMode) -> f32 {
     let builtin = AGENTS_HERO_HEIGHT + agent_settings_builtin::content_height_for_ui(settings);
-    if !mode.shows_external_agents(ui) {
+    if !mode.shows_external_agents() {
         return builtin + CONTENT_TAIL_PAD;
     }
     // Walk the same ladder the row geometry does, so the scroll range
@@ -141,15 +137,9 @@ fn paint_panel(cx: &mut PaintCx<'_>, panel: Rect, args: PanelPaintArgs<'_>) {
         AgentSettingsTab::Agents => {
             paint_agents_tab(cx, theme, settings, ui, content_rect, now_ms, mode)
         }
-        AgentSettingsTab::Mcp => agent_settings_mcp::paint_mcp_tab(
-            cx,
-            theme,
-            settings,
-            ui,
-            content_rect,
-            now_ms,
-            ui.external_cli_available,
-        ),
+        AgentSettingsTab::Mcp => {
+            agent_settings_mcp::paint_mcp_tab(cx, theme, settings, ui, content_rect, now_ms)
+        }
         AgentSettingsTab::Images => {
             paint_secondary_hero(cx, theme, ui, content_rect, "settings.images");
             let body_h = agent_settings_images::responsive_content_height(settings);
@@ -280,7 +270,7 @@ fn paint_agents_tab(
     super::hero::paint_agents_hero(cx, theme, ui, content);
     let mut y = agents_body_top(content);
     y = agent_settings_builtin::paint_builtin_section(cx, theme, settings, ui, content, y, now_ms);
-    if !mode.shows_external_agents(ui) {
+    if !mode.shows_external_agents() {
         return;
     }
     y += SECTION_GAP;

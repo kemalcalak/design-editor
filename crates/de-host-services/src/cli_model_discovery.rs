@@ -120,7 +120,7 @@ fn trim_catalog_bullet(line: &str) -> (&str, bool) {
 }
 
 /// Query the real Grok Build model catalog. The command is bounded because
-/// model discovery runs during startup and must never strand its worker.
+/// model discovery runs in a background worker and must never strand it.
 pub fn query_grok_models() -> Result<Vec<ModelEntry>, CliProbeError> {
     let exe = resolve_cli("grok").ok_or(CliProbeError::NotFound {
         provider: "Grok Build",
@@ -196,7 +196,7 @@ pub fn discover_deepseek_harness() -> Vec<ModelEntry> {
 }
 
 /// The one model entry the DeepSeek Harness card and chat picker
-/// advertise. Shared by startup discovery and the connect probe.
+/// advertise. Shared by background discovery and the connect probe.
 pub fn deepseek_harness_default_model() -> Vec<ModelEntry> {
     vec![ModelEntry::new(
         AgentProvider::DeepSeekHarness,

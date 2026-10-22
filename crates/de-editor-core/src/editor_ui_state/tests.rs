@@ -287,6 +287,32 @@ fn chat_model_picker_helpers_reset_select_interaction_state_and_search() {
 }
 
 #[test]
+fn cli_provider_state_shows_only_on_the_model_picker_or_agents_tab() {
+    use crate::agent_settings::AgentSettingsTab;
+    let mut ui = EditorUiState::new();
+    assert!(!ui.shows_cli_provider_state(), "a fresh launch shows none");
+
+    ui.toggle_chat_model_picker();
+    assert!(ui.shows_cli_provider_state());
+    ui.close_chat_model_picker();
+    assert!(!ui.shows_cli_provider_state());
+
+    ui.agent_settings.tab = AgentSettingsTab::Mcp;
+    ui.agent_settings_open = true;
+    assert!(
+        !ui.shows_cli_provider_state(),
+        "the MCP tab does not show provider connection state"
+    );
+    ui.agent_settings.tab = AgentSettingsTab::Agents;
+    assert!(ui.shows_cli_provider_state());
+    ui.agent_settings_open = false;
+    assert!(
+        !ui.shows_cli_provider_state(),
+        "a remembered Agents tab behind a closed modal shows nothing"
+    );
+}
+
+#[test]
 fn icon_picker_helpers_reset_select_interaction_state_and_search() {
     let mut ui = EditorUiState::new();
     ui.icon_picker_replace_selection = true;

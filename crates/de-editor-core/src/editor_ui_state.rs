@@ -51,10 +51,6 @@ pub struct EditorUiState {
     pub chat_tab_width_bumped: bool,
     /// Transient host ownership of chat; hides the internal Agent tab.
     pub host_owns_chat: bool,
-    /// Whether external CLI agents (Claude Code, Codex, …) can run on this
-    /// platform. When cleared, the chat catalog and the settings panel hide
-    /// every external-CLI surface.
-    pub external_cli_available: bool,
 
     // --- Theme + locale --------------------------------------------
     /// User's Design Editor theme preference — TopBar Sun icon flips it.

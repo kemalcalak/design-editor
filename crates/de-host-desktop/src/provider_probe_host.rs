@@ -127,7 +127,7 @@ impl DesktopApp {
         // list, not a snapshot of the current session: persisting failures
         // too meant a single bad probe — a GUI launch that inherited none
         // of the user's shell env, a machine offline at login — evicted the
-        // provider from the startup replay list permanently, so the app
+        // provider from the reconnect replay list permanently, so the app
         // could never retry on its own and the user had to press Connect
         // again every launch. A failed probe now leaves the list alone and
         // the next launch retries it. Explicit Disconnect still clears the
@@ -139,7 +139,7 @@ impl DesktopApp {
                 crate::agent_connect_store::save(&self.remembered_connections);
             }
         }
-        // Startup restore replays one silent probe per remembered
+        // The reconnect replay runs one silent probe per remembered
         // provider; queue the next one as each outcome lands.
         if let Some(next) = self.provider_reconnect_queue.pop() {
             self.host
@@ -160,7 +160,7 @@ impl DesktopApp {
     /// lands on `Error` and an in-flight one on `Probing`. Watching that
     /// TRANSITION rather than the `connected` flag is what separates a
     /// withdrawal from a failure — and it also spares the providers still
-    /// waiting their turn in the startup replay, whose cards are `Idle`
+    /// waiting their turn in the reconnect replay, whose cards are `Idle`
     /// too but were never non-`Idle` to begin with.
     pub(crate) fn persist_connection_changes(&mut self) {
         let settings = &self.host.editor_state().editor_ui.agent_settings;
@@ -197,35 +197,17 @@ impl DesktopApp {
         self.last_saved_pencil_cursor = Some(style);
     }
 
-    /// Begin the startup reconnect replay for providers remembered as
-    /// connected last session. The first probe starts immediately; the
-    /// rest ride the landing hook above, one at a time.
-    pub(crate) fn restore_remembered_connections(&mut self) {
-        let mut remembered = crate::agent_connect_store::load();
-        // Adopt the stored list as this session's last-known-good set
-        // before any probe runs, so a probe that fails cannot be mistaken
-        // for a user withdrawal and evict the provider.
+    /// Seed this session's last-known-good set from `agents.json` before
+    /// any probe runs, so a probe that fails cannot be mistaken for a user
+    /// withdrawal and evict the provider. Reads the store only; the
+    /// reconnect replay itself waits for `start_cli_probes_on_demand`.
+    pub(crate) fn load_remembered_connections(&mut self) {
+        let remembered = crate::agent_connect_store::load();
         self.remembered_connections = std::array::from_fn(|index| {
             AgentProvider::ALL
                 .get(index)
                 .is_some_and(|provider| remembered.contains(provider))
         });
-        if remembered.is_empty() {
-            return;
-        }
-        let first = remembered.remove(0);
-        remembered.reverse();
-        self.provider_reconnect_queue = remembered;
-        // `begin_provider_connect`, not a bare write to the request seam:
-        // the landing hook drops any outcome whose card is not in the
-        // Probing phase, so a seam-only request ran a real probe whose
-        // result was then discarded — and with it the hook that advances
-        // this queue, stranding every provider after the first.
-        self.host
-            .editor_state_mut()
-            .editor_ui
-            .agent_settings
-            .begin_provider_connect(first);
     }
 
     /// Whether a probe worker is in flight — keeps the idle event

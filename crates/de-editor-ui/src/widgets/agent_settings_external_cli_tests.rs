@@ -1,21 +1,11 @@
-//! Settings-modal coverage for the host capability
-//! `EditorUiState::external_cli_available`.
-//!
-//! A host that cannot spawn subprocess CLIs clears that flag, so the modal
-//! must hide every surface that only exists to add, connect, or configure
-//! one: the Agents tab's ACP section and its external-provider card list
-//! (with the section headers that introduce them), and the MCP tab's
-//! terminal-integration toggle grid. What stays is the built-in API-key
-//! provider section — the ONLY agent path on such a host — and the MCP
-//! server card itself.
-//!
-//! Every assertion here is a lockstep check: a hidden block must leave no
-//! live hit rect behind, and the content below it must shift up by
-//! exactly the hidden height (proved by pressing the shifted control).
+//! Settings-modal coverage for the external-CLI surfaces: the Agents
+//! tab's provider card list and ACP section, and the MCP tab's
+//! terminal-integration list. Every host that paints the modal can run
+//! agent CLIs, so each surface must stay reachable — every provider keeps
+//! a Connect target, a hover target, and a painted name, and every CLI
+//! keeps its MCP toggle.
 
-use crate::widgets::agent_settings_panel::{
-    content_viewport, mcp_copy_config_button, AgentSettingsHit, AgentSettingsPanel,
-};
+use crate::widgets::agent_settings_panel::{AgentSettingsHit, AgentSettingsPanel};
 use crate::widgets::test_capture_backend::CaptureBackend;
 use crate::widgets::{PaintCx, Widget};
 use crate::{Point2D, Rect};
@@ -32,11 +22,10 @@ const PROBE_STEP: f32 = 8.0;
 /// of the document can hide between two sampled offsets.
 const SCROLL_STEP: f32 = 24.0;
 
-fn state_for(tab: AgentSettingsTab, external_cli_available: bool) -> EditorState {
+fn state_for(tab: AgentSettingsTab) -> EditorState {
     let mut state = EditorState::default();
     state.editor_ui.locale = de_i18n::Locale::EnUs;
     state.editor_ui.agent_settings.tab = tab;
-    state.editor_ui.external_cli_available = external_cli_available;
     state
 }
 
@@ -169,161 +158,43 @@ fn cli_toggle_hits(hits: &[AgentSettingsHit]) -> Vec<McpCli> {
 // ---------------------------------------------------------------------
 
 #[test]
-fn desktop_agents_tab_still_offers_every_external_provider_card() {
-    let mut state = state_for(AgentSettingsTab::Agents, true);
+fn agents_tab_offers_every_external_provider_card() {
+    let mut state = state_for(AgentSettingsTab::Agents);
     let hits = reachable_hits(&mut state);
 
     let mut connects = connect_hits(&hits);
     connects.sort_by_key(|provider| provider.index());
     let mut expected = AgentProvider::ALL.to_vec();
     expected.sort_by_key(|provider| provider.index());
-    assert_eq!(
-        connects, expected,
-        "the desktop card list must stay byte-identical: every provider keeps a Connect target"
-    );
+    assert_eq!(connects, expected, "every provider keeps a Connect target");
     assert!(
         hits.contains(&AgentSettingsHit::AddAcpAgent),
         "the ACP section's add action belongs to the external-CLI half"
     );
     assert!(
         hits.contains(&AgentSettingsHit::AddProvider),
-        "the built-in API-key section's add action must be reachable on desktop"
+        "the built-in API-key section's add action must be reachable"
     );
 }
 
 #[test]
-fn hiding_external_clis_removes_every_agents_tab_cli_target() {
-    let mut state = state_for(AgentSettingsTab::Agents, false);
-    let hits = reachable_hits(&mut state);
-
-    assert!(
-        connect_hits(&hits).is_empty(),
-        "a hidden provider card must not leave a live Connect rect: {hits:?}"
-    );
-    for hit in &hits {
-        assert!(
-            !matches!(
-                hit,
-                AgentSettingsHit::AddAcpAgent
-                    | AgentSettingsHit::AddAcpPreset(_)
-                    | AgentSettingsHit::ToggleAcpConnected(_)
-                    | AgentSettingsHit::EditAcpAgent(_)
-                    | AgentSettingsHit::RemoveAcpAgent(_)
-                    | AgentSettingsHit::FocusAcpAgent { .. }
-                    | AgentSettingsHit::FocusAcpAgentDraft(_)
-                    | AgentSettingsHit::SaveAcpAgentDraft
-                    | AgentSettingsHit::CancelAcpAgentDraft
-            ),
-            "{hit:?} is an external-CLI target and must be gone with the section"
-        );
-    }
-}
-
-/// Anything the built-in API-key section owns. Its geometry sits ABOVE
-/// the external-CLI half, so hiding that half must leave this set
-/// untouched — same controls, same rects.
-fn builtin_hits(hits: &[AgentSettingsHit]) -> Vec<String> {
-    let mut out: Vec<String> = hits
-        .iter()
-        .filter(|hit| {
-            matches!(
-                hit,
-                AgentSettingsHit::AddProvider
-                    | AgentSettingsHit::FocusBuiltinAgent { .. }
-                    | AgentSettingsHit::FocusBuiltinAgentDraft(_)
-                    | AgentSettingsHit::ToggleBuiltinAgentKind(_)
-                    | AgentSettingsHit::ToggleBuiltinAgentDraftKind
-                    | AgentSettingsHit::ToggleBuiltinAgentPresetMenu(_)
-                    | AgentSettingsHit::SelectBuiltinAgentPreset { .. }
-                    | AgentSettingsHit::ToggleBuiltinModelMenu(_)
-                    | AgentSettingsHit::SelectBuiltinModel { .. }
-                    | AgentSettingsHit::SaveBuiltinAgentDraft
-                    | AgentSettingsHit::CancelBuiltinAgentDraft
-                    | AgentSettingsHit::ToggleBuiltinAgentEnabled(_)
-                    | AgentSettingsHit::EditBuiltinAgent(_)
-                    | AgentSettingsHit::RemoveBuiltinAgent(_)
-            )
-        })
-        .map(|hit| format!("{hit:?}"))
-        .collect();
-    out.sort();
-    out
-}
-
-#[test]
-fn hiding_external_clis_leaves_the_builtin_agent_section_untouched() {
-    for seed in [false, true] {
-        let mut with_clis = state_for(AgentSettingsTab::Agents, true);
-        let mut without_clis = state_for(AgentSettingsTab::Agents, false);
-        if seed {
-            for state in [&mut with_clis, &mut without_clis] {
-                state
-                    .editor_ui
-                    .agent_settings
-                    .add_builtin_agent_with_defaults("Provider", "sk-test", "model");
-            }
-        }
-
-        let desktop = builtin_hits(&reachable_hits(&mut with_clis));
-        let mobile = builtin_hits(&reachable_hits(&mut without_clis));
-
-        assert!(
-            !mobile.is_empty(),
-            "built-in API-key providers are the only agent path on mobile — \
-             their controls must survive"
-        );
-        assert_eq!(
-            desktop, mobile,
-            "the built-in section must be identical with and without external CLIs \
-             (seeded agent: {seed})"
-        );
-    }
-}
-
-#[test]
-fn hiding_external_clis_removes_every_provider_card_hover_target() {
-    let mut with_clis = state_for(AgentSettingsTab::Agents, true);
+fn every_provider_card_has_a_hover_target() {
+    let mut state = state_for(AgentSettingsTab::Agents);
     assert_eq!(
-        hovered_card_indices(&mut with_clis).len(),
+        hovered_card_indices(&mut state).len(),
         AgentProvider::ALL.len(),
-        "desktop hover still covers every card"
-    );
-
-    let mut without_clis = state_for(AgentSettingsTab::Agents, false);
-    assert!(
-        hovered_card_indices(&mut without_clis).is_empty(),
-        "no card is painted, so `card_at` must never report one"
+        "hover covers every card"
     );
 }
 
 #[test]
-fn hiding_external_clis_shortens_the_agents_scroll_range_and_stops_painting_names() {
-    let with_clis = AgentSettingsPanel::for_editor(&state_for(AgentSettingsTab::Agents, true))
-        .content_total_height();
-    let state_without = state_for(AgentSettingsTab::Agents, false);
-    let without_clis = AgentSettingsPanel::for_editor(&state_without).content_total_height();
-    assert!(
-        without_clis < with_clis,
-        "the hidden block must give its height back to the scroll range: \
-         {without_clis} is not shorter than {with_clis}"
-    );
-
-    let mut state = state_for(AgentSettingsTab::Agents, false);
-    let texts = painted_texts(&mut state);
-    for provider in AgentProvider::ALL {
-        assert!(
-            !texts.iter().any(|text| text.contains(provider.name())),
-            "{:?} is still painted on the Agents tab",
-            provider.name()
-        );
-    }
-
-    let mut state = state_for(AgentSettingsTab::Agents, true);
+fn agents_tab_paints_every_provider_name() {
+    let mut state = state_for(AgentSettingsTab::Agents);
     let texts = painted_texts(&mut state);
     for provider in AgentProvider::ALL {
         assert!(
             texts.iter().any(|text| text.contains(provider.name())),
-            "desktop must keep painting {:?}",
+            "the Agents tab must paint {:?}",
             provider.name()
         );
     }
@@ -333,18 +204,10 @@ fn hiding_external_clis_shortens_the_agents_scroll_range_and_stops_painting_name
 // MCP tab
 // ---------------------------------------------------------------------
 
-fn mcp_state(external_cli_available: bool) -> EditorState {
-    let mut state = state_for(AgentSettingsTab::Mcp, external_cli_available);
-    // A listening server is what makes the custom-configuration section
-    // exist, which is the block that has to shift up by the hidden
-    // integrations height.
-    state.editor_ui.agent_settings.mcp_server.running = true;
-    state
-}
-
 #[test]
-fn desktop_mcp_tab_still_offers_every_cli_toggle() {
-    let mut state = mcp_state(true);
+fn mcp_tab_offers_every_cli_toggle() {
+    let mut state = state_for(AgentSettingsTab::Mcp);
+    state.editor_ui.agent_settings.mcp_server.running = true;
     // The collapsed list shows six agents; "Show more" reveals the rest.
     state.editor_ui.agent_settings.mcp_show_all_agents = true;
     let hits = reachable_hits(&mut state);
@@ -357,97 +220,4 @@ fn desktop_mcp_tab_still_offers_every_cli_toggle() {
         toggles, expected,
         "every agent stays reachable from the MCP tab"
     );
-}
-
-#[test]
-fn hiding_external_clis_removes_every_mcp_cli_toggle_but_keeps_the_server_card() {
-    let mut state = mcp_state(false);
-    let hits = reachable_hits(&mut state);
-
-    assert!(
-        cli_toggle_hits(&hits).is_empty(),
-        "a hidden toggle row must not leave a live rect: {hits:?}"
-    );
-    assert!(
-        hits.contains(&AgentSettingsHit::ToggleMcpServer),
-        "the MCP server card's Start/Stop stays: {hits:?}"
-    );
-    assert!(
-        hits.contains(&AgentSettingsHit::CopyMcpClientConfig),
-        "the custom-configuration copy action stays: {hits:?}"
-    );
-
-    // The port field is only editable while the server is stopped.
-    let mut stopped = state_for(AgentSettingsTab::Mcp, false);
-    stopped.editor_ui.agent_settings.mcp_server.running = false;
-    let hits = reachable_hits(&mut stopped);
-    assert!(
-        hits.contains(&AgentSettingsHit::FocusMcpPort),
-        "the MCP port input stays editable: {hits:?}"
-    );
-
-    let mut state = mcp_state(false);
-    let texts = painted_texts(&mut state);
-    for cli in McpCli::ALL {
-        assert!(
-            !texts.iter().any(|text| text.contains(cli.label())),
-            "{:?} is still painted on the MCP tab",
-            cli.label()
-        );
-    }
-}
-
-#[test]
-fn hidden_agent_list_lifts_only_what_sits_below_it() {
-    let with_clis = mcp_state(true);
-    let without_clis = mcp_state(false);
-    let rect = panel_rect(&with_clis);
-    assert_eq!(rect, panel_rect(&without_clis), "the shell must not move");
-
-    // The endpoint Copy chip lives in the server card, above the list.
-    let settings = &with_clis.editor_ui.agent_settings;
-    assert_eq!(
-        mcp_copy_config_button(rect, settings),
-        mcp_copy_config_button(rect, &without_clis.editor_ui.agent_settings)
-    );
-    let height_with = crate::widgets::agent_settings_mcp::content_height(settings, true);
-    let height_without = crate::widgets::agent_settings_mcp::content_height(settings, false);
-    assert!(
-        height_without < height_with,
-        "the scroll range shrinks without the agent list"
-    );
-}
-
-#[test]
-fn pressing_where_a_hidden_mcp_toggle_used_to_be_does_nothing() {
-    let with_clis = mcp_state(true);
-    let rect = panel_rect(&with_clis);
-    let content = content_viewport(rect);
-    // Row centres of the desktop toggle grid, in unscrolled document
-    // space — the exact points that used to flip a CLI.
-    let rows: Vec<Rect> = (0..McpCli::DISPLAY.len())
-        .map(|index| crate::widgets::agent_settings_mcp::cli_row_rect(content, index))
-        .collect();
-
-    let mut state = mcp_state(false);
-    for row in rows {
-        let scroll = (row.origin.y - content.origin.y).max(0.0);
-        state.editor_ui.agent_settings.scroll_y.offset = scroll;
-        let panel = AgentSettingsPanel::for_editor(&state);
-        let effective = panel.effective_scroll(rect);
-        let point = Point2D::new(
-            row.origin.x + row.size.x / 2.0,
-            row.origin.y + row.size.y / 2.0 - effective,
-        );
-        if !panel.resolved_content_viewport(rect).contains(point) {
-            continue;
-        }
-        assert!(
-            !matches!(
-                panel.hit_test(rect, point),
-                AgentSettingsHit::ToggleMcpCli(_)
-            ),
-            "a press at the old toggle row still flips a CLI"
-        );
-    }
 }

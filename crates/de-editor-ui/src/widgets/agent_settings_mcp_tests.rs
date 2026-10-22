@@ -30,11 +30,11 @@ fn rows_route_set_up_expand_and_copy() {
     let rows = agent_rows(content(), &settings);
     let codex = rows[1];
     assert_eq!(
-        hit_test(content(), &settings, center(codex.action), true),
+        hit_test(content(), &settings, center(codex.action)),
         McpHit::ToggleCli(codex.cli)
     );
     assert_eq!(
-        hit_test(content(), &settings, center(codex.row), true),
+        hit_test(content(), &settings, center(codex.row)),
         McpHit::ExpandCli(codex.cli)
     );
 
@@ -43,7 +43,7 @@ fn rows_route_set_up_expand_and_copy() {
     let open = rows[1];
     assert!(open.snippet.size.y > 0.0);
     assert_eq!(
-        hit_test(content(), &settings, center(open.snippet_copy), true),
+        hit_test(content(), &settings, center(open.snippet_copy)),
         McpHit::CopySnippet(open.cli)
     );
     // The expanded snippet pushes the next row down.
@@ -54,63 +54,33 @@ fn rows_route_set_up_expand_and_copy() {
 fn the_server_card_routes_its_controls() {
     let mut settings = AgentSettings::default();
     assert_eq!(
-        hit_test(
-            content(),
-            &settings,
-            center(server_button_rect(content())),
-            true
-        ),
+        hit_test(content(), &settings, center(server_button_rect(content()))),
         McpHit::ToggleServer
     );
     assert_eq!(
         hit_test(
             content(),
             &settings,
-            center(client_config_copy_button_rect(content(), &settings)),
-            true
+            center(client_config_copy_button_rect(content(), &settings))
         ),
         McpHit::CopyClientConfig
     );
     assert_eq!(
-        hit_test(
-            content(),
-            &settings,
-            center(port_field_rect(content())),
-            true
-        ),
+        hit_test(content(), &settings, center(port_field_rect(content()))),
         McpHit::FocusPort
     );
     settings.mcp_server.running = true;
     assert_ne!(
-        hit_test(
-            content(),
-            &settings,
-            center(port_field_rect(content())),
-            true
-        ),
+        hit_test(content(), &settings, center(port_field_rect(content()))),
         McpHit::FocusPort,
         "the port is read-only while the server runs"
     );
 }
 
 #[test]
-fn without_external_clis_the_list_is_gone() {
-    let settings = AgentSettings::default();
-    let row = agent_rows(content(), &settings)[0];
-    assert_eq!(
-        hit_test(content(), &settings, center(row.action), false),
-        McpHit::None
-    );
-    assert!(
-        connected_rect(content(), &settings, false).origin.y
-            < connected_rect(content(), &settings, true).origin.y
-    );
-}
-
-#[test]
 fn content_height_grows_with_the_full_list() {
     let mut settings = AgentSettings::default();
-    let collapsed = content_height(&settings, true);
+    let collapsed = content_height(&settings);
     settings.mcp_show_all_agents = true;
-    assert!(content_height(&settings, true) > collapsed);
+    assert!(content_height(&settings) > collapsed);
 }

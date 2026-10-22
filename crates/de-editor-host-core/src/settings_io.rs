@@ -272,15 +272,10 @@ fn to_payload(state: &EditorState) -> SettingsPayload {
         auto_update_enabled: Some(eui.agent_settings.auto_update_enabled),
         experimental_features_enabled: Some(eui.agent_settings.experimental_features_enabled),
         connected: Some(eui.agent_settings.connected.to_vec()),
-        // Skip auto-imported (e.g. Zode) agents: their source file is the
-        // single source of truth and they're re-imported every launch, so
-        // persisting them would silently duplicate the source's API keys
-        // into this settings.json.
         builtin_agents: Some(
             eui.agent_settings
                 .builtin_agents
                 .iter()
-                .filter(|agent| !eui.agent_settings.imported_agent_ids.contains(&agent.id))
                 .map(builtin_agent_to_payload)
                 .collect(),
         ),
@@ -475,9 +470,9 @@ fn apply_payload_with_options(
 /// copied verbatim (a round-trip must be lossless). The one casualty is a
 /// legacy Gemini-era 7-entry file that was never opened since the
 /// retirement — its index-4 Gemini flag reads as Antigravity — but the
-/// startup reconnect replay re-probes every remembered provider, so an
+/// desktop reconnect replay re-probes every remembered provider, so an
 /// uninstalled / unauthenticated CLI honestly degrades back to
-/// disconnected on first launch. Treating 7 as legacy instead would
+/// disconnected the first time agents are shown. Treating 7 as legacy instead would
 /// corrupt EVERY current file on every load, which is far worse.
 fn migrate_connected_provider_flags(flags: Vec<bool>) -> [bool; 7] {
     let mut migrated = [false; 7];
@@ -572,9 +567,6 @@ fn load_checked_from_path(state: &mut EditorState, path: &Path) -> Result<(), Se
 /// Strict load used by web startup. A missing file is a normal first-run state,
 /// but an existing file must be readable and losslessly loadable so the daemon
 /// cannot later overwrite unknown settings or miss browser-owned credentials.
-/// External application configs are intentionally not imported here: the web
-/// model catalog must reflect web/Design Editor settings only, rather than expose
-/// machine-local Zode providers that the browser settings UI cannot manage.
 pub fn load_checked(state: &mut EditorState) -> Result<(), SettingsIoError> {
     seed_system_locale(state);
     let path = settings_path().ok_or(SettingsIoError::PathUnresolved)?;
@@ -583,9 +575,7 @@ pub fn load_checked(state: &mut EditorState) -> Result<(), SettingsIoError> {
 }
 
 /// Best-effort Design Editor settings load. Returns silently on missing file /
-/// parse error. Host-specific imports belong to the host startup path rather
-/// than this shared loader so the web daemon cannot inherit desktop-only
-/// configuration sources.
+/// parse error.
 pub fn load(state: &mut EditorState) {
     // Seed the locale from the OS BEFORE the settings file is read.
     // `apply_payload`'s persisted-locale arm overrides this when a

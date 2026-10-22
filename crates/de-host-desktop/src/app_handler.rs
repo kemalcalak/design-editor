@@ -191,10 +191,10 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         }
 
         self.window = Some(window);
-        // Replay last session's CLI connections (silent probes, one at a
-        // time) so the user isn't greeted by five "Connect" buttons on
-        // every launch.
-        self.restore_remembered_connections();
+        // Seed last session's CLI connections from the store. The silent
+        // replay probes themselves wait until the user opens the chat
+        // model picker or Settings → Agents (`start_cli_probes_on_demand`).
+        self.load_remembered_connections();
         if let Some(style) = crate::ui_prefs::load_pencil_cursor() {
             self.host.editor_state_mut().editor_ui.pencil_cursor_style = style;
         }

@@ -108,7 +108,6 @@ pub(in crate::widgets) fn paint_mcp_tab(
     ui: &EditorUiState,
     content: Rect,
     now_ms: u64,
-    external_cli_available: bool,
 ) {
     paint_tab_intro(
         cx,
@@ -118,10 +117,10 @@ pub(in crate::widgets) fn paint_mcp_tab(
         Some(t_settings(ui, "settings.mcp.heroSubtitle")),
     );
     paint_server_card(cx, theme, settings, ui, content, now_ms);
-    if cli_integrations_visible(external_cli_available) {
+    if cli_integrations_visible() {
         paint_agents(cx, theme, settings, ui, content, now_ms);
     }
-    paint_connected(cx, theme, settings, ui, content, external_cli_available);
+    paint_connected(cx, theme, settings, ui, content);
 }
 
 fn paint_server_card(
@@ -520,9 +519,8 @@ fn paint_connected(
     settings: &AgentSettings,
     ui: &EditorUiState,
     content: Rect,
-    external_cli_available: bool,
 ) {
-    let rect = connected_rect(content, settings, external_cli_available);
+    let rect = connected_rect(content, settings);
     let baseline = centered_text_baseline_y(rect, 12.0);
     caption(
         cx,

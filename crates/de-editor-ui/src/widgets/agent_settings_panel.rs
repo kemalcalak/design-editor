@@ -178,13 +178,10 @@ impl AgentSettingsPanelMode {
     /// the ACP section and the provider card list, plus the section
     /// headers that only exist to add or connect one.
     ///
-    /// `external_cli_available` is the runtime host capability: where it is
-    /// cleared every external-CLI surface is hidden and the built-in
-    /// API-key providers become the only agent path. Paint, hit-test,
-    /// hover, and the content-height walk all read this one predicate so
-    /// a hidden block leaves no live hit rect behind it.
-    fn shows_external_agents(self, ui: &EditorUiState) -> bool {
-        ui.external_cli_available && self == AgentSettingsPanelMode::Full
+    /// Paint, hit-test, hover, and the content-height walk all read this
+    /// one predicate so a hidden block leaves no live hit rect behind it.
+    fn shows_external_agents(self) -> bool {
+        self == AgentSettingsPanelMode::Full
     }
 }
 
@@ -356,7 +353,6 @@ impl<'a> AgentSettingsPanel<'a> {
         let total = match self.mode.active_tab(&self.settings) {
             AgentSettingsTab::Mcp => crate::widgets::agent_settings_mcp::content_height_at(
                 &self.settings,
-                self.ui.external_cli_available,
                 content.size.x,
             ),
             _ => self.content_total_height(),

@@ -52,11 +52,10 @@ pub(super) const COPY_FEEDBACK_MS: u64 = de_editor_core::HOME_COPIED_MS;
 /// controls that silently do nothing.
 const CLI_INTEGRATIONS_PLATFORM: bool = !cfg!(target_arch = "wasm32");
 
-/// Whether the agent list exists on this surface at all: build capability
-/// AND the runtime host capability (`EditorUiState::external_cli_available`
-/// — some hosts cannot spawn subprocess CLIs).
-pub(super) fn cli_integrations_visible(external_cli_available: bool) -> bool {
-    CLI_INTEGRATIONS_PLATFORM && external_cli_available
+/// Whether the agent list exists on this surface at all (the build
+/// capability above).
+pub(super) fn cli_integrations_visible() -> bool {
+    CLI_INTEGRATIONS_PLATFORM
 }
 
 fn body_top(content: Rect) -> f32 {
@@ -254,12 +253,8 @@ fn list_bottom(content: Rect, settings: &AgentSettings) -> f32 {
 
 /// The CONNECTED line under the list (or under the card on hosts without
 /// the list).
-pub(super) fn connected_rect(
-    content: Rect,
-    settings: &AgentSettings,
-    external_cli_available: bool,
-) -> Rect {
-    let y = if cli_integrations_visible(external_cli_available) {
+pub(super) fn connected_rect(content: Rect, settings: &AgentSettings) -> Rect {
+    let y = if cli_integrations_visible() {
         list_bottom(content, settings) + 16.0
     } else {
         server_card_rect(content).origin.y + CARD_H + 16.0
@@ -283,12 +278,11 @@ pub(super) fn cli_row_rect(content: Rect, index: usize) -> Rect {
 #[cfg(test)]
 pub(super) fn row_boxes(
     content: Rect,
-    external_cli_available: bool,
 ) -> Vec<(Rect, crate::widgets::agent_settings_rows::RowLines)> {
     use crate::widgets::agent_settings_rows::RowLines;
     let settings = AgentSettings::default();
     let mut boxes = vec![(server_card_rect(content), RowLines::Two)];
-    if cli_integrations_visible(external_cli_available) {
+    if cli_integrations_visible() {
         boxes.extend(
             agent_rows(content, &settings)
                 .into_iter()
@@ -298,24 +292,15 @@ pub(super) fn row_boxes(
     boxes
 }
 
-pub(super) fn content_height(settings: &AgentSettings, external_cli_available: bool) -> f32 {
-    content_height_at(settings, external_cli_available, 600.0)
+pub(super) fn content_height(settings: &AgentSettings) -> f32 {
+    content_height_at(settings, 600.0)
 }
 
 /// The tab's height when laid out `width` wide: an expanded snippet wraps
 /// onto more lines in a narrow window.
-pub(super) fn content_height_at(
-    settings: &AgentSettings,
-    external_cli_available: bool,
-    width: f32,
-) -> f32 {
+pub(super) fn content_height_at(settings: &AgentSettings, width: f32) -> f32 {
     let origin = Rect::xywh(0.0, 0.0, width, 0.0);
-    connected_rect(origin, settings, external_cli_available)
-        .origin
-        .y
-        + CONNECTED_H
-        - origin.origin.y
-        + CONTENT_TAIL_PAD
+    connected_rect(origin, settings).origin.y + CONNECTED_H - origin.origin.y + CONTENT_TAIL_PAD
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -333,12 +318,7 @@ pub enum McpHit {
     None,
 }
 
-pub fn hit_test(
-    content: Rect,
-    settings: &AgentSettings,
-    scrolled: Point2D,
-    external_cli_available: bool,
-) -> McpHit {
+pub fn hit_test(content: Rect, settings: &AgentSettings, scrolled: Point2D) -> McpHit {
     // Host-managed (embed): the extension owns the lifecycle — no
     // start/stop, no port editing; the endpoint still copies.
     let host_managed = settings.mcp_host_managed();
@@ -352,7 +332,7 @@ pub fn hit_test(
     {
         return McpHit::FocusPort;
     }
-    if !cli_integrations_visible(external_cli_available) {
+    if !cli_integrations_visible() {
         return McpHit::None;
     }
     for row in agent_rows(content, settings) {

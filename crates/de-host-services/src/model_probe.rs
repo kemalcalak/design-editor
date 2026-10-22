@@ -1,4 +1,5 @@
-//! Background startup model-catalog probe.
+//! Background model-catalog probe. The desktop spawns it on demand, the
+//! first time the session shows CLI provider state.
 
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 
@@ -25,7 +26,7 @@ impl ModelProbe {
         Self::spawn_for_connected([true; 7])
     }
 
-    /// Probe only providers connected at startup. Provider queries execute
+    /// Probe only the providers in `connected`. Provider queries execute
     /// concurrently, so their individual timeouts do not stack serially.
     pub fn spawn_for_connected(connected: [bool; 7]) -> Self {
         if !connected.iter().any(|is_connected| *is_connected) {

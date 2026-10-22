@@ -146,7 +146,7 @@ impl AgentSettingsPanel<'_> {
                     }
                     BuiltinHit::None => {}
                 }
-                if !self.mode.shows_external_agents(self.ui) {
+                if !self.mode.shows_external_agents() {
                     return AgentSettingsHit::Inside;
                 }
                 let acp_y = acp_section_y(content, &self.settings);
@@ -190,12 +190,7 @@ impl AgentSettingsPanel<'_> {
                 }
             }
             AgentSettingsTab::Mcp => {
-                match agent_settings_mcp::hit_test(
-                    content,
-                    &self.settings,
-                    scrolled,
-                    self.ui.external_cli_available,
-                ) {
+                match agent_settings_mcp::hit_test(content, &self.settings, scrolled) {
                     McpHit::ToggleServer => return AgentSettingsHit::ToggleMcpServer,
                     McpHit::ToggleCli(cli) => return AgentSettingsHit::ToggleMcpCli(cli),
                     McpHit::CopyClientConfig => return AgentSettingsHit::CopyMcpClientConfig,
@@ -286,7 +281,7 @@ impl AgentSettingsPanel<'_> {
         if !layout.content.contains(point) {
             return None;
         }
-        if !self.mode.shows_external_agents(self.ui) {
+        if !self.mode.shows_external_agents() {
             return None;
         }
         let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
@@ -313,7 +308,7 @@ impl AgentSettingsPanel<'_> {
         if !content.contains(point) {
             return None;
         }
-        if !self.mode.shows_external_agents(self.ui) {
+        if !self.mode.shows_external_agents() {
             return None;
         }
         let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
@@ -328,7 +323,7 @@ impl AgentSettingsPanel<'_> {
         if !content.contains(point) {
             return None;
         }
-        if !self.mode.shows_external_agents(self.ui) {
+        if !self.mode.shows_external_agents() {
             return None;
         }
         let scrolled = Point2D::new(point.x, point.y + self.effective_scroll(panel));
@@ -426,10 +421,8 @@ impl AgentSettingsPanel<'_> {
 
     pub fn content_total_height(&self) -> f32 {
         match self.mode.active_tab(&self.settings) {
-            AgentSettingsTab::Agents => agents_content_height(&self.settings, self.mode, self.ui),
-            AgentSettingsTab::Mcp => {
-                agent_settings_mcp::content_height(&self.settings, self.ui.external_cli_available)
-            }
+            AgentSettingsTab::Agents => agents_content_height(&self.settings, self.mode),
+            AgentSettingsTab::Mcp => agent_settings_mcp::content_height(&self.settings),
             AgentSettingsTab::Images => {
                 secondary_hero_height()
                     + secondary_card_pad()

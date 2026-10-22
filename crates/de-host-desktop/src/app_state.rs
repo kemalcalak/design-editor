@@ -42,10 +42,6 @@ impl DesktopApp {
         host.editor_state_mut().editor_ui.home.visible =
             !cfg!(test) && should_show_home(initial_file.is_some(), entry_surface);
         prompt_center_store::install_user_prompts(&mut host);
-        // Zode is a desktop-local integration. Keep it out of the shared
-        // settings loader so `--serve-web` never exposes machine-local Zode
-        // providers that the browser settings UI cannot manage.
-        de_host_services::zode_import::import_zode_builtin_agents(host.editor_state_mut());
         // Imported UIKits + browser-open flag (`uikits.json`). Skipped
         // under test like the update / model probes — unit tests must
         // not see a developer machine's kit store.
@@ -112,12 +108,11 @@ impl DesktopApp {
             host.editor_state_mut().editor_ui.update_status =
                 de_editor_core::UpdateStatus::Checking;
         }
-        let model_probe = if cfg!(test) {
-            de_host_services::model_discovery::ModelProbe::idle()
-        } else {
-            let connected = host.editor_state().editor_ui.agent_settings.connected;
-            de_host_services::model_discovery::ModelProbe::spawn_for_connected(connected)
-        };
+        // CLI model discovery does not run at launch: it spawns the
+        // connected agent CLIs, which may call their vendors' APIs. It
+        // starts the first time the user opens a surface that shows CLI
+        // provider state (`cli_probe_gate::start_cli_probes_on_demand`).
+        let model_probe = de_host_services::model_discovery::ModelProbe::idle();
         Self {
             window: None,
             a11y: None,
@@ -172,6 +167,7 @@ impl DesktopApp {
             kit_browser_open_persisted,
             provider_connect_job: None,
             provider_reconnect_queue: Vec::new(),
+            cli_probes_started: false,
             remembered_connections: [false; 7],
             last_seen_provider_phase: Default::default(),
             hovered_image_drop: false,

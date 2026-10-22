@@ -20,7 +20,7 @@
 //! | `agent_settings/config_types.rs`| built-in / ACP / image-gen value types |
 //! | `agent_settings/mutators.rs`    | `impl AgentSettings` mutators        |
 
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::collections::{BTreeMap, VecDeque};
 
 use crate::agent_settings_builtin_presets::BuiltinAgentPresetKey;
 pub use crate::chat::AgentProvider;
@@ -280,13 +280,6 @@ pub struct AgentSettings {
     pub builtin_model_catalogs: BTreeMap<BuiltinModelCatalogTarget, BuiltinModelCatalog>,
     pub pending_builtin_model_catalog_refreshes: VecDeque<BuiltinModelCatalogRefreshRequest>,
     pub builtin_model_catalog_generation: u64,
-    /// Ids of `builtin_agents` that were auto-imported from an external
-    /// CLI config (e.g. Zode's `~/.zode/config.json`). Runtime-only —
-    /// NOT persisted. These agents are re-derived from their source file
-    /// on every launch, so persisting them would silently duplicate the
-    /// source's API keys into Design Editor's own settings.json; the host's
-    /// save path skips any agent whose id is in this set.
-    pub imported_agent_ids: BTreeSet<String>,
     pub acp_agents: Vec<AcpAgentConfig>,
     pub acp_agent_draft: Option<AcpAgentConfig>,
     pub next_acp_agent_id: u64,
@@ -379,7 +372,6 @@ impl Default for AgentSettings {
             builtin_model_catalogs: BTreeMap::new(),
             pending_builtin_model_catalog_refreshes: VecDeque::new(),
             builtin_model_catalog_generation: 0,
-            imported_agent_ids: BTreeSet::new(),
             acp_agents: Vec::new(),
             acp_agent_draft: None,
             next_acp_agent_id: 1,

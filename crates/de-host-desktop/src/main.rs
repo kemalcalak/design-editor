@@ -22,6 +22,7 @@ mod bundled_fonts;
 mod chat_acp;
 mod chat_attachment;
 mod chat_session;
+mod cli_probe_gate;
 mod clipboard;
 mod codegen_export;
 mod codegen_input;
@@ -298,7 +299,8 @@ struct DesktopApp {
     pending_html_paste: Option<PendingHtmlPaste>,
     /// Background AI-model discovery — probes the installed CLIs
     /// on a worker thread; its result is drained into
-    /// `chat.available_models` on a later frame.
+    /// `chat.available_models` on a later frame. Idle until
+    /// `start_cli_probes_on_demand` spawns it.
     model_probe: de_host_services::model_discovery::ModelProbe,
     /// Per-agent HTTP model catalogs requested by the built-in model picker.
     /// Jobs stay host-side because discovery uses native networking; only
@@ -332,8 +334,13 @@ struct DesktopApp {
     /// Connect) — spawned from the `pending_provider_connect`
     /// request seam, drained by `drain_provider_connect`.
     provider_connect_job: Option<provider_probe_host::ProviderConnectJob>,
-    /// Startup reconnect replay queue (see `agent_connect_store`).
+    /// Reconnect replay queue (see `agent_connect_store`), filled by
+    /// `start_cli_probes_on_demand`.
     provider_reconnect_queue: Vec<de_editor_core::AgentProvider>,
+    /// Whether this session's CLI probes (model discovery + reconnect
+    /// replay) have started. They start once, the first time a surface
+    /// that shows CLI provider state opens — see `cli_probe_gate`.
+    cli_probes_started: bool,
     /// Last persisted pencil-cursor style (see `ui_prefs`).
     last_saved_pencil_cursor: Option<de_editor_core::PencilCursorStyle>,
     /// Providers the store remembers as LAST KNOWN GOOD — seeded from
@@ -545,11 +552,13 @@ where
 fn main() {
     // FIRST, before any thread exists: graft the login-shell PATH and proxy
     // exports onto this process. A Dock/Finder launch inherits launchd's
-    // minimal environment — CLI agents (codex is a node-shebang script) and
-    // the Claude agent SDK's env baseline all need the user's real PATH,
-    // networked CLI probes need the proxy vars, and the SDK's dangerous-env
-    // blocklist forbids passing PATH per-request, so the process env is the
-    // only correct carrier.
+    // minimal environment — agent CLIs (codex is a node-shebang script) and
+    // the Claude agent SDK's env baseline need the user's real PATH to be
+    // found at all, the API providers' HTTP clients need the proxy vars to
+    // honour HTTPS_PROXY, and the SDK's dangerous-env blocklist forbids
+    // passing PATH per-request, so the process env is the only correct
+    // carrier. This spawns no agent CLI; those wait for
+    // `start_cli_probes_on_demand`.
     de_host_services::chat_spawn::repair_gui_process_env();
     // Register the brand-logo catalog (omitted from the wasm bundle, embedded in
     // this binary) BEFORE any path that can render natively — the GUI app, the

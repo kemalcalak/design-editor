@@ -20,7 +20,6 @@ impl Default for EditorUiState {
             property_panel_width: 256.0,
             chat_tab_width_bumped: false,
             host_owns_chat: false,
-            external_cli_available: true,
             theme_mode: ThemeMode::Dark,
             host_theme_override: None,
             entry_surface: EntrySurface::default(),

@@ -5,10 +5,11 @@
 //! state, so every launch greeted the user with disconnected provider cards
 //! (measured / user-reported on both dev and packaged builds). The store
 //! keeps only the CONNECTED flags (no keys, no models — CLI providers
-//! have no secrets and the catalog must be re-probed anyway); on startup
-//! the host replays a silent connect probe for each remembered provider,
-//! so the status and the model picker come back by themselves and an
-//! uninstalled CLI honestly degrades to disconnected.
+//! have no secrets and the catalog must be re-probed anyway). The first
+//! time the session shows CLI provider state (the chat model picker or
+//! Settings → Agents) the host replays a silent connect probe for each
+//! remembered provider, so the status and the model picker come back by
+//! themselves and an uninstalled CLI honestly degrades to disconnected.
 
 use de_editor_core::AgentProvider;
 

@@ -355,7 +355,13 @@ impl DesktopApp {
                 self.redraw_dirty = true;
             }
         }
-        // Drain background model discovery once it lands.
+        // Start the CLI probes the first time the chat model picker or
+        // Settings → Agents is on screen, then drain discovery once it
+        // lands. Runs before `drain_provider_connect` below so the replay's
+        // first request is spawned this same frame.
+        if self.start_cli_probes_on_demand() {
+            self.redraw_dirty = true;
+        }
         if self.model_probe.poll_into(self.host.editor_state_mut()) {
             self.host.mark_editor_state_dirty();
             self.redraw_dirty = true;
