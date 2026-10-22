@@ -129,6 +129,7 @@ fn pump_with_channel_interleave(
     let tool_requests = session.drain_tool_requests();
     between_channel_observations();
     let poll = session.poll();
+    let now_ms = host.now_ms();
     let mut changed = false;
     if !poll.is_idle() {
         let messages = &mut host
@@ -147,6 +148,7 @@ fn pump_with_channel_interleave(
                 &poll,
                 session.is_design_loop(),
             );
+            msg.note_thinking_clock(now_ms);
             changed = true;
         }
     }

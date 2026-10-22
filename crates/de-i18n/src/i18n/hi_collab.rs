@@ -175,6 +175,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.plus.attach" => "फ़ाइल जोड़ें",
         "chat.plus.library" => "स्टाइल लाइब्रेरी",
         "chat.plus.parallel" => "समानांतर एजेंट",
+        "chat.thought" => "{{seconds}} सेकंड सोचा",
+        "chat.thinking" => "सोच रहा है…",
+        "chat.status.working" => "काम चल रहा है…",
         _ => return None,
     })
 }

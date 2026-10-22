@@ -253,7 +253,7 @@ pub(crate) fn paint_rich(cx: &mut PaintCx<'_>, theme: &Theme, lines: &[RichLine]
             }
             let layout = TextLayout::single_run(
                 &span.text,
-                "system-ui",
+                crate::widgets::home_surface::SANS,
                 BODY_FONT,
                 color.to_jian(),
                 Point2D::new(0.0, 0.0),

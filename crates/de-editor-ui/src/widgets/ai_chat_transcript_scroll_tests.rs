@@ -120,7 +120,7 @@ fn paint_at_scroll(messages: &[ChatMessage], scroll: f32) -> TransformBackend {
 
 #[test]
 fn paint_translates_items_by_scroll_and_balances_save_restore() {
-    // A single user bubble → exactly one radius-14 rounded rect to track.
+    // A single user bubble → exactly one radius-10 rounded rect to track.
     let messages = [ChatMessage::user("scroll paint probe — one bubble")];
     let scroll = 100.0_f32;
 
@@ -128,11 +128,11 @@ fn paint_translates_items_by_scroll_and_balances_save_restore() {
     let scrolled = paint_at_scroll(&messages, scroll);
 
     let y0 = unscrolled
-        .first_round_rect_y(14.0)
-        .expect("user bubble paints a radius-14 rounded rect at scroll 0");
+        .first_round_rect_y(10.0)
+        .expect("user bubble paints a radius-10 rounded rect at scroll 0");
     let y_s = scrolled
-        .first_round_rect_y(14.0)
-        .expect("user bubble paints a radius-14 rounded rect at scroll S");
+        .first_round_rect_y(10.0)
+        .expect("user bubble paints a radius-10 rounded rect at scroll S");
 
     // The painted y at scroll S equals its y at scroll 0 minus S — the transform
     // is a pure constant vertical shift, applied by `translate`, not a rebuild.

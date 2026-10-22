@@ -40,7 +40,7 @@ pub(crate) fn transcript_hit(
             }
         }
         if let Some(t) = &item.tools {
-            if (t.header).contains(p) {
+            if t.header.size.y > 0.0 && (t.header).contains(p) {
                 return Some(TranscriptHit::ToggleToolCalls(item.msg_index));
             }
             for card in &t.cards {

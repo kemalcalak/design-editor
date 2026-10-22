@@ -175,6 +175,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.plus.attach" => "附加文件",
         "chat.plus.library" => "风格库",
         "chat.plus.parallel" => "并行 Agent",
+        "chat.thought" => "思考了 {{seconds}} 秒",
+        "chat.thinking" => "思考中…",
+        "chat.status.working" => "处理中…",
         _ => return None,
     })
 }

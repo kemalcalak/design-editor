@@ -389,15 +389,17 @@ mod tests {
         use de_editor_ui::{Point2D, Rect};
 
         let mut state = EditorState::new();
+        // The thinking mode lives in the composer's "+" menu (#26), which
+        // stays open while its row cycles the mode.
+        state.editor_ui.chat_plus_menu_open = true;
         let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
         let toggle_point = {
             let panel = AIChatPlaceholder::from_editor(&state);
-            let input = panel.input_rect(rect);
             let mut found = None;
-            let mut y = input.origin.y;
-            while y < input.origin.y + input.size.y && found.is_none() {
-                let mut x = input.origin.x;
-                while x < input.origin.x + input.size.x {
+            let mut y = rect.origin.y;
+            while y < rect.origin.y + rect.size.y && found.is_none() {
+                let mut x = rect.origin.x;
+                while x < rect.origin.x + rect.size.x {
                     let point = Point2D::new(x, y);
                     if panel.hit_test(rect, point) == Some(AIChatHit::CycleThinking) {
                         found = Some(point);
@@ -407,7 +409,7 @@ mod tests {
                 }
                 y += 1.0;
             }
-            found.expect("the chat footer must expose a thinking-mode control")
+            found.expect("the composer's + menu must expose a thinking-mode control")
         };
 
         // A model the profile does not force off follows the user's choice.

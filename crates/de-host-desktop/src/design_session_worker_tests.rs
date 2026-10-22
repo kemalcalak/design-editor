@@ -737,7 +737,8 @@ fn explicit_stop_after_stop_streaming_finalizes_current_worker_bubbles() {
     assert_eq!(messages[0].content, "OLD-WORKER-SENTINEL");
     assert_eq!(messages[0].activities[0].status, ChatActivityStatus::Done);
     for message in messages.iter().skip(2) {
-        assert_eq!(message.activities[0].status, ChatActivityStatus::Error);
+        // A user stop ends unfinished rows as Stopped, not as failures (#26).
+        assert_eq!(message.activities[0].status, ChatActivityStatus::Stopped);
         if message.design_worker_group.is_some() {
             assert_eq!(message.content.matches("Stopped designing").count(), 1);
         }
@@ -790,7 +791,7 @@ fn explicit_stop_falls_back_to_active_retry_before_later_completed_workers() {
     ));
 
     let retry = &host.editor_state().chat.messages[1];
-    assert_eq!(retry.activities[0].status, ChatActivityStatus::Error);
+    assert_eq!(retry.activities[0].status, ChatActivityStatus::Stopped);
     assert_eq!(retry.content.matches("Stopped designing").count(), 1);
     let completed = &host.editor_state().chat.messages[3];
     assert_eq!(completed.content, "LATER-WORKER-SENTINEL");

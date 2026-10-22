@@ -315,9 +315,8 @@ render: captured frame
         !backend
             .texts
             .iter()
-            .any(|text| text.contains("lint: fixed spacing")
-                || text.contains("render: captured frame")),
-        "collapsed TS accordions hide details until opened"
+            .any(|text| text.contains("render: captured frame")),
+        "a collapsed row shows only its first detail, inline (#26)"
     );
 }
 
@@ -436,4 +435,26 @@ fn a_long_repair_list_renders_every_line_it_was_given_plus_the_overflow_notice()
         step.rect.size.y > 32.0 * LINE_H,
         "an expanded 32-row list must reserve height for its rows"
     );
+}
+
+#[test]
+fn a_user_stopped_row_is_quiet_and_collapsed_not_a_failure() {
+    let mut message = ChatMessage::assistant("Stopped.");
+    message.activities = vec![de_editor_core::ChatActivity {
+        id: "cover".into(),
+        title: "Cover".into(),
+        detail: Some("Stopped by the user before this section completed.".into()),
+        status: de_editor_core::ChatActivityStatus::Stopped,
+        content_offset: None,
+    }];
+    let items = build_transcript(
+        std::slice::from_ref(&message),
+        body(),
+        de_editor_core::Locale::EnUs,
+    );
+    let step = &items[0].steps[0];
+    assert!(step.stopped);
+    assert!(!step.failed, "a stop is not an error");
+    assert!(!step.expanded, "stopped rows start collapsed");
+    assert!(!step.retryable);
 }

@@ -177,6 +177,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.plus.attach" => "파일 첨부",
         "chat.plus.library" => "스타일 라이브러리",
         "chat.plus.parallel" => "병렬 에이전트",
+        "chat.thought" => "{{seconds}}초 동안 생각함",
+        "chat.thinking" => "생각 중…",
+        "chat.status.working" => "작업 중…",
         _ => return None,
     })
 }

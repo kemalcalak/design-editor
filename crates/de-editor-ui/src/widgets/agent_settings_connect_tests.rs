@@ -87,7 +87,9 @@ fn connected_card_paints_probe_connection_info_in_green() {
     let capture = paint_panel(&mut state);
     let (_, color) = find_text(&capture, "✓ Connected via pro (a@b.c)")
         .expect("probe connectionInfo should replace the static subtitle");
-    let green = (crate::theme::Theme::dark().status_success).to_jian();
+    let green = crate::widgets::home_surface::settings_theme(de_editor_core::ThemeMode::Dark)
+        .status_success
+        .to_jian();
     assert_eq!(*color, green, "connected info renders in the success green");
 }
 

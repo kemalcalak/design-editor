@@ -175,6 +175,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.plus.attach" => "Attach file",
         "chat.plus.library" => "Style library",
         "chat.plus.parallel" => "Parallel agents",
+        "chat.thought" => "Thought for {{seconds}}s",
+        "chat.thinking" => "Thinking…",
+        "chat.status.working" => "Working…",
         _ => return None,
     })
 }

@@ -43,7 +43,7 @@ fn transcript_hit_resolves_a_click_on_the_thinking_header() {
 }
 
 #[test]
-fn transcript_hit_resolves_a_click_on_the_tool_header() {
+fn the_tool_list_has_no_header_and_a_click_lands_on_the_row() {
     let mut m = ChatMessage::assistant("answer");
     m.tool_calls = vec![ChatToolCall {
         name: "insert_node".into(),
@@ -51,16 +51,15 @@ fn transcript_hit_resolves_a_click_on_the_tool_header() {
         content_offset: None,
     }];
     let msgs = std::slice::from_ref(&m);
-    let header = build_transcript(msgs, body(), de_editor_core::Locale::EnUs)[0]
-        .tools
-        .as_ref()
-        .unwrap()
-        .header;
-    let cx = header.origin.x + header.size.x / 2.0;
-    let cy = header.origin.y + header.size.y / 2.0;
+    let items = build_transcript(msgs, body(), de_editor_core::Locale::EnUs);
+    let tools = items[0].tools.as_ref().unwrap();
+    assert_eq!(tools.header.size.y, 0.0, "no \"N tool calls\" header (#26)");
+    let row = tools.cards[0].header;
+    let cx = row.origin.x + row.size.x / 2.0;
+    let cy = tools.header.origin.y;
     assert_eq!(
-        transcript_hit(&canonical_at_body(msgs), body(), cx, cy, 0.0),
-        Some(TranscriptHit::ToggleToolCalls(0))
+        transcript_hit(&canonical_at_body(msgs), body(), cx, cy + 1.0, 0.0),
+        Some(TranscriptHit::SetToolCallCardExpanded(0, 0, true))
     );
 }
 
@@ -513,7 +512,7 @@ fn stale_build_with_more_items_than_live_messages_is_no_hit_not_a_panic() {
             thinking_pt = Some((it.msg_index, center(t.header)));
         }
         if let Some(t) = &it.tools {
-            tool_pt = Some((it.msg_index, center(t.header)));
+            tool_pt = Some((it.msg_index, center(t.cards[0].header)));
         }
         if let Some(block) = it.design_blocks.first() {
             design_pt = Some((it.msg_index, center(block.header)));
@@ -553,8 +552,8 @@ fn stale_build_with_more_items_than_live_messages_is_no_hit_not_a_panic() {
     assert_eq!(selection_at(short, &build, b, t_pt, 0.0), None);
     assert_eq!(
         transcript_hit(&build, b, tool_p.x, tool_p.y, 0.0),
-        Some(TranscriptHit::ToggleToolCalls(tool_idx)),
-        "tool header still hits safely"
+        Some(TranscriptHit::SetToolCallCardExpanded(tool_idx, 0, true)),
+        "tool row still hits safely"
     );
     assert_eq!(selection_at(short, &build, b, tool_p, 0.0), None);
     assert_eq!(

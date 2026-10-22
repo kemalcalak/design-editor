@@ -130,6 +130,10 @@ pub fn settings_theme(mode: ThemeMode) -> Theme {
         ring: p.accent,
         button_hover: p.subtle,
         row_selected: p.subtle,
+        user_bubble: p.subtle,
+        user_bubble_foreground: p.text,
+        muted_subtle: p.text_3,
+        status_success: p.ok,
         ..base
     }
 }

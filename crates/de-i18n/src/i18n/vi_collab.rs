@@ -175,6 +175,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.plus.attach" => "Đính kèm tệp",
         "chat.plus.library" => "Thư viện phong cách",
         "chat.plus.parallel" => "Agent song song",
+        "chat.thought" => "Đã suy nghĩ {{seconds}} giây",
+        "chat.thinking" => "Đang suy nghĩ…",
+        "chat.status.working" => "Đang làm…",
         _ => return None,
     })
 }

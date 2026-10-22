@@ -44,45 +44,40 @@ use super::ai_chat_transcript_tools::{
     build_tool_panel, paint_tool_panel, ToolPanel, ToolPanelLayout,
 };
 
-/// Body text size used throughout the transcript.
-pub(crate) const BODY_FONT: f32 = 12.0;
+/// Body text size used throughout the transcript (#26: Manrope 13).
+pub(crate) const BODY_FONT: f32 = 13.0;
 /// Height of one wrapped text line.
-pub(crate) const LINE_H: f32 = 16.0;
+pub(crate) const LINE_H: f32 = 20.0;
 /// Inner padding inside a collapsible block box (thinking / tool body).
 pub(crate) const BUBBLE_PAD: f32 = 8.0;
-/// Inner padding for user message bubbles — matches the #27 generous
-/// padding spec (~14px). Larger than BUBBLE_PAD so the user bubble
-/// feels spacious without inflating assistant / block bodies.
-pub(crate) const USER_BUBBLE_PAD: f32 = 14.0;
-const TYPING_LABEL: &str = "Thinking";
+/// Inner padding for user message bubbles (#26 frames: 9 x 12).
+pub(crate) const USER_BUBBLE_PAD: f32 = 11.0;
+/// Corner radius of a user message bubble.
+const USER_BUBBLE_RADIUS: f32 = 10.0;
 const AUTOMATED_ACTION_LABEL: &str = "(Automated action completed)";
-const TYPING_PAD_X: f32 = 10.0;
-const TYPING_PAD_Y: f32 = 4.0;
-const TYPING_LABEL_DOT_GAP: f32 = 6.0;
-const TYPING_DOT: f32 = 4.0;
-const TYPING_DOT_GAP: f32 = 2.0;
 /// Height of a collapsible header row (thinking / tool-calls).
 pub(crate) const HEADER_H: f32 = 22.0;
 /// Vertical gap between two messages.
-pub(crate) const MSG_GAP: f32 = 12.0;
+pub(crate) const MSG_GAP: f32 = 16.0;
 /// Vertical gap between sub-blocks within one message.
-const SUB_GAP: f32 = 4.0;
-/// Height of one design activity header. Matches the compact built-in tool
-/// cards so CLI and in-process design turns share one reading rhythm.
-pub(crate) const ACTION_STEP_H: f32 = 28.0;
+const SUB_GAP: f32 = 8.0;
+/// Height of one design activity row. Matches the compact built-in tool
+/// rows so CLI and in-process design turns share one reading rhythm.
+pub(crate) const ACTION_STEP_H: f32 = 30.0;
 /// Height of one detail line under a progress step.
-pub(crate) const ACTION_DETAIL_LINE_H: f32 = 14.0;
+pub(crate) const ACTION_DETAIL_LINE_H: f32 = 16.0;
 /// Gap between the progress title row and detail lines.
 pub(crate) const ACTION_DETAIL_GAP: f32 = 4.0;
-/// Vertical gap between compact design-progress rows.
-pub(crate) const ACTION_STEP_GAP: f32 = 4.0;
+/// Vertical gap between design-progress rows: none — consecutive rows
+/// share one bordered list (#26).
+pub(crate) const ACTION_STEP_GAP: f32 = 0.0;
 /// Side length of an image thumbnail box.
 const IMG_THUMB: f32 = 60.0;
 /// Gap between image thumbnails.
 const IMG_GAP: f32 = 4.0;
 /// Approximate device px per wrap *unit* at [`BODY_FONT`]. Drives the
 /// unit budget handed to [`wrap_units`].
-pub(crate) const CHAR_UNIT_PX: f32 = 6.6;
+pub(crate) const CHAR_UNIT_PX: f32 = 6.3;
 /// Maximum user bubble width as a fraction of the transcript body width.
 const USER_BUBBLE_MAX_FRAC: f32 = 0.78;
 /// Minimum user bubble width so very short prompts still read as a chip.
@@ -115,6 +110,9 @@ pub(crate) struct ActionStep {
     pub done: bool,
     pub active: bool,
     pub failed: bool,
+    /// The user stopped the turn before this row finished (#26): painted
+    /// quietly and collapsed, never as a failure.
+    pub stopped: bool,
     /// True only for a failed row backed by a persisted
     /// `ChatMessage::failed_subtasks` entry — gates the row's "Retry" icon
     /// so it never paints a dead button for a failure with nothing to
@@ -124,16 +122,14 @@ pub(crate) struct ActionStep {
     pub retryable: bool,
 }
 
-/// The answer-text bubble of a message. `typing` is set on an
-/// in-flight message with no text yet — paint shows animated dots.
+/// The answer-text bubble of a message.
 pub(crate) struct TextBubble {
     pub rect: Rect,
     pub lines: Vec<String>,
     /// Assistant narration keeps its markdown typography (bold labels, code
     /// chips, real bullets); `lines` stays the plain fallback used by the
-    /// user bubble, the typing pill and the selection/copy paths.
+    /// user bubble and the selection/copy paths.
     pub rich: Vec<super::ai_chat_transcript_richtext::RichLine>,
-    pub typing: bool,
 }
 
 /// One fully-placed message in the transcript — absolute rects ready
@@ -154,6 +150,8 @@ pub(crate) struct TranscriptItem {
     /// (truncated to whatever fits — see [`build_item`]).
     pub images: Vec<Rect>,
     pub streaming: bool,
+    /// The live "Working…" line under a streaming message (#26).
+    pub status: Option<super::ai_chat_transcript_status::StatusLine>,
 }
 
 /// Wrap-unit budget for an inner text width.
@@ -163,14 +161,6 @@ fn unit_budget(inner_w: f32) -> u32 {
 
 fn text_unit_width(text: &str) -> f32 {
     text.chars().map(char_display_units).sum::<u32>() as f32 * CHAR_UNIT_PX
-}
-
-fn typing_dots_width() -> f32 {
-    3.0 * TYPING_DOT + 2.0 * TYPING_DOT_GAP
-}
-
-fn typing_pill_width() -> f32 {
-    2.0 * TYPING_PAD_X + text_unit_width(TYPING_LABEL) + TYPING_LABEL_DOT_GAP + typing_dots_width()
 }
 
 /// Place one message starting at `top`. Returns the item and the
@@ -346,6 +336,8 @@ pub(crate) fn build_item(
             done,
             active,
             failed,
+            stopped: step.status
+                == Some(super::ai_chat_transcript_steps::ParsedStepStatus::Stopped),
             retryable,
         });
         y += step_h + ACTION_STEP_GAP;
@@ -354,7 +346,7 @@ pub(crate) fn build_item(
     let thinking = build_collapsible(
         !thinking_text.trim().is_empty(),
         msg.thinking_collapsed,
-        de_i18n::translate(locale, "ai.thinkingProcess").to_string(),
+        super::ai_chat_transcript_status::thinking_label(msg, locale),
         &|| wrap_units(&thinking_text, budget),
         &mut y,
     );
@@ -377,10 +369,10 @@ pub(crate) fn build_item(
         y = next_y;
         None
     } else {
-        let (tools, next_y) = build_tool_panel(
+        let (mut tools, next_y) = build_tool_panel(
             &msg.tool_calls,
             ToolPanelLayout {
-                collapsed: msg.tools_collapsed,
+                collapsed: false,
                 label: de_i18n::translate(locale, "ai.toolCalls")
                     .replace("{{count}}", &msg.tool_calls.len().to_string()),
                 x,
@@ -393,6 +385,12 @@ pub(crate) fn build_item(
             },
         );
         y = next_y;
+        if let Some(panel) = tools.as_mut() {
+            // A plain list of rows, no "N tool calls" header (#26).
+            y -= super::ai_chat_transcript_tools::strip_panel_header(panel)
+                + 2.0 * super::ai_chat_transcript_tools::CARD_GAP;
+            y += SUB_GAP;
+        }
         tools
     };
     let (design_blocks, next_y) = place_design_blocks(
@@ -405,13 +403,6 @@ pub(crate) fn build_item(
     );
     y = next_y;
 
-    let typing = msg.streaming
-        && msg.content.is_empty()
-        && steps.is_empty()
-        && !has_progress_steps
-        && thinking.is_none()
-        && tools.is_none()
-        && flow_panels.is_empty();
     let automated_placeholder = !is_user
         && !msg.streaming
         && !msg.content.trim().is_empty()
@@ -422,21 +413,7 @@ pub(crate) fn build_item(
         && tools.is_none()
         && !activity_interleave
         && !tool_interleave;
-    let bubble = if typing {
-        let r = Rect::xywh(
-            x,
-            y,
-            typing_pill_width().min(body.size.x),
-            LINE_H + 2.0 * TYPING_PAD_Y,
-        );
-        y += r.size.y;
-        Some(TextBubble {
-            rect: r,
-            lines: Vec::new(),
-            rich: Vec::new(),
-            typing: true,
-        })
-    } else if automated_placeholder {
+    let bubble = if automated_placeholder {
         let lines = vec![AUTOMATED_ACTION_LABEL.to_string()];
         let r = Rect::xywh(x, y, bubble_w, LINE_H);
         y += r.size.y;
@@ -444,7 +421,6 @@ pub(crate) fn build_item(
             rect: r,
             lines,
             rich: Vec::new(),
-            typing: false,
         })
     } else if !visible_content.is_empty() && !activity_interleave && !tool_interleave {
         // The user's own words are plain; the assistant's narration keeps its
@@ -467,7 +443,6 @@ pub(crate) fn build_item(
             rect: r,
             lines,
             rich,
-            typing: false,
         })
     } else {
         None
@@ -492,6 +467,22 @@ pub(crate) fn build_item(
         let rows = msg.images.len().div_ceil(per_row);
         y += rows as f32 * (IMG_THUMB + IMG_GAP) - IMG_GAP;
     }
+    let status = (!is_user && msg.streaming).then(|| {
+        if y > top {
+            y += SUB_GAP;
+        }
+        let rect = Rect::xywh(
+            x,
+            y,
+            bubble_w,
+            super::ai_chat_transcript_status::STATUS_LINE_H,
+        );
+        y += rect.size.y;
+        super::ai_chat_transcript_status::StatusLine {
+            rect,
+            label: de_i18n::translate(locale, "chat.status.working").to_string(),
+        }
+    });
 
     (
         TranscriptItem {
@@ -507,6 +498,7 @@ pub(crate) fn build_item(
             bubble,
             images,
             streaming: msg.streaming,
+            status,
         },
         y,
     )
@@ -565,38 +557,12 @@ pub(crate) fn draw_line(
 ) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        crate::widgets::home_surface::SANS,
         size,
         (color).to_jian(),
         Point2D::new(0.0, 0.0),
     );
     cx.backend.draw_text(&layout, Point2D::new(x, baseline_y));
-}
-
-/// Paint the animated "assistant is typing" dots after the label.
-fn paint_typing_dots(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    start_x: f32,
-    center_y: f32,
-    now_ms: u64,
-) {
-    let phase = (now_ms / 280) % 3;
-    for i in 0..3u64 {
-        let active = i == phase;
-        let r = if active {
-            TYPING_DOT * 0.6
-        } else {
-            TYPING_DOT * 0.5
-        };
-        let mut color = theme.muted_foreground;
-        color.a *= if active { 0.9 } else { 0.7 };
-        let cx_dot = start_x + r + i as f32 * (TYPING_DOT + TYPING_DOT_GAP);
-        cx.backend.fill_oval(
-            Rect::xywh(cx_dot - r, center_y - r, r * 2.0, r * 2.0),
-            color,
-        );
-    }
 }
 
 /// Paint the transcript from an already-resolved canonical (scroll-0) build.
@@ -629,6 +595,7 @@ pub(crate) fn paint_transcript_with_selection(
         if let Some(identity) = &item.agent_identity {
             paint_agent_identity(cx, theme, identity);
         }
+        super::ai_chat_transcript_status::paint_step_lists(cx, theme, &item.steps);
         for step in &item.steps {
             paint_action_step(cx, theme, step, now_ms);
         }
@@ -651,35 +618,15 @@ pub(crate) fn paint_transcript_with_selection(
             // assistant text = plain (no bubble background).
             let (bg, fg) = match item.role {
                 ChatRole::User => (theme.user_bubble, theme.user_bubble_foreground),
-                ChatRole::Assistant => (theme.muted, theme.foreground),
+                ChatRole::Assistant => (theme.muted, theme.muted_foreground),
             };
-            if bubble.typing {
-                cx.backend
-                    .fill_round_rect(bubble.rect, bubble.rect.size.y / 2.0, bg);
-                let text_x = bubble.rect.origin.x + TYPING_PAD_X;
-                let baseline = bubble.rect.origin.y + TYPING_PAD_Y + 11.0;
-                draw_line(
-                    cx,
-                    TYPING_LABEL,
-                    text_x,
-                    baseline,
-                    BODY_FONT,
-                    theme.muted_foreground,
-                );
-                paint_typing_dots(
-                    cx,
-                    theme,
-                    text_x + text_unit_width(TYPING_LABEL) + TYPING_LABEL_DOT_GAP,
-                    bubble.rect.origin.y + bubble.rect.size.y / 2.0,
-                    now_ms,
-                );
-            } else {
+            {
                 // Clip to the bubble — over-long tokens stay inside.
                 cx.backend.save();
                 cx.backend.clip_rect(bubble.rect);
                 if item.role == ChatRole::User {
-                    // #27 restyle: rounded-rect bubble with ~14px radius.
-                    cx.backend.fill_round_rect(bubble.rect, 14.0, bg);
+                    cx.backend
+                        .fill_round_rect(bubble.rect, USER_BUBBLE_RADIUS, bg);
                 }
                 if item.role == ChatRole::User {
                     // Bounds-defense: index the live slice with `.get` — the
@@ -743,6 +690,9 @@ pub(crate) fn paint_transcript_with_selection(
             .get(item.msg_index)
             .map(|m| m.images.as_slice())
             .unwrap_or(&[]);
+        if let Some(status) = &item.status {
+            super::ai_chat_transcript_status::paint_status_line(cx, theme, status, now_ms);
+        }
         for (rect, img) in item.images.iter().zip(msg_images.iter()) {
             cx.backend.fill_round_rect(*rect, 6.0, theme.muted);
             draw_icon(

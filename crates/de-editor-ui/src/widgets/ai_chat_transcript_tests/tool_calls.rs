@@ -159,7 +159,7 @@ fn streaming_tool_card_falls_back_to_running_status() {
 }
 
 #[test]
-fn paint_expanded_tool_calls_as_individual_cards_like_ts() {
+fn paint_expanded_tool_calls_as_rows_in_one_list() {
     let mut m = ChatMessage::assistant("done");
     m.tools_collapsed = false;
     m.tool_calls = vec![
@@ -189,14 +189,17 @@ fn paint_expanded_tool_calls_as_individual_cards_like_ts() {
         de_editor_core::Locale::EnUs,
     );
 
-    assert!(
-        backend.round_rects.len() >= 3,
-        "TS renders each tool call as its own bordered card, not one text body"
+    // The rows share one bordered list (#26); only the destructive call
+    // paints a surface of its own.
+    assert_eq!(
+        backend.round_rects.len(),
+        1,
+        "the delete row stands out with its own surface"
     );
 }
 
 #[test]
-fn mixed_tool_calls_expand_only_write_level_card_bodies_like_ts() {
+fn tool_rows_start_closed_and_a_failed_call_opens() {
     let mut m = ChatMessage::assistant("done");
     m.tools_collapsed = false;
     m.tool_calls = vec![
@@ -210,6 +213,11 @@ fn mixed_tool_calls_expand_only_write_level_card_bodies_like_ts() {
             args: r#"{"args":{"dsl":"I(\"root\",{})"}}"#.into(),
             content_offset: None,
         },
+        ChatToolCall {
+            name: "delete_node".into(),
+            args: r#"{"args":{"id":"old"},"result":{"success":false,"error":"missing"}}"#.into(),
+            content_offset: None,
+        },
     ];
 
     let items = build_transcript(
@@ -219,13 +227,16 @@ fn mixed_tool_calls_expand_only_write_level_card_bodies_like_ts() {
     );
     let tools = items[0].tools.as_ref().expect("tools block present");
 
-    assert_eq!(tools.cards.len(), 2);
+    assert_eq!(tools.cards.len(), 3);
+    assert_eq!(tools.cards[0].body.size.y, 0.0, "a read call starts closed");
+    assert_eq!(tools.cards[1].body.size.y, 0.0, "so does a write (#26)");
     assert!(
-        tools.cards[0].body.size.y == 0.0,
-        "TS keeps read tool cards collapsed by default"
+        tools.cards[2].body.size.y > 0.0,
+        "a failed call opens on its error"
     );
-    assert!(
-        tools.cards[1].body.size.y > 0.0,
-        "TS opens modify tool cards by default"
+    // The rows are back to back: one list.
+    assert_eq!(
+        tools.cards[1].rect.origin.y,
+        tools.cards[0].rect.origin.y + tools.cards[0].rect.size.y
     );
 }

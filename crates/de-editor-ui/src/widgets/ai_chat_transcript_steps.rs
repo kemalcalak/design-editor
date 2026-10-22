@@ -6,6 +6,7 @@ pub(crate) enum ParsedStepStatus {
     Streaming,
     Done,
     Error,
+    Stopped,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,6 +28,7 @@ pub(crate) fn activity_step(activity: &ChatActivity) -> ParsedStep {
         ChatActivityStatus::Running => ParsedStepStatus::Streaming,
         ChatActivityStatus::Done => ParsedStepStatus::Done,
         ChatActivityStatus::Error => ParsedStepStatus::Error,
+        ChatActivityStatus::Stopped => ParsedStepStatus::Stopped,
     };
     ParsedStep {
         title: activity.title.clone(),
@@ -339,6 +341,7 @@ pub(crate) fn step_state(
     match step.status {
         Some(ParsedStepStatus::Done) => (true, false, false),
         Some(ParsedStepStatus::Error) => (true, false, true),
+        Some(ParsedStepStatus::Stopped) => (true, false, false),
         Some(ParsedStepStatus::Streaming) => (false, streaming, false),
         Some(ParsedStepStatus::Pending) => (false, false, false),
         None => {
