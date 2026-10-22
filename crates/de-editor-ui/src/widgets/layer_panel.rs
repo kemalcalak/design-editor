@@ -9,7 +9,7 @@ use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::layer_panel_cache::{self, CachedLayerRows};
 use crate::widgets::layer_panel_metrics::{
     add_page_target, collapse_target, delete_page_target, glyph_rect_in, layer_action_targets,
-    layer_drag_target, layer_node_icon_x, LayerPanelMetrics,
+    layer_node_icon_x, LayerPanelMetrics,
 };
 use crate::widgets::layer_panel_walkers::{
     apply_layer_rename, icon_for_node, kind_label, layer_regions, layers_content_width,
@@ -38,9 +38,8 @@ fn t(ui: &EditorUiState, key: &'static str) -> &'static str {
 pub(crate) const ROW_PAD_X: f32 = 12.0;
 use crate::widgets::layer_panel_paint::{
     layer_content_clip_rect_with_metrics, layer_label_available_width_with_metrics,
-    paint_drag_ghost, paint_layer_action_backing, paint_layer_drag_handle,
-    paint_rename_input_with_metrics, paint_section_header_with_metrics, truncate_to_fit,
-    truncate_to_fit_measured,
+    paint_drag_ghost, paint_layer_action_backing, paint_rename_input_with_metrics,
+    paint_section_header_with_metrics, truncate_to_fit, truncate_to_fit_measured,
 };
 
 /// One row in the layers tree — flat depth-walked view.
@@ -127,7 +126,7 @@ impl LayerPanel {
     /// a live overlay (see `layer_panel_cache`), so a selection-/hover-only
     /// change reuses the cached rows.
     pub fn from_editor_owned(state: &EditorState, owner: u64) -> Self {
-        let metrics = LayerPanelMetrics::for_ui(&state.editor_ui);
+        let metrics = LayerPanelMetrics::DESKTOP;
         let rows =
             layer_panel_cache::resolve_owned(owner, state, || build_layer_rows(state, metrics));
         Self::assemble(
@@ -243,8 +242,8 @@ impl LayerPanel {
             walk_excluding(child, &cx, drag_source, 0, &mut items);
         }
         apply_layer_rename(&mut items, &rename);
-        let metrics = LayerPanelMetrics::for_ui(&state.editor_ui);
-        let pages_content_width = pages_content_width(&pages, LAYER_PANEL_WIDTH, metrics);
+        let metrics = LayerPanelMetrics::DESKTOP;
+        let pages_content_width = pages_content_width(&pages, LAYER_PANEL_WIDTH);
         let layers_content_width = layers_content_width(&items, LAYER_PANEL_WIDTH, metrics);
         Self::assemble(
             state,
@@ -302,31 +301,6 @@ impl LayerPanel {
             metrics: self.metrics,
         })
     }
-
-    /// Return the layer-list scroll offset that keeps `node_id`'s
-    /// row visible inside the clipped Layers viewport.
-    pub fn layers_offset_revealing(&self, rect: Rect, node_id: &NodeId) -> Option<f32> {
-        let index = self
-            .items
-            .iter()
-            .position(|item| &item.node_id == node_id)?;
-        let r = self.regions(rect);
-        if r.layers_view_h <= 0.0 {
-            return None;
-        }
-        let row_top = index as f32 * self.metrics.layer_row_height;
-        let row_bottom = row_top + self.metrics.layer_row_height;
-        let view_top = r.layers.offset;
-        let view_bottom = view_top + r.layers_view_h;
-        let next = if row_top < view_top {
-            row_top
-        } else if row_bottom > view_bottom {
-            row_bottom - r.layers_view_h
-        } else {
-            view_top
-        };
-        Some(next.clamp(0.0, r.layers.max_offset))
-    }
 }
 
 /// Walk the active page into the styling-neutral row model the cache
@@ -342,7 +316,7 @@ fn build_layer_rows(state: &EditorState, metrics: LayerPanelMetrics) -> CachedLa
         walk(child, &cx, 0, &mut items);
     }
     apply_layer_rename(&mut items, &rename);
-    let pages_content_width = pages_content_width(&pages, LAYER_PANEL_WIDTH, metrics);
+    let pages_content_width = pages_content_width(&pages, LAYER_PANEL_WIDTH);
     let layers_content_width = layers_content_width(&items, LAYER_PANEL_WIDTH, metrics);
     CachedLayerRows {
         pages: Rc::new(pages),
@@ -414,7 +388,6 @@ impl Widget for LayerPanel {
             &self.theme,
             rect.origin.x,
             y,
-            rect.size.x,
             self.pages_label,
             self.metrics,
         );
@@ -459,11 +432,7 @@ impl Widget for LayerPanel {
             }
             let label_x = row.origin.x + 12.0;
             let delete_target = delete_page_target(rect, y, self.metrics);
-            let label_max_x = if self.metrics.touch {
-                delete_target.origin.x - 4.0
-            } else {
-                rect.origin.x + rect.size.x - self.metrics.row_pad_x - 18.0
-            };
+            let label_max_x = rect.origin.x + rect.size.x - self.metrics.row_pad_x - 18.0;
             let available_w = (label_max_x - label_x).max(0.0);
             if page.renaming {
                 paint_rename_input_with_metrics(
@@ -490,18 +459,14 @@ impl Widget for LayerPanel {
                     .to_jian(),
                     Point2D::new(0.0, 0.0),
                 );
-                let baseline = if self.metrics.touch {
-                    jian_widgets::centered_text_baseline_y(row, self.metrics.row_font)
-                } else {
-                    row.origin.y + 19.0
-                };
+                let baseline = row.origin.y + 19.0;
                 cx.backend
                     .draw_text(&label, Point2D::new(label_x, baseline));
             }
             // Hover-reveal × delete button on the trailing edge —
             // matches TS page-row hover affordance. Hit-test geometry
             // mirrors the paint exactly.
-            if page_hovered || self.metrics.touch {
+            if page_hovered {
                 let close = glyph_rect_in(delete_target, self.metrics.glyph_size);
                 draw_icon(
                     cx.backend,
@@ -535,7 +500,6 @@ impl Widget for LayerPanel {
             &self.theme,
             rect.origin.x,
             y,
-            rect.size.x,
             self.layers_label,
             self.metrics,
         );
@@ -597,8 +561,7 @@ impl Widget for LayerPanel {
             } else {
                 dim(self.theme.muted_foreground, dim_factor)
             };
-            let content_clip =
-                layer_content_clip_rect_with_metrics(row, item.renaming, self.metrics);
+            let content_clip = layer_content_clip_rect_with_metrics(row, item.renaming);
             cx.backend.save();
             cx.backend.clip_rect(content_clip);
             cx.backend
@@ -622,12 +585,8 @@ impl Widget for LayerPanel {
                     1.4,
                 );
             }
-            let icon_x = layer_node_icon_x(row, indent, self.metrics);
-            let icon_y = if self.metrics.touch {
-                row.origin.y + (row.size.y - self.metrics.glyph_size) / 2.0
-            } else {
-                row.origin.y + 6.0
-            };
+            let icon_x = layer_node_icon_x(row, indent);
+            let icon_y = row.origin.y + 6.0;
             draw_icon(
                 cx.backend,
                 item.icon,
@@ -643,14 +602,12 @@ impl Widget for LayerPanel {
             } else {
                 dim(self.theme.card_foreground, dim_factor)
             };
-            let label_x =
-                icon_x + self.metrics.glyph_size + if self.metrics.touch { 8.0 } else { 6.0 };
+            let label_x = icon_x + self.metrics.glyph_size + 6.0;
             let available_w = layer_label_available_width_with_metrics(
                 row,
                 label_x,
                 r.layers.horizontal_offset,
                 item.renaming,
-                self.metrics,
             );
             if item.renaming {
                 paint_rename_input_with_metrics(
@@ -677,17 +634,12 @@ impl Widget for LayerPanel {
                     (label_color).to_jian(),
                     Point2D::new(0.0, 0.0),
                 );
-                let baseline = if self.metrics.touch {
-                    jian_widgets::centered_text_baseline_y(row, self.metrics.row_font)
-                } else {
-                    row.origin.y + 17.0
-                };
+                let baseline = row.origin.y + 17.0;
                 cx.backend
                     .draw_text(&label, Point2D::new(label_x, baseline));
             }
             cx.backend.restore();
             let (eye_target, lock_target) = layer_action_targets(row, self.metrics);
-            let drag_target = layer_drag_target(row, self.metrics).filter(|_| !item.renaming);
             let eye_icon = if item.hidden { Icon::EyeOff } else { Icon::Eye };
             let lock_icon = if item.locked {
                 Icon::Lock
@@ -716,18 +668,16 @@ impl Widget for LayerPanel {
             let trailing_stroke = 1.2;
             let eye_glyph = glyph_rect_in(eye_target, trailing_size);
             let lock_glyph = glyph_rect_in(lock_target, trailing_size);
-            let show_eye = (hovered || self.metrics.touch) && !item.renaming;
-            let show_lock = (hovered || self.metrics.touch) && !item.renaming;
+            let show_eye = hovered && !item.renaming;
+            let show_lock = hovered && !item.renaming;
             paint_layer_action_backing(
                 cx,
                 row,
-                self.metrics,
                 &self.theme,
                 selected,
                 hovered,
-                drag_target.is_some() || show_eye || show_lock,
+                show_eye || show_lock,
             );
-            paint_layer_drag_handle(cx, drag_target, trailing_default);
             if show_eye {
                 draw_icon(
                     cx.backend,

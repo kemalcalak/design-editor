@@ -72,29 +72,6 @@ test("real daemon: handshake → version → mcp-via-proxy → auth/origin defen
   const unauth = await fetch(`${client.baseUrl}/api/mcp/version`);
   expect(unauth.status).toBe(401);
 
-  // The collaboration API is privileged by the same deny-by-default gate: the
-  // webview inherits collaboration for free, so the extension's only job is
-  // that the managed token — and nothing else — opens it.
-  const collabUnauth = await fetch(`${client.baseUrl}/api/collab/state`);
-  expect(collabUnauth.status).toBe(401);
-
-  const collabAuthed = await fetch(`${client.baseUrl}/api/collab/state`, {
-    headers: { "X-Design-Editor-Token": client.handshake.token },
-  });
-  expect(collabAuthed.status).toBe(200);
-  const collabState = (await collabAuthed.json()) as Record<string, unknown>;
-  expect(typeof collabState.wireVersion).toBe("number");
-  expect(typeof collabState.collabSeq).toBe("number");
-  expect(typeof collabState.availability).toBe("string");
-
-  // The participant-avatar proxy sits behind the same gate.
-  const avatarUnauth = await fetch(`${client.baseUrl}/api/collab/avatar`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ participantKey: "nobody" }),
-  });
-  expect(avatarUnauth.status).toBe(401);
-
   // MCP initialize through the proxy → a JSON-RPC result.
   const proxy = new McpProxy(
     { active: { filePath: "x", client }, onActiveChanged: () => {} },

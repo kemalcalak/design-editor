@@ -132,53 +132,6 @@ impl WidgetHost {
         let (x, y) = (ctx.x, ctx.y);
         let viewport_width = ctx.viewport_width;
         let viewport_height = ctx.viewport_height;
-        if self.editor_state.editor_ui.collab.panel.open
-            && !(self.editor_state.editor_ui.account_ui_available
-                && self.editor_state.editor_ui.login_modal_open)
-        {
-            let top_bar_rect = Rect::xywh(
-                0.0,
-                0.0,
-                viewport_width,
-                de_editor_ui::widgets::TOP_BAR_HEIGHT,
-            );
-            let top_bar =
-                de_editor_ui::widgets::TopBar::for_editor_ui(&self.editor_state.editor_ui)
-                    .with_traffic_controls(false);
-            if let Some(panel) =
-                de_editor_ui::widgets::CollabPanel::for_editor_ui(&self.editor_state.editor_ui)
-            {
-                let panel_rect = panel.rect_at(
-                    top_bar.collaboration_chip_rect_estimated(top_bar_rect),
-                    Rect::xywh(0.0, 0.0, viewport_width, viewport_height),
-                );
-                if let Some(hit) = panel.hit_test(panel_rect, Point2D::new(x, y)) {
-                    match hit {
-                        de_editor_ui::widgets::CollabPanelHit::CopyInvite(invite)
-                        | de_editor_ui::widgets::CollabPanelHit::CopyShareEndpoint(invite) => {
-                            self.host_copy_text(&invite);
-                        }
-                        hit => {
-                            let _ = de_editor_ui::widgets::collab_ui::apply_panel_hit(
-                                &mut self.editor_state.editor_ui,
-                                hit,
-                            );
-                        }
-                    }
-                } else {
-                    self.editor_state.editor_ui.collab.panel.open = false;
-                    self.editor_state
-                        .editor_ui
-                        .collab
-                        .panel
-                        .join_address_focused = false;
-                    self.editor_state.editor_ui.collab.panel.hover = None;
-                    self.blur_text_inputs_on_blank_press();
-                }
-                self.mark_dirty();
-                return Some(true);
-            }
-        }
         // 0a0. Import dropdown — same overlay tier as the locale picker.
         if self.editor_state.editor_ui.import_menu_open {
             use de_editor_ui::widgets::{ImportMenu, ImportMenuChoice};
@@ -236,8 +189,8 @@ impl WidgetHost {
         None
     }
 
-    /// Shape picker, file menu, export / figma modals, sign-in modal and
-    /// account dropdown. `None` — none of them claimed the press.
+    /// Shape picker, file menu, export / figma modals. `None` — none of
+    /// them claimed the press.
     pub(in crate::widget_host) fn press_menu_modal_tiers(
         &mut self,
         ctx: &PressCtx,
@@ -279,23 +232,6 @@ impl WidgetHost {
         if self.editor_state.editor_ui.figma_import_open {
             self.close_image_popovers_for_higher_overlay();
             self.dispatch_figma_import_press(x, y, viewport_width, viewport_height);
-            return Some(true);
-        }
-        // Sign-in modal / account dropdown — same overlay tier as native
-        // §0a/§0a' (before the TopBar so a re-click on the avatar closes
-        // instead of re-toggling).
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.login_modal_open
-        {
-            self.close_image_popovers_for_higher_overlay();
-            self.dispatch_login_modal_press(x, y, viewport_width, viewport_height);
-            return Some(true);
-        }
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.account_menu_open
-        {
-            self.close_image_popovers_for_higher_overlay();
-            self.dispatch_account_menu_press(x, y, viewport_width, viewport_height);
             return Some(true);
         }
         None

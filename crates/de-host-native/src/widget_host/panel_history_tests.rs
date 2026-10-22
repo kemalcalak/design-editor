@@ -116,7 +116,7 @@ fn eye_and_lock_toggles_via_click_are_undoable() {
     host.mark_paint_dirty_for_test();
     // Ask the host where the tree is: the rail carries a tab row now
     // (对话 / 图层 / 幻灯片), so the tree starts below it.
-    let layer_rect = host.layers_content_rect(VW, VH);
+    let layer_rect = host.layers_content_rect(VH);
     let find = |host: &WidgetHostNative, want_eye: bool| -> Option<(f32, f32)> {
         let panel = LayerPanel::from_editor(host.editor_state());
         let mut y = layer_rect.origin.y;
@@ -168,7 +168,7 @@ fn layer_drag_reorder_is_undoable() {
     host.refresh_layout_scene();
     // Ask the host where the tree is: the rail carries a tab row now
     // (对话 / 图层 / 幻灯片), so the tree starts below it.
-    let layer_rect = host.layers_content_rect(VW, VH);
+    let layer_rect = host.layers_content_rect(VH);
     // Scan for a cursor point whose drop target moves "a" after "b".
     let panel = LayerPanel::from_editor_with_drag_source(host.editor_state(), &NodeId::new("a"));
     let mut drop_at: Option<(f32, f32)> = None;
@@ -194,7 +194,7 @@ fn layer_drag_reorder_is_undoable() {
         current_y: dy,
         active: true,
     };
-    assert!(host.commit_layer_drag(drag, VW, VH));
+    assert!(host.commit_layer_drag(drag, VH));
     let order: Vec<String> = host
         .editor_state()
         .active_children()
@@ -227,7 +227,7 @@ fn add_page_via_click_is_undoable() {
     // plus_x = panel_w - ROW_PAD_X(12) - 12, a 14 px box.
     // Measured from the rail's CONTENT rect, not the window: the rail
     // carries a tab row now, so the Pages header starts below it.
-    let content = host.layers_content_rect(VW, VH);
+    let content = host.layers_content_rect(VH);
     let plus_x = content.origin.x + content.size.x - 12.0 - 12.0 + 7.0;
     let plus_y = content.origin.y + 8.0 + 7.0;
     let before = history_len(&host);

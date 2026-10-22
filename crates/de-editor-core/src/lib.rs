@@ -7,7 +7,6 @@
 //! editor-only state (selection, tool, viewport, history, transient
 //! UI drafts).
 
-pub mod account_state;
 pub mod acp_agent_presets;
 pub mod agent_indicators;
 mod agent_indicators_tests;
@@ -21,7 +20,6 @@ pub mod agent_settings_button_state;
 pub mod agent_settings_connection;
 pub mod align;
 pub mod align_guides;
-pub mod auth_routes;
 pub mod blank_starter;
 pub mod bridge_protocol;
 pub mod button_press_state;
@@ -36,17 +34,6 @@ pub mod chat_sessions;
 mod chat_title;
 pub mod clipboard;
 pub mod codegen;
-pub mod collab_admission_ui;
-pub mod collab_gate;
-pub mod collab_notice_ui;
-pub mod collab_owner_confirm_ui;
-pub mod collab_panel_hover;
-pub mod collab_public_ui;
-pub mod collab_routes;
-mod collab_transport_capabilities;
-mod collab_ui_debug;
-pub mod collab_ui_state;
-pub mod collab_wire;
 pub mod color_picker;
 pub mod color_picker_edit;
 mod color_picker_snapshot;
@@ -72,11 +59,9 @@ pub mod design_md;
 pub mod design_md_button_state;
 pub mod document_install;
 pub mod drag_mutators;
-pub mod edit_transaction;
 pub mod editor_toast;
 pub mod home_mcp_setup;
 pub mod home_thumbnail;
-pub mod size_class;
 // Runtime-fetched product assets for the browser bundle (native embeds them).
 pub mod editor_ui_state;
 pub mod export_batch;
@@ -139,7 +124,6 @@ pub mod ref_resolve;
 pub mod rename;
 pub mod render_backend;
 pub mod request_snapshot;
-pub mod save_name_keyboard;
 pub mod scene_template_append;
 pub mod scene_template_catalog;
 pub mod scene_template_keyboard;
@@ -148,7 +132,6 @@ pub mod scene_template_prompt;
 pub mod scene_vars;
 pub mod selection;
 pub mod selection_resolve;
-pub mod share_routes;
 pub mod state;
 pub mod statusbar_state;
 pub mod svg_import;
@@ -234,7 +217,6 @@ mod dirty_tests;
 #[cfg(test)]
 mod document_install_tests;
 #[cfg(test)]
-mod edit_transaction_tests;
 #[cfg(test)]
 mod fills_tests;
 #[cfg(test)]
@@ -269,9 +251,6 @@ mod tests_pages;
 #[cfg(test)]
 mod translate_equivalence_tests;
 
-pub use account_state::{
-    AccountMenuRow, AccountState, LoginFlowError, LoginFlowStatus, LoginModalButton,
-};
 pub use acp_agent_presets::{
     acp_agent_preset, matches_preset_transport, AcpAgentPreset, AcpPresetAvailability,
     ACP_AGENT_PRESETS,
@@ -304,33 +283,6 @@ pub use chat::{
 pub use chat_activity::{ChatActivity, ChatActivityStatus, ChatCompletion, PendingSubtaskRetry};
 pub use chat_button_state::{ChatFooterButton, ChatHeaderButton};
 pub use chat_sessions::{adjust_running_tab_after_close, ChatSessions};
-pub use collab_admission_ui::{
-    CollabAdmissionRequestKey, PendingCollabAdmissionUi, MAX_COLLAB_ADMISSION_REQUEST_KEY_BYTES,
-    MAX_COLLAB_PENDING_ADMISSIONS,
-};
-pub use collab_gate::{
-    CollabApplyError, CollabDocumentMutation, CollabEditSource, CollabGateAction, CollabGatePolicy,
-    CollabGateReason, CollabNodeField, CollabUnsupportedFeature,
-};
-pub use collab_owner_confirm_ui::{
-    CollabOwnerIdentityUi, PendingOwnerConfirmationUi, MAX_COLLAB_OWNER_DISPLAY_NAME_CHARS,
-    MAX_COLLAB_OWNER_IDENTIFIER_CHARS,
-};
-pub use collab_panel_hover::CollabPanelHover;
-pub use collab_public_ui::{
-    CollabConnectErrorUi, CollabConnectionPathUi, CollabInviteCode, CollabPublicSessionUi,
-    CollabRelayRegion, MAX_COLLAB_INVITE_CODE_CHARS,
-};
-pub use collab_transport_capabilities::CollabTransportCapabilities;
-pub use collab_ui_state::{
-    AuthenticatedCollabSession, CollabAvailability, CollabCanvasPoint, CollabConnectionPhase,
-    CollabDiscardedEditUi, CollabNotice, CollabNoticeKind, CollabPanelState, CollabPanelView,
-    CollabParticipantUi, CollabPendingEditUi, CollabRejectUiCode, CollabShareEndpoint,
-    CollabUiAction, CollabUiRole, CollabUiState, DiscoveredCollabEndpoint, RemotePresenceUi,
-    COLLAB_PRESENCE_FRAME_INTERVAL_MS, MAX_COLLAB_DISCARDED_FIELDS,
-    MAX_COLLAB_DISCARDED_NODE_LABEL_CHARS, MAX_COLLAB_DISPLAY_NAME_CHARS,
-    MAX_COLLAB_SHARE_ENDPOINT_CHARS, MAX_COLLAB_UI_PARTICIPANTS, MAX_COLLAB_UI_SELECTION_IDS,
-};
 pub use color_picker::{hsv_to_rgb, parse_hex_alpha, parse_hex_rgb, rgb_to_hex, rgb_to_hsv};
 pub use command::{
     BatchInsertItem, EditorCommand, EffectField, LayoutPropValue, NodeFlag, StrokeSide,
@@ -344,10 +296,7 @@ pub use components::{Component, ComponentLibrary, ComponentOption};
 pub use compositing::{fill_blend_mode_at, node_blend_mode, node_mask_type};
 pub use design_md::{extract_design_md_from_document, generate_design_md, parse_design_md};
 pub use design_md_button_state::DesignMdButton;
-pub use document_install::{DocumentInstallError, DocumentInstallReport, PreparedDocument};
-pub use edit_transaction::{
-    CompletedLocalEdit, EditOrigin, LocalEditCapture, LocalEditError, LocalEditOutcome,
-};
+pub use document_install::{DocumentInstallError, PreparedDocument};
 pub use editor_ui_state::home::{HOME_COPIED_MS, HOME_RECENT_MAX};
 pub use editor_ui_state::workspace::{
     WorkspaceHit, WorkspacePhase, WorkspaceState, WorkspaceView, WORKSPACE_DECK_STRIP_H,
@@ -365,8 +314,8 @@ pub use editor_ui_state::{
     PreviewDeviceKind, PromptCenterFocus, PromptCenterState, PromptFilter, PropertyTab, RecentFile,
     RecentView, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus, SizeToggleState,
     SlidesDrag, SlidesPanelState, SlidesPanelTarget, StyleImportState, TaskDraft, ThemeMode,
-    UpdateStatus, VariableRowFocus, WindowControlRequest, CHAT_TAB_MIN_WIDTH,
-    LAYER_PANEL_MAX_WIDTH, LAYER_PANEL_MIN_WIDTH,
+    UpdateStatus, VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH,
+    LAYER_PANEL_MIN_WIDTH,
 };
 pub use export_dialog_state::ExportDialogButton;
 pub use export_quick_menu_state::ExportQuickRow;
@@ -383,9 +332,8 @@ pub use history_snapshot::{SharedComponents, SharedDoc};
 pub use hoist_app_state::{hoist_app_state, UNPLANNED_APP_STATE_IDX};
 pub use icon_picker_state::{IconPickerRemoteIcon, IconPickerRemoteState, IconifyLoadMoreRequest};
 pub use id_allocator::{
-    collect_document_ids, next_namespaced_counter, next_sequential_counter, DocumentIdAllocator,
-    IdAllocError, IdAllocator, NamespacedIdAllocator, PeerNamespace, SequentialIdAllocator,
-    MAX_PEER_NAMESPACE_LEN,
+    collect_document_ids, next_sequential_counter, DocumentIdAllocator, IdAllocError, IdAllocator,
+    SequentialIdAllocator,
 };
 pub use image_aspect::aspect_matched_height;
 pub use image_crop::{

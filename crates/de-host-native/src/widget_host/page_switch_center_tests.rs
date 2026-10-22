@@ -33,7 +33,7 @@ fn point_for_page_row(host: &WidgetHostNative, page_index: usize) -> Point2D {
     // panel rect here: the rail carries a tab row now (对话 / 图层 /
     // 幻灯片), so the tree starts below it and a hand-rolled rect probes
     // 36 px above every row.
-    let rect = host.layers_content_rect(VIEWPORT_W, VIEWPORT_H);
+    let rect = host.layers_content_rect(VIEWPORT_H);
     let regions = panel.regions(rect);
     let mut y = regions.pages_rows_top + 2.0;
     while y < regions.pages_rows_top + regions.pages_view_h {

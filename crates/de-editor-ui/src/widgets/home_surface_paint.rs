@@ -33,13 +33,11 @@ pub(super) fn paint_home(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, rect: 
     }
     // The borderless window's own close / minimise / maximise dots
     // (Windows / Linux; macOS keeps its native traffic lights there).
-    if !surface.ui.touch_chrome() {
-        paint_window_control_dots(
-            cx.backend,
-            Rect::xywh(0.0, 0.0, layout.sidebar.size.x, super::WINDOW_STRIP_H),
-            surface.ui.topbar_traffic_hover,
-        );
-    }
+    paint_window_control_dots(
+        cx.backend,
+        Rect::xywh(0.0, 0.0, layout.sidebar.size.x, super::WINDOW_STRIP_H),
+        surface.ui.topbar_traffic_hover,
+    );
 }
 
 pub(super) fn draw_text(

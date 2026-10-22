@@ -83,16 +83,7 @@ pub fn drain_preset_io(host: &mut WidgetHostNative) -> bool {
     match action {
         ThemePresetIo::Export => export_preset_dialog(host.editor_state()),
         ThemePresetIo::Import => {
-            if host.gate_collaboration_action(
-                de_editor_core::CollabGateAction::Document(
-                    de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::VariablesThemes,
-                    ),
-                ),
-                de_editor_core::CollabEditSource::Import,
-            ) {
-                import_preset_dialog(host);
-            }
+            import_preset_dialog(host);
         }
     }
     true
@@ -155,16 +146,6 @@ fn import_preset_dialog(host: &mut WidgetHostNative) {
         );
         return;
     };
-    if !host.gate_collaboration_action(
-        de_editor_core::CollabGateAction::Document(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::VariablesThemes,
-            ),
-        ),
-        de_editor_core::CollabEditSource::Import,
-    ) {
-        return;
-    }
     let state = host.editor_state_mut();
     let snap = state.snapshot_for_history();
     state.merge_theme_preset_payload(themes, variables);

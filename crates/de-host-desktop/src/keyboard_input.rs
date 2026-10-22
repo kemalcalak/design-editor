@@ -265,14 +265,8 @@ impl DesktopApp {
                             consumed = self.host.toggle_preview_with_cached_viewport();
                         }
                         "d" => consumed = self.host.apply_duplicate(),
-                        "z" => {
-                            consumed = self.collab_runtime.request_undo(&mut self.host)
-                                || self.host.apply_undo()
-                        }
-                        "y" => {
-                            consumed = self.collab_runtime.reject_redo(&mut self.host)
-                                || self.host.apply_redo()
-                        }
+                        "z" => consumed = self.host.apply_undo(),
+                        "y" => consumed = self.host.apply_redo(),
                         "g" => consumed = self.host.apply_group(),
                         "j" => consumed = self.host.apply_toggle_chat(),
                         // Cmd/Ctrl+T — open a fresh chat tab (MT.3). Preserves
@@ -314,10 +308,7 @@ impl DesktopApp {
                         }
                         _ if image_popover_open => consumed = true,
                         _ if settings_focused => {}
-                        "z" => {
-                            consumed = self.collab_runtime.reject_redo(&mut self.host)
-                                || self.host.apply_redo()
-                        }
+                        "z" => consumed = self.host.apply_redo(),
                         "g" => consumed = self.host.apply_ungroup(),
                         "c" => consumed = self.host.apply_toggle_code_panel(),
                         "v" => consumed = self.host.apply_toggle_variables_panel(),
@@ -510,16 +501,6 @@ impl DesktopApp {
     }
 
     fn paste_image_to_canvas(&mut self, image: crate::clipboard::ClipboardImage) -> bool {
-        if !self.host.gate_collaboration_action(
-            de_editor_core::CollabGateAction::Document(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::ClipboardPaste,
-                ),
-            ),
-            de_editor_core::CollabEditSource::User,
-        ) {
-            return true;
-        }
         let encoded = base64::engine::general_purpose::STANDARD.encode(&image.png);
         let src = format!("data:image/png;base64,{encoded}");
         let centre = de_editor_ui::widgets::host_canvas_geometry::canvas_centre_doc_point(

@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Mobile-safe Design Editor raster, SVG, and PDF export core"
+description = "Design Editor raster, SVG, and PDF export core"
 
 [lib]
 name = "de_render_export"

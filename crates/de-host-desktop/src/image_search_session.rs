@@ -27,8 +27,8 @@ use de_ai::chat_provider::ChatProvider;
 use de_host_services::image_relevance_judge::{ChatVisionJudge, OpenAiCompatVisionJudge};
 use de_image_enrich::net::{ImageRelevanceJudge, NoJudge};
 pub(crate) use de_image_enrich::{
-    apply_result, collaboration_image_result_gate, collect_targets, collect_targets_with_scene,
-    image_request_mode, is_image_fallback, ImageAspectRatio, ImageRequestMode, ImageSearchTarget,
+    apply_result, collect_targets, collect_targets_with_scene, image_request_mode,
+    is_image_fallback, ImageAspectRatio, ImageRequestMode, ImageSearchTarget,
     SEARCH_FAILED_PLACEHOLDER_SRC,
 };
 
@@ -305,13 +305,6 @@ impl ImageSearchSession {
         state: &EditorState,
         scene: Option<&de_editor_ui::layout_scene::LayoutScene>,
     ) -> bool {
-        // Automatic enrichment is an external-asset mutation, which M1 does
-        // not admit into a bound collaboration document. Check before
-        // starting network/provider work; do not show a rejection merely
-        // because a collaborative canvas contains an empty placeholder.
-        if collaboration_image_result_gate(state).is_err() {
-            return false;
-        }
         // Perf gate: this runs on every `RedrawRequested`. Skip the whole-tree
         // walk when the document content AND active page are unchanged since
         // the last scan, and no session-set mutation (job completion/failure,
@@ -416,16 +409,6 @@ impl ImageSearchSession {
                     // revision, but the gate invalidation still covers the
                     // failure path.)
                     self.last_scanned = None;
-                    // A job may have started while the document was standalone
-                    // and become ready only after Start/Join. Re-check the
-                    // current phase and role immediately before the raw node
-                    // mutation, discard the result on rejection, and keep it
-                    // retryable after the collaboration session is left.
-                    if let Err(reason) = collaboration_image_result_gate(state) {
-                        state.editor_ui.collab.set_notice(reason.notice_kind(), 0);
-                        changed = true;
-                        continue;
-                    }
                     if job.intent.is_some() && current_intents.is_none() {
                         #[cfg(test)]
                         {

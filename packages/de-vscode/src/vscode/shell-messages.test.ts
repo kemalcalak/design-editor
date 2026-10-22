@@ -3,7 +3,6 @@ import {
   isShellControl,
   isShellSaveRequest,
   parseShellCopyText,
-  parseShellExternalUrl,
   parseShellReadyOrigin,
 } from "./shell-messages";
 
@@ -69,58 +68,3 @@ describe("isShellSaveRequest", () => {
   });
 });
 
-describe("parseShellExternalUrl", () => {
-  test("accepts HTTPS and canonicalizes it", () => {
-    expect(
-      parseShellExternalUrl(
-        JSON.stringify({
-          type: "op-shell/open-external",
-          url: "https://sso.zseven.cn/device?code=abc",
-        }),
-      ),
-    ).toBe("https://sso.zseven.cn/device?code=abc");
-  });
-
-  test("accepts loopback HTTP for a development SSO", () => {
-    expect(
-      parseShellExternalUrl(
-        JSON.stringify({ type: "op-shell/open-external", url: "http://127.0.0.1:3100/device" }),
-      ),
-    ).toBe("http://127.0.0.1:3100/device");
-    expect(
-      parseShellExternalUrl(
-        JSON.stringify({ type: "op-shell/open-external", url: "http://localhost:3100/device" }),
-      ),
-    ).toBe("http://localhost:3100/device");
-  });
-
-  test("rejects unsafe schemes, remote plaintext HTTP, and credentials", () => {
-    for (const url of [
-      "javascript:alert(1)",
-      "file:///tmp/secret",
-      "http://sso.zseven.cn/device",
-      "https://user:password@sso.zseven.cn/device",
-    ]) {
-      expect(
-        parseShellExternalUrl(JSON.stringify({ type: "op-shell/open-external", url })),
-      ).toBeUndefined();
-    }
-  });
-
-  test("rejects malformed, foreign, and oversized messages", () => {
-    expect(parseShellExternalUrl("not json")).toBeUndefined();
-    expect(
-      parseShellExternalUrl(
-        JSON.stringify({ type: "op-bridge/opened", url: "https://example.com" }),
-      ),
-    ).toBeUndefined();
-    expect(
-      parseShellExternalUrl(
-        JSON.stringify({
-          type: "op-shell/open-external",
-          url: `https://example.com/${"x".repeat(4_096)}`,
-        }),
-      ),
-    ).toBeUndefined();
-  });
-});

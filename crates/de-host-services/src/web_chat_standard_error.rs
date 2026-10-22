@@ -32,9 +32,6 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum WebChatStandardError {
-    /// The daemon is shutting down and will not durably accept a document
-    /// write. The conversation still answers; the document is untouched.
-    ShuttingDown,
     /// The request-scoped credential names a different model than the turn
     /// it rides with. Refused rather than reconciled — the credential is
     /// browser-supplied and the mismatch is unresolvable.
@@ -53,19 +50,11 @@ pub(crate) enum WebChatStandardError {
     NoModelConfigured,
     /// Provider resolution itself failed. Text is `ai_proxy`'s own message.
     ProviderResolve(String),
-    /// A live collaboration session refuses AI writes. The M1 protocol has no
-    /// way to sequence a write the local user did not make, so the desktop
-    /// refuses the same turn — this keeps the daemon's answer identical rather
-    /// than letting the AI route fork the shared document.
-    CollabRefused(crate::web_canvas_server::DaemonMutationRefusal),
 }
 
 impl fmt::Display for WebChatStandardError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            WebChatStandardError::ShuttingDown => f.write_str(
-                "this daemon is stopping; the reply was produced but the document was not changed",
-            ),
             WebChatStandardError::TransientModelMismatch => {
                 f.write_str("transient credential model does not match the request")
             }
@@ -73,7 +62,6 @@ impl fmt::Display for WebChatStandardError {
                 "provider endpoint is not allowed: private, loopback, and reserved addresses require an DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST entry",
             ),
             WebChatStandardError::NoModelConfigured => f.write_str("no model configured"),
-            WebChatStandardError::CollabRefused(refusal) => write!(f, "{refusal}"),
             WebChatStandardError::EndpointRejected(message)
             | WebChatStandardError::Document(message)
             | WebChatStandardError::ProviderResolve(message) => f.write_str(message),

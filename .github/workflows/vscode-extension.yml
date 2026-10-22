@@ -1,14 +1,12 @@
 name: VS Code extension package
 
 # Fast source gate for de-vscode (typecheck + unit tests + esbuild bundle). It
-# deliberately emits a platform-neutral development VSIX; tagged releases use
-# rust-release.yml to build six platform-specific VSIX packages that embed the
-# matching de-host-web-server binary, WebAssembly bundle, and CanvasKit assets.
+# deliberately emits a platform-neutral development VSIX; releases do not
+# publish a VSIX.
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
     paths:
       - 'packages/de-vscode/**'
       # de-vscode is a member of the packages/ Bun workspace: its

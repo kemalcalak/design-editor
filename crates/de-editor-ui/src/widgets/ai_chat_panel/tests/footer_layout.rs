@@ -342,28 +342,6 @@ fn header_new_chat_circle_at_right_resolves_new_chat() {
     );
 }
 
-#[test]
-fn header_collapse_chevron_area_resolves_toggle_collapse() {
-    // The chevron now lives only on the TOUCH sheet: desktop has no
-    // collapsed state left to toggle into, so the affordance is gone
-    // there and the hit rect with it.
-    let mut s = EditorState::new();
-    // The expanded panel only exists where the conversation lives:
-    // the rail's Agent tab. Elsewhere the chat is composer-only.
-    s.editor_ui.enter_chat_tab();
-    s.editor_ui.touch = true;
-    let panel = AIChatPlaceholder::from_editor(&s);
-    let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, AI_CHAT_HEIGHT);
-    // Chevron center: PAD + 9 (half of 18px icon).
-    let p = Point2D::new(PAD + 9.0, HEADER_HEIGHT / 2.0);
-
-    assert_eq!(
-        panel.hit_test(rect, p),
-        Some(AIChatHit::ToggleCollapse),
-        "collapse chevron must resolve ToggleCollapse on the touch sheet"
-    );
-}
-
 // ── Thinking-mode toggle ─────────────────────────────────────────────────────
 
 /// The footer as laid out for a default-size panel.

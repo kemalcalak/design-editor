@@ -28,7 +28,7 @@ fn topbar_point(host: &mut WidgetHostNative, target: TopBarHit) -> Point2D {
 fn layer_row_point(host: &WidgetHostNative, target: &NodeId) -> Point2D {
     // The rail carries a tab row now (对话 / 图层 / 幻灯片), so the tree
     // starts below it; ask the host rather than rebuilding the rect.
-    let rect = host.layers_content_rect(VIEWPORT_W, VIEWPORT_H);
+    let rect = host.layers_content_rect(VIEWPORT_H);
     let panel = LayerPanel::from_editor(host.editor_state());
     let mut y = rect.origin.y;
     while y < rect.origin.y + rect.size.y {

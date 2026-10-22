@@ -28,13 +28,9 @@ use de_editor_core::editor_ui_state::EditorUiState;
 /// Row index of the Model field among DisplayName / ApiKey / Model / BaseUrl.
 pub const MODEL_FIELD_ROW: usize = 2;
 const MODEL_ROW_H: f32 = 24.0;
-const TOUCH_MODEL_ROW_H: f32 = 44.0;
 const MODEL_MENU_PAD: f32 = 4.0;
-const TOUCH_MODEL_MENU_PAD: f32 = 6.0;
 const MODEL_MENU_MAX_VISIBLE: usize = 6;
-const TOUCH_MODEL_MENU_MAX_VISIBLE: usize = 5;
 const MODEL_MENU_GAP: f32 = 4.0;
-const TOUCH_MODEL_MENU_GAP: f32 = 8.0;
 
 /// Menu target for a form card: saved agent by index, or the draft.
 pub fn menu_target(index: Option<usize>) -> BuiltinModelMenuTarget {
@@ -70,37 +66,25 @@ pub fn model_menu_visible(settings: &AgentSettings) -> bool {
 /// loading, empty, and short catalogs do not leave a large blank panel.
 /// Layout (card heights + the fields below Model) and hit-test all derive
 /// from this so they cannot drift from the paint.
-pub fn model_menu_height(settings: &AgentSettings, index: Option<usize>, touch: bool) -> f32 {
+pub fn model_menu_height(settings: &AgentSettings, index: Option<usize>) -> f32 {
     if settings.builtin_model_menu_open == Some(menu_target(index)) && model_menu_visible(settings)
     {
-        menu_view_height(settings, index, touch) + menu_gap(touch)
+        menu_view_height(settings, index) + menu_gap()
     } else {
         0.0
     }
 }
 
-fn menu_gap(touch: bool) -> f32 {
-    if touch {
-        TOUCH_MODEL_MENU_GAP
-    } else {
-        MODEL_MENU_GAP
-    }
+fn menu_gap() -> f32 {
+    MODEL_MENU_GAP
 }
 
-fn menu_metrics(touch: bool) -> (f32, f32, usize) {
-    if touch {
-        (
-            TOUCH_MODEL_MENU_PAD,
-            TOUCH_MODEL_ROW_H,
-            TOUCH_MODEL_MENU_MAX_VISIBLE,
-        )
-    } else {
-        (MODEL_MENU_PAD, MODEL_ROW_H, MODEL_MENU_MAX_VISIBLE)
-    }
+fn menu_metrics() -> (f32, f32, usize) {
+    (MODEL_MENU_PAD, MODEL_ROW_H, MODEL_MENU_MAX_VISIBLE)
 }
 
-fn menu_row_count(settings: &AgentSettings, index: Option<usize>, touch: bool) -> usize {
-    let (_, _, max_visible) = menu_metrics(touch);
+fn menu_row_count(settings: &AgentSettings, index: Option<usize>) -> usize {
+    let (_, _, max_visible) = menu_metrics();
     match catalog(settings, index) {
         Some(catalog) if !catalog.models.is_empty() => catalog.models.len().min(max_visible),
         Some(catalog)
@@ -118,23 +102,18 @@ fn menu_row_count(settings: &AgentSettings, index: Option<usize>, touch: bool) -
     }
 }
 
-fn menu_view_height(settings: &AgentSettings, index: Option<usize>, touch: bool) -> f32 {
-    let (pad, row_h, _) = menu_metrics(touch);
-    pad * 2.0 + menu_row_count(settings, index, touch) as f32 * row_h
+fn menu_view_height(settings: &AgentSettings, index: Option<usize>) -> f32 {
+    let (pad, row_h, _) = menu_metrics();
+    pad * 2.0 + menu_row_count(settings, index) as f32 * row_h
 }
 
 /// The menu is anchored under the Model field's input rect, same width.
-pub fn model_menu_rect(
-    settings: &AgentSettings,
-    card: Rect,
-    index: Option<usize>,
-    touch: bool,
-) -> Rect {
-    let input = field_input_rect_for_ui(settings, card, index, MODEL_FIELD_ROW, touch);
-    let gap = menu_gap(touch);
+pub fn model_menu_rect(settings: &AgentSettings, card: Rect, index: Option<usize>) -> Rect {
+    let input = field_input_rect_for_ui(settings, card, index, MODEL_FIELD_ROW);
+    let gap = menu_gap();
     Rect {
         origin: Point2D::new(input.origin.x, input.origin.y + input.size.y + gap),
-        size: Point2D::new(input.size.x, menu_view_height(settings, index, touch)),
+        size: Point2D::new(input.size.x, menu_view_height(settings, index)),
     }
 }
 
@@ -183,12 +162,8 @@ fn effective_model_selected<'a>(
     }
 }
 
-fn row_rect(menu: Rect, row: usize, touch: bool) -> Rect {
-    let (pad, row_h) = if touch {
-        (TOUCH_MODEL_MENU_PAD, TOUCH_MODEL_ROW_H)
-    } else {
-        (MODEL_MENU_PAD, MODEL_ROW_H)
-    };
+fn row_rect(menu: Rect, row: usize) -> Rect {
+    let (pad, row_h) = (MODEL_MENU_PAD, MODEL_ROW_H);
     Rect {
         origin: Point2D::new(
             menu.origin.x + pad,
@@ -198,28 +173,24 @@ fn row_rect(menu: Rect, row: usize, touch: bool) -> Rect {
     }
 }
 
-fn content_height(options: usize, touch: bool) -> f32 {
-    let (pad, row_h) = if touch {
-        (TOUCH_MODEL_MENU_PAD, TOUCH_MODEL_ROW_H)
-    } else {
-        (MODEL_MENU_PAD, MODEL_ROW_H)
-    };
+fn content_height(options: usize) -> f32 {
+    let (pad, row_h) = (MODEL_MENU_PAD, MODEL_ROW_H);
     pad * 2.0 + options as f32 * row_h
 }
 
 /// Largest valid scroll offset for the open menu's option list.
-pub fn model_scroll_max(settings: &AgentSettings, index: Option<usize>, touch: bool) -> f32 {
+pub fn model_scroll_max(settings: &AgentSettings, index: Option<usize>) -> f32 {
     let options = catalog(settings, index)
         .map(|catalog| catalog.models.len())
         .unwrap_or(0);
-    (content_height(options, touch) - menu_view_height(settings, index, touch)).max(0.0)
+    (content_height(options) - menu_view_height(settings, index)).max(0.0)
 }
 
-fn effective_model_scroll(settings: &AgentSettings, index: Option<usize>, touch: bool) -> f32 {
+fn effective_model_scroll(settings: &AgentSettings, index: Option<usize>) -> f32 {
     settings
         .builtin_model_menu_scroll
         .offset
-        .clamp(0.0, model_scroll_max(settings, index, touch))
+        .clamp(0.0, model_scroll_max(settings, index))
 }
 
 /// Whether `point` sits inside the open menu for this card.
@@ -228,11 +199,10 @@ pub fn model_menu_contains(
     card: Rect,
     index: Option<usize>,
     point: Point2D,
-    touch: bool,
 ) -> bool {
     settings.builtin_model_menu_open == Some(menu_target(index))
         && model_menu_visible(settings)
-        && model_menu_rect(settings, card, index, touch).contains(point)
+        && model_menu_rect(settings, card, index).contains(point)
 }
 
 /// Index into the catalog option list under `point`, honoring scroll.
@@ -241,24 +211,19 @@ pub fn model_row_at(
     card: Rect,
     index: Option<usize>,
     point: Point2D,
-    touch: bool,
 ) -> Option<usize> {
-    if !model_menu_contains(settings, card, index, point, touch) {
+    if !model_menu_contains(settings, card, index, point) {
         return None;
     }
-    let menu = model_menu_rect(settings, card, index, touch);
+    let menu = model_menu_rect(settings, card, index);
     let options = catalog(settings, index)
         .map(|catalog| catalog.models.len())
         .unwrap_or(0);
     if options == 0 {
         return None;
     }
-    let (pad, row_h) = if touch {
-        (TOUCH_MODEL_MENU_PAD, TOUCH_MODEL_ROW_H)
-    } else {
-        (MODEL_MENU_PAD, MODEL_ROW_H)
-    };
-    let local_y = point.y - menu.origin.y - pad + effective_model_scroll(settings, index, touch);
+    let (pad, row_h) = (MODEL_MENU_PAD, MODEL_ROW_H);
+    let local_y = point.y - menu.origin.y - pad + effective_model_scroll(settings, index);
     if local_y < 0.0 {
         return None;
     }
@@ -278,41 +243,39 @@ pub fn paint_model_menu(
     agent: &BuiltinAgentConfig,
     index: Option<usize>,
     card: Rect,
-    touch: bool,
 ) {
     if settings.builtin_model_menu_open != Some(menu_target(index)) || !model_menu_visible(settings)
     {
         return;
     }
-    let menu = model_menu_rect(settings, card, index, touch);
-    let radius = if touch { 10.0 } else { 6.0 };
+    let menu = model_menu_rect(settings, card, index);
+    let radius = 6.0;
     cx.backend.fill_round_rect(menu, radius, theme.card);
     cx.backend
         .stroke_round_rect(menu, radius, theme.border, 1.0);
     cx.backend.save();
     cx.backend.clip_rect(menu);
-    let scroll_offset = effective_model_scroll(settings, index, touch);
+    let scroll_offset = effective_model_scroll(settings, index);
     cx.backend.translate(Point2D::new(0.0, -scroll_offset));
     let mut scrollbar_options = None;
     let catalog = catalog(settings, index);
     let state_row = state_rows(ui, catalog);
     if let Some((hint, detail)) = state_row {
-        paint_state_rows(cx, theme, menu, &hint, detail.as_deref(), touch);
+        paint_state_rows(cx, theme, menu, &hint, detail.as_deref());
     } else if let Some(options) = catalog.map(|catalog| catalog.models.as_slice()) {
         let selected = effective_model_selected(settings, ui, agent, index);
         for (row, option) in options.iter().enumerate() {
-            let item = row_rect(menu, row, touch);
+            let item = row_rect(menu, row);
             if settings.builtin_model_menu_hover == Some(row) {
-                cx.backend
-                    .fill_round_rect(item, if touch { 8.0 } else { 5.0 }, theme.button_hover);
+                cx.backend.fill_round_rect(item, 5.0, theme.button_hover);
             }
             if selected(&option.id) {
-                let icon_size = if touch { 18.0 } else { 12.0 };
+                let icon_size = 12.0;
                 draw_icon(
                     cx.backend,
                     Icon::Check,
                     Point2D::new(
-                        item.origin.x + if touch { 12.0 } else { 8.0 },
+                        item.origin.x + 8.0,
                         item.origin.y + (item.size.y - icon_size) / 2.0,
                     ),
                     icon_size,
@@ -320,8 +283,8 @@ pub fn paint_model_menu(
                     1.7,
                 );
             }
-            let font_size = if touch { 15.0 } else { 11.0 };
-            let text_x = item.origin.x + if touch { 44.0 } else { 28.0 };
+            let font_size = 11.0;
+            let text_x = item.origin.x + 28.0;
             let shown = ellipsize(
                 cx,
                 &option.display_name,
@@ -334,11 +297,7 @@ pub fn paint_model_menu(
                 font_size,
                 theme.foreground,
                 text_x,
-                if touch {
-                    jian_widgets::centered_text_baseline_y(item, font_size)
-                } else {
-                    item.origin.y + 16.0
-                },
+                item.origin.y + 16.0,
             );
         }
         scrollbar_options = Some(options.len());
@@ -347,7 +306,7 @@ pub fn paint_model_menu(
     // The scrollbar belongs to the fixed viewport, not the translated model
     // content. Painting after restore keeps the thumb visible at every offset.
     if let Some(options) = scrollbar_options {
-        paint_scrollbar(cx, theme, menu, options, touch, scroll_offset);
+        paint_scrollbar(cx, theme, menu, options, scroll_offset);
     }
 }
 
@@ -383,10 +342,9 @@ fn paint_state_rows(
     menu: Rect,
     hint: &str,
     detail: Option<&str>,
-    touch: bool,
 ) {
-    let font_size = if touch { 15.0 } else { 11.0 };
-    let hint_row = row_rect(menu, 0, touch);
+    let font_size = 11.0;
+    let hint_row = row_rect(menu, 0);
     let hint = ellipsize(cx, hint, (hint_row.size.x - 16.0).max(0.0), font_size);
     draw_text(
         cx,
@@ -394,14 +352,10 @@ fn paint_state_rows(
         font_size,
         theme.muted_foreground,
         hint_row.origin.x + 8.0,
-        if touch {
-            jian_widgets::centered_text_baseline_y(hint_row, font_size)
-        } else {
-            hint_row.origin.y + 16.0
-        },
+        hint_row.origin.y + 16.0,
     );
     if let Some(detail) = detail {
-        let detail_row = row_rect(menu, 1, touch);
+        let detail_row = row_rect(menu, 1);
         let detail = ellipsize(cx, detail, (detail_row.size.x - 16.0).max(0.0), font_size);
         draw_text(
             cx,
@@ -409,32 +363,16 @@ fn paint_state_rows(
             font_size,
             theme.muted_foreground,
             detail_row.origin.x + 8.0,
-            if touch {
-                jian_widgets::centered_text_baseline_y(detail_row, font_size)
-            } else {
-                detail_row.origin.y + 16.0
-            },
+            detail_row.origin.y + 16.0,
         );
     }
 }
 
-fn paint_scrollbar(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    menu: Rect,
-    options: usize,
-    touch: bool,
-    offset: f32,
-) {
-    let content_h = content_height(options, touch);
+fn paint_scrollbar(cx: &mut PaintCx<'_>, theme: &Theme, menu: Rect, options: usize, offset: f32) {
+    let content_h = content_height(options);
     let track_h = (menu.size.y - 8.0).max(0.0);
     let scroll = jian_core::scroll::ScrollState { offset };
-    let Some(thumb_geom) = scroll.thumb(
-        track_h,
-        content_h,
-        menu.size.y,
-        if touch { 44.0 } else { 24.0 },
-    ) else {
+    let Some(thumb_geom) = scroll.thumb(track_h, content_h, menu.size.y, 24.0) else {
         return;
     };
     let thumb = Rect {
@@ -461,11 +399,11 @@ mod tests {
     #[test]
     fn menu_height_is_zero_unless_the_model_field_owns_focus() {
         let mut settings = AgentSettings::default();
-        assert_eq!(model_menu_height(&settings, Some(0), false), 0.0);
+        assert_eq!(model_menu_height(&settings, Some(0)), 0.0);
 
         settings.builtin_model_menu_open = Some(menu_target(Some(0)));
         assert_eq!(
-            model_menu_height(&settings, Some(0), false),
+            model_menu_height(&settings, Some(0)),
             0.0,
             "the open flag alone must not reserve height without focus"
         );
@@ -475,7 +413,7 @@ mod tests {
             field: BuiltinAgentField::ApiKey,
         });
         assert_eq!(
-            model_menu_height(&settings, Some(0), false),
+            model_menu_height(&settings, Some(0)),
             0.0,
             "a different field on the same card hides the menu"
         );
@@ -485,7 +423,7 @@ mod tests {
             field: BuiltinAgentField::Model,
         });
         assert!(
-            model_menu_height(&settings, Some(0), false) > 0.0,
+            model_menu_height(&settings, Some(0)) > 0.0,
             "the Model focus shows the menu"
         );
     }
@@ -532,35 +470,31 @@ mod tests {
             origin: Point2D::new(10.0, 10.0),
             size: Point2D::new(500.0, 200.0),
         };
-        let menu = model_menu_rect(&settings, card, Some(0), false);
+        let menu = model_menu_rect(&settings, card, Some(0));
         let first_row = Point2D::new(
             menu.origin.x + 40.0,
             menu.origin.y + MODEL_MENU_PAD + MODEL_ROW_H / 2.0,
         );
-        assert_eq!(
-            model_row_at(&settings, card, Some(0), first_row, false),
-            Some(0)
-        );
+        assert_eq!(model_row_at(&settings, card, Some(0), first_row), Some(0));
         assert_eq!(
             model_row_at(
                 &settings,
                 card,
                 Some(0),
                 Point2D::new(menu.origin.x + 40.0, menu.origin.y + 1.0),
-                false,
             ),
             None,
             "a click on the top padding maps to nothing"
         );
         settings.builtin_model_menu_scroll.offset = MODEL_ROW_H;
         assert_eq!(
-            model_row_at(&settings, card, Some(0), first_row, false),
+            model_row_at(&settings, card, Some(0), first_row),
             Some(1),
             "scrolling shifts which row the same screen point hits"
         );
         assert_eq!(
-            model_scroll_max(&settings, Some(0), false),
-            content_height(10, false) - menu_view_height(&settings, Some(0), false)
+            model_scroll_max(&settings, Some(0)),
+            content_height(10) - menu_view_height(&settings, Some(0))
         );
 
         let request = settings
@@ -580,9 +514,9 @@ mod tests {
             },
         );
         settings.builtin_model_menu_scroll.offset = 10_000.0;
-        assert_eq!(effective_model_scroll(&settings, Some(0), false), 0.0);
+        assert_eq!(effective_model_scroll(&settings, Some(0)), 0.0);
         assert_eq!(
-            model_row_at(&settings, card, Some(0), first_row, false),
+            model_row_at(&settings, card, Some(0), first_row),
             Some(0),
             "a shorter async result clamps paint and hit-testing to the same first row"
         );
@@ -607,14 +541,9 @@ mod tests {
         };
 
         let compact = MODEL_MENU_PAD * 2.0 + MODEL_ROW_H;
-        assert_eq!(menu_view_height(&settings, None, false), compact);
+        assert_eq!(menu_view_height(&settings, None), compact);
         assert_eq!(
-            menu_view_height(&settings, None, true),
-            TOUCH_MODEL_MENU_PAD * 2.0 + TOUCH_MODEL_ROW_H,
-            "touch keeps the guidance row compact while preserving a 44pt target"
-        );
-        assert_eq!(
-            model_menu_height(&settings, None, false),
+            model_menu_height(&settings, None),
             compact + MODEL_MENU_GAP,
             "an unconfigured provider shows one compact guidance row"
         );
@@ -641,14 +570,9 @@ mod tests {
             },
         );
         assert_eq!(
-            menu_view_height(&settings, None, false),
+            menu_view_height(&settings, None),
             MODEL_MENU_PAD * 2.0 + MODEL_ROW_H * 2.0,
             "a two-model catalog reserves exactly two rows"
-        );
-        assert_eq!(
-            menu_view_height(&settings, None, true),
-            TOUCH_MODEL_MENU_PAD * 2.0 + TOUCH_MODEL_ROW_H * 2.0,
-            "touch reserves exactly the discovered rows below its five-row cap"
         );
     }
 
@@ -684,7 +608,7 @@ mod tests {
         );
 
         assert_eq!(
-            menu_view_height(&settings, None, false),
+            menu_view_height(&settings, None),
             MODEL_MENU_PAD * 2.0 + MODEL_ROW_H * 2.0
         );
     }
@@ -705,7 +629,6 @@ mod tests {
             card,
             None,
             Point2D::new(200.0, 200.0),
-            false,
         ));
     }
 }

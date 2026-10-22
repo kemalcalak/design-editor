@@ -13,7 +13,7 @@ pub(in crate::widget_host) const LEGACY_PREVIEW_POINTER_ID: u32 = 1;
 
 impl WidgetHostNative {
     /// True while ANY preview pointer is between Down and Up.
-    #[cfg(any(test, feature = "testing"))]
+    #[cfg(test)]
     pub fn preview_any_pointer_held_for_test(&self) -> bool {
         !self.preview_pressed_pids.is_empty()
     }
@@ -21,27 +21,13 @@ impl WidgetHostNative {
     /// The factual timestamp for the live-preview pointer event being
     /// dispatched: the scoped event time when a timestamped entry
     /// variant (`apply_press_at` / `apply_cursor_move_at` /
-    /// `apply_release_with_viewport_at` / `cancel_native_touch_gestures_at`)
-    /// supplied one, else the host's global clock (`now_ms`). The
+    /// `apply_release_with_viewport_at`) supplied one, else the host's global clock (`now_ms`). The
     /// global clock and the event time are deliberately independent:
     /// an out-of-order event (frame at 2000, Down at 950) keeps the
     /// clock at 2000 while the Swipe recognizer measures the factual
     /// 100 ms pair delta.
     pub(in crate::widget_host) fn preview_pointer_time_ms(&self) -> u64 {
         self.preview_event_time_ms.unwrap_or(self.now_ms)
-    }
-
-    /// Narrow test-only snapshot of one `$app` value from the live
-    /// preview runtime. CLONED out of `PreviewSession` — the runtime's
-    /// state is interior-mutable, so production callers never receive a
-    /// reference into it. Compiled only when the `testing` feature is
-    /// enabled (de-engine-ffi / de-host-native test builds).
-    #[cfg(feature = "testing")]
-    pub fn preview_app_state_value_for_test(
-        &self,
-        key: &str,
-    ) -> Option<jian_core::value::RuntimeValue> {
-        self.preview.as_ref()?.app_state_value_for_test(key)
     }
 
     /// Center the canvas viewport on a scene-space `rect`, keeping zoom

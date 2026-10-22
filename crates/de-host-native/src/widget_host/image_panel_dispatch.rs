@@ -84,13 +84,6 @@ impl WidgetHostNative {
 
     /// Commit `src` onto the selected image node (with history).
     pub(in crate::widget_host) fn write_selected_image_src(&mut self, src: &str) {
-        if !self.collab_allows_document_mutation(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-            ),
-        ) {
-            return;
-        }
         if image_ops::write_selected_image_src(&mut self.editor_state, src) {
             self.mark_dirty();
         }

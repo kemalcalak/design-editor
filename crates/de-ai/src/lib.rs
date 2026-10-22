@@ -11,8 +11,7 @@
 //! - [`chat_models`] — the `ModelEntry` model-catalog type.
 //! - [`chat_sse`] — transport-free Anthropic / OpenAI-compatible SSE
 //!   payload → `ChatDelta` parsers shared by the desktop/daemon
-//!   transports (`de-host-services`) and the mobile FFI chat pump
-//!   (`de-engine-ffi`).
+//!   transports (`de-host-services`).
 //! - [`agent_settings_state`] — state types for the Cmd+, settings
 //!   modal (`AgentSettingsTab`, `AgentProvider`, …).
 //! - [`design_md`] — the shared design.md generation system prompt +

@@ -51,16 +51,6 @@ pub struct EditorUiState {
     pub chat_tab_width_bumped: bool,
     /// Transient host ownership of chat; hides the internal Agent tab.
     pub host_owns_chat: bool,
-    /// Responsive layout: live size class, touch density (≥44pt targets,
-    /// bottom dock, sheets), and the single open mobile sheet.
-    pub size_class: crate::size_class::EditorSizeClass,
-    pub touch: bool,
-    /// Whether external CLI agents (Claude Code, Codex, …) can run on this
-    /// platform. Mobile shells (iOS / Android / HarmonyOS) cannot spawn
-    /// subprocess CLIs, so their FFI clears this and the chat catalog plus
-    /// the settings panel hide every external-CLI surface.
-    pub external_cli_available: bool,
-    pub mobile_sheet: Option<crate::size_class::MobileSheetKind>,
 
     // --- Theme + locale --------------------------------------------
     /// User's Design Editor theme preference — TopBar Sun icon flips it.
@@ -101,12 +91,6 @@ pub struct EditorUiState {
     /// to `1` (serde default), matching `ChatState::default().agent_team_size`.
     pub preferred_agent_team_size: u32,
 
-    // --- Collaboration ---------------------------------------------
-    /// Sanitized collaboration display state shared by native and web
-    /// widgets. Transport handles, tickets, subjects, and device ids never
-    /// enter this paint-state projection.
-    pub collab: crate::collab_ui_state::CollabUiState,
-
     // --- File menu --------------------------------------------------
     /// File-menu dropdown open (anchored under folder + chevron).
     pub file_menu_open: bool,
@@ -121,24 +105,6 @@ pub struct EditorUiState {
     pub export_quick_menu_hover: Option<crate::export_quick_menu_state::ExportQuickRow>,
     /// Pending file-menu action for the host runner to handle.
     pub pending_file_action: Option<FileAction>,
-    /// One-shot request for the mobile shell to present its native
-    /// account-center screen (set by the touch more-panel's Account tile;
-    /// desktop chrome keeps its painted account surfaces and never sets it).
-    pub pending_account_center: bool,
-    /// One-shot request for the mobile shell to start the sign-in flow (set
-    /// by the touch more-panel's Sign in tile). The shell configures the
-    /// auth runtime for its resolved region if needed, then calls
-    /// `op_editor_begin_login`; the engine-painted login modal never opens
-    /// on touch chrome.
-    pub pending_mobile_login: bool,
-    /// One-shot request for the mobile shell to present its native language
-    /// picker (set by the touch more-panel's Language tile).
-    pub pending_language_picker: bool,
-    /// Mobile Save / Save As file-name prompt (touch shells only).
-    pub save_name_dialog: SaveNameDialogState,
-    /// One-shot request for the embedded shell to drive the window from the
-    /// TopBar's painted traffic-light dots (desktop chrome only).
-    pub pending_window_control: Option<WindowControlRequest>,
     /// Recent files (head = newest, cap 10).
     pub recent_files: Vec<RecentFile>,
     /// TopBar display name; `None` = "Untitled".
@@ -259,39 +225,6 @@ pub struct EditorUiState {
     /// Draft, caret, selection, and blink state for the focused
     /// settings-modal input.
     pub settings_input: jian_core::text_input::TextInputState,
-
-    // --- Account (platform + zseven-sso user system) ---------------
-    /// Runtime release gate for the account experience. Hosts set this
-    /// at startup when a working auth backend is linked (the
-    /// `de-auth-bridge` prebuilt library, or the dev fake-login env);
-    /// stub builds and the wasm host leave it false, hiding every
-    /// account entry point exactly like the old compile-time gate.
-    pub account_ui_available: bool,
-    /// Signed-in / signed-out identity, fed by the zseven-sso device
-    /// login flow (browser pairing + WebSocket push) — see
-    /// `AccountState::dev_fake_signed_in` for the dev-only fast path.
-    pub account: crate::account_state::AccountState,
-    /// TopBar avatar-button dropdown (signed-in state) open.
-    pub account_menu_open: bool,
-    /// Which account-dropdown row the cursor is over.
-    pub account_menu_hover: Option<crate::account_state::AccountMenuRow>,
-    /// Show the "MCP Tokens" row in the signed-in account dropdown. Set
-    /// true only by the online/hub-served web host (a `?tenant=` page);
-    /// native desktop and self-hosted serve-web leave it false so the row
-    /// — which opens the hub portal's token page — never appears there.
-    pub account_mcp_tokens_entry: bool,
-    /// Sign-in modal (signed-out state) open.
-    pub login_modal_open: bool,
-    /// Which login-modal control the cursor is over.
-    pub login_modal_hover: Option<crate::account_state::LoginModalButton>,
-    /// Set after the production "Sign in with browser" button is
-    /// clicked in a build without an auth backend — reveals the honest
-    /// "coming soon" note instead of pretending a flow ran. Untouched
-    /// by the dev fake-login and real device-login paths.
-    pub login_modal_stub_hint_shown: bool,
-    /// Progress note for an in-flight browser device-login, painted in
-    /// the sign-in modal. `None` when no flow is running.
-    pub login_modal_status: Option<crate::account_state::LoginFlowStatus>,
 
     // --- Toolbar shape slot ----------------------------------------
     /// Toolbar shape-tool dropdown state.

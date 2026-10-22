@@ -8,18 +8,10 @@ impl WidgetHost {
             return false;
         }
         let snap = self.editor_state.snapshot_for_history();
-        let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            self.editor_state.group_selected_with_allocator(allocator)
-        } else {
-            Ok(self.editor_state.group_selected(&mut self.next_node_id))
-        };
-        let grouped = match result {
-            Ok(id) => id.is_some(),
-            Err(error) => {
-                self.show_collab_id_error(error);
-                return true;
-            }
-        };
+        let grouped = self
+            .editor_state
+            .group_selected(&mut self.next_node_id)
+            .is_some();
         if grouped {
             self.editor_state.history_push_past(snap);
             self.mark_dirty();
@@ -53,28 +45,18 @@ impl WidgetHost {
             return false;
         };
         let snap = self.editor_state.snapshot_for_history();
-        let new_id = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            self.editor_state
-                .replace_paths_with_polyline_with_allocator(&selected, &contours, allocator)
-        } else {
-            Ok(self.editor_state.replace_paths_with_polyline(
-                &selected,
-                &contours,
-                &mut self.next_node_id,
-            ))
-        };
-        match new_id {
-            Err(error) => {
-                self.show_collab_id_error(error);
-                true
-            }
-            Ok(Some(id)) => {
+        match self.editor_state.replace_paths_with_polyline(
+            &selected,
+            &contours,
+            &mut self.next_node_id,
+        ) {
+            Some(id) => {
                 self.editor_state.history_push_past(snap);
                 self.editor_state.set_single_selection(id);
                 self.mark_dirty();
                 true
             }
-            Ok(None) => false,
+            None => false,
         }
     }
 }

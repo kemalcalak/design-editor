@@ -7,14 +7,9 @@
 use super::*;
 use crate::widgets::text_metrics;
 
-pub(super) fn agents_content_height(
-    settings: &AgentSettings,
-    mode: AgentSettingsPanelMode,
-    ui: &EditorUiState,
-) -> f32 {
-    let builtin = AGENTS_HERO_HEIGHT
-        + agent_settings_builtin::content_height_for_ui(settings, ui.touch_chrome());
-    if !mode.shows_external_agents(ui) {
+pub(super) fn agents_content_height(settings: &AgentSettings, mode: AgentSettingsPanelMode) -> f32 {
+    let builtin = AGENTS_HERO_HEIGHT + agent_settings_builtin::content_height_for_ui(settings);
+    if !mode.shows_external_agents() {
         return builtin + CONTENT_TAIL_PAD;
     }
     // Walk the same ladder the row geometry does, so the scroll range
@@ -78,12 +73,12 @@ impl<'a> Widget for AgentSettingsPanel<'a> {
                 scroll,
             },
         );
-        if self.mode.active_tab(&self.settings, self.ui) == AgentSettingsTab::Fonts {
+        if self.mode.active_tab(&self.settings) == AgentSettingsTab::Fonts {
             agent_settings_fonts::paint_picker(
                 cx,
                 &self.theme,
                 rect,
-                hero_body_rect_for_ui(layout.content, self.ui.touch_chrome()),
+                hero_body_rect_for_ui(layout.content),
                 self.ui,
                 scroll,
                 self.now_ms,
@@ -108,153 +103,109 @@ fn paint_panel(cx: &mut PaintCx<'_>, panel: Rect, args: PanelPaintArgs<'_>) {
         layout,
         scroll,
     } = args;
-    match layout.kind {
-        AgentSettingsSurfaceKind::Compact => cx.backend.fill_rect(panel, theme.card),
-        AgentSettingsSurfaceKind::Medium | AgentSettingsSurfaceKind::Expanded => {
-            cx.backend.fill_round_rect(panel, 20.0, theme.card);
-            cx.backend.stroke_round_rect(panel, 20.0, theme.border, 1.0);
-        }
-        AgentSettingsSurfaceKind::Desktop => {
-            cx.backend.fill_round_rect(panel, 12.0, theme.card);
-            // The navigation rail sits on the page background: a rounded
-            // fill for the left corners, squared off on its right edge.
-            let rail = crate::widgets::agent_settings_panel_geometry::nav_rail_rect(panel);
-            cx.backend.fill_round_rect(rail, 12.0, theme.background);
-            cx.backend.fill_rect(
-                Rect::xywh(
-                    rail.origin.x + rail.size.x - 12.0,
-                    rail.origin.y,
-                    12.0,
-                    rail.size.y,
-                ),
-                theme.background,
-            );
-            cx.backend.fill_rect(
-                Rect::xywh(
-                    rail.origin.x + rail.size.x,
-                    panel.origin.y,
-                    1.0,
-                    panel.size.y,
-                ),
-                theme.border,
-            );
-            cx.backend.stroke_round_rect(panel, 12.0, theme.border, 1.0);
-        }
-    }
-    paint_touch_title(cx, theme, ui, layout);
-    if layout.kind == AgentSettingsSurfaceKind::Expanded {
-        let x = panel.origin.x + layout.header.size.x;
-        cx.backend.stroke_line(
-            Point2D::new(x, panel.origin.y),
-            Point2D::new(x, panel.origin.y + panel.size.y),
-            theme.border,
+    cx.backend.fill_round_rect(panel, 12.0, theme.card);
+    // The navigation rail sits on the page background: a rounded
+    // fill for the left corners, squared off on its right edge.
+    let rail = crate::widgets::agent_settings_panel_geometry::nav_rail_rect(panel);
+    cx.backend.fill_round_rect(rail, 12.0, theme.background);
+    cx.backend.fill_rect(
+        Rect::xywh(
+            rail.origin.x + rail.size.x - 12.0,
+            rail.origin.y,
+            12.0,
+            rail.size.y,
+        ),
+        theme.background,
+    );
+    cx.backend.fill_rect(
+        Rect::xywh(
+            rail.origin.x + rail.size.x,
+            panel.origin.y,
             1.0,
-        );
-    }
+            panel.size.y,
+        ),
+        theme.border,
+    );
+    cx.backend.stroke_round_rect(panel, 12.0, theme.border, 1.0);
+    paint_title(cx, theme, ui, layout);
     super::tabs::paint_tab_strip(cx, theme, settings, ui, layout, mode);
     let content_rect = layout.content;
     cx.backend.save();
     cx.backend.clip_rect(layout.content_paint_clip());
     cx.backend.translate(Point2D::new(0.0, -scroll));
-    match mode.active_tab(settings, ui) {
+    match mode.active_tab(settings) {
         AgentSettingsTab::Agents => {
             paint_agents_tab(cx, theme, settings, ui, content_rect, now_ms, mode)
         }
-        AgentSettingsTab::Mcp => agent_settings_mcp::paint_mcp_tab(
-            cx,
-            theme,
-            settings,
-            ui,
-            content_rect,
-            now_ms,
-            ui.external_cli_available,
-        ),
+        AgentSettingsTab::Mcp => {
+            agent_settings_mcp::paint_mcp_tab(cx, theme, settings, ui, content_rect, now_ms)
+        }
         AgentSettingsTab::Images => {
             paint_secondary_hero(cx, theme, ui, content_rect, "settings.images");
-            if !ui.touch_chrome() {
-                let body_h = agent_settings_images::responsive_content_height(
-                    settings,
-                    hero_body_rect_for_ui(content_rect, false).size.x,
-                    false,
-                );
-                crate::widgets::agent_settings_rows::paint_row_card(
-                    cx,
-                    theme,
-                    crate::widgets::agent_settings_panel_geometry::secondary_card_rect(
-                        content_rect,
-                        body_h,
-                    ),
-                );
-            }
+            let body_h = agent_settings_images::responsive_content_height(settings);
+            crate::widgets::agent_settings_rows::paint_row_card(
+                cx,
+                theme,
+                crate::widgets::agent_settings_panel_geometry::secondary_card_rect(
+                    content_rect,
+                    body_h,
+                ),
+            );
+
             agent_settings_images::paint_images_tab(
                 cx,
                 theme,
                 settings,
                 ui,
-                hero_body_rect_for_ui(content_rect, ui.touch_chrome()),
+                hero_body_rect_for_ui(content_rect),
                 now_ms,
             )
         }
         AgentSettingsTab::Fonts => {
             paint_secondary_hero(cx, theme, ui, content_rect, "settings.fonts");
-            if !ui.touch_chrome() {
-                let body_h = agent_settings_fonts::content_height(ui);
-                crate::widgets::agent_settings_rows::paint_row_card(
-                    cx,
-                    theme,
-                    crate::widgets::agent_settings_panel_geometry::secondary_card_rect(
-                        content_rect,
-                        body_h,
-                    ),
-                );
-            }
+            let body_h = agent_settings_fonts::content_height(ui);
+            crate::widgets::agent_settings_rows::paint_row_card(
+                cx,
+                theme,
+                crate::widgets::agent_settings_panel_geometry::secondary_card_rect(
+                    content_rect,
+                    body_h,
+                ),
+            );
+
             agent_settings_fonts::paint_fonts_tab(
                 cx,
                 theme,
                 ui,
-                hero_body_rect_for_ui(content_rect, ui.touch_chrome()),
+                hero_body_rect_for_ui(content_rect),
             )
         }
         AgentSettingsTab::System => {
             agent_settings_system::paint_system_tab(cx, theme, settings, ui, content_rect)
-        }
-        AgentSettingsTab::Account => {
-            paint_secondary_hero(cx, theme, ui, content_rect, "settings.account");
-            agent_settings_account::paint_account_tab(
-                cx,
-                theme,
-                ui,
-                hero_body_rect_for_ui(content_rect, ui.touch_chrome()),
-            )
         }
     }
     cx.backend.restore();
     paint_close(cx, theme, settings, ui, layout);
 }
 
-fn paint_touch_title(
+fn paint_title(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
     ui: &EditorUiState,
     layout: AgentSettingsLayout,
 ) {
-    // Desktop titles the rail in Home's 15 px semibold; touch keeps its
-    // larger header title.
-    let desktop = layout.kind == AgentSettingsSurfaceKind::Desktop;
+    // The rail is titled in Home's 15 px semibold.
     let text = TextLayout::single_run(
         t_settings(ui, "settings.title"),
         crate::widgets::agent_settings_rows::SETTINGS_FONT_FAMILY,
-        if desktop { 15.0 } else { 20.0 },
+        15.0,
         theme.foreground.to_jian(),
         Point2D::new(0.0, 0.0),
     )
-    .with_font_weight(if desktop { 600 } else { 400 });
+    .with_font_weight(600);
     cx.backend.draw_text(
         &text,
-        Point2D::new(
-            layout.header.origin.x + 20.0,
-            layout.header.origin.y + if desktop { 34.0 } else { 36.0 },
-        ),
+        Point2D::new(layout.header.origin.x + 20.0, layout.header.origin.y + 34.0),
     );
 }
 
@@ -271,16 +222,14 @@ fn paint_secondary_hero(
 ) {
     let (title, subtitle) = match prefix {
         "settings.images" => ("settings.tab.images", "settings.images.heroSubtitle"),
-        "settings.fonts" => ("settings.tab.fonts", "settings.fonts.heroSubtitle"),
-        _ => ("settings.tab.account", "settings.account.heroSubtitle"),
+        _ => ("settings.tab.fonts", "settings.fonts.heroSubtitle"),
     };
-    crate::widgets::agent_settings_rows::paint_tab_intro_for_ui(
+    crate::widgets::agent_settings_rows::paint_tab_intro(
         cx,
         theme,
         content,
         t_settings(ui, title),
         Some(t_settings(ui, subtitle)),
-        ui.touch_chrome(),
     );
 }
 
@@ -318,10 +267,10 @@ fn paint_agents_tab(
     now_ms: u64,
     mode: AgentSettingsPanelMode,
 ) {
-    super::hero::paint_agents_hero(cx, theme, ui, content, !ui.touch_chrome());
+    super::hero::paint_agents_hero(cx, theme, ui, content);
     let mut y = agents_body_top(content);
     y = agent_settings_builtin::paint_builtin_section(cx, theme, settings, ui, content, y, now_ms);
-    if !mode.shows_external_agents(ui) {
+    if !mode.shows_external_agents() {
         return;
     }
     y += SECTION_GAP;

@@ -186,9 +186,8 @@ pub struct CodegenState {
     /// Monotonic runtime lifetime of document-scoped codegen state.
     ///
     /// This is intentionally not part of the `.op` document. Every document
-    /// install/reset advances it, including collaboration RemoteCommit,
-    /// Replay, and rollback paths that deliberately preserve the editor's
-    /// broader document generation.
+    /// install/reset advances it, including paths that deliberately
+    /// preserve the editor's broader document generation.
     #[doc(hidden)]
     pub document_reset_epoch: u64,
     pub framework: Framework,

@@ -38,7 +38,6 @@ use jian_widgets::components::select::SelectState;
 // ceiling. They contribute inherent methods, so every existing call
 // site resolves unchanged.
 mod build;
-mod density;
 mod hit;
 mod menus;
 mod paint;
@@ -81,8 +80,6 @@ pub struct PropertyPanel {
     pub id: WidgetId,
     pub snapshot: NodeSnapshot,
     pub theme: Theme,
-    /// Paint / hit-test scale for touch chrome. Desktop stays exactly 1:1.
-    pub(crate) density_scale: f32,
     /// Design-tab page inspector target. It is built only when no
     /// node is selected and uses a dedicated paint / hit-test branch;
     /// node sections never consult the neutral snapshot in this mode.
@@ -206,9 +203,6 @@ pub struct PropertyPanel {
     pub tab: de_editor_core::PropertyTab,
     /// Header tab currently hovered. Used only for the pinned tab strip.
     pub tab_hover: Option<de_editor_core::PropertyTab>,
-    /// Whether this responsive layout exposes the generated-code tab.
-    /// Compact touch layouts hide it; tablet, desktop, and web keep it.
-    pub code_tab_available: bool,
     /// Current export format + scale, shown on the Export section's
     /// two dropdowns. Clicking a dropdown opens its inline select
     /// popup (NOT the Export modal).
@@ -274,7 +268,7 @@ impl PropertyPanel {
     /// self-corrects on the very next frame.
     pub(crate) fn effective_scroll(&self, panel_rect: Rect) -> f32 {
         let max = (self.logical_content_height(panel_rect) - panel_rect.size.y).max(0.0);
-        self.logical_length(self.scroll).clamp(0.0, max)
+        self.scroll.clamp(0.0, max)
     }
 
     /// `panel_rect` shifted up by the (clamped) scroll offset. Both
@@ -303,7 +297,7 @@ impl PropertyPanel {
     /// Total height (px) of the panel's section content — drives the
     /// scroll clamp so the inspector can't scroll past its end.
     pub fn content_height(&self, panel_rect: Rect) -> f32 {
-        self.physical_length(self.logical_content_height(self.logical_rect(panel_rect)))
+        self.logical_content_height(panel_rect)
     }
 
     fn logical_content_height(&self, panel_rect: Rect) -> f32 {
@@ -343,7 +337,6 @@ impl PropertyPanel {
             layout_justify: self.snapshot.layout_justify,
             layout_align: self.snapshot.layout_align,
             size_options: caps.size_options,
-            touch_controls: self.density_scale > 1.0,
             size_fill_width: self.snapshot.size_fill_width,
             size_fill_height: self.snapshot.size_fill_height,
             size_hug_width: self.snapshot.size_hug_width,
@@ -442,10 +435,7 @@ pub(super) fn action_wash_rect(
         // into the gutter / inter-column gap (both empty), but the right edge
         // is clamped to the cell so a long localized label can't wash over the
         // adjacent column.
-        let touch_controls =
-            r.size.y > crate::widgets::property_panel_inputs::SIZE_CHECK_ROW_HEIGHT;
-        let label_x =
-            crate::widgets::property_panel_inputs::size_check_label_offset(touch_controls);
+        let label_x = crate::widgets::property_panel_inputs::size_check_label_offset();
         let cell_right = r.origin.x + r.size.x;
         let content_right =
             r.origin.x + label_x + text_metrics::measure_chrome(backend, label, 12.0);

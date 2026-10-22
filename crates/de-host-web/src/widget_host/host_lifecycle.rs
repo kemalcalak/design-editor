@@ -51,7 +51,6 @@ impl WidgetHost {
             node_drag: None,
             option_drag_source_ids: Vec::new(),
             next_node_id: 100,
-            collab_id_allocator: None,
             shift_held: false,
             alt_held: false,
             now_ms: 0,
@@ -61,7 +60,6 @@ impl WidgetHost {
             last_viewport_h: 0.0,
             last_cursor_x: 0.0,
             last_cursor_y: 0.0,
-            pending_auth_actions: Vec::new(),
             chat_panel_owner: de_editor_ui::widgets::AIChatPlaceholder::next_owner(),
             layer_panel_owner: de_editor_ui::widgets::LayerPanel::next_layer_panel_owner(),
             last_chat_session_index,
@@ -84,11 +82,6 @@ impl WidgetHost {
             slideshow_press_screen: None,
             bundled_fonts_pending: false,
         }
-    }
-
-    /// Drain the device-login actions queued by press dispatchers.
-    pub fn take_pending_auth_actions(&mut self) -> Vec<PendingAuthAction> {
-        std::mem::take(&mut self.pending_auth_actions)
     }
 
     /// Rotate the chat-panel transcript-cache owner when the active chat session
@@ -233,83 +226,5 @@ impl WidgetHost {
     #[cfg(feature = "canvaskit")]
     pub(crate) fn set_op_ck(&mut self, op_ck: &crate::canvaskit::OpCk) {
         self.op_ck = Some(op_ck.clone());
-    }
-}
-
-impl WidgetHost {
-    /// The last known cursor position in document coordinates, for the
-    /// collaboration presence relay.
-    ///
-    /// `None` before the pointer has ever entered the canvas or while it sits
-    /// over the chrome — peers should see no cursor rather than one parked at
-    /// the origin.
-    pub(crate) fn last_cursor_doc_point(&self, width: f32, height: f32) -> Option<(f64, f64)> {
-        use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
-
-        if !canvas_geometry::over_canvas(
-            &self.editor_state,
-            self.last_cursor_x,
-            self.last_cursor_y,
-            width,
-            height,
-        ) {
-            return None;
-        }
-        let point = canvas_geometry::canvas_doc_point_unclamped(
-            &self.editor_state,
-            self.last_cursor_x,
-            self.last_cursor_y,
-        );
-        Some((f64::from(point.x), f64::from(point.y)))
-    }
-}
-
-impl WidgetHost {
-    /// Switch every collaboration-supported creation path to one owner-assigned
-    /// namespace, resuming above the ids already in the document.
-    pub(crate) fn enable_collaboration_ids(
-        &mut self,
-        namespace: de_editor_core::PeerNamespace,
-    ) -> Result<(), de_editor_core::IdAllocError> {
-        self.collab_id_allocator = Some(
-            de_editor_core::DocumentIdAllocator::namespaced_for_document(
-                &self.editor_state.doc,
-                namespace,
-            )?,
-        );
-        Ok(())
-    }
-
-    /// Return to the standalone `n{counter}` allocation policy.
-    pub(crate) fn disable_collaboration_ids(&mut self) {
-        self.collab_id_allocator = None;
-        if let Ok(next) = de_editor_core::next_sequential_counter(&self.editor_state.doc) {
-            self.next_node_id = self.next_node_id.max(next);
-        }
-    }
-
-    /// Whether creation currently mints from an owner-assigned namespace.
-    pub(crate) fn collaboration_ids_enabled(&self) -> bool {
-        self.collab_id_allocator.is_some()
-    }
-
-    /// Surface an exhausted / invalid namespace as a panel notice.
-    ///
-    /// An allocation failure during a session is not something the user can act
-    /// on directly, but silently dropping the gesture would look like a broken
-    /// canvas, so it reports through the same notice channel every other
-    /// collaboration refusal uses.
-    pub(in crate::widget_host) fn show_collab_id_error(
-        &mut self,
-        _error: de_editor_core::IdAllocError,
-    ) {
-        let now = self.now_ms;
-        self.editor_state.editor_ui.collab.set_notice(
-            de_editor_core::CollabNoticeKind::Reject(
-                de_editor_core::CollabRejectUiCode::ResourceLimit,
-            ),
-            now,
-        );
-        self.mark_dirty();
     }
 }

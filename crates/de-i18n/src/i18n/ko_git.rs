@@ -101,7 +101,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "git.header.overflowCloseRepo" => "저장소 닫기",
         "git.header.overflowRemoteSettings" => "원격 설정…",
         "git.header.overflowSshKeys" => "SSH 키…",
-        "git.header.overflowMoreActions" => "추가 작업",
         "git.history.empty" => "기록 없음",
         "git.history.autosaveGroup_one" => "자동 저장 1건",
         "git.history.autosaveGroup_other" => "자동 저장 {{count}}건",

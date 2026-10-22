@@ -2,23 +2,12 @@
 //! `DesktopApp`. Carved out of the `main.rs` spine to keep it under the
 //! 800-line cap; pure code motion.
 
-use crate::{prompt_update_available, update_check, DesktopApp};
+use crate::{prompt_update_available, DesktopApp};
 
 impl DesktopApp {
-    /// Drain the browser device-login flow: fold bridge status polls
-    /// into UI state and open the verification page (exactly once per
-    /// flow) in the system browser.
-    pub(crate) fn poll_auth_flow(&mut self) -> bool {
-        let changed = self.host.poll_auth();
-        if let Some(url) = self.host.take_pending_browser_url() {
-            update_check::open_url(&url);
-        }
-        changed
-    }
-
     /// Drain the background auto-update probe into `update_status`.
-    /// When the probe reports a newer release, offer to open the
-    /// download page — once per check.
+    /// When the probe reports a newer release, offer to download and
+    /// open the installer — once per check.
     pub(crate) fn poll_update_probe(&mut self) -> bool {
         let Some(status) = self.update_probe.poll() else {
             return false;

@@ -37,11 +37,7 @@ fn frame_lifecycle_spans_emitted() {
 #[test]
 fn lifecycle_hook_spans_emitted() {
     let mut ctx = setup_headless_context();
-    ctx.on_pause().unwrap();
-    ctx.on_resume(None).unwrap();
     ctx.on_low_memory();
 
-    assert!(logs_contain("on_pause"), "on_pause span missing");
-    assert!(logs_contain("on_resume"), "on_resume span missing");
     assert!(logs_contain("on_low_memory"), "on_low_memory span missing");
 }

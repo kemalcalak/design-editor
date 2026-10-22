@@ -22,12 +22,11 @@ mod bundled_fonts;
 mod chat_acp;
 mod chat_attachment;
 mod chat_session;
+mod cli_probe_gate;
 mod clipboard;
 mod codegen_export;
 mod codegen_input;
 mod codegen_session;
-mod collab_avatar_host;
-mod collab_runtime;
 mod commit_diff_host;
 mod commit_diff_semantic;
 mod cursor_icon;
@@ -135,9 +134,6 @@ type PendingHtmlPaste = (u64, std::sync::mpsc::Receiver<HtmlPasteResult>);
 #[derive(Clone, Copy, Debug)]
 enum DesktopEvent {
     McpWake,
-    /// A bounded collaboration network worker queued typed input for the
-    /// GUI-owned session/editor actor.
-    CollabWake,
     /// A background image decode completed and can be installed.
     ImageDecodeReady,
     /// A second launch forwarded a document to this instance (see
@@ -227,9 +223,6 @@ struct DesktopApp {
     /// saves serialized prevents an older snapshot from committing after a
     /// newer Save request to the same path.
     save_session: save_session::SaveSession,
-    /// Generation-scoped Save-As requests started while collaboration was
-    /// bound. A successful live acknowledgement detaches into the saved fork.
-    collab_fork_saves: Vec<(u64, u64, u64, PathBuf)>,
     error: Option<SharedSkiaError>,
     /// Design-loop canvas indicator — tracks the active agent epoch,
     /// colour/name identity, and initial frame set. `None` when no
@@ -306,7 +299,8 @@ struct DesktopApp {
     pending_html_paste: Option<PendingHtmlPaste>,
     /// Background AI-model discovery — probes the installed CLIs
     /// on a worker thread; its result is drained into
-    /// `chat.available_models` on a later frame.
+    /// `chat.available_models` on a later frame. Idle until
+    /// `start_cli_probes_on_demand` spawns it.
     model_probe: de_host_services::model_discovery::ModelProbe,
     /// Per-agent HTTP model catalogs requested by the built-in model picker.
     /// Jobs stay host-side because discovery uses native networking; only
@@ -322,18 +316,12 @@ struct DesktopApp {
     /// canvas painter recorded as cache misses — fetched bytes land in
     /// the painter's shared byte cache so the next frame draws them.
     remote_images: remote_image_host::RemoteImageSession,
-    /// Verified collaboration profile images. Encoded bytes remain in an
-    /// ephemeral bounded UI cache and never enter the document.
-    collab_avatars: collab_avatar_host::CollabAvatarHost,
     /// Two-thread local image raster decode pool.
     image_decodes: image_decode_host::ImageDecodeHost,
     /// Loads Home's Recent thumbnails into the image cache.
     home_thumbnails: home_thumbnails::HomeThumbnails,
     /// Cross-thread wake handle used by live MCP connection threads.
     mcp_wake_proxy: Option<EventLoopProxy<DesktopEvent>>,
-    /// Collaboration session/editor actor. Sockets remain on bounded network
-    /// workers; this field is touched only by the winit GUI thread.
-    collab_runtime: collab_runtime::DesktopCollabRuntime,
     /// Paths forwarded by second-launch processes (`single_instance`),
     /// drained on the UI thread by `drain_forwarded_files`.
     forwarded_files: single_instance::ForwardQueue,
@@ -346,8 +334,13 @@ struct DesktopApp {
     /// Connect) — spawned from the `pending_provider_connect`
     /// request seam, drained by `drain_provider_connect`.
     provider_connect_job: Option<provider_probe_host::ProviderConnectJob>,
-    /// Startup reconnect replay queue (see `agent_connect_store`).
+    /// Reconnect replay queue (see `agent_connect_store`), filled by
+    /// `start_cli_probes_on_demand`.
     provider_reconnect_queue: Vec<de_editor_core::AgentProvider>,
+    /// Whether this session's CLI probes (model discovery + reconnect
+    /// replay) have started. They start once, the first time a surface
+    /// that shows CLI provider state opens — see `cli_probe_gate`.
+    cli_probes_started: bool,
     /// Last persisted pencil-cursor style (see `ui_prefs`).
     last_saved_pencil_cursor: Option<de_editor_core::PencilCursorStyle>,
     /// Providers the store remembers as LAST KNOWN GOOD — seeded from
@@ -497,38 +490,9 @@ fn parse_live_mcp_port<I: Iterator<Item = String>>(args: I) -> Option<u16> {
     None
 }
 
-/// Initialize the device-login runtime (proprietary bridge library) and
-/// restore a persisted session, then set the runtime account gate. Stub
-/// builds (no prebuilt library for this target) leave the gate closed
-/// unless `DESIGN_EDITOR_DEV_FAKE_LOGIN=1` re-opens it for UI work.
-fn init_auth_runtime(host: &mut WidgetHostNative) {
-    let dev_fake = std::env::var(de_auth_bridge::ENV_DEV_FAKE_LOGIN).as_deref() == Ok("1");
-    let mut backend_ready = false;
-    if de_auth_bridge::available() {
-        if let Ok(dir) = de_config_store::design_editor_dir() {
-            let config = de_auth_bridge::desktop_init_config(&dir, env!("CARGO_PKG_VERSION"));
-            if de_auth_bridge::init(&config) {
-                backend_ready = true;
-                if de_auth_bridge::restore() {
-                    if let de_auth_bridge::AuthStatus::SignedIn {
-                        display_name,
-                        username,
-                        avatar_url,
-                        ..
-                    } = de_auth_bridge::poll(de_auth_bridge::SESSION_HANDLE)
-                    {
-                        let _ = host.adopt_auth_session_profile(display_name, username, avatar_url);
-                        host.arm_auth_session_refresh();
-                    }
-                }
-            }
-        }
-    }
-    host.editor_state_mut().editor_ui.account_ui_available = backend_ready || dev_fake;
-}
-
-/// Pop a native dialog offering to open the download page when a
-/// newer release is found. Yes opens the GitHub releases page.
+/// Pop a native dialog offering the update when a newer release is
+/// found. Yes downloads and opens the platform installer (the releases
+/// page is the fallback).
 fn prompt_update_available(locale: de_editor_core::Locale, version: &str) {
     let body = de_i18n::translate(locale, "dialog.updateBody")
         .replace("{{version}}", version)
@@ -589,11 +553,13 @@ where
 fn main() {
     // FIRST, before any thread exists: graft the login-shell PATH and proxy
     // exports onto this process. A Dock/Finder launch inherits launchd's
-    // minimal environment — CLI agents (codex is a node-shebang script) and
-    // the Claude agent SDK's env baseline all need the user's real PATH,
-    // networked CLI probes need the proxy vars, and the SDK's dangerous-env
-    // blocklist forbids passing PATH per-request, so the process env is the
-    // only correct carrier.
+    // minimal environment — agent CLIs (codex is a node-shebang script) and
+    // the Claude agent SDK's env baseline need the user's real PATH to be
+    // found at all, the API providers' HTTP clients need the proxy vars to
+    // honour HTTPS_PROXY, and the SDK's dangerous-env blocklist forbids
+    // passing PATH per-request, so the process env is the only correct
+    // carrier. This spawns no agent CLI; those wait for
+    // `start_cli_probes_on_demand`.
     de_host_services::chat_spawn::repair_gui_process_env();
     // Register the brand-logo catalog (omitted from the wasm bundle, embedded in
     // this binary) BEFORE any path that can render natively — the GUI app, the
@@ -667,13 +633,8 @@ fn main() {
     let mcp_wake_proxy = event_loop.create_proxy();
     // Give the non-bundled binary a proper Dock name + icon.
     macos_app::apply();
-    // The collaboration runtime drives async relay/JWKS work from sync code;
-    // install the bridge before any session can start.
-    collab_runtime::install_blocking_executor();
     let mut app = DesktopApp::new(initial_file);
     app.image_decodes.set_wake_proxy(mcp_wake_proxy.clone());
-    app.collab_runtime
-        .set_wake_notifier(collab_runtime::wake_notifier(mcp_wake_proxy.clone()));
     app.mcp_wake_proxy = Some(mcp_wake_proxy);
     // Start accepting forwarded opens from second launches, sharing the queue
     // the UI thread drains in `drain_forwarded_files`.

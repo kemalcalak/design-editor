@@ -188,23 +188,6 @@ pub(crate) fn reset() {
     SYNC_STATE.with(|state| *state.borrow_mut() = CredentialSyncState::default());
 }
 
-/// Whether a callback issued at `issued_epoch` still belongs to the account
-/// that issued it.
-///
-/// An XHR cannot be un-issued: `reset` empties the queue, but a POST already
-/// on the wire will still complete and its callback would fold the previous
-/// account's result — a success, a retry schedule, an error banner — into the
-/// new account's state.
-///
-/// The epoch MUST be captured when the request is issued and compared here as
-/// an immutable snapshot. An earlier version read a shared `ISSUED_EPOCH` cell
-/// that `reset` itself rewrote, so by the time a stale callback landed the
-/// cell already held the NEW epoch and the comparison passed — the guard let
-/// through exactly what it existed to stop.
-fn identity_is_current(issued_epoch: u64) -> bool {
-    issued_epoch == crate::identity_epoch::epoch()
-}
-
 /// Begin credential-policy discovery against the daemon. This issues a daemon
 /// request, so the mount calls it only AFTER the bridge init gate (managed mode
 /// needs the auth token on the wire). State must already be cleared via `reset`.
@@ -257,13 +240,7 @@ fn request_repaint() {
 
 fn fetch_policy() {
     let base = crate::daemon_base::daemon_base();
-    // Snapshotted here, moved into the closure: the value must describe THIS
-    // request, not whatever the tab's identity is when the reply lands.
-    let issued_epoch = crate::identity_epoch::epoch();
     let on_response: Rc<dyn Fn(u16, String)> = Rc::new(move |status, body| {
-        if !identity_is_current(issued_epoch) {
-            return; // issued for a previous account
-        }
         let policy = parse_policy_response(status, &body);
         if policy.is_none() {
             report_sync_failure(Some(status));
@@ -285,13 +262,7 @@ fn fetch_policy() {
 
 fn post_credentials(body: &str) {
     let base = crate::daemon_base::daemon_base();
-    let issued_epoch = crate::identity_epoch::epoch();
     let on_response: Rc<dyn Fn(u16, String)> = Rc::new(move |status, _| {
-        if !identity_is_current(issued_epoch) {
-            // Issued for a previous account: its result must not become the
-            // new account's success, retry schedule or error banner.
-            return;
-        }
         if !(200..300).contains(&status) {
             report_sync_failure(Some(status));
         }
@@ -318,13 +289,7 @@ fn schedule_retry(delay_ms: i32, generation: u64) {
     {
         use wasm_bindgen::JsCast;
 
-        let issued_epoch = crate::identity_epoch::epoch();
         let callback = wasm_bindgen::closure::Closure::<dyn FnMut()>::once_into_js(move || {
-            if !identity_is_current(issued_epoch) {
-                // A timer armed for a previous account: firing it would resend
-                // that account's credential payload into the new tenant.
-                return;
-            }
             let action = SYNC_STATE.with(|state| state.borrow_mut().retry_due(generation));
             dispatch(action);
         });
@@ -654,57 +619,6 @@ mod tests {
         assert_eq!(
             parse_policy_response(200, r#"{"serverPersistence":false}"#),
             Some(false)
-        );
-    }
-}
-
-#[cfg(test)]
-mod identity_epoch_guard_tests {
-    use super::*;
-
-    #[test]
-    fn a_callback_issued_under_an_older_epoch_is_refused() {
-        // The bug this pins: the guard used to read a shared cell that `reset`
-        // itself rewrote, so a stale callback compared "new == new" and was
-        // let through — the guard admitted exactly what it existed to stop.
-        crate::identity_epoch::reset_for_test();
-        crate::identity_epoch::observe_subject(Some("alice"));
-        let issued_under_alice = crate::identity_epoch::epoch();
-        assert!(identity_is_current(issued_under_alice));
-
-        // The tab switches to B, which resets the queue.
-        crate::identity_epoch::observe_subject(Some("bob"));
-        reset();
-
-        assert!(
-            !identity_is_current(issued_under_alice),
-            "A's in-flight callback must stay refused after the switch"
-        );
-        assert!(
-            identity_is_current(crate::identity_epoch::epoch()),
-            "B's own requests must still be accepted"
-        );
-    }
-
-    #[test]
-    fn a_refused_callback_leaves_no_state_behind_and_sync_can_restart() {
-        // The FirstIdentified race: a policy fetch issued at mount under the
-        // anonymous epoch is refused when it lands, and `policy_in_flight`
-        // would stay set — after which every `changed()` is a no-op and the
-        // account can never upload again.
-        crate::identity_epoch::reset_for_test();
-        let mut state = CredentialSyncState::default();
-        assert_eq!(state.begin_policy_check(), SyncAction::FetchPolicy);
-        // …its reply is discarded by the guard, so nothing resolves it.
-
-        // The partition reload resets and restarts, which is what unwedges it.
-        let mut restarted = CredentialSyncState::default();
-        assert_eq!(restarted.begin_policy_check(), SyncAction::FetchPolicy);
-        assert_eq!(restarted.resolve_policy(Some(true)), SyncAction::None);
-        assert_ne!(
-            restarted.changed("{}".to_string()),
-            SyncAction::None,
-            "after the restart a credential edit must reach the daemon again"
         );
     }
 }

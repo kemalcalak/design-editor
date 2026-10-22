@@ -99,8 +99,6 @@ pub fn updates_document(action: &PropertyPanelAction) -> bool {
     )
 }
 
-pub use crate::widgets::property_panel_collab::collab_gate_action;
-
 /// Translate the widget-facade compositing target into the core one.
 pub fn compositing_picker_target(
     target: CompositingTarget,
@@ -619,9 +617,7 @@ pub fn apply_property_action(
         }
         A::SetExportFormat(format) => {
             let ui = &mut state.editor_ui;
-            if format.is_implemented() {
-                ui.export_format = *format;
-            }
+            ui.export_format = *format;
             ui.export_format_picker_open = false;
             ui.export_picker_hover = None;
             Handled
@@ -785,10 +781,7 @@ pub fn apply_property_action(
         | A::ApplyGeneratedImage
         | A::RetryImageGenerate
         | A::OpenImageGenSettings => HostOwned,
-        // Clipboard / download / bundle export are platform IO. Compact touch
-        // layouts do not expose the Code panel, so direct action dispatch is
-        // inert there as well as through paint / hit-testing.
-        A::Codegen(_) if !state.editor_ui.code_property_tab_available() => Handled,
+        // Clipboard / download / bundle export are platform IO.
         A::Codegen(_) => HostOwned,
     }
 }

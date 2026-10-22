@@ -6,11 +6,7 @@
 
 use super::*;
 
-pub(super) fn rebuild_registry(
-    doc: &EditorState,
-    requested_tool: Option<&str>,
-    profile: tool_profile::McpAccessProfile,
-) -> ToolRegistry {
+pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) -> ToolRegistry {
     let mut r = ToolRegistry::default();
 
     macro_rules! register_tool {
@@ -61,24 +57,15 @@ pub(super) fn rebuild_registry(
     // Phase 0: always register spawn_agents (validates + returns request result).
     // Actual parallel execution is deferred to Phase 3 (Task 3.1).
     register_tool!("spawn_agents", spawn_agents_snapshot());
-    register_tool!(
-        "ToolSearch",
-        tool_search_snapshot(tool_profile::tool_search_schemas(profile))
-    );
+    register_tool!("ToolSearch", tool_search_snapshot(TOOL_SCHEMAS));
     register_tool!("get_screenshot", get_screenshot_snapshot(doc));
     register_tool!("export_item", export_item_snapshot(doc));
     register_tool!("export_nodes", export_nodes_snapshot(doc));
     register_tool!("export_deck", export_deck_snapshot(doc));
     register_tool!("export_frames", export_frames_snapshot(doc));
     register_tool!("get_deck_boards", get_deck_boards_snapshot(doc));
-    register_tool!(
-        "list_scene_templates",
-        list_scene_templates_snapshot(profile.includes_user_scene_templates())
-    );
-    register_tool!(
-        "use_scene_template",
-        use_scene_template_snapshot(profile.includes_user_scene_templates())
-    );
+    register_tool!("list_scene_templates", list_scene_templates_snapshot());
+    register_tool!("use_scene_template", use_scene_template_snapshot());
     register_tool!("get_active_theme", get_active_theme_snapshot(doc));
     register_tool!("list_components", list_components_snapshot(doc));
     register_tool!("list_ui_kits", list_ui_kits_snapshot(doc));

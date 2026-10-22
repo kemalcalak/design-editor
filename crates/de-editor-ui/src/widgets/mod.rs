@@ -45,8 +45,6 @@ mod layer_panel_metrics;
 mod layer_panel_paint;
 #[cfg(test)]
 mod layer_panel_tests;
-#[cfg(test)]
-mod layer_panel_touch_tests;
 mod layer_panel_walkers;
 pub mod path_anchor_context_menu;
 pub mod prompt_center_panel;
@@ -76,7 +74,6 @@ mod prompt_center_shared_flow_tests;
 pub mod property_panel;
 pub mod property_panel_action;
 pub mod property_panel_code;
-pub mod property_panel_collab;
 pub mod property_panel_commit;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
@@ -160,16 +157,12 @@ pub(crate) mod scene_template_previews;
 mod scene_template_style_geometry;
 mod scene_template_style_import;
 mod scene_template_style_paint;
-mod scene_template_touch_density;
-#[cfg(test)]
-mod scene_template_touch_tests;
 mod scene_template_user_layout;
 pub mod text_input;
 pub(crate) mod text_input_backend;
 pub mod text_metrics;
 mod text_selection;
 pub mod toolbar;
-pub mod touch_overlay_geometry;
 
 // Step 3 — center canvas that renders document nodes as actual
 // visual primitives (frame fills, rect strokes, text strings).
@@ -181,7 +174,6 @@ mod canvas_agent_cursor_motion_tests;
 mod canvas_agent_cursor_presence_tests;
 #[cfg(test)]
 mod canvas_agent_cursor_tests;
-mod canvas_collab_presence;
 mod canvas_frame_labels;
 mod canvas_generation_scan;
 #[cfg(test)]
@@ -217,9 +209,6 @@ pub mod editor_state_ext;
 
 // Host-shared press/click dispatch flows (native + web widget hosts).
 pub mod chat_click_flow;
-mod collab_avatar_paint;
-pub mod collab_panel;
-pub mod collab_ui;
 pub mod cursor_hover_flow;
 pub mod drag_flow;
 mod drag_flow_index;
@@ -251,17 +240,10 @@ mod icons_data;
 pub mod brand_icons;
 
 // Step 4 — extra editor-chrome widgets (TS app parity).
-mod account_avatar_paint;
-pub mod account_menu;
-pub mod account_press_flow;
-pub mod agent_settings_account;
-#[cfg(test)]
-mod agent_settings_account_gate_tests;
 pub mod agent_settings_acp;
 mod agent_settings_acp_helpers;
 mod agent_settings_acp_presets;
 pub mod agent_settings_builtin;
-mod agent_settings_builtin_empty;
 mod agent_settings_builtin_form;
 mod agent_settings_builtin_layout;
 mod agent_settings_builtin_model_menu;
@@ -391,19 +373,13 @@ pub mod icon_picker_panel;
 pub mod ime_preedit_overlay;
 pub mod import_menu;
 pub mod locale_picker;
-pub mod login_modal;
 pub mod marquee_flow;
 pub(crate) mod menu_paint;
 pub mod missing_fonts_flow;
 pub mod missing_fonts_panel;
-pub mod mobile_chrome;
-#[cfg(test)]
-mod mobile_layout_tests;
-pub mod mobile_more_panel;
 pub mod property_panel_color_variables;
 #[cfg(test)]
 mod property_panel_color_variables_tests;
-pub mod save_name_dialog;
 pub(crate) mod settings_form;
 pub mod shape_picker;
 pub mod slides_panel;
@@ -470,7 +446,6 @@ pub use ai_chat_panel::{
 pub use ai_chat_panel_minimized::{AI_CHAT_MINIMIZED_HEIGHT, AI_CHAT_MINIMIZED_MIN_WIDTH};
 pub use ai_chat_transcript_design::{parse_design_json_nodes, DesignParseError};
 pub use align_toolbar::{AlignToolbar, AlignToolbarHit, ALIGN_TOOLBAR_HEIGHT, ALIGN_TOOLBAR_WIDTH};
-pub use collab_panel::{CollabPanel, CollabPanelHit, COLLAB_PANEL_WIDTH};
 pub use component_browser_panel::{
     ComponentBrowserHit, ComponentBrowserPanel, COMPONENT_BROWSER_PANEL_H,
     COMPONENT_BROWSER_PANEL_W,
@@ -489,13 +464,10 @@ pub use icon_picker_panel::{
 pub use import_menu::{ImportMenu, ImportMenuChoice, IMPORT_MENU_WIDTH};
 pub use locale_picker::{LocalePicker, LOCALE_PICKER_WIDTH};
 pub use missing_fonts_panel::{MissingFontsHit, MissingFontsPanel};
-pub use mobile_chrome::{MobileAppBar, MobileAppBarHit, MobileDock, MobileDockHit};
-pub use mobile_more_panel::MobileMoreEntry;
 pub use prompt_center_panel::{
     PromptCenterCard, PromptCenterHit, PromptCenterPanel, PROMPT_CENTER_MIN_H, PROMPT_CENTER_MIN_W,
     PROMPT_CENTER_VIEWPORT_H_RATIO, PROMPT_CENTER_VIEWPORT_W_RATIO,
 };
-pub use save_name_dialog::{SaveNameDialog, SaveNameDialogHit};
 pub use shape_picker::{ShapeChoice, ShapePicker, SHAPE_PICKER_WIDTH};
 pub use slides_panel::{
     SlidesPanel, SlidesPanelLayout, SlidesPanelTabs, SLIDES_TAB_ROW_HEIGHT, SLIDE_THUMB_RADIUS,

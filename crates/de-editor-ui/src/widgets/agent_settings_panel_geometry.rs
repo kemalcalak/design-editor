@@ -26,22 +26,6 @@ pub(super) const PROVIDER_SECTION_HEADER_H: f32 =
 /// Muted hint under a connected Claude Code row.
 pub(super) const CLAUDE_HINT_H: f32 = 24.0;
 
-const FULL_TABS_WITHOUT_ACCOUNT: [AgentSettingsTab; 5] = [
-    AgentSettingsTab::Agents,
-    AgentSettingsTab::Mcp,
-    AgentSettingsTab::Images,
-    AgentSettingsTab::Fonts,
-    AgentSettingsTab::System,
-];
-
-pub(super) fn full_settings_tabs(account_available: bool) -> &'static [AgentSettingsTab] {
-    if account_available {
-        &AgentSettingsTab::ALL
-    } else {
-        &FULL_TABS_WITHOUT_ACCOUNT
-    }
-}
-
 pub(super) fn tab_i18n_label(ui: &EditorUiState, tab: AgentSettingsTab) -> &'static str {
     match tab {
         AgentSettingsTab::Agents => t_settings(ui, "settings.tab.agents"),
@@ -49,7 +33,6 @@ pub(super) fn tab_i18n_label(ui: &EditorUiState, tab: AgentSettingsTab) -> &'sta
         AgentSettingsTab::Images => t_settings(ui, "settings.tab.images"),
         AgentSettingsTab::Fonts => t_settings(ui, "settings.tab.fonts"),
         AgentSettingsTab::System => t_settings(ui, "settings.tab.system"),
-        AgentSettingsTab::Account => t_settings(ui, "settings.tab.account"),
     }
 }
 
@@ -143,7 +126,7 @@ pub(super) fn agents_body_top(content: Rect) -> f32 {
     content.origin.y + AGENTS_HERO_HEIGHT
 }
 
-/// Images / Fonts / Account take the same intro every other tab does,
+/// Images / Fonts take the same intro every other tab does,
 /// with one muted line.
 pub(super) const SECONDARY_HEADING_HAS_DESC: bool = true;
 
@@ -152,20 +135,11 @@ pub(super) const SECONDARY_HEADING_HAS_DESC: bool = true;
 /// their own geometry stays written against "the top of my body", so
 /// adding the intro needed no edits inside them.
 pub(super) fn hero_body_rect(content: Rect) -> Rect {
-    hero_body_rect_for_ui(content, false)
+    hero_body_rect_for_ui(content)
 }
 
-pub(super) fn hero_body_rect_for_ui(content: Rect, touch: bool) -> Rect {
-    let dy = crate::widgets::agent_settings_rows::tab_intro_height_for_ui(
-        SECONDARY_HEADING_HAS_DESC,
-        touch,
-    );
-    if touch {
-        return Rect {
-            origin: Point2D::new(content.origin.x, content.origin.y + dy),
-            size: Point2D::new(content.size.x, (content.size.y - dy).max(0.0)),
-        };
-    }
+pub(super) fn hero_body_rect_for_ui(content: Rect) -> Rect {
+    let dy = crate::widgets::agent_settings_rows::tab_intro_height(SECONDARY_HEADING_HAS_DESC);
     // Desktop (Settings v2) sets these tabs' bodies on a card: the body
     // sits inside it, inset by the card padding.
     let inset_x = crate::widgets::agent_settings_rows::CARD_INSET_X;
@@ -188,10 +162,7 @@ pub(super) const SECONDARY_CARD_PAD_Y: f32 = 12.0;
 /// The desktop card behind a secondary tab's body of `body_h`.
 pub(super) fn secondary_card_rect(content: Rect, body_h: f32) -> Rect {
     let top = content.origin.y
-        + crate::widgets::agent_settings_rows::tab_intro_height_for_ui(
-            SECONDARY_HEADING_HAS_DESC,
-            false,
-        );
+        + crate::widgets::agent_settings_rows::tab_intro_height(SECONDARY_HEADING_HAS_DESC);
     Rect {
         origin: Point2D::new(content.origin.x, top),
         size: Point2D::new(content.size.x, body_h + 2.0 * SECONDARY_CARD_PAD_Y),

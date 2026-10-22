@@ -5,14 +5,11 @@
 //! The agent-settings state walk itself lives in
 //! `de_editor_ui::widgets::agent_settings_press_flow` (shared with the
 //! web host); what stays here is the desktop platform arms — the
-//! clipboard queue, the OS URL launcher, `de-auth-bridge` session
-//! revoke, synchronous font enumeration.
+//! clipboard queue, the OS URL launcher, synchronous font enumeration.
 
 use super::WidgetHostNative;
 use de_editor_core::agent_settings::ImageGenField;
 use de_editor_core::host_settings_commit::SettingsCommitScope;
-use de_editor_ui::widgets::agent_settings_fonts::FontsHit;
-use de_editor_ui::widgets::agent_settings_panel::AgentSettingsHit;
 use de_editor_ui::widgets::agent_settings_press_flow::{
     self as settings_flow, SettingsPress, SettingsPressOutcome,
 };
@@ -41,46 +38,18 @@ impl WidgetHostNative {
         doc_point: Point2D,
     ) -> Option<de_editor_core::NodeId> {
         let tool = self.editor_state.tool;
-        let allowed = if matches!(tool, de_editor_core::Tool::Pen) {
-            self.collab_allows_pen_path_mutation()
-        } else {
-            self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::BasicNodeInsert,
-            )
-        };
-        if !allowed {
-            return None;
-        }
         // Click-create default size: Text needs room for its
         // placeholder glyphs; shape tools start 1×1 so a drag
         // immediately sizes the node to the cursor.
         let (init_w, init_h) = create_initial_size_for_tool(tool);
-        let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            self.editor_state.create_node_for_tool_with_allocator(
-                tool,
-                allocator,
-                doc_point.x as f64,
-                doc_point.y as f64,
-                init_w,
-                init_h,
-            )
-        } else {
-            Ok(self.editor_state.create_node_for_tool(
-                tool,
-                &mut self.next_node_id,
-                doc_point.x as f64,
-                doc_point.y as f64,
-                init_w,
-                init_h,
-            ))
-        };
-        let id = match result {
-            Ok(id) => id,
-            Err(error) => {
-                self.show_collab_id_error(error);
-                return None;
-            }
-        };
+        let id = self.editor_state.create_node_for_tool(
+            tool,
+            &mut self.next_node_id,
+            doc_point.x as f64,
+            doc_point.y as f64,
+            init_w,
+            init_h,
+        );
         if id.is_some() {
             self.mark_dirty();
         }
@@ -111,15 +80,6 @@ impl WidgetHostNative {
             None
         };
         drop(panel);
-        if matches!(hit, AgentSettingsHit::Fonts(FontsHit::SelectFont(_)))
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::Typography,
-                ),
-            )
-        {
-            return true;
-        }
         let outcome = settings_flow::apply_agent_settings_hit(
             &mut self.editor_state,
             hit,
@@ -144,10 +104,6 @@ impl WidgetHostNative {
             }
         }
         self.finish_agent_settings_press(outcome);
-        self.ensure_focused_agent_settings_visible(vw, vh);
-        if !self.editor_state.editor_ui.agent_settings_open {
-            self.cancel_agent_settings_touch_gesture();
-        }
         self.mark_dirty();
         true
     }
@@ -163,11 +119,6 @@ impl WidgetHostNative {
                 self.editor_state.chat.queue_copy_text(text);
             }
             SettingsPress::OpenUrl(url) => open_external_url(url),
-            SettingsPress::SignOut => {
-                // Revoke the device session (inert no-op in stub builds).
-                de_auth_bridge::sign_out();
-                self.forget_auth_session_profile();
-            }
         }
         if outcome.refresh_fonts {
             self.refresh_missing_fonts_for_settings();

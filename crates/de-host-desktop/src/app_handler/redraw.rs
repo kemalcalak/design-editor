@@ -41,64 +41,6 @@ impl DesktopApp {
             self.redraw_dirty = true;
             return false;
         }
-        if self.collab_runtime.refresh_availability(&mut self.host) {
-            self.redraw_dirty = true;
-        }
-        let collaboration_transition_pending = matches!(
-            self.host
-                .editor_state()
-                .editor_ui
-                .collab
-                .pending_action
-                .as_ref(),
-            Some(
-                de_editor_core::CollabUiAction::Start
-                    | de_editor_core::CollabUiAction::StartLan
-                    | de_editor_core::CollabUiAction::JoinDiscovered { .. }
-                    | de_editor_core::CollabUiAction::JoinAddress { .. }
-                    | de_editor_core::CollabUiAction::Retry
-            )
-        );
-        let collaboration_transition_ready = if collaboration_transition_pending {
-            self.settle_document_io_before_collaboration();
-            self.settle_git_before_collaboration_transition()
-        } else {
-            true
-        };
-        // A press that queues an action also opens the gesture's local-edit
-        // capture, and the session's document actor refuses to activate a
-        // peer (or run any other document transition) while that capture is
-        // open. Draining here would turn every in-panel approval into a
-        // spurious failure, so wait for the matching release — which finishes
-        // the capture and requests another frame.
-        if collaboration_transition_ready
-            && !self.collab_runtime.local_edit_in_flight()
-            && self.collab_runtime.drain_ui_action(&mut self.host)
-        {
-            self.redraw_dirty = true;
-        }
-        if self.collab_runtime.take_save_as_fork_request() {
-            self.request_background_save_as();
-            self.redraw_dirty = true;
-        }
-        if self.collab_runtime.poll(&mut self.host) {
-            self.redraw_dirty = true;
-        }
-        for status in self.collab_runtime.drain_status_events() {
-            eprintln!("[collab] {status:?}");
-        }
-        let collab_cursor = self.host.canvas_doc_point(
-            self.cursor_x,
-            self.cursor_y,
-            self.viewport_width,
-            self.viewport_height,
-        );
-        if self
-            .collab_runtime
-            .publish_local_presence(&mut self.host, collab_cursor)
-        {
-            self.redraw_dirty = true;
-        }
         // Route any accessibility action requests (#67) from the
         // screen reader back into host state before painting, so a
         // Focus / activation reflects in this frame.
@@ -408,15 +350,18 @@ impl DesktopApp {
         if self.remote_images.pump() {
             self.redraw_dirty = true;
         }
-        if self.collab_avatars.pump() {
-            self.redraw_dirty = true;
-        }
         if let Some(backend) = self.backend.as_mut() {
             if self.image_decodes.pump(backend) {
                 self.redraw_dirty = true;
             }
         }
-        // Drain background model discovery once it lands.
+        // Start the CLI probes the first time the chat model picker or
+        // Settings → Agents is on screen, then drain discovery once it
+        // lands. Runs before `drain_provider_connect` below so the replay's
+        // first request is spawned this same frame.
+        if self.start_cli_probes_on_demand() {
+            self.redraw_dirty = true;
+        }
         if self.model_probe.poll_into(self.host.editor_state_mut()) {
             self.host.mark_editor_state_dirty();
             self.redraw_dirty = true;
@@ -459,11 +404,6 @@ impl DesktopApp {
         }
         // Drain the background auto-update probe.
         if self.poll_update_probe() {
-            self.redraw_dirty = true;
-        }
-        // Drain the browser device-login flow (status + browser
-        // opens land here).
-        if self.poll_auth_flow() {
             self.redraw_dirty = true;
         }
         // Drain a finished background `git pull`.

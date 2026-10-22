@@ -16,7 +16,7 @@ use super::PaintCx;
 use crate::{Point2D, Rect};
 
 const VIEWPORT: (f32, f32) = (1440.0, 900.0);
-const KEY: &str = "collab.status.localEditPreserved";
+const KEY: &str = "menu.saveAsTemplate.failed";
 
 fn state_with_toast(now_ms: u64) -> EditorState {
     let mut state = EditorState::new();
@@ -239,13 +239,9 @@ fn the_banner_paints_its_localized_message_and_a_level_tinted_frame() {
         .first()
         .map(|(text, _)| text.clone())
         .expect("a message");
-    assert!(
-        message.contains("Undo"),
-        "the recovery action must be named in the sentence: {message}"
-    );
-    assert!(
-        !message.contains("collab.status"),
-        "a raw key means the locale table is missing the entry: {message}"
+    assert_eq!(
+        message, "Could not save the template",
+        "a raw key means the locale table is missing the entry"
     );
 }
 

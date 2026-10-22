@@ -133,14 +133,6 @@ impl WidgetHost {
                 return lower_cleared;
             }
         }
-        if self.apply_collab_panel_cursor_move(
-            x,
-            y,
-            chat_or_picker_surface_owns_point,
-            &mut upper_hover_changed,
-        ) {
-            return true;
-        }
         // Export-section select-popup row hover highlight.
         if self.editor_state.editor_ui.export_scale_picker_open
             || self.editor_state.editor_ui.export_format_picker_open

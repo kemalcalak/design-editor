@@ -9,8 +9,9 @@ use de_editor_core::AssetCenterTab;
 
 use super::asset_center_style_cards::{user_card_count, StyleGuideCard};
 use super::asset_center_style_layout::{style_grid_layout, StyleGridLayout, StyleGridMetrics};
+use super::panel_control_metrics::CHIP_H;
 use super::prompt_center_panel::estimated_text_width;
-use super::scene_template_panel::{SceneTemplatePanel, CHIP_LABEL_SIZE};
+use super::scene_template_panel::{SceneTemplatePanel, CHIP_LABEL_SIZE, HEADER_H, TAB_ROW_H};
 use crate::{Point2D, Rect};
 
 /// Hover token for the import button.
@@ -48,11 +49,9 @@ impl SceneTemplatePanel<'_> {
         let width = estimated_text_width(self.style_import_label(), CHIP_LABEL_SIZE) + 34.0;
         Some(Rect::xywh(
             content.origin.x + content.size.x - width,
-            panel.origin.y
-                + self.header_height_for(panel)
-                + (self.tab_row_height_for(panel) - self.density().chip_h) / 2.0,
+            panel.origin.y + HEADER_H + (TAB_ROW_H - CHIP_H) / 2.0,
             width,
-            self.density().chip_h,
+            CHIP_H,
         ))
     }
 
@@ -77,9 +76,6 @@ impl SceneTemplatePanel<'_> {
     /// the button itself as well as on the card, or moving toward it would
     /// make it vanish.
     pub(super) fn style_delete_visible(&self, index: usize) -> bool {
-        if self.touch_density_active() {
-            return true;
-        }
         let hover = self.state.editor_ui.scene_template_center.hover;
         hover == Some(index) || hover == Some(Self::style_delete_hover_token(index))
     }
@@ -131,7 +127,7 @@ impl SceneTemplatePanel<'_> {
         is_user: bool,
         point: Point2D,
     ) -> usize {
-        if is_user && self.style_delete_rect_for(card).contains(point) {
+        if is_user && Self::style_delete_rect(card).contains(point) {
             return Self::style_delete_hover_token(index);
         }
         index

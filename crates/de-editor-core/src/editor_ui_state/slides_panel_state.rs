@@ -4,9 +4,7 @@
 //! (`Chat`), the ordinary Pages + Layers tree, and a page navigator
 //! that lists one thumbnail per top-level board. Which tab is showing,
 //! which row the cursor is on, and the reorder gesture in flight are
-//! all transient UI state and live here. The Chat tab is desktop-only
-//! (touch chrome hosts the conversation as its own bottom sheet), and
-//! the Slides tab only exists for documents that have boards to list.
+//! all transient UI state and live here. The Slides tab only exists for documents that have boards to list.
 //!
 //! The slide ORDER is deliberately absent: it is the document's own
 //! top-level child order (`crate::preview_slideshow::active_page_boards`)
@@ -143,7 +141,7 @@ impl SlidesPanelState {
 impl EditorUiState {
     /// Whether the Agent conversation can own the left rail.
     pub fn chat_tab_available(&self) -> bool {
-        !self.touch_chrome() && !self.host_owns_chat
+        !self.host_owns_chat
     }
 
     /// Show the Agent conversation in the left rail: select the Chat
@@ -153,8 +151,7 @@ impl EditorUiState {
     /// The bump is armed the FIRST time the tab becomes active in a
     /// session, whether or not the width was below the bar — afterwards
     /// the user's own drag is the only thing that moves the width.
-    /// Touch chrome never takes the tab: its chat is a bottom sheet,
-    /// and a Chat tab with no body would blank the rail.
+    /// A host that owns the chat never takes the tab.
     pub fn enter_chat_tab(&mut self) -> bool {
         if !self.chat_tab_available() {
             return false;

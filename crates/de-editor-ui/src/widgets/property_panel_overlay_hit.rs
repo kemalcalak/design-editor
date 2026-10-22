@@ -41,10 +41,7 @@ impl PropertyPanel {
     /// Whether `point` falls inside either open Export scale / format
     /// popup, including the popup chrome around its option rows.
     pub fn export_picker_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        self.export_picker_contains_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.export_picker_contains_logical(panel_rect, point)
     }
 
     fn export_picker_contains_logical(&self, panel_rect: Rect, point: Point2D) -> bool {
@@ -76,10 +73,7 @@ impl PropertyPanel {
     /// Whether `point` falls inside the open font-weight popup,
     /// including its vertical chrome padding.
     pub fn font_weight_picker_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        self.font_weight_picker_contains_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.font_weight_picker_contains_logical(panel_rect, point)
     }
 
     fn font_weight_picker_contains_logical(&self, panel_rect: Rect, point: Point2D) -> bool {
@@ -95,10 +89,7 @@ impl PropertyPanel {
     /// Whether `point` falls inside the open padding-mode gear popup,
     /// including its title and padded chrome.
     pub fn padding_mode_popover_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        self.padding_mode_popover_contains_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.padding_mode_popover_contains_logical(panel_rect, point)
     }
 
     fn padding_mode_popover_contains_logical(&self, panel_rect: Rect, point: Point2D) -> bool {
@@ -116,7 +107,6 @@ impl PropertyPanel {
                 crate::widgets::property_panel_mode_popover::mode_popover_rect_from_gear(
                     gear,
                     panel_rect.size.x,
-                    self.density_scale > 1.0,
                 )
             })
             .is_some_and(|popup| popup.contains(point))
@@ -125,10 +115,7 @@ impl PropertyPanel {
     /// Whether `point` falls inside the open stroke-mode gear popup,
     /// including its title and padded chrome.
     pub fn stroke_mode_popover_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        self.stroke_mode_popover_contains_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.stroke_mode_popover_contains_logical(panel_rect, point)
     }
 
     fn stroke_mode_popover_contains_logical(&self, panel_rect: Rect, point: Point2D) -> bool {
@@ -144,7 +131,6 @@ impl PropertyPanel {
                 crate::widgets::property_panel_mode_popover::mode_popover_rect_from_gear(
                     gear,
                     panel_rect.size.x,
-                    self.density_scale > 1.0,
                 )
             })
             .is_some_and(|popup| popup.contains(point))
@@ -183,9 +169,7 @@ impl PropertyPanel {
         &self,
         panel_rect: Rect,
     ) -> Option<crate::widgets::property_panel_color_variables::ColorVariablePickerLayout> {
-        let logical = self.logical_rect(panel_rect);
-        self.color_variable_picker_layout_logical(logical)
-            .map(|layout| layout.scaled_about(logical.origin, self.density_scale))
+        self.color_variable_picker_layout_logical(panel_rect)
     }
 
     pub(super) fn color_variable_picker_layout_logical(
@@ -206,15 +190,15 @@ impl PropertyPanel {
             crate::widgets::property_panel_fill::fill_type_picker_viewport(panel_rect),
             self.color_variables.len(),
             self.bound_color_variable_ref().is_some(),
-            self.color_variable_picker_scroll / self.density_scale,
+            self.color_variable_picker_scroll,
         )
     }
 
     /// Whether `point` falls anywhere on the open colour-variable
     /// popup — the host swallows such presses instead of dismissing it.
     pub fn color_variable_picker_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        self.color_variable_picker_layout_logical(self.logical_rect(panel_rect))
-            .is_some_and(|layout| layout.contains(self.logical_point(panel_rect, point)))
+        self.color_variable_picker_layout_logical(panel_rect)
+            .is_some_and(|layout| layout.contains(point))
     }
 
     /// Bind / unbind action under `point`, honoring the popup's own
@@ -229,8 +213,8 @@ impl PropertyPanel {
 
         let target = self.color_variable_picker_open?;
         let row = self
-            .color_variable_picker_layout_logical(self.logical_rect(panel_rect))?
-            .row_at(self.logical_point(panel_rect, point))?;
+            .color_variable_picker_layout_logical(panel_rect)?
+            .row_at(point)?;
         Some(match row {
             ColorVariableRow::Unbind => A::UnbindColorVariable(target),
             ColorVariableRow::Variable(index) => A::BindColorVariable { target, index },
@@ -241,21 +225,18 @@ impl PropertyPanel {
     /// geometry [`Self::color_variable_picker_action_at`] presses
     /// against, so a hovered row is always a clickable one.
     pub fn color_variable_picker_row_at(&self, panel_rect: Rect, point: Point2D) -> Option<usize> {
-        self.color_variable_picker_layout_logical(self.logical_rect(panel_rect))?
-            .row_slot_at(self.logical_point(panel_rect, point))
+        self.color_variable_picker_layout_logical(panel_rect)?
+            .row_slot_at(point)
     }
 
     /// Scroll range of the popup's list (host wheel handler clamp).
     pub fn color_variable_picker_max_scroll(&self, panel_rect: Rect) -> f32 {
-        self.color_variable_picker_layout_logical(self.logical_rect(panel_rect))
-            .map_or(0.0, |layout| layout.max_scroll * self.density_scale)
+        self.color_variable_picker_layout_logical(panel_rect)
+            .map_or(0.0, |layout| layout.max_scroll)
     }
 
     pub fn fill_type_picker_hit(&self, panel_rect: Rect, point: Point2D) -> SelectHit {
-        self.fill_type_picker_hit_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.fill_type_picker_hit_logical(panel_rect, point)
     }
 
     pub(super) fn fill_type_picker_hit_logical(
@@ -287,10 +268,7 @@ impl PropertyPanel {
     }
 
     pub fn fill_type_picker_row_at(&self, panel_rect: Rect, point: Point2D) -> Option<usize> {
-        match self.fill_type_picker_hit_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        ) {
+        match self.fill_type_picker_hit_logical(panel_rect, point) {
             SelectHit::Row(idx) => Some(idx),
             SelectHit::Inside | SelectHit::Outside => None,
         }
@@ -319,11 +297,11 @@ impl PropertyPanel {
         let entries = self.font_picker_entries();
         property_panel_typography::font_picker_contains(
             &self.font_picker,
-            self.scrolled_rect(self.logical_rect(panel_rect)),
+            self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &entries,
             self.font_import_supported,
-            self.logical_point(panel_rect, point),
+            point,
         )
     }
 
@@ -334,12 +312,12 @@ impl PropertyPanel {
         }
         let entries = self.font_picker_entries();
         property_panel_typography::font_picker_entry_index_at(
-            self.scrolled_rect(self.logical_rect(panel_rect)),
+            self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &entries,
             self.font_import_supported,
             &self.font_picker,
-            self.logical_point(panel_rect, point),
+            point,
         )
     }
 
@@ -351,12 +329,12 @@ impl PropertyPanel {
         }
         let entries = self.font_picker_entries();
         property_panel_typography::font_picker_import_action_at(
-            self.scrolled_rect(self.logical_rect(panel_rect)),
+            self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &entries,
             self.font_import_supported,
             &self.font_picker,
-            self.logical_point(panel_rect, point),
+            point,
         )
     }
 
@@ -364,11 +342,11 @@ impl PropertyPanel {
     pub fn font_picker_max_scroll(&self, panel_rect: Rect) -> f32 {
         let entries = self.font_picker_entries();
         property_panel_typography::font_picker_max_scroll(
-            self.scrolled_rect(self.logical_rect(panel_rect)),
+            self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &entries,
             self.font_import_supported,
-        ) * self.density_scale
+        )
     }
 
     /// Whether `point` is inside an open image Search / Generate
@@ -378,11 +356,11 @@ impl PropertyPanel {
             return false;
         }
         property_panel_image_assets::image_popovers_contain(
-            self.scrolled_rect(self.logical_rect(panel_rect)),
+            self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &self.image_panel,
             self.image_gen_profile.as_ref(),
-            self.logical_point(panel_rect, point),
+            point,
         )
     }
 
@@ -395,11 +373,11 @@ impl PropertyPanel {
             return None;
         }
         property_panel_image_assets::image_popover_input_at(
-            self.scrolled_rect(self.logical_rect(panel_rect)),
+            self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &self.image_panel,
             self.image_gen_profile.as_ref(),
-            self.logical_point(panel_rect, point),
+            point,
         )
     }
 
@@ -413,12 +391,12 @@ impl PropertyPanel {
             return None;
         }
         property_panel_image_assets::image_popover_input_drag_offset_at(
-            self.scrolled_rect(self.logical_rect(panel_rect)),
+            self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &self.image_panel,
             self.image_gen_profile.as_ref(),
             kind,
-            self.logical_point(panel_rect, point),
+            point,
         )
     }
 
@@ -426,92 +404,12 @@ impl PropertyPanel {
         if self.is_multi {
             return None;
         }
-        let logical = self.logical_rect(panel_rect);
         property_panel_image_assets::image_popover_input_caret_rect(
-            self.scrolled_rect(logical),
+            self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &self.image_panel,
             self.image_gen_profile.as_ref(),
         )
-        .map(|rect| self.physical_rect(logical, rect))
-    }
-
-    /// Current physical bounds of the active Property-surface keyboard owner.
-    /// Overlay inputs win over stale body focus, matching input routing.
-    pub fn keyboard_owner_rect(&self, panel_rect: Rect) -> Option<Rect> {
-        if self.is_multi || panel_rect.size.y <= 0.0 {
-            return None;
-        }
-        let logical = self.logical_rect(panel_rect);
-        let scrolled = self.scrolled_rect(logical);
-        let owner = if self.image_panel.search_open || self.image_panel.generate_open {
-            property_panel_image_assets::image_popover_input_caret_rect(
-                scrolled,
-                self.visible_sections(),
-                &self.image_panel,
-                self.image_gen_profile.as_ref(),
-            )
-        } else if self.font_picker.open {
-            let entries = self.font_picker_entries();
-            property_panel_typography::font_picker_layout(
-                scrolled,
-                self.visible_sections(),
-                &entries,
-                self.font_import_supported,
-                self.font_picker.scroll.offset,
-            )
-            .map(|layout| layout.search)
-        } else if self.page_only
-            && self.focus == Some(de_editor_core::PropertyFocus::PageBackgroundHex)
-        {
-            Some(crate::widgets::property_panel_page::background_input_rect(
-                logical,
-                self.page_background.is_some(),
-            ))
-        } else if self.image_fill_popover_open
-            && self.focus == Some(de_editor_core::PropertyFocus::ImageTileScale)
-        {
-            crate::widgets::property_panel_image_fill::image_fill_popover_input_rect(
-                scrolled,
-                self.visible_sections(),
-                &self.snapshot,
-            )
-        } else {
-            let focus = self.focus.or_else(|| {
-                self.effect_param_focus
-                    .map(|focus| de_editor_core::PropertyFocus::EffectRadius(focus.effect))
-            })?;
-            crate::widgets::property_panel_sections::editable_input_rects(
-                scrolled,
-                self.visible_sections(),
-                &self.snapshot.fills,
-                &self.snapshot.effects,
-            )
-            .into_iter()
-            .find_map(|(candidate, rect)| (candidate == focus).then_some(rect))
-        }?;
-        Some(self.physical_rect(logical, owner))
-    }
-
-    /// Scroll offset that keeps the active Property-surface keyboard owner
-    /// inside the clipped body after a mobile keyboard shortens the panel.
-    pub fn keyboard_owner_scroll_offset(&self, panel_rect: Rect) -> Option<f32> {
-        let logical = self.logical_rect(panel_rect);
-        let owner = self.keyboard_owner_rect(panel_rect)?;
-        let current = self.physical_length(self.effective_scroll(logical));
-        let margin = self.physical_length(8.0);
-        let visible_top = panel_rect.origin.y
-            + self.physical_length(crate::widgets::property_panel_inputs::TAB_HEIGHT)
-            + margin;
-        let visible_bottom = panel_rect.origin.y + panel_rect.size.y - margin;
-        let mut next = current;
-        if owner.origin.y < visible_top {
-            next -= visible_top - owner.origin.y;
-        } else if owner.origin.y + owner.size.y > visible_bottom {
-            next += owner.origin.y + owner.size.y - visible_bottom;
-        }
-        let max = (self.content_height(panel_rect) - panel_rect.size.y).max(0.0);
-        Some(next.clamp(0.0, max))
     }
 
     pub fn image_popover_input_geometry(
@@ -522,15 +420,13 @@ impl PropertyPanel {
         if self.is_multi {
             return None;
         }
-        let logical = self.logical_rect(panel_rect);
         property_panel_image_assets::image_popover_input_geometry(
-            self.scrolled_rect(logical),
+            self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &self.image_panel,
             self.image_gen_profile.as_ref(),
             backend,
         )
-        .map(|geometry| geometry.with_coordinate_scale(logical.origin, self.density_scale))
     }
 
     #[cfg(test)]

@@ -49,11 +49,6 @@ impl CkInner {
             crate::iconify_web::ensure_core_catalog();
         }
         crate::web_asset_fetch::drain_pending();
-        // Collaboration-peer avatars: drain what the roster paint enqueued and
-        // fetch it through the daemon proxy (a wasm page cannot reach the CDN
-        // directly). Bounded per frame; empty and cheap outside a session. The
-        // self-account avatar is NOT handled here — `web_auth_sync` owns it.
-        crate::collab_avatar_fetch::drain_pending();
         // A template clicked before its document arrived is instantiated here,
         // the frame after the fetch lands. No-op on every other frame and on
         // native, where the document was already in the binary.
@@ -119,8 +114,8 @@ impl CkInner {
             ime.sync_focus(ime_focus);
         }
         // Device theme first, and OUTSIDE both gates below. The settings
-        // fingerprint is `None` whenever the partition blob is unwritable, and
-        // a device preference must not be collateral damage of an account blob
+        // fingerprint is `None` whenever the settings blob is unwritable, and
+        // a device preference must not be collateral damage of a settings blob
         // this tab refuses to touch. Cheap: a comparison, not a write.
         let _ = crate::web_settings::theme::save_if_changed(self.host.editor_state());
         if !crate::web_settings::credential_migration_pending(&self.credential_fingerprint) {
@@ -213,14 +208,6 @@ impl crate::repaint_ctx::RepaintContext for CkInner {
         &mut self.host
     }
 
-    fn reset_persistence_baselines(&mut self, load: &crate::web_settings::CredentialLoad) {
-        // Through the SAME constructors mount uses. A bare recompute set
-        // `settings_fingerprint` to `None` — which the save gate reads as
-        // "never save" — and dropped the credential write-pending retry and
-        // the fail-closed `write_disabled` an unsupported snapshot sets.
-        self.settings_fingerprint = load.initial_settings_fingerprint(self.host.editor_state());
-        self.credential_fingerprint = load.initial_fingerprint(self.host.editor_state());
-    }
     fn viewport_size(&self) -> (f32, f32) {
         self.backend.logical_size()
     }
@@ -305,19 +292,10 @@ pub(super) fn start_bootstrap_reset(
     let on_reset: std::rc::Rc<dyn Fn(u16, String)> = {
         let complete = complete.clone();
         let base = base.clone();
-        std::rc::Rc::new(move |status: u16, body: String| {
+        std::rc::Rc::new(move |_status: u16, body: String| {
             // The daemon answers `{"ok":true,...}` for both a fresh reset and a
             // peer-skipped one (`"skipped":true`) — either is completion.
             if body.contains("\"ok\":true") {
-                complete();
-                return;
-            }
-            // A live collaboration session owns this document, so the daemon
-            // refuses to reset it (409 `collab-active`). That is a deliberate
-            // answer, not a failure: resetting is exactly the wrong thing to do
-            // to a document peers are editing. Retrying would only ask again
-            // and warn about a daemon that is working correctly.
-            if status == 409 {
                 complete();
                 return;
             }

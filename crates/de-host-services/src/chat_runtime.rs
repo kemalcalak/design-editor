@@ -34,7 +34,7 @@ use futures::StreamExt;
 use tokio::sync::mpsc;
 
 // `shared_runtime` + `block_on_anywhere` moved to `de_chat_agent::runtime`
-// (pure code motion) so the shared agent loop's tests and the mobile hosts
+// (pure code motion) so the shared agent loop's tests and every host
 // use the same process-wide runtime discipline; re-exported unchanged —
 // `de_host_services::chat_runtime::block_on_anywhere` remains the sanctioned
 // sync-to-async bridge path.

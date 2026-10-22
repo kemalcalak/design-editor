@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "已將 $1 個節點匯入 Design Editor。"
   },
-  "statusSendingAccount": {
-    "message": "正在傳送到我的帳號…"
-  },
-  "statusSentToAccount": {
-    "message": "已傳送到我的帳號：$1"
-  },
-  "statusSentLocalFallback": {
-    "message": "帳號工作階段已過期，已改為傳送到本機的 Design Editor：匯入 $1 個節點。"
-  },
   "statusDownloaded": {
     "message": "已儲存 $1。"
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "本次擷取超過 $1 MB，超出 Design Editor 快照入口的上限。請使用「下載 .op」，然後在 Design Editor 中開啟該檔案"
   },
-  "errorAccountTooLarge": {
-    "message": "本次擷取超過 $1 MB，超出帳號收件匣的上限。請改為傳送到本裝置。"
-  },
   "errorImport": {
     "message": "Design Editor 拒絕了這份快照：$1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "無法進行元素擷取：擴充功能的背景 worker 沒有執行。請在 chrome://extensions 的擴充功能卡片上查看錯誤，重新執行 build-wasm.sh 後按「重新載入」。（$1）"
-  },
-  "accountSignIn": {
-    "message": "登入"
-  },
-  "accountSignOut": {
-    "message": "登出"
-  },
-  "accountSignInOpened": {
-    "message": "請在剛開啟的頁面中完成登入，然後重新開啟此彈出視窗。"
-  },
-  "accountSignedOut": {
-    "message": "已登出 Design Editor 帳號。"
-  },
-  "accountSignOutManual": {
-    "message": "請在剛開啟的帳號頁面中完成登出。"
-  },
-  "accountUnavailable": {
-    "message": "無法連線到你的 Design Editor 帳號：$1"
-  },
-  "errorAccountSignedOut": {
-    "message": "Design Editor 帳號工作階段已過期。請重新登入後再試一次。"
-  },
-  "errorAccountForbidden": {
-    "message": "Hub 拒絕了這次上傳的來源或工作階段權杖。請重新登入後再試一次。($1)"
-  },
-  "errorAccountQuota": {
-    "message": "帳號收件匣已滿——最多保存 $1 份快照或 $2 MB。請先在帳號頁面刪除一些，然後重試。($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "上傳到帳號的次數過多，請稍後再試。($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "上傳到帳號的次數過多，請約 $1 分鐘後再試。"
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "上傳到帳號的次數過多，請約 $1 秒後再試。"
-  },
-  "errorAccountRejected": {
-    "message": "Design Editor 帳號拒絕了這份快照：$1"
-  },
-  "errorAccountUnavailable": {
-    "message": "Design Editor 帳號目前無法接收擷取（$1）。請稍後再試，或改傳到本機的 Design Editor。"
-  },
-  "regionLabel": {
-    "message": "區域"
-  },
-  "regionCn": {
-    "message": "中國"
-  },
-  "regionGlobal": {
-    "message": "全球"
-  },
-  "deliveryLabel": {
-    "message": "傳送至"
-  },
-  "deliveryLocal": {
-    "message": "本機的 Design Editor"
-  },
-  "deliveryAccount": {
-    "message": "我的 Design Editor 帳號"
   }
 }

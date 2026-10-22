@@ -74,46 +74,6 @@ impl WidgetHost {
         self.clear_lower_overlay_hover_impl(true)
     }
 
-    /// Clear hover feedback below the collaboration popover while preserving
-    /// the popover's own active control.
-    pub(in crate::widget_host) fn clear_hover_below_collab_panel(&mut self) -> bool {
-        let mut changed = false;
-        {
-            let ui = &mut self.editor_state.editor_ui;
-            changed |= ui.canvas_hover_node.take().is_some();
-            changed |= ui.hovered_layer_id.take().is_some();
-            changed |= ui.hovered_page_index.take().is_some();
-            changed |= ui.file_menu.hover.take().is_some();
-            changed |= ui.export_quick_menu_hover.take().is_some();
-            changed |= ui.locale_picker.hover.take().is_some();
-            changed |= ui.shape_picker.hover.take().is_some();
-            changed |= ui.fill_type_picker.hover.take().is_some();
-            changed |= ui.toolbar_hover.take().is_some();
-            changed |= ui.align_toolbar_hover.take().is_some();
-            changed |= ui.statusbar_hover.take().is_some();
-            changed |= ui.topbar_button_hover.take().is_some();
-            changed |= ui.chat_model_picker.hover.take().is_some();
-            changed |= ui.chat_header_hover.take().is_some();
-            changed |= ui.chat_tab_hover.take().is_some();
-            changed |= ui.chat_design_block_hover.take().is_some();
-            changed |= ui.chat_footer_hover.take().is_some();
-            changed |= ui.clear_chat_style_chip_hover();
-            changed |= ui.chat_example_hover.take().is_some();
-            changed |= ui.parallel_agents_picker_hover.take().is_some();
-            changed |= ui.export_picker_hover.take().is_some();
-            changed |= ui.variables_panel_hover.take().is_some();
-            changed |= ui.variables_preset_menu_hover.take().is_some();
-            changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
-        }
-        changed |= self.editor_state.codegen.framework_hover.take().is_some();
-        changed |= self.editor_state.codegen.action_hover.take().is_some();
-        if changed {
-            self.mark_dirty();
-        }
-        changed
-    }
-
     /// Clear hover state for surfaces painted below the regular Chat panel.
     /// Chat's own hover state and the higher Status/Align/overlay tiers are
     /// deliberately preserved.
@@ -145,7 +105,6 @@ impl WidgetHost {
         let mut changed = false;
         {
             let ui = &mut self.editor_state.editor_ui;
-            changed |= ui.collab.panel.hover.take().is_some();
             changed |= ui.chat_model_picker.hover.take().is_some();
             changed |= ui.chat_header_hover.take().is_some();
             changed |= ui.chat_tab_hover.take().is_some();
@@ -187,7 +146,6 @@ impl WidgetHost {
             changed |= ui.align_toolbar_hover.take().is_some();
             changed |= ui.statusbar_hover.take().is_some();
             changed |= ui.topbar_button_hover.take().is_some();
-            changed |= ui.collab.panel.hover.take().is_some();
             if clear_chat_model_picker {
                 changed |= ui.chat_model_picker.hover.take().is_some();
             }

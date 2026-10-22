@@ -286,9 +286,4 @@ fn the_chat_is_composer_only_until_the_agent_tab_owns_the_rail() {
     ui.slides_panel.tab = LeftPanelTab::Layers;
     ui.workspace.visible = true;
     assert!(!ui.chat_composer_only(), "the workspace dock IS the chat");
-
-    // Touch chrome hosts a sheet, not a docked composer.
-    ui.workspace.visible = false;
-    ui.touch = true;
-    assert!(!ui.chat_composer_only());
 }

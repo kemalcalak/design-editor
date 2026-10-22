@@ -22,7 +22,7 @@ impl UserActivationId {
         Self(raw)
     }
 
-    /// The wrapped host counter value, for FFI/JNI/NAPI marshalling.
+    /// The wrapped host counter value, for host marshalling.
     pub const fn raw(self) -> u64 {
         self.0
     }

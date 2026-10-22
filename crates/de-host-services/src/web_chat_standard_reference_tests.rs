@@ -106,7 +106,6 @@ fn rejected_reference_is_reported_and_new_design_still_runs() {
         CanvasWriteTarget {
             state: &state,
             hub: &hub,
-            write_barrier: None,
         },
     )
     .expect("new-design route");
@@ -161,7 +160,6 @@ Calm and focused.
         CanvasWriteTarget {
             state: &state,
             hub: &hub,
-            write_barrier: None,
         },
     )
     .expect("new-design route");
@@ -215,7 +213,6 @@ fn url_reference_is_attempted_before_screenshot_fallback() {
         CanvasWriteTarget {
             state: &state,
             hub: &hub,
-            write_barrier: None,
         },
     )
     .expect("new-design route");

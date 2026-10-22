@@ -16,7 +16,7 @@ impl WidgetHostNative {
         viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
-        let cancelled = self.cancel_native_touch_gestures();
+        let cancelled = self.cancel_pointer_gestures();
         if self
             .wheel_home_model_picker(x, y, dy, viewport_width, viewport_height)
             .is_some()
@@ -140,10 +140,7 @@ impl WidgetHostNative {
             return true;
         }
         // Route Layers pan before the canvas.
-        if self.try_scroll_layer_panel(x, y, dx, dy, viewport_width, viewport_height) {
-            return true;
-        }
-        if self.mobile_sheet_owns_point(Point2D::new(x, y), viewport_width, viewport_height) {
+        if self.try_scroll_layer_panel(x, y, dx, dy, viewport_height) {
             return true;
         }
         if self.device_mode_active() && self.over_canvas(x, y, viewport_width, viewport_height) {

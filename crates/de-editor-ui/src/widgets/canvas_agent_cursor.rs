@@ -578,30 +578,6 @@ pub(crate) fn paint_agent_cursors(
     }
 }
 
-/// Paint one remote collaborator's pointer with the agent-cursor look —
-/// same silhouette, contact shadow, white rim, and capsule name tag — in the
-/// participant's own colour. Collaboration presence and agent activity are
-/// different sources, but on canvas they are both "someone else's pointer",
-/// so they must not read as two unrelated visual languages.
-pub(crate) fn paint_presence_cursor(
-    cx: &mut PaintCx<'_>,
-    pos: Point2D,
-    color: Color,
-    name: &str,
-    style: de_editor_core::PencilCursorStyle,
-) {
-    let sprite = CursorSprite {
-        pos,
-        alpha: 1.0,
-        color,
-        name: (!name.is_empty()).then(|| name.to_owned()),
-        current_rect: None,
-    };
-    // `now_ms` only drives the breathing border, which a presence cursor
-    // never carries (`current_rect` is None).
-    paint_sprite(cx, &sprite, 0, &silhouette_for(style));
-}
-
 #[path = "canvas_cursor_silhouette.rs"]
 mod silhouette_geometry;
 use silhouette_geometry::{paint_rim, paint_soft_shadow};

@@ -104,7 +104,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "git.header.overflowCloseRepo" => "关闭仓库",
         "git.header.overflowRemoteSettings" => "远端设置…",
         "git.header.overflowSshKeys" => "SSH 密钥…",
-        "git.header.overflowMoreActions" => "更多操作",
         "git.history.empty" => "暂无历史",
         "git.history.autosaveGroup_one" => "1 个自动快照",
         "git.history.autosaveGroup_other" => "{{count}} 个自动快照",

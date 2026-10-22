@@ -24,19 +24,7 @@ impl WidgetHostNative {
         match press_flow::press_shape_picker(&mut self.editor_state, panel_rect, Point2D::new(x, y))
         {
             ShapePickerPress::SetTool(tool) => self.apply_set_tool(tool),
-            ShapePickerPress::Close => {
-                if matches!(
-                    self.editor_state.editor_ui.pending_file_action,
-                    Some(de_editor_core::editor_ui_state::FileAction::ImportImageOrSvg)
-                ) && !self.collab_allows_document_mutation_from(
-                    de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-                    ),
-                    de_editor_core::CollabEditSource::Import,
-                ) {
-                    self.editor_state.editor_ui.pending_file_action = None;
-                }
-            }
+            ShapePickerPress::Close => {}
             ShapePickerPress::Swallow => return true,
             ShapePickerPress::Outside => {
                 // Miss — the dismissing click is a blank press.

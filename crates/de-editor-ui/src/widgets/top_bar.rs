@@ -6,7 +6,6 @@
 //!   a P6 follow-up; Step 4 paints only.
 
 use crate::theme::Theme;
-use crate::widgets::collab_ui::CollabTopBarModel;
 use crate::widgets::editor_state_ext::{theme_for, translate};
 use crate::widgets::icons::{draw_icon, draw_import_icon, Icon};
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
@@ -53,10 +52,6 @@ pub(super) const PREVIEW_BUTTON_AVAILABLE: bool = true;
 pub(super) const AGENT_ICON_CHIP: f32 = 20.0;
 pub(super) const AGENT_ICON_LOGO: f32 = 12.0;
 pub(super) const AGENT_ICON_OVERLAP: f32 = 6.0;
-/// Collaboration participant chips are slightly smaller than provider
-/// logos so the status stays visually secondary to the agent launcher.
-pub(super) const COLLAB_AVATAR_CHIP: f32 = 18.0;
-pub(super) const COLLAB_AVATAR_OVERLAP: f32 = 5.0;
 /// Diameter of a macOS-style window-control dot.
 pub(super) const TRAFFIC_DOT: f32 = 12.0;
 /// Centre-to-centre spacing of the 3 window-control dots.
@@ -95,10 +90,6 @@ pub enum TopBarHit {
     OpenAssetCenter,
     /// Agents and MCP chip — open the agent settings modal.
     OpenAgentSettings,
-    /// Collaboration status / participant chip — open the collaboration
-    /// panel. The chip is absent when this build has no collaboration
-    /// runtime.
-    Collaboration,
     /// Git-branch button next to the file name — toggle the git panel.
     ToggleGitPanel,
     /// Maximize icon (rightmost of the right cluster) — toggle window
@@ -106,9 +97,6 @@ pub enum TopBarHit {
     ToggleFullscreen,
     /// Play / Stop icon — enter / exit canvas Preview (Play) mode.
     TogglePreview,
-    /// User-avatar button — open the sign-in modal (signed out) or the
-    /// account dropdown (signed in).
-    Account,
 }
 
 pub struct TopBar {
@@ -126,8 +114,6 @@ pub struct TopBar {
     /// Number of enabled MCP CLI integrations — the `· N MCP` half
     /// of the chip status.
     pub mcp_count: u32,
-    /// Sanitized collaboration status and epoch-local participant avatars.
-    pub collab: CollabTopBarModel,
     pub theme: Theme,
     pub label_edited: &'static str,
     pub label_agents_and_mcp: &'static str,
@@ -165,15 +151,6 @@ pub struct TopBar {
     /// exactly. `None` (the wasm build, or before a measure pass) →
     /// `hit_test` falls back to a char-count estimate.
     pub chip_text_w: Option<f32>,
-    /// Sign-in state — drives the avatar button's glyph (generic user
-    /// outline when signed out, profile image with an initial fallback when
-    /// signed in).
-    pub account: de_editor_core::AccountState,
-    /// Whether the avatar button paints at all. Follows the host-set
-    /// runtime release gate (`EditorUiState::account_ui_available`):
-    /// desktop enables it when an auth backend is linked, web when the
-    /// serving daemon reports one over `/api/auth/status`.
-    pub account_button_visible: bool,
     /// Which embedding container the chrome renders inside. `VsCode` hides
     /// the file-scoped chrome (open menu, Figma import, centered file
     /// name/edited/git cluster) and the Maximize button — the host
@@ -190,7 +167,6 @@ impl TopBar {
             agent_count: 1,
             connected: [false; 7],
             mcp_count: 0,
-            collab: CollabTopBarModel::default(),
             theme: Theme::dark(),
             label_edited: "",
             label_agents_and_mcp: "Agents & MCP",
@@ -205,8 +181,6 @@ impl TopBar {
             hover: None,
             pressed: None,
             chip_text_w: None,
-            account: de_editor_core::AccountState::Anonymous,
-            account_button_visible: false,
             embed: de_editor_core::EmbedHost::None,
         }
     }
@@ -244,7 +218,6 @@ impl TopBar {
             agent_count,
             connected,
             mcp_count,
-            collab: CollabTopBarModel::for_editor_ui(ui),
             theme: theme_for(ui),
             label_edited: translate(ui, "topbar.edited"),
             label_agents_and_mcp: if ui.embed == de_editor_core::EmbedHost::VsCode {
@@ -266,8 +239,6 @@ impl TopBar {
                 _ => None,
             },
             chip_text_w: None,
-            account: ui.account.clone(),
-            account_button_visible: ui.account_ui_available,
             embed: ui.embed,
         }
     }
@@ -356,7 +327,7 @@ impl TopBar {
     }
 
     // Right-cluster rects (`globe_rect` / `theme_button_rect` /
-    // `preview_button_rect` / `account_button_rect`), the file-menu +
+    // `preview_button_rect`), the file-menu +
     // git-button rect helpers, and their visibility predicates live in
     // the `top_bar_geometry` sibling (split for the 800-line cap).
 
@@ -485,18 +456,6 @@ impl TopBar {
         let globe = self.globe_rect(rect);
         if (globe).contains(point) {
             return Some(TopBarHit::ToggleLocale);
-        }
-        if self.account_button_visible {
-            let account = self.account_button_rect(rect);
-            if (account).contains(point) {
-                return Some(TopBarHit::Account);
-            }
-        }
-        if self.collab.visible {
-            let collab = self.collaboration_chip_rect_estimated(rect);
-            if collab.contains(point) {
-                return Some(TopBarHit::Collaboration);
-            }
         }
         // Agent chip hit area — slightly larger than the painted
         // chip so off-by-a-few-pixels clicks still register. The

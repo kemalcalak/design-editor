@@ -12,8 +12,8 @@
 //! Jian `DrawOp`s and submits via `jian_skia::SkiaBackend::draw_on_canvas`).
 //!
 //! Module layout (spec v19 §2 / §3 / §5.2.1):
-//! - [`context`] — `GlContextProvider` trait + `GlutinProvider` desktop impl
-//!   + iOS / Android stubs; `SharedSkiaContext` owning the GL stack.
+//! - [`context`] — `GlContextProvider` trait + `GlutinProvider` desktop impl;
+//!   `SharedSkiaContext` owning the GL stack.
 //! - [`canvas_view_stub`] — `CanvasViewportStub::render_into` (deliberately
 //!   pollutes GL state to verify chrome paint isolation).
 //! - [`backend`] — `NativeBackend` exposing frame-scoped methods mirroring the
@@ -26,108 +26,47 @@ compile_error!(
      Use de-host-web for browser builds (spec v19 §1.2)."
 );
 
-// Cross-platform context module: re-exports the `GlContextProvider` trait
-// + `ProviderError` / `ProviderResult` on every (non-wasm) target so spec
-// §11 invariant 2 holds — mobile callers can name the trait. Internal
-// cfg-gates select between `GlutinProvider` (desktop), `EaglProvider` (iOS)
-// and `AndroidEglProvider` (Android), and `SharedSkiaContext` is only
-// compiled in on desktop where the GL + Skia stack is available.
+// Context module: re-exports the `GlContextProvider` trait +
+// `ProviderError` / `ProviderResult` on every (non-wasm) target;
+// `GlutinProvider` and `SharedSkiaContext` are compiled in with `gl-host`.
 pub mod context;
 
-// Desktop-only modules — pull `skia_safe` / `jian_skia` / `glutin` types
-// that aren't fetched on iOS / Android (see Cargo.toml target-gated deps).
-// Spec §11 invariants 1 & 3: mobile builds compile shell-native without
-// these modules at all; mobile widget rendering lands in Step 1f.
-// Cross-platform render stack: `backend` (NativeBackend) and
-// `widget_host` (NativeFrameBackend + WidgetHostNative) compile on
-// every target where `skia-safe` + `jian-skia` compile — desktop
-// trio + iOS + Android. Per the 2026-05-10 user directive
-// (jian will eventually need iOS and Android) these used to be
-// desktop-only; lifting the gate is the first half of the mobile
-// extension. The other half (real `EaglProvider` / `AndroidEglProvider`
-// impls + Metal/Vulkan integration) lands in Step 1f.
-//
-// `canvas_view_stub` stays desktop-only — it pulls `glow` for a
-// GL-state-isolation probe that has no mobile equivalent.
-#[cfg(any(
-    target_os = "macos",
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "ios",
-    target_os = "android"
-))]
+// Render stack: `backend` (NativeBackend) and `widget_host`
+// (NativeFrameBackend + WidgetHostNative) compile on every desktop target
+// where `skia-safe` + `jian-skia` compile (see Cargo.toml target-gated deps).
+// `canvas_view_stub` additionally needs `gl-host` — it pulls `glow` for a
+// GL-state-isolation probe.
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod backend;
 #[cfg(feature = "gl-host")]
-#[cfg(any(
-    target_os = "macos",
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "ios",
-    target_os = "android"
-))]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod boolean_ops;
 #[cfg(feature = "gl-host")]
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod canvas_view_stub;
-// The editor-UI composition host — desktop + mobile (the mobile player
-// engine drives it through the same NativeFrameBackend). Its only
-// desktop-specific glue (collab session runtime, preview auto-wire) is
-// gl-host-gated inside.
+// The editor-UI composition host. Its GUI-runner glue (preview auto-wire)
+// is gl-host-gated inside.
 #[cfg(feature = "widget-host")]
-#[cfg(any(
-    target_os = "macos",
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "ios",
-    target_os = "android"
-))]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod widget_host;
 // Canvas Preview (Play) mode runtime owner — depends on the OP
 // `RenderBackend` trait (same gate as `widget_host`).
 #[cfg(feature = "widget-host")]
-#[cfg(any(
-    target_os = "macos",
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "ios",
-    target_os = "android"
-))]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub use de_preview_core as preview;
 
-#[cfg(any(
-    target_os = "macos",
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "ios",
-    target_os = "android"
-))]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub use backend::{
     begin_image_paint_diagnostics, decode_raster, decode_raster_capped,
     end_image_paint_diagnostics, image_paint_diagnostics_snapshot, to_jian_rect,
     ImagePaintDiagnostics, NativeBackend, NativeFrameBackend,
 };
 #[cfg(feature = "widget-host")]
-#[cfg(any(
-    target_os = "macos",
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "ios",
-    target_os = "android"
-))]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub use preview::{PreviewEnterError, PreviewLayoutError, PreviewSession};
 #[cfg(feature = "widget-host")]
-#[cfg(any(
-    target_os = "macos",
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "ios",
-    target_os = "android"
-))]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub use widget_host::{CursorHint, WidgetHostNative};
-// Regional SSO selection for embedded mobile shells; re-exported so the
-// C-ABI layer can name it without depending on de-auth-bridge directly.
-#[cfg(feature = "widget-host")]
-pub use de_auth_bridge::MobileSsoRegion;
 
 // canvas_view_stub stays desktop-only (uses glow GL-isolation probe).
 #[cfg(feature = "gl-host")]
@@ -143,13 +82,6 @@ pub use context::{GlContextProvider, ProviderError, ProviderResult};
 pub use context::{
     GlutinProvider, SharedSkiaContext, SharedSkiaError, SharedSkiaResult, SurfaceConfig,
 };
-
-// Mobile stub re-exports — Step 1f real impls; today they're zero-sized
-// placeholder structs whose `GlContextProvider` impls `unimplemented!()`.
-#[cfg(target_os = "android")]
-pub use context::AndroidEglProvider;
-#[cfg(target_os = "ios")]
-pub use context::EaglProvider;
 
 // `placeholder()` from Task 1 was removed by Codex Phase A Gate round 1
 // NIT 1 — Task 2's full re-export chain (`SharedSkiaContext`,
@@ -175,13 +107,7 @@ pub(crate) mod font_registry_test_support {
 #[cfg(all(
     test,
     feature = "widget-host",
-    any(
-        target_os = "macos",
-        target_os = "linux",
-        target_os = "windows",
-        target_os = "ios",
-        target_os = "android"
-    )
+    any(target_os = "macos", target_os = "linux", target_os = "windows")
 ))]
 pub(crate) mod agent_indicator_test_support {
     use std::sync::{LazyLock, RwLock, RwLockReadGuard, RwLockWriteGuard};

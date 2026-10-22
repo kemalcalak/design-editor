@@ -8,36 +8,24 @@ use jian_widgets::components::text_area::TextArea;
 use jian_widgets::components::text_input::TextInputView;
 use jian_widgets::Tokens;
 
-pub(super) fn model_text_area_rect(input: Rect, touch: bool) -> Rect {
-    let trailing = if touch { 44.0 } else { 24.0 };
+pub(super) fn model_text_area_rect(input: Rect) -> Rect {
+    let trailing = 24.0;
     Rect {
         origin: input.origin,
         size: crate::Point2D::new((input.size.x - trailing).max(0.0), input.size.y),
     }
 }
 
-pub(super) fn model_text_font_size(touch: bool) -> f32 {
-    if touch {
-        15.0
-    } else {
-        11.0
-    }
+pub(super) fn model_text_font_size() -> f32 {
+    11.0
 }
 
-pub(super) fn model_text_pad_x(touch: bool) -> f32 {
-    if touch {
-        12.0
-    } else {
-        6.0
-    }
+pub(super) fn model_text_pad_x() -> f32 {
+    6.0
 }
 
-pub(super) fn model_text_max_visible_lines(touch: bool) -> usize {
-    if touch {
-        4
-    } else {
-        3
-    }
+pub(super) fn model_text_max_visible_lines() -> usize {
+    3
 }
 
 /// Map a click/tap in the focused provider Model editor back to the source
@@ -47,15 +35,14 @@ pub(super) fn model_text_byte_offset_at(
     ui: &EditorUiState,
     input: Rect,
     point: crate::Point2D,
-    touch: bool,
 ) -> Option<usize> {
     crate::widgets::text_input::multiline_byte_offset_at(
         &ui.settings_input,
-        model_text_area_rect(input, touch),
+        model_text_area_rect(input),
         point,
-        model_text_font_size(touch),
-        model_text_pad_x(touch),
-        model_text_max_visible_lines(touch),
+        model_text_font_size(),
+        model_text_pad_x(),
+        model_text_max_visible_lines(),
     )
 }
 
@@ -64,23 +51,17 @@ pub(super) fn model_text_byte_offset_at(
 /// not left-aligned single-line (`McpPort` centers its digits) or which
 /// paints without an input-rect geometry (ACP fields) — those keep the
 /// caret-at-end behavior rather than risking a wrong mapping.
-fn single_line_metrics(focus: SettingsFocus, touch: bool) -> Option<(f32, f32)> {
+fn single_line_metrics(focus: SettingsFocus) -> Option<(f32, f32)> {
     use de_editor_core::agent_settings::BuiltinAgentField;
     match focus {
-        // `settings_form::paint_field_frame_for_ui`.
+        // `settings_form::paint_field_frame`.
         SettingsFocus::BuiltinAgent { field, .. } | SettingsFocus::BuiltinAgentDraft(field) => {
-            (field != BuiltinAgentField::Model).then_some(if touch {
-                (15.0, 12.0)
-            } else {
-                (11.0, 6.0)
-            })
+            (field != BuiltinAgentField::Model).then_some((11.0, 6.0))
         }
         // `agent_settings_images_parts::paint_search_input_row`.
-        SettingsFocus::ImageSearch(_) => Some(if touch { (15.0, 12.0) } else { (13.0, 12.0) }),
+        SettingsFocus::ImageSearch(_) => Some((13.0, 12.0)),
         // `agent_settings_images_parts` gen-profile field paint.
-        SettingsFocus::ImageGenProfile { .. } => {
-            Some(if touch { (15.0, 12.0) } else { (11.0, 6.0) })
-        }
+        SettingsFocus::ImageGenProfile { .. } => Some((11.0, 6.0)),
         SettingsFocus::McpPort
         | SettingsFocus::AcpAgent { .. }
         | SettingsFocus::AcpAgentDraft(_) => None,
@@ -96,9 +77,8 @@ pub(super) fn single_line_text_byte_offset_at(
     focus: SettingsFocus,
     input: Rect,
     point: crate::Point2D,
-    touch: bool,
 ) -> Option<usize> {
-    let (font_size, pad_x) = single_line_metrics(focus, touch)?;
+    let (font_size, pad_x) = single_line_metrics(focus)?;
     crate::widgets::text_input::single_line_byte_offset_at(
         &ui.settings_input,
         input,

@@ -251,7 +251,7 @@ fn placeholders(value: &str) -> BTreeSet<String> {
 fn every_locale_has_exactly_the_english_key_set() {
     let all_tables = tables();
     let expected = table_keys(all_tables[0].0, all_tables[0].1, all_tables[0].2);
-    assert_eq!(expected.len(), 1793, "update the intentional catalog size");
+    assert_eq!(expected.len(), 1647, "update the intentional catalog size");
 
     for (name, main, git, lookup) in all_tables {
         let actual = table_keys(name, main, git);
@@ -274,7 +274,6 @@ fn every_locale_has_exactly_the_english_key_set() {
 #[test]
 fn scene_template_catalog_is_complete_in_all_fifteen_locales() {
     for key in [
-        "sceneTemplate.title",
         "sceneTemplate.searchPlaceholder",
         "sceneTemplate.empty",
         "sceneTemplate.frames",
@@ -338,28 +337,6 @@ fn scene_template_catalog_is_complete_in_all_fifteen_locales() {
             assert!(
                 lookup(key).is_some(),
                 "locale `{name}` is missing direct Scene Template Center key `{key}`"
-            );
-        }
-    }
-}
-
-#[test]
-fn collaboration_catalog_is_complete_in_all_fifteen_locales() {
-    let all_tables = tables();
-    let keys: Vec<_> = table_keys(all_tables[0].0, all_tables[0].1, all_tables[0].2)
-        .into_iter()
-        .filter(|key| key.starts_with("collab."))
-        .collect();
-    assert_eq!(
-        keys.len(),
-        114,
-        "update the intentional collaboration key set"
-    );
-    for key in keys {
-        for (name, _, _, lookup) in &all_tables {
-            assert!(
-                lookup(&key).is_some(),
-                "locale `{name}` is missing direct collaboration key `{key}`"
             );
         }
     }

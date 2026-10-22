@@ -64,10 +64,6 @@ impl ExportFormat {
         ExportFormat::Svg,
         ExportFormat::Pdf,
     ];
-    /// Whether the current target's shipping renderer contains this encoder.
-    pub fn is_implemented(self) -> bool {
-        export_format(self).is_implemented()
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -127,24 +123,18 @@ impl ExportDialog {
         for (i, &fmt) in ExportFormat::ALL.iter().enumerate() {
             let rect = self.format_pill_rect(i);
             let selected = fmt == doc_export_format(ui.export_format);
-            if !fmt.is_implemented() {
-                self.paint_disabled_pill(backend, theme, rect, fmt.label());
-            } else {
-                let button = de_editor_core::ExportDialogButton::Format(
-                    crate::widgets::editor_state_ext::export_format(fmt),
-                );
-                let hovered = ui.export_dialog_hover == Some(button);
-                let pressed = export_dialog_pressed(ui, button);
-                self.paint_pill(
-                    backend,
-                    theme,
-                    rect,
-                    fmt.label(),
-                    selected,
-                    hovered,
-                    pressed,
-                );
-            }
+            let button = de_editor_core::ExportDialogButton::Format(export_format(fmt));
+            let hovered = ui.export_dialog_hover == Some(button);
+            let pressed = export_dialog_pressed(ui, button);
+            self.paint_pill(
+                backend,
+                theme,
+                rect,
+                fmt.label(),
+                selected,
+                hovered,
+                pressed,
+            );
         }
 
         // Scale row label + pills.
@@ -205,20 +195,6 @@ impl ExportDialog {
         .paint(backend, export, &tokens);
     }
 
-    fn paint_disabled_pill(
-        &self,
-        backend: &mut dyn RenderBackend,
-        theme: &Theme,
-        rect: Rect,
-        label: &str,
-    ) {
-        backend.fill_round_rect(rect, PILL_RADIUS, theme.muted);
-        backend.stroke_round_rect(rect, PILL_RADIUS, theme.border, 1.0);
-        // Muted-foreground signals "not pickable" without a hard
-        // disabled overlay. Honest UI: still shows what's coming.
-        paint_centered_label(backend, label, 12.0, theme.muted_foreground, rect);
-    }
-
     #[allow(clippy::too_many_arguments)]
     fn paint_pill(
         &self,
@@ -255,11 +231,6 @@ impl ExportDialog {
         }
         for (i, &fmt) in ExportFormat::ALL.iter().enumerate() {
             if (self.format_pill_rect(i)).contains(point) {
-                // Disabled formats swallow the click without changing
-                // the active format. Same as TS — visible but inert.
-                if !fmt.is_implemented() {
-                    return None;
-                }
                 return Some(ExportDialogHit::Format(fmt));
             }
         }
@@ -454,28 +425,12 @@ mod tests {
     }
 
     #[test]
-    fn hit_test_resolves_each_implemented_format_pill() {
+    fn hit_test_resolves_each_format_pill() {
         let dlg = ExportDialog::centered(1000.0, 800.0);
         for (i, &fmt) in ExportFormat::ALL.iter().enumerate() {
             let r = dlg.format_pill_rect(i);
             let center = Point2D::new(r.origin.x + r.size.x / 2.0, r.origin.y + r.size.y / 2.0);
-            if fmt.is_implemented() {
-                assert_eq!(dlg.hit_test(center), Some(ExportDialogHit::Format(fmt)));
-            } else {
-                // Disabled formats swallow the click; no action queued.
-                assert_eq!(dlg.hit_test(center), None);
-            }
-        }
-    }
-
-    #[test]
-    fn every_host_format_matches_the_core_capability() {
-        for fmt in ExportFormat::ALL {
-            assert_eq!(
-                fmt.is_implemented(),
-                export_format(fmt).is_implemented(),
-                "{fmt:?} capability drifted"
-            );
+            assert_eq!(dlg.hit_test(center), Some(ExportDialogHit::Format(fmt)));
         }
     }
 

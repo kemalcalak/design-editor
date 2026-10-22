@@ -20,27 +20,8 @@
  * one file is what makes it checkable.
  */
 
-import {
-  cacheAccount,
-  cachedAccount,
-  clearCachedAccount,
-  deliveryTarget,
-  fetchSession,
-  hubOrigin,
-  openAccountPage,
-  openSignIn,
-  persistDeliveryTarget,
-  persistRegion,
-  signOut,
-  storedRegion,
-} from './account.js';
 import { capturePage } from './capture.js';
-import {
-  defaultEndpoint,
-  importSnapshot,
-  normalizeEndpoint,
-  sendSnapshotToAccount,
-} from './client.js';
+import { defaultEndpoint, importSnapshot, normalizeEndpoint } from './client.js';
 import { coreError, getCore, invalidateCore, isCoreTrap } from './core-registry.js';
 import {
   currentLocale,
@@ -50,14 +31,12 @@ import {
   persistLocale,
   setLocale,
   SUPPORTED_LOCALES,
-  t,
 } from './i18n.js';
 import {
   captureDetail,
   localizeDocument,
   msg,
   renderStatus,
-  reportAccountError,
   reportCaptureError,
   reportDeliveryError,
   setStatus,
@@ -81,46 +60,16 @@ const downloadButton = document.getElementById('download');
 const endpointInput = document.getElementById('endpoint');
 const endpointSummary = document.getElementById('endpoint-summary');
 const localeSelect = document.getElementById('locale');
-const regionSelect = document.getElementById('region');
-const deliveryRow = document.getElementById('delivery-row');
-const deliverySelect = document.getElementById('delivery');
-const accountRow = document.getElementById('account');
 
 /** Last successful capture in this popup session: `{ text, meta }`. */
 let captured = null;
 let busy = false;
-
-/**
- * The account row's model: `{ displayName, avatarUrl, region }`, or null when
- * signed out. It may start out as the CACHED row from the last open — a
- * picture of the last session, replaced (or cleared) as soon as the live
- * probe answers.
- */
-let account = null;
-
-/**
- * The session's CSRF token, required by the hub's mutating endpoints — the
- * logout call and, now, every snapshot filed in the account inbox.
- *
- * In memory for the lifetime of this popup only, and set exclusively by a
- * live probe — never restored from storage, never written to it. See
- * `account.js` for the whole trust model.
- */
-let csrfToken = null;
-
-/** The hub origin the current region resolves to. */
-let currentHubOrigin = '';
-/** Guards the sign-in / sign-out controls against a double click. */
-let accountBusy = false;
 
 function setBusy(next) {
   busy = next;
   for (const button of [captureButton, designButton, pickButton, downloadButton]) {
     button.disabled = next;
   }
-  // The account controls navigate away from the popup, which would abandon a
-  // capture mid-transfer, so they go down with all four action buttons.
-  if (!accountRow.hidden) renderAccount();
 }
 
 async function activeTab() {
@@ -165,22 +114,9 @@ function rememberAction(action) {
   return chrome.storage.local.set({ [LAST_ACTION_KEY]: action });
 }
 
-/**
- * Send the capture wherever the user chose.
- *
- * The choice is resolved by the core rather than read from the `<select>`:
- * the stored value, the session state and whether the account target exists at
- * all are one rule in one place (`delivery.rs`), and a session that expired
- * while this popup was open collapses back to the local editor there.
- */
+/** Send the capture to the Design Editor at the configured loopback endpoint. */
 async function onCapture() {
   if (busy) return;
-  const target = await deliveryTarget(account !== null);
-  if (target === 'account') return sendToAccount();
-  return sendToLocal();
-}
-
-async function sendToLocal() {
   const endpoint = await commitEndpoint();
   if (!endpoint) return;
 
@@ -199,88 +135,6 @@ async function sendToLocal() {
   } finally {
     setBusy(false);
   }
-}
-
-/**
- * Upload the capture to the signed-in account's inbox.
- *
- * The CSRF token is the one value this flow needs that a cached row cannot
- * supply, so a popup whose opening probe has not landed yet re-probes here
- * rather than failing. That probe is also what keeps the account row honest:
- * a session that ended in another tab is discovered before a 32 MB upload is
- * started, not after.
- */
-async function sendToAccount() {
-  setBusy(true);
-  try {
-    const token = await ensureCsrfToken();
-    if (!token) return;
-    const { text, meta } = await ensureCapture();
-    setStatus(msg('statusSendingAccount'), 'working');
-    const filed = await sendSnapshotToAccount(currentHubOrigin, token, text, meta);
-    await rememberAction('send');
-    setStatus(msg('statusSentToAccount', [filed.name]), 'ok', { detail: captureDetail(meta) });
-  } catch (error) {
-    if (isCoreTrap(error)) invalidateCore();
-    // A session that ended between the probe and the upload leaves a row this
-    // popup has stopped believing in; clearing it is what sends the next press
-    // to the local editor instead of repeating a request that cannot succeed.
-    if (error && error.code === 'signedOut') await forgetAccount();
-    reportAccountError(error);
-  } finally {
-    setBusy(false);
-  }
-}
-
-/**
- * The live session's CSRF token, re-probing when this popup has not seen one.
- *
- * Returns null after writing the status line, so callers can simply stop.
- */
-async function ensureCsrfToken() {
-  // `refreshAccount` sets this before it paints anything, and nothing can
-  // select the account destination before that has happened — but a URL built
-  // against an empty origin would be a relative one, and the whole point of
-  // pinning the hub set is that no request goes anywhere unnamed.
-  if (!currentHubOrigin) currentHubOrigin = await hubOrigin(await storedRegion());
-  if (csrfToken) return csrfToken;
-  let view;
-  try {
-    view = await fetchSession(currentHubOrigin);
-  } catch (error) {
-    setStatus(
-      msg('accountUnavailable', [String(error?.detail ?? error?.message ?? error)]),
-      'error',
-    );
-    return null;
-  }
-  if (view.state !== 'signedIn') {
-    // Only a definite `signedOut` clears the row; an `error` means the hub
-    // said something we cannot act on, and dropping the session over that
-    // would be the same mistake `refreshAccount` refuses to make.
-    if (view.state === 'signedOut') await forgetAccount();
-    setStatus(msg('errorAccountSignedOut'), 'error');
-    return null;
-  }
-  csrfToken = view.csrfToken;
-  account = {
-    displayName: view.displayName,
-    avatarUrl: view.avatarUrl ?? null,
-    region: regionSelect.value,
-  };
-  await cacheAccount(view, regionSelect.value);
-  renderAccount();
-  await syncDelivery();
-  return csrfToken;
-}
-
-/** Drop every trace of the session this popup was holding. */
-async function forgetAccount() {
-  account = null;
-  csrfToken = null;
-  await clearCachedAccount();
-  renderAccount();
-  await syncDelivery();
 }
 
 /**
@@ -417,224 +271,6 @@ async function onDesignMd() {
   }
 }
 
-/* ------------------------------------------------------------ the account */
-
-/**
- * Build one control for the account row.
- *
- * Everything in this row is assembled node by node with `textContent`. None
- * of it is ever handed to `innerHTML`: the display name comes from another
- * user's account profile, and the popup renders it inside the extension's own
- * origin, where a script tag would run with the extension's permissions.
- */
-function accountButton(label, className, onClick) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = `account-link ${className}`;
-  button.textContent = label;
-  button.disabled = busy || accountBusy;
-  button.addEventListener('click', onClick);
-  return button;
-}
-
-/**
- * Paint the account row from {@link account}.
- *
- * Signed out: one quiet "sign in" button. Signed in: the avatar (when there
- * is one that survived the core's `https://`-only check), the display name,
- * a region badge, and a sign-out control.
- */
-function renderAccount() {
-  accountRow.replaceChildren();
-  accountRow.hidden = false;
-
-  if (!account) {
-    accountRow.append(accountButton(t('accountSignIn'), 'account-signin', onSignIn));
-    return;
-  }
-
-  if (account.avatarUrl) {
-    const avatar = document.createElement('img');
-    avatar.className = 'account-avatar';
-    avatar.src = account.avatarUrl;
-    avatar.alt = '';
-    // The avatar is decoration beside a name the row already states.
-    avatar.setAttribute('aria-hidden', 'true');
-    // The hub does not need to know which of its users opened this popup on
-    // which page, and an avatar request is not worth a referrer.
-    avatar.referrerPolicy = 'no-referrer';
-    // A CDN that is down, a blocked image, a URL that 404s: none of those
-    // should leave a broken-image glyph in the header.
-    avatar.addEventListener('error', () => avatar.remove(), { once: true });
-    accountRow.append(avatar);
-  }
-
-  const name = document.createElement('span');
-  name.className = 'account-name';
-  name.textContent = account.displayName;
-  name.title = account.displayName;
-
-  const region = document.createElement('span');
-  region.className = 'account-region';
-  region.textContent = t(account.region === 'global' ? 'regionGlobal' : 'regionCn');
-
-  accountRow.append(name, region, accountButton(t('accountSignOut'), 'account-signout', onSignOut));
-}
-
-/** Show or hide the delivery row, and keep its selection legal. */
-async function syncDelivery() {
-  const signedIn = account !== null;
-  deliveryRow.hidden = !getCore().deliveryRowVisible(signedIn);
-  deliverySelect.value = await deliveryTarget(signedIn);
-}
-
-/**
- * Ask the hub who is signed in, and repaint.
- *
- * The cached row is painted first so the header does not flash empty on
- * every open, then the probe either confirms it, replaces it, or clears it.
- * An `error` state deliberately changes nothing: a hub that is briefly
- * unreachable must not look like a sign-out.
- */
-async function refreshAccount() {
-  const region = await storedRegion();
-  regionSelect.value = region;
-  currentHubOrigin = await hubOrigin(region);
-
-  const cached = await cachedAccount();
-  // A cached row from the OTHER region belongs to a different identity.
-  account = cached && cached.region === region ? cached : null;
-  renderAccount();
-  await syncDelivery();
-
-  let view;
-  try {
-    view = await fetchSession(currentHubOrigin);
-  } catch (error) {
-    // Silent on open: the account row is optional, and the popup's status
-    // area belongs to the capture the user came here for. The stale row (if
-    // any) stays up rather than being replaced by an error.
-    return { state: 'error', detail: String(error?.detail ?? error?.message ?? error) };
-  }
-
-  if (view.state === 'signedIn') {
-    account = {
-      displayName: view.displayName,
-      avatarUrl: view.avatarUrl ?? null,
-      region,
-    };
-    csrfToken = view.csrfToken;
-    await cacheAccount(view, region);
-  } else if (view.state === 'signedOut') {
-    account = null;
-    csrfToken = null;
-    await clearCachedAccount();
-  }
-
-  renderAccount();
-  await syncDelivery();
-  return view;
-}
-
-/**
- * Start the sign-in.
- *
- * The tab that opens takes focus, which closes this popup — so the status
- * line is written first and the sentence it leaves behind ("finish signing
- * in, then reopen") is what the user reads on the way out.
- */
-async function onSignIn() {
-  if (accountBusy) return;
-  accountBusy = true;
-  renderAccount();
-  try {
-    setStatus(msg('accountSignInOpened'), 'working');
-    await openSignIn(currentHubOrigin);
-  } catch (error) {
-    setStatus(msg('accountUnavailable', [String(error?.message ?? error)]), 'error');
-  } finally {
-    accountBusy = false;
-    renderAccount();
-  }
-}
-
-/**
- * Sign out.
- *
- * The local state is cleared whatever the hub says: the extension has
- * stopped believing in this session, and a row that outlived the user's
- * decision would be a lie. When the hub refuses the extension-origin logout
- * — which is what today's op-hub does, see `account.js` — the account page
- * opens so the user can finish there.
- */
-async function onSignOut() {
-  if (accountBusy) return;
-  accountBusy = true;
-  renderAccount();
-  const token = csrfToken;
-  try {
-    const ended = await signOut(currentHubOrigin, token);
-    account = null;
-    csrfToken = null;
-    await clearCachedAccount();
-    if (ended) {
-      setStatus(msg('accountSignedOut'), 'ok');
-    } else {
-      setStatus(msg('accountSignOutManual'), 'working');
-      await openAccountPage(currentHubOrigin);
-    }
-  } finally {
-    accountBusy = false;
-    renderAccount();
-    await syncDelivery();
-  }
-}
-
-/**
- * Fill the region selector.
- *
- * Unlike the language rows — which are each language's own name, so they are
- * not translated — the two regions are product terms and are read in the
- * popup's language.
- */
-function buildRegionSelect() {
-  regionSelect.replaceChildren();
-  for (const [value, key] of [
-    ['cn', 'regionCn'],
-    ['global', 'regionGlobal'],
-  ]) {
-    const option = document.createElement('option');
-    option.value = value;
-    option.textContent = t(key);
-    regionSelect.append(option);
-  }
-}
-
-/**
- * Fill the delivery selector.
- *
- * Both destinations are selectable now that the hub answers the inbox route.
- * The account option is still gated on the core's `accountDeliveryAvailable`
- * rather than on this file's opinion: if that flag is ever turned off — a hub
- * regression, a region that has not deployed the route — the option stops
- * being offered here without any other edit, exactly as it did while the API
- * was still a proposal.
- */
-function buildDeliverySelect() {
-  const cloudReady = getCore().accountDeliveryAvailable();
-  deliverySelect.replaceChildren();
-  for (const [value, key] of [
-    ['local', 'deliveryLocal'],
-    ['account', 'deliveryAccount'],
-  ]) {
-    if (value === 'account' && !cloudReady) continue;
-    const option = document.createElement('option');
-    option.value = value;
-    option.textContent = t(key);
-    deliverySelect.append(option);
-  }
-}
-
 /**
  * Fill the language selector.
  *
@@ -659,16 +295,6 @@ async function applyLocale(code) {
   await setLocale(code);
   localizeDocument();
   localeSelect.value = currentLocale();
-  // The three JS-built surfaces — the account row and the two selectors —
-  // hold rendered text, so they are rebuilt rather than left in the old
-  // language beside a header that changed.
-  const region = regionSelect.value;
-  const delivery = deliverySelect.value;
-  buildRegionSelect();
-  buildDeliverySelect();
-  regionSelect.value = region;
-  deliverySelect.value = delivery;
-  if (!accountRow.hidden) renderAccount();
   renderStatus();
 }
 
@@ -721,28 +347,6 @@ async function init() {
   endpointInput.addEventListener('change', async () => {
     if (await commitEndpoint()) setStatus(msg('statusIdle'), 'idle');
   });
-
-  buildRegionSelect();
-  buildDeliverySelect();
-  regionSelect.addEventListener('change', async () => {
-    await persistRegion(regionSelect.value);
-    // The two regions are separate deployments with separate accounts, so
-    // the cached row from the old one is not a session in the new one.
-    await clearCachedAccount();
-    account = null;
-    csrfToken = null;
-    await refreshAccount();
-  });
-  deliverySelect.addEventListener('change', async () => {
-    deliverySelect.value = await persistDeliveryTarget(deliverySelect.value, account !== null);
-  });
-
-  // Last, and deliberately not awaited: the account row is optional, and a
-  // hub that is slow or unreachable must not delay the capture buttons by so
-  // much as a frame. `refreshAccount` already absorbs probe failures; this
-  // catch covers the storage and core paths, so nothing about the account can
-  // take the popup down — it just leaves the header slot as it found it.
-  refreshAccount().catch(() => undefined);
 }
 
 init();

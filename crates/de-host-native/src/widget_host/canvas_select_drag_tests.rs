@@ -172,7 +172,7 @@ fn blank_canvas_press_exits_the_entered_container() {
 }
 
 #[test]
-fn desktop_blank_canvas_drag_still_uses_marquee_instead_of_touch_pan() {
+fn blank_canvas_drag_uses_marquee_instead_of_panning() {
     let mut host = WidgetHostNative::new();
     seed(&mut host, NESTED);
     let viewport_before = host.editor_state().viewport;
@@ -180,7 +180,6 @@ fn desktop_blank_canvas_drag_still_uses_marquee_instead_of_touch_pan() {
     press_doc(&mut host, 700.0, 350.0);
 
     assert!(host.marquee_drag.is_some());
-    assert!(host.touch_panel_gesture.is_none());
     assert!(host.drag.is_none());
     assert_eq!(host.editor_state().viewport, viewport_before);
 }

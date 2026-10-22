@@ -39,25 +39,11 @@ pub async fn client_for(
 ) -> Result<reqwest::Client, ProviderDialError> {
     match policy {
         EndpointDialPolicy::Trusted => crate::chat_builtin_http::builtin_http_client(),
-        EndpointDialPolicy::PublicOnly => pinned_public_client(url, false).await,
+        EndpointDialPolicy::PublicOnly => pinned_public_client(url).await,
     }
 }
 
-/// Build the stricter asset-only client used by bounded profile images.
-///
-/// Clash-style fake-IP TUN resolvers use RFC 2544 `198.18.0.0/15` addresses as
-/// opaque public-host tokens. This seam accepts only a hostname whose entire
-/// resolution is in that range; literals and mixed sets remain rejected.
-pub async fn client_for_tunnel_compatible_public_asset(
-    url: &str,
-) -> Result<reqwest::Client, ProviderDialError> {
-    pinned_public_client(url, true).await
-}
-
-async fn pinned_public_client(
-    url: &str,
-    allow_tunnel_fake_ip: bool,
-) -> Result<reqwest::Client, ProviderDialError> {
+async fn pinned_public_client(url: &str) -> Result<reqwest::Client, ProviderDialError> {
     let parsed = reqwest::Url::parse(url).map_err(|_| ProviderDialError::NotAUrl)?;
     let host = parsed
         .host_str()
@@ -68,7 +54,6 @@ async fn pinned_public_client(
     let port = parsed
         .port_or_known_default()
         .ok_or(ProviderDialError::MissingPort)?;
-    let host_is_literal = host.parse::<std::net::IpAddr>().is_ok();
     let addrs = if let Ok(ip) = host.parse::<std::net::IpAddr>() {
         // Literal address: nothing to resolve, screening alone suffices.
         vec![SocketAddr::new(ip, port)]
@@ -81,8 +66,7 @@ async fn pinned_public_client(
             })?
             .collect()
     };
-    let addrs =
-        screen_resolved_addrs_for_policy(&host, host_is_literal, addrs, allow_tunnel_fake_ip)?;
+    let addrs = screen_resolved_addrs(&host, addrs)?;
     // `.no_proxy()` is load-bearing, not a tidy-up: with an env/system HTTP
     // proxy configured, reqwest tunnels the request to the proxy and the
     // proxy re-resolves the target host — so `resolve_to_addrs` would be
@@ -100,32 +84,14 @@ async fn pinned_public_client(
 /// Screen a resolved address set for a `PublicOnly` dial. Empty resolutions
 /// and sets containing ANY reserved address are rejected — a mixed
 /// public/private answer is exactly the rebinding shape this guards against.
-#[cfg(test)]
 fn screen_resolved_addrs(
     host: &str,
     addrs: Vec<SocketAddr>,
-) -> Result<Vec<SocketAddr>, ProviderDialError> {
-    screen_resolved_addrs_for_policy(host, false, addrs, false)
-}
-
-fn screen_resolved_addrs_for_policy(
-    host: &str,
-    host_is_literal: bool,
-    addrs: Vec<SocketAddr>,
-    allow_tunnel_fake_ip: bool,
 ) -> Result<Vec<SocketAddr>, ProviderDialError> {
     if addrs.is_empty() {
         return Err(ProviderDialError::Unresolved {
             host: host.to_string(),
         });
-    }
-    let tunnel_fake_ip_set = allow_tunnel_fake_ip
-        && !host_is_literal
-        && addrs
-            .iter()
-            .all(|address| is_rfc2544_benchmark_address(address.ip()));
-    if tunnel_fake_ip_set {
-        return Ok(addrs);
     }
     if addrs
         .iter()
@@ -136,14 +102,6 @@ fn screen_resolved_addrs_for_policy(
         });
     }
     Ok(addrs)
-}
-
-fn is_rfc2544_benchmark_address(address: std::net::IpAddr) -> bool {
-    matches!(
-        address,
-        std::net::IpAddr::V4(address)
-            if address.octets()[0] == 198 && matches!(address.octets()[1], 18 | 19)
-    )
 }
 
 #[cfg(test)]
@@ -213,22 +171,5 @@ mod tests {
                 "reserved address {reserved} must poison the whole resolution"
             );
         }
-    }
-
-    #[test]
-    fn bounded_asset_policy_accepts_only_hostname_fake_ip_sets() {
-        let fake_ip = vec![addr("198.18.0.42")];
-        assert!(
-            screen_resolved_addrs_for_policy("avatar.example", false, fake_ip.clone(), true,)
-                .is_ok()
-        );
-        assert!(screen_resolved_addrs_for_policy("198.18.0.42", true, fake_ip, true,).is_err());
-        assert!(screen_resolved_addrs_for_policy(
-            "avatar.example",
-            false,
-            vec![addr("198.18.0.42"), addr("93.184.216.34")],
-            true,
-        )
-        .is_err());
     }
 }

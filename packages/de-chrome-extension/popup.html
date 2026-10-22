@@ -6,25 +6,10 @@
   </head>
   <body>
     <header class="head">
-      <!--
-        The brand line owns its own row: mark plus title and nothing else, so
-        the title never has to compete with a display name for width and never
-        wraps, in any of the fifteen locales.
-      -->
       <div class="brand">
         <img class="mark" src="icons/icon-48.png" alt="" aria-hidden="true" />
         <h1 data-i18n="extName">Design Editor</h1>
       </div>
-      <!--
-        The account row, on the line below. Signed out it is one quiet text
-        button; signed in it is an avatar, a name, a region badge and a
-        sign-out control. It is built by `popup.js` rather than written out
-        here because both states are data-driven and every string in them is
-        user- or server-supplied — assembling it with `textContent` is what
-        guarantees no remote value is ever parsed as markup. `hidden` until the
-        first render so a checkout with no core does not show an empty slot.
-      -->
-      <div id="account" class="account" hidden></div>
     </header>
 
     <div class="actions">
@@ -103,26 +88,6 @@
         <div class="settings-row">
           <label class="settings-row-label" for="locale" data-i18n="languageLabel">Language</label>
           <select id="locale" class="select" data-i18n-aria="languageLabel"></select>
-        </div>
-        <!--
-          The account region. It decides which hub the sign-in tab and the
-          session probe address, mirroring the product's own built-in cn /
-          global pair. It lives beside the language for the same reason: set
-          once, then forgotten.
-        -->
-        <div class="settings-row">
-          <label class="settings-row-label" for="region" data-i18n="regionLabel">Region</label>
-          <select id="region" class="select" data-i18n-aria="regionLabel"></select>
-        </div>
-        <!--
-          Where a capture goes. Hidden until a session exists, because signed
-          out there is exactly one destination and a picker with one option
-          is noise. Signed in, both destinations are selectable: this
-          computer's Design Editor, or the hub's per-user snapshot inbox.
-        -->
-        <div class="settings-row" id="delivery-row" hidden>
-          <label class="settings-row-label" for="delivery" data-i18n="deliveryLabel">Send to</label>
-          <select id="delivery" class="select" data-i18n-aria="deliveryLabel"></select>
         </div>
       </div>
     </details>

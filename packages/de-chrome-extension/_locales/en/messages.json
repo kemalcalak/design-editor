@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "Imported $1 nodes into Design Editor."
   },
-  "statusSendingAccount": {
-    "message": "Sending to your Design Editor account…"
-  },
-  "statusSentToAccount": {
-    "message": "Sent to your Design Editor account: $1"
-  },
-  "statusSentLocalFallback": {
-    "message": "Your account session had expired, so this went to the Design Editor on this computer: $1 nodes imported."
-  },
   "statusDownloaded": {
     "message": "Saved $1."
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "This capture is larger than $1 MB, which Design Editor's snapshot route refuses. Use Download .op, then open the file in Design Editor."
   },
-  "errorAccountTooLarge": {
-    "message": "This capture is larger than $1 MB, which the account inbox refuses. Deliver it to this device instead."
-  },
   "errorImport": {
     "message": "Design Editor refused the snapshot: $1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "Element capture is unavailable: the extension's background worker is not running. Check the extension card in chrome://extensions for an error, re-run build-wasm.sh, then hit Reload. ($1)"
-  },
-  "accountSignIn": {
-    "message": "Sign in"
-  },
-  "accountSignOut": {
-    "message": "Sign out"
-  },
-  "accountSignInOpened": {
-    "message": "Finish signing in on the page that just opened, then reopen this popup."
-  },
-  "accountSignedOut": {
-    "message": "Signed out of your Design Editor account."
-  },
-  "accountSignOutManual": {
-    "message": "Finish signing out on the account page that just opened."
-  },
-  "accountUnavailable": {
-    "message": "Your Design Editor account could not be reached: $1"
-  },
-  "errorAccountSignedOut": {
-    "message": "Your Design Editor account session has expired. Sign in again, then try once more."
-  },
-  "errorAccountForbidden": {
-    "message": "The hub refused this upload's origin or session token. Sign in again, then try once more. ($1)"
-  },
-  "errorAccountQuota": {
-    "message": "Your account inbox is full — it holds at most $1 snapshots or $2 MB. Delete some on the account page, then try again. ($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "Too many uploads to your account. Try again a little later. ($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "Too many uploads to your account. Try again in about $1 minutes."
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "Too many uploads to your account. Try again in about $1 seconds."
-  },
-  "errorAccountRejected": {
-    "message": "Your Design Editor account refused the snapshot: $1"
-  },
-  "errorAccountUnavailable": {
-    "message": "Your Design Editor account cannot accept captures right now ($1). Try again later, or send to the Design Editor on this computer."
-  },
-  "regionLabel": {
-    "message": "Region"
-  },
-  "regionCn": {
-    "message": "China"
-  },
-  "regionGlobal": {
-    "message": "Global"
-  },
-  "deliveryLabel": {
-    "message": "Send to"
-  },
-  "deliveryLocal": {
-    "message": "Design Editor on this computer"
-  },
-  "deliveryAccount": {
-    "message": "My Design Editor account"
   }
 }

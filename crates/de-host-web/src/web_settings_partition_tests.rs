@@ -1,5 +1,6 @@
-//! Account-partition isolation: what an empty partition must clear, and what
-//! the rebuilt persistence baselines must preserve.
+//! Settings-blob replacement: what reloading an empty blob must clear, what
+//! the load's persistence baselines must preserve, and how the device theme
+//! survives a blob reload.
 //!
 //! Split out of `web_settings_tests.rs` at the 800-line cap; nested under it
 //! so `use super::*` still reaches the shared helpers.
@@ -40,15 +41,14 @@ fn state_with_runtime_builtin_catalog() -> (EditorState, String) {
 }
 
 #[test]
-fn an_empty_partition_clears_the_previous_accounts_credentials() {
-    // The account-switch leak: after switching, the in-memory state still held
-    // account A's API keys, and an empty partition for B meant "keep whatever
-    // was there" instead of "no keys".
+fn reloading_an_empty_blob_clears_the_previous_credentials() {
+    // A reload must replace the in-memory state, not merge into it: an empty
+    // credential blob means "no keys", not "keep whatever was there".
     let mut state = EditorState::new();
     let mut writes = Vec::new();
-    // A signs in and stores a key.
+    // The first blob stores a key.
     let credential_json = r#"{"version":2,"builtin_agents":[{"id":"a1","preset":"custom",
-        "display_name":"A's model","kind":"openai-compat","api_key":"sk-account-a",
+        "display_name":"Old model","kind":"openai-compat","api_key":"sk-old-key",
         "model":"m","base_url":"https://api.example.com/v1","enabled":true}],
         "image_gen_profiles":[],"active_image_gen_profile_id":null,"openverse_oauth":null}"#;
     super::storage::load_into_with(&mut state, None, Some(credential_json), |k, v| {
@@ -57,28 +57,15 @@ fn an_empty_partition_clears_the_previous_accounts_credentials() {
     });
     assert!(
         !state.editor_ui.agent_settings.builtin_agents.is_empty(),
-        "A's credential must load in the first place"
+        "the first blob's credential must load in the first place"
     );
 
-    // B signs in: their partition is empty.
+    // The reloaded blob is empty.
     super::storage::load_into_with(&mut state, None, None, |_, _| true);
     assert!(
         state.editor_ui.agent_settings.builtin_agents.is_empty(),
-        "B must not inherit A's API keys from an empty partition"
+        "an empty blob must not inherit the previous API keys"
     );
-}
-
-#[test]
-fn account_reset_clears_runtime_builtin_catalogs() {
-    let (mut state, id) = state_with_runtime_builtin_catalog();
-
-    super::reset_account_scoped_settings(&mut state);
-
-    assert!(state
-        .editor_ui
-        .agent_settings
-        .builtin_model_catalog_options(&id)
-        .is_empty());
 }
 
 #[test]
@@ -108,65 +95,15 @@ fn either_builtin_snapshot_replacement_clears_runtime_catalogs() {
 }
 
 #[test]
-fn an_empty_partition_resets_account_scoped_settings_to_defaults() {
-    // `apply_payload` only writes fields the blob carries, so an empty
-    // partition used to leave A's locale, recent files and provider config in
-    // place for B.
-    let mut state = EditorState::new();
-    state.editor_ui.locale = Locale::Ja;
-    state.editor_ui.recent_files = vec![RecentFile {
-        path: "/a/secret-project.op".into(),
-        modified_at: 1,
-    }];
-    state.editor_ui.agent_settings.mcp_server.port = 4242;
-    state.editor_ui.agent_settings.openverse_client_id = "a-client".into();
-
-    super::reset_account_scoped_settings(&mut state);
-    super::storage::load_into_with(&mut state, None, None, |_, _| true);
-
-    let defaults = de_editor_core::EditorUiState::default();
-    let default_agents = de_editor_core::AgentSettings::default();
-    assert_eq!(state.editor_ui.locale, defaults.locale, "locale must reset");
-    assert!(
-        state.editor_ui.recent_files.is_empty(),
-        "B must not see A's recent files"
-    );
-    assert_eq!(
-        state.editor_ui.agent_settings.mcp_server.port,
-        default_agents.mcp_server.port
-    );
-    assert!(state
-        .editor_ui
-        .agent_settings
-        .openverse_client_id
-        .is_empty());
-}
-
-#[test]
-fn a_populated_partition_still_wins_over_the_defaults() {
-    // The reset must not erase the partition being loaded — defaults first,
-    // then the target snapshot on top.
-    let mut state = EditorState::new();
-    state.editor_ui.locale = Locale::Ja;
-    let settings = r#"{"version":1,"locale":"fr","mcp_port":5150}"#;
-
-    super::reset_account_scoped_settings(&mut state);
-    super::storage::load_into_with(&mut state, Some(settings), None, |_, _| true);
-
-    assert_eq!(state.editor_ui.locale, Locale::Fr);
-    assert_eq!(state.editor_ui.agent_settings.mcp_server.port, 5150);
-}
-
-#[test]
-fn rebuilt_baselines_keep_saving_and_keep_failing_closed() {
+fn load_baselines_keep_saving_and_keep_failing_closed() {
     // The regression this pins: setting `settings_fingerprint` to `None`
     // makes the save gate (`if let Some(..)`) skip forever, so nothing was
-    // ever persisted again after an account switch.
+    // ever persisted again after the load.
     let mut state = EditorState::new();
     let healthy = super::storage::load_into_with(&mut state, None, None, |_, _| true);
     assert!(
         healthy.initial_settings_fingerprint(&state).is_some(),
-        "a healthy partition must leave the save path enabled"
+        "a healthy blob must leave the save path enabled"
     );
     assert!(!healthy
         .initial_fingerprint(&state)
@@ -186,26 +123,25 @@ fn rebuilt_baselines_keep_saving_and_keep_failing_closed() {
         .write_disabled_for_test());
 }
 
-// ── Theme is device-level, not account-level ──────────────────────────────
+// ── Theme is device-level, not part of the settings blob ──────────────────
 //
 // Light or dark is a property of the screen you are sitting at. These pin the
-// four things the split has to get right: a switch keeps the theme, the
-// account reset does not touch it, existing data migrates once, and a change
-// still persists.
+// things the split has to get right: a blob reload keeps the theme, existing
+// data migrates once, and a change still persists.
 
 #[test]
-fn switching_accounts_keeps_the_devices_theme() {
-    // A is on dark; B's blob says light. The screen must stay dark — B signing
-    // in on this laptop does not change what the room looks like.
+fn reloading_the_blob_keeps_the_devices_theme() {
+    // The screen is dark; the reloaded blob says light. The screen must stay
+    // dark — the blob is not read for theme.
     let mut state = EditorState::new();
     state.editor_ui.theme_mode = ThemeMode::Dark;
 
-    let b_blob = r#"{"version":1,"theme":"light","locale":"en-US"}"#;
-    super::storage::load_into_with(&mut state, Some(b_blob), None, |_, _| true);
+    let blob = r#"{"version":1,"theme":"light","locale":"en-US"}"#;
+    super::storage::load_into_with(&mut state, Some(blob), None, |_, _| true);
     assert_eq!(
         state.editor_ui.theme_mode,
         ThemeMode::Dark,
-        "the incoming account's blob must not be read for theme"
+        "the reloaded blob must not be read for theme"
     );
 
     // And the device key, when one exists, is what decides.
@@ -220,28 +156,9 @@ fn switching_accounts_keeps_the_devices_theme() {
 }
 
 #[test]
-fn the_account_reset_leaves_the_theme_alone() {
-    // Everything else here goes back to default so an empty partition cannot
-    // inherit the previous account's values. Theme is the one exception, and
-    // it has to be, or every switch would flip the screen.
-    let mut state = EditorState::new();
-    state.editor_ui.theme_mode = ThemeMode::Dark;
-    state.editor_ui.locale = Locale::ZhCn;
-
-    super::reset_account_scoped_settings(&mut state);
-
-    assert_eq!(state.editor_ui.theme_mode, ThemeMode::Dark);
-    assert_eq!(
-        state.editor_ui.locale,
-        de_editor_core::EditorUiState::default().locale,
-        "locale IS account-scoped and must still reset"
-    );
-}
-
-#[test]
-fn an_existing_accounts_theme_migrates_to_the_device_once() {
+fn an_existing_blob_theme_migrates_to_the_device_once() {
     // First run after the split: no device key, so the theme already stored in
-    // the account blob is adopted rather than reset to default.
+    // the settings blob is adopted rather than reset to default.
     let blob = r#"{"version":1,"theme":"dark","locale":"en-US"}"#;
     assert_eq!(
         super::payload_theme_of(Some(blob)),
@@ -263,7 +180,7 @@ fn an_existing_accounts_theme_migrates_to_the_device_once() {
 }
 
 #[test]
-fn the_account_blob_still_carries_a_theme_for_older_builds() {
+fn the_settings_blob_still_carries_a_theme_for_older_builds() {
     // Write-only compatibility: an older bundle reads theme ONLY from here, so
     // dropping the field would silently reset the theme on a downgrade or in a
     // second tab still running the old build.
@@ -275,10 +192,10 @@ fn the_account_blob_still_carries_a_theme_for_older_builds() {
 }
 
 #[test]
-fn a_theme_change_still_persists_after_an_account_switch() {
-    // The B2c shape: a reset that leaves the save path unable to fire again.
+fn a_theme_change_still_persists_after_a_blob_reload() {
+    // The B2c shape: a reload that leaves the save path unable to fire again.
     // The device theme is saved outside the settings fingerprint entirely, so
-    // an unwritable partition blob cannot disable it.
+    // an unwritable settings blob cannot disable it.
     super::theme::reset_last_written_for_test();
     let mut state = EditorState::new();
     state.editor_ui.theme_mode = ThemeMode::Dark;
@@ -293,8 +210,7 @@ fn a_theme_change_still_persists_after_an_account_switch() {
         Ok(true)
     );
 
-    // Switch accounts: reset + load, neither of which may disturb the theme.
-    super::reset_account_scoped_settings(&mut state);
+    // Reload the blob: loading it again may not disturb the theme.
     super::storage::load_into_with(
         &mut state,
         Some(r#"{"version":1,"theme":"light"}"#),

@@ -20,7 +20,7 @@ use de_editor_core::agent_settings::{
     ImageSearchField, ImageTestStatus, SettingsFocus, OPENVERSE_AUTH_DOCS_URL,
 };
 use de_editor_core::host_settings_commit::{commit_settings_focus, SettingsCommitScope};
-use de_editor_core::{AccountState, AgentSettingsTab, ButtonPressTarget, EditorState};
+use de_editor_core::{AgentSettingsTab, ButtonPressTarget, EditorState};
 
 use crate::widgets::agent_settings_fonts::FontsHit;
 use crate::widgets::agent_settings_panel::AgentSettingsHit;
@@ -41,9 +41,6 @@ pub enum SettingsPress {
     CopyText(String),
     /// Open this help link in the user's browser.
     OpenUrl(&'static str),
-    /// Sign-out row — display state is already `Anonymous`; the host
-    /// revokes the device session through its platform transport.
-    SignOut,
 }
 
 /// [`SettingsPress`] plus the one cross-cutting follow-up that isn't a
@@ -272,22 +269,6 @@ pub fn apply_agent_settings_hit(
                 state.ui.property_focus = None;
             }
             SettingsPressOutcome::handled()
-        }
-        AgentSettingsHit::OpenLoginModal => {
-            // Switching modals is also a Settings dismissal: land the active
-            // draft, release keyboard ownership, and close a missing-font
-            // picker belonging to the Settings Fonts tab before login appears.
-            commit(state);
-            state.editor_ui.close_font_picker();
-            state.editor_ui.escape_agent_settings_modal();
-            state.editor_ui.login_modal_open = true;
-            state.editor_ui.login_modal_hover = None;
-            SettingsPressOutcome::handled()
-        }
-        AgentSettingsHit::SignOutAccount => {
-            state.editor_ui.account = AccountState::Anonymous;
-            let _ = crate::collab_avatar_runtime::register_account_avatar_url(None);
-            SettingsPressOutcome::effect(SettingsPress::SignOut)
         }
         AgentSettingsHit::FocusMcpPort => {
             commit(state);

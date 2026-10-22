@@ -8,7 +8,6 @@ set -euo pipefail
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 guard_source="$script_dir/check-version-sync.sh"
 reader_source="$script_dir/../scripts/workspace-version.sh"
-android_reader_source="$script_dir/../scripts/android-version.sh"
 temp_root=$(mktemp -d "${TMPDIR:-/tmp}/check-version-sync.XXXXXX")
 trap 'rm -rf "$temp_root"' EXIT HUP INT TERM
 
@@ -119,22 +118,17 @@ jobs:
         shell: bash
         run: |
           [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]]
+          [[ "$GITHUB_REF" == refs/heads/main ]]
           version=$(scripts/workspace-version.sh)
-          case "$GITHUB_REF" in
-            "refs/heads/v$version"|"refs/tags/v$version") ;;
-          esac
-          tools/check-op-auth-release-matrix.sh
-          tools/check-op-auth-prebuilt.sh --require-hardened
           echo "version=$version" >> "$GITHUB_OUTPUT"
-  build:
+  rust-check:
     needs: version
-    runs-on: ubuntu-latest
-    env:
-      DE_VERSION: ${{ needs.version.outputs.version }}
-    steps:
-      - run: echo build
-  web-docker:
-__WEB_NEEDS__
+    uses: ./.github/workflows/rust-check.yml
+  version-sync:
+    needs: version
+    uses: ./.github/workflows/version-sync.yml
+  build:
+__BUILD_NEEDS__
     runs-on: ubuntu-latest
     env:
       DE_VERSION: ${{ needs.version.outputs.version }}
@@ -142,25 +136,8 @@ __WEB_NEEDS__
       - run: |
           version="__PUBLISH_VERSION__"
           echo "$version"
-  sdk-packages:
-__SDK_NEEDS__
-    runs-on: ubuntu-latest
-    env:
-      DE_VERSION: ${{ needs.version.outputs.version }}
-    steps:
-      - run: bun run sync-version:check
-      - run: |
-          version="__PUBLISH_VERSION__"
-          echo "$version"
-  release-draft:
-    needs: [version, android-release, build, web-docker, sdk-packages, vsix]
-    runs-on: ubuntu-latest
-    env:
-      DE_VERSION: ${{ needs.version.outputs.version }}
-    steps:
-      - run: version="$DE_VERSION"
-  package-managers:
-    needs: [version, release-draft]
+  publish:
+    needs: [version, build]
     runs-on: ubuntu-latest
     env:
       DE_VERSION: ${{ needs.version.outputs.version }}
@@ -175,12 +152,8 @@ SCRIPT
     fi
 
     awk -v dependency_mode="$dependency_mode" -v publish_version="$publish_version" '
-        $0 == "__WEB_NEEDS__" {
-            if (dependency_mode == "required") print "    needs: version"
-            next
-        }
-        $0 == "__SDK_NEEDS__" {
-            if (dependency_mode == "required") print "    needs: version"
+        $0 == "__BUILD_NEEDS__" {
+            if (dependency_mode == "required") print "    needs: [version, rust-check, version-sync]"
             next
         }
         {
@@ -200,7 +173,6 @@ new_repo() {
         "$repo/packages" \
         "$repo/tools" \
         "$repo/scripts" \
-        "$repo/packaging/android/app" \
         "$repo/crates/de-cli/assets" \
         "$repo/crates/de-cli/src" \
         "$repo/crates/de-editor-core/src" \
@@ -210,9 +182,7 @@ new_repo() {
     git -C "$repo" init -q
     cp "$guard_source" "$repo/tools/check-version-sync.sh"
     cp "$reader_source" "$repo/scripts/workspace-version.sh"
-    cp "$android_reader_source" "$repo/scripts/android-version.sh"
-    chmod +x "$repo/tools/check-version-sync.sh" "$repo/scripts/workspace-version.sh" \
-        "$repo/scripts/android-version.sh"
+    chmod +x "$repo/tools/check-version-sync.sh" "$repo/scripts/workspace-version.sh"
     printf '%s\n' \
         '[workspace]' \
         'members = []' \
@@ -225,26 +195,6 @@ new_repo() {
     mkdir -p "$repo/packages/de-chrome-extension"
     printf '{"manifest_version":3,"name":"fixture-extension","version":"%s"}\n' "$version" \
         > "$repo/packages/de-chrome-extension/manifest.json"
-    cat > "$repo/packaging/android/app/build.gradle.kts" <<'KOTLIN'
-val repositoryRoot = rootProject.layout.projectDirectory.dir("../..")
-val androidVersionOutput = providers.exec {
-    commandLine(
-        repositoryRoot.file("scripts/android-version.sh").asFile.absolutePath,
-        repositoryRoot.file("Cargo.toml").asFile.absolutePath,
-    )
-}.standardOutput.asText.get().trim()
-val androidVersionLines = androidVersionOutput.lines()
-val canonicalVersionName = Regex("""versionName=""")
-    .matchEntire(androidVersionLines[0])
-val canonicalVersionCode = Regex("""versionCode=""")
-    .matchEntire(androidVersionLines[1])
-android {
-    defaultConfig {
-        versionCode = canonicalVersionCode
-        versionName = canonicalVersionName
-    }
-}
-KOTLIN
     cat > "$repo/crates/de-cli/assets/skill-bundle.json" <<'JSON'
 {"one":"__DESIGN_EDITOR_VERSION__","two":"__DESIGN_EDITOR_VERSION__","three":"__DESIGN_EDITOR_VERSION__","four":"__DESIGN_EDITOR_VERSION__","five":"__DESIGN_EDITOR_VERSION__"}
 JSON
@@ -552,8 +502,6 @@ jobs:
       - id: version
         run: |
           # version=$(scripts/workspace-version.sh)
-          # tools/check-op-auth-release-matrix.sh
-          # tools/check-op-auth-prebuilt.sh --require-hardened
           echo "version=0.8.1" >> "$GITHUB_OUTPUT"
 SCRIPT
 run_guard "$repo"
@@ -562,7 +510,7 @@ assert_contains '.github/workflows/rust-release.yml:1:' 'commented release check
 assert_contains 'error: release version computation must use the canonical workspace reader' \
     'commented release checks'
 assert_no_success_output 'commented release checks'
-pass 'commented source and matrix gate calls do not satisfy the guard'
+pass 'commented source reader calls do not satisfy the guard'
 
 repo=$(new_repo macos_noop_mismatch_and_reassignment 0.8.1)
 cat > "$repo/scripts/bundle-macos.sh" <<'SCRIPT'
@@ -626,12 +574,10 @@ run_guard "$repo"
 assert_status 1 'publish jobs without version dependency'
 assert_contains '.github/workflows/rust-release.yml:1:' \
     'publish jobs without version dependency'
-assert_contains 'error: web-docker must depend on the version preflight job' \
-    'publish jobs without version dependency'
-assert_contains 'error: sdk-packages must depend on the version preflight job' \
+assert_contains 'error: build must wait for the version preflight and the required checks' \
     'publish jobs without version dependency'
 assert_no_success_output 'publish jobs without version dependency'
-pass 'web Docker and SDK publishing cannot start before version preflight'
+pass 'release builds cannot start before the version preflight and checks'
 
 repo=$(new_repo independent_publish_tag_versions 0.8.1)
 write_workflow_fixture "$repo" required independent
@@ -755,24 +701,6 @@ assert_contains 'crates/de-editor-core/src/state.rs:1: error: empty documents mu
     'hardcoded Rust product version'
 assert_no_success_output 'hardcoded Rust product version'
 pass 'Rust product-version producers remain derived from Cargo metadata'
-
-repo=$(new_repo android_gradle_version_drift 0.8.1)
-sed -i.bak \
-    -e 's/versionName = canonicalVersionName/versionName = "0.8.1"/' \
-    -e 's/versionCode = canonicalVersionCode/versionCode = 8001/' \
-    -e 's#scripts/android-version[.]sh#scripts/other-version.sh#' \
-    "$repo/packaging/android/app/build.gradle.kts"
-rm "$repo/packaging/android/app/build.gradle.kts.bak"
-run_guard "$repo"
-assert_status 1 'Android Gradle version drift'
-assert_contains 'error: Android versionName must not be hard-coded' \
-    'Android Gradle version drift'
-assert_contains 'error: Android versionCode must not be hard-coded' \
-    'Android Gradle version drift'
-assert_contains 'packaging/android/app/build.gradle.kts:1: error: Android Gradle configuration must invoke scripts/android-version.sh' \
-    'Android Gradle version drift'
-assert_no_success_output 'Android Gradle version drift'
-pass 'Android Gradle cannot hard-code versions or bypass the canonical resolver'
 
 repo=$(new_repo versioned_local_product_dependency 0.8.1)
 printf '%s\n' \

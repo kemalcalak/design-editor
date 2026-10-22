@@ -165,14 +165,13 @@ impl WidgetHostNative {
             let stage = self.preview_canvas_rect(viewport_width, viewport_height);
             self.frame_slideshow_board((stage.size.x, stage.size.y));
         }
-        // 2. TopBar — painted only on the desktop; mobile layout replaces
-        //    it with the floating action cluster below.
+        // 2. TopBar.
         let top_bar = TopBar::for_editor_ui(&self.editor_state.editor_ui);
         let top_bar_rect = Rect {
             origin: Point2D::new(0.0, 0.0),
             size: Point2D::new(viewport_width, TOP_BAR_HEIGHT),
         };
-        if !self.editor_state.editor_ui.touch_chrome() && !workspace_visible {
+        if !workspace_visible {
             {
                 let mut cx = PaintCx {
                     backend: &mut *frame,
@@ -181,14 +180,9 @@ impl WidgetHostNative {
             }
         }
 
-        // 3. The left rail — painted BEFORE the canvas on the desktop
-        //    (it pushes the canvas) and AFTER it in mobile layout (it
-        //    overlays the canvas).
-        let persistent_layers = !workspace_visible
-            && (!self.editor_state.editor_ui.touch_chrome()
-                || (self.editor_state.editor_ui.expanded_touch_layout()
-                    && self.editor_state.editor_ui.sidebar_open));
-        if persistent_layers {
+        // 3. The left rail — painted BEFORE the canvas (it pushes the
+        //    canvas).
+        if !workspace_visible {
             self.paint_left_rail(frame, viewport_width, viewport_height);
         }
 
@@ -311,51 +305,21 @@ impl WidgetHostNative {
             }
         }
 
-        if !presenting {
-            self.paint_mobile_sheet_scrim(frame, viewport_width, viewport_height);
-        }
-
-        // Touch overlay: Layers paints after the canvas. Expanded's
-        // persistent rail already painted before it and pushed the canvas.
-        if self.editor_state.editor_ui.touch_chrome()
-            && !presenting
-            && self.editor_state.editor_ui.mobile_sheet
-                == Some(de_editor_core::size_class::MobileSheetKind::Layers)
-        {
-            self.paint_mobile_layers_sheet(frame, viewport_width, viewport_height);
-        }
-
         // 5. PropertyPanel — only when selection.
         let property_panel = PropertyPanel::for_selection_at_with_scene(
             &self.editor_state,
             &self.layout_scene,
             self.now_ms,
         );
-        let touch_layout = self.editor_state.editor_ui.touch_chrome();
-        let properties_open = !touch_layout
-            || self.editor_state.editor_ui.expanded_touch_layout()
-            || self.editor_state.editor_ui.mobile_sheet
-                == Some(de_editor_core::size_class::MobileSheetKind::Properties);
         if let Some(panel) = property_panel
             .as_ref()
-            .filter(|_| !presenting && properties_open && !workspace_visible)
+            .filter(|_| !presenting && !workspace_visible)
         {
             let property_rect = self.property_rect(viewport_width, viewport_height);
             let mut cx = PaintCx {
                 backend: &mut *frame,
             };
-            if self.editor_state.editor_ui.compact_layout()
-                || self.editor_state.editor_ui.medium_layout()
-            {
-                crate::widget_host::paint_mobile::paint_property_sheet(
-                    &self.editor_state,
-                    panel,
-                    &mut cx,
-                    property_rect,
-                );
-            } else {
-                panel.paint(&mut cx, property_rect);
-            }
+            panel.paint(&mut cx, property_rect);
         }
 
         // 5b. VariablesPanel — mirrors TS' `{}` toolbar toggle as a
@@ -395,12 +359,7 @@ impl WidgetHostNative {
             .size
             .y;
         let toolbar_rect = canvas_geometry::toolbar_rect(&self.editor_state, toolbar_h);
-        let touch_layout = self.editor_state.editor_ui.touch_chrome();
-        if canvas_geometry::toolbar_fits(canvas_w)
-            && !presenting
-            && !touch_layout
-            && !workspace_visible
-        {
+        if canvas_geometry::toolbar_fits(canvas_w) && !presenting && !workspace_visible {
             let mut cx = PaintCx {
                 backend: &mut *frame,
             };
@@ -410,12 +369,9 @@ impl WidgetHostNative {
         // 7. AIChatPlaceholder — painted LAST so it sits on top
         //    of the toolbar in any overlap region (matches the
         //    user's requested z-order: chat above toolbar).
-        let chat_open = !touch_layout
-            || self.editor_state.editor_ui.mobile_sheet
-                == Some(de_editor_core::size_class::MobileSheetKind::Ai);
         if let Some(chat_rect) = self
             .ai_chat_rect(viewport_width, viewport_height)
-            .filter(|_| !presenting && chat_open)
+            .filter(|_| !presenting)
         {
             // Owner-stamp so paint stores the canonical build under THIS host's
             // owner — the display-frame cursor hint reads it back by that owner.
@@ -435,7 +391,7 @@ impl WidgetHostNative {
         // 8. StatusBar — floating bottom-right.
         if let Some(status_rect) =
             canvas_geometry::status_bar_rect(&self.editor_state, viewport_width, viewport_height)
-                .filter(|_| !presenting && !touch_layout)
+                .filter(|_| !presenting)
         {
             let status = StatusBar::for_editor(&self.editor_state);
             let mut cx = PaintCx {
@@ -455,11 +411,7 @@ impl WidgetHostNative {
         //      2+ nodes are selected. Sits above the canvas but
         //      below status / modal overlays.
         let canvas_region = canvas_rect;
-        if self.preview.is_none()
-            && !touch_layout
-            && !workspace_visible
-            && self.editor_state.editor_ui.mobile_sheet.is_none()
-        {
+        if self.preview.is_none() && !workspace_visible {
             if let Some(toolbar) =
                 AlignToolbar::for_canvas_region(canvas_region, &self.editor_state)
             {
@@ -496,13 +448,9 @@ impl WidgetHostNative {
         // 8.6. PropertyPanel overlays — painted after canvas floating
         //      controls so the image-fill popover can cover the zoom
         //      status pill when it extends into the canvas.
-        let properties_open = !touch_layout
-            || self.editor_state.editor_ui.expanded_touch_layout()
-            || self.editor_state.editor_ui.mobile_sheet
-                == Some(de_editor_core::size_class::MobileSheetKind::Properties);
         if let Some(panel) = property_panel
             .as_ref()
-            .filter(|_| !presenting && properties_open && !workspace_visible)
+            .filter(|_| !presenting && !workspace_visible)
         {
             let property_rect = self.property_rect(viewport_width, viewport_height);
             let mut cx = PaintCx {
@@ -512,10 +460,6 @@ impl WidgetHostNative {
             self.image_input_geometry =
                 panel.image_popover_input_geometry(property_rect, &mut *frame);
         }
-
-        // Touch chrome sits above the editor canvas and rails, but below
-        // pickers, dialogs, settings, and diagnostics painted afterwards.
-        self.paint_mobile_chrome(frame, viewport_width, viewport_height);
 
         // 8.65. TopBar hover tooltip — over the rails, under every menu.
         self.paint_top_bar_tooltip_overlay(frame, &top_bar, top_bar_rect, viewport_width);
@@ -592,32 +536,6 @@ impl WidgetHostNative {
             picker.paint(&mut cx, picker_rect);
         }
 
-        // Collaboration popover — a real shared widget anchored to the
-        // collaboration status chip. It consumes only sanitized UI state;
-        // the native session actor drains queued actions separately.
-        let touch_presenting = presenting && ui.touch_chrome();
-        if let Some(panel) = (!touch_presenting)
-            .then(|| {
-                de_editor_ui::widgets::CollabPanel::for_editor_ui_at(
-                    &self.editor_state.editor_ui,
-                    self.now_ms,
-                )
-            })
-            .flatten()
-        {
-            let panel_rect =
-                de_editor_ui::widgets::touch_overlay_geometry::collaboration_panel_rect(
-                    &self.editor_state,
-                    &panel,
-                    viewport_width,
-                    viewport_height,
-                );
-            let mut cx = PaintCx {
-                backend: &mut *frame,
-            };
-            panel.paint(&mut cx, panel_rect);
-        }
-
         // 10b. TopBar dropdowns — the File menu and the export quick menu
         //      (bodies in `paint_chrome_menus.rs`). Only one is open at a
         //      time; the file menu paints first so a stale flag can never
@@ -671,33 +589,8 @@ impl WidgetHostNative {
             dlg.paint(&mut *frame, &self.theme, &self.editor_state.editor_ui);
         }
 
-        // 10e. Sign-in modal — full-viewport scrim + centred card.
-        if !touch_presenting {
-            self.paint_login_modal_overlay(frame, viewport_width, viewport_height);
-        }
-
-        // 10f. Signed-in account dropdown — anchored under the TopBar
-        //      avatar button, no scrim (same tier as the file menu /
-        //      locale picker).
-        if !touch_presenting && ui.account_ui_available && ui.account_menu_open {
-            use de_editor_ui::widgets::account_menu::AccountMenu;
-            if let Some(menu) = AccountMenu::for_editor_ui(&self.editor_state.editor_ui) {
-                let menu_rect = de_editor_ui::widgets::touch_overlay_geometry::account_menu_rect(
-                    &self.editor_state,
-                    &menu,
-                    viewport_width,
-                );
-                let mut cx = PaintCx {
-                    backend: &mut *frame,
-                };
-                menu.paint(&mut cx, menu_rect);
-            }
-        }
-
         // 10a. Agent-settings modal — top-most overlay when open.
-        if !touch_presenting {
-            self.paint_agent_settings_modal_overlay(frame, viewport_width, viewport_height);
-        }
+        self.paint_agent_settings_modal_overlay(frame, viewport_width, viewport_height);
 
         // 10b. Color picker — floating overlay near the right rail.
         if let Some(state) = self.editor_state.ui.color_picker.clone() {
@@ -754,10 +647,6 @@ impl WidgetHostNative {
                 target,
             );
         }
-
-        // 13b. Mobile save-name dialog — modal above every touch surface;
-        //      matches its tier-0 position in the press ladder.
-        self.paint_save_name_dialog(frame, viewport_width, viewport_height);
 
         // Top-most overlay band — the diagnostics notice, the toast banner and
         // the missing-font modal, in that z-order. Split into a sibling at the

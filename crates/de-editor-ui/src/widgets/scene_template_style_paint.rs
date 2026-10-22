@@ -165,7 +165,7 @@ impl SceneTemplatePanel<'_> {
         // the name has to clear whichever of them is showing.
         let delete_visible = card.is_user && self.style_delete_visible(index);
         let corner_w = if delete_visible {
-            pin_w.max(self.style_delete_rect_for(rect).size.x + 8.0)
+            pin_w.max(Self::style_delete_rect(rect).size.x + 8.0)
         } else {
             pin_w
         };
@@ -177,7 +177,7 @@ impl SceneTemplatePanel<'_> {
             self.theme.foreground,
         );
         if delete_visible {
-            self.paint_style_delete_button(cx, self.style_delete_rect_for(rect), index);
+            self.paint_style_delete_button(cx, Self::style_delete_rect(rect), index);
         } else if is_pinned {
             self.paint_text(
                 cx,

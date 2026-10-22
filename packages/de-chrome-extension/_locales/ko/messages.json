@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "노드 $1개를 Design Editor로 가져왔습니다."
   },
-  "statusSendingAccount": {
-    "message": "내 계정으로 보내는 중…"
-  },
-  "statusSentToAccount": {
-    "message": "내 계정으로 보냈습니다: $1"
-  },
-  "statusSentLocalFallback": {
-    "message": "계정 세션이 만료되어 이 컴퓨터의 Design Editor로 보냈습니다: 노드 $1개를 가져왔습니다."
-  },
   "statusDownloaded": {
     "message": "저장했습니다: $1"
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "이번 캡처는 $1 MB를 초과하여 Design Editor의 스냅샷 경로가 거부합니다. [.op 다운로드]를 사용한 뒤 해당 파일을 Design Editor에서 여세요"
   },
-  "errorAccountTooLarge": {
-    "message": "이번 캡처는 $1 MB를 초과하여 계정 수신함이 거부합니다. 대신 이 기기로 전송하세요."
-  },
   "errorImport": {
     "message": "Design Editor이 스냅샷을 거부했습니다: $1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "요소 캡처를 사용할 수 없습니다: 확장 프로그램의 백그라운드 worker가 실행 중이 아닙니다. chrome://extensions의 확장 프로그램 카드에서 오류를 확인하고 build-wasm.sh를 다시 실행한 뒤 [새로고침]을 누르세요. ($1)"
-  },
-  "accountSignIn": {
-    "message": "로그인"
-  },
-  "accountSignOut": {
-    "message": "로그아웃"
-  },
-  "accountSignInOpened": {
-    "message": "새로 열린 페이지에서 로그인을 완료한 다음 이 팝업을 다시 여세요."
-  },
-  "accountSignedOut": {
-    "message": "Design Editor 계정에서 로그아웃했습니다."
-  },
-  "accountSignOutManual": {
-    "message": "새로 열린 계정 페이지에서 로그아웃을 완료하세요."
-  },
-  "accountUnavailable": {
-    "message": "Design Editor 계정에 연결할 수 없습니다: $1"
-  },
-  "errorAccountSignedOut": {
-    "message": "Design Editor 계정 세션이 만료되었습니다. 다시 로그인한 후 시도해 주세요."
-  },
-  "errorAccountForbidden": {
-    "message": "허브가 이 업로드의 출처 또는 세션 토큰을 거부했습니다. 다시 로그인한 후 시도해 주세요. ($1)"
-  },
-  "errorAccountQuota": {
-    "message": "계정 보관함이 가득 찼습니다. 최대 $1개 또는 $2 MB까지 저장됩니다. 계정 페이지에서 일부를 삭제한 후 다시 시도해 주세요. ($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "계정으로의 업로드가 너무 많습니다. 잠시 후 다시 시도해 주세요. ($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "계정으로의 업로드가 너무 많습니다. 약 $1분 후에 다시 시도해 주세요."
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "계정으로의 업로드가 너무 많습니다. 약 $1초 후에 다시 시도해 주세요."
-  },
-  "errorAccountRejected": {
-    "message": "Design Editor 계정이 스냅숏을 거부했습니다: $1"
-  },
-  "errorAccountUnavailable": {
-    "message": "Design Editor 계정이 지금은 캡처를 받을 수 없습니다 ($1). 잠시 후 다시 시도하거나 이 컴퓨터의 Design Editor로 보내세요."
-  },
-  "regionLabel": {
-    "message": "지역"
-  },
-  "regionCn": {
-    "message": "중국"
-  },
-  "regionGlobal": {
-    "message": "글로벌"
-  },
-  "deliveryLabel": {
-    "message": "보낼 대상"
-  },
-  "deliveryLocal": {
-    "message": "이 컴퓨터의 Design Editor"
-  },
-  "deliveryAccount": {
-    "message": "내 Design Editor 계정"
   }
 }

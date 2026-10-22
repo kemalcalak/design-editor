@@ -7,14 +7,14 @@
 //!
 //! The row has two modes and picks between them by MEASURING, never by
 //! a width threshold — see [`SlidesPanelTabs::new`]. Which tabs EXIST
-//! is the flow's decision ([`SlidesTabRow`]): the Chat tab is
-//! desktop-only, the slides tab needs boards, Layers is always there.
+//! is the flow's decision ([`SlidesTabRow`]): the Chat tab needs an
+//! editor-owned conversation, the slides tab needs boards, Layers is always there.
 
 use de_editor_core::{LeftPanelTab, SlidesPanelTarget};
 
 use super::{
     contains, TAB_FONT, TAB_GAP, TAB_ICON_GAP, TAB_ICON_SIZE, TAB_INSET_X, TAB_INSET_Y, TAB_PAD_X,
-    TAB_RADIUS, TAB_ROW_HEIGHT, TOUCH_SLIDES_TAB_ROW_HEIGHT, TOUCH_SLIDES_TAB_TARGET,
+    TAB_RADIUS, TAB_ROW_HEIGHT,
 };
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::text_metrics;
@@ -31,9 +31,7 @@ pub struct SlidesTabRow<'a> {
     pub chat_label: &'a str,
     pub layers_label: &'a str,
     pub slides_label: &'a str,
-    /// The Chat tab is desktop-only: touch chrome hosts the
-    /// conversation as its own bottom sheet, so the sheet's row keeps
-    /// the two tabs it has always had.
+    /// Whether the Chat tab is offered.
     pub chat_available: bool,
     /// The slides tab needs boards to list — see the flow's
     /// `slides_tab_available`.
@@ -104,23 +102,9 @@ impl SlidesPanelTabs {
     /// icons a few pixels early rather than painting a label that
     /// clips.
     pub fn new(panel: Rect, active: LeftPanelTab, tabs: &SlidesTabRow<'_>) -> Self {
-        Self::with_row_height(panel, active, tabs, TAB_ROW_HEIGHT)
-    }
-
-    /// Touch variant with a 52pt row and 44pt tab targets.
-    pub fn new_touch(panel: Rect, active: LeftPanelTab, tabs: &SlidesTabRow<'_>) -> Self {
-        Self::with_row_height(panel, active, tabs, TOUCH_SLIDES_TAB_ROW_HEIGHT)
-    }
-
-    fn with_row_height(
-        panel: Rect,
-        active: LeftPanelTab,
-        tabs: &SlidesTabRow<'_>,
-        row_height: f32,
-    ) -> Self {
         let row = Rect {
             origin: panel.origin,
-            size: Point2D::new(panel.size.x, row_height),
+            size: Point2D::new(panel.size.x, TAB_ROW_HEIGHT),
         };
         let shown = tabs.tabs();
         let widest = shown
@@ -153,13 +137,8 @@ impl SlidesPanelTabs {
     ) -> Vec<(LeftPanelTab, Rect)> {
         let inner_w = (row.size.x - TAB_INSET_X * 2.0).max(0.0);
         let x = row.origin.x + TAB_INSET_X;
-        let inset_y = if row.size.y > TAB_ROW_HEIGHT {
-            4.0
-        } else {
-            TAB_INSET_Y
-        };
-        let y = row.origin.y + inset_y;
-        let h = (row.size.y - inset_y * 2.0).max(0.0);
+        let y = row.origin.y + TAB_INSET_Y;
+        let h = (row.size.y - TAB_INSET_Y * 2.0).max(0.0);
 
         // Text mode: each tab takes the width of its OWN label, laid
         // left to right from the rail's inset. Equal thirds is what made
@@ -170,18 +149,10 @@ impl SlidesPanelTabs {
         // the words fit, so the total cannot overrun the rail.
         if text_mode {
             let mut cursor = 0.0_f32;
-            // A touch row still owes every tab a 44 pt target, so a short
-            // label's natural width is floored there.
-            let touch_floor = if row.size.y > TAB_ROW_HEIGHT {
-                TOUCH_SLIDES_TAB_TARGET
-            } else {
-                0.0
-            };
             return shown
                 .iter()
                 .map(|tab| {
                     let w = (estimated_text_width(tabs.label(*tab), TAB_FONT) + TAB_PAD_X * 2.0)
-                        .max(touch_floor)
                         .min((inner_w - cursor).max(0.0));
                     let rect = Rect {
                         origin: Point2D::new(x + cursor, y),
@@ -197,34 +168,22 @@ impl SlidesPanelTabs {
         // shrink to their glyph. Laid out left to right from the inner
         // edge, so the row reads as a toolbar rather than stretched
         // halves with nothing in them.
-        let touch = row.size.y > TAB_ROW_HEIGHT;
-        let icon_only_w = if touch {
-            TOUCH_SLIDES_TAB_TARGET
-        } else {
-            TAB_ICON_SIZE + TAB_PAD_X * 2.0
-        };
+        let icon_only_w = TAB_ICON_SIZE + TAB_PAD_X * 2.0;
         let labelled_w = |label: &str| {
-            (TAB_ICON_SIZE + TAB_ICON_GAP + estimated_text_width(label, TAB_FONT) + TAB_PAD_X * 2.0)
-                .max(if touch { TOUCH_SLIDES_TAB_TARGET } else { 0.0 })
+            TAB_ICON_SIZE + TAB_ICON_GAP + estimated_text_width(label, TAB_FONT) + TAB_PAD_X * 2.0
         };
         // Even one pill can overrun a very narrow rail, so each tab is
-        // capped at what its predecessors left, minus the minimum
-        // target the tabs still to come need on touch.
+        // capped at what its predecessors left.
         let mut rects = Vec::with_capacity(shown.len());
         let mut cursor = 0.0_f32;
-        for (index, tab) in shown.iter().enumerate() {
+        for tab in shown.iter() {
             let remaining = (inner_w - cursor).max(0.0);
-            let reserve = if touch {
-                TOUCH_SLIDES_TAB_TARGET * (shown.len() - 1 - index) as f32
-            } else {
-                0.0
-            };
             let wanted = if *tab == active {
                 labelled_w(tabs.label(*tab))
             } else {
                 icon_only_w
             };
-            let w = wanted.min((remaining - reserve).max(0.0));
+            let w = wanted.min(remaining);
             rects.push((
                 *tab,
                 Rect {

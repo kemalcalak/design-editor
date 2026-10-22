@@ -10,8 +10,8 @@ use crate::codegen_session::{CodegenDelta, CodegenSession};
 /// The components are the concrete host's whole-state epoch,
 /// [`de_editor_core::EditorState`]'s document generation, and
 /// [`de_editor_core::codegen::CodegenState::document_reset_epoch`]. The third
-/// value covers collaboration installs/rollbacks that intentionally preserve
-/// the broader editor document generation.
+/// value covers document resets that intentionally preserve the broader
+/// editor document generation.
 pub type CodegenDocumentIdentity = (u64, u64, u64);
 
 /// The completed result kept host-side for Download.
@@ -77,7 +77,7 @@ impl CodegenResults {
 /// Cancel and retire a session captured against a superseded document.
 ///
 /// Returns `true` only when a stale session was removed. This is useful both
-/// before a new launch and from render-free mobile background pumps.
+/// before a new launch and from a pump that runs without rendering.
 pub fn retire_stale_codegen_session(
     current: &mut Option<CodegenSession>,
     live_identity: CodegenDocumentIdentity,

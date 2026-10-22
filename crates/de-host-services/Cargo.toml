@@ -16,13 +16,6 @@ default = []
 mcp-debug-tools = ["de-mcp/debug-tools", "de-chat-agent/mcp-debug-tools"]
 # Production release lane; forwarded by de-host-web-server.
 pinned-skia-binaries = ["skia-safe/no-compile"]
-# Dev-only collaboration tickets for the serve-web daemon, mirroring
-# de-host-desktop's flag of the same name: links the locally built ABI-v2
-# op-auth archive (debug profile only; see de-auth-bridge/README).
-dev-op-auth-abi-v2 = [
-  "de-auth-bridge/dev-abi-v2",
-  "de-collab-host/dev-op-auth-abi-v2",
-]
 
 [dependencies]
 # --- workspace path deps (the headless daemon's closure; modules land in
@@ -34,8 +27,6 @@ de-figma = { path = "../de-figma" }
 de-html = { path = "../de-html" }
 de-editor-core = { path = "../de-editor-core" }
 de-builtin-model-discovery = { path = "../de-builtin-model-discovery" }
-# Device-login proxy for the web editor (prebuilt library or inert stub).
-de-auth-bridge = { path = "../de-auth-bridge" }
 de-config-store = { path = "../de-config-store" }
 de-editor-ui = { path = "../de-editor-ui" }
 de-editor-host-core = { path = "../de-editor-host-core", features = [
@@ -44,7 +35,7 @@ de-editor-host-core = { path = "../de-editor-host-core", features = [
 de-mcp = { path = "../de-mcp", features = ["script"] }
 de-ai = { path = "../de-ai" }
 # The builtin-provider agent loop + canvas/design tool surface, factored out
-# so mobile hosts share it; this crate re-exports it under the original paths.
+# into its own crate; this crate re-exports it under the original paths.
 de-chat-agent = { path = "../de-chat-agent" }
 de-ai-skills = { path = "../de-ai-skills" }
 de-orchestrator = { path = "../de-orchestrator" }
@@ -62,10 +53,6 @@ de-util = { path = "../de-util" }
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 agent = { path = "../../vendor/agent/crates/agent", default-features = false }
 anthropic-agent-sdk = { path = "../../vendor/anthropic-agent-sdk" }
-# Collaboration runtime — the daemon runs the same owner/guest actors the
-# desktop GUI runs, so a browser client gets real sessions instead of a
-# permanently `Unavailable` panel.
-de-collab-host = { path = "../de-collab-host" }
 
 # --- external (crates.io / forks) ---
 # Keep the product's explicit installed-CLI contract; the SDK's default
@@ -91,8 +78,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 base64 = "0.22"
 getrandom = "0.3"
-hmac = "0.12"
-sha2 = "0.10"
 tracing = { workspace = true }
 signal-hook = "0.3"
 
@@ -108,15 +93,8 @@ skia-safe = { version = "0.97.0", default-features = false, features = [
   "pdf",
 ] }
 
-# Unix signal handling for the online daemon's controlled shutdown. Already in
-# the dependency graph transitively; named here so the SIGTERM handler can use
-# it directly. Unix-only — the online daemon is a container deployment.
-[target.'cfg(unix)'.dependencies]
-libc = "0.2"
-
 [dev-dependencies]
-# Controlled collaboration fixtures so the collab_state tests can drive the
-# real begin -> install -> reject/fail path instead of asserting on a
-# hand-built outcome value. Dev-only: the normal dependency above (line 53)
-# stays feature-free, so nothing ships with `test-support` compiled in.
-de-collab-host = { path = "../de-collab-host", features = ["test-support"] }
+
+# Process-liveness probes in the subprocess / startup tests (`libc::kill`).
+[target.'cfg(unix)'.dev-dependencies]
+libc = "0.2"

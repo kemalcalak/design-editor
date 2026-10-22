@@ -159,7 +159,7 @@ impl EditorState {
     /// layouts where that tab is available; a retained Compact Code value is
     /// treated as Design.
     pub fn property_panel_visible(&self) -> bool {
-        if self.editor_ui.effective_property_tab() == crate::PropertyTab::Code {
+        if self.editor_ui.property_tab == crate::PropertyTab::Code {
             return true;
         }
         if self.selection.set.is_empty() {

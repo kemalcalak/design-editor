@@ -1,5 +1,5 @@
 //! Browser-origin screening for the daemon's sensitive POST routes
-//! (credentials / AI / auth / figma): same-origin by default, widened only
+//! (credentials / AI / figma): same-origin by default, widened only
 //! by the explicit `DESIGN_EDITOR_WEB_ALLOWED_ORIGINS` allowlist. Split out of
 //! `web_canvas_server.rs` to keep the spine under the 800-line cap.
 
@@ -9,12 +9,6 @@ pub(super) fn is_sensitive_browser_post(request: &crate::mcp_serve::HttpRequest)
     request.method == "POST"
         && (request.path == "/api/settings/credentials"
             || request.path.starts_with("/api/ai/")
-            || request
-                .path
-                .starts_with(de_editor_core::auth_routes::API_PREFIX)
-            || request
-                .path
-                .starts_with(de_editor_core::collab_routes::API_PREFIX)
             || request.path.starts_with("/api/figma/"))
 }
 

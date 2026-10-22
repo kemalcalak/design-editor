@@ -13,22 +13,6 @@ use de_editor_core::PropertyFocus;
 use jian_widgets::components::select::SelectHit;
 
 impl PropertyPanel {
-    /// Whether a physical point is in the Code tab's horizontal framework
-    /// strip. Native touch arbitration uses this one bounded query instead of
-    /// duplicating the panel's density coordinate mapping.
-    pub fn code_framework_strip_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        if !matches!(self.tab, de_editor_core::PropertyTab::Code) || !panel_rect.contains(point) {
-            return false;
-        }
-        let logical_rect = self.logical_rect(panel_rect);
-        let logical_point = self.logical_point(panel_rect, point);
-        let (top, bottom) = crate::widgets::property_panel_code::framework_row_band_for(
-            logical_rect.origin.y,
-            self.density_scale > 1.0,
-        );
-        logical_point.y >= top && logical_point.y <= bottom
-    }
-
     /// Map a physical surface point over the Code tab to its hover state.
     /// The panel-owned Codegen snapshot already carries logical scroll offsets.
     pub(crate) fn code_hover_at(
@@ -43,11 +27,10 @@ impl PropertyPanel {
             return (None, None);
         }
         crate::widgets::property_panel_code::code_hover_at_with_locale_for_touch(
-            self.logical_rect(panel_rect),
+            panel_rect,
             &self.codegen,
-            self.logical_point(panel_rect, point),
+            point,
             self.locale,
-            self.density_scale > 1.0,
         )
     }
 
@@ -57,11 +40,7 @@ impl PropertyPanel {
         if !matches!(self.tab, de_editor_core::PropertyTab::Code) {
             return None;
         }
-        crate::widgets::property_panel_code::code_text_offset_at(
-            self.logical_rect(panel_rect),
-            &self.codegen,
-            self.logical_point(panel_rect, point),
-        )
+        crate::widgets::property_panel_code::code_text_offset_at(panel_rect, &self.codegen, point)
     }
 
     /// Hit-test the flex / size buttons + checkboxes. Returns the
@@ -69,10 +48,7 @@ impl PropertyPanel {
     /// missed every clickable shape. Called AFTER `hit_test` so
     /// text inputs win over the action rects they overlap with.
     pub fn hit_test_action(&self, panel_rect: Rect, point: Point2D) -> Option<PropertyPanelAction> {
-        self.hit_test_action_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.hit_test_action_logical(panel_rect, point)
     }
 
     fn hit_test_action_logical(
@@ -87,8 +63,6 @@ impl PropertyPanel {
             panel_rect.origin.y,
             point,
             self.snapshot.widget.is_some(),
-            self.code_tab_available,
-            self.density_scale > 1.0,
         ) {
             return Some(PropertyPanelAction::SetPropertyTab(tab));
         }
@@ -102,7 +76,6 @@ impl PropertyPanel {
                 &self.codegen,
                 point,
                 self.locale,
-                self.density_scale > 1.0,
             );
         }
         if self.page_only {
@@ -250,10 +223,7 @@ impl PropertyPanel {
     /// `SetExportFormat`), matching `paint_select_popup`'s row walk,
     /// so it can drive the popup's hover highlight.
     pub fn export_picker_row_at(&self, panel_rect: Rect, point: Point2D) -> Option<usize> {
-        self.export_picker_row_at_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.export_picker_row_at_logical(panel_rect, point)
     }
 
     fn export_picker_row_at_logical(&self, panel_rect: Rect, point: Point2D) -> Option<usize> {
@@ -293,8 +263,7 @@ impl PropertyPanel {
         field: de_editor_core::ImageAdjustmentField,
         x: f32,
     ) -> Option<PropertyPanelAction> {
-        let point = self.logical_point(panel_rect, Point2D::new(x, panel_rect.origin.y));
-        let panel_rect = self.logical_rect(panel_rect);
+        let point = Point2D::new(x, panel_rect.origin.y);
         if self.is_multi || !self.image_fill_popover_open {
             return None;
         }
@@ -313,8 +282,7 @@ impl PropertyPanel {
         effect_index: usize,
         x: f32,
     ) -> Option<PropertyPanelAction> {
-        let point = self.logical_point(panel_rect, Point2D::new(x, panel_rect.origin.y));
-        let panel_rect = self.logical_rect(panel_rect);
+        let point = Point2D::new(x, panel_rect.origin.y);
         if self.is_multi {
             return None;
         }
@@ -348,10 +316,7 @@ impl PropertyPanel {
     }
 
     pub fn image_fill_popover_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        self.image_fill_popover_contains_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.image_fill_popover_contains_logical(panel_rect, point)
     }
 
     fn image_fill_popover_contains_logical(&self, panel_rect: Rect, point: Point2D) -> bool {
@@ -373,8 +338,6 @@ impl PropertyPanel {
         panel_rect: Rect,
         point: Point2D,
     ) -> Option<PropertyFocus> {
-        let point = self.logical_point(panel_rect, point);
-        let panel_rect = self.logical_rect(panel_rect);
         if self.is_multi || !self.image_fill_popover_open {
             return None;
         }
@@ -396,8 +359,6 @@ impl PropertyPanel {
     /// per-kind section filtering applied in `paint`, so rects
     /// after a skipped section don't drift out of alignment.
     pub fn hit_test(&self, panel_rect: Rect, point: Point2D) -> Option<PropertyFocus> {
-        let point = self.logical_point(panel_rect, point);
-        let panel_rect = self.logical_rect(panel_rect);
         if self.is_multi {
             // Inputs inert in v1 multi-select aggregate view.
             return None;
@@ -431,10 +392,7 @@ impl PropertyPanel {
     /// drives the per-button `theme.button_hover` wash. Shares the
     /// walker geometry with `hit_test_action` + paint so it can't drift.
     pub fn action_hover_index(&self, panel_rect: Rect, point: Point2D) -> Option<usize> {
-        self.action_hover_index_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.action_hover_index_logical(panel_rect, point)
     }
 
     fn action_hover_index_logical(&self, panel_rect: Rect, point: Point2D) -> Option<usize> {
@@ -482,16 +440,12 @@ impl PropertyPanel {
         panel_rect: Rect,
         point: Point2D,
     ) -> Option<de_editor_core::PropertyTab> {
-        let point = self.logical_point(panel_rect, point);
-        let panel_rect = self.logical_rect(panel_rect);
         sections::tab_strip_hit(
             &self.labels,
             panel_rect.origin.x,
             panel_rect.origin.y,
             point,
             self.snapshot.widget.is_some(),
-            self.code_tab_available,
-            self.density_scale > 1.0,
         )
     }
 }

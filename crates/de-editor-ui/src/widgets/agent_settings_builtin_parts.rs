@@ -2,7 +2,6 @@
 
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
-use crate::widgets::settings_form::ellipsize;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
 use de_editor_core::agent_settings::{
@@ -15,11 +14,6 @@ const FIELD_H: f32 = 24.0;
 const PRESET_MENU_ITEM_H: f32 = 24.0;
 const PRESET_MENU_PAD: f32 = 4.0;
 const PRESET_MENU_MAX_VISIBLE_ITEMS: usize = 8;
-const TOUCH_FIELD_LABEL_W: f32 = 84.0;
-const TOUCH_FIELD_H: f32 = 44.0;
-const TOUCH_PRESET_MENU_ITEM_H: f32 = 44.0;
-const TOUCH_PRESET_MENU_PAD: f32 = 6.0;
-const TOUCH_PRESET_MENU_MAX_VISIBLE_ITEMS: usize = 6;
 struct KindOption {
     label: &'static str,
     kind: BuiltinAgentKind,
@@ -49,27 +43,8 @@ pub fn paint_kind_toggle(
     theme: &Theme,
     agent: &BuiltinAgentConfig,
     card: Rect,
-    api_format_label: &str,
-    touch: bool,
 ) {
     let options = kind_options(agent);
-    if touch {
-        paint_touch_field_label(cx, theme, card, api_format_label, kind_rect(card, true));
-    }
-    if touch && options.len() == 1 {
-        let rect = kind_rect(card, true);
-        cx.backend.fill_round_rect(rect, 10.0, theme.card);
-        cx.backend.stroke_round_rect(rect, 10.0, theme.border, 1.0);
-        draw_text(
-            cx,
-            options[0].label,
-            15.0,
-            theme.foreground,
-            rect.origin.x + 12.0,
-            jian_widgets::centered_text_baseline_y(rect, 15.0),
-        );
-        return;
-    }
     let labels: Vec<&str> = options.iter().map(|o| o.label).collect();
     let active = options
         .iter()
@@ -80,11 +55,11 @@ pub fn paint_kind_toggle(
         icons: None,
         active,
         hover: None,
-        font_size: if touch { 14.0 } else { 10.0 },
+        font_size: 10.0,
     }
     .paint(
         cx.backend,
-        kind_rect(card, touch),
+        kind_rect(card),
         &crate::widgets::button::tokens_from_theme(theme),
     );
 }
@@ -93,11 +68,10 @@ pub fn kind_toggle_target(
     agent: &BuiltinAgentConfig,
     card: Rect,
     point: Point2D,
-    touch: bool,
 ) -> Option<BuiltinAgentKind> {
     let options = kind_options(agent);
     let idx = jian_widgets::components::toggle_group::ToggleGroup::segment_at(
-        kind_rect(card, touch),
+        kind_rect(card),
         options.len(),
         point,
     )?;
@@ -124,26 +98,16 @@ pub fn paint_provider_select(
     agent: &BuiltinAgentConfig,
     card: Rect,
     provider_label: &str,
-    touch: bool,
 ) {
-    let input = provider_select_rect(card, touch);
-    let label_size = if touch { 14.0 } else { 11.0 };
-    let label_y = if touch {
-        jian_widgets::centered_text_baseline_y(input, label_size)
-    } else {
-        input.origin.y + 16.0
-    };
-    let provider_label = if touch {
-        ellipsize(cx, provider_label, TOUCH_FIELD_LABEL_W - 8.0, label_size)
-    } else {
-        provider_label.to_string()
-    };
+    let input = provider_select_rect(card);
+    let label_size = 11.0;
+    let label_y = input.origin.y + 16.0;
     draw_text(
         cx,
-        &provider_label,
+        provider_label,
         label_size,
         theme.muted_foreground,
-        card.origin.x + if touch { 16.0 } else { 12.0 },
+        card.origin.x + 12.0,
         label_y,
     );
     jian_widgets::components::select_trigger::SelectTrigger {
@@ -153,7 +117,7 @@ pub fn paint_provider_select(
         hovered: false,
         pressed: false,
         enabled: true,
-        font_size: if touch { 15.0 } else { 11.0 },
+        font_size: 11.0,
         bordered: true,
     }
     .paint(
@@ -170,7 +134,6 @@ pub fn paint_preset_menu(
     agent: &BuiltinAgentConfig,
     index: Option<usize>,
     card: Rect,
-    touch: bool,
 ) {
     let target = match index {
         Some(index) => BuiltinAgentPresetMenuTarget::Agent(index),
@@ -179,11 +142,9 @@ pub fn paint_preset_menu(
     if settings.builtin_preset_menu_open != Some(target) {
         return;
     }
-    let menu = preset_menu_rect(card, touch);
-    cx.backend
-        .fill_round_rect(menu, if touch { 10.0 } else { 6.0 }, theme.card);
-    cx.backend
-        .stroke_round_rect(menu, if touch { 10.0 } else { 6.0 }, theme.border, 1.0);
+    let menu = preset_menu_rect(card);
+    cx.backend.fill_round_rect(menu, 6.0, theme.card);
+    cx.backend.stroke_round_rect(menu, 6.0, theme.border, 1.0);
     cx.backend.save();
     cx.backend.clip_rect(menu);
     cx.backend.translate(Point2D::new(
@@ -191,23 +152,21 @@ pub fn paint_preset_menu(
         -settings.builtin_preset_menu_scroll.offset,
     ));
     for (i, preset) in BUILTIN_AGENT_PRESETS.iter().enumerate() {
-        let item = preset_item_rect(card, i, touch);
+        let item = preset_item_rect(card, i);
         let active = agent.preset == preset.key;
         let hovered = settings.builtin_preset_menu_hover == Some(preset.key);
         if active {
-            cx.backend
-                .fill_round_rect(item, if touch { 8.0 } else { 5.0 }, theme.muted);
+            cx.backend.fill_round_rect(item, 5.0, theme.muted);
         } else if hovered {
-            cx.backend
-                .fill_round_rect(item, if touch { 8.0 } else { 5.0 }, theme.button_hover);
+            cx.backend.fill_round_rect(item, 5.0, theme.button_hover);
         }
         if active {
-            let icon_size = if touch { 18.0 } else { 12.0 };
+            let icon_size = 12.0;
             draw_icon(
                 cx.backend,
                 Icon::Check,
                 Point2D::new(
-                    item.origin.x + if touch { 12.0 } else { 8.0 },
+                    item.origin.x + 8.0,
                     item.origin.y + (item.size.y - icon_size) / 2.0,
                 ),
                 icon_size,
@@ -215,22 +174,18 @@ pub fn paint_preset_menu(
                 1.7,
             );
         }
-        let font_size = if touch { 15.0 } else { 11.0 };
+        let font_size = 11.0;
         draw_text(
             cx,
             preset.display_name,
             font_size,
             theme.foreground,
-            item.origin.x + if touch { 44.0 } else { 28.0 },
-            if touch {
-                jian_widgets::centered_text_baseline_y(item, font_size)
-            } else {
-                item.origin.y + 16.0
-            },
+            item.origin.x + 28.0,
+            item.origin.y + 16.0,
         );
     }
     cx.backend.restore();
-    paint_menu_scrollbar(cx, theme, menu, settings.builtin_preset_menu_scroll, touch);
+    paint_menu_scrollbar(cx, theme, menu, settings.builtin_preset_menu_scroll);
 }
 
 pub fn paint_key_glyph(cx: &mut PaintCx<'_>, theme: &Theme, avatar: Rect) {
@@ -266,24 +221,16 @@ pub fn paint_key_glyph(cx: &mut PaintCx<'_>, theme: &Theme, avatar: Rect) {
     );
 }
 
-pub fn provider_select_rect(card: Rect, touch: bool) -> Rect {
-    let (pad_x, label_w, y, height) = if touch {
-        (16.0, TOUCH_FIELD_LABEL_W, 108.0, TOUCH_FIELD_H)
-    } else {
-        (12.0, FIELD_LABEL_W, 48.0, FIELD_H)
-    };
+pub fn provider_select_rect(card: Rect) -> Rect {
+    let (pad_x, label_w, y, height) = (12.0, FIELD_LABEL_W, 48.0, FIELD_H);
     Rect {
         origin: Point2D::new(card.origin.x + pad_x + label_w, card.origin.y + y),
         size: Point2D::new(card.size.x - pad_x * 2.0 - label_w, height),
     }
 }
 
-pub fn kind_rect(card: Rect, touch: bool) -> Rect {
-    let (right, top, width, height) = if touch {
-        (16.0, 56.0, card.size.x - 32.0 - TOUCH_FIELD_LABEL_W, 44.0)
-    } else {
-        (16.0, 10.0, 156.0, 24.0)
-    };
+pub fn kind_rect(card: Rect) -> Rect {
+    let (right, top, width, height) = (16.0, 10.0, 156.0, 24.0);
     Rect {
         origin: Point2D::new(
             card.origin.x + card.size.x - right - width,
@@ -293,68 +240,33 @@ pub fn kind_rect(card: Rect, touch: bool) -> Rect {
     }
 }
 
-fn paint_touch_field_label(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    card: Rect,
-    label: &str,
-    input: Rect,
-) {
-    let font_size = 14.0;
-    let label_x = card.origin.x + 16.0;
-    let shown = ellipsize(
-        cx,
-        label,
-        (input.origin.x - label_x - 8.0).max(0.0),
-        font_size,
-    );
-    draw_text(
-        cx,
-        &shown,
-        font_size,
-        theme.muted_foreground,
-        label_x,
-        jian_widgets::centered_text_baseline_y(input, font_size),
-    );
-}
-
-pub fn preset_menu_height(settings: &AgentSettings, index: Option<usize>, touch: bool) -> f32 {
+pub fn preset_menu_height(settings: &AgentSettings, index: Option<usize>) -> f32 {
     let target = match index {
         Some(index) => BuiltinAgentPresetMenuTarget::Agent(index),
         None => BuiltinAgentPresetMenuTarget::Draft,
     };
     if settings.builtin_preset_menu_open == Some(target) {
-        preset_menu_view_height(touch) + if touch { 8.0 } else { 6.0 }
+        preset_menu_view_height() + 6.0
     } else {
         0.0
     }
 }
 
-pub fn preset_at(
-    card: Rect,
-    point: Point2D,
-    scroll: f32,
-    touch: bool,
-) -> Option<BuiltinAgentPresetKey> {
-    let index = preset_index_at(card, point, scroll, touch)?;
+pub fn preset_at(card: Rect, point: Point2D, scroll: f32) -> Option<BuiltinAgentPresetKey> {
+    let index = preset_index_at(card, point, scroll)?;
     BUILTIN_AGENT_PRESETS.get(index).map(|preset| preset.key)
 }
 
-pub fn preset_hover_at(
-    card: Rect,
-    point: Point2D,
-    scroll: f32,
-    touch: bool,
-) -> Option<BuiltinAgentPresetKey> {
-    preset_at(card, point, scroll, touch)
+pub fn preset_hover_at(card: Rect, point: Point2D, scroll: f32) -> Option<BuiltinAgentPresetKey> {
+    preset_at(card, point, scroll)
 }
 
-pub fn preset_scroll_max(touch: bool) -> f32 {
-    (preset_content_height(touch) - preset_menu_view_height(touch)).max(0.0)
+pub fn preset_scroll_max() -> f32 {
+    (preset_content_height() - preset_menu_view_height()).max(0.0)
 }
 
-pub fn preset_menu_contains(card: Rect, point: Point2D, touch: bool) -> bool {
-    (preset_menu_rect(card, touch)).contains(point)
+pub fn preset_menu_contains(card: Rect, point: Point2D) -> bool {
+    (preset_menu_rect(card)).contains(point)
 }
 
 fn preset_label(key: BuiltinAgentPresetKey) -> &'static str {
@@ -365,37 +277,26 @@ fn preset_label(key: BuiltinAgentPresetKey) -> &'static str {
         .unwrap_or("Custom")
 }
 
-pub fn preset_menu_rect(card: Rect, touch: bool) -> Rect {
-    let base = provider_select_rect(card, touch);
-    let menu = preset_menu_rect_from_y(
-        base.origin.y + base.size.y + if touch { 8.0 } else { 4.0 },
-        touch,
-    );
+pub fn preset_menu_rect(card: Rect) -> Rect {
+    let base = provider_select_rect(card);
+    let menu = preset_menu_rect_from_y(base.origin.y + base.size.y + 4.0);
     Rect {
         origin: Point2D::new(base.origin.x, menu.origin.y),
         size: Point2D::new(base.size.x, menu.size.y),
     }
 }
 
-fn preset_menu_rect_from_y(y: f32, touch: bool) -> Rect {
+fn preset_menu_rect_from_y(y: f32) -> Rect {
     Rect {
         origin: Point2D::new(0.0, y),
-        size: Point2D::new(0.0, preset_menu_view_height(touch)),
+        size: Point2D::new(0.0, preset_menu_view_height()),
     }
 }
 
-fn preset_item_rect(card: Rect, index: usize, touch: bool) -> Rect {
-    let menu = preset_menu_rect(card, touch);
-    let pad = if touch {
-        TOUCH_PRESET_MENU_PAD
-    } else {
-        PRESET_MENU_PAD
-    };
-    let item_h = if touch {
-        TOUCH_PRESET_MENU_ITEM_H
-    } else {
-        PRESET_MENU_ITEM_H
-    };
+fn preset_item_rect(card: Rect, index: usize) -> Rect {
+    let menu = preset_menu_rect(card);
+    let pad = PRESET_MENU_PAD;
+    let item_h = PRESET_MENU_ITEM_H;
     Rect {
         origin: Point2D::new(
             menu.origin.x + pad,
@@ -405,22 +306,14 @@ fn preset_item_rect(card: Rect, index: usize, touch: bool) -> Rect {
     }
 }
 
-fn preset_index_at(card: Rect, point: Point2D, scroll: f32, touch: bool) -> Option<usize> {
-    if !preset_menu_contains(card, point, touch) {
+fn preset_index_at(card: Rect, point: Point2D, scroll: f32) -> Option<usize> {
+    if !preset_menu_contains(card, point) {
         return None;
     }
-    let menu = preset_menu_rect(card, touch);
-    let pad = if touch {
-        TOUCH_PRESET_MENU_PAD
-    } else {
-        PRESET_MENU_PAD
-    };
-    let item_h = if touch {
-        TOUCH_PRESET_MENU_ITEM_H
-    } else {
-        PRESET_MENU_ITEM_H
-    };
-    let local_y = point.y - menu.origin.y - pad + scroll.clamp(0.0, preset_scroll_max(touch));
+    let menu = preset_menu_rect(card);
+    let pad = PRESET_MENU_PAD;
+    let item_h = PRESET_MENU_ITEM_H;
+    let local_y = point.y - menu.origin.y - pad + scroll.clamp(0.0, preset_scroll_max());
     if local_y < 0.0 {
         return None;
     }
@@ -429,22 +322,13 @@ fn preset_index_at(card: Rect, point: Point2D, scroll: f32, touch: bool) -> Opti
     (inside_row && index < BUILTIN_AGENT_PRESETS.len()).then_some(index)
 }
 
-fn preset_content_height(touch: bool) -> f32 {
-    if touch {
-        TOUCH_PRESET_MENU_PAD * 2.0 + BUILTIN_AGENT_PRESETS.len() as f32 * TOUCH_PRESET_MENU_ITEM_H
-    } else {
-        PRESET_MENU_PAD * 2.0 + BUILTIN_AGENT_PRESETS.len() as f32 * PRESET_MENU_ITEM_H
-    }
+fn preset_content_height() -> f32 {
+    PRESET_MENU_PAD * 2.0 + BUILTIN_AGENT_PRESETS.len() as f32 * PRESET_MENU_ITEM_H
 }
 
-fn preset_menu_view_height(touch: bool) -> f32 {
-    let max_h = if touch {
-        TOUCH_PRESET_MENU_PAD * 2.0
-            + TOUCH_PRESET_MENU_MAX_VISIBLE_ITEMS as f32 * TOUCH_PRESET_MENU_ITEM_H
-    } else {
-        PRESET_MENU_PAD * 2.0 + PRESET_MENU_MAX_VISIBLE_ITEMS as f32 * PRESET_MENU_ITEM_H
-    };
-    preset_content_height(touch).min(max_h)
+fn preset_menu_view_height() -> f32 {
+    let max_h = PRESET_MENU_PAD * 2.0 + PRESET_MENU_MAX_VISIBLE_ITEMS as f32 * PRESET_MENU_ITEM_H;
+    preset_content_height().min(max_h)
 }
 
 fn paint_menu_scrollbar(
@@ -452,16 +336,10 @@ fn paint_menu_scrollbar(
     theme: &Theme,
     menu: Rect,
     scroll: jian_core::scroll::ScrollState,
-    touch: bool,
 ) {
-    let content_h = preset_content_height(touch);
+    let content_h = preset_content_height();
     let track_h = (menu.size.y - 8.0).max(0.0);
-    let Some(thumb_geom) = scroll.thumb(
-        track_h,
-        content_h,
-        menu.size.y,
-        if touch { 44.0 } else { 24.0 },
-    ) else {
+    let Some(thumb_geom) = scroll.thumb(track_h, content_h, menu.size.y, 24.0) else {
         return;
     };
     let thumb = Rect {
@@ -505,7 +383,7 @@ mod tests {
         let full_h =
             PRESET_MENU_PAD * 2.0 + BUILTIN_AGENT_PRESETS.len() as f32 * PRESET_MENU_ITEM_H + 6.0;
 
-        let capped_h = preset_menu_height(&settings, None, false);
+        let capped_h = preset_menu_height(&settings, None);
 
         assert!(
             capped_h < full_h,
@@ -513,7 +391,7 @@ mod tests {
         );
         assert!(capped_h <= PRESET_MENU_PAD * 2.0 + PRESET_MENU_ITEM_H * 8.0 + 6.0);
         settings.builtin_preset_menu_open = Some(BuiltinAgentPresetMenuTarget::Agent(0));
-        assert_eq!(preset_menu_height(&settings, None, false), 0.0);
+        assert_eq!(preset_menu_height(&settings, None), 0.0);
     }
 
     #[test]
@@ -533,23 +411,19 @@ mod tests {
             enabled: true,
         };
         let openai_half = Point2D::new(
-            kind_rect(card, false).origin.x + 120.0,
-            kind_rect(card, false).origin.y + 12.0,
+            kind_rect(card).origin.x + 120.0,
+            kind_rect(card).origin.y + 12.0,
         );
-        assert_eq!(
-            kind_toggle_target(&anthropic, card, openai_half, false),
-            None
-        );
-        let touch_kind = kind_rect(card, true);
+        assert_eq!(kind_toggle_target(&anthropic, card, openai_half), None);
+        let kind = kind_rect(card);
         assert_eq!(
             kind_toggle_target(
                 &anthropic,
                 card,
-                Point2D::new(touch_kind.origin.x + 44.0, touch_kind.origin.y + 22.0),
-                true,
+                Point2D::new(kind.origin.x + 44.0, kind.origin.y + 22.0),
             ),
             None,
-            "a single supported API format must stay read-only on touch"
+            "a single supported API format must stay read-only"
         );
 
         let openai = BuiltinAgentConfig {
@@ -563,18 +437,15 @@ mod tests {
             enabled: true,
         };
         let anthropic_half = Point2D::new(
-            kind_rect(card, false).origin.x + 30.0,
-            kind_rect(card, false).origin.y + 12.0,
+            kind_rect(card).origin.x + 30.0,
+            kind_rect(card).origin.y + 12.0,
         );
-        assert_eq!(
-            kind_toggle_target(&openai, card, anthropic_half, false),
-            None
-        );
+        assert_eq!(kind_toggle_target(&openai, card, anthropic_half), None);
 
         let mut minimax = anthropic.clone();
         minimax.preset = BuiltinAgentPresetKey::MiniMax;
         minimax.display_name = "MiniMax".into();
-        let target = kind_toggle_target(&minimax, card, openai_half, false);
+        let target = kind_toggle_target(&minimax, card, openai_half);
         assert_eq!(target, Some(BuiltinAgentKind::OpenAiCompat));
     }
 }

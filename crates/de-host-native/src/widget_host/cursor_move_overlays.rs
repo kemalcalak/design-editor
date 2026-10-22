@@ -79,11 +79,6 @@ impl WidgetHostNative {
                 }
             }
         }
-        // Collaboration paints above Git and ordinary dropdowns, but below
-        // the path/layer context menus resolved above.
-        if let Some(consumed) = self.cursor_move_collab_panel(ctx) {
-            return Some(consumed);
-        }
         // Git is painted and pressed above Chat. Update both Git views before
         // the picker and keep an unchanged point inside the Git footprint from
         // leaking into the picker behind it.
@@ -396,7 +391,7 @@ impl WidgetHostNative {
             || self.chat_resize.is_some()
             || self.chat_drag.is_some()
             || self.drag.is_some();
-        if !late_pointer_capture_active && !self.editor_state.editor_ui.touch_chrome() {
+        if !late_pointer_capture_active {
             let over_align = !over_topmost
                 && self
                     .align_toolbar_rect(self.last_viewport_w, self.last_viewport_h)

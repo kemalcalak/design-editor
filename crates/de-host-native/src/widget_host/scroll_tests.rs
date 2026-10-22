@@ -44,7 +44,7 @@ fn layer_panel_trackpad_pan_scrolls_horizontally() {
         // Through the host's own rect, not a hand-built one: a document
         // with top-level frames shows the rail's tab row, and the tree
         // starts below it.
-        let regions = panel.regions(host.layers_content_rect(viewport_w, viewport_h));
+        let regions = panel.regions(host.layers_content_rect(viewport_h));
         assert!(regions.layers.max_horizontal_offset > 0.0);
 
         assert!(host.apply_pan_gesture(
@@ -210,17 +210,6 @@ fn model_menu_wheel_recomputes_the_stationary_pointer_hover() {
         settings.builtin_model_menu_hover,
         Some(2),
         "the same screen point now covers the third model row"
-    );
-
-    host.editor_state_mut().editor_ui.touch = true;
-    host.refresh_agent_settings_hover_after_scroll(point.x, point.y);
-    assert_eq!(
-        host.editor_state()
-            .editor_ui
-            .agent_settings
-            .builtin_model_menu_hover,
-        None,
-        "touch scrolling must not leave a persistent hover wash"
     );
 }
 

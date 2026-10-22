@@ -55,8 +55,7 @@ gh attestation verify <downloaded-file> --repo kemalcalak/design-editor
 
 Design Editor is a local-first design tool. The application does not collect or
 transmit personal data or telemetry. Network access happens only for features
-the user explicitly invokes (e.g. optional AI providers, collaboration, or
-image search), using endpoints the user configures or enables.
+the user explicitly invokes (e.g. optional AI providers or image search), using endpoints the user configures or enables.
 
 ## Team
 

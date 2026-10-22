@@ -146,13 +146,6 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
             .editor_state_mut()
             .editor_ui
             .style_import_file_picker_supported = true;
-        // Online / hub-served mode: a `?tenant=` page URL means the hub is
-        // serving this editor at its own origin, so its `/mcp-tokens`
-        // portal page is reachable. Reveal the "MCP Tokens" row in the
-        // signed-in account dropdown. Self-hosted serve-web (no tenant) and
-        // native desktop leave this false so the row never appears there.
-        b.host.editor_state_mut().editor_ui.account_mcp_tokens_entry =
-            crate::daemon_base::tenant_param().is_some();
         // First frame paints synchronously so the shell is visible immediately
         // (no one-frame blank). Subsequent input-driven repaints coalesce
         // through the rAF installed below.
@@ -241,15 +234,6 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
     // Mirror the daemon's agent-indicator registry so design runs paint
     // their agent borders / badges / reveal animations on web too.
     crate::agent_indicator_sync::start(&inner);
-    // Device-login relay: seed `account_ui_available` + any session the
-    // daemon restored (shared with the desktop GUI), then drive login
-    // flows through the daemon's `/api/auth/*` proxy.
-    crate::web_auth_sync::start(&inner);
-    // Collaboration relay. Starts here rather than inside the sync-reset
-    // completion because it neither reads nor writes the document — it drives
-    // `editor_ui.collab` only — and the panel should report availability as
-    // soon as the daemon can answer, not one bootstrap later.
-    crate::collab_sync::start(&inner);
     // 4. Reset the daemon's transient sync document, THEN emit the managed
     //    `ready` reply and start the live-sync ticks. The reset must complete
     //    FIRST for two reasons:

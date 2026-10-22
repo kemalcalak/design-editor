@@ -75,13 +75,9 @@ pub fn run_cli_mode(prog: &str, mode: &str, mut args: impl Iterator<Item = Strin
                     return Some(1);
                 }
             }
-            // The online daemon is multi-tenant and must not install host-user
-            // material into a process-global registry. Its MCP profile also
-            // refuses user-template tools; local and managed daemons load the
-            // standard native collection before accepting any request.
-            if !options.online {
-                crate::user_scene_template_store::initialize_user_scene_templates_once();
-            }
+            // Load the standard native user-template collection before
+            // accepting any request.
+            crate::user_scene_template_store::initialize_user_scene_templates_once();
             if let Err(e) = crate::web_canvas_server::run_web_canvas(options) {
                 eprintln!("{prog} --serve-web: {e}");
                 return Some(1);

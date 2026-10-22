@@ -17,7 +17,6 @@ impl WidgetHost {
             || eui.variable_row_focus.is_some()
             || eui.variables_theme_rename_axis.is_some()
             || eui.variables_variant_rename_value.is_some()
-            || eui.collab.panel.join_address_focused
             || eui.preset_name_input_active()
             || self.variables_search_active()
             || eui.agent_settings.focus.is_some()
@@ -64,9 +63,6 @@ impl WidgetHost {
         self.editor_state.editor_ui.variables_search_focus = false;
         // Settings-modal inputs (MCP port, agent / image-gen fields).
         self.commit_settings_focus();
-        // Collaboration Join field has no committed draft; another surface
-        // taking focus always drops its caret, including stale focus.
-        self.editor_state.editor_ui.blur_collab_join_input();
         // Preset save-as-name input discards on blur, matching native
         // and TS outside-mousedown behavior.
         self.editor_state.editor_ui.variables_preset_name_focus = false;

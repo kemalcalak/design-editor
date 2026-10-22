@@ -90,7 +90,7 @@ pub(super) const TITLE_SIZE: f32 = 24.0;
 pub(super) const TAB_ROW_H: f32 = 48.0;
 pub(super) const SEARCH_ROW_H: f32 = 52.0;
 pub(super) const FILTER_ROW_H: f32 = 44.0;
-use crate::widgets::panel_control_metrics::CHIP_PAD_X;
+use crate::widgets::panel_control_metrics::{CHIP_GAP, CHIP_PAD_X};
 /// Every control in this panel measures against the shared ladder in
 /// `panel_control_metrics` rather than declaring its own box. The four
 /// aliases below exist only so the call sites already written against these
@@ -431,12 +431,10 @@ impl<'a> SceneTemplatePanel<'a> {
             .into_iter()
             .map(|tab| self.tab_label(tab))
             .collect();
-        let track_h = self.tab_track_height_for();
+        let track_h = super::panel_control_metrics::SEGMENT_TRACK_H;
         Rect::xywh(
             Self::content_rect(panel).origin.x,
-            panel.origin.y
-                + self.header_height_for(panel)
-                + (self.tab_row_height_for(panel) - track_h) / 2.0,
+            panel.origin.y + HEADER_H + (TAB_ROW_H - track_h) / 2.0,
             segment_track_width(labels.len(), segment_width_for(&labels)),
             track_h,
         )
@@ -482,7 +480,28 @@ impl<'a> SceneTemplatePanel<'a> {
     }
 
     pub(super) fn filter_chip_rects(&self, panel: Rect) -> Vec<(Rect, SceneFilter)> {
-        self.filter_chip_layout(panel).0
+        if self.tab() != AssetCenterTab::Templates {
+            return Vec::new();
+        }
+        let content = Self::content_rect(panel);
+        let row_top = panel.origin.y + HEADER_H + TAB_ROW_H + SEARCH_ROW_H;
+        let mut x = content.origin.x;
+        let mut rects = Vec::new();
+        for filter in self.filters() {
+            let width = chip_width(self.filter_label(filter)).min(content.size.x);
+            let rect = Rect::xywh(x, row_top + (FILTER_ROW_H - CHIP_H) / 2.0, width, CHIP_H);
+            rects.push((rect, filter));
+            x += width + CHIP_GAP;
+        }
+        rects
+    }
+
+    fn filter_row_height(&self) -> f32 {
+        if self.tab() == AssetCenterTab::Templates {
+            FILTER_ROW_H
+        } else {
+            0.0
+        }
     }
 
     /// Whether the prompt-to-deck row paints.
@@ -511,11 +530,7 @@ impl<'a> SceneTemplatePanel<'a> {
     }
 
     pub(super) fn generate_row_top(&self, panel: Rect) -> f32 {
-        panel.origin.y
-            + self.header_height_for(panel)
-            + self.tab_row_height_for(panel)
-            + self.search_row_height_for(panel)
-            + self.filter_row_height_for(panel)
+        panel.origin.y + HEADER_H + TAB_ROW_H + SEARCH_ROW_H + self.filter_row_height()
     }
 
     /// Topic field rect, or `None` when the row does not paint.
@@ -525,13 +540,13 @@ impl<'a> SceneTemplatePanel<'a> {
     /// about to be typed, and a row reads as one sentence only while the two
     /// stay on one line.
     pub fn generate_input_rect(&self, panel: Rect) -> Option<Rect> {
-        if !self.generate_row_visible_in(panel) {
+        if !self.generate_row_visible() {
             return None;
         }
         let content = Self::control_rect(panel);
         let reserved = basis_chip_reserved_width(self.basis_chip_rect(panel), GENERATE_GAP);
-        let input_h = self.generate_input_height_for();
-        let button_w = self.generate_button_width_for();
+        let input_h = GENERATE_INPUT_H;
+        let button_w = GENERATE_BUTTON_W;
         Some(Rect::xywh(
             content.origin.x + reserved,
             self.generate_row_top(panel) + 6.0,
@@ -546,13 +561,18 @@ impl<'a> SceneTemplatePanel<'a> {
         Some(Rect::xywh(
             input.origin.x + input.size.x + GENERATE_GAP,
             input.origin.y,
-            self.generate_button_width_for(),
-            self.generate_input_height_for(),
+            GENERATE_BUTTON_W,
+            GENERATE_INPUT_H,
         ))
     }
 
     pub(super) fn cards_top(&self, panel: Rect) -> f32 {
-        self.generate_row_top(panel) + self.generate_row_height_for(panel)
+        let generate_row_h = if self.generate_row_visible() {
+            GENERATE_ROW_H
+        } else {
+            0.0
+        };
+        self.generate_row_top(panel) + generate_row_h
     }
 
     pub fn cards_viewport(&self, panel: Rect) -> Rect {
@@ -576,13 +596,11 @@ impl<'a> SceneTemplatePanel<'a> {
     /// count so the two tabs do not disagree about how wide a card is.
     pub(super) fn grid_metrics(&self, panel: Rect) -> (usize, f32, f32) {
         let viewport_w = self.cards_viewport(panel).size.x;
-        let columns = self
-            .touch_grid_columns(viewport_w)
-            .unwrap_or_else(|| grid_columns(viewport_w));
+        let columns = grid_columns(viewport_w);
         let card_w = card_width(viewport_w, columns);
         let card_h = match self.tab() {
             AssetCenterTab::Templates => template_card_height(card_w),
-            AssetCenterTab::Styles => self.touch_style_card_height(),
+            AssetCenterTab::Styles => STYLE_CARD_H,
         };
         (columns, card_w, card_h)
     }

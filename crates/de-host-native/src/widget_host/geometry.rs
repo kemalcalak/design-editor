@@ -31,9 +31,6 @@ impl WidgetHostNative {
     /// True when the cursor is over either resize gutter — used by
     /// the runner to set `CursorIcon::EwResize`. None = no gutter.
     pub fn panel_resize_hover(&self, x: f32, y: f32, viewport_w: f32) -> Option<PanelResizeKind> {
-        if self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         // While the workspace is docked, the dock's own 5 px handle owns
         // the column's edge (and runs at a HIGHER press tier than this
         // gutter) — a second gutter over the same pixels would only race
@@ -111,56 +108,6 @@ impl WidgetHostNative {
         self.clear_lower_overlay_hover_impl(true)
     }
 
-    /// Clear hover feedback painted below the collaboration popover while
-    /// preserving the popover control resolved for this cursor event.
-    pub(in crate::widget_host) fn clear_hover_below_collab_panel(&mut self) -> bool {
-        let mut changed = false;
-        {
-            let ui = &mut self.editor_state.editor_ui;
-            changed |= ui.canvas_hover_node.take().is_some();
-            changed |= ui.hovered_layer_id.take().is_some();
-            changed |= ui.hovered_page_index.take().is_some();
-            changed |= ui.file_menu.hover.take().is_some();
-            changed |= ui.export_quick_menu_hover.take().is_some();
-            changed |= ui.locale_picker.hover.take().is_some();
-            changed |= ui.shape_picker.hover.take().is_some();
-            changed |= ui.fill_type_picker.hover.take().is_some();
-            changed |= ui.compositing_picker.hover.take().is_some();
-            changed |= ui.toolbar_hover.take().is_some();
-            changed |= ui.align_toolbar_hover.take().is_some();
-            changed |= ui.statusbar_hover.take().is_some();
-            changed |= ui.topbar_button_hover.take().is_some();
-            changed |= std::mem::take(&mut ui.topbar_traffic_hover);
-            changed |= ui.chat_model_picker.hover.take().is_some();
-            changed |= ui.chat_header_hover.take().is_some();
-            changed |= ui.chat_tab_hover.take().is_some();
-            changed |= ui.chat_design_block_hover.take().is_some();
-            changed |= ui.chat_footer_hover.take().is_some();
-            changed |= ui.clear_chat_style_chip_hover();
-            changed |= ui.chat_example_hover.take().is_some();
-            changed |= ui.parallel_agents_picker_hover.take().is_some();
-            changed |= ui.export_picker_hover.take().is_some();
-            changed |= ui.variables_panel_hover.take().is_some();
-            changed |= ui.variables_preset_menu_hover.take().is_some();
-            changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
-            let git = &mut ui.git_panel;
-            changed |= git.empty_hovered_card.take().is_some();
-            changed |= std::mem::take(&mut git.branch_button_hovered);
-            changed |= git.button_hover.take().is_some();
-            changed |= git.tracked_picker.hover.take().is_some();
-            changed |= git.branch_picker_menu.hover.take().is_some();
-            changed |= git.overflow_menu.hover.take().is_some();
-        }
-        changed |= self.editor_state.codegen.framework_hover.take().is_some();
-        changed |= self.editor_state.codegen.action_hover.take().is_some();
-        self.last_hover_probe = None;
-        if changed {
-            self.mark_dirty();
-        }
-        changed
-    }
-
     /// Clear hover state below the open chat model picker while preserving
     /// the picker's own active row.
     pub(in crate::widget_host) fn clear_hover_below_chat_model_picker(&mut self) -> bool {
@@ -213,7 +160,6 @@ impl WidgetHostNative {
         let mut changed = false;
         {
             let ui = &mut self.editor_state.editor_ui;
-            changed |= ui.collab.panel.hover.take().is_some();
             changed |= ui.chat_model_picker.hover.take().is_some();
             changed |= ui.chat_header_hover.take().is_some();
             changed |= ui.chat_tab_hover.take().is_some();
@@ -247,7 +193,6 @@ impl WidgetHostNative {
             changed |= ui.align_toolbar_hover.take().is_some();
             changed |= ui.topbar_button_hover.take().is_some();
             changed |= std::mem::take(&mut ui.topbar_traffic_hover);
-            changed |= ui.collab.panel.hover.take().is_some();
             if clear_chat_model_picker {
                 changed |= ui.chat_model_picker.hover.take().is_some();
             }
@@ -507,7 +452,7 @@ impl WidgetHostNative {
             && x >= 0.0
             && x <= panel_w
         {
-            let layer_rect = self.layers_content_rect(viewport_w, viewport_h);
+            let layer_rect = self.layers_content_rect(viewport_h);
             let panel = self.layer_panel();
             match panel.hit_test(layer_rect, point) {
                 Some(LayerPanelHit::Layer(id))
@@ -597,9 +542,6 @@ impl WidgetHostNative {
         viewport_w: f32,
         viewport_h: f32,
     ) -> Option<Rect> {
-        if self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         canvas_geometry::status_bar_rect(&self.editor_state, viewport_w, viewport_h)
     }
 
@@ -705,9 +647,6 @@ impl WidgetHostNative {
         viewport_w: f32,
         viewport_h: f32,
     ) -> Option<de_editor_ui::widgets::AlignToolbarHit> {
-        if self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         use de_editor_ui::widgets::AlignToolbar;
         let canvas_region =
             canvas_geometry::canvas_rect(&self.editor_state, viewport_w, viewport_h);

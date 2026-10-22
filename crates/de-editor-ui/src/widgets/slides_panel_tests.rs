@@ -32,12 +32,6 @@ const VI_ROW: SlidesTabRow<'static> = SlidesTabRow {
     chat_available: true,
     slides_available: true,
 };
-/// The touch row keeps two tabs — touch chrome hosts the chat as a
-/// sheet, so the Chat tab is not offered there.
-const TOUCH_ROW: SlidesTabRow<'static> = SlidesTabRow {
-    chat_available: false,
-    ..VI_ROW
-};
 
 fn tabs_at(width: f32, active: LeftPanelTab, row: &SlidesTabRow<'static>) -> SlidesPanelTabs {
     SlidesPanelTabs::new(rail(width), active, row)

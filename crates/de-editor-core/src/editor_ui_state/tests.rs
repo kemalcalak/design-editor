@@ -21,41 +21,6 @@ fn default_editor_ui_is_quiescent() {
 }
 
 #[test]
-fn code_property_tab_is_hidden_only_for_compact_touch_layouts() {
-    use crate::size_class::EditorSizeClass;
-
-    let mut ui = EditorUiState::new();
-    assert!(ui.code_property_tab_available());
-
-    ui.touch = true;
-    ui.size_class = EditorSizeClass::Compact;
-    assert!(!ui.code_property_tab_available());
-
-    ui.size_class = EditorSizeClass::Medium;
-    assert!(ui.code_property_tab_available());
-
-    ui.size_class = EditorSizeClass::Expanded;
-    assert!(ui.code_property_tab_available());
-}
-
-#[test]
-fn compact_legacy_code_tab_presents_and_dispatches_as_design() {
-    use crate::size_class::EditorSizeClass;
-
-    let mut ui = EditorUiState::new();
-    ui.touch = true;
-    ui.size_class = EditorSizeClass::Compact;
-    ui.property_tab = PropertyTab::Code;
-    ui.property_tab_hover = Some(PropertyTab::Code);
-
-    assert_eq!(ui.effective_property_tab(), PropertyTab::Design);
-    assert!(ui.set_property_tab(PropertyTab::Code));
-    assert_eq!(ui.property_tab, PropertyTab::Design);
-    assert_eq!(ui.property_tab_hover, None);
-    assert!(!ui.set_property_tab(PropertyTab::Code));
-}
-
-#[test]
 fn editor_pixel_scroll_fields_use_scroll_state() {
     let mut s = EditorUiState::default();
 
@@ -319,6 +284,32 @@ fn chat_model_picker_helpers_reset_select_interaction_state_and_search() {
     assert_eq!(ui.chat_model_picker.hover, None);
     assert_eq!(ui.chat_model_picker.pressed, None);
     assert_eq!(ui.chat_model_picker.scroll.offset, 0.0);
+}
+
+#[test]
+fn cli_provider_state_shows_only_on_the_model_picker_or_agents_tab() {
+    use crate::agent_settings::AgentSettingsTab;
+    let mut ui = EditorUiState::new();
+    assert!(!ui.shows_cli_provider_state(), "a fresh launch shows none");
+
+    ui.toggle_chat_model_picker();
+    assert!(ui.shows_cli_provider_state());
+    ui.close_chat_model_picker();
+    assert!(!ui.shows_cli_provider_state());
+
+    ui.agent_settings.tab = AgentSettingsTab::Mcp;
+    ui.agent_settings_open = true;
+    assert!(
+        !ui.shows_cli_provider_state(),
+        "the MCP tab does not show provider connection state"
+    );
+    ui.agent_settings.tab = AgentSettingsTab::Agents;
+    assert!(ui.shows_cli_provider_state());
+    ui.agent_settings_open = false;
+    assert!(
+        !ui.shows_cli_provider_state(),
+        "a remembered Agents tab behind a closed modal shows nothing"
+    );
 }
 
 #[test]

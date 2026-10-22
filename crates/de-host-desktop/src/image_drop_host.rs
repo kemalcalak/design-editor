@@ -59,16 +59,6 @@ pub fn apply_image_drop(
     viewport_w: f32,
     viewport_h: f32,
 ) -> ImageDropOutcome {
-    if !host.gate_collaboration_action(
-        de_editor_core::CollabGateAction::Document(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-            ),
-        ),
-        de_editor_core::CollabEditSource::Import,
-    ) {
-        return ImageDropOutcome::Ignored;
-    }
     let embedded = match read_as_data_url(path) {
         Ok(embedded) => embedded,
         Err(e) => {

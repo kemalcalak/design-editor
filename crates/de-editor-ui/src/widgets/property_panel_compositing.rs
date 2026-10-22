@@ -425,10 +425,7 @@ impl PropertyPanel {
     }
 
     pub fn compositing_picker_hit(&self, panel_rect: Rect, point: Point2D) -> SelectHit {
-        self.compositing_picker_hit_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.compositing_picker_hit_logical(panel_rect, point)
     }
 
     pub(super) fn compositing_picker_hit_logical(
@@ -455,20 +452,14 @@ impl PropertyPanel {
     }
 
     pub fn compositing_picker_row_at(&self, panel_rect: Rect, point: Point2D) -> Option<usize> {
-        match self.compositing_picker_hit_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        ) {
+        match self.compositing_picker_hit_logical(panel_rect, point) {
             SelectHit::Row(index) => Some(index),
             SelectHit::Inside | SelectHit::Outside => None,
         }
     }
 
     pub fn compositing_picker_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        self.compositing_picker_contains_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        )
+        self.compositing_picker_contains_logical(panel_rect, point)
     }
 
     pub(super) fn compositing_picker_contains_logical(
@@ -488,10 +479,7 @@ impl PropertyPanel {
         point: Point2D,
     ) -> Option<PropertyPanelAction> {
         let target = self.compositing_picker_target?;
-        let SelectHit::Row(index) = self.compositing_picker_hit_logical(
-            self.logical_rect(panel_rect),
-            self.logical_point(panel_rect, point),
-        ) else {
+        let SelectHit::Row(index) = self.compositing_picker_hit_logical(panel_rect, point) else {
             return None;
         };
         action_for_row(target, index)

@@ -26,9 +26,9 @@ fn transient_host_locale_does_not_change_persistence_fingerprint() {
 
 #[test]
 fn settings_payload_restores_locale_but_never_theme() {
-    // Theme moved out of the account-scoped payload semantics: it is a device
-    // preference resolved from its own unpartitioned key, so reading it here
-    // would let an incoming account flip the screen. The field is still
+    // Theme moved out of the settings payload semantics: it is a device
+    // preference resolved from its own unsuffixed key, so reading it here
+    // would let a blob reload flip the screen. The field is still
     // written for older builds — see `partition_tests` — and is still readable
     // as the one-time migration source through `payload_theme_of`.
     let payload = r#"{"version":1,"theme":"light","locale":"en-US"}"#;
@@ -763,7 +763,7 @@ fn pending_legacy_migration_blocks_an_ordinary_settings_write() {
     let mut settings_baseline = fingerprint(&state);
     // Locale, not theme: theme is no longer restored from the blob, so setting
     // it here would leave the fingerprint unchanged and the test would pass
-    // for the wrong reason. Locale is genuinely account-scoped — and it has to
+    // for the wrong reason. Locale genuinely lives in the blob — and it has to
     // be a value the default is not, or this is the same no-op trap.
     assert_ne!(state.editor_ui.locale, Locale::EnUs);
     state.editor_ui.locale = Locale::EnUs;

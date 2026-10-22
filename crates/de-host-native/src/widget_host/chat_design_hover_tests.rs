@@ -101,12 +101,12 @@ fn cursor_move_sets_chat_tab_hover_when_over_tab() {
     let chat_rect = host.ai_chat_rect(viewport_w, viewport_h).unwrap();
 
     // Verify that `tab_hover_at` agrees with our probe point before wiring.
-    // Tab 0 body starts at tab_row_left = rect.origin.x + PAD + CHEVRON_W + PILL_GAP
-    // (8 + 18 + 6 = 32 px from the panel left edge).  Center of the first tab
-    // body: x = tab_row_left + TAB_MAX_W / 2, y = rect.origin.y + HEADER_HEIGHT / 2.
+    // Tab 0 body starts at tab_row_left = rect.origin.x + PAD (16 px from the
+    // panel left edge) and spans TAB_MAX_W (120 px), so x = +92 lands inside
+    // it with margin on both sides; y = rect.origin.y + HEADER_HEIGHT / 2.
     let over_tab0 = Point2D::new(
-        chat_rect.origin.x + 32.0 + 60.0, // tab row left + half TAB_MAX_W
-        chat_rect.origin.y + 18.0,        // header mid
+        chat_rect.origin.x + 92.0, // inside tab 0's body [16, 136)
+        chat_rect.origin.y + 18.0, // header mid
     );
     let panel = AIChatPlaceholder::from_editor(host.editor_state());
     assert_eq!(

@@ -101,7 +101,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "git.header.overflowCloseRepo" => "Đóng kho",
         "git.header.overflowRemoteSettings" => "Cài đặt remote…",
         "git.header.overflowSshKeys" => "Khóa SSH…",
-        "git.header.overflowMoreActions" => "Thêm thao tác",
         "git.history.empty" => "Chưa có lịch sử",
         "git.history.autosaveGroup_one" => "1 tự động lưu",
         "git.history.autosaveGroup_other" => "{{count}} tự động lưu",

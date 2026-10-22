@@ -1,5 +1,4 @@
 use crate::theme::Theme;
-use crate::widgets::agent_settings_account::{self, AccountTabHit};
 use crate::widgets::agent_settings_acp::{self, AcpHit};
 use crate::widgets::agent_settings_builtin::{self, BuiltinHit};
 use crate::widgets::agent_settings_fonts::{self, FontsHit};
@@ -9,7 +8,7 @@ use crate::widgets::agent_settings_mcp::{self, McpHit};
 use crate::widgets::agent_settings_panel_card::paint_agent_card;
 use crate::widgets::agent_settings_panel_geometry::{
     acp_section_y, agent_card_rect_at, agent_card_rect_in, agents_body_top, close_rect,
-    connect_btn_rect_at, content_rect, disconnect_btn_rect_at, full_settings_tabs, hero_body_rect,
+    connect_btn_rect_at, content_rect, disconnect_btn_rect_at, hero_body_rect,
     hero_body_rect_for_ui, provider_rows_top, tab_i18n_label, CLAUDE_HINT_H,
     PROVIDER_SECTION_HEADER_H,
 };
@@ -99,7 +98,7 @@ pub fn content_viewport(panel: Rect) -> Rect {
 }
 
 /// Body viewport for the tabs the panel paints a hero on behalf of
-/// (Images / Fonts / Account): [`content_viewport`] pushed down past that
+/// (Images / Fonts): [`content_viewport`] pushed down past that
 /// hero. Those tabs' own geometry is written against the top of their
 /// body, so this is the rect they — and anything testing them — must use.
 pub fn secondary_tab_body(panel: Rect) -> Rect {
@@ -149,54 +148,29 @@ pub fn close_button_rect(panel: Rect) -> Rect {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AgentSettingsPanelMode {
     Full,
-    /// `Full` plus the Account tab — selected when the host enabled the
-    /// runtime account gate (`EditorUiState::account_ui_available`).
-    FullWithAccount,
     WebBuiltinOnly,
-    /// `WebBuiltinOnly` plus the Account tab (web with a daemon-side
-    /// auth backend).
-    WebBuiltinOnlyWithAccount,
     McpOnly,
 }
 
 impl AgentSettingsPanelMode {
-    fn visible_tabs(self, ui: &EditorUiState) -> &'static [AgentSettingsTab] {
-        if ui.touch_chrome() && self != AgentSettingsPanelMode::McpOnly {
-            return if matches!(
-                self,
-                AgentSettingsPanelMode::FullWithAccount
-                    | AgentSettingsPanelMode::WebBuiltinOnlyWithAccount
-            ) {
-                &TOUCH_TABS_WITH_ACCOUNT
-            } else {
-                &TOUCH_TABS
-            };
-        }
+    fn visible_tabs(self) -> &'static [AgentSettingsTab] {
         match self {
-            AgentSettingsPanelMode::Full => full_settings_tabs(false),
-            AgentSettingsPanelMode::FullWithAccount => full_settings_tabs(true),
+            AgentSettingsPanelMode::Full => &AgentSettingsTab::ALL,
             AgentSettingsPanelMode::WebBuiltinOnly => &[
                 AgentSettingsTab::Agents,
                 AgentSettingsTab::Images,
                 AgentSettingsTab::Fonts,
                 AgentSettingsTab::System,
             ],
-            AgentSettingsPanelMode::WebBuiltinOnlyWithAccount => &[
-                AgentSettingsTab::Agents,
-                AgentSettingsTab::Images,
-                AgentSettingsTab::Fonts,
-                AgentSettingsTab::System,
-                AgentSettingsTab::Account,
-            ],
             AgentSettingsPanelMode::McpOnly => &[AgentSettingsTab::Mcp],
         }
     }
 
-    fn active_tab(self, settings: &AgentSettings, ui: &EditorUiState) -> AgentSettingsTab {
-        if self.visible_tabs(ui).contains(&settings.tab) {
+    fn active_tab(self, settings: &AgentSettings) -> AgentSettingsTab {
+        if self.visible_tabs().contains(&settings.tab) {
             settings.tab
         } else {
-            self.visible_tabs(ui)[0]
+            self.visible_tabs()[0]
         }
     }
 
@@ -204,48 +178,16 @@ impl AgentSettingsPanelMode {
     /// the ACP section and the provider card list, plus the section
     /// headers that only exist to add or connect one.
     ///
-    /// `external_cli_available` is the runtime host capability: mobile
-    /// shells (iOS / Android / HarmonyOS) cannot spawn subprocess CLIs,
-    /// so every external-CLI surface is hidden there and the built-in
-    /// API-key providers become the only agent path. Paint, hit-test,
-    /// hover, and the content-height walk all read this one predicate so
-    /// a hidden block leaves no live hit rect behind it.
-    fn shows_external_agents(self, ui: &EditorUiState) -> bool {
-        ui.external_cli_available
-            && !ui.touch_chrome()
-            && matches!(
-                self,
-                AgentSettingsPanelMode::Full | AgentSettingsPanelMode::FullWithAccount
-            )
+    /// Paint, hit-test, hover, and the content-height walk all read this
+    /// one predicate so a hidden block leaves no live hit rect behind it.
+    fn shows_external_agents(self) -> bool {
+        self == AgentSettingsPanelMode::Full
     }
 }
 
-const TOUCH_TABS: [AgentSettingsTab; 4] = [
-    AgentSettingsTab::Agents,
-    AgentSettingsTab::Images,
-    AgentSettingsTab::Fonts,
-    AgentSettingsTab::System,
-];
-
-const TOUCH_TABS_WITH_ACCOUNT: [AgentSettingsTab; 5] = [
-    AgentSettingsTab::Agents,
-    AgentSettingsTab::Images,
-    AgentSettingsTab::Fonts,
-    AgentSettingsTab::System,
-    AgentSettingsTab::Account,
-];
-
 fn mode_for_ui(ui: &EditorUiState, base: AgentSettingsPanelMode) -> AgentSettingsPanelMode {
-    // Capability controls whether this build can begin a new login; a restored
-    // signed-in profile still needs its Account settings even if that runtime
-    // gate has not been advertised yet.
-    let account_visible = ui.account_ui_available || ui.account.is_signed_in();
     if ui.embed == de_editor_core::EmbedHost::VsCode {
         AgentSettingsPanelMode::McpOnly
-    } else if base == AgentSettingsPanelMode::Full && account_visible {
-        AgentSettingsPanelMode::FullWithAccount
-    } else if base == AgentSettingsPanelMode::WebBuiltinOnly && account_visible {
-        AgentSettingsPanelMode::WebBuiltinOnlyWithAccount
     } else {
         base
     }
@@ -329,8 +271,6 @@ pub enum AgentSettingsHit {
     SelectThemeMode(de_editor_core::editor_ui_state::ThemeMode),
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
     FocusMcpPort,
-    OpenLoginModal,
-    SignOutAccount,
     Outside,
     Inside,
 }
@@ -381,35 +321,8 @@ impl<'a> AgentSettingsPanel<'a> {
 
     /// Centred modal rect, clamped to the viewport. Width and height both
     /// shrink below their ceiling when the window is small, so the dialog
-    /// never runs off screen or under the top bar. In mobile layout the
-    /// settings become a responsive touch surface: full-screen on phone,
-    /// inset on tablet portrait, and a bounded rail workspace on tablet
-    /// landscape.
+    /// never runs off screen or under the top bar.
     pub fn rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
-        if self.ui.compact_layout() {
-            return Rect {
-                origin: Point2D::new(0.0, 0.0),
-                size: Point2D::new(viewport_w.max(0.0), viewport_h.max(0.0)),
-            };
-        }
-        if self.ui.medium_layout() {
-            let inset = 12.0;
-            return Rect {
-                origin: Point2D::new(inset, inset),
-                size: Point2D::new(
-                    (viewport_w - inset * 2.0).max(0.0),
-                    (viewport_h - inset * 2.0).max(0.0),
-                ),
-            };
-        }
-        if self.ui.expanded_touch_layout() {
-            let w = PANEL_WIDTH.min((viewport_w - 32.0).max(0.0));
-            let h = 800.0_f32.min((viewport_h - 32.0).max(0.0));
-            return Rect {
-                origin: Point2D::new((viewport_w - w) / 2.0, (viewport_h - h) / 2.0),
-                size: Point2D::new(w, h),
-            };
-        }
         let top_limit = crate::widgets::TOP_BAR_HEIGHT + 8.0;
         let w = PANEL_WIDTH
             .min(viewport_w - VIEWPORT_MARGIN_X * 2.0)
@@ -425,10 +338,10 @@ impl<'a> AgentSettingsPanel<'a> {
         }
     }
 
-    /// Resolved responsive geometry shared by paint, hit-testing, scrolling,
-    /// and host gesture code.
+    /// Resolved modal geometry shared by paint, hit-testing, scrolling, and
+    /// host gesture code.
     pub fn resolved_layout(&self, panel: Rect) -> AgentSettingsLayout {
-        AgentSettingsLayout::resolve(panel, self.ui, self.navigation_tabs().len())
+        AgentSettingsLayout::resolve(panel, self.navigation_tabs().len())
     }
 
     pub fn resolved_content_viewport(&self, panel: Rect) -> Rect {
@@ -437,10 +350,9 @@ impl<'a> AgentSettingsPanel<'a> {
 
     pub fn max_scroll(&self, panel: Rect) -> f32 {
         let content = self.resolved_content_viewport(panel);
-        let total = match self.mode.active_tab(&self.settings, self.ui) {
+        let total = match self.mode.active_tab(&self.settings) {
             AgentSettingsTab::Mcp => crate::widgets::agent_settings_mcp::content_height_at(
                 &self.settings,
-                self.ui.external_cli_available,
                 content.size.x,
             ),
             _ => self.content_total_height(),
@@ -456,11 +368,11 @@ impl<'a> AgentSettingsPanel<'a> {
     }
 
     pub fn navigation_tabs(&self) -> &'static [AgentSettingsTab] {
-        self.mode.visible_tabs(self.ui)
+        self.mode.visible_tabs()
     }
 
     pub fn active_tab(&self) -> AgentSettingsTab {
-        self.mode.active_tab(&self.settings, self.ui)
+        self.mode.active_tab(&self.settings)
     }
 }
 
@@ -470,5 +382,5 @@ mod layout;
 mod paint;
 mod tabs;
 
-pub use layout::{AgentSettingsLayout, AgentSettingsSurfaceKind};
+pub use layout::AgentSettingsLayout;
 pub use paint::drag_for_hit;

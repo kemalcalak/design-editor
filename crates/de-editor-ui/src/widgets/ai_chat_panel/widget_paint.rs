@@ -92,34 +92,11 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
             // Vertical center of all header icons (18px icons in 36px header).
             let header_icon_y = rect.origin.y + (HEADER_HEIGHT - 18.0) / 2.0;
             let right_edge = rect.origin.x + rect.size.x - PAD;
-            let chevron_x = rect.origin.x + PAD;
             let tokens = crate::widgets::button::tokens_from_theme(&self.theme);
 
-            // The collapse chevron survives only on the touch sheet, which
-            // still collapses to its header. On desktop the conversation's
-            // one home is the rail's Agent tab, so there is no header-only
-            // middle state to toggle into, and a control that toggles
-            // nothing is what made the header read as a floating window's
-            // title bar.
-            if self.touch_sheet {
-                jian_widgets::components::icon_button::IconButton {
-                    icon_paths: Icon::ChevronDown.paths(),
-                    hovered: self.header_hover == Some(ChatHeaderButton::ToggleCollapse),
-                    pressed: self.header_pressed == Some(ChatHeaderButton::ToggleCollapse),
-                    active: false,
-                    enabled: true,
-                    icon_size: 18.0,
-                    stroke_width: 1.4,
-                }
-                .paint(
-                    cx.backend,
-                    Rect {
-                        origin: Point2D::new(chevron_x, header_icon_y),
-                        size: Point2D::new(18.0, 18.0),
-                    },
-                    &tokens,
-                );
-            }
+            // There is no collapse chevron: the conversation's one home is
+            // the rail's Agent tab, so there is no header-only middle state
+            // to toggle into.
             // --- New-chat "+" circular button (far right, 28px circle) ---
             const NEW_CHAT_R: f32 = NEW_CHAT_D / 2.0;
             let new_chat_rect = Rect {

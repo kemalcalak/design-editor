@@ -13,7 +13,6 @@ use crate::{Point2D, Rect};
 use de_editor_core::codegen::{CodegenHover, CodegenPhase, CodegenState, Framework};
 
 const CHIP_HEIGHT: f32 = 22.0;
-pub(super) const TOUCH_TARGET_SIZE: f32 = 30.0;
 const CHIP_PAD_X: f32 = 8.0;
 const CHIP_FONT_SIZE: f32 = 11.0;
 const CHIP_GAP: f32 = 2.0;
@@ -27,19 +26,11 @@ struct FrameworkStripMetrics {
     chevron_width: f32,
 }
 
-fn strip_metrics(touch_controls: bool) -> FrameworkStripMetrics {
-    if touch_controls {
-        FrameworkStripMetrics {
-            chip_height: TOUCH_TARGET_SIZE,
-            chip_min_width: TOUCH_TARGET_SIZE,
-            chevron_width: TOUCH_TARGET_SIZE,
-        }
-    } else {
-        FrameworkStripMetrics {
-            chip_height: CHIP_HEIGHT,
-            chip_min_width: 0.0,
-            chevron_width: CHEVRON_ZONE_W,
-        }
+fn strip_metrics() -> FrameworkStripMetrics {
+    FrameworkStripMetrics {
+        chip_height: CHIP_HEIGHT,
+        chip_min_width: 0.0,
+        chevron_width: CHEVRON_ZONE_W,
     }
 }
 
@@ -67,8 +58,8 @@ fn chip_label_width(label: &str) -> f32 {
     })
 }
 
-fn framework_row_width(touch_controls: bool) -> f32 {
-    let metrics = strip_metrics(touch_controls);
+fn framework_row_width() -> f32 {
+    let metrics = strip_metrics();
     Framework::ALL
         .iter()
         .enumerate()
@@ -80,18 +71,18 @@ fn framework_row_width(touch_controls: bool) -> f32 {
         .sum()
 }
 
-fn framework_overflows(width: f32, touch_controls: bool) -> bool {
-    framework_row_width(touch_controls) > (width - PAD_X * 2.0).max(0.0)
+fn framework_overflows(width: f32) -> bool {
+    framework_row_width() > (width - PAD_X * 2.0).max(0.0)
 }
 
 pub fn framework_row_overflow(width: f32) -> f32 {
-    framework_row_overflow_for(width, false)
+    framework_row_overflow_for(width)
 }
 
-pub(crate) fn framework_row_overflow_for(width: f32, touch_controls: bool) -> f32 {
-    let metrics = strip_metrics(touch_controls);
+pub(crate) fn framework_row_overflow_for(width: f32) -> f32 {
+    let metrics = strip_metrics();
     let usable = (width - PAD_X * 2.0).max(0.0);
-    let row_width = framework_row_width(touch_controls);
+    let row_width = framework_row_width();
     if row_width <= usable {
         return 0.0;
     }
@@ -99,11 +90,11 @@ pub(crate) fn framework_row_overflow_for(width: f32, touch_controls: bool) -> f3
 }
 
 pub fn framework_row_band(panel_top: f32) -> (f32, f32) {
-    framework_row_band_for(panel_top, false)
+    framework_row_band_for(panel_top)
 }
 
-pub(crate) fn framework_row_band_for(panel_top: f32, touch_controls: bool) -> (f32, f32) {
-    let metrics = strip_metrics(touch_controls);
+pub(crate) fn framework_row_band_for(panel_top: f32) -> (f32, f32) {
+    let metrics = strip_metrics();
     let top = panel_top + TAB_HEIGHT + SECTION_HEADER_HEIGHT;
     (top, top + metrics.chip_height)
 }
@@ -114,7 +105,7 @@ pub(super) fn framework_chip_rects(
     width: f32,
     scroll: f32,
 ) -> Vec<(Framework, Rect)> {
-    framework_chip_rects_for(x, y, width, scroll, false)
+    framework_chip_rects_for(x, y, width, scroll)
 }
 
 pub(super) fn framework_chip_rects_for(
@@ -122,10 +113,9 @@ pub(super) fn framework_chip_rects_for(
     y: f32,
     width: f32,
     scroll: f32,
-    touch_controls: bool,
 ) -> Vec<(Framework, Rect)> {
-    let metrics = strip_metrics(touch_controls);
-    let inset = if framework_overflows(width, touch_controls) {
+    let metrics = strip_metrics();
+    let inset = if framework_overflows(width) {
         metrics.chevron_width
     } else {
         0.0
@@ -149,27 +139,22 @@ pub(super) fn framework_chip_rects_for(
 }
 
 pub(super) fn chips_body_top(y: f32) -> f32 {
-    chips_body_top_for(y, false)
+    chips_body_top_for(y)
 }
 
-pub(super) fn chips_body_top_for(y: f32, touch_controls: bool) -> f32 {
-    y + strip_metrics(touch_controls).chip_height + CHIP_DIVIDER_GAP + SECTION_GAP
+pub(super) fn chips_body_top_for(y: f32) -> f32 {
+    y + strip_metrics().chip_height + CHIP_DIVIDER_GAP + SECTION_GAP
 }
 
 pub(super) fn framework_chevron_zones(x: f32, y: f32, width: f32) -> Option<(Rect, Rect)> {
-    framework_chevron_zones_for(x, y, width, false)
+    framework_chevron_zones_for(x, y, width)
 }
 
-pub(super) fn framework_chevron_zones_for(
-    x: f32,
-    y: f32,
-    width: f32,
-    touch_controls: bool,
-) -> Option<(Rect, Rect)> {
-    if !framework_overflows(width, touch_controls) {
+pub(super) fn framework_chevron_zones_for(x: f32, y: f32, width: f32) -> Option<(Rect, Rect)> {
+    if !framework_overflows(width) {
         return None;
     }
-    let metrics = strip_metrics(touch_controls);
+    let metrics = strip_metrics();
     let band_left = x + PAD_X;
     let band_right = x + width - PAD_X;
     Some((
@@ -185,7 +170,7 @@ pub(super) fn framework_chevron_zones_for(
 }
 
 pub fn framework_at(x: f32, y: f32, width: f32, point: Point2D, scroll: f32) -> Option<Framework> {
-    framework_at_for_touch(x, y, width, point, scroll, false)
+    framework_at_for_touch(x, y, width, point, scroll)
 }
 
 pub(crate) fn framework_at_for_touch(
@@ -194,18 +179,17 @@ pub(crate) fn framework_at_for_touch(
     width: f32,
     point: Point2D,
     scroll: f32,
-    touch_controls: bool,
 ) -> Option<Framework> {
-    let metrics = strip_metrics(touch_controls);
+    let metrics = strip_metrics();
     let usable = (width - PAD_X * 2.0).max(0.0);
-    let inset = if framework_row_overflow_for(width, touch_controls) > 0.0 {
+    let inset = if framework_row_overflow_for(width) > 0.0 {
         metrics.chevron_width
     } else {
         0.0
     };
     let band_left = x + PAD_X + inset;
     let band_right = x + PAD_X + usable - inset;
-    framework_chip_rects_for(x, y, width, scroll, touch_controls)
+    framework_chip_rects_for(x, y, width, scroll)
         .into_iter()
         .filter(|(_, rect)| rect.origin.x + rect.size.x > band_left && rect.origin.x < band_right)
         .find(|(_, rect)| {
@@ -257,7 +241,7 @@ pub(super) fn paint_framework_chips(
     y: f32,
     width: f32,
 ) -> f32 {
-    paint_framework_chips_for(cx, theme, state, x, y, width, false)
+    paint_framework_chips_for(cx, theme, state, x, y, width)
 }
 
 pub(super) fn paint_framework_chips_for(
@@ -267,11 +251,10 @@ pub(super) fn paint_framework_chips_for(
     x: f32,
     y: f32,
     width: f32,
-    touch_controls: bool,
 ) -> f32 {
-    let metrics = strip_metrics(touch_controls);
+    let metrics = strip_metrics();
     let usable = (width - PAD_X * 2.0).max(0.0);
-    let zones = framework_chevron_zones_for(x, y, width, touch_controls);
+    let zones = framework_chevron_zones_for(x, y, width);
     let inset = if zones.is_some() {
         metrics.chevron_width
     } else {
@@ -287,11 +270,10 @@ pub(super) fn paint_framework_chips_for(
         .iter()
         .map(|framework| framework_tab_label(*framework))
         .collect();
-    let rects: Vec<Rect> =
-        framework_chip_rects_for(x, y, width, state.framework_scroll.offset, touch_controls)
-            .into_iter()
-            .map(|(_, chip)| chip)
-            .collect();
+    let rects: Vec<Rect> = framework_chip_rects_for(x, y, width, state.framework_scroll.offset)
+        .into_iter()
+        .map(|(_, chip)| chip)
+        .collect();
     let active = Framework::ALL
         .iter()
         .position(|framework| *framework == state.framework)
@@ -322,7 +304,7 @@ pub(super) fn paint_framework_chips_for(
     cx.backend.restore();
 
     if let Some((left, right)) = zones {
-        let max = framework_row_overflow_for(width, touch_controls);
+        let max = framework_row_overflow_for(width);
         paint_chevron(
             cx,
             theme,
@@ -348,5 +330,5 @@ pub(super) fn paint_framework_chips_for(
         },
         theme.border,
     );
-    chips_body_top_for(y, touch_controls)
+    chips_body_top_for(y)
 }

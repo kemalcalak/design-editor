@@ -5,11 +5,10 @@
 //! motion.
 
 use crate::{
-    collab_avatar_host, figma_import_session, git_session, html_import_session, image_decode_host,
-    image_panel_host, image_search_session, ime_window, init_auth_runtime, kit_persistence,
-    persistence, prompt_center_store, remote_image_host, save_session, single_instance,
-    theme_preset_host, update_check, DesktopApp, PaintedPageIdentity, INITIAL_VIEWPORT_H,
-    INITIAL_VIEWPORT_W,
+    figma_import_session, git_session, html_import_session, image_decode_host, image_panel_host,
+    image_search_session, ime_window, kit_persistence, persistence, prompt_center_store,
+    remote_image_host, save_session, single_instance, theme_preset_host, update_check, DesktopApp,
+    PaintedPageIdentity, INITIAL_VIEWPORT_H, INITIAL_VIEWPORT_W,
 };
 use de_host_native::WidgetHostNative;
 use std::path::PathBuf;
@@ -43,10 +42,6 @@ impl DesktopApp {
         host.editor_state_mut().editor_ui.home.visible =
             !cfg!(test) && should_show_home(initial_file.is_some(), entry_surface);
         prompt_center_store::install_user_prompts(&mut host);
-        // Zode is a desktop-local integration. Keep it out of the shared
-        // settings loader so `--serve-web` never exposes machine-local Zode
-        // providers that the browser settings UI cannot manage.
-        de_host_services::zode_import::import_zode_builtin_agents(host.editor_state_mut());
         // Imported UIKits + browser-open flag (`uikits.json`). Skipped
         // under test like the update / model probes — unit tests must
         // not see a developer machine's kit store.
@@ -100,32 +95,31 @@ impl DesktopApp {
         // registry they merge into is memory-only, so it has to be refilled
         // from disk at every launch, exactly like the style guides above.
         crate::user_template_store::load_user_scene_templates_once();
-        // Account gate + session restore. The bridge links the proprietary
-        // auth library when a prebuilt exists for this target; stub builds
-        // keep every account entry point hidden unless the dev fake-login
-        // env is set. Skipped under test like the update / model probes.
-        if !cfg!(test) {
-            init_auth_runtime(&mut host);
-        }
         let kit_browser_open_persisted = Some(host.editor_state().editor_ui.component_browser_open);
         if fit_blank_frame {
             host.fit_content_to_viewport(INITIAL_VIEWPORT_W, INITIAL_VIEWPORT_H);
         }
         host.editor_state_mut().mark_saved_revision();
         host.mark_editor_state_dirty();
-        // Personal build: there is no release feed to compare this build
-        // against, so the automatic update check never runs.
-        let update_probe = update_check::UpdateProbe::idle();
+        // The one network request at launch: the GitHub release check, and
+        // only while Settings → System → "automatic updates" is on (the
+        // default). Unit tests never reach the network.
+        let auto_update = !cfg!(test)
+            && host
+                .editor_state()
+                .editor_ui
+                .agent_settings
+                .auto_update_enabled;
+        let update_probe = update_check::UpdateProbe::for_auto_check(auto_update);
         if update_probe.is_pending() {
             host.editor_state_mut().editor_ui.update_status =
                 de_editor_core::UpdateStatus::Checking;
         }
-        let model_probe = if cfg!(test) {
-            de_host_services::model_discovery::ModelProbe::idle()
-        } else {
-            let connected = host.editor_state().editor_ui.agent_settings.connected;
-            de_host_services::model_discovery::ModelProbe::spawn_for_connected(connected)
-        };
+        // CLI model discovery does not run at launch: it spawns the
+        // connected agent CLIs, which may call their vendors' APIs. It
+        // starts the first time the user opens a surface that shows CLI
+        // provider state (`cli_probe_gate::start_cli_probes_on_demand`).
+        let model_probe = de_host_services::model_discovery::ModelProbe::idle();
         Self {
             window: None,
             a11y: None,
@@ -150,7 +144,6 @@ impl DesktopApp {
             rotate_cursor: None,
             current_path: None,
             save_session: save_session::SaveSession::new(),
-            collab_fork_saves: Vec::new(),
             error: None,
             design_loop_indicator: None,
             design_session_indicator: None,
@@ -173,16 +166,15 @@ impl DesktopApp {
             image_search: image_search_session::ImageSearchSession::new(),
             image_panel: image_panel_host::ImagePanelJobs::new(),
             remote_images: remote_image_host::RemoteImageSession::new(),
-            collab_avatars: collab_avatar_host::CollabAvatarHost::new(),
             image_decodes: image_decode_host::ImageDecodeHost::new(),
             home_thumbnails: crate::home_thumbnails::HomeThumbnails::default(),
             mcp_wake_proxy: None,
-            collab_runtime: crate::collab_runtime::DesktopCollabRuntime::new(),
             forwarded_files: single_instance::ForwardQueue::default(),
             iconify_job: None,
             kit_browser_open_persisted,
             provider_connect_job: None,
             provider_reconnect_queue: Vec::new(),
+            cli_probes_started: false,
             remembered_connections: [false; 7],
             last_seen_provider_phase: Default::default(),
             hovered_image_drop: false,
@@ -366,12 +358,6 @@ impl DesktopApp {
     /// Confirm the adjacent `.op` destination before disturbing any active
     /// import. Cancel therefore leaves the current worker and document intact.
     pub(crate) fn begin_figma_import(&mut self, path: PathBuf) -> bool {
-        if !self.host.gate_collaboration_action(
-            de_editor_core::CollabGateAction::ReplaceDocument,
-            de_editor_core::CollabEditSource::Import,
-        ) {
-            return false;
-        }
         if self
             .current_figma_import
             .as_ref()
@@ -393,14 +379,8 @@ impl DesktopApp {
         true
     }
 
-    /// Start an HTML/ZIP whole-document import after a current-phase gate.
+    /// Start an HTML/ZIP whole-document import.
     pub(crate) fn begin_html_import(&mut self, path: PathBuf) -> bool {
-        if !self.host.gate_collaboration_action(
-            de_editor_core::CollabGateAction::ReplaceDocument,
-            de_editor_core::CollabEditSource::Import,
-        ) {
-            return false;
-        }
         figma_import_session::cancel(&mut self.host, &mut self.current_figma_import);
         html_import_session::cancel(&mut self.host, &mut self.current_html_import);
         self.current_html_import = Some(html_import_session::spawn(&mut self.host, path));

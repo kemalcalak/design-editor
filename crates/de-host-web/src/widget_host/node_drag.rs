@@ -132,33 +132,13 @@ impl WidgetHost {
         let total_dx = ((x - drag.press_screen_x) / zoom) as f64;
         let total_dy = ((y - drag.press_screen_y) / zoom) as f64;
         if !drag.moved {
-            let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-                core_drag::activate_node_drag_with_allocator(
-                    &mut self.editor_state,
-                    allocator,
-                    self.alt_held,
-                    total_dx,
-                    total_dy,
-                )
-            } else {
-                Ok(core_drag::activate_node_drag(
-                    &mut self.editor_state,
-                    &mut self.next_node_id,
-                    self.alt_held,
-                    total_dx,
-                    total_dy,
-                ))
-            };
-            let activation = match result {
-                Ok(activation) => activation,
-                Err(error) => {
-                    // Abandon the gesture: the alt-clone never landed, so
-                    // there is nothing to translate on the following moves.
-                    self.node_drag = None;
-                    self.show_collab_id_error(error);
-                    return Some(true);
-                }
-            };
+            let activation = core_drag::activate_node_drag(
+                &mut self.editor_state,
+                &mut self.next_node_id,
+                self.alt_held,
+                total_dx,
+                total_dy,
+            );
             if activation.duplicated {
                 self.option_drag_source_ids = activation.option_drag_source_ids;
                 // The drag snapshot already advanced the revision before the

@@ -17,28 +17,12 @@
  *
  * The delivery mode is not asked for again either: the pick reuses whichever
  * of "send" or "download" the user last chose in the popup, persisted under
- * `lastAction`, and — for a send — whichever destination is stored under
- * `deliveryTarget`. One button, one predictable behaviour.
- *
- * # The account destination, from here
- *
- * Uploading to the hub needs the session's CSRF token, and that token lives in
- * POPUP memory by design: it is never written to storage, so there is nothing
- * here to read. The worker therefore obtains its own by running the same
- * session probe the popup runs (`account.js`'s `fetchSession`), which also
- * settles the question that matters more — whether the session is still live
- * at the moment of the pick, minutes or hours after the popup last looked.
- *
- * That is why `account.js` is imported here rather than duplicated: it depends
- * on nothing but `core-registry.js`, so pulling it into the worker's graph
- * adds no dynamic `import()` (which `ServiceWorkerGlobalScope` forbids, see
- * `scripts/check-sw-imports.mjs`). The popup's `wasm-core.js` loader stays out
- * of that graph, as it always has.
+ * `lastAction`. A send always goes to the loopback Design Editor at the
+ * stored endpoint. One button, one predictable behaviour.
  */
 
-import { deliveryTarget, fetchSession, hubOrigin, storedRegion } from './account.js';
 import { capturePage } from './capture.js';
-import { importSnapshot, sendSnapshotToAccount } from './client.js';
+import { importSnapshot } from './client.js';
 import {
   coreError,
   getCore,
@@ -186,36 +170,7 @@ function dataUrl(text) {
   return `data:application/json;base64,${btoa(binary)}`;
 }
 
-/**
- * Resolve the account destination for a send, or null when this is not one.
- *
- * Two calls to the core's rule, with the hub probe between them. The first is
- * a cheap pre-check — `deliveryTarget(true)` answers "account" only when the
- * user actually stored that choice — so a user who never touched the setting
- * never pays for a network round trip on a pick. The second re-asks with what
- * the probe found, which is where an expired session collapses back to the
- * local editor, in the core, exactly as it does in the popup.
- *
- * @returns {Promise<{origin: string, csrfToken?: string, fellBack?: boolean} | null>}
- */
-async function accountDelivery() {
-  if ((await deliveryTarget(true)) !== 'account') return null;
-  const origin = await hubOrigin(await storedRegion());
-  let view;
-  try {
-    view = await fetchSession(origin);
-  } catch {
-    // An unreachable hub is not a reason to lose the capture: it resolves the
-    // same way an expired session does, and the report says where it went.
-    view = { state: 'error' };
-  }
-  if ((await deliveryTarget(view.state === 'signedIn')) !== 'account') {
-    return { origin, fellBack: true };
-  }
-  return { origin, csrfToken: view.csrfToken };
-}
-
-async function deliver(mode, text, meta, endpoint, account) {
+async function deliver(mode, text, meta, endpoint) {
   if (mode === 'download') {
     // Same conversion as the popup: hand back a ready-to-open `.op` document,
     // not the raw snapshot. An empty capture surfaces as an actionable error
@@ -236,18 +191,8 @@ async function deliver(mode, text, meta, endpoint, account) {
     }
     return { key: 'statusDownloaded', args: [filename] };
   }
-  if (account && account.csrfToken) {
-    const filed = await sendSnapshotToAccount(account.origin, account.csrfToken, text, meta);
-    return { key: 'statusSentToAccount', args: [filed.name] };
-  }
   const outcome = await importSnapshot(endpoint, text);
-  // A pick the user aimed at their account that ended up here went local
-  // because the session was gone. Saying so is the difference between a
-  // surprise and an explanation.
-  return {
-    key: account && account.fellBack ? 'statusSentLocalFallback' : 'statusImported',
-    args: [String(outcome.nodeCount)],
-  };
+  return { key: 'statusImported', args: [String(outcome.nodeCount)] };
 }
 
 /**
@@ -257,11 +202,6 @@ async function deliver(mode, text, meta, endpoint, account) {
 function failureMessage(error, endpoint) {
   const code = error && error.code;
   const detail = String((error && (error.detail || error.message)) || error);
-  // `forbidden` means two different things depending on where the capture was
-  // going — "this editor has no extension ingress" locally, "origin or CSRF"
-  // at the hub — so the hub's failures are routed by the tag `client.js` puts
-  // on them rather than by the code alone.
-  if (error && error.account) return accountFailureMessage(code, detail, error);
   switch (code) {
     case 'cancelled':
       return { key: 'statusPickCancelled', args: [] };
@@ -295,50 +235,6 @@ function failureMessage(error, endpoint) {
     default:
       return { key: 'errorInjection', args: [detail] };
   }
-}
-
-/**
- * The same mapping for a failed upload to the account.
- *
- * Deliberately the message set the popup uses for these codes, so the outcome
- * of a pick reads exactly like the outcome of the button.
- */
-function accountFailureMessage(code, detail, error) {
-  switch (code) {
-    case 'signedOut':
-      return { key: 'errorAccountSignedOut', args: [] };
-    case 'forbidden':
-      return { key: 'errorAccountForbidden', args: [detail] };
-    case 'quota':
-      return {
-        key: 'errorAccountQuota',
-        args: [String(getCore().hubQuotaItems()), String(getCore().hubQuotaTotalMb()), detail],
-      };
-    case 'rateLimited':
-      return accountRateLimitMessage(error.retryAfterSeconds, detail);
-    // NOT `errorTooLarge`: the hub's 32 MiB cap is smaller than the local
-    // ingest cap, so a capture in between imports fine locally — the local
-    // message's "download the file" remedy would be wrong here.
-    case 'tooLarge':
-      return { key: 'errorAccountTooLarge', args: [detail] };
-    case 'rejected':
-      return { key: 'errorAccountRejected', args: [detail] };
-    case 'unavailable':
-      return { key: 'errorAccountUnavailable', args: [detail] };
-    case 'hubOffline':
-    case 'hubTimeout':
-    case 'hubNotPermitted':
-      return { key: 'accountUnavailable', args: [detail] };
-    default:
-      return { key: 'errorAccountUnavailable', args: [detail] };
-  }
-}
-
-/** "Try again in about N minutes", or seconds, or without a number. */
-function accountRateLimitMessage(seconds, detail) {
-  if (typeof seconds !== 'number') return { key: 'errorAccountRateLimited', args: [detail] };
-  if (seconds < 60) return { key: 'errorAccountRateLimitedSeconds', args: [String(seconds)] };
-  return { key: 'errorAccountRateLimitedMinutes', args: [String(Math.ceil(seconds / 60))] };
 }
 
 /**
@@ -382,14 +278,13 @@ async function runPick(tabId) {
   }
 
   const { text, meta } = await capturePage(tabId, undefined, { pickedRoot: true });
-  const account = mode === 'send' ? await accountDelivery() : null;
-  // An upload to the hub can run for a minute or more with no `chrome.*` call
-  // in it, which is exactly the gap that gets a worker evicted — the same
-  // reason the pick itself is wrapped.
+  // A large import into the editor can run for a while with no `chrome.*`
+  // call in it, which is exactly the gap that gets a worker evicted — the
+  // same reason the pick itself is wrapped.
   const stopDeliveryKeepAlive = keepAlive();
   let delivered;
   try {
-    delivered = await deliver(mode, text, meta, endpoint, account);
+    delivered = await deliver(mode, text, meta, endpoint);
   } finally {
     stopDeliveryKeepAlive();
   }

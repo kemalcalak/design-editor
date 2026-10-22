@@ -20,9 +20,6 @@ use de_editor_ui::widgets::{drag_flow::CanvasDropIndex, SelectionHandle};
 use de_editor_ui::{Rect, Theme};
 
 mod a11y;
-mod account_press;
-#[cfg(test)]
-mod account_press_tests;
 #[cfg(test)]
 mod agent_settings_acp_tests;
 #[cfg(test)]
@@ -36,14 +33,10 @@ mod agent_settings_geometry;
 mod agent_settings_image_gen_tests;
 #[cfg(test)]
 mod agent_settings_tests;
-mod agent_settings_touch;
-#[cfg(test)]
-mod agent_settings_touch_tests;
 mod ai_chat_geometry;
 #[cfg(test)]
 mod ai_chat_minimized_tests;
 mod arc_drag;
-mod auth_flow;
 mod blur_inputs;
 #[cfg(test)]
 mod blur_inputs_tests;
@@ -73,16 +66,6 @@ mod chat_style_card_tests;
 mod click;
 #[cfg(test)]
 mod codegen_framework_tests;
-pub mod collab_history_hit;
-#[cfg(feature = "collab-host")]
-mod collab_host_impl;
-#[cfg(test)]
-mod collab_input_tests;
-#[cfg(test)]
-mod collaboration_id_tests;
-#[cfg(test)]
-mod collaboration_install_tests;
-mod collaboration_policy;
 mod color_picker_press;
 mod component_browser_press;
 mod cursor_hint;
@@ -156,8 +139,6 @@ mod keyboard_delete;
 mod keyboard_escape;
 mod keyboard_send;
 mod missing_fonts_dispatch;
-#[cfg(test)]
-mod mobile_touch_tests;
 mod mode_transition_host;
 #[cfg(test)]
 mod overlay_cursor_tests;
@@ -167,7 +148,6 @@ mod page_switch_center_tests;
 mod paint;
 mod paint_chrome_menus;
 mod paint_floating_panels;
-mod paint_mobile;
 mod paint_pan_cache;
 mod paint_rail;
 mod paint_topmost_overlays;
@@ -180,6 +160,7 @@ mod panel_history_tests;
 mod pen_press;
 #[cfg(test)]
 mod pen_press_tests;
+mod pointer_cancel;
 mod press;
 mod press_canvas_tiers;
 mod press_chrome_tiers;
@@ -213,8 +194,6 @@ mod prompt_center_press;
 #[cfg(test)]
 mod property_compositing_tests;
 mod property_dispatch;
-#[cfg(test)]
-mod property_keyboard_occlusion_tests;
 mod property_layout_dispatch;
 #[cfg(test)]
 mod property_panel_interactions_tests;
@@ -230,10 +209,7 @@ mod scene_state;
 mod scene_template_host_tests;
 #[cfg(test)]
 mod scene_template_ime_tests;
-mod scene_template_install;
 mod scene_template_press;
-#[cfg(test)]
-mod scene_template_touch_tests;
 mod screen_switcher;
 #[cfg(all(test, not(target_os = "windows")))]
 mod screen_switcher_tests;
@@ -265,9 +241,6 @@ mod toolbar_hover;
 mod top_bar_home_tests;
 #[cfg(test)]
 mod top_bar_tooltip_tests;
-mod touch_panel_gesture;
-#[cfg(test)]
-mod touch_panel_gesture_tests;
 #[cfg(test)]
 mod variables_panel_add_tests;
 mod variables_panel_commit;
@@ -280,8 +253,6 @@ mod variables_panel_tests;
 mod variables_panel_ux_tests;
 mod variables_preset_press;
 mod viewport_fit;
-#[cfg(test)]
-mod window_control_tests;
 mod workspace;
 mod workspace_paint;
 
@@ -348,12 +319,6 @@ pub struct WidgetHostNative {
     /// Active canvas pan-drag state — left-button press → motion
     /// → release.
     pub(in crate::widget_host) drag: Option<DragState>,
-    /// Pending one-finger gestures: touch Agent Settings body (release
-    /// commits, slop promotes to scroll) and touch Property / Layers / Slides
-    /// surfaces (stationary release replays the press, slop scrolls).
-    pub(in crate::widget_host) agent_settings_touch_gesture:
-        Option<agent_settings_touch::AgentSettingsTouchGesture>,
-    pub(in crate::widget_host) touch_panel_gesture: Option<touch_panel_gesture::TouchPanelGesture>,
     /// True while Space is held — transient pan mode (TS parity):
     /// canvas presses pan regardless of the active tool.
     pub(in crate::widget_host) space_pan: bool,
@@ -464,10 +429,6 @@ pub struct WidgetHostNative {
     /// Bumped past the highest sample id so new + sample nodes
     /// never collide on the same key.
     pub(in crate::widget_host) next_node_id: u64,
-    /// Session-owned allocator for collaboration-authored ids. Standalone
-    /// paths keep using `next_node_id`; while this is `Some`, every supported
-    /// document creation path must use this allocator instead.
-    pub(in crate::widget_host) collab_id_allocator: Option<de_editor_core::DocumentIdAllocator>,
     /// Host-supplied frame timestamp in milliseconds. Focused
     /// `TextInputState`s use this for caret blink. The
     /// inspector_window runner refreshes this once per
@@ -504,24 +465,6 @@ pub struct WidgetHostNative {
     /// Last viewport size seen by paint/press. Used by handlers
     /// that don't receive viewport dims (e.g. apply_cursor_move
     /// driving the color-picker drag).
-    /// In-flight browser device-login flow handle from `de-auth-bridge`
-    /// (`None` = no login running). Polled by the desktop event loop via
-    /// [`Self::poll_auth`].
-    pub(in crate::widget_host) auth_login_handle: Option<u64>,
-    /// Verification URL waiting for the desktop host to open in the
-    /// system browser (drained by `take_pending_browser_url`).
-    pub(in crate::widget_host) auth_pending_browser_url: Option<String>,
-    /// Whether the current flow's verification URL was already queued —
-    /// the flow reports `WaitingApproval` every poll, but the browser
-    /// must open exactly once.
-    pub(in crate::widget_host) auth_browser_opened: bool,
-    /// Short post-restore window during which the desktop keeps polling the
-    /// session handle. The private runtime revalidates persisted credentials
-    /// asynchronously, so profile fields can become fresher after startup.
-    pub(in crate::widget_host) auth_session_refresh_deadline: Option<std::time::Instant>,
-    /// Opaque process-local hash of the last mirrored avatar source. This keeps
-    /// repeated session polls idempotent without retaining another signed URL.
-    pub(in crate::widget_host) auth_account_avatar_revision: Option<u64>,
     /// Rect the toast banner painted last frame, or `None` when nothing
     /// painted. Cached because the banner's width is measured in the font it
     /// paints with, which only the paint pass can do — the press arm re-checks
@@ -530,7 +473,6 @@ pub struct WidgetHostNative {
     pub(in crate::widget_host) toast_rect: Option<de_editor_ui::Rect>,
     pub(in crate::widget_host) last_viewport_w: f32,
     pub(in crate::widget_host) last_viewport_h: f32,
-    pub(in crate::widget_host) keyboard_occlusion: f32,
     /// Live canvas Preview (Play) session — `Some` while
     /// `editor_state.editor_ui.preview.mode` is set. Owns the jian
     /// `Runtime` (host-local; `!Send`). Built on enter from the
@@ -555,8 +497,8 @@ pub struct WidgetHostNative {
     pub(in crate::widget_host) preview_pressed_pids: Vec<u32>,
     /// Scoped factual timestamp (ms) of the pointer event currently
     /// being routed by a timestamped entry variant (`apply_press_at` /
-    /// `apply_cursor_move_at` / `apply_release_with_viewport_at` /
-    /// `cancel_native_touch_gestures_at`). The live-preview pointer
+    /// `apply_cursor_move_at` / `apply_release_with_viewport_at`). The
+    /// live-preview pointer
     /// path stamps `PointerEvent.t_ms` with this exact value while the
     /// host's GLOBAL clock (`now_ms`) advances independently and only
     /// ever forward — an out-of-order event (frame at 2000, Down at

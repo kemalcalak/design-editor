@@ -198,8 +198,7 @@ impl EditorUiState {
         self.close_icon_picker();
         self.close_chat_model_picker();
         self.close_parallel_agents_picker();
-        self.scene_template_center
-            .open(now_ms, !self.touch_chrome());
+        self.scene_template_center.open(now_ms);
     }
 
     /// Close the Scene Template Center and clear its transient state.
@@ -219,15 +218,9 @@ impl EditorUiState {
         true
     }
 
-    /// Close the style-import layer and resolve keyboard ownership for the
-    /// current input mode. Pointer-driven desktop keeps its search focus;
-    /// touch returns to browsing until the user taps a field again.
+    /// Close the style-import layer; the search field keeps its focus.
     pub fn close_scene_template_style_import(&mut self) -> bool {
-        let changed = self.scene_template_center.close_style_import();
-        if changed && self.touch_chrome() {
-            self.scene_template_center.input_focus_active = false;
-        }
-        changed
+        self.scene_template_center.close_style_import()
     }
 
     /// Aim the generate row at a template: pin its style guide, narrow the
@@ -468,6 +461,17 @@ impl EditorUiState {
         changed
     }
 
+    /// Whether a surface that shows agent-CLI provider state is on screen:
+    /// the chat model picker, or the Settings modal on its Agents tab.
+    /// Desktop defers its CLI probes (model discovery and the remembered
+    /// connection replay) until this first turns true, so a launch that
+    /// never looks at agents never spawns a CLI.
+    pub fn shows_cli_provider_state(&self) -> bool {
+        self.chat_model_picker.open
+            || (self.agent_settings_open
+                && self.agent_settings.tab == crate::agent_settings::AgentSettingsTab::Agents)
+    }
+
     pub fn toggle_chat_model_picker(&mut self) -> bool {
         let opening = !self.chat_model_picker.open;
         self.close_chat_model_picker();
@@ -651,69 +655,11 @@ impl EditorUiState {
 }
 
 impl EditorUiState {
-    /// Phone bottom-sheet layout. Kept as a narrow compatibility helper;
-    /// tablet and input-density decisions must use the explicit predicates
-    /// below so Medium never silently collapses into Compact again.
-    pub fn mobile_layout(&self) -> bool {
-        self.touch && self.size_class.is_compact()
-    }
-
-    /// Native touch chrome is shared by phone and tablet players. Layout
-    /// geometry still branches on the three size classes.
-    pub fn touch_chrome(&self) -> bool {
-        self.touch
-    }
-
-    pub fn compact_layout(&self) -> bool {
-        self.touch && self.size_class.is_compact()
-    }
-
-    pub fn medium_layout(&self) -> bool {
-        self.touch && self.size_class.is_medium()
-    }
-
-    pub fn expanded_touch_layout(&self) -> bool {
-        self.touch && self.size_class.is_expanded()
-    }
-
-    /// The generated-code inspector needs more horizontal room than the
-    /// Compact phone sheet provides. It remains available on tablet, desktop,
-    /// and web layouts.
-    pub fn code_property_tab_available(&self) -> bool {
-        !self.compact_layout()
-    }
-
-    /// Active PropertyPanel tab after applying responsive availability. A
-    /// retained Code value (for example after resizing an iPad split view down
-    /// to Compact) presents as Design until enough room is available again.
-    pub fn effective_property_tab(&self) -> crate::PropertyTab {
-        if !self.code_property_tab_available()
-            && matches!(self.property_tab, crate::PropertyTab::Code)
-        {
-            crate::PropertyTab::Design
-        } else {
-            self.property_tab
-        }
-    }
-
-    /// Set the active PropertyPanel tab without allowing direct action
-    /// dispatch to reopen Code in a Compact layout. Returns whether the stored
-    /// value changed.
+    /// Set the active PropertyPanel tab. Returns whether the stored value
+    /// changed.
     pub fn set_property_tab(&mut self, requested: crate::PropertyTab) -> bool {
-        let next = if !self.code_property_tab_available()
-            && matches!(requested, crate::PropertyTab::Code)
-        {
-            crate::PropertyTab::Design
-        } else {
-            requested
-        };
-        let changed = self.property_tab != next;
-        self.property_tab = next;
-        if !self.code_property_tab_available()
-            && matches!(self.property_tab_hover, Some(crate::PropertyTab::Code))
-        {
-            self.property_tab_hover = None;
-        }
+        let changed = self.property_tab != requested;
+        self.property_tab = requested;
         changed
     }
 }

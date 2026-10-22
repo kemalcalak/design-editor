@@ -30,9 +30,6 @@ de-editor-ui = { path = "../de-editor-ui", features = ["runtime-icon-catalog", "
 # `daemon_base` module reads its shared MCP-port/daemon-origin consts.
 de-editor-core = { path = "../de-editor-core" }
 
-# The canonical collaboration id grammar. Dependency-free and wasm32-clean —
-# the push gate parses namespaced ids with it rather than matching prefixes.
-de-util = { path = "../de-util" }
 # These stay optional and are pulled only by `canvaskit`, so the wasm32-clean
 # stub baseline (`--no-default-features --features web`) never compiles the
 # full editor pipeline. `de-pen-loader` disables `skia-measure` below; the web

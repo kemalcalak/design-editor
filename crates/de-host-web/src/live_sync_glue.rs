@@ -157,9 +157,6 @@ fn push_reasons(
 pub(crate) fn start<C: RepaintContext + 'static>(inner: &Rc<RefCell<C>>, sync: SharedSync) {
     ACTIVE_SYNC.with(|slot| *slot.borrow_mut() = Some(Rc::downgrade(&sync)));
     let base = crate::daemon_base::daemon_base();
-    // One-shot: learn whether this daemon is the document's sole sequencer,
-    // which decides whether a sync conflict may auto-resolve.
-    probe_serve_mode(&base);
     // One document fetch / one push at a time; ticks observing an in-flight
     // request skip (the TS hook queues at most one — same effective shape).
     // `fetch_busy` stays a plain Cell (pull-side, local to this module);
@@ -224,7 +221,6 @@ fn poll_version<C: RepaintContext + 'static>(
         sync.borrow_mut().gate.note_conflict(v); // observer latch reports; user decides again
         return;
     }
-    maybe_auto_resolve_conflict_in_session(inner, sync, pair);
     if !sync.borrow().gate.pull_allowed(pair) {
         return;
     }
@@ -234,19 +230,7 @@ fn poll_version<C: RepaintContext + 'static>(
     let base_owned = base.to_string();
     let fetch_busy = fetch_busy.clone();
     let last_selection_key = last_selection_key.clone();
-    let on_version: Rc<dyn Fn(u16, String)> = Rc::new(move |status: u16, body: String| {
-        // A refused credential is the signal that this tab no longer speaks
-        // for the account whose document it is showing. Treating it as "no
-        // version" — which is what an untyped body read does — is what let the
-        // previous account's document sit on screen indefinitely.
-        if matches!(status, 401 | 403) {
-            note_auth_invalid();
-            return;
-        }
-        // The daemon answers both counters here. Hand the collaboration one to
-        // its own loop rather than opening a second probe; a `collabSeq` bump
-        // must never reach the document fetch below.
-        crate::collab_sync::note_version_probe(&body);
+    let on_version: Rc<dyn Fn(u16, String)> = Rc::new(move |_status: u16, body: String| {
         let Some(version) = WebSyncClient::parse_version_probe(&body) else {
             return; // daemon down / non-JSON error body — retry next tick
         };
@@ -273,58 +257,6 @@ fn poll_version<C: RepaintContext + 'static>(
         }
     });
     let _ = live_sync::get_with_status(&format!("{base}/api/mcp/version"), on_version);
-}
-
-/// Auto-resolve a latched push conflict, but only inside a live session.
-///
-/// A conflict closes both the pull and the push gate and is cleared by exactly
-/// two things, neither reachable from this tick: the VS Code host's explicit
-/// `resolve-conflict`, and a successful re-push. A plain browser tab has
-/// neither, so a single 409 wedges live sync for the rest of the page's life.
-///
-/// Auto-accepting the remote is only safe when the *server* is the authority
-/// and the user's dropped work is recoverable — which is exactly what an
-/// `Active` collaboration session provides:
-///
-/// * the daemon's document is the sequenced truth every peer already sees, so
-///   there is nothing for this tab to "win" by holding its copy back;
-/// * the runtime projects a rejected local edit into
-///   `collab.discarded_edit`, and the panel offers to replay it, so accepting
-///   the remote does not silently destroy the edit that lost.
-///
-/// Outside a session neither holds — the daemon is a peer, not an authority,
-/// and nothing preserves the losing edit — so the latch stays and the existing
-/// explicit-resolution semantics are untouched. That is the difference between
-/// recovering automatically and quietly overwriting a user's unpushed work.
-fn maybe_auto_resolve_conflict_in_session<C: RepaintContext + 'static>(
-    inner: &Rc<RefCell<C>>,
-    sync: &SharedSync,
-    pair: (u64, u64),
-) {
-    let has_conflict = sync.borrow().gate.conflict().is_some();
-    let phase = inner
-        .try_borrow()
-        .map(|context| context.host().editor_state().editor_ui.collab.phase)
-        .unwrap_or(de_editor_core::CollabConnectionPhase::Idle);
-    if !auto_resolve_is_safe(has_conflict, phase, server_is_authoritative()) {
-        return;
-    }
-    // Accepting the remote overwrites whatever this tab had not yet pushed.
-    // Undo is the primary way back (the apply is undoable); this stash is the
-    // belt-and-braces copy plus the notice that tells the user any of it
-    // happened. It must run BEFORE the resolve, while the local document is
-    // still the one on screen.
-    if !live_sync_conflict::preserve_local_document(inner, crate::collab_sync::now_ms()) {
-        // No backup taken, so nothing is accepted. Better to converge one tick
-        // later than to overwrite unpushed work with no way back.
-        return;
-    }
-    // Re-opens the pull for THIS pair only; the resolving pull's apply calls
-    // `note_synced`, which is what finally clears the baseline and reopens the
-    // push side too.
-    if let Ok(mut sync) = sync.try_borrow_mut() {
-        sync.gate.resolve_accept_remote(pair);
-    }
 }
 
 /// Apply a `GET /api/mcp/document` response to the live shell.
@@ -403,10 +335,6 @@ fn apply_document_response<C: RepaintContext + 'static>(
         })
         .unwrap_or(false);
     if applied {
-        // Every id in this document came from the daemon, so it is the set an
-        // active session will accept a push against. Recording it here is what
-        // lets the push gate tell an edited node from an invented one.
-        crate::collab_sync::note_daemon_document(inner_ref.host().editor_state());
         // Baseline = OUR serialization of the just-applied document, so the
         // push tick compares apples to apples (serde normalization differs
         // from the daemon's wire bytes).
@@ -531,19 +459,6 @@ fn push_document_if_changed<C: RepaintContext + 'static>(
         // from the scalar baseline, not mistaken for a content change.
         reasons.editor_meta
     };
-    // The daemon refused this tab's credential. Whatever is on screen belongs
-    // to whoever was signed in before, so pushing it now would write one
-    // account's work into whichever tenant the new credential resolves to.
-    // Held until the identity reset rebuilds the tab.
-    if auth_is_invalid() {
-        return;
-    }
-    // An active collaboration session cannot sequence a node id this browser
-    // minted from its local counter. Hold the push rather than fork the shared
-    // document; the next pull replaces the local node with the daemon's copy.
-    if crate::collab_sync::push_blocked_by_session(inner.borrow().host().editor_state()) {
-        return;
-    }
     if !should_push {
         // Bytes already match the daemon baseline (e.g. a generation-only
         // replace — same content, new generation): no push to send, but the
@@ -726,15 +641,6 @@ mod tests {
 }
 
 thread_local! {
-    /// Raised when the daemon answered a sync request 401/403.
-    ///
-    /// A tab whose credential stopped being accepted must stop pushing: the
-    /// document on screen belongs to whoever WAS signed in, and pushing it
-    /// after a switch would write one account's work into another's tenant.
-    /// Cleared by [`clear_auth_invalid`], which the identity reset calls once
-    /// the tab has been rebuilt for the new account.
-    pub(super) static AUTH_INVALID: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
-
     /// The mounted editor's sync controller, exposed weakly so File → Save can
     /// consume the daemon's returned version without creating an ownership
     /// cycle or threading sync state through every DOM file-action callback.
@@ -747,17 +653,8 @@ pub(crate) use live_sync_controller::{acknowledge_daemon_save, SharedSync, SyncC
 // Spine-local: the two identity pairs every gating decision here is keyed on.
 use live_sync_controller::{current_oversize_identity, current_pair};
 
-#[path = "live_sync_conflict.rs"]
-mod live_sync_conflict;
-#[path = "live_sync_identity.rs"]
-mod live_sync_identity;
-pub(crate) use live_sync_identity::{auth_is_invalid, note_auth_invalid, reset_for_new_identity};
-// Only the latch's own test lifts it; the reset clears it internally.
-use live_sync_conflict::{auto_resolve_is_safe, probe_serve_mode, server_is_authoritative};
-#[cfg(test)]
-pub(crate) use live_sync_identity::clear_auth_invalid;
 // Lives here rather than beside `lib.rs`'s modules because the two paths it
 // drives are private submodules of this spine.
 #[cfg(test)]
-#[path = "live_sync_toast_tests.rs"]
-mod live_sync_toast_tests;
+#[path = "live_sync_latch_tests.rs"]
+mod live_sync_latch_tests;

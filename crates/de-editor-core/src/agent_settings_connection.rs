@@ -63,7 +63,7 @@ pub struct ProviderConnection {
 /// Result payload the host-side probe writes back through
 /// [`AgentSettings::apply_provider_connect_outcome`]. Discovered
 /// model entries travel separately through `chat.discovered_models`
-/// (the same seam startup discovery uses).
+/// (the same seam background model discovery uses).
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ProviderConnectOutcome {
     pub connected: bool,

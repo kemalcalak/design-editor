@@ -34,8 +34,6 @@ pub(super) const SETTINGS_FONT_FAMILY: &str = crate::widgets::home_surface::SANS
 /// section header for the page, not a poster for it.
 pub(super) const INTRO_TITLE_FONT: f32 = 16.0;
 pub(super) const INTRO_DESC_FONT: f32 = 12.0;
-const TOUCH_INTRO_TITLE_FONT: f32 = 17.0;
-const TOUCH_INTRO_DESC_FONT: f32 = 14.0;
 /// Clear space above the title's ascender, and below the block's last
 /// descender before the first row.
 const INTRO_TOP_PAD: f32 = 2.0;
@@ -67,35 +65,15 @@ const LABEL_INK: f32 = LABEL_ASCENT + LABEL_DESCENT;
 const DESC_ASCENT: f32 = ROW_DESC_FONT * ASCENT_RATIO;
 const DESC_DESCENT: f32 = ROW_DESC_FONT * DESCENT_RATIO;
 const DESC_INK: f32 = DESC_ASCENT + DESC_DESCENT;
-#[derive(Debug, Clone, Copy, PartialEq)]
-struct IntroMetrics {
-    title_font: f32,
-    desc_font: f32,
+const fn intro_title_baseline() -> f32 {
+    INTRO_TOP_PAD + INTRO_TITLE_FONT * ASCENT_RATIO
 }
 
-const fn intro_metrics(touch: bool) -> IntroMetrics {
-    if touch {
-        IntroMetrics {
-            title_font: TOUCH_INTRO_TITLE_FONT,
-            desc_font: TOUCH_INTRO_DESC_FONT,
-        }
-    } else {
-        IntroMetrics {
-            title_font: INTRO_TITLE_FONT,
-            desc_font: INTRO_DESC_FONT,
-        }
-    }
-}
-
-const fn intro_title_baseline(metrics: IntroMetrics) -> f32 {
-    INTRO_TOP_PAD + metrics.title_font * ASCENT_RATIO
-}
-
-const fn intro_desc_baseline(metrics: IntroMetrics) -> f32 {
-    intro_title_baseline(metrics)
-        + metrics.title_font * DESCENT_RATIO
+const fn intro_desc_baseline() -> f32 {
+    intro_title_baseline()
+        + INTRO_TITLE_FONT * DESCENT_RATIO
         + INTRO_LINE_GAP
-        + metrics.desc_font * ASCENT_RATIO
+        + INTRO_DESC_FONT * ASCENT_RATIO
 }
 
 /// How many lines of text a row carries. The row's BOX HEIGHT follows
@@ -168,24 +146,17 @@ pub(super) fn measure_settings_text(cx: &mut PaintCx<'_>, text: &str, font_size:
 /// top to the first row below it. One source for paint, hit-test, and the
 /// content-height walk on every tab.
 pub(super) const fn tab_intro_height(has_desc: bool) -> f32 {
-    tab_intro_height_for_ui(has_desc, false)
-}
-
-/// Density-aware intro height. Touch paint and all body offsets consume this
-/// same calculation so increasing legibility cannot make the following rows
-/// overlap the intro.
-pub(super) const fn tab_intro_height_for_ui(has_desc: bool, touch: bool) -> f32 {
-    let metrics = intro_metrics(touch);
     if has_desc {
-        intro_desc_baseline(metrics) + metrics.desc_font * DESCENT_RATIO + INTRO_BOTTOM_GAP
+        intro_desc_baseline() + INTRO_DESC_FONT * DESCENT_RATIO + INTRO_BOTTOM_GAP
     } else {
-        intro_title_baseline(metrics) + metrics.title_font * DESCENT_RATIO + INTRO_BOTTOM_GAP
+        intro_title_baseline() + INTRO_TITLE_FONT * DESCENT_RATIO + INTRO_BOTTOM_GAP
     }
 }
 
 /// Paint a tab's intro at the top of `content`: a section-sized title and
 /// at most one muted line. Both are ellipsized to the content width so a
-/// long translation can't run past the modal edge.
+/// long translation can't run past the modal edge. Shares its baselines
+/// with [`tab_intro_height`].
 pub(super) fn paint_tab_intro(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
@@ -193,54 +164,33 @@ pub(super) fn paint_tab_intro(
     title: &str,
     desc: Option<&str>,
 ) {
-    paint_tab_intro_for_ui(cx, theme, content, title, desc, false);
-}
-
-/// Density-aware tab intro paint. Desktop keeps the legacy 15/12 typography;
-/// touch surfaces use 17/14 while sharing baselines with
-/// [`tab_intro_height_for_ui`].
-pub(super) fn paint_tab_intro_for_ui(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    content: Rect,
-    title: &str,
-    desc: Option<&str>,
-    touch: bool,
-) {
-    let metrics = intro_metrics(touch);
-    let title_text = fit_text(cx, title, content.size.x, metrics.title_font);
+    let title_text = fit_text(cx, title, content.size.x, INTRO_TITLE_FONT);
     let title_layout = TextLayout::single_run(
         &title_text,
         SETTINGS_FONT_FAMILY,
-        metrics.title_font,
+        INTRO_TITLE_FONT,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
     )
     .with_font_weight(700);
     cx.backend.draw_text(
         &title_layout,
-        Point2D::new(
-            content.origin.x,
-            content.origin.y + intro_title_baseline(metrics),
-        ),
+        Point2D::new(content.origin.x, content.origin.y + intro_title_baseline()),
     );
     let Some(desc) = desc else {
         return;
     };
-    let text = fit_text(cx, desc, content.size.x, metrics.desc_font);
+    let text = fit_text(cx, desc, content.size.x, INTRO_DESC_FONT);
     let layout = TextLayout::single_run(
         &text,
         SETTINGS_FONT_FAMILY,
-        metrics.desc_font,
+        INTRO_DESC_FONT,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
     );
     cx.backend.draw_text(
         &layout,
-        Point2D::new(
-            content.origin.x,
-            content.origin.y + intro_desc_baseline(metrics),
-        ),
+        Point2D::new(content.origin.x, content.origin.y + intro_desc_baseline()),
     );
 }
 
@@ -563,18 +513,6 @@ mod tests {
     }
 
     #[test]
-    fn intro_density_preserves_desktop_and_expands_touch_geometry() {
-        assert_eq!(tab_intro_height_for_ui(true, false), tab_intro_height(true));
-        assert_eq!(
-            tab_intro_height_for_ui(false, false),
-            tab_intro_height(false)
-        );
-        assert_eq!(tab_intro_height(true), 49.0);
-        assert!((tab_intro_height_for_ui(true, true) - 52.0).abs() < 0.01);
-        assert!(tab_intro_height_for_ui(false, true) > tab_intro_height(false));
-    }
-
-    #[test]
     fn both_row_shapes_centre_their_ink_in_their_own_box() {
         // A one-line row is not a two-line row with the bottom line
         // missing — each shape's ink stack sits optically centred in the
@@ -642,33 +580,6 @@ mod fit_tests {
         assert!(
             painted <= 100.0,
             "fitted width {painted} must fit the 100px column in the PAINTED family"
-        );
-    }
-
-    #[test]
-    fn touch_intro_paint_uses_17_and_14_point_metrics_inside_its_height() {
-        let content = Rect::xywh(12.0, 20.0, 320.0, 200.0);
-        let mut backend = FamilyGapBackend::default();
-        let mut cx = PaintCx {
-            backend: &mut backend,
-        };
-
-        paint_tab_intro_for_ui(
-            &mut cx,
-            &crate::theme::Theme::dark(),
-            content,
-            "Title",
-            Some("Description"),
-            true,
-        );
-
-        assert_eq!(backend.runs.len(), 2);
-        assert_eq!(backend.runs[0].font_size, TOUCH_INTRO_TITLE_FONT);
-        assert_eq!(backend.runs[1].font_size, TOUCH_INTRO_DESC_FONT);
-        let desc_ink_bottom = backend.runs[1].origin.y + TOUCH_INTRO_DESC_FONT * DESCENT_RATIO;
-        assert!(
-            desc_ink_bottom
-                <= content.origin.y + tab_intro_height_for_ui(true, true) - INTRO_BOTTOM_GAP
         );
     }
 

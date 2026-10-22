@@ -83,23 +83,14 @@ pub(crate) fn stroke_side_input_rects(
     }
 }
 
-fn stroke_mode_popover_layout(
-    x0: f32,
-    y: f32,
-    width: f32,
-    touch_controls: bool,
-) -> (Rect, Rect, [Rect; 3]) {
-    let gear_size = if touch_controls { 30.0 } else { 18.0 };
+fn stroke_mode_popover_layout(x0: f32, y: f32, width: f32) -> (Rect, Rect, [Rect; 3]) {
+    let gear_size = 18.0;
     let gear = Rect {
         origin: Point2D::new(x0 + width - PAD_X - gear_size, y + 11.0 - gear_size / 2.0),
         size: Point2D::new(gear_size, gear_size),
     };
-    let pop_box = mode_popover::mode_popover_rect_from_gear(gear, width, touch_controls);
-    (
-        gear,
-        pop_box,
-        mode_popover::mode_popover_rows(pop_box, touch_controls),
-    )
+    let pop_box = mode_popover::mode_popover_rect_from_gear(gear, width);
+    (gear, pop_box, mode_popover::mode_popover_rows(pop_box))
 }
 
 pub(crate) fn push_stroke_action_rects(
@@ -108,9 +99,8 @@ pub(crate) fn push_stroke_action_rects(
     y: f32,
     width: f32,
     popover_open: bool,
-    touch_controls: bool,
 ) {
-    let (gear, _box, rows) = stroke_mode_popover_layout(x0, y, width, touch_controls);
+    let (gear, _box, rows) = stroke_mode_popover_layout(x0, y, width);
     out.push((PropertyPanelAction::ToggleStrokeModePopover, gear));
     if popover_open {
         for (i, rect) in rows.into_iter().enumerate() {
@@ -132,9 +122,8 @@ pub fn paint_stroke_mode_popover(
     x0: f32,
     y: f32,
     width: f32,
-    touch_controls: bool,
 ) {
-    let (_gear, pop_box, rows) = stroke_mode_popover_layout(x0, y, width, touch_controls);
+    let (_gear, pop_box, rows) = stroke_mode_popover_layout(x0, y, width);
     mode_popover::paint_mode_popover(
         cx,
         theme,

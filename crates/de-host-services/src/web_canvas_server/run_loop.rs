@@ -26,12 +26,6 @@ use super::*;
 /// to the bound address. Non-managed mode is untouched: no token, no handshake
 /// output, no stdin thread.
 pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
-    // The public multi-account daemon is a different accept loop: it resolves
-    // a tenant per connection instead of sharing one document. Everything
-    // below this line is the single-document daemon, unchanged.
-    if options.online {
-        return online_run_loop::run_online_web_canvas(options);
-    }
     let mode = options.mode();
     let ServeWebOptions {
         port,
@@ -39,7 +33,6 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         host,
         managed,
         allow_origins,
-        online: _,
         config_root: _,
     } = options;
     let current_path = path.clone();
@@ -50,12 +43,6 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         credential_persistence,
         crate::settings_io::save_checked,
     )?;
-    // Device-login proxy: init the shared auth runtime and restore the
-    // session the desktop GUI may already have persisted. Never on a
-    // non-loopback bind outside managed mode — the proxy session belongs
-    // to the daemon owner, not to whoever can reach the port.
-    let loopback_bind = matches!(host.as_str(), "127.0.0.1" | "localhost" | "::1");
-    crate::web_auth::init(&mut editor, managed || loopback_bind);
     let listener = TcpListener::bind((host.as_str(), port))
         .map_err(|e| WebCanvasError::Config(format!("bind {host}:{port}: {e}")))?;
     let local_addr = listener
@@ -143,9 +130,6 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
             guard.allow_origins = allow_origins;
         }
     }
-    // The collaboration pump. It observes `shutdown` itself, so it retires
-    // within one tick of the daemon being asked to stop.
-    collab_driver::spawn(&state, &hub, &shutdown);
     for stream in listener.incoming() {
         if shutdown.load(Ordering::Acquire) {
             break;

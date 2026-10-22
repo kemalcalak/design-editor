@@ -18,7 +18,6 @@ impl WidgetHostNative {
     pub(in crate::widget_host) fn press_property_overlay_tiers(
         &mut self,
         ctx: &PressCtx,
-        allow_touch_panel_defer: bool,
     ) -> Option<bool> {
         let (x, y) = (ctx.x, ctx.y);
         let viewport_width = ctx.viewport_width;
@@ -108,14 +107,7 @@ impl WidgetHostNative {
             return Some(true);
         }
 
-        // 0c0a1. Text font-family picker — a touch inside the popup is
-        // release-delayed so a row press can promote to one-finger scrolling.
-        // Mouse presses and touch presses outside the popup keep the existing
-        // immediate select / outside-dismiss behaviour.
-        if allow_touch_panel_defer && !in_git_panel && self.begin_font_picker_touch_gesture(ctx) {
-            return Some(true);
-        }
-        // Text font-family picker — outside-click dismiss.
+        // 0c0a1. Text font-family picker — outside-click dismiss.
         if !in_git_panel && self.dismiss_font_picker_on_press(x, y, viewport_width, viewport_height)
         {
             return Some(true);
@@ -188,41 +180,11 @@ impl WidgetHostNative {
     pub(in crate::widget_host) fn press_property_panel_tier(
         &mut self,
         ctx: &PressCtx,
-        allow_touch_panel_defer: bool,
     ) -> Option<bool> {
         let (x, y) = (ctx.x, ctx.y);
         let viewport_width = ctx.viewport_width;
         let viewport_height = ctx.viewport_height;
         let in_git_panel = ctx.in_git_panel;
-        let inspector_visible = !self.editor_state.editor_ui.touch_chrome()
-            || self.editor_state.editor_ui.expanded_touch_layout()
-            || self.editor_state.editor_ui.mobile_sheet
-                == Some(de_editor_core::size_class::MobileSheetKind::Properties);
-        if !inspector_visible {
-            return None;
-        }
-        // Touch inspector close hides the surface without destroying the
-        // selection. Selection and inspector visibility are separate state.
-        if self.editor_state.editor_ui.touch_chrome()
-            && !self.editor_state.editor_ui.expanded_touch_layout()
-        {
-            if let Some(panel) =
-                PropertyPanel::for_selection_with_scene(&self.editor_state, &self.layout_scene)
-            {
-                let sheet = self.property_rect(ctx.viewport_width, ctx.viewport_height);
-                let close = de_editor_ui::widgets::mobile_chrome::sheet_close_rect(sheet);
-                if close.contains(Point2D::new(x, y)) {
-                    self.cancel_native_touch_gestures();
-                    self.dismiss_mobile_surface();
-                    self.mark_dirty();
-                    return Some(true);
-                }
-                let _ = panel;
-            }
-        }
-        if allow_touch_panel_defer && self.begin_property_touch_gesture(ctx) {
-            return Some(true);
-        }
         // 0c. PropertyPanel input row.
         self.refresh_layout_scene();
         if let Some(panel) =
@@ -322,7 +284,6 @@ impl WidgetHostNative {
                 self.editor_state.ui.property_caret_anchor_ms = self.now_ms;
                 self.editor_state.ui.property_draft_select_all = false;
                 self.editor_state.chat.focused = false;
-                self.reveal_property_keyboard_owner();
                 self.mark_dirty();
                 return Some(true);
             }

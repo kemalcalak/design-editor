@@ -166,35 +166,11 @@ fn parse_chat_attachments(value: Option<&Value>) -> Vec<ChatAttachment> {
 }
 
 /// Everything an AI turn needs to commit to the canvas: the document
-/// authority, the stream that announces a change, and the shutdown admission
-/// that decides whether a commit may happen at all.
-///
-/// Bundled because the three always travel together — and separating them is
-/// how `/api/ai/standard` came to have commit points with no admission.
+/// authority and the stream that announces a change.
 #[derive(Clone, Copy)]
 pub(crate) struct CanvasWriteTarget<'a> {
     pub(crate) state: &'a Mutex<WebCanvasState>,
     pub(crate) hub: &'a SseHub,
-    pub(crate) write_barrier: Option<&'a crate::web_canvas_server::WriteBarrier>,
-}
-
-/// Admission for one document commit on the AI path.
-///
-/// The conversation itself never holds the shutdown barrier — a model turn can
-/// run for minutes and would block every stop. The pass is taken only for the
-/// instant a commit touches the document, and refused once shutdown has closed
-/// the barrier: the reply still streams back, but the document is left alone
-/// and the caller is told the turn was not applied.
-fn admit_document_write(
-    barrier: Option<&crate::web_canvas_server::WriteBarrier>,
-) -> Result<Option<crate::web_canvas_server::WritePass<'_>>, WebChatStandardError> {
-    let Some(barrier) = barrier else {
-        return Ok(None); // local/managed: no flush to protect
-    };
-    barrier
-        .enter()
-        .map(Some)
-        .ok_or(WebChatStandardError::ShuttingDown)
 }
 
 pub fn stream_standard_turn<W: Write>(
@@ -202,11 +178,10 @@ pub fn stream_standard_turn<W: Write>(
     req: WebStandardTurnRequest,
     state: &Mutex<WebCanvasState>,
     hub: &SseHub,
-    write_barrier: Option<&crate::web_canvas_server::WriteBarrier>,
     cors_origin: Option<&str>,
 ) -> std::io::Result<()> {
     crate::ai_proxy::write_sse_headers(out, cors_origin)?;
-    let mut snapshot = match apply_request_snapshot(&req, state, hub, write_barrier) {
+    let mut snapshot = match apply_request_snapshot(&req, state, hub) {
         Ok(snapshot) => snapshot,
         Err(error) => {
             // `write_error_event` feeds `de-ai`'s `ChatDelta::Error(String)`
@@ -223,25 +198,7 @@ pub fn stream_standard_turn<W: Write>(
     {
         let tick = {
             let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
-            // Through the gateway like every other daemon write: during a live
-            // session this housekeeping edit would be an unsequenced AI write.
-            // Skipping it only means the starter frame stays, which is strictly
-            // better than forking the shared document.
-            let gated = guard
-                .gate_daemon_mutation(
-                    de_editor_core::CollabGateAction::Document(
-                        de_editor_core::CollabDocumentMutation::NodeDelete,
-                    ),
-                    de_editor_core::CollabEditSource::Ai,
-                )
-                .is_ok();
-            // Also a document commit, so it needs the same instant of
-            // admission; a closed barrier simply skips the clear.
-            let starter_clear_pass = admit_document_write(write_barrier).ok();
-            if gated
-                && starter_clear_pass.is_some()
-                && clear_live_starter_frame_for_design(&mut guard).is_some()
-            {
+            if clear_live_starter_frame_for_design(&mut guard).is_some() {
                 snapshot = guard.editor.clone();
                 Some(guard.sse_tick())
             } else {
@@ -292,14 +249,7 @@ pub fn stream_standard_turn<W: Write>(
         }
         crate::chat_intent::DesignIntent::Modify => {
             let plan = modify_plan.expect("route checked has_modify_plan");
-            stream_modify_route(
-                out,
-                plan,
-                design_provider.as_ref(),
-                state,
-                hub,
-                write_barrier,
-            )
+            stream_modify_route(out, plan, design_provider.as_ref(), state, hub)
         }
         crate::chat_intent::DesignIntent::New => stream_new_design_route(
             out,
@@ -307,11 +257,7 @@ pub fn stream_standard_turn<W: Write>(
             snapshot,
             design_provider,
             model,
-            CanvasWriteTarget {
-                state,
-                hub,
-                write_barrier,
-            },
+            CanvasWriteTarget { state, hub },
         ),
     }
 }
@@ -320,7 +266,6 @@ fn apply_request_snapshot(
     req: &WebStandardTurnRequest,
     state: &Mutex<WebCanvasState>,
     hub: &SseHub,
-    write_barrier: Option<&crate::web_canvas_server::WriteBarrier>,
 ) -> Result<EditorState, WebChatStandardError> {
     let mut broadcast_tick = None;
     let mut snapshot = {
@@ -340,38 +285,12 @@ fn apply_request_snapshot(
             let loaded = de_pen_loader::load_canonical(doc_json)
                 .map_err(|e| WebChatStandardError::Document(e.to_string()))?;
             if guard.editor.doc != loaded.value {
-                // A whole-document swap during a live session is exactly what
-                // the collaboration protocol cannot sequence, so the gateway
-                // refuses it here rather than letting the AI route silently
-                // replace what peers are editing.
-                guard
-                    .gate_daemon_mutation(
-                        de_editor_core::CollabGateAction::ReplaceDocument,
-                        de_editor_core::CollabEditSource::Ai,
-                    )
-                    .map_err(WebChatStandardError::CollabRefused)?;
-                // The one instant this turn touches the document; refused
-                // outright once shutdown has closed the barrier.
-                let _write_pass = admit_document_write(write_barrier)?;
                 guard.replace_document(loaded.value);
                 broadcast_tick = Some(guard.sse_tick());
             }
         }
-        // `apply_editor_meta` and the active-page switch below both write
-        // state that `EditorMeta::from_state` serialises into the tenant's
-        // persisted snapshot (`active_page_index`, `preserve_authored_
-        // geometry`). They are therefore document writes for admission
-        // purposes even when the document itself is unchanged, and a closed
-        // barrier must skip them — otherwise a turn arriving during shutdown
-        // moves the active page after the flush snapshotted it.
-        //
-        // Skipped, not refused: the metadata is incidental to the turn, so a
-        // plain chat reply still streams back rather than erroring.
-        let metadata_pass = admit_document_write(write_barrier).ok();
-        if metadata_pass.is_some() {
-            if let Some(meta) = req.editor_meta.clone() {
-                de_pen_loader::apply_editor_meta(&mut guard.editor, meta);
-            }
+        if let Some(meta) = req.editor_meta.clone() {
+            de_pen_loader::apply_editor_meta(&mut guard.editor, meta);
         }
         if let Some(size) = req.agent_team_size {
             guard.editor.chat.agent_team_size = size.clamp(1, 6);
@@ -384,17 +303,15 @@ fn apply_request_snapshot(
             .last()
             .cloned()
             .unwrap_or(NodeId::NONE);
-        if metadata_pass.is_some() {
-            if let Some(page_id) = req.active_page_id.as_deref() {
-                if let Some(index) = guard
-                    .editor
-                    .doc
-                    .pages
-                    .as_ref()
-                    .and_then(|pages| pages.iter().position(|p| p.id == page_id))
-                {
-                    let _ = guard.editor.set_active_page(index);
-                }
+        if let Some(page_id) = req.active_page_id.as_deref() {
+            if let Some(index) = guard
+                .editor
+                .doc
+                .pages
+                .as_ref()
+                .and_then(|pages| pages.iter().position(|p| p.id == page_id))
+            {
+                let _ = guard.editor.set_active_page(index);
             }
         }
         guard.editor.clone()
@@ -486,7 +403,6 @@ fn stream_modify_route<W: Write>(
     provider: &dyn ChatProvider,
     state: &Mutex<WebCanvasState>,
     hub: &SseHub,
-    write_barrier: Option<&crate::web_canvas_server::WriteBarrier>,
 ) -> std::io::Result<()> {
     write_delta_event(out, STANDARD_MODIFY_STEP)?;
     let target_frame_ids = plan.target_frame_ids;
@@ -515,39 +431,18 @@ fn stream_modify_route<W: Write>(
         write_delta_event(out, &format!("\n{full_response}"))?;
         let (applied, tick) = {
             let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
-            // `apply_design_modification` writes a batch straight into the
-            // editor, so the gate runs before it rather than per command.
-            if guard
-                .gate_daemon_mutation(
-                    de_editor_core::CollabGateAction::Document(
-                        de_editor_core::CollabDocumentMutation::NodePropertyBatch,
-                    ),
-                    de_editor_core::CollabEditSource::Ai,
-                )
-                .is_err()
-            {
-                (0, None)
+            let (count, mutated) = crate::chat_canvas_tools::apply_design_modification(
+                &mut guard.editor,
+                &nodes,
+                &target_frame_ids,
+            );
+            let tick = if mutated {
+                guard.version += 1;
+                Some(guard.sse_tick())
             } else {
-                // Shutting down: the reply still streams, the document is left
-                // exactly as the flush will find it.
-                let admitted = admit_document_write(write_barrier).ok();
-                let (count, mutated) = if admitted.is_none() {
-                    (0, false)
-                } else {
-                    crate::chat_canvas_tools::apply_design_modification(
-                        &mut guard.editor,
-                        &nodes,
-                        &target_frame_ids,
-                    )
-                };
-                let tick = if mutated {
-                    guard.version += 1;
-                    Some(guard.sse_tick())
-                } else {
-                    None
-                };
-                (count, tick)
-            }
+                None
+            };
+            (count, tick)
         };
         if let Some(tick) = tick {
             hub.broadcast(tick);
@@ -606,7 +501,7 @@ fn stream_new_design_route<W: Write>(
     };
     let provider_arc: Arc<dyn ChatProvider> = Arc::from(provider);
     let llm = ChatProviderLlmClient::new(provider_arc.clone()).with_model(model.clone());
-    let mut sink = WebDesignDocSink::new(target.state, target.hub, target.write_barrier, snapshot);
+    let mut sink = WebDesignDocSink::new(target.state, target.hub, snapshot);
     let abort = AbortFlag::new();
     let image_model = request.model.clone();
     let image_provider = request.provider.clone();
@@ -729,23 +624,12 @@ fn stream_new_design_route<W: Write>(
 struct WebDesignDocSink<'a> {
     state: &'a Mutex<WebCanvasState>,
     hub: &'a SseHub,
-    write_barrier: Option<&'a crate::web_canvas_server::WriteBarrier>,
     mirror: EditorState,
 }
 
 impl<'a> WebDesignDocSink<'a> {
-    fn new(
-        state: &'a Mutex<WebCanvasState>,
-        hub: &'a SseHub,
-        write_barrier: Option<&'a crate::web_canvas_server::WriteBarrier>,
-        mirror: EditorState,
-    ) -> Self {
-        Self {
-            state,
-            hub,
-            write_barrier,
-            mirror,
-        }
+    fn new(state: &'a Mutex<WebCanvasState>, hub: &'a SseHub, mirror: EditorState) -> Self {
+        Self { state, hub, mirror }
     }
 }
 
@@ -755,14 +639,9 @@ impl DocSink for WebDesignDocSink<'_> {
     }
 
     fn apply(&mut self, cmd: EditorCommand) -> bool {
-        let Ok(_write_pass) = admit_document_write(self.write_barrier) else {
-            return false;
-        };
         let (applied, tick, snapshot) = {
             let mut guard = self.state.lock().unwrap_or_else(|p| p.into_inner());
-            let applied = guard
-                .apply_gated(cmd, de_editor_core::CollabEditSource::Ai)
-                .unwrap_or(false);
+            let applied = guard.editor.apply(cmd);
             let tick = if applied {
                 crate::design_session::fit_design_viewport_to_content(
                     &mut guard.editor,

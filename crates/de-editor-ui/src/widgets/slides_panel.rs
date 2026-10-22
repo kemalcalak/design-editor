@@ -45,10 +45,6 @@ use crate::{Color, Point2D, Rect, TextLayout, Theme};
 
 /// Height of the tab row that heads the rail.
 pub const SLIDES_TAB_ROW_HEIGHT: f32 = 44.0;
-/// Touch rail tab row. Its 4pt vertical insets leave 44pt tab targets.
-pub const TOUCH_SLIDES_TAB_ROW_HEIGHT: f32 = 52.0;
-/// Minimum width and height of every touch rail tab target.
-pub const TOUCH_SLIDES_TAB_TARGET: f32 = 44.0;
 /// Short alias used inside this module's geometry.
 const TAB_ROW_HEIGHT: f32 = SLIDES_TAB_ROW_HEIGHT;
 /// Height of the bar pinned to the rail's bottom edge.

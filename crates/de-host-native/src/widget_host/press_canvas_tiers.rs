@@ -124,7 +124,6 @@ impl WidgetHostNative {
                     x,
                     y,
                     text_edit_was_active,
-                    viewport_width,
                     viewport_height,
                 );
             }
@@ -143,13 +142,6 @@ impl WidgetHostNative {
         // the sweep handle can overlap the right-mid resize grip.
         if let Some((node_id, handle)) = self.arc_handle_hit(x, y, viewport_width, viewport_height)
         {
-            if !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::UnsupportedNodeProperty,
-                ),
-            ) {
-                return true;
-            }
             let pre = self.editor_state.snapshot_for_history();
             self.arc_handle_drag = Some(super::ArcHandleDragState {
                 node_id: de_editor_core::NodeId::new(&node_id),
@@ -166,11 +158,6 @@ impl WidgetHostNative {
             &self.editor_state,
             Point2D::new(x, y),
         ) {
-            if !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::NodePropertyBatch,
-            ) {
-                return true;
-            }
             let (start_authored_x, start_authored_y) = self
                 .editor_state
                 .selected_node()
@@ -205,13 +192,6 @@ impl WidgetHostNative {
         )
         .is_some()
         {
-            if !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::NodeProperty(
-                    de_editor_core::CollabNodeField::Rotation,
-                ),
-            ) {
-                return true;
-            }
             if let Some(node) = self
                 .layout_scene
                 .active_page()
@@ -246,7 +226,6 @@ impl WidgetHostNative {
                 x,
                 y,
                 text_edit_was_active,
-                viewport_width,
                 viewport_height,
             );
         }
@@ -265,22 +244,9 @@ impl WidgetHostNative {
                 x,
                 y,
                 text_edit_was_active,
-                viewport_width,
                 viewport_height,
             );
         }
-        // A touch down on empty canvas stays pending until it either crosses
-        // gesture slop (viewport pan) or releases as a tap (clear selection).
-        // Node hits above retain their ordinary selection / node-drag path.
-        if self.editor_state.editor_ui.touch_chrome() {
-            // Break node double-tap continuity on down even though selection
-            // clearing waits for release. A blank pan must never let the next
-            // node tap drill using a stale prior click.
-            self.editor_state.editor_ui.last_canvas_click = None;
-            self.begin_canvas_touch_gesture(x, y, viewport_width, viewport_height);
-            return blurred;
-        }
-
         // Desktop empty-canvas press — start a marquee.
         self.editor_state.editor_ui.last_canvas_click = None;
         let cleared_now = core_press::clear_selection_on_empty_canvas_press(

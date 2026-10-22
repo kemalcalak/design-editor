@@ -96,22 +96,11 @@ impl WidgetHost {
         // on the page (native parity — `host_requests.rs`).
         let mut clones = Vec::with_capacity(nodes.len());
         for node in &nodes {
-            let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-                de_editor_core::walkers::deep_clone_with_allocator(node, allocator, &mut taken)
-            } else {
-                Ok(de_editor_core::walkers::deep_clone_with_new_ids(
-                    node,
-                    &mut self.next_node_id,
-                    &mut taken,
-                ))
-            };
-            let mut clone = match result {
-                Ok(clone) => clone,
-                Err(error) => {
-                    self.show_collab_id_error(error);
-                    return true;
-                }
-            };
+            let mut clone = de_editor_core::walkers::deep_clone_with_new_ids(
+                node,
+                &mut self.next_node_id,
+                &mut taken,
+            );
             de_editor_core::walkers::translate_subtree(&mut clone, dx, dy);
             new_ids.push(de_editor_core::NodeId::new(clone.base().id.clone()));
             clones.push(clone);

@@ -23,13 +23,9 @@ fn teardown_three_times_no_panic() {
 #[test]
 fn lifecycle_hooks_are_idempotent() {
     // Mirrors spec §11.4 invariant + plan v7 Task 2 Step 16a:
-    // on_pause/on_resume/on_low_memory/teardown must each survive
-    // back-to-back invocation without panic.
+    // on_low_memory/teardown must each survive back-to-back invocation
+    // without panic.
     let mut ctx = setup_headless_context();
-    ctx.on_pause().expect("on_pause #1");
-    ctx.on_pause().expect("on_pause #2");
-    ctx.on_resume(None).expect("on_resume #1");
-    ctx.on_resume(None).expect("on_resume #2");
     ctx.on_low_memory();
     ctx.on_low_memory();
     ctx.teardown().expect("teardown #1");

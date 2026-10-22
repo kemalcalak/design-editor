@@ -75,11 +75,8 @@ fn mock_stream(request: &str) -> MockStream {
 }
 
 /// One SSE payload for the hub tests.
-fn tick(version: u64, collab_seq: u64) -> SseTick {
-    SseTick {
-        version,
-        collab_seq,
-    }
+fn tick(version: u64) -> SseTick {
+    SseTick { version }
 }
 
 #[test]

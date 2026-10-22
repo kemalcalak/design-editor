@@ -33,9 +33,6 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         if self.poll_mcp_server() {
             self.request_redraw(true);
         }
-        if self.collab_runtime.poll(&mut self.host) {
-            self.request_redraw(true);
-        }
         if self.mcp_shutdown_requested() {
             // Finalize-lifecycle invariant (0718-1-k3-1 postmortem) — see
             // `chat_session::finalize_design_session_if_needed`'s doc
@@ -194,10 +191,10 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         }
 
         self.window = Some(window);
-        // Replay last session's CLI connections (silent probes, one at a
-        // time) so the user isn't greeted by five "Connect" buttons on
-        // every launch.
-        self.restore_remembered_connections();
+        // Seed last session's CLI connections from the store. The silent
+        // replay probes themselves wait until the user opens the chat
+        // model picker or Settings → Agents (`start_cli_probes_on_demand`).
+        self.load_remembered_connections();
         if let Some(style) = crate::ui_prefs::load_pencil_cursor() {
             self.host.editor_state_mut().editor_ui.pencil_cursor_style = style;
         }
@@ -371,9 +368,9 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
             }
         }
 
-        // Startup background probes are likely still running. Wake
-        // the loop soon so their results are drained even if the user
-        // never touches the freshly opened window.
+        // Background probes (the launch update check, on-demand model
+        // discovery) may still be running. Wake the loop soon so their
+        // results are drained even if the user never touches the window.
         if self.update_probe.is_pending() || self.model_probe.is_pending() {
             event_loop.set_control_flow(ControlFlow::WaitUntil(
                 Instant::now() + Duration::from_millis(500),
@@ -397,11 +394,6 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                         "teardown-backstop",
                     );
                     event_loop.exit();
-                }
-            }
-            DesktopEvent::CollabWake => {
-                if self.collab_runtime.poll(&mut self.host) {
-                    self.request_redraw(true);
                 }
             }
             DesktopEvent::ImageDecodeReady => {
@@ -508,7 +500,6 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                 button: MouseButton::Left,
                 ..
             } => self.on_left_release(),
-            WindowEvent::Focused(false) => self.on_focus_lost(),
             WindowEvent::MouseWheel { delta, .. } => self.on_mouse_wheel(delta),
             WindowEvent::PinchGesture { delta, .. } => self.on_pinch_gesture(delta),
             // CJK composition: preedit updates paint through the
@@ -575,8 +566,6 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
     }
 
     fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
-        // Queue an authenticated Bye before transport workers are stopped.
-        self.collab_runtime.leave(&mut self.host);
         // macOS Cmd+Q / Alt+F4 / WM-close can deliver `exiting` without
         // `CloseRequested`; flush MCP port draft before snapshotting so
         // a focused-but-uncommitted edit isn't silently dropped.

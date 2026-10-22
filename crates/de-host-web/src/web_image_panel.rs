@@ -376,9 +376,6 @@ fn post_json_with_timeout(
     let Ok(xhr) = web_sys::XmlHttpRequest::new() else {
         return false;
     };
-    // Same reason as the AI transport: this helper builds its own XHR for a
-    // caller-chosen timeout and so bypasses the `live_sync` stamping.
-    let url = &crate::daemon_base::with_tenant_param(url);
     if xhr.open_with_async("POST", url, true).is_err() {
         return false;
     }

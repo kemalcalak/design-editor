@@ -17,9 +17,6 @@ impl WidgetHostNative {
             if self.editor_state.editor_ui.chat_model_picker.open {
                 return self.apply_chat_model_picker_backspace();
             }
-            if self.editor_state.editor_ui.login_modal_open {
-                return true;
-            }
             if !self.editor_state.editor_ui.agent_settings_open {
                 if let Some(changed) = self.home_backspace() {
                     return changed;
@@ -27,15 +24,6 @@ impl WidgetHostNative {
             }
             // Settings modal over Home: fall through so its own input
             // arm in the ladder below takes the key.
-        }
-        // Save-name dialog first — same modal priority as `apply_text`.
-        if let Some(changed) =
-            de_editor_core::save_name_keyboard::backspace(&mut self.editor_state, self.now_ms)
-        {
-            if changed {
-                self.mark_dirty();
-            }
-            return true;
         }
         if let Some(changed) = shared::prompt_center_backspace(&mut self.editor_state, self.now_ms)
         {
@@ -56,32 +44,15 @@ impl WidgetHostNative {
         if self.preview.is_some() {
             return self.preview_dispatch_key("Backspace", false);
         }
-        if self.editor_state.editor_ui.collab_join_input_active() {
-            let changed = de_editor_ui::widgets::collab_ui::join_address_backspace(
-                &mut self.editor_state.editor_ui,
-                self.now_ms,
-            )
-            .unwrap_or(false);
-            if changed {
-                self.mark_dirty();
-            }
-            return true;
-        }
         if self.apply_image_panel_backspace() {
             return true;
         }
         if self.editor_state.color_picker_hex_focused() {
-            if !self.collab_allows_color_picker_mutation() {
-                return true;
-            }
             self.editor_state.color_picker_hex_backspace(self.now_ms);
             self.mark_dirty();
             return true;
         }
         if self.editor_state.color_picker_rgb_focused() {
-            if !self.collab_allows_color_picker_mutation() {
-                return true;
-            }
             self.editor_state.color_picker_rgb_backspace(self.now_ms);
             self.mark_dirty();
             return true;
@@ -152,15 +123,6 @@ impl WidgetHostNative {
                 self.mark_dirty();
             }
             return changed;
-        }
-        if self.editor_state.ui.text_editing.is_some()
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::NodeProperty(
-                    de_editor_core::CollabNodeField::Content,
-                ),
-            )
-        {
-            return true;
         }
         if let Some(changed) = shared::text_edit_backspace(&mut self.editor_state, self.now_ms) {
             if changed {
@@ -271,10 +233,6 @@ impl WidgetHostNative {
         if self.apply_pen_backspace() {
             return true;
         }
-        if !self.collab_allows_document_mutation(de_editor_core::CollabDocumentMutation::NodeDelete)
-        {
-            return true;
-        }
         if shared::delete_selection_with_history(&mut self.editor_state) {
             self.mark_dirty();
             return true;
@@ -287,14 +245,6 @@ impl WidgetHostNative {
     pub fn apply_delete(&mut self) -> bool {
         if let Some(changed) = self.home_delete() {
             return changed;
-        }
-        if let Some(changed) =
-            de_editor_core::save_name_keyboard::delete_forward(&mut self.editor_state, self.now_ms)
-        {
-            if changed {
-                self.mark_dirty();
-            }
-            return true;
         }
         if let Some(changed) =
             shared::prompt_center_delete_forward(&mut self.editor_state, self.now_ms)
@@ -319,20 +269,6 @@ impl WidgetHostNative {
         }
         if self.apply_image_panel_delete() {
             return true;
-        }
-        // Forward deletion in the join input. A no-op falls through to
-        // `delete_owned_by_chrome_input`, which still swallows the key
-        // before it can reach the canvas selection.
-        if self.editor_state.editor_ui.collab_join_input_active() {
-            let changed = de_editor_ui::widgets::collab_ui::join_address_delete_forward(
-                &mut self.editor_state.editor_ui,
-                self.now_ms,
-            )
-            .unwrap_or(false);
-            if changed {
-                self.mark_dirty();
-                return true;
-            }
         }
         // The open font picker owns Delete. Its search draft handles
         // Backspace separately; forward-delete must never reach the canvas
@@ -379,15 +315,6 @@ impl WidgetHostNative {
         }
         // Delete is FORWARD deletion at the caret (or removes the
         // active selection) — textarea parity.
-        if self.editor_state.ui.text_editing.is_some()
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::NodeProperty(
-                    de_editor_core::CollabNodeField::Content,
-                ),
-            )
-        {
-            return true;
-        }
         if let Some(changed) = shared::text_edit_delete_forward(&mut self.editor_state, self.now_ms)
         {
             if changed {
@@ -418,10 +345,6 @@ impl WidgetHostNative {
         if shared::delete_owned_by_chrome_input(&self.editor_state) {
             return false;
         }
-        if !self.collab_allows_document_mutation(de_editor_core::CollabDocumentMutation::NodeDelete)
-        {
-            return true;
-        }
         if shared::delete_selection_with_history(&mut self.editor_state) {
             self.mark_dirty();
             return true;
@@ -434,39 +357,7 @@ impl WidgetHostNative {
         if self.input_active() {
             return false;
         }
-        if !self.collab_allows_document_mutation(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::Duplicate,
-            ),
-        ) {
-            return true;
-        }
-        let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            if self.editor_state.selection.is_empty() {
-                Ok(None)
-            } else {
-                let snapshot = self.editor_state.snapshot_for_history();
-                let result = self
-                    .editor_state
-                    .duplicate_selected_with_allocator(allocator, 10.0);
-                if result.as_ref().is_ok_and(Option::is_some) {
-                    self.editor_state.history_push_past(snapshot);
-                }
-                result
-            }
-        } else {
-            Ok(
-                shared::duplicate_selection(&mut self.editor_state, &mut self.next_node_id)
-                    .then_some(self.editor_state.selection.anchor.clone()),
-            )
-        };
-        let dup = match result {
-            Ok(id) => id.is_some(),
-            Err(error) => {
-                self.show_collab_id_error(error);
-                return true;
-            }
-        };
+        let dup = shared::duplicate_selection(&mut self.editor_state, &mut self.next_node_id);
         if dup {
             self.mark_dirty();
         }

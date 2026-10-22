@@ -167,9 +167,8 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     if crate::mcp_serve::is_document_sync_route(&req.method, &req.path) {
         // Whole-document replacement of the live (possibly SHARED) document.
         // The local desktop and a self-hosted serve-web daemon trust every
-        // caller that clears the `Host`/`Origin` boundary above — the online
-        // multi-tenant daemon is a separate request loop with its own
-        // per-account auth — so no per-instance token is demanded here. The
+        // caller that clears the `Host`/`Origin` boundary above, so no
+        // per-instance token is demanded here. The
         // REST route answers `{ok,error}`, not JSON-RPC.
         return serve_document_sync(stream, req_tx, wake_ui, stateful_lock, &req.body);
     }
@@ -243,10 +242,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     // Gate 2 (see `admission.rs`): everything from here down reads or writes
     // the live document — every `tools/call`, not just the write ones. The
     // `Host`/`Origin` boundary above is the only gate the local desktop and a
-    // self-hosted serve-web daemon apply; `CollabGatePolicy` (which still runs
-    // on the UI thread for each apply) decides what a session permits. The
-    // online multi-tenant daemon authenticates per account in its own request
-    // loop, not here.
+    // self-hosted serve-web daemon apply.
     // Everything below observes or mutates shared state — the live
     // `EditorState` OR a `--file` document on disk (a read-modify-write).
     // Serialize it under one lock so snapshots stay coherent, concurrent live

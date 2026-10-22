@@ -44,7 +44,6 @@ pub fn pump_commands(
         return false;
     }
     let mut any_applied = false;
-    let mut any_rejected = false;
     for req in reqs {
         let target_page_index = req.target_page_id.as_deref().and_then(|page_id| {
             match host.editor_state().doc.pages.as_ref() {
@@ -76,16 +75,6 @@ pub fn pump_commands(
         let applied = match req.op {
             DesignCmdOp::Apply(cmd) => {
                 if !target_available {
-                    false
-                } else if !host.gate_collaboration_action(
-                    de_editor_core::CollabGateAction::Document(
-                        de_editor_core::CollabDocumentMutation::Unsupported(
-                            de_editor_core::CollabUnsupportedFeature::BulkWrite,
-                        ),
-                    ),
-                    de_editor_core::CollabEditSource::Ai,
-                ) {
-                    any_rejected = true;
                     false
                 } else {
                     let state = host.editor_state_mut();
@@ -125,7 +114,7 @@ pub fn pump_commands(
     if any_applied {
         host.mark_editor_state_dirty();
     }
-    any_applied || any_rejected
+    any_applied
 }
 
 /// Drain every pending progress delta and fold it into the trailing

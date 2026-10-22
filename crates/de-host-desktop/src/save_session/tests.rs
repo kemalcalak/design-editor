@@ -11,32 +11,6 @@ fn temp_op_path(tag: &str) -> PathBuf {
     ))
 }
 
-fn bind_active_guest(app: &mut crate::DesktopApp) {
-    assert!(app
-        .host
-        .editor_state_mut()
-        .editor_ui
-        .collab
-        .set_authenticated_session(
-            de_editor_core::CollabConnectionPhase::Active,
-            de_editor_core::AuthenticatedCollabSession {
-                session_name: "Shared design".into(),
-                role: de_editor_core::CollabUiRole::Editor,
-                share_endpoint: None,
-            },
-            Vec::new(),
-        ));
-}
-
-fn collab_fork_identity(app: &crate::DesktopApp, path: PathBuf) -> (u64, u64, u64, PathBuf) {
-    (
-        app.host.document_epoch(),
-        app.host.editor_state().document_generation(),
-        app.host.editor_state().document_revision(),
-        path,
-    )
-}
-
 #[test]
 fn worker_saves_the_captured_revision_not_later_edits() {
     let path = temp_op_path("snapshot");
@@ -155,7 +129,7 @@ fn unchanged_bound_document_skips_snapshot_only_while_the_file_exists() {
 }
 
 #[test]
-fn collaboration_fork_path_comparison_normalizes_equivalent_paths() {
+fn path_comparison_normalizes_equivalent_paths() {
     let source = temp_op_path("path-identity");
     std::fs::write(&source, b"existing OP").expect("write source");
     let dotted_alias = source
@@ -163,20 +137,16 @@ fn collaboration_fork_path_comparison_normalizes_equivalent_paths() {
         .expect("source parent")
         .join(".")
         .join(source.file_name().expect("source file name"));
-    assert!(!collaboration_fork_target_is_safe(
-        Some(&source),
-        &dotted_alias
-    ));
+    assert!(!paths_provably_distinct(&source, &dotted_alias));
 
     let distinct = temp_op_path("path-identity-distinct");
-    assert!(collaboration_fork_target_is_safe(Some(&source), &distinct));
-    assert!(collaboration_fork_target_is_safe(None, &source));
+    assert!(paths_provably_distinct(&source, &distinct));
 
     let unresolved = temp_op_path("missing-path-parent")
         .with_extension("")
-        .join("fork.op");
+        .join("copy.op");
     assert!(
-        !collaboration_fork_target_is_safe(Some(&source), &unresolved),
+        !paths_provably_distinct(&source, &unresolved),
         "an unresolved target must fail closed"
     );
     let _ = std::fs::remove_file(source);
@@ -184,13 +154,13 @@ fn collaboration_fork_path_comparison_normalizes_equivalent_paths() {
 
 #[cfg(unix)]
 #[test]
-fn collaboration_fork_path_comparison_rejects_symlink_alias() {
+fn path_comparison_rejects_symlink_alias() {
     let source = temp_op_path("path-symlink-source");
     let alias = temp_op_path("path-symlink-alias");
     std::fs::write(&source, b"existing OP").expect("write source");
     std::os::unix::fs::symlink(&source, &alias).expect("create source alias");
 
-    assert!(!collaboration_fork_target_is_safe(Some(&source), &alias));
+    assert!(!paths_provably_distinct(&source, &alias));
 
     let _ = std::fs::remove_file(alias);
     let _ = std::fs::remove_file(source);
@@ -304,184 +274,4 @@ fn stale_epoch_ack_cannot_rebind_save_as_to_a_replaced_document() {
         .editor_ui
         .file_name_display
         .is_none());
-}
-
-#[test]
-fn registered_stale_fork_completion_cannot_leave_the_live_collaboration() {
-    let mut app = crate::DesktopApp::new(None);
-    let old_epoch = app.host.document_epoch();
-    let old_generation = app.host.editor_state().document_generation();
-    let old_revision = app.host.editor_state().document_revision();
-    let path = PathBuf::from("stale-collaboration-fork.op");
-    app.collab_fork_saves
-        .push((old_epoch, old_generation, old_revision, path.clone()));
-
-    app.host.replace_editor_state(EditorState::new());
-    bind_active_guest(&mut app);
-    assert_ne!(app.host.document_epoch(), old_epoch);
-    assert!(app.apply_save_completion(SaveCompletion {
-        path,
-        set_current_path: true,
-        document_epoch: old_epoch,
-        generation: old_generation,
-        revision: old_revision,
-        result: Ok(()),
-    }));
-
-    assert!(app.collab_fork_saves.is_empty());
-    assert_eq!(
-        app.host.editor_state().editor_ui.collab.phase,
-        de_editor_core::CollabConnectionPhase::Active
-    );
-    assert!(app.current_path.is_none());
-}
-
-#[test]
-fn already_pending_without_exact_fork_registration_cannot_gain_leave_authority() {
-    let mut app = crate::DesktopApp::new(None);
-    bind_active_guest(&mut app);
-    let identity = collab_fork_identity(&app, temp_op_path("unregistered-pending"));
-
-    assert!(
-        !app.confirm_collaboration_fork_enqueue(identity.clone(), EnqueueOutcome::AlreadyPending)
-    );
-    assert!(app.collab_fork_saves.is_empty());
-
-    assert!(app.confirm_collaboration_fork_enqueue(identity.clone(), EnqueueOutcome::Started));
-    assert_eq!(app.collab_fork_saves, vec![identity.clone()]);
-    assert!(app.confirm_collaboration_fork_enqueue(identity, EnqueueOutcome::AlreadyPending));
-    assert_eq!(app.collab_fork_saves.len(), 1);
-}
-
-#[test]
-fn successful_guest_fork_leaves_only_after_worker_completion_is_applied() {
-    let source = temp_op_path("collab-source");
-    let target = temp_op_path("collab-fork");
-    let mut app = crate::DesktopApp::new(None);
-    app.host.editor_state_mut().doc.name = Some("Shared source".into());
-    app.host.editor_state_mut().mark_document_changed();
-    de_host_services::doc_io::save_to_path(app.host.editor_state(), &source)
-        .expect("write shared source");
-    app.host.editor_state_mut().mark_saved_revision();
-    app.current_path = Some(source.clone());
-    let source_bytes = std::fs::read(&source).expect("read shared source");
-
-    bind_active_guest(&mut app);
-    app.host.editor_state_mut().doc.name = Some("Guest local fork".into());
-    app.host.editor_state_mut().mark_document_changed();
-    assert!(app.host.gate_collaboration_action(
-        de_editor_core::CollabGateAction::SaveFork,
-        de_editor_core::CollabEditSource::User,
-    ));
-    let identity = collab_fork_identity(&app, target.clone());
-    let outcome = app.enqueue_background_save(target.clone(), true);
-    assert!(app.confirm_collaboration_fork_enqueue(identity, outcome));
-    assert_eq!(app.collab_fork_saves.len(), 1);
-
-    let completion = app
-        .save_session
-        .wait_next()
-        .expect("background Save As completion");
-    assert!(completion.result.is_ok(), "{:?}", completion.result);
-    assert_eq!(
-        app.host.editor_state().editor_ui.collab.phase,
-        de_editor_core::CollabConnectionPhase::Active,
-        "a completed worker has no leave authority before its UI-thread acknowledgement"
-    );
-    assert_eq!(app.current_path.as_deref(), Some(source.as_path()));
-    assert_eq!(
-        std::fs::read(&source).expect("re-read shared source"),
-        source_bytes,
-        "Save As must not overwrite the collaboration source path"
-    );
-
-    assert!(app.apply_save_completion(completion));
-    assert_eq!(
-        app.host.editor_state().editor_ui.collab.phase,
-        de_editor_core::CollabConnectionPhase::Idle
-    );
-    assert!(app.collab_fork_saves.is_empty());
-    assert_eq!(app.current_path.as_deref(), Some(target.as_path()));
-    let fork = de_host_services::doc_io::load_editor_state(&target, de_editor_core::Locale::EnUs)
-        .expect("load local fork");
-    assert_eq!(fork.doc.name.as_deref(), Some("Guest local fork"));
-    let shared = de_host_services::doc_io::load_editor_state(&source, de_editor_core::Locale::EnUs)
-        .expect("reload shared source");
-    assert_eq!(shared.doc.name.as_deref(), Some("Shared source"));
-
-    let _ = std::fs::remove_file(source);
-    let _ = std::fs::remove_file(target);
-}
-
-#[test]
-fn failed_guest_fork_worker_does_not_touch_or_leave_the_shared_document() {
-    let source = temp_op_path("failed-collab-source");
-    let missing_parent = temp_op_path("missing-parent").with_extension("");
-    let target = missing_parent.join("fork.op");
-    let mut app = crate::DesktopApp::new(None);
-    app.host.editor_state_mut().doc.name = Some("Shared source".into());
-    app.host.editor_state_mut().mark_document_changed();
-    de_host_services::doc_io::save_to_path(app.host.editor_state(), &source)
-        .expect("write shared source");
-    app.host.editor_state_mut().mark_saved_revision();
-    app.current_path = Some(source.clone());
-    let source_bytes = std::fs::read(&source).expect("read shared source");
-
-    bind_active_guest(&mut app);
-    app.host.editor_state_mut().doc.name = Some("Unsaved guest fork".into());
-    app.host.editor_state_mut().mark_document_changed();
-    let identity = collab_fork_identity(&app, target.clone());
-    let outcome = app.enqueue_background_save(target.clone(), true);
-    assert!(app.confirm_collaboration_fork_enqueue(identity, outcome));
-    let completion = app
-        .save_session
-        .wait_next()
-        .expect("failed background Save As completion");
-
-    assert!(completion.result.is_err());
-    assert_eq!(app.collab_fork_saves.len(), 1);
-    assert_eq!(
-        app.host.editor_state().editor_ui.collab.phase,
-        de_editor_core::CollabConnectionPhase::Active
-    );
-    assert_eq!(app.current_path.as_deref(), Some(source.as_path()));
-    assert!(!target.exists());
-    assert_eq!(
-        std::fs::read(&source).expect("re-read shared source"),
-        source_bytes
-    );
-
-    let _ = std::fs::remove_file(source);
-}
-
-#[test]
-fn unregistered_save_completion_cannot_leave_an_active_guest() {
-    let target = temp_op_path("non-fork-completion");
-    let mut app = crate::DesktopApp::new(None);
-    bind_active_guest(&mut app);
-    assert!(app.collab_fork_saves.is_empty());
-    assert_eq!(
-        app.save_session.enqueue(
-            app.host.editor_state(),
-            app.host.document_epoch(),
-            target.clone(),
-            false,
-            None,
-        ),
-        EnqueueOutcome::Started
-    );
-    let completion = app
-        .save_session
-        .wait_next()
-        .expect("background save completion");
-    assert!(completion.result.is_ok(), "{:?}", completion.result);
-
-    assert!(app.apply_save_completion(completion));
-    assert_eq!(
-        app.host.editor_state().editor_ui.collab.phase,
-        de_editor_core::CollabConnectionPhase::Active,
-        "a cancelled Save As registers no fork identity, so another completion cannot detach it"
-    );
-
-    let _ = std::fs::remove_file(target);
 }

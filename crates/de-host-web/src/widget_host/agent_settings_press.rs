@@ -3,8 +3,8 @@
 //! The state walk itself lives in
 //! `de_editor_ui::widgets::agent_settings_press_flow` (shared with the
 //! native host); this file keeps the browser platform arms — clipboard
-//! through `host_copy_text`, `window.open` for the help link, the
-//! `PendingAuthAction` sign-out queue, the async CanvasKit font refresh —
+//! through `host_copy_text`, `window.open` for the help link, the async
+//! CanvasKit font refresh —
 //! plus the daemon MCP-server start/stop request seam, which is
 //! web-only.
 
@@ -101,10 +101,6 @@ impl WidgetHost {
                 if let Some(w) = web_sys::window() {
                     let _ = w.open_with_url_and_target(url, "_blank");
                 }
-            }
-            SettingsPress::SignOut => {
-                self.pending_auth_actions
-                    .push(crate::widget_host::PendingAuthAction::SignOut);
             }
         }
         if outcome.refresh_fonts {

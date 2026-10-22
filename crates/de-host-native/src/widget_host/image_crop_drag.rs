@@ -41,13 +41,6 @@ impl WidgetHostNative {
         if !crop_flow::can_start_image_crop_drag(&self.editor_state, target) {
             return false;
         }
-        if !self.collab_allows_document_mutation(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-            ),
-        ) {
-            return true;
-        }
         self.refresh_layout_scene();
         let Some(drag) = crop_flow::start_image_crop_drag(
             &self.editor_state,
@@ -69,16 +62,6 @@ impl WidgetHostNative {
         x: f32,
         y: f32,
     ) -> Option<bool> {
-        if self.image_crop_drag.is_some()
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-                ),
-            )
-        {
-            self.image_crop_drag = None;
-            return Some(true);
-        }
         let mut drag = self.image_crop_drag.take()?;
         match crop_flow::image_crop_drag_cursor_move(&mut self.editor_state, &mut drag, x, y) {
             // The gesture stays dropped — `take()` above already cleared it.

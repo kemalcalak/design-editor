@@ -12,7 +12,7 @@ mod tests {
 
     #[test]
     fn an_accepted_remote_document_can_be_undone_back_to_the_local_edit() {
-        // The online conflict path: the daemon's document is accepted to lift
+        // The conflict-accept path: the daemon's document is accepted to lift
         // a latch that would otherwise never clear, overwriting whatever this
         // tab had not yet pushed. Undo is the user-reachable way back, and it
         // must restore the LOCAL edit — not the document that preceded it.

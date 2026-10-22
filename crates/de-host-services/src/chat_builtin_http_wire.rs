@@ -7,8 +7,7 @@
 //! paths (`chat_builtin_http::map_openai_stop_reason`, …) are unchanged.
 //!
 //! The pure payload parsers (`parse_*_sse_data`, `map_*_stop_reason`,
-//! `provider_endpoint`) moved to `de_ai::chat_sse` so the mobile FFI chat
-//! pump shares them; this module re-exports them unchanged and keeps the
+//! `provider_endpoint`) moved to `de_ai::chat_sse`; this module re-exports them unchanged and keeps the
 //! reqwest/tokio transport halves.
 
 use de_ai::chat_provider::{ChatDelta, StopReason};
@@ -23,7 +22,7 @@ pub(crate) use de_ai::chat_sse::{
 use crate::chat_builtin_http::BuiltinHttpError;
 
 // `apply_reasoning_wire_control` moved to `de_chat_agent::backoff` (pure
-// code motion) so the shared agent loop and mobile hosts build request
+// code motion) so the shared agent loop and the daemon build request
 // bodies through one entry point; re-exported unchanged.
 pub use de_chat_agent::backoff::apply_reasoning_wire_control;
 

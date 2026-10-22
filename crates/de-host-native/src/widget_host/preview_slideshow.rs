@@ -415,7 +415,3 @@ mod tests {
 #[cfg(all(test, not(target_os = "windows")))]
 #[path = "preview_slideshow_swipe_tests.rs"]
 mod swipe_tests;
-
-#[cfg(all(test, not(target_os = "windows")))]
-#[path = "preview_slideshow_touch_tests.rs"]
-mod touch_tests;

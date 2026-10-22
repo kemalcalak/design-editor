@@ -4,7 +4,7 @@
 //! Tier 1 runs before ANY other hit-test: a missing-font prompt, floating
 //! panel, colour picker, modal Git popover, or an open context menu owns
 //! the press outright. Tier 2 is the dropdown/modal band (shape picker,
-//! file menu, export / figma / login / account, import, locale).
+//! file menu, export / figma, import, locale).
 //!
 //! Order within each helper is paint Z-order and is load-bearing.
 
@@ -12,7 +12,7 @@ use super::press_ctx::PressCtx;
 use super::WidgetHostNative;
 use de_editor_core::host_press_transitions as core_press;
 use de_editor_ui::widgets::press_flow::{self, LocalePickerPress, OpenLayerMenuPress};
-use de_editor_ui::widgets::{CollabPanel, ImportMenu, ImportMenuChoice};
+use de_editor_ui::widgets::{ImportMenu, ImportMenuChoice};
 use de_editor_ui::{Point2D, Rect};
 
 impl WidgetHostNative {
@@ -21,9 +21,6 @@ impl WidgetHostNative {
         &mut self,
         ctx: &PressCtx,
     ) -> Option<bool> {
-        if self.preview_slideshow_active() && self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         let (x, y) = (ctx.x, ctx.y);
         let viewport_width = ctx.viewport_width;
         let viewport_height = ctx.viewport_height;
@@ -166,56 +163,9 @@ impl WidgetHostNative {
         &mut self,
         ctx: &PressCtx,
     ) -> Option<bool> {
-        if self.preview_slideshow_active() && self.editor_state.editor_ui.touch_chrome() {
-            return None;
-        }
         let (x, y) = (ctx.x, ctx.y);
         let viewport_width = ctx.viewport_width;
         let viewport_height = ctx.viewport_height;
-        // Shared collaboration popover. Like the account/locale menus it is
-        // modal within the dropdown tier: a press outside closes and is
-        // swallowed, while a row/button only queues a runtime-owned action.
-        if self.editor_state.editor_ui.collab.panel.open
-            && !((self.editor_state.editor_ui.account_ui_available
-                || self.editor_state.editor_ui.touch_chrome())
-                && self.editor_state.editor_ui.login_modal_open)
-        {
-            if let Some(panel) = CollabPanel::for_editor_ui(&self.editor_state.editor_ui) {
-                let panel_rect =
-                    de_editor_ui::widgets::touch_overlay_geometry::collaboration_panel_rect(
-                        &self.editor_state,
-                        &panel,
-                        viewport_width,
-                        viewport_height,
-                    );
-                let point = Point2D::new(x, y);
-                if let Some(hit) = panel.hit_test(panel_rect, point) {
-                    match hit {
-                        de_editor_ui::widgets::CollabPanelHit::CopyInvite(invite)
-                        | de_editor_ui::widgets::CollabPanelHit::CopyShareEndpoint(invite) => {
-                            self.editor_state.chat.queue_copy_text(invite);
-                        }
-                        hit => {
-                            let _ = de_editor_ui::widgets::collab_ui::apply_panel_hit(
-                                &mut self.editor_state.editor_ui,
-                                hit,
-                            );
-                        }
-                    }
-                } else {
-                    self.editor_state.editor_ui.collab.panel.open = false;
-                    self.editor_state
-                        .editor_ui
-                        .collab
-                        .panel
-                        .join_address_focused = false;
-                    self.editor_state.editor_ui.collab.panel.hover = None;
-                    self.blur_text_inputs_on_blank_press();
-                }
-                self.mark_dirty();
-                return Some(true);
-            }
-        }
         // 0ab. Shape picker overlay.
         if self.dispatch_shape_picker_press(x, y, viewport_width, viewport_height) {
             return Some(true);
@@ -256,26 +206,6 @@ impl WidgetHostNative {
             self.dispatch_figma_import_press(x, y, viewport_width, viewport_height);
             return Some(true);
         }
-        if (self.editor_state.editor_ui.account_ui_available
-            || self.editor_state.editor_ui.touch_chrome())
-            && self.editor_state.editor_ui.login_modal_open
-        {
-            self.close_image_popovers_for_higher_overlay();
-            self.dispatch_login_modal_press(x, y, viewport_width, viewport_height);
-            return Some(true);
-        }
-
-        // 0a'. Account dropdown — anchored under the TopBar avatar
-        // button; must hit-test before the TopBar's own block so a
-        // re-click on the avatar closes rather than re-toggling.
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.account_menu_open
-        {
-            self.close_image_popovers_for_higher_overlay();
-            self.dispatch_account_menu_press(x, y, viewport_width, viewport_height);
-            return Some(true);
-        }
-
         // 0a0. Import dropdown — same overlay tier as the locale picker.
         if self.editor_state.editor_ui.import_menu_open {
             self.refresh_layout_scene();

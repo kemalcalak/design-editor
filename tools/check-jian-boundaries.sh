@@ -11,18 +11,8 @@
 #  the editor-UI composition already lives in de-editor-ui. Reinstate an
 #  equivalent facade check if a real app crate is reintroduced.)
 #
-# Invariant 2 (§11.1, §12.3 — REVISED 2026-07-20): mobile targets
-#   (both CI architectures for Android and iOS) must NOT pull
-#   `jian-host-desktop` (desktop GUI host glue — winit / glutin /
-#   GLContextProvider impl that has no mobile equivalent) or `rquickjs*`
-#   (desktop script generation; upstream has no mobile bindings). Per the
-#   2026-05-10 user directive (jian will eventually need iOS and
-#   Android), `jian-skia` is now ALLOWED on mobile targets — the
-#   widget render stack (skia-safe + jian-skia + NativeBackend +
-#   widget_host) compiles for iOS / Android cargo check, leaving
-#   only the host-specific (Metal / Vulkan / event) integration to
-#   Step 1f via the existing `EaglProvider` / `AndroidEglProvider`
-#   plugin point.
+# (The former Invariant 2 — mobile targets must not pull desktop-only
+#  backends — was dropped with the iOS / Android / HarmonyOS players.)
 #
 # Invariant 3 (§11.1, §1.2): wasm32 builds of `de-host-web`
 #   must NOT pull `jian-host-desktop` or `jian-skia` (skia-safe build.rs
@@ -46,34 +36,6 @@ if ! command -v jq >/dev/null 2>&1; then
     echo "  brew: brew install jq" >&2
     exit 2
 fi
-
-# ── Invariant 2: mobile targets don't pull desktop-only backends. ────
-# `cargo tree` honours `--target` cfg-gates so only the deps that
-# actually compile under the mobile target are listed. `jian-skia` IS
-# allowed on mobile (2026-05-10 user directive — widget render stack
-# extends to iOS / Android); we still forbid `jian-host-desktop`
-# because it pulls winit / glutin / desktop GLContextProvider impls
-# that have no mobile equivalent. QuickJS is also forbidden: its
-# rquickjs-sys package has no generated bindings for these targets and
-# script generation is only used by the desktop `gl-host` Preview path.
-for target in \
-    aarch64-linux-android \
-    x86_64-linux-android \
-    aarch64-apple-ios \
-    aarch64-apple-ios-sim; do
-    tree_mobile="$(cargo tree -p de-host-native \
-        --target "$target" \
-        --prefix none \
-        --edges normal,build 2>/dev/null || true)"
-    forbidden_mobile="$(echo "$tree_mobile" \
-        | grep -oE '\b(jian-host-desktop|rquickjs(-core|-sys)?)\b' \
-        | sort -u || true)"
-    if [ -n "$forbidden_mobile" ]; then
-        echo "INVARIANT 2 FAILED ($target): forbidden desktop-only crates in closure:" >&2
-        echo "$forbidden_mobile" >&2
-        exit 1
-    fi
-done
 
 # ── Invariant 3: wasm32 has no jian-host-desktop / jian-skia. ──────────
 # `jian-core` IS allowed (P0.5 wasm32-clean).
@@ -105,4 +67,4 @@ if [ -n "$shell_web_deps" ]; then
     exit 1
 fi
 
-echo "check-jian-boundaries.sh: all mobile/Jian boundary invariants pass."
+echo "check-jian-boundaries.sh: all Jian boundary invariants pass."

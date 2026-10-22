@@ -101,7 +101,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "git.header.overflowCloseRepo" => "Depoyu kapat",
         "git.header.overflowRemoteSettings" => "Uzak ayarları…",
         "git.header.overflowSshKeys" => "SSH anahtarları…",
-        "git.header.overflowMoreActions" => "Diğer eylemler",
         "git.history.empty" => "Henüz geçmiş yok",
         "git.history.autosaveGroup_one" => "1 otomatik kaydetme",
         "git.history.autosaveGroup_other" => "{{count}} otomatik kaydetme",

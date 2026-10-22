@@ -6,8 +6,6 @@ Design-as-code inside your editor — open, view, and edit Design Editor `.op` f
 
 - **Custom `.op` editor** — `.op` design files open in a live Design Editor canvas hosted in a VS Code webview, backed by a local Design Editor daemon. Edits are tracked as document changes, so save, save-as, revert, and hot-exit backup all work like a native editor.
 - **Live preview** — use the Play control in the embedded Design Editor top bar to enter the same interactive Preview mode as the desktop/web editor; the canvas stays in the VS Code tab instead of opening a separate renderer.
-- **Design Editor account** — the account control uses the managed daemon's device-login flow. VS Code opens the verification page in the system browser, while credentials remain in Design Editor's native auth store rather than extension settings or webview storage.
-- **Collaboration** — after signing in, the embedded collaboration control starts or joins the same LAN/public-relay sessions as the native editor. Presence, document operations, reconnect state, and read-only fallback are owned by the shared Rust collaboration runtime.
 - **`.fig` import** — opening a `.fig` file converts it into design content on the fly; saves land on the sibling `.op` file (for example `design.fig` → `design.op`) rather than writing back to the `.fig`.
 - **MCP configuration** — the extension runs a local MCP proxy and can write the connection into your IDE's MCP config, so an AI assistant can drive Design Editor through the Model Context Protocol. Commands: *Configure MCP* and *Remove MCP*.
 - **AI skill install** — install (or remove) the bundled Design Editor design skill into your IDE's rules directory (Cursor / Trae / Windsurf). Commands: *Install Skill* and *Remove Skill*. The built-in VS Code chat participant is currently a read-only design advisor; it does not yet run the complete create/inspect/finalize pipeline.
@@ -29,10 +27,9 @@ Design-as-code inside your editor — open, view, and edit Design Editor `.op` f
 
 1. Trust the workspace when prompted (required for the live editor and MCP).
 2. Open any `.op` file — it opens in the Design Editor canvas editor. Opening a `.fig` file imports it and edits are saved to the sibling `.op`.
-3. Use the account avatar in the canvas top bar to sign in. The approval page opens in your system browser and the editor updates when the device flow completes.
-4. Use **Play** for an interactive preview, or **Collaborate** to start/join a LAN or public-relay session.
-5. Run **Design Editor: Configure MCP** from the Command Palette to register the local MCP proxy with your AI tooling.
-6. Run **Design Editor: Generate Code** to produce React or Vue code from the current design, or chat with **@design-editor** in the VS Code chat view.
+3. Use **Play** for an interactive preview.
+4. Run **Design Editor: Configure MCP** from the Command Palette to register the local MCP proxy with your AI tooling.
+5. Run **Design Editor: Generate Code** to produce React or Vue code from the current design, or chat with **@design-editor** in the VS Code chat view.
 
 ## Settings
 
@@ -42,10 +39,8 @@ Design-as-code inside your editor — open, view, and edit Design Editor `.op` f
 
 ## Host boundaries
 
-The extension does not implement a second account or collaboration stack. It
-supervises the bundled native daemon and embeds the shared Rust web editor. The
-webview relay accepts only typed control messages; external navigation is
-limited to HTTPS (plus loopback HTTP for a development SSO), and collaboration
+The extension supervises the bundled native daemon and embeds the shared Rust
+web editor. The webview relay accepts only typed control messages, and daemon
 traffic remains token-authenticated between the webview and its per-document
 managed daemon.
 

@@ -40,7 +40,6 @@ use de_editor_ui::widgets::TOP_BAR_HEIGHT;
 use de_editor_ui::{Point2D, Rect, Theme};
 
 mod a11y_bridge;
-mod account_press;
 #[cfg(test)]
 mod agent_settings_acp_press_tests;
 #[cfg(test)]
@@ -81,10 +80,6 @@ mod chrome_menu_press;
 mod click;
 #[cfg(test)]
 mod codegen_framework_tests;
-#[cfg(test)]
-mod collab_id_alloc_tests;
-#[cfg(test)]
-mod collab_input_tests;
 mod color_picker_press;
 mod component_browser_press;
 mod cursor_input;
@@ -222,18 +217,6 @@ mod viewport_fit;
 mod web_fonts;
 mod wheel_pan;
 
-/// Device-login side effects requested by press dispatchers and executed
-/// by `web_auth_sync` against the daemon's `/api/auth/*` proxy. (Begin is
-/// NOT queued: it must fire inside the click's user-activation window so
-/// the sign-in popup isn't blocked — see `web_auth_sync::begin_login_now`.)
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PendingAuthAction {
-    /// Abort the in-flight flow (modal dismissed).
-    CancelLogin,
-    /// Drop the shared session and revoke the device token.
-    SignOut,
-}
-
 // Floating-chrome insets live with the canvas-region math they are
 // measured from, so the native + web hosts can't drift on where the
 // chat pill / toolbar / status pill sit.
@@ -347,12 +330,6 @@ pub struct WidgetHost {
     /// nodes never collide on the same key. Matches the native
     /// host's allocator.
     pub(in crate::widget_host) next_node_id: u64,
-    /// Owner-assigned id allocator, set while a collaboration session is live.
-    ///
-    /// The protocol replays node ids verbatim, so a peer minting from the
-    /// private `next_node_id` counter would eventually agree on an id for two
-    /// different nodes. `None` restores the standalone policy.
-    pub(in crate::widget_host) collab_id_allocator: Option<de_editor_core::DocumentIdAllocator>,
     /// Whether the shift key is currently held. The DOM listener
     /// updates this from every keyboard / mouse event so apply_press
     /// can branch on shift+click for multi-select. Matches the
@@ -384,10 +361,6 @@ pub struct WidgetHost {
     /// browser IME candidate-window fallback instead of viewport (0, 0).
     pub(in crate::widget_host) last_cursor_x: f32,
     pub(in crate::widget_host) last_cursor_y: f32,
-    /// Queued device-login actions for the daemon auth proxy; the
-    /// `web_auth_sync` poll tick drains them into `/api/auth/*` calls.
-    /// Press dispatchers only enqueue — they never issue requests.
-    pub(in crate::widget_host) pending_auth_actions: Vec<PendingAuthAction>,
     /// Stable, process-unique id scoping this host's chat-panel transcript
     /// cache (mirrors native `WidgetHostNative::chat_panel_owner`). Stamped onto
     /// every `AIChatPlaceholder` this host builds so the thread-local canonical

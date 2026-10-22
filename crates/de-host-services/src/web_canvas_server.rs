@@ -44,20 +44,13 @@ const MAX_CONNS: usize = 64;
 /// detected (the heartbeat write fails once the socket is gone).
 const SSE_HEARTBEAT: Duration = Duration::from_secs(15);
 
-/// One SSE payload: the two sequence numbers a client polls on.
+/// One SSE payload: the sequence number a client polls on.
 ///
 /// `version` changes only when document *content* changes, so it is what makes
-/// a client refetch the document. `collab_seq` changes whenever the
-/// collaboration projection changes — a peer joining, a cursor moving — and
-/// must never by itself cause a document fetch.
-///
-/// Carried as one struct so a bump and its broadcast stay a single atomic
-/// event. The serialized form stays a superset of the original `{"version":N}`
-/// payload, so a client that only reads `version` is unaffected.
+/// a client refetch the document. Serialized as `{"version":N}`.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct SseTick {
     pub version: u64,
-    pub collab_seq: u64,
 }
 
 /// RAII decrement for the connection counter — `Drop` runs on normal exit AND
@@ -104,17 +97,8 @@ pub struct WebCanvasState {
     /// no-op `{"ok":true,"skipped":true,"version":<current>}` reply instead
     /// of touching the document again.
     pub(crate) reset_consumed: bool,
-    /// In-flight browser device-login flow driven through the auth proxy
-    /// endpoints (`/api/auth/login/*`); `None` when no login is running.
-    pub(crate) auth_login_handle: Option<u64>,
-    /// Collaboration runtime + its projection sequence. Idle until a browser
-    /// posts a start/join action.
-    pub(crate) collab: collab_state::WebCollabState,
-    /// How this daemon is deployed. `Local` for every existing invocation;
-    /// `Online` is the only value that refuses anything, and it is what the
-    /// REST tier consults for the routes that would otherwise share one
-    /// process's filesystem, settings file and device session between
-    /// mutually untrusting accounts. See `online_policy.rs`.
+    /// How this daemon is deployed (`Local` or `Managed`); reported to the
+    /// browser as `serveMode`. See `serve_mode.rs`.
     pub(crate) mode: ServeMode,
 }
 
@@ -165,27 +149,8 @@ impl WebCanvasState {
             managed_token: None,
             allow_origins: Vec::new(),
             reset_consumed: false,
-            auth_login_handle: None,
-            collab: collab_state::WebCollabState::default(),
             mode: ServeMode::Local,
         }
-    }
-
-    /// One online account's document authority.
-    ///
-    /// Separate from the loader-backed constructors on purpose: a tenant is
-    /// never backed by a local path (the online mode serves no local files),
-    /// and its browser-supplied credentials never reach the process settings
-    /// file, so it always carries the browser-only persistence policy.
-    pub(crate) fn new_for_tenant(editor: EditorState, port: u16) -> Self {
-        let mut state = Self::new_with_path_and_policy(
-            editor,
-            port,
-            None,
-            WebCredentialPersistence::BrowserOnly,
-        );
-        state.mode = ServeMode::Online;
-        state
     }
 
     /// Replace the whole document (an already-loaded `POST /api/mcp/document`
@@ -223,14 +188,6 @@ impl WebCanvasState {
         if self.reset_consumed {
             return Ok(ResetOutcome { skipped: true });
         }
-        // A reset swaps the whole document and starts a new generation, which
-        // the M1 protocol cannot sequence — the peers would silently diverge.
-        // `ReplaceDocument` is refused for every source once a session exists.
-        self.gate_daemon_mutation(
-            de_editor_core::CollabGateAction::ReplaceDocument,
-            de_editor_core::CollabEditSource::ExternalSync,
-        )
-        .map_err(WebCanvasError::Collab)?;
         self.reset_document()?;
         self.reset_consumed = true;
         Ok(ResetOutcome { skipped: false })
@@ -252,7 +209,7 @@ impl WebCanvasState {
         body: &str,
         base_version_override: Option<u64>,
     ) -> Result<PushOutcome> {
-        let push = PendingDocumentPush::parse(body, self.mode)?;
+        let push = PendingDocumentPush::parse(body)?;
         self.apply_prepared_document_push(push, base_version_override)
     }
 
@@ -280,23 +237,7 @@ impl WebCanvasState {
                 });
             }
         }
-        // The gateway runs BEFORE the document is taken out of `push`, so a
-        // refusal leaves `push` still owning it — and its `Drop` releases the
-        // pending thumbnail seed. Taking first meant a gated push orphaned its
-        // seed in the process-global side table.
-        //
-        // A metadata-only push carries no document and is not a document
-        // mutation, so it is not gated; it is handled below.
         let mut push = push;
-        if push.prepared.is_some() {
-            self.gate_daemon_mutation(
-                de_editor_core::CollabGateAction::Document(
-                    de_editor_core::CollabDocumentMutation::NodePropertyBatch,
-                ),
-                de_editor_core::CollabEditSource::User,
-            )
-            .map_err(WebCanvasError::Collab)?;
-        }
         // Taken rather than moved: taking `prepared` is what tells the `Drop`
         // this push reached the install.
         let editor_meta = push.take_editor_meta();
@@ -311,46 +252,7 @@ impl WebCanvasState {
                 current_version: self.version,
             });
         };
-        let version = if self.collab_session_is_active() {
-            // Inside the session's local-edit capture: the session core diffs
-            // the document and emits precise node operations, so pushing an
-            // unchanged document produces no transaction at all.
-            match self.ingest_document_in_session(prepared) {
-                // Sequenced: publish it.
-                collab_state::IngestOutcome::Committed => {
-                    self.version = self.version.saturating_add(1);
-                    self.version
-                }
-                // Accepted, but identical. Answering 200 is right — the
-                // client's document IS the daemon's — but bumping the version
-                // would make every peer refetch a document that did not
-                // change.
-                collab_state::IngestOutcome::NoChange => self.version,
-                // The session did not take it. Reporting success here (which
-                // is what the old `bool` did for `Failed`) left the browser
-                // believing a write landed that had been discarded, with no
-                // signal to resync.
-                // Both mean "your push did not land, refetch". The browser's
-                // recovery only fires on `version-conflict` WITH a `version`
-                // (see `WebSyncClient::parse_push_conflict`), so both carry
-                // the authoritative version — a bare refusal would leave the
-                // tab latched with no way to resync.
-                collab_state::IngestOutcome::Rejected => {
-                    return Err(WebCanvasError::IngestRejected(
-                        collab_state::IngestOutcome::Rejected,
-                        self.version,
-                    ));
-                }
-                collab_state::IngestOutcome::Failed => {
-                    return Err(WebCanvasError::IngestRejected(
-                        collab_state::IngestOutcome::Failed,
-                        self.version,
-                    ));
-                }
-            }
-        } else {
-            self.replace_document(prepared.into_document())
-        };
+        let version = self.replace_document(prepared.into_document());
         de_pen_loader::apply_editor_meta(&mut self.editor, editor_meta);
         Ok(PushOutcome {
             applied: true,
@@ -358,11 +260,10 @@ impl WebCanvasState {
         })
     }
 
-    /// The pair of sequence numbers a client polls on.
+    /// The sequence number a client polls on.
     pub(crate) const fn sse_tick(&self) -> SseTick {
         SseTick {
             version: self.version,
-            collab_seq: self.collab.seq(),
         }
     }
 
@@ -372,11 +273,6 @@ impl WebCanvasState {
     }
 }
 
-/// Render an error, adding the machine-readable code when it has one.
-///
-/// A collaboration refusal is not a malformed request, so a client needs the
-/// code to decide between retrying, refetching, and telling the user to leave
-/// the session.
 /// Outcome of [`WebCanvasState::reset_document_guarded`].
 pub(crate) struct ResetOutcome {
     pub skipped: bool,
@@ -412,13 +308,6 @@ where
     // `String` the caller would have to re-render.
     F: FnOnce(&EditorState) -> std::result::Result<(), crate::settings_io::SettingsIoError>,
 {
-    // There is ONE settings file per process. In a shared deployment a
-    // settings write would overwrite every other account's providers and
-    // credentials with this account's, so nothing is persisted: the change
-    // still lands in this tenant's in-memory editor and dies with it.
-    if !state.mode.allows_settings_persistence() {
-        return reply;
-    }
     if method == "POST" && path == "/api/settings/credentials" && reply.status == "200 OK" {
         if save_credentials(&state.editor).is_err() {
             if let Some(settings) = credential_settings_before {
@@ -469,11 +358,8 @@ pub fn handle_web_canvas_request(
             // `{running,port,localIp}` matches TS `server.get.ts`; the daemon
             // binds 127.0.0.1 (localhost-only) so localIp is loopback. Extra
             // `server`/`mode` fields are additive diagnostics.
-            // `serveMode` is additive: the browser reads it to learn whether
-            // the daemon is the sole sequencer for this document (online) or
-            // merely a peer holding the operator's file (local/managed). That
-            // decides whether a sync conflict may be auto-resolved — see
-            // `de-host-web/src/live_sync_glue.rs::auto_resolve_is_safe`.
+            // `serveMode` is an additive diagnostic naming how the daemon
+            // was launched (`local` / `managed`).
             body: format!(
                 r#"{{"running":true,"port":{},"localIp":"127.0.0.1","server":"design-editor-mcp","mode":"web-canvas","serveMode":"{}"}}"#,
                 state.port,
@@ -520,19 +406,11 @@ pub fn handle_web_canvas_request(
                 })
                 .to_string(),
             },
-            Err(error) => collab_aware_error_reply(&error),
+            Err(error) => error_reply(&error),
         },
         ("GET", "/api/mcp/version") => WebReply {
-            // `collabSeq` rides along so the existing 400 ms version poll also
-            // notices collaboration changes without a second request. Adding a
-            // field is backward compatible: a client that reads only `version`
-            // is unaffected.
             status: "200 OK",
-            body: format!(
-                r#"{{"version":{},"collabSeq":{}}}"#,
-                state.version,
-                state.collab.seq()
-            ),
+            body: format!(r#"{{"version":{}}}"#, state.version),
         },
         ("GET", "/api/mcp/indicators") => WebReply {
             // Agent-indicator relay: design runs execute inside this
@@ -540,29 +418,11 @@ pub fn handle_web_canvas_request(
             // from lives HERE — the browser polls this and mirrors it
             // into its own registry (agent_indicators::apply_remote) so
             // agent borders / badges / reveal animations show on web.
-            //
-            // That registry has no tenant dimension, so a shared deployment
-            // relays the empty projection instead of showing one account the
-            // shape of another account's design run.
             status: "200 OK",
-            body: if state.mode.allows_agent_indicator_relay() {
-                de_editor_core::agent_indicators::relay_json()
-            } else {
-                online_policy::EMPTY_INDICATOR_RELAY.to_string()
-            },
+            body: de_editor_core::agent_indicators::relay_json(),
         },
-        // The wasm shell posts a sync-reset on every mount. Locally that
-        // means "the browser just booted, drop the transient document";
-        // online it would wipe the document the returning account left
-        // behind, so the route answers with the already-reset shape — the
-        // same body a second local reset produces — and touches nothing.
-        ("POST", "/api/mcp/sync-reset") if state.mode.sync_reset_is_noop() => WebReply {
-            status: "200 OK",
-            body: format!(
-                r#"{{"ok":true,"skipped":true,"version":{}}}"#,
-                state.version
-            ),
-        },
+        // The wasm shell posts a sync-reset on every mount: "the browser
+        // just booted, drop the transient document".
         ("POST", "/api/mcp/sync-reset") => match state.reset_document_guarded() {
             Ok(outcome) if outcome.skipped => WebReply {
                 status: "200 OK",
@@ -575,7 +435,6 @@ pub fn handle_web_canvas_request(
                 status: "200 OK",
                 body: crate::mcp_serve::document_sync_ok(state.version),
             },
-            Err(e) if e.error_code().is_some() => collab_aware_error_reply(&e),
             Err(e) => WebReply {
                 status: e.http_status(),
                 body: crate::mcp_serve::rest_error_body(&format!("sync reset failed: {e}")),
@@ -610,34 +469,7 @@ pub fn handle_web_canvas_request(
             }
         }
         ("POST", "/api/mcp/selection") => apply_selection_sync(body, state),
-        // Both file routes touch the daemon host's filesystem, which in a
-        // shared process means every account reading and writing through the
-        // service account's paths. Refused before the handler, not inside it.
-        ("POST", "/api/file/save" | "/api/file/open-recent")
-            if !state.mode.allows_local_file_routes() =>
-        {
-            online_policy::refusal_reply(online_policy::OnlineRouteRefusal::LocalFileAccess)
-        }
-        // A save reply REPLACES `state.editor` (it installs the document it
-        // just wrote, plus its metadata), so it is a whole-document swap and
-        // has to clear the same gate `open-recent` does. Swapping the document
-        // out from under a live session would leave the peers editing a
-        // document this daemon no longer has.
-        ("POST", "/api/file/save") => match state.gate_daemon_mutation(
-            de_editor_core::CollabGateAction::ReplaceDocument,
-            de_editor_core::CollabEditSource::ExternalSync,
-        ) {
-            Ok(()) => save_current_file(body, state),
-            Err(refusal) => WebReply {
-                status: refusal.http_status(),
-                body: serde_json::json!({
-                    "ok": false,
-                    "error": refusal.code(),
-                    "message": refusal.to_string(),
-                })
-                .to_string(),
-            },
-        },
+        ("POST", "/api/file/save") => save_current_file(body, state),
         ("POST", "/api/file/open-recent") => open_recent_file(body, state),
         ("POST", "/api/export/pdf") => export_pdf_download(body, state),
         ("POST", "/api/export/raster") => export_raster_download(body, state),
@@ -686,27 +518,6 @@ pub fn handle_web_canvas_request(
                 }
             }
         }
-        // Device-login proxy: the wasm bundle ships no auth code and
-        // drives the flow through the daemon's de-auth-bridge runtime.
-        // (`POST /api/auth/login/begin` is a streaming-tier route — it
-        // waits for the verification URI off the state lock.)
-        //
-        // The bridge holds ONE device session per process, so online the
-        // routes fall through to the 404 arm: an account signs in to the
-        // hub, not to this daemon, and proxying the service account's
-        // session would sign every visitor in as it.
-        (_, path) if !state.mode.allows_device_login_proxy() && is_device_login_route(path) => {
-            not_found_reply()
-        }
-        ("GET", de_editor_core::auth_routes::STATUS) => crate::web_auth::status(state),
-        ("GET", de_editor_core::auth_routes::LOGIN_STATUS) => crate::web_auth::login_status(state),
-        ("POST", de_editor_core::auth_routes::LOGIN_CANCEL) => crate::web_auth::login_cancel(state),
-        ("POST", de_editor_core::auth_routes::LOGOUT) => crate::web_auth::logout(state),
-        // Collaboration: the runtime lives in this daemon, the panel in the
-        // browser. See `web_canvas_server/collab_routes.rs`.
-        ("GET", de_editor_core::collab_routes::STATE) => collab_routes::state(state),
-        ("POST", de_editor_core::collab_routes::ACTION) => collab_routes::action(body, state),
-        ("POST", de_editor_core::collab_routes::PRESENCE) => collab_routes::presence(body, state),
         _ => not_found_reply(),
     }
 }
@@ -720,70 +531,31 @@ fn not_found_reply() -> WebReply {
     }
 }
 
-/// Whether `path` belongs to the daemon-hosted device-login proxy.
-fn is_device_login_route(path: &str) -> bool {
-    path.starts_with(de_editor_core::auth_routes::API_PREFIX)
-}
-
-mod collab_driver;
 mod document_push;
-#[cfg(test)]
-pub(crate) use document_push::collab_aware_error_reply_for_test;
 pub(crate) use document_push::{document_push_reply, PendingDocumentPush};
-// Spine-local: the shared coded-error renderer for the document routes.
-use document_push::collab_aware_error_reply;
+// Spine-local: the shared error renderer for the document routes.
+use document_push::error_reply;
 mod sse_hub;
 pub use sse_hub::SseHub;
 pub(crate) use sse_hub::SseSlot;
-mod collab_routes;
-pub(crate) mod collab_state;
 mod connect_routes;
 mod connection;
 mod connection_ai_routes;
 mod doc_routes;
 mod export_routes;
-mod hub_verifier;
-pub mod online_policy;
-mod online_run_loop;
 mod origin_guard;
 mod run_loop;
+pub mod serve_mode;
 mod serve_options;
-mod share_routes;
-pub mod tenant;
-pub mod tenant_auth;
-pub mod tenant_store;
-mod tool_scopes;
 
-pub use collab_state::{DaemonMutationRefusal, IngestOutcome};
 pub use connect_routes::*;
 use connection::*;
 use doc_routes::*;
 use export_routes::*;
-pub use hub_verifier::HubVerifier;
-pub use online_policy::{OnlineRouteRefusal, ServeMode};
-pub use online_run_loop::*;
 use origin_guard::*;
 pub use run_loop::*;
+pub use serve_mode::ServeMode;
 pub use serve_options::*;
-pub use share_routes::ShareError;
-pub use tenant::{TenantError, TenantLease, TenantLimits, TenantRegistry, WriteBarrier, WritePass};
-pub use tenant_auth::{
-    IdentityVerifier, OnlineAuthError, PresentedCredentials, ResolvedIdentity, StaticVerifier,
-};
-pub use tenant_store::{TenantStore, TenantStoreError};
-
-/// Serialises the tests that mutate `jian_ops_schema::image_thumbs`.
-///
-/// The registry is process-global and both `restore_snapshot` and
-/// `clear_registry` replace the whole table, so two such tests running in
-/// parallel wipe each other's entries — a failure with nothing to do with what
-/// either test asserts. Unique ids are not enough; the replacement is
-/// wholesale.
-#[cfg(test)]
-pub(crate) fn lock_image_thumb_registry() -> std::sync::MutexGuard<'static, ()> {
-    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    LOCK.lock().unwrap_or_else(|poison| poison.into_inner())
-}
 
 #[cfg(test)]
 #[path = "web_canvas_server_tests.rs"]

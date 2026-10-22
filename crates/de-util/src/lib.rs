@@ -8,7 +8,6 @@
 //! browser host via de-editor-core / de-editor-ui.
 
 pub mod cli_output;
-pub mod collab_id;
 pub mod hex_color;
 pub mod image_dimensions;
 pub mod json_escape;

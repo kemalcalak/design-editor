@@ -78,25 +78,6 @@ reviewed_skia_archive() {
             features=jpegd-jpege-pdf-textlayout
             expected=c066658b13e257d418f647447d06eb8a83cb060b037228da838589dd863bf053
             ;;
-        ios)
-            [[ $target == aarch64-apple-ios ]] || {
-                printf 'error: the reviewed iOS Skia archive is device ARM64 only\n' >&2
-                return 1
-            }
-            features=jpegd-jpege-metal-pdf-textlayout
-            expected=4abbaea5e4e8934a6f19c5de44eaba9bf9238af4abbe57dbac5f2dc03923b182
-            ;;
-        android)
-            features=gl-jpegd-jpege-pdf-textlayout
-            case $target in
-                aarch64-linux-android) expected=82ca6dd1720bbe8b105c12c4d0c78786d2c792e9d2a7f2102ab66bb24dafa9d0 ;;
-                x86_64-linux-android) expected=ca217df6ffced17381cbea4df044969a493a46bddc757ee844e2fbaf54fa1257 ;;
-                *)
-                    printf 'error: no reviewed Android Skia archive for %s\n' "$target" >&2
-                    return 1
-                    ;;
-            esac
-            ;;
         *)
             printf 'error: unsupported Skia release profile: %s\n' "$profile" >&2
             return 1
@@ -109,8 +90,8 @@ reviewed_skia_archive() {
 verify_staged_skia_archive() {
     local profile=$1 target=$2 url_template=$3
     local metadata key expected archive_suffix remainder archive_url archive
-    [[ $profile == desktop || $profile == android ]] || {
-        printf 'error: staged release verification requires the desktop or Android Skia profile\n' >&2
+    [[ $profile == desktop ]] || {
+        printf 'error: staged release verification requires the desktop Skia profile\n' >&2
         return 1
     }
     [[ -z ${FORCE_SKIA_BINARIES_DOWNLOAD+x} ]] || {
@@ -154,7 +135,7 @@ verify_staged_skia_archive() {
 download_verified() {
     local url=$1 expected=$2 output=$3 output_dir temporary
     case $url in
-        https://github.com/*|https://dl.google.com/android/repository/*) ;;
+        https://github.com/*) ;;
         *)
             printf 'error: release tool URL is not on an approved HTTPS origin\n' >&2
             return 1
@@ -346,213 +327,6 @@ self_test() {
     printf 'pinned-release-tools.sh: checksum rejection self-test passed.\n'
 }
 
-install_binaryen() {
-    local install_root=$1 version=version_123
-    local expected=e959f2170af4c20c552e9de3a0253704d6a9d2766e8fdb88e4d6ac4bae9388fe
-    local temporary archive destination member
-    [[ -d $install_root && ! -L $install_root ]] || {
-        printf 'error: Binaryen install root must be an existing regular directory\n' >&2
-        exit 1
-    }
-    temporary=$(mktemp -d)
-    archive=$temporary/binaryen.tar.gz
-    destination=$install_root/binaryen-$version
-    [[ ! -e $destination && ! -L $destination ]] || {
-        printf 'error: refusing to replace existing Binaryen directory: %s\n' "$destination" >&2
-        exit 1
-    }
-    download_verified \
-        "https://github.com/WebAssembly/binaryen/releases/download/$version/binaryen-$version-x86_64-linux.tar.gz" \
-        "$expected" "$archive"
-    while IFS= read -r member; do
-        [[ $member == "binaryen-$version/"* && $member != *'../'* && $member != /* ]] || {
-            printf 'error: unsafe Binaryen archive member: %s\n' "$member" >&2
-            exit 1
-        }
-    done < <(tar -tzf "$archive")
-    tar -xzf "$archive" -C "$install_root"
-    [[ -x $destination/bin/wasm-opt && ! -L $destination/bin/wasm-opt ]] || {
-        printf 'error: verified Binaryen archive lacks wasm-opt\n' >&2
-        exit 1
-    }
-    rm -rf "$temporary"
-    "$destination/bin/wasm-opt" --version
-    if [[ -n ${GITHUB_PATH:-} ]]; then
-        printf '%s\n' "$destination/bin" >> "$GITHUB_PATH"
-    else
-        printf '%s\n' "$destination/bin"
-    fi
-}
-
-install_bundletool() {
-    local install_root=$1
-    local version=1.18.3
-    local expected=a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29
-    local archive actual
-    [[ ! -e $install_root && ! -L $install_root ]] || {
-        printf 'error: refusing to replace existing bundletool root: %s\n' "$install_root" >&2
-        exit 1
-    }
-    command -v java >/dev/null 2>&1 || {
-        printf 'error: Java is required to validate bundletool\n' >&2
-        exit 1
-    }
-    archive=$install_root/bundletool-all-$version.jar
-    download_verified \
-        "https://github.com/google/bundletool/releases/download/$version/bundletool-all-$version.jar" \
-        "$expected" "$archive"
-    actual=$(java -jar "$archive" version)
-    [[ $actual == "$version" ]] || {
-        printf 'error: bundletool reports an unexpected version: %s\n' "$actual" >&2
-        exit 1
-    }
-    printf '%s\n' "$archive"
-}
-
-install_android_signing_tools() {
-    local install_root=$1 temporary build_tools_archive jdk_archive
-    local build_tools_root jdk_root bundletool_jar actual member resolved
-    local build_tools_sha=5d9ac77fb6ff43d9da518a337b4fcf8f9097113df531d99ccefe80ef7ce8250b
-    local jdk_sha=f2dc5418092c43003db8f9005c4a286e1c0104fea96ccdd49e8ebd037cac9219
-    local bundletool_sha=a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29
-    [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || {
-        printf 'error: Android signing tools are pinned for Linux x86_64 only\n' >&2
-        exit 1
-    }
-    [[ ! -e $install_root && ! -L $install_root ]] || {
-        printf 'error: refusing to replace existing Android signing tools: %s\n' \
-            "$install_root" >&2
-        exit 1
-    }
-    temporary=$(mktemp -d)
-    build_tools_archive=$temporary/build-tools.zip
-    jdk_archive=$temporary/jdk.tar.gz
-    download_verified \
-        https://dl.google.com/android/repository/build-tools_r36_linux.zip \
-        "$build_tools_sha" "$build_tools_archive"
-    download_verified \
-        'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.8%2B9/OpenJDK21U-jdk_x64_linux_hotspot_21.0.8_9.tar.gz' \
-        "$jdk_sha" "$jdk_archive"
-    while IFS= read -r member; do
-        [[ $member == android-16/* && $member != *'../'* \
-            && $member != /* && $member != *"\\"* ]] || {
-            printf 'error: unsafe Android Build-Tools archive member: %s\n' "$member" >&2
-            exit 1
-        }
-    done < <(unzip -Z1 "$build_tools_archive")
-    while IFS= read -r member; do
-        [[ $member == jdk-21.0.8+9/* && $member != *'../'* \
-            && $member != /* && $member != *"\\"* ]] || {
-            printf 'error: unsafe Temurin archive member: %s\n' "$member" >&2
-            exit 1
-        }
-    done < <(tar -tzf "$jdk_archive")
-    mkdir -p "$install_root/build-tools" "$install_root/bundletool"
-    unzip -q "$build_tools_archive" -d "$temporary/build-tools"
-    mv "$temporary/build-tools/android-16" "$install_root/build-tools/36.0.0"
-    tar -xzf "$jdk_archive" -C "$install_root"
-    build_tools_root=$install_root/build-tools/36.0.0
-    jdk_root=$install_root/jdk-21.0.8+9
-    while IFS= read -r member; do
-        resolved=$(readlink -f "$member")
-        [[ $resolved == "$install_root/"* ]] || {
-            printf 'error: verified Android signing tool symlink escapes its root\n' >&2
-            exit 1
-        }
-    done < <(find "$install_root" -type l -print)
-    for member in aapt apksigner zipalign; do
-        [[ -f $build_tools_root/$member && ! -L $build_tools_root/$member \
-            && -x $build_tools_root/$member ]] || {
-            printf 'error: Android Build-Tools archive lacks %s\n' "$member" >&2
-            exit 1
-        }
-    done
-    for member in java jarsigner keytool; do
-        [[ -f $jdk_root/bin/$member && ! -L $jdk_root/bin/$member \
-            && -x $jdk_root/bin/$member ]] || {
-            printf 'error: Temurin archive lacks %s\n' "$member" >&2
-            exit 1
-        }
-    done
-    grep -Eq '^Pkg\.Revision[[:space:]]*=[[:space:]]*36\.0\.0$' \
-        "$build_tools_root/source.properties"
-    actual=$("$jdk_root/bin/java" -version 2>&1 | head -n 1)
-    [[ $actual == 'openjdk version "21.0.8"'* ]] || {
-        printf 'error: verified Temurin reports an unexpected version: %s\n' "$actual" >&2
-        exit 1
-    }
-    bundletool_jar=$install_root/bundletool/bundletool-all-1.18.3.jar
-    download_verified \
-        https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar \
-        "$bundletool_sha" "$bundletool_jar"
-    [[ $("$jdk_root/bin/java" -jar "$bundletool_jar" version) == 1.18.3 ]]
-    {
-        printf 'android_build_tools_sha256=%s\n' "$build_tools_sha"
-        printf 'temurin_jdk_sha256=%s\n' "$jdk_sha"
-        printf 'bundletool_sha256=%s\n' "$bundletool_sha"
-    } > "$install_root/VERIFIED-DIGESTS"
-    chmod 0444 "$install_root/VERIFIED-DIGESTS"
-    rm -rf "$temporary"
-    if [[ -n ${GITHUB_ENV:-} ]]; then
-        {
-            printf 'ANDROID_SIGNING_TOOLS_ROOT=%s\n' "$install_root"
-            printf 'ANDROID_BUILD_TOOLS_DIR=%s\n' "$build_tools_root"
-            printf 'ANDROID_JAVA_HOME=%s\n' "$jdk_root"
-            printf 'BUNDLETOOL_JAR=%s\n' "$bundletool_jar"
-        } >> "$GITHUB_ENV"
-    else
-        printf '%s\n' "$install_root"
-    fi
-}
-
-download_appimage_tools() {
-    local architecture=$1 tool_output=$2 runtime_output=$3
-    local tool_sha runtime_sha
-    case $architecture in
-        x86_64)
-            tool_sha=ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
-            runtime_sha=2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d
-            ;;
-        aarch64)
-            tool_sha=f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158
-            runtime_sha=00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444
-            ;;
-        *)
-            printf 'error: unsupported AppImage architecture: %s\n' "$architecture" >&2
-            exit 1
-            ;;
-    esac
-    [[ $tool_output != "$runtime_output" ]] || {
-        printf 'error: AppImage tool and runtime outputs must differ\n' >&2
-        exit 1
-    }
-    download_verified \
-        "https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-$architecture.AppImage" \
-        "$tool_sha" "$tool_output"
-    download_verified \
-        "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-$architecture" \
-        "$runtime_sha" "$runtime_output"
-    chmod 0755 "$tool_output"
-    chmod 0644 "$runtime_output"
-}
-
-install_buildx() {
-    local output=$1
-    local expected=48af8a397ebd60178778bf63611dbcebe5f5e7a9be90eb9147b24b9587455778
-    [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || {
-        printf 'error: the pinned Buildx asset is only for Linux x86_64\n' >&2
-        exit 1
-    }
-    download_verified \
-        https://github.com/docker/buildx/releases/download/v0.36.1/buildx-v0.36.1.linux-amd64 \
-        "$expected" "$output"
-    chmod 0755 "$output"
-    [[ $("$output" version) == "github.com/docker/buildx v0.36.1 "* ]] || {
-        printf 'error: downloaded Buildx reports an unexpected version\n' >&2
-        exit 1
-    }
-}
-
 install_bun() {
     local install_root=$1
     local expected=951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f
@@ -655,43 +429,6 @@ install_ripgrep() {
     fi
 }
 
-install_node() {
-    local install_root=$1
-    local expected=cc47fc6eb872f905f48c85397856e8a097b2020bb65b394e728af606bfb6e1a9
-    local temporary archive member
-    [[ ! -e $install_root && ! -L $install_root ]] || {
-        printf 'error: refusing to replace existing Node directory: %s\n' "$install_root" >&2
-        exit 1
-    }
-    temporary=$(mktemp -d)
-    archive=$temporary/node.tar.gz
-    download_verified \
-        https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz \
-        "$expected" "$archive"
-    while IFS= read -r member; do
-        [[ $member == ./* && $member != *'../'* ]] || {
-            printf 'error: unsafe Node archive member: %s\n' "$member" >&2
-            exit 1
-        }
-    done < <(tar -tzf "$archive")
-    mkdir -p "$install_root"
-    tar -xzf "$archive" -C "$install_root"
-    [[ -x $install_root/bin/node && ! -L $install_root/bin/node ]] || {
-        printf 'error: verified Node archive lacks a regular node binary\n' >&2
-        exit 1
-    }
-    [[ $("$install_root/bin/node" --version) == v20.20.2 ]] || {
-        printf 'error: downloaded Node reports an unexpected version\n' >&2
-        exit 1
-    }
-    rm -rf "$temporary"
-    if [[ -n ${GITHUB_PATH:-} ]]; then
-        printf '%s\n' "$install_root/bin" >> "$GITHUB_PATH"
-    else
-        printf '%s\n' "$install_root/bin"
-    fi
-}
-
 install_skia_archive() {
     local profile=$1 target=$2 cache_dir=$3
     local metadata key expected archive cache_url
@@ -730,29 +467,6 @@ case ${1-} in
         [[ $# -eq 1 ]] || { printf 'usage: %s --self-test\n' "$0" >&2; exit 2; }
         self_test
         ;;
-    binaryen)
-        [[ $# -eq 2 ]] || { printf 'usage: %s binaryen INSTALL_ROOT\n' "$0" >&2; exit 2; }
-        install_binaryen "$2"
-        ;;
-    bundletool)
-        [[ $# -eq 2 ]] || { printf 'usage: %s bundletool INSTALL_ROOT\n' "$0" >&2; exit 2; }
-        install_bundletool "$2"
-        ;;
-    android-signing-tools)
-        [[ $# -eq 2 ]] || { printf 'usage: %s android-signing-tools INSTALL_ROOT\n' "$0" >&2; exit 2; }
-        install_android_signing_tools "$2"
-        ;;
-    appimage)
-        [[ $# -eq 4 ]] || {
-            printf 'usage: %s appimage ARCH TOOL_OUTPUT RUNTIME_OUTPUT\n' "$0" >&2
-            exit 2
-        }
-        download_appimage_tools "$2" "$3" "$4"
-        ;;
-    buildx)
-        [[ $# -eq 2 ]] || { printf 'usage: %s buildx OUTPUT\n' "$0" >&2; exit 2; }
-        install_buildx "$2"
-        ;;
     bun)
         [[ $# -eq 2 ]] || { printf 'usage: %s bun INSTALL_ROOT\n' "$0" >&2; exit 2; }
         install_bun "$2"
@@ -760,10 +474,6 @@ case ${1-} in
     ripgrep)
         [[ $# -eq 2 ]] || { printf 'usage: %s ripgrep INSTALL_ROOT\n' "$0" >&2; exit 2; }
         install_ripgrep "$2"
-        ;;
-    node)
-        [[ $# -eq 2 ]] || { printf 'usage: %s node INSTALL_ROOT\n' "$0" >&2; exit 2; }
-        install_node "$2"
         ;;
     cargo-cli)
         [[ $# -eq 3 ]] || {
@@ -773,18 +483,18 @@ case ${1-} in
         install_pinned_cargo_cli "$2" "$3"
         ;;
     skia)
-        [[ $# -eq 4 ]] || { printf 'usage: %s skia {desktop|web|ios|android} TARGET CACHE_DIR\n' "$0" >&2; exit 2; }
+        [[ $# -eq 4 ]] || { printf 'usage: %s skia {desktop|web} TARGET CACHE_DIR\n' "$0" >&2; exit 2; }
         install_skia_archive "$2" "$3" "$4"
         ;;
     verify-skia)
         [[ $# -eq 4 ]] || {
-            printf 'usage: %s verify-skia {desktop|android} TARGET SKIA_BINARIES_URL\n' "$0" >&2
+            printf 'usage: %s verify-skia desktop TARGET SKIA_BINARIES_URL\n' "$0" >&2
             exit 2
         }
         verify_staged_skia_archive "$2" "$3" "$4"
         ;;
     *)
-        printf 'usage: %s {--self-test|binaryen|bundletool|android-signing-tools|appimage|buildx|bun|ripgrep|node|cargo-cli|skia|verify-skia} ...\n' "$0" >&2
+        printf 'usage: %s {--self-test|bun|ripgrep|cargo-cli|skia|verify-skia} ...\n' "$0" >&2
         exit 2
         ;;
 esac

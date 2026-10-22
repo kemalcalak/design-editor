@@ -129,9 +129,6 @@ fn title_group_center_is_independent_of_asymmetric_chrome() {
     crowded.agent_count = 6;
     crowded.connected = [true; 7];
     crowded.mcp_count = 8;
-    crowded.account_button_visible = true;
-    crowded.collab.visible = true;
-    crowded.collab.label = "Connected".to_string();
 
     for bar in [&compact, &crowded] {
         let layout = bar.title_layout(rect, title_test_width);
@@ -292,32 +289,6 @@ fn for_editor_ui_picks_up_button_press() {
     let bar = TopBar::for_editor_ui(&ui);
     assert!(bar.is_pressed(de_editor_core::TopBarButton::ToggleTheme));
     assert!(!bar.is_pressed(de_editor_core::TopBarButton::ToggleSidebar));
-}
-
-#[test]
-fn collaboration_chip_is_a_real_hit_target_only_when_available() {
-    let rect = Rect {
-        origin: Point2D::ZERO,
-        size: Point2D::new(1200.0, TOP_BAR_HEIGHT),
-    };
-    let hidden = TopBar::for_editor_ui(&EditorUiState::default());
-    assert!(!hidden.collab.visible);
-
-    let mut ui = EditorUiState::default();
-    ui.collab.availability = de_editor_core::CollabAvailability::Ready;
-    let bar = TopBar::for_editor_ui(&ui);
-    let chip = bar.collaboration_chip_rect_estimated(rect);
-    assert!(chip.size.x > 0.0);
-    assert_eq!(
-        bar.hit_test(
-            rect,
-            Point2D::new(
-                chip.origin.x + chip.size.x / 2.0,
-                chip.origin.y + chip.size.y / 2.0,
-            ),
-        ),
-        Some(TopBarHit::Collaboration)
-    );
 }
 
 #[test]
@@ -690,66 +661,15 @@ fn chip_with_only_builtin_agents_reserves_no_icon_cluster() {
 }
 
 #[test]
-fn account_button_gate_off_removes_hit_target_and_layout_slot() {
+fn agent_chip_divider_anchors_on_the_globe() {
     let bar = TopBar::new("Untitled");
-    assert!(
-        !bar.account_button_visible,
-        "the account button must default to hidden"
-    );
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),
         size: Point2D::new(1000.0, TOP_BAR_HEIGHT),
     };
-    let account = bar.account_button_rect(rect);
     let globe = bar.globe_rect(rect);
     assert!(
-        nearly_eq(account.origin.x + account.size.x, globe.origin.x),
-        "dormant avatar geometry should stay ready for the gated-on state"
-    );
-    assert!(
         nearly_eq(bar.chip_right_anchor_x(rect), globe.origin.x),
-        "hiding the avatar must also collapse its layout slot"
+        "the agent chip hangs directly off the globe button"
     );
-    for x in 0..1000 {
-        let hit = bar.hit_test(rect, Point2D::new(x as f32, TOP_BAR_HEIGHT / 2.0));
-        assert_ne!(
-            hit,
-            Some(TopBarHit::Account),
-            "hidden account control hit at x={x}"
-        );
-    }
-}
-
-#[test]
-fn account_button_gate_on_restores_hit_target_and_layout_slot() {
-    let mut bar = TopBar::new("Untitled");
-    bar.account_button_visible = true;
-    let rect = Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(1000.0, TOP_BAR_HEIGHT),
-    };
-    let account = bar.account_button_rect(rect);
-    assert!(
-        nearly_eq(bar.chip_right_anchor_x(rect), account.origin.x),
-        "an enabled avatar must reclaim its layout slot"
-    );
-    let center = Point2D::new(
-        account.origin.x + account.size.x / 2.0,
-        account.origin.y + account.size.y / 2.0,
-    );
-    assert_eq!(bar.hit_test(rect, center), Some(TopBarHit::Account));
-}
-
-#[test]
-fn for_editor_ui_carries_signed_in_account() {
-    let ui = EditorUiState {
-        account: de_editor_core::AccountState::SignedIn {
-            display_name: "Fini".to_string(),
-            username: "fini".to_string(),
-        },
-        ..EditorUiState::default()
-    };
-    let bar = TopBar::for_editor_ui(&ui);
-    assert!(bar.account.is_signed_in());
-    assert_eq!(bar.account.initial(), 'F');
 }

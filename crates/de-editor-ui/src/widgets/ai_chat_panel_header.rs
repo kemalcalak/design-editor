@@ -6,14 +6,14 @@
 //! ## Layout (left→right inside the tab-row zone)
 //!
 //! ```text
-//! [chevron][  tab 0  ][  tab 1 (active)  ][ tab 2 ][ + ]
+//! [  tab 0  ][  tab 1 (active)  ][ tab 2 ][ + ]
 //! ```
 //!
-//! Tab-row zone: `x = panel_left + PAD + CHEVRON_W + PILL_GAP` to
+//! Tab-row zone: `x = panel_left + PAD` to
 //!               `x = right_edge - NEW_CHAT_D - MAXIMIZE_GAP - MAXIMIZE_W - PILL_RIGHT_GAP`
 //!
-//! Tabs lay out left→right; leftmost tabs clip under the chevron if they
-//! overflow (simple left-clip, no scrollbar). The active tab is a rounded
+//! Tabs lay out left→right; when they overflow they right-align against the
+//! zone's right edge (simple clip, no scrollbar). The active tab is a rounded
 //! pill with brighter text (+ running spinner). Inactive tabs are muted
 //! text only. Hovering any tab reveals a small × close glyph at its right.
 //!
@@ -32,10 +32,6 @@ use crate::{Color, Point2D, Rect, TextLayout};
 
 // ── Layout constants ─────────────────────────────────────────────────────────
 
-/// Width of the collapse chevron icon.
-pub(crate) const CHEVRON_W: f32 = 18.0;
-/// Gap between chevron and the first tab.
-pub(crate) const PILL_GAP: f32 = 6.0;
 /// Gap between the last tab and the maximize button.
 pub(crate) const PILL_RIGHT_GAP: f32 = 8.0;
 /// Diameter of the new-chat "+" circle.
@@ -65,20 +61,9 @@ const SPINNER_D: f32 = 10.0;
 
 // ── Computed tab-row extents ─────────────────────────────────────────────────
 
-/// Left x-coordinate where the tab row starts (just right of the chevron).
+/// Left x-coordinate where the tab row starts (one `PAD` inside the header).
 pub(crate) fn tab_row_left(rect: Rect) -> f32 {
-    tab_row_left_for(rect, false)
-}
-
-/// Left edge of the tab zone. Only the touch sheet still paints a
-/// collapse chevron ahead of it.
-pub(crate) fn tab_row_left_for(rect: Rect, touch_sheet: bool) -> f32 {
-    let chevron = if touch_sheet {
-        CHEVRON_W + PILL_GAP
-    } else {
-        0.0
-    };
-    rect.origin.x + PAD + chevron
+    rect.origin.x + PAD
 }
 
 /// Right x-coordinate where the tab row ends (just left of the maximize icon).

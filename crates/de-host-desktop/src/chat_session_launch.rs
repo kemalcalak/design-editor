@@ -167,9 +167,7 @@ fn launch_if_pending_inner(
             let provider_arc: Arc<dyn ChatProvider> = Arc::from(provider);
             let llm = ChatProviderLlmClient::new(provider_arc.clone())
                 .with_model(selected_cli_model_id(host));
-            if super::allow_ai_bulk_write(host)
-                && clear_fresh_starter_frame_for_design(host.editor_state_mut())
-            {
+            if clear_fresh_starter_frame_for_design(host.editor_state_mut()) {
                 host.mark_editor_state_dirty();
             }
             let append_context = de_host_services::chat_intent::detect_append_intent(
@@ -481,9 +479,7 @@ fn launch_cli_standard_turn(
         // Same ordering rule as the builtin route: the scenario fact is read
         // while the page still shows what the user had.
         stamp_design_turn_scenario(host.editor_state_mut(), user_text);
-        if super::allow_ai_bulk_write(host)
-            && clear_fresh_starter_frame_for_design(host.editor_state_mut())
-        {
+        if clear_fresh_starter_frame_for_design(host.editor_state_mut()) {
             host.mark_editor_state_dirty();
         }
     }

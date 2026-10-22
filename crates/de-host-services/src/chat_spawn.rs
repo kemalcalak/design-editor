@@ -296,9 +296,12 @@ pub fn effective_path_env() -> String {
 /// — WITHOUT passing them through per-request env maps, which the agent
 /// SDK's dangerous-env blocklist rejects outright.
 ///
-/// Two repairs, both narrow: the merged `PATH` (so `#!/usr/bin/env node`
-/// shebangs resolve) and the [`GRAFTED_ENV_KEYS`] proxy allowlist (so
-/// networked probes are not stranded on a proxy-only route).
+/// Two repairs, both narrow: the merged `PATH`, so a Dock launch can find
+/// the agent CLIs and their `#!/usr/bin/env node` shebangs resolve, and
+/// the [`GRAFTED_ENV_KEYS`] proxy allowlist, so the API providers' HTTP
+/// clients (and any agent CLI) honour `HTTPS_PROXY` and friends instead
+/// of being stranded on a proxy-only route. It only reads the login
+/// shell's environment; it starts no agent CLI.
 pub fn repair_gui_process_env() {
     repair_process_path();
     repair_process_proxy_vars();

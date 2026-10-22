@@ -126,20 +126,6 @@ impl WidgetHost {
             }
             return true;
         }
-        if self.editor_state.editor_ui.collab_join_input_active() {
-            let changed = de_editor_ui::widgets::collab_ui::join_address_paste(
-                &mut self.editor_state.editor_ui,
-                text,
-                self.now_ms,
-            )
-            .unwrap_or(false);
-            if changed {
-                self.mark_dirty();
-            }
-            // Consumed either way: the browser default must never route the
-            // payload into the hidden IME input behind the focused field.
-            return true;
-        }
         self.apply_paste_text(text)
     }
 }

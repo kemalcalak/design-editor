@@ -49,9 +49,8 @@ use helpers::{
 impl EditorState {
     /// Apply a command using the caller's document-wide id policy.
     ///
-    /// Collaboration hosts pass their session-owned namespaced allocator.
     /// Validation failures remain `Ok(false)`; allocator exhaustion is typed
-    /// so the host can roll back the surrounding local edit transaction.
+    /// so the host can report it instead of minting a fallback id.
     pub fn apply_with_allocator(
         &mut self,
         cmd: EditorCommand,

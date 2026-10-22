@@ -119,9 +119,6 @@ impl WidgetHost {
                 self.document_import_generation.wrapping_add(1).max(1);
             crate::figma_temp_bridge::cancel_all();
         }
-        if self.editor_state.editor_ui.login_modal_status.is_some() {
-            self.cancel_login_flow();
-        }
         de_editor_core::host_escape_transitions::close_preview_owned_overlays(
             &mut self.editor_state,
             self.now_ms,
@@ -578,18 +575,15 @@ mod tests {
     }
 
     #[test]
-    fn web_preview_entry_queues_its_real_auth_cancel_and_clears_focus_idempotently() {
-        use de_editor_core::{AccountState, Locale, LoginFlowStatus, PropertyFocus, ThemeMode};
+    fn web_preview_entry_clears_focus_idempotently() {
+        use de_editor_core::{Locale, PropertyFocus, ThemeMode};
 
         let mut host = web_preview_entry_host();
-        host.editor_state.editor_ui.login_modal_open = true;
-        host.editor_state.editor_ui.login_modal_status = Some(LoginFlowStatus::WaitingBrowser);
         host.editor_state.editor_ui.prompt_center.open = true;
         host.editor_state.editor_ui.prompt_center.save_open = true;
         host.editor_state.editor_ui.theme_mode = ThemeMode::Light;
         host.editor_state.editor_ui.locale = Locale::Ja;
         host.editor_state.editor_ui.pinned_style_guide = Some("editorial-dark".to_string());
-        host.editor_state.editor_ui.account = AccountState::dev_fake_signed_in();
         host.editor_state.editor_ui.layer_panel_width = 312.0;
         host.editor_state.editor_ui.property_panel_width = 364.0;
         host.editor_state.ui.property_focus = Some(PropertyFocus::PositionX);
@@ -612,7 +606,6 @@ mod tests {
         host.editor_state.chat.focus_input_at_end(0);
         host.editor_state.chat.input.set_composition("zhong", 5, 0);
         let document_before = host.editor_state.doc.clone();
-        let account_before = host.editor_state.editor_ui.account.clone();
         let import_generation_before = host.document_import_generation;
 
         host.prepare_preview_entry();
@@ -626,7 +619,6 @@ mod tests {
         assert!(!host.editor_state.chat.focused);
         assert!(host.editor_state.chat.input.composition().is_none());
         assert_eq!(host.editor_state.chat.input.text(), "durable chat draft");
-        assert!(!host.editor_state.editor_ui.login_modal_open);
         assert!(!host.editor_state.editor_ui.prompt_center.open);
         assert_eq!(host.editor_state.editor_ui.theme_mode, ThemeMode::Light);
         assert_eq!(host.editor_state.editor_ui.locale, Locale::Ja);
@@ -634,32 +626,20 @@ mod tests {
             host.editor_state.editor_ui.pinned_style_guide.as_deref(),
             Some("editorial-dark")
         );
-        assert_eq!(host.editor_state.editor_ui.account, account_before);
         assert_eq!(host.editor_state.editor_ui.layer_panel_width, 312.0);
         assert_eq!(host.editor_state.editor_ui.property_panel_width, 364.0);
         assert_eq!(host.document_import_generation, import_generation_before);
-        assert_eq!(
-            host.pending_auth_actions,
-            vec![super::super::PendingAuthAction::CancelLogin],
-            "web records the daemon request instead of claiming native cancellation"
-        );
 
         host.prepare_preview_entry();
-        assert_eq!(
-            host.pending_auth_actions,
-            vec![super::super::PendingAuthAction::CancelLogin],
-            "repeated cleanup cannot enqueue duplicate cancellation"
-        );
         assert_eq!(host.document_import_generation, import_generation_before);
     }
 
     #[test]
     fn web_preview_prepare_invalidates_import_generation_and_clears_capture_state() {
-        use de_editor_core::{LoginFlowStatus, NodeId};
+        use de_editor_core::NodeId;
 
         let mut host = web_preview_entry_host();
         host.document_import_generation = 41;
-        host.editor_state.editor_ui.login_modal_status = Some(LoginFlowStatus::WaitingBrowser);
         host.editor_state.editor_ui.figma_import_open = true;
         host.editor_state.editor_ui.figma_import_in_progress = true;
         host.editor_state.editor_ui.figma_import_pages = vec![
@@ -685,11 +665,6 @@ mod tests {
         host.prepare_preview_entry();
 
         assert_eq!(host.document_import_generation, 42);
-        assert!(!host.editor_state.editor_ui.login_modal_open);
-        assert_eq!(
-            host.pending_auth_actions,
-            vec![super::super::PendingAuthAction::CancelLogin]
-        );
         assert!(!host.editor_state.editor_ui.figma_import_open);
         assert!(!host.editor_state.editor_ui.figma_import_in_progress);
         assert!(host.editor_state.editor_ui.figma_import_pages.is_empty());
@@ -705,39 +680,26 @@ mod tests {
 
         host.prepare_preview_entry();
         assert_eq!(host.document_import_generation, 42);
-        assert_eq!(
-            host.pending_auth_actions,
-            vec![super::super::PendingAuthAction::CancelLogin]
-        );
     }
 
     #[cfg(feature = "canvaskit")]
     #[test]
     fn web_preview_entry_without_op_ck_keeps_state_and_warns() {
-        use de_editor_core::{LoginFlowStatus, PropertyFocus};
+        use de_editor_core::PropertyFocus;
 
         let mut host = web_preview_entry_host();
-        host.editor_state.editor_ui.login_modal_open = true;
-        host.editor_state.editor_ui.login_modal_status = Some(LoginFlowStatus::WaitingBrowser);
         host.editor_state.ui.property_focus = Some(PropertyFocus::PositionX);
         host.editor_state.ui.property_input.set_text("draft");
         let document_before = host.editor_state.doc.clone();
         let warnings_before = host.editor_state.editor_ui.preview.warnings.clone();
-        let auth_actions_before = host.pending_auth_actions.clone();
 
         assert!(!host.enter_preview_from_browser(1200.0, 800.0, None));
 
         assert_eq!(host.editor_state.doc, document_before);
-        assert!(host.editor_state.editor_ui.login_modal_open);
-        assert_eq!(
-            host.editor_state.editor_ui.login_modal_status,
-            Some(LoginFlowStatus::WaitingBrowser)
-        );
         assert_eq!(
             host.editor_state.ui.property_focus,
             Some(PropertyFocus::PositionX)
         );
-        assert_eq!(host.pending_auth_actions, auth_actions_before);
         assert_eq!(
             host.editor_state.editor_ui.preview.warnings,
             vec!["preview: CanvasKit not initialized".to_string()]

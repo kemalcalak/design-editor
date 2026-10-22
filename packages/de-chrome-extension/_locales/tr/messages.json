@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "$1 düğüm Design Editor’a aktarıldı."
   },
-  "statusSendingAccount": {
-    "message": "Design Editor hesabınıza gönderiliyor…"
-  },
-  "statusSentToAccount": {
-    "message": "Design Editor hesabınıza gönderildi: $1"
-  },
-  "statusSentLocalFallback": {
-    "message": "Hesap oturumunuzun süresi dolmuştu, bu yüzden bu bilgisayardaki Design Editor'a gitti: $1 düğüm içe aktarıldı."
-  },
   "statusDownloaded": {
     "message": "$1 kaydedildi."
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "Bu yakalama $1 MB’tan büyük ve Design Editor’ın anlık görüntü yolu bunu reddediyor. “.op indir” kullanın, ardından dosyayı Design Editor’da açın"
   },
-  "errorAccountTooLarge": {
-    "message": "Bu yakalama $1 MB’tan büyük ve hesabın gelen kutusu bunu reddediyor. Bunun yerine bu cihaza gönderin."
-  },
   "errorImport": {
     "message": "Design Editor anlık görüntüyü reddetti: $1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "Öğe yakalama kullanılamıyor: uzantının arka plan worker’ı çalışmıyor. chrome://extensions sayfasındaki uzantı kartında hata olup olmadığını kontrol edin, build-wasm.sh betiğini yeniden çalıştırın, sonra Yeniden Yükle düğmesine basın. ($1)"
-  },
-  "accountSignIn": {
-    "message": "Oturum aç"
-  },
-  "accountSignOut": {
-    "message": "Oturumu kapat"
-  },
-  "accountSignInOpened": {
-    "message": "Az önce açılan sayfada oturum açmayı tamamlayın, sonra bu pencereyi yeniden açın."
-  },
-  "accountSignedOut": {
-    "message": "Design Editor hesabınızdan çıkış yapıldı."
-  },
-  "accountSignOutManual": {
-    "message": "Az önce açılan hesap sayfasında çıkışı tamamlayın."
-  },
-  "accountUnavailable": {
-    "message": "Design Editor hesabınıza ulaşılamadı: $1"
-  },
-  "errorAccountSignedOut": {
-    "message": "Design Editor hesap oturumunuzun süresi doldu. Yeniden oturum açıp tekrar deneyin."
-  },
-  "errorAccountForbidden": {
-    "message": "Hub bu yüklemenin kaynağını veya oturum belirtecini reddetti. Yeniden oturum açıp tekrar deneyin. ($1)"
-  },
-  "errorAccountQuota": {
-    "message": "Hesabınızın gelen kutusu dolu — en fazla $1 anlık görüntü veya $2 MB tutar. Hesap sayfasından birkaçını silip tekrar deneyin. ($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "Hesabınıza çok fazla yükleme yapıldı. Biraz sonra tekrar deneyin. ($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "Hesabınıza çok fazla yükleme yapıldı. Yaklaşık $1 dakika sonra tekrar deneyin."
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "Hesabınıza çok fazla yükleme yapıldı. Yaklaşık $1 saniye sonra tekrar deneyin."
-  },
-  "errorAccountRejected": {
-    "message": "Design Editor hesabınız anlık görüntüyü reddetti: $1"
-  },
-  "errorAccountUnavailable": {
-    "message": "Design Editor hesabınız şu anda yakalama alamıyor ($1). Daha sonra deneyin veya bu bilgisayardaki Design Editor'a gönderin."
-  },
-  "regionLabel": {
-    "message": "Bölge"
-  },
-  "regionCn": {
-    "message": "Çin"
-  },
-  "regionGlobal": {
-    "message": "Küresel"
-  },
-  "deliveryLabel": {
-    "message": "Gönderilecek yer"
-  },
-  "deliveryLocal": {
-    "message": "Bu bilgisayardaki Design Editor"
-  },
-  "deliveryAccount": {
-    "message": "Design Editor hesabım"
   }
 }

@@ -85,7 +85,6 @@ pub fn tooltip_for(ui: &EditorUiState, button: TopBarButton) -> TopBarTooltip {
             // apply_toggle_agent_settings()` under the Cmd/Ctrl guard.
             DESKTOP_SHORTCUTS.then_some("⌘,"),
         ),
-        TopBarButton::OpenCollaboration => (translate(ui, "tooltip.topbar.collaboration"), None),
         TopBarButton::ToggleGitPanel => (
             if ui.git_panel.open {
                 translate(ui, "git.closePanel")
@@ -116,7 +115,6 @@ pub fn tooltip_for(ui: &EditorUiState, button: TopBarButton) -> TopBarTooltip {
             // toggle_preview_with_cached_viewport()`.
             DESKTOP_SHORTCUTS.then_some("⌘P"),
         ),
-        TopBarButton::OpenAccount => (translate(ui, "tooltip.topbar.account"), None),
     };
     TopBarTooltip { label, shortcut }
 }
@@ -131,9 +129,7 @@ pub fn suppressed(ui: &EditorUiState, button: TopBarButton) -> bool {
         TopBarButton::OpenExportMenu => ui.export_quick_menu_open,
         TopBarButton::OpenAssetCenter => ui.scene_template_center.open,
         TopBarButton::OpenAgentSettings => ui.agent_settings_open,
-        TopBarButton::OpenCollaboration => ui.collab.panel.open,
         TopBarButton::ToggleGitPanel => ui.git_panel.open,
-        TopBarButton::OpenAccount => ui.account_menu_open,
         // Sidebar / theme / fullscreen / preview act immediately — they
         // open no surface that could cover or repeat the tooltip.
         TopBarButton::ToggleSidebar
@@ -199,7 +195,7 @@ pub fn paint_top_bar_tooltip(
 }
 
 /// Every button the bar can hover, for exhaustive coverage checks.
-pub const ALL_TOP_BAR_BUTTONS: [TopBarButton; 14] = [
+pub const ALL_TOP_BAR_BUTTONS: [TopBarButton; 12] = [
     TopBarButton::ToggleSidebar,
     TopBarButton::ToggleFileMenu,
     TopBarButton::OpenImportMenu,
@@ -209,9 +205,7 @@ pub const ALL_TOP_BAR_BUTTONS: [TopBarButton; 14] = [
     TopBarButton::OpenExportMenu,
     TopBarButton::OpenAssetCenter,
     TopBarButton::OpenAgentSettings,
-    TopBarButton::OpenCollaboration,
     TopBarButton::ToggleGitPanel,
     TopBarButton::ToggleFullscreen,
     TopBarButton::TogglePreview,
-    TopBarButton::OpenAccount,
 ];

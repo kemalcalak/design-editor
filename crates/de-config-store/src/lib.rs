@@ -10,8 +10,8 @@ use std::io::{Error, ErrorKind, Write};
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-/// Process-wide config root. First resolution wins so a late mobile
-/// reconfiguration cannot split state between HOME and the app sandbox.
+/// Process-wide config root. First resolution wins so a late
+/// reconfiguration cannot split state between HOME and an explicit root.
 static USER_ROOT_OVERRIDE: OnceLock<PathBuf> = OnceLock::new();
 static USER_ROOT_INIT_LOCK: Mutex<()> = Mutex::new(());
 /// Set only by [`configure_user_root`] — never by the lazy `~/.design-editor`
@@ -108,10 +108,10 @@ pub fn configure_user_root(root: impl Into<PathBuf>) -> std::io::Result<&'static
     Ok(configured)
 }
 
-/// The private app-sandbox root an embedded shell explicitly selected via
-/// [`configure_user_root`], or `None` when the process runs on the desktop
-/// default. Persistence layers that must not touch a desktop config
-/// location from an embedded process (mobile `settings.json`) key off this.
+/// The config root a supervisor explicitly selected via
+/// [`configure_user_root`] (the `--serve-web` `config_root`), or `None` when
+/// the process runs on the platform default. Persistence layers that must
+/// stay inside that root (`settings.json`) key off this.
 pub fn configured_user_root() -> Option<PathBuf> {
     EXPLICIT_USER_ROOT.get().cloned()
 }

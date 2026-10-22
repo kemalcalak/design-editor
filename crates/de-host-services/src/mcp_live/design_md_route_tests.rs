@@ -51,8 +51,6 @@ fn request_for(
         origin: origin.map(str::to_string),
         token: None,
         content_type: content_type.map(str::to_string),
-        authorization: None,
-        cookie: None,
         query: None,
     }
 }

@@ -22,6 +22,8 @@ on:
       - 'tools/check-file-line-cap.sh'
       - '.github/workflows/rust-release.yml'
       - '.github/workflows/rust-check.yml'
+  # The release workflow runs these checks on the commit it releases.
+  workflow_call:
   push:
     branches: [main]
     paths:
@@ -45,7 +47,10 @@ on:
 # One run per PR (or per branch push); a newer push to a PR cancels the
 # older run. Pushes to main are never cancelled.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Inside the release workflow's `workflow_call`, github.workflow is the
+  # caller's name: give each called run its own group so it never queues
+  # behind (or is cancelled by) a regular push run of this workflow.
+  group: rust-check-${{ github.workflow == 'Rust check (native)' && (github.event.pull_request.number || github.ref) || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -159,40 +164,29 @@ jobs:
         run: cargo test --workspace --doc
       - name: Run CanvasKit web host tests
         run: cargo test -p de-host-web --features canvaskit -- --test-threads=1
-      # `gl-host` and `editor` are NON-DEFAULT features, so the workspace
-      # test step above compiles neither the native widget host (884 tests
-      # covering the entire desktop/mobile editor chrome) nor de-engine-ffi's
-      # editor-mode integration tests. That gap is exactly how the mobile
-      # safe-area band contract stayed red for eleven days after d20be2410
-      # re-tinted the bands. One Linux leg is enough to hold the contract;
-      # Windows is excluded for the same DirectWrite/Skia reason as above.
+      # `gl-host` is a NON-DEFAULT feature, so the workspace test step above
+      # never compiles the native widget host (the entire desktop editor
+      # chrome). One Linux leg is enough to hold that contract; Windows is
+      # excluded for the same DirectWrite/Skia reason as above.
       - name: Run native widget-host tests (non-default gl-host feature)
         if: runner.os == 'Linux'
         run: cargo test -p de-host-native --features gl-host
-      - name: Run engine-ffi editor-mode tests (non-default editor feature)
-        if: runner.os == 'Linux'
-        run: cargo test -p de-engine-ffi --features editor
       - run: cargo clippy --workspace --all-targets -- -D warnings
       # The workspace clippy above only sees DEFAULT features, so the
-      # CanvasKit web host, the native widget host and the FFI editor mode
-      # are all invisible to it — a real `collapsible_if` sat in
+      # CanvasKit web host and the native widget host are both invisible
+      # to it — a real `collapsible_if` sat in
       # `canvaskit/mount_keyboard.rs` from 26b91658d until 0827 for exactly
-      # that reason. Lint those three surfaces explicitly.
+      # that reason. Lint those two surfaces explicitly.
       - name: Clippy non-default feature surfaces
         if: runner.os == 'Linux'
         run: |
           cargo clippy -p de-host-web --features canvaskit --all-targets -- -D warnings
           cargo clippy -p de-host-native --features gl-host --all-targets -- -D warnings
-          cargo clippy -p de-engine-ffi --features editor --all-targets -- -D warnings
       # Step 1a Phase C Task 4: spec v19 §11 + §12.3 boundary invariants.
-      # Linux runner has the full mobile target stdlib (`rustup target add`
-      # in subsequent steps would handle ios/android cargo metadata too,
-      # but the script uses `cargo tree --target` which only needs the
-      # cfg-gate evaluation, not the actual target sysroot).
       - name: Verify Jian boundary invariants
         if: runner.os == 'Linux'
         run: |
-          rustup target add aarch64-linux-android aarch64-apple-ios wasm32-unknown-unknown
+          rustup target add wasm32-unknown-unknown
           bash tools/check-jian-boundaries.sh
 
       - name: Verify Step 1b widget boundary (spec §1.4)

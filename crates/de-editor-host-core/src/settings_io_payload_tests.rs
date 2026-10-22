@@ -1,8 +1,7 @@
 //! Settings payload round-trips: the MCP CLI toggle arrays across their
 //! historical lengths, and the fields a payload may and may not carry.
 //!
-//! Sibling of `settings_io_tests.rs`, split out at the 800-line cap the
-//! collab security-boundary check enforces over this crate.
+//! Sibling of `settings_io_tests.rs`, split out at the 800-line cap.
 
 use super::*;
 

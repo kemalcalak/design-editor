@@ -583,19 +583,6 @@ mod tests {
         assert!(!s.codegen.pending_download);
     }
 
-    /// Note on the conflict-accept path, which deliberately does NOT go
-    /// through `replace_document`:
-    ///
-    /// This test pins that a plain sync apply wipes draft state so undo cannot
-    /// resurrect a stale document and fight the sync loop. The web shell's
-    /// server-authoritative conflict accept
-    /// (`de-host-web/src/live_sync_conflict.rs`) uses
-    /// `replace_document_with_undo` instead, and that is not the same
-    /// situation: what undo restores there is the user's OWN edit, which the
-    /// accept just overwrote, and pushing it back is an ordinary push carrying
-    /// the current baseVersion. It is a user redoing their work, not a stale
-    /// document re-entering the sync loop — so the invariant below is
-    /// unaffected.
     #[test]
     fn replace_document_clears_stale_draft_state_so_undo_cannot_resurrect_old_doc() {
         let mut s = EditorState::new();

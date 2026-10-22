@@ -11,12 +11,7 @@ fn tools_list_response_includes_all_registered_tools() {
     // Debug gating is passed explicitly (no process-global env mutation,
     // so this test can't race other tests' env access).
     let state = de_editor_core::EditorState::new();
-    let r = tools_list_response(
-        "3",
-        &state,
-        false,
-        tool_profile::McpAccessProfile::UNRESTRICTED,
-    );
+    let r = tools_list_response("3", &state, false);
     // The production catalog excludes debug tools. Exact-count
     // assertion: any tool added without updating this test trips
     // the count first. Codex stop-gate: previous `contains`-only
@@ -35,12 +30,7 @@ fn tools_list_response_includes_all_registered_tools() {
     );
     #[cfg(not(feature = "mcp-debug-tools"))]
     {
-        let r_forced_debug = tools_list_response(
-            "3",
-            &state,
-            true,
-            tool_profile::McpAccessProfile::UNRESTRICTED,
-        );
+        let r_forced_debug = tools_list_response("3", &state, true);
         for name in [
             "debug_validation_report",
             "debug_logs_tail",
@@ -209,12 +199,7 @@ fn tools_list_response_includes_all_registered_tools() {
 
     // Gate open (debug_enabled = true) — internal debug builds can opt in
     // to the debug tools catalog.
-    let r_debug = tools_list_response(
-        "3",
-        &state,
-        true,
-        tool_profile::McpAccessProfile::UNRESTRICTED,
-    );
+    let r_debug = tools_list_response("3", &state, true);
     #[cfg(feature = "mcp-debug-tools")]
     for name in [
         "debug_validation_report",
@@ -236,13 +221,9 @@ fn tools_list_response_includes_all_registered_tools() {
 #[test]
 fn tools_list_design_content_schema_advertises_ts_layered_args() {
     let state = de_editor_core::EditorState::new();
-    let response: serde_json::Value = serde_json::from_str(&tools_list_response(
-        "3",
-        &state,
-        false,
-        tool_profile::McpAccessProfile::UNRESTRICTED,
-    ))
-    .expect("tools/list response should be JSON");
+    let response: serde_json::Value =
+        serde_json::from_str(&tools_list_response("3", &state, false))
+            .expect("tools/list response should be JSON");
     let tools = response["result"]["tools"]
         .as_array()
         .expect("tools/list result should contain tools");
@@ -280,13 +261,9 @@ fn tools_list_design_content_schema_advertises_ts_layered_args() {
 #[test]
 fn tools_list_schemas_advertise_ts_file_path_args() {
     let state = de_editor_core::EditorState::new();
-    let response: serde_json::Value = serde_json::from_str(&tools_list_response(
-        "3",
-        &state,
-        false,
-        tool_profile::McpAccessProfile::UNRESTRICTED,
-    ))
-    .expect("tools/list response should be JSON");
+    let response: serde_json::Value =
+        serde_json::from_str(&tools_list_response("3", &state, false))
+            .expect("tools/list response should be JSON");
     let tools = response["result"]["tools"]
         .as_array()
         .expect("tools/list result should contain tools");
@@ -626,56 +603,7 @@ fn set_themes_accepts_structured_mcp_arguments_and_mutates_state() {
 }
 
 #[test]
-fn online_dispatch_refuses_user_scene_templates_before_the_tool_runs() {
-    let mut state = de_editor_core::EditorState::new();
-    let line = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"use_scene_template","arguments":{"templateId":"user:private-deck"}}}"#;
-    let mut applied = false;
-    let response = process_message_with_applier_profiled(
-        &mut state,
-        line,
-        tool_profile::McpAccessProfile::online(tool_profile::McpScopes::FULL),
-        |_, _, _| {
-            applied = true;
-            true
-        },
-    )
-    .expect("dispatch")
-    .expect("response");
-
-    assert!(response.contains(r#""isError":true"#), "{response}");
-    assert!(
-        response.contains("user-template-not-available"),
-        "the profile must reject the user half explicitly: {response}"
-    );
-    assert!(!applied, "a refused user template must emit no command");
-}
-
-#[test]
-fn online_dispatch_keeps_shipped_scene_templates_available() {
-    let mut state = de_editor_core::EditorState::new();
-    let line = r#"{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"use_scene_template","arguments":{"templateId":"slide-deck"}}}"#;
-    let mut applied_id = None;
-    let response = process_message_with_applier_profiled(
-        &mut state,
-        line,
-        tool_profile::McpAccessProfile::online(tool_profile::McpScopes::FULL),
-        |_, _, command| {
-            let EditorCommand::AdoptSceneTemplate { template_id } = command else {
-                return false;
-            };
-            applied_id = Some(template_id.clone());
-            true
-        },
-    )
-    .expect("dispatch")
-    .expect("response");
-
-    assert!(!response.contains(r#""isError""#), "{response}");
-    assert_eq!(applied_id.as_deref(), Some("slide-deck"));
-}
-
-#[test]
-fn scene_template_listing_is_shipped_only_online_and_two_source_locally() {
+fn scene_template_listing_includes_both_sources() {
     let _guard = scene_template_tools::exclusive_user_template_registry_for_tests();
     de_editor_core::user_scene_templates::load_user_scene_template(
         de_editor_core::user_scene_templates::UserSceneTemplate {
@@ -690,18 +618,6 @@ fn scene_template_listing_is_shipped_only_online_and_two_source_locally() {
     )
     .expect("register user template fixture");
     let line = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"list_scene_templates","arguments":{}}}"#;
-
-    let online = process_message_with_applier_profiled(
-        &mut de_editor_core::EditorState::new(),
-        line,
-        tool_profile::McpAccessProfile::online(tool_profile::McpScopes::FULL),
-        |_, _, _| false,
-    )
-    .expect("online dispatch")
-    .expect("online response");
-    let online_text = crate::mcp_serve::tool_text(&online);
-    assert!(online_text.contains("slide-deck"), "{online_text}");
-    assert!(!online_text.contains("user:private-deck"), "{online_text}");
 
     let local =
         process_message_with_applier(&mut de_editor_core::EditorState::new(), line, |_, _, _| {

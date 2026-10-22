@@ -52,41 +52,28 @@ pub fn pick_save_as_path(state: &EditorState) -> Option<PathBuf> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[must_use = "a Save As outcome may require scheduling a collaboration fork"]
+#[must_use = "a Save As outcome says whether the document reached disk"]
 pub(crate) enum SaveActionOutcome {
     Saved,
     Cancelled,
     Failed,
-    Rejected,
-    BackgroundForkRequired,
 }
 
 impl SaveActionOutcome {
     fn into_action_outcome(self) -> ActionOutcome {
         match self {
             Self::Saved => ActionOutcome::Saved,
-            Self::BackgroundForkRequired => ActionOutcome::SaveAsForkRequired,
-            Self::Cancelled | Self::Failed | Self::Rejected => ActionOutcome::Noop,
+            Self::Cancelled | Self::Failed => ActionOutcome::Noop,
         }
     }
 }
 
 /// Cmd+S — save to `current_path` if known, else fall through to Save As.
-/// Collaboration-bound Save As returns an explicit background-fork request;
-/// this synchronous residual never detaches a session identity.
 pub fn handle_save(
     host: &mut WidgetHostNative,
     current_path: &mut Option<PathBuf>,
     window: Option<&winit::window::Window>,
 ) -> SaveActionOutcome {
-    let action = if current_path.is_some() {
-        de_editor_core::CollabGateAction::SaveShared
-    } else {
-        de_editor_core::CollabGateAction::SaveFork
-    };
-    if !host.gate_collaboration_action(action, de_editor_core::CollabEditSource::User) {
-        return SaveActionOutcome::Rejected;
-    }
     if let Some(path) = current_path.clone() {
         match save_to_path(host.editor_state(), &path) {
             Err(e) => {
@@ -133,26 +120,7 @@ pub(crate) fn fit_loaded_document(
     host.mark_editor_state_dirty();
 }
 
-pub(crate) fn requires_background_save_as_fork(state: &EditorState) -> bool {
-    let collab = &state.editor_ui.collab;
-    if collab.authenticated_session().is_some()
-        || collab.pending_edit != de_editor_core::CollabPendingEditUi::None
-    {
-        return true;
-    }
-    // Authentication metadata is intentionally absent during these
-    // transitions. Fail closed until the runtime returns to a genuinely
-    // unbound phase.
-    !matches!(
-        collab.phase,
-        de_editor_core::CollabConnectionPhase::Idle
-            | de_editor_core::CollabConnectionPhase::Discovering
-    )
-}
-
-/// Legacy synchronous Save As. Standalone documents still use the native
-/// dialog directly; a collaboration identity is routed back to the desktop's
-/// background fork dispatcher before any picker or write can run.
+/// Legacy synchronous Save As through the native dialog.
 pub fn handle_save_as(
     host: &mut WidgetHostNative,
     current_path: &mut Option<PathBuf>,
@@ -171,9 +139,6 @@ fn handle_save_as_with(
     save: impl FnOnce(&EditorState) -> Result<Option<PathBuf>, DocIoError>,
     report_error: impl FnOnce(&WidgetHostNative, &DocIoError),
 ) -> SaveActionOutcome {
-    if requires_background_save_as_fork(host.editor_state()) {
-        return SaveActionOutcome::BackgroundForkRequired;
-    }
     match save(host.editor_state()) {
         Ok(Some(path)) => {
             crate::settings_io::touch_recent(host, &path);
@@ -203,12 +168,6 @@ fn load_into_host(
     host: &mut WidgetHostNative,
     path: &std::path::Path,
 ) -> Result<Option<PathBuf>, DocumentOpenError> {
-    if !host.gate_collaboration_action(
-        de_editor_core::CollabGateAction::ReplaceDocument,
-        de_editor_core::CollabEditSource::User,
-    ) {
-        return Ok(None);
-    }
     let loaded_source_state = crate::figma_import_session::capture_output_state(path)?;
     let locale = host.editor_state().editor_ui.locale;
     let loaded = load_editor_state_with_report(path, locale);
@@ -400,15 +359,6 @@ pub fn run_action(
     use de_editor_core::editor_ui_state::FileAction;
     match action {
         FileAction::New => {
-            if !host.gate_collaboration_action(
-                de_editor_core::CollabGateAction::ReplaceDocument,
-                de_editor_core::CollabEditSource::User,
-            ) {
-                // A refused New drops the template it was meant to open, so
-                // a later, unrelated New does not open it out of nowhere.
-                host.editor_state_mut().editor_ui.home.pending_template = None;
-                return ActionOutcome::Noop;
-            }
             let mut state = EditorState::starter();
             preserve_app_preferences(host.editor_state(), &mut state);
             state.editor_ui.home.hide();
@@ -556,12 +506,6 @@ pub fn run_action(
             ActionOutcome::Noop
         }
         FileAction::ImportHtml => {
-            if !host.gate_collaboration_action(
-                de_editor_core::CollabGateAction::ReplaceDocument,
-                de_editor_core::CollabEditSource::Import,
-            ) {
-                return ActionOutcome::Noop;
-            }
             let path = match rfd::FileDialog::new()
                 .set_title(de_i18n::translate(
                     host.editor_state().editor_ui.locale,
@@ -578,12 +522,6 @@ pub fn run_action(
             ActionOutcome::HtmlImportStarted(path)
         }
         FileAction::ImportFigma => {
-            if !host.gate_collaboration_action(
-                de_editor_core::CollabGateAction::ReplaceDocument,
-                de_editor_core::CollabEditSource::Import,
-            ) {
-                return ActionOutcome::Noop;
-            }
             let path = match rfd::FileDialog::new()
                 .set_title(de_i18n::translate(
                     host.editor_state().editor_ui.locale,
@@ -605,42 +543,15 @@ pub fn run_action(
         }
         FileAction::FinishFigmaImport(selection) => ActionOutcome::FigmaImportSelection(selection),
         FileAction::ImportImageOrSvg => {
-            if host.gate_collaboration_action(
-                de_editor_core::CollabGateAction::Document(
-                    de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-                    ),
-                ),
-                de_editor_core::CollabEditSource::Import,
-            ) {
-                crate::persistence_image::handle_import_image_or_svg(host);
-            }
+            crate::persistence_image::handle_import_image_or_svg(host);
             ActionOutcome::Noop
         }
         FileAction::PickFillImage => {
-            if host.gate_collaboration_action(
-                de_editor_core::CollabGateAction::Document(
-                    de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-                    ),
-                ),
-                de_editor_core::CollabEditSource::Import,
-            ) {
-                crate::persistence_image::handle_pick_fill_image(host);
-            }
+            crate::persistence_image::handle_pick_fill_image(host);
             ActionOutcome::Noop
         }
         FileAction::RelinkImage => {
-            if host.gate_collaboration_action(
-                de_editor_core::CollabGateAction::Document(
-                    de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::ExternalAssets,
-                    ),
-                ),
-                de_editor_core::CollabEditSource::Import,
-            ) {
-                crate::persistence_image::handle_relink_image(host);
-            }
+            crate::persistence_image::handle_relink_image(host);
             ActionOutcome::Noop
         }
     }

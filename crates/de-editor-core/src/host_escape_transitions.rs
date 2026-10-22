@@ -234,7 +234,6 @@ impl EditorUiState {
         self.figma_import_in_progress = false;
         self.file_drop_active = false;
         self.file_drop_target = None;
-        self.save_name_dialog.close();
 
         self.agent_settings_open = false;
         self.agent_settings_drag = None;
@@ -263,12 +262,6 @@ impl EditorUiState {
         self.agent_settings.hover_acp_preset = None;
         self.agent_settings.hover_nav = None;
         self.settings_input.reset_transient();
-        self.account_menu_open = false;
-        self.account_menu_hover = None;
-        self.login_modal_open = false;
-        self.login_modal_hover = None;
-        self.login_modal_stub_hint_shown = false;
-        self.login_modal_status = None;
 
         self.locale_picker = Default::default();
         self.shape_picker = Default::default();
@@ -344,10 +337,6 @@ impl EditorUiState {
 
         self.layer_context_menu = None;
         self.slides_panel.clear_pointer();
-        self.collab.panel.open = false;
-        self.collab.panel.join_address_focused = false;
-        self.collab.panel.join_input.reset_transient();
-        self.collab.panel.hover = None;
         self.missing_fonts_modal_open = false;
         self.missing_fonts_hover = None;
         self.html_import_diagnostics_open = false;
@@ -489,7 +478,6 @@ mod tests {
         ui.figma_import_page_select.open = true;
         ui.file_drop_active = true;
         ui.file_drop_target = Some(crate::NodeId::new("n1"));
-        ui.save_name_dialog.open_with("draft", false, 1);
         ui.prompt_center.open = false;
         ui.prompt_center.save_open = true;
         ui.scene_template_center.open = false;
@@ -521,7 +509,6 @@ mod tests {
         let ui = &state.editor_ui;
         assert!(!ui.figma_import_in_progress && ui.figma_import_pages.is_empty());
         assert!(!ui.file_drop_active && ui.file_drop_target.is_none());
-        assert!(!ui.save_name_dialog.open);
         assert!(!ui.prompt_center.save_open && !ui.scene_template_center.import.open);
         assert!(ui.shape_picker.hover.is_none() && ui.shape_picker.pressed.is_none());
         assert!(ui.hovered_layer_id.is_none() && ui.pressed_button.is_none());
@@ -543,7 +530,6 @@ mod tests {
         ui.theme_mode = crate::ThemeMode::Light;
         ui.locale = crate::Locale::Ja;
         ui.pinned_style_guide = Some("editorial-dark".to_string());
-        ui.account = crate::AccountState::dev_fake_signed_in();
         ui.scenario = Some(crate::scene_template_catalog::TemplateScene::Slides);
         ui.pending_file_action = Some(crate::FileAction::Save);
         ui.preview.mode = true;
@@ -555,7 +541,6 @@ mod tests {
             .active_theme
             .insert("mode".into(), "dark".into());
         let document = state.doc.clone();
-        let account = ui.account.clone();
         let preview = ui.preview.clone();
         let variables = state.ui.variables.clone();
         close_preview_owned_overlays(&mut state, 0);
@@ -568,7 +553,6 @@ mod tests {
         assert_eq!(ui.theme_mode, crate::ThemeMode::Light);
         assert_eq!(ui.locale, crate::Locale::Ja);
         assert_eq!(ui.pinned_style_guide.as_deref(), Some("editorial-dark"));
-        assert_eq!(ui.account, account);
         assert_eq!(ui.pending_file_action, Some(crate::FileAction::Save));
         assert_eq!(ui.preview, preview);
         assert_eq!(state.ui.variables, variables);

@@ -10,10 +10,9 @@
 //! Tier 3 is pointer capture: once one of these drags is live it owns the
 //! cursor until release.
 
-use super::cursor_move_ctx::CursorMoveCtx;
 use super::WidgetHostNative;
-use de_editor_ui::widgets::{CollabPanel, PropertyPanel};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::PropertyPanel;
+use de_editor_ui::Point2D;
 
 impl WidgetHostNative {
     /// `None` — no floating panel consumed the move.
@@ -171,15 +170,6 @@ impl WidgetHostNative {
                 *higher_overlay_hover_changed |= changed;
             }
         }
-        // Collaboration is painted above the remaining dropdown/variables
-        // surfaces. Defer its point to the context-menu tier so the still
-        // higher path/layer menus can win first.
-        if self
-            .collab_panel_probe_at(Point2D::new(x, y))
-            .is_some_and(|(rect, _)| rect.contains(Point2D::new(x, y)))
-        {
-            return None;
-        }
         if self.over_dropdown_overlay(x, y, self.last_viewport_w, self.last_viewport_h) {
             self.update_dropdown_hover(x, y, false);
             self.clear_chat_and_lower_hover();
@@ -229,55 +219,6 @@ impl WidgetHostNative {
             }
         }
         None
-    }
-
-    /// Collaboration is above Git/dropdown/chrome/property overlays but below
-    /// path/layer menus and the draggable panels. The caller invokes this
-    /// after those higher tiers have had first refusal.
-    pub(in crate::widget_host) fn cursor_move_collab_panel(
-        &mut self,
-        ctx: &mut CursorMoveCtx,
-    ) -> Option<bool> {
-        if !self.editor_state.editor_ui.collab.panel.open {
-            return None;
-        }
-        let point = ctx.point;
-        let probe = self.collab_panel_probe_at(point);
-        let (panel_rect, new_hover) = probe?;
-        let changed = new_hover != self.editor_state.editor_ui.collab.panel.hover;
-        if changed {
-            self.editor_state.editor_ui.collab.panel.hover = new_hover;
-            self.mark_dirty();
-        }
-        if panel_rect.contains(point) {
-            self.clear_hover_below_collab_panel();
-            return Some(true);
-        }
-        if changed {
-            if ctx.chat_or_picker_owns_point {
-                ctx.upper_hover_changed = true;
-            } else {
-                return Some(true);
-            }
-        }
-        None
-    }
-
-    fn collab_panel_probe_at(
-        &self,
-        point: Point2D,
-    ) -> Option<(Rect, Option<de_editor_core::CollabPanelHover>)> {
-        let ui = &self.editor_state.editor_ui;
-        CollabPanel::for_editor_ui(ui).map(|panel| {
-            let panel_rect =
-                de_editor_ui::widgets::touch_overlay_geometry::collaboration_panel_rect(
-                    &self.editor_state,
-                    &panel,
-                    self.last_viewport_w,
-                    self.last_viewport_h,
-                );
-            (panel_rect, panel.hover_at(panel_rect, point))
-        })
     }
 
     /// `None` — no in-flight drag owns the cursor.

@@ -42,7 +42,7 @@ pub enum PreviewInteraction {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PreviewPlatform {
-    /// Native desktop / mobile hosts (de-host-native family).
+    /// The native desktop host (de-host-native family).
     Native,
     /// The browser-backed host (de-host-web).
     Web,

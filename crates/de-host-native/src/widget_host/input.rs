@@ -30,9 +30,7 @@ impl WidgetHostNative {
             return true;
         }
         let ui = &self.editor_state.ui;
-        self.editor_state.editor_ui.save_name_dialog.open
-            || self.editor_state.editor_ui.collab_join_input_active()
-            || ui.layer_rename.is_some()
+        ui.layer_rename.is_some()
             || ui.text_editing.is_some()
             || ui.property_focus.is_some()
             || self.editor_state.editor_ui.variable_row_focus.is_some()
@@ -60,9 +58,7 @@ impl WidgetHostNative {
             || self.editor_state.editor_ui.icon_picker.open
             || self.editor_state.editor_ui.prompt_center.open
             // The Asset Center owns the keyboard while a visible field has
-            // explicit focus. Desktop opens search-focused; touch waits for a
-            // field tap so opening the gallery cannot raise the software
-            // keyboard over its cards. Its
+            // explicit focus. Opens search-focused. Its
             // absence here is what left the gallery unable to take IME input:
             // `text_input_focus_active` reads this list, and a `false` there
             // makes the desktop shell call `set_ime_allowed(false)`, so the
@@ -82,7 +78,6 @@ impl WidgetHostNative {
 
     pub fn settings_focus_active(&self) -> bool {
         self.editor_state.editor_ui.agent_settings.focus.is_some()
-            || self.editor_state.editor_ui.collab_join_input_active()
     }
 
     /// Whether the variables-panel search input owns the keyboard.
@@ -225,42 +220,13 @@ impl WidgetHostNative {
             // Once direct manipulation starts, the cursor owns the dragged
             // node's position exactly.
             self.layout_transition = None;
-            let mutation = if self.alt_held {
-                de_editor_core::CollabDocumentMutation::Unsupported(
-                    de_editor_core::CollabUnsupportedFeature::Duplicate,
-                )
-            } else {
-                de_editor_core::CollabDocumentMutation::NodeMove
-            };
-            if !self.collab_allows_document_mutation(mutation) {
-                self.node_drag = None;
-                return Some(true);
-            }
-            let result = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-                de_editor_core::host_drag_transitions::activate_node_drag_with_allocator(
-                    &mut self.editor_state,
-                    allocator,
-                    self.alt_held,
-                    total_dx,
-                    total_dy,
-                )
-            } else {
-                Ok(de_editor_core::host_drag_transitions::activate_node_drag(
-                    &mut self.editor_state,
-                    &mut self.next_node_id,
-                    self.alt_held,
-                    total_dx,
-                    total_dy,
-                ))
-            };
-            let activation = match result {
-                Ok(activation) => activation,
-                Err(error) => {
-                    self.node_drag = None;
-                    self.show_collab_id_error(error);
-                    return Some(true);
-                }
-            };
+            let activation = de_editor_core::host_drag_transitions::activate_node_drag(
+                &mut self.editor_state,
+                &mut self.next_node_id,
+                self.alt_held,
+                total_dx,
+                total_dy,
+            );
             if activation.duplicated {
                 self.option_drag_source_ids = activation.option_drag_source_ids;
                 // The drag snapshot already advanced the revision before the
@@ -286,17 +252,6 @@ impl WidgetHostNative {
         let dx = (x - prev_screen_x) / zoom;
         let dy = (y - prev_screen_y) / zoom;
         if dx != 0.0 || dy != 0.0 {
-            // Re-check at the mutation sink. A role downgrade, disconnect, or
-            // session end can arrive after the drag crossed its threshold.
-            if !self
-                .collab_allows_document_mutation(de_editor_core::CollabDocumentMutation::NodeMove)
-            {
-                self.node_drag = None;
-                self.canvas_drop_index = None;
-                self.editor_state.editor_ui.active_guides.clear();
-                self.editor_state.editor_ui.canvas_drop_indicator = None;
-                return Some(true);
-            }
             if let Some(drag) = self.node_drag.as_mut() {
                 drag.last_screen_x = x;
                 drag.last_screen_y = y;
@@ -350,16 +305,9 @@ impl WidgetHostNative {
     ) -> Option<usize> {
         if !self.editor_state.property_panel_visible()
             || !matches!(
-                self.editor_state.editor_ui.effective_property_tab(),
+                self.editor_state.editor_ui.property_tab,
                 de_editor_core::PropertyTab::Code
             )
-        {
-            return None;
-        }
-        if self.editor_state.editor_ui.touch_chrome()
-            && !self.editor_state.editor_ui.expanded_touch_layout()
-            && self.editor_state.editor_ui.mobile_sheet
-                != Some(de_editor_core::size_class::MobileSheetKind::Properties)
         {
             return None;
         }
@@ -579,12 +527,6 @@ impl WidgetHostNative {
     }
 
     fn apply_cursor_move_inner(&mut self, x: f32, y: f32) -> bool {
-        if let Some(changed) = self.update_agent_settings_touch_gesture(x, y) {
-            return changed;
-        }
-        if let Some(changed) = self.update_touch_panel_gesture(x, y) {
-            return changed;
-        }
         // The Home-anchored model picker hovers above the takeover —
         // its hover pass runs before Home's.
         if let Some(consumed) =

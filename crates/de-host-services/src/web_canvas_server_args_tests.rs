@@ -162,7 +162,6 @@ fn managed_config_root_is_explicit_and_never_changes_standalone_defaults() {
     for args in [
         vec!["--managed", "--port", "0", "--config-root"],
         vec!["--managed", "--port", "0", "--config-root", "relative"],
-        vec!["--online", "--port", "0", "--config-root"],
     ] {
         assert!(parse(args.into_iter().map(String::from).collect()).is_err());
     }
@@ -221,28 +220,29 @@ fn parse_serve_web_args_managed_accepts_only_loopback_hosts() {
 }
 
 #[test]
-fn parse_serve_web_args_local_and_online_keep_non_loopback_opt_in() {
+fn parse_serve_web_args_local_keeps_non_loopback_opt_in() {
     let local =
         parse_serve_web_args(vec!["3100".into(), "--host".into(), "0.0.0.0".into()].into_iter())
             .expect("local LAN bind");
     assert!(!local.managed);
-    assert!(!local.online);
     assert_eq!(local.host, "0.0.0.0");
+}
 
-    let online = parse_serve_web_args(
-        vec![
-            "--online".into(),
-            "--port".into(),
-            "3100".into(),
-            "--host".into(),
-            "0.0.0.0".into(),
-        ]
-        .into_iter(),
-    )
-    .expect("online Docker bind");
-    assert!(!online.managed);
-    assert!(online.online);
-    assert_eq!(online.host, "0.0.0.0");
+#[test]
+fn parse_serve_web_args_rejects_the_retired_online_flag() {
+    for argv in [
+        vec!["3100", "--online"],
+        vec!["--online", "--port", "3100"],
+        vec!["--managed", "--online", "--port", "3100"],
+    ] {
+        let error = parse_serve_web_args(argv.iter().map(|arg| arg.to_string()))
+            .err()
+            .unwrap_or_else(|| panic!("{argv:?} must be rejected"));
+        assert!(
+            error.to_string().contains(r#"unexpected arg "--online""#),
+            "{argv:?}: {error}"
+        );
+    }
 }
 
 #[test]

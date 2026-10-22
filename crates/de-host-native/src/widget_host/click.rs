@@ -56,7 +56,6 @@ impl WidgetHostNative {
     pub(in crate::widget_host) fn commit_layer_drag(
         &mut self,
         d: super::LayerDragState,
-        viewport_w: f32,
         viewport_h: f32,
     ) -> bool {
         if !d.active {
@@ -66,9 +65,6 @@ impl WidgetHostNative {
         }
         // Activation happened on cursor move, but permissions can change
         // before release. The commit sink must fail closed as well.
-        if !self.collab_allows_document_mutation(de_editor_core::CollabDocumentMutation::NodeMove) {
-            return true;
-        }
         self.refresh_layout_scene();
         if self
             .layout_scene
@@ -79,7 +75,7 @@ impl WidgetHostNative {
             return false;
         }
         use de_editor_ui::widgets::{DropPosition, LayerPanel};
-        let layer_rect = self.layers_content_rect(viewport_w, viewport_h);
+        let layer_rect = self.layers_content_rect(viewport_h);
         // Build with source excluded so indicator y matches post-commit.
         let panel = LayerPanel::from_editor_with_drag_source(&self.editor_state, &d.source);
         let cursor = Point2D::new(d.current_x, d.current_y);
@@ -144,55 +140,34 @@ impl WidgetHostNative {
         let was_focused = self.blur_text_inputs_on_blank_press();
         let toolbar_rect = self.toolbar_rect(viewport_width, viewport_height);
         let toolbar = Toolbar::for_editor(&self.editor_state);
-        if !self.editor_state.editor_ui.touch_chrome() {
-            if let Some(hit) = toolbar.hit_test(toolbar_rect, Point2D::new(x, y)) {
-                self.editor_state.editor_ui.pressed_button =
-                    Some(de_editor_core::ButtonPressTarget::Toolbar(
-                        de_editor_ui::widgets::editor_state_ext::toolbar_hover(hit),
-                    ));
-                match hit {
-                    de_editor_ui::widgets::ToolbarHit::Tool(tool) => {
-                        self.apply_set_tool(tool);
-                        return true;
-                    }
-                    de_editor_ui::widgets::ToolbarHit::Action(action) => {
-                        return self.dispatch_toolbar_action(action);
-                    }
-                    de_editor_ui::widgets::ToolbarHit::ToggleShapePicker => {
-                        core_press::toggle_shape_picker(&mut self.editor_state.editor_ui);
-                        self.mark_dirty();
-                        return true;
-                    }
+        if let Some(hit) = toolbar.hit_test(toolbar_rect, Point2D::new(x, y)) {
+            self.editor_state.editor_ui.pressed_button =
+                Some(de_editor_core::ButtonPressTarget::Toolbar(
+                    de_editor_ui::widgets::editor_state_ext::toolbar_hover(hit),
+                ));
+            match hit {
+                de_editor_ui::widgets::ToolbarHit::Tool(tool) => {
+                    self.apply_set_tool(tool);
+                    return true;
+                }
+                de_editor_ui::widgets::ToolbarHit::Action(action) => {
+                    return self.dispatch_toolbar_action(action);
+                }
+                de_editor_ui::widgets::ToolbarHit::ToggleShapePicker => {
+                    core_press::toggle_shape_picker(&mut self.editor_state.editor_ui);
+                    self.mark_dirty();
+                    return true;
                 }
             }
         }
+
         // Panel hits only when sidebar is open.
         if !self.layers_panel_visible() {
             return was_focused;
         }
-        let layer_rect = self.layers_content_rect(viewport_width, viewport_height);
+        let layer_rect = self.layers_content_rect(viewport_height);
         let panel = self.layer_panel();
         if let Some(hit) = panel.hit_test(layer_rect, Point2D::new(x, y)) {
-            let mutation = match &hit {
-                de_editor_ui::widgets::LayerPanelHit::ToggleHidden(_)
-                | de_editor_ui::widgets::LayerPanelHit::ToggleLocked(_) => {
-                    Some(de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::VisibilityAndLocking,
-                    ))
-                }
-                de_editor_ui::widgets::LayerPanelHit::AddPage
-                | de_editor_ui::widgets::LayerPanelHit::DeletePage(_) => {
-                    Some(de_editor_core::CollabDocumentMutation::Unsupported(
-                        de_editor_core::CollabUnsupportedFeature::PageStructure,
-                    ))
-                }
-                de_editor_ui::widgets::LayerPanelHit::Page(_)
-                | de_editor_ui::widgets::LayerPanelHit::Layer(_)
-                | de_editor_ui::widgets::LayerPanelHit::ToggleCollapsed(_) => None,
-            };
-            if mutation.is_some_and(|mutation| !self.collab_allows_document_mutation(mutation)) {
-                return true;
-            }
             return match press_flow::apply_layer_panel_click(
                 &mut self.editor_state,
                 hit,

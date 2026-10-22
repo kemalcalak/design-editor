@@ -16,13 +16,6 @@ impl WidgetHostNative {
         // mutate the document — commit any pending variable-row
         // edit first so the dirty draft lands before this op runs.
         self.commit_variable_row_focus_if_any();
-        if !self.collab_allows_document_mutation(
-            de_editor_core::CollabDocumentMutation::Unsupported(
-                de_editor_core::CollabUnsupportedFeature::NodeReplacement,
-            ),
-        ) {
-            return true;
-        }
         // The skia `Path::op` math runs against the layout-resolved
         // `LayoutScene` + the editor selection; the result polyline
         // is committed back through an `EditorState` mutator so the
@@ -47,32 +40,19 @@ impl WidgetHostNative {
             .map(de_editor_core::NodeId::new)
             .collect();
         let pre = self.editor_state.snapshot_for_history();
-        let new_id = if let Some(allocator) = self.collab_id_allocator.as_mut() {
-            self.editor_state
-                .replace_paths_with_polyline_with_allocator(
-                    &source_ids,
-                    &result.contours,
-                    allocator,
-                )
-        } else {
-            Ok(self.editor_state.replace_paths_with_polyline(
-                &source_ids,
-                &result.contours,
-                &mut self.next_node_id,
-            ))
-        };
+        let new_id = self.editor_state.replace_paths_with_polyline(
+            &source_ids,
+            &result.contours,
+            &mut self.next_node_id,
+        );
         match new_id {
-            Err(error) => {
-                self.show_collab_id_error(error);
-                true
-            }
-            Ok(Some(id)) => {
+            Some(id) => {
                 self.editor_state.history_push_past(pre);
                 self.editor_state.set_single_selection(id);
                 self.mark_dirty();
                 true
             }
-            Ok(None) => false,
+            None => false,
         }
     }
 }

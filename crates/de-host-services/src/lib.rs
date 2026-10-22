@@ -53,8 +53,6 @@ pub mod cli_probe_error;
 mod cli_probe_support;
 pub mod cli_provider_probe;
 mod cli_resolver_windows;
-pub(crate) mod collab_avatar_proxy;
-pub mod collab_blocking;
 mod copilot_sdk_probe;
 #[cfg(test)]
 mod design_agent_reflow_tests;
@@ -81,8 +79,6 @@ pub mod export_pdf;
 pub mod export_pptx;
 mod figma_convert;
 mod figma_convert_error;
-pub mod hub_auth_client;
-pub mod hub_auth_error;
 pub mod image_relevance_judge;
 mod import_html_url;
 pub mod import_html_url_error;
@@ -93,25 +89,22 @@ pub mod model_catalog_refresh;
 pub mod model_discovery;
 mod model_probe;
 pub mod pre_validator;
-pub mod profile_avatar_fetch;
 mod provider_dial;
 pub mod provider_probe;
 pub mod provider_probe_host;
 pub mod provider_probe_models;
-pub mod public_https_client;
 pub mod quality_credential;
 pub mod reference_context;
 pub mod reference_context_error;
 #[cfg(test)]
 pub(crate) mod test_support;
 // Settings persistence moved to de-editor-host-core (feature `settings-io`)
-// so the mobile FFI hosts share the exact desktop load/save path; these
+// so every host shares the exact desktop load/save path; these
 // re-exports keep every `de_host_services::settings_io*` import stable.
 pub use de_editor_host_core::settings_io;
 pub use de_editor_host_core::settings_io_error;
 pub mod user_scene_template_store;
 pub mod validation_providers;
-pub(crate) mod web_auth;
 pub mod web_canvas_server;
 pub mod web_canvas_server_error;
 pub mod web_chat_standard;
@@ -121,4 +114,3 @@ pub mod web_credentials_error;
 pub mod web_image_generate;
 pub mod web_image_search;
 pub mod web_static;
-pub mod zode_import;

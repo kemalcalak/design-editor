@@ -16,8 +16,7 @@ use super::SseTick;
 /// information the client lost, it is information the newer one already
 /// contains. A queue therefore buys nothing and costs the one thing that
 /// matters: a subscriber that stops reading (a paused tab, a stalled socket,
-/// a laptop that slept) accumulates one entry per mutation, unbounded, in a
-/// process shared with every other account.
+/// a laptop that slept) accumulates one entry per mutation, unbounded.
 ///
 /// So the slot holds exactly one tick and a publisher overwrites it. A burst
 /// of a thousand mutations against a subscriber that never wakes leaves one
@@ -79,7 +78,7 @@ impl SseHub {
     pub(crate) fn subscribe(&self) -> Arc<SseSlot> {
         let slot = Arc::new(SseSlot::new());
         let mut subscribers = self.subscribers.lock().unwrap_or_else(|p| p.into_inner());
-        // Prune here too, not only on broadcast: a tenant whose clients all
+        // Prune here too, not only on broadcast: a hub whose clients all
         // disconnected and which then never publishes again would otherwise
         // accumulate one dead `Weak` per reconnect, forever.
         subscribers.retain(|slot| slot.strong_count() > 0);

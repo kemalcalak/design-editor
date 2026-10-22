@@ -22,9 +22,6 @@ impl WidgetHostNative {
             InstanceLifecycleOutcome, PropertyActionFollowUp as F, PropertyActionOutcome as O,
         };
         use PropertyPanelAction as A;
-        if !self.collab_allows_user_action(dispatch::collab_gate_action(&action)) {
-            return;
-        }
         // ImageTileScale lives in the floating image-fill editor. Any button
         // action may close that editor (or switch away from Tile), so commit
         // its draft before the instance-write scope and before the input can
@@ -112,7 +109,6 @@ impl WidgetHostNative {
         // keyboard is already visible must reveal it immediately. This is
         // idempotent for ordinary actions and complements body-row focus,
         // which is seeded directly by the press tier.
-        self.reveal_property_keyboard_owner();
         self.mark_dirty();
     }
 

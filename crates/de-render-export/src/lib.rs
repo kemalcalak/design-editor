@@ -1,4 +1,4 @@
-//! Mobile-safe raster, SVG, and PDF export.
+//! Raster, SVG, and PDF export.
 //!
 //! Raster (PNG/JPEG/WEBP) renders through the SAME scene painter the
 //! live editor canvas uses — `canvas_viewport_paint::paint_node`
@@ -105,17 +105,6 @@ impl RasterFormat {
             RasterFormat::Webp => "WEBP",
         }
     }
-
-    fn ensure_supported(self) -> Result<(), ExportError> {
-        // The pinned iOS and Android Skia archives omit WebP. Desktop keeps
-        // the historical best-effort Skia encode path without enabling a new
-        // feature that would change its pinned binary key.
-        if matches!(self, RasterFormat::Webp) && cfg!(any(target_os = "ios", target_os = "android"))
-        {
-            return Err(ExportError::UnsupportedFormat { format: "WEBP" });
-        }
-        Ok(())
-    }
 }
 
 /// Raster export with explicit format + scale. Scale clamped to
@@ -127,7 +116,6 @@ pub fn export_raster(
     format: RasterFormat,
     scale: f32,
 ) -> Result<(), ExportError> {
-    format.ensure_supported()?;
     let scale = clamp_scale(scale);
     let page = scene.active_page().ok_or(ExportError::NoActivePage)?;
     let bounds = page_bounds(page).ok_or(ExportError::NothingToExport)?;
@@ -164,7 +152,6 @@ pub fn export_node_raster_with_margin(
     scale: f32,
     margin: f32,
 ) -> Result<(), ExportError> {
-    format.ensure_supported()?;
     let scale = clamp_scale(scale);
     let page = scene.active_page().ok_or(ExportError::NoActivePage)?;
     let node = page
@@ -195,7 +182,6 @@ pub fn render_node_raster_bytes(
     format: RasterFormat,
     scale: f32,
 ) -> Result<Vec<u8>, ExportError> {
-    format.ensure_supported()?;
     let page = scene.active_page().ok_or(ExportError::NoActivePage)?;
     render_node_on_page_raster_bytes(page, node_id, format, scale)
 }
@@ -207,7 +193,6 @@ pub fn render_page_raster_bytes(
     format: RasterFormat,
     scale: f32,
 ) -> Result<Vec<u8>, ExportError> {
-    format.ensure_supported()?;
     let bounds = page_bounds(page).ok_or_else(|| ExportError::PageEmpty {
         page_id: page.id.clone(),
     })?;
@@ -223,7 +208,6 @@ pub fn render_node_on_page_raster_bytes(
     format: RasterFormat,
     scale: f32,
 ) -> Result<Vec<u8>, ExportError> {
-    format.ensure_supported()?;
     let node = page
         .find(node_id)
         .ok_or_else(|| ExportError::NodeNotFoundOnPage {
@@ -285,7 +269,6 @@ pub fn render_raster_bytes(
     margin: f32,
     paint: impl FnOnce(&Canvas),
 ) -> Result<Vec<u8>, ExportError> {
-    format.ensure_supported()?;
     let width_f = ((bounds.size.x + margin * 2.0) * scale).round();
     let height_f = ((bounds.size.y + margin * 2.0) * scale).round();
     if !width_f.is_finite() || !height_f.is_finite() {

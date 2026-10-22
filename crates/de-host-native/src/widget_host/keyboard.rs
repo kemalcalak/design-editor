@@ -18,25 +18,11 @@ impl WidgetHostNative {
             && !self.editor_state.editor_ui.agent_settings_open
         {
             // The overlays Home opens own the keyboard above the sheet:
-            // the model picker's search box takes text, the sign-in
-            // modal has no inputs so it just swallows the key.
+            // the model picker's search box takes text.
             if self.editor_state.editor_ui.chat_model_picker.open {
                 return self.apply_chat_model_picker_text(c);
             }
-            if !self.editor_state.editor_ui.login_modal_open {
-                return self.home_text(c);
-            }
-            return true;
-        }
-        // The mobile save-name dialog is fully modal — it owns every
-        // keystroke while open, above every other input surface.
-        if let Some(changed) =
-            de_editor_core::save_name_keyboard::text(&mut self.editor_state, c, self.now_ms)
-        {
-            if changed {
-                self.mark_dirty();
-            }
-            return true;
+            return self.home_text(c);
         }
         if let Some(changed) = shared::prompt_center_text(&mut self.editor_state, c, self.now_ms) {
             if changed {
@@ -59,18 +45,6 @@ impl WidgetHostNative {
             let mut s = [0u8; 4];
             return self.preview_dispatch_text(c.encode_utf8(&mut s));
         }
-        if self.editor_state.editor_ui.collab_join_input_active() {
-            let changed = de_editor_ui::widgets::collab_ui::join_address_text(
-                &mut self.editor_state.editor_ui,
-                c,
-                self.now_ms,
-            )
-            .unwrap_or(false);
-            if changed {
-                self.mark_dirty();
-            }
-            return true;
-        }
         // This popover is painted above every other editor input, so it wins
         // even if a lower surface retained stale focus.
         if self.apply_image_panel_text(c) {
@@ -78,9 +52,6 @@ impl WidgetHostNative {
         }
         // Color-picker hex field owns the keyboard while focused.
         if self.editor_state.color_picker_hex_focused() {
-            if !self.collab_allows_color_picker_mutation() {
-                return true;
-            }
             if c.is_control() {
                 return false;
             }
@@ -90,9 +61,6 @@ impl WidgetHostNative {
         }
         // Color-picker R/G/B numeric field owns the keyboard while focused.
         if self.editor_state.color_picker_rgb_focused() {
-            if !self.collab_allows_color_picker_mutation() {
-                return true;
-            }
             if c.is_control() {
                 return false;
             }
@@ -208,15 +176,6 @@ impl WidgetHostNative {
                 self.mark_dirty();
             }
             return changed;
-        }
-        if self.editor_state.ui.text_editing.is_some()
-            && !self.collab_allows_document_mutation(
-                de_editor_core::CollabDocumentMutation::NodeProperty(
-                    de_editor_core::CollabNodeField::Content,
-                ),
-            )
-        {
-            return true;
         }
         if let Some(changed) = shared::text_edit_text(&mut self.editor_state, c, self.now_ms) {
             if changed {

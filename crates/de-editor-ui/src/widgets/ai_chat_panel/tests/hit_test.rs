@@ -71,8 +71,7 @@ fn short_panel_drops_occluded_example_pills_from_hit_testing() {
     // the rail's Agent tab. Elsewhere the chat is composer-only.
     s.editor_ui.enter_chat_tab();
     let panel = AIChatPlaceholder::from_editor(&s);
-    // Short rect — like the compact AI sheet with the software keyboard up:
-    // the raw pill stack runs past the composer block.
+    // Short rect: the raw pill stack runs past the composer block.
     let rect = Rect::xywh(0.0, 0.0, AI_CHAT_WIDTH, 300.0);
     let region = panel.empty_state_region(rect);
     let content_bottom = region.origin.y + region.size.y;

@@ -84,43 +84,8 @@ impl WidgetHostNative {
             }
             return Some(changed);
         }
-        // Sign-in modal — owns the cursor while open. Hover the close
-        // `✕` + the primary sign-in button.
-        if (self.editor_state.editor_ui.account_ui_available
-            || self.editor_state.editor_ui.touch_chrome())
-            && self.editor_state.editor_ui.login_modal_open
-        {
-            let changed = hover_flow::login_modal_hover(
-                &mut self.editor_state,
-                self.last_viewport_w,
-                self.last_viewport_h,
-                Point2D::new(x, y),
-            );
-            if changed {
-                self.mark_dirty();
-            }
-            return Some(changed);
-        }
-        // Signed-in account dropdown — owns the cursor while open.
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.account_menu_open
-        {
-            let changed = hover_flow::account_menu_hover(
-                &mut self.editor_state,
-                self.last_viewport_w,
-                Point2D::new(x, y),
-            );
-            if changed {
-                self.mark_dirty();
-            }
-            return Some(changed);
-        }
         if let Some(state) = self.editor_state.ui.color_picker.clone() {
             if let Some(kind) = state.drag {
-                if !self.collab_allows_color_picker_mutation() {
-                    self.editor_state.color_picker_set_drag(None);
-                    return Some(true);
-                }
                 use de_editor_core::ui_draft::ColorPickerDrag;
                 use de_editor_ui::widgets::color_picker::ColorPicker;
                 let picker = ColorPicker::for_state(&self.editor_state, state.clone());

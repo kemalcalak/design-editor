@@ -1,11 +1,7 @@
 //! The editor's one transient notice slot.
 //!
-//! Some things the editor does to a user's document need saying out loud even
-//! though there is no panel listening. The online conflict auto-accept is the
-//! motivating case: the remote document replaces what the tab had, the local
-//! copy is recoverable through undo, and the surface that would normally carry
-//! that sentence — the collaboration panel's notice strip — is structurally
-//! unreachable outside a session.
+//! Some things the editor does need saying out loud even though there is no
+//! panel listening — a template save that succeeded or failed, say.
 //!
 //! Deliberately **one slot, not a queue**. A queue turns a notice into a
 //! backlog the user has to read through, and the second message is nearly
@@ -137,14 +133,14 @@ mod tests {
     fn a_raised_toast_is_visible_until_its_lifetime_runs_out() {
         let mut ui = ui();
         ui.show_toast(
-            "collab.status.localEditPreserved",
+            "menu.saveAsTemplate.failed",
             Vec::new(),
             EditorToastLevel::Warn,
             1_000,
         );
 
         let toast = ui.visible_toast(1_000).expect("visible when raised");
-        assert_eq!(toast.i18n_key, "collab.status.localEditPreserved");
+        assert_eq!(toast.i18n_key, "menu.saveAsTemplate.failed");
         assert_eq!(toast.level, EditorToastLevel::Warn);
         assert_eq!(toast.expires_at_ms(), 1_000 + EDITOR_TOAST_LIFETIME_MS);
 

@@ -35,14 +35,7 @@ impl EditorState {
             .available_models
             .get(self.chat.selected_model)
             .cloned();
-        // Platforms that cannot spawn subprocess CLIs (mobile shells) keep
-        // every external-CLI model out of the catalog; built-in API-key
-        // providers below are unaffected.
-        let connected = if self.editor_ui.external_cli_available {
-            self.editor_ui.agent_settings.verified_connected_mask()
-        } else {
-            [false; 7]
-        };
+        let connected = self.editor_ui.agent_settings.verified_connected_mask();
         self.chat.rebuild_available_models(&connected);
 
         let builtin_entries = self
@@ -92,5 +85,33 @@ impl EditorState {
                 }
             }
         }
+    }
+
+    /// Whether the user is looking at, or about to use, agent-CLI state:
+    /// the chat model picker, Settings → Agents, or a focused chat composer
+    /// (a CLI model selected last session must be verified before the first
+    /// send). Desktop starts its CLI probes on the first frame this is true.
+    pub fn wants_cli_provider_state(&self) -> bool {
+        self.editor_ui.shows_cli_provider_state() || self.chat.focused
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::EditorState;
+
+    #[test]
+    fn a_focused_chat_composer_wants_cli_provider_state() {
+        let mut state = EditorState::new();
+        assert!(
+            !state.wants_cli_provider_state(),
+            "a fresh launch wants none"
+        );
+        state.chat.focus_input_at_end(0);
+        assert!(state.wants_cli_provider_state());
+        state.chat.blur_input(0);
+        assert!(!state.wants_cli_provider_state());
+        state.editor_ui.toggle_chat_model_picker();
+        assert!(state.wants_cli_provider_state());
     }
 }
