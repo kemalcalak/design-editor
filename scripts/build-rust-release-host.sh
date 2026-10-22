@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Build one desktop release target with required ABI 3 auth inputs, then
-# prove Cargo did not silently select the auth stub.
+# Build one desktop release target against the verified pinned Skia cache.
 
 set -euo pipefail
 
@@ -32,7 +31,6 @@ command -v cargo >/dev/null 2>&1 || {
 }
 
 cd "$repo_root"
-cargo clean -p de-auth-bridge --target "$release_target" --release
 cargo clean -p skia-bindings --target "$release_target" --release
 "$repo_root/tools/pinned-release-tools.sh" verify-skia \
     desktop "$release_target" "$SKIA_BINARIES_URL"
@@ -41,4 +39,3 @@ cargo build \
     --target "$release_target" --release --locked \
     --features \
       de-host-desktop/pinned-skia-binaries,de-host-web-server/pinned-skia-binaries
-OP_AUTH_CARGO_TARGET=$release_target tools/check-op-auth-cargo-build.sh

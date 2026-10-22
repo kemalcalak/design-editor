@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "$1 個のノードを Design Editor にインポートしました。"
   },
-  "statusSendingAccount": {
-    "message": "アカウントに送信しています…"
-  },
-  "statusSentToAccount": {
-    "message": "アカウントに送信しました: $1"
-  },
-  "statusSentLocalFallback": {
-    "message": "アカウントのセッションが期限切れだったため、このパソコンの Design Editor に送信しました: $1 個のノードをインポートしました。"
-  },
   "statusDownloaded": {
     "message": "$1 を保存しました。"
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "このキャプチャは $1 MB を超えており、Design Editor のスナップショット受け口が受け付けません。「.op をダウンロード」してから、そのファイルを Design Editor で開いてください"
   },
-  "errorAccountTooLarge": {
-    "message": "このキャプチャは $1 MB を超えており、アカウントの受信箱が受け付けません。代わりにこのデバイスへ送信してください。"
-  },
   "errorImport": {
     "message": "Design Editor がスナップショットを拒否しました: $1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "要素のキャプチャは利用できません: 拡張機能のバックグラウンド worker が実行されていません。chrome://extensions の拡張機能カードでエラーを確認し、build-wasm.sh を再実行してから「再読み込み」を押してください。（$1）"
-  },
-  "accountSignIn": {
-    "message": "ログイン"
-  },
-  "accountSignOut": {
-    "message": "ログアウト"
-  },
-  "accountSignInOpened": {
-    "message": "開いたページでログインを完了してから、このポップアップを開き直してください。"
-  },
-  "accountSignedOut": {
-    "message": "Design Editor アカウントからログアウトしました。"
-  },
-  "accountSignOutManual": {
-    "message": "開いたアカウントページでログアウトを完了してください。"
-  },
-  "accountUnavailable": {
-    "message": "Design Editor アカウントに接続できませんでした: $1"
-  },
-  "errorAccountSignedOut": {
-    "message": "Design Editor アカウントのセッションが期限切れです。もう一度サインインしてからお試しください。"
-  },
-  "errorAccountForbidden": {
-    "message": "ハブがこのアップロードの送信元またはセッショントークンを拒否しました。もう一度サインインしてからお試しください。($1)"
-  },
-  "errorAccountQuota": {
-    "message": "アカウントの受信ボックスがいっぱいです。保存できるのは最大 $1 件、$2 MB までです。アカウントページでいくつか削除してから再試行してください。($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "アカウントへのアップロードが多すぎます。しばらくしてからお試しください。($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "アカウントへのアップロードが多すぎます。約 $1 分後にお試しください。"
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "アカウントへのアップロードが多すぎます。約 $1 秒後にお試しください。"
-  },
-  "errorAccountRejected": {
-    "message": "Design Editor アカウントがスナップショットを拒否しました: $1"
-  },
-  "errorAccountUnavailable": {
-    "message": "Design Editor アカウントは現在キャプチャを受け取れません ($1)。しばらくしてから、またはこのパソコンの Design Editor に送信してください。"
-  },
-  "regionLabel": {
-    "message": "リージョン"
-  },
-  "regionCn": {
-    "message": "中国"
-  },
-  "regionGlobal": {
-    "message": "グローバル"
-  },
-  "deliveryLabel": {
-    "message": "送信先"
-  },
-  "deliveryLocal": {
-    "message": "このパソコンの Design Editor"
-  },
-  "deliveryAccount": {
-    "message": "自分の Design Editor アカウント"
   }
 }

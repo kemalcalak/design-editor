@@ -10,8 +10,8 @@
 #   1. Build the Rust logic core (scripts/build-wasm.sh, which itself runs the
 #      LinkError, no-eval and service-worker import guards).
 #   2. cargo test -p de-chrome-extension-core — the whole logic surface,
-#      including the assertion that manifest.json grants exactly the hub
-#      origins the core is compiled against. Skippable with --skip-tests when
+#      including the assertion that manifest.json grants exactly the loopback
+#      origin the core's endpoint guard accepts. Skippable with --skip-tests when
 #      the caller has just run it.
 #   3. node --check every runtime .js, so a syntax error cannot ship.
 #   4. The drift/privacy guards: vendored extractor, service-worker import
@@ -80,7 +80,6 @@ RUNTIME_FILES=(
   manifest.json
   popup.html
   popup.css
-  account.js
   background.js
   capture.js
   client.js

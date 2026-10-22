@@ -97,9 +97,6 @@ pub enum TopBarHit {
     ToggleFullscreen,
     /// Play / Stop icon — enter / exit canvas Preview (Play) mode.
     TogglePreview,
-    /// User-avatar button — open the sign-in modal (signed out) or the
-    /// account dropdown (signed in).
-    Account,
 }
 
 pub struct TopBar {
@@ -154,15 +151,6 @@ pub struct TopBar {
     /// exactly. `None` (the wasm build, or before a measure pass) →
     /// `hit_test` falls back to a char-count estimate.
     pub chip_text_w: Option<f32>,
-    /// Sign-in state — drives the avatar button's glyph (generic user
-    /// outline when signed out, profile image with an initial fallback when
-    /// signed in).
-    pub account: de_editor_core::AccountState,
-    /// Whether the avatar button paints at all. Follows the host-set
-    /// runtime release gate (`EditorUiState::account_ui_available`):
-    /// desktop enables it when an auth backend is linked, web when the
-    /// serving daemon reports one over `/api/auth/status`.
-    pub account_button_visible: bool,
     /// Which embedding container the chrome renders inside. `VsCode` hides
     /// the file-scoped chrome (open menu, Figma import, centered file
     /// name/edited/git cluster) and the Maximize button — the host
@@ -193,8 +181,6 @@ impl TopBar {
             hover: None,
             pressed: None,
             chip_text_w: None,
-            account: de_editor_core::AccountState::Anonymous,
-            account_button_visible: false,
             embed: de_editor_core::EmbedHost::None,
         }
     }
@@ -253,8 +239,6 @@ impl TopBar {
                 _ => None,
             },
             chip_text_w: None,
-            account: ui.account.clone(),
-            account_button_visible: ui.account_ui_available,
             embed: ui.embed,
         }
     }
@@ -343,7 +327,7 @@ impl TopBar {
     }
 
     // Right-cluster rects (`globe_rect` / `theme_button_rect` /
-    // `preview_button_rect` / `account_button_rect`), the file-menu +
+    // `preview_button_rect`), the file-menu +
     // git-button rect helpers, and their visibility predicates live in
     // the `top_bar_geometry` sibling (split for the 800-line cap).
 
@@ -472,12 +456,6 @@ impl TopBar {
         let globe = self.globe_rect(rect);
         if (globe).contains(point) {
             return Some(TopBarHit::ToggleLocale);
-        }
-        if self.account_button_visible {
-            let account = self.account_button_rect(rect);
-            if (account).contains(point) {
-                return Some(TopBarHit::Account);
-            }
         }
         // Agent chip hit area — slightly larger than the painted
         // chip so off-by-a-few-pixels clicks still register. The

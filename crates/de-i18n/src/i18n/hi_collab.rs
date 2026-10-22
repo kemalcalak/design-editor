@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "गर्म नारंगी 4:5 ज्ञान कार्ड: क्रमांकित शीर्ष लेबल, बड़ा शीर्षक, परिभाषा, क्रमांकित गोल चिह्नों वाली तीन बातें, और खाते व QR वाला फुटर; ज्ञान-केंद्रित अकाउंट की श्रृंखला के लिए।",
         "sceneTemplate.item.analyticsMetricCard.title" => "एनालिटिक्स मीट्रिक शेयर कार्ड",
         "sceneTemplate.item.analyticsMetricCard.summary" => "गहरे रंग का 1200×630 डेटा कार्ड: मुख्य मीट्रिक का बड़ा अंक और माह-दर-माह बैज, दाईं ओर क्षैतिज बार और नीचे तीन सहायक मीट्रिक; सोशल शेयर और साप्ताहिक रिपोर्ट के लिए।",
-        "account.mcpToken" => "MCP टोकन",
         "menu.saveAsTemplate" => "टेम्पलेट के रूप में सहेजें…",
         "menu.saveAsTemplate.saved" => "टेम्पलेट के रूप में सहेजा गया",
         "menu.saveAsTemplate.failed" => "टेम्पलेट सहेजा नहीं जा सका",

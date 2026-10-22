@@ -76,7 +76,7 @@ impl AgentLoopConfig {
 
 // The stateful tool-call accumulation (one fully-accumulated call, the
 // transcript tool-card envelope, per-wire collectors) moved to
-// `de_ai::chat_tool_sse` so the mobile FFI design loop shares one
+// `de_ai::chat_tool_sse` so every design loop shares one
 // implementation — same migration `de_ai::chat_sse`'s plain parsers made.
 // Re-exported unchanged so existing `chat_agent_loop::` paths still resolve.
 pub use de_ai::chat_tool_sse::{normalized_args, tool_card_envelope, PendingToolCall};

@@ -3,11 +3,11 @@
  * mapping from a thrown error onto the sentence the user reads.
  *
  * Split out of `popup.js` for two reasons beyond its length. The mapping is
- * the part of the popup that grows with every destination — three ingresses
+ * the part of the popup that grows with every destination — two ingresses
  * and a dozen failure codes now — while the controller around it does not, and
  * keeping every message key in one file is what makes it possible to check
  * that none of them is unreachable. And nothing here touches `chrome.*`: it is
- * DOM, `i18n.js`, and the core's published ceilings.
+ * DOM and `i18n.js`.
  *
  * Messages are held as *references* (`{ key, args }`) rather than as rendered
  * text, so switching language re-renders whatever is on screen exactly instead
@@ -15,7 +15,6 @@
  * shape `background.js` stores a pick result in, which is why `tRef` recurses.
  */
 
-import { getCore } from './core-registry.js';
 import { t, tRef } from './i18n.js';
 
 const statusArea = document.getElementById('status');
@@ -121,64 +120,6 @@ export function reportDeliveryError(error, endpoint) {
     default:
       return reportCaptureError(error);
   }
-}
-
-/**
- * Failures of the account upload.
- *
- * Every code here comes from the core's classification of one Hub status, so
- * this switch and `hub_reply.rs`'s enum are the same list read from two ends.
- * The quota ceilings are read from the core rather than retyped: they are part
- * of the Hub's contract, and a number that drifted would be worse than no
- * number at all.
- */
-export function reportAccountError(error) {
-  const detail = String((error && (error.detail || error.message)) || error);
-  switch (error && error.code) {
-    case 'signedOut':
-      return setStatus(msg('errorAccountSignedOut'), 'error');
-    case 'forbidden':
-      return setStatus(msg('errorAccountForbidden', [detail]), 'error');
-    case 'quota':
-      return setStatus(
-        msg('errorAccountQuota', [
-          String(getCore().hubQuotaItems()),
-          String(getCore().hubQuotaTotalMb()),
-          detail,
-        ]),
-        'error',
-      );
-    case 'rateLimited':
-      return setStatus(rateLimitMessage(error.retryAfterSeconds, detail), 'error');
-    // The hub's own cap (32 MiB) is smaller than the local ingest cap, so
-    // this capture may still import locally — say so instead of the local
-    // message's "download the file".
-    case 'tooLarge':
-      return setStatus(msg('errorAccountTooLarge', [detail]), 'error');
-    case 'rejected':
-      return setStatus(msg('errorAccountRejected', [detail]), 'error');
-    case 'unavailable':
-      return setStatus(msg('errorAccountUnavailable', [detail]), 'error');
-    case 'hubOffline':
-    case 'hubTimeout':
-    case 'hubNotPermitted':
-      return setStatus(msg('accountUnavailable', [detail]), 'error');
-    default:
-      return reportCaptureError(error);
-  }
-}
-
-/**
- * "Try again in about N minutes", or seconds when the wait is short.
- *
- * A wait the hub did not state falls back to the message without a number:
- * `Retry-After` in its HTTP-date form is not turned into a duration (the core
- * has no clock), and inventing one would be worse than saying nothing.
- */
-function rateLimitMessage(seconds, detail) {
-  if (typeof seconds !== 'number') return msg('errorAccountRateLimited', [detail]);
-  if (seconds < 60) return msg('errorAccountRateLimitedSeconds', [String(seconds)]);
-  return msg('errorAccountRateLimitedMinutes', [String(Math.ceil(seconds / 60))]);
 }
 
 /** Localize every `data-i18n` node in the document, plus the title. */

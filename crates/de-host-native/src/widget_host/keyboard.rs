@@ -18,15 +18,11 @@ impl WidgetHostNative {
             && !self.editor_state.editor_ui.agent_settings_open
         {
             // The overlays Home opens own the keyboard above the sheet:
-            // the model picker's search box takes text, the sign-in
-            // modal has no inputs so it just swallows the key.
+            // the model picker's search box takes text.
             if self.editor_state.editor_ui.chat_model_picker.open {
                 return self.apply_chat_model_picker_text(c);
             }
-            if !self.editor_state.editor_ui.login_modal_open {
-                return self.home_text(c);
-            }
-            return true;
+            return self.home_text(c);
         }
         if let Some(changed) = shared::prompt_center_text(&mut self.editor_state, c, self.now_ms) {
             if changed {

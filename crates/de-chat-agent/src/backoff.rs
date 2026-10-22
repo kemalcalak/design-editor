@@ -1,7 +1,7 @@
 //! Shared HTTP throttle / retry ladder + provider client construction for
 //! the builtin (API-key) providers — extracted verbatim from
 //! `de-host-services/src/chat_builtin_http.rs` (which re-exports everything
-//! here) so the agent loop and the mobile hosts dial with identical posture.
+//! here) so the agent loop and the daemon dial with identical posture.
 
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};

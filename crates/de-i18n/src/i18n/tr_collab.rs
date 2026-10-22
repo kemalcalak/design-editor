@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "Numaralı üst etiketi, büyük başlığı, tanımı, numaralı dairelerle üç maddeyi ve hesap ile QR kodu içeren sıcak turuncu 4:5 bilgi kartı; bilgi odaklı hesapların seri paylaşımları için.",
         "sceneTemplate.item.analyticsMetricCard.title" => "Analitik metrik paylaşım kartı",
         "sceneTemplate.item.analyticsMetricCard.summary" => "Büyük ana metrik ve aylık değişim rozeti, sağda yatay çubuklar ve altta üç ikincil metrik içeren koyu 1200×630 veri kartı; sosyal paylaşım ve haftalık rapor görselleri için.",
-        "account.mcpToken" => "MCP Belirteçleri",
         "menu.saveAsTemplate" => "Şablon olarak kaydet…",
         "menu.saveAsTemplate.saved" => "Şablon olarak kaydedildi",
         "menu.saveAsTemplate.failed" => "Şablon kaydedilemedi",

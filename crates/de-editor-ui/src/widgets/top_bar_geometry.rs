@@ -147,31 +147,9 @@ impl TopBar {
         }
     }
 
-    /// User-avatar button — anchored directly left of the Globe button,
-    /// between the locale/theme cluster and the agent-status chip's
-    /// divider (TS parity spot: "between the agents chip and the
-    /// globe/theme icons"). Derived from [`Self::globe_rect`] so the two
-    /// can never drift apart.
-    pub fn account_button_rect(&self, top_bar_rect: Rect) -> Rect {
-        let globe = self.globe_rect(top_bar_rect);
-        Rect {
-            origin: Point2D::new(globe.origin.x - ICON_BUTTON, globe.origin.y),
-            size: Point2D::new(ICON_BUTTON, ICON_BUTTON),
-        }
-    }
-
-    fn account_or_globe_anchor_x(&self, top_bar_rect: Rect) -> f32 {
-        if self.account_button_visible {
-            self.account_button_rect(top_bar_rect).origin.x
-        } else {
-            self.globe_rect(top_bar_rect).origin.x
-        }
-    }
-
-    /// Left edge the agent chip's divider hangs off: the account button, or
-    /// the globe when the account button is hidden.
+    /// Left edge the agent chip's divider hangs off: the globe button.
     pub(super) fn chip_right_anchor_x(&self, top_bar_rect: Rect) -> f32 {
-        self.account_or_globe_anchor_x(top_bar_rect)
+        self.globe_rect(top_bar_rect).origin.x
     }
 
     /// Agent-chip bounds for an already measured status-label width.
@@ -362,12 +340,6 @@ impl TopBar {
             B::OpenAssetCenter => self.asset_center_button_rect(top_bar_rect),
             B::ToggleTheme => self.theme_button_rect(top_bar_rect),
             B::ToggleLocale => self.globe_rect(top_bar_rect),
-            B::OpenAccount => {
-                if !self.account_button_visible {
-                    return None;
-                }
-                self.account_button_rect(top_bar_rect)
-            }
             B::OpenAgentSettings => {
                 let text_w = measure(&self.chip_text(), 11.0);
                 self.agent_chip_rect(top_bar_rect, text_w)

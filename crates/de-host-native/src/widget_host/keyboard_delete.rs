@@ -17,9 +17,6 @@ impl WidgetHostNative {
             if self.editor_state.editor_ui.chat_model_picker.open {
                 return self.apply_chat_model_picker_backspace();
             }
-            if self.editor_state.editor_ui.login_modal_open {
-                return true;
-            }
             if !self.editor_state.editor_ui.agent_settings_open {
                 if let Some(changed) = self.home_backspace() {
                     return changed;

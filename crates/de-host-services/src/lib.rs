@@ -91,25 +91,22 @@ pub mod model_catalog_refresh;
 pub mod model_discovery;
 mod model_probe;
 pub mod pre_validator;
-pub mod profile_avatar_fetch;
 mod provider_dial;
 pub mod provider_probe;
 pub mod provider_probe_host;
 pub mod provider_probe_models;
-pub mod public_https_client;
 pub mod quality_credential;
 pub mod reference_context;
 pub mod reference_context_error;
 #[cfg(test)]
 pub(crate) mod test_support;
 // Settings persistence moved to de-editor-host-core (feature `settings-io`)
-// so the mobile FFI hosts share the exact desktop load/save path; these
+// so every host shares the exact desktop load/save path; these
 // re-exports keep every `de_host_services::settings_io*` import stable.
 pub use de_editor_host_core::settings_io;
 pub use de_editor_host_core::settings_io_error;
 pub mod user_scene_template_store;
 pub mod validation_providers;
-pub(crate) mod web_auth;
 pub mod web_canvas_server;
 pub mod web_canvas_server_error;
 pub mod web_chat_standard;

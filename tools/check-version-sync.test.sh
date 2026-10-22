@@ -122,8 +122,6 @@ jobs:
           case "$GITHUB_REF" in
             "refs/heads/v$version"|"refs/tags/v$version") ;;
           esac
-          tools/check-op-auth-release-matrix.sh
-          tools/check-op-auth-prebuilt.sh --require-hardened
           echo "version=$version" >> "$GITHUB_OUTPUT"
   build:
     needs: version
@@ -528,8 +526,6 @@ jobs:
       - id: version
         run: |
           # version=$(scripts/workspace-version.sh)
-          # tools/check-op-auth-release-matrix.sh
-          # tools/check-op-auth-prebuilt.sh --require-hardened
           echo "version=0.8.1" >> "$GITHUB_OUTPUT"
 SCRIPT
 run_guard "$repo"
@@ -538,7 +534,7 @@ assert_contains '.github/workflows/rust-release.yml:1:' 'commented release check
 assert_contains 'error: release version computation must use the canonical workspace reader' \
     'commented release checks'
 assert_no_success_output 'commented release checks'
-pass 'commented source and matrix gate calls do not satisfy the guard'
+pass 'commented source reader calls do not satisfy the guard'
 
 repo=$(new_repo macos_noop_mismatch_and_reassignment 0.8.1)
 cat > "$repo/scripts/bundle-macos.sh" <<'SCRIPT'

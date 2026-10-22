@@ -60,7 +60,6 @@ impl WidgetHost {
             last_viewport_h: 0.0,
             last_cursor_x: 0.0,
             last_cursor_y: 0.0,
-            pending_auth_actions: Vec::new(),
             chat_panel_owner: de_editor_ui::widgets::AIChatPlaceholder::next_owner(),
             layer_panel_owner: de_editor_ui::widgets::LayerPanel::next_layer_panel_owner(),
             last_chat_session_index,
@@ -83,11 +82,6 @@ impl WidgetHost {
             slideshow_press_screen: None,
             bundled_fonts_pending: false,
         }
-    }
-
-    /// Drain the device-login actions queued by press dispatchers.
-    pub fn take_pending_auth_actions(&mut self) -> Vec<PendingAuthAction> {
-        std::mem::take(&mut self.pending_auth_actions)
     }
 
     /// Rotate the chat-panel transcript-cache owner when the active chat session

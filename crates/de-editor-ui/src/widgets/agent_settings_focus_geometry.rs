@@ -93,7 +93,7 @@ pub(super) fn focused_input_rect(
             Some(crate::widgets::agent_settings_mcp::port_field_rect(content))
         }
         AgentSettingsTab::Images => image_input_rect(content, settings, focus),
-        AgentSettingsTab::Fonts | AgentSettingsTab::System | AgentSettingsTab::Account => None,
+        AgentSettingsTab::Fonts | AgentSettingsTab::System => None,
         AgentSettingsTab::Mcp => None,
     }
 }

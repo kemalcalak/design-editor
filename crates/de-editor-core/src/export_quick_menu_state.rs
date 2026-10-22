@@ -3,7 +3,7 @@
 //! `ExportQuickRow` mirrors the rows `de_editor_ui::widgets::ExportQuickMenu`
 //! paints so the host can record hover on `EditorUiState` without
 //! `de-editor-core` depending on the widget crate (same discipline as
-//! `topbar_state::TopBarButton` and `account_state::AccountMenuRow`).
+//! `topbar_state::TopBarButton`).
 //!
 //! Which rows a given document actually offers is decided in the widget
 //! layer (`widgets::export_menu_rows`), shared with the File menu's export

@@ -533,12 +533,6 @@ require_workflow_job_regex version \
     '^[[:space:]]*version=\$\(scripts/workspace-version[.]sh\)[[:space:]]*$' \
     'release version computation must use the canonical workspace reader'
 require_workflow_job_regex version \
-    '^[[:space:]]*tools/check-op-auth-release-matrix[.]sh[[:space:]]*$' \
-    'release preflight must validate the adopted signed Auth matrix'
-require_workflow_job_regex version \
-    '^[[:space:]]*tools/check-op-auth-prebuilt[.]sh[[:space:]]+--require-hardened[[:space:]]*$' \
-    'release preflight must reject an incomplete or development Auth matrix'
-require_workflow_job_regex version \
     'refs/heads/v\$version.*refs/tags/v\$version' \
     'release preflight must validate the exact version branch or tag ref'
 require_workflow_job_regex version \

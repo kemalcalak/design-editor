@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "暖色オレンジの4:5知識カード。番号付きの眉見出し、大きなタイトル、定義、番号円付きの3要点、アカウントとQRのフッターを備え、知識系アカウントの連作に向いています。",
         "sceneTemplate.item.analyticsMetricCard.title" => "分析指標シェアカード",
         "sceneTemplate.item.analyticsMetricCard.summary" => "ダークな1200×630データカード。主指標の大きな数字と前月比バッジ、右側の横棒グラフ、下部の3つの補助指標を備え、SNS共有や週報の図版に向いています。",
-        "account.mcpToken" => "MCP トークン",
         "menu.saveAsTemplate" => "テンプレートとして保存…",
         "menu.saveAsTemplate.saved" => "テンプレートとして保存しました",
         "menu.saveAsTemplate.failed" => "テンプレートを保存できませんでした",

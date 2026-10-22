@@ -34,18 +34,11 @@ use web_sys::MessageEvent;
 #[path = "vscode_bridge_snapshot.rs"]
 mod document_snapshot;
 mod early_listener;
-mod external_relay;
 mod helpers;
 mod startup;
 
 pub(crate) use early_listener::install_early;
 pub(crate) use startup::{await_init, in_iframe};
-
-/// Hold an external-navigation request until the locked bridge proves it is
-/// attached to the token-authenticated managed daemon.
-pub(crate) fn request_external_navigation(url: &str) {
-    external_relay::request(url);
-}
 
 use crate::document_json::{parse_document_json, with_borrowed_parsed_document};
 use crate::live_sync;
@@ -288,11 +281,7 @@ fn handle_init<C: RepaintContext + 'static>(
     token: String,
     mcp_url: Option<String>,
 ) {
-    let token_changed = live_sync::bridge_token().as_deref() != Some(token.as_str());
     live_sync::set_bridge_token(token);
-    if token_changed {
-        crate::web_auth_sync::refresh_status(inner);
-    }
     if let Some(url) = mcp_url {
         // Surface the host's real MCP endpoint on the settings card (the
         // daemon-internal port would point clients at a dead endpoint).

@@ -11,7 +11,6 @@
 )]
 
 mod a11y;
-mod account_avatar_host;
 mod acp_agent_probe_host;
 mod agent_connect_store;
 mod app_handler;
@@ -315,9 +314,6 @@ struct DesktopApp {
     /// canvas painter recorded as cache misses — fetched bytes land in
     /// the painter's shared byte cache so the next frame draws them.
     remote_images: remote_image_host::RemoteImageSession,
-    /// The signed-in account's profile image. Encoded bytes remain in an
-    /// ephemeral bounded UI cache and never enter the document.
-    account_avatar: account_avatar_host::AccountAvatarHost,
     /// Two-thread local image raster decode pool.
     image_decodes: image_decode_host::ImageDecodeHost,
     /// Loads Home's Recent thumbnails into the image cache.
@@ -485,36 +481,6 @@ fn parse_live_mcp_port<I: Iterator<Item = String>>(args: I) -> Option<u16> {
         }
     }
     None
-}
-
-/// Initialize the device-login runtime (proprietary bridge library) and
-/// restore a persisted session, then set the runtime account gate. Stub
-/// builds (no prebuilt library for this target) leave the gate closed
-/// unless `DESIGN_EDITOR_DEV_FAKE_LOGIN=1` re-opens it for UI work.
-fn init_auth_runtime(host: &mut WidgetHostNative) {
-    let dev_fake = std::env::var(de_auth_bridge::ENV_DEV_FAKE_LOGIN).as_deref() == Ok("1");
-    let mut backend_ready = false;
-    if de_auth_bridge::available() {
-        if let Ok(dir) = de_config_store::design_editor_dir() {
-            let config = de_auth_bridge::desktop_init_config(&dir, env!("CARGO_PKG_VERSION"));
-            if de_auth_bridge::init(&config) {
-                backend_ready = true;
-                if de_auth_bridge::restore() {
-                    if let de_auth_bridge::AuthStatus::SignedIn {
-                        display_name,
-                        username,
-                        avatar_url,
-                        ..
-                    } = de_auth_bridge::poll(de_auth_bridge::SESSION_HANDLE)
-                    {
-                        let _ = host.adopt_auth_session_profile(display_name, username, avatar_url);
-                        host.arm_auth_session_refresh();
-                    }
-                }
-            }
-        }
-    }
-    host.editor_state_mut().editor_ui.account_ui_available = backend_ready || dev_fake;
 }
 
 /// Pop a native dialog offering to open the download page when a

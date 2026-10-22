@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "$1 nœuds importés dans Design Editor."
   },
-  "statusSendingAccount": {
-    "message": "Envoi vers votre compte Design Editor…"
-  },
-  "statusSentToAccount": {
-    "message": "Envoyé vers votre compte Design Editor : $1"
-  },
-  "statusSentLocalFallback": {
-    "message": "Votre session de compte avait expiré : l'envoi est allé vers l'Design Editor de cet ordinateur — $1 nœuds importés."
-  },
   "statusDownloaded": {
     "message": "$1 enregistré."
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "Cette capture dépasse $1 Mo, ce que la route de capture d’Design Editor refuse. Utilisez « Télécharger le .op », puis ouvrez le fichier dans Design Editor"
   },
-  "errorAccountTooLarge": {
-    "message": "Cette capture dépasse $1 Mo, ce que la boîte de réception du compte refuse. Envoyez-la plutôt vers cet appareil."
-  },
   "errorImport": {
     "message": "Design Editor a refusé la capture : $1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "La capture d’élément est indisponible : le service worker de l’extension n’est pas en cours d’exécution. Consultez la fiche de l’extension dans chrome://extensions pour voir l’erreur, réexécutez build-wasm.sh, puis cliquez sur Actualiser. ($1)"
-  },
-  "accountSignIn": {
-    "message": "Se connecter"
-  },
-  "accountSignOut": {
-    "message": "Se déconnecter"
-  },
-  "accountSignInOpened": {
-    "message": "Terminez la connexion dans la page qui vient de s'ouvrir, puis rouvrez cette fenêtre."
-  },
-  "accountSignedOut": {
-    "message": "Vous êtes déconnecté de votre compte Design Editor."
-  },
-  "accountSignOutManual": {
-    "message": "Terminez la déconnexion dans la page de compte qui vient de s'ouvrir."
-  },
-  "accountUnavailable": {
-    "message": "Impossible de joindre votre compte Design Editor : $1"
-  },
-  "errorAccountSignedOut": {
-    "message": "Votre session de compte Design Editor a expiré. Reconnectez-vous, puis réessayez."
-  },
-  "errorAccountForbidden": {
-    "message": "Le hub a refusé l'origine ou le jeton de session de cet envoi. Reconnectez-vous, puis réessayez. ($1)"
-  },
-  "errorAccountQuota": {
-    "message": "La boîte de réception de votre compte est pleine — elle contient au maximum $1 captures ou $2 Mo. Supprimez-en depuis la page du compte, puis réessayez. ($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "Trop d'envois vers votre compte. Réessayez un peu plus tard. ($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "Trop d'envois vers votre compte. Réessayez dans environ $1 minutes."
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "Trop d'envois vers votre compte. Réessayez dans environ $1 secondes."
-  },
-  "errorAccountRejected": {
-    "message": "Votre compte Design Editor a refusé la capture : $1"
-  },
-  "errorAccountUnavailable": {
-    "message": "Votre compte Design Editor ne peut pas recevoir de capture pour l'instant ($1). Réessayez plus tard, ou envoyez vers l'Design Editor de cet ordinateur."
-  },
-  "regionLabel": {
-    "message": "Région"
-  },
-  "regionCn": {
-    "message": "Chine"
-  },
-  "regionGlobal": {
-    "message": "International"
-  },
-  "deliveryLabel": {
-    "message": "Envoyer vers"
-  },
-  "deliveryLocal": {
-    "message": "Design Editor sur cet ordinateur"
-  },
-  "deliveryAccount": {
-    "message": "Mon compte Design Editor"
   }
 }

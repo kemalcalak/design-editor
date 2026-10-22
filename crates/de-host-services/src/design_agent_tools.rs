@@ -1,5 +1,5 @@
 //! Shim over `de_chat_agent::design_agent_tools` (the design tool surface
-//! moved there, pure code motion, so mobile hosts share it).
+//! moved there, pure code motion).
 //!
 //! Two jobs beyond re-exporting:
 //!

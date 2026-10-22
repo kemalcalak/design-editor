@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "Se importaron $1 nodos en Design Editor."
   },
-  "statusSendingAccount": {
-    "message": "Enviando a tu cuenta de Design Editor…"
-  },
-  "statusSentToAccount": {
-    "message": "Enviado a tu cuenta de Design Editor: $1"
-  },
-  "statusSentLocalFallback": {
-    "message": "Tu sesión de la cuenta había caducado, así que se envió al Design Editor de este equipo: $1 nodos importados."
-  },
   "statusDownloaded": {
     "message": "Se guardó $1."
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "Esta captura supera $1 MB, y la ruta de capturas de Design Editor la rechaza. Usa «Descargar .op» y luego abre el archivo en Design Editor"
   },
-  "errorAccountTooLarge": {
-    "message": "Esta captura supera $1 MB, y la bandeja de entrada de la cuenta la rechaza. Envíala a este dispositivo en su lugar."
-  },
   "errorImport": {
     "message": "Design Editor rechazó la captura: $1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "La captura de elemento no está disponible: el service worker de la extensión no se está ejecutando. Busca el error en la tarjeta de la extensión en chrome://extensions, vuelve a ejecutar build-wasm.sh y pulsa Actualizar. ($1)"
-  },
-  "accountSignIn": {
-    "message": "Iniciar sesión"
-  },
-  "accountSignOut": {
-    "message": "Cerrar sesión"
-  },
-  "accountSignInOpened": {
-    "message": "Termina de iniciar sesión en la página que se acaba de abrir y vuelve a abrir esta ventana."
-  },
-  "accountSignedOut": {
-    "message": "Has cerrado la sesión de tu cuenta de Design Editor."
-  },
-  "accountSignOutManual": {
-    "message": "Termina de cerrar sesión en la página de cuenta que se acaba de abrir."
-  },
-  "accountUnavailable": {
-    "message": "No se pudo conectar con tu cuenta de Design Editor: $1"
-  },
-  "errorAccountSignedOut": {
-    "message": "Tu sesión de la cuenta de Design Editor ha caducado. Vuelve a iniciar sesión e inténtalo de nuevo."
-  },
-  "errorAccountForbidden": {
-    "message": "El hub rechazó el origen o el token de sesión de este envío. Vuelve a iniciar sesión e inténtalo de nuevo. ($1)"
-  },
-  "errorAccountQuota": {
-    "message": "La bandeja de tu cuenta está llena: guarda como máximo $1 capturas o $2 MB. Elimina algunas en la página de la cuenta e inténtalo de nuevo. ($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "Demasiados envíos a tu cuenta. Inténtalo un poco más tarde. ($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "Demasiados envíos a tu cuenta. Inténtalo dentro de unos $1 minutos."
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "Demasiados envíos a tu cuenta. Inténtalo dentro de unos $1 segundos."
-  },
-  "errorAccountRejected": {
-    "message": "Tu cuenta de Design Editor rechazó la captura: $1"
-  },
-  "errorAccountUnavailable": {
-    "message": "Tu cuenta de Design Editor no puede recibir capturas ahora mismo ($1). Inténtalo más tarde o envíala al Design Editor de este equipo."
-  },
-  "regionLabel": {
-    "message": "Región"
-  },
-  "regionCn": {
-    "message": "China"
-  },
-  "regionGlobal": {
-    "message": "Global"
-  },
-  "deliveryLabel": {
-    "message": "Enviar a"
-  },
-  "deliveryLocal": {
-    "message": "Design Editor en este equipo"
-  },
-  "deliveryAccount": {
-    "message": "Mi cuenta de Design Editor"
   }
 }

@@ -131,7 +131,7 @@ type OpenSurface = fn(&mut EditorUiState);
 
 #[test]
 fn every_open_surface_suppresses_exactly_its_own_button() {
-    let cases: [(TopBarButton, OpenSurface); 8] = [
+    let cases: [(TopBarButton, OpenSurface); 7] = [
         (TopBarButton::ToggleFileMenu, |ui| ui.file_menu_open = true),
         (TopBarButton::OpenImportMenu, |ui| {
             ui.import_menu_open = true
@@ -149,7 +149,6 @@ fn every_open_surface_suppresses_exactly_its_own_button() {
             ui.agent_settings_open = true
         }),
         (TopBarButton::ToggleGitPanel, |ui| ui.git_panel.open = true),
-        (TopBarButton::OpenAccount, |ui| ui.account_menu_open = true),
     ];
     for (button, open) in cases {
         let mut ui = EditorUiState::default();
@@ -275,10 +274,7 @@ fn the_rightmost_button_clamps_its_tooltip_inside_the_viewport() {
 
 #[test]
 fn every_visible_button_resolves_an_anchor_rect() {
-    let ui = EditorUiState {
-        account_ui_available: true,
-        ..Default::default()
-    };
+    let ui = EditorUiState::default();
     let bar = TopBar::for_editor_ui(&ui);
     for button in ALL_TOP_BAR_BUTTONS {
         // Buttons compiled out of this build legitimately have no rect;
@@ -309,7 +305,6 @@ fn no_tooltip_label_overflows_its_own_bubble() {
         for button in ALL_TOP_BAR_BUTTONS {
             let mut ui = hovering(button, 0);
             ui.locale = locale;
-            ui.account_ui_available = true;
 
             let mut backend = FamilyGapBackend::default();
             let bar = TopBar::for_editor_ui(&ui);

@@ -661,8 +661,6 @@ thread_local! {
     /// A tab whose credential stopped being accepted must stop pushing: the
     /// document on screen belongs to whoever WAS signed in, and pushing it
     /// after a switch would write one account's work into another's tenant.
-    /// Cleared by [`clear_auth_invalid`], which the identity reset calls once
-    /// the tab has been rebuilt for the new account.
     pub(super) static AUTH_INVALID: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 
     /// The mounted editor's sync controller, exposed weakly so File → Save can
@@ -679,15 +677,9 @@ use live_sync_controller::{current_oversize_identity, current_pair};
 
 #[path = "live_sync_identity.rs"]
 mod live_sync_identity;
-pub(crate) use live_sync_identity::{auth_is_invalid, note_auth_invalid, reset_for_new_identity};
-// Only the latch's own test lifts it; the reset clears it internally.
-#[cfg(test)]
-pub(crate) use live_sync_identity::clear_auth_invalid;
+pub(crate) use live_sync_identity::{auth_is_invalid, note_auth_invalid};
 // Lives here rather than beside `lib.rs`'s modules because the two paths it
 // drives are private submodules of this spine.
 #[cfg(test)]
 #[path = "live_sync_latch_tests.rs"]
 mod live_sync_latch_tests;
-#[cfg(test)]
-#[path = "live_sync_toast_tests.rs"]
-mod live_sync_toast_tests;

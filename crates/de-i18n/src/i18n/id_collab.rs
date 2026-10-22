@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "Kartu pengetahuan 4:5 berwarna oranye hangat dengan label alis bernomor, judul besar, definisi, tiga poin bernomor, serta footer akun dan QR; untuk seri konten akun pengetahuan.",
         "sceneTemplate.item.analyticsMetricCard.title" => "Kartu berbagi metrik analitik",
         "sceneTemplate.item.analyticsMetricCard.summary" => "Kartu data gelap 1200×630 dengan angka metrik utama yang besar dan lencana perubahan bulanan, batang horizontal di kanan, serta tiga metrik sekunder di bawah; untuk berbagi di media sosial dan laporan mingguan.",
-        "account.mcpToken" => "Token MCP",
         "menu.saveAsTemplate" => "Simpan sebagai Template…",
         "menu.saveAsTemplate.saved" => "Tersimpan sebagai template",
         "menu.saveAsTemplate.failed" => "Template tidak dapat disimpan",

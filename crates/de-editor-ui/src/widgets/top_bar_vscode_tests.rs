@@ -26,10 +26,9 @@ fn vscode_embed_hides_file_figma_title_and_fullscreen() {
 }
 
 #[test]
-fn vscode_embed_keeps_preview_account_and_shared_chrome() {
+fn vscode_embed_keeps_preview_and_shared_chrome() {
     let mut bar = TopBar::new("Untitled").with_traffic_controls(false);
     bar.embed = de_editor_core::EmbedHost::VsCode;
-    bar.account_button_visible = true;
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),
         size: Point2D::new(1200.0, TOP_BAR_HEIGHT),
@@ -43,7 +42,6 @@ fn vscode_embed_keeps_preview_account_and_shared_chrome() {
         TopBarHit::ToggleTheme,
         TopBarHit::OpenAgentSettings,
         TopBarHit::TogglePreview,
-        TopBarHit::Account,
     ] {
         assert!(hits.contains(&expect), "missing {expect:?}");
     }

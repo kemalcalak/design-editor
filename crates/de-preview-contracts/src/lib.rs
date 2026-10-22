@@ -3,7 +3,7 @@
 //!
 //! This crate is a LEAF: it depends only on `serde` / `serde_json` /
 //! `thiserror` and contains no runtime, layout, or UI code. It exists so
-//! `de-preview-core`, `de-editor-ui`, the FFI layers, and the host
+//! `de-preview-core`, `de-editor-ui`, and the host
 //! adapters can share one frozen contract without creating the existing
 //! Core → UI dependency cycle.
 //!

@@ -16,24 +16,6 @@ use wasm_bindgen::JsValue;
 pub(crate) trait RepaintContext {
     fn host(&self) -> &WidgetHost;
     fn host_mut(&mut self) -> &mut WidgetHost;
-    /// Rebuild the settings/credential change-detection baselines from the
-    /// partition that was just loaded.
-    ///
-    /// Called when the tab switches accounts. The baselines were computed
-    /// against the PREVIOUS account's state, so keeping them means the first
-    /// comparison after the switch reports a spurious change and writes the
-    /// new account's partition against the old one's shape.
-    ///
-    /// `load` carries the semantics a bare recompute would throw away — the
-    /// write-pending retry, and the fail-closed `write_disabled` an
-    /// unsupported snapshot sets — so it is rebuilt through the same
-    /// `initial_*` constructors mount uses, not from the state alone.
-    ///
-    /// Defaulted to a no-op: a backend with no persistence baselines (the
-    /// smoke harness) has nothing to rebuild.
-    fn reset_persistence_baselines(&mut self, load: &crate::web_settings::CredentialLoad) {
-        let _ = load;
-    }
     /// Logical viewport size in CSS pixels. File-open/import flows fit the
     /// loaded content to this size after replacing the document.
     fn viewport_size(&self) -> (f32, f32);

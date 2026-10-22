@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "การ์ดความรู้ 4:5 โทนส้มอุ่น มีป้ายคิ้วหมายเลข ชื่อเรื่องขนาดใหญ่ คำจำกัดความ สามประเด็นพร้อมวงกลมหมายเลข และท้ายการ์ดเป็นบัญชีกับ QR เหมาะกับซีรีส์ของบัญชีสายความรู้",
         "sceneTemplate.item.analyticsMetricCard.title" => "การ์ดแชร์ตัวชี้วัด Analytics",
         "sceneTemplate.item.analyticsMetricCard.summary" => "การ์ดข้อมูลสีเข้มขนาด 1200×630 มีตัวเลขตัวชี้วัดหลักขนาดใหญ่กับป้ายเทียบเดือนก่อน กราฟแท่งแนวนอนด้านขวา และตัวชี้วัดรองสามช่องด้านล่าง เหมาะกับการแชร์บนโซเชียลและภาพประกอบรายงานประจำสัปดาห์",
-        "account.mcpToken" => "โทเค็น MCP",
         "menu.saveAsTemplate" => "บันทึกเป็นเทมเพลต…",
         "menu.saveAsTemplate.saved" => "บันทึกเป็นเทมเพลตแล้ว",
         "menu.saveAsTemplate.failed" => "ไม่สามารถบันทึกเทมเพลตได้",

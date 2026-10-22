@@ -189,7 +189,7 @@ impl WidgetHostNative {
 
     /// Whether a press at `(x, y)` should drag the borderless window:
     /// Home's title strip outside every Home control and popover. While
-    /// an overlay Home opened is up (Settings, sign-in, the language menu,
+    /// an overlay Home opened is up (Settings, the language menu,
     /// the model picker, which can reach the strip) the press is theirs.
     pub fn home_window_drag_at(
         &self,
@@ -199,11 +199,7 @@ impl WidgetHostNative {
         viewport_height: f32,
     ) -> bool {
         let ui = &self.editor_state.editor_ui;
-        if ui.agent_settings_open
-            || ui.login_modal_open
-            || ui.locale_picker.open
-            || ui.chat_model_picker.open
-        {
+        if ui.agent_settings_open || ui.locale_picker.open || ui.chat_model_picker.open {
             return false;
         }
         HomeSurface::for_editor_at(&self.editor_state, self.now_ms).is_some_and(|home| {

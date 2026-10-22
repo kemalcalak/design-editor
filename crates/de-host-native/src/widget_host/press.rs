@@ -166,7 +166,7 @@ impl WidgetHostNative {
         self.last_viewport_h = viewport_height;
         // Home is a full-surface first-launch entry and owns every pointer
         // event before document chrome or canvas tiers can see it — but the
-        // overlays Home itself opens (agent settings, sign-in modal, the
+        // overlays Home itself opens (agent settings, the language menu, the
         // Home-anchored model picker) paint ABOVE the takeover, so their
         // presses must arrive first.
         if let Some(consumed) = self.press_home_overlays(x, y, viewport_width, viewport_height) {
@@ -240,8 +240,8 @@ impl WidgetHostNative {
             .chat_model_picker_rect(viewport_width, viewport_height)
             .is_some_and(|r| r.contains(Point2D::new(x, y)));
 
-        // Tier 2 — shape picker, file / export / figma / login / account
-        // modals, import + locale dropdowns.
+        // Tier 2 — shape picker, file / export / figma modals, import +
+        // locale dropdowns.
         if let Some(consumed) = self.press_menu_modal_tiers(&ctx) {
             return consumed;
         }

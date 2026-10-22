@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "Um cartão de conhecimento 4:5 em laranja quente, com antetítulo numerado, título grande, definição, três pontos numerados e rodapé com conta e QR code, para séries de conteúdo de conhecimento.",
         "sceneTemplate.item.analyticsMetricCard.title" => "Cartão de partilha de métricas analíticas",
         "sceneTemplate.item.analyticsMetricCard.summary" => "Um cartão de dados escuro de 1200×630, com métrica principal em destaque e selo de variação mensal, barras horizontais à direita e três métricas secundárias na base, para partilha social e relatórios semanais.",
-        "account.mcpToken" => "Tokens MCP",
         "menu.saveAsTemplate" => "Salvar como modelo…",
         "menu.saveAsTemplate.saved" => "Salvo como modelo",
         "menu.saveAsTemplate.failed" => "Não foi possível salvar o modelo",

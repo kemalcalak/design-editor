@@ -83,41 +83,6 @@ pub fn missing_fonts_modal_hover(
     changed
 }
 
-/// Sign-in modal hover: the close `✕` plus the primary sign-in button.
-pub fn login_modal_hover(
-    state: &mut EditorState,
-    viewport_w: f32,
-    viewport_h: f32,
-    point: Point2D,
-) -> bool {
-    use crate::widgets::login_modal::LoginModal;
-    let modal = LoginModal::for_editor(state);
-    let panel = modal.rect(viewport_w, viewport_h);
-    let new_hover =
-        crate::widgets::editor_state_ext::login_modal_button(modal.hit_test(panel, point));
-    let changed = new_hover != state.editor_ui.login_modal_hover;
-    if changed {
-        state.editor_ui.login_modal_hover = new_hover;
-    }
-    changed
-}
-
-/// Signed-in account dropdown row hover, anchored under the TopBar
-/// account button.
-pub fn account_menu_hover(state: &mut EditorState, viewport_w: f32, point: Point2D) -> bool {
-    use crate::widgets::account_menu::AccountMenu;
-    let new_hover = AccountMenu::for_editor_ui(&state.editor_ui).and_then(|menu| {
-        let panel =
-            crate::widgets::host_overlay_geometry::account_menu_rect(state, &menu, viewport_w);
-        menu.row_at(panel, point)
-    });
-    let changed = new_hover != state.editor_ui.account_menu_hover;
-    if changed {
-        state.editor_ui.account_menu_hover = new_hover;
-    }
-    changed
-}
-
 // ─── Context menus ─────────────────────────────────────────────────────
 
 /// Whether the open path-anchor context menu covers `point`. An

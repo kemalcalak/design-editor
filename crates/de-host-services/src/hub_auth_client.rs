@@ -12,7 +12,7 @@
 //!
 //! The hub sits beside this daemon on a private container network and is
 //! addressed as `http://backend:8080`, so this deliberately does NOT use
-//! `public_https_client` / `provider_dial`: those exist to screen
+//! `provider_dial`: it exists to screen
 //! *caller-supplied* destinations and reject exactly the private addresses
 //! this call must reach. The URL here comes from the operator's environment,
 //! never from a request, so the relevant hardening is different — no proxy,

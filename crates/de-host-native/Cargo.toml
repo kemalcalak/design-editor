@@ -85,9 +85,6 @@ de-editor-core = { path = "../de-editor-core" }
 # Transport-free host state machines. Default host-core features pull
 # AI/design integrations, none of which the native cache adapter needs.
 de-editor-host-core = { path = "../de-editor-host-core", default-features = false }
-# Device-login client bridge — links the proprietary prebuilt library when
-# one exists for the target, else compiles an inert stub (login hidden).
-de-auth-bridge = { path = "../de-auth-bridge" }
 de-i18n = { path = "../de-i18n" }
 
 # Native-only deps cfg-gated outside wasm32. This is critical (resolves codex round 2 B1 BLOCK):

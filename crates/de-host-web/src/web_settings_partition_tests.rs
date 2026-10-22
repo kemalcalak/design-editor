@@ -69,19 +69,6 @@ fn an_empty_partition_clears_the_previous_accounts_credentials() {
 }
 
 #[test]
-fn account_reset_clears_runtime_builtin_catalogs() {
-    let (mut state, id) = state_with_runtime_builtin_catalog();
-
-    super::reset_account_scoped_settings(&mut state);
-
-    assert!(state
-        .editor_ui
-        .agent_settings
-        .builtin_model_catalog_options(&id)
-        .is_empty());
-}
-
-#[test]
 fn either_builtin_snapshot_replacement_clears_runtime_catalogs() {
     let settings_snapshot = r#"{"version":1,"builtin_agents":[{"id":"builtin-1",
         "preset":"custom","display_name":"New","kind":"openai-compat",
@@ -105,56 +92,6 @@ fn either_builtin_snapshot_replacement_clears_runtime_catalogs() {
         .agent_settings
         .builtin_model_catalog_options(&old_id)
         .is_empty());
-}
-
-#[test]
-fn an_empty_partition_resets_account_scoped_settings_to_defaults() {
-    // `apply_payload` only writes fields the blob carries, so an empty
-    // partition used to leave A's locale, recent files and provider config in
-    // place for B.
-    let mut state = EditorState::new();
-    state.editor_ui.locale = Locale::Ja;
-    state.editor_ui.recent_files = vec![RecentFile {
-        path: "/a/secret-project.op".into(),
-        modified_at: 1,
-    }];
-    state.editor_ui.agent_settings.mcp_server.port = 4242;
-    state.editor_ui.agent_settings.openverse_client_id = "a-client".into();
-
-    super::reset_account_scoped_settings(&mut state);
-    super::storage::load_into_with(&mut state, None, None, |_, _| true);
-
-    let defaults = de_editor_core::EditorUiState::default();
-    let default_agents = de_editor_core::AgentSettings::default();
-    assert_eq!(state.editor_ui.locale, defaults.locale, "locale must reset");
-    assert!(
-        state.editor_ui.recent_files.is_empty(),
-        "B must not see A's recent files"
-    );
-    assert_eq!(
-        state.editor_ui.agent_settings.mcp_server.port,
-        default_agents.mcp_server.port
-    );
-    assert!(state
-        .editor_ui
-        .agent_settings
-        .openverse_client_id
-        .is_empty());
-}
-
-#[test]
-fn a_populated_partition_still_wins_over_the_defaults() {
-    // The reset must not erase the partition being loaded — defaults first,
-    // then the target snapshot on top.
-    let mut state = EditorState::new();
-    state.editor_ui.locale = Locale::Ja;
-    let settings = r#"{"version":1,"locale":"fr","mcp_port":5150}"#;
-
-    super::reset_account_scoped_settings(&mut state);
-    super::storage::load_into_with(&mut state, Some(settings), None, |_, _| true);
-
-    assert_eq!(state.editor_ui.locale, Locale::Fr);
-    assert_eq!(state.editor_ui.agent_settings.mcp_server.port, 5150);
 }
 
 #[test]
@@ -189,9 +126,8 @@ fn rebuilt_baselines_keep_saving_and_keep_failing_closed() {
 // ── Theme is device-level, not account-level ──────────────────────────────
 //
 // Light or dark is a property of the screen you are sitting at. These pin the
-// four things the split has to get right: a switch keeps the theme, the
-// account reset does not touch it, existing data migrates once, and a change
-// still persists.
+// things the split has to get right: a switch keeps the theme, existing
+// data migrates once, and a change still persists.
 
 #[test]
 fn switching_accounts_keeps_the_devices_theme() {
@@ -216,25 +152,6 @@ fn switching_accounts_keeps_the_devices_theme() {
             ThemeMode::Light
         ),
         ThemeMode::Dark
-    );
-}
-
-#[test]
-fn the_account_reset_leaves_the_theme_alone() {
-    // Everything else here goes back to default so an empty partition cannot
-    // inherit the previous account's values. Theme is the one exception, and
-    // it has to be, or every switch would flip the screen.
-    let mut state = EditorState::new();
-    state.editor_ui.theme_mode = ThemeMode::Dark;
-    state.editor_ui.locale = Locale::ZhCn;
-
-    super::reset_account_scoped_settings(&mut state);
-
-    assert_eq!(state.editor_ui.theme_mode, ThemeMode::Dark);
-    assert_eq!(
-        state.editor_ui.locale,
-        de_editor_core::EditorUiState::default().locale,
-        "locale IS account-scoped and must still reset"
     );
 }
 
@@ -293,8 +210,7 @@ fn a_theme_change_still_persists_after_an_account_switch() {
         Ok(true)
     );
 
-    // Switch accounts: reset + load, neither of which may disturb the theme.
-    super::reset_account_scoped_settings(&mut state);
+    // Switch accounts: loading the next partition may not disturb the theme.
     super::storage::load_into_with(
         &mut state,
         Some(r#"{"version":1,"theme":"light"}"#),

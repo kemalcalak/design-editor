@@ -1,7 +1,7 @@
 //! Reserved-address screening for provider-endpoint dials — moved verbatim
 //! from `de-host-services/src/web_credentials.rs` (which re-exports
 //! [`is_restricted_ip`]) so the connect-time dial guard
-//! (`crate::provider_dial`) links on mobile hosts too.
+//! (`crate::provider_dial`) links without the daemon.
 
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 

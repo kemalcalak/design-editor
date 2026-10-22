@@ -47,18 +47,14 @@ Every rule the extension applies without asking the browser lives in Rust, in
 cargo test -p de-chrome-extension-core
 ```
 
-| In Rust (`crates/de-chrome-extension-core/src/`)                                 | Why                                                                                                                           |
-| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `endpoint.rs` — endpoint parsing, loopback whitelist, `localhost` → `127.0.0.1`  | The outbound-destination guard. Testable against a table of hostile inputs.                                                   |
-| `transfer.rs` — chunk planning, slice integrity, `truncated` detection, size cap | The rules that decide whether a capture is intact.                                                                            |
-| `ingress.rs` — the `/mcp` `tools/call` envelope template + reply classification  | The wire shape (and its key order) is pinned by a test; reply shapes are parsed once, in one place.                           |
-| `filename.rs` — download-name sanitisation                                       | The page title is attacker-controlled.                                                                                        |
-| `account.rs` — regions, hub origins, hub URLs, session-reply parsing             | The reachable host set and everything rendered from another user's profile. See [Account](#your-design-editor-account-optional). |
-| `delivery.rs` — where a capture is allowed to go                                 | One rule, one place: an expired session or a target the hub does not answer collapses to the local editor.                    |
-| `hub.rs` — the account inbox's create envelope, name, size ceiling               | The Hub's contract, field for field, including the ceilings that decide whether a request is worth sending at all.            |
-| `hub_reply.rs` — what each inbox status means                                    | Nine statuses, nine pieces of advice. Classified once, against fixtures copied from op-hub's own tests.                       |
-| `design_md.rs` — design endpoint/reply rules + deterministic Markdown fallback   | The intelligent path and the offline fallback share one strict evidence contract.                                             |
-| `js_text.rs` — JS-compatible whitespace + UTF-16 measurement                     | Keeps the port behaviourally identical to the JS it replaced.                                                                 |
+| In Rust (`crates/de-chrome-extension-core/src/`)                                 | Why                                                                                                 |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `endpoint.rs` — endpoint parsing, loopback whitelist, `localhost` → `127.0.0.1`  | The outbound-destination guard. Testable against a table of hostile inputs.                         |
+| `transfer.rs` — chunk planning, slice integrity, `truncated` detection, size cap | The rules that decide whether a capture is intact.                                                  |
+| `ingress.rs` — the `/mcp` `tools/call` envelope template + reply classification  | The wire shape (and its key order) is pinned by a test; reply shapes are parsed once, in one place. |
+| `filename.rs` — download-name sanitisation                                       | The page title is attacker-controlled.                                                              |
+| `design_md.rs` — design endpoint/reply rules + deterministic Markdown fallback   | The intelligent path and the offline fallback share one strict evidence contract.                   |
+| `js_text.rs` — JS-compatible whitespace + UTF-16 measurement                     | Keeps the port behaviourally identical to the JS it replaced.                                       |
 
 | In JavaScript                  | Why                                                                                                                                                                                                           |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -66,8 +62,7 @@ cargo test -p de-chrome-extension-core
 | `popup-status.js`              | The status surface and the failure-code → message mapping, which grows with every destination while the controller does not. No `chrome.*` at all.                                                            |
 | `i18n.js`                      | The message layer: loads `_locales/<locale>/messages.json` and substitutes `$1`-style slots. Not `chrome.i18n` — see [Languages](#languages).                                                                 |
 | `background.js`                | Service worker. Owns element picking and design generation, both of which outlive the popup.                                                                                                                  |
-| `client.js`                    | `fetch`, `AbortController`, bounded request timeouts and response reading for snapshot, account and intelligent design routes.                                                                                |
-| `account.js`                   | The hub arm: `fetch` with `credentials: 'include'`, `chrome.tabs` for the sign-in tab, `chrome.permissions` for the pre-flight check, and the storage of the row the header paints.                           |
+| `client.js`                    | `fetch`, `AbortController`, bounded request timeouts and response reading for snapshot and intelligent design routes.                                                                                         |
 | `capture.js`                   | `chrome.scripting` plus the functions injected into the tab — those are evaluated in the page's process and **must** be JS. Slices are joined here because only JS can rejoin a split surrogate pair exactly. |
 | `design-capture.js`            | A separate, one-pass collector for bounded de-identified style statistics. It never uses the content-bearing snapshot.                                                                                        |
 | `design-evidence.js`           | The pure schema/privacy boundary: stable ordering, allowlisted fields and a hard 256 KiB UTF-8 cap.                                                                                                           |
@@ -123,18 +118,17 @@ repo treats every other wasm-bindgen output (`crates/de-host-web/pkg/`,
 `packages/de-web-sdk/wasm/`).
 
 The manifest declares
-`content_security_policy.extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' https: data:"`.
+`content_security_policy.extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data:"`.
 The `'wasm-unsafe-eval'` keyword is what MV3 requires to instantiate a bundled
 `.wasm`; it permits `WebAssembly.compile` on package bytes and nothing else. No
 code is fetched from anywhere but this package — the build script fails if the
 generated shim contains an `eval`, a `new Function`, or an `http(s)://`
 reference.
 
-`img-src` is stated rather than left to the default, which is unrestricted: the
-account row renders an avatar from the hub's CDN, and writing the directive
-down turns "any image at all" into "package images, HTTPS images, and the one
-`data:` URI in `popup.css` (the select chevron — a fetched background image
-would be a remote request)". A `data:` URI cannot execute under this policy;
+`img-src` is stated rather than left to the default, which is unrestricted:
+writing the directive down turns "any image at all" into "package images and
+the one `data:` URI in `popup.css` (the select chevron — a fetched background
+image would be a remote request)". A `data:` URI cannot execute under this policy;
 `script-src` is unchanged.
 
 ## Use
@@ -144,11 +138,11 @@ would be a remote request)". A `data:` URI cannot execute under this policy;
 2. Click the extension icon.
 3. Choose one of the four actions:
 
-| Action                | What it does                                                                                                                                                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Capture full page** | Captures the whole page and sends it to the Design Editor instance at the endpoint under **Design Editor endpoint** (default `127.0.0.1:3100`).                                                                                       |
+| Action                | What it does                                                                                                                                                                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Capture full page** | Captures the whole page and sends it to the Design Editor instance at the endpoint under **Design Editor endpoint** (default `127.0.0.1:3100`).                                                                                    |
 | **Extract design.md** | Aggregates de-identified design-style evidence and downloads a reusable `design.md`. Design Editor uses a compatible evidence-only built-in API model when available; otherwise the extension uses a deterministic local fallback. |
-| **Capture element**   | Lets you point at one element and captures only its subtree. See below.                                                                                                                                                         |
+| **Capture element**   | Lets you point at one element and captures only its subtree. See below.                                                                                                                                                            |
 | **Download .op**      | Captures and saves a ready-to-open `<page-title>.op` document instead of sending it — double-click it to open in Design Editor.                                                                                                    |
 
 The status area reports node counts, importer warnings, design evidence counts,
@@ -275,11 +269,11 @@ reverse, or a manifest `__MSG_*` key that some locale cannot resolve.
 `scripts/check-design-evidence.mjs` independently exercises the pure
 privacy allowlist, caps, stable ordering, fallback reasons and busy handoff.
 
-## The three delivery paths
+## The two delivery paths
 
-Which one the **Capture** button uses is decided by the `delivery.rs` rule:
-path 1 unless you are signed in AND have chosen your account under **Send to**,
-in which case path 3. `Download .op` is always path 2.
+The **Capture** button always uses path 1; `Download .op` is always path 2.
+Neither involves an account or any remote host: a capture only ever goes to the
+Design Editor on your own computer or to a file on your disk.
 
 ### 1. Send to a running Design Editor (the button)
 
@@ -289,7 +283,7 @@ The extension POSTs the snapshot to the local editor. It tries, in order:
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `POST /api/import/web-snapshot`                | desktop app's live MCP endpoint (`crates/de-host-services/src/mcp_live/snapshot_ingest.rs`) | Insert-only. Open to a well-formed extension id by default; optionally pinned as described below.                |
 | `POST /api/generate/design-md`                 | desktop app's live MCP endpoint (`crates/de-host-services/src/mcp_live/design_md_route.rs`) | Bounded style evidence only. Model work requires explicit extension pairing; every refusal falls back locally.   |
-| `POST /mcp` → `tools/call import_web_snapshot` | headless daemon `design-editor --serve-web <port>`                                     | Fallback, tried only on a `404`. That daemon is unmanaged (permissive CORS, no token) so a plain MCP call works. |
+| `POST /mcp` → `tools/call import_web_snapshot` | headless daemon `design-editor --serve-web <port>`                                          | Fallback, tried only on a `404`. That daemon is unmanaged (permissive CORS, no token) so a plain MCP call works. |
 
 The desktop route is the recommended path, and the only one this extension is
 designed around. The fallback exists for the **unmanaged** `--serve-web` daemon,
@@ -350,161 +344,20 @@ Open it directly:
 
 No CLI conversion step is needed — the file is already a `.op` document.
 
-### 3. Send to your Design Editor account
-
-`POST <hub>/api/v1/snapshots`, with the hub's session cookie and the session's
-`X-CSRF-Token`. See [Delivering to your account](#delivering-to-your-account)
-below for what that costs, what it refuses, and how long it keeps a capture.
-
-## Your Design Editor account (optional)
-
-**Everything above works signed out, and always will.** Signing in adds an
-identity to the popup's header and — once the hub grows a snapshot inbox — a
-second place a capture can go. It is never required, and it changes nothing
-about the local import path.
-
-### Signing in
-
-Press **Sign in** in the popup header. A normal browser tab opens on the
-Design Editor Hub's own sign-in page (`GET /api/v1/auth/login?return_to=/account`)
-and the whole SSO handshake happens there, between your browser and the hub.
-Finish it, then reopen the popup: the header now shows your avatar, your
-display name, a region badge, and **Sign out**.
-
-The extension is a **public client** and holds nothing worth stealing:
-
-- It never sees your password, an authorization code, or a long-lived token.
-- The hub's `op_hub_session` cookie is `HttpOnly` and lives in the browser's
-  cookie jar under the hub's origin. The extension cannot read it — and does
-  not declare the `cookies` permission that would let it try.
-- All it does is `GET /api/v1/session` with `credentials: 'include'` and render
-  the reply. The reply's `primary_email`, `roles` and `capabilities` are
-  dropped at the Rust boundary; the popup shows who you are, not what you may
-  do, and what is never handed over cannot leak into a cached row.
-- The session's `csrf_token` is held in memory for the lifetime of one popup
-  and is **never written to storage**.
-
-### Regions
-
-Two hubs, matching the product's own built-in dual-region design:
-
-| Region   | Hub                      |
-| -------- | ------------------------ |
-| `cn`     | `https://op.zseven.cn`   |
-| `global` | `https://op.zseven.tech` |
-
-Pick one under **Region** in the settings row. Both are declared in
-`host_permissions`, and `account.rs` is compiled against exactly those two — a
-test asserts the manifest and the core agree, because a mismatch would show up
-as an unexplained network failure rather than as a build error. Changing the
-region clears the cached account row, since the two are separate deployments
-with separate accounts.
-
-For hub development there is one escape hatch: set `hubDevOrigin` in
-`chrome.storage.local` to a **loopback** origin (`http://127.0.0.1:18081`, the
-hub's own documented dev invocation) and it wins over the region. Anything that
-is not loopback is ignored rather than obeyed — the manifest already grants
-loopback, so the override needs no new permission and cannot aim a
-cookie-bearing request at a host of someone else's choosing.
-
-### Delivering to your account
-
-When you are signed in, a **Send to** row appears in the settings with two
-options: this computer's Design Editor (the default), and your account. Choosing
-your account makes the **Capture** button — and the next element pick — upload
-to the hub's per-user snapshot inbox instead of to loopback. The choice is
-remembered.
-
-```http
-POST <hub>/api/v1/snapshots
-Content-Type: application/json
-X-CSRF-Token: <the live session's token>
-Cookie: op_hub_session=…            (attached by the browser, never read by us)
-
-{ "kind": "web-snapshot", "name": "Example page — 2026-08-04 17:20",
-  "source_url": "https://example.com/pricing",
-  "captured_at": "2026-08-04T09:20:31Z", "snapshot": { … } }
-```
-
-Everything about that request that is a decision lives in the core: the
-envelope and the page-title-derived name in `hub.rs`, and what each answer
-means in `hub_reply.rs`. Three consequences are worth knowing before you pick
-this destination:
-
-| Ceiling     | Value                                                            | What you see                                                                         |
-| ----------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Per capture | 32 MB (the hub's own cap — smaller than the local route's 48 MB) | Refused before the upload starts, with the advice to deliver to this device instead. |
-| Per account | 50 snapshots or 200 MB                                           | "Your account inbox is full", naming both ceilings.                                  |
-| Per hour    | 20 uploads                                                       | "Try again in about N minutes", from the hub's own `Retry-After`.                    |
-| Retention   | 30 days                                                          | An unclaimed capture is deleted; the inbox is not storage.                           |
-
-**The name is derived from the page title**, sanitised the same way a download
-filename is, plus a local-time stamp — so it is readable in the account portal
-and cannot disguise itself there.
-
-**A session that expired sends the capture to the local editor instead.** That
-is `delivery.rs`'s single rule, and it applies identically to the button and to
-an element pick that finishes minutes later; the status line says which
-destination it went to.
-
-**The `source_url` is sent when the page has an ordinary `http(s)` URL.** It is
-the one field that turns an inbox into a partial browsing history, so anything
-unusual — credentials in the URL, a non-`http` scheme, characters a browser
-would not have produced — is withheld rather than uploaded.
-
-The API was specified from this side first, in
-[`docs/hub-inbox-api-proposal.md`](docs/hub-inbox-api-proposal.md); op-hub
-shipped it, and that document now records what was asked for and what landed.
-
-### Signing out
-
-`POST /api/v1/auth/logout` with the session's CSRF header. This used to be
-answered `403` — the hub required an `Origin` exactly equal to its own, and an
-extension page always sends `Origin: chrome-extension://<id>`, which `fetch`
-does not let any client change. op-hub now admits a well-formed extension
-origin on exactly two routes, sign-out and the snapshot inbox
-(`auth.ExtensionCapableMutation`), so the one-click sign-out works.
-
-The popup clears its local copy either way — it has stopped believing in the
-session regardless of what the hub says — and falls back to opening the hub's
-account page if the call is still refused, which is what happens against an
-older hub or one that pins a different extension id.
-
-### If the account row insists you are signed out
-
-The design depends on one browser behaviour that is not visible in either
-repository's source: Chrome treats an extension-initiated request to a host in
-`host_permissions` as same-site for cookie purposes, which is what makes the
-hub's `SameSite=Lax` session cookie travel with the probe. If a future Chrome
-tightened that, every probe would return `401` while you are plainly signed in
-on the hub in another tab. That is the first thing to check.
-
-(The absence of `Access-Control-Allow-Origin` on hub responses is _not_ a
-problem, and not worth chasing: a `fetch` from an extension page to a host the
-extension has permission for is a privileged request — no preflight, no ACAO
-required. It is the same mechanism the loopback import path relies on.)
-
 ## Permissions, and why each is needed
 
-| Permission                                   | Why                                                                                                 |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `activeTab`                                  | Read the one tab where you pressed an action — granted per click, with no standing browsing access. |
-| `scripting`                                  | Inject the snapshot extractor, de-identified style collector, transfer harness and picker overlay.  |
-| `downloads`                                  | Save a ready-to-open `.op` document or generated `design.md`.                                       |
-| `storage`                                    | Remember settings plus one pending pick result and one pending design result.                       |
-| `host_permissions: http://127.0.0.1/*`       | POST a snapshot or bounded design evidence to your local Design Editor.                                |
-| `host_permissions: https://op.zseven.cn/*`   | Ask the China hub who is signed in, and open its sign-in page. Used only if you sign in.            |
-| `host_permissions: https://op.zseven.tech/*` | The same, for the Global hub.                                                                       |
+| Permission                             | Why                                                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `activeTab`                            | Read the one tab where you pressed an action — granted per click, with no standing browsing access. |
+| `scripting`                            | Inject the snapshot extractor, de-identified style collector, transfer harness and picker overlay.  |
+| `downloads`                            | Save a ready-to-open `.op` document or generated `design.md`.                                       |
+| `storage`                              | Remember settings plus one pending pick result and one pending design result.                       |
+| `host_permissions: http://127.0.0.1/*` | POST a snapshot or bounded design evidence to your local Design Editor.                             |
 
 There is deliberately **no `<all_urls>` host permission**: `activeTab` already
-covers capture, and the only hosts the extension can address are loopback and
-the two hubs above.
-
-There is also no **`cookies`** permission. The hub session cookie is
-`HttpOnly` and belongs to the hub's origin; the extension reads the session
-through `GET /api/v1/session` instead, which is both narrower and the
-documented contract. An extension that asks for `cookies` to reach one site's
-session has asked for every site's.
+covers capture, and the only host the extension can address is loopback — a
+test in the core asserts the manifest grants `http://127.0.0.1/*` and nothing
+else. There is no `cookies` permission either.
 
 `http://localhost/*` is **not** declared, and would be dead weight if it were:
 the core rewrites `localhost` to `127.0.0.1` before any URL is built (the live
@@ -570,8 +423,7 @@ design-capture.js                Bounded de-identified computed-style collector
 design-evidence.js               Pure evidence allowlist, caps and network redaction
 design-md.js                     Smart job/fallback/download orchestration
 picker.js                        Hover/click element picker injected into the page
-client.js                        Snapshot, account and bounded design-job fetch clients
-account.js                       The hub arm: session probe, sign-in tab, cached account row
+client.js                        Snapshot and bounded design-job fetch clients
 core-registry.js                 The one live core instance (imports nothing)
 i18n.js                          Message loader + $1 substitution + the locale list
 wasm-core.js                     The popup's dynamic loader for the core
@@ -586,7 +438,6 @@ scripts/check-locales.mjs        Fails on key / placeholder drift across the 15 
 _locales/<locale>/messages.json  UI strings — 15 locales, en is default_locale
 icons/                           Toolbar icons, derived from the desktop app's flat mark
 docs/privacy-policy.md           The listing's privacy policy, EN + 中文
-docs/hub-inbox-api-proposal.md   The account-delivery API, as proposed to op-hub (now shipped)
 ```
 
 The icons are the **flat** cyan mark from
@@ -642,22 +493,21 @@ either police three identical files or exempt them. The switcher still offers
 
 ### Fill in the listing
 
-| Field                     | What to use                                                                                                                                                                                                               |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name / description        | Come from `_locales/*/messages.json` (`extName`, `extDescription`) — do not retype them.                                                                                                                                  |
-| Category                  | Developer Tools.                                                                                                                                                                                                          |
-| Privacy policy URL        | Publish [`docs/privacy-policy.md`](docs/privacy-policy.md) and link it. It is written to be published verbatim.                                                                                                           |
-| Single purpose            | "Turn the rendered page the user chooses into editable Design Editor design nodes or a reusable design-system guide."                                                                                                        |
-| `activeTab` + `scripting` | "Runs the snapshot or de-identified style collector only in the tab where the user presses an action."                                                                                                                    |
-| `downloads`               | "Saves a ready-to-open .op document or the generated design.md guide."                                                                                                                                                    |
-| `storage`                 | "Stores settings and the most recent background-action result locally."                                                                                                                                                   |
-| `http://127.0.0.1/*`      | "Delivers a capture or bounded de-identified style evidence with its title removed to Design Editor on the user's computer."                                                                                                 |
-| The two `op.zseven.*`     | "Reads the signed-in user's own account profile from the Design Editor Hub, and uploads a capture to that same account when the user selects it as the destination. Optional; the extension is fully functional signed out." |
-| Data usage disclosures    | No analytics, advertising or sale. Snapshot content goes only to the chosen destination; bounded style evidence with no page text/title goes to local Design Editor and may be processed by its configured AI provider.      |
+| Field                     | What to use                                                                                                                                                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name / description        | Come from `_locales/*/messages.json` (`extName`, `extDescription`) — do not retype them.                                                                                                                                             |
+| Category                  | Developer Tools.                                                                                                                                                                                                                     |
+| Privacy policy URL        | Publish [`docs/privacy-policy.md`](docs/privacy-policy.md) and link it. It is written to be published verbatim.                                                                                                                      |
+| Single purpose            | "Turn the rendered page the user chooses into editable Design Editor design nodes or a reusable design-system guide."                                                                                                                |
+| `activeTab` + `scripting` | "Runs the snapshot or de-identified style collector only in the tab where the user presses an action."                                                                                                                               |
+| `downloads`               | "Saves a ready-to-open .op document or the generated design.md guide."                                                                                                                                                               |
+| `storage`                 | "Stores settings and the most recent background-action result locally."                                                                                                                                                              |
+| `http://127.0.0.1/*`      | "Delivers a capture or bounded de-identified style evidence with its title removed to Design Editor on the user's computer."                                                                                                         |
+| Data usage disclosures    | No analytics, advertising or sale. Snapshot content goes only to local Design Editor or a local file; bounded style evidence with no page text/title goes to local Design Editor and may be processed by its configured AI provider. |
 
 Expect review to ask about the host permissions. The answer is in
 [Permissions](#permissions-and-why-each-is-needed): no `<all_urls>`, no
-`cookies`, and three named hosts, one of which is loopback.
+`cookies`, and one named host, which is loopback.
 
 ### After the first publish: pin the id
 
@@ -678,12 +528,7 @@ store assigns one:
    Setting it enables AI generation for the ids you name and narrows snapshot
    admission to the same set — what you want once a published id exists.
 
-3. If a second listing is ever published per region, list both ids
-   comma-separated.
-
-The same id is what [`docs/hub-inbox-api-proposal.md`](docs/hub-inbox-api-proposal.md)
-asks op-hub to allowlist so the extension's logout — and, later, its upload —
-passes the hub's `Origin` check.
+3. If a second listing is ever published, list both ids comma-separated.
 
 ## Troubleshooting
 
@@ -714,9 +559,7 @@ same isolation contract.
 **"This capture is larger than 48 MB"** — the snapshot route caps its body at
 48 MB (it is the one ingress that needs no token, so it does not get to make the
 editor buffer an arbitrary amount). Use `Download .op` and open the file in
-Design Editor, which has no such limit. Delivery to the account has its own,
-smaller 32 MB ceiling — the hub's, not this route's — and its message suggests
-delivering to this device instead.
+Design Editor, which has no such limit.
 
 **"… did not answer within 30s"** — a snapshot connection was accepted but the
 reply never came. The editor is busy or stuck (a modal dialog blocking its UI

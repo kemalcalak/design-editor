@@ -54,7 +54,7 @@ const CLI_INTEGRATIONS_PLATFORM: bool = !cfg!(target_arch = "wasm32");
 
 /// Whether the agent list exists on this surface at all: build capability
 /// AND the runtime host capability (`EditorUiState::external_cli_available`
-/// — mobile shells cannot spawn subprocess CLIs).
+/// — some hosts cannot spawn subprocess CLIs).
 pub(super) fn cli_integrations_visible(external_cli_available: bool) -> bool {
     CLI_INTEGRATIONS_PLATFORM && external_cli_available
 }

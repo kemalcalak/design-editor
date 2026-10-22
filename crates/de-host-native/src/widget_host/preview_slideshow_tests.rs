@@ -9,9 +9,7 @@
 use super::WidgetHostNative;
 use de_editor_core::preview_slideshow::SlideshowToolbarButton;
 use de_editor_core::scene_template_catalog::TemplateScene;
-use de_editor_core::{
-    AccountState, EditorState, Locale, PreviewDeviceKind, PropertyFocus, ThemeMode,
-};
+use de_editor_core::{EditorState, Locale, PreviewDeviceKind, PropertyFocus, ThemeMode};
 use de_editor_ui::widgets::SlideshowToolbar;
 use de_editor_ui::Point2D;
 use std::sync::{LazyLock, Mutex, MutexGuard};
@@ -566,7 +564,6 @@ fn native_preview_prepare_runs_for_non_decks_and_reentry() {
         state.editor_ui.figma_import_page_select.open = true;
         state.editor_ui.theme_mode = ThemeMode::Light;
         state.editor_ui.locale = Locale::Ja;
-        state.editor_ui.account = AccountState::dev_fake_signed_in();
         state.editor_ui.layer_panel_width = 312.0;
         state.editor_ui.property_panel_width = 364.0;
         state.ui.property_focus = Some(PropertyFocus::PositionX);
@@ -581,9 +578,7 @@ fn native_preview_prepare_runs_for_non_decks_and_reentry() {
         last_y: VH / 2.0,
     });
     assert!(host.drag.is_some(), "fixture owns a pan capture");
-    host.auth_login_handle = Some(7);
     let document_before = host.editor_state().doc.clone();
-    let account_before = host.editor_state().editor_ui.account.clone();
 
     assert!(host.enter_preview((VW, VH)));
     let state = host.editor_state();
@@ -597,7 +592,6 @@ fn native_preview_prepare_runs_for_non_decks_and_reentry() {
     assert!(!state.editor_ui.prompt_center.open);
     assert_eq!(state.editor_ui.theme_mode, ThemeMode::Light);
     assert_eq!(state.editor_ui.locale, Locale::Ja);
-    assert_eq!(state.editor_ui.account, account_before);
     assert_eq!(state.editor_ui.layer_panel_width, 312.0);
     assert_eq!(state.editor_ui.property_panel_width, 364.0);
     assert!(state.editor_ui.figma_import_pages.is_empty());
@@ -609,7 +603,6 @@ fn native_preview_prepare_runs_for_non_decks_and_reentry() {
         ))
     );
     assert!(host.drag.is_none());
-    assert_eq!(host.auth_login_handle, None);
 
     host.editor_state_mut().editor_ui.pending_file_action.take();
     assert!(host.enter_preview((VW, VH)));

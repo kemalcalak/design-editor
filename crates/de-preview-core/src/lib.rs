@@ -87,7 +87,7 @@ mod transition;
 mod ui_actions;
 
 /// Frozen Preview contract DTOs, re-exported so consumers of this crate
-/// (UI, FFI, hosts) need not take the leaf dependency directly.
+/// (UI, hosts) need not take the leaf dependency directly.
 pub use de_preview_contracts::{
     EffectSource, HapticStyle, PreviewCapability, PreviewEffect, PreviewEffectFailure,
     PreviewEffectFailureCode, PreviewEffectResult, PreviewHostCapabilities, SharePayload,

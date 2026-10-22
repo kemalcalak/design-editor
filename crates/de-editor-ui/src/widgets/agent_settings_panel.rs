@@ -1,5 +1,4 @@
 use crate::theme::Theme;
-use crate::widgets::agent_settings_account::{self, AccountTabHit};
 use crate::widgets::agent_settings_acp::{self, AcpHit};
 use crate::widgets::agent_settings_builtin::{self, BuiltinHit};
 use crate::widgets::agent_settings_fonts::{self, FontsHit};
@@ -9,7 +8,7 @@ use crate::widgets::agent_settings_mcp::{self, McpHit};
 use crate::widgets::agent_settings_panel_card::paint_agent_card;
 use crate::widgets::agent_settings_panel_geometry::{
     acp_section_y, agent_card_rect_at, agent_card_rect_in, agents_body_top, close_rect,
-    connect_btn_rect_at, content_rect, disconnect_btn_rect_at, full_settings_tabs, hero_body_rect,
+    connect_btn_rect_at, content_rect, disconnect_btn_rect_at, hero_body_rect,
     hero_body_rect_for_ui, provider_rows_top, tab_i18n_label, CLAUDE_HINT_H,
     PROVIDER_SECTION_HEADER_H,
 };
@@ -99,7 +98,7 @@ pub fn content_viewport(panel: Rect) -> Rect {
 }
 
 /// Body viewport for the tabs the panel paints a hero on behalf of
-/// (Images / Fonts / Account): [`content_viewport`] pushed down past that
+/// (Images / Fonts): [`content_viewport`] pushed down past that
 /// hero. Those tabs' own geometry is written against the top of their
 /// body, so this is the rect they — and anything testing them — must use.
 pub fn secondary_tab_body(panel: Rect) -> Rect {
@@ -149,33 +148,19 @@ pub fn close_button_rect(panel: Rect) -> Rect {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AgentSettingsPanelMode {
     Full,
-    /// `Full` plus the Account tab — selected when the host enabled the
-    /// runtime account gate (`EditorUiState::account_ui_available`).
-    FullWithAccount,
     WebBuiltinOnly,
-    /// `WebBuiltinOnly` plus the Account tab (web with a daemon-side
-    /// auth backend).
-    WebBuiltinOnlyWithAccount,
     McpOnly,
 }
 
 impl AgentSettingsPanelMode {
     fn visible_tabs(self) -> &'static [AgentSettingsTab] {
         match self {
-            AgentSettingsPanelMode::Full => full_settings_tabs(false),
-            AgentSettingsPanelMode::FullWithAccount => full_settings_tabs(true),
+            AgentSettingsPanelMode::Full => &AgentSettingsTab::ALL,
             AgentSettingsPanelMode::WebBuiltinOnly => &[
                 AgentSettingsTab::Agents,
                 AgentSettingsTab::Images,
                 AgentSettingsTab::Fonts,
                 AgentSettingsTab::System,
-            ],
-            AgentSettingsPanelMode::WebBuiltinOnlyWithAccount => &[
-                AgentSettingsTab::Agents,
-                AgentSettingsTab::Images,
-                AgentSettingsTab::Fonts,
-                AgentSettingsTab::System,
-                AgentSettingsTab::Account,
             ],
             AgentSettingsPanelMode::McpOnly => &[AgentSettingsTab::Mcp],
         }
@@ -199,25 +184,13 @@ impl AgentSettingsPanelMode {
     /// hover, and the content-height walk all read this one predicate so
     /// a hidden block leaves no live hit rect behind it.
     fn shows_external_agents(self, ui: &EditorUiState) -> bool {
-        ui.external_cli_available
-            && matches!(
-                self,
-                AgentSettingsPanelMode::Full | AgentSettingsPanelMode::FullWithAccount
-            )
+        ui.external_cli_available && self == AgentSettingsPanelMode::Full
     }
 }
 
 fn mode_for_ui(ui: &EditorUiState, base: AgentSettingsPanelMode) -> AgentSettingsPanelMode {
-    // Capability controls whether this build can begin a new login; a restored
-    // signed-in profile still needs its Account settings even if that runtime
-    // gate has not been advertised yet.
-    let account_visible = ui.account_ui_available || ui.account.is_signed_in();
     if ui.embed == de_editor_core::EmbedHost::VsCode {
         AgentSettingsPanelMode::McpOnly
-    } else if base == AgentSettingsPanelMode::Full && account_visible {
-        AgentSettingsPanelMode::FullWithAccount
-    } else if base == AgentSettingsPanelMode::WebBuiltinOnly && account_visible {
-        AgentSettingsPanelMode::WebBuiltinOnlyWithAccount
     } else {
         base
     }
@@ -301,8 +274,6 @@ pub enum AgentSettingsHit {
     SelectThemeMode(de_editor_core::editor_ui_state::ThemeMode),
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
     FocusMcpPort,
-    OpenLoginModal,
-    SignOutAccount,
     Outside,
     Inside,
 }

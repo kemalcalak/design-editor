@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "В Design Editor импортировано узлов: $1."
   },
-  "statusSendingAccount": {
-    "message": "Отправка в ваш аккаунт Design Editor…"
-  },
-  "statusSentToAccount": {
-    "message": "Отправлено в ваш аккаунт Design Editor: $1"
-  },
-  "statusSentLocalFallback": {
-    "message": "Сессия аккаунта истекла, поэтому снимок ушёл в Design Editor на этом компьютере: импортировано узлов — $1."
-  },
   "statusDownloaded": {
     "message": "Сохранено: $1."
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "Этот снимок больше $1 МБ, и маршрут снимков Design Editor его отклоняет. Используйте «Скачать .op», затем откройте файл в Design Editor"
   },
-  "errorAccountTooLarge": {
-    "message": "Этот снимок больше $1 МБ, и входящие аккаунта его отклоняют. Отправьте его вместо этого на это устройство."
-  },
   "errorImport": {
     "message": "Design Editor отклонил снимок: $1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "Захват элемента недоступен: фоновый worker расширения не запущен. Проверьте карточку расширения в chrome://extensions на наличие ошибки, выполните build-wasm.sh ещё раз и нажмите «Обновить». ($1)"
-  },
-  "accountSignIn": {
-    "message": "Войти"
-  },
-  "accountSignOut": {
-    "message": "Выйти"
-  },
-  "accountSignInOpened": {
-    "message": "Завершите вход на открывшейся странице, затем откройте это окно снова."
-  },
-  "accountSignedOut": {
-    "message": "Вы вышли из аккаунта Design Editor."
-  },
-  "accountSignOutManual": {
-    "message": "Завершите выход на открывшейся странице аккаунта."
-  },
-  "accountUnavailable": {
-    "message": "Не удалось связаться с вашим аккаунтом Design Editor: $1"
-  },
-  "errorAccountSignedOut": {
-    "message": "Сессия аккаунта Design Editor истекла. Войдите снова и повторите попытку."
-  },
-  "errorAccountForbidden": {
-    "message": "Хаб отклонил источник или токен сессии этой загрузки. Войдите снова и повторите попытку. ($1)"
-  },
-  "errorAccountQuota": {
-    "message": "Входящие вашего аккаунта переполнены — не более $1 снимков или $2 МБ. Удалите часть на странице аккаунта и повторите. ($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "Слишком много загрузок в аккаунт. Повторите чуть позже. ($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "Слишком много загрузок в аккаунт. Повторите примерно через $1 мин."
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "Слишком много загрузок в аккаунт. Повторите примерно через $1 с."
-  },
-  "errorAccountRejected": {
-    "message": "Аккаунт Design Editor отклонил снимок: $1"
-  },
-  "errorAccountUnavailable": {
-    "message": "Аккаунт Design Editor сейчас не может принять снимок ($1). Повторите позже или отправьте в Design Editor на этом компьютере."
-  },
-  "regionLabel": {
-    "message": "Регион"
-  },
-  "regionCn": {
-    "message": "Китай"
-  },
-  "regionGlobal": {
-    "message": "Глобальный"
-  },
-  "deliveryLabel": {
-    "message": "Отправить в"
-  },
-  "deliveryLocal": {
-    "message": "Design Editor на этом компьютере"
-  },
-  "deliveryAccount": {
-    "message": "Мой аккаунт Design Editor"
   }
 }

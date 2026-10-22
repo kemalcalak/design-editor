@@ -26,22 +26,6 @@ pub(super) const PROVIDER_SECTION_HEADER_H: f32 =
 /// Muted hint under a connected Claude Code row.
 pub(super) const CLAUDE_HINT_H: f32 = 24.0;
 
-const FULL_TABS_WITHOUT_ACCOUNT: [AgentSettingsTab; 5] = [
-    AgentSettingsTab::Agents,
-    AgentSettingsTab::Mcp,
-    AgentSettingsTab::Images,
-    AgentSettingsTab::Fonts,
-    AgentSettingsTab::System,
-];
-
-pub(super) fn full_settings_tabs(account_available: bool) -> &'static [AgentSettingsTab] {
-    if account_available {
-        &AgentSettingsTab::ALL
-    } else {
-        &FULL_TABS_WITHOUT_ACCOUNT
-    }
-}
-
 pub(super) fn tab_i18n_label(ui: &EditorUiState, tab: AgentSettingsTab) -> &'static str {
     match tab {
         AgentSettingsTab::Agents => t_settings(ui, "settings.tab.agents"),
@@ -49,7 +33,6 @@ pub(super) fn tab_i18n_label(ui: &EditorUiState, tab: AgentSettingsTab) -> &'sta
         AgentSettingsTab::Images => t_settings(ui, "settings.tab.images"),
         AgentSettingsTab::Fonts => t_settings(ui, "settings.tab.fonts"),
         AgentSettingsTab::System => t_settings(ui, "settings.tab.system"),
-        AgentSettingsTab::Account => t_settings(ui, "settings.tab.account"),
     }
 }
 
@@ -143,7 +126,7 @@ pub(super) fn agents_body_top(content: Rect) -> f32 {
     content.origin.y + AGENTS_HERO_HEIGHT
 }
 
-/// Images / Fonts / Account take the same intro every other tab does,
+/// Images / Fonts take the same intro every other tab does,
 /// with one muted line.
 pub(super) const SECONDARY_HEADING_HAS_DESC: bool = true;
 

@@ -72,7 +72,6 @@ fn opening_the_asset_center_dismisses_the_other_top_bar_menus() {
     state.editor_ui.file_menu_open = true;
     state.editor_ui.export_quick_menu_open = true;
     state.editor_ui.import_menu_open = true;
-    state.editor_ui.account_menu_open = true;
     state.editor_ui.locale_picker.open = true;
     state.editor_ui.prompt_center.open = true;
 
@@ -82,7 +81,6 @@ fn opening_the_asset_center_dismisses_the_other_top_bar_menus() {
     assert!(!state.editor_ui.file_menu_open);
     assert!(!state.editor_ui.export_quick_menu_open);
     assert!(!state.editor_ui.import_menu_open);
-    assert!(!state.editor_ui.account_menu_open);
     assert!(!state.editor_ui.locale_picker.open);
     assert!(
         !state.editor_ui.prompt_center.open,

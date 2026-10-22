@@ -23,8 +23,7 @@ use crate::chat_canvas_tools::MAX_TOOL_TURNS;
 use crate::chat_runtime::{resolved_skill_preamble, shared_runtime, BlockingRecvIter};
 
 // The error enum, retry ladder, throttle, and provider-client builders moved
-// to `de-chat-agent` (pure code motion) so the mobile FFI hosts share them;
-// re-exported here so every existing path stays valid. Test-only helpers
+// to `de-chat-agent` (pure code motion); re-exported here so every existing path stays valid. Test-only helpers
 // (`is_retryable_status`, `throttle_wait`) ride along for the sibling tests.
 #[cfg(test)]
 use de_chat_agent::backoff::{

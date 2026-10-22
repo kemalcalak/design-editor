@@ -16,19 +16,15 @@ pub(crate) struct WebDecodeJob {
 pub(crate) fn take_web_decode_batch(max: usize) -> Vec<WebDecodeJob> {
     take_pending_decodes(max)
         .into_iter()
-        .filter_map(|pending| {
-            match cached_bytes_for(pending.id).or_else(|| {
-                de_editor_ui::account_avatar_runtime::cached_account_avatar_bytes(pending.id)
-            }) {
-                Some(bytes) => Some(WebDecodeJob {
-                    id: pending.id,
-                    bytes,
-                    max_edge_px: pending.max_edge_px,
-                }),
-                None => {
-                    mark_decode_done(pending.id);
-                    None
-                }
+        .filter_map(|pending| match cached_bytes_for(pending.id) {
+            Some(bytes) => Some(WebDecodeJob {
+                id: pending.id,
+                bytes,
+                max_edge_px: pending.max_edge_px,
+            }),
+            None => {
+                mark_decode_done(pending.id);
+                None
             }
         })
         .collect()
@@ -104,35 +100,5 @@ mod tests {
             take_web_decode_batch(2).is_empty(),
             "a failed bridge decode must remain negatively cached"
         );
-    }
-
-    #[test]
-    fn web_decode_batch_accepts_bounded_profile_avatar_bytes() {
-        let _decode_guard = DECODE_REGISTRY_LOCK
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        let _ = de_editor_ui::account_avatar_runtime::register_account_avatar_url(None);
-        clear_pending_work();
-        let mut png = vec![0; 32];
-        png[..8].copy_from_slice(b"\x89PNG\r\n\x1a\n");
-        png[8..12].copy_from_slice(&13_u32.to_be_bytes());
-        png[12..16].copy_from_slice(b"IHDR");
-        png[16..20].copy_from_slice(&16_u32.to_be_bytes());
-        png[20..24].copy_from_slice(&16_u32.to_be_bytes());
-        assert!(
-            de_editor_ui::account_avatar_runtime::install_account_avatar_bytes(
-                "web-avatar-revision",
-                png
-            )
-        );
-        let image = de_editor_ui::account_avatar_runtime::account_avatar_image()
-            .expect("ready account avatar");
-        note_pending_decode(image.image_id, 64);
-
-        let batch = take_web_decode_batch(1);
-        assert_eq!(batch.len(), 1);
-        assert_eq!(batch[0].id, image.image_id);
-        finish_web_decode(batch[0].id, true);
-        clear_pending_work();
     }
 }

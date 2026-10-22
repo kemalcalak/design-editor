@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "暖橙纸感 4:5 知识卡：编号眉标、大字标题、一段定义、三条要点各带序号圆标，底部账号与二维码，适合知识类账号的系列卡片。",
         "sceneTemplate.item.analyticsMetricCard.title" => "数据看板分享卡",
         "sceneTemplate.item.analyticsMetricCard.summary" => "深色 1200×630 数据卡：主指标大数字与环比徽标、右侧横向条形图、底部三格次要指标，适合社交分享与周报配图。",
-        "account.mcpToken" => "MCP 令牌",
         "menu.saveAsTemplate" => "存为模板…",
         "menu.saveAsTemplate.saved" => "已存为模板",
         "menu.saveAsTemplate.failed" => "无法保存模板",

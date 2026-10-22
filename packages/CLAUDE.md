@@ -66,22 +66,6 @@ member — load it unpacked from `chrome://extensions`.
   `crates/de-host-services/src/mcp_live/`. The extension's offline path is
   **Download .op**, which converts the capture locally into a ready-to-open
   document.
-- **Account (optional).** The popup header can sign in to OP Hub through the
-  hub's own BFF: a tab on `GET /api/v1/auth/login?return_to=/account`, then
-  `GET /api/v1/session` with `credentials: 'include'`. The extension is a
-  public client — no SSO secret, no token, no `cookies` permission; the hub's
-  `HttpOnly` session cookie stays in the browser's jar. Regions `cn` /
-  `global` map to `https://op.zseven.cn` / `https://op.zseven.tech`, both in
-  `host_permissions`, and `account.rs` asserts the manifest agrees.
-- **Account delivery (optional, signed in).** `POST <hub>/api/v1/snapshots`
-  with `credentials: 'include'` + `X-CSRF-Token`, i.e. op-hub's per-user
-  snapshot inbox. The envelope, the page-title-derived name, the 32 MiB
-  ceiling and the reply classification are Rust (`hub.rs` / `hub_reply.rs`);
-  `delivery.rs` remains the single rule that decides local vs account, and an
-  expired session collapses to local. The service worker's element-pick flow
-  runs its own session probe (`account.js` is in the worker's static graph and
-  stays dynamic-import-free). Contract history:
-  `de-chrome-extension/docs/hub-inbox-api-proposal.md`.
 - **Store packaging.** `bun run package-extension` (or
   `de-chrome-extension/scripts/package-extension.sh`) builds the wasm, runs
   the tests and all four guards, stages only the runtime files, copies `pt` to

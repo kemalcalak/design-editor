@@ -505,8 +505,6 @@ pub(crate) fn apply_entry_hit(
         | AgentSettingsHit::SelectPencilCursor(_)
         | AgentSettingsHit::SelectThemeMode(_)
         | AgentSettingsHit::ToggleExperimental
-        | AgentSettingsHit::OpenLoginModal
-        | AgentSettingsHit::SignOutAccount
         | AgentSettingsHit::FocusMcpPort => {
             debug_assert!(false, "handled by apply_agent_settings_hit");
             SettingsPressOutcome::handled()

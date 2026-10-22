@@ -3,8 +3,8 @@
 //!
 //! Only the multi-account online deployment serves these; the local and
 //! managed daemons have exactly one document and nobody to share it with.
-//! Keeping the paths in one wasm-clean crate both sides already depend on is
-//! the same arrangement `auth_routes` uses.
+//! The paths live in this wasm-clean crate because both sides already
+//! depend on it.
 
 /// Prefix shared by every route below (used by the server's sensitive-POST /
 /// CORS gating).

@@ -5,8 +5,7 @@
 //! The agent-settings state walk itself lives in
 //! `de_editor_ui::widgets::agent_settings_press_flow` (shared with the
 //! web host); what stays here is the desktop platform arms — the
-//! clipboard queue, the OS URL launcher, `de-auth-bridge` session
-//! revoke, synchronous font enumeration.
+//! clipboard queue, the OS URL launcher, synchronous font enumeration.
 
 use super::WidgetHostNative;
 use de_editor_core::agent_settings::ImageGenField;
@@ -120,11 +119,6 @@ impl WidgetHostNative {
                 self.editor_state.chat.queue_copy_text(text);
             }
             SettingsPress::OpenUrl(url) => open_external_url(url),
-            SettingsPress::SignOut => {
-                // Revoke the device session (inert no-op in stub builds).
-                de_auth_bridge::sign_out();
-                self.forget_auth_session_profile();
-            }
         }
         if outcome.refresh_fonts {
             self.refresh_missing_fonts_for_settings();

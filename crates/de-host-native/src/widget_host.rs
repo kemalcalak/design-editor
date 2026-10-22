@@ -20,9 +20,6 @@ use de_editor_ui::widgets::{drag_flow::CanvasDropIndex, SelectionHandle};
 use de_editor_ui::{Rect, Theme};
 
 mod a11y;
-mod account_press;
-#[cfg(test)]
-mod account_press_tests;
 #[cfg(test)]
 mod agent_settings_acp_tests;
 #[cfg(test)]
@@ -40,7 +37,6 @@ mod ai_chat_geometry;
 #[cfg(test)]
 mod ai_chat_minimized_tests;
 mod arc_drag;
-mod auth_flow;
 mod blur_inputs;
 #[cfg(test)]
 mod blur_inputs_tests;
@@ -470,24 +466,6 @@ pub struct WidgetHostNative {
     /// Last viewport size seen by paint/press. Used by handlers
     /// that don't receive viewport dims (e.g. apply_cursor_move
     /// driving the color-picker drag).
-    /// In-flight browser device-login flow handle from `de-auth-bridge`
-    /// (`None` = no login running). Polled by the desktop event loop via
-    /// [`Self::poll_auth`].
-    pub(in crate::widget_host) auth_login_handle: Option<u64>,
-    /// Verification URL waiting for the desktop host to open in the
-    /// system browser (drained by `take_pending_browser_url`).
-    pub(in crate::widget_host) auth_pending_browser_url: Option<String>,
-    /// Whether the current flow's verification URL was already queued —
-    /// the flow reports `WaitingApproval` every poll, but the browser
-    /// must open exactly once.
-    pub(in crate::widget_host) auth_browser_opened: bool,
-    /// Short post-restore window during which the desktop keeps polling the
-    /// session handle. The private runtime revalidates persisted credentials
-    /// asynchronously, so profile fields can become fresher after startup.
-    pub(in crate::widget_host) auth_session_refresh_deadline: Option<std::time::Instant>,
-    /// Opaque process-local hash of the last mirrored avatar source. This keeps
-    /// repeated session polls idempotent without retaining another signed URL.
-    pub(in crate::widget_host) auth_account_avatar_revision: Option<u64>,
     /// Rect the toast banner painted last frame, or `None` when nothing
     /// painted. Cached because the banner's width is measured in the font it
     /// paints with, which only the paint pass can do — the press arm re-checks

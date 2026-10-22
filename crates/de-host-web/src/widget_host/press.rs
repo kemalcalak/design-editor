@@ -159,7 +159,7 @@ impl WidgetHost {
         if let Some(consumed) = self.press_import_locale_tiers(&ctx) {
             return consumed;
         }
-        // Tier 3 — shape picker, file / export / figma / login / account.
+        // Tier 3 — shape picker, file / export / figma.
         if let Some(consumed) = self.press_menu_modal_tiers(&ctx) {
             return consumed;
         }

@@ -16,10 +16,6 @@ default = []
 mcp-debug-tools = ["de-mcp/debug-tools", "de-chat-agent/mcp-debug-tools"]
 # Production release lane; forwarded by de-host-web-server.
 pinned-skia-binaries = ["skia-safe/no-compile"]
-# Dev-only: links the locally built ABI-v2 op-auth archive for the serve-web
-# daemon, mirroring de-host-desktop's flag of the same name (debug profile
-# only; see de-auth-bridge/README).
-dev-op-auth-abi-v2 = ["de-auth-bridge/dev-abi-v2"]
 
 [dependencies]
 # --- workspace path deps (the headless daemon's closure; modules land in
@@ -31,8 +27,6 @@ de-figma = { path = "../de-figma" }
 de-html = { path = "../de-html" }
 de-editor-core = { path = "../de-editor-core" }
 de-builtin-model-discovery = { path = "../de-builtin-model-discovery" }
-# Device-login proxy for the web editor (prebuilt library or inert stub).
-de-auth-bridge = { path = "../de-auth-bridge" }
 de-config-store = { path = "../de-config-store" }
 de-editor-ui = { path = "../de-editor-ui" }
 de-editor-host-core = { path = "../de-editor-host-core", features = [
@@ -41,7 +35,7 @@ de-editor-host-core = { path = "../de-editor-host-core", features = [
 de-mcp = { path = "../de-mcp", features = ["script"] }
 de-ai = { path = "../de-ai" }
 # The builtin-provider agent loop + canvas/design tool surface, factored out
-# so mobile hosts share it; this crate re-exports it under the original paths.
+# into its own crate; this crate re-exports it under the original paths.
 de-chat-agent = { path = "../de-chat-agent" }
 de-ai-skills = { path = "../de-ai-skills" }
 de-orchestrator = { path = "../de-orchestrator" }
@@ -84,7 +78,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 base64 = "0.22"
 getrandom = "0.3"
-hmac = "0.12"
 sha2 = "0.10"
 tracing = { workspace = true }
 signal-hook = "0.3"

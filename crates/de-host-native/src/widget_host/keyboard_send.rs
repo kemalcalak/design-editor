@@ -11,12 +11,10 @@ impl WidgetHostNative {
         if self.editor_state.editor_ui.home.visible {
             // The overlays Home opens own Enter above the sheet: the
             // settings modal falls through to its own ladder arm, the
-            // picker and sign-in modal simply swallow the key.
+            // picker simply swallows the key.
             if self.editor_state.editor_ui.agent_settings_open {
                 // Fall through to the settings handling below.
-            } else if self.editor_state.editor_ui.chat_model_picker.open
-                || self.editor_state.editor_ui.login_modal_open
-            {
+            } else if self.editor_state.editor_ui.chat_model_picker.open {
                 return true;
             } else {
                 if self

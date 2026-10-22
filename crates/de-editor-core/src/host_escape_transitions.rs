@@ -262,12 +262,6 @@ impl EditorUiState {
         self.agent_settings.hover_acp_preset = None;
         self.agent_settings.hover_nav = None;
         self.settings_input.reset_transient();
-        self.account_menu_open = false;
-        self.account_menu_hover = None;
-        self.login_modal_open = false;
-        self.login_modal_hover = None;
-        self.login_modal_stub_hint_shown = false;
-        self.login_modal_status = None;
 
         self.locale_picker = Default::default();
         self.shape_picker = Default::default();
@@ -536,7 +530,6 @@ mod tests {
         ui.theme_mode = crate::ThemeMode::Light;
         ui.locale = crate::Locale::Ja;
         ui.pinned_style_guide = Some("editorial-dark".to_string());
-        ui.account = crate::AccountState::dev_fake_signed_in();
         ui.scenario = Some(crate::scene_template_catalog::TemplateScene::Slides);
         ui.pending_file_action = Some(crate::FileAction::Save);
         ui.preview.mode = true;
@@ -548,7 +541,6 @@ mod tests {
             .active_theme
             .insert("mode".into(), "dark".into());
         let document = state.doc.clone();
-        let account = ui.account.clone();
         let preview = ui.preview.clone();
         let variables = state.ui.variables.clone();
         close_preview_owned_overlays(&mut state, 0);
@@ -561,7 +553,6 @@ mod tests {
         assert_eq!(ui.theme_mode, crate::ThemeMode::Light);
         assert_eq!(ui.locale, crate::Locale::Ja);
         assert_eq!(ui.pinned_style_guide.as_deref(), Some("editorial-dark"));
-        assert_eq!(ui.account, account);
         assert_eq!(ui.pending_file_action, Some(crate::FileAction::Save));
         assert_eq!(ui.preview, preview);
         assert_eq!(state.ui.variables, variables);

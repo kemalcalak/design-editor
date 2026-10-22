@@ -5,11 +5,10 @@
 //! motion.
 
 use crate::{
-    account_avatar_host, figma_import_session, git_session, html_import_session, image_decode_host,
-    image_panel_host, image_search_session, ime_window, init_auth_runtime, kit_persistence,
-    persistence, prompt_center_store, remote_image_host, save_session, single_instance,
-    theme_preset_host, update_check, DesktopApp, PaintedPageIdentity, INITIAL_VIEWPORT_H,
-    INITIAL_VIEWPORT_W,
+    figma_import_session, git_session, html_import_session, image_decode_host, image_panel_host,
+    image_search_session, ime_window, kit_persistence, persistence, prompt_center_store,
+    remote_image_host, save_session, single_instance, theme_preset_host, update_check, DesktopApp,
+    PaintedPageIdentity, INITIAL_VIEWPORT_H, INITIAL_VIEWPORT_W,
 };
 use de_host_native::WidgetHostNative;
 use std::path::PathBuf;
@@ -100,13 +99,6 @@ impl DesktopApp {
         // registry they merge into is memory-only, so it has to be refilled
         // from disk at every launch, exactly like the style guides above.
         crate::user_template_store::load_user_scene_templates_once();
-        // Account gate + session restore. The bridge links the proprietary
-        // auth library when a prebuilt exists for this target; stub builds
-        // keep every account entry point hidden unless the dev fake-login
-        // env is set. Skipped under test like the update / model probes.
-        if !cfg!(test) {
-            init_auth_runtime(&mut host);
-        }
         let kit_browser_open_persisted = Some(host.editor_state().editor_ui.component_browser_open);
         if fit_blank_frame {
             host.fit_content_to_viewport(INITIAL_VIEWPORT_W, INITIAL_VIEWPORT_H);
@@ -172,7 +164,6 @@ impl DesktopApp {
             image_search: image_search_session::ImageSearchSession::new(),
             image_panel: image_panel_host::ImagePanelJobs::new(),
             remote_images: remote_image_host::RemoteImageSession::new(),
-            account_avatar: account_avatar_host::AccountAvatarHost::new(),
             image_decodes: image_decode_host::ImageDecodeHost::new(),
             home_thumbnails: crate::home_thumbnails::HomeThumbnails::default(),
             mcp_wake_proxy: None,

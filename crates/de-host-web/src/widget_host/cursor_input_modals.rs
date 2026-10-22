@@ -63,35 +63,6 @@ impl WidgetHost {
         {
             return Some(true);
         }
-        // Sign-in modal — owns the cursor while open (native parity).
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.login_modal_open
-        {
-            let changed = hover_flow::login_modal_hover(
-                &mut self.editor_state,
-                self.last_viewport_w,
-                self.last_viewport_h,
-                Point2D::new(x, y),
-            );
-            if changed {
-                self.mark_dirty();
-            }
-            return Some(changed);
-        }
-        // Signed-in account dropdown — owns the cursor while open.
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.account_menu_open
-        {
-            let changed = hover_flow::account_menu_hover(
-                &mut self.editor_state,
-                self.last_viewport_w,
-                Point2D::new(x, y),
-            );
-            if changed {
-                self.mark_dirty();
-            }
-            return Some(changed);
-        }
         if self.editor_state.editor_ui.agent_settings_open {
             return Some(self.update_agent_settings_hover(x, y));
         }

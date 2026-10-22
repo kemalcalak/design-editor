@@ -40,7 +40,6 @@ use de_editor_ui::widgets::TOP_BAR_HEIGHT;
 use de_editor_ui::{Point2D, Rect, Theme};
 
 mod a11y_bridge;
-mod account_press;
 #[cfg(test)]
 mod agent_settings_acp_press_tests;
 #[cfg(test)]
@@ -218,18 +217,6 @@ mod viewport_fit;
 mod web_fonts;
 mod wheel_pan;
 
-/// Device-login side effects requested by press dispatchers and executed
-/// by `web_auth_sync` against the daemon's `/api/auth/*` proxy. (Begin is
-/// NOT queued: it must fire inside the click's user-activation window so
-/// the sign-in popup isn't blocked — see `web_auth_sync::begin_login_now`.)
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PendingAuthAction {
-    /// Abort the in-flight flow (modal dismissed).
-    CancelLogin,
-    /// Drop the shared session and revoke the device token.
-    SignOut,
-}
-
 // Floating-chrome insets live with the canvas-region math they are
 // measured from, so the native + web hosts can't drift on where the
 // chat pill / toolbar / status pill sit.
@@ -374,10 +361,6 @@ pub struct WidgetHost {
     /// browser IME candidate-window fallback instead of viewport (0, 0).
     pub(in crate::widget_host) last_cursor_x: f32,
     pub(in crate::widget_host) last_cursor_y: f32,
-    /// Queued device-login actions for the daemon auth proxy; the
-    /// `web_auth_sync` poll tick drains them into `/api/auth/*` calls.
-    /// Press dispatchers only enqueue — they never issue requests.
-    pub(in crate::widget_host) pending_auth_actions: Vec<PendingAuthAction>,
     /// Stable, process-unique id scoping this host's chat-panel transcript
     /// cache (mirrors native `WidgetHostNative::chat_panel_owner`). Stamped onto
     /// every `AIChatPlaceholder` this host builds so the thread-local canonical

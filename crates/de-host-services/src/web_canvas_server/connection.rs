@@ -179,22 +179,6 @@ pub(super) fn dispatch<S: Read + Write>(
                 .map(|()| false);
         }
     }
-    // Sign-in popup interstitial — same auth-exempt static surface as the
-    // bundle routes above (it renders a spinner and nothing else). It only
-    // exists to host the daemon's device-login proxy, so a deployment with no
-    // proxy has no interstitial either.
-    if req.method == "GET"
-        && req.path == de_editor_core::auth_routes::LOADING_PAGE
-        && ctx.mode.allows_device_login_proxy()
-    {
-        let reply = crate::web_static::StaticReply {
-            status: "200 OK",
-            content_type: "text/html; charset=utf-8",
-            body: crate::web_auth::LOADING_PAGE_HTML.as_bytes().to_vec(),
-        };
-        return crate::web_static::write_static_response(stream, &reply, cors_origin)
-            .map(|()| false);
-    }
     // There is deliberately no managed-mode request-token gate here. Managed
     // is a single-tenant child process whose authority comes from the local
     // supervisor's stdin lease and the browser Origin boundary above. Online
@@ -226,54 +210,6 @@ pub(super) fn dispatch<S: Read + Write>(
             )?;
             return Ok(false);
         }
-    }
-    // Online account projection. The device-login proxy stays 404 (it drives
-    // a process-wide device session), but the shell must be able to learn
-    // which account it is showing — without this the identity epoch never
-    // fires and an account switch leaks the previous account's document.
-    if req.method == "GET" && req.path == de_editor_core::auth_routes::STATUS {
-        if let Some(identity) = ctx.rest_identity.as_ref() {
-            crate::mcp_serve::write_mcp_http_response_with_origin(
-                stream,
-                "200 OK",
-                &identity.auth_status_json(),
-                cors_origin,
-            )?;
-            return Ok(false);
-        }
-    }
-    // Current-account avatar proxy: performs bounded public HTTPS I/O on this
-    // connection thread, never while holding the editor-state mutex. Part of
-    // the device-login proxy, so it is off wherever that is.
-    if req.method == "POST"
-        && req.path == de_editor_core::auth_routes::AVATAR
-        && ctx.mode.allows_device_login_proxy()
-    {
-        let reply = crate::web_auth::avatar();
-        crate::mcp_serve::write_mcp_http_response_with_origin(
-            stream,
-            reply.status,
-            &reply.body,
-            cors_origin,
-        )?;
-        return Ok(false);
-    }
-    // Device-login begin: waits (per-connection thread, off the state
-    // lock) for the pairing's verification URI so the popup can navigate
-    // straight from this response — handled here rather than in the
-    // whole-body REST tier, which runs under the state mutex.
-    if req.method == "POST"
-        && req.path == de_editor_core::auth_routes::LOGIN_BEGIN
-        && ctx.mode.allows_device_login_proxy()
-    {
-        let reply = crate::web_auth::login_begin_and_wait(state);
-        crate::mcp_serve::write_mcp_http_response_with_origin(
-            stream,
-            reply.status,
-            &reply.body,
-            cors_origin,
-        )?;
-        return Ok(false);
     }
     // SSE live-update stream: the browser shell subscribes and re-syncs whenever
     // the document version advances. Subscribe BEFORE reading the current

@@ -201,11 +201,10 @@ fn top_bar_holds_the_bar_in_the_painted_family() {
     use crate::widgets::{TopBar, TOP_BAR_HEIGHT};
 
     for locale in de_i18n::Locale::ALL {
-        let mut ui = de_editor_core::editor_ui_state::EditorUiState {
-            account_ui_available: true,
+        let ui = de_editor_core::editor_ui_state::EditorUiState {
+            locale,
             ..Default::default()
         };
-        ui.locale = locale;
         let bar = TopBar::for_editor_ui(&ui);
         let rect = Rect {
             origin: Point2D::ZERO,

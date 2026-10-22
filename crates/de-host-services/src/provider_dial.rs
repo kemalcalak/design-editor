@@ -1,11 +1,9 @@
 //! Shim over `de_chat_agent::provider_dial` (the connect-time endpoint
-//! guard moved there, pure code motion, so mobile hosts share it). Only the
+//! guard moved there, pure code motion). Only the
 //! browser-credential allowlist policy stays here — it reads
 //! `web_credentials`, which remains daemon-side.
 
-pub(crate) use de_chat_agent::provider_dial::{
-    client_for, client_for_tunnel_compatible_public_asset, EndpointDialPolicy, ProviderDialError,
-};
+pub(crate) use de_chat_agent::provider_dial::{client_for, EndpointDialPolicy, ProviderDialError};
 
 /// Dial policy for a browser-supplied endpoint: explicit allowlist entries
 /// (the operator's intranet opt-in) dial as configured; everything else is

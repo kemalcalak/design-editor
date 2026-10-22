@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "Thẻ kiến thức 4:5 tông cam ấm với nhãn đầu mục đánh số, tiêu đề lớn, định nghĩa, ba ý chính có vòng tròn số và chân thẻ chứa tài khoản cùng QR; hợp cho chuỗi bài của tài khoản kiến thức.",
         "sceneTemplate.item.analyticsMetricCard.title" => "Thẻ chia sẻ chỉ số phân tích",
         "sceneTemplate.item.analyticsMetricCard.summary" => "Thẻ dữ liệu tối màu 1200×630 với con số chỉ số chính cỡ lớn và huy hiệu so với tháng trước, biểu đồ thanh ngang bên phải và ba chỉ số phụ ở cuối; hợp để chia sẻ trên mạng xã hội và minh họa báo cáo tuần.",
-        "account.mcpToken" => "Token MCP",
         "menu.saveAsTemplate" => "Lưu làm mẫu…",
         "menu.saveAsTemplate.saved" => "Đã lưu làm mẫu",
         "menu.saveAsTemplate.failed" => "Không thể lưu mẫu",

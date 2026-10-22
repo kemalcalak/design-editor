@@ -168,3 +168,21 @@ fn a_design_job_id_cannot_escape_its_url_segment() {
         );
     }
 }
+
+/// The loopback whitelist above is the guard; the manifest's
+/// `host_permissions` is the backstop. The manifest is a separate file no
+/// compiler checks, so assert here that it grants the loopback origin and
+/// nothing wider — a capture must have nowhere else to go.
+#[test]
+fn the_manifest_grants_only_the_loopback_origin() {
+    const MANIFEST: &str = include_str!("../../../packages/de-chrome-extension/manifest.json");
+    let parsed: serde_json::Value =
+        serde_json::from_str(MANIFEST).expect("manifest.json is valid JSON");
+    let granted: Vec<&str> = parsed["host_permissions"]
+        .as_array()
+        .expect("manifest.json declares host_permissions")
+        .iter()
+        .filter_map(|value| value.as_str())
+        .collect();
+    assert_eq!(granted, ["http://127.0.0.1/*"]);
+}

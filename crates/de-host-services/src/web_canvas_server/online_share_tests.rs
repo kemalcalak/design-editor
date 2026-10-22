@@ -669,75 +669,6 @@ fn a_share_that_cannot_be_persisted_is_reported_and_rolled_back() {
 }
 
 // ---------------------------------------------------------------------------
-// B2: the shell must be able to learn which account it is showing.
-// ---------------------------------------------------------------------------
-
-#[test]
-fn the_online_status_route_projects_the_verified_identity() {
-    // Without this the shell's identity epoch never fires, and an account
-    // switch in one tab leaks the previous account's document.
-    let response = serve(
-        &registry(),
-        &verifier(),
-        Request::new("GET", de_editor_core::auth_routes::STATUS).with_bearer("tokA"),
-    );
-    assert_eq!(status_line(&response), "HTTP/1.1 200 OK", "{response}");
-    let payload = body(&response);
-    assert_eq!(payload["signed_in"], true);
-    assert_eq!(payload["available"], true);
-    assert_eq!(payload["username"], "userA");
-}
-
-#[test]
-fn two_accounts_see_their_own_identity_on_the_status_route() {
-    let registry = registry();
-    let verifier = verifier();
-    for (token, account) in [("tokA", "userA"), ("tokB", "userB")] {
-        let response = serve(
-            &registry,
-            &verifier,
-            Request::new("GET", de_editor_core::auth_routes::STATUS).with_bearer(token),
-        );
-        assert_eq!(body(&response)["username"], account, "{token}");
-    }
-}
-
-#[test]
-fn the_sign_in_and_sign_out_routes_stay_unreachable_online() {
-    // Only the read-only projection is exposed: the rest drive the
-    // process-wide device session an online deployment must never share.
-    let registry = registry();
-    let verifier = verifier();
-    for request in [
-        Request::json("POST", de_editor_core::auth_routes::LOGIN_BEGIN, "{}").with_bearer("tokA"),
-        Request::json("POST", de_editor_core::auth_routes::LOGOUT, "{}").with_bearer("tokA"),
-        Request::new("GET", de_editor_core::auth_routes::LOGIN_STATUS).with_bearer("tokA"),
-    ] {
-        let path = request.path;
-        let response = serve(&registry, &verifier, request);
-        assert_eq!(
-            status_line(&response),
-            "HTTP/1.1 404 Not Found",
-            "{path}: {response}"
-        );
-    }
-}
-
-#[test]
-fn an_unauthenticated_caller_cannot_reach_the_status_projection() {
-    let response = serve(
-        &registry(),
-        &verifier(),
-        Request::new("GET", de_editor_core::auth_routes::STATUS),
-    );
-    assert_eq!(
-        status_line(&response),
-        "HTTP/1.1 401 Unauthorized",
-        "{response}"
-    );
-}
-
-// ---------------------------------------------------------------------------
 // B3 residue: start-up probes and the shutdown drain.
 // ---------------------------------------------------------------------------
 
@@ -777,20 +708,6 @@ fn a_disabled_store_passes_the_probe_trivially() {
     TenantStore::new(None)
         .check_writable()
         .expect("no store, no probe");
-}
-
-#[test]
-fn the_status_projection_carries_a_stable_subject_distinct_from_the_handle() {
-    // The shell partitions its storage by this, so it must be the same key the
-    // tenant registry uses — not a renameable display handle.
-    let response = serve(
-        &registry(),
-        &verifier(),
-        Request::new("GET", de_editor_core::auth_routes::STATUS).with_bearer("tokA"),
-    );
-    let payload = body(&response);
-    assert_eq!(payload["subject"], "userA");
-    assert!(payload["username"].is_string());
 }
 
 #[cfg(test)]

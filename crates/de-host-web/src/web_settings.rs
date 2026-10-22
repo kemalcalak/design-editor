@@ -52,115 +52,6 @@ pub(crate) fn host_owns_chat_from_query(search: &str) -> bool {
 #[path = "web_settings_host_chrome_tests.rs"]
 mod host_chrome_tests;
 
-/// Restore every setting the partition snapshot owns to its default.
-///
-/// `apply_payload` only writes fields the stored blob actually carries, so an
-/// EMPTY partition left the previous account's values in place: B inherited
-/// A's locale, recent files, MCP port and provider profiles. Resetting first
-/// makes "absent from the blob" mean "default" rather than "keep whatever was
-/// there".
-///
-/// The field set is exactly what `apply_payload` writes, so the two cannot
-/// drift into a field that is saved per-account but never reset.
-///
-/// `theme_mode` is deliberately NOT included. Theme is a **device**
-/// preference — light or dark is a property of the screen you are sitting at,
-/// not of who is signed in — so it lives in its own unpartitioned key (see
-/// [`theme`]) and must survive an account switch untouched. Resetting it here
-/// would flip the screen every time a different person signed in on the same
-/// laptop, which is the behaviour this split exists to remove.
-pub(super) fn reset_account_scoped_settings(state: &mut EditorState) {
-    let defaults = de_editor_core::AgentSettings::default();
-    let eui = &mut state.editor_ui;
-    eui.agent_settings.clear_builtin_model_catalogs();
-    eui.locale = de_editor_core::EditorUiState::default().locale;
-    eui.pending_locale = None;
-    eui.locale_persistence_override = None;
-    eui.recent_files.clear();
-    eui.entry_surface = de_editor_core::EditorUiState::default().entry_surface;
-    eui.agent_settings.mcp_server.port = defaults.mcp_server.port;
-    eui.agent_settings.mcp_cli_enabled = defaults.mcp_cli_enabled;
-    eui.agent_settings.images_advanced_open = defaults.images_advanced_open;
-    eui.agent_settings.openverse_client_id = defaults.openverse_client_id;
-    eui.agent_settings.openverse_client_secret = defaults.openverse_client_secret;
-    eui.agent_settings.auto_update_enabled = defaults.auto_update_enabled;
-    eui.agent_settings.experimental_features_enabled = defaults.experimental_features_enabled;
-    eui.agent_settings.builtin_agents = defaults.builtin_agents;
-    eui.agent_settings.next_builtin_agent_id = defaults.next_builtin_agent_id;
-    eui.agent_settings.image_gen_profiles = defaults.image_gen_profiles;
-    eui.agent_settings.next_image_gen_profile_id = defaults.next_image_gen_profile_id;
-    eui.agent_settings.active_image_gen_profile_id = defaults.active_image_gen_profile_id;
-}
-
-/// Re-read account-scoped storage after the tab's partition changed.
-///
-/// The shell loads settings and credentials at mount, before any
-/// `/api/auth/status` answer has arrived — so it loads them from the `anon`
-/// partition. Once the account is known the partition key changes, and what is
-/// in memory belongs to the wrong one: without this the tab keeps showing (and
-/// re-saving) anonymous settings under the account's key.
-pub(crate) fn reload_for_active_partition<C: crate::repaint_ctx::RepaintContext>(
-    inner: &std::rc::Rc<std::cell::RefCell<C>>,
-) {
-    let Ok(mut context) = inner.try_borrow_mut() else {
-        return;
-    };
-    let previous_locale = context.host().editor_state().editor_ui.locale;
-    // Defaults first, then the target partition on top: without this an empty
-    // partition silently inherits the previous account's settings.
-    reset_account_scoped_settings(context.host_mut().editor_state_mut());
-    let load = storage::load_into(context.host_mut().editor_state_mut());
-    let loaded_locale = context.host().editor_state().editor_ui.locale;
-    if stage_partition_locale(
-        context.host_mut().editor_state_mut(),
-        previous_locale,
-        de_i18n::catalog_ready(loaded_locale),
-    ) {
-        de_editor_core::web_assets::request(&de_i18n::catalog_route(loaded_locale));
-    }
-    // The device's own theme goes back on top of whatever the new partition
-    // just applied. This is the account-switch half of the split: without it
-    // the screen would follow whoever signed in.
-    theme::apply_after_load(context.host_mut().editor_state_mut(), load.payload_theme());
-    // AFTER the load, not before: the baselines must measure against the state
-    // this partition just produced. Rebuilding them from the previous
-    // account's state would make the very next comparison report the whole
-    // partition as a change and write it back under the wrong key.
-    context.reset_persistence_baselines(&load);
-    // Restart credential sync for the partition now in force.
-    //
-    // Needed on FirstIdentified too, which does NOT go through the identity
-    // reset: a policy fetch issued at mount under the anonymous epoch is
-    // refused by the epoch guard when it lands, and `policy_in_flight` would
-    // stay set forever — after which every `changed()` returns `SyncAction::
-    // None` and the account can never upload a credential again.
-    crate::web_credential_sync::reset();
-    crate::web_credential_sync::start();
-    context.host_mut().mark_editor_state_dirty();
-    let _ = context.repaint();
-}
-
-/// Keep the currently painted account/anon locale until a newly loaded
-/// partition's runtime catalog is ready. Returns whether the host must request
-/// the loaded locale through the existing asset queue.
-fn stage_partition_locale(
-    state: &mut EditorState,
-    previous_locale: Locale,
-    catalog_ready: bool,
-) -> bool {
-    let loaded_locale = state.editor_ui.locale;
-    state.editor_ui.locale = previous_locale;
-    let deferred = state
-        .editor_ui
-        .set_locale_when_catalog_ready(loaded_locale, catalog_ready);
-    if deferred {
-        // The target came from this partition and is already persisted there.
-        // Preserve it if another setting is saved before the catalog arrives.
-        state.editor_ui.locale_persistence_override = Some(loaded_locale);
-    }
-    deferred
-}
-
 /// Per-account storage keys.
 ///
 /// The base keys above are same-origin and carry no account dimension, so two
@@ -202,7 +93,6 @@ use storage::{
 };
 pub(crate) use storage::{
     credential_migration_pending, load_into, save_credentials_if_changed, save_if_changed,
-    CredentialLoad,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]

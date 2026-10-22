@@ -450,30 +450,6 @@ fn the_agent_indicator_relay_is_empty() {
 }
 
 #[test]
-fn the_device_login_proxy_is_not_routed() {
-    // `/api/auth/status` is deliberately EXCLUDED: it is the read-only account
-    // projection the shell needs to detect an account switch, and it answers
-    // from the connection's verified identity rather than from the daemon's
-    // process-wide device session. Everything that drives that session stays
-    // unreachable. See `the_sign_in_and_sign_out_routes_stay_unreachable_online`.
-    let registry = registry();
-    let verifier = verifier();
-    for request in [
-        Request::json("POST", de_editor_core::auth_routes::LOGOUT, "{}").with_bearer("tokA"),
-        Request::json("POST", de_editor_core::auth_routes::LOGIN_BEGIN, "{}").with_bearer("tokA"),
-        Request::new("GET", de_editor_core::auth_routes::LOGIN_STATUS).with_bearer("tokA"),
-    ] {
-        let path = request.path;
-        let response = serve(&registry, &verifier, request);
-        assert_eq!(
-            status_line(&response),
-            "HTTP/1.1 404 Not Found",
-            "{path}: {response}"
-        );
-    }
-}
-
-#[test]
 fn a_settings_write_never_reaches_the_process_settings_file() {
     // The route still answers and the change still lands in this account's
     // in-memory editor; what must not happen is a write to the ONE settings

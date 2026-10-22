@@ -96,20 +96,6 @@ pub fn figma_import_button(
     }
 }
 
-/// Map a widget-layer `LoginModalHit` onto the canonical
-/// `de_editor_core::LoginModalButton` for hover/press state.
-pub fn login_modal_button(
-    hit: crate::widgets::login_modal::LoginModalHit,
-) -> Option<de_editor_core::LoginModalButton> {
-    use crate::widgets::login_modal::LoginModalHit as W;
-    use de_editor_core::LoginModalButton as O;
-    match hit {
-        W::Close => Some(O::Close),
-        W::SignIn => Some(O::SignIn),
-        W::Outside | W::Inside => None,
-    }
-}
-
 /// Map a widget-layer `AgentSettingsHit` onto the canonical
 /// `de_editor_core::AgentSettingsButton` for shared pressed feedback.
 pub fn agent_settings_button(
@@ -287,7 +273,6 @@ pub fn topbar_button_hover(
         W::ToggleGitPanel => O::ToggleGitPanel,
         W::ToggleFullscreen => O::ToggleFullscreen,
         W::TogglePreview => O::TogglePreview,
-        W::Account => O::OpenAccount,
     }
 }
 

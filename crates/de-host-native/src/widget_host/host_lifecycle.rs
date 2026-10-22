@@ -94,11 +94,6 @@ impl WidgetHostNative {
             slide_thumbs: Default::default(),
             last_chat_session_index,
             workspace_dock_drag: None,
-            auth_login_handle: None,
-            auth_pending_browser_url: None,
-            auth_browser_opened: false,
-            auth_session_refresh_deadline: None,
-            auth_account_avatar_revision: None,
         }
     }
 

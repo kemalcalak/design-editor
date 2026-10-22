@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "Тёплая оранжевая карточка знаний 4:5 с нумерованной надстрокой, крупным заголовком, определением, тремя нумерованными пунктами и нижней строкой с аккаунтом и QR-кодом — для серии познавательных публикаций.",
         "sceneTemplate.item.analyticsMetricCard.title" => "Карточка для публикации аналитических метрик",
         "sceneTemplate.item.analyticsMetricCard.summary" => "Тёмная карточка данных 1200×630 с крупным главным показателем и бейджем месячной динамики, горизонтальными полосами справа и тремя вторичными показателями внизу — для соцсетей и еженедельных отчётов.",
-        "account.mcpToken" => "Токены MCP",
         "menu.saveAsTemplate" => "Сохранить как шаблон…",
         "menu.saveAsTemplate.saved" => "Сохранено как шаблон",
         "menu.saveAsTemplate.failed" => "Не удалось сохранить шаблон",

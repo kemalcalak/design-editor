@@ -1,13 +1,13 @@
 //! Settings-modal coverage for the host capability
 //! `EditorUiState::external_cli_available`.
 //!
-//! Mobile shells (iOS / Android / HarmonyOS) cannot spawn subprocess
-//! CLIs, so the modal must hide every surface that only exists to add,
-//! connect, or configure one: the Agents tab's ACP section and its
-//! external-provider card list (with the section headers that introduce
-//! them), and the MCP tab's terminal-integration toggle grid. What stays
-//! is the built-in API-key provider section — the ONLY agent path on
-//! mobile — and the MCP server card itself.
+//! A host that cannot spawn subprocess CLIs clears that flag, so the modal
+//! must hide every surface that only exists to add, connect, or configure
+//! one: the Agents tab's ACP section and its external-provider card list
+//! (with the section headers that introduce them), and the MCP tab's
+//! terminal-integration toggle grid. What stays is the built-in API-key
+//! provider section — the ONLY agent path on such a host — and the MCP
+//! server card itself.
 //!
 //! Every assertion here is a lockstep check: a hidden block must leave no
 //! live hit rect behind, and the content below it must shift up by

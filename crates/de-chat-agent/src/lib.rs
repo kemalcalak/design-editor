@@ -1,7 +1,7 @@
 //! Builtin-provider agent tool loop + canvas/design tool surface.
 //!
 //! Everything here moved verbatim from `de-host-services` (which re-exports
-//! it all under its original paths) so the mobile FFI hosts run the SAME
+//! it all under its original paths) so every host runs the SAME
 //! design pipeline as desktop — the tool-executing loop with its corrective
 //! budgets, the 15-tool design surface with its per-batch quality feedback,
 //! and the loop-end structural finalize plumbing. The move is pure code

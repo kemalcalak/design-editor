@@ -21,8 +21,8 @@
   },
   "background": { "service_worker": "background.js", "type": "module" },
   "permissions": ["activeTab", "scripting", "downloads", "storage"],
-  "host_permissions": ["http://127.0.0.1/*", "https://op.zseven.cn/*", "https://op.zseven.tech/*"],
+  "host_permissions": ["http://127.0.0.1/*"],
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' https: data:"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data:"
   }
 }

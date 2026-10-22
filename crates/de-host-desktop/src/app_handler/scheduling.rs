@@ -93,7 +93,6 @@ impl DesktopApp {
             let deadline = self.clock_start + Duration::from_millis(deadline_ms);
             event_loop.set_control_flow(ControlFlow::WaitUntil(deadline));
         } else if self.update_probe.is_pending()
-            || self.host.auth_flow_active()
             || self.model_probe.is_pending()
             || self.image_search.is_pending()
             || self.image_panel.is_pending()
@@ -101,8 +100,6 @@ impl DesktopApp {
             // paint recorded (the next pump picks them up).
             || self.remote_images.is_pending()
             || de_editor_ui::widgets::canvas_viewport_image::has_pending_remote_image_requests()
-            || self.account_avatar.is_pending()
-            || de_editor_ui::account_avatar_runtime::has_pending_account_avatar_requests()
             || self.image_decodes.is_pending()
             || de_editor_ui::widgets::canvas_viewport_image::has_pending_decodes()
             || self
@@ -173,12 +170,9 @@ impl DesktopApp {
             // scheduled for it would be thrown away unpainted.
             || self.host.top_bar_tooltip_showing()
             || self.update_probe.is_pending()
-            || self.host.auth_flow_active()
             || self.model_probe.is_pending()
             || self.image_search.is_pending()
             || self.image_panel.is_pending()
-            || self.account_avatar.is_pending()
-            || de_editor_ui::account_avatar_runtime::has_pending_account_avatar_requests()
             || self.image_decodes.is_pending()
             || de_editor_ui::widgets::canvas_viewport_image::has_pending_decodes()
             || self

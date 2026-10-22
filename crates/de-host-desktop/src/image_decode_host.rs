@@ -130,9 +130,7 @@ impl ImageDecodeHost {
             }
             for pending in batch {
                 let id = pending.id;
-                let Some(bytes) = cached_bytes_for(id).or_else(|| {
-                    de_editor_ui::account_avatar_runtime::cached_account_avatar_bytes(id)
-                }) else {
+                let Some(bytes) = cached_bytes_for(id) else {
                     mark_decode_done(id);
                     discarded += 1;
                     continue;
@@ -247,9 +245,8 @@ fn decode_worker(
 /// render goes through `de-render-export`'s
 /// `scene_painter::ensure_images_decoded`, whose discovery pass calls
 /// `take_pending_decodes(usize::MAX)` and silently discards ids whose bytes
-/// live outside the data-url cache (the avatar cache, for one). That exact
-/// theft made `worker_uses_the_bounded_avatar_cache_without_gui_decode` fail
-/// on linux-aarch64 CI while the template-save test rendered its preview.
+/// live outside the data-url cache. That exact theft once made a decode test
+/// fail on linux-aarch64 CI while the template-save test rendered its preview.
 ///
 /// Discipline: tests that merely PAINT (and so only append queue entries)
 /// stay unlocked — `reset_decode_registry` absorbs their leftovers — but any
@@ -344,44 +341,6 @@ mod tests {
         }
         let image = backend.raster_image(id).expect("installed raster");
         assert_eq!(image.dimensions(), (3, 2).into());
-    }
-
-    #[test]
-    fn worker_uses_the_bounded_avatar_cache_without_gui_decode() {
-        let _decode_guard = super::lock_decode_test_registry();
-        let _avatar_guard = crate::account_avatar_host::lock_avatar_test_registry();
-        reset_decode_registry();
-        use de_editor_ui::account_avatar_runtime as avatar;
-        let url = "https://cdn.example/avatar-decode.png";
-        assert!(avatar::register_account_avatar_url(None));
-        assert!(avatar::register_account_avatar_url(Some(url)));
-        assert!(avatar::account_avatar_image().is_none());
-        let request = avatar::take_account_avatar_requests(1)
-            .pop()
-            .expect("avatar request queued");
-        assert!(avatar::complete_account_avatar_request(
-            &request,
-            Some(encode_test_png())
-        ));
-        let image = avatar::account_avatar_image().expect("avatar bytes are ready");
-        note_pending_decode(image.image_id, 64);
-
-        let mut host = ImageDecodeHost::new();
-        let mut backend = NativeBackend::with_dpi(1.0);
-        assert!(host.pump(&mut backend), "first pump submits avatar decode");
-        let deadline = Instant::now() + Duration::from_secs(5);
-        while !backend.image_decoded(image.image_id, &[], 64) {
-            host.pump(&mut backend);
-            assert!(Instant::now() < deadline, "avatar decode never landed");
-            std::thread::yield_now();
-        }
-        assert_eq!(
-            backend
-                .raster_image(image.image_id)
-                .expect("installed avatar raster")
-                .dimensions(),
-            (3, 2).into()
-        );
     }
 
     #[test]

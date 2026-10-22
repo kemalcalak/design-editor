@@ -12,9 +12,6 @@ path = "src/main.rs"
 
 [features]
 pinned-skia-binaries = ["de-host-services/pinned-skia-binaries"]
-# Forwarded to de-host-services so a dev daemon links the locally built
-# ABI-v2 op-auth archive (debug only).
-dev-op-auth-abi-v2 = ["de-host-services/dev-op-auth-abi-v2"]
 
 [dependencies]
 de-host-services = { path = "../de-host-services" }

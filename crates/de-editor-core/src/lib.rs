@@ -7,7 +7,6 @@
 //! editor-only state (selection, tool, viewport, history, transient
 //! UI drafts).
 
-pub mod account_state;
 pub mod acp_agent_presets;
 pub mod agent_indicators;
 mod agent_indicators_tests;
@@ -21,7 +20,6 @@ pub mod agent_settings_button_state;
 pub mod agent_settings_connection;
 pub mod align;
 pub mod align_guides;
-pub mod auth_routes;
 pub mod blank_starter;
 pub mod bridge_protocol;
 pub mod button_press_state;
@@ -254,9 +252,6 @@ mod tests_pages;
 #[cfg(test)]
 mod translate_equivalence_tests;
 
-pub use account_state::{
-    AccountMenuRow, AccountState, LoginFlowError, LoginFlowStatus, LoginModalButton,
-};
 pub use acp_agent_presets::{
     acp_agent_preset, matches_preset_transport, AcpAgentPreset, AcpPresetAvailability,
     ACP_AGENT_PRESETS,

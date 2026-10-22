@@ -9,12 +9,8 @@ use de_editor_core::agent_settings::{
     AcpAgentField, AgentSettingsTab, BuiltinAgentField, ImageGenField, ImageGenProvider,
     ImageSearchField, ImageTestStatus, SettingsFocus,
 };
-use de_editor_core::host_settings_commit::SettingsCommitScope;
-use de_editor_core::{
-    AgentSettingsButton, BuiltinAgentPresetKey, ButtonPressTarget, MissingFontSurface,
-};
+use de_editor_core::{AgentSettingsButton, BuiltinAgentPresetKey, ButtonPressTarget};
 use de_editor_ui::widgets::agent_settings_panel::{AgentSettingsHit, AgentSettingsPanel};
-use de_editor_ui::widgets::agent_settings_press_flow;
 use de_editor_ui::Point2D;
 
 /// The settings modal is a wide, tall workspace; these fixtures press
@@ -107,38 +103,5 @@ fn escape_blurs_focus_before_hiding_settings_and_releases_text_owner() {
     assert_eq!(
         host.editor_state().editor_ui.agent_settings.mcp_server.port,
         original_port
-    );
-}
-
-#[test]
-fn login_modal_transition_commits_settings_and_releases_all_text_owners() {
-    let mut host = WidgetHostNative::new();
-    {
-        let ui = &mut host.editor_state_mut().editor_ui;
-        ui.agent_settings_open = true;
-        ui.agent_settings.focus = Some(SettingsFocus::McpPort);
-        ui.settings_input.set_text("4321");
-        ui.open_missing_font_picker(0, MissingFontSurface::Settings);
-    }
-
-    agent_settings_press_flow::apply_agent_settings_hit(
-        host.editor_state_mut(),
-        AgentSettingsHit::OpenLoginModal,
-        SettingsCommitScope::Operator,
-        0,
-    );
-
-    let ui = &host.editor_state().editor_ui;
-    assert!(!ui.agent_settings_open);
-    assert!(ui.login_modal_open);
-    assert!(ui.agent_settings.focus.is_none());
-    assert!(!ui.font_picker.open);
-    assert!(ui.font_picker_purpose.is_none());
-    assert_eq!(ui.agent_settings.mcp_server.port, 4321);
-    assert!(!host.input_active());
-    assert!(!host.apply_text('9'));
-    assert_eq!(
-        host.editor_state().editor_ui.agent_settings.mcp_server.port,
-        4321
     );
 }

@@ -589,27 +589,6 @@ impl WidgetHostNative {
             dlg.paint(&mut *frame, &self.theme, &self.editor_state.editor_ui);
         }
 
-        // 10e. Sign-in modal — full-viewport scrim + centred card.
-        self.paint_login_modal_overlay(frame, viewport_width, viewport_height);
-
-        // 10f. Signed-in account dropdown — anchored under the TopBar
-        //      avatar button, no scrim (same tier as the file menu /
-        //      locale picker).
-        if ui.account_ui_available && ui.account_menu_open {
-            use de_editor_ui::widgets::account_menu::AccountMenu;
-            if let Some(menu) = AccountMenu::for_editor_ui(&self.editor_state.editor_ui) {
-                let menu_rect = de_editor_ui::widgets::host_overlay_geometry::account_menu_rect(
-                    &self.editor_state,
-                    &menu,
-                    viewport_width,
-                );
-                let mut cx = PaintCx {
-                    backend: &mut *frame,
-                };
-                menu.paint(&mut cx, menu_rect);
-            }
-        }
-
         // 10a. Agent-settings modal — top-most overlay when open.
         self.paint_agent_settings_modal_overlay(frame, viewport_width, viewport_height);
 

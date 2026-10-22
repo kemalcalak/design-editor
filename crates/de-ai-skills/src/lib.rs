@@ -185,16 +185,16 @@ const FINISH_CONDITION_PLACEHOLDER: &str = "{{finishCondition}}";
 /// How the executing host verifies visual output — the one part of the
 /// design-agent protocol that is host-capability-dependent. The empty-canvas
 /// postmortem: the prompt made the screenshot check "mandatory, not
-/// optional" and made it the END condition, while the mobile host cannot
-/// render screenshots at all — a trailing capability note was not enough for
-/// a weak model on a starved budget, so the protocol text itself must be
+/// optional" and made it the END condition, while a host without a render
+/// arm cannot take screenshots at all — a trailing capability note was not
+/// enough for a weak model on a starved budget, so the protocol text itself must be
 /// host-aware.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DesignVerifyProtocol {
     /// Desktop / daemon: `get_screenshot` renders, the screenshot check is
     /// mandatory, and finishing is gated on it (the historical text).
     Screenshot,
-    /// Hosts without a render arm (the mobile FFI): verification runs on
+    /// Hosts without a render arm: verification runs on
     /// `snapshot_layout` + per-batch `layoutIssues`, and finishing is gated
     /// on those instead. `get_screenshot` is not mentioned as available.
     LayoutSnapshot,

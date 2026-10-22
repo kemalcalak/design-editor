@@ -381,18 +381,3 @@ pub fn icon_picker_panel_rect(
 #[cfg(test)]
 #[path = "host_overlay_geometry_tests.rs"]
 mod host_overlay_geometry_tests;
-
-/// Signed-in account dropdown rect, hung from the TopBar account button and
-/// clamped inside the viewport.
-pub fn account_menu_rect(
-    state: &EditorState,
-    menu: &crate::widgets::account_menu::AccountMenu<'_>,
-    viewport_w: f32,
-) -> Rect {
-    let top_bar = Rect::xywh(0.0, 0.0, viewport_w, TOP_BAR_HEIGHT);
-    let anchor = TopBar::for_editor_ui(&state.editor_ui).account_button_rect(top_bar);
-    let mut rect = menu.rect_at(anchor);
-    let max_x = (viewport_w - rect.size.x - 8.0).max(8.0);
-    rect.origin.x = rect.origin.x.clamp(8.0, max_x);
-    rect
-}

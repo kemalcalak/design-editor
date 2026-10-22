@@ -50,7 +50,7 @@ env:
 
 jobs:
   version:
-    name: Validate release version and production auth matrix
+    name: Validate release version
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -64,7 +64,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
           ref: ${{ github.sha }}
-      - name: Validate Cargo version and the signed Auth matrix in this source
+      - name: Validate Cargo version in this source
         id: version
         shell: bash
         run: |
@@ -83,11 +83,7 @@ jobs:
           esac
           tools/check-rust-release-auth-workflow.sh
           tools/check-release-workflow-policy.test.sh rust
-          tools/check-op-auth-release-matrix.test.sh
-          tools/check-op-auth-cargo-build.test.sh
           tools/pinned-release-tools.test.sh
-          tools/check-op-auth-release-matrix.sh
-          tools/check-op-auth-prebuilt.sh --require-hardened
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "source_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 

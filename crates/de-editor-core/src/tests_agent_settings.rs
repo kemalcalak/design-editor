@@ -30,7 +30,7 @@ fn default_settings_are_quiescent() {
 
 #[test]
 fn tab_and_cli_arrays_cover_all_variants() {
-    assert_eq!(AgentSettingsTab::ALL.len(), 6);
+    assert_eq!(AgentSettingsTab::ALL.len(), 5);
     assert_eq!(McpCli::ALL.len(), 13);
     assert_eq!(
         AgentSettings::default().mcp_cli_enabled.len(),
@@ -138,10 +138,7 @@ fn settings_tab_fallback_labels_match_ts_order() {
         .map(|tab| tab.label())
         .collect();
 
-    assert_eq!(
-        labels,
-        vec!["Agents", "MCP", "Images", "Fonts", "System", "Account"]
-    );
+    assert_eq!(labels, vec!["Agents", "MCP", "Images", "Fonts", "System"]);
 }
 
 #[test]

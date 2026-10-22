@@ -4,9 +4,9 @@
 //!
 //! Moved here (pure code motion) from `de-host-services/src/web_image_search.rs`
 //! (providers) and `de-host-desktop/src/{image_search_session/fetch.rs,
-//! image_downscale.rs}` — both re-export under their old paths — so the
-//! mobile FFI host resolves design image slots through the exact desktop
-//! ladder instead of a drifting port.
+//! image_downscale.rs}` — both re-export under their old paths — so every
+//! host resolves design image slots through the exact desktop ladder
+//! instead of a drifting port.
 
 pub mod downscale;
 pub mod fetch;

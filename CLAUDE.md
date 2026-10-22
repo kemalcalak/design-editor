@@ -43,7 +43,7 @@ crates/
 ├── de-util/              Dependency-free leaf: hex-colour parsing + JSON / XML escaping
 └── de-mcp / de-ai / de-ai-skills / de-codegen / de-orchestrator / de-figma /
    de-git / de-opmerge / de-pen-loader / de-design-lint / de-i18n / de-html /
-   de-auth-bridge / de-smoke / …
+   de-smoke / …
 
 packages/
 ├── de-web-sdk/           Read-only `.op` web viewer SDK (wraps the de-host-web wasm bundle)

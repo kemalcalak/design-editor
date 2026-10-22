@@ -201,17 +201,6 @@ impl WidgetHost {
                         }
                     }
                 }
-                TopBarHit::Account => {
-                    if self.editor_state.editor_ui.account_ui_available {
-                        if self.editor_state.editor_ui.account.is_signed_in() {
-                            self.editor_state.editor_ui.account_menu_open = true;
-                            self.editor_state.editor_ui.account_menu_hover = None;
-                        } else {
-                            self.editor_state.editor_ui.login_modal_open = true;
-                            self.editor_state.editor_ui.login_modal_hover = None;
-                        }
-                    }
-                }
             }
             self.mark_dirty();
             return Some(true);

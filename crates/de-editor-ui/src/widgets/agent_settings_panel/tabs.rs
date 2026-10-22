@@ -18,7 +18,6 @@ fn tab_icon(tab: AgentSettingsTab) -> Icon {
         AgentSettingsTab::Images => Icon::Image,
         AgentSettingsTab::Fonts => Icon::Type,
         AgentSettingsTab::System => Icon::Settings,
-        AgentSettingsTab::Account => Icon::User,
     }
 }
 

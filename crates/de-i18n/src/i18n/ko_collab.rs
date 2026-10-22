@@ -119,7 +119,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "따뜻한 오렌지색 4:5 지식 카드입니다. 번호가 붙은 상단 라벨, 큰 제목, 정의, 번호 원형 아이콘이 붙은 세 가지 요점, 계정과 QR 푸터로 구성해 지식 계정 시리즈에 적합합니다.",
         "sceneTemplate.item.analyticsMetricCard.title" => "분석 지표 공유 카드",
         "sceneTemplate.item.analyticsMetricCard.summary" => "어두운 1200×630 데이터 카드입니다. 주요 지표의 큰 숫자와 전월 대비 배지, 오른쪽 가로 막대 그래프, 하단 세 가지 보조 지표를 담아 소셜 공유와 주간 보고서에 적합합니다.",
-        "account.mcpToken" => "MCP 토큰",
         "menu.saveAsTemplate" => "템플릿으로 저장…",
         "menu.saveAsTemplate.saved" => "템플릿으로 저장됨",
         "menu.saveAsTemplate.failed" => "템플릿을 저장할 수 없음",

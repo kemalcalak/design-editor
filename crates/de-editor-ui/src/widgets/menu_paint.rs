@@ -1,8 +1,8 @@
 //! Shared row-geometry + paint helpers for dropdown menus.
 //!
-//! `file_menu.rs` and `account_menu.rs` paint the same row chrome
-//! (hover tint, hit rect, divider) with their own width/row-height
-//! constants; the geometry-parameterized bodies live here once.
+//! `file_menu.rs` paints its row chrome (hover tint, hit rect, divider)
+//! through these geometry-parameterized bodies with its own
+//! width/row-height constants.
 
 use crate::theme::Theme;
 use crate::widgets::PaintCx;

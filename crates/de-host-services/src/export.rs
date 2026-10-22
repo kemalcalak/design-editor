@@ -1,9 +1,8 @@
-//! Compatibility surface over the mobile-safe render export core.
+//! Compatibility surface over the standalone render export core.
 //!
 //! Headless screenshot capture remains a host service because it adds MCP
 //! base64 transport semantics. All file rendering lives in
-//! [`de_render_export`] so desktop, server, and native mobile shells share
-//! one renderer without pulling the rest of `de-host-services` into mobile.
+//! [`de_render_export`] so desktop and server share one renderer.
 
 pub use de_render_export::*;
 

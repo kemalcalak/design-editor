@@ -178,7 +178,6 @@ impl WidgetHostNative {
                     de_editor_core::FigmaImportSelection::Cancel,
                 ));
         }
-        self.cancel_auth_login();
         de_editor_core::host_escape_transitions::close_preview_owned_overlays(
             &mut self.editor_state,
             self.now_ms,

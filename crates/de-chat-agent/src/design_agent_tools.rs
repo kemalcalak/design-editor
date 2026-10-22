@@ -489,7 +489,7 @@ pub fn execute_agent_tool_with_root_seed_guard(
 ///
 /// `de-host-services`' `design_agent_tools` shim installs its registrar
 /// lazily from every executor entry point, so desktop/daemon behavior is
-/// unchanged. A host that never installs one (the mobile FFI) simply has no
+/// unchanged. A host that never installs one simply has no
 /// screenshot/export arms — those tools are not advertised there either.
 pub type HostToolRegistrar = fn(&EditorState, &str, &mut ToolRegistry) -> bool;
 
@@ -511,7 +511,7 @@ static HOST_TOOL_CATALOG: std::sync::OnceLock<HostToolCatalog> = std::sync::Once
 /// A `select:` query returns every matched descriptor regardless of
 /// `max_results`, and the protocol's Step 2 select list names
 /// `get_screenshot` / `spawn_agents` — so a host that does not advertise
-/// those (the mobile FFI) otherwise hands the model descriptors for tools
+/// those otherwise hands the model descriptors for tools
 /// its executor rejects, teaching it to spend turns on calls that can only
 /// fail. Idempotent; the first installer wins. Uninstalled hosts keep the
 /// full MCP catalog (desktop/daemon behavior unchanged).

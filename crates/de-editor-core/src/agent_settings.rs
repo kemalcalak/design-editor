@@ -42,18 +42,15 @@ pub enum AgentSettingsTab {
     Images,
     Fonts,
     System,
-    /// Sign-in status + workspace identity for the planned user system.
-    Account,
 }
 
 impl AgentSettingsTab {
-    pub const ALL: [AgentSettingsTab; 6] = [
+    pub const ALL: [AgentSettingsTab; 5] = [
         AgentSettingsTab::Agents,
         AgentSettingsTab::Mcp,
         AgentSettingsTab::Images,
         AgentSettingsTab::Fonts,
         AgentSettingsTab::System,
-        AgentSettingsTab::Account,
     ];
 
     pub fn label(self) -> &'static str {
@@ -63,7 +60,6 @@ impl AgentSettingsTab {
             AgentSettingsTab::Images => "Images",
             AgentSettingsTab::Fonts => "Fonts",
             AgentSettingsTab::System => "System",
-            AgentSettingsTab::Account => "Account",
         }
     }
 }

@@ -142,7 +142,7 @@ grep -Fq 'must use file://C:/... form' "$temporary/windows-leading-slash.log" ||
 
 verify_pattern="\"\$repo_root/tools/pinned-release-tools.sh\" verify-skia"
 verify_args="    desktop \"\$release_target\" \"\$SKIA_BINARIES_URL\""
-build_pattern="    cargo build \\"
+build_pattern="cargo build \\"
 [[ $(grep -Fc "$verify_pattern" "$release_builder") -eq 1 ]] || {
     printf 'error: Rust release build must invoke staged Skia verification once\n' >&2
     exit 1
@@ -152,8 +152,8 @@ grep -Fxq "$verify_args" "$release_builder" || {
     exit 1
 }
 verify_line=$(grep -nF "$verify_pattern" "$release_builder" | cut -d: -f1)
-build_line=$(grep -nF "$build_pattern" "$release_builder" | cut -d: -f1)
-[[ -n $verify_line && -n $build_line && $((build_line - verify_line)) -eq 4 ]] || {
+build_line=$(grep -nxF "$build_pattern" "$release_builder" | cut -d: -f1)
+[[ -n $verify_line && -n $build_line && $((build_line - verify_line)) -eq 2 ]] || {
     printf 'error: Rust release build does not verify staged Skia before Cargo\n' >&2
     exit 1
 }

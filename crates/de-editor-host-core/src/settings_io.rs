@@ -217,7 +217,7 @@ struct SettingsPayload {
 /// Resolve the platform-specific settings path. `None` when no
 /// usable config base exists — load/save become silent no-ops.
 ///
-/// An embedded shell (the mobile FFI hosts) selects its private
+/// An embedded shell selects its private
 /// app-sandbox directory through `de_config_store::configure_user_root`
 /// before engine construction; `settings.json` then lives next to the
 /// other per-user config files in that root. Desktop never configures an

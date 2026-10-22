@@ -32,20 +32,11 @@ impl WidgetHostNative {
             return None;
         }
         // Same z-order as the normal path: the settings modal (tier 1),
-        // then the sign-in modal Settings ▸ Account opens, then the locale
-        // dropdown, then the model picker.
+        // then the locale dropdown, then the model picker.
         if self.editor_state.editor_ui.agent_settings_open {
             return self
                 .dispatch_agent_settings_press(x, y, viewport_width, viewport_height)
                 .then_some(true);
-        }
-        let login_open = {
-            let ui = &self.editor_state.editor_ui;
-            ui.login_modal_open && ui.account_ui_available
-        };
-        if login_open {
-            self.dispatch_login_modal_press(x, y, viewport_width, viewport_height);
-            return Some(true);
         }
         if self.editor_state.editor_ui.locale_picker.open {
             let panel = self.locale_picker_rect(viewport_width);
@@ -71,7 +62,7 @@ impl WidgetHostNative {
     }
 
     /// Paint the Home-opened overlays above the takeover: the agent-
-    /// settings modal, the sign-in modal, the language menu, then the
+    /// settings modal, the language menu, then the
     /// Home-anchored model picker.
     pub(in crate::widget_host) fn paint_home_overlays(
         &mut self,
@@ -83,7 +74,6 @@ impl WidgetHostNative {
             return;
         }
         self.paint_agent_settings_modal_overlay(frame, viewport_width, viewport_height);
-        self.paint_login_modal_overlay(frame, viewport_width, viewport_height);
         if self.editor_state.editor_ui.locale_picker.open {
             let rect = self.locale_picker_rect(viewport_width);
             let picker =
@@ -94,35 +84,6 @@ impl WidgetHostNative {
             picker.paint(&mut cx, rect);
         }
         self.paint_home_model_picker(frame, viewport_width, viewport_height);
-    }
-
-    /// The sign-in modal: full-viewport scrim + centred card.
-    pub(in crate::widget_host) fn paint_login_modal_overlay(
-        &self,
-        frame: &mut NativeFrameBackend<'_>,
-        viewport_width: f32,
-        viewport_height: f32,
-    ) {
-        let ui = &self.editor_state.editor_ui;
-        if !(ui.account_ui_available && ui.login_modal_open) {
-            return;
-        }
-        use de_editor_ui::widgets::login_modal::LoginModal;
-        frame.fill_rect(
-            Rect::xywh(0.0, 0.0, viewport_width, viewport_height),
-            de_editor_ui::Color {
-                r: 0.0,
-                g: 0.0,
-                b: 0.0,
-                a: 0.45,
-            },
-        );
-        let modal = LoginModal::for_editor(&self.editor_state);
-        let modal_rect = modal.rect(viewport_width, viewport_height);
-        let mut cx = PaintCx {
-            backend: &mut *frame,
-        };
-        modal.paint(&mut cx, modal_rect);
     }
 
     /// The agent-settings modal: dim scrim across the viewport plus the

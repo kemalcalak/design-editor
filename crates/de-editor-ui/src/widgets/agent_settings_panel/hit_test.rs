@@ -266,17 +266,6 @@ impl AgentSettingsPanel<'_> {
                 }
                 SystemHit::None => {}
             },
-            AgentSettingsTab::Account => {
-                match agent_settings_account::hit_test(
-                    hero_body_rect_for_ui(content),
-                    self.ui,
-                    scrolled,
-                ) {
-                    AccountTabHit::SignIn => return AgentSettingsHit::OpenLoginModal,
-                    AccountTabHit::SignOut => return AgentSettingsHit::SignOutAccount,
-                    AccountTabHit::None => {}
-                }
-            }
         }
         AgentSettingsHit::Inside
     }
@@ -452,11 +441,6 @@ impl AgentSettingsPanel<'_> {
                     + agent_settings_fonts::content_height(self.ui)
             }
             AgentSettingsTab::System => agent_settings_system::content_height(),
-            AgentSettingsTab::Account => {
-                secondary_hero_height()
-                    + secondary_card_pad()
-                    + agent_settings_account::content_height()
-            }
         }
     }
 

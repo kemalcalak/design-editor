@@ -144,8 +144,7 @@ fn preview_pointer_path_without_clock_advance_never_swipes() {
 /// Critical regression: the timestamped host entries carry the FACTUAL
 /// event time while the global clock advances independently. Pump the
 /// global clock to 2000 (the frame pump's value), then deliver a press at
-/// 950 and a move at 1050 through the same timestamped entry variants the
-/// FFI editor `_at` functions use. The global clock stays 2000, but the
+/// 950 and a move at 1050 through the timestamped `_at` entry variants. The global clock stays 2000, but the
 /// Swipe recognizer measures the factual 100 ms pair delta and `onSwipe`
 /// runs exactly once — a clock-overwrite design (pushing the raw event
 /// time into `now_ms`) would collapse the delta to 0 and never claim.

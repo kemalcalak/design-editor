@@ -41,7 +41,7 @@ crates/
 └── …                     de-mcp / de-ai / de-ai-skills / de-codegen / de-orchestrator / de-figma /
                           de-git / de-opmerge / de-pen-loader / de-design-lint / de-config-store /
                           de-process-io / de-acp / de-i18n / de-rpc-transport / de-smoke /
-                          de-host-services / de-host-web-server / de-html / de-auth-bridge / de-web-sdk
+                          de-host-services / de-host-web-server / de-html / de-web-sdk
 ```
 
 `de-util` is the workspace's single source for three helpers that had drifted
@@ -139,7 +139,7 @@ Mutators on `Document`:
 | LayerContextMenu  | Right-click overlay on layer rows + page tabs (Rename / Duplicate / Delete / Group / Ungroup / Lock / Hide; subset on page tabs)     | `layer_context_menu.rs`                                                                                                                 |
 | AgentSettings     | Cmd+, modal — 880×640 with sidebar nav (Agents / MCP / Images / System) + scrollable right pane                                      | `agent_settings_panel.rs` + `agent_settings_{i18n,images,mcp,system}.rs`                                                                |
 | theme             | shadcn-dark palette tokens (incl. `canvas_surface`)                                                                                  | `theme.rs`                                                                                                                              |
-| i18n              | 15 canonical locale catalogs, 1,673 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
+| i18n              | 15 canonical locale catalogs, 1,647 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
 
 ## Theme + i18n
 
@@ -150,9 +150,9 @@ Mutators on `Document`:
 - 15 supported locales (matches TS dropdown order): EnUs / ZhCn / ZhTw / Ja / Ko / Fr / Es / De / Pt / Ru / Hi / Tr / Th / Vi / Id. Each carries a `display_name()` (English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Français / Español / Deutsch / Português / Русский / हिन्दी / Türkçe / ไทย / Tiếng Việt / Bahasa Indonesia).
 - TopBar Globe-button is a 44 px-wide compound (globe + chevron-down) opening a `LocalePicker` dropdown. Native applies a clicked locale immediately; web closes the picker but keeps the old locale while an uninstalled runtime catalog is pending, then mutates `Document.ui.locale` once the JSON is ready. Clicking outside (or the Globe again) closes silently. The picker paints as the top-most overlay so it covers chat / status / canvas.
 - Multi-script chrome strings (한국어 / हिन्दी / ไทย / Tiếng Việt) render against per-codepoint typeface lookups (`FontMgr::match_family_style_character` cached per `i32` in `NativeBackend`), with each string broken into contiguous-typeface segments before draw.
-- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,673 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,673-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
+- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,647 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,647-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
 
-  **Adding a new key: put it in `<locale>_collab.rs` (the terminal overflow shard), in all 15 locales.** The main tables sit at or just under the repo's 800-line ceiling (`zh_cn.rs` is exactly 800, `en.rs` 798), so a new entry there does not fit — the `_panel` shards exist precisely to absorb overflow and have room. Only edit a main or `_git` table when you are changing the wording of a key that already lives there. Then bump the expected count in `catalog_integrity_tests.rs` and run:
+  **Adding a new key: put it in `<locale>_collab.rs` (the terminal overflow shard), in all 15 locales.** The main tables sit close to the repo's 800-line ceiling (`zh_cn.rs` and `en.rs` are 775 lines), so new entries do not belong there — the `_panel` shards exist precisely to absorb overflow and have room. Only edit a main or `_git` table when you are changing the wording of a key that already lives there. Then bump the expected count in `catalog_integrity_tests.rs` and run:
 
   ```sh
   cargo test -p de-i18n
@@ -323,7 +323,7 @@ Smoke: `crates/design-editor-shell-web/smoke/step-1b.html` — start `python3 -m
 
 1. `press_topmost_overlay_tiers` — modals, floating panels, context menus
 2. commit-on-blur for property-panel inputs + the variable-row inline editor, then resolve Git-panel / chat-model-picker ownership (the floating Git panel paints over the right rail, so every rail tier below skips a click inside its rect)
-3. `press_menu_modal_tiers` — shape picker; file / export / figma / login / account modals; import + locale dropdowns
+3. `press_menu_modal_tiers` — shape picker; file / export / figma modals; import + locale dropdowns
 4. `press_rail_overlay_tiers` — image-fill popover, StatusBar, resize gutter, the model-picker slice above the TopBar
 5. `press_top_bar_tier` — TopBar chrome and its blank-press gaps
 6. `press_preview_tier` — Preview (Play) mode swallows everything below
@@ -425,7 +425,6 @@ Pure state transitions — no widget types, wasm32-clean — live in **`de-edito
 | `host_preset_name_draft.rs`        | The variables preset "save as name" input                                                 |
 | `request_snapshot.rs`              | `narrowed_snapshot` — see below                                                           |
 | `agent_reveals.rs`                 | Before/after node-id diff + staggered reveal bookkeeping for freshly inserted subtrees    |
-| `auth_routes.rs`                   | Device-login HTTP route paths shared by the web shell (client) and serve-web daemon (server) |
 
 Widget-typed shared logic lives in **`de-editor-ui/src/widgets/`**:
 
@@ -442,14 +441,13 @@ Widget-typed shared logic lives in **`de-editor-ui/src/widgets/`**:
 | `image_popover_input_flow.rs`                              | Mouse selection in the image Search / Generate text inputs                         |
 | `scroll_flow.rs`                                           | Panel wheel / trackpad-pan scrolling                                               |
 | `cursor_hover_flow.rs`                                     | Cursor-move hover resolution                                                       |
-| `account_press_flow.rs`                                    | Sign-in modal + signed-in account-dropdown press flow                              |
 | `missing_fonts_flow.rs`                                    | Missing-font prompt: scroll, press dispatch, detection/refresh bookkeeping         |
 | `variables_panel_geometry_flow.rs`                         | Floating VariablesPanel placement + resize clamping                                |
 | `agent_settings_press_flow.rs` + `_entries.rs` + `_focus.rs` | Agent-settings modal press dispatch, list-entry arms, and input focus seeding    |
 | `host_canvas_geometry.rs`                                  | The coordinate invariant (see "Hit-test order")                                    |
 | `host_overlay_geometry.rs`                                 | On-screen rects for dropdowns, the three draggable floating panels, StatusBar actions |
 | `host_frame_bookkeeping.rs`                                | Per-frame work both spines do around paint (cache owner rotation, layout transitions, animation deadlines) |
-| `menu_paint.rs`                                            | Shared dropdown row chrome (hover tint, hit rect, divider) for file + account menus |
+| `menu_paint.rs`                                            | Shared dropdown row chrome (hover tint, hit rect, divider) for the file menu        |
 | `settings_form.rs`                                         | Shared card-form chrome for the Agent settings sections                            |
 | `test_capture_backend.rs`                                  | Test-only `RenderBackend` stub recording `fill_round_rect` calls                   |
 

@@ -343,8 +343,8 @@ pub enum TopBarPress {
     /// The file menu was toggled: the host also clears the layer-panel
     /// hover wash, then marks dirty and consumes the press.
     FileMenuToggled,
-    /// Platform-specific hit (fullscreen / preview / git panel /
-    /// account) — the host handles it itself.
+    /// Platform-specific hit (fullscreen / preview / git panel) — the
+    /// host handles it itself.
     Platform,
 }
 
@@ -384,7 +384,6 @@ pub fn apply_shared_top_bar_hit(
             state.editor_ui.import_menu_open = false;
             state.editor_ui.import_menu.open = false;
             state.editor_ui.import_menu.hover = None;
-            state.editor_ui.account_menu_open = false;
             state.editor_ui.open_scene_template_center(now_ms);
             state.chat.blur_input(now_ms);
             TopBarPress::Handled
@@ -410,10 +409,9 @@ pub fn apply_shared_top_bar_hit(
             core_press::toggle_file_menu(&mut state.editor_ui);
             TopBarPress::FileMenuToggled
         }
-        TopBarHit::ToggleFullscreen
-        | TopBarHit::TogglePreview
-        | TopBarHit::ToggleGitPanel
-        | TopBarHit::Account => TopBarPress::Platform,
+        TopBarHit::ToggleFullscreen | TopBarHit::TogglePreview | TopBarHit::ToggleGitPanel => {
+            TopBarPress::Platform
+        }
     }
 }
 

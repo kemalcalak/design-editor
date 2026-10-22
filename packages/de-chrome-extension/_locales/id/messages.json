@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "$1 node diimpor ke Design Editor."
   },
-  "statusSendingAccount": {
-    "message": "Mengirim ke akun Design Editor Anda…"
-  },
-  "statusSentToAccount": {
-    "message": "Terkirim ke akun Design Editor Anda: $1"
-  },
-  "statusSentLocalFallback": {
-    "message": "Sesi akun Anda sudah kedaluwarsa, jadi tangkapan ini dikirim ke Design Editor di komputer ini: $1 node diimpor."
-  },
   "statusDownloaded": {
     "message": "$1 disimpan."
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "Tangkapan ini lebih besar dari $1 MB, dan rute cuplikan Design Editor menolaknya. Gunakan “Unduh .op”, lalu buka berkas di Design Editor"
   },
-  "errorAccountTooLarge": {
-    "message": "Tangkapan ini lebih besar dari $1 MB, dan kotak masuk akun menolaknya. Kirimkan ke perangkat ini saja."
-  },
   "errorImport": {
     "message": "Design Editor menolak cuplikan: $1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "Penangkapan elemen tidak tersedia: worker latar belakang ekstensi tidak berjalan. Periksa kartu ekstensi di chrome://extensions untuk melihat error, jalankan ulang build-wasm.sh, lalu klik Muat Ulang. ($1)"
-  },
-  "accountSignIn": {
-    "message": "Masuk"
-  },
-  "accountSignOut": {
-    "message": "Keluar"
-  },
-  "accountSignInOpened": {
-    "message": "Selesaikan proses masuk di halaman yang baru terbuka, lalu buka lagi jendela ini."
-  },
-  "accountSignedOut": {
-    "message": "Anda telah keluar dari akun Design Editor."
-  },
-  "accountSignOutManual": {
-    "message": "Selesaikan proses keluar di halaman akun yang baru terbuka."
-  },
-  "accountUnavailable": {
-    "message": "Tidak dapat menghubungi akun Design Editor Anda: $1"
-  },
-  "errorAccountSignedOut": {
-    "message": "Sesi akun Design Editor Anda sudah kedaluwarsa. Masuk lagi, lalu coba sekali lagi."
-  },
-  "errorAccountForbidden": {
-    "message": "Hub menolak asal atau token sesi unggahan ini. Masuk lagi, lalu coba sekali lagi. ($1)"
-  },
-  "errorAccountQuota": {
-    "message": "Kotak masuk akun Anda penuh — maksimal $1 tangkapan atau $2 MB. Hapus beberapa di halaman akun, lalu coba lagi. ($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "Terlalu banyak unggahan ke akun Anda. Coba lagi nanti. ($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "Terlalu banyak unggahan ke akun Anda. Coba lagi sekitar $1 menit lagi."
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "Terlalu banyak unggahan ke akun Anda. Coba lagi sekitar $1 detik lagi."
-  },
-  "errorAccountRejected": {
-    "message": "Akun Design Editor Anda menolak snapshot: $1"
-  },
-  "errorAccountUnavailable": {
-    "message": "Akun Design Editor Anda tidak dapat menerima tangkapan saat ini ($1). Coba lagi nanti, atau kirim ke Design Editor di komputer ini."
-  },
-  "regionLabel": {
-    "message": "Wilayah"
-  },
-  "regionCn": {
-    "message": "Tiongkok"
-  },
-  "regionGlobal": {
-    "message": "Global"
-  },
-  "deliveryLabel": {
-    "message": "Kirim ke"
-  },
-  "deliveryLocal": {
-    "message": "Design Editor di komputer ini"
-  },
-  "deliveryAccount": {
-    "message": "Akun Design Editor saya"
   }
 }

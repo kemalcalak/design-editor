@@ -35,7 +35,7 @@ impl EditorState {
             .available_models
             .get(self.chat.selected_model)
             .cloned();
-        // Platforms that cannot spawn subprocess CLIs (mobile shells) keep
+        // Platforms that cannot spawn subprocess CLIs keep
         // every external-CLI model out of the catalog; built-in API-key
         // providers below are unaffected.
         let connected = if self.editor_ui.external_cli_available {

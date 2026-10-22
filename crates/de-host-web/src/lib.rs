@@ -45,19 +45,11 @@ mod preview_pump;
 // Top-bar hover-tooltip dwell → rAF repaint (the web host has no
 // animation-deadline scheduler of its own).
 #[cfg(feature = "canvaskit")]
+mod live_sync_glue;
+#[cfg(feature = "canvaskit")]
 mod tooltip_pump;
 #[cfg(feature = "canvaskit")]
 mod video_overlay;
-// Daemon device-login relay (action drain + login-status poll + popup).
-#[cfg(feature = "canvaskit")]
-mod live_sync_glue;
-#[cfg(feature = "canvaskit")]
-mod web_auth_sync;
-// Opens the hub portal's per-account MCP-token page in a new tab from the
-// signed-in account dropdown (online/hub-served web only). Only the
-// canvaskit widget host calls it, so it shares that gate.
-#[cfg(feature = "canvaskit")]
-mod web_mcp_tokens;
 // Shared daemon base-URL resolution (page origin when served by the daemon,
 // localhost fallback for the dev smoke page).
 #[cfg(feature = "canvaskit")]
@@ -73,8 +65,8 @@ mod document_json;
 mod dom_io;
 #[cfg(feature = "canvaskit")]
 mod file_actions;
-// Which account this tab belongs to. Lives with the daemon-facing modules
-// because it is driven by the device-login status poll.
+// Which account this tab belongs to (online mode). Lives with the
+// daemon-facing modules.
 #[cfg(feature = "canvaskit")]
 pub mod identity_epoch;
 #[cfg(all(test, feature = "canvaskit"))]

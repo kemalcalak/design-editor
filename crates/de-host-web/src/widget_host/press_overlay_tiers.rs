@@ -189,8 +189,8 @@ impl WidgetHost {
         None
     }
 
-    /// Shape picker, file menu, export / figma modals, sign-in modal and
-    /// account dropdown. `None` — none of them claimed the press.
+    /// Shape picker, file menu, export / figma modals. `None` — none of
+    /// them claimed the press.
     pub(in crate::widget_host) fn press_menu_modal_tiers(
         &mut self,
         ctx: &PressCtx,
@@ -232,23 +232,6 @@ impl WidgetHost {
         if self.editor_state.editor_ui.figma_import_open {
             self.close_image_popovers_for_higher_overlay();
             self.dispatch_figma_import_press(x, y, viewport_width, viewport_height);
-            return Some(true);
-        }
-        // Sign-in modal / account dropdown — same overlay tier as native
-        // §0a/§0a' (before the TopBar so a re-click on the avatar closes
-        // instead of re-toggling).
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.login_modal_open
-        {
-            self.close_image_popovers_for_higher_overlay();
-            self.dispatch_login_modal_press(x, y, viewport_width, viewport_height);
-            return Some(true);
-        }
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.account_menu_open
-        {
-            self.close_image_popovers_for_higher_overlay();
-            self.dispatch_account_menu_press(x, y, viewport_width, viewport_height);
             return Some(true);
         }
         None

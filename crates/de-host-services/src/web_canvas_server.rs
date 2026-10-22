@@ -97,9 +97,6 @@ pub struct WebCanvasState {
     /// no-op `{"ok":true,"skipped":true,"version":<current>}` reply instead
     /// of touching the document again.
     pub(crate) reset_consumed: bool,
-    /// In-flight browser device-login flow driven through the auth proxy
-    /// endpoints (`/api/auth/login/*`); `None` when no login is running.
-    pub(crate) auth_login_handle: Option<u64>,
     /// How this daemon is deployed. `Local` for every existing invocation;
     /// `Online` is the only value that refuses anything, and it is what the
     /// REST tier consults for the routes that would otherwise share one
@@ -155,7 +152,6 @@ impl WebCanvasState {
             managed_token: None,
             allow_origins: Vec::new(),
             reset_consumed: false,
-            auth_login_handle: None,
             mode: ServeMode::Local,
         }
     }
@@ -578,22 +574,6 @@ pub fn handle_web_canvas_request(
                 }
             }
         }
-        // Device-login proxy: the wasm bundle ships no auth code and
-        // drives the flow through the daemon's de-auth-bridge runtime.
-        // (`POST /api/auth/login/begin` is a streaming-tier route — it
-        // waits for the verification URI off the state lock.)
-        //
-        // The bridge holds ONE device session per process, so online the
-        // routes fall through to the 404 arm: an account signs in to the
-        // hub, not to this daemon, and proxying the service account's
-        // session would sign every visitor in as it.
-        (_, path) if !state.mode.allows_device_login_proxy() && is_device_login_route(path) => {
-            not_found_reply()
-        }
-        ("GET", de_editor_core::auth_routes::STATUS) => crate::web_auth::status(state),
-        ("GET", de_editor_core::auth_routes::LOGIN_STATUS) => crate::web_auth::login_status(state),
-        ("POST", de_editor_core::auth_routes::LOGIN_CANCEL) => crate::web_auth::login_cancel(state),
-        ("POST", de_editor_core::auth_routes::LOGOUT) => crate::web_auth::logout(state),
         _ => not_found_reply(),
     }
 }
@@ -605,11 +585,6 @@ fn not_found_reply() -> WebReply {
         body: r#"{"ok":false,"error":"Not found. Use /api/mcp/document, /api/mcp/sync-reset, /api/mcp/server, /api/file/save, /api/export/raster, /api/export/pdf, or /mcp."}"#
             .to_string(),
     }
-}
-
-/// Whether `path` belongs to the daemon-hosted device-login proxy.
-fn is_device_login_route(path: &str) -> bool {
-    path.starts_with(de_editor_core::auth_routes::API_PREFIX)
 }
 
 mod document_push;

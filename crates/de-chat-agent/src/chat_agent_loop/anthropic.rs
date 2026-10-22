@@ -10,8 +10,8 @@ use super::*;
 // Anthropic wire
 // ---------------------------------------------------------------------------
 
-// Per-block streamed accumulation moved to `de_ai::chat_tool_sse` so the
-// mobile FFI design loop shares this exact wire behavior; the alias keeps
+// Per-block streamed accumulation moved to `de_ai::chat_tool_sse` so every
+// design loop shares this exact wire behavior; the alias keeps
 // every existing `AnthropicCollector` path stable.
 pub(super) use de_ai::chat_tool_sse::AnthropicToolCollector as AnthropicCollector;
 

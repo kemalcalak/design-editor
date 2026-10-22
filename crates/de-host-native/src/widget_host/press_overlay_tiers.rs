@@ -4,7 +4,7 @@
 //! Tier 1 runs before ANY other hit-test: a missing-font prompt, floating
 //! panel, colour picker, modal Git popover, or an open context menu owns
 //! the press outright. Tier 2 is the dropdown/modal band (shape picker,
-//! file menu, export / figma / login / account, import, locale).
+//! file menu, export / figma, import, locale).
 //!
 //! Order within each helper is paint Z-order and is load-bearing.
 
@@ -206,25 +206,6 @@ impl WidgetHostNative {
             self.dispatch_figma_import_press(x, y, viewport_width, viewport_height);
             return Some(true);
         }
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.login_modal_open
-        {
-            self.close_image_popovers_for_higher_overlay();
-            self.dispatch_login_modal_press(x, y, viewport_width, viewport_height);
-            return Some(true);
-        }
-
-        // 0a'. Account dropdown — anchored under the TopBar avatar
-        // button; must hit-test before the TopBar's own block so a
-        // re-click on the avatar closes rather than re-toggling.
-        if self.editor_state.editor_ui.account_ui_available
-            && self.editor_state.editor_ui.account_menu_open
-        {
-            self.close_image_popovers_for_higher_overlay();
-            self.dispatch_account_menu_press(x, y, viewport_width, viewport_height);
-            return Some(true);
-        }
-
         // 0a0. Import dropdown — same overlay tier as the locale picker.
         if self.editor_state.editor_ui.import_menu_open {
             self.refresh_layout_scene();

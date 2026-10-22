@@ -117,7 +117,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "sceneTemplate.item.compoundEffectCard.summary" => "Eine warme orangefarbene 4:5-Wissenskarte mit nummeriertem Auftakt, großem Titel, Definition, drei nummerierten Punkten und Fußzeile mit Konto und QR-Code, für Wissensserien.",
         "sceneTemplate.item.analyticsMetricCard.title" => "Karte zum Teilen von Analytics-Kennzahlen",
         "sceneTemplate.item.analyticsMetricCard.summary" => "Eine dunkle Datenkarte im Format 1200×630 mit großer Hauptkennzahl und Monatsvergleichs-Badge, horizontalen Balken rechts und drei Nebenkennzahlen unten, für Social Sharing und Wochenberichte.",
-        "account.mcpToken" => "MCP-Tokens",
         "menu.saveAsTemplate" => "Als Vorlage sichern…",
         "menu.saveAsTemplate.saved" => "Als Vorlage gespeichert",
         "menu.saveAsTemplate.failed" => "Vorlage konnte nicht gespeichert werden",

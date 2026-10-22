@@ -193,15 +193,6 @@ fn paint_panel(cx: &mut PaintCx<'_>, panel: Rect, args: PanelPaintArgs<'_>) {
         AgentSettingsTab::System => {
             agent_settings_system::paint_system_tab(cx, theme, settings, ui, content_rect)
         }
-        AgentSettingsTab::Account => {
-            paint_secondary_hero(cx, theme, ui, content_rect, "settings.account");
-            agent_settings_account::paint_account_tab(
-                cx,
-                theme,
-                ui,
-                hero_body_rect_for_ui(content_rect),
-            )
-        }
     }
     cx.backend.restore();
     paint_close(cx, theme, settings, ui, layout);
@@ -241,8 +232,7 @@ fn paint_secondary_hero(
 ) {
     let (title, subtitle) = match prefix {
         "settings.images" => ("settings.tab.images", "settings.images.heroSubtitle"),
-        "settings.fonts" => ("settings.tab.fonts", "settings.fonts.heroSubtitle"),
-        _ => ("settings.tab.account", "settings.account.heroSubtitle"),
+        _ => ("settings.tab.fonts", "settings.fonts.heroSubtitle"),
     };
     crate::widgets::agent_settings_rows::paint_tab_intro_for_ui(
         cx,

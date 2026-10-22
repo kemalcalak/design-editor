@@ -66,7 +66,7 @@ fn effect_metadata_is_self_describing() {
     );
 }
 
-/// The activation id is an opaque handle with a stable raw form for FFI.
+/// The activation id is an opaque handle with a stable raw form for hosts.
 #[test]
 fn activation_id_round_trips_raw() {
     let id = UserActivationId::from_raw(9001);

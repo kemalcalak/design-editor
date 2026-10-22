@@ -350,9 +350,6 @@ impl DesktopApp {
         if self.remote_images.pump() {
             self.redraw_dirty = true;
         }
-        if self.account_avatar.pump() {
-            self.redraw_dirty = true;
-        }
         if let Some(backend) = self.backend.as_mut() {
             if self.image_decodes.pump(backend) {
                 self.redraw_dirty = true;
@@ -401,11 +398,6 @@ impl DesktopApp {
         }
         // Drain the background auto-update probe.
         if self.poll_update_probe() {
-            self.redraw_dirty = true;
-        }
-        // Drain the browser device-login flow (status + browser
-        // opens land here).
-        if self.poll_auth_flow() {
             self.redraw_dirty = true;
         }
         // Drain a finished background `git pull`.

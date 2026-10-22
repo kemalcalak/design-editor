@@ -96,50 +96,6 @@ impl WidgetHost {
             dlg.paint(&mut *backend, &self.theme, &self.editor_state.editor_ui);
         }
 
-        // Sign-in modal — full-viewport scrim + centred card (native §10e).
-        if ui.account_ui_available && ui.login_modal_open {
-            use de_editor_ui::widgets::login_modal::LoginModal;
-            backend.fill_rect(
-                Rect {
-                    origin: Point2D::new(0.0, 0.0),
-                    size: Point2D::new(viewport_width, viewport_height),
-                },
-                de_editor_ui::Color {
-                    r: 0.0,
-                    g: 0.0,
-                    b: 0.0,
-                    a: 0.45,
-                },
-            );
-            let modal = LoginModal::for_editor(&self.editor_state);
-            let modal_rect = modal.rect(viewport_width, viewport_height);
-            let mut cx = PaintCx {
-                backend: &mut *backend,
-            };
-            modal.paint(&mut cx, modal_rect);
-        }
-
-        // Signed-in account dropdown — anchored under the TopBar avatar
-        // button, no scrim (native §10f).
-        if ui.account_ui_available && ui.account_menu_open {
-            use de_editor_ui::widgets::account_menu::AccountMenu;
-            use de_editor_ui::widgets::top_bar::TopBar;
-            use de_editor_ui::widgets::TOP_BAR_HEIGHT;
-            let top_bar_rect = Rect {
-                origin: Point2D::new(0.0, 0.0),
-                size: Point2D::new(viewport_width, TOP_BAR_HEIGHT),
-            };
-            let top_bar = TopBar::for_editor_ui(&self.editor_state.editor_ui);
-            let anchor = top_bar.account_button_rect(top_bar_rect);
-            if let Some(menu) = AccountMenu::for_editor_ui(&self.editor_state.editor_ui) {
-                let menu_rect = menu.rect_at(anchor);
-                let mut cx = PaintCx {
-                    backend: &mut *backend,
-                };
-                menu.paint(&mut cx, menu_rect);
-            }
-        }
-
         // Settings modal — Cmd+, overlay. Painted before the colour
         // picker / context menu / floating panels, mirroring native
         // §10a z-order.

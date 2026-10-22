@@ -89,7 +89,6 @@ pub fn toggle_export_quick_menu(ui: &mut EditorUiState) {
         ui.import_menu_open = false;
         ui.import_menu.open = false;
         ui.import_menu.hover = None;
-        ui.account_menu_open = false;
         close_locale_picker(ui);
     }
 }

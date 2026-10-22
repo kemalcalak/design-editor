@@ -1,8 +1,8 @@
 //! Which routes this daemon is allowed to serve, per deployment mode.
 //!
 //! The daemon grew up as a single-user, loopback-bound process: every route
-//! trusted its one client with the operator's filesystem, the operator's
-//! device-login session, and the operator's LAN. A public multi-account
+//! trusted its one client with the operator's filesystem, settings and
+//! credentials, and the operator's LAN. A public multi-account
 //! deployment shares one process between mutually untrusting accounts, so
 //! those routes have to be shut off — not by remembering to check at each
 //! call site, but from one table a reviewer can read end to end.
@@ -63,13 +63,6 @@ impl ServeMode {
     /// shared deployment would let any account overwrite every other
     /// account's providers and credentials.
     pub const fn allows_settings_persistence(self) -> bool {
-        !self.is_online()
-    }
-
-    /// The device-login proxy (`/api/auth/*`). The bridge runtime holds ONE
-    /// device session per process, so proxying it in a shared deployment
-    /// would sign every visitor in as whoever the service account is.
-    pub const fn allows_device_login_proxy(self) -> bool {
         !self.is_online()
     }
 
@@ -267,7 +260,6 @@ mod tests {
         for mode in [ServeMode::Local, ServeMode::Managed] {
             assert!(mode.allows_local_file_routes(), "{mode:?}");
             assert!(mode.allows_settings_persistence(), "{mode:?}");
-            assert!(mode.allows_device_login_proxy(), "{mode:?}");
             assert!(mode.allows_agent_indicator_relay(), "{mode:?}");
             assert!(mode.allows_root_jsonrpc_alias(), "{mode:?}");
             assert!(mode.allows_generic_shutdown(), "{mode:?}");
@@ -284,7 +276,6 @@ mod tests {
         assert!(mode.is_online());
         assert!(!mode.allows_local_file_routes());
         assert!(!mode.allows_settings_persistence());
-        assert!(!mode.allows_device_login_proxy());
         assert!(!mode.allows_agent_indicator_relay());
         assert!(!mode.allows_root_jsonrpc_alias());
         assert!(!mode.allows_generic_shutdown());

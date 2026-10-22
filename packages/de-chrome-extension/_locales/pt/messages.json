@@ -85,15 +85,6 @@
   "statusImported": {
     "message": "$1 nós importados para o Design Editor."
   },
-  "statusSendingAccount": {
-    "message": "Enviando para a sua conta Design Editor…"
-  },
-  "statusSentToAccount": {
-    "message": "Enviado para a sua conta Design Editor: $1"
-  },
-  "statusSentLocalFallback": {
-    "message": "A sessão da sua conta tinha expirado, então isto foi para o Design Editor deste computador: $1 nós importados."
-  },
   "statusDownloaded": {
     "message": "$1 salvo."
   },
@@ -136,9 +127,6 @@
   "errorTooLarge": {
     "message": "Esta captura é maior que $1 MB, e a rota de capturas do Design Editor a recusa. Use “Baixar .op” e abra o arquivo no Design Editor"
   },
-  "errorAccountTooLarge": {
-    "message": "Esta captura é maior que $1 MB, e a caixa de entrada da conta a recusa. Envie para este dispositivo em vez disso."
-  },
   "errorImport": {
     "message": "O Design Editor recusou a captura: $1"
   },
@@ -153,65 +141,5 @@
   },
   "errorPickUnavailable": {
     "message": "A captura de elemento está indisponível: o service worker da extensão não está em execução. Verifique o erro no cartão da extensão em chrome://extensions, execute build-wasm.sh novamente e clique em Atualizar. ($1)"
-  },
-  "accountSignIn": {
-    "message": "Entrar"
-  },
-  "accountSignOut": {
-    "message": "Sair"
-  },
-  "accountSignInOpened": {
-    "message": "Conclua o login na página que acabou de abrir e reabra esta janela."
-  },
-  "accountSignedOut": {
-    "message": "Sessão encerrada na sua conta Design Editor."
-  },
-  "accountSignOutManual": {
-    "message": "Conclua a saída na página da conta que acabou de abrir."
-  },
-  "accountUnavailable": {
-    "message": "Não foi possível acessar sua conta Design Editor: $1"
-  },
-  "errorAccountSignedOut": {
-    "message": "A sessão da sua conta Design Editor expirou. Entre novamente e tente outra vez."
-  },
-  "errorAccountForbidden": {
-    "message": "O hub recusou a origem ou o token de sessão deste envio. Entre novamente e tente outra vez. ($1)"
-  },
-  "errorAccountQuota": {
-    "message": "A caixa de entrada da sua conta está cheia — ela guarda no máximo $1 capturas ou $2 MB. Apague algumas na página da conta e tente de novo. ($3)"
-  },
-  "errorAccountRateLimited": {
-    "message": "Envios demais para a sua conta. Tente um pouco mais tarde. ($1)"
-  },
-  "errorAccountRateLimitedMinutes": {
-    "message": "Envios demais para a sua conta. Tente novamente em cerca de $1 minutos."
-  },
-  "errorAccountRateLimitedSeconds": {
-    "message": "Envios demais para a sua conta. Tente novamente em cerca de $1 segundos."
-  },
-  "errorAccountRejected": {
-    "message": "A sua conta Design Editor recusou a captura: $1"
-  },
-  "errorAccountUnavailable": {
-    "message": "A sua conta Design Editor não consegue receber capturas agora ($1). Tente mais tarde ou envie para o Design Editor deste computador."
-  },
-  "regionLabel": {
-    "message": "Região"
-  },
-  "regionCn": {
-    "message": "China"
-  },
-  "regionGlobal": {
-    "message": "Global"
-  },
-  "deliveryLabel": {
-    "message": "Enviar para"
-  },
-  "deliveryLocal": {
-    "message": "Design Editor neste computador"
-  },
-  "deliveryAccount": {
-    "message": "Minha conta Design Editor"
   }
 }
