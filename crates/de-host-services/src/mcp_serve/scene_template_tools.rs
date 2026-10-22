@@ -21,9 +21,7 @@ use de_editor_core::user_scene_templates::user_scene_templates;
 use de_editor_core::EditorCommand;
 use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
 
-pub struct ListSceneTemplates {
-    include_user: bool,
-}
+pub struct ListSceneTemplates;
 
 impl McpTool for ListSceneTemplates {
     fn name(&self) -> &str {
@@ -42,23 +40,21 @@ impl McpTool for ListSceneTemplates {
 
         let mut templates: Vec<serde_json::Value> = Vec::new();
 
-        if self.include_user {
-            // Saved templates come first, as they do in the panel: a list where
-            // your own material sits below sixty shipped entries is a list you
-            // scroll past your own work in. Ids keep the two apart, so a save
-            // that shares a shipped template's name cannot quietly take its
-            // place. A saved template has no scene or tags to filter by, so the
-            // filters below apply to the shipped half only.
-            for user in user_scene_templates() {
-                templates.push(serde_json::json!({
-                    "id": user.id,
-                    "name": user.name,
-                    "frames": user.frames,
-                    "frameWidth": user.frame_width,
-                    "frameHeight": user.frame_height,
-                    "isUser": true,
-                }));
-            }
+        // Saved templates come first, as they do in the panel: a list where
+        // your own material sits below sixty shipped entries is a list you
+        // scroll past your own work in. Ids keep the two apart, so a save
+        // that shares a shipped template's name cannot quietly take its
+        // place. A saved template has no scene or tags to filter by, so the
+        // filters below apply to the shipped half only.
+        for user in user_scene_templates() {
+            templates.push(serde_json::json!({
+                "id": user.id,
+                "name": user.name,
+                "frames": user.frames,
+                "frameWidth": user.frame_width,
+                "frameHeight": user.frame_height,
+                "isUser": true,
+            }));
         }
 
         for template in scene_template_catalogue()
@@ -95,9 +91,7 @@ impl McpTool for ListSceneTemplates {
     }
 }
 
-pub struct UseSceneTemplate {
-    include_user: bool,
-}
+pub struct UseSceneTemplate;
 
 impl McpTool for UseSceneTemplate {
     fn name(&self) -> &str {
@@ -118,7 +112,7 @@ impl McpTool for UseSceneTemplate {
         // than a command the host silently applies as a no-op — checked
         // against both halves of the catalogue.
         let shipped = scene_template_by_id(template_id);
-        let user_template = if self.include_user && shipped.is_none() {
+        let user_template = if shipped.is_none() {
             user_scene_templates()
                 .into_iter()
                 .find(|template| template.id == template_id)
@@ -161,12 +155,12 @@ impl McpTool for UseSceneTemplate {
     }
 }
 
-pub fn list_scene_templates_snapshot(include_user: bool) -> ListSceneTemplates {
-    ListSceneTemplates { include_user }
+pub fn list_scene_templates_snapshot() -> ListSceneTemplates {
+    ListSceneTemplates
 }
 
-pub fn use_scene_template_snapshot(include_user: bool) -> UseSceneTemplate {
-    UseSceneTemplate { include_user }
+pub fn use_scene_template_snapshot() -> UseSceneTemplate {
+    UseSceneTemplate
 }
 
 #[cfg(test)]
@@ -211,7 +205,7 @@ mod tests {
     fn listing_puts_saved_templates_first_with_is_user() {
         let _guard = exclusive_user_template_registry_for_tests();
         save("my-deck");
-        let json = call_json(&list_scene_templates_snapshot(true), &BTreeMap::new());
+        let json = call_json(&list_scene_templates_snapshot(), &BTreeMap::new());
         let templates = json["templates"].as_array().expect("a templates array");
 
         assert!(templates.len() > 60, "the shipped catalogue plus one save");
@@ -238,30 +232,12 @@ mod tests {
         save("my-deck");
         let mut args = BTreeMap::new();
         args.insert("scene".into(), "slides".into());
-        let json = call_json(&list_scene_templates_snapshot(true), &args);
+        let json = call_json(&list_scene_templates_snapshot(), &args);
         let templates = json["templates"].as_array().expect("a templates array");
         assert_eq!(templates[0]["id"], "user:my-deck");
         assert!(
             templates[1..].iter().all(|t| t["scene"] == "slides"),
             "the shipped half is filtered, the saved half is not"
-        );
-    }
-
-    #[test]
-    fn shipped_only_listing_never_reads_the_user_registry() {
-        let _guard = exclusive_user_template_registry_for_tests();
-        save("private-deck");
-        let json = call_json(&list_scene_templates_snapshot(false), &BTreeMap::new());
-        let templates = json["templates"].as_array().expect("a templates array");
-
-        assert!(templates
-            .iter()
-            .any(|template| template["id"] == "slide-deck"));
-        assert!(
-            templates
-                .iter()
-                .all(|template| template["id"] != "user:private-deck"),
-            "a shared deployment only receives immutable shipped entries"
         );
     }
 
@@ -271,7 +247,7 @@ mod tests {
     fn use_scene_template_reaches_both_halves() {
         let _guard = exclusive_user_template_registry_for_tests();
         save("my-deck");
-        let tool = use_scene_template_snapshot(true);
+        let tool = use_scene_template_snapshot();
 
         let mut args = BTreeMap::new();
         args.insert("templateId".into(), "user:my-deck".into());
@@ -300,26 +276,6 @@ mod tests {
         assert!(matches!(
             tool.call(&unknown_shipped),
             ToolOutcome::Err(ToolErrorCode::InvalidArgument, _)
-        ));
-    }
-
-    #[test]
-    fn shipped_only_use_snapshot_does_not_resolve_user_registry_ids() {
-        let _guard = exclusive_user_template_registry_for_tests();
-        save("private-deck");
-        let tool = use_scene_template_snapshot(false);
-
-        let user = BTreeMap::from([("templateId".to_string(), "user:private-deck".to_string())]);
-        assert!(matches!(
-            tool.call(&user),
-            ToolOutcome::Err(ToolErrorCode::InvalidArgument, _)
-        ));
-
-        let shipped = BTreeMap::from([("templateId".to_string(), "slide-deck".to_string())]);
-        assert!(matches!(
-            tool.call(&shipped),
-            ToolOutcome::OkJsonWithCommand(_, EditorCommand::AdoptSceneTemplate { template_id })
-                if template_id == "slide-deck"
         ));
     }
 }

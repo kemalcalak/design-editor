@@ -170,9 +170,6 @@ pub(super) fn serve_ai_route<S: Read + Write>(
                 standard_req,
                 state,
                 ctx.hub,
-                // The conversation does not hold the barrier — a model turn
-                // runs for minutes. It is taken only at the document commits.
-                ctx.write_barrier,
                 cors_origin,
             )
             .map_err(|e| WebCanvasError::Transport(format!("ai standard: {e}")))

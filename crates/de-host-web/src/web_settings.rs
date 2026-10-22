@@ -52,19 +52,15 @@ pub(crate) fn host_owns_chat_from_query(search: &str) -> bool {
 #[path = "web_settings_host_chrome_tests.rs"]
 mod host_chrome_tests;
 
-/// Per-account storage keys.
+/// Storage-key suffix shared by every partitioned key below.
 ///
-/// The base keys above are same-origin and carry no account dimension, so two
-/// accounts using one browser shared one settings blob — and one account's
-/// provider API keys were readable by the next. Every read and write goes
-/// through these instead, partitioned by the signed-in subject
-/// (`identity_epoch::current_subject`, `"anon"` before sign-in).
-///
-/// The old unpartitioned keys are deliberately NOT migrated. They may hold a
-/// different account's credentials than the one now signed in, and there is no
-/// way to tell whose they were — so adopting them is exactly the leak this
-/// closes. They are left in place (untouched, unread) rather than deleted, so
-/// a user who downgrades does not lose their settings.
+/// The keys were once partitioned per signed-in account, and a tab that never
+/// signed in used `anon`. Accounts are gone, but the suffix is kept so the
+/// settings and credentials existing browsers already stored keep loading.
+/// The bare unsuffixed keys stay unread, exactly as before.
+const STORAGE_PARTITION: &str = "anon";
+
+/// The localStorage keys every settings / credential read and write uses.
 pub(crate) fn settings_storage_key() -> String {
     partitioned(STORAGE_KEY)
 }
@@ -74,7 +70,7 @@ pub(crate) fn credential_storage_key() -> String {
 }
 
 fn partitioned(base: &str) -> String {
-    format!("{base}::{}", crate::identity_epoch::current_subject())
+    format!("{base}::{STORAGE_PARTITION}")
 }
 
 #[path = "web_settings_legacy.rs"]

@@ -17,10 +17,7 @@
 //! a self-hosted serve-web daemon trust every local process that clears the
 //! boundary — the token it published in `~/.design-editor/.de-mcp-port` and the
 //! `ping` reply was readable by any such process anyway, so it only added
-//! friction for a caller that had only the URL (a bare MCP client). The
-//! online multi-tenant daemon is a SEPARATE request loop that authenticates
-//! per account (`web_canvas_server::RequestAuth`, a `Bearer` token the hub
-//! introspects), so relaxing this endpoint does not touch online auth.
+//! friction for a caller that had only the URL (a bare MCP client).
 //! `design-editor/shutdown` keeps its own body-carried
 //! token check (`mcp_serve::shutdown_request_id`), unchanged.
 //!

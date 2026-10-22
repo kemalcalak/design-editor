@@ -32,9 +32,6 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum WebChatStandardError {
-    /// The daemon is shutting down and will not durably accept a document
-    /// write. The conversation still answers; the document is untouched.
-    ShuttingDown,
     /// The request-scoped credential names a different model than the turn
     /// it rides with. Refused rather than reconciled — the credential is
     /// browser-supplied and the mismatch is unresolvable.
@@ -58,9 +55,6 @@ pub(crate) enum WebChatStandardError {
 impl fmt::Display for WebChatStandardError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            WebChatStandardError::ShuttingDown => f.write_str(
-                "this daemon is stopping; the reply was produced but the document was not changed",
-            ),
             WebChatStandardError::TransientModelMismatch => {
                 f.write_str("transient credential model does not match the request")
             }

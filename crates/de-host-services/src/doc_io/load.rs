@@ -10,37 +10,6 @@ pub fn load_editor_state(
     load_editor_state_with_report(path, locale).map(|loaded| loaded.state)
 }
 
-thread_local! {
-    /// Set for the duration of a load that must not publish thumbnails.
-    ///
-    /// A thread-local rather than a parameter because the seam is four calls
-    /// deep through `de_pen_loader`, and threading a flag through a loader
-    /// this pass does not own would be a much larger change for the same
-    /// effect. The scope is one synchronous load on one thread.
-    static SKIP_THUMBNAILS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
-}
-
-fn skip_thumbnails() -> bool {
-    SKIP_THUMBNAILS.with(std::cell::Cell::get)
-}
-
-/// Load a document WITHOUT publishing its thumbnails to the process-global
-/// registry.
-///
-/// For the multi-tenant online daemon: that registry has no tenant dimension
-/// and a load replaces it wholesale, so restoring one account's document would
-/// drop every other account's thumbnails. Online policy disables thumbnails
-/// anyway; this keeps the restore path from reintroducing them.
-pub fn load_editor_state_without_thumbnails(
-    path: &std::path::Path,
-    locale: de_editor_core::Locale,
-) -> Result<EditorState, DocIoError> {
-    SKIP_THUMBNAILS.with(|flag| flag.set(true));
-    let outcome = load_editor_state_with_report(path, locale).map(|loaded| loaded.state);
-    SKIP_THUMBNAILS.with(|flag| flag.set(false));
-    outcome
-}
-
 pub fn load_editor_state_with_report(
     path: &std::path::Path,
     locale: de_editor_core::Locale,
@@ -108,15 +77,6 @@ fn parse_editor_state_source(
         }
     };
     let loaded = canonical.loaded;
-    if skip_thumbnails() {
-        // Drop the pending thumbnail seed BEFORE `EditorState::from_document`
-        // consumes the document, because that is what activates it — and
-        // activation REPLACES the process-global registry wholesale. In a
-        // shared process, restoring one account's tenant would therefore
-        // discard every other account's thumbnails and rebind their ids to
-        // these bytes. See `web_canvas_server::online_policy`.
-        jian_ops_schema::image_thumbs::discard_for_document(&loaded.value);
-    }
     for warning in &loaded.warnings {
         eprintln!("[open] schema warning: {warning:?}");
     }

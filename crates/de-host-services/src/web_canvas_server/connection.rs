@@ -6,33 +6,12 @@
 
 use super::*;
 
-/// Everything one request is served against.
-///
-/// The single-user daemon has exactly one `Mutex<WebCanvasState>` and one
-/// [`SseHub`], so this used to be two arguments. The online daemon has one of
-/// each per account and resolves them from the connection's verified identity
-/// before dispatch, so the pair travels together with the deployment mode that
-/// decides which routes exist at all.
-///
-/// `Local` and `Managed` build exactly the ctx the two arguments used to mean,
-/// and every mode predicate answers `true` for them — the non-online dispatch
-/// below is unchanged.
+/// Everything one request is served against: the daemon's one document
+/// authority, its SSE hub, and the mode it was launched in.
 pub(super) struct ConnCtx<'a> {
     pub(super) state: &'a Mutex<WebCanvasState>,
     pub(super) hub: &'a SseHub,
     pub(super) mode: ServeMode,
-    /// Which MCP tools this connection may see and call. `UNRESTRICTED` for
-    /// the local and managed daemons — the whole catalog, full authority,
-    /// exactly as before capability profiles existed.
-    pub(super) mcp_profile: crate::mcp_serve::tool_profile::McpAccessProfile,
-    /// How this connection's caller authenticated, and what it may do.
-    ///
-    /// `None` for the local and managed daemons, which have no per-request
-    /// identity and are unrestricted — the REST scope gate is skipped whole.
-    pub(super) rest_identity: Option<super::tenant_auth::ResolvedIdentity>,
-    /// Admits document writes until shutdown closes it. `None` for the local
-    /// and managed daemons, whose lifecycle has no flush to protect.
-    pub(super) write_barrier: Option<&'a super::tenant::WriteBarrier>,
 }
 
 /// Handle one connection against the single-user document authority.
@@ -79,25 +58,10 @@ pub(super) fn serve_one_in_mode<S: Read + Write>(
     mode: ServeMode,
 ) -> Result<bool> {
     let req = crate::mcp_serve::read_http_request(stream)?;
-    dispatch(
-        stream,
-        &req,
-        &ConnCtx {
-            state,
-            hub,
-            mode,
-            mcp_profile: crate::mcp_serve::tool_profile::McpAccessProfile::UNRESTRICTED,
-            rest_identity: None,
-            write_barrier: None,
-        },
-    )
+    dispatch(stream, &req, &ConnCtx { state, hub, mode })
 }
 
 /// Route one already-parsed request against `ctx`.
-///
-/// Split from the read so the online accept loop can resolve the identity —
-/// and therefore the tenant this ctx points at — from the request headers
-/// before anything is dispatched.
 pub(super) fn dispatch<S: Read + Write>(
     stream: &mut S,
     req: &crate::mcp_serve::HttpRequest,
@@ -109,13 +73,9 @@ pub(super) fn dispatch<S: Read + Write>(
         let guard = state.lock().unwrap_or_else(|p| p.into_inner());
         (guard.managed_token.clone(), guard.allow_origins.clone())
     };
-    // Online never emits `*`: its requests carry credentials, and a wildcard
-    // plus credentials is what lets any page on the internet read another
-    // account's document. Managed mode keeps its own allowlist echo, and the
-    // local daemon keeps the permissive value it has always used.
-    let cors_origin: Option<String> = if ctx.mode.is_online() {
-        online_policy::online_cors_origin(&allow_origins, req.origin.as_deref())
-    } else if matches!(ctx.mode, ServeMode::Managed) {
+    // Managed mode keeps its own allowlist echo, and the local daemon keeps
+    // the permissive value it has always used.
+    let cors_origin: Option<String> = if matches!(ctx.mode, ServeMode::Managed) {
         cors_origin_for(&allow_origins, req.origin.as_deref(), req.host.as_deref())
     } else {
         Some("*".to_string())
@@ -180,37 +140,8 @@ pub(super) fn dispatch<S: Read + Write>(
         }
     }
     // There is deliberately no managed-mode request-token gate here. Managed
-    // is a single-tenant child process whose authority comes from the local
-    // supervisor's stdin lease and the browser Origin boundary above. Online
-    // mode is unchanged: its accept loop resolves a verified account identity
-    // before constructing `ctx`, and the scope checks immediately below still
-    // constrain that identity on every credentialed route.
-    // Scopes apply to every credentialed route, not just the REST tier and
-    // `/mcp`. They used to be checked inside the `/api/*` branch, which sits
-    // BELOW the specially dispatched routes (AI streams, SSE, figma) — so a
-    // read-only token could drive all of those. Checked here, ahead of every
-    // branch, there is no route left to slip past it.
-    if let Some(identity) = ctx.rest_identity.as_ref() {
-        if let Some(refusal) = super::tool_scopes::check_rest_scope(
-            identity.via,
-            identity.scopes,
-            &req.method,
-            &req.path,
-        ) {
-            crate::mcp_serve::write_mcp_http_response_with_origin(
-                stream,
-                refusal.http_status(),
-                &serde_json::json!({
-                    "ok": false,
-                    "error": refusal.code(),
-                    "message": refusal.to_string(),
-                })
-                .to_string(),
-                cors_origin,
-            )?;
-            return Ok(false);
-        }
-    }
+    // is a single-operator child process whose authority comes from the local
+    // supervisor's stdin lease and the browser Origin boundary above.
     // SSE live-update stream: the browser shell subscribes and re-syncs whenever
     // the document version advances. Subscribe BEFORE reading the current
     // version so no broadcast is missed (a duplicate is harmless — versions are
@@ -248,28 +179,12 @@ pub(super) fn dispatch<S: Read + Write>(
     if req.path.starts_with("/api/") {
         // Parse the whole-document push BEFORE taking the state lock. A push
         // can carry megabytes of embedded images, and parsing it under the
-        // lock stalled every other request to this tenant — including the
+        // lock stalled every other request to this daemon — including the
         // version probe that tells the browser anything changed. Nothing here
         // reads live state; `baseVersion` is deliberately re-checked inside
         // the lock, where it is not a race.
         let pending_push = (req.method == "POST" && req.path == "/api/mcp/document")
-            .then(|| PendingDocumentPush::parse(&req.body, ctx.mode));
-        // A document write must hold a pass for its whole locked segment, so
-        // shutdown cannot snapshot the document between the pass being taken
-        // and the commit landing.
-        let write_pass = match admit_mutation(ctx, pending_push.is_some()) {
-            MutationAdmission::NotAWrite => None,
-            MutationAdmission::Admitted(pass) => pass,
-            MutationAdmission::ShuttingDown => {
-                crate::mcp_serve::write_mcp_http_response_with_origin(
-                    stream,
-                    "503 Service Unavailable",
-                    SHUTTING_DOWN_REST_BODY,
-                    cors_origin,
-                )?;
-                return Ok(false);
-            }
-        };
+            .then(|| PendingDocumentPush::parse(&req.body));
         let reply = {
             let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
             let before = guard.version;
@@ -302,8 +217,6 @@ pub(super) fn dispatch<S: Read + Write>(
             }
             reply
         };
-        // Released only after the commit is visible in the shared state.
-        drop(write_pass);
         crate::mcp_serve::write_mcp_http_response_with_origin(
             stream,
             reply.status,
@@ -315,13 +228,7 @@ pub(super) fn dispatch<S: Read + Write>(
     // JSON-RPC tool dispatch is served ONLY as a POST to `/` or `/mcp`. An
     // unknown path is 404; a known path with the wrong method (e.g. `GET /mcp`)
     // is 405 — never silently dispatched as a tool call.
-    //
-    // The public deployment keeps exactly one spelling: `/` is the site root
-    // there, and making a site root a JSON-RPC endpoint is a trap, so the
-    // alias answers 405 alongside every other wrong-method request to it.
-    let is_jsonrpc_path =
-        req.path == "/mcp" || (req.path == "/" && ctx.mode.allows_root_jsonrpc_alias());
-    if !is_jsonrpc_path && req.path != "/" {
+    if req.path != "/mcp" && req.path != "/" {
         crate::mcp_serve::write_mcp_http_response_with_origin(
             stream,
             "404 Not Found",
@@ -330,7 +237,7 @@ pub(super) fn dispatch<S: Read + Write>(
         )?;
         return Ok(false);
     }
-    if !is_jsonrpc_path || req.method != "POST" {
+    if req.method != "POST" {
         crate::mcp_serve::write_mcp_http_response_with_origin(
             stream,
             "405 Method Not Allowed",
@@ -342,33 +249,25 @@ pub(super) fn dispatch<S: Read + Write>(
     // Token-authenticated graceful shutdown (`de stop`): same body-carried
     // token contract as the `--mcp-http` server. Managed mode accepts the
     // startup-handshake token here for lifecycle compatibility, but never as
-    // an ordinary request header; local/online operator shutdown continues to
-    // use only DESIGN_EDITOR_MCP_TOKEN. A stale file, recycled pid, or random
+    // an ordinary request header; local operator shutdown continues to use
+    // only DESIGN_EDITOR_MCP_TOKEN. A stale file, recycled pid, or random
     // client therefore cannot shut the daemon down.
-    //
-    // Online keeps this branch ONLY because the token comes from the
-    // operator's process environment and never from an account credential —
-    // it is the operations channel, not a client-reachable route. The
-    // env-token check below is what makes that true: with no
-    // `DESIGN_EDITOR_MCP_TOKEN` set there is no token that satisfies it.
     let operator_token = crate::mcp_serve::headless_token_from_env();
-    if ctx.mode.allows_generic_shutdown() || operator_token.is_some() {
-        let managed_shutdown = matches!(ctx.mode, ServeMode::Managed)
-            .then_some(managed_lifecycle_token.as_deref())
-            .flatten()
-            .and_then(|token| crate::mcp_serve::shutdown_request_id(&req.body, token));
-        let operator_shutdown = operator_token
-            .as_deref()
-            .and_then(|token| crate::mcp_serve::shutdown_request_id(&req.body, token));
-        if let Some(id) = managed_shutdown.or(operator_shutdown) {
-            crate::mcp_serve::write_mcp_http_response_with_origin(
-                stream,
-                "200 OK",
-                &crate::mcp_serve::shutdown_ok_response(&id),
-                cors_origin,
-            )?;
-            return Ok(true);
-        }
+    let managed_shutdown = matches!(ctx.mode, ServeMode::Managed)
+        .then_some(managed_lifecycle_token.as_deref())
+        .flatten()
+        .and_then(|token| crate::mcp_serve::shutdown_request_id(&req.body, token));
+    let operator_shutdown = operator_token
+        .as_deref()
+        .and_then(|token| crate::mcp_serve::shutdown_request_id(&req.body, token));
+    if let Some(id) = managed_shutdown.or(operator_shutdown) {
+        crate::mcp_serve::write_mcp_http_response_with_origin(
+            stream,
+            "200 OK",
+            &crate::mcp_serve::shutdown_ok_response(&id),
+            cors_origin,
+        )?;
+        return Ok(true);
     }
     // `debug_screenshot` for `--serve-web`: the browser shell mirrors this
     // daemon's document, so the daemon can satisfy the live screenshot tool from
@@ -395,36 +294,6 @@ pub(super) fn dispatch<S: Read + Write>(
         )?;
         return Ok(false);
     }
-    // A `/mcp` call that will mutate the document is admitted through the same
-    // barrier the REST push uses. `tool_profile` already knows which tools
-    // write, so the decision is made BEFORE dispatch — the alternative is
-    // discovering it from an `EditorCommand` the tool has already produced,
-    // which is after the point where refusing is still honest.
-    let mcp_write = de_mcp::parse_tool_call(&req.body)
-        .is_some_and(|call| crate::mcp_serve::tool_profile::tool_writes(&call.tool));
-    let mcp_write_pass = match admit_mutation(ctx, mcp_write) {
-        MutationAdmission::NotAWrite => None,
-        MutationAdmission::Admitted(pass) => pass,
-        MutationAdmission::ShuttingDown => {
-            // A tools/call error envelope, not a transport failure: an MCP
-            // client must be able to read the refusal and keep its session.
-            let refusal = de_mcp::parse_tool_call(&req.body).map(|call| {
-                de_mcp::tool_response_to_json(&de_mcp::ToolResponse::Err {
-                    id: call.id.clone(),
-                    code: de_mcp::ToolErrorCode::ToolFailed,
-                    message: "shutting-down: this daemon is stopping and cannot accept writes"
-                        .to_string(),
-                })
-            });
-            crate::mcp_serve::write_mcp_http_response_with_origin(
-                stream,
-                "200 OK",
-                refusal.as_deref().unwrap_or(SHUTTING_DOWN_REST_BODY),
-                cors_origin,
-            )?;
-            return Ok(false);
-        }
-    };
     // JSON-RPC `/mcp` dispatch against the in-memory document. A mutating apply
     // bumps the sync version, broadcast to SSE subscribers so the browser shell
     // sees JSON-RPC-driven changes too.
@@ -439,10 +308,9 @@ pub(super) fn dispatch<S: Read + Write>(
         // call against a headless `de start` daemon also relays the
         // radar-scan to the browser shell) is tracked as follow-up
         // scope, not part of this pass.
-        let response = crate::mcp_serve::process_message_with_applier_profiled(
+        let response = crate::mcp_serve::process_message_with_applier(
             &mut guard.editor,
             &req.body,
-            ctx.mcp_profile,
             |_tool_name, editor, cmd| {
                 let ok = editor.apply(cmd.clone());
                 if ok {
@@ -463,8 +331,6 @@ pub(super) fn dispatch<S: Read + Write>(
         }
         response
     };
-    // Released only once the commit is visible in the shared state.
-    drop(mcp_write_pass);
     let status = if response.is_empty() {
         "202 Accepted"
     } else {
@@ -472,39 +338,6 @@ pub(super) fn dispatch<S: Read + Write>(
     };
     crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &response, cors_origin)?;
     Ok(false)
-}
-
-/// The body a REST write gets once shutdown has closed the barrier.
-const SHUTTING_DOWN_REST_BODY: &str = r#"{"ok":false,"error":"shutting-down","message":"this daemon is stopping and cannot accept writes"}"#;
-
-/// Whether a mutation may proceed, and the pass that proves it is in flight.
-pub(super) enum MutationAdmission<'a> {
-    /// Not a document mutation — nothing to admit.
-    NotAWrite,
-    /// Admitted. `None` when this deployment runs no barrier (local/managed).
-    Admitted(Option<super::tenant::WritePass<'a>>),
-    /// The daemon is stopping and will not durably accept this write.
-    ShuttingDown,
-}
-
-/// The single admission point for every document mutation.
-///
-/// Both the REST push and the `/mcp` write dispatch go through here, so a
-/// mutation route added later cannot quietly skip the barrier — which is
-/// exactly how `/mcp` came to be writing during shutdown while REST was
-/// refused.
-pub(super) fn admit_mutation<'a>(ctx: &ConnCtx<'a>, is_write: bool) -> MutationAdmission<'a> {
-    if !is_write {
-        return MutationAdmission::NotAWrite;
-    }
-    let Some(barrier) = ctx.write_barrier else {
-        // Local and managed daemons have no flush to protect.
-        return MutationAdmission::Admitted(None);
-    };
-    match barrier.enter() {
-        Some(pass) => MutationAdmission::Admitted(Some(pass)),
-        None => MutationAdmission::ShuttingDown,
-    }
 }
 
 /// Stream Server-Sent Events to a subscribed client: write the SSE headers,

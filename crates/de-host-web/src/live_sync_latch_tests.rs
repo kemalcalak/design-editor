@@ -1,22 +1,7 @@
-//! Guards for the live-sync latches that need no live shell: the refused
-//! credential latch and the undoable-apply rule behind
-//! `replace_document_from_sync`.
+//! Guards for the live-sync rules that need no live shell: the undoable-apply
+//! rule behind `replace_document_from_sync`.
 //!
 //! Split out of `live_sync_glue.rs` at the 800-line cap.
-
-mod auth_latch_tests {
-    use crate::live_sync_glue::{auth_is_invalid, note_auth_invalid};
-
-    #[test]
-    fn a_refused_credential_stops_the_tab_pushing() {
-        assert!(!auth_is_invalid(), "a healthy tab pushes");
-
-        // The document on screen belongs to whoever WAS signed in; pushing it
-        // after a switch would write one account's work into another's tenant.
-        note_auth_invalid();
-        assert!(auth_is_invalid());
-    }
-}
 
 mod undoable_apply_tests {
     use de_editor_core::web_sync::WebSyncClient;

@@ -79,7 +79,7 @@ impl std::io::Write for FailingStream {
 #[test]
 fn a_subscriber_that_never_reads_keeps_exactly_one_pending_tick() {
     // The unbounded-queue bug: a paused tab accumulated one entry per
-    // mutation, in a process shared with every other account.
+    // mutation.
     let hub = SseHub::default();
     let slot = hub.subscribe();
     for version in 0..1000 {
@@ -104,7 +104,7 @@ fn a_dropped_subscriber_is_pruned_without_signalling_anything() {
 
 #[test]
 fn subscribing_prunes_dead_slots_even_when_nothing_is_ever_broadcast() {
-    // A tenant whose clients all disconnected and which never publishes again
+    // A hub whose clients all disconnected and which never publishes again
     // would otherwise accumulate one dead `Weak` per reconnect, forever.
     let hub = SseHub::default();
     for _ in 0..100 {

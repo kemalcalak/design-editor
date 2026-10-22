@@ -91,15 +91,7 @@ pub fn post_ai_stream_to(
     on_event: Rc<dyn Fn(AiEvent)>,
 ) -> Result<AiStreamHandle, wasm_bindgen::JsValue> {
     let xhr = web_sys::XmlHttpRequest::new()?;
-    // Built here rather than by the caller: this transport rolls its own XHR
-    // for SSE-over-progress-events, so it does not pass through the
-    // `live_sync` helpers that stamp the tenant on every other request. A
-    // shared page would otherwise stream AI turns against the caller's own
-    // document instead of the one on screen.
-    let url = crate::daemon_base::append_tenant_param(
-        &format!("{base}{endpoint}"),
-        crate::daemon_base::tenant_param().as_deref(),
-    );
+    let url = format!("{base}{endpoint}");
     xhr.open_with_async("POST", &url, true)?;
     crate::live_sync::attach_daemon_headers(&xhr, &url);
     xhr.set_request_header("Content-Type", "application/json")?;

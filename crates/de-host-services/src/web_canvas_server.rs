@@ -97,11 +97,8 @@ pub struct WebCanvasState {
     /// no-op `{"ok":true,"skipped":true,"version":<current>}` reply instead
     /// of touching the document again.
     pub(crate) reset_consumed: bool,
-    /// How this daemon is deployed. `Local` for every existing invocation;
-    /// `Online` is the only value that refuses anything, and it is what the
-    /// REST tier consults for the routes that would otherwise share one
-    /// process's filesystem, settings file and device session between
-    /// mutually untrusting accounts. See `online_policy.rs`.
+    /// How this daemon is deployed (`Local` or `Managed`); reported to the
+    /// browser as `serveMode`. See `serve_mode.rs`.
     pub(crate) mode: ServeMode,
 }
 
@@ -154,23 +151,6 @@ impl WebCanvasState {
             reset_consumed: false,
             mode: ServeMode::Local,
         }
-    }
-
-    /// One online account's document authority.
-    ///
-    /// Separate from the loader-backed constructors on purpose: a tenant is
-    /// never backed by a local path (the online mode serves no local files),
-    /// and its browser-supplied credentials never reach the process settings
-    /// file, so it always carries the browser-only persistence policy.
-    pub(crate) fn new_for_tenant(editor: EditorState, port: u16) -> Self {
-        let mut state = Self::new_with_path_and_policy(
-            editor,
-            port,
-            None,
-            WebCredentialPersistence::BrowserOnly,
-        );
-        state.mode = ServeMode::Online;
-        state
     }
 
     /// Replace the whole document (an already-loaded `POST /api/mcp/document`
@@ -229,7 +209,7 @@ impl WebCanvasState {
         body: &str,
         base_version_override: Option<u64>,
     ) -> Result<PushOutcome> {
-        let push = PendingDocumentPush::parse(body, self.mode)?;
+        let push = PendingDocumentPush::parse(body)?;
         self.apply_prepared_document_push(push, base_version_override)
     }
 
@@ -328,13 +308,6 @@ where
     // `String` the caller would have to re-render.
     F: FnOnce(&EditorState) -> std::result::Result<(), crate::settings_io::SettingsIoError>,
 {
-    // There is ONE settings file per process. In a shared deployment a
-    // settings write would overwrite every other account's providers and
-    // credentials with this account's, so nothing is persisted: the change
-    // still lands in this tenant's in-memory editor and dies with it.
-    if !state.mode.allows_settings_persistence() {
-        return reply;
-    }
     if method == "POST" && path == "/api/settings/credentials" && reply.status == "200 OK" {
         if save_credentials(&state.editor).is_err() {
             if let Some(settings) = credential_settings_before {
@@ -385,11 +358,8 @@ pub fn handle_web_canvas_request(
             // `{running,port,localIp}` matches TS `server.get.ts`; the daemon
             // binds 127.0.0.1 (localhost-only) so localIp is loopback. Extra
             // `server`/`mode` fields are additive diagnostics.
-            // `serveMode` is additive: the browser reads it to learn whether
-            // the daemon is the sole sequencer for this document (online) or
-            // merely a peer holding the operator's file (local/managed). That
-            // decides whether a sync conflict may be auto-resolved — see
-            // `de-host-web/src/live_sync_glue.rs::auto_resolve_is_safe`.
+            // `serveMode` is an additive diagnostic naming how the daemon
+            // was launched (`local` / `managed`).
             body: format!(
                 r#"{{"running":true,"port":{},"localIp":"127.0.0.1","server":"design-editor-mcp","mode":"web-canvas","serveMode":"{}"}}"#,
                 state.port,
@@ -448,29 +418,11 @@ pub fn handle_web_canvas_request(
             // from lives HERE — the browser polls this and mirrors it
             // into its own registry (agent_indicators::apply_remote) so
             // agent borders / badges / reveal animations show on web.
-            //
-            // That registry has no tenant dimension, so a shared deployment
-            // relays the empty projection instead of showing one account the
-            // shape of another account's design run.
             status: "200 OK",
-            body: if state.mode.allows_agent_indicator_relay() {
-                de_editor_core::agent_indicators::relay_json()
-            } else {
-                online_policy::EMPTY_INDICATOR_RELAY.to_string()
-            },
+            body: de_editor_core::agent_indicators::relay_json(),
         },
-        // The wasm shell posts a sync-reset on every mount. Locally that
-        // means "the browser just booted, drop the transient document";
-        // online it would wipe the document the returning account left
-        // behind, so the route answers with the already-reset shape — the
-        // same body a second local reset produces — and touches nothing.
-        ("POST", "/api/mcp/sync-reset") if state.mode.sync_reset_is_noop() => WebReply {
-            status: "200 OK",
-            body: format!(
-                r#"{{"ok":true,"skipped":true,"version":{}}}"#,
-                state.version
-            ),
-        },
+        // The wasm shell posts a sync-reset on every mount: "the browser
+        // just booted, drop the transient document".
         ("POST", "/api/mcp/sync-reset") => match state.reset_document_guarded() {
             Ok(outcome) if outcome.skipped => WebReply {
                 status: "200 OK",
@@ -517,14 +469,6 @@ pub fn handle_web_canvas_request(
             }
         }
         ("POST", "/api/mcp/selection") => apply_selection_sync(body, state),
-        // Both file routes touch the daemon host's filesystem, which in a
-        // shared process means every account reading and writing through the
-        // service account's paths. Refused before the handler, not inside it.
-        ("POST", "/api/file/save" | "/api/file/open-recent")
-            if !state.mode.allows_local_file_routes() =>
-        {
-            online_policy::refusal_reply(online_policy::OnlineRouteRefusal::LocalFileAccess)
-        }
         ("POST", "/api/file/save") => save_current_file(body, state),
         ("POST", "/api/file/open-recent") => open_recent_file(body, state),
         ("POST", "/api/export/pdf") => export_pdf_download(body, state),
@@ -599,47 +543,19 @@ mod connection;
 mod connection_ai_routes;
 mod doc_routes;
 mod export_routes;
-mod hub_verifier;
-pub mod online_policy;
-mod online_run_loop;
 mod origin_guard;
 mod run_loop;
+pub mod serve_mode;
 mod serve_options;
-mod share_routes;
-pub mod tenant;
-pub mod tenant_auth;
-pub mod tenant_store;
-mod tool_scopes;
 
 pub use connect_routes::*;
 use connection::*;
 use doc_routes::*;
 use export_routes::*;
-pub use hub_verifier::HubVerifier;
-pub use online_policy::{OnlineRouteRefusal, ServeMode};
-pub use online_run_loop::*;
 use origin_guard::*;
 pub use run_loop::*;
+pub use serve_mode::ServeMode;
 pub use serve_options::*;
-pub use share_routes::ShareError;
-pub use tenant::{TenantError, TenantLease, TenantLimits, TenantRegistry, WriteBarrier, WritePass};
-pub use tenant_auth::{
-    IdentityVerifier, OnlineAuthError, PresentedCredentials, ResolvedIdentity, StaticVerifier,
-};
-pub use tenant_store::{TenantStore, TenantStoreError};
-
-/// Serialises the tests that mutate `jian_ops_schema::image_thumbs`.
-///
-/// The registry is process-global and both `restore_snapshot` and
-/// `clear_registry` replace the whole table, so two such tests running in
-/// parallel wipe each other's entries — a failure with nothing to do with what
-/// either test asserts. Unique ids are not enough; the replacement is
-/// wholesale.
-#[cfg(test)]
-pub(crate) fn lock_image_thumb_registry() -> std::sync::MutexGuard<'static, ()> {
-    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    LOCK.lock().unwrap_or_else(|poison| poison.into_inner())
-}
 
 #[cfg(test)]
 #[path = "web_canvas_server_tests.rs"]

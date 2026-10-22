@@ -93,10 +93,7 @@ pub fn get(url: &str, on_response: Rc<dyn Fn(String)>) -> bool {
     let Ok(xhr) = web_sys::XmlHttpRequest::new() else {
         return false;
     };
-    if xhr
-        .open_with_async("GET", &crate::daemon_base::with_tenant_param(url), true)
-        .is_err()
-    {
+    if xhr.open_with_async("GET", url, true).is_err() {
         return false;
     }
     attach_daemon_headers(&xhr, url);
@@ -122,10 +119,7 @@ pub fn get_with_status(url: &str, on_response: Rc<dyn Fn(u16, String)>) -> bool 
     let Ok(xhr) = web_sys::XmlHttpRequest::new() else {
         return false;
     };
-    if xhr
-        .open_with_async("GET", &crate::daemon_base::with_tenant_param(url), true)
-        .is_err()
-    {
+    if xhr.open_with_async("GET", url, true).is_err() {
         return false;
     }
     attach_daemon_headers(&xhr, url);
@@ -152,10 +146,7 @@ pub fn post_json(url: &str, body: &str, on_response: Option<Rc<dyn Fn(String)>>)
     let Ok(xhr) = web_sys::XmlHttpRequest::new() else {
         return false;
     };
-    if xhr
-        .open_with_async("POST", &crate::daemon_base::with_tenant_param(url), true)
-        .is_err()
-    {
+    if xhr.open_with_async("POST", url, true).is_err() {
         return false;
     }
     attach_daemon_headers(&xhr, url);
@@ -182,10 +173,7 @@ pub fn post_json_with_status(url: &str, body: &str, on_response: Rc<dyn Fn(u16, 
     let Ok(xhr) = web_sys::XmlHttpRequest::new() else {
         return false;
     };
-    if xhr
-        .open_with_async("POST", &crate::daemon_base::with_tenant_param(url), true)
-        .is_err()
-    {
+    if xhr.open_with_async("POST", url, true).is_err() {
         return false;
     }
     attach_daemon_headers(&xhr, url);

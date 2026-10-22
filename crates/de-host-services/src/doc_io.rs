@@ -55,10 +55,7 @@ pub use clean_copy::{
 pub use error::DocIoError;
 #[cfg(test)]
 use load::looks_like_legacy_doc_payload;
-pub use load::{
-    load_editor_state, load_editor_state_from_source, load_editor_state_with_report,
-    load_editor_state_without_thumbnails,
-};
+pub use load::{load_editor_state, load_editor_state_from_source, load_editor_state_with_report};
 pub use load_report::{DocumentLoadReport, LoadedEditorState};
 
 /// Legacy sidecar path for a given `.op` / `.pen` file —
@@ -85,25 +82,6 @@ pub fn save_to_path(state: &EditorState, path: &std::path::Path) -> Result<(), D
         &state.doc,
         de_pen_loader::EditorMeta::from_state(state),
         &thumbnails,
-        path,
-    )
-}
-
-/// Save WITHOUT capturing the process-global thumbnail registry.
-///
-/// For the multi-tenant online daemon. `capture_snapshot` reads a registry
-/// with no tenant dimension, so an eviction would write whatever account
-/// happened to have activated last into THIS account's file — persisting
-/// another tenant's image data. Online policy disables thumbnails anyway, so
-/// the file simply carries none.
-pub fn save_to_path_without_thumbnails(
-    state: &EditorState,
-    path: &std::path::Path,
-) -> Result<(), DocIoError> {
-    save_document_with_thumbnails_to_path(
-        &state.doc,
-        de_pen_loader::EditorMeta::from_state(state),
-        &jian_ops_schema::image_thumbs::ImageThumbSnapshot::default(),
         path,
     )
 }

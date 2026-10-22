@@ -230,15 +230,7 @@ fn poll_version<C: RepaintContext + 'static>(
     let base_owned = base.to_string();
     let fetch_busy = fetch_busy.clone();
     let last_selection_key = last_selection_key.clone();
-    let on_version: Rc<dyn Fn(u16, String)> = Rc::new(move |status: u16, body: String| {
-        // A refused credential is the signal that this tab no longer speaks
-        // for the account whose document it is showing. Treating it as "no
-        // version" — which is what an untyped body read does — is what let the
-        // previous account's document sit on screen indefinitely.
-        if matches!(status, 401 | 403) {
-            note_auth_invalid();
-            return;
-        }
+    let on_version: Rc<dyn Fn(u16, String)> = Rc::new(move |_status: u16, body: String| {
         let Some(version) = WebSyncClient::parse_version_probe(&body) else {
             return; // daemon down / non-JSON error body — retry next tick
         };
@@ -467,13 +459,6 @@ fn push_document_if_changed<C: RepaintContext + 'static>(
         // from the scalar baseline, not mistaken for a content change.
         reasons.editor_meta
     };
-    // The daemon refused this tab's credential. Whatever is on screen belongs
-    // to whoever was signed in before, so pushing it now would write one
-    // account's work into whichever tenant the new credential resolves to.
-    // Held until the identity reset rebuilds the tab.
-    if auth_is_invalid() {
-        return;
-    }
     if !should_push {
         // Bytes already match the daemon baseline (e.g. a generation-only
         // replace — same content, new generation): no push to send, but the
@@ -656,13 +641,6 @@ mod tests {
 }
 
 thread_local! {
-    /// Raised when the daemon answered a sync request 401/403.
-    ///
-    /// A tab whose credential stopped being accepted must stop pushing: the
-    /// document on screen belongs to whoever WAS signed in, and pushing it
-    /// after a switch would write one account's work into another's tenant.
-    pub(super) static AUTH_INVALID: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
-
     /// The mounted editor's sync controller, exposed weakly so File → Save can
     /// consume the daemon's returned version without creating an ownership
     /// cycle or threading sync state through every DOM file-action callback.
@@ -675,9 +653,6 @@ pub(crate) use live_sync_controller::{acknowledge_daemon_save, SharedSync, SyncC
 // Spine-local: the two identity pairs every gating decision here is keyed on.
 use live_sync_controller::{current_oversize_identity, current_pair};
 
-#[path = "live_sync_identity.rs"]
-mod live_sync_identity;
-pub(crate) use live_sync_identity::{auth_is_invalid, note_auth_invalid};
 // Lives here rather than beside `lib.rs`'s modules because the two paths it
 // drives are private submodules of this spine.
 #[cfg(test)]

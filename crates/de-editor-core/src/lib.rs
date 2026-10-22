@@ -132,7 +132,6 @@ pub mod scene_template_prompt;
 pub mod scene_vars;
 pub mod selection;
 pub mod selection_resolve;
-pub mod share_routes;
 pub mod state;
 pub mod statusbar_state;
 pub mod svg_import;

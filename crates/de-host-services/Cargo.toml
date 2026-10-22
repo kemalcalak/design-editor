@@ -78,7 +78,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 base64 = "0.22"
 getrandom = "0.3"
-sha2 = "0.10"
 tracing = { workspace = true }
 signal-hook = "0.3"
 
@@ -94,10 +93,8 @@ skia-safe = { version = "0.97.0", default-features = false, features = [
   "pdf",
 ] }
 
-# Unix signal handling for the online daemon's controlled shutdown. Already in
-# the dependency graph transitively; named here so the SIGTERM handler can use
-# it directly. Unix-only — the online daemon is a container deployment.
-[target.'cfg(unix)'.dependencies]
-libc = "0.2"
-
 [dev-dependencies]
+
+# Process-liveness probes in the subprocess / startup tests (`libc::kill`).
+[target.'cfg(unix)'.dev-dependencies]
+libc = "0.2"

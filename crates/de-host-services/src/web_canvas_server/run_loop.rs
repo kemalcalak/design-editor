@@ -26,12 +26,6 @@ use super::*;
 /// to the bound address. Non-managed mode is untouched: no token, no handshake
 /// output, no stdin thread.
 pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
-    // The public multi-account daemon is a different accept loop: it resolves
-    // a tenant per connection instead of sharing one document. Everything
-    // below this line is the single-document daemon, unchanged.
-    if options.online {
-        return online_run_loop::run_online_web_canvas(options);
-    }
     let mode = options.mode();
     let ServeWebOptions {
         port,
@@ -39,7 +33,6 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         host,
         managed,
         allow_origins,
-        online: _,
         config_root: _,
     } = options;
     let current_path = path.clone();

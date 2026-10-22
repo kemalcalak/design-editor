@@ -17,20 +17,9 @@
 #   docker build -f Dockerfile.web-rust --build-arg WEB_BUNDLE_SOURCE=copy \
 #     -t design-editor-web-rust .
 #
-# Run (single-user, the historical default):
+# Run:
 #   docker run -p 3100:3100 design-editor-web-rust
 #   # then open http://localhost:3100/
-#
-# Run (multi-account online mode, behind a reverse proxy on one public origin):
-#   docker run -p 3100:3100 \
-#     -e DESIGN_EDITOR_SERVE_MODE=online \
-#     -e DESIGN_EDITOR_HUB_BASE_URL=http://backend:8080 \
-#     -e DESIGN_EDITOR_HUB_INTERNAL_AUTH="$(cat /run/secrets/de-canvas-internal-auth)" \
-#     -e DESIGN_EDITOR_WEB_ALLOWED_ORIGINS=https://hub.example.com \
-#     design-editor-web-rust
-#   Every request is then attributed to a verified op-hub account and served
-#   against that account's own document. See `web_canvas_server/online_policy.rs`
-#   for what online mode refuses, and `hub_auth_client.rs` for the identity call.
 #
 # Why wasm-in-Docker is the default (vs. always COPY-artifact): the production
 # `canvaskit` feature is pure Rust + web_sys + serde — it needs NO emscripten /
@@ -167,11 +156,7 @@ RUN mkdir -p /out/web-bundle && \
 FROM debian:bookworm-slim@sha256:abd67ffcfa541b485a3dff59865ab629aa048a6c613e639d36e7456b0b229241 AS runtime
 
 ARG SERVE_PORT=3100
-# `local` keeps the historical single-user daemon; `online` adds `--online`,
-# the multi-account mode. Set at run time, so one image serves both.
-ARG SERVE_MODE=local
-ENV DESIGN_EDITOR_SERVE_PORT=${SERVE_PORT} \
-    DESIGN_EDITOR_SERVE_MODE=${SERVE_MODE}
+ENV DESIGN_EDITOR_SERVE_PORT=${SERVE_PORT}
 
 RUN sed -ri \
       -e 's|^URIs: http://deb.debian.org/debian$|URIs: http://snapshot.debian.org/archive/debian/20260803T000000Z|' \
@@ -195,20 +180,11 @@ WORKDIR /app
 COPY --from=builder --chown=10001:10001 /src/target/release/de-host-web-server /app/de-host-web-server
 COPY --from=builder --chown=10001:10001 /out/web-bundle /app/web-bundle
 
-# The daemon writes nothing outside /tmp in online mode (settings persistence
-# is refused there), so it runs unprivileged and the image can be mounted
-# read-only by the orchestrator.
-# The online data directory, created with the runtime owner so a fresh named
-# volume inherits that ownership and mode on its first mount. The daemon probes
-# it at start-up and refuses to run if it is not writable.
-RUN install -d -o 10001 -g 10001 -m 0700 /data
-
 USER 10001:10001
 
 EXPOSE ${SERVE_PORT}
 
-# `/` is the one route served without a credential in every mode, so it is the
-# only probe that works for both `local` and `online`.
+# `/` is served without a credential, so it is the health probe.
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=6 \
     CMD wget --quiet --output-document=/dev/null \
         "http://127.0.0.1:${DESIGN_EDITOR_SERVE_PORT}/" || exit 1
@@ -220,5 +196,4 @@ STOPSIGNAL SIGTERM
 # reverse proxy for anything beyond a trusted network. The port is taken from
 # the build-time SERVE_PORT (baked into DESIGN_EDITOR_SERVE_PORT); `sh -c` lets the
 # env var expand at container start.
-CMD ["sh", "-c", "if [ \"${DESIGN_EDITOR_SERVE_MODE}\" = online ]; then set -- --online; else set --; fi; \
-exec /app/de-host-web-server --serve-web \"${DESIGN_EDITOR_SERVE_PORT}\" --host 0.0.0.0 \"$@\""]
+CMD ["sh", "-c", "exec /app/de-host-web-server --serve-web \"${DESIGN_EDITOR_SERVE_PORT}\" --host 0.0.0.0"]

@@ -17,13 +17,9 @@ fn console_warn(message: &str) {
     web_sys::console::warn_1(&JsValue::from_str(message));
 }
 
-fn identity_is_current(issued_epoch: u64) -> bool {
-    issued_epoch == crate::identity_epoch::epoch()
-}
-
-/// Drain every picker-triggered refresh. Each callback carries both the
-/// account epoch and the core request generation/config snapshot, so a result
-/// from an old account or an edited credential can never populate the picker.
+/// Drain every picker-triggered refresh. Each callback carries the core
+/// request generation/config snapshot, so a result for an edited credential
+/// can never populate the picker.
 pub(crate) fn drain_pending_builtin_model_discovery<C: RepaintContext + 'static>(
     inner: &InnerRc<C>,
 ) {
@@ -67,14 +63,10 @@ fn start_request<C: RepaintContext + 'static>(
     expected: BuiltinAgentConfig,
 ) {
     let body = discovery_request_json(&request, &expected);
-    let issued_epoch = crate::identity_epoch::epoch();
     let request_for_response = request.clone();
     let expected_for_response = expected.clone();
     let inner_for_response = inner.clone();
     let callback: Rc<dyn Fn(u16, String)> = Rc::new(move |status, body| {
-        if !identity_is_current(issued_epoch) {
-            return;
-        }
         let mut context = inner_for_response.borrow_mut();
         if apply_response(
             context.host_mut().editor_state_mut(),
@@ -370,17 +362,5 @@ mod tests {
                 .map(|catalog| catalog.phase),
             Some(de_editor_core::BuiltinModelCatalogPhase::Error)
         );
-    }
-
-    #[test]
-    fn identity_epoch_rejects_a_previous_accounts_callback() {
-        crate::identity_epoch::reset_for_test();
-        crate::identity_epoch::observe_subject(Some("alice"));
-        let issued_epoch = crate::identity_epoch::epoch();
-        assert!(identity_is_current(issued_epoch));
-
-        crate::identity_epoch::observe_subject(Some("bob"));
-
-        assert!(!identity_is_current(issued_epoch));
     }
 }
