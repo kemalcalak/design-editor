@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "场景选择指南长图",
+  "name": "scenario-guide-long",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "场景选择指南长图",
+      "name": "scenario-guide-long",
       "width": 1080,
       "height": 2723,
       "layout": "vertical",
@@ -67,7 +67,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -89,7 +89,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "判定标签",
+              "name": "verdict-tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -110,9 +110,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "判定文字",
-                  "content": "场景指南 · 做图",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "verdict-text",
+                  "content": "Scenario guide · Visuals",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 700,
                   "fill": [
@@ -131,9 +131,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "这次该套模板\n还是找人做",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Use a template,\nor hire a designer?",
+              "fontFamily": "Inter",
               "fontSize": 66,
               "fontWeight": 700,
               "fill": [
@@ -150,9 +150,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "不用比参数——在下面七行里找到你现在这一行就行。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Skip the spec sheets: just find your row among the seven below.",
+              "fontFamily": "Inter",
               "fontSize": 27,
               "fontWeight": 400,
               "fill": [
@@ -171,7 +171,7 @@
         {
           "type": "frame",
           "id": "f18",
-          "name": "02 候选者",
+          "name": "02-options",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -188,7 +188,7 @@
             {
               "type": "frame",
               "id": "f17",
-              "name": "候选行",
+              "name": "option-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -200,7 +200,7 @@
                 {
                   "type": "frame",
                   "id": "f11",
-                  "name": "候选者",
+                  "name": "option",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -216,7 +216,7 @@
                     {
                       "type": "rectangle",
                       "id": "r7",
-                      "name": "候选顶条",
+                      "name": "option-top-bar",
                       "width": "fill_container",
                       "height": 8,
                       "fill": [
@@ -229,7 +229,7 @@
                     {
                       "type": "frame",
                       "id": "f10",
-                      "name": "候选体",
+                      "name": "option-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -246,9 +246,9 @@
                         {
                           "type": "text",
                           "id": "t8",
-                          "name": "候选名",
-                          "content": "套模板",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-name",
+                          "content": "Template",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 700,
                           "fill": [
@@ -265,9 +265,9 @@
                         {
                           "type": "text",
                           "id": "t9",
-                          "name": "候选说明",
-                          "content": "现成版式，改文案就能发",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-desc",
+                          "content": "Ready-made layout; swap the copy and post",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -290,7 +290,7 @@
                 {
                   "type": "frame",
                   "id": "f16",
-                  "name": "候选者",
+                  "name": "option",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -306,7 +306,7 @@
                     {
                       "type": "rectangle",
                       "id": "r12",
-                      "name": "候选顶条",
+                      "name": "option-top-bar",
                       "width": "fill_container",
                       "height": 8,
                       "fill": [
@@ -319,7 +319,7 @@
                     {
                       "type": "frame",
                       "id": "f15",
-                      "name": "候选体",
+                      "name": "option-body",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -336,9 +336,9 @@
                         {
                           "type": "text",
                           "id": "t13",
-                          "name": "候选名",
-                          "content": "找设计师",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-name",
+                          "content": "Designer",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 700,
                           "fill": [
@@ -355,9 +355,9 @@
                         {
                           "type": "text",
                           "id": "t14",
-                          "name": "候选说明",
-                          "content": "从零定制，含一轮沟通",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-desc",
+                          "content": "Custom from scratch, one feedback round included",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 400,
                           "fill": [
@@ -384,7 +384,7 @@
         {
           "type": "frame",
           "id": "f66",
-          "name": "03 七行",
+          "name": "03-seven-rows",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -401,7 +401,7 @@
             {
               "type": "frame",
               "id": "f64",
-              "name": "区块头",
+              "name": "section-head",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -412,7 +412,7 @@
                 {
                   "type": "rectangle",
                   "id": "r61",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -425,9 +425,9 @@
                 {
                   "type": "text",
                   "id": "t62",
-                  "name": "区块标题",
-                  "content": "七种处境",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Seven situations",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -444,9 +444,9 @@
                 {
                   "type": "text",
                   "id": "t63",
-                  "name": "区块说明",
-                  "content": "先看左边那句是不是你，再看右边的标签。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-desc",
+                  "content": "Check whether the left side is you, then read the tag on the right.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -465,7 +465,7 @@
             {
               "type": "frame",
               "id": "f65",
-              "name": "判定列表",
+              "name": "verdict-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -476,7 +476,7 @@
                 {
                   "type": "frame",
                   "id": "f24",
-                  "name": "判定项",
+                  "name": "verdict-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -496,7 +496,7 @@
                     {
                       "type": "frame",
                       "id": "f22",
-                      "name": "处境行",
+                      "name": "situation-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -508,9 +508,9 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "处境",
-                          "content": "三天内就要上线",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "situation",
+                          "content": "Launching within three days",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
                           "fill": [
@@ -527,7 +527,7 @@
                         {
                           "type": "frame",
                           "id": "f20",
-                          "name": "判定标签",
+                          "name": "verdict-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -548,9 +548,9 @@
                             {
                               "type": "text",
                               "id": "t21",
-                              "name": "判定文字",
-                              "content": "套模板",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "verdict-text",
+                              "content": "Template",
+                              "fontFamily": "Inter",
                               "fontSize": 25,
                               "fontWeight": 700,
                               "fill": [
@@ -571,9 +571,9 @@
                     {
                       "type": "text",
                       "id": "t23",
-                      "name": "理由",
-                      "content": "设计师光第一稿就要三天。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "reason",
+                      "content": "A designer needs three days for the first draft alone.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -602,7 +602,7 @@
                 {
                   "type": "frame",
                   "id": "f30",
-                  "name": "判定项",
+                  "name": "verdict-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -622,7 +622,7 @@
                     {
                       "type": "frame",
                       "id": "f28",
-                      "name": "处境行",
+                      "name": "situation-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -634,9 +634,9 @@
                         {
                           "type": "text",
                           "id": "t25",
-                          "name": "处境",
-                          "content": "一次要出二十张",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "situation",
+                          "content": "Need 20 images at once",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
                           "fill": [
@@ -653,7 +653,7 @@
                         {
                           "type": "frame",
                           "id": "f26",
-                          "name": "判定标签",
+                          "name": "verdict-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -674,9 +674,9 @@
                             {
                               "type": "text",
                               "id": "t27",
-                              "name": "判定文字",
-                              "content": "套模板",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "verdict-text",
+                              "content": "Template",
+                              "fontFamily": "Inter",
                               "fontSize": 25,
                               "fontWeight": 700,
                               "fill": [
@@ -697,9 +697,9 @@
                     {
                       "type": "text",
                       "id": "t29",
-                      "name": "理由",
-                      "content": "量大的时候，一致比独特值钱。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "reason",
+                      "content": "At volume, consistency is worth more than originality.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -728,7 +728,7 @@
                 {
                   "type": "frame",
                   "id": "f36",
-                  "name": "判定项",
+                  "name": "verdict-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -748,7 +748,7 @@
                     {
                       "type": "frame",
                       "id": "f34",
-                      "name": "处境行",
+                      "name": "situation-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -760,9 +760,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "处境",
-                          "content": "这是公司的门面",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "situation",
+                          "content": "It's the face of the company",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
                           "fill": [
@@ -779,7 +779,7 @@
                         {
                           "type": "frame",
                           "id": "f32",
-                          "name": "判定标签",
+                          "name": "verdict-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -800,9 +800,9 @@
                             {
                               "type": "text",
                               "id": "t33",
-                              "name": "判定文字",
-                              "content": "找设计师",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "verdict-text",
+                              "content": "Designer",
+                              "fontFamily": "Inter",
                               "fontSize": 25,
                               "fontWeight": 700,
                               "fill": [
@@ -823,9 +823,9 @@
                     {
                       "type": "text",
                       "id": "t35",
-                      "name": "理由",
-                      "content": "第一印象只发生一次。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "reason",
+                      "content": "You only make a first impression once.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -854,7 +854,7 @@
                 {
                   "type": "frame",
                   "id": "f42",
-                  "name": "判定项",
+                  "name": "verdict-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -874,7 +874,7 @@
                     {
                       "type": "frame",
                       "id": "f40",
-                      "name": "处境行",
+                      "name": "situation-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -886,9 +886,9 @@
                         {
                           "type": "text",
                           "id": "t37",
-                          "name": "处境",
-                          "content": "预算五百以内",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "situation",
+                          "content": "Budget under $75",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
                           "fill": [
@@ -905,7 +905,7 @@
                         {
                           "type": "frame",
                           "id": "f38",
-                          "name": "判定标签",
+                          "name": "verdict-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -926,9 +926,9 @@
                             {
                               "type": "text",
                               "id": "t39",
-                              "name": "判定文字",
-                              "content": "套模板",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "verdict-text",
+                              "content": "Template",
+                              "fontFamily": "Inter",
                               "fontSize": 25,
                               "fontWeight": 700,
                               "fill": [
@@ -949,9 +949,9 @@
                     {
                       "type": "text",
                       "id": "t41",
-                      "name": "理由",
-                      "content": "定制的起步价通常不止这个数。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "reason",
+                      "content": "Custom work usually starts above that.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -980,7 +980,7 @@
                 {
                   "type": "frame",
                   "id": "f48",
-                  "name": "判定项",
+                  "name": "verdict-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1000,7 +1000,7 @@
                     {
                       "type": "frame",
                       "id": "f46",
-                      "name": "处境行",
+                      "name": "situation-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1012,9 +1012,9 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "处境",
-                          "content": "要一套长期能用的规范",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "situation",
+                          "content": "Need a system that lasts",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
                           "fill": [
@@ -1031,7 +1031,7 @@
                         {
                           "type": "frame",
                           "id": "f44",
-                          "name": "判定标签",
+                          "name": "verdict-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1052,9 +1052,9 @@
                             {
                               "type": "text",
                               "id": "t45",
-                              "name": "判定文字",
-                              "content": "找设计师",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "verdict-text",
+                              "content": "Designer",
+                              "fontFamily": "Inter",
                               "fontSize": 25,
                               "fontWeight": 700,
                               "fill": [
@@ -1075,9 +1075,9 @@
                     {
                       "type": "text",
                       "id": "t47",
-                      "name": "理由",
-                      "content": "规范是判断力，模板给不了。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "reason",
+                      "content": "A system is judgment; a template can't give you that.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -1106,7 +1106,7 @@
                 {
                   "type": "frame",
                   "id": "f54",
-                  "name": "判定项",
+                  "name": "verdict-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1126,7 +1126,7 @@
                     {
                       "type": "frame",
                       "id": "f52",
-                      "name": "处境行",
+                      "name": "situation-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1138,9 +1138,9 @@
                         {
                           "type": "text",
                           "id": "t49",
-                          "name": "处境",
-                          "content": "自己也说不清要什么",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "situation",
+                          "content": "Not sure what you want yet",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
                           "fill": [
@@ -1157,7 +1157,7 @@
                         {
                           "type": "frame",
                           "id": "f50",
-                          "name": "判定标签",
+                          "name": "verdict-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1178,9 +1178,9 @@
                             {
                               "type": "text",
                               "id": "t51",
-                              "name": "判定文字",
-                              "content": "找设计师",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "verdict-text",
+                              "content": "Designer",
+                              "fontFamily": "Inter",
                               "fontSize": 25,
                               "fontWeight": 700,
                               "fill": [
@@ -1201,9 +1201,9 @@
                     {
                       "type": "text",
                       "id": "t53",
-                      "name": "理由",
-                      "content": "把需求问出来本身就是那份钱。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "reason",
+                      "content": "Drawing out the brief is what you're paying for.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -1232,7 +1232,7 @@
                 {
                   "type": "frame",
                   "id": "f60",
-                  "name": "判定项",
+                  "name": "verdict-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1252,7 +1252,7 @@
                     {
                       "type": "frame",
                       "id": "f58",
-                      "name": "处境行",
+                      "name": "situation-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1264,9 +1264,9 @@
                         {
                           "type": "text",
                           "id": "t55",
-                          "name": "处境",
-                          "content": "每周都要发新的",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "situation",
+                          "content": "Posting something new weekly",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 700,
                           "fill": [
@@ -1283,7 +1283,7 @@
                         {
                           "type": "frame",
                           "id": "f56",
-                          "name": "判定标签",
+                          "name": "verdict-tag",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1304,9 +1304,9 @@
                             {
                               "type": "text",
                               "id": "t57",
-                              "name": "判定文字",
-                              "content": "套模板",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "verdict-text",
+                              "content": "Template",
+                              "fontFamily": "Inter",
                               "fontSize": 25,
                               "fontWeight": 700,
                               "fill": [
@@ -1327,9 +1327,9 @@
                     {
                       "type": "text",
                       "id": "t59",
-                      "name": "理由",
-                      "content": "长期高频，只有模板撑得住。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "reason",
+                      "content": "Only templates hold up at high frequency over time.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -1362,7 +1362,7 @@
         {
           "type": "frame",
           "id": "f80",
-          "name": "04 例外",
+          "name": "04-exception",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1379,7 +1379,7 @@
             {
               "type": "frame",
               "id": "f79",
-              "name": "区块头",
+              "name": "section-head",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1390,7 +1390,7 @@
                 {
                   "type": "rectangle",
                   "id": "r76",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -1403,9 +1403,9 @@
                 {
                   "type": "text",
                   "id": "t77",
-                  "name": "区块标题",
-                  "content": "还有第八种",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "There's an eighth",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -1422,9 +1422,9 @@
                 {
                   "type": "text",
                   "id": "t78",
-                  "name": "区块说明",
-                  "content": "七行里没有你？多半是这一种。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-desc",
+                  "content": "Not in the seven rows? You're probably this one.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -1443,7 +1443,7 @@
             {
               "type": "frame",
               "id": "f75",
-              "name": "例外面板",
+              "name": "exception-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1463,7 +1463,7 @@
                 {
                   "type": "frame",
                   "id": "f72",
-                  "name": "例外头",
+                  "name": "exception-head",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1475,7 +1475,7 @@
                     {
                       "type": "frame",
                       "id": "f67",
-                      "name": "判定标签",
+                      "name": "verdict-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1496,9 +1496,9 @@
                         {
                           "type": "text",
                           "id": "t68",
-                          "name": "判定文字",
-                          "content": "套模板",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "verdict-text",
+                          "content": "Template",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 700,
                           "fill": [
@@ -1517,9 +1517,9 @@
                     {
                       "type": "text",
                       "id": "t69",
-                      "name": "加号",
-                      "content": "＋",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "plus",
+                      "content": "+",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 700,
                       "fill": [
@@ -1536,7 +1536,7 @@
                     {
                       "type": "frame",
                       "id": "f70",
-                      "name": "判定标签",
+                      "name": "verdict-tag",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1557,9 +1557,9 @@
                         {
                           "type": "text",
                           "id": "t71",
-                          "name": "判定文字",
-                          "content": "找设计师",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "verdict-text",
+                          "content": "Designer",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 700,
                           "fill": [
@@ -1580,9 +1580,9 @@
                 {
                   "type": "text",
                   "id": "t73",
-                  "name": "例外标题",
-                  "content": "两个都要",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "exception-title",
+                  "content": "Both",
+                  "fontFamily": "Inter",
                   "fontSize": 34,
                   "fontWeight": 700,
                   "fill": [
@@ -1599,9 +1599,9 @@
                 {
                   "type": "text",
                   "id": "t74",
-                  "name": "例外说明",
-                  "content": "先请设计师做一套规范，再照着它套模板。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "exception-desc",
+                  "content": "Have a designer build a system first, then use templates built on it.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -1623,7 +1623,7 @@
         {
           "type": "frame",
           "id": "f85",
-          "name": "05 页脚",
+          "name": "05-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1643,9 +1643,9 @@
             {
               "type": "text",
               "id": "t81",
-              "name": "结语",
-              "content": "决定不了，通常是因为还没写下截止日期和预算。",
-              "fontFamily": "Noto Sans SC",
+              "name": "closing-note",
+              "content": "Can't decide? You probably haven't written down your deadline and budget yet.",
+              "fontFamily": "Inter",
               "fontSize": 29,
               "fontWeight": 600,
               "fill": [
@@ -1662,7 +1662,7 @@
             {
               "type": "frame",
               "id": "f84",
-              "name": "署名行",
+              "name": "credit-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1674,9 +1674,9 @@
                 {
                   "type": "text",
                   "id": "t82",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -1693,9 +1693,9 @@
                 {
                   "type": "text",
                   "id": "t83",
-                  "name": "更新说明",
-                  "content": "每周一张能照着判的指南",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "A weekly guide you can decide by",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

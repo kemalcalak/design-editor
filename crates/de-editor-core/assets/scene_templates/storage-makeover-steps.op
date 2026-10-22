@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "家居收纳改造步骤 · 3:4 六帧",
+  "name": "home-storage-steps-3x4-six-frames",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f34",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -61,7 +61,7 @@
         {
           "type": "frame",
           "id": "f30",
-          "name": "封面主体",
+          "name": "cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -73,7 +73,7 @@
             {
               "type": "frame",
               "id": "f5",
-              "name": "封面头",
+              "name": "cover-head",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -84,7 +84,7 @@
                 {
                   "type": "frame",
                   "id": "f1",
-                  "name": "标签",
+                  "name": "tag",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -105,9 +105,9 @@
                     {
                       "type": "text",
                       "id": "t2",
-                      "name": "标签文字",
-                      "content": "收纳改造 · 四步",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tag-text",
+                      "content": "Storage makeover · 4 steps",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 600,
                       "fill": [
@@ -126,9 +126,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "封面标题",
-                  "content": "一个柜子\n一个下午",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "cover-title",
+                  "content": "One cabinet,\none afternoon",
+                  "fontFamily": "Inter",
                   "fontSize": 68,
                   "fontWeight": 700,
                   "fill": [
@@ -145,9 +145,9 @@
                 {
                   "type": "text",
                   "id": "t4",
-                  "name": "封面副标题",
-                  "content": "每一步都给一条判定标准：做到那个样子就往下走，不用纠结。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "cover-subtitle",
+                  "content": "Each step has a clear finish line: hit it and move on, no second-guessing.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -166,7 +166,7 @@
             {
               "type": "frame",
               "id": "f29",
-              "name": "预告区",
+              "name": "preview-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -177,7 +177,7 @@
                 {
                   "type": "frame",
                   "id": "f10",
-                  "name": "步骤预告",
+                  "name": "step-preview",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -197,7 +197,7 @@
                     {
                       "type": "frame",
                       "id": "f6",
-                      "name": "序号方",
+                      "name": "index-square",
                       "width": 52,
                       "height": 52,
                       "layout": "horizontal",
@@ -214,7 +214,7 @@
                         {
                           "type": "text",
                           "id": "t7",
-                          "name": "序号",
+                          "name": "index",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 23,
@@ -235,9 +235,9 @@
                     {
                       "type": "text",
                       "id": "t8",
-                      "name": "预告名",
-                      "content": "全部倒出来",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-name",
+                      "content": "Empty it all out",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -254,9 +254,9 @@
                     {
                       "type": "text",
                       "id": "t9",
-                      "name": "预告耗时",
-                      "content": "20 分钟",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-duration",
+                      "content": "20 min",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 600,
                       "fill": [
@@ -285,7 +285,7 @@
                 {
                   "type": "frame",
                   "id": "f15",
-                  "name": "步骤预告",
+                  "name": "step-preview",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -305,7 +305,7 @@
                     {
                       "type": "frame",
                       "id": "f11",
-                      "name": "序号方",
+                      "name": "index-square",
                       "width": 52,
                       "height": 52,
                       "layout": "horizontal",
@@ -322,7 +322,7 @@
                         {
                           "type": "text",
                           "id": "t12",
-                          "name": "序号",
+                          "name": "index",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 23,
@@ -343,9 +343,9 @@
                     {
                       "type": "text",
                       "id": "t13",
-                      "name": "预告名",
-                      "content": "只分三堆",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-name",
+                      "content": "Sort into 3 piles",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -362,9 +362,9 @@
                     {
                       "type": "text",
                       "id": "t14",
-                      "name": "预告耗时",
-                      "content": "30 分钟",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-duration",
+                      "content": "30 min",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 600,
                       "fill": [
@@ -393,7 +393,7 @@
                 {
                   "type": "frame",
                   "id": "f20",
-                  "name": "步骤预告",
+                  "name": "step-preview",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -413,7 +413,7 @@
                     {
                       "type": "frame",
                       "id": "f16",
-                      "name": "序号方",
+                      "name": "index-square",
                       "width": 52,
                       "height": 52,
                       "layout": "horizontal",
@@ -430,7 +430,7 @@
                         {
                           "type": "text",
                           "id": "t17",
-                          "name": "序号",
+                          "name": "index",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 23,
@@ -451,9 +451,9 @@
                     {
                       "type": "text",
                       "id": "t18",
-                      "name": "预告名",
-                      "content": "按拿取频率归位",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-name",
+                      "content": "Shelve by how often",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -470,9 +470,9 @@
                     {
                       "type": "text",
                       "id": "t19",
-                      "name": "预告耗时",
-                      "content": "25 分钟",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-duration",
+                      "content": "25 min",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 600,
                       "fill": [
@@ -501,7 +501,7 @@
                 {
                   "type": "frame",
                   "id": "f25",
-                  "name": "步骤预告",
+                  "name": "step-preview",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -521,7 +521,7 @@
                     {
                       "type": "frame",
                       "id": "f21",
-                      "name": "序号方",
+                      "name": "index-square",
                       "width": 52,
                       "height": 52,
                       "layout": "horizontal",
@@ -538,7 +538,7 @@
                         {
                           "type": "text",
                           "id": "t22",
-                          "name": "序号",
+                          "name": "index",
                           "content": "04",
                           "fontFamily": "Inter",
                           "fontSize": 23,
@@ -559,9 +559,9 @@
                     {
                       "type": "text",
                       "id": "t23",
-                      "name": "预告名",
-                      "content": "贴标签",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-name",
+                      "content": "Label it",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -578,9 +578,9 @@
                     {
                       "type": "text",
                       "id": "t24",
-                      "name": "预告耗时",
-                      "content": "15 分钟",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "preview-duration",
+                      "content": "15 min",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 600,
                       "fill": [
@@ -611,7 +611,7 @@
             {
               "type": "frame",
               "id": "f28",
-              "name": "合计条",
+              "name": "total-bar",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -631,7 +631,7 @@
                 {
                   "type": "icon_font",
                   "id": "i26",
-                  "name": "合计图标",
+                  "name": "total-icon",
                   "iconFontName": "clock",
                   "width": 26,
                   "height": 26,
@@ -645,9 +645,9 @@
                 {
                   "type": "text",
                   "id": "t27",
-                  "name": "合计文字",
-                  "content": "四步合计 90 分钟，中间可以停。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "total-text",
+                  "content": "Four steps, 90 minutes total. Pause whenever you like.",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 500,
                   "fill": [
@@ -669,7 +669,7 @@
         {
           "type": "frame",
           "id": "f33",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -681,9 +681,9 @@
             {
               "type": "text",
               "id": "t31",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -700,7 +700,7 @@
             {
               "type": "text",
               "id": "t32",
-              "name": "页码",
+              "name": "page-number",
               "content": "01 / 06",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -725,7 +725,7 @@
     {
       "type": "frame",
       "id": "f59",
-      "name": "02 全部倒出来",
+      "name": "02-empty-it-all",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -747,7 +747,7 @@
         {
           "type": "frame",
           "id": "f39",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -758,7 +758,7 @@
             {
               "type": "frame",
               "id": "f35",
-              "name": "步骤徽章",
+              "name": "step-badge",
               "width": 56,
               "height": 56,
               "layout": "horizontal",
@@ -775,7 +775,7 @@
                 {
                   "type": "text",
                   "id": "t36",
-                  "name": "步骤序号",
+                  "name": "step-number",
                   "content": "01",
                   "fontFamily": "Inter",
                   "fontSize": 25,
@@ -796,9 +796,9 @@
             {
               "type": "text",
               "id": "t37",
-              "name": "步骤名",
-              "content": "全部倒出来",
-              "fontFamily": "Noto Sans SC",
+              "name": "step-name",
+              "content": "Empty it all out",
+              "fontFamily": "Inter",
               "fontSize": 50,
               "fontWeight": 700,
               "fill": [
@@ -815,9 +815,9 @@
             {
               "type": "text",
               "id": "t38",
-              "name": "耗时",
-              "content": "20 分钟",
-              "fontFamily": "Noto Sans SC",
+              "name": "duration",
+              "content": "20 min",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 600,
               "fill": [
@@ -836,7 +836,7 @@
         {
           "type": "frame",
           "id": "f40",
-          "name": "图位",
+          "name": "image-slot",
           "width": "fill_container",
           "height": 842,
           "layout": "vertical",
@@ -854,7 +854,7 @@
             {
               "type": "icon_font",
               "id": "i41",
-              "name": "图位图标",
+              "name": "image-slot-icon",
               "iconFontName": "camera",
               "width": 44,
               "height": 44,
@@ -868,9 +868,9 @@
             {
               "type": "text",
               "id": "t42",
-              "name": "图位提示",
-              "content": "东西全摊在地上",
-              "fontFamily": "Noto Sans SC",
+              "name": "image-slot-hint",
+              "content": "Everything spread on the floor",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 600,
               "fill": [
@@ -888,9 +888,9 @@
             {
               "type": "text",
               "id": "t43",
-              "name": "图位规格",
-              "content": "拍过程中的样子，别等收拾完再补拍",
-              "fontFamily": "Noto Sans SC",
+              "name": "image-slot-spec",
+              "content": "Shoot it mid-process; don't restage it after tidying",
+              "fontFamily": "Inter",
               "fontSize": 23,
               "fontWeight": 400,
               "fill": [
@@ -910,7 +910,7 @@
         {
           "type": "frame",
           "id": "f48",
-          "name": "判定框",
+          "name": "check-box",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -930,7 +930,7 @@
             {
               "type": "icon_font",
               "id": "i44",
-              "name": "判定图标",
+              "name": "check-icon",
               "iconFontName": "circle-check",
               "width": 28,
               "height": 28,
@@ -944,7 +944,7 @@
             {
               "type": "frame",
               "id": "f47",
-              "name": "判定文案",
+              "name": "check-copy",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -955,9 +955,9 @@
                 {
                   "type": "text",
                   "id": "t45",
-                  "name": "判定标题",
-                  "content": "做到这样才算完成",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "check-title",
+                  "content": "Done when it looks like this",
+                  "fontFamily": "Inter",
                   "fontSize": 22,
                   "fontWeight": 700,
                   "fill": [
@@ -974,9 +974,9 @@
                 {
                   "type": "text",
                   "id": "t46",
-                  "name": "判定标准",
-                  "content": "柜子里空到能看见底板，一件不剩。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "check-criterion",
+                  "content": "The cabinet is empty down to the base. Nothing left.",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 500,
                   "fill": [
@@ -998,7 +998,7 @@
         {
           "type": "frame",
           "id": "f55",
-          "name": "要点区",
+          "name": "tips",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1009,7 +1009,7 @@
             {
               "type": "frame",
               "id": "f51",
-              "name": "要点",
+              "name": "tip",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1020,7 +1020,7 @@
                 {
                   "type": "icon_font",
                   "id": "i49",
-                  "name": "要点图标",
+                  "name": "tip-icon",
                   "iconFontName": "check",
                   "width": 24,
                   "height": 24,
@@ -1034,9 +1034,9 @@
                 {
                   "type": "text",
                   "id": "t50",
-                  "name": "要点文字",
-                  "content": "一次只做一个柜子。倒两个柜子你会中途放弃。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tip-text",
+                  "content": "One cabinet at a time. Empty two and you'll quit halfway.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1055,7 +1055,7 @@
             {
               "type": "frame",
               "id": "f54",
-              "name": "要点",
+              "name": "tip",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1066,7 +1066,7 @@
                 {
                   "type": "icon_font",
                   "id": "i52",
-                  "name": "要点图标",
+                  "name": "tip-icon",
                   "iconFontName": "circle-x",
                   "width": 24,
                   "height": 24,
@@ -1080,9 +1080,9 @@
                 {
                   "type": "text",
                   "id": "t53",
-                  "name": "要点文字",
-                  "content": "别边倒边整理。倒和分是两件事，混着做两件都做不完。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tip-text",
+                  "content": "Don't tidy while you empty. They're two jobs; mix them and neither gets done.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1103,7 +1103,7 @@
         {
           "type": "frame",
           "id": "f58",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1115,9 +1115,9 @@
             {
               "type": "text",
               "id": "t56",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -1134,7 +1134,7 @@
             {
               "type": "text",
               "id": "t57",
-              "name": "页码",
+              "name": "page-number",
               "content": "02 / 06",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -1159,7 +1159,7 @@
     {
       "type": "frame",
       "id": "f84",
-      "name": "03 只分三堆",
+      "name": "03-three-piles",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -1181,7 +1181,7 @@
         {
           "type": "frame",
           "id": "f64",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1192,7 +1192,7 @@
             {
               "type": "frame",
               "id": "f60",
-              "name": "步骤徽章",
+              "name": "step-badge",
               "width": 56,
               "height": 56,
               "layout": "horizontal",
@@ -1209,7 +1209,7 @@
                 {
                   "type": "text",
                   "id": "t61",
-                  "name": "步骤序号",
+                  "name": "step-number",
                   "content": "02",
                   "fontFamily": "Inter",
                   "fontSize": 25,
@@ -1230,9 +1230,9 @@
             {
               "type": "text",
               "id": "t62",
-              "name": "步骤名",
-              "content": "只分三堆",
-              "fontFamily": "Noto Sans SC",
+              "name": "step-name",
+              "content": "Sort into 3 piles",
+              "fontFamily": "Inter",
               "fontSize": 50,
               "fontWeight": 700,
               "fill": [
@@ -1249,9 +1249,9 @@
             {
               "type": "text",
               "id": "t63",
-              "name": "耗时",
-              "content": "30 分钟",
-              "fontFamily": "Noto Sans SC",
+              "name": "duration",
+              "content": "30 min",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 600,
               "fill": [
@@ -1270,7 +1270,7 @@
         {
           "type": "frame",
           "id": "f65",
-          "name": "图位",
+          "name": "image-slot",
           "width": "fill_container",
           "height": 842,
           "layout": "vertical",
@@ -1288,7 +1288,7 @@
             {
               "type": "icon_font",
               "id": "i66",
-              "name": "图位图标",
+              "name": "image-slot-icon",
               "iconFontName": "camera",
               "width": 44,
               "height": 44,
@@ -1302,9 +1302,9 @@
             {
               "type": "text",
               "id": "t67",
-              "name": "图位提示",
-              "content": "地上分好的三堆",
-              "fontFamily": "Noto Sans SC",
+              "name": "image-slot-hint",
+              "content": "Three piles on the floor",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 600,
               "fill": [
@@ -1322,9 +1322,9 @@
             {
               "type": "text",
               "id": "t68",
-              "name": "图位规格",
-              "content": "拍过程中的样子，别等收拾完再补拍",
-              "fontFamily": "Noto Sans SC",
+              "name": "image-slot-spec",
+              "content": "Shoot it mid-process; don't restage it after tidying",
+              "fontFamily": "Inter",
               "fontSize": 23,
               "fontWeight": 400,
               "fill": [
@@ -1344,7 +1344,7 @@
         {
           "type": "frame",
           "id": "f73",
-          "name": "判定框",
+          "name": "check-box",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1364,7 +1364,7 @@
             {
               "type": "icon_font",
               "id": "i69",
-              "name": "判定图标",
+              "name": "check-icon",
               "iconFontName": "circle-check",
               "width": 28,
               "height": 28,
@@ -1378,7 +1378,7 @@
             {
               "type": "frame",
               "id": "f72",
-              "name": "判定文案",
+              "name": "check-copy",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1389,9 +1389,9 @@
                 {
                   "type": "text",
                   "id": "t70",
-                  "name": "判定标题",
-                  "content": "做到这样才算完成",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "check-title",
+                  "content": "Done when it looks like this",
+                  "fontFamily": "Inter",
                   "fontSize": 22,
                   "fontWeight": 700,
                   "fill": [
@@ -1408,9 +1408,9 @@
                 {
                   "type": "text",
                   "id": "t71",
-                  "name": "判定标准",
-                  "content": "地上只剩三堆：留、送走、扔。没有第四堆。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "check-criterion",
+                  "content": "Only three piles: keep, give away, toss. No fourth pile.",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 500,
                   "fill": [
@@ -1432,7 +1432,7 @@
         {
           "type": "frame",
           "id": "f80",
-          "name": "要点区",
+          "name": "tips",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1443,7 +1443,7 @@
             {
               "type": "frame",
               "id": "f76",
-              "name": "要点",
+              "name": "tip",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1454,7 +1454,7 @@
                 {
                   "type": "icon_font",
                   "id": "i74",
-                  "name": "要点图标",
+                  "name": "tip-icon",
                   "iconFontName": "check",
                   "width": 24,
                   "height": 24,
@@ -1468,9 +1468,9 @@
                 {
                   "type": "text",
                   "id": "t75",
-                  "name": "要点文字",
-                  "content": "拿不准的一律进「送走」堆，一个月后没想起来就真送走。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tip-text",
+                  "content": "Unsure? It goes in \"give away.\" Not missed in a month? Give it away for real.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1489,7 +1489,7 @@
             {
               "type": "frame",
               "id": "f79",
-              "name": "要点",
+              "name": "tip",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1500,7 +1500,7 @@
                 {
                   "type": "icon_font",
                   "id": "i77",
-                  "name": "要点图标",
+                  "name": "tip-icon",
                   "iconFontName": "circle-x",
                   "width": 24,
                   "height": 24,
@@ -1514,9 +1514,9 @@
                 {
                   "type": "text",
                   "id": "t78",
-                  "name": "要点文字",
-                  "content": "别设「以后再说」堆。那一堆最后会原样塞回柜子。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tip-text",
+                  "content": "No \"deal with it later\" pile. It ends up back in the cabinet as is.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1537,7 +1537,7 @@
         {
           "type": "frame",
           "id": "f83",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1549,9 +1549,9 @@
             {
               "type": "text",
               "id": "t81",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -1568,7 +1568,7 @@
             {
               "type": "text",
               "id": "t82",
-              "name": "页码",
+              "name": "page-number",
               "content": "03 / 06",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -1593,7 +1593,7 @@
     {
       "type": "frame",
       "id": "f109",
-      "name": "04 按拿取频率归位",
+      "name": "04-shelve-by-use",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -1615,7 +1615,7 @@
         {
           "type": "frame",
           "id": "f89",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1626,7 +1626,7 @@
             {
               "type": "frame",
               "id": "f85",
-              "name": "步骤徽章",
+              "name": "step-badge",
               "width": 56,
               "height": 56,
               "layout": "horizontal",
@@ -1643,7 +1643,7 @@
                 {
                   "type": "text",
                   "id": "t86",
-                  "name": "步骤序号",
+                  "name": "step-number",
                   "content": "03",
                   "fontFamily": "Inter",
                   "fontSize": 25,
@@ -1664,9 +1664,9 @@
             {
               "type": "text",
               "id": "t87",
-              "name": "步骤名",
-              "content": "按拿取频率归位",
-              "fontFamily": "Noto Sans SC",
+              "name": "step-name",
+              "content": "Shelve by how often",
+              "fontFamily": "Inter",
               "fontSize": 50,
               "fontWeight": 700,
               "fill": [
@@ -1683,9 +1683,9 @@
             {
               "type": "text",
               "id": "t88",
-              "name": "耗时",
-              "content": "25 分钟",
-              "fontFamily": "Noto Sans SC",
+              "name": "duration",
+              "content": "25 min",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 600,
               "fill": [
@@ -1704,7 +1704,7 @@
         {
           "type": "frame",
           "id": "f90",
-          "name": "图位",
+          "name": "image-slot",
           "width": "fill_container",
           "height": 842,
           "layout": "vertical",
@@ -1722,7 +1722,7 @@
             {
               "type": "icon_font",
               "id": "i91",
-              "name": "图位图标",
+              "name": "image-slot-icon",
               "iconFontName": "camera",
               "width": 44,
               "height": 44,
@@ -1736,9 +1736,9 @@
             {
               "type": "text",
               "id": "t92",
-              "name": "图位提示",
-              "content": "柜内分区示意",
-              "fontFamily": "Noto Sans SC",
+              "name": "image-slot-hint",
+              "content": "Zones inside the cabinet",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 600,
               "fill": [
@@ -1756,9 +1756,9 @@
             {
               "type": "text",
               "id": "t93",
-              "name": "图位规格",
-              "content": "拍过程中的样子，别等收拾完再补拍",
-              "fontFamily": "Noto Sans SC",
+              "name": "image-slot-spec",
+              "content": "Shoot it mid-process; don't restage it after tidying",
+              "fontFamily": "Inter",
               "fontSize": 23,
               "fontWeight": 400,
               "fill": [
@@ -1778,7 +1778,7 @@
         {
           "type": "frame",
           "id": "f98",
-          "name": "判定框",
+          "name": "check-box",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1798,7 +1798,7 @@
             {
               "type": "icon_font",
               "id": "i94",
-              "name": "判定图标",
+              "name": "check-icon",
               "iconFontName": "circle-check",
               "width": 28,
               "height": 28,
@@ -1812,7 +1812,7 @@
             {
               "type": "frame",
               "id": "f97",
-              "name": "判定文案",
+              "name": "check-copy",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1823,9 +1823,9 @@
                 {
                   "type": "text",
                   "id": "t95",
-                  "name": "判定标题",
-                  "content": "做到这样才算完成",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "check-title",
+                  "content": "Done when it looks like this",
+                  "fontFamily": "Inter",
                   "fontSize": 22,
                   "fontWeight": 700,
                   "fill": [
@@ -1842,9 +1842,9 @@
                 {
                   "type": "text",
                   "id": "t96",
-                  "name": "判定标准",
-                  "content": "每天要用的都在伸手就够到的那一层。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "check-criterion",
+                  "content": "Everything you use daily sits on the shelf within easy reach.",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 500,
                   "fill": [
@@ -1866,7 +1866,7 @@
         {
           "type": "frame",
           "id": "f105",
-          "name": "要点区",
+          "name": "tips",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1877,7 +1877,7 @@
             {
               "type": "frame",
               "id": "f101",
-              "name": "要点",
+              "name": "tip",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1888,7 +1888,7 @@
                 {
                   "type": "icon_font",
                   "id": "i99",
-                  "name": "要点图标",
+                  "name": "tip-icon",
                   "iconFontName": "check",
                   "width": 24,
                   "height": 24,
@@ -1902,9 +1902,9 @@
                 {
                   "type": "text",
                   "id": "t100",
-                  "name": "要点文字",
-                  "content": "常用的放腰到肩之间，不常用的放最高最低两层。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tip-text",
+                  "content": "Daily items at waist to shoulder; the rest up top or down low.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1923,7 +1923,7 @@
             {
               "type": "frame",
               "id": "f104",
-              "name": "要点",
+              "name": "tip",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1934,7 +1934,7 @@
                 {
                   "type": "icon_font",
                   "id": "i102",
-                  "name": "要点图标",
+                  "name": "tip-icon",
                   "iconFontName": "circle-x",
                   "width": 24,
                   "height": 24,
@@ -1948,9 +1948,9 @@
                 {
                   "type": "text",
                   "id": "t103",
-                  "name": "要点文字",
-                  "content": "别按颜色或大小排。好看维持不过两周，顺手能维持两年。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tip-text",
+                  "content": "Don't sort by color or size. Pretty lasts two weeks; handy lasts two years.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1971,7 +1971,7 @@
         {
           "type": "frame",
           "id": "f108",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -1983,9 +1983,9 @@
             {
               "type": "text",
               "id": "t106",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -2002,7 +2002,7 @@
             {
               "type": "text",
               "id": "t107",
-              "name": "页码",
+              "name": "page-number",
               "content": "04 / 06",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -2027,7 +2027,7 @@
     {
       "type": "frame",
       "id": "f134",
-      "name": "05 贴标签",
+      "name": "05-label-it",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -2049,7 +2049,7 @@
         {
           "type": "frame",
           "id": "f114",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -2060,7 +2060,7 @@
             {
               "type": "frame",
               "id": "f110",
-              "name": "步骤徽章",
+              "name": "step-badge",
               "width": 56,
               "height": 56,
               "layout": "horizontal",
@@ -2077,7 +2077,7 @@
                 {
                   "type": "text",
                   "id": "t111",
-                  "name": "步骤序号",
+                  "name": "step-number",
                   "content": "04",
                   "fontFamily": "Inter",
                   "fontSize": 25,
@@ -2098,9 +2098,9 @@
             {
               "type": "text",
               "id": "t112",
-              "name": "步骤名",
-              "content": "贴标签",
-              "fontFamily": "Noto Sans SC",
+              "name": "step-name",
+              "content": "Label it",
+              "fontFamily": "Inter",
               "fontSize": 50,
               "fontWeight": 700,
               "fill": [
@@ -2117,9 +2117,9 @@
             {
               "type": "text",
               "id": "t113",
-              "name": "耗时",
-              "content": "15 分钟",
-              "fontFamily": "Noto Sans SC",
+              "name": "duration",
+              "content": "15 min",
+              "fontFamily": "Inter",
               "fontSize": 26,
               "fontWeight": 600,
               "fill": [
@@ -2138,7 +2138,7 @@
         {
           "type": "frame",
           "id": "f115",
-          "name": "图位",
+          "name": "image-slot",
           "width": "fill_container",
           "height": 842,
           "layout": "vertical",
@@ -2156,7 +2156,7 @@
             {
               "type": "icon_font",
               "id": "i116",
-              "name": "图位图标",
+              "name": "image-slot-icon",
               "iconFontName": "camera",
               "width": 44,
               "height": 44,
@@ -2170,9 +2170,9 @@
             {
               "type": "text",
               "id": "t117",
-              "name": "图位提示",
-              "content": "贴好标签的收纳盒",
-              "fontFamily": "Noto Sans SC",
+              "name": "image-slot-hint",
+              "content": "Labeled storage boxes",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 600,
               "fill": [
@@ -2190,9 +2190,9 @@
             {
               "type": "text",
               "id": "t118",
-              "name": "图位规格",
-              "content": "拍过程中的样子，别等收拾完再补拍",
-              "fontFamily": "Noto Sans SC",
+              "name": "image-slot-spec",
+              "content": "Shoot it mid-process; don't restage it after tidying",
+              "fontFamily": "Inter",
               "fontSize": 23,
               "fontWeight": 400,
               "fill": [
@@ -2212,7 +2212,7 @@
         {
           "type": "frame",
           "id": "f123",
-          "name": "判定框",
+          "name": "check-box",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -2232,7 +2232,7 @@
             {
               "type": "icon_font",
               "id": "i119",
-              "name": "判定图标",
+              "name": "check-icon",
               "iconFontName": "circle-check",
               "width": 28,
               "height": 28,
@@ -2246,7 +2246,7 @@
             {
               "type": "frame",
               "id": "f122",
-              "name": "判定文案",
+              "name": "check-copy",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2257,9 +2257,9 @@
                 {
                   "type": "text",
                   "id": "t120",
-                  "name": "判定标题",
-                  "content": "做到这样才算完成",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "check-title",
+                  "content": "Done when it looks like this",
+                  "fontFamily": "Inter",
                   "fontSize": 22,
                   "fontWeight": 700,
                   "fill": [
@@ -2276,9 +2276,9 @@
                 {
                   "type": "text",
                   "id": "t121",
-                  "name": "判定标准",
-                  "content": "每个不透明的盒子外面都有一张能看清的标签。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "check-criterion",
+                  "content": "Every opaque box has a label you can read at a glance.",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 500,
                   "fill": [
@@ -2300,7 +2300,7 @@
         {
           "type": "frame",
           "id": "f130",
-          "name": "要点区",
+          "name": "tips",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -2311,7 +2311,7 @@
             {
               "type": "frame",
               "id": "f126",
-              "name": "要点",
+              "name": "tip",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2322,7 +2322,7 @@
                 {
                   "type": "icon_font",
                   "id": "i124",
-                  "name": "要点图标",
+                  "name": "tip-icon",
                   "iconFontName": "check",
                   "width": 24,
                   "height": 24,
@@ -2336,9 +2336,9 @@
                 {
                   "type": "text",
                   "id": "t125",
-                  "name": "要点文字",
-                  "content": "标签写「里面是什么」，不写「谁的」——归位的人才看得懂。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tip-text",
+                  "content": "Label what's inside, not whose it is, so whoever puts it back can tell.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -2357,7 +2357,7 @@
             {
               "type": "frame",
               "id": "f129",
-              "name": "要点",
+              "name": "tip",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2368,7 +2368,7 @@
                 {
                   "type": "icon_font",
                   "id": "i127",
-                  "name": "要点图标",
+                  "name": "tip-icon",
                   "iconFontName": "circle-x",
                   "width": 24,
                   "height": 24,
@@ -2382,9 +2382,9 @@
                 {
                   "type": "text",
                   "id": "t128",
-                  "name": "要点文字",
-                  "content": "别用手写便利贴。三个月后会卷边掉下来，然后没人补。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tip-text",
+                  "content": "Skip sticky notes. They curl, fall off and never get replaced.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -2405,7 +2405,7 @@
         {
           "type": "frame",
           "id": "f133",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -2417,9 +2417,9 @@
             {
               "type": "text",
               "id": "t131",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -2436,7 +2436,7 @@
             {
               "type": "text",
               "id": "t132",
-              "name": "页码",
+              "name": "page-number",
               "content": "05 / 06",
               "fontFamily": "Inter",
               "fontSize": 24,
@@ -2461,7 +2461,7 @@
     {
       "type": "frame",
       "id": "f156",
-      "name": "06 维持",
+      "name": "06-upkeep",
       "width": 1080,
       "height": 1440,
       "layout": "vertical",
@@ -2483,7 +2483,7 @@
         {
           "type": "frame",
           "id": "f138",
-          "name": "页头",
+          "name": "header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -2494,7 +2494,7 @@
             {
               "type": "frame",
               "id": "f135",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2515,9 +2515,9 @@
                 {
                   "type": "text",
                   "id": "t136",
-                  "name": "标签文字",
-                  "content": "维持",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Upkeep",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -2536,9 +2536,9 @@
             {
               "type": "text",
               "id": "t137",
-              "name": "收尾标题",
-              "content": "收拾完只是开始\n维持才是本体",
-              "fontFamily": "Noto Sans SC",
+              "name": "outro-title",
+              "content": "Tidying is the start.\nKeeping it is the job.",
+              "fontFamily": "Inter",
               "fontSize": 58,
               "fontWeight": 700,
               "fill": [
@@ -2557,7 +2557,7 @@
         {
           "type": "frame",
           "id": "f152",
-          "name": "收尾主体",
+          "name": "outro-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2569,7 +2569,7 @@
             {
               "type": "frame",
               "id": "f151",
-              "name": "规则区",
+              "name": "rules",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2580,7 +2580,7 @@
                 {
                   "type": "frame",
                   "id": "f141",
-                  "name": "规则卡",
+                  "name": "rule-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2600,9 +2600,9 @@
                     {
                       "type": "text",
                       "id": "t139",
-                      "name": "规则标题",
-                      "content": "每天花两分钟归位",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-title",
+                      "content": "Put things back, 2 min a day",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 600,
                       "fill": [
@@ -2619,9 +2619,9 @@
                     {
                       "type": "text",
                       "id": "t140",
-                      "name": "规则说明",
-                      "content": "两分钟维持得住，周末两小时补不回来。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-desc",
+                      "content": "Two minutes a day holds. Two hours on Sunday won't catch up.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -2650,7 +2650,7 @@
                 {
                   "type": "frame",
                   "id": "f144",
-                  "name": "规则卡",
+                  "name": "rule-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2670,9 +2670,9 @@
                     {
                       "type": "text",
                       "id": "t142",
-                      "name": "规则标题",
-                      "content": "进一件出一件",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-title",
+                      "content": "One in, one out",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 600,
                       "fill": [
@@ -2689,9 +2689,9 @@
                     {
                       "type": "text",
                       "id": "t143",
-                      "name": "规则说明",
-                      "content": "柜子的容量是固定的，这条不遵守迟早再来一遍。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-desc",
+                      "content": "The cabinet won't get bigger. Skip this and you'll be doing it all again.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -2720,7 +2720,7 @@
                 {
                   "type": "frame",
                   "id": "f147",
-                  "name": "规则卡",
+                  "name": "rule-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2740,9 +2740,9 @@
                     {
                       "type": "text",
                       "id": "t145",
-                      "name": "规则标题",
-                      "content": "空出一格不要填",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-title",
+                      "content": "Leave one shelf empty",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 600,
                       "fill": [
@@ -2759,9 +2759,9 @@
                     {
                       "type": "text",
                       "id": "t146",
-                      "name": "规则说明",
-                      "content": "留白是缓冲，塞满的柜子第一天就开始乱。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "rule-desc",
+                      "content": "Empty space is a buffer. A packed cabinet gets messy on day one.",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -2792,7 +2792,7 @@
             {
               "type": "frame",
               "id": "f150",
-              "name": "关注卡",
+              "name": "follow-card",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2812,9 +2812,9 @@
                 {
                   "type": "text",
                   "id": "t148",
-                  "name": "关注标题",
-                  "content": "改造完拍一张",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "follow-title",
+                  "content": "Post your after shot",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 700,
                   "fill": [
@@ -2831,9 +2831,9 @@
                 {
                   "type": "text",
                   "id": "t149",
-                  "name": "关注副文案",
-                  "content": "评论区贴出来，我帮你看看哪一层还能再省。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "follow-subcopy",
+                  "content": "Drop it in the comments and I'll point out which shelf could work harder.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -2855,7 +2855,7 @@
         {
           "type": "frame",
           "id": "f155",
-          "name": "页脚",
+          "name": "footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "horizontal",
@@ -2867,9 +2867,9 @@
             {
               "type": "text",
               "id": "t153",
-              "name": "账号名",
-              "content": "@ 你的账号名",
-              "fontFamily": "Noto Sans SC",
+              "name": "handle",
+              "content": "@yourhandle",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 600,
               "fill": [
@@ -2886,7 +2886,7 @@
             {
               "type": "text",
               "id": "t154",
-              "name": "页码",
+              "name": "page-number",
               "content": "06 / 06",
               "fontFamily": "Inter",
               "fontSize": 24,

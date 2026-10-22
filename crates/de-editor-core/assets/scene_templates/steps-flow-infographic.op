@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "流程步骤信息长图",
+  "name": "steps-flow-infographic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "流程步骤长图",
+      "name": "steps-flow-long-graphic",
       "width": 1080,
       "height": 3085,
       "layout": "vertical",
@@ -67,7 +67,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -89,7 +89,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "胶囊",
+              "name": "pill",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -111,9 +111,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "胶囊文字",
-                  "content": "上手指南 · 第一次做图",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "pill-text",
+                  "content": "Getting Started · Your First Graphic",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 600,
                   "fill": [
@@ -132,9 +132,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "五步做完\n第一张图",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Five steps to\nyour first graphic",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -151,9 +151,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "全程约一小时，中间可以停。每一步都能单独做完。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "About an hour in total, with breaks allowed. Each step stands on its own.",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 400,
               "fill": [
@@ -172,7 +172,7 @@
         {
           "type": "frame",
           "id": "f65",
-          "name": "02 步骤",
+          "name": "02-steps",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -189,7 +189,7 @@
             {
               "type": "frame",
               "id": "f63",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -200,7 +200,7 @@
                 {
                   "type": "rectangle",
                   "id": "r60",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -214,9 +214,9 @@
                 {
                   "type": "text",
                   "id": "t61",
-                  "name": "区块标题",
-                  "content": "按顺序来",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Go in order",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -233,9 +233,9 @@
                 {
                   "type": "text",
                   "id": "t62",
-                  "name": "区块说明",
-                  "content": "每一步后面那个时间是给自己留的上限，不是目标。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-description",
+                  "content": "The time after each step is a ceiling, not a target.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -254,7 +254,7 @@
             {
               "type": "frame",
               "id": "f64",
-              "name": "步骤列表",
+              "name": "step-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -265,7 +265,7 @@
                 {
                   "type": "frame",
                   "id": "f15",
-                  "name": "步骤 1",
+                  "name": "step-1",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -286,7 +286,7 @@
                     {
                       "type": "frame",
                       "id": "f7",
-                      "name": "序号 1",
+                      "name": "index-1",
                       "width": 76,
                       "height": 76,
                       "layout": "horizontal",
@@ -303,7 +303,7 @@
                         {
                           "type": "text",
                           "id": "t8",
-                          "name": "序号数字",
+                          "name": "index-number",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -324,7 +324,7 @@
                     {
                       "type": "frame",
                       "id": "f14",
-                      "name": "步骤文案",
+                      "name": "step-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -335,9 +335,9 @@
                         {
                           "type": "text",
                           "id": "t9",
-                          "name": "步骤标题",
-                          "content": "挑一个你已经做过的场景",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-title",
+                          "content": "Pick something you've done before",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 600,
                           "fill": [
@@ -354,9 +354,9 @@
                         {
                           "type": "text",
                           "id": "t10",
-                          "name": "步骤说明",
-                          "content": "别选没做过的事。用自己熟的，才分得清哪儿是工具的问题。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Skip anything new. With familiar material, you can tell when the tool is the problem.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -373,7 +373,7 @@
                         {
                           "type": "frame",
                           "id": "f11",
-                          "name": "胶囊",
+                          "name": "pill",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -395,7 +395,7 @@
                             {
                               "type": "icon_font",
                               "id": "i12",
-                              "name": "胶囊图标",
+                              "name": "pill-icon",
                               "iconFontName": "clock",
                               "width": 23,
                               "height": 23,
@@ -409,9 +409,9 @@
                             {
                               "type": "text",
                               "id": "t13",
-                              "name": "胶囊文字",
-                              "content": "10 分钟",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "pill-text",
+                              "content": "10 min",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -443,7 +443,7 @@
                 {
                   "type": "frame",
                   "id": "f17",
-                  "name": "连接",
+                  "name": "connector",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -455,7 +455,7 @@
                     {
                       "type": "icon_font",
                       "id": "i16",
-                      "name": "向下",
+                      "name": "arrow-down",
                       "iconFontName": "chevron-down",
                       "width": 32,
                       "height": 32,
@@ -471,7 +471,7 @@
                 {
                   "type": "frame",
                   "id": "f26",
-                  "name": "步骤 2",
+                  "name": "step-2",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -492,7 +492,7 @@
                     {
                       "type": "frame",
                       "id": "f18",
-                      "name": "序号 2",
+                      "name": "index-2",
                       "width": 76,
                       "height": 76,
                       "layout": "horizontal",
@@ -509,7 +509,7 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "序号数字",
+                          "name": "index-number",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -530,7 +530,7 @@
                     {
                       "type": "frame",
                       "id": "f25",
-                      "name": "步骤文案",
+                      "name": "step-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -541,9 +541,9 @@
                         {
                           "type": "text",
                           "id": "t20",
-                          "name": "步骤标题",
-                          "content": "把结论写成一句话",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-title",
+                          "content": "Write the point in one sentence",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 600,
                           "fill": [
@@ -560,9 +560,9 @@
                         {
                           "type": "text",
                           "id": "t21",
-                          "name": "步骤说明",
-                          "content": "先写那句话，再找支撑它的内容。顺序反了就成了流水账。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Write that sentence first, then find what backs it up. Reverse it and you get a list of stuff.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -579,7 +579,7 @@
                         {
                           "type": "frame",
                           "id": "f22",
-                          "name": "胶囊",
+                          "name": "pill",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -601,7 +601,7 @@
                             {
                               "type": "icon_font",
                               "id": "i23",
-                              "name": "胶囊图标",
+                              "name": "pill-icon",
                               "iconFontName": "clock",
                               "width": 23,
                               "height": 23,
@@ -615,9 +615,9 @@
                             {
                               "type": "text",
                               "id": "t24",
-                              "name": "胶囊文字",
-                              "content": "15 分钟",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "pill-text",
+                              "content": "15 min",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -649,7 +649,7 @@
                 {
                   "type": "frame",
                   "id": "f28",
-                  "name": "连接",
+                  "name": "connector",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -661,7 +661,7 @@
                     {
                       "type": "icon_font",
                       "id": "i27",
-                      "name": "向下",
+                      "name": "arrow-down",
                       "iconFontName": "chevron-down",
                       "width": 32,
                       "height": 32,
@@ -677,7 +677,7 @@
                 {
                   "type": "frame",
                   "id": "f37",
-                  "name": "步骤 3",
+                  "name": "step-3",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -698,7 +698,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "序号 3",
+                      "name": "index-3",
                       "width": 76,
                       "height": 76,
                       "layout": "horizontal",
@@ -715,7 +715,7 @@
                         {
                           "type": "text",
                           "id": "t30",
-                          "name": "序号数字",
+                          "name": "index-number",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -736,7 +736,7 @@
                     {
                       "type": "frame",
                       "id": "f36",
-                      "name": "步骤文案",
+                      "name": "step-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -747,9 +747,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "步骤标题",
-                          "content": "套一个现成模板起稿",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-title",
+                          "content": "Start from a template",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 600,
                           "fill": [
@@ -766,9 +766,9 @@
                         {
                           "type": "text",
                           "id": "t32",
-                          "name": "步骤说明",
-                          "content": "从模板改比从空白建快一倍，也不会漏掉署名和出处。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Editing a template is twice as fast as a blank canvas, and you won't forget credits or sources.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -785,7 +785,7 @@
                         {
                           "type": "frame",
                           "id": "f33",
-                          "name": "胶囊",
+                          "name": "pill",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -807,7 +807,7 @@
                             {
                               "type": "icon_font",
                               "id": "i34",
-                              "name": "胶囊图标",
+                              "name": "pill-icon",
                               "iconFontName": "clock",
                               "width": 23,
                               "height": 23,
@@ -821,9 +821,9 @@
                             {
                               "type": "text",
                               "id": "t35",
-                              "name": "胶囊文字",
-                              "content": "5 分钟",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "pill-text",
+                              "content": "5 min",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -855,7 +855,7 @@
                 {
                   "type": "frame",
                   "id": "f39",
-                  "name": "连接",
+                  "name": "connector",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -867,7 +867,7 @@
                     {
                       "type": "icon_font",
                       "id": "i38",
-                      "name": "向下",
+                      "name": "arrow-down",
                       "iconFontName": "chevron-down",
                       "width": 32,
                       "height": 32,
@@ -883,7 +883,7 @@
                 {
                   "type": "frame",
                   "id": "f48",
-                  "name": "步骤 4",
+                  "name": "step-4",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -904,7 +904,7 @@
                     {
                       "type": "frame",
                       "id": "f40",
-                      "name": "序号 4",
+                      "name": "index-4",
                       "width": 76,
                       "height": 76,
                       "layout": "horizontal",
@@ -921,7 +921,7 @@
                         {
                           "type": "text",
                           "id": "t41",
-                          "name": "序号数字",
+                          "name": "index-number",
                           "content": "04",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -942,7 +942,7 @@
                     {
                       "type": "frame",
                       "id": "f47",
-                      "name": "步骤文案",
+                      "name": "step-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -953,9 +953,9 @@
                         {
                           "type": "text",
                           "id": "t42",
-                          "name": "步骤标题",
-                          "content": "只改文案，先别动版式",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-title",
+                          "content": "Change the copy, not the layout",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 600,
                           "fill": [
@@ -972,9 +972,9 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "步骤说明",
-                          "content": "把所有文字换成自己的，再回头看还有哪里不顺眼。多数时候一处都不用改。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Swap in all your own text, then look for anything that feels off. Usually nothing does.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -991,7 +991,7 @@
                         {
                           "type": "frame",
                           "id": "f44",
-                          "name": "胶囊",
+                          "name": "pill",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1013,7 +1013,7 @@
                             {
                               "type": "icon_font",
                               "id": "i45",
-                              "name": "胶囊图标",
+                              "name": "pill-icon",
                               "iconFontName": "clock",
                               "width": 23,
                               "height": 23,
@@ -1027,9 +1027,9 @@
                             {
                               "type": "text",
                               "id": "t46",
-                              "name": "胶囊文字",
-                              "content": "30 分钟",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "pill-text",
+                              "content": "30 min",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -1061,7 +1061,7 @@
                 {
                   "type": "frame",
                   "id": "f50",
-                  "name": "连接",
+                  "name": "connector",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1073,7 +1073,7 @@
                     {
                       "type": "icon_font",
                       "id": "i49",
-                      "name": "向下",
+                      "name": "arrow-down",
                       "iconFontName": "chevron-down",
                       "width": 32,
                       "height": 32,
@@ -1089,7 +1089,7 @@
                 {
                   "type": "frame",
                   "id": "f59",
-                  "name": "步骤 5",
+                  "name": "step-5",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1110,7 +1110,7 @@
                     {
                       "type": "frame",
                       "id": "f51",
-                      "name": "序号 5",
+                      "name": "index-5",
                       "width": 76,
                       "height": 76,
                       "layout": "horizontal",
@@ -1127,7 +1127,7 @@
                         {
                           "type": "text",
                           "id": "t52",
-                          "name": "序号数字",
+                          "name": "index-number",
                           "content": "05",
                           "fontFamily": "Inter",
                           "fontSize": 32,
@@ -1148,7 +1148,7 @@
                     {
                       "type": "frame",
                       "id": "f58",
-                      "name": "步骤文案",
+                      "name": "step-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1159,9 +1159,9 @@
                         {
                           "type": "text",
                           "id": "t53",
-                          "name": "步骤标题",
-                          "content": "导出前通读一遍",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-title",
+                          "content": "Read it through before export",
+                          "fontFamily": "Inter",
                           "fontSize": 34,
                           "fontWeight": 600,
                           "fill": [
@@ -1178,9 +1178,9 @@
                         {
                           "type": "text",
                           "id": "t54",
-                          "name": "步骤说明",
-                          "content": "念出声地读一遍。读不顺的句子，图上也一定看着别扭。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Read it out loud. If a sentence trips you up, it will look awkward on the graphic too.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1197,7 +1197,7 @@
                         {
                           "type": "frame",
                           "id": "f55",
-                          "name": "胶囊",
+                          "name": "pill",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1219,7 +1219,7 @@
                             {
                               "type": "icon_font",
                               "id": "i56",
-                              "name": "胶囊图标",
+                              "name": "pill-icon",
                               "iconFontName": "clock",
                               "width": 23,
                               "height": 23,
@@ -1233,9 +1233,9 @@
                             {
                               "type": "text",
                               "id": "t57",
-                              "name": "胶囊文字",
-                              "content": "5 分钟",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "pill-text",
+                              "content": "5 min",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -1271,7 +1271,7 @@
         {
           "type": "frame",
           "id": "f77",
-          "name": "03 提示",
+          "name": "03-tips",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1288,7 +1288,7 @@
             {
               "type": "frame",
               "id": "f76",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1299,7 +1299,7 @@
                 {
                   "type": "rectangle",
                   "id": "r73",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -1313,9 +1313,9 @@
                 {
                   "type": "text",
                   "id": "t74",
-                  "name": "区块标题",
-                  "content": "两句实话",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Two honest notes",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -1332,9 +1332,9 @@
                 {
                   "type": "text",
                   "id": "t75",
-                  "name": "区块说明",
-                  "content": "做过的人都会撞上的两件事，先说在前面。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-description",
+                  "content": "Two things everyone runs into, so you know up front.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -1353,7 +1353,7 @@
             {
               "type": "frame",
               "id": "f72",
-              "name": "提示面板",
+              "name": "tip-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1374,7 +1374,7 @@
                 {
                   "type": "frame",
                   "id": "f68",
-                  "name": "提示项",
+                  "name": "tip-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1385,7 +1385,7 @@
                     {
                       "type": "icon_font",
                       "id": "i66",
-                      "name": "星标",
+                      "name": "star",
                       "iconFontName": "sparkles",
                       "width": 28,
                       "height": 28,
@@ -1399,9 +1399,9 @@
                     {
                       "type": "text",
                       "id": "t67",
-                      "name": "提示文字",
-                      "content": "卡在第二步是正常的，那一步本来就最费脑子。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tip-text",
+                      "content": "Stuck on step 2? Normal. It's the hardest thinking.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 500,
                       "fill": [
@@ -1420,7 +1420,7 @@
                 {
                   "type": "frame",
                   "id": "f71",
-                  "name": "提示项",
+                  "name": "tip-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1431,7 +1431,7 @@
                     {
                       "type": "icon_font",
                       "id": "i69",
-                      "name": "星标",
+                      "name": "star",
                       "iconFontName": "sparkles",
                       "width": 28,
                       "height": 28,
@@ -1445,9 +1445,9 @@
                     {
                       "type": "text",
                       "id": "t70",
-                      "name": "提示文字",
-                      "content": "一次只做一张。做完再开下一张，比同时开三张快。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tip-text",
+                      "content": "One at a time. Finishing beats juggling three.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 500,
                       "fill": [
@@ -1470,7 +1470,7 @@
         {
           "type": "frame",
           "id": "f83",
-          "name": "04 收尾",
+          "name": "04-wrap-up",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1492,9 +1492,9 @@
             {
               "type": "text",
               "id": "t78",
-              "name": "收尾标题",
-              "content": "做完记得存成自己的模板",
-              "fontFamily": "Noto Sans SC",
+              "name": "wrap-up-title",
+              "content": "When you're done, save it as your template",
+              "fontFamily": "Inter",
               "fontSize": 48,
               "fontWeight": 700,
               "fill": [
@@ -1511,9 +1511,9 @@
             {
               "type": "text",
               "id": "t79",
-              "name": "收尾说明",
-              "content": "下一张就只剩改文案了 —— 这五步只需要走一次。",
-              "fontFamily": "Noto Sans SC",
+              "name": "wrap-up-description",
+              "content": "Next time it's just new copy. You only walk these five steps once.",
+              "fontFamily": "Inter",
               "fontSize": 27,
               "fontWeight": 400,
               "fill": [
@@ -1530,7 +1530,7 @@
             {
               "type": "frame",
               "id": "f80",
-              "name": "胶囊",
+              "name": "pill",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1552,7 +1552,7 @@
                 {
                   "type": "icon_font",
                   "id": "i81",
-                  "name": "胶囊图标",
+                  "name": "pill-icon",
                   "iconFontName": "favorite",
                   "width": 27,
                   "height": 27,
@@ -1566,9 +1566,9 @@
                 {
                   "type": "text",
                   "id": "t82",
-                  "name": "胶囊文字",
-                  "content": "收藏这张图",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "pill-text",
+                  "content": "Save this graphic",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 600,
                   "fill": [
@@ -1589,7 +1589,7 @@
         {
           "type": "frame",
           "id": "f87",
-          "name": "05 页脚",
+          "name": "05-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1606,7 +1606,7 @@
             {
               "type": "frame",
               "id": "f86",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1617,9 +1617,9 @@
                 {
                   "type": "text",
                   "id": "t84",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -1636,9 +1636,9 @@
                 {
                   "type": "text",
                   "id": "t85",
-                  "name": "更新说明",
-                  "content": "每周一张能照着做的图",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "A new follow-along graphic every week",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

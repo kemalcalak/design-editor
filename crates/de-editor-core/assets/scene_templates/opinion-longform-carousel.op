@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "观点长文轮播 · 3:4 六板",
+  "name": "opinion-long-read-carousel-3x4-6-boards",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -47,7 +47,7 @@
     {
       "type": "frame",
       "id": "f27",
-      "name": "01 封面 · 三行阶梯",
+      "name": "01-cover-three-line-stagger",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -62,7 +62,7 @@
         {
           "type": "frame",
           "id": "f14",
-          "name": "封面 · 三行阶梯 · 内容",
+          "name": "cover-three-line-stagger-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -79,7 +79,7 @@
             {
               "type": "frame",
               "id": "f21",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -90,7 +90,7 @@
                 {
                   "type": "frame",
                   "id": "f17",
-                  "name": "页眉行",
+                  "name": "page-header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -102,9 +102,9 @@
                     {
                       "type": "text",
                       "id": "t15",
-                      "name": "系列名",
-                      "content": "观点 · 长文",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Opinion · Long read",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -121,7 +121,7 @@
                     {
                       "type": "text",
                       "id": "t16",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "01 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -142,7 +142,7 @@
                 {
                   "type": "frame",
                   "id": "f20",
-                  "name": "报头双线",
+                  "name": "masthead-double-rule",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -153,7 +153,7 @@
                     {
                       "type": "rectangle",
                       "id": "r18",
-                      "name": "粗线",
+                      "name": "thick-rule",
                       "width": "fill_container",
                       "height": 3,
                       "fill": [
@@ -166,7 +166,7 @@
                     {
                       "type": "rectangle",
                       "id": "r19",
-                      "name": "细线",
+                      "name": "thin-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -183,7 +183,7 @@
             {
               "type": "frame",
               "id": "f13",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -199,9 +199,9 @@
                 {
                   "type": "text",
                   "id": "t10",
-                  "name": "眉标",
-                  "content": "一篇讲清楚「表达」的长文 · 共 6 板",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "eyebrow",
+                  "content": "A long read on saying it clearly · 6 boards",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 600,
                   "fill": [
@@ -218,7 +218,7 @@
                 {
                   "type": "frame",
                   "id": "f11",
-                  "name": "三行阶梯",
+                  "name": "three-line-stagger",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -229,7 +229,7 @@
                     {
                       "type": "frame",
                       "id": "f2",
-                      "name": "阶梯行",
+                      "name": "stagger-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -241,9 +241,9 @@
                         {
                           "type": "text",
                           "id": "t1",
-                          "name": "标题行",
-                          "content": "你不是",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "title-line",
+                          "content": "You're not",
+                          "fontFamily": "Inter",
                           "fontSize": 88,
                           "fontWeight": 700,
                           "fill": [
@@ -262,7 +262,7 @@
                     {
                       "type": "frame",
                       "id": "f7",
-                      "name": "阶梯行",
+                      "name": "stagger-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -274,7 +274,7 @@
                         {
                           "type": "group",
                           "id": "g3",
-                          "name": "套印错位",
+                          "name": "misregistration",
                           "width": 392,
                           "height": 109,
                           "layout": "none",
@@ -283,9 +283,9 @@
                             {
                               "type": "text",
                               "id": "t4",
-                              "name": "标题行",
-                              "content": "没有观点",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "title-line",
+                              "content": "pointless",
+                              "fontFamily": "Inter",
                               "fontSize": 88,
                               "fontWeight": 700,
                               "fill": [
@@ -304,7 +304,7 @@
                             {
                               "type": "rectangle",
                               "id": "r5",
-                              "name": "墨版底",
+                              "name": "ink-plate-base",
                               "width": 384,
                               "height": 101,
                               "fill": [
@@ -319,7 +319,7 @@
                             {
                               "type": "rectangle",
                               "id": "r6",
-                              "name": "套红版 · 错位",
+                              "name": "red-plate-offset",
                               "width": 384,
                               "height": 101,
                               "fill": [
@@ -344,7 +344,7 @@
                     {
                       "type": "frame",
                       "id": "f9",
-                      "name": "阶梯行",
+                      "name": "stagger-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -356,9 +356,9 @@
                         {
                           "type": "text",
                           "id": "t8",
-                          "name": "标题行",
-                          "content": "只是没说清",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "title-line",
+                          "content": "just unclear",
+                          "fontFamily": "Inter",
                           "fontSize": 88,
                           "fontWeight": 700,
                           "fill": [
@@ -385,9 +385,9 @@
                 {
                   "type": "text",
                   "id": "t12",
-                  "name": "副标",
-                  "content": "观点不稀缺，把观点放进别人脑子里才稀缺。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "subtitle",
+                  "content": "Opinions are cheap. Getting one into someone else's head is rare.",
+                  "fontFamily": "Inter",
                   "fontSize": 40,
                   "fontWeight": 400,
                   "fill": [
@@ -406,7 +406,7 @@
             {
               "type": "frame",
               "id": "f26",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -417,7 +417,7 @@
                 {
                   "type": "rectangle",
                   "id": "r22",
-                  "name": "栏线",
+                  "name": "column-rule",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -430,7 +430,7 @@
                 {
                   "type": "frame",
                   "id": "f25",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -442,9 +442,9 @@
                     {
                       "type": "text",
                       "id": "t23",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -461,9 +461,9 @@
                     {
                       "type": "text",
                       "id": "t24",
-                      "name": "本板提要",
-                      "content": "封面",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-summary",
+                      "content": "Cover",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -490,7 +490,7 @@
     {
       "type": "frame",
       "id": "f53",
-      "name": "02 反差 · 上下叠压",
+      "name": "02-contrast-stacked",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -505,7 +505,7 @@
         {
           "type": "frame",
           "id": "f40",
-          "name": "反差 · 上下叠压 · 内容",
+          "name": "contrast-stacked-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -522,7 +522,7 @@
             {
               "type": "frame",
               "id": "f47",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -533,7 +533,7 @@
                 {
                   "type": "frame",
                   "id": "f43",
-                  "name": "页眉行",
+                  "name": "page-header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -545,9 +545,9 @@
                     {
                       "type": "text",
                       "id": "t41",
-                      "name": "系列名",
-                      "content": "观点 · 长文",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Opinion · Long read",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -564,7 +564,7 @@
                     {
                       "type": "text",
                       "id": "t42",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "02 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -585,7 +585,7 @@
                 {
                   "type": "frame",
                   "id": "f46",
-                  "name": "报头双线",
+                  "name": "masthead-double-rule",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -596,7 +596,7 @@
                     {
                       "type": "rectangle",
                       "id": "r44",
-                      "name": "粗线",
+                      "name": "thick-rule",
                       "width": "fill_container",
                       "height": 3,
                       "fill": [
@@ -609,7 +609,7 @@
                     {
                       "type": "rectangle",
                       "id": "r45",
-                      "name": "细线",
+                      "name": "thin-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -626,7 +626,7 @@
             {
               "type": "frame",
               "id": "f39",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -642,9 +642,9 @@
                 {
                   "type": "text",
                   "id": "t28",
-                  "name": "小标题",
-                  "content": "先看一组对照",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "heading",
+                  "content": "A quick side-by-side",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -661,7 +661,7 @@
                 {
                   "type": "frame",
                   "id": "f38",
-                  "name": "上下反差",
+                  "name": "stacked-contrast",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -672,7 +672,7 @@
                     {
                       "type": "frame",
                       "id": "f32",
-                      "name": "反差块",
+                      "name": "contrast-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -692,9 +692,9 @@
                         {
                           "type": "text",
                           "id": "t29",
-                          "name": "反差标签",
-                          "content": "多数人这样写",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-label",
+                          "content": "How most people write",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -711,9 +711,9 @@
                         {
                           "type": "text",
                           "id": "t30",
-                          "name": "反差句",
-                          "content": "「我觉得这件事挺重要的」",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-line",
+                          "content": "\"I think this is pretty important\"",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -730,9 +730,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "反差注解",
-                          "content": "重要在哪、对谁重要、不做会怎样，全没说。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-note",
+                          "content": "Important how, to whom, and what if you skip it? None of that is said.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -751,7 +751,7 @@
                     {
                       "type": "rectangle",
                       "id": "r33",
-                      "name": "分界",
+                      "name": "divider",
                       "width": "fill_container",
                       "height": 3,
                       "fill": [
@@ -764,7 +764,7 @@
                     {
                       "type": "frame",
                       "id": "f37",
-                      "name": "反差块",
+                      "name": "contrast-block",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -784,9 +784,9 @@
                         {
                           "type": "text",
                           "id": "t34",
-                          "name": "反差标签",
-                          "content": "说清楚是这样",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-label",
+                          "content": "What clear looks like",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -803,9 +803,9 @@
                         {
                           "type": "text",
                           "id": "t35",
-                          "name": "反差句",
-                          "content": "「不写下来，三天后你只剩情绪」",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-line",
+                          "content": "\"Don't write it down, and in 3 days all you have is a mood\"",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 700,
                           "fill": [
@@ -822,9 +822,9 @@
                         {
                           "type": "text",
                           "id": "t36",
-                          "name": "反差注解",
-                          "content": "给了动作、代价和时间，这才叫观点。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "contrast-note",
+                          "content": "An action, a cost and a timeframe. That's a point.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -847,7 +847,7 @@
             {
               "type": "frame",
               "id": "f52",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -858,7 +858,7 @@
                 {
                   "type": "rectangle",
                   "id": "r48",
-                  "name": "栏线",
+                  "name": "column-rule",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -871,7 +871,7 @@
                 {
                   "type": "frame",
                   "id": "f51",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -883,9 +883,9 @@
                     {
                       "type": "text",
                       "id": "t49",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -902,9 +902,9 @@
                     {
                       "type": "text",
                       "id": "t50",
-                      "name": "本板提要",
-                      "content": "论点 0",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-summary",
+                      "content": "Point 0",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -931,7 +931,7 @@
     {
       "type": "frame",
       "id": "f82",
-      "name": "03 展开 · 段落纯排",
+      "name": "03-expand-plain-paragraphs",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -946,7 +946,7 @@
         {
           "type": "frame",
           "id": "f69",
-          "name": "展开 · 段落纯排 · 内容",
+          "name": "expand-plain-paragraphs-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -963,7 +963,7 @@
             {
               "type": "frame",
               "id": "f76",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -974,7 +974,7 @@
                 {
                   "type": "frame",
                   "id": "f72",
-                  "name": "页眉行",
+                  "name": "page-header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -986,9 +986,9 @@
                     {
                       "type": "text",
                       "id": "t70",
-                      "name": "系列名",
-                      "content": "观点 · 长文",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Opinion · Long read",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1005,7 +1005,7 @@
                     {
                       "type": "text",
                       "id": "t71",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "03 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -1026,7 +1026,7 @@
                 {
                   "type": "frame",
                   "id": "f75",
-                  "name": "报头双线",
+                  "name": "masthead-double-rule",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1037,7 +1037,7 @@
                     {
                       "type": "rectangle",
                       "id": "r73",
-                      "name": "粗线",
+                      "name": "thick-rule",
                       "width": "fill_container",
                       "height": 3,
                       "fill": [
@@ -1050,7 +1050,7 @@
                     {
                       "type": "rectangle",
                       "id": "r74",
-                      "name": "细线",
+                      "name": "thin-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -1067,7 +1067,7 @@
             {
               "type": "frame",
               "id": "f68",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1083,9 +1083,9 @@
                 {
                   "type": "text",
                   "id": "t66",
-                  "name": "小标题",
-                  "content": "说清楚是一道工序",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "heading",
+                  "content": "Clarity is a process",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -1102,7 +1102,7 @@
                 {
                   "type": "frame",
                   "id": "f67",
-                  "name": "正文区",
+                  "name": "body-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1113,7 +1113,7 @@
                     {
                       "type": "frame",
                       "id": "f57",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1125,7 +1125,7 @@
                         {
                           "type": "frame",
                           "id": "f55",
-                          "name": "段首标记位",
+                          "name": "paragraph-marker-slot",
                           "width": 16,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1136,7 +1136,7 @@
                             {
                               "type": "rectangle",
                               "id": "r54",
-                              "name": "套红方点",
+                              "name": "red-overprint-dot",
                               "width": 16,
                               "height": 16,
                               "fill": [
@@ -1151,9 +1151,9 @@
                         {
                           "type": "text",
                           "id": "t56",
-                          "name": "正文",
-                          "content": "把话说清楚，从来不是修辞问题。它是一道工序：先把结论拎到最前面，再补上你凭什么这么想。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body-text",
+                          "content": "Being clear was never about rhetoric. It's a process: put the conclusion first, then add why you believe it.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -1172,7 +1172,7 @@
                     {
                       "type": "frame",
                       "id": "f61",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1184,7 +1184,7 @@
                         {
                           "type": "frame",
                           "id": "f59",
-                          "name": "段首标记位",
+                          "name": "paragraph-marker-slot",
                           "width": 16,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1195,7 +1195,7 @@
                             {
                               "type": "rectangle",
                               "id": "r58",
-                              "name": "段首标记",
+                              "name": "paragraph-marker",
                               "width": 16,
                               "height": 16,
                               "fill": [
@@ -1210,9 +1210,9 @@
                         {
                           "type": "text",
                           "id": "t60",
-                          "name": "正文",
-                          "content": "多数人写反了：先铺三百字背景，读者滑到第二屏还不知道你要说什么，于是划走。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body-text",
+                          "content": "Most people do it backwards: 300 words of setup, and by the second screen readers still don't know your point, so they scroll on.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -1231,7 +1231,7 @@
                     {
                       "type": "frame",
                       "id": "f65",
-                      "name": "段落",
+                      "name": "paragraph",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1243,7 +1243,7 @@
                         {
                           "type": "frame",
                           "id": "f63",
-                          "name": "段首标记位",
+                          "name": "paragraph-marker-slot",
                           "width": 16,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1254,7 +1254,7 @@
                             {
                               "type": "rectangle",
                               "id": "r62",
-                              "name": "段首标记",
+                              "name": "paragraph-marker",
                               "width": 16,
                               "height": 16,
                               "fill": [
@@ -1269,9 +1269,9 @@
                         {
                           "type": "text",
                           "id": "t64",
-                          "name": "正文",
-                          "content": "不是不认同，是没等到。所以先写最后那一句：写完它，前面所有段落只有一个任务，让人信它。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "body-text",
+                          "content": "They didn't disagree, they just didn't wait. So write the last line first. Then every paragraph has one job: make it believable.",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 400,
                           "fill": [
@@ -1294,7 +1294,7 @@
             {
               "type": "frame",
               "id": "f81",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1305,7 +1305,7 @@
                 {
                   "type": "rectangle",
                   "id": "r77",
-                  "name": "栏线",
+                  "name": "column-rule",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -1318,7 +1318,7 @@
                 {
                   "type": "frame",
                   "id": "f80",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1330,9 +1330,9 @@
                     {
                       "type": "text",
                       "id": "t78",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -1349,9 +1349,9 @@
                     {
                       "type": "text",
                       "id": "t79",
-                      "name": "本板提要",
-                      "content": "论点 1",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-summary",
+                      "content": "Point 1",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1378,7 +1378,7 @@
     {
       "type": "frame",
       "id": "f114",
-      "name": "04 方法 · 编号纵列",
+      "name": "04-method-numbered-column",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -1393,7 +1393,7 @@
         {
           "type": "frame",
           "id": "f101",
-          "name": "方法 · 编号纵列 · 内容",
+          "name": "method-numbered-column-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1410,7 +1410,7 @@
             {
               "type": "frame",
               "id": "f108",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1421,7 +1421,7 @@
                 {
                   "type": "frame",
                   "id": "f104",
-                  "name": "页眉行",
+                  "name": "page-header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1433,9 +1433,9 @@
                     {
                       "type": "text",
                       "id": "t102",
-                      "name": "系列名",
-                      "content": "观点 · 长文",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Opinion · Long read",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1452,7 +1452,7 @@
                     {
                       "type": "text",
                       "id": "t103",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "04 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -1473,7 +1473,7 @@
                 {
                   "type": "frame",
                   "id": "f107",
-                  "name": "报头双线",
+                  "name": "masthead-double-rule",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1484,7 +1484,7 @@
                     {
                       "type": "rectangle",
                       "id": "r105",
-                      "name": "粗线",
+                      "name": "thick-rule",
                       "width": "fill_container",
                       "height": 3,
                       "fill": [
@@ -1497,7 +1497,7 @@
                     {
                       "type": "rectangle",
                       "id": "r106",
-                      "name": "细线",
+                      "name": "thin-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -1514,7 +1514,7 @@
             {
               "type": "frame",
               "id": "f100",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1530,9 +1530,9 @@
                 {
                   "type": "text",
                   "id": "t98",
-                  "name": "小标题",
-                  "content": "三道工序，按顺序做",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "heading",
+                  "content": "Three steps, in order",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -1549,7 +1549,7 @@
                 {
                   "type": "frame",
                   "id": "f99",
-                  "name": "要点列表",
+                  "name": "point-list",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1560,7 +1560,7 @@
                     {
                       "type": "frame",
                       "id": "f87",
-                      "name": "要点",
+                      "name": "point",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1572,7 +1572,7 @@
                         {
                           "type": "text",
                           "id": "t83",
-                          "name": "编号",
+                          "name": "number",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 64,
@@ -1591,7 +1591,7 @@
                         {
                           "type": "frame",
                           "id": "f86",
-                          "name": "要点文案",
+                          "name": "point-copy",
                           "width": 752,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1602,9 +1602,9 @@
                             {
                               "type": "text",
                               "id": "t84",
-                              "name": "要点标题",
-                              "content": "先写最后一句",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-title",
+                              "content": "Write the last line first",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -1621,9 +1621,9 @@
                             {
                               "type": "text",
                               "id": "t85",
-                              "name": "要点注解",
-                              "content": "整段删到只剩一句话，那句就是观点。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-note",
+                              "content": "Cut it down to one sentence. That's your point.",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -1644,7 +1644,7 @@
                     {
                       "type": "frame",
                       "id": "f92",
-                      "name": "要点",
+                      "name": "point",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1656,7 +1656,7 @@
                         {
                           "type": "text",
                           "id": "t88",
-                          "name": "编号",
+                          "name": "number",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 64,
@@ -1675,7 +1675,7 @@
                         {
                           "type": "frame",
                           "id": "f91",
-                          "name": "要点文案",
+                          "name": "point-copy",
                           "width": 752,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1686,9 +1686,9 @@
                             {
                               "type": "text",
                               "id": "t89",
-                              "name": "要点标题",
-                              "content": "给它一个代价",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-title",
+                              "content": "Give it a cost",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -1705,9 +1705,9 @@
                             {
                               "type": "text",
                               "id": "t90",
-                              "name": "要点注解",
-                              "content": "说明不这么做会失去什么，才有重量。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-note",
+                              "content": "Show what's lost if you don't. That's the weight.",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -1728,7 +1728,7 @@
                     {
                       "type": "frame",
                       "id": "f97",
-                      "name": "要点",
+                      "name": "point",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1740,7 +1740,7 @@
                         {
                           "type": "text",
                           "id": "t93",
-                          "name": "编号",
+                          "name": "number",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 64,
@@ -1759,7 +1759,7 @@
                         {
                           "type": "frame",
                           "id": "f96",
-                          "name": "要点文案",
+                          "name": "point-copy",
                           "width": 752,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1770,9 +1770,9 @@
                             {
                               "type": "text",
                               "id": "t94",
-                              "name": "要点标题",
-                              "content": "换成对方的词",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-title",
+                              "content": "Use their words",
+                              "fontFamily": "Inter",
                               "fontSize": 48,
                               "fontWeight": 700,
                               "fill": [
@@ -1789,9 +1789,9 @@
                             {
                               "type": "text",
                               "id": "t95",
-                              "name": "要点注解",
-                              "content": "换成听的人熟悉的说法，别用行话。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-note",
+                              "content": "Say it the way your reader would. Skip the jargon.",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 400,
                               "fill": [
@@ -1816,7 +1816,7 @@
             {
               "type": "frame",
               "id": "f113",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1827,7 +1827,7 @@
                 {
                   "type": "rectangle",
                   "id": "r109",
-                  "name": "栏线",
+                  "name": "column-rule",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -1840,7 +1840,7 @@
                 {
                   "type": "frame",
                   "id": "f112",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1852,9 +1852,9 @@
                     {
                       "type": "text",
                       "id": "t110",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -1871,9 +1871,9 @@
                     {
                       "type": "text",
                       "id": "t111",
-                      "name": "本板提要",
-                      "content": "论点 2",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-summary",
+                      "content": "Point 2",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1900,7 +1900,7 @@
     {
       "type": "frame",
       "id": "f132",
-      "name": "05 金句 · 满版一句",
+      "name": "05-key-quote-full-bleed",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -1915,7 +1915,7 @@
         {
           "type": "frame",
           "id": "f119",
-          "name": "金句 · 满版一句 · 内容",
+          "name": "key-quote-full-bleed-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1932,7 +1932,7 @@
             {
               "type": "frame",
               "id": "f126",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1943,7 +1943,7 @@
                 {
                   "type": "frame",
                   "id": "f122",
-                  "name": "页眉行",
+                  "name": "page-header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1955,9 +1955,9 @@
                     {
                       "type": "text",
                       "id": "t120",
-                      "name": "系列名",
-                      "content": "观点 · 长文",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Opinion · Long read",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -1974,7 +1974,7 @@
                     {
                       "type": "text",
                       "id": "t121",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "05 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -1995,7 +1995,7 @@
                 {
                   "type": "frame",
                   "id": "f125",
-                  "name": "报头双线",
+                  "name": "masthead-double-rule",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2006,7 +2006,7 @@
                     {
                       "type": "rectangle",
                       "id": "r123",
-                      "name": "粗线",
+                      "name": "thick-rule",
                       "width": "fill_container",
                       "height": 3,
                       "fill": [
@@ -2019,7 +2019,7 @@
                     {
                       "type": "rectangle",
                       "id": "r124",
-                      "name": "细线",
+                      "name": "thin-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2036,7 +2036,7 @@
             {
               "type": "frame",
               "id": "f118",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2052,7 +2052,7 @@
                 {
                   "type": "rectangle",
                   "id": "r115",
-                  "name": "套红方点",
+                  "name": "red-overprint-dot",
                   "width": 24,
                   "height": 24,
                   "fill": [
@@ -2065,9 +2065,9 @@
                 {
                   "type": "text",
                   "id": "t116",
-                  "name": "金句",
-                  "content": "写不清楚的观点，\n等于你还没想清楚。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "key-quote",
+                  "content": "If you can't write it clearly,\nyou haven't thought it through.",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -2084,9 +2084,9 @@
                 {
                   "type": "text",
                   "id": "t117",
-                  "name": "出处",
-                  "content": "—— 本篇第 3 板的那道工序，说到底只是在逼你想完",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "source",
+                  "content": "— The process on board 3 is really just a way to make you finish the thought",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -2105,7 +2105,7 @@
             {
               "type": "frame",
               "id": "f131",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2116,7 +2116,7 @@
                 {
                   "type": "rectangle",
                   "id": "r127",
-                  "name": "栏线",
+                  "name": "column-rule",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -2129,7 +2129,7 @@
                 {
                   "type": "frame",
                   "id": "f130",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2141,9 +2141,9 @@
                     {
                       "type": "text",
                       "id": "t128",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -2160,9 +2160,9 @@
                     {
                       "type": "text",
                       "id": "t129",
-                      "name": "本板提要",
-                      "content": "复述点",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-summary",
+                      "content": "Recap",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -2189,7 +2189,7 @@
     {
       "type": "frame",
       "id": "f151",
-      "name": "06 收束 · 签名",
+      "name": "06-close-signature",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -2204,7 +2204,7 @@
         {
           "type": "frame",
           "id": "f138",
-          "name": "收束 · 签名 · 内容",
+          "name": "close-signature-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2221,7 +2221,7 @@
             {
               "type": "frame",
               "id": "f145",
-              "name": "页眉",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2232,7 +2232,7 @@
                 {
                   "type": "frame",
                   "id": "f141",
-                  "name": "页眉行",
+                  "name": "page-header-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2244,9 +2244,9 @@
                     {
                       "type": "text",
                       "id": "t139",
-                      "name": "系列名",
-                      "content": "观点 · 长文",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "series-name",
+                      "content": "Opinion · Long read",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [
@@ -2263,7 +2263,7 @@
                     {
                       "type": "text",
                       "id": "t140",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "06 / 06",
                       "fontFamily": "Inter",
                       "fontSize": 32,
@@ -2284,7 +2284,7 @@
                 {
                   "type": "frame",
                   "id": "f144",
-                  "name": "报头双线",
+                  "name": "masthead-double-rule",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2295,7 +2295,7 @@
                     {
                       "type": "rectangle",
                       "id": "r142",
-                      "name": "粗线",
+                      "name": "thick-rule",
                       "width": "fill_container",
                       "height": 3,
                       "fill": [
@@ -2308,7 +2308,7 @@
                     {
                       "type": "rectangle",
                       "id": "r143",
-                      "name": "细线",
+                      "name": "thin-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2325,7 +2325,7 @@
             {
               "type": "frame",
               "id": "f137",
-              "name": "主体",
+              "name": "body",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2341,9 +2341,9 @@
                 {
                   "type": "text",
                   "id": "t133",
-                  "name": "收束句",
-                  "content": "先写最后一句，\n再写前面的话。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-line",
+                  "content": "Write the last line first,\nthen everything before it.",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -2360,7 +2360,7 @@
                 {
                   "type": "frame",
                   "id": "f136",
-                  "name": "行动",
+                  "name": "action",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2371,7 +2371,7 @@
                     {
                       "type": "rectangle",
                       "id": "r134",
-                      "name": "短线",
+                      "name": "short-rule",
                       "width": 140,
                       "height": 3,
                       "fill": [
@@ -2384,9 +2384,9 @@
                     {
                       "type": "text",
                       "id": "t135",
-                      "name": "行动说明",
-                      "content": "把这句话抄进你的备忘录，下次写之前先看一眼。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "action-note",
+                      "content": "Copy this into your notes and glance at it before you write next time.",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 400,
                       "fill": [
@@ -2407,7 +2407,7 @@
             {
               "type": "frame",
               "id": "f150",
-              "name": "页脚",
+              "name": "page-footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2418,7 +2418,7 @@
                 {
                   "type": "rectangle",
                   "id": "r146",
-                  "name": "栏线",
+                  "name": "column-rule",
                   "width": "fill_container",
                   "height": 1,
                   "fill": [
@@ -2431,7 +2431,7 @@
                 {
                   "type": "frame",
                   "id": "f149",
-                  "name": "署名行",
+                  "name": "byline",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2443,9 +2443,9 @@
                     {
                       "type": "text",
                       "id": "t147",
-                      "name": "账号名",
-                      "content": "@ 你的账号名",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "handle",
+                      "content": "@yourhandle",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -2462,9 +2462,9 @@
                     {
                       "type": "text",
                       "id": "t148",
-                      "name": "本板提要",
-                      "content": "收束",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "board-summary",
+                      "content": "Close",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 400,
                       "fill": [

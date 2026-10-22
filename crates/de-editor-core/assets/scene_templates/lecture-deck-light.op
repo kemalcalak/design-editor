@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "课件 deck · 浅色 16:9",
+  "name": "lecture-deck-light-16x9",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f32",
-      "name": "01 课程封面",
+      "name": "01-course-cover",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -54,7 +54,7 @@
         {
           "type": "frame",
           "id": "f8",
-          "name": "01 课程封面 · 正文",
+          "name": "01-course-cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -70,7 +70,7 @@
             {
               "type": "frame",
               "id": "f34",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -92,9 +92,9 @@
                 {
                   "type": "text",
                   "id": "t35",
-                  "name": "标签文字",
-                  "content": "第 07 讲",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Lecture 07",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -113,7 +113,7 @@
             {
               "type": "frame",
               "id": "f4",
-              "name": "课程标题",
+              "name": "course-title",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -124,9 +124,9 @@
                 {
                   "type": "text",
                   "id": "t1",
-                  "name": "课名",
-                  "content": "函数的单调性\n与极值判定",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "course-name",
+                  "content": "Monotonicity and\nExtreme Values",
+                  "fontFamily": "Inter",
                   "fontSize": 116,
                   "fontWeight": 700,
                   "fill": [
@@ -143,7 +143,7 @@
                 {
                   "type": "rectangle",
                   "id": "r2",
-                  "name": "强调条",
+                  "name": "accent-bar",
                   "width": 150,
                   "height": 10,
                   "cornerRadius": 999,
@@ -157,9 +157,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "课程说明",
-                  "content": "这一讲我们只解决一个问题：拿到一个函数，怎么判断它在哪段往上走。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "course-description",
+                  "content": "Today we solve exactly one problem: given a function, how do you tell where it's rising?",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -178,7 +178,7 @@
             {
               "type": "frame",
               "id": "f7",
-              "name": "讲师信息",
+              "name": "instructor-info",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -190,9 +190,9 @@
                 {
                   "type": "text",
                   "id": "t5",
-                  "name": "讲师",
-                  "content": "主讲 · 林望舒",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "instructor",
+                  "content": "Taught by Lena Wells",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 500,
                   "fill": [
@@ -209,9 +209,9 @@
                 {
                   "type": "text",
                   "id": "t6",
-                  "name": "学期",
-                  "content": "高等数学（上）· 2026 秋",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "term",
+                  "content": "Calculus I · Fall 2026",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -232,7 +232,7 @@
         {
           "type": "frame",
           "id": "f33",
-          "name": "01 课程封面 · 装饰",
+          "name": "01-course-cover-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -241,7 +241,7 @@
             {
               "type": "rectangle",
               "id": "r9",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -256,7 +256,7 @@
             {
               "type": "rectangle",
               "id": "r10",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -271,7 +271,7 @@
             {
               "type": "rectangle",
               "id": "r11",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -286,7 +286,7 @@
             {
               "type": "rectangle",
               "id": "r12",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -301,7 +301,7 @@
             {
               "type": "rectangle",
               "id": "r13",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -316,7 +316,7 @@
             {
               "type": "rectangle",
               "id": "r14",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -331,7 +331,7 @@
             {
               "type": "rectangle",
               "id": "r15",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -346,7 +346,7 @@
             {
               "type": "rectangle",
               "id": "r16",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -361,7 +361,7 @@
             {
               "type": "rectangle",
               "id": "r17",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -376,7 +376,7 @@
             {
               "type": "rectangle",
               "id": "r18",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -391,7 +391,7 @@
             {
               "type": "rectangle",
               "id": "r19",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -406,7 +406,7 @@
             {
               "type": "rectangle",
               "id": "r20",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -421,7 +421,7 @@
             {
               "type": "rectangle",
               "id": "r21",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -436,7 +436,7 @@
             {
               "type": "rectangle",
               "id": "r22",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -451,7 +451,7 @@
             {
               "type": "rectangle",
               "id": "r23",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -466,7 +466,7 @@
             {
               "type": "rectangle",
               "id": "r24",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -481,7 +481,7 @@
             {
               "type": "rectangle",
               "id": "r25",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -496,7 +496,7 @@
             {
               "type": "rectangle",
               "id": "r26",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -511,7 +511,7 @@
             {
               "type": "rectangle",
               "id": "r27",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -526,7 +526,7 @@
             {
               "type": "rectangle",
               "id": "r28",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -541,7 +541,7 @@
             {
               "type": "rectangle",
               "id": "r29",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -556,7 +556,7 @@
             {
               "type": "rectangle",
               "id": "r30",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -571,7 +571,7 @@
             {
               "type": "rectangle",
               "id": "r31",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -592,7 +592,7 @@
     {
       "type": "frame",
       "id": "f88",
-      "name": "02 学习目标",
+      "name": "02-learning-goals",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -607,7 +607,7 @@
         {
           "type": "frame",
           "id": "f64",
-          "name": "02 学习目标 · 正文",
+          "name": "02-learning-goals-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -623,7 +623,7 @@
             {
               "type": "frame",
               "id": "f92",
-              "name": "页头",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -634,9 +634,9 @@
                 {
                   "type": "text",
                   "id": "t90",
-                  "name": "页标题",
-                  "content": "这节课下课时，你应该能——",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "By the end, you can:",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -653,9 +653,9 @@
                 {
                   "type": "text",
                   "id": "t91",
-                  "name": "页副标题",
-                  "content": "三条，都要能自己动手做出来，不是听懂就算。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Three skills, and you have to do them yourself. Following along isn't enough.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -674,7 +674,7 @@
             {
               "type": "frame",
               "id": "f94",
-              "name": "目标区",
+              "name": "goal-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -686,7 +686,7 @@
                 {
                   "type": "frame",
                   "id": "f93",
-                  "name": "目标列表",
+                  "name": "goal-list",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -697,7 +697,7 @@
                     {
                       "type": "frame",
                       "id": "f44",
-                      "name": "知识点卡",
+                      "name": "concept-card",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -719,7 +719,7 @@
                         {
                           "type": "rectangle",
                           "id": "r43",
-                          "name": "知识点色条",
+                          "name": "concept-color-bar",
                           "width": 10,
                           "height": "fill_container",
                           "fill": [
@@ -732,7 +732,7 @@
                         {
                           "type": "frame",
                           "id": "f42",
-                          "name": "卡内容",
+                          "name": "card-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -747,7 +747,7 @@
                             {
                               "type": "frame",
                               "id": "f41",
-                              "name": "目标 1",
+                              "name": "goal-1",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -758,7 +758,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f36",
-                                  "name": "序号 1",
+                                  "name": "index-1",
                                   "width": 64,
                                   "height": 64,
                                   "layout": "horizontal",
@@ -776,7 +776,7 @@
                                     {
                                       "type": "text",
                                       "id": "t37",
-                                      "name": "序号数字",
+                                      "name": "index-number",
                                       "content": "1",
                                       "fontFamily": "Inter",
                                       "fontSize": 29,
@@ -797,7 +797,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f40",
-                                  "name": "目标文案",
+                                  "name": "goal-copy",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -808,9 +808,9 @@
                                     {
                                       "type": "text",
                                       "id": "t38",
-                                      "name": "目标标题",
-                                      "content": "说得出定义",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "goal-title",
+                                      "content": "State the definition",
+                                      "fontFamily": "Inter",
                                       "fontSize": 40,
                                       "fontWeight": 600,
                                       "fill": [
@@ -827,9 +827,9 @@
                                     {
                                       "type": "text",
                                       "id": "t39",
-                                      "name": "目标说明",
-                                      "content": "用导数的符号说明单调递增、递减到底在讲什么。",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "goal-description",
+                                      "content": "Explain what increasing and decreasing really mean, using the sign of the derivative.",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -854,7 +854,7 @@
                     {
                       "type": "frame",
                       "id": "f53",
-                      "name": "知识点卡",
+                      "name": "concept-card",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -876,7 +876,7 @@
                         {
                           "type": "rectangle",
                           "id": "r52",
-                          "name": "知识点色条",
+                          "name": "concept-color-bar",
                           "width": 10,
                           "height": "fill_container",
                           "fill": [
@@ -889,7 +889,7 @@
                         {
                           "type": "frame",
                           "id": "f51",
-                          "name": "卡内容",
+                          "name": "card-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -904,7 +904,7 @@
                             {
                               "type": "frame",
                               "id": "f50",
-                              "name": "目标 2",
+                              "name": "goal-2",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -915,7 +915,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f45",
-                                  "name": "序号 2",
+                                  "name": "index-2",
                                   "width": 64,
                                   "height": 64,
                                   "layout": "horizontal",
@@ -933,7 +933,7 @@
                                     {
                                       "type": "text",
                                       "id": "t46",
-                                      "name": "序号数字",
+                                      "name": "index-number",
                                       "content": "2",
                                       "fontFamily": "Inter",
                                       "fontSize": 29,
@@ -954,7 +954,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f49",
-                                  "name": "目标文案",
+                                  "name": "goal-copy",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -965,9 +965,9 @@
                                     {
                                       "type": "text",
                                       "id": "t47",
-                                      "name": "目标标题",
-                                      "content": "判得出区间",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "goal-title",
+                                      "content": "Find the intervals",
+                                      "fontFamily": "Inter",
                                       "fontSize": 40,
                                       "fontWeight": 600,
                                       "fill": [
@@ -984,9 +984,9 @@
                                     {
                                       "type": "text",
                                       "id": "t48",
-                                      "name": "目标说明",
-                                      "content": "给定一个可导函数，能划出它的单调区间。",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "goal-description",
+                                      "content": "Given a differentiable function, mark out where it increases and decreases.",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1011,7 +1011,7 @@
                     {
                       "type": "frame",
                       "id": "f62",
-                      "name": "知识点卡",
+                      "name": "concept-card",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1033,7 +1033,7 @@
                         {
                           "type": "rectangle",
                           "id": "r61",
-                          "name": "知识点色条",
+                          "name": "concept-color-bar",
                           "width": 10,
                           "height": "fill_container",
                           "fill": [
@@ -1046,7 +1046,7 @@
                         {
                           "type": "frame",
                           "id": "f60",
-                          "name": "卡内容",
+                          "name": "card-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1061,7 +1061,7 @@
                             {
                               "type": "frame",
                               "id": "f59",
-                              "name": "目标 3",
+                              "name": "goal-3",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1072,7 +1072,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f54",
-                                  "name": "序号 3",
+                                  "name": "index-3",
                                   "width": 64,
                                   "height": 64,
                                   "layout": "horizontal",
@@ -1090,7 +1090,7 @@
                                     {
                                       "type": "text",
                                       "id": "t55",
-                                      "name": "序号数字",
+                                      "name": "index-number",
                                       "content": "3",
                                       "fontFamily": "Inter",
                                       "fontSize": 29,
@@ -1111,7 +1111,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f58",
-                                  "name": "目标文案",
+                                  "name": "goal-copy",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1122,9 +1122,9 @@
                                     {
                                       "type": "text",
                                       "id": "t56",
-                                      "name": "目标标题",
-                                      "content": "找得到极值",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "goal-title",
+                                      "content": "Locate the extrema",
+                                      "fontFamily": "Inter",
                                       "fontSize": 40,
                                       "fontWeight": 600,
                                       "fill": [
@@ -1141,9 +1141,9 @@
                                     {
                                       "type": "text",
                                       "id": "t57",
-                                      "name": "目标说明",
-                                      "content": "会用一阶导数的符号变化确定极大值与极小值。",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "goal-description",
+                                      "content": "Use sign changes in the first derivative to find local maxima and minima.",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1174,7 +1174,7 @@
         {
           "type": "frame",
           "id": "f89",
-          "name": "02 学习目标 · 装饰",
+          "name": "02-learning-goals-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1183,7 +1183,7 @@
             {
               "type": "text",
               "id": "t63",
-              "name": "ghost 页码",
+              "name": "ghost-page-number",
               "content": "02",
               "fontFamily": "Inter",
               "fontSize": 460,
@@ -1205,7 +1205,7 @@
             {
               "type": "rectangle",
               "id": "r65",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1220,7 +1220,7 @@
             {
               "type": "rectangle",
               "id": "r66",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1235,7 +1235,7 @@
             {
               "type": "rectangle",
               "id": "r67",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1250,7 +1250,7 @@
             {
               "type": "rectangle",
               "id": "r68",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1265,7 +1265,7 @@
             {
               "type": "rectangle",
               "id": "r69",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1280,7 +1280,7 @@
             {
               "type": "rectangle",
               "id": "r70",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1295,7 +1295,7 @@
             {
               "type": "rectangle",
               "id": "r71",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1310,7 +1310,7 @@
             {
               "type": "rectangle",
               "id": "r72",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1325,7 +1325,7 @@
             {
               "type": "rectangle",
               "id": "r73",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1340,7 +1340,7 @@
             {
               "type": "rectangle",
               "id": "r74",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1355,7 +1355,7 @@
             {
               "type": "rectangle",
               "id": "r75",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1370,7 +1370,7 @@
             {
               "type": "rectangle",
               "id": "r76",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1385,7 +1385,7 @@
             {
               "type": "rectangle",
               "id": "r77",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1400,7 +1400,7 @@
             {
               "type": "rectangle",
               "id": "r78",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1415,7 +1415,7 @@
             {
               "type": "rectangle",
               "id": "r79",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1430,7 +1430,7 @@
             {
               "type": "rectangle",
               "id": "r80",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1445,7 +1445,7 @@
             {
               "type": "rectangle",
               "id": "r81",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1460,7 +1460,7 @@
             {
               "type": "rectangle",
               "id": "r82",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1475,7 +1475,7 @@
             {
               "type": "rectangle",
               "id": "r83",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1490,7 +1490,7 @@
             {
               "type": "rectangle",
               "id": "r84",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1505,7 +1505,7 @@
             {
               "type": "rectangle",
               "id": "r85",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1520,7 +1520,7 @@
             {
               "type": "rectangle",
               "id": "r86",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1535,7 +1535,7 @@
             {
               "type": "rectangle",
               "id": "r87",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -1556,7 +1556,7 @@
     {
       "type": "frame",
       "id": "f133",
-      "name": "03 概念讲解",
+      "name": "03-concept",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1571,7 +1571,7 @@
         {
           "type": "frame",
           "id": "f109",
-          "name": "03 概念讲解 · 正文",
+          "name": "03-concept-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1587,7 +1587,7 @@
             {
               "type": "frame",
               "id": "f136",
-              "name": "页头",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1598,9 +1598,9 @@
                 {
                   "type": "text",
                   "id": "t135",
-                  "name": "页标题",
-                  "content": "导数的符号，决定曲线的走向",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "The derivative's sign sets the direction",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -1619,7 +1619,7 @@
             {
               "type": "frame",
               "id": "f138",
-              "name": "图文区",
+              "name": "image-text-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -1631,7 +1631,7 @@
                 {
                   "type": "frame",
                   "id": "f137",
-                  "name": "图文两栏",
+                  "name": "image-text-columns",
                   "width": "fill_container",
                   "height": 560,
                   "layout": "horizontal",
@@ -1642,7 +1642,7 @@
                     {
                       "type": "frame",
                       "id": "f104",
-                      "name": "知识点卡",
+                      "name": "concept-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "horizontal",
@@ -1664,7 +1664,7 @@
                         {
                           "type": "rectangle",
                           "id": "r103",
-                          "name": "知识点色条",
+                          "name": "concept-color-bar",
                           "width": 10,
                           "height": "fill_container",
                           "fill": [
@@ -1677,7 +1677,7 @@
                         {
                           "type": "frame",
                           "id": "f102",
-                          "name": "卡内容",
+                          "name": "card-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1692,7 +1692,7 @@
                             {
                               "type": "frame",
                               "id": "f97",
-                              "name": "定义组",
+                              "name": "definition-group",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -1703,9 +1703,9 @@
                                 {
                                   "type": "text",
                                   "id": "t95",
-                                  "name": "定义标题",
-                                  "content": "单调性的判定定理",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "definition-title",
+                                  "content": "The monotonicity test",
+                                  "fontFamily": "Inter",
                                   "fontSize": 40,
                                   "fontWeight": 600,
                                   "fill": [
@@ -1722,9 +1722,9 @@
                                 {
                                   "type": "text",
                                   "id": "t96",
-                                  "name": "定义正文",
-                                  "content": "设函数 f(x) 在区间 (a, b) 内可导。若在该区间内恒有 f'(x) > 0，则 f(x) 在 (a, b) 上单调递增；若恒有 f'(x) < 0，则单调递减。",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "definition-body",
+                                  "content": "Let f(x) be differentiable on (a, b). If f'(x) > 0 throughout the interval, f(x) is increasing on (a, b); if f'(x) < 0 throughout, it is decreasing.",
+                                  "fontFamily": "Inter",
                                   "fontSize": 30,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1743,7 +1743,7 @@
                             {
                               "type": "frame",
                               "id": "f101",
-                              "name": "追问组",
+                              "name": "follow-up-group",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -1754,7 +1754,7 @@
                                 {
                                   "type": "rectangle",
                                   "id": "r98",
-                                  "name": "正文分隔线",
+                                  "name": "body-divider",
                                   "width": "fill_container",
                                   "height": 2,
                                   "fill": [
@@ -1767,9 +1767,9 @@
                                 {
                                   "type": "text",
                                   "id": "t99",
-                                  "name": "提示标题",
-                                  "content": "为什么成立",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "tip-title",
+                                  "content": "Why it works",
+                                  "fontFamily": "Inter",
                                   "fontSize": 30,
                                   "fontWeight": 600,
                                   "fill": [
@@ -1786,9 +1786,9 @@
                                 {
                                   "type": "text",
                                   "id": "t100",
-                                  "name": "提示正文",
-                                  "content": "导数是切线的斜率。斜率一直为正，意味着曲线上任意两点连线都在往右上方走——这正是「递增」的几何说法。",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "tip-body",
+                                  "content": "The derivative is the slope of the tangent. If the slope stays positive, the line through any two points on the curve rises to the right, which is exactly what \"increasing\" means geometrically.",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -1811,7 +1811,7 @@
                     {
                       "type": "frame",
                       "id": "f107",
-                      "name": "配图占位",
+                      "name": "image-placeholder",
                       "width": 700,
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1833,9 +1833,9 @@
                         {
                           "type": "text",
                           "id": "t105",
-                          "name": "配图提示",
-                          "content": "把函数图像拖到这里",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-hint",
+                          "content": "Drop the function graph here",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 600,
                           "fill": [
@@ -1852,9 +1852,9 @@
                         {
                           "type": "text",
                           "id": "t106",
-                          "name": "配图说明",
-                          "content": "建议画出 f(x) 与 f'(x) 的符号对照",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "image-caption",
+                          "content": "Tip: plot f(x) next to the sign of f'(x)",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -1879,7 +1879,7 @@
         {
           "type": "frame",
           "id": "f134",
-          "name": "03 概念讲解 · 装饰",
+          "name": "03-concept-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -1888,7 +1888,7 @@
             {
               "type": "text",
               "id": "t108",
-              "name": "ghost 页码",
+              "name": "ghost-page-number",
               "content": "03",
               "fontFamily": "Inter",
               "fontSize": 460,
@@ -1910,7 +1910,7 @@
             {
               "type": "rectangle",
               "id": "r110",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1925,7 +1925,7 @@
             {
               "type": "rectangle",
               "id": "r111",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1940,7 +1940,7 @@
             {
               "type": "rectangle",
               "id": "r112",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1955,7 +1955,7 @@
             {
               "type": "rectangle",
               "id": "r113",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1970,7 +1970,7 @@
             {
               "type": "rectangle",
               "id": "r114",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -1985,7 +1985,7 @@
             {
               "type": "rectangle",
               "id": "r115",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -2000,7 +2000,7 @@
             {
               "type": "rectangle",
               "id": "r116",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -2015,7 +2015,7 @@
             {
               "type": "rectangle",
               "id": "r117",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -2030,7 +2030,7 @@
             {
               "type": "rectangle",
               "id": "r118",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2045,7 +2045,7 @@
             {
               "type": "rectangle",
               "id": "r119",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2060,7 +2060,7 @@
             {
               "type": "rectangle",
               "id": "r120",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2075,7 +2075,7 @@
             {
               "type": "rectangle",
               "id": "r121",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2090,7 +2090,7 @@
             {
               "type": "rectangle",
               "id": "r122",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2105,7 +2105,7 @@
             {
               "type": "rectangle",
               "id": "r123",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2120,7 +2120,7 @@
             {
               "type": "rectangle",
               "id": "r124",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2135,7 +2135,7 @@
             {
               "type": "rectangle",
               "id": "r125",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2150,7 +2150,7 @@
             {
               "type": "rectangle",
               "id": "r126",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2165,7 +2165,7 @@
             {
               "type": "rectangle",
               "id": "r127",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2180,7 +2180,7 @@
             {
               "type": "rectangle",
               "id": "r128",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2195,7 +2195,7 @@
             {
               "type": "rectangle",
               "id": "r129",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2210,7 +2210,7 @@
             {
               "type": "rectangle",
               "id": "r130",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2225,7 +2225,7 @@
             {
               "type": "rectangle",
               "id": "r131",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2240,7 +2240,7 @@
             {
               "type": "rectangle",
               "id": "r132",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -2261,7 +2261,7 @@
     {
       "type": "frame",
       "id": "f195",
-      "name": "04 例题",
+      "name": "04-example",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -2276,7 +2276,7 @@
         {
           "type": "frame",
           "id": "f171",
-          "name": "04 例题 · 正文",
+          "name": "04-example-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2292,7 +2292,7 @@
             {
               "type": "frame",
               "id": "f198",
-              "name": "页头",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2303,9 +2303,9 @@
                 {
                   "type": "text",
                   "id": "t197",
-                  "name": "页标题",
-                  "content": "按这四步走，一步都不要跳",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Four steps. Don't skip any.",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -2324,7 +2324,7 @@
             {
               "type": "frame",
               "id": "f199",
-              "name": "例题区",
+              "name": "example-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -2336,7 +2336,7 @@
                 {
                   "type": "frame",
                   "id": "f169",
-                  "name": "知识点卡",
+                  "name": "concept-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2358,7 +2358,7 @@
                     {
                       "type": "rectangle",
                       "id": "r168",
-                      "name": "知识点色条",
+                      "name": "concept-color-bar",
                       "width": 10,
                       "height": "fill_container",
                       "fill": [
@@ -2371,7 +2371,7 @@
                     {
                       "type": "frame",
                       "id": "f167",
-                      "name": "卡内容",
+                      "name": "card-content",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -2386,7 +2386,7 @@
                         {
                           "type": "frame",
                           "id": "f141",
-                          "name": "题干",
+                          "name": "problem",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2407,9 +2407,9 @@
                             {
                               "type": "text",
                               "id": "t139",
-                              "name": "题干标签",
-                              "content": "例题",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "problem-label",
+                              "content": "Example",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 600,
                               "fill": [
@@ -2426,9 +2426,9 @@
                             {
                               "type": "text",
                               "id": "t140",
-                              "name": "题干正文",
-                              "content": "求函数 f(x) = x³ − 3x² + 1 的单调区间与极值。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "problem-body",
+                              "content": "Find the intervals of monotonicity and the extrema of f(x) = x³ − 3x² + 1.",
+                              "fontFamily": "Inter",
                               "fontSize": 34,
                               "fontWeight": 600,
                               "fill": [
@@ -2447,7 +2447,7 @@
                         {
                           "type": "frame",
                           "id": "f166",
-                          "name": "解答步骤",
+                          "name": "solution-steps",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -2458,7 +2458,7 @@
                             {
                               "type": "frame",
                               "id": "f147",
-                              "name": "步骤 1",
+                              "name": "step-1",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -2469,7 +2469,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f142",
-                                  "name": "序号 1",
+                                  "name": "index-1",
                                   "width": 56,
                                   "height": 56,
                                   "layout": "horizontal",
@@ -2487,7 +2487,7 @@
                                     {
                                       "type": "text",
                                       "id": "t143",
-                                      "name": "序号数字",
+                                      "name": "index-number",
                                       "content": "1",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -2508,7 +2508,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f146",
-                                  "name": "步骤文案",
+                                  "name": "step-copy",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2519,9 +2519,9 @@
                                     {
                                       "type": "text",
                                       "id": "t144",
-                                      "name": "步骤标题",
-                                      "content": "求导",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "step-title",
+                                      "content": "Differentiate",
+                                      "fontFamily": "Inter",
                                       "fontSize": 30,
                                       "fontWeight": 600,
                                       "fill": [
@@ -2538,7 +2538,7 @@
                                     {
                                       "type": "text",
                                       "id": "t145",
-                                      "name": "步骤算式",
+                                      "name": "step-formula",
                                       "content": "f'(x) = 3x² − 6x = 3x(x − 2)",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -2561,7 +2561,7 @@
                             {
                               "type": "frame",
                               "id": "f153",
-                              "name": "步骤 2",
+                              "name": "step-2",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -2572,7 +2572,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f148",
-                                  "name": "序号 2",
+                                  "name": "index-2",
                                   "width": 56,
                                   "height": 56,
                                   "layout": "horizontal",
@@ -2590,7 +2590,7 @@
                                     {
                                       "type": "text",
                                       "id": "t149",
-                                      "name": "序号数字",
+                                      "name": "index-number",
                                       "content": "2",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -2611,7 +2611,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f152",
-                                  "name": "步骤文案",
+                                  "name": "step-copy",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2622,9 +2622,9 @@
                                     {
                                       "type": "text",
                                       "id": "t150",
-                                      "name": "步骤标题",
-                                      "content": "找驻点",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "step-title",
+                                      "content": "Find critical points",
+                                      "fontFamily": "Inter",
                                       "fontSize": 30,
                                       "fontWeight": 600,
                                       "fill": [
@@ -2641,8 +2641,8 @@
                                     {
                                       "type": "text",
                                       "id": "t151",
-                                      "name": "步骤算式",
-                                      "content": "令 f'(x) = 0，得 x = 0 与 x = 2",
+                                      "name": "step-formula",
+                                      "content": "Set f'(x) = 0, giving x = 0 and x = 2",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
@@ -2664,7 +2664,7 @@
                             {
                               "type": "frame",
                               "id": "f159",
-                              "name": "步骤 3",
+                              "name": "step-3",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -2675,7 +2675,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f154",
-                                  "name": "序号 3",
+                                  "name": "index-3",
                                   "width": 56,
                                   "height": 56,
                                   "layout": "horizontal",
@@ -2693,7 +2693,7 @@
                                     {
                                       "type": "text",
                                       "id": "t155",
-                                      "name": "序号数字",
+                                      "name": "index-number",
                                       "content": "3",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -2714,7 +2714,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f158",
-                                  "name": "步骤文案",
+                                  "name": "step-copy",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2725,9 +2725,9 @@
                                     {
                                       "type": "text",
                                       "id": "t156",
-                                      "name": "步骤标题",
-                                      "content": "判符号",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "step-title",
+                                      "content": "Check the sign",
+                                      "fontFamily": "Inter",
                                       "fontSize": 30,
                                       "fontWeight": 600,
                                       "fill": [
@@ -2744,8 +2744,8 @@
                                     {
                                       "type": "text",
                                       "id": "t157",
-                                      "name": "步骤算式",
-                                      "content": "x < 0 与 x > 2 时 f'(x) > 0；0 < x < 2 时 f'(x) < 0",
+                                      "name": "step-formula",
+                                      "content": "f'(x) > 0 for x < 0 and x > 2; f'(x) < 0 for 0 < x < 2",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
@@ -2767,7 +2767,7 @@
                             {
                               "type": "frame",
                               "id": "f165",
-                              "name": "步骤 4",
+                              "name": "step-4",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -2778,7 +2778,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f160",
-                                  "name": "序号 4",
+                                  "name": "index-4",
                                   "width": 56,
                                   "height": 56,
                                   "layout": "horizontal",
@@ -2796,7 +2796,7 @@
                                     {
                                       "type": "text",
                                       "id": "t161",
-                                      "name": "序号数字",
+                                      "name": "index-number",
                                       "content": "4",
                                       "fontFamily": "Inter",
                                       "fontSize": 26,
@@ -2817,7 +2817,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f164",
-                                  "name": "步骤文案",
+                                  "name": "step-copy",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -2828,9 +2828,9 @@
                                     {
                                       "type": "text",
                                       "id": "t162",
-                                      "name": "步骤标题",
-                                      "content": "下结论",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "step-title",
+                                      "content": "Conclude",
+                                      "fontFamily": "Inter",
                                       "fontSize": 30,
                                       "fontWeight": 600,
                                       "fill": [
@@ -2847,8 +2847,8 @@
                                     {
                                       "type": "text",
                                       "id": "t163",
-                                      "name": "步骤算式",
-                                      "content": "x = 0 处取极大值 f(0) = 1，x = 2 处取极小值 f(2) = −3",
+                                      "name": "step-formula",
+                                      "content": "Local max f(0) = 1 at x = 0; local min f(2) = −3 at x = 2",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
@@ -2880,7 +2880,7 @@
         {
           "type": "frame",
           "id": "f196",
-          "name": "04 例题 · 装饰",
+          "name": "04-example-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -2889,7 +2889,7 @@
             {
               "type": "text",
               "id": "t170",
-              "name": "ghost 页码",
+              "name": "ghost-page-number",
               "content": "04",
               "fontFamily": "Inter",
               "fontSize": 460,
@@ -2911,7 +2911,7 @@
             {
               "type": "rectangle",
               "id": "r172",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -2926,7 +2926,7 @@
             {
               "type": "rectangle",
               "id": "r173",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -2941,7 +2941,7 @@
             {
               "type": "rectangle",
               "id": "r174",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -2956,7 +2956,7 @@
             {
               "type": "rectangle",
               "id": "r175",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -2971,7 +2971,7 @@
             {
               "type": "rectangle",
               "id": "r176",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -2986,7 +2986,7 @@
             {
               "type": "rectangle",
               "id": "r177",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -3001,7 +3001,7 @@
             {
               "type": "rectangle",
               "id": "r178",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -3016,7 +3016,7 @@
             {
               "type": "rectangle",
               "id": "r179",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -3031,7 +3031,7 @@
             {
               "type": "rectangle",
               "id": "r180",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3046,7 +3046,7 @@
             {
               "type": "rectangle",
               "id": "r181",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3061,7 +3061,7 @@
             {
               "type": "rectangle",
               "id": "r182",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3076,7 +3076,7 @@
             {
               "type": "rectangle",
               "id": "r183",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3091,7 +3091,7 @@
             {
               "type": "rectangle",
               "id": "r184",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3106,7 +3106,7 @@
             {
               "type": "rectangle",
               "id": "r185",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3121,7 +3121,7 @@
             {
               "type": "rectangle",
               "id": "r186",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3136,7 +3136,7 @@
             {
               "type": "rectangle",
               "id": "r187",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3151,7 +3151,7 @@
             {
               "type": "rectangle",
               "id": "r188",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3166,7 +3166,7 @@
             {
               "type": "rectangle",
               "id": "r189",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3181,7 +3181,7 @@
             {
               "type": "rectangle",
               "id": "r190",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3196,7 +3196,7 @@
             {
               "type": "rectangle",
               "id": "r191",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3211,7 +3211,7 @@
             {
               "type": "rectangle",
               "id": "r192",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3226,7 +3226,7 @@
             {
               "type": "rectangle",
               "id": "r193",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3241,7 +3241,7 @@
             {
               "type": "rectangle",
               "id": "r194",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -3262,7 +3262,7 @@
     {
       "type": "frame",
       "id": "f254",
-      "name": "05 对比",
+      "name": "05-comparison",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -3277,7 +3277,7 @@
         {
           "type": "frame",
           "id": "f230",
-          "name": "05 对比 · 正文",
+          "name": "05-comparison-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -3293,7 +3293,7 @@
             {
               "type": "frame",
               "id": "f258",
-              "name": "页头",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3304,9 +3304,9 @@
                 {
                   "type": "text",
                   "id": "t256",
-                  "name": "页标题",
-                  "content": "两个概念，别再混着用",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Two ideas. Stop mixing them up.",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -3323,9 +3323,9 @@
                 {
                   "type": "text",
                   "id": "t257",
-                  "name": "页副标题",
-                  "content": "单调性说的是一段，极值说的是一点。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-subtitle",
+                  "content": "Monotonicity is about an interval. An extremum is about a point.",
+                  "fontFamily": "Inter",
                   "fontSize": 30,
                   "fontWeight": 400,
                   "fill": [
@@ -3344,7 +3344,7 @@
             {
               "type": "frame",
               "id": "f259",
-              "name": "对比区",
+              "name": "comparison-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -3356,7 +3356,7 @@
                 {
                   "type": "frame",
                   "id": "f228",
-                  "name": "对比表",
+                  "name": "comparison-table",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3374,7 +3374,7 @@
                     {
                       "type": "frame",
                       "id": "f206",
-                      "name": "表头",
+                      "name": "table-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3400,7 +3400,7 @@
                         {
                           "type": "frame",
                           "id": "f201",
-                          "name": "表头行标题",
+                          "name": "header-row-label",
                           "width": 260,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3411,9 +3411,9 @@
                             {
                               "type": "text",
                               "id": "t200",
-                              "name": "表头留白",
+                              "name": "header-spacer",
                               "content": " ",
-                              "fontFamily": "Noto Sans SC",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 600,
                               "fill": [
@@ -3432,7 +3432,7 @@
                         {
                           "type": "frame",
                           "id": "f203",
-                          "name": "表头左列",
+                          "name": "header-left-column",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3443,9 +3443,9 @@
                             {
                               "type": "text",
                               "id": "t202",
-                              "name": "表头左列文字",
-                              "content": "单调性",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "header-left-column-text",
+                              "content": "Monotonicity",
+                              "fontFamily": "Inter",
                               "fontSize": 34,
                               "fontWeight": 700,
                               "fill": [
@@ -3464,7 +3464,7 @@
                         {
                           "type": "frame",
                           "id": "f205",
-                          "name": "表头右列",
+                          "name": "header-right-column",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3475,9 +3475,9 @@
                             {
                               "type": "text",
                               "id": "t204",
-                              "name": "表头右列文字",
-                              "content": "极值",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "header-right-column-text",
+                              "content": "Extremum",
+                              "fontFamily": "Inter",
                               "fontSize": 34,
                               "fontWeight": 700,
                               "fill": [
@@ -3498,7 +3498,7 @@
                     {
                       "type": "frame",
                       "id": "f213",
-                      "name": "对比行",
+                      "name": "comparison-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3524,7 +3524,7 @@
                         {
                           "type": "frame",
                           "id": "f208",
-                          "name": "行标题",
+                          "name": "row-header",
                           "width": 260,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3535,9 +3535,9 @@
                             {
                               "type": "text",
                               "id": "t207",
-                              "name": "行标题文字",
-                              "content": "看的是什么",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "row-header-text",
+                              "content": "What it looks at",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 600,
                               "fill": [
@@ -3556,7 +3556,7 @@
                         {
                           "type": "frame",
                           "id": "f210",
-                          "name": "左列内容",
+                          "name": "left-column-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3567,9 +3567,9 @@
                             {
                               "type": "text",
                               "id": "t209",
-                              "name": "左列文字",
-                              "content": "f'(x) 在整个区间上的符号",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "left-column-text",
+                              "content": "The sign of f'(x) across the whole interval",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3588,7 +3588,7 @@
                         {
                           "type": "frame",
                           "id": "f212",
-                          "name": "右列内容",
+                          "name": "right-column-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3599,9 +3599,9 @@
                             {
                               "type": "text",
                               "id": "t211",
-                              "name": "右列文字",
-                              "content": "f'(x) 在某一点两侧的符号变化",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "right-column-text",
+                              "content": "How the sign of f'(x) changes around a point",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3622,7 +3622,7 @@
                     {
                       "type": "frame",
                       "id": "f220",
-                      "name": "对比行",
+                      "name": "comparison-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3648,7 +3648,7 @@
                         {
                           "type": "frame",
                           "id": "f215",
-                          "name": "行标题",
+                          "name": "row-header",
                           "width": 260,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3659,9 +3659,9 @@
                             {
                               "type": "text",
                               "id": "t214",
-                              "name": "行标题文字",
-                              "content": "回答的问题",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "row-header-text",
+                              "content": "The question it answers",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 600,
                               "fill": [
@@ -3680,7 +3680,7 @@
                         {
                           "type": "frame",
                           "id": "f217",
-                          "name": "左列内容",
+                          "name": "left-column-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3691,9 +3691,9 @@
                             {
                               "type": "text",
                               "id": "t216",
-                              "name": "左列文字",
-                              "content": "这段曲线往上还是往下",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "left-column-text",
+                              "content": "Is this stretch of curve going up or down?",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3712,7 +3712,7 @@
                         {
                           "type": "frame",
                           "id": "f219",
-                          "name": "右列内容",
+                          "name": "right-column-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3723,9 +3723,9 @@
                             {
                               "type": "text",
                               "id": "t218",
-                              "name": "右列文字",
-                              "content": "这一点是不是拐上去/拐下来的地方",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "right-column-text",
+                              "content": "Does the curve turn up or down at this point?",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3746,7 +3746,7 @@
                     {
                       "type": "frame",
                       "id": "f227",
-                      "name": "对比行",
+                      "name": "comparison-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3761,7 +3761,7 @@
                         {
                           "type": "frame",
                           "id": "f222",
-                          "name": "行标题",
+                          "name": "row-header",
                           "width": 260,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3772,9 +3772,9 @@
                             {
                               "type": "text",
                               "id": "t221",
-                              "name": "行标题文字",
-                              "content": "容易错在哪",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "row-header-text",
+                              "content": "Common mistake",
+                              "fontFamily": "Inter",
                               "fontSize": 27,
                               "fontWeight": 600,
                               "fill": [
@@ -3793,7 +3793,7 @@
                         {
                           "type": "frame",
                           "id": "f224",
-                          "name": "左列内容",
+                          "name": "left-column-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3804,9 +3804,9 @@
                             {
                               "type": "text",
                               "id": "t223",
-                              "name": "左列文字",
-                              "content": "漏掉不可导的点也要单独讨论",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "left-column-text",
+                              "content": "Forgetting that non-differentiable points need their own check",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3825,7 +3825,7 @@
                         {
                           "type": "frame",
                           "id": "f226",
-                          "name": "右列内容",
+                          "name": "right-column-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3836,9 +3836,9 @@
                             {
                               "type": "text",
                               "id": "t225",
-                              "name": "右列文字",
-                              "content": "驻点不一定是极值点，要看符号是否真的变了",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "right-column-text",
+                              "content": "A critical point isn't always an extremum. Check the sign actually changes.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3865,7 +3865,7 @@
         {
           "type": "frame",
           "id": "f255",
-          "name": "05 对比 · 装饰",
+          "name": "05-comparison-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -3874,7 +3874,7 @@
             {
               "type": "text",
               "id": "t229",
-              "name": "ghost 页码",
+              "name": "ghost-page-number",
               "content": "05",
               "fontFamily": "Inter",
               "fontSize": 460,
@@ -3896,7 +3896,7 @@
             {
               "type": "rectangle",
               "id": "r231",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -3911,7 +3911,7 @@
             {
               "type": "rectangle",
               "id": "r232",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -3926,7 +3926,7 @@
             {
               "type": "rectangle",
               "id": "r233",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -3941,7 +3941,7 @@
             {
               "type": "rectangle",
               "id": "r234",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -3956,7 +3956,7 @@
             {
               "type": "rectangle",
               "id": "r235",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -3971,7 +3971,7 @@
             {
               "type": "rectangle",
               "id": "r236",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -3986,7 +3986,7 @@
             {
               "type": "rectangle",
               "id": "r237",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4001,7 +4001,7 @@
             {
               "type": "rectangle",
               "id": "r238",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4016,7 +4016,7 @@
             {
               "type": "rectangle",
               "id": "r239",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4031,7 +4031,7 @@
             {
               "type": "rectangle",
               "id": "r240",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4046,7 +4046,7 @@
             {
               "type": "rectangle",
               "id": "r241",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4061,7 +4061,7 @@
             {
               "type": "rectangle",
               "id": "r242",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4076,7 +4076,7 @@
             {
               "type": "rectangle",
               "id": "r243",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4091,7 +4091,7 @@
             {
               "type": "rectangle",
               "id": "r244",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4106,7 +4106,7 @@
             {
               "type": "rectangle",
               "id": "r245",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4121,7 +4121,7 @@
             {
               "type": "rectangle",
               "id": "r246",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4136,7 +4136,7 @@
             {
               "type": "rectangle",
               "id": "r247",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4151,7 +4151,7 @@
             {
               "type": "rectangle",
               "id": "r248",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4166,7 +4166,7 @@
             {
               "type": "rectangle",
               "id": "r249",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4181,7 +4181,7 @@
             {
               "type": "rectangle",
               "id": "r250",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4196,7 +4196,7 @@
             {
               "type": "rectangle",
               "id": "r251",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4211,7 +4211,7 @@
             {
               "type": "rectangle",
               "id": "r252",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4226,7 +4226,7 @@
             {
               "type": "rectangle",
               "id": "r253",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4247,7 +4247,7 @@
     {
       "type": "frame",
       "id": "f314",
-      "name": "06 小结与作业",
+      "name": "06-summary-homework",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -4262,7 +4262,7 @@
         {
           "type": "frame",
           "id": "f290",
-          "name": "06 小结与作业 · 正文",
+          "name": "06-summary-homework-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -4278,7 +4278,7 @@
             {
               "type": "frame",
               "id": "f317",
-              "name": "页头",
+              "name": "page-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -4289,9 +4289,9 @@
                 {
                   "type": "text",
                   "id": "t316",
-                  "name": "页标题",
-                  "content": "带走这三句话就够了",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Take these three lines home",
+                  "fontFamily": "Inter",
                   "fontSize": 76,
                   "fontWeight": 700,
                   "fill": [
@@ -4310,7 +4310,7 @@
             {
               "type": "frame",
               "id": "f319",
-              "name": "小结区",
+              "name": "summary-area",
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -4322,7 +4322,7 @@
                 {
                   "type": "frame",
                   "id": "f318",
-                  "name": "小结两栏",
+                  "name": "summary-columns",
                   "width": "fill_container",
                   "height": 490,
                   "layout": "horizontal",
@@ -4333,7 +4333,7 @@
                     {
                       "type": "frame",
                       "id": "f276",
-                      "name": "知识点卡",
+                      "name": "concept-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "horizontal",
@@ -4355,7 +4355,7 @@
                         {
                           "type": "rectangle",
                           "id": "r275",
-                          "name": "知识点色条",
+                          "name": "concept-color-bar",
                           "width": 10,
                           "height": "fill_container",
                           "fill": [
@@ -4368,7 +4368,7 @@
                         {
                           "type": "frame",
                           "id": "f274",
-                          "name": "卡内容",
+                          "name": "card-content",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4383,9 +4383,9 @@
                             {
                               "type": "text",
                               "id": "t260",
-                              "name": "小结标题",
-                              "content": "本讲小结",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "summary-title",
+                              "content": "Summary",
+                              "fontFamily": "Inter",
                               "fontSize": 44,
                               "fontWeight": 700,
                               "fill": [
@@ -4402,7 +4402,7 @@
                             {
                               "type": "frame",
                               "id": "f273",
-                              "name": "小结条目",
+                              "name": "summary-entry",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -4413,7 +4413,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f264",
-                                  "name": "小结条",
+                                  "name": "summary-item",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -4424,7 +4424,7 @@
                                     {
                                       "type": "frame",
                                       "id": "f262",
-                                      "name": "条目圆点位",
+                                      "name": "bullet-slot",
                                       "width": "fit_content",
                                       "height": "fit_content",
                                       "layout": "vertical",
@@ -4441,7 +4441,7 @@
                                         {
                                           "type": "rectangle",
                                           "id": "r261",
-                                          "name": "条目圆点",
+                                          "name": "bullet",
                                           "width": 14,
                                           "height": 14,
                                           "cornerRadius": 7,
@@ -4457,9 +4457,9 @@
                                     {
                                       "type": "text",
                                       "id": "t263",
-                                      "name": "条目文字",
-                                      "content": "先求导，再找驻点，最后判符号——顺序不能换。",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "item-text",
+                                      "content": "Differentiate, find critical points, check signs.",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4478,7 +4478,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f268",
-                                  "name": "小结条",
+                                  "name": "summary-item",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -4489,7 +4489,7 @@
                                     {
                                       "type": "frame",
                                       "id": "f266",
-                                      "name": "条目圆点位",
+                                      "name": "bullet-slot",
                                       "width": "fit_content",
                                       "height": "fit_content",
                                       "layout": "vertical",
@@ -4506,7 +4506,7 @@
                                         {
                                           "type": "rectangle",
                                           "id": "r265",
-                                          "name": "条目圆点",
+                                          "name": "bullet",
                                           "width": 14,
                                           "height": 14,
                                           "cornerRadius": 7,
@@ -4522,9 +4522,9 @@
                                     {
                                       "type": "text",
                                       "id": "t267",
-                                      "name": "条目文字",
-                                      "content": "驻点只是候选，符号真的变了才是极值点。",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "item-text",
+                                      "content": "Critical points are candidates; sign change confirms.",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4543,7 +4543,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f272",
-                                  "name": "小结条",
+                                  "name": "summary-item",
                                   "width": "fill_container",
                                   "height": "fit_content",
                                   "layout": "horizontal",
@@ -4554,7 +4554,7 @@
                                     {
                                       "type": "frame",
                                       "id": "f270",
-                                      "name": "条目圆点位",
+                                      "name": "bullet-slot",
                                       "width": "fit_content",
                                       "height": "fit_content",
                                       "layout": "vertical",
@@ -4571,7 +4571,7 @@
                                         {
                                           "type": "rectangle",
                                           "id": "r269",
-                                          "name": "条目圆点",
+                                          "name": "bullet",
                                           "width": 14,
                                           "height": 14,
                                           "cornerRadius": 7,
@@ -4587,9 +4587,9 @@
                                     {
                                       "type": "text",
                                       "id": "t271",
-                                      "name": "条目文字",
-                                      "content": "不可导的点也要单独拿出来讨论。",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "item-text",
+                                      "content": "Treat non-differentiable points as separate cases.",
+                                      "fontFamily": "Inter",
                                       "fontSize": 28,
                                       "fontWeight": 400,
                                       "fill": [
@@ -4614,7 +4614,7 @@
                     {
                       "type": "frame",
                       "id": "f288",
-                      "name": "课后作业",
+                      "name": "homework",
                       "width": 680,
                       "height": "fill_container",
                       "layout": "vertical",
@@ -4635,9 +4635,9 @@
                         {
                           "type": "text",
                           "id": "t277",
-                          "name": "作业标题",
-                          "content": "课后作业",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "homework-title",
+                          "content": "Homework",
+                          "fontFamily": "Inter",
                           "fontSize": 44,
                           "fontWeight": 700,
                           "fill": [
@@ -4654,7 +4654,7 @@
                         {
                           "type": "frame",
                           "id": "f287",
-                          "name": "作业条目",
+                          "name": "homework-entry",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4665,7 +4665,7 @@
                             {
                               "type": "frame",
                               "id": "f280",
-                              "name": "作业条",
+                              "name": "homework-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -4676,9 +4676,9 @@
                                 {
                                   "type": "text",
                                   "id": "t278",
-                                  "name": "作业出处",
-                                  "content": "课本 P128",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "homework-source",
+                                  "content": "Textbook p. 128",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 600,
                                   "fill": [
@@ -4695,9 +4695,9 @@
                                 {
                                   "type": "text",
                                   "id": "t279",
-                                  "name": "作业内容",
-                                  "content": "习题 3.4 第 1、3、5 题",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "homework-content",
+                                  "content": "Exercise 3.4, problems 1, 3, 5",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -4716,7 +4716,7 @@
                             {
                               "type": "frame",
                               "id": "f283",
-                              "name": "作业条",
+                              "name": "homework-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -4727,9 +4727,9 @@
                                 {
                                   "type": "text",
                                   "id": "t281",
-                                  "name": "作业出处",
-                                  "content": "补充题",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "homework-source",
+                                  "content": "Extra problem",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 600,
                                   "fill": [
@@ -4746,9 +4746,9 @@
                                 {
                                   "type": "text",
                                   "id": "t282",
-                                  "name": "作业内容",
-                                  "content": "讨论 f(x) = x·e^(−x) 的单调区间与极值",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "homework-content",
+                                  "content": "Find the intervals of monotonicity and extrema of f(x) = x·e^(−x)",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -4767,7 +4767,7 @@
                             {
                               "type": "frame",
                               "id": "f286",
-                              "name": "作业条",
+                              "name": "homework-item",
                               "width": "fill_container",
                               "height": "fit_content",
                               "layout": "vertical",
@@ -4778,9 +4778,9 @@
                                 {
                                   "type": "text",
                                   "id": "t284",
-                                  "name": "作业出处",
-                                  "content": "下次课前",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "homework-source",
+                                  "content": "Before next class",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 600,
                                   "fill": [
@@ -4797,9 +4797,9 @@
                                 {
                                   "type": "text",
                                   "id": "t285",
-                                  "name": "作业内容",
-                                  "content": "预习凹凸性与拐点（P131–P136）",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "homework-content",
+                                  "content": "Read ahead: concavity and inflection points (pp. 131–136)",
+                                  "fontFamily": "Inter",
                                   "fontSize": 28,
                                   "fontWeight": 400,
                                   "fill": [
@@ -4828,7 +4828,7 @@
         {
           "type": "frame",
           "id": "f315",
-          "name": "06 小结与作业 · 装饰",
+          "name": "06-summary-homework-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -4837,7 +4837,7 @@
             {
               "type": "text",
               "id": "t289",
-              "name": "ghost 页码",
+              "name": "ghost-page-number",
               "content": "06",
               "fontFamily": "Inter",
               "fontSize": 460,
@@ -4859,7 +4859,7 @@
             {
               "type": "rectangle",
               "id": "r291",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4874,7 +4874,7 @@
             {
               "type": "rectangle",
               "id": "r292",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4889,7 +4889,7 @@
             {
               "type": "rectangle",
               "id": "r293",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4904,7 +4904,7 @@
             {
               "type": "rectangle",
               "id": "r294",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4919,7 +4919,7 @@
             {
               "type": "rectangle",
               "id": "r295",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4934,7 +4934,7 @@
             {
               "type": "rectangle",
               "id": "r296",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4949,7 +4949,7 @@
             {
               "type": "rectangle",
               "id": "r297",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4964,7 +4964,7 @@
             {
               "type": "rectangle",
               "id": "r298",
-              "name": "网格横线",
+              "name": "grid-line-horizontal",
               "width": 1920,
               "height": 2,
               "fill": [
@@ -4979,7 +4979,7 @@
             {
               "type": "rectangle",
               "id": "r299",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -4994,7 +4994,7 @@
             {
               "type": "rectangle",
               "id": "r300",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5009,7 +5009,7 @@
             {
               "type": "rectangle",
               "id": "r301",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5024,7 +5024,7 @@
             {
               "type": "rectangle",
               "id": "r302",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5039,7 +5039,7 @@
             {
               "type": "rectangle",
               "id": "r303",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5054,7 +5054,7 @@
             {
               "type": "rectangle",
               "id": "r304",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5069,7 +5069,7 @@
             {
               "type": "rectangle",
               "id": "r305",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5084,7 +5084,7 @@
             {
               "type": "rectangle",
               "id": "r306",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5099,7 +5099,7 @@
             {
               "type": "rectangle",
               "id": "r307",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5114,7 +5114,7 @@
             {
               "type": "rectangle",
               "id": "r308",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5129,7 +5129,7 @@
             {
               "type": "rectangle",
               "id": "r309",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5144,7 +5144,7 @@
             {
               "type": "rectangle",
               "id": "r310",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5159,7 +5159,7 @@
             {
               "type": "rectangle",
               "id": "r311",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5174,7 +5174,7 @@
             {
               "type": "rectangle",
               "id": "r312",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [
@@ -5189,7 +5189,7 @@
             {
               "type": "rectangle",
               "id": "r313",
-              "name": "网格竖线",
+              "name": "grid-line-vertical",
               "width": 2,
               "height": 1080,
               "fill": [

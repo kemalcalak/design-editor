@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "测深海图 · 咨询策略档 16:9",
+  "name": "sounding-chart-consulting-deck-16x9",
   "variables": {
     "c-paper": {
       "type": "color",
@@ -63,7 +63,7 @@
     {
       "type": "frame",
       "id": "f9",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -78,7 +78,7 @@
         {
           "type": "frame",
           "id": "f8",
-          "name": "01 封面 · 正文",
+          "name": "01-cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -96,9 +96,9 @@
             {
               "type": "text",
               "id": "t1",
-              "name": "项目代号",
-              "content": "MLN · 26H1 渠道诊断",
-              "fontFamily": "Noto Sans SC",
+              "name": "project-code",
+              "content": "MLN · 26H1 Channel Diagnostic",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 500,
               "fill": [
@@ -115,7 +115,7 @@
             {
               "type": "frame",
               "id": "f4",
-              "name": "主张",
+              "name": "claim",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -126,9 +126,9 @@
                 {
                   "type": "text",
                   "id": "t2",
-                  "name": "主标题",
-                  "content": "换渠道救不回毛利\n漏水口在安装这一段",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "main-title",
+                  "content": "New channels won't fix margin\nThe leak is in installation",
+                  "fontFamily": "Inter",
                   "fontSize": 104,
                   "fontWeight": 700,
                   "fill": [
@@ -145,7 +145,7 @@
                 {
                   "type": "rectangle",
                   "id": "r3",
-                  "name": "短线",
+                  "name": "short-rule",
                   "width": 120,
                   "height": 3,
                   "fill": [
@@ -160,7 +160,7 @@
             {
               "type": "frame",
               "id": "f7",
-              "name": "落款",
+              "name": "sign-off",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -172,9 +172,9 @@
                 {
                   "type": "text",
                   "id": "t5",
-                  "name": "委托方",
-                  "content": "明澜家用水处理 · 战略办公室",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "client",
+                  "content": "Marlin Home Water · Strategy Office",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -191,7 +191,7 @@
                 {
                   "type": "text",
                   "id": "t6",
-                  "name": "日期",
+                  "name": "date",
                   "content": "2026.08",
                   "fontFamily": "Inter",
                   "fontSize": 26,
@@ -218,7 +218,7 @@
     {
       "type": "frame",
       "id": "f30",
-      "name": "02 议题航迹",
+      "name": "02-agenda-track",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -233,7 +233,7 @@
         {
           "type": "frame",
           "id": "f29",
-          "name": "02 议题航迹 · 正文",
+          "name": "02-agenda-track-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -251,9 +251,9 @@
             {
               "type": "text",
               "id": "t31",
-              "name": "页标题",
-              "content": "这次诊断，我们只下了五个测点",
-              "fontFamily": "Noto Sans SC",
+              "name": "page-title",
+              "content": "This diagnostic takes five soundings",
+              "fontFamily": "Inter",
               "fontSize": 64,
               "fontWeight": 700,
               "fill": [
@@ -270,7 +270,7 @@
             {
               "type": "frame",
               "id": "f28",
-              "name": "航迹目录",
+              "name": "track-agenda",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -281,7 +281,7 @@
                 {
                   "type": "frame",
                   "id": "f27",
-                  "name": "航迹线",
+                  "name": "track-line",
                   "width": 1680,
                   "height": 2,
                   "fill": [
@@ -294,7 +294,7 @@
                 {
                   "type": "frame",
                   "id": "f20",
-                  "name": "航迹点行",
+                  "name": "track-point-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -305,7 +305,7 @@
                     {
                       "type": "frame",
                       "id": "f10",
-                      "name": "航迹点位",
+                      "name": "track-point-slot",
                       "width": "fill_container",
                       "height": 20,
                       "layout": "horizontal",
@@ -317,7 +317,7 @@
                         {
                           "type": "rectangle",
                           "id": "r11",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 20,
                           "height": 20,
                           "cornerRadius": 10,
@@ -333,7 +333,7 @@
                     {
                       "type": "frame",
                       "id": "f12",
-                      "name": "航迹点位",
+                      "name": "track-point-slot",
                       "width": "fill_container",
                       "height": 20,
                       "layout": "horizontal",
@@ -345,7 +345,7 @@
                         {
                           "type": "rectangle",
                           "id": "r13",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 20,
                           "height": 20,
                           "cornerRadius": 10,
@@ -365,7 +365,7 @@
                     {
                       "type": "frame",
                       "id": "f14",
-                      "name": "航迹点位",
+                      "name": "track-point-slot",
                       "width": "fill_container",
                       "height": 20,
                       "layout": "horizontal",
@@ -377,7 +377,7 @@
                         {
                           "type": "rectangle",
                           "id": "r15",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 20,
                           "height": 20,
                           "cornerRadius": 10,
@@ -397,7 +397,7 @@
                     {
                       "type": "frame",
                       "id": "f16",
-                      "name": "航迹点位",
+                      "name": "track-point-slot",
                       "width": "fill_container",
                       "height": 20,
                       "layout": "horizontal",
@@ -409,7 +409,7 @@
                         {
                           "type": "rectangle",
                           "id": "r17",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 20,
                           "height": 20,
                           "cornerRadius": 10,
@@ -429,7 +429,7 @@
                     {
                       "type": "frame",
                       "id": "f18",
-                      "name": "航迹点位",
+                      "name": "track-point-slot",
                       "width": "fill_container",
                       "height": 20,
                       "layout": "horizontal",
@@ -441,7 +441,7 @@
                         {
                           "type": "rectangle",
                           "id": "r19",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 20,
                           "height": 20,
                           "cornerRadius": 10,
@@ -463,7 +463,7 @@
                 {
                   "type": "frame",
                   "id": "f26",
-                  "name": "节名行",
+                  "name": "section-name-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -474,9 +474,9 @@
                     {
                       "type": "text",
                       "id": "t21",
-                      "name": "节名",
-                      "content": "总体结论",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-name",
+                      "content": "Key finding",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 600,
                       "fill": [
@@ -494,9 +494,9 @@
                     {
                       "type": "text",
                       "id": "t22",
-                      "name": "节名",
-                      "content": "毛利去向",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-name",
+                      "content": "Where margin goes",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 600,
                       "fill": [
@@ -514,9 +514,9 @@
                     {
                       "type": "text",
                       "id": "t23",
-                      "name": "节名",
-                      "content": "安装网络",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-name",
+                      "content": "Install network",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 600,
                       "fill": [
@@ -534,9 +534,9 @@
                     {
                       "type": "text",
                       "id": "t24",
-                      "name": "节名",
-                      "content": "取舍判断",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-name",
+                      "content": "Trade-off",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 600,
                       "fill": [
@@ -554,9 +554,9 @@
                     {
                       "type": "text",
                       "id": "t25",
-                      "name": "节名",
-                      "content": "行动清单",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "section-name",
+                      "content": "Action list",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 600,
                       "fill": [
@@ -578,7 +578,7 @@
             {
               "type": "frame",
               "id": "f34",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -590,9 +590,9 @@
                 {
                   "type": "text",
                   "id": "t32",
-                  "name": "页脚眉标",
-                  "content": "明澜 · 渠道诊断",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "footer-eyebrow",
+                  "content": "Marlin · Channel Diagnostic",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -609,7 +609,7 @@
                 {
                   "type": "text",
                   "id": "t33",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "02 / 07",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -636,7 +636,7 @@
     {
       "type": "frame",
       "id": "f51",
-      "name": "03 结论",
+      "name": "03-conclusion",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -651,7 +651,7 @@
         {
           "type": "frame",
           "id": "f50",
-          "name": "03 结论 · 正文",
+          "name": "03-conclusion-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -669,7 +669,7 @@
             {
               "type": "frame",
               "id": "f55",
-              "name": "论证",
+              "name": "argument",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -680,9 +680,9 @@
                 {
                   "type": "text",
                   "id": "t52",
-                  "name": "页标题",
-                  "content": "复购只发生在\n上门当天能装完的门店",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Repeat sales only happen at stores\nthat install on the first visit",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -699,9 +699,9 @@
                 {
                   "type": "text",
                   "id": "t53",
-                  "name": "引导句",
-                  "content": "同一款机器、同一个价，差别不在渠道，在人。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "lead-in",
+                  "content": "Same unit, same price: it's the crew, not the channel.",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 400,
                   "fill": [
@@ -718,7 +718,7 @@
                 {
                   "type": "frame",
                   "id": "f54",
-                  "name": "论据列表",
+                  "name": "point-list",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -729,7 +729,7 @@
                     {
                       "type": "frame",
                       "id": "f39",
-                      "name": "论据 1",
+                      "name": "point-1",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -740,7 +740,7 @@
                         {
                           "type": "text",
                           "id": "t35",
-                          "name": "论据序号",
+                          "name": "point-index",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 40,
@@ -759,7 +759,7 @@
                         {
                           "type": "frame",
                           "id": "f38",
-                          "name": "论据文案",
+                          "name": "point-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -770,9 +770,9 @@
                             {
                               "type": "text",
                               "id": "t36",
-                              "name": "论据标题",
-                              "content": "上门当天装完的门店，复购没掉过",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-title",
+                              "content": "Same-day install stores never lost repeat sales",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 600,
                               "fill": [
@@ -789,9 +789,9 @@
                             {
                               "type": "text",
                               "id": "t37",
-                              "name": "论据说明",
-                              "content": "华东 91% 的工单当天闭环，华南 88%。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-note",
+                              "content": "East closes 91% of jobs same day, South 88%.",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 400,
                               "fill": [
@@ -812,7 +812,7 @@
                     {
                       "type": "frame",
                       "id": "f44",
-                      "name": "论据 2",
+                      "name": "point-2",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -823,7 +823,7 @@
                         {
                           "type": "text",
                           "id": "t40",
-                          "name": "论据序号",
+                          "name": "point-index",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 40,
@@ -842,7 +842,7 @@
                         {
                           "type": "frame",
                           "id": "f43",
-                          "name": "论据文案",
+                          "name": "point-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -853,9 +853,9 @@
                             {
                               "type": "text",
                               "id": "t41",
-                              "name": "论据标题",
-                              "content": "被改约一次，客户基本就走了",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-title",
+                              "content": "One reschedule and the customer is gone",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 600,
                               "fill": [
@@ -872,9 +872,9 @@
                             {
                               "type": "text",
                               "id": "t42",
-                              "name": "论据说明",
-                              "content": "改约过的工单，年内复购只剩 9%。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-note",
+                              "content": "Rescheduled jobs: just 9% repeat within the year.",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 400,
                               "fill": [
@@ -895,7 +895,7 @@
                     {
                       "type": "frame",
                       "id": "f49",
-                      "name": "论据 3",
+                      "name": "point-3",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -906,7 +906,7 @@
                         {
                           "type": "text",
                           "id": "t45",
-                          "name": "论据序号",
+                          "name": "point-index",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 40,
@@ -925,7 +925,7 @@
                         {
                           "type": "frame",
                           "id": "f48",
-                          "name": "论据文案",
+                          "name": "point-copy",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -936,9 +936,9 @@
                             {
                               "type": "text",
                               "id": "t46",
-                              "name": "论据标题",
-                              "content": "装不好不是缺人，是缺件",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-title",
+                              "content": "Failed installs lack parts, not people",
+                              "fontFamily": "Inter",
                               "fontSize": 40,
                               "fontWeight": 600,
                               "fill": [
@@ -955,9 +955,9 @@
                             {
                               "type": "text",
                               "id": "t47",
-                              "name": "论据说明",
-                              "content": "西南 47% 的改约理由是配件不在车上。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "point-note",
+                              "content": "Southwest: 47% of reschedules were missing parts.",
+                              "fontFamily": "Inter",
                               "fontSize": 32,
                               "fontWeight": 400,
                               "fill": [
@@ -982,7 +982,7 @@
             {
               "type": "frame",
               "id": "f72",
-              "name": "页尾",
+              "name": "page-end",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -993,7 +993,7 @@
                 {
                   "type": "frame",
                   "id": "f60",
-                  "name": "读数条",
+                  "name": "reading-bar",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1004,7 +1004,7 @@
                     {
                       "type": "rectangle",
                       "id": "r56",
-                      "name": "读数上边线",
+                      "name": "reading-top-rule",
                       "width": "fill_container",
                       "height": 3,
                       "fill": [
@@ -1017,7 +1017,7 @@
                     {
                       "type": "frame",
                       "id": "f59",
-                      "name": "读数",
+                      "name": "reading",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1029,7 +1029,7 @@
                         {
                           "type": "text",
                           "id": "t57",
-                          "name": "读数数值",
+                          "name": "reading-value",
                           "content": "3.1×",
                           "fontFamily": "Inter",
                           "fontSize": 48,
@@ -1048,9 +1048,9 @@
                         {
                           "type": "text",
                           "id": "t58",
-                          "name": "读数结论",
-                          "content": "复购差距来自安装，不来自价格。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "reading-takeaway",
+                          "content": "The repeat-sales gap comes from installs, not price.",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 500,
                           "fill": [
@@ -1072,7 +1072,7 @@
                 {
                   "type": "frame",
                   "id": "f71",
-                  "name": "页脚",
+                  "name": "footer",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1084,9 +1084,9 @@
                     {
                       "type": "text",
                       "id": "t61",
-                      "name": "页脚眉标",
-                      "content": "明澜 · 渠道诊断｜总体结论",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "footer-eyebrow",
+                      "content": "Marlin · Channel Diagnostic | Key finding",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -1103,7 +1103,7 @@
                     {
                       "type": "frame",
                       "id": "f70",
-                      "name": "航迹条",
+                      "name": "track-bar",
                       "width": 200,
                       "height": 8,
                       "layout": "none",
@@ -1112,7 +1112,7 @@
                         {
                           "type": "frame",
                           "id": "f68",
-                          "name": "航迹点层",
+                          "name": "track-point-layer",
                           "width": 200,
                           "height": 8,
                           "layout": "none",
@@ -1121,7 +1121,7 @@
                             {
                               "type": "rectangle",
                               "id": "r63",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -1137,7 +1137,7 @@
                             {
                               "type": "rectangle",
                               "id": "r64",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -1157,7 +1157,7 @@
                             {
                               "type": "rectangle",
                               "id": "r65",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -1177,7 +1177,7 @@
                             {
                               "type": "rectangle",
                               "id": "r66",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -1197,7 +1197,7 @@
                             {
                               "type": "rectangle",
                               "id": "r67",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -1219,7 +1219,7 @@
                         {
                           "type": "rectangle",
                           "id": "r69",
-                          "name": "航迹线",
+                          "name": "track-line",
                           "width": 200,
                           "height": 2,
                           "fill": [
@@ -1236,7 +1236,7 @@
                     {
                       "type": "text",
                       "id": "t62",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "03 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 24,
@@ -1265,7 +1265,7 @@
     {
       "type": "frame",
       "id": "f111",
-      "name": "04 证据",
+      "name": "04-evidence",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1280,7 +1280,7 @@
         {
           "type": "frame",
           "id": "f110",
-          "name": "04 证据 · 正文",
+          "name": "04-evidence-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1298,7 +1298,7 @@
             {
               "type": "frame",
               "id": "f113",
-              "name": "论证",
+              "name": "argument",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1309,9 +1309,9 @@
                 {
                   "type": "text",
                   "id": "t112",
-                  "name": "页标题",
-                  "content": "毛利不是被渠道拿走的\n是被返工吃掉的",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Channels didn't take the margin\nRework ate it",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -1328,7 +1328,7 @@
                 {
                   "type": "frame",
                   "id": "f109",
-                  "name": "证据区",
+                  "name": "evidence-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1339,7 +1339,7 @@
                     {
                       "type": "frame",
                       "id": "f107",
-                      "name": "深度剖面条",
+                      "name": "depth-profile-bar",
                       "width": 1152,
                       "height": 504,
                       "layout": "none",
@@ -1348,7 +1348,7 @@
                         {
                           "type": "frame",
                           "id": "f106",
-                          "name": "剖面内容",
+                          "name": "profile-content",
                           "width": "fill_container",
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1359,7 +1359,7 @@
                             {
                               "type": "rectangle",
                               "id": "r105",
-                              "name": "剖面基线",
+                              "name": "profile-baseline",
                               "width": 1152,
                               "height": 2,
                               "fill": [
@@ -1372,7 +1372,7 @@
                             {
                               "type": "frame",
                               "id": "f104",
-                              "name": "剖面列",
+                              "name": "profile-column",
                               "width": 1152,
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -1383,7 +1383,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f83",
-                                  "name": "出厂毛利 列",
+                                  "name": "factory-margin-column",
                                   "width": 172,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1394,7 +1394,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r80",
-                                      "name": "剖面条",
+                                      "name": "profile-bar",
                                       "width": 172,
                                       "height": 420,
                                       "fill": [
@@ -1407,7 +1407,7 @@
                                     {
                                       "type": "text",
                                       "id": "t81",
-                                      "name": "剖面数值",
+                                      "name": "profile-value",
                                       "content": "42.0",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1427,9 +1427,9 @@
                                     {
                                       "type": "text",
                                       "id": "t82",
-                                      "name": "剖面标签",
-                                      "content": "出厂毛利",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "profile-label",
+                                      "content": "Factory margin",
+                                      "fontFamily": "Inter",
                                       "fontSize": 24,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1449,7 +1449,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f87",
-                                  "name": "渠道返点 列",
+                                  "name": "rebate-column",
                                   "width": 172,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1460,7 +1460,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r84",
-                                      "name": "剖面条",
+                                      "name": "profile-bar",
                                       "width": 172,
                                       "height": 64,
                                       "fill": [
@@ -1473,7 +1473,7 @@
                                     {
                                       "type": "text",
                                       "id": "t85",
-                                      "name": "剖面数值",
+                                      "name": "profile-value",
                                       "content": "6.4",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1493,9 +1493,9 @@
                                     {
                                       "type": "text",
                                       "id": "t86",
-                                      "name": "剖面标签",
-                                      "content": "渠道返点",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "profile-label",
+                                      "content": "Channel rebates",
+                                      "fontFamily": "Inter",
                                       "fontSize": 24,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1515,7 +1515,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f91",
-                                  "name": "仓配摊销 列",
+                                  "name": "logistics-column",
                                   "width": 172,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1526,7 +1526,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r88",
-                                      "name": "剖面条",
+                                      "name": "profile-bar",
                                       "width": 172,
                                       "height": 31,
                                       "fill": [
@@ -1539,7 +1539,7 @@
                                     {
                                       "type": "text",
                                       "id": "t89",
-                                      "name": "剖面数值",
+                                      "name": "profile-value",
                                       "content": "3.1",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1559,9 +1559,9 @@
                                     {
                                       "type": "text",
                                       "id": "t90",
-                                      "name": "剖面标签",
-                                      "content": "仓配摊销",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "profile-label",
+                                      "content": "Logistics",
+                                      "fontFamily": "Inter",
                                       "fontSize": 24,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1581,7 +1581,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f95",
-                                  "name": "安装返工 列",
+                                  "name": "rework-column",
                                   "width": 172,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1592,7 +1592,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r92",
-                                      "name": "剖面条",
+                                      "name": "profile-bar",
                                       "width": 172,
                                       "height": 118,
                                       "fill": [
@@ -1605,7 +1605,7 @@
                                     {
                                       "type": "text",
                                       "id": "t93",
-                                      "name": "剖面数值",
+                                      "name": "profile-value",
                                       "content": "11.8",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1625,9 +1625,9 @@
                                     {
                                       "type": "text",
                                       "id": "t94",
-                                      "name": "剖面标签",
-                                      "content": "安装返工",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "profile-label",
+                                      "content": "Install rework",
+                                      "fontFamily": "Inter",
                                       "fontSize": 24,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1647,7 +1647,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f99",
-                                  "name": "退换保修 列",
+                                  "name": "returns-column",
                                   "width": 172,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1658,7 +1658,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r96",
-                                      "name": "剖面条",
+                                      "name": "profile-bar",
                                       "width": 172,
                                       "height": 27,
                                       "fill": [
@@ -1671,7 +1671,7 @@
                                     {
                                       "type": "text",
                                       "id": "t97",
-                                      "name": "剖面数值",
+                                      "name": "profile-value",
                                       "content": "2.7",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1691,9 +1691,9 @@
                                     {
                                       "type": "text",
                                       "id": "t98",
-                                      "name": "剖面标签",
-                                      "content": "退换保修",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "profile-label",
+                                      "content": "Returns/warranty",
+                                      "fontFamily": "Inter",
                                       "fontSize": 24,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1713,7 +1713,7 @@
                                 {
                                   "type": "frame",
                                   "id": "f103",
-                                  "name": "到手毛利 列",
+                                  "name": "net-margin-column",
                                   "width": 172,
                                   "height": "fit_content",
                                   "layout": "vertical",
@@ -1724,7 +1724,7 @@
                                     {
                                       "type": "rectangle",
                                       "id": "r100",
-                                      "name": "剖面条",
+                                      "name": "profile-bar",
                                       "width": 172,
                                       "height": 180,
                                       "fill": [
@@ -1737,7 +1737,7 @@
                                     {
                                       "type": "text",
                                       "id": "t101",
-                                      "name": "剖面数值",
+                                      "name": "profile-value",
                                       "content": "18.0",
                                       "fontFamily": "Inter",
                                       "fontSize": 28,
@@ -1757,9 +1757,9 @@
                                     {
                                       "type": "text",
                                       "id": "t102",
-                                      "name": "剖面标签",
-                                      "content": "到手毛利",
-                                      "fontFamily": "Noto Sans SC",
+                                      "name": "profile-label",
+                                      "content": "Net margin",
+                                      "fontFamily": "Inter",
                                       "fontSize": 24,
                                       "fontWeight": 400,
                                       "fill": [
@@ -1785,7 +1785,7 @@
                     {
                       "type": "frame",
                       "id": "f108",
-                      "name": "注解栏",
+                      "name": "annotation-panel",
                       "width": 480,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1796,7 +1796,7 @@
                         {
                           "type": "frame",
                           "id": "f75",
-                          "name": "注解组",
+                          "name": "annotation-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1807,9 +1807,9 @@
                             {
                               "type": "text",
                               "id": "t73",
-                              "name": "注解标题",
-                              "content": "返工的钱不在财务账上",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "annotation-title",
+                              "content": "Rework isn't on the books",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -1826,9 +1826,9 @@
                             {
                               "type": "text",
                               "id": "t74",
-                              "name": "注解说明",
-                              "content": "它记在售后工时里，\n季度报表看不见，\n年底盘账才发现。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "annotation-note",
+                              "content": "It's buried in service hours,\nunseen in quarterly reports,\nfound only at year-end close.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -1847,7 +1847,7 @@
                         {
                           "type": "rectangle",
                           "id": "r76",
-                          "name": "横线",
+                          "name": "horizontal-rule",
                           "width": "fill_container",
                           "height": 1,
                           "fill": [
@@ -1860,7 +1860,7 @@
                         {
                           "type": "frame",
                           "id": "f79",
-                          "name": "注解组",
+                          "name": "annotation-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1871,9 +1871,9 @@
                             {
                               "type": "text",
                               "id": "t77",
-                              "name": "注解标题",
-                              "content": "换渠道省不下这一段",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "annotation-title",
+                              "content": "Switching won't cut this",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -1890,9 +1890,9 @@
                             {
                               "type": "text",
                               "id": "t78",
-                              "name": "注解说明",
-                              "content": "经销商换一轮，\n安装还是那批人。\n返点让掉两个点，返工照旧。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "annotation-note",
+                              "content": "New dealers, same installers.\nCut rebates by two points,\nthe rework stays the same.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -1917,7 +1917,7 @@
             {
               "type": "frame",
               "id": "f126",
-              "name": "页脚区",
+              "name": "footer-area",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1928,9 +1928,9 @@
                 {
                   "type": "text",
                   "id": "t125",
-                  "name": "来源脚注",
-                  "content": "数据来源：明澜 2026 年 1–6 月工单与售后台账，单位 元/台，样本 626 家门店。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "source-footnote",
+                  "content": "Source: Marlin work orders and service ledger, Jan–Jun 2026. Unit: $ per unit. Sample: 626 stores.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1947,7 +1947,7 @@
                 {
                   "type": "frame",
                   "id": "f124",
-                  "name": "页脚",
+                  "name": "footer",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1959,9 +1959,9 @@
                     {
                       "type": "text",
                       "id": "t114",
-                      "name": "页脚眉标",
-                      "content": "明澜 · 渠道诊断｜毛利去向",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "footer-eyebrow",
+                      "content": "Marlin · Channel Diagnostic | Where margin goes",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -1978,7 +1978,7 @@
                     {
                       "type": "frame",
                       "id": "f123",
-                      "name": "航迹条",
+                      "name": "track-bar",
                       "width": 200,
                       "height": 8,
                       "layout": "none",
@@ -1987,7 +1987,7 @@
                         {
                           "type": "frame",
                           "id": "f121",
-                          "name": "航迹点层",
+                          "name": "track-point-layer",
                           "width": 200,
                           "height": 8,
                           "layout": "none",
@@ -1996,7 +1996,7 @@
                             {
                               "type": "rectangle",
                               "id": "r116",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -2016,7 +2016,7 @@
                             {
                               "type": "rectangle",
                               "id": "r117",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -2032,7 +2032,7 @@
                             {
                               "type": "rectangle",
                               "id": "r118",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -2052,7 +2052,7 @@
                             {
                               "type": "rectangle",
                               "id": "r119",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -2072,7 +2072,7 @@
                             {
                               "type": "rectangle",
                               "id": "r120",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -2094,7 +2094,7 @@
                         {
                           "type": "rectangle",
                           "id": "r122",
-                          "name": "航迹线",
+                          "name": "track-line",
                           "width": 200,
                           "height": 2,
                           "fill": [
@@ -2111,7 +2111,7 @@
                     {
                       "type": "text",
                       "id": "t115",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "04 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 24,
@@ -2140,7 +2140,7 @@
     {
       "type": "frame",
       "id": "f128",
-      "name": "05 数据",
+      "name": "05-data",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -2155,7 +2155,7 @@
         {
           "type": "frame",
           "id": "f127",
-          "name": "05 数据 · 正文",
+          "name": "05-data-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -2173,7 +2173,7 @@
             {
               "type": "frame",
               "id": "f179",
-              "name": "论证",
+              "name": "argument",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2184,9 +2184,9 @@
                 {
                   "type": "text",
                   "id": "t129",
-                  "name": "页标题",
-                  "content": "装得快的区域，复购就没有掉过",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Fast installs, steady repeat sales",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -2203,7 +2203,7 @@
                 {
                   "type": "frame",
                   "id": "f178",
-                  "name": "区域表",
+                  "name": "region-table",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2214,7 +2214,7 @@
                     {
                       "type": "frame",
                       "id": "f135",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2225,9 +2225,9 @@
                         {
                           "type": "text",
                           "id": "t130",
-                          "name": "表头单元",
-                          "content": "区域",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "Region",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 600,
                           "fill": [
@@ -2244,9 +2244,9 @@
                         {
                           "type": "text",
                           "id": "t131",
-                          "name": "表头单元",
-                          "content": "门店数",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "Stores",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 600,
                           "fill": [
@@ -2264,9 +2264,9 @@
                         {
                           "type": "text",
                           "id": "t132",
-                          "name": "表头单元",
-                          "content": "平均上门（天）",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "Avg days to visit",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 600,
                           "fill": [
@@ -2284,9 +2284,9 @@
                         {
                           "type": "text",
                           "id": "t133",
-                          "name": "表头单元",
-                          "content": "一次装成率",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "First-visit install",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 600,
                           "fill": [
@@ -2304,9 +2304,9 @@
                         {
                           "type": "text",
                           "id": "t134",
-                          "name": "表头单元",
-                          "content": "年内复购",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "Annual repeat",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 600,
                           "fill": [
@@ -2326,7 +2326,7 @@
                     {
                       "type": "rectangle",
                       "id": "r136",
-                      "name": "横线",
+                      "name": "horizontal-rule",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -2339,7 +2339,7 @@
                     {
                       "type": "frame",
                       "id": "f142",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2350,9 +2350,9 @@
                         {
                           "type": "text",
                           "id": "t137",
-                          "name": "表格单元",
-                          "content": "华东",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "table-cell",
+                          "content": "East",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
                           "fill": [
@@ -2369,7 +2369,7 @@
                         {
                           "type": "text",
                           "id": "t138",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "186",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2389,7 +2389,7 @@
                         {
                           "type": "text",
                           "id": "t139",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "2.4",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2409,7 +2409,7 @@
                         {
                           "type": "text",
                           "id": "t140",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "91%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2429,7 +2429,7 @@
                         {
                           "type": "text",
                           "id": "t141",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "34%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2451,7 +2451,7 @@
                     {
                       "type": "rectangle",
                       "id": "r143",
-                      "name": "横线",
+                      "name": "horizontal-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2464,7 +2464,7 @@
                     {
                       "type": "frame",
                       "id": "f149",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2475,9 +2475,9 @@
                         {
                           "type": "text",
                           "id": "t144",
-                          "name": "表格单元",
-                          "content": "华南",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "table-cell",
+                          "content": "South",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
                           "fill": [
@@ -2494,7 +2494,7 @@
                         {
                           "type": "text",
                           "id": "t145",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "142",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2514,7 +2514,7 @@
                         {
                           "type": "text",
                           "id": "t146",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "3.1",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2534,7 +2534,7 @@
                         {
                           "type": "text",
                           "id": "t147",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "88%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2554,7 +2554,7 @@
                         {
                           "type": "text",
                           "id": "t148",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "29%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2576,7 +2576,7 @@
                     {
                       "type": "rectangle",
                       "id": "r150",
-                      "name": "横线",
+                      "name": "horizontal-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2589,7 +2589,7 @@
                     {
                       "type": "frame",
                       "id": "f156",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2600,9 +2600,9 @@
                         {
                           "type": "text",
                           "id": "t151",
-                          "name": "表格单元",
-                          "content": "华北",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "table-cell",
+                          "content": "North",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
                           "fill": [
@@ -2619,7 +2619,7 @@
                         {
                           "type": "text",
                           "id": "t152",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "128",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2639,7 +2639,7 @@
                         {
                           "type": "text",
                           "id": "t153",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "4.6",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2659,7 +2659,7 @@
                         {
                           "type": "text",
                           "id": "t154",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "74%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2679,7 +2679,7 @@
                         {
                           "type": "text",
                           "id": "t155",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "18%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2701,7 +2701,7 @@
                     {
                       "type": "rectangle",
                       "id": "r157",
-                      "name": "横线",
+                      "name": "horizontal-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2714,7 +2714,7 @@
                     {
                       "type": "frame",
                       "id": "f163",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2725,9 +2725,9 @@
                         {
                           "type": "text",
                           "id": "t158",
-                          "name": "表格单元",
-                          "content": "华中",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "table-cell",
+                          "content": "Central",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
                           "fill": [
@@ -2744,7 +2744,7 @@
                         {
                           "type": "text",
                           "id": "t159",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "96",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2764,7 +2764,7 @@
                         {
                           "type": "text",
                           "id": "t160",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "5.2",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2784,7 +2784,7 @@
                         {
                           "type": "text",
                           "id": "t161",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "69%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2804,7 +2804,7 @@
                         {
                           "type": "text",
                           "id": "t162",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "15%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2826,7 +2826,7 @@
                     {
                       "type": "rectangle",
                       "id": "r164",
-                      "name": "横线",
+                      "name": "horizontal-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2839,7 +2839,7 @@
                     {
                       "type": "frame",
                       "id": "f170",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2850,9 +2850,9 @@
                         {
                           "type": "text",
                           "id": "t165",
-                          "name": "表格单元",
-                          "content": "西南",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "table-cell",
+                          "content": "Southwest",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
                           "fill": [
@@ -2869,7 +2869,7 @@
                         {
                           "type": "text",
                           "id": "t166",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "74",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2889,7 +2889,7 @@
                         {
                           "type": "text",
                           "id": "t167",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "6.8",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2909,7 +2909,7 @@
                         {
                           "type": "text",
                           "id": "t168",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "61%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2929,7 +2929,7 @@
                         {
                           "type": "text",
                           "id": "t169",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "11%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -2951,7 +2951,7 @@
                     {
                       "type": "rectangle",
                       "id": "r171",
-                      "name": "横线",
+                      "name": "horizontal-rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2964,7 +2964,7 @@
                     {
                       "type": "frame",
                       "id": "f177",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2975,9 +2975,9 @@
                         {
                           "type": "text",
                           "id": "t172",
-                          "name": "表格单元",
-                          "content": "合计",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "table-cell",
+                          "content": "Total",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 600,
                           "fill": [
@@ -2994,7 +2994,7 @@
                         {
                           "type": "text",
                           "id": "t173",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "626",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -3014,7 +3014,7 @@
                         {
                           "type": "text",
                           "id": "t174",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "4.1",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -3034,7 +3034,7 @@
                         {
                           "type": "text",
                           "id": "t175",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "78%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -3054,7 +3054,7 @@
                         {
                           "type": "text",
                           "id": "t176",
-                          "name": "表格单元",
+                          "name": "table-cell",
                           "content": "22%",
                           "fontFamily": "Inter",
                           "fontSize": 30,
@@ -3080,7 +3080,7 @@
             {
               "type": "frame",
               "id": "f192",
-              "name": "页脚区",
+              "name": "footer-area",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3091,9 +3091,9 @@
                 {
                   "type": "text",
                   "id": "t191",
-                  "name": "来源脚注",
-                  "content": "数据来源：明澜工单系统 2026 年 1–6 月，一次装成率指首次上门即完成安装并通过验收的比例。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "source-footnote",
+                  "content": "Source: Marlin work order system, Jan–Jun 2026. First-visit install rate = share installed and signed off on the first visit.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -3110,7 +3110,7 @@
                 {
                   "type": "frame",
                   "id": "f190",
-                  "name": "页脚",
+                  "name": "footer",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3122,9 +3122,9 @@
                     {
                       "type": "text",
                       "id": "t180",
-                      "name": "页脚眉标",
-                      "content": "明澜 · 渠道诊断｜安装网络",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "footer-eyebrow",
+                      "content": "Marlin · Channel Diagnostic | Install network",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -3141,7 +3141,7 @@
                     {
                       "type": "frame",
                       "id": "f189",
-                      "name": "航迹条",
+                      "name": "track-bar",
                       "width": 200,
                       "height": 8,
                       "layout": "none",
@@ -3150,7 +3150,7 @@
                         {
                           "type": "frame",
                           "id": "f187",
-                          "name": "航迹点层",
+                          "name": "track-point-layer",
                           "width": 200,
                           "height": 8,
                           "layout": "none",
@@ -3159,7 +3159,7 @@
                             {
                               "type": "rectangle",
                               "id": "r182",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -3179,7 +3179,7 @@
                             {
                               "type": "rectangle",
                               "id": "r183",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -3199,7 +3199,7 @@
                             {
                               "type": "rectangle",
                               "id": "r184",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -3215,7 +3215,7 @@
                             {
                               "type": "rectangle",
                               "id": "r185",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -3235,7 +3235,7 @@
                             {
                               "type": "rectangle",
                               "id": "r186",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -3257,7 +3257,7 @@
                         {
                           "type": "rectangle",
                           "id": "r188",
-                          "name": "航迹线",
+                          "name": "track-line",
                           "width": 200,
                           "height": 2,
                           "fill": [
@@ -3274,7 +3274,7 @@
                     {
                       "type": "text",
                       "id": "t181",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "05 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 24,
@@ -3303,7 +3303,7 @@
     {
       "type": "frame",
       "id": "f212",
-      "name": "06 取舍",
+      "name": "06-trade-off",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -3318,7 +3318,7 @@
         {
           "type": "frame",
           "id": "f211",
-          "name": "06 取舍 · 正文",
+          "name": "06-trade-off-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -3336,7 +3336,7 @@
             {
               "type": "frame",
               "id": "f214",
-              "name": "论证",
+              "name": "argument",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3347,9 +3347,9 @@
                 {
                   "type": "text",
                   "id": "t213",
-                  "name": "页标题",
-                  "content": "该换的不是经销商\n是把安装收回来自己做",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Don't change dealers\nBring installation in-house",
+                  "fontFamily": "Inter",
                   "fontSize": 64,
                   "fontWeight": 700,
                   "fill": [
@@ -3366,7 +3366,7 @@
                 {
                   "type": "frame",
                   "id": "f210",
-                  "name": "取舍区",
+                  "name": "trade-off-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3377,7 +3377,7 @@
                     {
                       "type": "frame",
                       "id": "f208",
-                      "name": "证据栏",
+                      "name": "evidence-panel",
                       "width": 1140,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -3388,7 +3388,7 @@
                         {
                           "type": "frame",
                           "id": "f195",
-                          "name": "证据条",
+                          "name": "evidence-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3399,9 +3399,9 @@
                             {
                               "type": "text",
                               "id": "t193",
-                              "name": "证据标题",
-                              "content": "自有师傅的一次装成率是 94%",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence-title",
+                              "content": "In-house crews: 94% first-visit installs",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -3418,9 +3418,9 @@
                             {
                               "type": "text",
                               "id": "t194",
-                              "name": "证据说明",
-                              "content": "外包队伍 68%。\n同样的培训，差别在返修要不要自己扛。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence-note",
+                              "content": "Contractors hit 68%.\nSame training; the gap is who pays for callbacks.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -3439,7 +3439,7 @@
                         {
                           "type": "rectangle",
                           "id": "r196",
-                          "name": "横线",
+                          "name": "horizontal-rule",
                           "width": "fill_container",
                           "height": 1,
                           "fill": [
@@ -3452,7 +3452,7 @@
                         {
                           "type": "frame",
                           "id": "f199",
-                          "name": "证据条",
+                          "name": "evidence-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3463,9 +3463,9 @@
                             {
                               "type": "text",
                               "id": "t197",
-                              "name": "证据标题",
-                              "content": "改约主要卡在配件不在车上",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence-title",
+                              "content": "Reschedules stall on parts missing from the truck",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -3482,9 +3482,9 @@
                             {
                               "type": "text",
                               "id": "t198",
-                              "name": "证据说明",
-                              "content": "不是人手不够。\n配件调度这一段本来就在我们自己手里。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence-note",
+                              "content": "It's not a headcount issue.\nAnd parts dispatch is already in our own hands.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -3503,7 +3503,7 @@
                         {
                           "type": "rectangle",
                           "id": "r200",
-                          "name": "横线",
+                          "name": "horizontal-rule",
                           "width": "fill_container",
                           "height": 1,
                           "fill": [
@@ -3516,7 +3516,7 @@
                         {
                           "type": "frame",
                           "id": "f203",
-                          "name": "证据条",
+                          "name": "evidence-item",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3527,9 +3527,9 @@
                             {
                               "type": "text",
                               "id": "t201",
-                              "name": "证据标题",
-                              "content": "经销商并不反对我们自己装",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence-title",
+                              "content": "Dealers don't mind us installing ourselves",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -3546,9 +3546,9 @@
                             {
                               "type": "text",
                               "id": "t202",
-                              "name": "证据说明",
-                              "content": "他们要的是卖机器那笔返点，\n安装对他们一直是成本中心。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "evidence-note",
+                              "content": "What they want is the rebate on each unit sold;\nto them, installation has always been a cost center.",
+                              "fontFamily": "Inter",
                               "fontSize": 30,
                               "fontWeight": 400,
                               "fill": [
@@ -3569,7 +3569,7 @@
                     {
                       "type": "rectangle",
                       "id": "r209",
-                      "name": "竖线",
+                      "name": "vertical-rule",
                       "width": 1,
                       "height": "fill_container",
                       "fill": [
@@ -3582,7 +3582,7 @@
                     {
                       "type": "frame",
                       "id": "f207",
-                      "name": "判断栏",
+                      "name": "judgment-panel",
                       "width": 491,
                       "height": "fill_container",
                       "layout": "vertical",
@@ -3602,7 +3602,7 @@
                         {
                           "type": "rectangle",
                           "id": "r204",
-                          "name": "警戒短线",
+                          "name": "alert-rule",
                           "width": 96,
                           "height": 4,
                           "fill": [
@@ -3615,9 +3615,9 @@
                         {
                           "type": "text",
                           "id": "t205",
-                          "name": "判断标题",
-                          "content": "这一步的代价",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "judgment-title",
+                          "content": "The cost of this move",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 600,
                           "fill": [
@@ -3634,9 +3634,9 @@
                         {
                           "type": "text",
                           "id": "t206",
-                          "name": "判断说明",
-                          "content": "自建安装要多背\n三年四千三百万固定成本。\n换来的是复购，\n不是当期毛利。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "judgment-note",
+                          "content": "Insourcing installs adds\n$6M fixed cost over 3 yrs.\nIt buys repeat sales,\nnot near-term margin.",
+                          "fontFamily": "Inter",
                           "fontSize": 30,
                           "fontWeight": 400,
                           "fill": [
@@ -3659,7 +3659,7 @@
             {
               "type": "frame",
               "id": "f225",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -3671,9 +3671,9 @@
                 {
                   "type": "text",
                   "id": "t215",
-                  "name": "页脚眉标",
-                  "content": "明澜 · 渠道诊断｜取舍判断",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "footer-eyebrow",
+                  "content": "Marlin · Channel Diagnostic | Trade-off",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -3690,7 +3690,7 @@
                 {
                   "type": "frame",
                   "id": "f224",
-                  "name": "航迹条",
+                  "name": "track-bar",
                   "width": 200,
                   "height": 8,
                   "layout": "none",
@@ -3699,7 +3699,7 @@
                     {
                       "type": "frame",
                       "id": "f222",
-                      "name": "航迹点层",
+                      "name": "track-point-layer",
                       "width": 200,
                       "height": 8,
                       "layout": "none",
@@ -3708,7 +3708,7 @@
                         {
                           "type": "rectangle",
                           "id": "r217",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 8,
                           "height": 8,
                           "cornerRadius": 4,
@@ -3728,7 +3728,7 @@
                         {
                           "type": "rectangle",
                           "id": "r218",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 8,
                           "height": 8,
                           "cornerRadius": 4,
@@ -3748,7 +3748,7 @@
                         {
                           "type": "rectangle",
                           "id": "r219",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 8,
                           "height": 8,
                           "cornerRadius": 4,
@@ -3768,7 +3768,7 @@
                         {
                           "type": "rectangle",
                           "id": "r220",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 8,
                           "height": 8,
                           "cornerRadius": 4,
@@ -3784,7 +3784,7 @@
                         {
                           "type": "rectangle",
                           "id": "r221",
-                          "name": "航迹点",
+                          "name": "track-point",
                           "width": 8,
                           "height": 8,
                           "cornerRadius": 4,
@@ -3806,7 +3806,7 @@
                     {
                       "type": "rectangle",
                       "id": "r223",
-                      "name": "航迹线",
+                      "name": "track-line",
                       "width": 200,
                       "height": 2,
                       "fill": [
@@ -3823,7 +3823,7 @@
                 {
                   "type": "text",
                   "id": "t216",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "06 / 07",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -3850,7 +3850,7 @@
     {
       "type": "frame",
       "id": "f236",
-      "name": "07 行动",
+      "name": "07-action",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -3865,7 +3865,7 @@
         {
           "type": "frame",
           "id": "f235",
-          "name": "07 行动 · 正文",
+          "name": "07-action-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -3883,9 +3883,9 @@
             {
               "type": "text",
               "id": "t237",
-              "name": "收束句",
-              "content": "先把华南的安装收回来\n再谈全国",
-              "fontFamily": "Noto Sans SC",
+              "name": "closing-line",
+              "content": "Bring the South's installs in-house first\nthen talk national",
+              "fontFamily": "Inter",
               "fontSize": 72,
               "fontWeight": 700,
               "fill": [
@@ -3902,7 +3902,7 @@
             {
               "type": "frame",
               "id": "f238",
-              "name": "行动区",
+              "name": "action-area",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -3913,7 +3913,7 @@
                 {
                   "type": "frame",
                   "id": "f228",
-                  "name": "行动 1",
+                  "name": "action-1",
                   "width": 528,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3924,7 +3924,7 @@
                     {
                       "type": "text",
                       "id": "t226",
-                      "name": "行动序号",
+                      "name": "action-index",
                       "content": "01",
                       "fontFamily": "Inter",
                       "fontSize": 40,
@@ -3943,9 +3943,9 @@
                     {
                       "type": "text",
                       "id": "t227",
-                      "name": "行动文案",
-                      "content": "九月底前接管\n华南两个仓的配件调度",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "action-copy",
+                      "content": "By Sept 30, take over parts\ndispatch at both South hubs",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 500,
                       "fill": [
@@ -3964,7 +3964,7 @@
                 {
                   "type": "frame",
                   "id": "f231",
-                  "name": "行动 2",
+                  "name": "action-2",
                   "width": 528,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3975,7 +3975,7 @@
                     {
                       "type": "text",
                       "id": "t229",
-                      "name": "行动序号",
+                      "name": "action-index",
                       "content": "02",
                       "fontFamily": "Inter",
                       "fontSize": 40,
@@ -3994,9 +3994,9 @@
                     {
                       "type": "text",
                       "id": "t230",
-                      "name": "行动文案",
-                      "content": "十月起在广深\n自招一百二十名安装师傅",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "action-copy",
+                      "content": "Hire 120 in-house installers\nin the South from October",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 500,
                       "fill": [
@@ -4015,7 +4015,7 @@
                 {
                   "type": "frame",
                   "id": "f234",
-                  "name": "行动 3",
+                  "name": "action-3",
                   "width": 528,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -4026,7 +4026,7 @@
                     {
                       "type": "text",
                       "id": "t232",
-                      "name": "行动序号",
+                      "name": "action-index",
                       "content": "03",
                       "fontFamily": "Inter",
                       "fontSize": 40,
@@ -4045,9 +4045,9 @@
                     {
                       "type": "text",
                       "id": "t233",
-                      "name": "行动文案",
-                      "content": "年底复盘一次装成率，\n到不了九成就停",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "action-copy",
+                      "content": "Review first-visit rate at\nyear-end; stop below 90%",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 500,
                       "fill": [
@@ -4068,7 +4068,7 @@
             {
               "type": "frame",
               "id": "f251",
-              "name": "页尾",
+              "name": "page-end",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -4079,9 +4079,9 @@
                 {
                   "type": "text",
                   "id": "t239",
-                  "name": "落款",
-                  "content": "明澜家用水处理 · 战略办公室｜2026 年 8 月 12 日",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "sign-off",
+                  "content": "Marlin Home Water · Strategy Office | Aug 12, 2026",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -4098,7 +4098,7 @@
                 {
                   "type": "frame",
                   "id": "f250",
-                  "name": "页脚",
+                  "name": "footer",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4110,9 +4110,9 @@
                     {
                       "type": "text",
                       "id": "t240",
-                      "name": "页脚眉标",
-                      "content": "明澜 · 渠道诊断｜行动清单",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "footer-eyebrow",
+                      "content": "Marlin · Channel Diagnostic | Action list",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -4129,7 +4129,7 @@
                     {
                       "type": "frame",
                       "id": "f249",
-                      "name": "航迹条",
+                      "name": "track-bar",
                       "width": 200,
                       "height": 8,
                       "layout": "none",
@@ -4138,7 +4138,7 @@
                         {
                           "type": "frame",
                           "id": "f247",
-                          "name": "航迹点层",
+                          "name": "track-point-layer",
                           "width": 200,
                           "height": 8,
                           "layout": "none",
@@ -4147,7 +4147,7 @@
                             {
                               "type": "rectangle",
                               "id": "r242",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -4167,7 +4167,7 @@
                             {
                               "type": "rectangle",
                               "id": "r243",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -4187,7 +4187,7 @@
                             {
                               "type": "rectangle",
                               "id": "r244",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -4207,7 +4207,7 @@
                             {
                               "type": "rectangle",
                               "id": "r245",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -4227,7 +4227,7 @@
                             {
                               "type": "rectangle",
                               "id": "r246",
-                              "name": "航迹点",
+                              "name": "track-point",
                               "width": 8,
                               "height": 8,
                               "cornerRadius": 4,
@@ -4245,7 +4245,7 @@
                         {
                           "type": "rectangle",
                           "id": "r248",
-                          "name": "航迹线",
+                          "name": "track-line",
                           "width": 200,
                           "height": 2,
                           "fill": [
@@ -4262,7 +4262,7 @@
                     {
                       "type": "text",
                       "id": "t241",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "07 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 24,

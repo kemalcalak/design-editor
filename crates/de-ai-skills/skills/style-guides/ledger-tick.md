@@ -77,11 +77,11 @@ Both are deliberately low-contrast and are exempt from text-contrast checks **be
 
 | Role            | Family                                   | Usage                                                  |
 | --------------- | ---------------------------------------- | ------------------------------------------------------ |
-| Display         | 思源黑体 Bold / Familjen Grotesk          | Cover title, page titles                               |
-| Body            | 霞鹜新晰黑 / Familjen Grotesk             | Row labels, definitions, notes, verdict sentences      |
+| Display         | Familjen Grotesk Bold, Space Grotesk     | Cover title, page titles                               |
+| Body            | Familjen Grotesk, Inter                  | Row labels, definitions, notes, verdict sentences      |
 | Data / Marks    | **IBM Plex Mono**                        | **Mandatory** for every figure and every mark column   |
 
-Fallback chain: display `Noto Sans SC` 700 / body `Noto Sans SC` 400 / mono `Inter` 500.
+Fallback chain: display `Space Grotesk` 700 / body `Inter` 400 / mono `JetBrains Mono` 500.
 
 The mono rule is not decoration. Column headers, dates, page numbers, and every cell in a mark column are set in IBM Plex Mono so glyph advances are uniform and marks land on the same optical centre down a column. A proportional face makes an eight-row column visibly ragged, and a ragged column cannot be checked at a glance.
 
@@ -95,13 +95,13 @@ The mono rule is not decoration. Column headers, dates, page numbers, and every 
 | Mark glyph     | 32   | Mono    | The tri-tick cell mark, and the tally conclusion line    |
 | Item title     | 32   | Body    | One gap / one advantage / one criterion heading          |
 | Cover subtitle | 30   | Body    | Cover subtitle only                                      |
-| Table header   | 28   | Mono    | Uppercase, letterSpacing **+2** on Latin, **0 on CJK**   |
+| Table header   | 28   | Mono    | Uppercase, letterSpacing **+2**; numeric headers at **0** |
 | Row label      | 28   | Body    | The left-hand criterion label in the matrix              |
 | Body note      | 28   | Body    | Definitions, current state, plan, reading notes          |
 | Footnote       | 24   | Body    | Data cut-off date, sources, page numbers                 |
 | Chip label     | 20   | Mono    | Uppercase text inside the own-column chip, in ledger.paper |
 
-Table headers are the only uppercase run in the system, and +2 tracking is what makes an uppercase mono header read as a ledger column head rather than as shouting. Tracking follows the run's actual script: a Latin header takes +2, a Chinese one takes 0, because positive tracking on Han glyphs loosens an already full-width em box into gaps.
+Table headers are the only uppercase run in the system, and +2 tracking is what makes an uppercase mono header read as a ledger column head rather than as shouting. Tracking follows the run's content: a word header takes +2, a header that is a year or a figure takes 0, because positive tracking on fixed-width mono digits loosens an already even advance into gaps and pulls the figure off the column's optical centre.
 
 ## Layout Grammar
 

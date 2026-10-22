@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "潮痕石板 · 数据评审档 16:9",
+  "name": "tidemark-slate-data-review-16x9",
   "variables": {
     "c-wash": {
       "type": "color",
@@ -55,7 +55,7 @@
     {
       "type": "frame",
       "id": "f13",
-      "name": "01 封面",
+      "name": "01-cover",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -70,7 +70,7 @@
         {
           "type": "frame",
           "id": "f12",
-          "name": "01 封面 · 正文",
+          "name": "01-cover-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -88,7 +88,7 @@
             {
               "type": "frame",
               "id": "f1",
-              "name": "周期标记",
+              "name": "period-marker",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -110,7 +110,7 @@
                 {
                   "type": "text",
                   "id": "t2",
-                  "name": "周期文字",
+                  "name": "period-text",
                   "content": "2026 Q2",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -131,7 +131,7 @@
             {
               "type": "frame",
               "id": "f5",
-              "name": "主张",
+              "name": "claim",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -142,9 +142,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "主标题",
-                  "content": "签得多了\n但签得更慢了",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "main-title",
+                  "content": "More signed,\nbut signed slower",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -161,9 +161,9 @@
                 {
                   "type": "text",
                   "id": "t4",
-                  "name": "范围说明",
-                  "content": "本次评审覆盖企业版四条业务线，数据截至 6 月 30 日。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "scope-note",
+                  "content": "Covers all four Enterprise business lines. Data through June 30.",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 400,
                   "fill": [
@@ -182,7 +182,7 @@
             {
               "type": "frame",
               "id": "f14",
-              "name": "页尾",
+              "name": "page-end",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -193,7 +193,7 @@
                 {
                   "type": "frame",
                   "id": "f8",
-                  "name": "潮痕",
+                  "name": "tidemark",
                   "width": 1728,
                   "height": 4,
                   "layout": "none",
@@ -202,7 +202,7 @@
                     {
                       "type": "rectangle",
                       "id": "r6",
-                      "name": "潮痕刻度",
+                      "name": "tidemark-scale",
                       "width": 220,
                       "height": 4,
                       "fill": [
@@ -217,7 +217,7 @@
                     {
                       "type": "rectangle",
                       "id": "r7",
-                      "name": "潮痕底线",
+                      "name": "tidemark-baseline",
                       "width": 1728,
                       "height": 2,
                       "fill": [
@@ -234,7 +234,7 @@
                 {
                   "type": "frame",
                   "id": "f11",
-                  "name": "落款",
+                  "name": "sign-off",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -246,9 +246,9 @@
                     {
                       "type": "text",
                       "id": "t9",
-                      "name": "汇报人",
-                      "content": "增长与运营部 · 周砚",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "presenter",
+                      "content": "Growth & Operations · Jordan Wells",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 500,
                       "fill": [
@@ -265,7 +265,7 @@
                     {
                       "type": "text",
                       "id": "t10",
-                      "name": "日期",
+                      "name": "date",
                       "content": "2026.07.09",
                       "fontFamily": "Inter",
                       "fontSize": 26,
@@ -294,7 +294,7 @@
     {
       "type": "frame",
       "id": "f16",
-      "name": "02 全景磁贴",
+      "name": "02-overview-tiles",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -309,7 +309,7 @@
         {
           "type": "frame",
           "id": "f15",
-          "name": "02 全景磁贴 · 正文",
+          "name": "02-overview-tiles-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -327,9 +327,9 @@
             {
               "type": "text",
               "id": "t17",
-              "name": "页标题",
-              "content": "签署量涨了三成，签完的时间也一起涨了",
-              "fontFamily": "Noto Sans SC",
+              "name": "page-title",
+              "content": "Signing volume is up 30%, and so is time to sign",
+              "fontFamily": "Inter",
               "fontSize": 56,
               "fontWeight": 700,
               "fill": [
@@ -346,7 +346,7 @@
             {
               "type": "frame",
               "id": "f66",
-              "name": "磁贴行",
+              "name": "tile-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -357,7 +357,7 @@
                 {
                   "type": "frame",
                   "id": "f29",
-                  "name": "潮位磁贴",
+                  "name": "tide-tile",
                   "width": 414,
                   "height": 360,
                   "layout": "vertical",
@@ -379,9 +379,9 @@
                     {
                       "type": "text",
                       "id": "t28",
-                      "name": "磁贴标签",
-                      "content": "季度签署量（万份）",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tile-label",
+                      "content": "Quarterly signings (10K)",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 500,
                       "fill": [
@@ -398,7 +398,7 @@
                     {
                       "type": "frame",
                       "id": "f27",
-                      "name": "读数",
+                      "name": "readout",
                       "width": 358,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -409,7 +409,7 @@
                         {
                           "type": "text",
                           "id": "t22",
-                          "name": "磁贴数值",
+                          "name": "tile-value",
                           "content": "18.6",
                           "fontFamily": "Inter",
                           "fontSize": 64,
@@ -428,7 +428,7 @@
                         {
                           "type": "frame",
                           "id": "f26",
-                          "name": "潮位刻度",
+                          "name": "tide-scale",
                           "width": 358,
                           "height": 14,
                           "layout": "none",
@@ -437,7 +437,7 @@
                             {
                               "type": "rectangle",
                               "id": "r23",
-                              "name": "目标刻痕",
+                              "name": "target-tick",
                               "width": 3,
                               "height": 14,
                               "fill": [
@@ -452,7 +452,7 @@
                             {
                               "type": "rectangle",
                               "id": "r24",
-                              "name": "已达段",
+                              "name": "reached-segment",
                               "width": 279.24,
                               "height": 2,
                               "fill": [
@@ -467,7 +467,7 @@
                             {
                               "type": "rectangle",
                               "id": "r25",
-                              "name": "刻度底线",
+                              "name": "scale-baseline",
                               "width": 358,
                               "height": 2,
                               "fill": [
@@ -486,7 +486,7 @@
                     {
                       "type": "frame",
                       "id": "f21",
-                      "name": "变化 chip",
+                      "name": "change-chip",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -497,7 +497,7 @@
                         {
                           "type": "rectangle",
                           "id": "r18",
-                          "name": "航标点",
+                          "name": "marker-dot",
                           "width": 12,
                           "height": 12,
                           "cornerRadius": 6,
@@ -511,7 +511,7 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "变化数值",
+                          "name": "change-value",
                           "content": "+31%",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -530,9 +530,9 @@
                         {
                           "type": "text",
                           "id": "t20",
-                          "name": "比较词",
-                          "content": "对比上季",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "comparison-label",
+                          "content": "vs last quarter",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -553,7 +553,7 @@
                 {
                   "type": "frame",
                   "id": "f41",
-                  "name": "潮位磁贴",
+                  "name": "tide-tile",
                   "width": 414,
                   "height": 360,
                   "layout": "vertical",
@@ -575,9 +575,9 @@
                     {
                       "type": "text",
                       "id": "t40",
-                      "name": "磁贴标签",
-                      "content": "平均签署时长（小时）",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tile-label",
+                      "content": "Avg time to sign (hrs)",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 500,
                       "fill": [
@@ -594,7 +594,7 @@
                     {
                       "type": "frame",
                       "id": "f39",
-                      "name": "读数",
+                      "name": "readout",
                       "width": 358,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -605,7 +605,7 @@
                         {
                           "type": "text",
                           "id": "t34",
-                          "name": "磁贴数值",
+                          "name": "tile-value",
                           "content": "6.4",
                           "fontFamily": "Inter",
                           "fontSize": 64,
@@ -624,7 +624,7 @@
                         {
                           "type": "frame",
                           "id": "f38",
-                          "name": "潮位刻度",
+                          "name": "tide-scale",
                           "width": 358,
                           "height": 14,
                           "layout": "none",
@@ -633,7 +633,7 @@
                             {
                               "type": "rectangle",
                               "id": "r35",
-                              "name": "目标刻痕",
+                              "name": "target-tick",
                               "width": 3,
                               "height": 14,
                               "fill": [
@@ -648,7 +648,7 @@
                             {
                               "type": "rectangle",
                               "id": "r36",
-                              "name": "已达段",
+                              "name": "reached-segment",
                               "width": 286.4,
                               "height": 2,
                               "fill": [
@@ -663,7 +663,7 @@
                             {
                               "type": "rectangle",
                               "id": "r37",
-                              "name": "刻度底线",
+                              "name": "scale-baseline",
                               "width": 358,
                               "height": 2,
                               "fill": [
@@ -682,7 +682,7 @@
                     {
                       "type": "frame",
                       "id": "f33",
-                      "name": "变化 chip",
+                      "name": "change-chip",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -693,7 +693,7 @@
                         {
                           "type": "rectangle",
                           "id": "r30",
-                          "name": "航标点",
+                          "name": "marker-dot",
                           "width": 12,
                           "height": 12,
                           "cornerRadius": 6,
@@ -707,7 +707,7 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "变化数值",
+                          "name": "change-value",
                           "content": "+0.9",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -726,9 +726,9 @@
                         {
                           "type": "text",
                           "id": "t32",
-                          "name": "比较词",
-                          "content": "比上季更慢",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "comparison-label",
+                          "content": "slower than last qtr",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -749,7 +749,7 @@
                 {
                   "type": "frame",
                   "id": "f53",
-                  "name": "潮位磁贴",
+                  "name": "tide-tile",
                   "width": 414,
                   "height": 360,
                   "layout": "vertical",
@@ -771,9 +771,9 @@
                     {
                       "type": "text",
                       "id": "t52",
-                      "name": "磁贴标签",
-                      "content": "一次签成率",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tile-label",
+                      "content": "First-pass sign rate",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 500,
                       "fill": [
@@ -790,7 +790,7 @@
                     {
                       "type": "frame",
                       "id": "f51",
-                      "name": "读数",
+                      "name": "readout",
                       "width": 358,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -801,7 +801,7 @@
                         {
                           "type": "text",
                           "id": "t46",
-                          "name": "磁贴数值",
+                          "name": "tile-value",
                           "content": "91.2%",
                           "fontFamily": "Inter",
                           "fontSize": 64,
@@ -820,7 +820,7 @@
                         {
                           "type": "frame",
                           "id": "f50",
-                          "name": "潮位刻度",
+                          "name": "tide-scale",
                           "width": 358,
                           "height": 14,
                           "layout": "none",
@@ -829,7 +829,7 @@
                             {
                               "type": "rectangle",
                               "id": "r47",
-                              "name": "目标刻痕",
+                              "name": "target-tick",
                               "width": 3,
                               "height": 14,
                               "fill": [
@@ -844,7 +844,7 @@
                             {
                               "type": "rectangle",
                               "id": "r48",
-                              "name": "已达段",
+                              "name": "reached-segment",
                               "width": 325.78,
                               "height": 2,
                               "fill": [
@@ -859,7 +859,7 @@
                             {
                               "type": "rectangle",
                               "id": "r49",
-                              "name": "刻度底线",
+                              "name": "scale-baseline",
                               "width": 358,
                               "height": 2,
                               "fill": [
@@ -878,7 +878,7 @@
                     {
                       "type": "frame",
                       "id": "f45",
-                      "name": "变化 chip",
+                      "name": "change-chip",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -889,7 +889,7 @@
                         {
                           "type": "rectangle",
                           "id": "r42",
-                          "name": "航标点",
+                          "name": "marker-dot",
                           "width": 12,
                           "height": 12,
                           "cornerRadius": 6,
@@ -903,7 +903,7 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "变化数值",
+                          "name": "change-value",
                           "content": "+1.8",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -922,9 +922,9 @@
                         {
                           "type": "text",
                           "id": "t44",
-                          "name": "比较词",
-                          "content": "个百分点",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "comparison-label",
+                          "content": "pts",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -945,7 +945,7 @@
                 {
                   "type": "frame",
                   "id": "f65",
-                  "name": "潮位磁贴",
+                  "name": "tide-tile",
                   "width": 414,
                   "height": 360,
                   "layout": "vertical",
@@ -967,9 +967,9 @@
                     {
                       "type": "text",
                       "id": "t64",
-                      "name": "磁贴标签",
-                      "content": "已上线集成（个）",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tile-label",
+                      "content": "Integrations live",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 500,
                       "fill": [
@@ -986,7 +986,7 @@
                     {
                       "type": "frame",
                       "id": "f63",
-                      "name": "读数",
+                      "name": "readout",
                       "width": 358,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -997,7 +997,7 @@
                         {
                           "type": "text",
                           "id": "t58",
-                          "name": "磁贴数值",
+                          "name": "tile-value",
                           "content": "11",
                           "fontFamily": "Inter",
                           "fontSize": 64,
@@ -1016,7 +1016,7 @@
                         {
                           "type": "frame",
                           "id": "f62",
-                          "name": "潮位刻度",
+                          "name": "tide-scale",
                           "width": 358,
                           "height": 14,
                           "layout": "none",
@@ -1025,7 +1025,7 @@
                             {
                               "type": "rectangle",
                               "id": "r59",
-                              "name": "目标刻痕",
+                              "name": "target-tick",
                               "width": 3,
                               "height": 14,
                               "fill": [
@@ -1040,7 +1040,7 @@
                             {
                               "type": "rectangle",
                               "id": "r60",
-                              "name": "已达段",
+                              "name": "reached-segment",
                               "width": 196.9,
                               "height": 2,
                               "fill": [
@@ -1055,7 +1055,7 @@
                             {
                               "type": "rectangle",
                               "id": "r61",
-                              "name": "刻度底线",
+                              "name": "scale-baseline",
                               "width": 358,
                               "height": 2,
                               "fill": [
@@ -1074,7 +1074,7 @@
                     {
                       "type": "frame",
                       "id": "f57",
-                      "name": "变化 chip",
+                      "name": "change-chip",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1085,7 +1085,7 @@
                         {
                           "type": "rectangle",
                           "id": "r54",
-                          "name": "航标点",
+                          "name": "marker-dot",
                           "width": 12,
                           "height": 12,
                           "cornerRadius": 6,
@@ -1099,7 +1099,7 @@
                         {
                           "type": "text",
                           "id": "t55",
-                          "name": "变化数值",
+                          "name": "change-value",
                           "content": "-7",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -1118,9 +1118,9 @@
                         {
                           "type": "text",
                           "id": "t56",
-                          "name": "比较词",
-                          "content": "低于目标",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "comparison-label",
+                          "content": "below target",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 400,
                           "fill": [
@@ -1143,7 +1143,7 @@
             {
               "type": "frame",
               "id": "f71",
-              "name": "页尾",
+              "name": "page-end",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1154,9 +1154,9 @@
                 {
                   "type": "text",
                   "id": "t67",
-                  "name": "来源脚注",
-                  "content": "数据来源：合章数据平台，口径为企业版付费租户，2026 年 4 月 1 日至 6 月 30 日。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "source-footnote",
+                  "content": "Source: Sealwise data platform, paid Enterprise tenants, Apr 1 – Jun 30, 2026.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1173,7 +1173,7 @@
                 {
                   "type": "frame",
                   "id": "f70",
-                  "name": "页脚",
+                  "name": "footer",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1185,9 +1185,9 @@
                     {
                       "type": "text",
                       "id": "t68",
-                      "name": "页脚眉标",
-                      "content": "合章电子签 · 2026 Q2 业务评审",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "footer-eyebrow",
+                      "content": "Sealwise e-Sign · 2026 Q2 Business Review",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -1204,7 +1204,7 @@
                     {
                       "type": "text",
                       "id": "t69",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "02 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 24,
@@ -1233,7 +1233,7 @@
     {
       "type": "frame",
       "id": "f80",
-      "name": "03 趋势",
+      "name": "03-trend",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1248,7 +1248,7 @@
         {
           "type": "frame",
           "id": "f79",
-          "name": "03 趋势 · 正文",
+          "name": "03-trend-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1266,7 +1266,7 @@
             {
               "type": "frame",
               "id": "f109",
-              "name": "论证",
+              "name": "argument",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1277,9 +1277,9 @@
                 {
                   "type": "text",
                   "id": "t81",
-                  "name": "页标题",
-                  "content": "签署量每个月都在涨，涨的全是中小客户",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Volume grew every month, and all of it came from SMBs",
+                  "fontFamily": "Inter",
                   "fontSize": 56,
                   "fontWeight": 700,
                   "fill": [
@@ -1296,7 +1296,7 @@
                 {
                   "type": "frame",
                   "id": "f108",
-                  "name": "趋势区",
+                  "name": "trend-area",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1307,7 +1307,7 @@
                     {
                       "type": "frame",
                       "id": "f106",
-                      "name": "趋势柱图",
+                      "name": "trend-bar-chart",
                       "width": 1240,
                       "height": 506,
                       "layout": "horizontal",
@@ -1318,7 +1318,7 @@
                         {
                           "type": "frame",
                           "id": "f85",
-                          "name": "一月 柱",
+                          "name": "jan-bar",
                           "width": 186,
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1330,7 +1330,7 @@
                             {
                               "type": "text",
                               "id": "t82",
-                              "name": "柱值",
+                              "name": "bar-value",
                               "content": "2.4",
                               "fontFamily": "Inter",
                               "fontSize": 26,
@@ -1350,7 +1350,7 @@
                             {
                               "type": "rectangle",
                               "id": "r83",
-                              "name": "月柱",
+                              "name": "month-bar",
                               "width": 186,
                               "height": 258,
                               "fill": [
@@ -1363,9 +1363,9 @@
                             {
                               "type": "text",
                               "id": "t84",
-                              "name": "月份",
-                              "content": "一月",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "month",
+                              "content": "Jan",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 400,
                               "fill": [
@@ -1385,7 +1385,7 @@
                         {
                           "type": "frame",
                           "id": "f89",
-                          "name": "二月 柱",
+                          "name": "feb-bar",
                           "width": 186,
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1397,7 +1397,7 @@
                             {
                               "type": "text",
                               "id": "t86",
-                              "name": "柱值",
+                              "name": "bar-value",
                               "content": "2.9",
                               "fontFamily": "Inter",
                               "fontSize": 26,
@@ -1417,7 +1417,7 @@
                             {
                               "type": "rectangle",
                               "id": "r87",
-                              "name": "月柱",
+                              "name": "month-bar",
                               "width": 186,
                               "height": 312,
                               "fill": [
@@ -1430,9 +1430,9 @@
                             {
                               "type": "text",
                               "id": "t88",
-                              "name": "月份",
-                              "content": "二月",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "month",
+                              "content": "Feb",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 400,
                               "fill": [
@@ -1452,7 +1452,7 @@
                         {
                           "type": "frame",
                           "id": "f93",
-                          "name": "三月 柱",
+                          "name": "mar-bar",
                           "width": 186,
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1464,7 +1464,7 @@
                             {
                               "type": "text",
                               "id": "t90",
-                              "name": "柱值",
+                              "name": "bar-value",
                               "content": "2.7",
                               "fontFamily": "Inter",
                               "fontSize": 26,
@@ -1484,7 +1484,7 @@
                             {
                               "type": "rectangle",
                               "id": "r91",
-                              "name": "月柱",
+                              "name": "month-bar",
                               "width": 186,
                               "height": 291,
                               "fill": [
@@ -1497,9 +1497,9 @@
                             {
                               "type": "text",
                               "id": "t92",
-                              "name": "月份",
-                              "content": "三月",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "month",
+                              "content": "Mar",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 400,
                               "fill": [
@@ -1519,7 +1519,7 @@
                         {
                           "type": "frame",
                           "id": "f97",
-                          "name": "四月 柱",
+                          "name": "apr-bar",
                           "width": 186,
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1531,7 +1531,7 @@
                             {
                               "type": "text",
                               "id": "t94",
-                              "name": "柱值",
+                              "name": "bar-value",
                               "content": "3.2",
                               "fontFamily": "Inter",
                               "fontSize": 26,
@@ -1551,7 +1551,7 @@
                             {
                               "type": "rectangle",
                               "id": "r95",
-                              "name": "月柱",
+                              "name": "month-bar",
                               "width": 186,
                               "height": 345,
                               "fill": [
@@ -1564,9 +1564,9 @@
                             {
                               "type": "text",
                               "id": "t96",
-                              "name": "月份",
-                              "content": "四月",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "month",
+                              "content": "Apr",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 400,
                               "fill": [
@@ -1586,7 +1586,7 @@
                         {
                           "type": "frame",
                           "id": "f101",
-                          "name": "五月 柱",
+                          "name": "may-bar",
                           "width": 186,
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1598,7 +1598,7 @@
                             {
                               "type": "text",
                               "id": "t98",
-                              "name": "柱值",
+                              "name": "bar-value",
                               "content": "3.4",
                               "fontFamily": "Inter",
                               "fontSize": 26,
@@ -1618,7 +1618,7 @@
                             {
                               "type": "rectangle",
                               "id": "r99",
-                              "name": "月柱",
+                              "name": "month-bar",
                               "width": 186,
                               "height": 366,
                               "fill": [
@@ -1631,9 +1631,9 @@
                             {
                               "type": "text",
                               "id": "t100",
-                              "name": "月份",
-                              "content": "五月",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "month",
+                              "content": "May",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 400,
                               "fill": [
@@ -1653,7 +1653,7 @@
                         {
                           "type": "frame",
                           "id": "f105",
-                          "name": "六月 柱",
+                          "name": "jun-bar",
                           "width": 186,
                           "height": "fill_container",
                           "layout": "vertical",
@@ -1665,7 +1665,7 @@
                             {
                               "type": "text",
                               "id": "t102",
-                              "name": "柱值",
+                              "name": "bar-value",
                               "content": "3.9",
                               "fontFamily": "Inter",
                               "fontSize": 26,
@@ -1685,7 +1685,7 @@
                             {
                               "type": "rectangle",
                               "id": "r103",
-                              "name": "月柱",
+                              "name": "month-bar",
                               "width": 186,
                               "height": 420,
                               "fill": [
@@ -1698,9 +1698,9 @@
                             {
                               "type": "text",
                               "id": "t104",
-                              "name": "月份",
-                              "content": "六月",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "month",
+                              "content": "Jun",
+                              "fontFamily": "Inter",
                               "fontSize": 24,
                               "fontWeight": 400,
                               "fill": [
@@ -1722,7 +1722,7 @@
                     {
                       "type": "frame",
                       "id": "f107",
-                      "name": "注解栏",
+                      "name": "annotation-column",
                       "width": 440,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1733,7 +1733,7 @@
                         {
                           "type": "frame",
                           "id": "f74",
-                          "name": "注解组",
+                          "name": "annotation-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1744,9 +1744,9 @@
                             {
                               "type": "text",
                               "id": "t72",
-                              "name": "注解标题",
-                              "content": "中小客户是自己找上门的",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "annotation-title",
+                              "content": "SMBs found us themselves",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -1763,9 +1763,9 @@
                             {
                               "type": "text",
                               "id": "t73",
-                              "name": "注解说明",
-                              "content": "六月新签里 71% 没有销售触达，\n来自模板市场与搜索。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "annotation-text",
+                              "content": "71% of June sign-ups had no sales touch,\ncoming from templates and search.",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -1784,7 +1784,7 @@
                         {
                           "type": "rectangle",
                           "id": "r75",
-                          "name": "横线",
+                          "name": "rule",
                           "width": "fill_container",
                           "height": 1,
                           "fill": [
@@ -1797,7 +1797,7 @@
                         {
                           "type": "frame",
                           "id": "f78",
-                          "name": "注解组",
+                          "name": "annotation-group",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -1808,9 +1808,9 @@
                             {
                               "type": "text",
                               "id": "t76",
-                              "name": "注解标题",
-                              "content": "大客户的量卡在集成上",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "annotation-title",
+                              "content": "Enterprise is stuck on integrations",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -1827,9 +1827,9 @@
                             {
                               "type": "text",
                               "id": "t77",
-                              "name": "注解说明",
-                              "content": "两家头部客户的用印审批\n还在他们自己的 OA 里。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "annotation-text",
+                              "content": "Two top accounts still run approvals\nin their own workflow tools.",
+                              "fontFamily": "Inter",
                               "fontSize": 26,
                               "fontWeight": 400,
                               "fill": [
@@ -1854,7 +1854,7 @@
             {
               "type": "frame",
               "id": "f114",
-              "name": "页尾",
+              "name": "page-end",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1865,9 +1865,9 @@
                 {
                   "type": "text",
                   "id": "t110",
-                  "name": "来源脚注",
-                  "content": "数据来源：合章数据平台，按签署完成时间归月，单位 万份。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "source-footnote",
+                  "content": "Source: Sealwise data platform, by completion month, in 10K documents.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -1884,7 +1884,7 @@
                 {
                   "type": "frame",
                   "id": "f113",
-                  "name": "页脚",
+                  "name": "footer",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1896,9 +1896,9 @@
                     {
                       "type": "text",
                       "id": "t111",
-                      "name": "页脚眉标",
-                      "content": "合章电子签 · 2026 Q2 业务评审",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "footer-eyebrow",
+                      "content": "Sealwise e-Sign · 2026 Q2 Business Review",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -1915,7 +1915,7 @@
                     {
                       "type": "text",
                       "id": "t112",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "03 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 24,
@@ -1944,7 +1944,7 @@
     {
       "type": "frame",
       "id": "f116",
-      "name": "04 明细表",
+      "name": "04-detail-table",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -1959,7 +1959,7 @@
         {
           "type": "frame",
           "id": "f115",
-          "name": "04 明细表 · 正文",
+          "name": "04-detail-table-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -1977,7 +1977,7 @@
             {
               "type": "frame",
               "id": "f188",
-              "name": "论证",
+              "name": "argument",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1988,9 +1988,9 @@
                 {
                   "type": "text",
                   "id": "t117",
-                  "name": "页标题",
-                  "content": "十一个集成里，四个已经逾期",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Of eleven integrations, four are overdue",
+                  "fontFamily": "Inter",
                   "fontSize": 56,
                   "fontWeight": 700,
                   "fill": [
@@ -2007,7 +2007,7 @@
                 {
                   "type": "frame",
                   "id": "f187",
-                  "name": "集成明细",
+                  "name": "integration-details",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -2018,7 +2018,7 @@
                     {
                       "type": "frame",
                       "id": "f123",
-                      "name": "表头",
+                      "name": "table-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2029,9 +2029,9 @@
                         {
                           "type": "text",
                           "id": "t118",
-                          "name": "表头单元",
-                          "content": "集成对象",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "Integration",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 600,
                           "fill": [
@@ -2048,9 +2048,9 @@
                         {
                           "type": "text",
                           "id": "t119",
-                          "name": "表头单元",
-                          "content": "状态",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "Status",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 600,
                           "fill": [
@@ -2067,9 +2067,9 @@
                         {
                           "type": "text",
                           "id": "t120",
-                          "name": "表头单元",
-                          "content": "责任人",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "Owner",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 600,
                           "fill": [
@@ -2086,9 +2086,9 @@
                         {
                           "type": "text",
                           "id": "t121",
-                          "name": "表头单元",
-                          "content": "到期",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "Due",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 600,
                           "fill": [
@@ -2105,9 +2105,9 @@
                         {
                           "type": "text",
                           "id": "t122",
-                          "name": "表头单元",
-                          "content": "当前卡点",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "header-cell",
+                          "content": "Current blocker",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 600,
                           "fill": [
@@ -2126,7 +2126,7 @@
                     {
                       "type": "rectangle",
                       "id": "r124",
-                      "name": "横线",
+                      "name": "rule",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -2139,7 +2139,7 @@
                     {
                       "type": "frame",
                       "id": "f132",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2150,9 +2150,9 @@
                         {
                           "type": "text",
                           "id": "t128",
-                          "name": "集成名",
-                          "content": "钉钉待办同步",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "integration-name",
+                          "content": "Slack task sync",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 500,
                           "fill": [
@@ -2169,7 +2169,7 @@
                         {
                           "type": "frame",
                           "id": "f127",
-                          "name": "状态单元",
+                          "name": "status-cell",
                           "width": 200,
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2180,7 +2180,7 @@
                             {
                               "type": "rectangle",
                               "id": "r125",
-                              "name": "航标点",
+                              "name": "marker-dot",
                               "width": 12,
                               "height": 12,
                               "cornerRadius": 6,
@@ -2194,9 +2194,9 @@
                             {
                               "type": "text",
                               "id": "t126",
-                              "name": "状态文字",
-                              "content": "正常",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status-text",
+                              "content": "On track",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 500,
                               "fill": [
@@ -2215,9 +2215,9 @@
                         {
                           "type": "text",
                           "id": "t129",
-                          "name": "责任人",
-                          "content": "陆迎",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "owner-name",
+                          "content": "Lena Park",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2234,7 +2234,7 @@
                         {
                           "type": "text",
                           "id": "t130",
-                          "name": "到期",
+                          "name": "due",
                           "content": "07-18",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -2253,9 +2253,9 @@
                         {
                           "type": "text",
                           "id": "t131",
-                          "name": "卡点",
-                          "content": "联调已过，等对方发版",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "blocker",
+                          "content": "Tested, waiting on their release",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2274,7 +2274,7 @@
                     {
                       "type": "rectangle",
                       "id": "r133",
-                      "name": "横线",
+                      "name": "rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2287,7 +2287,7 @@
                     {
                       "type": "frame",
                       "id": "f141",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2298,9 +2298,9 @@
                         {
                           "type": "text",
                           "id": "t137",
-                          "name": "集成名",
-                          "content": "企业微信审批",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "integration-name",
+                          "content": "Teams approvals",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 500,
                           "fill": [
@@ -2317,7 +2317,7 @@
                         {
                           "type": "frame",
                           "id": "f136",
-                          "name": "状态单元",
+                          "name": "status-cell",
                           "width": 200,
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2328,7 +2328,7 @@
                             {
                               "type": "rectangle",
                               "id": "r134",
-                              "name": "航标点",
+                              "name": "marker-dot",
                               "width": 12,
                               "height": 12,
                               "cornerRadius": 6,
@@ -2342,9 +2342,9 @@
                             {
                               "type": "text",
                               "id": "t135",
-                              "name": "状态文字",
-                              "content": "正常",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status-text",
+                              "content": "On track",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 500,
                               "fill": [
@@ -2363,9 +2363,9 @@
                         {
                           "type": "text",
                           "id": "t138",
-                          "name": "责任人",
-                          "content": "陆迎",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "owner-name",
+                          "content": "Lena Park",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2382,7 +2382,7 @@
                         {
                           "type": "text",
                           "id": "t139",
-                          "name": "到期",
+                          "name": "due",
                           "content": "07-25",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -2401,9 +2401,9 @@
                         {
                           "type": "text",
                           "id": "t140",
-                          "name": "卡点",
-                          "content": "灰度中，两家客户在跑",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "blocker",
+                          "content": "In beta, two customers live",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2422,7 +2422,7 @@
                     {
                       "type": "rectangle",
                       "id": "r142",
-                      "name": "横线",
+                      "name": "rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2435,7 +2435,7 @@
                     {
                       "type": "frame",
                       "id": "f150",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2446,9 +2446,9 @@
                         {
                           "type": "text",
                           "id": "t146",
-                          "name": "集成名",
-                          "content": "金蝶云星空",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "integration-name",
+                          "content": "NetSuite",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 500,
                           "fill": [
@@ -2465,7 +2465,7 @@
                         {
                           "type": "frame",
                           "id": "f145",
-                          "name": "状态单元",
+                          "name": "status-cell",
                           "width": 200,
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2476,7 +2476,7 @@
                             {
                               "type": "rectangle",
                               "id": "r143",
-                              "name": "航标点",
+                              "name": "marker-dot",
                               "width": 12,
                               "height": 12,
                               "cornerRadius": 6,
@@ -2490,9 +2490,9 @@
                             {
                               "type": "text",
                               "id": "t144",
-                              "name": "状态文字",
-                              "content": "风险",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status-text",
+                              "content": "At risk",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 500,
                               "fill": [
@@ -2511,9 +2511,9 @@
                         {
                           "type": "text",
                           "id": "t147",
-                          "name": "责任人",
-                          "content": "沈知白",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "owner-name",
+                          "content": "Sam Chen",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2530,7 +2530,7 @@
                         {
                           "type": "text",
                           "id": "t148",
-                          "name": "到期",
+                          "name": "due",
                           "content": "07-11",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -2549,9 +2549,9 @@
                         {
                           "type": "text",
                           "id": "t149",
-                          "name": "卡点",
-                          "content": "对方接口文档改了三次",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "blocker",
+                          "content": "Their API docs changed three times",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2570,7 +2570,7 @@
                     {
                       "type": "rectangle",
                       "id": "r151",
-                      "name": "横线",
+                      "name": "rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2583,7 +2583,7 @@
                     {
                       "type": "frame",
                       "id": "f159",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2594,9 +2594,9 @@
                         {
                           "type": "text",
                           "id": "t155",
-                          "name": "集成名",
-                          "content": "用友 U8C",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "integration-name",
+                          "content": "SAP Business One",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 500,
                           "fill": [
@@ -2613,7 +2613,7 @@
                         {
                           "type": "frame",
                           "id": "f154",
-                          "name": "状态单元",
+                          "name": "status-cell",
                           "width": 200,
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2624,7 +2624,7 @@
                             {
                               "type": "rectangle",
                               "id": "r152",
-                              "name": "航标点",
+                              "name": "marker-dot",
                               "width": 12,
                               "height": 12,
                               "cornerRadius": 6,
@@ -2638,9 +2638,9 @@
                             {
                               "type": "text",
                               "id": "t153",
-                              "name": "状态文字",
-                              "content": "风险",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status-text",
+                              "content": "At risk",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 500,
                               "fill": [
@@ -2659,9 +2659,9 @@
                         {
                           "type": "text",
                           "id": "t156",
-                          "name": "责任人",
-                          "content": "沈知白",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "owner-name",
+                          "content": "Sam Chen",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2678,7 +2678,7 @@
                         {
                           "type": "text",
                           "id": "t157",
-                          "name": "到期",
+                          "name": "due",
                           "content": "07-04",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -2697,9 +2697,9 @@
                         {
                           "type": "text",
                           "id": "t158",
-                          "name": "卡点",
-                          "content": "已逾期一周，等对方排期",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "blocker",
+                          "content": "A week late, waiting on their schedule",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2718,7 +2718,7 @@
                     {
                       "type": "rectangle",
                       "id": "r160",
-                      "name": "横线",
+                      "name": "rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2731,7 +2731,7 @@
                     {
                       "type": "frame",
                       "id": "f168",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2742,9 +2742,9 @@
                         {
                           "type": "text",
                           "id": "t164",
-                          "name": "集成名",
-                          "content": "飞书多维表",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "integration-name",
+                          "content": "Airtable",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 500,
                           "fill": [
@@ -2761,7 +2761,7 @@
                         {
                           "type": "frame",
                           "id": "f163",
-                          "name": "状态单元",
+                          "name": "status-cell",
                           "width": 200,
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2772,7 +2772,7 @@
                             {
                               "type": "rectangle",
                               "id": "r161",
-                              "name": "航标点",
+                              "name": "marker-dot",
                               "width": 12,
                               "height": 12,
                               "cornerRadius": 6,
@@ -2786,9 +2786,9 @@
                             {
                               "type": "text",
                               "id": "t162",
-                              "name": "状态文字",
-                              "content": "正常",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status-text",
+                              "content": "On track",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 500,
                               "fill": [
@@ -2807,9 +2807,9 @@
                         {
                           "type": "text",
                           "id": "t165",
-                          "name": "责任人",
-                          "content": "高见",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "owner-name",
+                          "content": "Grace Kim",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2826,7 +2826,7 @@
                         {
                           "type": "text",
                           "id": "t166",
-                          "name": "到期",
+                          "name": "due",
                           "content": "08-08",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -2845,9 +2845,9 @@
                         {
                           "type": "text",
                           "id": "t167",
-                          "name": "卡点",
-                          "content": "需求已确认，尚未开工",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "blocker",
+                          "content": "Scope agreed, not started",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2866,7 +2866,7 @@
                     {
                       "type": "rectangle",
                       "id": "r169",
-                      "name": "横线",
+                      "name": "rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -2879,7 +2879,7 @@
                     {
                       "type": "frame",
                       "id": "f177",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -2890,9 +2890,9 @@
                         {
                           "type": "text",
                           "id": "t173",
-                          "name": "集成名",
-                          "content": "泛微 OA",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "integration-name",
+                          "content": "ServiceNow",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 500,
                           "fill": [
@@ -2909,7 +2909,7 @@
                         {
                           "type": "frame",
                           "id": "f172",
-                          "name": "状态单元",
+                          "name": "status-cell",
                           "width": 200,
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2920,7 +2920,7 @@
                             {
                               "type": "rectangle",
                               "id": "r170",
-                              "name": "航标点",
+                              "name": "marker-dot",
                               "width": 12,
                               "height": 12,
                               "cornerRadius": 6,
@@ -2934,9 +2934,9 @@
                             {
                               "type": "text",
                               "id": "t171",
-                              "name": "状态文字",
-                              "content": "阻塞",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status-text",
+                              "content": "Blocked",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 500,
                               "fill": [
@@ -2955,9 +2955,9 @@
                         {
                           "type": "text",
                           "id": "t174",
-                          "name": "责任人",
-                          "content": "高见",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "owner-name",
+                          "content": "Grace Kim",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -2974,7 +2974,7 @@
                         {
                           "type": "text",
                           "id": "t175",
-                          "name": "到期",
+                          "name": "due",
                           "content": "06-20",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -2993,9 +2993,9 @@
                         {
                           "type": "text",
                           "id": "t176",
-                          "name": "卡点",
-                          "content": "对方要求私有化部署",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "blocker",
+                          "content": "They require on-prem deployment",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -3014,7 +3014,7 @@
                     {
                       "type": "rectangle",
                       "id": "r178",
-                      "name": "横线",
+                      "name": "rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -3027,7 +3027,7 @@
                     {
                       "type": "frame",
                       "id": "f186",
-                      "name": "表行",
+                      "name": "table-row",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3038,9 +3038,9 @@
                         {
                           "type": "text",
                           "id": "t182",
-                          "name": "集成名",
-                          "content": "致远 A8",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "integration-name",
+                          "content": "Workday",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 500,
                           "fill": [
@@ -3057,7 +3057,7 @@
                         {
                           "type": "frame",
                           "id": "f181",
-                          "name": "状态单元",
+                          "name": "status-cell",
                           "width": 200,
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -3068,7 +3068,7 @@
                             {
                               "type": "rectangle",
                               "id": "r179",
-                              "name": "航标点",
+                              "name": "marker-dot",
                               "width": 12,
                               "height": 12,
                               "cornerRadius": 6,
@@ -3082,9 +3082,9 @@
                             {
                               "type": "text",
                               "id": "t180",
-                              "name": "状态文字",
-                              "content": "阻塞",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "status-text",
+                              "content": "Blocked",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 500,
                               "fill": [
@@ -3103,9 +3103,9 @@
                         {
                           "type": "text",
                           "id": "t183",
-                          "name": "责任人",
-                          "content": "关屿",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "owner-name",
+                          "content": "Ian Grant",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -3122,7 +3122,7 @@
                         {
                           "type": "text",
                           "id": "t184",
-                          "name": "到期",
+                          "name": "due",
                           "content": "06-27",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -3141,9 +3141,9 @@
                         {
                           "type": "text",
                           "id": "t185",
-                          "name": "卡点",
-                          "content": "客户侧改了用印流程",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "blocker",
+                          "content": "Customer changed its approval flow",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
                           "fill": [
@@ -3166,7 +3166,7 @@
             {
               "type": "frame",
               "id": "f193",
-              "name": "页尾",
+              "name": "page-end",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3177,9 +3177,9 @@
                 {
                   "type": "text",
                   "id": "t189",
-                  "name": "来源脚注",
-                  "content": "数据来源：集成交付看板，状态截至 7 月 8 日 18:00。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "source-footnote",
+                  "content": "Source: integration delivery board, status as of Jul 8, 6:00 PM.",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -3196,7 +3196,7 @@
                 {
                   "type": "frame",
                   "id": "f192",
-                  "name": "页脚",
+                  "name": "footer",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -3208,9 +3208,9 @@
                     {
                       "type": "text",
                       "id": "t190",
-                      "name": "页脚眉标",
-                      "content": "合章电子签 · 2026 Q2 业务评审",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "footer-eyebrow",
+                      "content": "Sealwise e-Sign · 2026 Q2 Business Review",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -3227,7 +3227,7 @@
                     {
                       "type": "text",
                       "id": "t191",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "04 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 24,
@@ -3256,7 +3256,7 @@
     {
       "type": "frame",
       "id": "f233",
-      "name": "05 风险",
+      "name": "05-risks",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -3271,7 +3271,7 @@
         {
           "type": "frame",
           "id": "f232",
-          "name": "05 风险 · 正文",
+          "name": "05-risks-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -3289,7 +3289,7 @@
             {
               "type": "frame",
               "id": "f236",
-              "name": "论证",
+              "name": "argument",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -3300,9 +3300,9 @@
                 {
                   "type": "text",
                   "id": "t234",
-                  "name": "页标题",
-                  "content": "三个风险，两个我们自己能解",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "page-title",
+                  "content": "Three risks, and we can fix two ourselves",
+                  "fontFamily": "Inter",
                   "fontSize": 56,
                   "fontWeight": 700,
                   "fill": [
@@ -3319,7 +3319,7 @@
                 {
                   "type": "frame",
                   "id": "f235",
-                  "name": "风险列表",
+                  "name": "risk-list",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -3330,7 +3330,7 @@
                     {
                       "type": "frame",
                       "id": "f205",
-                      "name": "风险条",
+                      "name": "risk-bar",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3341,7 +3341,7 @@
                         {
                           "type": "frame",
                           "id": "f199",
-                          "name": "状态列",
+                          "name": "status-column",
                           "width": 140,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3352,7 +3352,7 @@
                             {
                               "type": "frame",
                               "id": "f197",
-                              "name": "航标药丸",
+                              "name": "marker-pill",
                               "width": "fit_content",
                               "height": 36,
                               "layout": "horizontal",
@@ -3374,9 +3374,9 @@
                                 {
                                   "type": "text",
                                   "id": "t198",
-                                  "name": "航标文字",
-                                  "content": "阻塞",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "marker-text",
+                                  "content": "Blocked",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 600,
                                   "fill": [
@@ -3397,7 +3397,7 @@
                         {
                           "type": "frame",
                           "id": "f203",
-                          "name": "风险文案",
+                          "name": "risk-copy",
                           "width": 1180,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3408,9 +3408,9 @@
                             {
                               "type": "text",
                               "id": "t200",
-                              "name": "风险标题",
-                              "content": "两家 OA 厂商要求私有化部署",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "risk-title",
+                              "content": "Two workflow vendors require on-prem deployment",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -3427,9 +3427,9 @@
                             {
                               "type": "text",
                               "id": "t201",
-                              "name": "风险影响",
-                              "content": "涉及四家年费合计两千四百万的客户，都在等这条。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "risk-impact",
+                              "content": "Four customers worth $3.4M a year are all waiting on this.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3446,9 +3446,9 @@
                             {
                               "type": "text",
                               "id": "t202",
-                              "name": "风险应对",
-                              "content": "八月前给出私有化版本的报价与交付边界。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "risk-response",
+                              "content": "Price and scope an on-prem version by August.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3467,7 +3467,7 @@
                         {
                           "type": "frame",
                           "id": "f204",
-                          "name": "归属列",
+                          "name": "owner-column",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3478,7 +3478,7 @@
                             {
                               "type": "frame",
                               "id": "f196",
-                              "name": "归属",
+                              "name": "owner",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -3489,9 +3489,9 @@
                                 {
                                   "type": "text",
                                   "id": "t194",
-                                  "name": "责任人",
-                                  "content": "关屿",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "owner-name",
+                                  "content": "Ian Grant",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 500,
                                   "fill": [
@@ -3508,7 +3508,7 @@
                                 {
                                   "type": "text",
                                   "id": "t195",
-                                  "name": "到期",
+                                  "name": "due",
                                   "content": "08-15",
                                   "fontFamily": "Inter",
                                   "fontSize": 26,
@@ -3533,7 +3533,7 @@
                     {
                       "type": "rectangle",
                       "id": "r206",
-                      "name": "横线",
+                      "name": "rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -3546,7 +3546,7 @@
                     {
                       "type": "frame",
                       "id": "f218",
-                      "name": "风险条",
+                      "name": "risk-bar",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3557,7 +3557,7 @@
                         {
                           "type": "frame",
                           "id": "f212",
-                          "name": "状态列",
+                          "name": "status-column",
                           "width": 140,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3568,7 +3568,7 @@
                             {
                               "type": "frame",
                               "id": "f210",
-                              "name": "航标药丸",
+                              "name": "marker-pill",
                               "width": "fit_content",
                               "height": 36,
                               "layout": "horizontal",
@@ -3590,9 +3590,9 @@
                                 {
                                   "type": "text",
                                   "id": "t211",
-                                  "name": "航标文字",
-                                  "content": "风险",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "marker-text",
+                                  "content": "At risk",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 600,
                                   "fill": [
@@ -3613,7 +3613,7 @@
                         {
                           "type": "frame",
                           "id": "f216",
-                          "name": "风险文案",
+                          "name": "risk-copy",
                           "width": 1180,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3624,9 +3624,9 @@
                             {
                               "type": "text",
                               "id": "t213",
-                              "name": "风险标题",
-                              "content": "平均签署时长从 4.1 小时涨到 6.4",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "risk-title",
+                              "content": "Avg time to sign rose from 4.1 to 6.4 hours",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -3643,9 +3643,9 @@
                             {
                               "type": "text",
                               "id": "t214",
-                              "name": "风险影响",
-                              "content": "投诉集中在等对方签，不在我们这一段。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "risk-impact",
+                              "content": "Complaints are about waiting on the other party, not us.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3662,9 +3662,9 @@
                             {
                               "type": "text",
                               "id": "t215",
-                              "name": "风险应对",
-                              "content": "九月上线到期提醒与代签授权，先在华东试。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "risk-response",
+                              "content": "Ship reminders and delegated signing in Sept, pilot in the Northeast.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3683,7 +3683,7 @@
                         {
                           "type": "frame",
                           "id": "f217",
-                          "name": "归属列",
+                          "name": "owner-column",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3694,7 +3694,7 @@
                             {
                               "type": "frame",
                               "id": "f209",
-                              "name": "归属",
+                              "name": "owner",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -3705,9 +3705,9 @@
                                 {
                                   "type": "text",
                                   "id": "t207",
-                                  "name": "责任人",
-                                  "content": "周砚",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "owner-name",
+                                  "content": "Jordan Wells",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 500,
                                   "fill": [
@@ -3724,7 +3724,7 @@
                                 {
                                   "type": "text",
                                   "id": "t208",
-                                  "name": "到期",
+                                  "name": "due",
                                   "content": "09-30",
                                   "fontFamily": "Inter",
                                   "fontSize": 26,
@@ -3749,7 +3749,7 @@
                     {
                       "type": "rectangle",
                       "id": "r219",
-                      "name": "横线",
+                      "name": "rule",
                       "width": "fill_container",
                       "height": 1,
                       "fill": [
@@ -3762,7 +3762,7 @@
                     {
                       "type": "frame",
                       "id": "f231",
-                      "name": "风险条",
+                      "name": "risk-bar",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -3773,7 +3773,7 @@
                         {
                           "type": "frame",
                           "id": "f225",
-                          "name": "状态列",
+                          "name": "status-column",
                           "width": 140,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3784,7 +3784,7 @@
                             {
                               "type": "frame",
                               "id": "f223",
-                              "name": "航标药丸",
+                              "name": "marker-pill",
                               "width": "fit_content",
                               "height": 36,
                               "layout": "horizontal",
@@ -3806,9 +3806,9 @@
                                 {
                                   "type": "text",
                                   "id": "t224",
-                                  "name": "航标文字",
-                                  "content": "风险",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "marker-text",
+                                  "content": "At risk",
+                                  "fontFamily": "Inter",
                                   "fontSize": 24,
                                   "fontWeight": 600,
                                   "fill": [
@@ -3829,7 +3829,7 @@
                         {
                           "type": "frame",
                           "id": "f229",
-                          "name": "风险文案",
+                          "name": "risk-copy",
                           "width": 1180,
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3840,9 +3840,9 @@
                             {
                               "type": "text",
                               "id": "t226",
-                              "name": "风险标题",
-                              "content": "模板市场的增长没有人守",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "risk-title",
+                              "content": "Nobody owns template growth",
+                              "fontFamily": "Inter",
                               "fontSize": 36,
                               "fontWeight": 600,
                               "fill": [
@@ -3859,9 +3859,9 @@
                             {
                               "type": "text",
                               "id": "t227",
-                              "name": "风险影响",
-                              "content": "六月 71% 的新签来自这里，但它没有归属团队。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "risk-impact",
+                              "content": "71% of June sign-ups came from here, but no team owns it.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3878,9 +3878,9 @@
                             {
                               "type": "text",
                               "id": "t228",
-                              "name": "风险应对",
-                              "content": "七月内定归属，先归运营，季度末重评。",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "risk-response",
+                              "content": "Assign an owner in July: Ops first, review at quarter end.",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 400,
                               "fill": [
@@ -3899,7 +3899,7 @@
                         {
                           "type": "frame",
                           "id": "f230",
-                          "name": "归属列",
+                          "name": "owner-column",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -3910,7 +3910,7 @@
                             {
                               "type": "frame",
                               "id": "f222",
-                              "name": "归属",
+                              "name": "owner",
                               "width": "fit_content",
                               "height": "fit_content",
                               "layout": "horizontal",
@@ -3921,9 +3921,9 @@
                                 {
                                   "type": "text",
                                   "id": "t220",
-                                  "name": "责任人",
-                                  "content": "周砚",
-                                  "fontFamily": "Noto Sans SC",
+                                  "name": "owner-name",
+                                  "content": "Jordan Wells",
+                                  "fontFamily": "Inter",
                                   "fontSize": 26,
                                   "fontWeight": 500,
                                   "fill": [
@@ -3940,7 +3940,7 @@
                                 {
                                   "type": "text",
                                   "id": "t221",
-                                  "name": "到期",
+                                  "name": "due",
                                   "content": "07-31",
                                   "fontFamily": "Inter",
                                   "fontSize": 26,
@@ -3969,7 +3969,7 @@
             {
               "type": "frame",
               "id": "f239",
-              "name": "页脚",
+              "name": "footer",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -3981,9 +3981,9 @@
                 {
                   "type": "text",
                   "id": "t237",
-                  "name": "页脚眉标",
-                  "content": "合章电子签 · 2026 Q2 业务评审",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "footer-eyebrow",
+                  "content": "Sealwise e-Sign · 2026 Q2 Business Review",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [
@@ -4000,7 +4000,7 @@
                 {
                   "type": "text",
                   "id": "t238",
-                  "name": "页码",
+                  "name": "page-number",
                   "content": "05 / 07",
                   "fontFamily": "Inter",
                   "fontSize": 24,
@@ -4027,7 +4027,7 @@
     {
       "type": "frame",
       "id": "f318",
-      "name": "06 泳道路线",
+      "name": "06-swimlane-roadmap",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -4042,7 +4042,7 @@
         {
           "type": "frame",
           "id": "f317",
-          "name": "06 泳道路线 · 正文",
+          "name": "06-swimlane-roadmap-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -4060,9 +4060,9 @@
             {
               "type": "text",
               "id": "t319",
-              "name": "页标题",
-              "content": "三季度只做三件事，其余往后放",
-              "fontFamily": "Noto Sans SC",
+              "name": "page-title",
+              "content": "Q3 does three things; everything else waits",
+              "fontFamily": "Inter",
               "fontSize": 56,
               "fontWeight": 700,
               "fill": [
@@ -4079,7 +4079,7 @@
             {
               "type": "frame",
               "id": "f320",
-              "name": "泳道区",
+              "name": "swimlane-area",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -4090,7 +4090,7 @@
                 {
                   "type": "frame",
                   "id": "f245",
-                  "name": "月份头",
+                  "name": "month-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4101,7 +4101,7 @@
                     {
                       "type": "frame",
                       "id": "f240",
-                      "name": "月份头占位",
+                      "name": "month-header-spacer",
                       "width": 200,
                       "height": 1,
                       "layout": "none",
@@ -4110,7 +4110,7 @@
                     {
                       "type": "frame",
                       "id": "f244",
-                      "name": "月份标签",
+                      "name": "month-label",
                       "width": 1504,
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -4121,9 +4121,9 @@
                         {
                           "type": "text",
                           "id": "t241",
-                          "name": "月份名",
-                          "content": "七月",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "month-name",
+                          "content": "July",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 500,
                           "fill": [
@@ -4141,9 +4141,9 @@
                         {
                           "type": "text",
                           "id": "t242",
-                          "name": "月份名",
-                          "content": "八月",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "month-name",
+                          "content": "August",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 500,
                           "fill": [
@@ -4161,9 +4161,9 @@
                         {
                           "type": "text",
                           "id": "t243",
-                          "name": "月份名",
-                          "content": "九月",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "month-name",
+                          "content": "September",
+                          "fontFamily": "Inter",
                           "fontSize": 24,
                           "fontWeight": 500,
                           "fill": [
@@ -4185,7 +4185,7 @@
                 {
                   "type": "frame",
                   "id": "f261",
-                  "name": "泳道",
+                  "name": "swimlane",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4196,9 +4196,9 @@
                     {
                       "type": "text",
                       "id": "t246",
-                      "name": "泳道名",
-                      "content": "集成交付",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "swimlane-name",
+                      "content": "Integrations",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 500,
                       "fill": [
@@ -4215,7 +4215,7 @@
                     {
                       "type": "frame",
                       "id": "f260",
-                      "name": "泳道时间区",
+                      "name": "swimlane-timeline",
                       "width": 1504,
                       "height": 56,
                       "layout": "none",
@@ -4224,7 +4224,7 @@
                         {
                           "type": "rectangle",
                           "id": "r249",
-                          "name": "里程碑",
+                          "name": "milestone",
                           "width": 16,
                           "height": 16,
                           "rotation": 45,
@@ -4240,7 +4240,7 @@
                         {
                           "type": "frame",
                           "id": "f247",
-                          "name": "泳道条",
+                          "name": "swimlane-bar",
                           "width": 1248.32,
                           "height": 40,
                           "layout": "horizontal",
@@ -4257,7 +4257,7 @@
                             {
                               "type": "rectangle",
                               "id": "r248",
-                              "name": "起点段",
+                              "name": "start-segment",
                               "width": 6,
                               "height": 40,
                               "fill": [
@@ -4274,7 +4274,7 @@
                         {
                           "type": "frame",
                           "id": "f250",
-                          "name": "月份分隔",
+                          "name": "month-divider",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4285,7 +4285,7 @@
                             {
                               "type": "rectangle",
                               "id": "r251",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4298,7 +4298,7 @@
                             {
                               "type": "rectangle",
                               "id": "r252",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4311,7 +4311,7 @@
                             {
                               "type": "rectangle",
                               "id": "r253",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4324,7 +4324,7 @@
                             {
                               "type": "rectangle",
                               "id": "r254",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4341,7 +4341,7 @@
                         {
                           "type": "frame",
                           "id": "f255",
-                          "name": "月份分隔",
+                          "name": "month-divider",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4352,7 +4352,7 @@
                             {
                               "type": "rectangle",
                               "id": "r256",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4365,7 +4365,7 @@
                             {
                               "type": "rectangle",
                               "id": "r257",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4378,7 +4378,7 @@
                             {
                               "type": "rectangle",
                               "id": "r258",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4391,7 +4391,7 @@
                             {
                               "type": "rectangle",
                               "id": "r259",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4412,7 +4412,7 @@
                 {
                   "type": "frame",
                   "id": "f277",
-                  "name": "泳道",
+                  "name": "swimlane",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4423,9 +4423,9 @@
                     {
                       "type": "text",
                       "id": "t262",
-                      "name": "泳道名",
-                      "content": "私有化版本",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "swimlane-name",
+                      "content": "On-prem version",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 500,
                       "fill": [
@@ -4442,7 +4442,7 @@
                     {
                       "type": "frame",
                       "id": "f276",
-                      "name": "泳道时间区",
+                      "name": "swimlane-timeline",
                       "width": 1504,
                       "height": 56,
                       "layout": "none",
@@ -4451,7 +4451,7 @@
                         {
                           "type": "rectangle",
                           "id": "r265",
-                          "name": "里程碑",
+                          "name": "milestone",
                           "width": 16,
                           "height": 16,
                           "rotation": 45,
@@ -4467,7 +4467,7 @@
                         {
                           "type": "frame",
                           "id": "f263",
-                          "name": "泳道条",
+                          "name": "swimlane-bar",
                           "width": 1263.36,
                           "height": 40,
                           "layout": "horizontal",
@@ -4484,7 +4484,7 @@
                             {
                               "type": "rectangle",
                               "id": "r264",
-                              "name": "起点段",
+                              "name": "start-segment",
                               "width": 6,
                               "height": 40,
                               "fill": [
@@ -4501,7 +4501,7 @@
                         {
                           "type": "frame",
                           "id": "f266",
-                          "name": "月份分隔",
+                          "name": "month-divider",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4512,7 +4512,7 @@
                             {
                               "type": "rectangle",
                               "id": "r267",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4525,7 +4525,7 @@
                             {
                               "type": "rectangle",
                               "id": "r268",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4538,7 +4538,7 @@
                             {
                               "type": "rectangle",
                               "id": "r269",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4551,7 +4551,7 @@
                             {
                               "type": "rectangle",
                               "id": "r270",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4568,7 +4568,7 @@
                         {
                           "type": "frame",
                           "id": "f271",
-                          "name": "月份分隔",
+                          "name": "month-divider",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4579,7 +4579,7 @@
                             {
                               "type": "rectangle",
                               "id": "r272",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4592,7 +4592,7 @@
                             {
                               "type": "rectangle",
                               "id": "r273",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4605,7 +4605,7 @@
                             {
                               "type": "rectangle",
                               "id": "r274",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4618,7 +4618,7 @@
                             {
                               "type": "rectangle",
                               "id": "r275",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4639,7 +4639,7 @@
                 {
                   "type": "frame",
                   "id": "f293",
-                  "name": "泳道",
+                  "name": "swimlane",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4650,9 +4650,9 @@
                     {
                       "type": "text",
                       "id": "t278",
-                      "name": "泳道名",
-                      "content": "签署提速",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "swimlane-name",
+                      "content": "Faster signing",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 500,
                       "fill": [
@@ -4669,7 +4669,7 @@
                     {
                       "type": "frame",
                       "id": "f292",
-                      "name": "泳道时间区",
+                      "name": "swimlane-timeline",
                       "width": 1504,
                       "height": 56,
                       "layout": "none",
@@ -4678,7 +4678,7 @@
                         {
                           "type": "rectangle",
                           "id": "r281",
-                          "name": "里程碑",
+                          "name": "milestone",
                           "width": 16,
                           "height": 16,
                           "rotation": 45,
@@ -4694,7 +4694,7 @@
                         {
                           "type": "frame",
                           "id": "f279",
-                          "name": "泳道条",
+                          "name": "swimlane-bar",
                           "width": 1007.68,
                           "height": 40,
                           "layout": "horizontal",
@@ -4711,7 +4711,7 @@
                             {
                               "type": "rectangle",
                               "id": "r280",
-                              "name": "起点段",
+                              "name": "start-segment",
                               "width": 6,
                               "height": 40,
                               "fill": [
@@ -4728,7 +4728,7 @@
                         {
                           "type": "frame",
                           "id": "f282",
-                          "name": "月份分隔",
+                          "name": "month-divider",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4739,7 +4739,7 @@
                             {
                               "type": "rectangle",
                               "id": "r283",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4752,7 +4752,7 @@
                             {
                               "type": "rectangle",
                               "id": "r284",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4765,7 +4765,7 @@
                             {
                               "type": "rectangle",
                               "id": "r285",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4778,7 +4778,7 @@
                             {
                               "type": "rectangle",
                               "id": "r286",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4795,7 +4795,7 @@
                         {
                           "type": "frame",
                           "id": "f287",
-                          "name": "月份分隔",
+                          "name": "month-divider",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4806,7 +4806,7 @@
                             {
                               "type": "rectangle",
                               "id": "r288",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4819,7 +4819,7 @@
                             {
                               "type": "rectangle",
                               "id": "r289",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4832,7 +4832,7 @@
                             {
                               "type": "rectangle",
                               "id": "r290",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4845,7 +4845,7 @@
                             {
                               "type": "rectangle",
                               "id": "r291",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4866,7 +4866,7 @@
                 {
                   "type": "frame",
                   "id": "f309",
-                  "name": "泳道",
+                  "name": "swimlane",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -4877,9 +4877,9 @@
                     {
                       "type": "text",
                       "id": "t294",
-                      "name": "泳道名",
-                      "content": "模板市场归属",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "swimlane-name",
+                      "content": "Template ownership",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 500,
                       "fill": [
@@ -4896,7 +4896,7 @@
                     {
                       "type": "frame",
                       "id": "f308",
-                      "name": "泳道时间区",
+                      "name": "swimlane-timeline",
                       "width": 1504,
                       "height": 56,
                       "layout": "none",
@@ -4905,7 +4905,7 @@
                         {
                           "type": "rectangle",
                           "id": "r297",
-                          "name": "里程碑",
+                          "name": "milestone",
                           "width": 16,
                           "height": 16,
                           "rotation": 45,
@@ -4921,7 +4921,7 @@
                         {
                           "type": "frame",
                           "id": "f295",
-                          "name": "泳道条",
+                          "name": "swimlane-bar",
                           "width": 661.76,
                           "height": 40,
                           "layout": "horizontal",
@@ -4938,7 +4938,7 @@
                             {
                               "type": "rectangle",
                               "id": "r296",
-                              "name": "起点段",
+                              "name": "start-segment",
                               "width": 6,
                               "height": 40,
                               "fill": [
@@ -4955,7 +4955,7 @@
                         {
                           "type": "frame",
                           "id": "f298",
-                          "name": "月份分隔",
+                          "name": "month-divider",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -4966,7 +4966,7 @@
                             {
                               "type": "rectangle",
                               "id": "r299",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4979,7 +4979,7 @@
                             {
                               "type": "rectangle",
                               "id": "r300",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -4992,7 +4992,7 @@
                             {
                               "type": "rectangle",
                               "id": "r301",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -5005,7 +5005,7 @@
                             {
                               "type": "rectangle",
                               "id": "r302",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -5022,7 +5022,7 @@
                         {
                           "type": "frame",
                           "id": "f303",
-                          "name": "月份分隔",
+                          "name": "month-divider",
                           "width": "fit_content",
                           "height": "fit_content",
                           "layout": "vertical",
@@ -5033,7 +5033,7 @@
                             {
                               "type": "rectangle",
                               "id": "r304",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -5046,7 +5046,7 @@
                             {
                               "type": "rectangle",
                               "id": "r305",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -5059,7 +5059,7 @@
                             {
                               "type": "rectangle",
                               "id": "r306",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -5072,7 +5072,7 @@
                             {
                               "type": "rectangle",
                               "id": "r307",
-                              "name": "月份分隔 · 段",
+                              "name": "month-divider-segment",
                               "width": 1,
                               "height": 8,
                               "fill": [
@@ -5095,7 +5095,7 @@
             {
               "type": "frame",
               "id": "f324",
-              "name": "页尾",
+              "name": "page-end",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -5106,7 +5106,7 @@
                 {
                   "type": "frame",
                   "id": "f316",
-                  "name": "图例",
+                  "name": "legend",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -5117,7 +5117,7 @@
                     {
                       "type": "frame",
                       "id": "f311",
-                      "name": "图例条",
+                      "name": "legend-bar",
                       "width": 48,
                       "height": 20,
                       "layout": "horizontal",
@@ -5134,7 +5134,7 @@
                         {
                           "type": "rectangle",
                           "id": "r312",
-                          "name": "图例起点段",
+                          "name": "legend-start-segment",
                           "width": 6,
                           "height": 20,
                           "fill": [
@@ -5149,9 +5149,9 @@
                     {
                       "type": "text",
                       "id": "t313",
-                      "name": "图例文字",
-                      "content": "进行中",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "legend-text",
+                      "content": "In progress",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -5168,7 +5168,7 @@
                     {
                       "type": "frame",
                       "id": "f314",
-                      "name": "图例间隔",
+                      "name": "legend-gap",
                       "width": 24,
                       "height": 1,
                       "layout": "none",
@@ -5177,7 +5177,7 @@
                     {
                       "type": "rectangle",
                       "id": "r310",
-                      "name": "图例里程碑",
+                      "name": "legend-milestone",
                       "width": 16,
                       "height": 16,
                       "rotation": 45,
@@ -5191,9 +5191,9 @@
                     {
                       "type": "text",
                       "id": "t315",
-                      "name": "图例文字",
-                      "content": "里程碑",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "legend-text",
+                      "content": "Milestone",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -5212,7 +5212,7 @@
                 {
                   "type": "frame",
                   "id": "f323",
-                  "name": "页脚",
+                  "name": "footer",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -5224,9 +5224,9 @@
                     {
                       "type": "text",
                       "id": "t321",
-                      "name": "页脚眉标",
-                      "content": "合章电子签 · 2026 Q2 业务评审",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "footer-eyebrow",
+                      "content": "Sealwise e-Sign · 2026 Q2 Business Review",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -5243,7 +5243,7 @@
                     {
                       "type": "text",
                       "id": "t322",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "06 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 24,
@@ -5272,7 +5272,7 @@
     {
       "type": "frame",
       "id": "f344",
-      "name": "07 决议",
+      "name": "07-decisions",
       "width": 1920,
       "height": 1080,
       "layout": "none",
@@ -5287,7 +5287,7 @@
         {
           "type": "frame",
           "id": "f343",
-          "name": "07 决议 · 正文",
+          "name": "07-decisions-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -5305,9 +5305,9 @@
             {
               "type": "text",
               "id": "t345",
-              "name": "页标题",
-              "content": "这三件今天要定，定不了就带走",
-              "fontFamily": "Noto Sans SC",
+              "name": "page-title",
+              "content": "Decide these three today, or leave with owners",
+              "fontFamily": "Inter",
               "fontSize": 56,
               "fontWeight": 700,
               "fill": [
@@ -5324,7 +5324,7 @@
             {
               "type": "frame",
               "id": "f346",
-              "name": "待决区",
+              "name": "pending-area",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -5335,7 +5335,7 @@
                 {
                   "type": "frame",
                   "id": "f330",
-                  "name": "待决事项",
+                  "name": "pending-item",
                   "width": 560,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -5346,7 +5346,7 @@
                     {
                       "type": "rectangle",
                       "id": "r325",
-                      "name": "横线",
+                      "name": "rule",
                       "width": 560,
                       "height": 2,
                       "fill": [
@@ -5359,9 +5359,9 @@
                     {
                       "type": "text",
                       "id": "t326",
-                      "name": "决议",
-                      "content": "私有化版本做不做，\n做到什么边界",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "decision",
+                      "content": "Build on-prem or not,\nand how far",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -5378,7 +5378,7 @@
                     {
                       "type": "frame",
                       "id": "f329",
-                      "name": "决策归属",
+                      "name": "decision-owner",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5389,9 +5389,9 @@
                         {
                           "type": "text",
                           "id": "t327",
-                          "name": "决策人",
-                          "content": "关屿",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "decision-maker",
+                          "content": "Ian Grant",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 500,
                           "fill": [
@@ -5408,7 +5408,7 @@
                         {
                           "type": "text",
                           "id": "t328",
-                          "name": "期限",
+                          "name": "deadline",
                           "content": "07-12",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5431,7 +5431,7 @@
                 {
                   "type": "frame",
                   "id": "f336",
-                  "name": "待决事项",
+                  "name": "pending-item",
                   "width": 560,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -5442,7 +5442,7 @@
                     {
                       "type": "rectangle",
                       "id": "r331",
-                      "name": "横线",
+                      "name": "rule",
                       "width": 560,
                       "height": 2,
                       "fill": [
@@ -5455,9 +5455,9 @@
                     {
                       "type": "text",
                       "id": "t332",
-                      "name": "决议",
-                      "content": "模板市场归运营\n还是归产品",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "decision",
+                      "content": "Templates go to Ops\nor to Product",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -5474,7 +5474,7 @@
                     {
                       "type": "frame",
                       "id": "f335",
-                      "name": "决策归属",
+                      "name": "decision-owner",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5485,9 +5485,9 @@
                         {
                           "type": "text",
                           "id": "t333",
-                          "name": "决策人",
-                          "content": "周砚",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "decision-maker",
+                          "content": "Jordan Wells",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 500,
                           "fill": [
@@ -5504,7 +5504,7 @@
                         {
                           "type": "text",
                           "id": "t334",
-                          "name": "期限",
+                          "name": "deadline",
                           "content": "07-12",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5527,7 +5527,7 @@
                 {
                   "type": "frame",
                   "id": "f342",
-                  "name": "待决事项",
+                  "name": "pending-item",
                   "width": 560,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -5538,7 +5538,7 @@
                     {
                       "type": "rectangle",
                       "id": "r337",
-                      "name": "横线",
+                      "name": "rule",
                       "width": 560,
                       "height": 2,
                       "fill": [
@@ -5551,9 +5551,9 @@
                     {
                       "type": "text",
                       "id": "t338",
-                      "name": "决议",
-                      "content": "两家逾期集成\n是否换供应商",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "decision",
+                      "content": "Replace the vendors on\ntwo late integrations",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -5570,7 +5570,7 @@
                     {
                       "type": "frame",
                       "id": "f341",
-                      "name": "决策归属",
+                      "name": "decision-owner",
                       "width": "fit_content",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -5581,9 +5581,9 @@
                         {
                           "type": "text",
                           "id": "t339",
-                          "name": "决策人",
-                          "content": "沈知白",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "decision-maker",
+                          "content": "Sam Chen",
+                          "fontFamily": "Inter",
                           "fontSize": 26,
                           "fontWeight": 500,
                           "fill": [
@@ -5600,7 +5600,7 @@
                         {
                           "type": "text",
                           "id": "t340",
-                          "name": "期限",
+                          "name": "deadline",
                           "content": "07-19",
                           "fontFamily": "Inter",
                           "fontSize": 26,
@@ -5625,7 +5625,7 @@
             {
               "type": "frame",
               "id": "f351",
-              "name": "页尾",
+              "name": "page-end",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -5636,9 +5636,9 @@
                 {
                   "type": "text",
                   "id": "t347",
-                  "name": "收束句",
-                  "content": "下个季度的增长在集成上，不在获客上。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "closing-line",
+                  "content": "Next quarter's growth is in integrations, not acquisition.",
+                  "fontFamily": "Inter",
                   "fontSize": 36,
                   "fontWeight": 500,
                   "fill": [
@@ -5655,7 +5655,7 @@
                 {
                   "type": "frame",
                   "id": "f350",
-                  "name": "页脚",
+                  "name": "footer",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -5667,9 +5667,9 @@
                     {
                       "type": "text",
                       "id": "t348",
-                      "name": "页脚眉标",
-                      "content": "合章电子签 · 2026 Q2 业务评审",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "footer-eyebrow",
+                      "content": "Sealwise e-Sign · 2026 Q2 Business Review",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 400,
                       "fill": [
@@ -5686,7 +5686,7 @@
                     {
                       "type": "text",
                       "id": "t349",
-                      "name": "页码",
+                      "name": "page-number",
                       "content": "07 / 07",
                       "fontFamily": "Inter",
                       "fontSize": 24,

@@ -83,7 +83,7 @@ impl SceneTemplatePanel<'_> {
         let content = Self::content_rect(panel);
         self.paint_text(
             cx,
-            self.t("assetCenter.title", "资产中心"),
+            self.t("assetCenter.title", "Asset Center"),
             Point2D::new(
                 content.origin.x,
                 jian_widgets::centered_text_baseline_y(
@@ -131,12 +131,14 @@ impl SceneTemplatePanel<'_> {
             jian_widgets::centered_text_baseline_y(rect, SEARCH_TEXT_SIZE),
             self.now_ms(),
             match self.tab() {
-                de_editor_core::AssetCenterTab::Templates => {
-                    self.t("sceneTemplate.searchPlaceholder", "搜索场景或模板")
-                }
-                de_editor_core::AssetCenterTab::Styles => {
-                    self.t("assetCenter.style.searchPlaceholder", "搜索风格或标签")
-                }
+                de_editor_core::AssetCenterTab::Templates => self.t(
+                    "sceneTemplate.searchPlaceholder",
+                    "Search scenes or templates",
+                ),
+                de_editor_core::AssetCenterTab::Styles => self.t(
+                    "assetCenter.style.searchPlaceholder",
+                    "Search styles or tags",
+                ),
             },
             self.field_focused(SceneTemplateFocus::Search),
         );
@@ -193,7 +195,7 @@ impl SceneTemplatePanel<'_> {
             self.now_ms(),
             self.t(
                 "sceneTemplate.generate.placeholder",
-                "描述主题，AI 直接生成整副演示文稿",
+                "Describe a topic — AI generates the whole deck",
             ),
             self.field_focused(SceneTemplateFocus::Generate),
         );
@@ -208,7 +210,7 @@ impl SceneTemplatePanel<'_> {
             ButtonSpec {
                 rect: button,
                 radius: CONTROL_RADIUS,
-                label: self.t("sceneTemplate.generate.button", "生成"),
+                label: self.t("sceneTemplate.generate.button", "Generate"),
                 label_size: GENERATE_TEXT_SIZE,
                 hovered: self.state.editor_ui.scene_template_center.hover
                     == Some(SCENE_TEMPLATE_GENERATE_HOVER),
@@ -224,11 +226,11 @@ impl SceneTemplatePanel<'_> {
             match self.tab() {
                 de_editor_core::AssetCenterTab::Templates => self.t(
                     "sceneTemplate.generate.hint",
-                    "新建一个文档，按主题直接生成整副演示文稿。",
+                    "A new document, built from your topic as a full slide deck.",
                 ),
                 de_editor_core::AssetCenterTab::Styles => self.t(
                     "assetCenter.style.generateHint",
-                    "新建一个文档，按主题生成；已钉住的风格会被直接采用。",
+                    "A new document built from your topic, in the pinned style.",
                 ),
             },
             Point2D::new(input.origin.x + 2.0, input.origin.y + input.size.y + 18.0),
@@ -261,7 +263,7 @@ impl SceneTemplatePanel<'_> {
         if user_cards.is_empty() && templates.is_empty() {
             self.paint_text(
                 cx,
-                self.t("sceneTemplate.empty", "没有匹配的模板"),
+                self.t("sceneTemplate.empty", "No matching templates"),
                 Point2D::new(viewport.origin.x + 4.0, viewport.origin.y + 28.0),
                 12.0,
                 self.theme.muted_foreground,
@@ -279,9 +281,9 @@ impl SceneTemplatePanel<'_> {
             self.paint_text(
                 cx,
                 if header.is_user {
-                    self.t("assetCenter.template.mine", "我的模板")
+                    self.t("assetCenter.template.mine", "My templates")
                 } else {
-                    self.t("assetCenter.template.builtIn", "内置模板")
+                    self.t("assetCenter.template.builtIn", "Built-in templates")
                 },
                 Point2D::new(
                     header.rect.origin.x,
@@ -311,7 +313,7 @@ impl SceneTemplatePanel<'_> {
             && rect.origin.y + rect.size.y >= viewport.origin.y
     }
 
-    /// "基于：极简 Keynote ×" — the standing answer to "in what style?".
+    /// "Based on: Minimal Keynote ×" — the standing answer to "in what style?".
     ///
     /// It reads as a chip rather than as a line of help text because it is
     /// removable, and the × has to look like the thing that removes it: the

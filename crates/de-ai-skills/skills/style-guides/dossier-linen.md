@@ -92,16 +92,17 @@ colour, and never a second accent's excuse.
 
 | Role | Family | Usage |
 | --- | --- | --- |
-| Display | 思源宋体 Semibold, Source Serif 4 | Document title and section titles |
-| Body | 霞鹜文楷, Source Serif 4 | Every paragraph, quote, and table cell |
+| Display | Source Serif 4 Semibold, DM Serif Display | Document title and section titles |
+| Body | Source Serif 4, Cormorant Garamond | Every paragraph, quote, and table cell |
 | Mono | IBM Plex Mono | Clause numbers, folio tabs, dates, owners, deadlines |
 
-Fallbacks: display `Noto Sans SC` 600, body `Noto Sans SC` 400, mono `Inter` 400. 霞鹜文楷
-is the body face because long CJK paragraphs are what this deck is made of, and it holds
-readability at paragraph length better than a screen sans. Write the Latin face **first**
-in every fallback chain — matching is per-character, so Han falls through to the CJK face
-automatically, whereas the reverse order lets the CJK face's own Latin swallow every
-digit and page number.
+Fallbacks: display `DM Serif Display` 400, body `Cormorant Garamond` 500, mono `DM Mono`
+400. Source Serif 4 is the body face because long paragraphs are what this deck is made
+of, and a book serif holds readability at paragraph length better than a screen sans; it
+also ships a true italic, which is the only sanctioned italic in the deck (the attributed
+line on the retrospective page). Every chain ends in a generic `serif` or `monospace`, and
+clause numbers, page numbers, and dates are always set by the mono face — never by the
+serif's old-style figures.
 
 ### Type Scale
 

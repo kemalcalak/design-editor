@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "避坑清单信息长图",
+  "name": "pitfall-list-infographic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "避坑清单长图",
+      "name": "pitfall-list-long-graphic",
       "width": 1080,
       "height": 3226,
       "layout": "vertical",
@@ -55,7 +55,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -77,7 +77,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -98,9 +98,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "标签文字",
-                  "content": "避坑清单 · 做图篇",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Mistakes to avoid · graphics",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -119,9 +119,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "做图最常踩的\n六个坑",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "Six most common\ngraphic mistakes",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -138,9 +138,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "按踩的人数从多到少排，每条都给一句能照着改的话。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Ranked from most to least common, each with one fix you can apply.",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 400,
               "fill": [
@@ -159,7 +159,7 @@
         {
           "type": "frame",
           "id": "f66",
-          "name": "02 排行",
+          "name": "02-ranking",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -176,7 +176,7 @@
             {
               "type": "frame",
               "id": "f64",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -187,7 +187,7 @@
                 {
                   "type": "rectangle",
                   "id": "r61",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -200,9 +200,9 @@
                 {
                   "type": "text",
                   "id": "t62",
-                  "name": "区块标题",
-                  "content": "从最常踩的那个说起",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Starting with the most common",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -219,9 +219,9 @@
                 {
                   "type": "text",
                   "id": "t63",
-                  "name": "区块说明",
-                  "content": "前三条是重灾区，单这三条就能解决大半问题。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-intro",
+                  "content": "The first three are the big ones. Fix them and most problems go away.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -240,7 +240,7 @@
             {
               "type": "frame",
               "id": "f65",
-              "name": "排行列表",
+              "name": "ranking-list",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -251,7 +251,7 @@
                 {
                   "type": "frame",
                   "id": "f15",
-                  "name": "坑",
+                  "name": "pitfall",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -271,7 +271,7 @@
                     {
                       "type": "frame",
                       "id": "f9",
-                      "name": "坑头",
+                      "name": "pitfall-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -282,7 +282,7 @@
                         {
                           "type": "text",
                           "id": "t7",
-                          "name": "排名",
+                          "name": "rank",
                           "content": "01",
                           "fontFamily": "Inter",
                           "fontSize": 56,
@@ -301,9 +301,9 @@
                         {
                           "type": "text",
                           "id": "t8",
-                          "name": "坑标题",
-                          "content": "一页想讲完所有事",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pitfall-title",
+                          "content": "Cramming it all onto one page",
+                          "fontFamily": "Inter",
                           "fontSize": 38,
                           "fontWeight": 700,
                           "fill": [
@@ -322,9 +322,9 @@
                     {
                       "type": "text",
                       "id": "t13",
-                      "name": "错在哪",
-                      "content": "把三段话塞进一张图，字缩到 20px，手机上谁都不会读。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "whats-wrong",
+                      "content": "Three paragraphs on one graphic, text shrunk to 20px. Nobody reads that on a phone.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -341,7 +341,7 @@
                     {
                       "type": "rectangle",
                       "id": "r14",
-                      "name": "改法上线",
+                      "name": "fix-top-rule",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -354,7 +354,7 @@
                     {
                       "type": "frame",
                       "id": "f12",
-                      "name": "改法",
+                      "name": "fix",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -365,7 +365,7 @@
                         {
                           "type": "icon_font",
                           "id": "i10",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "arrow-right",
                           "width": 26,
                           "height": 26,
@@ -379,9 +379,9 @@
                         {
                           "type": "text",
                           "id": "t11",
-                          "name": "改法文字",
-                          "content": "一页只讲一个点，讲不完就加一页。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "fix-text",
+                          "content": "One point per page. Need more? Add a page.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -402,7 +402,7 @@
                 {
                   "type": "frame",
                   "id": "f24",
-                  "name": "坑",
+                  "name": "pitfall",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -422,7 +422,7 @@
                     {
                       "type": "frame",
                       "id": "f18",
-                      "name": "坑头",
+                      "name": "pitfall-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -433,7 +433,7 @@
                         {
                           "type": "text",
                           "id": "t16",
-                          "name": "排名",
+                          "name": "rank",
                           "content": "02",
                           "fontFamily": "Inter",
                           "fontSize": 56,
@@ -452,9 +452,9 @@
                         {
                           "type": "text",
                           "id": "t17",
-                          "name": "坑标题",
-                          "content": "标题写成了说明书",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pitfall-title",
+                          "content": "Titles that read like manuals",
+                          "fontFamily": "Inter",
                           "fontSize": 38,
                           "fontWeight": 700,
                           "fill": [
@@ -473,9 +473,9 @@
                     {
                       "type": "text",
                       "id": "t22",
-                      "name": "错在哪",
-                      "content": "「关于如何提升时间管理效率的方法」——没人会为它停下。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "whats-wrong",
+                      "content": "\"Methods for improving time management efficiency\": nobody stops scrolling for that.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -492,7 +492,7 @@
                     {
                       "type": "rectangle",
                       "id": "r23",
-                      "name": "改法上线",
+                      "name": "fix-top-rule",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -505,7 +505,7 @@
                     {
                       "type": "frame",
                       "id": "f21",
-                      "name": "改法",
+                      "name": "fix",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -516,7 +516,7 @@
                         {
                           "type": "icon_font",
                           "id": "i19",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "arrow-right",
                           "width": 26,
                           "height": 26,
@@ -530,9 +530,9 @@
                         {
                           "type": "text",
                           "id": "t20",
-                          "name": "改法文字",
-                          "content": "先写结论那句话，再删到十个字以内。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "fix-text",
+                          "content": "Write the takeaway first, then cut it to a few words.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -553,7 +553,7 @@
                 {
                   "type": "frame",
                   "id": "f33",
-                  "name": "坑",
+                  "name": "pitfall",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -573,7 +573,7 @@
                     {
                       "type": "frame",
                       "id": "f27",
-                      "name": "坑头",
+                      "name": "pitfall-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -584,7 +584,7 @@
                         {
                           "type": "text",
                           "id": "t25",
-                          "name": "排名",
+                          "name": "rank",
                           "content": "03",
                           "fontFamily": "Inter",
                           "fontSize": 56,
@@ -603,9 +603,9 @@
                         {
                           "type": "text",
                           "id": "t26",
-                          "name": "坑标题",
-                          "content": "颜色一次上五个",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pitfall-title",
+                          "content": "Five colors at once",
+                          "fontFamily": "Inter",
                           "fontSize": 38,
                           "fontWeight": 700,
                           "fill": [
@@ -624,9 +624,9 @@
                     {
                       "type": "text",
                       "id": "t31",
-                      "name": "错在哪",
-                      "content": "每个模块一个颜色，看起来热闹，实际上等于一个都没强调。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "whats-wrong",
+                      "content": "A color per section looks lively, but when everything stands out, nothing does.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -643,7 +643,7 @@
                     {
                       "type": "rectangle",
                       "id": "r32",
-                      "name": "改法上线",
+                      "name": "fix-top-rule",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -656,7 +656,7 @@
                     {
                       "type": "frame",
                       "id": "f30",
-                      "name": "改法",
+                      "name": "fix",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -667,7 +667,7 @@
                         {
                           "type": "icon_font",
                           "id": "i28",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "arrow-right",
                           "width": 26,
                           "height": 26,
@@ -681,9 +681,9 @@
                         {
                           "type": "text",
                           "id": "t29",
-                          "name": "改法文字",
-                          "content": "一个强调色，只给最重要的那一处。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "fix-text",
+                          "content": "One accent color, used only where it matters most.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -704,7 +704,7 @@
                 {
                   "type": "frame",
                   "id": "f42",
-                  "name": "坑",
+                  "name": "pitfall",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -724,7 +724,7 @@
                     {
                       "type": "frame",
                       "id": "f36",
-                      "name": "坑头",
+                      "name": "pitfall-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -735,7 +735,7 @@
                         {
                           "type": "text",
                           "id": "t34",
-                          "name": "排名",
+                          "name": "rank",
                           "content": "04",
                           "fontFamily": "Inter",
                           "fontSize": 56,
@@ -754,9 +754,9 @@
                         {
                           "type": "text",
                           "id": "t35",
-                          "name": "坑标题",
-                          "content": "正文和背景对比不够",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pitfall-title",
+                          "content": "Low text contrast",
+                          "fontFamily": "Inter",
                           "fontSize": 38,
                           "fontWeight": 700,
                           "fill": [
@@ -775,9 +775,9 @@
                     {
                       "type": "text",
                       "id": "t40",
-                      "name": "错在哪",
-                      "content": "浅灰字压在浅灰底上，设计稿里好看，发出去在阳光下看不见。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "whats-wrong",
+                      "content": "Light grey on light grey looks great in the mockup and vanishes in sunlight.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -794,7 +794,7 @@
                     {
                       "type": "rectangle",
                       "id": "r41",
-                      "name": "改法上线",
+                      "name": "fix-top-rule",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -807,7 +807,7 @@
                     {
                       "type": "frame",
                       "id": "f39",
-                      "name": "改法",
+                      "name": "fix",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -818,7 +818,7 @@
                         {
                           "type": "icon_font",
                           "id": "i37",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "arrow-right",
                           "width": 26,
                           "height": 26,
@@ -832,9 +832,9 @@
                         {
                           "type": "text",
                           "id": "t38",
-                          "name": "改法文字",
-                          "content": "正文对比度至少 4.5:1，先量再发。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "fix-text",
+                          "content": "Body text needs at least 4.5:1. Check before you post.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -864,7 +864,7 @@
                 {
                   "type": "frame",
                   "id": "f51",
-                  "name": "坑",
+                  "name": "pitfall",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -884,7 +884,7 @@
                     {
                       "type": "frame",
                       "id": "f45",
-                      "name": "坑头",
+                      "name": "pitfall-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -895,7 +895,7 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "排名",
+                          "name": "rank",
                           "content": "05",
                           "fontFamily": "Inter",
                           "fontSize": 56,
@@ -914,9 +914,9 @@
                         {
                           "type": "text",
                           "id": "t44",
-                          "name": "坑标题",
-                          "content": "装饰压在文字上",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pitfall-title",
+                          "content": "Decoration over the text",
+                          "fontFamily": "Inter",
                           "fontSize": 38,
                           "fontWeight": 700,
                           "fill": [
@@ -935,9 +935,9 @@
                     {
                       "type": "text",
                       "id": "t49",
-                      "name": "错在哪",
-                      "content": "光效、纹理、大图铺满整页，标题只好往上叠，读起来费劲。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "whats-wrong",
+                      "content": "Glows, textures and full-bleed images everywhere, with the title stacked on top. Hard to read.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -954,7 +954,7 @@
                     {
                       "type": "rectangle",
                       "id": "r50",
-                      "name": "改法上线",
+                      "name": "fix-top-rule",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -967,7 +967,7 @@
                     {
                       "type": "frame",
                       "id": "f48",
-                      "name": "改法",
+                      "name": "fix",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -978,7 +978,7 @@
                         {
                           "type": "icon_font",
                           "id": "i46",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "arrow-right",
                           "width": 26,
                           "height": 26,
@@ -992,9 +992,9 @@
                         {
                           "type": "text",
                           "id": "t47",
-                          "name": "改法文字",
-                          "content": "给标题留一块干净的高对比区，装饰退到它外面。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "fix-text",
+                          "content": "Give the title clean, high-contrast space of its own.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -1024,7 +1024,7 @@
                 {
                   "type": "frame",
                   "id": "f60",
-                  "name": "坑",
+                  "name": "pitfall",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1044,7 +1044,7 @@
                     {
                       "type": "frame",
                       "id": "f54",
-                      "name": "坑头",
+                      "name": "pitfall-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1055,7 +1055,7 @@
                         {
                           "type": "text",
                           "id": "t52",
-                          "name": "排名",
+                          "name": "rank",
                           "content": "06",
                           "fontFamily": "Inter",
                           "fontSize": 56,
@@ -1074,9 +1074,9 @@
                         {
                           "type": "text",
                           "id": "t53",
-                          "name": "坑标题",
-                          "content": "每页都换一套版式",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "pitfall-title",
+                          "content": "A new layout on every page",
+                          "fontFamily": "Inter",
                           "fontSize": 38,
                           "fontWeight": 700,
                           "fill": [
@@ -1095,9 +1095,9 @@
                     {
                       "type": "text",
                       "id": "t58",
-                      "name": "错在哪",
-                      "content": "六页像六个模板拼起来的，读者每翻一页都要重新找重点在哪。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "whats-wrong",
+                      "content": "Six pages that look like six templates. Readers have to hunt for the point on every swipe.",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 400,
                       "fill": [
@@ -1114,7 +1114,7 @@
                     {
                       "type": "rectangle",
                       "id": "r59",
-                      "name": "改法上线",
+                      "name": "fix-top-rule",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -1127,7 +1127,7 @@
                     {
                       "type": "frame",
                       "id": "f57",
-                      "name": "改法",
+                      "name": "fix",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1138,7 +1138,7 @@
                         {
                           "type": "icon_font",
                           "id": "i55",
-                          "name": "箭头",
+                          "name": "arrow",
                           "iconFontName": "arrow-right",
                           "width": 26,
                           "height": 26,
@@ -1152,9 +1152,9 @@
                         {
                           "type": "text",
                           "id": "t56",
-                          "name": "改法文字",
-                          "content": "边距、字体、页码位置锁死，只让主视觉变。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "fix-text",
+                          "content": "Lock margins, fonts and folios; change only the visual.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -1188,7 +1188,7 @@
         {
           "type": "frame",
           "id": "f88",
-          "name": "03 自检",
+          "name": "03-self-check",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1205,7 +1205,7 @@
             {
               "type": "frame",
               "id": "f87",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1216,7 +1216,7 @@
                 {
                   "type": "rectangle",
                   "id": "r84",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -1229,9 +1229,9 @@
                 {
                   "type": "text",
                   "id": "t85",
-                  "name": "区块标题",
-                  "content": "发之前跑一遍",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Run this before posting",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -1248,9 +1248,9 @@
                 {
                   "type": "text",
                   "id": "t86",
-                  "name": "区块说明",
-                  "content": "四行，一分钟。过不了就别急着发。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-intro",
+                  "content": "Four lines, one minute. If it fails, don't post yet.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -1269,7 +1269,7 @@
             {
               "type": "frame",
               "id": "f83",
-              "name": "自检面板",
+              "name": "check-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1289,7 +1289,7 @@
                 {
                   "type": "frame",
                   "id": "f70",
-                  "name": "自检项",
+                  "name": "check-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1300,7 +1300,7 @@
                     {
                       "type": "frame",
                       "id": "f67",
-                      "name": "方框",
+                      "name": "checkbox",
                       "width": 40,
                       "height": 40,
                       "layout": "horizontal",
@@ -1316,7 +1316,7 @@
                         {
                           "type": "icon_font",
                           "id": "i68",
-                          "name": "勾",
+                          "name": "checkmark",
                           "iconFontName": "check",
                           "width": 24,
                           "height": 24,
@@ -1332,9 +1332,9 @@
                     {
                       "type": "text",
                       "id": "t69",
-                      "name": "自检文字",
-                      "content": "标题十个字以内，且是结论不是主题",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "check-text",
+                      "content": "Title is short, and a takeaway, not a topic",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 500,
                       "fill": [
@@ -1353,7 +1353,7 @@
                 {
                   "type": "frame",
                   "id": "f74",
-                  "name": "自检项",
+                  "name": "check-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1364,7 +1364,7 @@
                     {
                       "type": "frame",
                       "id": "f71",
-                      "name": "方框",
+                      "name": "checkbox",
                       "width": 40,
                       "height": 40,
                       "layout": "horizontal",
@@ -1380,7 +1380,7 @@
                         {
                           "type": "icon_font",
                           "id": "i72",
-                          "name": "勾",
+                          "name": "checkmark",
                           "iconFontName": "check",
                           "width": 24,
                           "height": 24,
@@ -1396,9 +1396,9 @@
                     {
                       "type": "text",
                       "id": "t73",
-                      "name": "自检文字",
-                      "content": "每页正文不超过四行",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "check-text",
+                      "content": "No more than four lines of body per page",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 500,
                       "fill": [
@@ -1417,7 +1417,7 @@
                 {
                   "type": "frame",
                   "id": "f78",
-                  "name": "自检项",
+                  "name": "check-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1428,7 +1428,7 @@
                     {
                       "type": "frame",
                       "id": "f75",
-                      "name": "方框",
+                      "name": "checkbox",
                       "width": 40,
                       "height": 40,
                       "layout": "horizontal",
@@ -1444,7 +1444,7 @@
                         {
                           "type": "icon_font",
                           "id": "i76",
-                          "name": "勾",
+                          "name": "checkmark",
                           "iconFontName": "check",
                           "width": 24,
                           "height": 24,
@@ -1460,9 +1460,9 @@
                     {
                       "type": "text",
                       "id": "t77",
-                      "name": "自检文字",
-                      "content": "强调色只出现在一处",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "check-text",
+                      "content": "Accent color appears in one place only",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 500,
                       "fill": [
@@ -1481,7 +1481,7 @@
                 {
                   "type": "frame",
                   "id": "f82",
-                  "name": "自检项",
+                  "name": "check-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1492,7 +1492,7 @@
                     {
                       "type": "frame",
                       "id": "f79",
-                      "name": "方框",
+                      "name": "checkbox",
                       "width": 40,
                       "height": 40,
                       "layout": "horizontal",
@@ -1508,7 +1508,7 @@
                         {
                           "type": "icon_font",
                           "id": "i80",
-                          "name": "勾",
+                          "name": "checkmark",
                           "iconFontName": "check",
                           "width": 24,
                           "height": 24,
@@ -1524,9 +1524,9 @@
                     {
                       "type": "text",
                       "id": "t81",
-                      "name": "自检文字",
-                      "content": "手机上退后一臂距离仍能读清正文",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "check-text",
+                      "content": "Body text still reads on a phone at arm's length",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 500,
                       "fill": [
@@ -1549,7 +1549,7 @@
         {
           "type": "frame",
           "id": "f93",
-          "name": "04 页脚",
+          "name": "04-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1569,9 +1569,9 @@
             {
               "type": "text",
               "id": "t89",
-              "name": "结语",
-              "content": "第七个坑是「觉得自己不会踩前六个」。",
-              "fontFamily": "Noto Sans SC",
+              "name": "closing-line",
+              "content": "Mistake #7: thinking you'd never make the first six.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 600,
               "fill": [
@@ -1588,7 +1588,7 @@
             {
               "type": "frame",
               "id": "f92",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1599,9 +1599,9 @@
                 {
                   "type": "text",
                   "id": "t90",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -1618,9 +1618,9 @@
                 {
                   "type": "text",
                   "id": "t91",
-                  "name": "更新说明",
-                  "content": "每周一张能照着改的图",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "A fix-it graphic every week",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

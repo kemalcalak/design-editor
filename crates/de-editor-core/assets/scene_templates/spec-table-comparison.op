@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "参数表对比长图",
+  "name": "spec-table-comparison-long-graphic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "参数表对比长图",
+      "name": "spec-table-comparison-long-graphic",
       "width": 1080,
       "height": 2405,
       "layout": "vertical",
@@ -55,7 +55,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -77,7 +77,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -98,9 +98,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "标签文字",
-                  "content": "参数对比 · 选购向",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Spec comparison · buying guide",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -119,9 +119,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "两台机器\n到底差在哪",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "What really sets\nthese two apart",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -138,9 +138,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "八项常用指标逐行摆开，深色那一格是这一行里更强的一方。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Eight key specs side by side. The dark cell wins its row.",
+              "fontFamily": "Inter",
               "fontSize": 27,
               "fontWeight": 400,
               "fill": [
@@ -159,7 +159,7 @@
         {
           "type": "frame",
           "id": "f14",
-          "name": "02 候选者",
+          "name": "02-contenders",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -176,7 +176,7 @@
             {
               "type": "frame",
               "id": "f13",
-              "name": "候选者行",
+              "name": "contender-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -187,7 +187,7 @@
                 {
                   "type": "frame",
                   "id": "f9",
-                  "name": "候选者",
+                  "name": "contender",
                   "width": 466,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -207,9 +207,9 @@
                     {
                       "type": "text",
                       "id": "t7",
-                      "name": "候选者名",
-                      "content": "轻装派",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "contender-name",
+                      "content": "Travel",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 700,
                       "fill": [
@@ -226,8 +226,8 @@
                     {
                       "type": "text",
                       "id": "t8",
-                      "name": "候选者规格",
-                      "content": "13.6 英寸 · 1.24kg",
+                      "name": "contender-spec",
+                      "content": "13.6 in · 1.24 kg",
                       "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
@@ -256,7 +256,7 @@
                 {
                   "type": "frame",
                   "id": "f12",
-                  "name": "候选者",
+                  "name": "contender",
                   "width": 466,
                   "height": "fit_content",
                   "layout": "vertical",
@@ -276,9 +276,9 @@
                     {
                       "type": "text",
                       "id": "t10",
-                      "name": "候选者名",
-                      "content": "生产力",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "contender-name",
+                      "content": "Workhorse",
+                      "fontFamily": "Inter",
                       "fontSize": 40,
                       "fontWeight": 700,
                       "fill": [
@@ -295,8 +295,8 @@
                     {
                       "type": "text",
                       "id": "t11",
-                      "name": "候选者规格",
-                      "content": "16 英寸 · 1.62kg",
+                      "name": "contender-spec",
+                      "content": "16 in · 1.62 kg",
                       "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
@@ -320,7 +320,7 @@
         {
           "type": "frame",
           "id": "f83",
-          "name": "03 参数表",
+          "name": "03-spec-table",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -337,7 +337,7 @@
             {
               "type": "frame",
               "id": "f82",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -348,7 +348,7 @@
                 {
                   "type": "rectangle",
                   "id": "r79",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -361,9 +361,9 @@
                 {
                   "type": "text",
                   "id": "t80",
-                  "name": "区块标题",
-                  "content": "八行看完",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Eight rows",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -380,9 +380,9 @@
                 {
                   "type": "text",
                   "id": "t81",
-                  "name": "区块说明",
-                  "content": "深色格 = 这一行里更强的那一台，只说事实。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-intro",
+                  "content": "Dark cell = the stronger machine in that row. Facts only.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -401,7 +401,7 @@
             {
               "type": "frame",
               "id": "f78",
-              "name": "表体",
+              "name": "table-body",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -417,7 +417,7 @@
                 {
                   "type": "frame",
                   "id": "f21",
-                  "name": "表头",
+                  "name": "table-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -428,7 +428,7 @@
                     {
                       "type": "frame",
                       "id": "f15",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 276,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -448,9 +448,9 @@
                         {
                           "type": "text",
                           "id": "t16",
-                          "name": "单元格文字",
-                          "content": "指标",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Spec",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -469,7 +469,7 @@
                     {
                       "type": "frame",
                       "id": "f17",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -489,9 +489,9 @@
                         {
                           "type": "text",
                           "id": "t18",
-                          "name": "单元格文字",
-                          "content": "轻装派",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Travel",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 700,
                           "fill": [
@@ -510,7 +510,7 @@
                     {
                       "type": "frame",
                       "id": "f19",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -530,9 +530,9 @@
                         {
                           "type": "text",
                           "id": "t20",
-                          "name": "单元格文字",
-                          "content": "生产力",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Workhorse",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 700,
                           "fill": [
@@ -553,7 +553,7 @@
                 {
                   "type": "frame",
                   "id": "f28",
-                  "name": "参数行",
+                  "name": "spec-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -564,7 +564,7 @@
                     {
                       "type": "frame",
                       "id": "f22",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 276,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -584,9 +584,9 @@
                         {
                           "type": "text",
                           "id": "t23",
-                          "name": "单元格文字",
-                          "content": "整机重量",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Weight",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -605,7 +605,7 @@
                     {
                       "type": "frame",
                       "id": "f24",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -625,7 +625,7 @@
                         {
                           "type": "text",
                           "id": "t25",
-                          "name": "单元格文字",
+                          "name": "cell-text",
                           "content": "1.24 kg",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -646,7 +646,7 @@
                     {
                       "type": "frame",
                       "id": "f26",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -666,7 +666,7 @@
                         {
                           "type": "text",
                           "id": "t27",
-                          "name": "单元格文字",
+                          "name": "cell-text",
                           "content": "1.62 kg",
                           "fontFamily": "Inter",
                           "fontSize": 28,
@@ -689,7 +689,7 @@
                 {
                   "type": "frame",
                   "id": "f35",
-                  "name": "参数行",
+                  "name": "spec-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -700,7 +700,7 @@
                     {
                       "type": "frame",
                       "id": "f29",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 276,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -720,9 +720,9 @@
                         {
                           "type": "text",
                           "id": "t30",
-                          "name": "单元格文字",
-                          "content": "实测续航",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Tested battery",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -741,7 +741,7 @@
                     {
                       "type": "frame",
                       "id": "f31",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -761,8 +761,8 @@
                         {
                           "type": "text",
                           "id": "t32",
-                          "name": "单元格文字",
-                          "content": "11 小时",
+                          "name": "cell-text",
+                          "content": "11 hrs",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 700,
@@ -782,7 +782,7 @@
                     {
                       "type": "frame",
                       "id": "f33",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -802,8 +802,8 @@
                         {
                           "type": "text",
                           "id": "t34",
-                          "name": "单元格文字",
-                          "content": "7 小时",
+                          "name": "cell-text",
+                          "content": "7 hrs",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
@@ -825,7 +825,7 @@
                 {
                   "type": "frame",
                   "id": "f42",
-                  "name": "参数行",
+                  "name": "spec-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -836,7 +836,7 @@
                     {
                       "type": "frame",
                       "id": "f36",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 276,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -856,9 +856,9 @@
                         {
                           "type": "text",
                           "id": "t37",
-                          "name": "单元格文字",
-                          "content": "屏幕",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Display",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -877,7 +877,7 @@
                     {
                       "type": "frame",
                       "id": "f38",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -897,8 +897,8 @@
                         {
                           "type": "text",
                           "id": "t39",
-                          "name": "单元格文字",
-                          "content": "60Hz 标准屏",
+                          "name": "cell-text",
+                          "content": "60Hz standard",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
@@ -918,7 +918,7 @@
                     {
                       "type": "frame",
                       "id": "f40",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -938,8 +938,8 @@
                         {
                           "type": "text",
                           "id": "t41",
-                          "name": "单元格文字",
-                          "content": "120Hz 高刷",
+                          "name": "cell-text",
+                          "content": "120Hz high refresh",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 700,
@@ -961,7 +961,7 @@
                 {
                   "type": "frame",
                   "id": "f49",
-                  "name": "参数行",
+                  "name": "spec-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -972,7 +972,7 @@
                     {
                       "type": "frame",
                       "id": "f43",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 276,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -992,9 +992,9 @@
                         {
                           "type": "text",
                           "id": "t44",
-                          "name": "单元格文字",
-                          "content": "视频剪辑",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Video editing",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -1013,7 +1013,7 @@
                     {
                       "type": "frame",
                       "id": "f45",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1033,8 +1033,8 @@
                         {
                           "type": "text",
                           "id": "t46",
-                          "name": "单元格文字",
-                          "content": "1080p 顺畅",
+                          "name": "cell-text",
+                          "content": "Smooth 1080p",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
@@ -1054,7 +1054,7 @@
                     {
                       "type": "frame",
                       "id": "f47",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1074,8 +1074,8 @@
                         {
                           "type": "text",
                           "id": "t48",
-                          "name": "单元格文字",
-                          "content": "4K 不掉帧",
+                          "name": "cell-text",
+                          "content": "4K, no dropped frames",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 700,
@@ -1097,7 +1097,7 @@
                 {
                   "type": "frame",
                   "id": "f56",
-                  "name": "参数行",
+                  "name": "spec-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1108,7 +1108,7 @@
                     {
                       "type": "frame",
                       "id": "f50",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 276,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1128,9 +1128,9 @@
                         {
                           "type": "text",
                           "id": "t51",
-                          "name": "单元格文字",
-                          "content": "接口",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Ports",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -1149,7 +1149,7 @@
                     {
                       "type": "frame",
                       "id": "f52",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1169,8 +1169,8 @@
                         {
                           "type": "text",
                           "id": "t53",
-                          "name": "单元格文字",
-                          "content": "2 个 USB-C",
+                          "name": "cell-text",
+                          "content": "2× USB-C",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
@@ -1190,7 +1190,7 @@
                     {
                       "type": "frame",
                       "id": "f54",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1210,8 +1210,8 @@
                         {
                           "type": "text",
                           "id": "t55",
-                          "name": "单元格文字",
-                          "content": "3 口带读卡器",
+                          "name": "cell-text",
+                          "content": "3 ports + card reader",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 700,
@@ -1233,7 +1233,7 @@
                 {
                   "type": "frame",
                   "id": "f63",
-                  "name": "参数行",
+                  "name": "spec-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1244,7 +1244,7 @@
                     {
                       "type": "frame",
                       "id": "f57",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 276,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1264,9 +1264,9 @@
                         {
                           "type": "text",
                           "id": "t58",
-                          "name": "单元格文字",
-                          "content": "满载噪音",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Noise under load",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -1285,7 +1285,7 @@
                     {
                       "type": "frame",
                       "id": "f59",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1305,8 +1305,8 @@
                         {
                           "type": "text",
                           "id": "t60",
-                          "name": "单元格文字",
-                          "content": "几乎听不见",
+                          "name": "cell-text",
+                          "content": "Nearly silent",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 700,
@@ -1326,7 +1326,7 @@
                     {
                       "type": "frame",
                       "id": "f61",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1346,8 +1346,8 @@
                         {
                           "type": "text",
                           "id": "t62",
-                          "name": "单元格文字",
-                          "content": "能听见风扇",
+                          "name": "cell-text",
+                          "content": "Audible fan",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
@@ -1369,7 +1369,7 @@
                 {
                   "type": "frame",
                   "id": "f70",
-                  "name": "参数行",
+                  "name": "spec-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1380,7 +1380,7 @@
                     {
                       "type": "frame",
                       "id": "f64",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 276,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1400,9 +1400,9 @@
                         {
                           "type": "text",
                           "id": "t65",
-                          "name": "单元格文字",
-                          "content": "到手价",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Price",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -1421,7 +1421,7 @@
                     {
                       "type": "frame",
                       "id": "f66",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1441,8 +1441,8 @@
                         {
                           "type": "text",
                           "id": "t67",
-                          "name": "单元格文字",
-                          "content": "8,999 元",
+                          "name": "cell-text",
+                          "content": "$1,299",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 700,
@@ -1462,7 +1462,7 @@
                     {
                       "type": "frame",
                       "id": "f68",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1482,8 +1482,8 @@
                         {
                           "type": "text",
                           "id": "t69",
-                          "name": "单元格文字",
-                          "content": "13,499 元",
+                          "name": "cell-text",
+                          "content": "$1,999",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
@@ -1505,7 +1505,7 @@
                 {
                   "type": "frame",
                   "id": "f77",
-                  "name": "参数行",
+                  "name": "spec-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1516,7 +1516,7 @@
                     {
                       "type": "frame",
                       "id": "f71",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 276,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1536,9 +1536,9 @@
                         {
                           "type": "text",
                           "id": "t72",
-                          "name": "单元格文字",
-                          "content": "保修",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "cell-text",
+                          "content": "Warranty",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 600,
                           "fill": [
@@ -1557,7 +1557,7 @@
                     {
                       "type": "frame",
                       "id": "f73",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1577,8 +1577,8 @@
                         {
                           "type": "text",
                           "id": "t74",
-                          "name": "单元格文字",
-                          "content": "一年质保",
+                          "name": "cell-text",
+                          "content": "1 year",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 400,
@@ -1598,7 +1598,7 @@
                     {
                       "type": "frame",
                       "id": "f75",
-                      "name": "单元格",
+                      "name": "cell",
                       "width": 330,
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1618,8 +1618,8 @@
                         {
                           "type": "text",
                           "id": "t76",
-                          "name": "单元格文字",
-                          "content": "两年含上门",
+                          "name": "cell-text",
+                          "content": "2 years, on-site",
                           "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 700,
@@ -1651,7 +1651,7 @@
         {
           "type": "frame",
           "id": "f98",
-          "name": "04 结论",
+          "name": "04-verdict",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1668,7 +1668,7 @@
             {
               "type": "frame",
               "id": "f96",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1679,7 +1679,7 @@
                 {
                   "type": "rectangle",
                   "id": "r93",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -1692,9 +1692,9 @@
                 {
                   "type": "text",
                   "id": "t94",
-                  "name": "区块标题",
-                  "content": "四比四",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Four all",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -1711,9 +1711,9 @@
                 {
                   "type": "text",
                   "id": "t95",
-                  "name": "区块说明",
-                  "content": "指标数不是答案，你的使用方式才是。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-intro",
+                  "content": "The scorecard isn't the answer. How you work is.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -1732,7 +1732,7 @@
             {
               "type": "frame",
               "id": "f86",
-              "name": "比分行",
+              "name": "score-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1743,7 +1743,7 @@
                 {
                   "type": "text",
                   "id": "t84",
-                  "name": "比分",
+                  "name": "score",
                   "content": "4 : 4",
                   "fontFamily": "Inter",
                   "fontSize": 88,
@@ -1762,9 +1762,9 @@
                 {
                   "type": "text",
                   "id": "t85",
-                  "name": "比分说明",
-                  "content": "轻装派赢四行，生产力赢四行——这张表不替你选。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "score-note",
+                  "content": "Four rows each. The table won't choose for you.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -1783,7 +1783,7 @@
             {
               "type": "frame",
               "id": "f97",
-              "name": "建议行",
+              "name": "recommendation-row",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1794,7 +1794,7 @@
                 {
                   "type": "frame",
                   "id": "f89",
-                  "name": "建议",
+                  "name": "recommendation",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1814,9 +1814,9 @@
                     {
                       "type": "text",
                       "id": "t87",
-                      "name": "选谁",
-                      "content": "选 轻装派",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "pick",
+                      "content": "Pick Travel",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 700,
                       "fill": [
@@ -1833,9 +1833,9 @@
                     {
                       "type": "text",
                       "id": "t88",
-                      "name": "理由",
-                      "content": "常在路上，写字和开会为主。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "reason",
+                      "content": "Always on the move, mostly writing and calls.",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 400,
                       "fill": [
@@ -1863,7 +1863,7 @@
                 {
                   "type": "frame",
                   "id": "f92",
-                  "name": "建议",
+                  "name": "recommendation",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -1883,9 +1883,9 @@
                     {
                       "type": "text",
                       "id": "t90",
-                      "name": "选谁",
-                      "content": "选 生产力",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "pick",
+                      "content": "Pick Workhorse",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 700,
                       "fill": [
@@ -1902,9 +1902,9 @@
                     {
                       "type": "text",
                       "id": "t91",
-                      "name": "理由",
-                      "content": "固定工位，剪片调色，外设多。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "reason",
+                      "content": "Fixed desk, editing and grading, lots of peripherals.",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 400,
                       "fill": [
@@ -1936,7 +1936,7 @@
         {
           "type": "frame",
           "id": "f103",
-          "name": "05 页脚",
+          "name": "05-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1956,9 +1956,9 @@
             {
               "type": "text",
               "id": "t99",
-              "name": "结语",
-              "content": "比参数之前，先写下你每天真正在做的三件事。",
-              "fontFamily": "Noto Sans SC",
+              "name": "closing-line",
+              "content": "Before comparing specs, write down three things you actually do every day.",
+              "fontFamily": "Inter",
               "fontSize": 30,
               "fontWeight": 600,
               "fill": [
@@ -1975,7 +1975,7 @@
             {
               "type": "frame",
               "id": "f102",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1986,9 +1986,9 @@
                 {
                   "type": "text",
                   "id": "t100",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -2005,9 +2005,9 @@
                 {
                   "type": "text",
                   "id": "t101",
-                  "name": "更新说明",
-                  "content": "每周一张能照着抄的对比表",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "A copy-ready comparison every week",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

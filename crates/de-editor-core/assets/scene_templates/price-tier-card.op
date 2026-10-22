@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "促销价格卡 · 霓虹骑楼 1:1",
+  "name": "promo-price-card-neon-arcade-1x1",
   "variables": {
     "c-night": {
       "type": "color",
@@ -55,7 +55,7 @@
     {
       "type": "frame",
       "id": "f30",
-      "name": "促销价格卡 · 霓虹骑楼",
+      "name": "promo-price-card-neon-arcade",
       "width": 1080,
       "height": 1080,
       "layout": "none",
@@ -70,7 +70,7 @@
         {
           "type": "frame",
           "id": "f1",
-          "name": "价目卡 · 正文",
+          "name": "price-card-content",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -88,7 +88,7 @@
             {
               "type": "frame",
               "id": "f4",
-              "name": "卡头",
+              "name": "card-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -99,9 +99,9 @@
                 {
                   "type": "text",
                   "id": "t2",
-                  "name": "店招",
-                  "content": "夜灯咖啡 · 价目",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "shop-sign",
+                  "content": "Night Light Coffee · Menu",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 500,
                   "fill": [
@@ -118,9 +118,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "主张",
-                  "content": "开到最后一班地铁",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "headline",
+                  "content": "Open till the last train",
+                  "fontFamily": "Inter",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -139,7 +139,7 @@
             {
               "type": "frame",
               "id": "f23",
-              "name": "价目表",
+              "name": "price-table",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -150,7 +150,7 @@
                 {
                   "type": "frame",
                   "id": "f7",
-                  "name": "表头",
+                  "name": "table-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -167,9 +167,9 @@
                     {
                       "type": "text",
                       "id": "t5",
-                      "name": "表头 · 档位",
-                      "content": "档位",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "table-header-option",
+                      "content": "Option",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -186,9 +186,9 @@
                     {
                       "type": "text",
                       "id": "t6",
-                      "name": "表头 · 价格",
-                      "content": "价格",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "table-header-price",
+                      "content": "Price",
+                      "fontFamily": "Inter",
                       "fontSize": 32,
                       "fontWeight": 600,
                       "fill": [
@@ -208,7 +208,7 @@
                 {
                   "type": "frame",
                   "id": "f12",
-                  "name": "价目行 1",
+                  "name": "price-row-1",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -228,7 +228,7 @@
                     {
                       "type": "frame",
                       "id": "f10",
-                      "name": "档位单元",
+                      "name": "option-cell",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -239,9 +239,9 @@
                         {
                           "type": "text",
                           "id": "t8",
-                          "name": "档位名",
-                          "content": "单次体验",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-name",
+                          "content": "Single visit",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 600,
                           "fill": [
@@ -258,9 +258,9 @@
                         {
                           "type": "text",
                           "id": "t9",
-                          "name": "档位说明",
-                          "content": "含一杯手冲与一份点心",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-note",
+                          "content": "One pour-over and a pastry",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -279,8 +279,8 @@
                     {
                       "type": "text",
                       "id": "t11",
-                      "name": "价格",
-                      "content": "¥ 38",
+                      "name": "price",
+                      "content": "$ 6",
                       "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 700,
@@ -301,7 +301,7 @@
                 {
                   "type": "frame",
                   "id": "f17",
-                  "name": "价目行 2",
+                  "name": "price-row-2",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -321,7 +321,7 @@
                     {
                       "type": "frame",
                       "id": "f15",
-                      "name": "档位单元",
+                      "name": "option-cell",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -332,9 +332,9 @@
                         {
                           "type": "text",
                           "id": "t13",
-                          "name": "档位名",
-                          "content": "五次联票",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-name",
+                          "content": "5-visit pass",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 600,
                           "fill": [
@@ -351,9 +351,9 @@
                         {
                           "type": "text",
                           "id": "t14",
-                          "name": "档位说明",
-                          "content": "折合每次 32，三个月内有效",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-note",
+                          "content": "$5 per visit, valid for 3 months",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -372,8 +372,8 @@
                     {
                       "type": "text",
                       "id": "t16",
-                      "name": "价格",
-                      "content": "¥ 160",
+                      "name": "price",
+                      "content": "$ 25",
                       "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 700,
@@ -394,7 +394,7 @@
                 {
                   "type": "frame",
                   "id": "f22",
-                  "name": "价目行 3",
+                  "name": "price-row-3",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -414,7 +414,7 @@
                     {
                       "type": "frame",
                       "id": "f20",
-                      "name": "档位单元",
+                      "name": "option-cell",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -425,9 +425,9 @@
                         {
                           "type": "text",
                           "id": "t18",
-                          "name": "档位名",
-                          "content": "月度畅饮",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-name",
+                          "content": "Monthly unlimited",
+                          "fontFamily": "Inter",
                           "fontSize": 48,
                           "fontWeight": 600,
                           "fill": [
@@ -444,9 +444,9 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "档位说明",
-                          "content": "每日一杯，不限品类",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "option-note",
+                          "content": "One drink a day, any drink",
+                          "fontFamily": "Inter",
                           "fontSize": 32,
                           "fontWeight": 400,
                           "fill": [
@@ -465,8 +465,8 @@
                     {
                       "type": "text",
                       "id": "t21",
-                      "name": "价格",
-                      "content": "¥ 288",
+                      "name": "price",
+                      "content": "$ 45",
                       "fontFamily": "Inter",
                       "fontSize": 48,
                       "fontWeight": 700,
@@ -489,9 +489,9 @@
             {
               "type": "text",
               "id": "t24",
-              "name": "备注",
-              "content": "价格含税，不与其他优惠同享。",
-              "fontFamily": "Noto Sans SC",
+              "name": "footnote",
+              "content": "Prices include tax. Can't be combined with other offers.",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 400,
               "fill": [
@@ -510,7 +510,7 @@
         {
           "type": "frame",
           "id": "f31",
-          "name": "促销价格卡 · 霓虹骑楼 · 装饰",
+          "name": "promo-price-card-neon-arcade-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -519,7 +519,7 @@
             {
               "type": "rectangle",
               "id": "r25",
-              "name": "外散射",
+              "name": "outer-glow",
               "width": 211,
               "height": 1600,
               "cornerRadius": 640,
@@ -547,7 +547,7 @@
             {
               "type": "rectangle",
               "id": "r26",
-              "name": "灯管",
+              "name": "neon-tube",
               "width": 96,
               "height": 640,
               "cornerRadius": 320,
@@ -567,7 +567,7 @@
             {
               "type": "rectangle",
               "id": "r27",
-              "name": "外散射",
+              "name": "outer-glow",
               "width": 792,
               "height": 20,
               "cornerRadius": 8,
@@ -595,7 +595,7 @@
             {
               "type": "rectangle",
               "id": "r28",
-              "name": "灯管",
+              "name": "neon-tube",
               "width": 360,
               "height": 8,
               "cornerRadius": 4,
@@ -615,7 +615,7 @@
             {
               "type": "rectangle",
               "id": "r29",
-              "name": "雨夜反光",
+              "name": "rainy-night-reflection",
               "width": 1080,
               "height": 200,
               "fill": [

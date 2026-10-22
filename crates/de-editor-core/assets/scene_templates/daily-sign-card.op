@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "日签卡 · 园林框景 3:4",
+  "name": "daily-card-garden-frame-3x4",
   "variables": {
     "c-limewash": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f18",
-      "name": "日签卡 · 园林框景",
+      "name": "daily-card-garden-frame",
       "width": 1080,
       "height": 1440,
       "layout": "none",
@@ -54,7 +54,7 @@
         {
           "type": "frame",
           "id": "f1",
-          "name": "日签卡 · 正文",
+          "name": "daily-card-body",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -72,9 +72,9 @@
             {
               "type": "text",
               "id": "t2",
-              "name": "刊头",
-              "content": "一日一见 · 园记",
-              "fontFamily": "Noto Sans SC",
+              "name": "masthead",
+              "content": "One Day, One View · Garden Notes",
+              "fontFamily": "Inter",
               "fontSize": 32,
               "fontWeight": 500,
               "fill": [
@@ -91,7 +91,7 @@
             {
               "type": "frame",
               "id": "f3",
-              "name": "洞内",
+              "name": "window-inner",
               "width": 530,
               "height": "fit_content",
               "layout": "vertical",
@@ -102,7 +102,7 @@
                 {
                   "type": "text",
                   "id": "t4",
-                  "name": "日期",
+                  "name": "date",
                   "content": "08 / 09",
                   "fontFamily": "Inter",
                   "fontSize": 48,
@@ -121,9 +121,9 @@
                 {
                   "type": "text",
                   "id": "t5",
-                  "name": "金句",
-                  "content": "先留白，\n再住人。",
-                  "fontFamily": "Songti SC",
+                  "name": "quote",
+                  "content": "Leave room,\nthen live.",
+                  "fontFamily": "Noto Serif",
                   "fontSize": 88,
                   "fontWeight": 700,
                   "fill": [
@@ -143,7 +143,7 @@
             {
               "type": "frame",
               "id": "f7",
-              "name": "落款",
+              "name": "sign-off",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "vertical",
@@ -154,9 +154,9 @@
                 {
                   "type": "text",
                   "id": "t6",
-                  "name": "署名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 32,
                   "fontWeight": 500,
                   "fill": [
@@ -178,7 +178,7 @@
         {
           "type": "frame",
           "id": "f19",
-          "name": "日签卡 · 园林框景 · 装饰",
+          "name": "daily-card-garden-frame-decor",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "none",
@@ -187,7 +187,7 @@
             {
               "type": "path",
               "id": "p8",
-              "name": "檐线 1",
+              "name": "eave-line-1",
               "d": "M0 44 Q140 0 280 44",
               "width": 280,
               "height": 44,
@@ -207,7 +207,7 @@
             {
               "type": "path",
               "id": "p9",
-              "name": "檐线 2",
+              "name": "eave-line-2",
               "d": "M0 44 Q140 0 280 44",
               "width": 280,
               "height": 44,
@@ -227,7 +227,7 @@
             {
               "type": "path",
               "id": "p10",
-              "name": "檐线 3",
+              "name": "eave-line-3",
               "d": "M0 44 Q140 0 280 44",
               "width": 280,
               "height": 44,
@@ -247,7 +247,7 @@
             {
               "type": "path",
               "id": "p11",
-              "name": "漏窗 · 六角",
+              "name": "lattice-window-hex",
               "d": "M350 0 L700 175 L700 525 L350 700 L0 525 L0 175 Z",
               "width": 700,
               "height": 700,
@@ -267,7 +267,7 @@
             {
               "type": "rectangle",
               "id": "r12",
-              "name": "苔 1",
+              "name": "moss-1",
               "width": 6,
               "height": 6,
               "fill": [
@@ -283,7 +283,7 @@
             {
               "type": "rectangle",
               "id": "r13",
-              "name": "苔 2",
+              "name": "moss-2",
               "width": 6,
               "height": 6,
               "fill": [
@@ -299,7 +299,7 @@
             {
               "type": "rectangle",
               "id": "r14",
-              "name": "苔 3",
+              "name": "moss-3",
               "width": 6,
               "height": 6,
               "fill": [
@@ -315,7 +315,7 @@
             {
               "type": "rectangle",
               "id": "r15",
-              "name": "苔 4",
+              "name": "moss-4",
               "width": 6,
               "height": 6,
               "fill": [
@@ -331,7 +331,7 @@
             {
               "type": "rectangle",
               "id": "r16",
-              "name": "苔 5",
+              "name": "moss-5",
               "width": 6,
               "height": 6,
               "fill": [
@@ -347,7 +347,7 @@
             {
               "type": "rectangle",
               "id": "r17",
-              "name": "苔 6",
+              "name": "moss-6",
               "width": 6,
               "height": 6,
               "fill": [

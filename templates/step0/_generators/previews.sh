@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# 渲染场景模板的预览图：每帧一张（scale 2）+ 整页拼合总览（scale 1）
-# 卡片缩略图由 scene_preview_cards.py 从这些渲染产物再烤一层。
+# Render scene-template previews: one PNG per frame (scale 2) plus a whole-page
+# overview (scale 1). scene_preview_cards.py bakes the card thumbnails from these.
 set -euo pipefail
-R=/Users/fini/workspace/design-editor
+R=$(cd "$(dirname "$0")/../../.." && pwd)
 BIN=$R/target/release/design-editor
 OUT=$R/templates/step0/previews
 TMP=$(mktemp -d)
@@ -71,14 +71,14 @@ else
 fi
 
 for t in "${templates[@]}"; do
-  # The documents themselves are shipped assets (embedded by the scene
-  # template catalogue); this directory keeps only the generators and the
-  # full-resolution renders they produce.
+  # The documents themselves are the shipped assets and the source of truth
+  # (embedded by the scene template catalogue); edit them directly. This
+  # directory keeps only the full-resolution renders made from them.
   op=$R/crates/de-editor-core/assets/scene_templates/$t.op
   rm -rf "$TMP/$t"; mkdir -p "$TMP/$t"
   DESIGN_EDITOR_RENDER_MARGIN=0 "$BIN" --render-shots "$op" "$TMP/$t" 2 >/dev/null
 
-  # 按 .op 里 children 的顺序把 <node-id>.png 重命名成 <模板>-NN.png
+  # Rename <node-id>.png to <template>-NN.png in the .op children order
   python3 - "$op" "$TMP/$t" "$OUT" "$t" <<'PY'
 import json, shutil, sys, pathlib
 op, shots, out, name = sys.argv[1:5]
@@ -92,18 +92,22 @@ for i, n in enumerate(kids, 1):
     print(f"  {dst.name}  <- {n['name']}")
 PY
 
-  # 多帧模板再导一张整页总览（export_item 把所有顶层 frame 合成一张画布）
+  # Multi-frame templates also get a whole-page overview (export_item composites
+  # every top-level frame onto one canvas)
   n=$(python3 -c "import json;d=json.load(open('$op'));print(len(d.get('children') or d['pages'][0]['children']))")
   if [ "$n" -gt 1 ]; then
+    # `--mcp` writes the document back to disk normalised, so it must never
+    # open the shipped asset: work on a throwaway copy.
+    cp "$op" "$TMP/$t/doc.op"
     printf '%s\n' \
       '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
       '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"export_item","arguments":{"itemId":"page-1","format":"png","scale":1}}}' \
-    | "$BIN" --mcp "$op" 2>/dev/null | tail -1 \
+    | "$BIN" --mcp "$TMP/$t/doc.op" 2>/dev/null | tail -1 \
     | python3 -c "
 import sys, json, base64
 t = json.loads(json.load(sys.stdin)['result']['content'][0]['text'])
 open('$OUT/$t-overview.png','wb').write(base64.b64decode(t['bytes_base64']))
-print('  $t-overview.png  <- 五帧拼合')
+print('  $t-overview.png  <- all frames')
 "
   fi
 done

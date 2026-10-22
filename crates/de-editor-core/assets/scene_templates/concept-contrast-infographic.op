@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "概念对比科普长图",
+  "name": "concept-contrast-infographic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -51,7 +51,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "概念对比科普长图",
+      "name": "concept-contrast-infographic",
       "width": 1080,
       "height": 3060,
       "layout": "vertical",
@@ -67,7 +67,7 @@
         {
           "type": "frame",
           "id": "f6",
-          "name": "01 页头",
+          "name": "01-page-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -89,7 +89,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "胶囊",
+              "name": "pill",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -110,9 +110,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "胶囊文字",
-                  "content": "科普 · 一图讲清",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "pill-text",
+                  "content": "Explainer · At a glance",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 600,
                   "fill": [
@@ -131,9 +131,9 @@
             {
               "type": "text",
               "id": "t4",
-              "name": "主标题",
-              "content": "降噪耳机\n降的到底是什么",
-              "fontFamily": "Noto Sans SC",
+              "name": "main-title",
+              "content": "Noise cancelling:\nwhat does it cancel?",
+              "fontFamily": "Inter",
               "fontSize": 76,
               "fontWeight": 700,
               "fill": [
@@ -150,9 +150,9 @@
             {
               "type": "text",
               "id": "t5",
-              "name": "副标题",
-              "content": "两个常被混着说的词，其实是两套完全不同的做法。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Two terms people use interchangeably are really two completely different methods.",
+              "fontFamily": "Inter",
               "fontSize": 28,
               "fontWeight": 400,
               "fill": [
@@ -171,7 +171,7 @@
         {
           "type": "frame",
           "id": "f10",
-          "name": "02 结论",
+          "name": "02-conclusion",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -188,7 +188,7 @@
             {
               "type": "frame",
               "id": "f9",
-              "name": "结论面板",
+              "name": "conclusion-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -209,9 +209,9 @@
                 {
                   "type": "text",
                   "id": "t7",
-                  "name": "结论",
-                  "content": "它降的是低频、连续、稳定的噪声。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "conclusion",
+                  "content": "It cancels low-frequency, steady, continuous noise.",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -228,9 +228,9 @@
                 {
                   "type": "text",
                   "id": "t8",
-                  "name": "结论支撑",
-                  "content": "所以在地铁和飞机上最管用，在开放办公室里最不管用 —— 人说话是高频突发声，它基本抵消不掉。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "conclusion-support",
+                  "content": "That's why it shines on subways and planes and struggles in open offices: speech is high-pitched and bursty, and it barely touches it.",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 400,
                   "fill": [
@@ -251,7 +251,7 @@
         {
           "type": "frame",
           "id": "f28",
-          "name": "03 定义",
+          "name": "03-definitions",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -268,7 +268,7 @@
             {
               "type": "frame",
               "id": "f14",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -279,7 +279,7 @@
                 {
                   "type": "rectangle",
                   "id": "r11",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -293,9 +293,9 @@
                 {
                   "type": "text",
                   "id": "t12",
-                  "name": "区块标题",
-                  "content": "先分清是哪两个东西",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "First, tell the two apart",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -312,9 +312,9 @@
                 {
                   "type": "text",
                   "id": "t13",
-                  "name": "区块说明",
-                  "content": "一句话说清各自的做法，剩下的差异都是从这一句推出来的。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "One sentence on how each works. Every other difference follows from it.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -333,7 +333,7 @@
             {
               "type": "frame",
               "id": "f27",
-              "name": "定义组",
+              "name": "definition-group",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -344,7 +344,7 @@
                 {
                   "type": "frame",
                   "id": "f20",
-                  "name": "定义卡",
+                  "name": "definition-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -365,7 +365,7 @@
                     {
                       "type": "frame",
                       "id": "f18",
-                      "name": "定义卡头",
+                      "name": "definition-card-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -376,7 +376,7 @@
                         {
                           "type": "icon_font",
                           "id": "i15",
-                          "name": "图标",
+                          "name": "icon",
                           "iconFontName": "waves",
                           "width": 40,
                           "height": 40,
@@ -390,9 +390,9 @@
                         {
                           "type": "text",
                           "id": "t16",
-                          "name": "概念名",
-                          "content": "主动降噪",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "concept-name",
+                          "content": "Active cancelling",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 700,
                           "fill": [
@@ -409,7 +409,7 @@
                         {
                           "type": "text",
                           "id": "t17",
-                          "name": "西文名",
+                          "name": "latin-name",
                           "content": "ANC",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -430,9 +430,9 @@
                     {
                       "type": "text",
                       "id": "t19",
-                      "name": "原理",
-                      "content": "麦克风先录下环境噪声，喇叭再放一段反相声波把它抵消掉。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "mechanism",
+                      "content": "Mics record the ambient noise, then the speakers play an inverted wave to cancel it out.",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 400,
                       "fill": [
@@ -451,7 +451,7 @@
                 {
                   "type": "frame",
                   "id": "f26",
-                  "name": "定义卡",
+                  "name": "definition-card",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -472,7 +472,7 @@
                     {
                       "type": "frame",
                       "id": "f24",
-                      "name": "定义卡头",
+                      "name": "definition-card-header",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -483,7 +483,7 @@
                         {
                           "type": "icon_font",
                           "id": "i21",
-                          "name": "图标",
+                          "name": "icon",
                           "iconFontName": "shield",
                           "width": 40,
                           "height": 40,
@@ -497,9 +497,9 @@
                         {
                           "type": "text",
                           "id": "t22",
-                          "name": "概念名",
-                          "content": "被动隔音",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "concept-name",
+                          "content": "Passive isolation",
+                          "fontFamily": "Inter",
                           "fontSize": 40,
                           "fontWeight": 700,
                           "fill": [
@@ -516,7 +516,7 @@
                         {
                           "type": "text",
                           "id": "t23",
-                          "name": "西文名",
+                          "name": "latin-name",
                           "content": "Passive",
                           "fontFamily": "Inter",
                           "fontSize": 24,
@@ -537,9 +537,9 @@
                     {
                       "type": "text",
                       "id": "t25",
-                      "name": "原理",
-                      "content": "靠耳罩和耳塞的材料把声音挡在外面，不通电也一直在起作用。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "mechanism",
+                      "content": "Ear cups and tips physically block sound. It works even with the power off.",
+                      "fontFamily": "Inter",
                       "fontSize": 28,
                       "fontWeight": 400,
                       "fill": [
@@ -571,7 +571,7 @@
         {
           "type": "frame",
           "id": "f59",
-          "name": "04 维度",
+          "name": "04-dimensions",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -588,7 +588,7 @@
             {
               "type": "frame",
               "id": "f58",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -599,7 +599,7 @@
                 {
                   "type": "rectangle",
                   "id": "r55",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -613,9 +613,9 @@
                 {
                   "type": "text",
                   "id": "t56",
-                  "name": "区块标题",
-                  "content": "三个维度，一行一句",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Three dimensions, one line each",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -632,9 +632,9 @@
                 {
                   "type": "text",
                   "id": "t57",
-                  "name": "区块说明",
-                  "content": "左边是主动降噪，右边是被动隔音。每格只放一句能验证的话。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "Left is active cancelling, right is passive isolation. Each cell holds one claim you can test.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -653,7 +653,7 @@
             {
               "type": "frame",
               "id": "f54",
-              "name": "维度表",
+              "name": "dimension-table",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -674,7 +674,7 @@
                 {
                   "type": "frame",
                   "id": "f32",
-                  "name": "表头",
+                  "name": "table-header",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -685,9 +685,9 @@
                     {
                       "type": "text",
                       "id": "t29",
-                      "name": "A 名",
-                      "content": "主动降噪",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "a-name",
+                      "content": "Active cancelling",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -704,7 +704,7 @@
                     {
                       "type": "rectangle",
                       "id": "r30",
-                      "name": "表头竖线占位",
+                      "name": "header-divider-slot",
                       "width": 2,
                       "height": 2,
                       "fill": []
@@ -712,9 +712,9 @@
                     {
                       "type": "text",
                       "id": "t31",
-                      "name": "B 名",
-                      "content": "被动隔音",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "b-name",
+                      "content": "Passive isolation",
+                      "fontFamily": "Inter",
                       "fontSize": 30,
                       "fontWeight": 700,
                       "fill": [
@@ -733,7 +733,7 @@
                 {
                   "type": "rectangle",
                   "id": "r33",
-                  "name": "表头下线",
+                  "name": "header-underline",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -746,7 +746,7 @@
                 {
                   "type": "frame",
                   "id": "f40",
-                  "name": "维度块",
+                  "name": "dimension-block",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -757,9 +757,9 @@
                     {
                       "type": "text",
                       "id": "t38",
-                      "name": "维度名",
-                      "content": "擅长哪种噪声",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "dimension-name",
+                      "content": "Best against",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 600,
                       "fill": [
@@ -776,7 +776,7 @@
                     {
                       "type": "frame",
                       "id": "f37",
-                      "name": "维度两栏",
+                      "name": "dimension-columns",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -787,9 +787,9 @@
                         {
                           "type": "text",
                           "id": "t34",
-                          "name": "A 侧",
-                          "content": "低频连续：引擎、空调、地铁",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "a-side",
+                          "content": "Low hum: engines, AC, trains",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -806,7 +806,7 @@
                         {
                           "type": "rectangle",
                           "id": "r35",
-                          "name": "竖分隔",
+                          "name": "vertical-divider",
                           "width": 2,
                           "height": "fill_container",
                           "fill": [
@@ -819,9 +819,9 @@
                         {
                           "type": "text",
                           "id": "t36",
-                          "name": "B 侧",
-                          "content": "高频突发：键盘、餐具、人声",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "b-side",
+                          "content": "Sudden: typing, dishes, voices",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -840,7 +840,7 @@
                     {
                       "type": "rectangle",
                       "id": "r39",
-                      "name": "维度分割线",
+                      "name": "dimension-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -855,7 +855,7 @@
                 {
                   "type": "frame",
                   "id": "f47",
-                  "name": "维度块",
+                  "name": "dimension-block",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -866,9 +866,9 @@
                     {
                       "type": "text",
                       "id": "t45",
-                      "name": "维度名",
-                      "content": "代价是什么",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "dimension-name",
+                      "content": "The trade-off",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 600,
                       "fill": [
@@ -885,7 +885,7 @@
                     {
                       "type": "frame",
                       "id": "f44",
-                      "name": "维度两栏",
+                      "name": "dimension-columns",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -896,9 +896,9 @@
                         {
                           "type": "text",
                           "id": "t41",
-                          "name": "A 侧",
-                          "content": "要电、有轻微底噪，一部分人戴着会耳压不适。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "a-side",
+                          "content": "Needs power, adds slight hiss, and some feel ear pressure.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -915,7 +915,7 @@
                         {
                           "type": "rectangle",
                           "id": "r42",
-                          "name": "竖分隔",
+                          "name": "vertical-divider",
                           "width": 2,
                           "height": "fill_container",
                           "fill": [
@@ -928,9 +928,9 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "B 侧",
-                          "content": "要压耳，戴久了会闷热夹头，夏天尤其明显。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "b-side",
+                          "content": "Needs a tight seal; gets hot and pinchy, especially in summer.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -949,7 +949,7 @@
                     {
                       "type": "rectangle",
                       "id": "r46",
-                      "name": "维度分割线",
+                      "name": "dimension-divider",
                       "width": "fill_container",
                       "height": 2,
                       "fill": [
@@ -964,7 +964,7 @@
                 {
                   "type": "frame",
                   "id": "f53",
-                  "name": "维度块",
+                  "name": "dimension-block",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -975,9 +975,9 @@
                     {
                       "type": "text",
                       "id": "t52",
-                      "name": "维度名",
-                      "content": "怎么当场验证",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "dimension-name",
+                      "content": "How to test it on the spot",
+                      "fontFamily": "Inter",
                       "fontSize": 26,
                       "fontWeight": 600,
                       "fill": [
@@ -994,7 +994,7 @@
                     {
                       "type": "frame",
                       "id": "f51",
-                      "name": "维度两栏",
+                      "name": "dimension-columns",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "horizontal",
@@ -1005,9 +1005,9 @@
                         {
                           "type": "text",
                           "id": "t48",
-                          "name": "A 侧",
-                          "content": "按一次开关，轰鸣明显变小。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "a-side",
+                          "content": "Flip the switch once. The rumble drops noticeably.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1024,7 +1024,7 @@
                         {
                           "type": "rectangle",
                           "id": "r49",
-                          "name": "竖分隔",
+                          "name": "vertical-divider",
                           "width": 2,
                           "height": "fill_container",
                           "fill": [
@@ -1037,9 +1037,9 @@
                         {
                           "type": "text",
                           "id": "t50",
-                          "name": "B 侧",
-                          "content": "先别开电源，戴上安静下来的那部分就是隔音。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "b-side",
+                          "content": "Don't power on yet. Whatever goes quiet when you put them on is isolation.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1073,7 +1073,7 @@
         {
           "type": "frame",
           "id": "f75",
-          "name": "05 选择",
+          "name": "05-choice",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1090,7 +1090,7 @@
             {
               "type": "frame",
               "id": "f74",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1101,7 +1101,7 @@
                 {
                   "type": "rectangle",
                   "id": "r71",
-                  "name": "强调短线",
+                  "name": "accent-rule",
                   "width": 72,
                   "height": 8,
                   "cornerRadius": 999,
@@ -1115,9 +1115,9 @@
                 {
                   "type": "text",
                   "id": "t72",
-                  "name": "区块标题",
-                  "content": "那你该买哪个",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "So which should you buy?",
+                  "fontFamily": "Inter",
                   "fontSize": 46,
                   "fontWeight": 700,
                   "fill": [
@@ -1134,9 +1134,9 @@
                 {
                   "type": "text",
                   "id": "t73",
-                  "name": "区块说明",
-                  "content": "按自己一天里待得最久的那个场景选，不按参数表选。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "Pick by where you spend most of your day, not by the spec sheet.",
+                  "fontFamily": "Inter",
                   "fontSize": 27,
                   "fontWeight": 400,
                   "fill": [
@@ -1155,7 +1155,7 @@
             {
               "type": "frame",
               "id": "f70",
-              "name": "判据面板",
+              "name": "criteria-panel",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1176,7 +1176,7 @@
                 {
                   "type": "frame",
                   "id": "f64",
-                  "name": "判据项",
+                  "name": "criterion-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1187,7 +1187,7 @@
                     {
                       "type": "icon_font",
                       "id": "i60",
-                      "name": "箭头",
+                      "name": "arrow",
                       "iconFontName": "corner-down-right",
                       "width": 28,
                       "height": 28,
@@ -1201,7 +1201,7 @@
                     {
                       "type": "frame",
                       "id": "f63",
-                      "name": "判据文案",
+                      "name": "criterion-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1212,9 +1212,9 @@
                         {
                           "type": "text",
                           "id": "t61",
-                          "name": "场景",
-                          "content": "通勤一小时以上、常坐地铁和飞机",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "scenario",
+                          "content": "Commuting an hour or more, often by subway or plane",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 600,
                           "fill": [
@@ -1231,9 +1231,9 @@
                         {
                           "type": "text",
                           "id": "t62",
-                          "name": "动作",
-                          "content": "优先看主动降噪，这是它的主场。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action-step",
+                          "content": "Go active first. This is where it shines.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1254,7 +1254,7 @@
                 {
                   "type": "frame",
                   "id": "f69",
-                  "name": "判据项",
+                  "name": "criterion-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1265,7 +1265,7 @@
                     {
                       "type": "icon_font",
                       "id": "i65",
-                      "name": "箭头",
+                      "name": "arrow",
                       "iconFontName": "corner-down-right",
                       "width": 28,
                       "height": 28,
@@ -1279,7 +1279,7 @@
                     {
                       "type": "frame",
                       "id": "f68",
-                      "name": "判据文案",
+                      "name": "criterion-copy",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -1290,9 +1290,9 @@
                         {
                           "type": "text",
                           "id": "t66",
-                          "name": "场景",
-                          "content": "在开放办公室里想挡人声",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "scenario",
+                          "content": "Trying to block voices in an open office",
+                          "fontFamily": "Inter",
                           "fontSize": 28,
                           "fontWeight": 600,
                           "fill": [
@@ -1309,9 +1309,9 @@
                         {
                           "type": "text",
                           "id": "t67",
-                          "name": "动作",
-                          "content": "先换耳塞尺寸，把耳道封住比开降噪管用。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "action-step",
+                          "content": "Try a different ear-tip size first. Sealing the ear canal beats turning on noise cancelling.",
+                          "fontFamily": "Inter",
                           "fontSize": 27,
                           "fontWeight": 400,
                           "fill": [
@@ -1336,7 +1336,7 @@
         {
           "type": "frame",
           "id": "f80",
-          "name": "06 页脚",
+          "name": "06-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1356,9 +1356,9 @@
             {
               "type": "text",
               "id": "t76",
-              "name": "口径",
-              "content": "以消费级头戴与入耳耳机的常见实现为准，职业听力防护另有标准。",
-              "fontFamily": "Noto Sans SC",
+              "name": "scope-note",
+              "content": "Based on typical consumer over-ear and in-ear headphones. Professional hearing protection follows separate standards.",
+              "fontFamily": "Inter",
               "fontSize": 24,
               "fontWeight": 400,
               "fill": [
@@ -1375,7 +1375,7 @@
             {
               "type": "frame",
               "id": "f79",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -1386,9 +1386,9 @@
                 {
                   "type": "text",
                   "id": "t77",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 600,
                   "fill": [
@@ -1405,9 +1405,9 @@
                 {
                   "type": "text",
                   "id": "t78",
-                  "name": "更新说明",
-                  "content": "每周一张讲清一个概念",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "One concept explained every week",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 400,
                   "fill": [

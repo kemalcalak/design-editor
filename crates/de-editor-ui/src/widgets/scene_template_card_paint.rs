@@ -13,7 +13,7 @@
 //!   same rounded clip. Two decks at thumbnail size are frequently
 //!   indistinguishable in layout and obviously different in colour, so the
 //!   band is often the discriminating information on the whole card.
-//! - **The caption is one row plus a chip.** Title left, `N 页 · W×H` right,
+//! - **The caption is one row plus a chip.** Title left, `Pages: N · W×H` right,
 //!   scene chip beneath. The two wrapped summary lines this replaced cost
 //!   every card 32 px of permanent height to answer a question the user has
 //!   about one card at a time — so the summary moved onto the preview, on
@@ -228,7 +228,7 @@ impl SceneTemplatePanel<'_> {
         }
     }
 
-    /// Title on the left, `6 页 · 1920×1080` right-aligned on the same
+    /// Title on the left, `Pages: 6 · 1920×1080` right-aligned on the same
     /// baseline, scene chip beneath.
     ///
     /// One row because the two answer different halves of the same question —
@@ -273,11 +273,11 @@ impl SceneTemplatePanel<'_> {
         self.paint_scene_chip(cx, Point2D::new(left, top + 34.0), template);
     }
 
-    /// "PPT" / "卡片" — which shelf of the catalogue this came off.
+    /// "Slides" / "Card" — which shelf of the catalogue this came off.
     ///
     /// The same vocabulary as the filter row directly above the grid, so a
     /// chip on a card and a chip in the row are the one word: a user who
-    /// notices "信息图" on a card knows exactly which filter narrows to more
+    /// notices "Infographic" on a card knows exactly which filter narrows to more
     /// like it.
     fn paint_scene_chip(
         &self,
@@ -372,7 +372,7 @@ impl SceneTemplatePanel<'_> {
         self.paint_card_action(
             cx,
             add,
-            self.t("sceneTemplate.card.addToCanvas", "加入画布"),
+            self.t("sceneTemplate.card.addToCanvas", "Add to canvas"),
             true,
             card_add_hover_token(index),
         );
@@ -380,7 +380,7 @@ impl SceneTemplatePanel<'_> {
             self.paint_card_action(
                 cx,
                 rect,
-                self.t("sceneTemplate.card.generateFrom", "以此生成"),
+                self.t("sceneTemplate.card.generateFrom", "Generate from this"),
                 false,
                 card_generate_hover_token(index),
             );
@@ -458,19 +458,19 @@ impl SceneTemplatePanel<'_> {
         block.origin.y + block.size.y
     }
 
-    /// "6 页 · 1920×1080" — what distinguishes a deck from a poster at a
+    /// "Pages: 6 · 1920×1080" — what distinguishes a deck from a poster at a
     /// glance, which is the decision the card exists to support.
     pub(super) fn metadata(&self, template: &SceneTemplateDefinition) -> String {
         self.frames_metadata(template.frames, template.frame_width, template.frame_height)
     }
 
-    /// "N 页 · W×H" — the same sentence for a saved template's card.
+    /// "Pages: N · W×H" — the same sentence for a saved template's card.
     fn frames_metadata(&self, frames: u16, width: u32, height: u32) -> String {
         let count = frames.to_string();
         let pages =
             de_i18n::translate_with(self.locale, "sceneTemplate.frames", &[("count", &count)]);
         let pages = if pages == "sceneTemplate.frames" {
-            format!("{count} 页")
+            format!("Pages: {count}")
         } else {
             pages
         };
@@ -586,7 +586,7 @@ impl SceneTemplatePanel<'_> {
         );
     }
 
-    /// Title on the left, `N 页 · W×H` right-aligned on the same baseline.
+    /// Title on the left, `Pages: N · W×H` right-aligned on the same baseline.
     /// No scene chip beneath: a saved template carries no scene.
     fn paint_user_caption(&self, cx: &mut PaintCx<'_>, card: Rect, template: &UserTemplateCard) {
         let top = Self::card_caption_top(card);

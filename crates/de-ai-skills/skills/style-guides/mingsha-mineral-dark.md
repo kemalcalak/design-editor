@@ -6,7 +6,7 @@ platform: card
 
 ## Style Scope
 
-This guide is self-contained and written for **Chinese social cards** — a series of 6-10 fixed-canvas pages read by swiping on a phone, not a scrolling page and not an app screen. Apply its palette, texture language, spacing, and type treatments only when this exact guide is selected; do not borrow dashboard, terminal, luxury, food, or landing-page patterns into it. Treat unnamed layout frames as structural by default: no fill, stroke, cornerRadius, or shadow unless the node is deliberately a plaster panel, a mineral block, a caption rail, or a foil-ruled corner mark. Hierarchy comes from the mineral colours and the size jump, not from wrapper shells.
+This guide is self-contained and written for **social cards** — a series of 6-10 fixed-canvas pages read by swiping on a phone, not a scrolling page and not an app screen. Apply its palette, texture language, spacing, and type treatments only when this exact guide is selected; do not borrow dashboard, terminal, luxury, food, or landing-page patterns into it. Treat unnamed layout frames as structural by default: no fill, stroke, cornerRadius, or shadow unless the node is deliberately a plaster panel, a mineral block, a caption rail, or a foil-ruled corner mark. Hierarchy comes from the mineral colours and the size jump, not from wrapper shells.
 
 ## Style Summary
 
@@ -14,7 +14,7 @@ A cave-wall ground with pigment sitting on top of it. The page is `#21120B` — 
 
 The signature device is **flaking**. Three to five irregular polygons in the next plaster tone up sit on the ground, edges deliberately off-grid, as if the top layer had come away. They are the only shape in the system allowed to ignore the column grid, and no two of them may be the same path — a repeated flake stops being erosion and becomes wallpaper.
 
-Type splits cleanly. A旧字形 Ming display face carries every headline at 88px and up; a thin screen-optimised sans carries everything below it. The display face is what a cave inscription panel would look like if it were set rather than brushed: square-shouldered, high-contrast strokes, no calligraphic gesture at all. Body copy is shell white at three brightnesses rather than three greys, because the warm ochre ground turns a cold grey secondary tone muddy within one step.
+Type splits cleanly. A high-contrast inscriptional serif carries every headline at 88px and up; a thin screen-optimised sans carries everything below it. The display face is what a cave inscription panel would look like if it were set rather than brushed: square-shouldered, high-contrast strokes, no calligraphic gesture at all. Body copy is shell white at three brightnesses rather than three greys, because the warm ochre ground turns a cold grey secondary tone muddy within one step.
 
 Colour is rationed hard. **Three pigments exist; at most two appear on any one page, and each appears at most twice.** Gold leaf is not a pigment — it is a 1px rule around a corner mark, and it never touches text below 64px.
 
@@ -25,7 +25,7 @@ Key aesthetics:
 - **Opaque pigment, never wash**: mineral colour covers; it does not bleed, blur, or fade into the ground
 - **Two pigments per page, twice each**: the third pigment on a page is a bug
 - **Shell white at three brightnesses**: `#EFEBE2` / `#BBB7AD` / `#8A867D`, warm-tinted so they sit on ochre
-- **Ming display over thin sans**: 88px and up is the Ming face; below it, nothing but the sans
+- **Inscriptional serif over thin sans**: 88px and up is the serif; below it, nothing but the sans
 - **Gold as a rule, never as ink**: 1px foil frames on corner marks only
 - **Grit at the edges**: 8-14 four-pixel squares of pigment scattered within 40px of a colour block's edge
 - **No brush, anywhere**: no ink bleed, no dry-brush, no calligraphic stroke — this is applied pigment, not painting
@@ -87,19 +87,19 @@ At most two pigments appear on one card, each at most twice. Malachite is capped
 
 | Role             | Family                              | Range        | Usage                                                       |
 | ---------------- | ----------------------------------- | ------------ | ----------------------------------------------------------- |
-| Display          | Newsreader, 汇文明朝体, Noto Serif SC | 88px and up  | Every headline, pull quote, and large numeral                |
-| Body / Interface | Geist, LXGW Neo XiHei, Noto Sans SC | 64px and down | Body, captions, list rows, annotations, page numbers       |
+| Display          | Newsreader, DM Serif Display        | 88px and up  | Every headline, pull quote, and large numeral                |
+| Body / Interface | Geist, DM Sans                      | 64px and down | Body, captions, list rows, annotations, page numbers       |
 | Data / Numerals  | Geist                               | any          | All figures, with tabular-nums on                           |
 
-The Latin face is written **first** in every fallback chain. Font-family matching is per-character: Latin faces carry no CJK codepoints, so Han characters fall through to the Chinese face automatically. Written the other way round, the Chinese face's own mediocre Latin swallows every digit and letter and the paired Latin face never appears.
+Every fallback chain ends in a generic family (`serif` / `sans-serif`), and figures always come from Geist with `tabular-nums` on — never from the display serif's old-style digits, which bob above and below the baseline at 120px.
 
-汇文明朝体 is free for commercial use; Newsreader, Geist, LXGW Neo XiHei, and the Noto faces are OFL.
+Newsreader, DM Serif Display, Geist, and DM Sans are all OFL.
 
 ### Type Scale
 
 | Level      | Size  | Font    | Weight | Tracking | Line Height | Usage                                     |
 | ---------- | ----- | ------- | ------ | -------- | ----------- | ----------------------------------------- |
-| Display XL | 168px | Display | 700    | -0.01em  | 1.05        | Cover headline, 2-6 characters            |
+| Display XL | 168px | Display | 700    | -0.01em  | 1.05        | Cover headline, 1-3 short words           |
 | Display L  | 120px | Display | 700    | -0.01em  | 1.10        | Cover headline, large numerals            |
 | Display    | 88px  | Display | 700    | 0        | 1.15        | Interior headline, pull quote             |
 | Title 1    | 64px  | Body    | 700    | 0        | 1.25        | Page title                                |
@@ -120,18 +120,18 @@ The Latin face is written **first** in every fallback chain. Font-family matchin
 | Semibold | 600   | Section titles, the emphasised run inside a body line                |
 | Bold     | 700   | Page titles and every display line                                    |
 
-Chinese has no italic. Never set `font-style: italic` on Han characters — the browser synthesises a skew that deforms the strokes. Emphasis moves to weight (400 → 600), to a pigment underscore, or to a change of face. Turn synthesis off globally.
+No italic in body copy — Geist ships no italic, and the browser synthesises a skew that deforms the strokes. Emphasis moves to weight (400 → 600), to a pigment underscore, or to a change of face (Newsreader's designed italic, at display sizes only). Turn synthesis off globally.
 
 ### Line Height
 
 - Display (88-168px): 1.05-1.15 — the larger the size, the tighter
 - Titles (48-64px): 1.25-1.30
-- Body (36-40px): **1.70** — Chinese runs about 0.2 higher than the Latin equivalent because Han glyphs fill the em box top to bottom, and 1.5 leaves them touching
+- Body (36-40px): **1.70** — looser than a printed default because light text on a dark ground blooms optically, and at 1.5 the ascenders of one line crowd the descenders of the next
 - Captions: 1.50
 
 ### Letter Spacing
 
-Body 0.02em; titles 24-64px at 0; display above 88px at -0.01em. **Never apply the Latin display convention of -0.05em to Han text** — Han glyphs are already full-width by design, and negative tracking at that scale collides strokes.
+Body 0.02em; titles 24-64px at 0; display above 88px at -0.01em. **Never apply the poster convention of -0.05em to the display serif** — its hairline serifs already nearly touch at 120px, and negative tracking at that scale collides them. Body measure caps at **about 45 characters** per line on the card column; a single word stranded on a paragraph's last line is rebroken or rewritten.
 
 ## Spacing System
 

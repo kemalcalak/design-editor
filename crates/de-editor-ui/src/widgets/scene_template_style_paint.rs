@@ -34,7 +34,7 @@ impl SceneTemplatePanel<'_> {
         if cards.is_empty() {
             self.paint_text(
                 cx,
-                self.t("assetCenter.style.empty", "没有匹配的风格"),
+                self.t("assetCenter.style.empty", "No matching styles"),
                 Point2D::new(viewport.origin.x + 4.0, viewport.origin.y + 28.0),
                 12.0,
                 self.theme.muted_foreground,
@@ -52,9 +52,9 @@ impl SceneTemplatePanel<'_> {
             self.paint_text(
                 cx,
                 if header.is_user {
-                    self.t("assetCenter.style.mine", "我的风格")
+                    self.t("assetCenter.style.mine", "My styles")
                 } else {
-                    self.t("assetCenter.style.builtIn", "内置风格")
+                    self.t("assetCenter.style.builtIn", "Built-in styles")
                 },
                 Point2D::new(
                     header.rect.origin.x,
@@ -155,7 +155,7 @@ impl SceneTemplatePanel<'_> {
         let text_x = rect.origin.x + INSET;
         let text_w = rect.size.x - INSET * 2.0;
 
-        let pin_label = self.t("assetCenter.style.pinned", "已钉住");
+        let pin_label = self.t("assetCenter.style.pinned", "Pinned");
         let pin_w = if is_pinned {
             estimated_text_width(pin_label, PIN_SIZE) + 8.0
         } else {

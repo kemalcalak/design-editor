@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "手工 DIY 图解长图",
+  "name": "diy-blueprint-long-graphic",
   "variables": {
     "c-bg": {
       "type": "color",
@@ -39,7 +39,7 @@
     {
       "type": "frame",
       "id": "f1",
-      "name": "手工图解长图",
+      "name": "diy-guide-long-graphic",
       "width": 1080,
       "height": 4016,
       "layout": "vertical",
@@ -55,7 +55,7 @@
         {
           "type": "frame",
           "id": "f18",
-          "name": "01 页头",
+          "name": "01-header",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -77,7 +77,7 @@
             {
               "type": "frame",
               "id": "f2",
-              "name": "标签",
+              "name": "tag",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -98,9 +98,9 @@
                 {
                   "type": "text",
                   "id": "t3",
-                  "name": "标签文字",
-                  "content": "木工 · 入门件",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "tag-text",
+                  "content": "Woodwork · Beginner",
+                  "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": 700,
                   "fill": [
@@ -119,9 +119,9 @@
             {
               "type": "text",
               "id": "t15",
-              "name": "主标题",
-              "content": "一张边几\n六步做完",
-              "fontFamily": "Noto Sans SC",
+              "name": "title",
+              "content": "A side table\nin six steps",
+              "fontFamily": "Inter",
               "fontSize": 74,
               "fontWeight": 700,
               "fill": [
@@ -138,9 +138,9 @@
             {
               "type": "text",
               "id": "t16",
-              "name": "副标题",
-              "content": "先把材料按规格备齐，剩下六步就只是重复：量、锯、钻、拧。",
-              "fontFamily": "Noto Sans SC",
+              "name": "subtitle",
+              "content": "Get every material to spec first. The six steps are then just repeats: measure, saw, drill, screw.",
+              "fontFamily": "Inter",
               "fontSize": 27,
               "fontWeight": 400,
               "fill": [
@@ -157,7 +157,7 @@
             {
               "type": "frame",
               "id": "f17",
-              "name": "总览条",
+              "name": "overview-bar",
               "width": "fit_content",
               "height": "fit_content",
               "layout": "horizontal",
@@ -168,7 +168,7 @@
                 {
                   "type": "frame",
                   "id": "f6",
-                  "name": "总览项",
+                  "name": "overview-item",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -179,9 +179,9 @@
                     {
                       "type": "text",
                       "id": "t4",
-                      "name": "总览名",
-                      "content": "难度",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "overview-label",
+                      "content": "Difficulty",
+                      "fontFamily": "Inter",
                       "fontSize": 21,
                       "fontWeight": 400,
                       "fill": [
@@ -198,9 +198,9 @@
                     {
                       "type": "text",
                       "id": "t5",
-                      "name": "总览值",
-                      "content": "入门",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "overview-value",
+                      "content": "Beginner",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -219,7 +219,7 @@
                 {
                   "type": "rectangle",
                   "id": "r7",
-                  "name": "竖分隔",
+                  "name": "vertical-divider",
                   "width": 2,
                   "height": 46,
                   "fill": [
@@ -232,7 +232,7 @@
                 {
                   "type": "frame",
                   "id": "f10",
-                  "name": "总览项",
+                  "name": "overview-item",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -243,9 +243,9 @@
                     {
                       "type": "text",
                       "id": "t8",
-                      "name": "总览名",
-                      "content": "需要电动工具",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "overview-label",
+                      "content": "Power tools",
+                      "fontFamily": "Inter",
                       "fontSize": 21,
                       "fontWeight": 400,
                       "fill": [
@@ -262,9 +262,9 @@
                     {
                       "type": "text",
                       "id": "t9",
-                      "name": "总览值",
-                      "content": "只要电钻",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "overview-value",
+                      "content": "Drill only",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -283,7 +283,7 @@
                 {
                   "type": "rectangle",
                   "id": "r11",
-                  "name": "竖分隔",
+                  "name": "vertical-divider",
                   "width": 2,
                   "height": 46,
                   "fill": [
@@ -296,7 +296,7 @@
                 {
                   "type": "frame",
                   "id": "f14",
-                  "name": "总览项",
+                  "name": "overview-item",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "vertical",
@@ -307,9 +307,9 @@
                     {
                       "type": "text",
                       "id": "t12",
-                      "name": "总览名",
-                      "content": "成品尺寸",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "overview-label",
+                      "content": "Finished size",
+                      "fontFamily": "Inter",
                       "fontSize": 21,
                       "fontWeight": 400,
                       "fill": [
@@ -326,9 +326,9 @@
                     {
                       "type": "text",
                       "id": "t13",
-                      "name": "总览值",
+                      "name": "overview-value",
                       "content": "60×40×35 cm",
-                      "fontFamily": "Noto Sans SC",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -351,7 +351,7 @@
         {
           "type": "frame",
           "id": "f66",
-          "name": "02 材料",
+          "name": "02-materials",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -368,7 +368,7 @@
             {
               "type": "frame",
               "id": "f64",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -379,7 +379,7 @@
                 {
                   "type": "rectangle",
                   "id": "r61",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -392,9 +392,9 @@
                 {
                   "type": "text",
                   "id": "t62",
-                  "name": "区块标题",
-                  "content": "先备料，别边做边买",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Prep first, don't shop mid-build",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -411,9 +411,9 @@
                 {
                   "type": "text",
                   "id": "t63",
-                  "name": "区块说明",
-                  "content": "规格照抄就行；差 5 mm 也能装，差 5 cm 装不上。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "Copy the specs. Off by 5 mm still fits; off by 5 cm won't.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -432,7 +432,7 @@
             {
               "type": "frame",
               "id": "f48",
-              "name": "材料表",
+              "name": "material-table",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -452,7 +452,7 @@
                 {
                   "type": "frame",
                   "id": "f23",
-                  "name": "材料行",
+                  "name": "material-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -467,7 +467,7 @@
                     {
                       "type": "frame",
                       "id": "f21",
-                      "name": "材料名区",
+                      "name": "material-name-area",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -478,9 +478,9 @@
                         {
                           "type": "text",
                           "id": "t19",
-                          "name": "材料名",
-                          "content": "松木条",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "material-name",
+                          "content": "Pine battens",
+                          "fontFamily": "Inter",
                           "fontSize": 29,
                           "fontWeight": 600,
                           "fill": [
@@ -497,9 +497,9 @@
                         {
                           "type": "text",
                           "id": "t20",
-                          "name": "材料规格",
-                          "content": "2×4 cm 截面 · 长 60 cm",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "material-spec",
+                          "content": "2×4 cm section · 60 cm long",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -518,9 +518,9 @@
                     {
                       "type": "text",
                       "id": "t22",
-                      "name": "材料数量",
-                      "content": "4 根",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "material-qty",
+                      "content": "4 pcs",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -540,7 +540,7 @@
                 {
                   "type": "rectangle",
                   "id": "r24",
-                  "name": "横分隔",
+                  "name": "horizontal-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -553,7 +553,7 @@
                 {
                   "type": "frame",
                   "id": "f29",
-                  "name": "材料行",
+                  "name": "material-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -568,7 +568,7 @@
                     {
                       "type": "frame",
                       "id": "f27",
-                      "name": "材料名区",
+                      "name": "material-name-area",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -579,9 +579,9 @@
                         {
                           "type": "text",
                           "id": "t25",
-                          "name": "材料名",
-                          "content": "胶合板",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "material-name",
+                          "content": "Plywood",
+                          "fontFamily": "Inter",
                           "fontSize": 29,
                           "fontWeight": 600,
                           "fill": [
@@ -598,9 +598,9 @@
                         {
                           "type": "text",
                           "id": "t26",
-                          "name": "材料规格",
-                          "content": "厚 12 mm · 40×30 cm",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "material-spec",
+                          "content": "12 mm thick · 40×30 cm",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -619,9 +619,9 @@
                     {
                       "type": "text",
                       "id": "t28",
-                      "name": "材料数量",
-                      "content": "1 块",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "material-qty",
+                      "content": "1 sheet",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -641,7 +641,7 @@
                 {
                   "type": "rectangle",
                   "id": "r30",
-                  "name": "横分隔",
+                  "name": "horizontal-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -654,7 +654,7 @@
                 {
                   "type": "frame",
                   "id": "f35",
-                  "name": "材料行",
+                  "name": "material-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -669,7 +669,7 @@
                     {
                       "type": "frame",
                       "id": "f33",
-                      "name": "材料名区",
+                      "name": "material-name-area",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -680,9 +680,9 @@
                         {
                           "type": "text",
                           "id": "t31",
-                          "name": "材料名",
-                          "content": "自攻螺丝",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "material-name",
+                          "content": "Wood screws",
+                          "fontFamily": "Inter",
                           "fontSize": 29,
                           "fontWeight": 600,
                           "fill": [
@@ -699,9 +699,9 @@
                         {
                           "type": "text",
                           "id": "t32",
-                          "name": "材料规格",
+                          "name": "material-spec",
                           "content": "3.5×35 mm",
-                          "fontFamily": "Noto Sans SC",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -720,9 +720,9 @@
                     {
                       "type": "text",
                       "id": "t34",
-                      "name": "材料数量",
-                      "content": "16 颗",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "material-qty",
+                      "content": "16 pcs",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -742,7 +742,7 @@
                 {
                   "type": "rectangle",
                   "id": "r36",
-                  "name": "横分隔",
+                  "name": "horizontal-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -755,7 +755,7 @@
                 {
                   "type": "frame",
                   "id": "f41",
-                  "name": "材料行",
+                  "name": "material-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -770,7 +770,7 @@
                     {
                       "type": "frame",
                       "id": "f39",
-                      "name": "材料名区",
+                      "name": "material-name-area",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -781,9 +781,9 @@
                         {
                           "type": "text",
                           "id": "t37",
-                          "name": "材料名",
-                          "content": "砂纸",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "material-name",
+                          "content": "Sandpaper",
+                          "fontFamily": "Inter",
                           "fontSize": 29,
                           "fontWeight": 600,
                           "fill": [
@@ -800,9 +800,9 @@
                         {
                           "type": "text",
                           "id": "t38",
-                          "name": "材料规格",
-                          "content": "180 目 + 320 目",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "material-spec",
+                          "content": "180 + 320 grit",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -821,9 +821,9 @@
                     {
                       "type": "text",
                       "id": "t40",
-                      "name": "材料数量",
-                      "content": "各 1 张",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "material-qty",
+                      "content": "1 each",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -843,7 +843,7 @@
                 {
                   "type": "rectangle",
                   "id": "r42",
-                  "name": "横分隔",
+                  "name": "horizontal-divider",
                   "width": "fill_container",
                   "height": 2,
                   "fill": [
@@ -856,7 +856,7 @@
                 {
                   "type": "frame",
                   "id": "f47",
-                  "name": "材料行",
+                  "name": "material-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -871,7 +871,7 @@
                     {
                       "type": "frame",
                       "id": "f45",
-                      "name": "材料名区",
+                      "name": "material-name-area",
                       "width": "fill_container",
                       "height": "fit_content",
                       "layout": "vertical",
@@ -882,9 +882,9 @@
                         {
                           "type": "text",
                           "id": "t43",
-                          "name": "材料名",
-                          "content": "木蜡油",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "material-name",
+                          "content": "Hardwax oil",
+                          "fontFamily": "Inter",
                           "fontSize": 29,
                           "fontWeight": 600,
                           "fill": [
@@ -901,9 +901,9 @@
                         {
                           "type": "text",
                           "id": "t44",
-                          "name": "材料规格",
-                          "content": "透明色 · 100 ml",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "material-spec",
+                          "content": "Clear · 100 ml",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -922,9 +922,9 @@
                     {
                       "type": "text",
                       "id": "t46",
-                      "name": "材料数量",
-                      "content": "1 罐",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "material-qty",
+                      "content": "1 can",
+                      "fontFamily": "Inter",
                       "fontSize": 27,
                       "fontWeight": 700,
                       "fill": [
@@ -956,7 +956,7 @@
             {
               "type": "frame",
               "id": "f65",
-              "name": "工具条",
+              "name": "tool-bar",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -967,7 +967,7 @@
                 {
                   "type": "frame",
                   "id": "f51",
-                  "name": "工具",
+                  "name": "tool",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -982,7 +982,7 @@
                     {
                       "type": "icon_font",
                       "id": "i49",
-                      "name": "工具图标",
+                      "name": "tool-icon",
                       "iconFontName": "hammer",
                       "width": 24,
                       "height": 24,
@@ -996,9 +996,9 @@
                     {
                       "type": "text",
                       "id": "t50",
-                      "name": "工具名",
-                      "content": "手锯",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tool-name",
+                      "content": "Hand saw",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 600,
                       "fill": [
@@ -1027,7 +1027,7 @@
                 {
                   "type": "frame",
                   "id": "f54",
-                  "name": "工具",
+                  "name": "tool",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1042,7 +1042,7 @@
                     {
                       "type": "icon_font",
                       "id": "i52",
-                      "name": "工具图标",
+                      "name": "tool-icon",
                       "iconFontName": "drill",
                       "width": 24,
                       "height": 24,
@@ -1056,9 +1056,9 @@
                     {
                       "type": "text",
                       "id": "t53",
-                      "name": "工具名",
-                      "content": "电钻",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tool-name",
+                      "content": "Drill",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 600,
                       "fill": [
@@ -1087,7 +1087,7 @@
                 {
                   "type": "frame",
                   "id": "f57",
-                  "name": "工具",
+                  "name": "tool",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1102,7 +1102,7 @@
                     {
                       "type": "icon_font",
                       "id": "i55",
-                      "name": "工具图标",
+                      "name": "tool-icon",
                       "iconFontName": "ruler",
                       "width": 24,
                       "height": 24,
@@ -1116,9 +1116,9 @@
                     {
                       "type": "text",
                       "id": "t56",
-                      "name": "工具名",
-                      "content": "卷尺",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tool-name",
+                      "content": "Tape",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 600,
                       "fill": [
@@ -1147,7 +1147,7 @@
                 {
                   "type": "frame",
                   "id": "f60",
-                  "name": "工具",
+                  "name": "tool",
                   "width": "fit_content",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1162,7 +1162,7 @@
                     {
                       "type": "icon_font",
                       "id": "i58",
-                      "name": "工具图标",
+                      "name": "tool-icon",
                       "iconFontName": "pencil-ruler",
                       "width": 24,
                       "height": 24,
@@ -1176,9 +1176,9 @@
                     {
                       "type": "text",
                       "id": "t59",
-                      "name": "工具名",
-                      "content": "角尺",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "tool-name",
+                      "content": "Square",
+                      "fontFamily": "Inter",
                       "fontSize": 24,
                       "fontWeight": 600,
                       "fill": [
@@ -1211,7 +1211,7 @@
         {
           "type": "frame",
           "id": "f123",
-          "name": "03 步骤",
+          "name": "03-steps",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -1228,7 +1228,7 @@
             {
               "type": "frame",
               "id": "f121",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1239,7 +1239,7 @@
                 {
                   "type": "rectangle",
                   "id": "r118",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -1252,9 +1252,9 @@
                 {
                   "type": "text",
                   "id": "t119",
-                  "name": "区块标题",
-                  "content": "六步，按顺序来",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "Six steps, in order",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -1271,9 +1271,9 @@
                 {
                   "type": "text",
                   "id": "t120",
-                  "name": "区块说明",
-                  "content": "每一步做完都停下来量一次，错了这时候还能救。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "Measure again after every step; mistakes are still fixable then.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -1292,7 +1292,7 @@
             {
               "type": "frame",
               "id": "f122",
-              "name": "步骤网格",
+              "name": "step-grid",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -1303,7 +1303,7 @@
                 {
                   "type": "frame",
                   "id": "f115",
-                  "name": "步骤排",
+                  "name": "step-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1314,7 +1314,7 @@
                     {
                       "type": "frame",
                       "id": "f74",
-                      "name": "步骤卡",
+                      "name": "step-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1334,7 +1334,7 @@
                         {
                           "type": "frame",
                           "id": "f67",
-                          "name": "步骤图位",
+                          "name": "step-image-slot",
                           "width": "fill_container",
                           "height": 230,
                           "layout": "vertical",
@@ -1352,7 +1352,7 @@
                             {
                               "type": "icon_font",
                               "id": "i68",
-                              "name": "图位图标",
+                              "name": "image-slot-icon",
                               "iconFontName": "camera",
                               "width": 32,
                               "height": 32,
@@ -1366,9 +1366,9 @@
                             {
                               "type": "text",
                               "id": "t69",
-                              "name": "图位提示",
-                              "content": "画线特写",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "image-slot-hint",
+                              "content": "Marking close-up",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -1388,7 +1388,7 @@
                         {
                           "type": "frame",
                           "id": "f72",
-                          "name": "步骤头",
+                          "name": "step-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1399,7 +1399,7 @@
                             {
                               "type": "text",
                               "id": "t70",
-                              "name": "步骤序号",
+                              "name": "step-number",
                               "content": "01",
                               "fontFamily": "Inter",
                               "fontSize": 30,
@@ -1418,9 +1418,9 @@
                             {
                               "type": "text",
                               "id": "t71",
-                              "name": "步骤名",
-                              "content": "量好再画线",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "step-name",
+                              "content": "Measure, then mark",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 600,
                               "fill": [
@@ -1439,9 +1439,9 @@
                         {
                           "type": "text",
                           "id": "t73",
-                          "name": "步骤说明",
-                          "content": "四根木条都量成 60 cm，用角尺画满一圈再锯。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Cut all four battens to 60 cm; square a line all the way round first.",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -1470,7 +1470,7 @@
                     {
                       "type": "frame",
                       "id": "f82",
-                      "name": "步骤卡",
+                      "name": "step-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1490,7 +1490,7 @@
                         {
                           "type": "frame",
                           "id": "f75",
-                          "name": "步骤图位",
+                          "name": "step-image-slot",
                           "width": "fill_container",
                           "height": 230,
                           "layout": "vertical",
@@ -1508,7 +1508,7 @@
                             {
                               "type": "icon_font",
                               "id": "i76",
-                              "name": "图位图标",
+                              "name": "image-slot-icon",
                               "iconFontName": "camera",
                               "width": 32,
                               "height": 32,
@@ -1522,9 +1522,9 @@
                             {
                               "type": "text",
                               "id": "t77",
-                              "name": "图位提示",
-                              "content": "锯切中",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "image-slot-hint",
+                              "content": "Sawing",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -1544,7 +1544,7 @@
                         {
                           "type": "frame",
                           "id": "f80",
-                          "name": "步骤头",
+                          "name": "step-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1555,7 +1555,7 @@
                             {
                               "type": "text",
                               "id": "t78",
-                              "name": "步骤序号",
+                              "name": "step-number",
                               "content": "02",
                               "fontFamily": "Inter",
                               "fontSize": 30,
@@ -1574,9 +1574,9 @@
                             {
                               "type": "text",
                               "id": "t79",
-                              "name": "步骤名",
-                              "content": "锯口留在线外",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "step-name",
+                              "content": "Saw outside the line",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 600,
                               "fill": [
@@ -1595,9 +1595,9 @@
                         {
                           "type": "text",
                           "id": "t81",
-                          "name": "步骤说明",
-                          "content": "锯片压着线的外侧走，锯完刚好到线。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Run the blade along the outer edge so the cut lands on the line.",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -1628,7 +1628,7 @@
                 {
                   "type": "frame",
                   "id": "f116",
-                  "name": "步骤排",
+                  "name": "step-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1639,7 +1639,7 @@
                     {
                       "type": "frame",
                       "id": "f90",
-                      "name": "步骤卡",
+                      "name": "step-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1659,7 +1659,7 @@
                         {
                           "type": "frame",
                           "id": "f83",
-                          "name": "步骤图位",
+                          "name": "step-image-slot",
                           "width": "fill_container",
                           "height": 230,
                           "layout": "vertical",
@@ -1677,7 +1677,7 @@
                             {
                               "type": "icon_font",
                               "id": "i84",
-                              "name": "图位图标",
+                              "name": "image-slot-icon",
                               "iconFontName": "camera",
                               "width": 32,
                               "height": 32,
@@ -1691,9 +1691,9 @@
                             {
                               "type": "text",
                               "id": "t85",
-                              "name": "图位提示",
-                              "content": "钻孔位置",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "image-slot-hint",
+                              "content": "Hole positions",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -1713,7 +1713,7 @@
                         {
                           "type": "frame",
                           "id": "f88",
-                          "name": "步骤头",
+                          "name": "step-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1724,7 +1724,7 @@
                             {
                               "type": "text",
                               "id": "t86",
-                              "name": "步骤序号",
+                              "name": "step-number",
                               "content": "03",
                               "fontFamily": "Inter",
                               "fontSize": 30,
@@ -1743,9 +1743,9 @@
                             {
                               "type": "text",
                               "id": "t87",
-                              "name": "步骤名",
-                              "content": "先打引导孔",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "step-name",
+                              "content": "Drill pilot holes",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 600,
                               "fill": [
@@ -1764,9 +1764,9 @@
                         {
                           "type": "text",
                           "id": "t89",
-                          "name": "步骤说明",
-                          "content": "先打 3 mm 孔，直接上螺丝会裂。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Drill 3 mm first; screws alone will split it.",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -1795,7 +1795,7 @@
                     {
                       "type": "frame",
                       "id": "f98",
-                      "name": "步骤卡",
+                      "name": "step-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1815,7 +1815,7 @@
                         {
                           "type": "frame",
                           "id": "f91",
-                          "name": "步骤图位",
+                          "name": "step-image-slot",
                           "width": "fill_container",
                           "height": 230,
                           "layout": "vertical",
@@ -1833,7 +1833,7 @@
                             {
                               "type": "icon_font",
                               "id": "i92",
-                              "name": "图位图标",
+                              "name": "image-slot-icon",
                               "iconFontName": "camera",
                               "width": 32,
                               "height": 32,
@@ -1847,9 +1847,9 @@
                             {
                               "type": "text",
                               "id": "t93",
-                              "name": "图位提示",
-                              "content": "拧螺丝",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "image-slot-hint",
+                              "content": "Driving screws",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -1869,7 +1869,7 @@
                         {
                           "type": "frame",
                           "id": "f96",
-                          "name": "步骤头",
+                          "name": "step-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -1880,7 +1880,7 @@
                             {
                               "type": "text",
                               "id": "t94",
-                              "name": "步骤序号",
+                              "name": "step-number",
                               "content": "04",
                               "fontFamily": "Inter",
                               "fontSize": 30,
@@ -1899,9 +1899,9 @@
                             {
                               "type": "text",
                               "id": "t95",
-                              "name": "步骤名",
-                              "content": "拧螺丝固定框",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "step-name",
+                              "content": "Screw the frame",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 600,
                               "fill": [
@@ -1920,9 +1920,9 @@
                         {
                           "type": "text",
                           "id": "t97",
-                          "name": "步骤说明",
-                          "content": "对角线交替拧，一次只拧到八成紧。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Alternate diagonally, only 80% tight each pass.",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -1953,7 +1953,7 @@
                 {
                   "type": "frame",
                   "id": "f117",
-                  "name": "步骤排",
+                  "name": "step-row",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -1964,7 +1964,7 @@
                     {
                       "type": "frame",
                       "id": "f106",
-                      "name": "步骤卡",
+                      "name": "step-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -1984,7 +1984,7 @@
                         {
                           "type": "frame",
                           "id": "f99",
-                          "name": "步骤图位",
+                          "name": "step-image-slot",
                           "width": "fill_container",
                           "height": 230,
                           "layout": "vertical",
@@ -2002,7 +2002,7 @@
                             {
                               "type": "icon_font",
                               "id": "i100",
-                              "name": "图位图标",
+                              "name": "image-slot-icon",
                               "iconFontName": "camera",
                               "width": 32,
                               "height": 32,
@@ -2016,9 +2016,9 @@
                             {
                               "type": "text",
                               "id": "t101",
-                              "name": "图位提示",
-                              "content": "面板压合",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "image-slot-hint",
+                              "content": "Fitting the top",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -2038,7 +2038,7 @@
                         {
                           "type": "frame",
                           "id": "f104",
-                          "name": "步骤头",
+                          "name": "step-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2049,7 +2049,7 @@
                             {
                               "type": "text",
                               "id": "t102",
-                              "name": "步骤序号",
+                              "name": "step-number",
                               "content": "05",
                               "fontFamily": "Inter",
                               "fontSize": 30,
@@ -2068,9 +2068,9 @@
                             {
                               "type": "text",
                               "id": "t103",
-                              "name": "步骤名",
-                              "content": "上面板",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "step-name",
+                              "content": "Add the top",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 600,
                               "fill": [
@@ -2089,9 +2089,9 @@
                         {
                           "type": "text",
                           "id": "t105",
-                          "name": "步骤说明",
-                          "content": "胶合板压在框上，四边各两颗螺丝。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "Set the plywood on the frame, two screws per side.",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -2120,7 +2120,7 @@
                     {
                       "type": "frame",
                       "id": "f114",
-                      "name": "步骤卡",
+                      "name": "step-card",
                       "width": "fill_container",
                       "height": "fill_container",
                       "layout": "vertical",
@@ -2140,7 +2140,7 @@
                         {
                           "type": "frame",
                           "id": "f107",
-                          "name": "步骤图位",
+                          "name": "step-image-slot",
                           "width": "fill_container",
                           "height": 230,
                           "layout": "vertical",
@@ -2158,7 +2158,7 @@
                             {
                               "type": "icon_font",
                               "id": "i108",
-                              "name": "图位图标",
+                              "name": "image-slot-icon",
                               "iconFontName": "camera",
                               "width": 32,
                               "height": 32,
@@ -2172,9 +2172,9 @@
                             {
                               "type": "text",
                               "id": "t109",
-                              "name": "图位提示",
-                              "content": "打磨中",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "image-slot-hint",
+                              "content": "Sanding",
+                              "fontFamily": "Inter",
                               "fontSize": 23,
                               "fontWeight": 600,
                               "fill": [
@@ -2194,7 +2194,7 @@
                         {
                           "type": "frame",
                           "id": "f112",
-                          "name": "步骤头",
+                          "name": "step-header",
                           "width": "fill_container",
                           "height": "fit_content",
                           "layout": "horizontal",
@@ -2205,7 +2205,7 @@
                             {
                               "type": "text",
                               "id": "t110",
-                              "name": "步骤序号",
+                              "name": "step-number",
                               "content": "06",
                               "fontFamily": "Inter",
                               "fontSize": 30,
@@ -2224,9 +2224,9 @@
                             {
                               "type": "text",
                               "id": "t111",
-                              "name": "步骤名",
-                              "content": "打磨上油",
-                              "fontFamily": "Noto Sans SC",
+                              "name": "step-name",
+                              "content": "Sand and oil",
+                              "fontFamily": "Inter",
                               "fontSize": 28,
                               "fontWeight": 600,
                               "fill": [
@@ -2245,9 +2245,9 @@
                         {
                           "type": "text",
                           "id": "t113",
-                          "name": "步骤说明",
-                          "content": "180 目磨平，320 目收光，再薄涂两遍油。",
-                          "fontFamily": "Noto Sans SC",
+                          "name": "step-description",
+                          "content": "180 grit to flatten, 320 to finish, then two thin coats of oil.",
+                          "fontFamily": "Inter",
                           "fontSize": 23,
                           "fontWeight": 400,
                           "fill": [
@@ -2282,7 +2282,7 @@
         {
           "type": "frame",
           "id": "f132",
-          "name": "04 成品",
+          "name": "04-result",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -2299,7 +2299,7 @@
             {
               "type": "frame",
               "id": "f131",
-              "name": "区块头",
+              "name": "section-header",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2310,7 +2310,7 @@
                 {
                   "type": "rectangle",
                   "id": "r128",
-                  "name": "强调短线",
+                  "name": "accent-dash",
                   "width": 72,
                   "height": 8,
                   "fill": [
@@ -2323,9 +2323,9 @@
                 {
                   "type": "text",
                   "id": "t129",
-                  "name": "区块标题",
-                  "content": "做完长这样",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-title",
+                  "content": "What it looks like",
+                  "fontFamily": "Inter",
                   "fontSize": 44,
                   "fontWeight": 700,
                   "fill": [
@@ -2342,9 +2342,9 @@
                 {
                   "type": "text",
                   "id": "t130",
-                  "name": "区块说明",
-                  "content": "尺寸可以改，结构不要改——四条腿的受力靠框。",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "section-note",
+                  "content": "Change the size, not the structure: the frame carries the legs.",
+                  "fontFamily": "Inter",
                   "fontSize": 26,
                   "fontWeight": 400,
                   "fill": [
@@ -2363,7 +2363,7 @@
             {
               "type": "frame",
               "id": "f124",
-              "name": "成品图位",
+              "name": "result-image-slot",
               "width": "fill_container",
               "height": 420,
               "layout": "vertical",
@@ -2381,7 +2381,7 @@
                 {
                   "type": "icon_font",
                   "id": "i125",
-                  "name": "成品图标",
+                  "name": "result-icon",
                   "iconFontName": "image",
                   "width": 46,
                   "height": 46,
@@ -2395,9 +2395,9 @@
                 {
                   "type": "text",
                   "id": "t126",
-                  "name": "成品提示",
-                  "content": "把你做完的成品拍进来",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "result-hint",
+                  "content": "Add a photo of your finished piece",
+                  "fontFamily": "Inter",
                   "fontSize": 28,
                   "fontWeight": 600,
                   "fill": [
@@ -2415,9 +2415,9 @@
                 {
                   "type": "text",
                   "id": "t127",
-                  "name": "成品规格",
-                  "content": "建议 16:9，光从侧面打，木纹才看得出",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "result-spec",
+                  "content": "16:9 works best. Side light brings out the grain",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 400,
                   "fill": [
@@ -2439,7 +2439,7 @@
         {
           "type": "frame",
           "id": "f150",
-          "name": "05 页脚",
+          "name": "05-footer",
           "width": "fill_container",
           "height": "fit_content",
           "layout": "vertical",
@@ -2461,9 +2461,9 @@
             {
               "type": "text",
               "id": "t145",
-              "name": "页脚标题",
-              "content": "开工前再看一眼",
-              "fontFamily": "Noto Sans SC",
+              "name": "footer-title",
+              "content": "One last look before you start",
+              "fontFamily": "Inter",
               "fontSize": 40,
               "fontWeight": 700,
               "fill": [
@@ -2480,7 +2480,7 @@
             {
               "type": "frame",
               "id": "f146",
-              "name": "自检列表",
+              "name": "checklist",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "vertical",
@@ -2491,7 +2491,7 @@
                 {
                   "type": "frame",
                   "id": "f136",
-                  "name": "自检项",
+                  "name": "check-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2502,7 +2502,7 @@
                     {
                       "type": "frame",
                       "id": "f133",
-                      "name": "方框",
+                      "name": "checkbox",
                       "width": 36,
                       "height": 36,
                       "layout": "horizontal",
@@ -2518,7 +2518,7 @@
                         {
                           "type": "icon_font",
                           "id": "i134",
-                          "name": "勾",
+                          "name": "tick",
                           "iconFontName": "check",
                           "width": 22,
                           "height": 22,
@@ -2534,9 +2534,9 @@
                     {
                       "type": "text",
                       "id": "t135",
-                      "name": "自检文字",
-                      "content": "锯之前把线画满一圈，只画一面必歪。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "check-text",
+                      "content": "Mark all the way round before sawing; one face only and it'll wander.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -2555,7 +2555,7 @@
                 {
                   "type": "frame",
                   "id": "f140",
-                  "name": "自检项",
+                  "name": "check-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2566,7 +2566,7 @@
                     {
                       "type": "frame",
                       "id": "f137",
-                      "name": "方框",
+                      "name": "checkbox",
                       "width": 36,
                       "height": 36,
                       "layout": "horizontal",
@@ -2582,7 +2582,7 @@
                         {
                           "type": "icon_font",
                           "id": "i138",
-                          "name": "勾",
+                          "name": "tick",
                           "iconFontName": "check",
                           "width": 22,
                           "height": 22,
@@ -2598,9 +2598,9 @@
                     {
                       "type": "text",
                       "id": "t139",
-                      "name": "自检文字",
-                      "content": "螺丝拧不进去先加深引导孔，别硬拧。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "check-text",
+                      "content": "Screw won't go in? Deepen the pilot hole, don't force it.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -2619,7 +2619,7 @@
                 {
                   "type": "frame",
                   "id": "f144",
-                  "name": "自检项",
+                  "name": "check-item",
                   "width": "fill_container",
                   "height": "fit_content",
                   "layout": "horizontal",
@@ -2630,7 +2630,7 @@
                     {
                       "type": "frame",
                       "id": "f141",
-                      "name": "方框",
+                      "name": "checkbox",
                       "width": 36,
                       "height": 36,
                       "layout": "horizontal",
@@ -2646,7 +2646,7 @@
                         {
                           "type": "icon_font",
                           "id": "i142",
-                          "name": "勾",
+                          "name": "tick",
                           "iconFontName": "check",
                           "width": 22,
                           "height": 22,
@@ -2662,9 +2662,9 @@
                     {
                       "type": "text",
                       "id": "t143",
-                      "name": "自检文字",
-                      "content": "上油前把粉尘擦干净，擦不净会留白点。",
-                      "fontFamily": "Noto Sans SC",
+                      "name": "check-text",
+                      "content": "Wipe off all dust before oiling, or it leaves white spots.",
+                      "fontFamily": "Inter",
                       "fontSize": 25,
                       "fontWeight": 400,
                       "fill": [
@@ -2685,7 +2685,7 @@
             {
               "type": "frame",
               "id": "f149",
-              "name": "署名行",
+              "name": "byline",
               "width": "fill_container",
               "height": "fit_content",
               "layout": "horizontal",
@@ -2697,9 +2697,9 @@
                 {
                   "type": "text",
                   "id": "t147",
-                  "name": "账号名",
-                  "content": "@ 你的账号名",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "handle",
+                  "content": "@ yourhandle",
+                  "fontFamily": "Inter",
                   "fontSize": 25,
                   "fontWeight": 600,
                   "fill": [
@@ -2716,9 +2716,9 @@
                 {
                   "type": "text",
                   "id": "t148",
-                  "name": "更新说明",
-                  "content": "每月一件能自己做的家具",
-                  "fontFamily": "Noto Sans SC",
+                  "name": "update-note",
+                  "content": "One DIY furniture build a month",
+                  "fontFamily": "Inter",
                   "fontSize": 23,
                   "fontWeight": 400,
                   "fill": [
