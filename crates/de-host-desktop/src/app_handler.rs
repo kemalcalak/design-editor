@@ -368,9 +368,9 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
             }
         }
 
-        // Startup background probes are likely still running. Wake
-        // the loop soon so their results are drained even if the user
-        // never touches the freshly opened window.
+        // Background probes (the launch update check, on-demand model
+        // discovery) may still be running. Wake the loop soon so their
+        // results are drained even if the user never touches the window.
         if self.update_probe.is_pending() || self.model_probe.is_pending() {
             event_loop.set_control_flow(ControlFlow::WaitUntil(
                 Instant::now() + Duration::from_millis(500),

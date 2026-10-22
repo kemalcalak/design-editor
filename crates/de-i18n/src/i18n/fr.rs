@@ -627,7 +627,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "Ces cadres n’ont pas pu être exportés :",
         "dialog.batchExportEmpty" => "Cette page ne contient aucun cadre de premier niveau visible à exporter.",
         "dialog.updateTitle" => "Mise à jour disponible",
-        "dialog.updateBody" => "Design Editor {{version}} est disponible (vous avez {{current}}).\n\nOuvrir la page des versions pour le télécharger ?",
+        "dialog.updateBody" => "Design Editor {{version}} est disponible (vous avez {{current}}).\n\nTélécharger et ouvrir le programme d’installation maintenant ?",
         "a11y.figmaImport" => "Importer depuis Figma",
         "a11y.import" => "Importer",
         "import.fromFigma" => "Importer depuis Figma",

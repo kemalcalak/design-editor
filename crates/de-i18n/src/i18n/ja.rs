@@ -627,7 +627,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "次のフレームは書き出せませんでした:",
         "dialog.batchExportEmpty" => "このページには書き出せる可視のトップレベルフレームがありません。",
         "dialog.updateTitle" => "更新があります",
-        "dialog.updateBody" => "Design Editor {{version}} が利用可能です(現在 {{current}})。\n\nリリースページを開いてダウンロードしますか?",
+        "dialog.updateBody" => "Design Editor {{version}} が利用可能です(現在 {{current}})。\n\nインストーラーをダウンロードして開きますか?",
         "a11y.figmaImport" => "Figma からインポート",
         "a11y.import" => "インポート",
         "import.fromFigma" => "Figma からインポート",

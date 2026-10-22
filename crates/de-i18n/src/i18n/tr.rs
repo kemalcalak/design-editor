@@ -627,7 +627,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "Bu çerçeveler dışa aktarılamadı:",
         "dialog.batchExportEmpty" => "Bu sayfada dışa aktarılacak görünür üst düzey çerçeve yok.",
         "dialog.updateTitle" => "Güncelleme mevcut",
-        "dialog.updateBody" => "Design Editor {{version}} mevcut (sizde {{current}} var).\n\nİndirmek için sürümler sayfası açılsın mı?",
+        "dialog.updateBody" => "Design Editor {{version}} mevcut (sizde {{current}} var).\n\nYükleyici şimdi indirilip açılsın mı?",
         "a11y.figmaImport" => "Figma'dan içe aktar",
         "a11y.import" => "İçe aktar",
         "import.fromFigma" => "Figma'dan içe aktar",

@@ -625,7 +625,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "ये फ़्रेम निर्यात नहीं हो सके:",
         "dialog.batchExportEmpty" => "इस पृष्ठ पर निर्यात करने के लिए कोई दृश्य शीर्ष-स्तरीय फ़्रेम नहीं है।",
         "dialog.updateTitle" => "अपडेट उपलब्ध",
-        "dialog.updateBody" => "Design Editor {{version}} उपलब्ध है (आपके पास {{current}} है)।\n\nडाउनलोड करने के लिए रिलीज़ पेज खोलें?",
+        "dialog.updateBody" => "Design Editor {{version}} उपलब्ध है (आपके पास {{current}} है)।\n\nइंस्टॉलर अभी डाउनलोड करके खोलें?",
         "a11y.figmaImport" => "Figma से आयात करें",
         "a11y.import" => "आयात करें",
         "import.fromFigma" => "Figma से आयात करें",

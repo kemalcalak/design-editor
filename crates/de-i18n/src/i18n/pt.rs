@@ -627,7 +627,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "Não foi possível exportar estes quadros:",
         "dialog.batchExportEmpty" => "Esta página não tem quadros visíveis de nível superior para exportar.",
         "dialog.updateTitle" => "Atualização disponível",
-        "dialog.updateBody" => "Design Editor {{version}} está disponível (você tem {{current}}).\n\nAbrir a página de versões para baixá-lo?",
+        "dialog.updateBody" => "Design Editor {{version}} está disponível (você tem {{current}}).\n\nBaixar e abrir o instalador agora?",
         "a11y.figmaImport" => "Importar do Figma",
         "a11y.import" => "Importar",
         "import.fromFigma" => "Importar do Figma",

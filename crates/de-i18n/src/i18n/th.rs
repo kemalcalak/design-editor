@@ -627,7 +627,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "ไม่สามารถส่งออกเฟรมเหล่านี้ได้:",
         "dialog.batchExportEmpty" => "หน้านี้ไม่มีเฟรมระดับบนสุดที่มองเห็นได้สำหรับส่งออก",
         "dialog.updateTitle" => "มีอัปเดต",
-        "dialog.updateBody" => "Design Editor {{version}} พร้อมใช้งาน (คุณมี {{current}})\n\nเปิดหน้ารุ่นเพื่อดาวน์โหลดหรือไม่?",
+        "dialog.updateBody" => "Design Editor {{version}} พร้อมใช้งาน (คุณมี {{current}})\n\nดาวน์โหลดและเปิดตัวติดตั้งตอนนี้หรือไม่?",
         "a11y.figmaImport" => "นำเข้าจาก Figma",
         "a11y.import" => "นำเข้า",
         "import.fromFigma" => "นำเข้าจาก Figma",

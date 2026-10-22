@@ -627,7 +627,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "Не удалось экспортировать эти фреймы:",
         "dialog.batchExportEmpty" => "На этой странице нет видимых фреймов верхнего уровня для экспорта.",
         "dialog.updateTitle" => "Доступно обновление",
-        "dialog.updateBody" => "Доступна версия Design Editor {{version}} (у вас {{current}}).\n\nОткрыть страницу релизов для загрузки?",
+        "dialog.updateBody" => "Доступна версия Design Editor {{version}} (у вас {{current}}).\n\nСкачать и открыть установщик сейчас?",
         "a11y.figmaImport" => "Импорт из Figma",
         "a11y.import" => "Импорт",
         "import.fromFigma" => "Импорт из Figma",

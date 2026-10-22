@@ -101,9 +101,16 @@ impl DesktopApp {
         }
         host.editor_state_mut().mark_saved_revision();
         host.mark_editor_state_dirty();
-        // Personal build: there is no release feed to compare this build
-        // against, so the automatic update check never runs.
-        let update_probe = update_check::UpdateProbe::idle();
+        // The one network request at launch: the GitHub release check, and
+        // only while Settings → System → "automatic updates" is on (the
+        // default). Unit tests never reach the network.
+        let auto_update = !cfg!(test)
+            && host
+                .editor_state()
+                .editor_ui
+                .agent_settings
+                .auto_update_enabled;
+        let update_probe = update_check::UpdateProbe::for_auto_check(auto_update);
         if update_probe.is_pending() {
             host.editor_state_mut().editor_ui.update_status =
                 de_editor_core::UpdateStatus::Checking;

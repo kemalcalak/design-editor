@@ -698,7 +698,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportEmpty" => "当前页面没有可导出的顶层画框。",
         "dialog.updateTitle" => "有可用更新",
         "dialog.updateBody" => {
-            "Design Editor {{version}} 已可用(当前版本 {{current}})。\n\n是否打开发布页面下载?"
+            "Design Editor {{version}} 已可用(当前版本 {{current}})。\n\n是否立即下载并打开安装程序?"
         }
         "a11y.figmaImport" => "从 Figma 导入",
         "a11y.import" => "导入",

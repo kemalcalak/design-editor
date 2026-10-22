@@ -627,7 +627,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "Diese Frames konnten nicht exportiert werden:",
         "dialog.batchExportEmpty" => "Diese Seite hat keine sichtbaren Top-Level-Frames zum Exportieren.",
         "dialog.updateTitle" => "Update verfügbar",
-        "dialog.updateBody" => "Design Editor {{version}} ist verfügbar (du hast {{current}}).\n\nDie Releases-Seite zum Herunterladen öffnen?",
+        "dialog.updateBody" => "Design Editor {{version}} ist verfügbar (du hast {{current}}).\n\nInstaller jetzt herunterladen und öffnen?",
         "a11y.figmaImport" => "Aus Figma importieren",
         "a11y.import" => "Importieren",
         "import.fromFigma" => "Aus Figma importieren",

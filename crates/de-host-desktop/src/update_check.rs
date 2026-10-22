@@ -68,6 +68,16 @@ impl UpdateProbe {
         Self { rx: None }
     }
 
+    /// The launch-time probe: one release check when the user's
+    /// "automatic updates" setting is on, otherwise idle.
+    pub fn for_auto_check(enabled: bool) -> Self {
+        if enabled {
+            Self::spawn()
+        } else {
+            Self::idle()
+        }
+    }
+
     /// Spawn the probe worker. Returns immediately; the request
     /// runs on its own thread.
     pub fn spawn() -> Self {
@@ -123,9 +133,8 @@ fn check_latest_release() -> UpdateStatus {
     }
 }
 
-/// Run the HTTPS request. `reqwest` is async-only in this
-/// workspace (no `blocking` feature), so the worker bridges onto the
-/// shared runtime for the one call — a private per-call runtime aborts
+/// Run the HTTPS request. The worker bridges onto the shared async
+/// runtime for the one call — a private per-call runtime aborts
 /// with "Cannot start a runtime from within a runtime" whenever this
 /// probe is reached from a tokio worker. `None` on any transport /
 /// parse failure.
@@ -210,12 +219,11 @@ fn select_latest_release_tag(json: &serde_json::Value) -> Option<String> {
 
 /// Download the platform installer for `version` on a worker thread
 /// and open it when done (macOS mounts the DMG, Windows launches the
-/// NSIS setup, Linux reveals the AppImage after `chmod +x`). Any
-/// failure — unknown platform, network error, missing asset — falls
-/// back to opening the releases page, so the user always ends up
-/// with a path to the update. Mirrors the electron-updater flow
-/// minus signature verification (no signing pipeline yet; the
-/// artifacts are the rust-release.yml installer matrix).
+/// NSIS setup). Any failure — a platform without a published installer,
+/// network error, missing asset — falls back to opening the releases
+/// page, so the user always ends up with a path to the update. There is
+/// no signature verification yet: the rust-release.yml assets are
+/// unsigned.
 pub fn download_and_open_installer(version: &str) {
     use std::sync::atomic::{AtomicBool, Ordering};
     // One download at a time — a second "Yes" (or re-check) while a
@@ -245,18 +253,13 @@ fn installer_asset_name(version: &str) -> Option<String> {
 
 /// Pure name table — split from [`installer_asset_name`] so tests
 /// cover every platform from any host.
+/// Only macOS arm64 and Windows x64 installers are published.
 fn asset_name_for(os: &str, arch: &str, version: &str) -> Option<String> {
-    let arch = match arch {
-        "aarch64" => "arm64",
-        "x86_64" => "x64",
-        _ => return None,
-    };
-    Some(match os {
-        "macos" => format!("Design-Editor-{version}-{arch}-mac.dmg"),
-        "windows" => format!("Design-Editor-{version}-{arch}-win-setup.exe"),
-        "linux" => format!("Design-Editor-{version}-{arch}-linux.AppImage"),
-        _ => return None,
-    })
+    match (os, arch) {
+        ("macos", "aarch64") => Some(format!("Design-Editor-{version}-arm64-mac.dmg")),
+        ("windows", "x86_64") => Some(format!("Design-Editor-{version}-x64-win-setup.exe")),
+        _ => None,
+    }
 }
 
 /// Blocking download + open. Only ever runs on the worker thread.
@@ -293,11 +296,6 @@ fn download_and_open_blocking(version: &str) -> bool {
     });
     if downloaded.is_none() {
         return false;
-    }
-    #[cfg(target_os = "linux")]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let _ = std::fs::set_permissions(&dest, std::fs::Permissions::from_mode(0o755));
     }
     open_installer_path(&dest)
 }
@@ -501,6 +499,11 @@ mod tests {
     }
 
     #[test]
+    fn disabled_auto_check_creates_idle_probe() {
+        assert!(!UpdateProbe::for_auto_check(false).is_pending());
+    }
+
+    #[test]
     fn disconnected_worker_resolves_as_error_instead_of_staying_checking() {
         let (tx, rx) = mpsc::channel();
         drop(tx);
@@ -525,11 +528,10 @@ mod installer_asset_tests {
             asset_name_for("windows", "x86_64", "0.9.0").as_deref(),
             Some("Design-Editor-0.9.0-x64-win-setup.exe")
         );
-        assert_eq!(
-            asset_name_for("linux", "aarch64", "0.9.0").as_deref(),
-            Some("Design-Editor-0.9.0-arm64-linux.AppImage")
-        );
+        // Unpublished platforms fall back to the releases page.
+        assert_eq!(asset_name_for("linux", "x86_64", "0.9.0"), None);
+        assert_eq!(asset_name_for("macos", "x86_64", "0.9.0"), None);
+        assert_eq!(asset_name_for("windows", "aarch64", "0.9.0"), None);
         assert_eq!(asset_name_for("freebsd", "x86_64", "0.9.0"), None);
-        assert_eq!(asset_name_for("macos", "riscv64", "0.9.0"), None);
     }
 }

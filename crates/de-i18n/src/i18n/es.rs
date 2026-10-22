@@ -627,7 +627,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "No se pudieron exportar estos marcos:",
         "dialog.batchExportEmpty" => "Esta página no tiene marcos visibles de nivel superior para exportar.",
         "dialog.updateTitle" => "Actualización disponible",
-        "dialog.updateBody" => "Design Editor {{version}} está disponible (tienes {{current}}).\n\n¿Abrir la página de versiones para descargarlo?",
+        "dialog.updateBody" => "Design Editor {{version}} está disponible (tienes {{current}}).\n\n¿Descargar y abrir el instalador ahora?",
         "a11y.figmaImport" => "Importar desde Figma",
         "a11y.import" => "Importar",
         "import.fromFigma" => "Importar desde Figma",

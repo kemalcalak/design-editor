@@ -627,7 +627,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "Không thể xuất các khung sau:",
         "dialog.batchExportEmpty" => "Trang này không có khung cấp cao nhất hiển thị để xuất.",
         "dialog.updateTitle" => "Có bản cập nhật",
-        "dialog.updateBody" => "Design Editor {{version}} đã có (bạn đang dùng {{current}}).\n\nMở trang phát hành để tải xuống?",
+        "dialog.updateBody" => "Design Editor {{version}} đã có (bạn đang dùng {{current}}).\n\nTải xuống và mở trình cài đặt ngay?",
         "a11y.figmaImport" => "Nhập từ Figma",
         "a11y.import" => "Nhập",
         "import.fromFigma" => "Nhập từ Figma",

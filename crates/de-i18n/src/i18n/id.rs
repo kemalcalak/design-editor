@@ -625,7 +625,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "Bingkai berikut gagal diekspor:",
         "dialog.batchExportEmpty" => "Halaman ini tidak memiliki bingkai tingkat atas yang terlihat untuk diekspor.",
         "dialog.updateTitle" => "Pembaruan tersedia",
-        "dialog.updateBody" => "Design Editor {{version}} tersedia (Anda memiliki {{current}}).\n\nBuka halaman rilis untuk mengunduhnya?",
+        "dialog.updateBody" => "Design Editor {{version}} tersedia (Anda memiliki {{current}}).\n\nUnduh dan buka penginstal sekarang?",
         "a11y.figmaImport" => "Impor dari Figma",
         "a11y.import" => "Impor",
         "import.fromFigma" => "Impor dari Figma",

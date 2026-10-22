@@ -623,7 +623,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportFailedLead" => "다음 프레임을 내보내지 못했습니다:",
         "dialog.batchExportEmpty" => "이 페이지에는 내보낼 수 있는 표시된 최상위 프레임이 없습니다.",
         "dialog.updateTitle" => "업데이트 사용 가능",
-        "dialog.updateBody" => "Design Editor {{version}}을(를) 사용할 수 있습니다(현재 {{current}}).\n\n릴리스 페이지를 열어 다운로드하시겠습니까?",
+        "dialog.updateBody" => "Design Editor {{version}}을(를) 사용할 수 있습니다(현재 {{current}}).\n\n지금 설치 프로그램을 다운로드하고 여시겠습니까?",
         "a11y.figmaImport" => "Figma에서 가져오기",
         "a11y.import" => "가져오기",
         "import.fromFigma" => "Figma에서 가져오기",
