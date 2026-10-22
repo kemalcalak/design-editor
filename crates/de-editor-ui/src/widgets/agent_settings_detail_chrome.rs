@@ -35,7 +35,7 @@ pub(crate) const CHECK_MAX_ROWS: usize = 8;
 const CHECK_SIZE: f32 = 16.0;
 /// Segmented control: label size, room around each label, track inset.
 const SEGMENT_FONT: f32 = 12.5;
-const SEGMENT_PAD_X: f32 = 14.0;
+const SEGMENT_PAD_X: f32 = 18.0;
 const SEGMENT_TRACK_PAD: f32 = 4.0;
 /// Footer button: padding the width estimate adds per side, the smaller
 /// padding the painted label is fitted within, and an icon's slot.
