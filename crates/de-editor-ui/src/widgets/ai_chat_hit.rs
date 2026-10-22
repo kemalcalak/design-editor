@@ -60,6 +60,9 @@ pub enum AIChatHit {
     /// The "Add a model provider" link that stands in for the model chip
     /// when nothing can answer — opens Settings on the Agents tab.
     OpenProviderSettings,
+    /// "Connect" on an installed agent's row in the model picker — the
+    /// same probe Settings' Connect runs.
+    ConnectAgent(de_editor_core::chat::AgentProvider),
     /// The pre-flight MCP notice above the input — opens Settings on the MCP
     /// tab so the missing integration is one click from the warning.
     OpenMcpSettings,

@@ -64,7 +64,7 @@ fn open_select_state() -> SelectState {
 fn model_picker_search_paints_visible_caret_at_blink_on_phase() {
     let theme = Theme::dark();
     let models = vec![ModelEntry::new(AgentProvider::CodexCli, "gpt-5", "gpt-5")];
-    let rect = Rect::xywh(10.0, 20.0, 240.0, picker_view_height(&models, ""));
+    let rect = Rect::xywh(10.0, 20.0, 240.0, picker_view_height(&models, &[], ""));
     let input = TextInputState::default();
     let state = open_select_state();
     let mut backend = CaptureBackend::default();
@@ -77,6 +77,7 @@ fn model_picker_search_paints_visible_caret_at_blink_on_phase() {
         &theme,
         rect,
         &models,
+        &[],
         0,
         &state,
         &input,
@@ -91,7 +92,7 @@ fn model_picker_search_paints_visible_caret_at_blink_on_phase() {
 fn model_picker_search_hides_caret_at_blink_off_phase() {
     let theme = Theme::dark();
     let models = vec![ModelEntry::new(AgentProvider::CodexCli, "gpt-5", "gpt-5")];
-    let rect = Rect::xywh(10.0, 20.0, 240.0, picker_view_height(&models, ""));
+    let rect = Rect::xywh(10.0, 20.0, 240.0, picker_view_height(&models, &[], ""));
     let input = TextInputState::default();
     let state = open_select_state();
     let mut backend = CaptureBackend::default();
@@ -104,6 +105,7 @@ fn model_picker_search_hides_caret_at_blink_off_phase() {
         &theme,
         rect,
         &models,
+        &[],
         0,
         &state,
         &input,

@@ -217,6 +217,7 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
                 &self.theme,
                 picker,
                 &self.state.available_models,
+                &self.offline_agents,
                 self.state.selected_model,
                 self.model_picker,
                 self.model_picker_input,

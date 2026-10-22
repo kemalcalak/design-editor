@@ -178,6 +178,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.thought" => "คิดอยู่ {{seconds}} วินาที",
         "chat.thinking" => "กำลังคิด…",
         "chat.status.working" => "กำลังทำงาน…",
+        "chat.picker.manage" => "จัดการผู้ให้บริการและเอเจนต์…",
+        "chat.picker.notConnected" => "ยังไม่ได้เชื่อมต่อ",
+        "chat.picker.connect" => "เชื่อมต่อ",
         _ => return None,
     })
 }

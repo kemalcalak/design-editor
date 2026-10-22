@@ -178,6 +178,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.thought" => "Đã suy nghĩ {{seconds}} giây",
         "chat.thinking" => "Đang suy nghĩ…",
         "chat.status.working" => "Đang làm…",
+        "chat.picker.manage" => "Quản lý nhà cung cấp và agent…",
+        "chat.picker.notConnected" => "chưa kết nối",
+        "chat.picker.connect" => "Kết nối",
         _ => return None,
     })
 }

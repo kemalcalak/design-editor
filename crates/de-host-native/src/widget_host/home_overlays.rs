@@ -128,6 +128,8 @@ impl WidgetHostNative {
         };
         let ui = &self.editor_state.editor_ui;
         let models = &self.editor_state.chat.available_models;
+        let offline =
+            de_editor_ui::widgets::ai_chat_model_picker::offline_agents(&self.editor_state);
         let selected = self.editor_state.chat.selected_model;
         let locale = ui.locale;
         let mut cx = PaintCx {
@@ -138,6 +140,7 @@ impl WidgetHostNative {
             &self.theme,
             card,
             models,
+            &offline,
             selected,
             &ui.chat_model_picker,
             &ui.chat_model_picker_input,
@@ -164,6 +167,7 @@ impl WidgetHostNative {
             &layout,
             viewport_width,
             &self.editor_state.chat.available_models,
+            &de_editor_ui::widgets::ai_chat_model_picker::offline_agents(&self.editor_state),
             &search,
         )
     }
@@ -198,11 +202,39 @@ impl WidgetHostNative {
             return Some(true);
         }
         let models = self.editor_state.chat.available_models.clone();
+        let offline =
+            de_editor_ui::widgets::ai_chat_model_picker::offline_agents(&self.editor_state);
+        // An installed agent's Connect, and the "Manage providers &
+        // agents…" footer (#26), before the row protocol.
+        if let Some(provider) = de_editor_ui::widgets::ai_chat_model_picker::offline_agent_at(
+            &self.editor_state.editor_ui.chat_model_picker,
+            card,
+            point,
+            &models,
+            &offline,
+            &search,
+        ) {
+            self.editor_state
+                .editor_ui
+                .agent_settings
+                .begin_provider_connect(provider);
+            self.mark_dirty();
+            return Some(true);
+        }
+        if de_editor_ui::widgets::ai_chat_model_picker::footer_rect(card).contains(point) {
+            let ui = &mut self.editor_state.editor_ui;
+            ui.close_chat_model_picker();
+            ui.agent_settings.tab = de_editor_core::agent_settings::AgentSettingsTab::Agents;
+            ui.agent_settings_open = true;
+            self.mark_dirty();
+            return Some(true);
+        }
         let hit = model_picker_hit(
             &self.editor_state.editor_ui.chat_model_picker,
             card,
             point,
             &models,
+            &offline,
             &search,
         );
         match hit {
@@ -265,11 +297,14 @@ impl WidgetHostNative {
             .text()
             .to_string();
         let models = self.editor_state.chat.available_models.clone();
+        let offline =
+            de_editor_ui::widgets::ai_chat_model_picker::offline_agents(&self.editor_state);
         let hit = model_picker_hit(
             &self.editor_state.editor_ui.chat_model_picker,
             card,
             point,
             &models,
+            &offline,
             &search,
         );
         let picker = &mut self.editor_state.editor_ui.chat_model_picker;
@@ -311,7 +346,11 @@ impl WidgetHostNative {
             .text()
             .to_string();
         let models = self.editor_state.chat.available_models.clone();
-        let max = max_picker_scroll(&models, &search);
+        let max = max_picker_scroll(
+            &models,
+            &de_editor_ui::widgets::ai_chat_model_picker::offline_agents(&self.editor_state),
+            &search,
+        );
         let picker = &mut self.editor_state.editor_ui.chat_model_picker;
         let next = (picker.scroll.offset - delta_y).clamp(0.0, max);
         if next != picker.scroll.offset {

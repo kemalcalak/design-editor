@@ -21,6 +21,19 @@ impl<'a> AIChatPlaceholder<'a> {
             return None;
         }
         let picker = self.model_picker_bounds(rect)?;
+        if let Some(provider) = crate::widgets::ai_chat_model_picker::offline_agent_at(
+            self.model_picker,
+            picker,
+            point,
+            &self.state.available_models,
+            &self.offline_agents,
+            self.model_picker_input.text(),
+        ) {
+            return Some(AIChatHit::ConnectAgent(provider));
+        }
+        if crate::widgets::ai_chat_model_picker::footer_rect(picker).contains(point) {
+            return Some(AIChatHit::OpenProviderSettings);
+        }
         if crate::widgets::ai_chat_model_picker::search_clear_hit(
             picker,
             point,
@@ -33,6 +46,7 @@ impl<'a> AIChatPlaceholder<'a> {
             picker,
             point,
             &self.state.available_models,
+            &self.offline_agents,
             self.model_picker_input.text(),
         ) {
             jian_widgets::components::select::SelectHit::Row(idx) => {

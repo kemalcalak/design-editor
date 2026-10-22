@@ -100,6 +100,9 @@ pub struct AIChatPlaceholder<'a> {
     pub(crate) usable_agent: bool,
     /// "model · provider" for the selected model.
     pub(crate) model_chip_label: String,
+    /// Installed agent CLIs not connected yet: the model picker offers
+    /// them with Connect (#26).
+    pub(crate) offline_agents: Vec<de_editor_core::chat::AgentProvider>,
     /// Whether the session select's list is open.
     pub(crate) session_menu_open: bool,
     /// Whether the composer's "+" menu is open, and its hovered row.
@@ -230,6 +233,7 @@ impl<'a> AIChatPlaceholder<'a> {
             mcp_endpoint: ui.agent_settings.mcp_endpoint_url(),
             usable_agent: state.has_usable_chat_agent(),
             model_chip_label: crate::widgets::home_surface::model_chip_label(state),
+            offline_agents: crate::widgets::ai_chat_model_picker::offline_agents(state),
             session_menu_open: ui.chat_session_menu_open,
             plus_menu_open: ui.chat_plus_menu_open,
             plus_menu_hover: ui.chat_plus_menu_hover,
@@ -537,6 +541,7 @@ impl<'a> AIChatPlaceholder<'a> {
     pub(crate) fn model_picker_rect(&self, rect: Rect, _input_rect: Rect) -> Rect {
         let height = crate::widgets::ai_chat_model_picker::picker_view_height(
             &self.state.available_models,
+            &self.offline_agents,
             self.model_picker_input.text(),
         );
         let card = self.composer_card(rect);

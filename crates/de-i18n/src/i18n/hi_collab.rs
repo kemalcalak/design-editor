@@ -178,6 +178,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.thought" => "{{seconds}} सेकंड सोचा",
         "chat.thinking" => "सोच रहा है…",
         "chat.status.working" => "काम चल रहा है…",
+        "chat.picker.manage" => "प्रदाता और एजेंट प्रबंधित करें…",
+        "chat.picker.notConnected" => "कनेक्ट नहीं",
+        "chat.picker.connect" => "कनेक्ट करें",
         _ => return None,
     })
 }

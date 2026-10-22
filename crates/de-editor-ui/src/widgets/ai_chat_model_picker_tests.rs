@@ -68,7 +68,7 @@ fn content_height_counts_groups_and_rows() {
         + 3.0 * MODEL_ROW_H
         + MODEL_PICKER_PAD_Y * 2.0
         + MODEL_FOOTER_H;
-    assert!((picker_content_height(&models, "") - expected).abs() < 0.01);
+    assert!((picker_content_height(&models, &[], "") - expected).abs() < 0.01);
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn content_height_groups_noncontiguous_models_by_provider_like_ts_model_groups()
         + 3.0 * MODEL_ROW_H
         + MODEL_PICKER_PAD_Y * 2.0
         + MODEL_FOOTER_H;
-    assert!((picker_content_height(&models, "") - expected).abs() < 0.01);
+    assert!((picker_content_height(&models, &[], "") - expected).abs() < 0.01);
 }
 
 #[test]
@@ -95,16 +95,23 @@ fn model_at_resolves_row_and_skips_headers() {
     ];
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(200.0, picker_content_height(&models, "")),
+        size: Point2D::new(200.0, picker_content_height(&models, &[], "")),
     };
     let first_row_y = MODEL_SEARCH_H + MODEL_PICKER_PAD_Y + MODEL_GROUP_H + MODEL_ROW_H / 2.0;
     assert_eq!(
-        model_at(rect, Point2D::new(100.0, first_row_y), &models, 0.0, "",),
+        model_at(
+            rect,
+            Point2D::new(100.0, first_row_y),
+            &models,
+            &[],
+            0.0,
+            "",
+        ),
         Some(0)
     );
     let header_y = MODEL_SEARCH_H + MODEL_PICKER_PAD_Y + MODEL_GROUP_H / 2.0;
     assert_eq!(
-        model_at(rect, Point2D::new(100.0, header_y), &models, 0.0, ""),
+        model_at(rect, Point2D::new(100.0, header_y), &models, &[], 0.0, ""),
         None
     );
 }
@@ -116,17 +123,17 @@ fn model_at_honors_scroll_offset() {
         .collect();
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(200.0, picker_view_height(&models, "")),
+        size: Point2D::new(200.0, picker_view_height(&models, &[], "")),
     };
     let probe = Point2D::new(
         100.0,
         MODEL_SEARCH_H + MODEL_PICKER_PAD_Y + MODEL_GROUP_H + MODEL_ROW_H / 2.0,
     );
-    let unscrolled = model_at(rect, probe, &models, 0.0, "");
-    let scrolled = model_at(rect, probe, &models, MODEL_ROW_H * 3.0, "");
+    let unscrolled = model_at(rect, probe, &models, &[], 0.0, "");
+    let scrolled = model_at(rect, probe, &models, &[], MODEL_ROW_H * 3.0, "");
     assert_eq!(unscrolled, Some(0));
     assert_eq!(scrolled, Some(3));
-    assert!(max_picker_scroll(&models, "") > 0.0);
+    assert!(max_picker_scroll(&models, &[], "") > 0.0);
 }
 
 #[test]
@@ -135,8 +142,8 @@ fn long_catalog_height_is_capped_to_ts_dropdown_height_and_still_scrolls() {
         .map(|i| entry(AgentProvider::OpenCode, &format!("m{i}")))
         .collect();
 
-    assert!((picker_view_height(&models, "") - 288.0).abs() < 0.01);
-    assert!(max_picker_scroll(&models, "") > 0.0);
+    assert!((picker_view_height(&models, &[], "") - 288.0).abs() < 0.01);
+    assert!(max_picker_scroll(&models, &[], "") > 0.0);
 }
 
 #[test]
@@ -148,7 +155,7 @@ fn model_at_filters_by_search_and_returns_original_index() {
     ];
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(220.0, picker_view_height(&models, "5.5")),
+        size: Point2D::new(220.0, picker_view_height(&models, &[], "5.5")),
     };
     let first_filtered_row_y =
         MODEL_SEARCH_H + MODEL_PICKER_PAD_Y + MODEL_GROUP_H + MODEL_ROW_H / 2.0;
@@ -158,6 +165,7 @@ fn model_at_filters_by_search_and_returns_original_index() {
             rect,
             Point2D::new(100.0, first_filtered_row_y),
             &models,
+            &[],
             0.0,
             "5.5",
         ),
@@ -177,20 +185,27 @@ fn model_picker_hit_uses_shared_select_state_protocol() {
     };
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(220.0, picker_view_height(&models, "")),
+        size: Point2D::new(220.0, picker_view_height(&models, &[], "")),
     };
     let first_row_y = MODEL_SEARCH_H + MODEL_PICKER_PAD_Y + MODEL_GROUP_H + MODEL_ROW_H / 2.0;
 
     assert_eq!(
-        model_picker_hit(&state, rect, Point2D::new(100.0, first_row_y), &models, "",),
+        model_picker_hit(
+            &state,
+            rect,
+            Point2D::new(100.0, first_row_y),
+            &models,
+            &[],
+            "",
+        ),
         SelectHit::Row(0)
     );
     assert_eq!(
-        model_picker_hit(&state, rect, Point2D::new(100.0, 12.0), &models, ""),
+        model_picker_hit(&state, rect, Point2D::new(100.0, 12.0), &models, &[], ""),
         SelectHit::Inside
     );
     assert_eq!(
-        model_picker_hit(&state, rect, Point2D::new(-1.0, 12.0), &models, ""),
+        model_picker_hit(&state, rect, Point2D::new(-1.0, 12.0), &models, &[], ""),
         SelectHit::Outside
     );
 }
@@ -198,7 +213,7 @@ fn model_picker_hit_uses_shared_select_state_protocol() {
 #[test]
 fn model_picker_search_uses_the_full_header_width() {
     let models = vec![entry(AgentProvider::CodexCli, "gpt-5")];
-    let rect = Rect::xywh(10.0, 20.0, 240.0, picker_view_height(&models, ""));
+    let rect = Rect::xywh(10.0, 20.0, 240.0, picker_view_height(&models, &[], ""));
     let state = SelectState {
         open: true,
         ..Default::default()
@@ -218,6 +233,7 @@ fn model_picker_search_uses_the_full_header_width() {
         &theme,
         rect,
         &models,
+        &[],
         0,
         &state,
         &input,
@@ -225,7 +241,7 @@ fn model_picker_search_uses_the_full_header_width() {
         de_editor_core::Locale::EnUs,
     );
     assert_eq!(
-        model_picker_hit(&state, rect, clear_point, &models, "gpt"),
+        model_picker_hit(&state, rect, clear_point, &models, &[], "gpt"),
         SelectHit::Inside,
         "the search clear target stays header chrome, never a model row"
     );
@@ -298,7 +314,7 @@ fn pressed_model_row_paints_studio_pressed_pill() {
     let models = vec![entry(AgentProvider::ClaudeCode, "claude-sonnet")];
     let rect = Rect {
         origin: Point2D::new(10.0, 20.0),
-        size: Point2D::new(240.0, picker_view_height(&models, "")),
+        size: Point2D::new(240.0, picker_view_height(&models, &[], "")),
     };
     let state = SelectState {
         open: true,
@@ -322,6 +338,7 @@ fn pressed_model_row_paints_studio_pressed_pill() {
         &theme,
         rect,
         &models,
+        &[],
         usize::MAX,
         &state,
         &input,
@@ -381,7 +398,8 @@ fn builtin_search_does_not_match_api_key_badge_text() {
         visible_model_indices(std::slice::from_ref(&builtin), "deepseek"),
         vec![0]
     );
-    assert_eq!(visible_model_indices(&[provider_model], "openai"), vec![0]);
+    // An agent CLI group reads by the agent's name (#26).
+    assert_eq!(visible_model_indices(&[provider_model], "codex"), vec![0]);
 }
 
 #[test]
@@ -466,7 +484,7 @@ fn builtin_groups_stay_separate_when_ids_differ_but_provider_matches() {
         + 2.0 * MODEL_ROW_H
         + MODEL_PICKER_PAD_Y * 2.0
         + MODEL_FOOTER_H;
-    assert!((picker_content_height(&models, "") - expected).abs() < 0.01);
+    assert!((picker_content_height(&models, &[], "") - expected).abs() < 0.01);
 }
 
 #[test]
@@ -481,7 +499,7 @@ fn acp_models_with_same_placeholder_provider_stay_in_separate_groups() {
         + 2.0 * MODEL_ROW_H
         + MODEL_PICKER_PAD_Y * 2.0
         + MODEL_FOOTER_H;
-    assert!((picker_content_height(&models, "") - expected).abs() < 0.01);
+    assert!((picker_content_height(&models, &[], "") - expected).abs() < 0.01);
 }
 
 #[test]
@@ -490,7 +508,7 @@ fn total_height_matches_studio_row_and_group_metrics() {
     // constants: search strip 40 + list pad 8 + group header 26 +
     // model row 36 + list pad 8 + footer row 36 = 154.
     let one = vec![entry(AgentProvider::ClaudeCode, "a")];
-    assert!((picker_content_height(&one, "") - 154.0).abs() < 0.01);
+    assert!((picker_content_height(&one, &[], "") - 154.0).abs() < 0.01);
 
     let models = vec![
         entry(AgentProvider::ClaudeCode, "a"),
@@ -498,10 +516,10 @@ fn total_height_matches_studio_row_and_group_metrics() {
         entry(AgentProvider::CodexCli, "c"),
     ];
     // 40 + 8 + 2×26 + 3×36 + 8 + 36 = 252.
-    assert!((picker_content_height(&models, "") - 252.0).abs() < 0.01);
+    assert!((picker_content_height(&models, &[], "") - 252.0).abs() < 0.01);
 
     // Empty catalogue: search strip + 44 px empty band + footer.
-    assert!((picker_content_height(&[], "") - 120.0).abs() < 0.01);
+    assert!((picker_content_height(&[], &[], "") - 120.0).abs() < 0.01);
 }
 
 #[test]
@@ -511,20 +529,20 @@ fn long_catalog_scroll_math_reserves_search_and_footer_bands() {
         .collect();
 
     // The cap still bites with the taller Studio rows.
-    assert!((picker_view_height(&models, "") - 288.0).abs() < 0.01);
+    assert!((picker_view_height(&models, &[], "") - 288.0).abs() < 0.01);
     // Only the band between the fixed search strip and the fixed
     // footer scrolls: 1 group + 40 rows + both list pads against
     // 288 − 40 (search) − 36 (footer).
     let list_h = MODEL_GROUP_H + 40.0 * MODEL_ROW_H + MODEL_PICKER_PAD_Y * 2.0;
     let view_list_h = 288.0 - MODEL_SEARCH_H - MODEL_FOOTER_H;
-    assert!((max_picker_scroll(&models, "") - (list_h - view_list_h)).abs() < 0.01);
-    assert!(max_picker_scroll(&models, "") > 0.0);
+    assert!((max_picker_scroll(&models, &[], "") - (list_h - view_list_h)).abs() < 0.01);
+    assert!(max_picker_scroll(&models, &[], "") > 0.0);
 }
 
 #[test]
 fn selected_row_pill_stays_inside_popover_at_minimum_width() {
     let models = vec![entry(AgentProvider::ClaudeCode, "claude-sonnet")];
-    let rect = Rect::xywh(10.0, 20.0, 180.0, picker_view_height(&models, ""));
+    let rect = Rect::xywh(10.0, 20.0, 180.0, picker_view_height(&models, &[], ""));
     let state = SelectState {
         open: true,
         ..Default::default()
@@ -541,6 +559,7 @@ fn selected_row_pill_stays_inside_popover_at_minimum_width() {
         &theme,
         rect,
         &models,
+        &[],
         0,
         &state,
         &input,
@@ -615,7 +634,7 @@ fn footer_row_is_chrome_never_a_model_row() {
     };
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(220.0, picker_view_height(&models, "")),
+        size: Point2D::new(220.0, picker_view_height(&models, &[], "")),
     };
     // The footer action row sits below the list band; a press there
     // must resolve as chrome (`Inside`), never as a model row —
@@ -623,13 +642,20 @@ fn footer_row_is_chrome_never_a_model_row() {
     // otherwise extend past the clip into the footer.
     let footer_y = rect.origin.y + rect.size.y - MODEL_FOOTER_H / 2.0;
     assert_eq!(
-        model_picker_hit(&state, rect, Point2D::new(110.0, footer_y), &models, "",),
+        model_picker_hit(
+            &state,
+            rect,
+            Point2D::new(110.0, footer_y),
+            &models,
+            &[],
+            "",
+        ),
         SelectHit::Inside
     );
     let scrolled_state = SelectState {
         open: true,
         scroll: jian_core::scroll::ScrollState {
-            offset: max_picker_scroll(&models, ""),
+            offset: max_picker_scroll(&models, &[], ""),
         },
         ..Default::default()
     };
@@ -639,8 +665,67 @@ fn footer_row_is_chrome_never_a_model_row() {
             rect,
             Point2D::new(110.0, footer_y),
             &models,
+            &[],
             "",
         ),
         SelectHit::Inside
     );
+}
+
+#[test]
+fn api_groups_list_before_agent_groups_and_carry_their_tags() {
+    use super::ai_chat_model_picker::{group_tag, grouped_visible_model_indices};
+    let cli = entry(AgentProvider::ClaudeCode, "claude-opus");
+    let api = ModelEntry::builtin(
+        AgentProvider::CodexCli,
+        "gateway",
+        "builtin:gateway:gpt-5",
+        "gpt-5",
+    );
+    let models = [cli, api];
+    let groups = grouped_visible_model_indices(&models, "");
+    assert_eq!(
+        groups,
+        vec![vec![1], vec![0]],
+        "API first, then the CLI agent"
+    );
+    assert_eq!(group_tag(&models[1]), "API");
+    assert_eq!(group_tag(&models[0]), "CLI");
+    assert_eq!(
+        super::ai_chat_model_picker::group_label_for_entry(&models[0]),
+        "CLAUDE CODE"
+    );
+}
+
+#[test]
+fn an_offline_agent_gets_a_connect_row_under_the_groups() {
+    let models = [entry(AgentProvider::ClaudeCode, "claude-opus")];
+    let offline = [AgentProvider::CodexCli];
+    let with = picker_content_height(&models, &offline, "");
+    let without = picker_content_height(&models, &[], "");
+    assert!((with - without - MODEL_ROW_H).abs() < 0.01);
+    let rect = Rect::xywh(0.0, 0.0, 300.0, with);
+    let state = SelectState {
+        open: true,
+        ..Default::default()
+    };
+    // The offline row is the last list row, just above the footer.
+    let row_y = rect.size.y - MODEL_FOOTER_H - MODEL_PICKER_PAD_Y - MODEL_ROW_H / 2.0;
+    let point = Point2D::new(150.0, row_y);
+    assert_eq!(
+        offline_agent_at(&state, rect, point, &models, &offline, ""),
+        Some(AgentProvider::CodexCli)
+    );
+    assert_eq!(
+        model_picker_hit(&state, rect, point, &models, &offline, ""),
+        SelectHit::Inside,
+        "a Connect row never selects a model"
+    );
+    // Search filters it by the agent's name.
+    assert_eq!(
+        offline_agent_at(&state, rect, point, &models, &offline, "zzz"),
+        None
+    );
+    let footer = footer_rect(rect);
+    assert_eq!(footer.origin.y + footer.size.y, rect.size.y);
 }

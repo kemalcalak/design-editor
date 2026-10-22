@@ -178,6 +178,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.thought" => "Думал {{seconds}} с",
         "chat.thinking" => "Думает…",
         "chat.status.working" => "Работает…",
+        "chat.picker.manage" => "Управлять провайдерами и агентами…",
+        "chat.picker.notConnected" => "не подключён",
+        "chat.picker.connect" => "Подключить",
         _ => return None,
     })
 }

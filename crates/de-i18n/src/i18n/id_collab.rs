@@ -178,6 +178,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.thought" => "Berpikir {{seconds}} dtk",
         "chat.thinking" => "Sedang berpikir…",
         "chat.status.working" => "Sedang bekerja…",
+        "chat.picker.manage" => "Kelola penyedia & agen…",
+        "chat.picker.notConnected" => "belum terhubung",
+        "chat.picker.connect" => "Hubungkan",
         _ => return None,
     })
 }
