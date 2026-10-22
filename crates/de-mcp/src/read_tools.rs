@@ -7,10 +7,9 @@
 use std::collections::BTreeMap;
 
 use de_editor_core::pen_node_ext::PenNodeExt;
-use de_editor_core::walkers::find_node;
-use de_editor_core::{EditorState, NodeId};
+use de_editor_core::EditorState;
 use jian_ops_schema::node::PenNode;
-use jian_scene::layout_scene::{NodeKind, SceneNode};
+use jian_scene::layout_scene::{NodeKind, SceneNode, ScenePage};
 use serde_json::{json, Map, Value};
 
 use super::tools::kind_label;
@@ -363,36 +362,6 @@ fn page_space_snapshots(state: &EditorState) -> (Vec<PageSpace>, String) {
     }
 }
 
-/// `(x, y, w, h)` for one node mirroring TS `getNodeBounds` (tree-utils.ts):
-/// authored `base.x/y` (parent-relative), and numeric width/height or 100
-/// when missing/keyword/zero (TS `w || 100`). A `ref` node with no numeric
-/// width adopts the referenced node's dimensions (looked up in `all_nodes`),
-/// exactly as TS does.
-fn node_bounds(n: &PenNode, all_nodes: &[PenNode]) -> (f64, f64, f64, f64) {
-    let base = n.base();
-    let numeric = |px: Option<f64>| px.filter(|&v| v != 0.0);
-    let mut w = numeric(n.width_px());
-    let mut h = numeric(n.height_px());
-    // TS: `if (node.type === 'ref' && !w)` → take the referenced component's
-    // numeric dims (or 100). The lookup walks the whole page tree (allNodes).
-    if w.is_none() {
-        if let PenNode::Ref(r) = n {
-            if let Some(target) = NodeId::new_opt(r.target.clone()) {
-                if let Some(comp) = find_node(all_nodes, &target) {
-                    w = numeric(comp.width_px());
-                    h = numeric(comp.height_px());
-                }
-            }
-        }
-    }
-    (
-        base.x.unwrap_or(0.0),
-        base.y.unwrap_or(0.0),
-        w.unwrap_or(100.0),
-        h.unwrap_or(100.0),
-    )
-}
-
 fn collect_node_meta(nodes: &[PenNode], out: &mut BTreeMap<String, NodeMeta>) {
     for node in nodes {
         out.insert(
@@ -461,64 +430,20 @@ fn scene_kind_label(kind: &NodeKind) -> &str {
     }
 }
 
-/// Build a TS `computeLayoutTree(roots, all_nodes, max_depth)`-equivalent
-/// `LayoutEntry[]` JSON for an arbitrary subtree (depth-limited, document-
-/// absolute coords). Used by `design_refine` for its `layoutSnapshot` result.
-pub(crate) fn subtree_layout_value(
-    roots: &[PenNode],
-    all_nodes: &[PenNode],
-    max_depth: u32,
-) -> Value {
-    let records = layout_records_in(roots, all_nodes);
+/// `LayoutEntry[]` JSON for the subtree rooted at `root_id` in a resolved
+/// scene page (depth-limited, document-absolute coords), read from the same
+/// jian layout `snapshot_layout` reports — so auto-layout children carry their
+/// flowed position, not a stale authored `x`/`y`. `root` supplies names and
+/// type labels. Used by `design_refine` for its `layoutSnapshot` result.
+pub(crate) fn subtree_layout_value(page: &ScenePage, root: &PenNode, max_depth: u32) -> Value {
+    let Some(scene_root) = page.find(root.id_str()) else {
+        return Value::Array(Vec::new());
+    };
+    let mut meta = BTreeMap::new();
+    collect_node_meta(std::slice::from_ref(root), &mut meta);
+    let records = scene_layout_records(std::slice::from_ref(scene_root), &meta);
     let selected: Vec<&LayoutRecord> = records.iter().filter(|r| r.depth <= max_depth).collect();
     Value::Array(layout_children_values(&selected, "", (0.0, 0.0)))
-}
-
-/// Like [`layout_records`] but with a distinct `all_nodes` scope for ref-node
-/// dim lookup (mirrors TS `computeLayoutTree(roots, allChildren, …)`), so a
-/// subtree can be laid out against the whole page's ref targets.
-fn layout_records_in(roots: &[PenNode], all_nodes: &[PenNode]) -> Vec<LayoutRecord> {
-    fn walk(
-        nodes: &[PenNode],
-        all_nodes: &[PenNode],
-        ancestors: &[String],
-        depth: u32,
-        parent_x: f64,
-        parent_y: f64,
-        out: &mut Vec<LayoutRecord>,
-    ) {
-        for n in nodes {
-            // Mirror TS `getNodeBounds`: x/y are the node's OWN authored
-            // offset (relative to parent), w/h are the numeric width/height or
-            // 100 when missing/keyword (`w || 100`). Then accumulate the
-            // parent's absolute position for document-absolute x/y, exactly as
-            // TS `computeLayoutTree`'s `absX = parentX + bounds.x`. (kept f64:
-            // TS returns raw numbers, never i32-truncated.)
-            let b = node_bounds(n, all_nodes);
-            let x = parent_x + b.0;
-            let y = parent_y + b.1;
-            let id = n.id_str().to_string();
-            out.push(LayoutRecord {
-                id: id.clone(),
-                name: n.base().name.clone(),
-                type_label: kind_label(n).to_string(),
-                ancestors: ancestors.to_vec(),
-                depth,
-                x,
-                y,
-                w: b.2,
-                h: b.3,
-            });
-            if let Some(children) = n.children() {
-                let mut child_ancestors = ancestors.to_vec();
-                child_ancestors.push(id.clone());
-                walk(children, all_nodes, &child_ancestors, depth + 1, x, y, out);
-            }
-        }
-    }
-    let mut out = Vec::new();
-    walk(roots, all_nodes, &[], 0, 0.0, 0.0, &mut out);
-    out
 }
 
 fn page_space(id: &str, roots: &[SceneNode]) -> PageSpace {

@@ -407,3 +407,39 @@ fn design_refine_missing_root_errors_like_ts() {
         other => panic!("expected Root-not-found error, got {other:?}"),
     }
 }
+
+#[test]
+fn design_refine_layout_snapshot_reports_flowed_position_of_auto_layout_child() {
+    // #57: a horizontal row child that still carries a stale authored
+    // `x:300,y:10` is laid out in flow (#54); `layoutSnapshot` must report
+    // that flowed position, not `row + (300, 10)`.
+    let src = r#"{"version":"1.0.0","children":[
+      {"type":"frame","id":"row","name":"Row","x":40,"y":20,"width":640,"height":56,
+       "layout":"horizontal","alignItems":"center","padding":[0,16],"children":[
+        {"type":"rectangle","id":"a","name":"A","width":40,"height":20},
+        {"type":"rectangle","id":"b","name":"B","x":300,"y":10,"width":30,"height":18}]}]}"#;
+    let parsed = jian_ops_schema::load_str(src).expect("parse .op fixture");
+    let state = EditorState::from_document(parsed.value);
+
+    let tool = design_refine_snapshot(&state);
+    let mut args = BTreeMap::new();
+    args.insert("rootId".into(), "row".into());
+
+    let json = match tool.call(&args) {
+        ToolOutcome::OkJsonWithCommand(json, EditorCommand::RefineDesign { .. }) => json,
+        other => panic!("expected OkJsonWithCommand RefineDesign, got {other:?}"),
+    };
+    let v: serde_json::Value = serde_json::from_str(&json).expect("refine json");
+    let row = &v["layoutSnapshot"][0];
+    assert_eq!(row["id"], "row", "{v}");
+    assert_eq!((row["x"].clone(), row["y"].clone()), (40.into(), 20.into()));
+    let b = &row["children"][1];
+    assert_eq!(b["id"], "b", "{v}");
+    // Flowed: after the padding (16) and A (40); centred on the 56-high row.
+    assert_eq!(b["x"], 40 + 16 + 40, "{b}");
+    assert_eq!(b["y"], 20 + (56 - 18) / 2, "{b}");
+    assert_eq!(
+        (b["width"].clone(), b["height"].clone()),
+        (30.into(), 18.into())
+    );
+}

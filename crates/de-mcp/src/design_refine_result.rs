@@ -11,7 +11,7 @@
 use std::collections::BTreeMap;
 
 use de_editor_core::command_refine::refine_subtree;
-use de_editor_core::walkers::find_node;
+use de_editor_core::walkers::{find_node, find_node_mut};
 use de_editor_core::{EditorState, NodeId, PenNodeExt};
 use jian_ops_schema::node::PenNode;
 use serde_json::{json, Map, Value};
@@ -28,6 +28,8 @@ use super::{McpTool, ToolErrorCode, ToolOutcome};
 pub struct DesignRefine {
     pages: Vec<PageNodes>,
     active_page_id: String,
+    /// Laid out with the refined root swapped in for `layoutSnapshot`.
+    state: EditorState,
 }
 
 impl McpTool for DesignRefine {
@@ -48,6 +50,7 @@ pub fn design_refine_snapshot(state: &EditorState) -> DesignRefine {
     DesignRefine {
         pages,
         active_page_id,
+        state: state.clone(),
     }
 }
 
@@ -57,7 +60,7 @@ impl DesignRefine {
     /// active page; otherwise match by page id, falling back to a numeric index
     /// into the page list. `page_nodes_snapshots` preserves `doc.pages` order +
     /// ids, so the numeric index agrees with the host.
-    fn resolve_page(&self, args: &BTreeMap<String, String>) -> Option<&PageNodes> {
+    fn resolve_page(&self, args: &BTreeMap<String, String>) -> Option<usize> {
         match optional_page_id(args)
             .as_deref()
             .map(str::trim)
@@ -66,13 +69,33 @@ impl DesignRefine {
             None => self
                 .pages
                 .iter()
-                .find(|p| p.id == self.active_page_id)
-                .or_else(|| self.pages.first()),
-            Some(raw) => self.pages.iter().find(|p| p.id == raw).or_else(|| {
+                .position(|p| p.id == self.active_page_id)
+                .or_else(|| (!self.pages.is_empty()).then_some(0)),
+            Some(raw) => self.pages.iter().position(|p| p.id == raw).or_else(|| {
                 raw.parse::<usize>()
                     .ok()
-                    .and_then(|idx| self.pages.get(idx))
+                    .filter(|&idx| idx < self.pages.len())
             }),
+        }
+    }
+
+    /// Lay out the document through jian with `refined` swapped in for the
+    /// root (what the host is about to apply) and report the root's resolved
+    /// subtree. Same scene builder as `snapshot_layout`. `page_index` indexes
+    /// `doc.pages` in `self.pages` order; a pageless document is page `0`.
+    fn layout_snapshot(&self, page_index: usize, refined: &PenNode) -> Value {
+        let mut state = self.state.clone();
+        let roots = match state.doc.pages.as_mut() {
+            Some(pages) if !pages.is_empty() => &mut pages[page_index].children,
+            _ => &mut state.doc.children,
+        };
+        if let Some(slot) = find_node_mut(roots, &NodeId::new(refined.id_str().to_string())) {
+            *slot = refined.clone();
+        }
+        let scene = de_pen_loader::editor_state_to_layout_scene(&state);
+        match scene.pages.get(page_index) {
+            Some(page) => crate::read_tools::subtree_layout_value(page, refined, 3),
+            None => Value::Array(Vec::new()),
         }
     }
 
@@ -99,10 +122,10 @@ impl DesignRefine {
         // `optional_page_id(args)` and the apply (command_apply.rs RefineDesign)
         // switches the active page to `command_page_index(...)` before refining
         // — id-match first, then numeric-index fallback, else the active page.
-        let Some(page) = self.resolve_page(args) else {
+        let Some(page_index) = self.resolve_page(args) else {
             return ToolOutcome::Err(ToolErrorCode::ToolFailed, "page not found".into());
         };
-        let children = &page.roots;
+        let children = &self.pages[page_index].roots;
 
         // TS errors when the root is absent instead of silently no-op refining.
         let Some(root) = find_node(children, &NodeId::new(root_id.clone())) else {
@@ -128,21 +151,10 @@ impl DesignRefine {
             })
             .collect();
 
-        // Lay out against the POST-refine page (root swapped in) so ref-node
-        // dimension lookups read the refined dimensions, matching the applied
-        // document. TS: computeLayoutTree([root], allChildren, 3).
-        let all_after: Vec<PenNode> = children
-            .iter()
-            .map(|n| {
-                if n.id_str() == root_id {
-                    refined.clone()
-                } else {
-                    n.clone()
-                }
-            })
-            .collect();
-        let layout_snapshot =
-            crate::read_tools::subtree_layout_value(std::slice::from_ref(&refined), &all_after, 3);
+        // Lay out the POST-refine page (root swapped in) through jian, so the
+        // snapshot matches what the applied document draws: auto-layout
+        // children report their flowed position, not stale authored x/y.
+        let layout_snapshot = self.layout_snapshot(page_index, &refined);
 
         let result = json!({
             "rootId": root_id,
