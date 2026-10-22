@@ -178,27 +178,27 @@ fn model_menu_wheel_recomputes_the_stationary_pointer_hover() {
         let x = content.origin.x + content.size.x * 0.65;
         (0..content.size.y.ceil() as usize)
             .map(|row| de_editor_ui::Point2D::new(x, content.origin.y + row as f32 + 0.5))
-            .find(|point| panel.builtin_model_hover_at(rect, *point) == Some(0))
+            .find(|point| panel.agents_checklist_hover_at(rect, *point) == Some(0))
             .expect("first model row is visible")
     };
     host.editor_state_mut()
         .editor_ui
         .agent_settings
-        .builtin_model_menu_hover = Some(0);
+        .agents_checklist_hover = Some(0);
 
     let outer_before = host.editor_state().editor_ui.agent_settings.scroll_y.offset;
     let zoom_before = host.editor_state().viewport.zoom;
     assert!(host.apply_wheel(point.x, point.y, 48.0, VIEWPORT_W, VIEWPORT_H));
     let settings = &host.editor_state().editor_ui.agent_settings;
-    assert_eq!(settings.builtin_model_menu_scroll.offset, 0.0);
+    assert_eq!(settings.agents_checklist_scroll.offset, 0.0);
     assert_eq!(settings.scroll_y.offset, outer_before);
     assert_eq!(host.editor_state().viewport.zoom, zoom_before);
 
     assert!(host.apply_wheel(point.x, point.y, -48.0, VIEWPORT_W, VIEWPORT_H));
     let settings = &host.editor_state().editor_ui.agent_settings;
-    assert_eq!(settings.builtin_model_menu_scroll.offset, 48.0);
+    assert_eq!(settings.agents_checklist_scroll.offset, 48.0);
     assert_eq!(
-        settings.builtin_model_menu_hover,
+        settings.agents_checklist_hover,
         Some(1),
         "the point sat on the first row's top edge; 48 px over 30 px rows lands on the second"
     );

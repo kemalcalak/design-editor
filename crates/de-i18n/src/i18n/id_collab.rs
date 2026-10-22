@@ -171,7 +171,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.tip.attach.title" => "Lampirkan konteks",
         "chat.tip.attach.body" => "Letakkan PNG, JPG, atau DESIGN.md di sini, atau lampirkan dengan +.",
         "chat.tip.mcp.title" => "Agen lewat MCP",
-        "chat.tip.mcp.body" => "Claude Code dan agen lain juga bisa merancang di sini, di {endpoint}.",
+        "chat.tip.mcp.body" => "Claude Code dan agen lain juga bisa merancang di sini, di {{endpoint}}.",
         "chat.plus.attach" => "Lampirkan file",
         "chat.plus.library" => "Pustaka gaya",
         "chat.plus.parallel" => "Agen paralel",

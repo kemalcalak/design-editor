@@ -21,8 +21,6 @@ impl WidgetHostNative {
             new_close_hover,
             new_server_hover,
             new_copy_hover,
-            new_add_provider_hover,
-            new_add_acp_hover,
             new_image_search_test_hover,
             new_image_search_register_link_hover,
             new_image_add_hover,
@@ -49,7 +47,7 @@ impl WidgetHostNative {
                 None
             };
             let model_hover = if is_agents {
-                panel.builtin_model_hover_at(panel_rect, point)
+                panel.agents_checklist_hover_at(panel_rect, point)
             } else {
                 None
             };
@@ -67,16 +65,6 @@ impl WidgetHostNative {
                 && matches!(
                     hit,
                     de_editor_ui::widgets::agent_settings_panel::AgentSettingsHit::ToggleMcpServer
-                );
-            let add_provider_hover = is_agents
-                && matches!(
-                    hit,
-                    de_editor_ui::widgets::agent_settings_panel::AgentSettingsHit::AddProvider
-                );
-            let add_acp_hover = is_agents
-                && matches!(
-                    hit,
-                    de_editor_ui::widgets::agent_settings_panel::AgentSettingsHit::AddAcpAgent
                 );
             let image_search_test_hover =
                 is_images && panel.image_search_test_button_hover_at(panel_rect, point);
@@ -141,8 +129,6 @@ impl WidgetHostNative {
                 close_hover,
                 server_hover,
                 copy_hover,
-                add_provider_hover,
-                add_acp_hover,
                 image_search_test_hover,
                 image_search_register_link_hover,
                 image_add_hover,
@@ -180,12 +166,12 @@ impl WidgetHostNative {
                 .editor_state
                 .editor_ui
                 .agent_settings
-                .builtin_model_menu_hover
+                .agents_checklist_hover
         {
             self.editor_state
                 .editor_ui
                 .agent_settings
-                .builtin_model_menu_hover = new_model_hover;
+                .agents_checklist_hover = new_model_hover;
             changed = true;
         }
         if new_close_hover
@@ -225,32 +211,6 @@ impl WidgetHostNative {
                 .editor_ui
                 .agent_settings
                 .hover_mcp_server_button = new_server_hover;
-            changed = true;
-        }
-        if new_add_provider_hover
-            != self
-                .editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_provider
-        {
-            self.editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_provider = new_add_provider_hover;
-            changed = true;
-        }
-        if new_add_acp_hover
-            != self
-                .editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_acp_agent
-        {
-            self.editor_state
-                .editor_ui
-                .agent_settings
-                .hover_add_acp_agent = new_add_acp_hover;
             changed = true;
         }
         if new_image_search_test_hover

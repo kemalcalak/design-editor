@@ -202,8 +202,11 @@ impl AgentSettingsPanel<'_> {
 
     /// A screen point inside the visible body where a press resolves to
     /// `hit`, at the current scroll — `None` when nothing visible does.
-    /// Lets host tests (and automation) press a control by what it does
-    /// instead of copying the geometry that places it.
+    /// Lets host tests press a control by what it does instead of copying
+    /// the geometry that places it. It probes the body on a 4 px grid, so
+    /// it is for tests and tooling, never a per-frame path; it stays `pub`
+    /// because the host crates' tests cannot see a `cfg(test)` item here.
+    #[doc(hidden)]
     pub fn point_for_hit(&self, panel: Rect, hit: AgentSettingsHit) -> Option<Point2D> {
         const STEP: f32 = 4.0;
         let content = self.resolved_content_viewport(panel);
@@ -267,7 +270,7 @@ impl AgentSettingsPanel<'_> {
     }
 
     /// Agents tab: the hovered row of the detail's model checklist.
-    pub fn builtin_model_hover_at(&self, panel: Rect, point: Point2D) -> Option<usize> {
+    pub fn agents_checklist_hover_at(&self, panel: Rect, point: Point2D) -> Option<usize> {
         let scrolled = self.agents_point(panel, point)?;
         let body = agents_body(self.resolved_content_viewport(panel));
         self.agents_tab().model_row_at(body, scrolled)
@@ -275,7 +278,7 @@ impl AgentSettingsPanel<'_> {
 
     /// Wheel-scroll cap for the model checklist under `point`; `None`
     /// when the cursor is not over one.
-    pub fn builtin_model_scroll_max_at(&self, panel: Rect, point: Point2D) -> Option<f32> {
+    pub fn agents_checklist_scroll_max_at(&self, panel: Rect, point: Point2D) -> Option<f32> {
         let scrolled = self.agents_point(panel, point)?;
         let body = agents_body(self.resolved_content_viewport(panel));
         self.agents_tab().model_scroll_max_at(body, scrolled)

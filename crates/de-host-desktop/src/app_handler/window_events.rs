@@ -41,11 +41,15 @@ impl DesktopApp {
         }
     }
 
-    /// Swap in a fresh document (File > New's path, so the chat and any
-    /// import session reset with it) and show Home over it. Home is not
-    /// dismissible here: Escape must not land on the blank starter page
-    /// as if it were the document just closed.
+    /// Stop any running turn, swap in a fresh document (File > New's path,
+    /// so import sessions reset with it) and show Home over it. The stop
+    /// goes through the same drain as the Stop button: otherwise the closed
+    /// document's agent would keep streaming into the blank starter behind
+    /// Home. Home is not dismissible here: Escape must not land on the
+    /// blank starter page as if it were the document just closed.
     fn close_document_to_home(&mut self) {
+        self.host.editor_state_mut().chat.pending_stop_chat = true;
+        self.drain_stop_chat();
         let outcome = persistence::run_action(
             de_editor_core::editor_ui_state::FileAction::New,
             &mut self.host,

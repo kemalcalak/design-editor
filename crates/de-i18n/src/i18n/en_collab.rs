@@ -171,7 +171,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.tip.attach.title" => "Attach context",
         "chat.tip.attach.body" => "Drop a PNG, JPG or DESIGN.md here, or attach with +.",
         "chat.tip.mcp.title" => "Agents over MCP",
-        "chat.tip.mcp.body" => "Claude Code and other agents can design here too, at {endpoint}.",
+        "chat.tip.mcp.body" => "Claude Code and other agents can design here too, at {{endpoint}}.",
         "chat.plus.attach" => "Attach file",
         "chat.plus.library" => "Style library",
         "chat.plus.parallel" => "Parallel agents",

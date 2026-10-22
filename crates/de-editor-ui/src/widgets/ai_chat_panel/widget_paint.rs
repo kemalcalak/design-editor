@@ -109,7 +109,7 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
                             ),
                             (
                                 t("chat.tip.mcp.title"),
-                                t("chat.tip.mcp.body").replace("{endpoint}", &self.mcp_endpoint),
+                                t("chat.tip.mcp.body").replace("{{endpoint}}", &self.mcp_endpoint),
                             ),
                         ],
                         // Prompts stay enabled without a connected model (#43) —

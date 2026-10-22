@@ -43,11 +43,18 @@ pub(crate) fn plus_menu_row_at(menu: Rect, point: Point2D) -> Option<u8> {
     (0..PLUS_MENU_ROWS).find(|row| row_rect(menu, *row).contains(point))
 }
 
-/// What pressing `row` does. Attaching waits while a turn streams, as the
-/// old paperclip did.
+/// Rows that wait while a turn streams: attaching (as the old paperclip
+/// did) and the team size (the old chip was inert mid-turn).
+fn row_waits_for_turn(row: u8) -> bool {
+    row == 0 || row == 3
+}
+
+/// What pressing `row` does.
 pub(crate) fn plus_menu_row_hit(row: u8, streaming: bool) -> AIChatHit {
+    if streaming && row_waits_for_turn(row) {
+        return AIChatHit::Inside;
+    }
     match row {
-        0 if streaming => AIChatHit::Inside,
         0 => AIChatHit::AddAttachment,
         1 => AIChatHit::OpenPromptCenter,
         2 => AIChatHit::CycleThinking,
@@ -85,7 +92,7 @@ pub(crate) fn paint_plus_menu(
     ];
     for (index, (icon, label, value)) in rows.into_iter().enumerate() {
         let row = row_rect(menu, index as u8);
-        let disabled = index == 0 && state.streaming;
+        let disabled = state.streaming && row_waits_for_turn(index as u8);
         if state.hover == Some(index as u8) && !disabled {
             cx.backend.fill_round_rect(row, 6.0, palette.subtle);
         }
@@ -177,5 +184,6 @@ mod tests {
             plus_menu_row_hit(3, false),
             AIChatHit::ToggleParallelAgentsPicker
         );
+        assert_eq!(plus_menu_row_hit(3, true), AIChatHit::Inside);
     }
 }

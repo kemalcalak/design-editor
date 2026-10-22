@@ -121,7 +121,7 @@ impl WidgetHostNative {
         self.refresh_layout_scene();
         let (panel, panel_rect) = self.agent_settings_geometry(viewport_width, viewport_height);
         let point = Point2D::new(x, y);
-        let Some(max) = panel.builtin_model_scroll_max_at(panel_rect, point) else {
+        let Some(max) = panel.agents_checklist_scroll_max_at(panel_rect, point) else {
             return false;
         };
         let changed = scroll_by_max(
@@ -129,7 +129,7 @@ impl WidgetHostNative {
                 .editor_state
                 .editor_ui
                 .agent_settings
-                .builtin_model_menu_scroll,
+                .agents_checklist_scroll,
             -delta,
             max,
         );

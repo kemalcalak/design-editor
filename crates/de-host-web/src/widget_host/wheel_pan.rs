@@ -121,7 +121,7 @@ impl WidgetHost {
                 return false;
             }
             (
-                panel.builtin_model_scroll_max_at(panel_rect, point),
+                panel.agents_checklist_scroll_max_at(panel_rect, point),
                 panel.builtin_preset_scroll_max_at(panel_rect, point),
                 panel.max_scroll(panel_rect),
             )
@@ -130,7 +130,7 @@ impl WidgetHost {
         let settings = &mut self.editor_state.editor_ui.agent_settings;
         if let Some(max) = model_max {
             settings
-                .builtin_model_menu_scroll
+                .agents_checklist_scroll
                 .scroll_by(-delta_y, max, 0.0);
         } else if let Some(max) = preset_max {
             settings

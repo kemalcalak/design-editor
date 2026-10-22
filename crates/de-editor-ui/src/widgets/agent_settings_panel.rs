@@ -131,9 +131,8 @@ impl AgentSettingsPanelMode {
         }
     }
 
-    /// Whether the Agents tab paints the external-CLI half of the tab —
-    /// the ACP section and the provider card list, plus the section
-    /// headers that only exist to add or connect one.
+    /// Whether the Agents tab lists the agents on this machine — the CLI
+    /// agents, the ACP agents and "Add ACP agent" — and their detail panes.
     ///
     /// Paint, hit-test, hover, and the content-height walk all read this
     /// one predicate so a hidden block leaves no live hit rect behind it.
@@ -195,12 +194,12 @@ pub enum AgentSettingsHit {
     /// Model checklist row pressed — positional index into the pane's
     /// rows (saved models, then the catalog's others), resolved to the
     /// model id by the press arm so this enum stays `Copy`.
-    SelectBuiltinModel {
+    ToggleBuiltinModel {
         index: Option<usize>,
         row: usize,
     },
     SaveBuiltinAgentDraft,
-    /// Commit the expanded editing form's drafts and collapse the card.
+    /// Commit the focused field of a saved provider and refresh its catalog.
     SaveBuiltinAgentEditing(usize),
     CancelBuiltinAgentDraft,
     ToggleBuiltinAgentEnabled(usize),

@@ -56,11 +56,10 @@ impl AgentSettings {
     pub fn select_agents_entry(&mut self, entry: AgentsEntry) {
         self.agents_selected = Some(entry);
         self.api_key_revealed = false;
-        self.builtin_model_menu_scroll.offset = 0.0;
+        self.agents_checklist_scroll.offset = 0.0;
         self.builtin_preset_menu_open = None;
         self.builtin_preset_menu_hover = None;
-        self.builtin_model_menu_open = None;
-        self.builtin_model_menu_hover = None;
+        self.agents_checklist_hover = None;
     }
 
     /// Fill the ACP draft from a quick-add preset, or clear it back to a
@@ -86,6 +85,25 @@ impl AgentSettings {
                 draft.args.clear();
             }
         }
+    }
+
+    /// The saved ACP agent a quick-add preset already became (by id, or a
+    /// hand-typed twin of its transport) — picking that preset again should
+    /// open it, not add a second copy.
+    pub fn acp_agent_for_preset(&self, preset_id: &str) -> Option<String> {
+        let preset = acp_agent_preset(preset_id)?;
+        self.acp_agents
+            .iter()
+            .find(|agent| {
+                agent.id == preset.id
+                    || (agent.connection_type == AcpConnectionType::Local
+                        && crate::acp_agent_presets::matches_preset_transport(
+                            preset,
+                            &agent.command,
+                            &agent.args,
+                        ))
+            })
+            .map(|agent| agent.id.clone())
     }
 
     /// Switch an ACP agent (`Some(index)`) or the draft between a local
@@ -159,6 +177,21 @@ mod tests {
     }
 
     #[test]
+    fn taking_over_a_browser_provider_keeps_it_selected() {
+        let mut settings = AgentSettings::default();
+        with_builtin(&mut settings, "One");
+        settings.add_builtin_agent_with_defaults("Browser", "sk-browser", "model-b");
+        settings.builtin_agents[1].id = "web-credential:builtin:b-1".into();
+        settings.select_agents_entry(AgentsEntry::Builtin("web-credential:builtin:b-1".into()));
+        assert!(settings.take_over_browser_builtin_agent(1));
+        let id = settings.builtin_agents[1].id.clone();
+        assert_eq!(
+            settings.resolved_agents_entry(true),
+            Some(AgentsEntry::Builtin(id))
+        );
+    }
+
+    #[test]
     fn external_rows_are_not_selectable_on_the_web_list() {
         let mut settings = AgentSettings::default();
         settings.select_agents_entry(AgentsEntry::Cli(AgentProvider::CodexCli));
@@ -206,6 +239,14 @@ mod tests {
         settings.fill_acp_draft_from_preset(None);
         let draft = settings.acp_agent_draft.as_ref().unwrap();
         assert!(draft.command.is_empty() && draft.args.is_empty());
+    }
+
+    #[test]
+    fn an_added_preset_resolves_to_its_agent() {
+        let mut settings = AgentSettings::default();
+        assert_eq!(settings.acp_agent_for_preset("kimi"), None);
+        settings.add_acp_agent_preset("kimi").unwrap();
+        assert_eq!(settings.acp_agent_for_preset("kimi"), Some("kimi".into()));
     }
 
     #[test]

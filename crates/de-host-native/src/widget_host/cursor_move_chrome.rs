@@ -142,6 +142,8 @@ impl WidgetHostNative {
             self.editor_state.editor_ui.parallel_agents_picker_hover = parallel_hover;
             chat_hover_changed = true;
         }
+        // Like web's: a row under a higher surface must not light up.
+        let plus_hover = plus_hover.filter(|_| !over_topmost);
         if plus_hover != self.editor_state.editor_ui.chat_plus_menu_hover {
             self.editor_state.editor_ui.chat_plus_menu_hover = plus_hover;
             chat_hover_changed = true;

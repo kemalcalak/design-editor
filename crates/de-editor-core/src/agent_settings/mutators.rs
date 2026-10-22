@@ -38,9 +38,14 @@ impl AgentSettings {
             self.builtin_agents.iter().map(|agent| agent.id.as_str()),
         );
         self.invalidate_builtin_model_catalog_for_agent(&old_id);
-        self.builtin_agents[index].id = format!("builtin-{next}");
+        let new_id = format!("builtin-{next}");
+        self.builtin_agents[index].id = new_id.clone();
         self.next_builtin_agent_id = next.saturating_add(1);
-        debug_assert_ne!(self.builtin_agents[index].id, old_id);
+        debug_assert_ne!(new_id, old_id);
+        // The Agents tab selects by id: keep it on the provider being edited.
+        if self.agents_selected == Some(AgentsEntry::Builtin(old_id)) {
+            self.agents_selected = Some(AgentsEntry::Builtin(new_id));
+        }
         true
     }
 

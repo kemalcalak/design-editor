@@ -171,7 +171,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.tip.attach.title" => "Đính kèm ngữ cảnh",
         "chat.tip.attach.body" => "Thả PNG, JPG hoặc DESIGN.md vào đây, hoặc đính kèm bằng +.",
         "chat.tip.mcp.title" => "Agent qua MCP",
-        "chat.tip.mcp.body" => "Claude Code và các agent khác cũng có thể thiết kế ở đây, tại {endpoint}.",
+        "chat.tip.mcp.body" => "Claude Code và các agent khác cũng có thể thiết kế ở đây, tại {{endpoint}}.",
         "chat.plus.attach" => "Đính kèm tệp",
         "chat.plus.library" => "Thư viện phong cách",
         "chat.plus.parallel" => "Agent song song",

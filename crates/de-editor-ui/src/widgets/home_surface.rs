@@ -24,6 +24,8 @@ mod icons;
 
 #[path = "home_surface_copy.rs"]
 mod copy;
+/// Backend-free text width, shared with the settings modal's hit geometry.
+pub(crate) use copy::estimate_width;
 pub use copy::size_chip_label;
 
 #[path = "home_surface_model.rs"]

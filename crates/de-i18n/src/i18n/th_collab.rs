@@ -171,7 +171,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.tip.attach.title" => "แนบบริบท",
         "chat.tip.attach.body" => "วาง PNG, JPG หรือ DESIGN.md ที่นี่ หรือแนบด้วย +",
         "chat.tip.mcp.title" => "เอเจนต์ผ่าน MCP",
-        "chat.tip.mcp.body" => "Claude Code และเอเจนต์อื่นก็ออกแบบที่นี่ได้ที่ {endpoint}",
+        "chat.tip.mcp.body" => "Claude Code และเอเจนต์อื่นก็ออกแบบที่นี่ได้ที่ {{endpoint}}",
         "chat.plus.attach" => "แนบไฟล์",
         "chat.plus.library" => "คลังสไตล์",
         "chat.plus.parallel" => "เอเจนต์แบบขนาน",

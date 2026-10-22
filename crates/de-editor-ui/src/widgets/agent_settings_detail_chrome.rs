@@ -7,7 +7,7 @@ use crate::theme::Theme;
 use crate::widgets::agent_settings_rows::{fit_text, measure_settings_text, SETTINGS_FONT_FAMILY};
 use crate::widgets::agent_settings_switch::{SETTINGS_SWITCH_H, SETTINGS_SWITCH_W};
 use crate::widgets::button::tokens_from_theme;
-use crate::widgets::home_surface::MONO;
+use crate::widgets::home_surface::{estimate_width, MONO};
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -18,6 +18,9 @@ pub(crate) const LABEL_FONT: f32 = 12.5;
 pub(crate) const VALUE_FONT: f32 = 13.0;
 /// Title block: title over one muted line.
 pub(crate) const HEADER_H: f32 = 60.0;
+/// Baselines of the title and its muted line, from the block's top.
+const TITLE_BASELINE: f32 = 20.0;
+const SUBTITLE_BASELINE: f32 = 42.0;
 /// A field label's band above its input.
 pub(crate) const LABEL_H: f32 = 24.0;
 pub(crate) const INPUT_H: f32 = 36.0;
@@ -30,6 +33,19 @@ pub(crate) const CHECK_BOX_PAD: f32 = 4.0;
 /// Rows a checklist shows before it scrolls.
 pub(crate) const CHECK_MAX_ROWS: usize = 8;
 const CHECK_SIZE: f32 = 16.0;
+/// Segmented control: label size, room around each label, track inset.
+const SEGMENT_FONT: f32 = 12.5;
+const SEGMENT_PAD_X: f32 = 14.0;
+const SEGMENT_TRACK_PAD: f32 = 4.0;
+/// Footer button: padding the width estimate adds per side, the smaller
+/// padding the painted label is fitted within, and an icon's slot.
+const BUTTON_PAD_X: f32 = 16.0;
+const BUTTON_FIT_PAD_X: f32 = 10.0;
+const ICON_SLOT: f32 = 22.0;
+/// Gap between the title block and the first field, and between the last
+/// field and the footer row.
+pub(crate) const BODY_TOP_GAP: f32 = 8.0;
+pub(crate) const FOOTER_GAP: f32 = 28.0;
 const RADIUS: f32 = 8.0;
 
 /// One run of text at a baseline.
@@ -53,6 +69,15 @@ pub(crate) fn text(
 /// Baseline that centres one line of `size` text in `rect`.
 pub(crate) fn centred_baseline(rect: Rect, size: f32) -> f32 {
     jian_widgets::centered_text_baseline_y(rect, size)
+}
+
+/// The next labelled field down a pane: its label band, then a `w`×`h`
+/// input at `x`; `y` advances past it and the gap to the next field.
+pub(crate) fn next_field(x: f32, y: &mut f32, w: f32, h: f32) -> Rect {
+    *y += LABEL_H;
+    let rect = Rect::xywh(x, *y, w, h);
+    *y += h + FIELD_GAP;
+    rect
 }
 
 /// The enable switch at the right of the title block.
@@ -89,7 +114,7 @@ pub(crate) fn paint_header(
         600,
         SETTINGS_FONT_FAMILY,
         detail.origin.x,
-        detail.origin.y + 20.0,
+        detail.origin.y + TITLE_BASELINE,
     );
     let subtitle = fit_text(cx, subtitle, budget, SUBTITLE_FONT);
     text(
@@ -100,7 +125,7 @@ pub(crate) fn paint_header(
         400,
         SETTINGS_FONT_FAMILY,
         detail.origin.x,
-        detail.origin.y + 42.0,
+        detail.origin.y + SUBTITLE_BASELINE,
     );
     if let Some(on) = switch {
         crate::widgets::agent_settings_switch::paint_settings_switch(
@@ -181,7 +206,7 @@ pub(crate) fn paint_segmented(
         icons: None,
         active: active.unwrap_or(usize::MAX),
         hover: None,
-        font_size: 12.5,
+        font_size: SEGMENT_FONT,
     }
     .paint(cx.backend, rect, &segment_tokens(theme));
 }
@@ -204,9 +229,9 @@ pub(crate) fn segment_at(rect: Rect, count: usize, point: Point2D) -> Option<usi
 pub(crate) fn segmented_width(labels: &[&str]) -> f32 {
     labels
         .iter()
-        .map(|label| label.chars().count() as f32 * 7.4 + 28.0)
+        .map(|label| estimate_width(label, SEGMENT_FONT) + SEGMENT_PAD_X * 2.0)
         .sum::<f32>()
-        + 8.0
+        + SEGMENT_TRACK_PAD * 2.0
 }
 
 /// Height of a checklist box with `rows` rows (capped, then it scrolls).
@@ -217,6 +242,12 @@ pub(crate) fn checklist_height(rows: usize) -> f32 {
 /// How far a checklist with `rows` rows can scroll.
 pub(crate) fn checklist_scroll_max(rows: usize) -> f32 {
     rows.saturating_sub(CHECK_MAX_ROWS) as f32 * CHECK_ROW_H
+}
+
+/// The stored checklist scroll, clamped to `rows` — the list can shrink
+/// under a stale offset when the selection or the catalog changes.
+pub(crate) fn checklist_scroll(offset: f32, rows: usize) -> f32 {
+    offset.clamp(0.0, checklist_scroll_max(rows))
 }
 
 /// Row `index` of a checklist, before clipping to the box.
@@ -332,7 +363,7 @@ pub(crate) enum ButtonKind {
 
 /// Estimated button width for hit geometry, which has no painter.
 pub(crate) fn button_width_estimate(label: &str, icon: bool) -> f32 {
-    label.chars().count() as f32 * 7.6 + 32.0 + if icon { 22.0 } else { 0.0 }
+    estimate_width(label, VALUE_FONT) + BUTTON_PAD_X * 2.0 + if icon { ICON_SLOT } else { 0.0 }
 }
 
 /// A rounded footer button.
@@ -356,13 +387,13 @@ pub(crate) fn paint_button(
             theme.foreground
         }
     };
-    let icon_w = if icon.is_some() { 22.0 } else { 0.0 };
+    let icon_w = if icon.is_some() { ICON_SLOT } else { 0.0 };
     // Widths come from an estimate (hit-test has no painter), so a long
     // translation is fitted rather than left to spill past the border.
     let label = fit_text(
         cx,
         label,
-        (rect.size.x - 24.0 - icon_w).max(0.0),
+        (rect.size.x - BUTTON_FIT_PAD_X * 2.0 - icon_w).max(0.0),
         VALUE_FONT,
     );
     let label = label.as_str();

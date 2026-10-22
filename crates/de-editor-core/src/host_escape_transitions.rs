@@ -252,8 +252,7 @@ impl EditorUiState {
         self.agent_settings.focus = None;
         self.agent_settings.builtin_preset_menu_open = None;
         self.agent_settings.builtin_preset_menu_hover = None;
-        self.agent_settings.builtin_model_menu_open = None;
-        self.agent_settings.builtin_model_menu_hover = None;
+        self.agent_settings.agents_checklist_hover = None;
         self.agent_settings.image_gen_provider_menu_open = None;
         self.agent_settings.hover_image_gen_provider_option = None;
         self.agent_settings.hover_agent_settings_close = false;
@@ -266,12 +265,8 @@ impl EditorUiState {
         self.agent_settings.hover_image_gen_profile_remove = None;
         self.agent_settings.hover_image_gen_profile_provider = None;
         self.agent_settings.hover_image_gen_profile_test = None;
-        self.agent_settings.hover_provider = usize::MAX;
-        self.agent_settings.hover_builtin_agent = usize::MAX;
-        self.agent_settings.hover_acp_agent = usize::MAX;
-        self.agent_settings.hover_add_provider = false;
-        self.agent_settings.hover_add_acp_agent = false;
-        self.agent_settings.hover_acp_preset = None;
+        self.agent_settings.hover_agents_row = None;
+        self.agent_settings.agents_checklist_hover = None;
         self.agent_settings.hover_nav = None;
         self.settings_input.reset_transient();
 

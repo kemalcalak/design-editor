@@ -149,10 +149,16 @@ pub(crate) fn apply_agents_hit(
             let preset = row
                 .and_then(|row| de_editor_core::acp_agent_presets::ACP_AGENT_PRESETS.get(row))
                 .map(|preset| preset.id);
-            state
-                .editor_ui
-                .agent_settings
-                .fill_acp_draft_from_preset(preset);
+            let existing =
+                preset.and_then(|id| state.editor_ui.agent_settings.acp_agent_for_preset(id));
+            match existing {
+                // Already added: open that agent rather than a duplicate draft.
+                Some(id) => select(state, AgentsEntry::Acp(id)),
+                None => state
+                    .editor_ui
+                    .agent_settings
+                    .fill_acp_draft_from_preset(preset),
+            }
         }
         AgentSettingsHit::SetAcpConnection { index, kind } => {
             commit(state);
@@ -279,6 +285,24 @@ mod tests {
             .agent_settings
             .take_pending_builtin_model_catalog_refresh()
             .is_some());
+    }
+
+    #[test]
+    fn picking_an_added_preset_opens_the_existing_agent() {
+        let mut state = EditorState::new();
+        state
+            .editor_ui
+            .agent_settings
+            .add_acp_agent_preset("gemini-cli");
+        press(&mut state, AgentSettingsHit::AddAcpAgent);
+        press(&mut state, AgentSettingsHit::SelectAcpPreset(Some(1)));
+        let settings = &state.editor_ui.agent_settings;
+        assert!(settings.acp_agent_draft.is_none());
+        assert_eq!(settings.acp_agents.len(), 1);
+        assert_eq!(
+            settings.agents_selected,
+            Some(AgentsEntry::Acp("gemini-cli".into()))
+        );
     }
 
     #[test]

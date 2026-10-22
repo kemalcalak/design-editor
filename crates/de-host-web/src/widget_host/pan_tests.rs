@@ -167,7 +167,7 @@ fn trackpad_pan_over_model_menu_scrolls_menu_before_settings_body() {
             .map(|row| Point2D::new(x, content.origin.y + row as f32 + 0.5))
             .find(|point| {
                 panel
-                    .builtin_model_scroll_max_at(rect, *point)
+                    .agents_checklist_scroll_max_at(rect, *point)
                     .is_some_and(|max| max > 0.0)
             })
             .expect("model checklist is inside settings viewport")
@@ -176,7 +176,7 @@ fn trackpad_pan_over_model_menu_scrolls_menu_before_settings_body() {
     assert!(host.apply_pan_gesture(point.x, point.y, -0.5, -48.0, VIEWPORT_W, VIEWPORT_H,));
 
     let settings = &host.editor_state.editor_ui.agent_settings;
-    assert!(settings.builtin_model_menu_scroll.offset > 0.0);
+    assert!(settings.agents_checklist_scroll.offset > 0.0);
     assert_eq!(settings.scroll_y.offset, 0.0);
     assert_eq!(host.editor_state.viewport.pan_x, 0.0);
     assert_eq!(host.editor_state.viewport.pan_y, 0.0);

@@ -89,21 +89,37 @@ fn visible_offline(offline: &[AgentProvider], search: &str) -> Vec<AgentProvider
         .collect()
 }
 
-/// Where a group's models come from: an API key, an agent CLI on this
-/// machine, or an ACP agent. Groups list in that order.
-fn group_kind(entry: &ModelEntry) -> u8 {
-    if is_builtin(entry) {
-        0
-    } else if is_acp(entry) {
-        2
-    } else {
-        1
+/// Where a model comes from, in the order the picker lists the groups.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum GroupKind {
+    Api,
+    Cli,
+    Acp,
+}
+
+impl GroupKind {
+    fn of(entry: &ModelEntry) -> Self {
+        if is_builtin(entry) {
+            GroupKind::Api
+        } else if is_acp(entry) {
+            GroupKind::Acp
+        } else {
+            GroupKind::Cli
+        }
+    }
+
+    fn tag(self) -> &'static str {
+        match self {
+            GroupKind::Api => "API",
+            GroupKind::Cli => "CLI",
+            GroupKind::Acp => "ACP",
+        }
     }
 }
 
 /// The tag a group header carries at its right edge.
 pub(crate) fn group_tag(entry: &ModelEntry) -> &'static str {
-    ["API", "CLI", "ACP"][group_kind(entry) as usize]
+    GroupKind::of(entry).tag()
 }
 
 /// One laid-out row in the dropdown.
@@ -196,7 +212,7 @@ pub(crate) fn grouped_visible_model_indices(
     }
     // API providers first, then agents on this machine, then ACP agents;
     // first-seen order within each.
-    groups.sort_by_key(|group| group_kind(&models[group[0]]));
+    groups.sort_by_key(|group| GroupKind::of(&models[group[0]]));
     groups
 }
 

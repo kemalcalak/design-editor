@@ -5,8 +5,8 @@
 use crate::theme::Theme;
 use crate::widgets::agent_settings_detail_chrome::{
     self as chrome, button_width_estimate, checklist_height, checklist_row_at, paint_button,
-    paint_checklist, paint_header, paint_label, paint_status, text, ButtonKind, CheckRow, BUTTON_H,
-    FIELD_GAP, HEADER_H, LABEL_FONT, LABEL_H, VALUE_FONT,
+    paint_checklist, paint_header, paint_label, paint_status, text, ButtonKind, CheckRow,
+    BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H, LABEL_FONT, LABEL_H, VALUE_FONT,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_rows::{fit_text, SETTINGS_FONT_FAMILY};
@@ -21,15 +21,21 @@ use de_editor_core::ModelEntry;
 
 const STATUS_H: f32 = 64.0;
 const EMPTY_H: f32 = 52.0;
-const FOOTER_GAP: f32 = 28.0;
 
 /// The agent's discovered model ids, in discovery order.
 pub(crate) fn cli_model_rows(discovered: &[ModelEntry], provider: AgentProvider) -> Vec<&str> {
-    discovered
-        .iter()
-        .filter(|entry| entry.provider == provider && entry.builtin_provider_id.is_none())
+    agent_models(discovered, provider)
         .map(|entry| entry.value.as_str())
         .collect()
+}
+
+fn agent_models(
+    discovered: &[ModelEntry],
+    provider: AgentProvider,
+) -> impl Iterator<Item = &ModelEntry> {
+    discovered
+        .iter()
+        .filter(move |entry| entry.provider == provider && entry.builtin_provider_id.is_none())
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -60,7 +66,7 @@ pub(crate) fn cli_layout(
 ) -> CliLayout {
     let x = detail.origin.x;
     let w = detail.size.x;
-    let mut y = detail.origin.y + HEADER_H + 8.0 + LABEL_H;
+    let mut y = detail.origin.y + HEADER_H + BODY_TOP_GAP + LABEL_H;
     let status = Rect::xywh(x, y, w, STATUS_H);
     let recheck_w = button_width_estimate(t_settings(ui, "settings.agents.checkAgain"), true);
     let recheck = Rect::xywh(
@@ -70,7 +76,7 @@ pub(crate) fn cli_layout(
         BUTTON_H,
     );
     y += STATUS_H + FIELD_GAP + LABEL_H;
-    let model_rows = cli_model_rows(discovered, provider).len();
+    let model_rows = agent_models(discovered, provider).count();
     let models_h = if model_rows == 0 {
         EMPTY_H
     } else {
@@ -106,7 +112,8 @@ pub(crate) fn cli_hit(settings: &AgentSettings, layout: &CliLayout, point: Point
         return CliHit::Recheck;
     }
     if layout.model_rows > 0 {
-        let scroll = settings.builtin_model_menu_scroll.offset;
+        let scroll =
+            chrome::checklist_scroll(settings.agents_checklist_scroll.offset, layout.model_rows);
         if let Some(row) = checklist_row_at(layout.models, layout.model_rows, scroll, point) {
             return CliHit::ToggleModel(row);
         }
@@ -291,8 +298,8 @@ pub(crate) fn paint_cli_detail(
             theme,
             layout.models,
             &rows,
-            settings.builtin_model_menu_scroll.offset,
-            settings.builtin_model_menu_hover,
+            chrome::checklist_scroll(settings.agents_checklist_scroll.offset, ids.len()),
+            settings.agents_checklist_hover,
         );
     }
     paint_status(

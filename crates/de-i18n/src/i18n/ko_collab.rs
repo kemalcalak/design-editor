@@ -173,7 +173,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.tip.attach.title" => "컨텍스트 첨부",
         "chat.tip.attach.body" => "PNG, JPG 또는 DESIGN.md를 여기에 놓거나 +로 첨부하세요.",
         "chat.tip.mcp.title" => "MCP로 연결된 에이전트",
-        "chat.tip.mcp.body" => "Claude Code 등 에이전트도 여기서 디자인할 수 있습니다: {endpoint}.",
+        "chat.tip.mcp.body" => "Claude Code 등 에이전트도 여기서 디자인할 수 있습니다: {{endpoint}}.",
         "chat.plus.attach" => "파일 첨부",
         "chat.plus.library" => "스타일 라이브러리",
         "chat.plus.parallel" => "병렬 에이전트",

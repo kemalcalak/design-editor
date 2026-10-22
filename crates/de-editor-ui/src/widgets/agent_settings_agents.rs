@@ -8,7 +8,9 @@ use crate::widgets::agent_settings_acp_detail::{self as acp, AcpHit};
 use crate::widgets::agent_settings_agents_list::{self as list, ListItem};
 use crate::widgets::agent_settings_api_detail::{self as api, ApiHit};
 use crate::widgets::agent_settings_cli_detail::{self as cli, CliHit};
-use crate::widgets::agent_settings_detail_chrome::{checklist_row_at, checklist_scroll_max};
+use crate::widgets::agent_settings_detail_chrome::{
+    checklist_row_at, checklist_scroll, checklist_scroll_max,
+};
 use crate::widgets::agent_settings_panel::AgentSettingsHit;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
@@ -191,7 +193,7 @@ impl<'a> AgentsTab<'a> {
                 None => AgentSettingsHit::FocusBuiltinAgentDraft(field),
             },
             ApiHit::RevealKey => AgentSettingsHit::ToggleApiKeyReveal,
-            ApiHit::ToggleModel(row) => AgentSettingsHit::SelectBuiltinModel { index, row },
+            ApiHit::ToggleModel(row) => AgentSettingsHit::ToggleBuiltinModel { index, row },
             ApiHit::Fetch => AgentSettingsHit::FetchBuiltinModels(index),
             ApiHit::Save => match index {
                 Some(index) => AgentSettingsHit::SaveBuiltinAgentEditing(index),
@@ -235,12 +237,8 @@ impl<'a> AgentsTab<'a> {
     /// The checklist row under `point`, for hover.
     pub(crate) fn model_row_at(&self, body: Rect, point: Point2D) -> Option<usize> {
         let (boxed, rows) = self.checklist(body)?;
-        checklist_row_at(
-            boxed,
-            rows,
-            self.settings.builtin_model_menu_scroll.offset,
-            point,
-        )
+        let scroll = checklist_scroll(self.settings.agents_checklist_scroll.offset, rows);
+        checklist_row_at(boxed, rows, scroll, point)
     }
 
     /// Wheel cap for the checklist under `point`.
@@ -388,6 +386,21 @@ mod tests {
             tab.hit(body(), point),
             AgentSettingsHit::Connect(AgentProvider::ClaudeCode)
         );
+    }
+
+    #[test]
+    fn the_body_height_does_not_depend_on_its_width() {
+        // The panel's content-height walk lays the body out at one
+        // reference width; that is only sound while no pane wraps.
+        let mut settings = AgentSettings::default();
+        settings.add_builtin_agent_with_defaults("Mine", "sk-1", "m");
+        let ui = EditorUiState::default();
+        for external in [false, true] {
+            let tab = tab(&settings, &ui, external);
+            let wide = tab.body_height(body());
+            let narrow = tab.body_height(Rect::xywh(0.0, 0.0, 560.0, 600.0));
+            assert_eq!(wide, narrow);
+        }
     }
 
     #[test]

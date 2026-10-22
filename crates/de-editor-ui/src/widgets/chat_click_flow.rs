@@ -245,10 +245,12 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
             ChatClickStep::Dirty
         }
         AIChatHit::ConnectAgent(provider) => {
-            state
-                .editor_ui
-                .agent_settings
-                .begin_provider_connect(provider);
+            // Same guard as Settings' Connect: a second press while the
+            // probe runs must not re-arm it.
+            let settings = &mut state.editor_ui.agent_settings;
+            if !settings.provider_probe_in_flight(provider) {
+                settings.begin_provider_connect(provider);
+            }
             ChatClickStep::Dirty
         }
         AIChatHit::OpenProviderSettings => {

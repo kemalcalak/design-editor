@@ -171,7 +171,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.tip.attach.title" => "コンテキストを添付",
         "chat.tip.attach.body" => "PNG、JPG、DESIGN.md をここにドロップするか、+ で添付します。",
         "chat.tip.mcp.title" => "MCP 経由のエージェント",
-        "chat.tip.mcp.body" => "Claude Code などのエージェントもここでデザインできます: {endpoint}。",
+        "chat.tip.mcp.body" => "Claude Code などのエージェントもここでデザインできます: {{endpoint}}。",
         "chat.plus.attach" => "ファイルを添付",
         "chat.plus.library" => "スタイルライブラリ",
         "chat.plus.parallel" => "並列エージェント",

@@ -171,7 +171,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.tip.attach.title" => "Bağlam ekle",
         "chat.tip.attach.body" => "Buraya PNG, JPG ya da DESIGN.md bırak veya + ile ekle.",
         "chat.tip.mcp.title" => "MCP üzerinden agent'lar",
-        "chat.tip.mcp.body" => "Claude Code ve diğer agent'lar da burada tasarlayabilir: {endpoint}.",
+        "chat.tip.mcp.body" => "Claude Code ve diğer agent'lar da burada tasarlayabilir: {{endpoint}}.",
         "chat.plus.attach" => "Dosya ekle",
         "chat.plus.library" => "Stil kütüphanesi",
         "chat.plus.parallel" => "Paralel agent'lar",

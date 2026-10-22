@@ -6,10 +6,11 @@
 use crate::theme::Theme;
 use crate::widgets::agent_settings_caret;
 use crate::widgets::agent_settings_detail_chrome::{
-    self as chrome, button_width_estimate, checklist_height, checklist_row_at, paint_button,
-    paint_checklist, paint_header, paint_icon_button, paint_input_box, paint_input_value,
-    paint_label, paint_segmented, paint_status, segment_at, segmented_width, ButtonKind, CheckRow,
-    BUTTON_H, FIELD_GAP, HEADER_H, INPUT_H, INPUT_PAD_X, LABEL_H, VALUE_FONT,
+    self as chrome, button_width_estimate, checklist_height, checklist_row_at, next_field,
+    paint_button, paint_checklist, paint_header, paint_icon_button, paint_input_box,
+    paint_input_value, paint_label, paint_segmented, paint_status, segment_at, segmented_width,
+    ButtonKind, CheckRow, BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H, INPUT_H,
+    INPUT_PAD_X, VALUE_FONT,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::icons::{draw_icon, Icon};
@@ -27,7 +28,6 @@ use de_editor_core::{builtin_agent_preset, BuiltinAgentPresetKey};
 
 const EYE: f32 = 16.0;
 const TEXT_LINES: usize = 4;
-const FOOTER_GAP: f32 = 28.0;
 
 #[path = "agent_settings_api_preset_menu.rs"]
 mod preset_menu;
@@ -80,22 +80,34 @@ pub(crate) fn api_target<'a>(
     }
 }
 
-/// Model ids the checklist lists: the saved ones first, then the
-/// catalog's other models.
-pub(crate) fn model_rows(settings: &AgentSettings, target: ApiTarget<'_>) -> Vec<String> {
-    let mut rows: Vec<String> = target
+/// Model ids the checklist lists: the catalog's, in catalog order, then
+/// saved ids the catalog does not know (typed by hand). Ticking never
+/// moves a catalog row; an unticked hand-typed id drops out of the list.
+pub(crate) fn model_rows<'a>(settings: &'a AgentSettings, target: ApiTarget<'a>) -> Vec<&'a str> {
+    let catalog = settings.builtin_model_catalog_options_for(&target.catalog_target());
+    let mut rows: Vec<&str> = catalog.iter().map(|option| option.id.as_str()).collect();
+    rows.extend(saved_outside_catalog(target, catalog));
+    rows
+}
+
+/// [`model_rows`]'s length without building it — layout runs on every
+/// cursor move while the modal is open.
+fn model_row_count(settings: &AgentSettings, target: ApiTarget<'_>) -> usize {
+    let catalog = settings.builtin_model_catalog_options_for(&target.catalog_target());
+    catalog.len() + saved_outside_catalog(target, catalog).count()
+}
+
+fn saved_outside_catalog<'a>(
+    target: ApiTarget<'a>,
+    catalog: &'a [de_editor_core::BuiltinModelOption],
+) -> impl Iterator<Item = &'a str> + 'a {
+    target
         .agent
         .models
         .iter()
+        .map(|model| model.as_str())
         .filter(|model| !model.trim().is_empty())
-        .cloned()
-        .collect();
-    for option in settings.builtin_model_catalog_options_for(&target.catalog_target()) {
-        if !rows.contains(&option.id) {
-            rows.push(option.id.clone());
-        }
-    }
-    rows
+        .filter(move |model| !catalog.iter().any(|option| option.id == *model))
 }
 
 /// How the Models block edits: a checklist of known ids, or a free-text
@@ -117,7 +129,7 @@ fn models_box(settings: &AgentSettings, target: ApiTarget<'_>) -> ModelsBox {
                     BuiltinModelCatalogPhase::Error | BuiltinModelCatalogPhase::Unsupported
                 )
         });
-    let rows = model_rows(settings, target).len();
+    let rows = model_row_count(settings, target);
     if focused || catalog_failed || rows == 0 {
         ModelsBox::Text
     } else {
@@ -164,13 +176,6 @@ fn kind_labels(agent: &BuiltinAgentConfig) -> Vec<(&'static str, BuiltinAgentKin
         .collect()
 }
 
-fn field(x: f32, y: &mut f32, w: f32, h: f32) -> Rect {
-    *y += LABEL_H;
-    let rect = Rect::xywh(x, *y, w, h);
-    *y += h + FIELD_GAP;
-    rect
-}
-
 pub(crate) fn api_layout(
     detail: Rect,
     settings: &AgentSettings,
@@ -179,20 +184,23 @@ pub(crate) fn api_layout(
 ) -> ApiLayout {
     let x = detail.origin.x;
     let w = detail.size.x;
-    let mut y = detail.origin.y + HEADER_H + 8.0;
+    let mut y = detail.origin.y + HEADER_H + BODY_TOP_GAP;
     let agent = target.agent;
     let kinds = kind_labels(agent);
     let format = (kinds.len() > 1).then(|| {
         let labels: Vec<&str> = kinds.iter().map(|(label, _)| *label).collect();
-        field(x, &mut y, segmented_width(&labels).min(w), INPUT_H)
+        next_field(x, &mut y, segmented_width(&labels).min(w), INPUT_H)
     });
-    let provider = target.index.is_none().then(|| field(x, &mut y, w, INPUT_H));
+    let provider = target
+        .index
+        .is_none()
+        .then(|| next_field(x, &mut y, w, INPUT_H));
     let name = (agent.preset == BuiltinAgentPresetKey::Custom || target.index.is_none())
-        .then(|| field(x, &mut y, w, INPUT_H));
+        .then(|| next_field(x, &mut y, w, INPUT_H));
     let base_url = agent
         .base_url_editable()
-        .then(|| field(x, &mut y, w, INPUT_H));
-    let api_key = field(x, &mut y, w, INPUT_H);
+        .then(|| next_field(x, &mut y, w, INPUT_H));
+    let api_key = next_field(x, &mut y, w, INPUT_H);
     let eye = Rect::xywh(
         api_key.origin.x + api_key.size.x - INPUT_PAD_X - EYE - 4.0,
         api_key.origin.y + (INPUT_H - EYE - 8.0) / 2.0,
@@ -204,7 +212,7 @@ pub(crate) fn api_layout(
         ModelsBox::Checklist { rows } => checklist_height(rows),
         ModelsBox::Text => TEXT_LINES as f32 * (VALUE_FONT + 6.0) + 16.0,
     };
-    let models = field(x, &mut y, w, models_h);
+    let models = next_field(x, &mut y, w, models_h);
     let footer = Rect::xywh(x, y - FIELD_GAP + FOOTER_GAP, w, BUTTON_H);
     let right = x + w;
     let save_w = button_width_estimate(save_label(ui, target), false);
@@ -311,7 +319,7 @@ pub(crate) fn api_hit(
     }
     match layout.models_box {
         ModelsBox::Checklist { rows } => {
-            let scroll = settings.builtin_model_menu_scroll.offset;
+            let scroll = chrome::checklist_scroll(settings.agents_checklist_scroll.offset, rows);
             if let Some(row) = checklist_row_at(layout.models, rows, scroll, point) {
                 return ApiHit::ToggleModel(row);
             }
@@ -510,9 +518,9 @@ pub(crate) fn paint_api_detail(
         layout.models,
     );
     match layout.models_box {
-        ModelsBox::Checklist { .. } => {
+        ModelsBox::Checklist { rows } => {
             let ids = model_rows(settings, target);
-            let rows: Vec<CheckRow<'_>> = ids
+            let check_rows: Vec<CheckRow<'_>> = ids
                 .iter()
                 .map(|id| CheckRow {
                     label: id,
@@ -523,9 +531,9 @@ pub(crate) fn paint_api_detail(
                 cx,
                 theme,
                 layout.models,
-                &rows,
-                settings.builtin_model_menu_scroll.offset,
-                settings.builtin_model_menu_hover,
+                &check_rows,
+                chrome::checklist_scroll(settings.agents_checklist_scroll.offset, rows),
+                settings.agents_checklist_hover,
             );
         }
         ModelsBox::Text => {

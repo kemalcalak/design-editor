@@ -6,10 +6,10 @@
 use crate::theme::Theme;
 use crate::widgets::agent_settings_caret;
 use crate::widgets::agent_settings_detail_chrome::{
-    self as chrome, button_width_estimate, paint_button, paint_header, paint_icon_button,
-    paint_input_box, paint_input_value, paint_label, paint_segmented, paint_status, segment_at,
-    segmented_width, text, ButtonKind, BUTTON_H, FIELD_GAP, HEADER_H, INPUT_H, INPUT_PAD_X,
-    LABEL_FONT, LABEL_H, VALUE_FONT,
+    self as chrome, button_width_estimate, next_field, paint_button, paint_header,
+    paint_icon_button, paint_input_box, paint_input_value, paint_label, paint_segmented,
+    paint_status, segment_at, segmented_width, text, ButtonKind, BODY_TOP_GAP, BUTTON_H, FIELD_GAP,
+    FOOTER_GAP, HEADER_H, INPUT_H, INPUT_PAD_X, LABEL_FONT, VALUE_FONT,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_rows::fit_text;
@@ -27,8 +27,8 @@ use de_editor_core::agent_settings::{
 use de_editor_core::editor_ui_state::EditorUiState;
 
 const HINT_H: f32 = 40.0;
-const COLUMN_GAP: f32 = 16.0;
-const FOOTER_GAP: f32 = 28.0;
+/// Space between the Command and Arguments inputs.
+const ARGS_GAP: f32 = 16.0;
 
 /// The agent the pane edits: a saved one by index, or the draft.
 #[derive(Clone, Copy)]
@@ -140,40 +140,45 @@ pub(crate) fn acp_layout(
 ) -> AcpLayout {
     let x = detail.origin.x;
     let w = detail.size.x;
-    let mut y = detail.origin.y + HEADER_H + 8.0;
-    let mut field = |h: f32, width: f32| {
-        y += LABEL_H;
-        let rect = Rect::xywh(x, y, width, h);
-        y += h + FIELD_GAP;
-        rect
-    };
-    let preset = target
-        .index
-        .is_none()
-        .then(|| field(INPUT_H, segmented_width(&preset_labels(ui)).min(w)));
-    let connection = field(INPUT_H, segmented_width(&connection_labels(ui)).min(w));
-    let name = field(INPUT_H, w);
+    let mut y = detail.origin.y + HEADER_H + BODY_TOP_GAP;
+    let preset = target.index.is_none().then(|| {
+        next_field(
+            x,
+            &mut y,
+            segmented_width(&preset_labels(ui)).min(w),
+            INPUT_H,
+        )
+    });
+    let connection = next_field(
+        x,
+        &mut y,
+        segmented_width(&connection_labels(ui)).min(w),
+        INPUT_H,
+    );
+    let name = next_field(x, &mut y, w, INPUT_H);
     let (command, args, hint, env, url) = match target.agent.connection_type {
         AcpConnectionType::Local => {
-            let half = (w - COLUMN_GAP) / 2.0;
-            let command = field(INPUT_H, half);
-            let args = Rect::xywh(x + half + COLUMN_GAP, command.origin.y, half, INPUT_H);
+            let half = (w - ARGS_GAP) / 2.0;
+            let command = next_field(x, &mut y, half, INPUT_H);
+            let args = Rect::xywh(x + half + ARGS_GAP, command.origin.y, half, INPUT_H);
+            // The install line hangs under the command row, closer than a
+            // field gap: it explains that row, it is not a field of its own.
             let hint = shows_install_hint(settings, target).then(|| {
                 y -= FIELD_GAP / 2.0;
                 let rect = Rect::xywh(x, y, w, HINT_H);
                 y += HINT_H + FIELD_GAP;
                 rect
             });
-            let mut env_field = |h: f32| {
-                y += LABEL_H;
-                let rect = Rect::xywh(x, y, w, h);
-                y += h + FIELD_GAP;
-                rect
-            };
-            let env = env_field(INPUT_H);
+            let env = next_field(x, &mut y, w, INPUT_H);
             (Some(command), Some(args), hint, Some(env), None)
         }
-        AcpConnectionType::Remote => (None, None, None, None, Some(field(INPUT_H, w))),
+        AcpConnectionType::Remote => (
+            None,
+            None,
+            None,
+            None,
+            Some(next_field(x, &mut y, w, INPUT_H)),
+        ),
     };
     let footer = Rect::xywh(x, y - FIELD_GAP + FOOTER_GAP, w, BUTTON_H);
     let primary_w = button_width_estimate(primary_label(ui, settings, target), false);

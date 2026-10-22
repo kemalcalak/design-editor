@@ -171,7 +171,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.tip.attach.title" => "附加上下文",
         "chat.tip.attach.body" => "将 PNG、JPG 或 DESIGN.md 拖到这里，或用 + 添加。",
         "chat.tip.mcp.title" => "通过 MCP 使用 Agent",
-        "chat.tip.mcp.body" => "Claude Code 等 Agent 也可以在这里设计，地址 {endpoint}。",
+        "chat.tip.mcp.body" => "Claude Code 等 Agent 也可以在这里设计，地址 {{endpoint}}。",
         "chat.plus.attach" => "附加文件",
         "chat.plus.library" => "风格库",
         "chat.plus.parallel" => "并行 Agent",

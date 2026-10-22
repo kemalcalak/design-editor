@@ -239,15 +239,6 @@ pub enum BuiltinAgentPresetMenuTarget {
     Draft,
 }
 
-/// Which built-in provider form has its model dropdown open. The menu
-/// targets the same cards as `BuiltinAgentPresetMenuTarget`, but it is
-/// keyed on the Model field instead of the provider preset select.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BuiltinModelMenuTarget {
-    Agent(usize),
-    Draft,
-}
-
 /// State for the floating agent-settings modal.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AgentSettings {
@@ -271,12 +262,11 @@ pub struct AgentSettings {
     pub builtin_preset_menu_open: Option<BuiltinAgentPresetMenuTarget>,
     pub builtin_preset_menu_scroll: jian_core::scroll::ScrollState,
     pub builtin_preset_menu_hover: Option<BuiltinAgentPresetKey>,
-    /// Dropdown of discovered models anchored to the built-in form's
-    /// Model field. Runtime-only — never persisted.
-    pub builtin_model_menu_open: Option<BuiltinModelMenuTarget>,
-    pub builtin_model_menu_scroll: jian_core::scroll::ScrollState,
-    /// Hovered row index into the visible model options.
-    pub builtin_model_menu_hover: Option<usize>,
+    /// Agents tab: scroll of the detail pane's model checklist (an API
+    /// provider's or a CLI agent's). Runtime-only; reset on selection.
+    pub agents_checklist_scroll: jian_core::scroll::ScrollState,
+    /// Agents tab: hovered checklist row.
+    pub agents_checklist_hover: Option<usize>,
     pub next_builtin_agent_id: u64,
     /// Runtime-only provider model catalogs. Persisted settings retain only the
     /// explicitly selected `BuiltinAgentConfig::models`.
@@ -337,17 +327,6 @@ pub struct AgentSettings {
     pub experimental_features_enabled: bool,
     /// Currently-focused editable input on the modal.
     pub focus: Option<SettingsFocus>,
-    /// Index into `AgentProvider::ALL` of the hovered card;
-    /// `usize::MAX` means no card is hovered.
-    pub hover_provider: usize,
-    /// Index into `builtin_agents` of the hovered provider card.
-    pub hover_builtin_agent: usize,
-    /// Index into `acp_agents` of the hovered ACP agent card.
-    pub hover_acp_agent: usize,
-    pub hover_add_provider: bool,
-    pub hover_add_acp_agent: bool,
-    /// Index into the *visible* quick-add preset rows under the cursor.
-    pub hover_acp_preset: Option<usize>,
     /// Sidebar nav item under the cursor; `None` = no hover.
     pub hover_nav: Option<AgentSettingsTab>,
     /// Agents tab: the list row the detail pane shows. Read it through
@@ -380,9 +359,8 @@ impl Default for AgentSettings {
             builtin_preset_menu_open: None,
             builtin_preset_menu_scroll: Default::default(),
             builtin_preset_menu_hover: None,
-            builtin_model_menu_open: None,
-            builtin_model_menu_scroll: Default::default(),
-            builtin_model_menu_hover: None,
+            agents_checklist_scroll: Default::default(),
+            agents_checklist_hover: None,
             next_builtin_agent_id: 1,
             builtin_model_catalogs: BTreeMap::new(),
             pending_builtin_model_catalog_refreshes: VecDeque::new(),
@@ -425,12 +403,6 @@ impl Default for AgentSettings {
             auto_update_enabled: true,
             experimental_features_enabled: false,
             focus: None,
-            hover_provider: usize::MAX,
-            hover_builtin_agent: usize::MAX,
-            hover_acp_agent: usize::MAX,
-            hover_add_provider: false,
-            hover_add_acp_agent: false,
-            hover_acp_preset: None,
             hover_nav: None,
             agents_selected: None,
             hover_agents_row: None,

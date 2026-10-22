@@ -1,5 +1,6 @@
-//! Proof sheets for the Settings > Agents redesign (#26): render the tab
-//! in its main states, with the bundled fonts, to PNGs for a visual check.
+//! Proof sheets for the chat panel and Settings > Agents redesign (#26):
+//! render their main states, with the bundled fonts, to PNGs for a visual
+//! check.
 //! Ignored by default because they write files; run with
 //!
 //!   DE_PROOF_DIR=/tmp/proof cargo test -p de-host-desktop settings_proof -- --ignored
@@ -138,5 +139,63 @@ fn settings_proof_sheets() {
         settings.builtin_preset_menu_open =
             Some(de_editor_core::agent_settings::BuiltinAgentPresetMenuTarget::Draft);
         shoot(&mut h, &format!("agents-custom-{suffix}"));
+    }
+}
+
+fn chat_host(theme: ThemeMode) -> WidgetHostNative {
+    let mut h = host(theme);
+    with_claude_connected(&mut h);
+    with_gateway(&mut h);
+    let state = h.editor_state_mut();
+    state.editor_ui.agent_settings_open = false;
+    state.editor_ui.slides_panel.tab = de_editor_core::editor_ui_state::LeftPanelTab::Chat;
+    state.rebuild_chat_models();
+    h
+}
+
+#[test]
+#[ignore]
+fn chat_proof_sheets() {
+    use de_editor_core::chat::ChatMessage;
+    use de_editor_core::{ChatActivity, ChatActivityStatus};
+    for (theme, suffix) in [(ThemeMode::Dark, "dark"), (ThemeMode::Light, "light")] {
+        let mut h = chat_host(theme);
+        shoot(&mut h, &format!("chat-empty-{suffix}"));
+
+        h.editor_state_mut().editor_ui.toggle_chat_plus_menu();
+        shoot(&mut h, &format!("chat-plus-{suffix}"));
+        h.editor_state_mut().editor_ui.toggle_chat_model_picker();
+        shoot(&mut h, &format!("chat-picker-{suffix}"));
+        h.editor_state_mut().editor_ui.close_chat_model_picker();
+
+        let chat = &mut h.editor_state_mut().chat;
+        chat.messages.push(ChatMessage::user(
+            "Pricing page for a calm note-taking app. Three tiers, soft greens.",
+        ));
+        let mut reply = ChatMessage::assistant(
+            "I'll set up a 1440 frame with a hero, three pricing cards and an FAQ, using a sage palette.",
+        );
+        reply.thinking = "Three tiers read best side by side…".into();
+        reply.thinking_ms = Some(6_200);
+        reply.streaming = true;
+        let offset = Some(reply.content.len() as u32);
+        let activity = |id: &str, title: &str, status| ChatActivity {
+            id: id.into(),
+            title: title.into(),
+            detail: None,
+            status,
+            content_offset: offset,
+        };
+        reply.activities = vec![
+            activity("frame", "Set up the 1440 frame", ChatActivityStatus::Done),
+            activity(
+                "tiers",
+                "Lay out the pricing tiers",
+                ChatActivityStatus::Running,
+            ),
+            activity("faq", "Write the FAQ", ChatActivityStatus::Pending),
+        ];
+        chat.messages.push(reply);
+        shoot(&mut h, &format!("chat-conversation-{suffix}"));
     }
 }

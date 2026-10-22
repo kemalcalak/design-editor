@@ -499,7 +499,7 @@ Every dropdown / sidebar / row list paints a per-row tint when the cursor is ove
 | Shape picker (`shape_picker.rs`)   | `Document.ui.shape_picker_hover: Option<ShapeChoice>` | `theme.muted`            |
 | Layer panel rows                   | `Document.ui.hovered_layer_id` / `hovered_page_index` | `theme.muted` row wash   |
 | AgentSettings nav (sidebar tabs)   | `agent_settings.hover_nav: Option<AgentSettingsTab>`  | `theme.accent`           |
-| AgentSettings provider cards       | `agent_settings.hover_provider: usize`                | `theme.accent` card wash |
+| AgentSettings Agents list          | `agent_settings.hover_agents_row: Option<usize>`      | `theme.muted` row wash   |
 | Layer context menu                 | `layer_context_menu.hovered_row: Option<u8>`          | row highlight            |
 
 Every host close path clears its respective hover state so reopening starts un-hovered.

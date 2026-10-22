@@ -139,7 +139,7 @@ pub(crate) fn apply_entry_hit(
             }
             SettingsPressOutcome::handled()
         }
-        AgentSettingsHit::SelectBuiltinModel { index, row } => {
+        AgentSettingsHit::ToggleBuiltinModel { index, row } => {
             // Resolve the pressed row against the same rows the checklist
             // painted — hit-test and press run on the same frame, so the
             // row index is stable. Resolve before commit because an operator
@@ -162,6 +162,7 @@ pub(crate) fn apply_entry_hit(
                         crate::widgets::agent_settings_api_detail::model_rows(settings, target)
                             .into_iter()
                             .nth(row)
+                            .map(str::to_string)
                     })
             };
             commit(state);
@@ -187,9 +188,8 @@ pub(crate) fn apply_entry_hit(
                 None => BuiltinAgentPresetMenuTarget::Draft,
             };
             let settings = &mut state.editor_ui.agent_settings;
-            settings.builtin_model_menu_open = None;
-            settings.builtin_model_menu_scroll.offset = 0.0;
-            settings.builtin_model_menu_hover = None;
+            settings.agents_checklist_scroll.offset = 0.0;
+            settings.agents_checklist_hover = None;
             settings.builtin_preset_menu_open =
                 (settings.builtin_preset_menu_open != Some(target)).then_some(target);
             settings.builtin_preset_menu_scroll.offset = 0.0;
@@ -240,9 +240,9 @@ pub(crate) fn apply_entry_hit(
             SettingsPressOutcome::handled()
         }
         AgentSettingsHit::SaveBuiltinAgentEditing(index) => {
-            // Commit any focused draft, then drop focus so the expanded
-            // form collapses; a fresh key or base URL warrants a model
-            // catalog refresh, mirroring the draft save.
+            // Commit any focused field, then drop focus; a fresh key or
+            // base URL warrants a model catalog refresh, mirroring the
+            // draft save.
             commit(state);
             queue_builtin_discovery(state, index, now_ms);
             clear_focus(state);
@@ -315,7 +315,7 @@ pub(crate) fn apply_entry_hit(
         AgentSettingsHit::ToggleAcpConnected(index) => {
             commit(state);
             let settings = &state.editor_ui.agent_settings;
-            // A card that was never configured focuses its transport
+            // An agent that was never configured focuses its transport
             // field instead of starting a doomed probe.
             let needs_config_focus = settings.acp_agents.get(index).is_some_and(|agent| {
                 !settings.acp_agent_verified_connected(&agent.id) && !agent.ready()
