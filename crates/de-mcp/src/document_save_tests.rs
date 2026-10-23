@@ -70,6 +70,61 @@ fn save_document_refuses_a_non_document_extension() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+fn state_with_image() -> de_editor_core::EditorState {
+    let url = format!("data:image/png;base64,{}", "iVBORw0KGgoA".repeat(600));
+    let src = format!(
+        r#"{{"version":"1.0.0","children":[{{"type":"image","id":"a","width":4,"height":4,"src":"{url}"}}]}}"#
+    );
+    de_editor_core::EditorState::from_document(
+        de_pen_loader::load_canonical(&src).expect("fixture").value,
+    )
+}
+
+#[test]
+fn save_document_writes_the_folder_layout_by_default() {
+    let dir = temp_dir("save-document-folder");
+    std::fs::create_dir_all(&dir).expect("temp dir");
+    let out_path = dir.join("copy.de");
+    let tool = save_document_snapshot(&state_with_image());
+    let mut args = BTreeMap::new();
+    args.insert("filePath".into(), out_path.display().to_string());
+
+    assert!(matches!(tool.call(&args), ToolOutcome::Ok(_)));
+
+    let saved = std::fs::read_to_string(&out_path).expect("saved");
+    assert!(saved.contains("\"src\": \"copy.assets/"), "{saved}");
+    assert!(!saved.contains("base64"));
+    assert_eq!(
+        std::fs::read_dir(dir.join("copy.assets")).unwrap().count(),
+        1
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn save_document_single_file_embeds_images_and_rejects_bad_flags() {
+    let dir = temp_dir("save-document-single");
+    std::fs::create_dir_all(&dir).expect("temp dir");
+    let out_path = dir.join("share.de");
+    let tool = save_document_snapshot(&state_with_image());
+    let mut args = BTreeMap::new();
+    args.insert("filePath".into(), out_path.display().to_string());
+    args.insert("singleFile".into(), "true".into());
+
+    assert!(matches!(tool.call(&args), ToolOutcome::Ok(_)));
+    assert!(std::fs::read_to_string(&out_path)
+        .unwrap()
+        .contains("base64"));
+    assert!(!dir.join("share.assets").exists());
+
+    args.insert("singleFile".into(), "1".into());
+    assert!(matches!(
+        tool.call(&args),
+        ToolOutcome::Err(ToolErrorCode::InvalidArgument, _)
+    ));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 fn temp_dir(label: &str) -> PathBuf {
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

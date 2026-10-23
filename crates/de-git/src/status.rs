@@ -104,9 +104,11 @@ impl GitRepo {
         })
     }
 
-    /// Stage `paths` (relative to the repo root or absolute). Uses
-    /// `add_all`, which stages additions, modifications AND deletions
-    /// of the matched paths — mirroring `git add -- <path>`.
+    /// Stage `paths` (relative to the repo root or absolute): additions,
+    /// modifications AND deletions of the matched paths, mirroring
+    /// `git add -- <path>`. `add_all` only sees files that exist, so
+    /// `update_all` records the deletions (a file inside a staged folder
+    /// that a save pruned, or a staged path that is gone).
     pub fn stage(&self, paths: &[&Path]) -> Result<(), GitError> {
         if paths.is_empty() {
             return Ok(());
@@ -115,6 +117,7 @@ impl GitRepo {
         let mut index = repo.index()?;
         let specs: Vec<PathBuf> = paths.iter().map(|p| self.rel_to_workdir(p)).collect();
         index.add_all(specs.iter(), git2::IndexAddOption::DEFAULT, None)?;
+        index.update_all(specs.iter(), None)?;
         index.write()?;
         Ok(())
     }
@@ -237,6 +240,64 @@ impl GitRepo {
         let blob = object.peel_to_blob()?;
         let abs = self.workdir().join(&rel);
         std::fs::write(&abs, blob.content()).map_err(|e| GitError::Io(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Restore every file below the directory `folder` to its version at
+    /// `commit`, creating directories as needed. A folder the commit does
+    /// not have is a no-op, and files that exist only in the working tree
+    /// are left alone. Used for a document's `<stem>.assets/` next to
+    /// [`GitRepo::restore`] of the document itself.
+    pub fn restore_folder(&self, folder: &Path, commit: &str) -> Result<(), GitError> {
+        let repo = self.open()?;
+        let rel = self.rel_to_workdir(folder);
+        let Some(rel_str) = rel.to_str() else {
+            return Ok(());
+        };
+        // Tree entries are `/`-separated on every platform; see `restore`.
+        let rel_str = rel_str.replace(std::path::MAIN_SEPARATOR, "/");
+        let object = match repo.revparse_single(&format!("{commit}:{rel_str}")) {
+            Ok(object) => object,
+            Err(e) if e.code() == git2::ErrorCode::NotFound => return Ok(()),
+            Err(e) => return Err(e.into()),
+        };
+        let Ok(tree) = object.peel_to_tree() else {
+            return Ok(());
+        };
+        let target = self.workdir().join(&rel);
+        let mut failure: Option<GitError> = None;
+        let walked = tree.walk(git2::TreeWalkMode::PreOrder, |parent, entry| {
+            if entry.kind() != Some(git2::ObjectType::Blob) {
+                return git2::TreeWalkResult::Ok;
+            }
+            let Ok(name) = entry.name() else {
+                return git2::TreeWalkResult::Ok;
+            };
+            let file = target.join(parent).join(name);
+            let written = entry
+                .to_object(&repo)
+                .and_then(|object| object.peel_to_blob())
+                .map_err(GitError::from)
+                .and_then(|blob| {
+                    if let Some(dir) = file.parent() {
+                        std::fs::create_dir_all(dir).map_err(|e| GitError::Io(e.to_string()))?;
+                    }
+                    std::fs::write(&file, blob.content()).map_err(|e| GitError::Io(e.to_string()))
+                });
+            match written {
+                Ok(()) => git2::TreeWalkResult::Ok,
+                Err(error) => {
+                    failure = Some(error);
+                    git2::TreeWalkResult::Abort
+                }
+            }
+        });
+        // An aborted walk reports a generic callback error; the write that
+        // stopped it is the useful one.
+        if let Some(error) = failure {
+            return Err(error);
+        }
+        walked?;
         Ok(())
     }
 

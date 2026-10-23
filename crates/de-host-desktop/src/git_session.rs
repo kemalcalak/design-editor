@@ -156,7 +156,12 @@ impl GitSession {
         let (Some(repo), Some(file)) = (self.repo.as_ref(), self.tracked_file.as_ref()) else {
             return Ok(());
         };
-        repo.stage(&[file.as_path()])
+        // The images the document names live in `<stem>.assets/`; staging
+        // the folder path also records files a save pruned.
+        match de_pen_loader::asset_folder::folder_path(file) {
+            Some(folder) => repo.stage(&[file.as_path(), folder.as_path()]),
+            None => repo.stage(&[file.as_path()]),
+        }
     }
 
     /// Whether the tracked document has staged changes (its index blob
@@ -167,10 +172,14 @@ impl GitSession {
         let Some(repo) = self.repo.as_ref() else {
             return false;
         };
-        match self.tracked_relpath() {
-            Some(rel) => repo.is_path_staged(&rel).unwrap_or(false),
-            None => false,
-        }
+        let Some(rel) = self.tracked_relpath() else {
+            return false;
+        };
+        let folder = de_pen_loader::asset_folder::folder_path(Path::new(&rel));
+        repo.is_path_staged(&rel).unwrap_or(false)
+            || folder
+                .and_then(|folder| folder.to_str().map(str::to_owned))
+                .is_some_and(|folder| repo.is_path_staged(&folder).unwrap_or(false))
     }
 
     /// The tracked document's path relative to the repository root,

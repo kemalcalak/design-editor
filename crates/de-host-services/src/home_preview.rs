@@ -120,8 +120,11 @@ pub fn render_document_png(doc_path: &Path) -> Result<Vec<u8>, HomePreviewError>
     let source = std::fs::read_to_string(doc_path).map_err(|error| {
         HomePreviewError::Load(crate::doc_io::DocIoError::Io(error.to_string()))
     })?;
-    let state =
-        crate::doc_io::load_editor_state_from_source(&source, de_editor_core::Locale::EnUs)?;
+    let state = crate::doc_io::load_editor_state_from_source_beside(
+        &source,
+        de_editor_core::Locale::EnUs,
+        doc_path,
+    )?;
     let scene = de_pen_loader::editor_state_to_active_page_layout_scene(&state);
     match scene.active_page() {
         Some(page) => render_page_png(page),

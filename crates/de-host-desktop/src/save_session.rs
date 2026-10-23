@@ -560,6 +560,9 @@ fn can_copy_clean_bound_document(state: &EditorState, source: &Path, target: &Pa
         && paths_provably_distinct(source, target)
         && source.is_file()
         && de_util::document_file::is_document_path(source)
+        // The copied bytes name the source's `<stem>.assets/` files; a
+        // regular save writes the target's own folder instead.
+        && !de_pen_loader::asset_folder::folder_path(source).is_some_and(|folder| folder.exists())
 }
 
 /// Resolve an existing path, or a not-yet-created leaf below an existing

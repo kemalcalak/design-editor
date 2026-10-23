@@ -139,3 +139,15 @@ impl fmt::Display for DocIoError {
 }
 
 impl std::error::Error for DocIoError {}
+
+/// The asset folder writer's failures map onto the same filesystem /
+/// serializer split as the document write around them.
+impl From<de_pen_loader::asset_folder::AssetFolderError> for DocIoError {
+    fn from(error: de_pen_loader::asset_folder::AssetFolderError) -> Self {
+        use de_pen_loader::asset_folder::AssetFolderError as E;
+        match error {
+            E::Json(error) => DocIoError::Serialize(error.to_string()),
+            E::Io(error) => DocIoError::Io(error.to_string()),
+        }
+    }
+}

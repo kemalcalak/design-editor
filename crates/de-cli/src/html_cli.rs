@@ -164,8 +164,8 @@ pub(super) fn run_import_html(
     }
     let value = serde_json::to_value(&imported.document)
         .map_err(|error| CliError::Payload(format!("serialize {out_path:?}: {error}")))?;
-    std::fs::write(out_path, value.to_string())
-        .map_err(|error| CliError::Io(format!("write {out_path:?}: {error}")))?;
+    de_pen_loader::asset_folder::write_document_value(std::path::Path::new(out_path), &value)
+        .map_err(|error| crate::cli_error::write_error(out_path, error))?;
     Ok(json!({
         "ok": true,
         "filePath": out_path,
@@ -192,8 +192,8 @@ pub(super) fn run_import_snapshot(json_path: &str, out_path: &str) -> Result<Str
     }
     let value = serde_json::to_value(&imported.document)
         .map_err(|error| CliError::Payload(format!("serialize {out_path:?}: {error}")))?;
-    std::fs::write(out_path, value.to_string())
-        .map_err(|error| CliError::Io(format!("write {out_path:?}: {error}")))?;
+    de_pen_loader::asset_folder::write_document_value(std::path::Path::new(out_path), &value)
+        .map_err(|error| crate::cli_error::write_error(out_path, error))?;
     Ok(json!({
         "ok": true,
         "filePath": out_path,

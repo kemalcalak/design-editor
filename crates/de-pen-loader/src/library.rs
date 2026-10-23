@@ -108,7 +108,10 @@ pub fn merge_library_into_state(
         path: path.to_string(),
         error: e.to_string(),
     })?;
-    merge_library_src_into_state(state, &src).map_err(|e| LibraryMergeError::Load {
+    // Images the library names in its own `.assets/` folder are read from
+    // beside the library, not from beside the document it merges into.
+    let assets = crate::pen_dev::folder_assets(std::path::Path::new(path));
+    merge_library_src_with_assets(state, &src, &assets).map_err(|e| LibraryMergeError::Load {
         path: path.to_string(),
         error: e.to_string(),
     })
@@ -124,8 +127,26 @@ pub fn merge_library_src_into_state(
     let loaded = load_canonical(src).map_err(|e| LibraryMergeError::Parse {
         error: e.to_string(),
     })?;
-    let lib_doc = loaded.value;
+    merge_library_document(state, loaded.value)
+}
 
+fn merge_library_src_with_assets(
+    state: &mut EditorState,
+    src: &str,
+    assets: crate::pen_dev::AssetReader<'_>,
+) -> Result<LibraryMergeReport, LibraryMergeError> {
+    let loaded = crate::payload::load_canonical_with_assets(src, assets).map_err(|e| {
+        LibraryMergeError::Parse {
+            error: e.to_string(),
+        }
+    })?;
+    merge_library_document(state, loaded.loaded.value)
+}
+
+fn merge_library_document(
+    state: &mut EditorState,
+    lib_doc: jian_ops_schema::PenDocument,
+) -> Result<LibraryMergeReport, LibraryMergeError> {
     // Harvest reusable masters from the library document (top-level + pages).
     let library = ComponentLibrary::from_document(&lib_doc);
 

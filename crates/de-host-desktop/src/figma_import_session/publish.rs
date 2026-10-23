@@ -10,7 +10,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use de_host_services::doc_io::{commit_staged_document, save_to_path};
+use de_host_services::doc_io::{commit_staged_document, save_single_file_to_path};
 
 use super::error::FigmaImportError;
 use super::output_guard::capture_output_state;
@@ -215,7 +215,10 @@ pub(super) fn persist_import_next_to_source(
             return Err(FigmaImportError::Cancelled);
         }
         let staging_path = import_staging_path(source_path)?;
-        if let Err(error) = save_to_path(&prepared.state, &staging_path) {
+        // The published name (`Design.de` or `Design (N).de`) is only known
+        // after staging, so the import lands as one self-contained file; its
+        // first save moves the images into that name's asset folder.
+        if let Err(error) = save_single_file_to_path(&prepared.state, &staging_path) {
             remove_import_artifact(&staging_path);
             // `WriteStaged` re-formats its own "beside <source>" envelope
             // around whatever the writer reported, so the underlying reason

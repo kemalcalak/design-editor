@@ -99,6 +99,19 @@ pub fn load_editor_state_from_source(
     Ok(finish_loaded_state(state, embedded_meta))
 }
 
+/// [`load_editor_state_from_source`] for source text read from `document`
+/// by the caller: images the source names in its asset folder are read from
+/// beside `document`.
+pub fn load_editor_state_from_source_beside(
+    src: &str,
+    locale: de_editor_core::Locale,
+    document: &std::path::Path,
+) -> Result<EditorState, DocIoError> {
+    let assets = de_pen_loader::pen_dev::folder_assets(document);
+    let (state, embedded_meta, _) = parse_editor_state_source(src, locale, &assets)?;
+    Ok(finish_loaded_state(state, embedded_meta))
+}
+
 fn parse_editor_state_source(
     src: &str,
     locale: de_editor_core::Locale,

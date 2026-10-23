@@ -33,14 +33,12 @@ pub(super) fn run_import_figma(fig_path: &str, out_path: &str) -> Result<String,
     let import =
         de_figma::parse_fig_binary(&bytes, file_name, de_figma::FigLayoutMode::DesignEditor)
             .map_err(|e| CliError::Document(format!("import {fig_path:?}: {e}")))?;
-    // Dedup shared image payloads into the `images` table — an
-    // image-heavy `.fig` references the same bitmap from many fills,
-    // and the inline form writes one full copy per reference.
-    let mut value = serde_json::to_value(&import.document)
+    // An image-heavy `.fig` references the same bitmap from many fills;
+    // each one lands once in `<out>.assets/` and every fill names that file.
+    let value = serde_json::to_value(&import.document)
         .map_err(|e| CliError::Payload(format!("serialize {out_path:?}: {e}")))?;
-    jian_ops_schema::image_table::externalize_images(&mut value);
-    let raw = value.to_string();
-    std::fs::write(out_path, raw).map_err(|e| CliError::Io(format!("write {out_path:?}: {e}")))?;
+    de_pen_loader::asset_folder::write_document_value(Path::new(out_path), &value)
+        .map_err(|e| crate::cli_error::write_error(out_path, e))?;
     let page_count = import.document.pages.as_ref().map_or(1, Vec::len);
     let node_count = import
         .document

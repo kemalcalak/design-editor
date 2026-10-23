@@ -244,3 +244,58 @@ fn create_and_switch_branch_in_one_step() {
         Some("wip".into())
     );
 }
+
+#[test]
+fn staging_a_folder_records_files_removed_from_it() {
+    let Some(tr) = TempRepo::new("stage-folder-deletion") else {
+        return;
+    };
+    tr.write("logo.de", "{}");
+    std::fs::create_dir_all(tr.dir.join("logo.assets")).unwrap();
+    tr.write("logo.assets/a.png", "a");
+    tr.write("logo.assets/b.png", "b");
+    let doc = tr.dir.join("logo.de");
+    let folder = tr.dir.join("logo.assets");
+    tr.repo
+        .stage(&[doc.as_path(), folder.as_path()])
+        .expect("stage");
+    tr.repo.commit("add logo").expect("commit");
+
+    std::fs::remove_file(tr.dir.join("logo.assets/b.png")).unwrap();
+    tr.repo
+        .stage(&[doc.as_path(), folder.as_path()])
+        .expect("stage again");
+    tr.repo.commit("prune b").expect("commit");
+
+    assert!(tr.repo.status().expect("status").is_clean());
+    assert_eq!(
+        tr.repo
+            .blob_at_commit("HEAD", "logo.assets/b.png")
+            .expect("read"),
+        None,
+        "the pruned image left the commit too"
+    );
+}
+
+#[test]
+fn restore_folder_brings_back_a_commits_files() {
+    let Some(tr) = TempRepo::new("restore-folder") else {
+        return;
+    };
+    std::fs::create_dir_all(tr.dir.join("logo.assets")).unwrap();
+    tr.write("logo.assets/a.png", "first");
+    tr.repo.stage_all().expect("stage");
+    let first = tr.repo.commit("first").expect("commit");
+    std::fs::remove_dir_all(tr.dir.join("logo.assets")).unwrap();
+
+    let folder = tr.dir.join("logo.assets");
+    tr.repo.restore_folder(&folder, &first).expect("restore");
+    assert_eq!(
+        std::fs::read_to_string(tr.dir.join("logo.assets/a.png")).unwrap(),
+        "first"
+    );
+    // A commit without the folder restores nothing and is not an error.
+    tr.repo
+        .restore_folder(&tr.dir.join("other.assets"), &first)
+        .expect("missing folder is a no-op");
+}
