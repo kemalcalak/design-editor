@@ -23,6 +23,7 @@ pub mod pickers;
 pub mod slides_panel_state;
 #[cfg(test)]
 mod tests;
+pub mod update_state;
 pub mod workspace;
 
 pub use exports::*;
@@ -674,6 +675,13 @@ pub struct EditorUiState {
     /// Latest result of the desktop host's background update probe.
     /// Transient: never serialized, rebuilt each launch.
     pub update_status: UpdateStatus,
+    /// In-app update modal (#111): the download / verify / stage job the
+    /// desktop host runs, painted over everything. `None` when no update
+    /// is in progress. Transient.
+    pub update_modal: Option<UpdateModalState>,
+    /// Update work queued by the modal or the System tab for the desktop
+    /// host to drain.
+    pub pending_update_action: Option<UpdateAction>,
 
     // --- In-app Git -------------------------------------------------
     /// Floating Git panel snapshot — filled by the desktop host from

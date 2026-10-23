@@ -318,7 +318,8 @@ pub use editor_ui_state::{
     PreviewDeviceKind, PromptCenterFocus, PromptCenterState, PromptFilter, PropertyTab, RecentFile,
     RecentView, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus, SizeToggleState,
     SlidesDrag, SlidesPanelState, SlidesPanelTarget, StyleImportState, TaskDraft, ThemeMode,
-    UpdateStatus, VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH,
+    UpdateAction, UpdateFailure, UpdateModalButton, UpdateModalState, UpdatePhase, UpdateStatus,
+    VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH,
     LAYER_PANEL_MIN_WIDTH,
 };
 pub use export_dialog_state::ExportDialogButton;

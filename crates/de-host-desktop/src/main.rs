@@ -107,6 +107,9 @@ mod test_config_root;
 mod theme_preset_host;
 mod ui_prefs;
 mod update_check;
+mod update_host;
+mod update_install;
+mod update_install_platform;
 mod user_style_store;
 mod user_template_save;
 mod user_template_store;
@@ -386,8 +389,12 @@ struct DesktopApp {
     /// on a worker thread; its result is drained into
     /// `editor_ui.update_status` on a later frame.
     update_probe: update_check::UpdateProbe,
-    /// Gates the update-available dialog to once per check.
+    /// Gates the launch-time update offer to once per check.
     update_prompt_shown: bool,
+    /// The in-app download / verify / stage job (#111), while it runs.
+    update_job: Option<update_install::UpdateJob>,
+    /// A verified build waiting for "Restart".
+    staged_update: Option<update_install::StagedUpdate>,
     /// Last *windowed* (non-maximized) outer position, physical px.
     /// Persisted on exit so a restart restores window placement.
     win_pos: Option<(i32, i32)>,
@@ -498,26 +505,6 @@ fn parse_live_mcp_port<I: Iterator<Item = String>>(args: I) -> Option<u16> {
         }
     }
     None
-}
-
-/// Pop a native dialog offering the update when a newer release is
-/// found. Yes downloads and opens the platform installer (the releases
-/// page is the fallback).
-fn prompt_update_available(locale: de_editor_core::Locale, version: &str) {
-    let body = de_i18n::translate(locale, "dialog.updateBody")
-        .replace("{{version}}", version)
-        .replace("{{current}}", env!("CARGO_PKG_VERSION"));
-    let choice = message_dialog::ask_yes_no(
-        de_i18n::translate(locale, "dialog.updateTitle"),
-        &body,
-        rfd::MessageLevel::Info,
-    );
-    if choice == Some(message_dialog::Choice::Yes) {
-        // Download the platform installer in the background and open
-        // it when ready; failures fall back to the releases page
-        // inside the worker.
-        update_check::download_and_open_installer(version);
-    }
 }
 
 /// Install a stderr tracing subscriber for debug-mode logging — orchestrator

@@ -420,6 +420,7 @@ pub(crate) fn apply_entry_hit(
         | AgentSettingsHit::OpenImageRegisterLink
         | AgentSettingsHit::TestImageSearch
         | AgentSettingsHit::ToggleAutoUpdate
+        | AgentSettingsHit::StartUpdate
         | AgentSettingsHit::SelectPencilCursor(_)
         | AgentSettingsHit::SelectThemeMode(_)
         | AgentSettingsHit::ToggleExperimental

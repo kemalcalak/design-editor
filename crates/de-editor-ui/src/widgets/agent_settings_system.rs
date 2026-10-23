@@ -6,6 +6,7 @@
 //! language (`agent_settings_rows`), separated by hairlines.
 
 use crate::theme::Theme;
+use crate::widgets::agent_settings_detail_chrome::{paint_button, ButtonKind};
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_metrics::CONTENT_TAIL_PAD;
 use crate::widgets::agent_settings_rows::{
@@ -34,11 +35,17 @@ const SEGMENT_ICON_GAP: f32 = 6.0;
 const SEGMENT_PAD_X: f32 = 6.0;
 const CURSOR_SWATCH: f32 = 38.0;
 const CURSOR_SWATCH_GAP: f32 = 8.0;
+/// The Auto-update row's Update / Restart button (#111), left of the switch.
+const UPDATE_BUTTON_W: f32 = 112.0;
+const UPDATE_BUTTON_H: f32 = 30.0;
+const UPDATE_BUTTON_GAP: f32 = 12.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SystemHit {
     SelectThemeMode(ThemeMode),
     ToggleAutoUpdate,
+    /// The Update / Restart button shown while a newer release is known.
+    StartUpdate,
     ToggleExperimental,
     /// Click on one of the pencil-cursor swatches.
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
@@ -164,6 +171,18 @@ pub(super) fn auto_update_switch_rect(content: Rect) -> Rect {
     switch_rect_for(content, SystemRow::AutoUpdate)
 }
 
+/// The Update / Restart button, between the row label and the switch.
+fn update_button_rect(content: Rect) -> Rect {
+    let switch = switch_rect_for(content, SystemRow::AutoUpdate);
+    Rect {
+        origin: Point2D::new(
+            switch.origin.x - UPDATE_BUTTON_GAP - UPDATE_BUTTON_W,
+            switch.origin.y + (switch.size.y - UPDATE_BUTTON_H) / 2.0,
+        ),
+        size: Point2D::new(UPDATE_BUTTON_W, UPDATE_BUTTON_H),
+    }
+}
+
 fn switch_rect_for(content: Rect, row: SystemRow) -> Rect {
     row_control_rect(rect_for(content, row), SETTINGS_SWITCH_W, SETTINGS_SWITCH_H)
 }
@@ -186,7 +205,7 @@ fn cursor_swatch_rect(content: Rect, i: usize) -> Rect {
     }
 }
 
-pub fn hit_test(content: Rect, scrolled: Point2D) -> SystemHit {
+pub fn hit_test(content: Rect, ui: &EditorUiState, scrolled: Point2D) -> SystemHit {
     for (i, mode) in SEGMENT_MODES.iter().enumerate() {
         if segment_rect(content, i).contains(scrolled) {
             return SystemHit::SelectThemeMode(*mode);
@@ -194,6 +213,12 @@ pub fn hit_test(content: Rect, scrolled: Point2D) -> SystemHit {
     }
     if AUTO_UPDATE_AVAILABLE && switch_rect_for(content, SystemRow::AutoUpdate).contains(scrolled) {
         return SystemHit::ToggleAutoUpdate;
+    }
+    if AUTO_UPDATE_AVAILABLE
+        && ui.update_button_version().is_some()
+        && update_button_rect(content).contains(scrolled)
+    {
+        return SystemHit::StartUpdate;
     }
     if switch_rect_for(content, SystemRow::Experimental).contains(scrolled) {
         return SystemHit::ToggleExperimental;
@@ -352,13 +377,13 @@ fn paint_auto_update_row(
     row: Rect,
     enabled: bool,
 ) {
-    paint_row_label_above_status(
-        cx,
-        theme,
-        row,
-        t_settings(ui, "agents.autoUpdate"),
-        SETTINGS_SWITCH_W + 16.0,
-    );
+    let show_button = ui.update_button_version().is_some();
+    let control_w = if show_button {
+        SETTINGS_SWITCH_W + UPDATE_BUTTON_GAP + UPDATE_BUTTON_W + 16.0
+    } else {
+        SETTINGS_SWITCH_W + 16.0
+    };
+    paint_row_label_above_status(cx, theme, row, t_settings(ui, "agents.autoUpdate"), control_w);
     let (color, status_key, _) = status_view(theme, &ui.update_status);
     let status_text = match &ui.update_status {
         UpdateStatus::Available { version } => {
@@ -367,6 +392,21 @@ fn paint_auto_update_row(
         _ => t_settings(ui, status_key).to_string(),
     };
     paint_row_status_line(cx, row, &status_text, color);
+    if show_button {
+        let label = if ui.update_staged() {
+            "settings.system.restartButton"
+        } else {
+            "settings.system.updateButton"
+        };
+        paint_button(
+            cx,
+            theme,
+            update_button_rect(content),
+            t_settings(ui, label),
+            Some(Icon::Download),
+            ButtonKind::Primary,
+        );
+    }
     paint_settings_switch(
         cx,
         theme,

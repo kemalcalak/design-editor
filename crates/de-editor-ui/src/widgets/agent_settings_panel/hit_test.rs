@@ -187,9 +187,10 @@ impl AgentSettingsPanel<'_> {
                     return AgentSettingsHit::Fonts(hit);
                 }
             }
-            AgentSettingsTab::System => match agent_settings_system::hit_test(content, scrolled) {
+            AgentSettingsTab::System => match agent_settings_system::hit_test(content, self.ui, scrolled) {
                 SystemHit::SelectThemeMode(mode) => return AgentSettingsHit::SelectThemeMode(mode),
                 SystemHit::ToggleAutoUpdate => return AgentSettingsHit::ToggleAutoUpdate,
+                SystemHit::StartUpdate => return AgentSettingsHit::StartUpdate,
                 SystemHit::ToggleExperimental => return AgentSettingsHit::ToggleExperimental,
                 SystemHit::SelectPencilCursor(style) => {
                     return AgentSettingsHit::SelectPencilCursor(style)

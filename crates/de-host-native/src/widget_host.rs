@@ -142,6 +142,7 @@ mod keyboard_delete;
 mod keyboard_escape;
 mod keyboard_send;
 mod missing_fonts_dispatch;
+mod update_modal_host;
 mod mode_transition_host;
 #[cfg(test)]
 mod overlay_cursor_tests;

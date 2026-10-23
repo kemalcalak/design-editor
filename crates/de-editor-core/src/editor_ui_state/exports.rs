@@ -28,6 +28,9 @@ pub use super::slides_panel_state::{
     LeftPanelTab, SlidesDrag, SlidesPanelState, SlidesPanelTarget, CHAT_TAB_MIN_WIDTH,
     LAYER_PANEL_MAX_WIDTH, LAYER_PANEL_MIN_WIDTH,
 };
+pub use super::update_state::{
+    UpdateAction, UpdateFailure, UpdateModalButton, UpdateModalState, UpdatePhase,
+};
 pub use super::workspace::{
     WorkspaceHit, WorkspacePhase, WorkspaceState, WorkspaceView, WORKSPACE_DECK_STRIP_H,
     WORKSPACE_ENTER_MS, WORKSPACE_HEADER_H, WORKSPACE_TOOLBAR_H,

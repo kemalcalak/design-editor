@@ -206,6 +206,8 @@ impl Default for EditorUiState {
             starter_ghost: None,
             canvas_drop_indicator: None,
             update_status: UpdateStatus::Idle,
+            update_modal: None,
+            pending_update_action: None,
             git_panel: GitPanelState::default(),
             design_md_panel: DesignMdPanelState::default(),
             prompt_center: PromptCenterState::default(),

@@ -11,6 +11,11 @@ impl WidgetHostNative {
     /// Escape — priority cascade: rename → property → pickers →
     /// chat → selection. One layer per press.
     pub fn apply_escape(&mut self) -> bool {
+        // The update modal (#111) is above every surface, Home included.
+        if self.editor_state.editor_ui.escape_update_modal() {
+            self.mark_dirty();
+            return true;
+        }
         // The result view is retired; the workspace is not a takeover,
         // so Escape in it walks the ordinary ladder (chat focus first,
         // then selection).

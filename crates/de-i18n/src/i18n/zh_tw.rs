@@ -608,7 +608,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.checking" => "檢查中…",
         "settings.system.checkingDescription" => "正在向發行伺服器查詢最新版本。",
         "settings.system.updateAvailable" => "有可用更新",
-        "settings.system.updateAvailableDescription" => "使用選單中的「檢查更新」開啟下載頁面。",
+        "settings.system.updateAvailableDescription" => "按「更新」即可在此下載並安裝。",
         "settings.system.idle" => "尚未檢查",
         "settings.system.idleDescription" => "啟動後將自動檢查更新。",
         "settings.system.errorStatus" => "檢查失敗",
@@ -638,10 +638,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.batchExportSummary" => "已匯出 {{ok}}/{{total}} 個畫框到：",
         "dialog.batchExportFailedLead" => "以下畫框匯出失敗：",
         "dialog.batchExportEmpty" => "目前頁面沒有可匯出的頂層畫框。",
-        "dialog.updateTitle" => "有可用更新",
-        "dialog.updateBody" => {
-            "Design Editor {{version}} 已可用(目前版本 {{current}})。\n\n是否立即下載並開啟安裝程式?"
-        }
         "a11y.figmaImport" => "從 Figma 匯入",
         "a11y.import" => "匯入",
         "import.fromFigma" => "從 Figma 匯入",

@@ -388,6 +388,7 @@ pub mod slides_panel_flow;
 pub mod slideshow_toolbar;
 pub mod status_bar;
 pub mod tooltip;
+pub mod update_modal;
 pub mod variables_panel;
 pub mod variables_panel_geometry_flow;
 mod variables_preset_menu;

@@ -80,5 +80,8 @@ impl WidgetHostNative {
                 self.now_ms,
             );
         }
+
+        // In-app update modal (#111) — above even the missing-font prompt.
+        self.paint_update_modal(frame, viewport_width, viewport_height);
     }
 }

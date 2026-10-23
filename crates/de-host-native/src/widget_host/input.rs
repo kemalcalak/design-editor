@@ -527,6 +527,12 @@ impl WidgetHostNative {
     }
 
     fn apply_cursor_move_inner(&mut self, x: f32, y: f32) -> bool {
+        // The update modal (#111) paints above everything, Home included.
+        if let Some(consumed) =
+            self.cursor_move_update_modal(x, y, self.last_viewport_w, self.last_viewport_h)
+        {
+            return consumed;
+        }
         // The Home-anchored model picker hovers above the takeover —
         // its hover pass runs before Home's.
         if let Some(consumed) =

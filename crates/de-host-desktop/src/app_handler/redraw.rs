@@ -409,6 +409,13 @@ impl DesktopApp {
         if self.poll_update_probe() {
             self.redraw_dirty = true;
         }
+        // Run queued update actions and drain the in-app update job (#111).
+        if self.drain_update_action(event_loop) {
+            self.redraw_dirty = true;
+        }
+        if self.poll_update_job() {
+            self.redraw_dirty = true;
+        }
         // Drain a finished background `git pull`.
         if self.poll_git_pull_job() {
             self.redraw_dirty = true;
