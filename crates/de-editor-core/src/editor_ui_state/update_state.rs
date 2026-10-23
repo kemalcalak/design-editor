@@ -248,26 +248,26 @@ mod tests {
     #[test]
     fn start_update_opens_the_modal_downloading_and_queues_the_job() {
         let mut ui = EditorUiState::default();
-        ui.start_update("0.2.1");
+        ui.start_update("1.0.0");
         let modal = ui.update_modal.as_ref().unwrap();
-        assert_eq!(modal.version, "0.2.1");
+        assert_eq!(modal.version, "1.0.0");
         assert!(matches!(modal.phase, UpdatePhase::Downloading { .. }));
         assert_eq!(ui.pending_update_action, Some(UpdateAction::Start));
     }
 
     #[test]
     fn start_update_reveals_a_hidden_staged_update_instead_of_redownloading() {
-        let mut modal = UpdateModalState::new("0.2.1", UpdatePhase::ReadyToRestart);
+        let mut modal = UpdateModalState::new("1.0.0", UpdatePhase::ReadyToRestart);
         modal.visible = false;
         let mut ui = with_modal(modal);
-        ui.start_update("0.2.1");
+        ui.start_update("1.0.0");
         assert!(ui.update_modal_visible());
         assert_eq!(ui.pending_update_action, None);
     }
 
     #[test]
     fn later_on_a_staged_update_hides_but_keeps_it() {
-        let mut ui = with_modal(UpdateModalState::new("0.2.1", UpdatePhase::ReadyToRestart));
+        let mut ui = with_modal(UpdateModalState::new("1.0.0", UpdatePhase::ReadyToRestart));
         ui.press_update_button(UpdateModalButton::Later);
         assert!(ui.update_modal.is_some());
         assert!(!ui.update_modal_visible());
@@ -275,7 +275,7 @@ mod tests {
 
     #[test]
     fn later_on_the_offer_drops_the_modal() {
-        let mut ui = with_modal(UpdateModalState::new("0.2.1", UpdatePhase::Offer));
+        let mut ui = with_modal(UpdateModalState::new("1.0.0", UpdatePhase::Offer));
         ui.press_update_button(UpdateModalButton::Later);
         assert!(ui.update_modal.is_none());
         assert_eq!(ui.pending_update_action, None);
@@ -284,7 +284,7 @@ mod tests {
     #[test]
     fn retry_after_a_failure_restarts_the_download() {
         let mut ui = with_modal(UpdateModalState::new(
-            "0.2.1",
+            "1.0.0",
             UpdatePhase::Failed(UpdateFailure::Network),
         ));
         ui.press_update_button(UpdateModalButton::Retry);
@@ -297,13 +297,13 @@ mod tests {
 
     #[test]
     fn escape_cancels_a_transfer_and_ignores_staging() {
-        let mut ui = with_modal(UpdateModalState::new("0.2.1", downloading()));
+        let mut ui = with_modal(UpdateModalState::new("1.0.0", downloading()));
         assert!(ui.escape_update_modal());
         assert!(ui.update_modal.is_none());
         assert_eq!(ui.pending_update_action, Some(UpdateAction::Cancel));
 
         ui.pending_update_action = None;
-        ui.update_modal = Some(UpdateModalState::new("0.2.1", UpdatePhase::Installing));
+        ui.update_modal = Some(UpdateModalState::new("1.0.0", UpdatePhase::Installing));
         assert!(ui.escape_update_modal());
         assert!(ui.update_modal.is_some());
         assert_eq!(ui.pending_update_action, None);
@@ -314,11 +314,11 @@ mod tests {
         let mut ui = EditorUiState::default();
         assert_eq!(ui.update_button_version(), None);
         ui.update_status = crate::editor_ui_state::UpdateStatus::Available {
-            version: "0.2.1".into(),
+            version: "1.0.0".into(),
         };
-        assert_eq!(ui.update_button_version(), Some("0.2.1"));
+        assert_eq!(ui.update_button_version(), Some("1.0.0"));
         assert!(!ui.update_staged());
-        ui.update_modal = Some(UpdateModalState::new("0.2.1", UpdatePhase::ReadyToRestart));
+        ui.update_modal = Some(UpdateModalState::new("1.0.0", UpdatePhase::ReadyToRestart));
         assert!(ui.update_staged());
     }
 

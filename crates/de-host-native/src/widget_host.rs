@@ -142,7 +142,6 @@ mod keyboard_delete;
 mod keyboard_escape;
 mod keyboard_send;
 mod missing_fonts_dispatch;
-mod update_modal_host;
 mod mode_transition_host;
 #[cfg(test)]
 mod overlay_cursor_tests;
@@ -233,6 +232,7 @@ mod shortcuts;
 mod slides_panel;
 mod slides_panel_thumbs;
 mod text_edit_press;
+mod update_modal_host;
 // Windows CI DirectWrite/Skia text layout aborts inside these text-edit
 // fixtures before Rust can report an assertion. macOS + Linux keep coverage.
 #[cfg(all(test, not(target_os = "windows")))]

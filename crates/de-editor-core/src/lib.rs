@@ -322,8 +322,7 @@ pub use editor_ui_state::{
     RecentView, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus, SizeToggleState,
     SlidesDrag, SlidesPanelState, SlidesPanelTarget, StyleImportState, TaskDraft, ThemeMode,
     UpdateAction, UpdateFailure, UpdateModalButton, UpdateModalState, UpdatePhase, UpdateStatus,
-    VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH,
-    LAYER_PANEL_MIN_WIDTH,
+    VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH, LAYER_PANEL_MIN_WIDTH,
 };
 pub use export_dialog_state::ExportDialogButton;
 pub use export_quick_menu_state::ExportQuickRow;

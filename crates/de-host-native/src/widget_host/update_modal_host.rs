@@ -98,7 +98,7 @@ mod tests {
     fn modal_press_routes_buttons_and_swallows_the_scrim() {
         let mut host = WidgetHostNative::new();
         host.editor_state.editor_ui.update_modal =
-            Some(UpdateModalState::new("0.2.1", UpdatePhase::Offer));
+            Some(UpdateModalState::new("1.0.0", UpdatePhase::Offer));
         assert!(host.apply_press(2.0, 2.0, 1200.0, 800.0));
         assert!(host.editor_state.editor_ui.update_modal.is_some());
 
@@ -117,7 +117,7 @@ mod tests {
     fn escape_cancels_a_running_download() {
         let mut host = WidgetHostNative::new();
         host.editor_state.editor_ui.update_modal = Some(UpdateModalState::new(
-            "0.2.1",
+            "1.0.0",
             UpdatePhase::Downloading {
                 received: 1,
                 total: Some(10),

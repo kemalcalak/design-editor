@@ -292,23 +292,23 @@ mod tests {
     use super::*;
 
     const SUMS: &str = "\
-0f343b0931126a20f133d67c2b018a3b0f343b0931126a20f133d67c2b018a3b  Design-Editor-0.2.1-arm64-mac.dmg
-AAAABBBBCCCCDDDDEEEEFFFF00001111AAAABBBBCCCCDDDDEEEEFFFF00001111 *Design-Editor-0.2.1-x64-win-setup.exe
+0f343b0931126a20f133d67c2b018a3b0f343b0931126a20f133d67c2b018a3b  Design-Editor-1.0.0-arm64-mac.dmg
+AAAABBBBCCCCDDDDEEEEFFFF00001111AAAABBBBCCCCDDDDEEEEFFFF00001111 *Design-Editor-1.0.0-x64-win-setup.exe
 deadbeef  de-cli-windows-x86_64.zip
 ";
 
     #[test]
     fn checksum_list_lookup_matches_the_exact_name() {
         assert_eq!(
-            expected_sha256(SUMS, "Design-Editor-0.2.1-arm64-mac.dmg").as_deref(),
+            expected_sha256(SUMS, "Design-Editor-1.0.0-arm64-mac.dmg").as_deref(),
             Some("0f343b0931126a20f133d67c2b018a3b0f343b0931126a20f133d67c2b018a3b")
         );
         // Binary-mode marker and upper-case hex are normalised.
         assert_eq!(
-            expected_sha256(SUMS, "Design-Editor-0.2.1-x64-win-setup.exe").as_deref(),
+            expected_sha256(SUMS, "Design-Editor-1.0.0-x64-win-setup.exe").as_deref(),
             Some("aaaabbbbccccddddeeeeffff00001111aaaabbbbccccddddeeeeffff00001111")
         );
-        assert_eq!(expected_sha256(SUMS, "Design-Editor-0.2.1"), None);
+        assert_eq!(expected_sha256(SUMS, "Design-Editor-1.0.0"), None);
         // A malformed hash never verifies anything.
         assert_eq!(expected_sha256(SUMS, "de-cli-windows-x86_64.zip"), None);
     }

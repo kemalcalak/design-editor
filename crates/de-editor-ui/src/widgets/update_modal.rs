@@ -347,7 +347,7 @@ mod tests {
 
     fn state_with(phase: UpdatePhase) -> EditorState {
         let mut state = EditorState::default();
-        state.editor_ui.update_modal = Some(UpdateModalState::new("0.2.1", phase));
+        state.editor_ui.update_modal = Some(UpdateModalState::new("1.0.0", phase));
         state
     }
 
@@ -438,7 +438,7 @@ mod tests {
     fn title_names_the_version_for_screen_readers() {
         let state = state_with(UpdatePhase::Offer);
         let modal = UpdateModal::for_editor(&state).unwrap();
-        assert!(modal.title().contains("v0.2.1"));
+        assert!(modal.title().contains("v1.0.0"));
         assert!(!modal.title().contains("{{"));
     }
 
