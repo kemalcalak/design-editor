@@ -129,6 +129,7 @@ fn batchable(cmd: &EditorCommand) -> bool {
         | C::SetNodeStrokeWidth { .. }
         | C::SetNodeStrokeSideWidth { .. }
         | C::AlignSelected { .. }
+        | C::CommitBooleanResult { .. }
         | C::SetNodeFillHex { .. }
         | C::SetNodeName { .. }
         | C::SetImageVideoSrc { .. }

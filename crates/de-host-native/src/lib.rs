@@ -38,7 +38,6 @@ pub mod context;
 // GL-state-isolation probe.
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod backend;
-#[cfg(feature = "gl-host")]
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod boolean_ops;
 #[cfg(feature = "gl-host")]

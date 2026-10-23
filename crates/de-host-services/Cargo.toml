@@ -42,6 +42,9 @@ de-orchestrator = { path = "../de-orchestrator" }
 de-design-lint = { path = "../de-design-lint" }
 de-pen-loader = { path = "../de-pen-loader" }
 de-render-export = { path = "../de-render-export" }
+# Raster-only native host lib: the canvas's skia boolean math for the MCP
+# `boolean_op` tool (already in this closure through de-render-export).
+de-host-native = { path = "../de-host-native", default-features = false }
 # Shared image-slot detection + result write-back for the MCP
 # `enrich_images` tool (also used by de-host-desktop's search session).
 de-image-enrich = { path = "../de-image-enrich", features = ["net"] }
