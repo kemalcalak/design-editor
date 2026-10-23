@@ -22,6 +22,7 @@ on:
       - 'tools/check-file-line-cap.sh'
       - '.github/workflows/rust-release.yml'
       - '.github/workflows/rust-check.yml'
+      - '.github/ci/rust-check-apt-packages.txt'
   # The release workflow runs these checks on the commit it releases.
   workflow_call:
   push:
@@ -43,6 +44,7 @@ on:
       - 'tools/check-file-line-cap.sh'
       - '.github/workflows/rust-release.yml'
       - '.github/workflows/rust-check.yml'
+      - '.github/ci/rust-check-apt-packages.txt'
 
 # One run per PR (or per branch push); a newer push to a PR cancels the
 # older run. Pushes to main are never cancelled.
@@ -74,9 +76,32 @@ jobs:
           toolchain: '1.94'
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      # Linux GL prerequisites for winit's x11+wayland feature link.
-      # libxkbcommon-x11-dev / libwayland-dev are winit's link-time deps on
-      # Linux; the wayland-csd-adwaita feature pulls in xkbcommon + wayland-client.
+      # Linux GL, font and tooling prerequisites; the package list and why each
+      # one is needed live in .github/ci/rust-check-apt-packages.txt.
+      # The downloaded .deb files are cached: fetching fonts-noto-cjk (61 MB)
+      # from the Azure Ubuntu mirror stalled past every timeout on 2026-10-22
+      # and failed the job before any build ran (#64).
+      - name: Linux apt cache key
+        id: apt-key
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          . /etc/os-release
+          # The month suffix rolls the cache forward so package updates get saved;
+          # a new month restores the previous archives through `prefix`, so only
+          # changed packages are downloaded.
+          prefix="apt-archives-${{ runner.os }}-${{ runner.arch }}-${VERSION_CODENAME}-${{ hashFiles('.github/ci/rust-check-apt-packages.txt') }}-"
+          echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
+          echo "key=$prefix$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+      - name: Restore Linux apt archives
+        id: apt-cache
+        if: runner.os == 'Linux'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/apt-archives/*.deb
+          key: ${{ steps.apt-key.outputs.key }}
+          restore-keys: ${{ steps.apt-key.outputs.prefix }}
       - name: Install Linux GL prereqs
         if: runner.os == 'Linux'
         shell: bash
@@ -89,29 +114,30 @@ jobs:
           # microsoft-prod). Ubuntu's own sources and the unused PPAs stay untouched.
           sudo rm -f /etc/apt/sources.list.d/google-chrome*.list /etc/apt/sources.list.d/google-chrome*.sources \
                      /etc/apt/sources.list.d/microsoft-*.list /etc/apt/sources.list.d/microsoft-*.sources
+          # apt-get reads and keeps .deb files in the cached directory; a cached
+          # file whose version still matches is installed without a download. The
+          # sandbox user `_apt` cannot enter the runner's home, so apt downloads
+          # as root (it would fall back to that anyway, with a warning).
+          apt_archives="$HOME/apt-archives"
+          mkdir -p "$apt_archives/partial"
           apt_options=(
             -o Acquire::ForceIPv4=true
             -o Acquire::Retries=3
             -o Acquire::http::Timeout=30
+            -o Dir::Cache::Archives="$apt_archives"
+            -o APT::Sandbox::User=root
           )
-          packages=(
-            libxkbcommon-dev libxkbcommon-x11-dev
-            libwayland-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
-            libegl1-mesa-dev libgles2-mesa-dev libgbm-dev mesa-utils
-            libfreetype-dev libfontconfig1-dev fonts-noto-cjk
-            pkg-config libssl-dev
-            # `check-rustls-client-policy.sh` matches with ripgrep's multiline
-            # + PCRE2 lookahead, which grep cannot replicate portably. Without
-            # it the script's `rg` calls fail as "command not found" and the
-            # policy reports a violation that is not there — red on every
-            # Linux/macOS run since 215100234 introduced the dependency.
-            ripgrep
-          )
+          mapfile -t packages < <(grep -Ev '^[[:space:]]*(#|$)' .github/ci/rust-check-apt-packages.txt)
+          if (( ${#packages[@]} == 0 )); then
+            echo "::error::no packages read from .github/ci/rust-check-apt-packages.txt"
+            exit 1
+          fi
           for attempt in 1 2 3 4; do
+            # 600s install budget: a cold cache still downloads fonts-noto-cjk.
             if sudo env DEBIAN_FRONTEND=noninteractive \
               timeout 180s apt-get "${apt_options[@]}" update && \
               sudo env DEBIAN_FRONTEND=noninteractive \
-              timeout 300s apt-get "${apt_options[@]}" install --yes "${packages[@]}"; then
+              timeout 600s apt-get "${apt_options[@]}" install --yes "${packages[@]}"; then
               break
             fi
             if [[ "$attempt" == 4 ]]; then
@@ -120,8 +146,23 @@ jobs:
             fi
             sleep $((attempt * 20))
           done
+          # Drop archives the mirror no longer serves so a rolled-forward cache
+          # does not keep superseded versions.
+          sudo apt-get "${apt_options[@]}" autoclean
+          echo "apt archives (cache hit: ${{ steps.apt-cache.outputs.cache-hit == 'true' }}):"
+          du -sh "$apt_archives"
+          ls "$apt_archives"/fonts-noto-cjk_*.deb 2>/dev/null \
+            || echo "::warning::fonts-noto-cjk .deb missing from $apt_archives; the next run downloads it again"
+      # Saved right after the install, not in a post-job step, so a later test
+      # failure still keeps the archives for the next run.
+      - name: Save Linux apt archives
+        if: runner.os == 'Linux' && steps.apt-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/apt-archives/*.deb
+          key: ${{ steps.apt-key.outputs.key }}
       # macOS runners ship no ripgrep and have no apt block above; same
-      # dependency, same reason (see the Linux packages list).
+      # dependency, same reason (see .github/ci/rust-check-apt-packages.txt).
       - name: Install ripgrep (macOS)
         if: runner.os == 'macOS'
         run: brew list ripgrep >/dev/null 2>&1 || brew install ripgrep
