@@ -106,6 +106,9 @@ pub mod import_common;
 pub mod import_html_tool;
 #[cfg(test)]
 mod import_html_tool_tests;
+pub mod import_pen_dev_tool;
+#[cfg(test)]
+mod import_pen_dev_tool_tests;
 pub mod import_snapshot_tool;
 #[cfg(test)]
 mod import_snapshot_tool_tests;

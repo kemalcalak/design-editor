@@ -90,6 +90,10 @@ pub enum FileAction {
     /// opens a file dialog for a saved page / snapshot and hands the
     /// path to the background HTML import worker.
     ImportHtml,
+    /// File ▸ Import ▸ pen.dev or the Home card — host picks a `.pen` file
+    /// and opens it like File ▸ Open: a pen.dev document converts into a
+    /// new untitled document and its source is never written (#72).
+    ImportPenDev,
     /// User chose `Import image or SVG…` in the toolbar shape picker
     /// — host opens a file dialog, then inserts the raster image as a
     /// new Image node (or parses the SVG into nodes; SVG path lands

@@ -232,6 +232,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.downloadedSection" => "Google Fonts からダウンロードしたフォント",
         "dialog.penDevImportTitle" => "pen.dev から読み込みました",
         "dialog.penDevImportBody" => "“{{name}}” の一部を読み込めませんでした:\n\n{{details}}\n\n残りは未保存の新規ドキュメントとして開きました。元のファイルは変更されていません。",
+        "import.fromPenDev" => "pen.dev から読み込む",
+        "home.import.penDev" => "pen.dev から読み込む",
+        "home.import.penDevSub" => ".pen ファイル",
+        "dialog.penDevImportToast" => "pen.dev から開きました。読み込めなかったもの: {{details}}",
         _ => return None,
     })
 }

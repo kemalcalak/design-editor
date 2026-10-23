@@ -311,9 +311,9 @@ pub(super) fn dispatch<S: Read + Write>(
         let response = crate::mcp_serve::process_message_with_applier(
             &mut guard.editor,
             &req.body,
-            |_tool_name, editor, cmd| {
+            |tool_name, editor, cmd| {
                 let ok = editor.apply(cmd.clone());
-                if ok {
+                if ok && !crate::mcp_serve::writes_verbatim(tool_name) {
                     crate::mcp_serve::run_write_repairs_after_apply(editor);
                 }
                 applied_any |= ok;

@@ -160,6 +160,7 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     register_tool!("insert_node", insert_node_snapshot());
     register_tool!("import_svg", import_svg_snapshot());
     register_tool!("import_html", import_html_snapshot());
+    register_tool!("import_pen_dev", import_pen_dev_snapshot(doc));
     register_tool!("import_html_url", import_html_url_snapshot());
     register_tool!("import_web_snapshot", import_web_snapshot_tool());
     register_tool!("update_node", update_node_snapshot());

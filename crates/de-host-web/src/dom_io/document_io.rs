@@ -113,6 +113,7 @@ pub(crate) fn drain_pending_file_action<C: RepaintContext + 'static>(inner: &Inn
             let _ = b.repaint();
         }
         FileAction::ImportHtml => import_html_file(inner),
+        FileAction::ImportPenDev => open_pen_dev_document(inner),
         FileAction::ImportImageOrSvg => import_image_or_svg(inner),
         FileAction::PickFillImage => pick_fill_image(inner),
         FileAction::RelinkImage => relink_image(inner),
@@ -503,6 +504,18 @@ pub(super) fn open_document<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
     );
 }
 
+/// File ▸ Import ▸ pen.dev and the Home card: a `.pen`-only picker into the
+/// same ingest as File ▸ Open, which converts a pen.dev document.
+fn open_pen_dev_document<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
+    let inner = inner.clone();
+    open_file_picker(
+        ".pen",
+        Box::new(move |file| {
+            read_open_document_file(&inner, file);
+        }),
+    );
+}
+
 /// Start a replacement-scoped read shared by the picker and file drop.
 pub(super) fn read_open_document_file<C: RepaintContext + 'static>(
     inner: &InnerRc<C>,
@@ -543,11 +556,24 @@ fn apply_opened_document<C: RepaintContext + 'static>(
                 console_warn(&format!("[open] schema warning: {w}"));
             }
             let mut state = ingested.state;
-            state.editor_ui.file_name_display = Some(file_name.to_string());
+            // A pen.dev source stays an import: the download is named for
+            // a new document, not written back over the `.pen`.
+            state.editor_ui.file_name_display =
+                ingested.pen_dev.is_none().then(|| file_name.to_string());
             // Use the shared ingestion path so an opened `.op` / `.pen` gets
             // the same cache invalidation and missing-font detection as Figma
             // and HTML document imports.
             b.host_mut().install_ingested_state(state);
+            if let Some(report) = ingested.pen_dev.filter(|report| report.has_losses()) {
+                b.host_mut().editor_state_mut().editor_ui.show_toast(
+                    "dialog.penDevImportToast",
+                    // Counts, not file names: a browser upload misses every
+                    // image, and the toast is one line.
+                    vec![("details".to_owned(), report.short_summary())],
+                    de_editor_core::editor_toast::EditorToastLevel::Warn,
+                    crate::listener::now_ms_perf(),
+                );
+            }
             let (w, h) = b.viewport_size();
             b.host_mut().fit_content_to_viewport(w, h);
             let _ = b.repaint();

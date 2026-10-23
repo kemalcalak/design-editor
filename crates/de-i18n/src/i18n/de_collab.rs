@@ -232,6 +232,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.downloadedSection" => "Von Google Fonts heruntergeladen",
         "dialog.penDevImportTitle" => "Aus pen.dev importiert",
         "dialog.penDevImportBody" => "Einige Teile von „{{name}}“ konnten nicht übernommen werden:\n\n{{details}}\n\nDer Rest wurde als neues, ungespeichertes Dokument geöffnet. Die Originaldatei bleibt unverändert.",
+        "import.fromPenDev" => "Aus pen.dev importieren",
+        "home.import.penDev" => "Aus pen.dev importieren",
+        "home.import.penDevSub" => ".pen-Datei",
+        "dialog.penDevImportToast" => "Aus pen.dev geöffnet. Nicht übernommen: {{details}}",
         _ => return None,
     })
 }

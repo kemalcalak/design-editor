@@ -17,6 +17,7 @@ use std::time::Instant;
 use crate::import_html_url::import_html_url_snapshot;
 use de_editor_core::{EditorCommand, EditorState};
 use de_mcp::import_html_tool::import_html_snapshot;
+use de_mcp::import_pen_dev_tool::import_pen_dev_snapshot;
 use de_mcp::import_snapshot_tool::import_web_snapshot_tool;
 use de_mcp::{
     add_node_effect_snapshot, add_page_snapshot, align_selected_snapshot,
@@ -163,6 +164,15 @@ pub(crate) fn normalize_icon_paths_after_apply(
     report
 }
 
+/// Tools whose writes must land exactly as authored. The repairs in
+/// [`run_write_repairs_after_apply`] and file-mode auto-finalize exist to
+/// tidy AI-generated designs (status bars on phone screens, icon paths, empty
+/// image slots); applied to an imported design they rewrite someone else's
+/// work. A later write still repairs the whole document (#107).
+pub(crate) fn writes_verbatim(tool_name: &str) -> bool {
+    tool_name == "import_pen_dev"
+}
+
 /// Run the two cheap, idempotent repair passes shared by every bare-MCP
 /// document write after the command itself has applied and before it saves.
 pub(crate) fn run_write_repairs_after_apply(state: &mut EditorState) -> bool {
@@ -197,10 +207,9 @@ fn process_message_with_auto_finalize(
         de_mcp::parse_tool_call(line.trim()).is_some_and(|call| call.tool == "finalize_design");
     let mut applier_failed: Option<String> = None;
     let mut apply_rejected = false;
-    // File-backed mode has no live canvas for any tool call to animate —
-    // the tool name is accepted (shared signature with the live-MCP path)
-    // and deliberately ignored here.
-    let response = process_message_with_applier(state, line, |_tool_name, state, cmd| {
+    // File-backed mode has no live canvas for any tool call to animate; the
+    // tool name only decides whether the write lands verbatim.
+    let response = process_message_with_applier(state, line, |tool_name, state, cmd| {
         // `EditorState::apply` runs the pre-validate-then-mutate
         // discipline; `false` means the command rejected and the
         // document was NOT changed.
@@ -208,12 +217,17 @@ fn process_message_with_auto_finalize(
             apply_rejected = true;
             return false;
         }
-        run_write_repairs_after_apply(state);
+        let verbatim = writes_verbatim(tool_name);
+        if !verbatim {
+            run_write_repairs_after_apply(state);
+        }
         if let Err(e) = save_editor_state(state, path) {
             applier_failed = Some(format!("save failed: {e}"));
             return false;
         }
-        if let Some(auto_finalize) = auto_finalize.as_deref_mut() {
+        // A verbatim write does not arm auto-finalize: finalizing would run
+        // the same repairs over it at session end.
+        if let Some(auto_finalize) = auto_finalize.as_deref_mut().filter(|_| !verbatim) {
             auto_finalize.note_write(Instant::now());
         }
         true
@@ -732,6 +746,8 @@ mod enrich_images_tool_tests;
 mod finalize_tool_advisory_tests;
 #[cfg(test)]
 mod finalize_tool_tests;
+#[cfg(test)]
+mod import_pen_dev_verbatim_tests;
 #[cfg(test)]
 mod kit_insert_tools_tests;
 #[cfg(test)]

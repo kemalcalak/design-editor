@@ -259,7 +259,7 @@ fn codegen_cancel_resets_phase_by_code_presence() {
 /// modal, and the HTML row raises the file action the desktop runner
 /// turns into a file dialog + background import.
 #[test]
-fn import_menu_routes_its_two_rows_to_figma_and_html() {
+fn import_menu_routes_its_rows_to_figma_html_and_pen_dev() {
     use de_editor_ui::widgets::ImportMenu;
 
     let (vw, vh) = (1200.0, 800.0);
@@ -275,7 +275,8 @@ fn import_menu_routes_its_two_rows_to_figma_and_html() {
         let menu = ImportMenu::for_editor_ui(&host.editor_state().editor_ui);
         let (anchor, viewport) = host.import_menu_anchor(vw, vh);
         let panel = menu.popup_rect(anchor, viewport);
-        let row_h = panel.size.y / 2.0;
+        let row_h =
+            panel.size.y / de_editor_ui::widgets::import_menu::ImportMenuChoice::ALL.len() as f32;
         de_editor_ui::Point2D::new(
             panel.origin.x + panel.size.x / 2.0,
             panel.origin.y + row_h * idx as f32 + row_h / 2.0,
@@ -306,6 +307,17 @@ fn import_menu_routes_its_two_rows_to_figma_and_html() {
         de_editor_core::figma_import_state::ImportSource::Html
     );
     assert_eq!(host.editor_state().editor_ui.pending_file_action, None);
+
+    // pen.dev row → no modal; the desktop opens a `.pen` picker.
+    let mut host = open_menu();
+    let pen_row = row_point(&host, 2);
+    assert!(host.apply_press(pen_row.x, pen_row.y, vw, vh));
+    assert!(!host.editor_state().editor_ui.import_menu_open);
+    assert!(!host.editor_state().editor_ui.figma_import_open);
+    assert_eq!(
+        host.editor_state().editor_ui.pending_file_action,
+        Some(de_editor_core::editor_ui_state::FileAction::ImportPenDev)
+    );
 }
 
 #[test]

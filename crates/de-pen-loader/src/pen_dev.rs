@@ -83,17 +83,33 @@ impl PenDevReport {
     /// One-line English list for logs, MCP results and the open dialog's
     /// detail line, e.g. `shader fill ×1, note ×3; missing images: a.png`.
     pub fn summary(&self) -> String {
+        let images = if self.missing_images.is_empty() {
+            String::new()
+        } else {
+            format!("missing images: {}", self.missing_images.join(", "))
+        };
+        self.join_with_features(images)
+    }
+
+    /// [`Self::summary`] with the missing images counted instead of named,
+    /// for one-line surfaces such as a toast (`shader fill ×1; 14 missing
+    /// images`).
+    pub fn short_summary(&self) -> String {
+        let images = match self.missing_images.len() {
+            0 => String::new(),
+            1 => "1 missing image".to_owned(),
+            count => format!("{count} missing images"),
+        };
+        self.join_with_features(images)
+    }
+
+    fn join_with_features(&self, images: String) -> String {
         let features = self
             .unsupported
             .iter()
             .map(|(feature, count)| format!("{feature} ×{count}"))
             .collect::<Vec<_>>()
             .join(", ");
-        let images = if self.missing_images.is_empty() {
-            String::new()
-        } else {
-            format!("missing images: {}", self.missing_images.join(", "))
-        };
         match (features.is_empty(), images.is_empty()) {
             (false, false) => format!("{features}; {images}"),
             (false, true) => features,

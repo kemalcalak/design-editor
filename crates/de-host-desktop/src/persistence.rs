@@ -223,8 +223,7 @@ fn load_into_host(
 
 /// Tell the user what a pen.dev import could not bring over (shader fills,
 /// notes, missing image files, …) instead of dropping it silently.
-/// Desktop only: the web host refuses pen.dev sources for now, because a
-/// browser upload carries no image folder (`ingest_op_source`).
+/// The web host reports the same losses in a toast (`document_io.rs`).
 fn alert_pen_dev_losses(
     host: &WidgetHostNative,
     path: &std::path::Path,
@@ -568,6 +567,21 @@ pub fn run_action(
             ActionOutcome::FigmaImportStarted(path)
         }
         FileAction::FinishFigmaImport(selection) => ActionOutcome::FigmaImportSelection(selection),
+        FileAction::ImportPenDev => {
+            let Some(path) = rfd::FileDialog::new()
+                .set_title(de_i18n::translate(
+                    host.editor_state().editor_ui.locale,
+                    "dialog.pickerOpenTitle",
+                ))
+                .add_filter("pen.dev", &["pen"])
+                .pick_file()
+            else {
+                return ActionOutcome::Noop;
+            };
+            // Same path as File ▸ Open: a pen.dev document converts into
+            // an untitled document and its loss report is shown there.
+            ActionOutcome::saved_or_noop(open_path(host, path, current_path, window))
+        }
         FileAction::ImportImageOrSvg => {
             crate::persistence_image::handle_import_image_or_svg(host);
             ActionOutcome::Noop
