@@ -86,19 +86,7 @@ cargo() {
         "$package_version" "$repo_root"
 }
 
-bun() {
-    repo_root=$(CDPATH='' cd "$PWD/.." && pwd)
-    if [[ "$PWD" != "$repo_root/packages" || "$*" != 'run sync-version:check' ]]; then
-        printf 'unexpected bun invocation: cwd=%s args=%s\n' "$PWD" "$*" >&2
-        return 42
-    fi
-    if [[ -e "$repo_root/.fake-bun-fail" ]]; then
-        printf 'package versions are stale\n' >&2
-        return 43
-    fi
-}
-
-export -f cargo bun
+export -f cargo
 
 write_workflow_fixture() {
     repo=$1
@@ -193,8 +181,24 @@ new_repo() {
     printf '%s\n' 'version = 4' > "$repo/Cargo.lock"
     printf '%s\n' '{"name":"fixture-packages"}' > "$repo/packages/package.json"
     mkdir -p "$repo/packages/de-chrome-extension"
-    printf '{"manifest_version":3,"name":"fixture-extension","version":"%s"}\n' "$version" \
+    printf '%s\n' '{"manifest_version":3,"name":"fixture-extension","version":"0.0.0"}' \
         > "$repo/packages/de-chrome-extension/manifest.json"
+    mkdir -p "$repo/packages/de-chrome-extension/scripts"
+    printf '%s\n' 'VERSION="$(sh "${WORKSPACE_ROOT}/scripts/workspace-version.sh")"' \
+        > "$repo/packages/de-chrome-extension/scripts/package-extension.sh"
+    for sdk in de-web-sdk de-web-sdk-react de-web-sdk-vue; do
+        mkdir -p "$repo/packages/$sdk/src"
+        printf '%s\n' "{\"name\":\"@fixture/$sdk\"}" > "$repo/packages/$sdk/package.json"
+        printf '%s\n' 'declare const __DE_VERSION__: string;' \
+            'export const VERSION: string = __DE_VERSION__;' > "$repo/packages/$sdk/src/index.ts"
+        for config in tsup.config.ts vitest.config.ts; do
+            printf '%s\n' 'export default defineConfig({ define: versionDefine() });' \
+                > "$repo/packages/$sdk/$config"
+        done
+    done
+    cat > "$repo/.github/workflows/vscode-extension.yml" <<'YAML'
+      - run: npm pkg set version="$(sh ../../scripts/workspace-version.sh)"
+YAML
     cat > "$repo/crates/de-cli/assets/skill-bundle.json" <<'JSON'
 {"one":"__DESIGN_EDITOR_VERSION__","two":"__DESIGN_EDITOR_VERSION__","three":"__DESIGN_EDITOR_VERSION__","four":"__DESIGN_EDITOR_VERSION__","five":"__DESIGN_EDITOR_VERSION__"}
 JSON
@@ -639,13 +643,60 @@ assert_status 0 'Cargo metadata warning'
 assert_contains 'warning: fake Cargo metadata warning' 'Cargo metadata warning'
 pass 'Cargo warnings do not corrupt the metadata JSON passed to jq'
 
-repo=$(new_repo package_version_drift 0.8.1)
-touch "$repo/.fake-bun-fail"
+repo=$(new_repo package_manifest_version 0.8.1)
+printf '%s\n' '{' '  "name": "@fixture/de-web-sdk",' '  "version": "0.8.1"' '}' \
+    > "$repo/packages/de-web-sdk/package.json"
 run_guard "$repo"
-assert_status 1 'package version drift'
-assert_contains 'packages:1: error: bun run sync-version:check failed' 'package version drift'
-assert_no_success_output 'package version drift'
-pass 'web SDK package drift is reported by the read-only guard'
+assert_status 1 'package manifest version'
+assert_contains 'packages/de-web-sdk/package.json:3: error: package manifests must not carry a version' \
+    'package manifest version'
+assert_no_success_output 'package manifest version'
+pass 'package manifests that carry a version are rejected with file and line'
+
+repo=$(new_repo malformed_package_manifest 0.8.1)
+printf '%s\n' '{"name": ' > "$repo/packages/de-web-sdk-react/package.json"
+run_guard "$repo"
+assert_status 1 'malformed package manifest'
+assert_contains 'packages/de-web-sdk-react/package.json:1: error: failed to parse package manifest' \
+    'malformed package manifest'
+assert_no_success_output 'malformed package manifest'
+pass 'malformed package manifests fail instead of passing silently'
+
+repo=$(new_repo sdk_literal_version 0.8.1)
+printf '%s\n' "export const VERSION = '0.8.1';" > "$repo/packages/de-web-sdk-vue/src/index.ts"
+run_guard "$repo"
+assert_status 1 'SDK literal version'
+assert_contains 'packages/de-web-sdk-vue/src/index.ts:1: error: SDK VERSION must come from the build-time __DE_VERSION__ define' \
+    'SDK literal version'
+assert_no_success_output 'SDK literal version'
+pass 'SDK entries cannot hard-code VERSION'
+
+repo=$(new_repo sdk_config_without_define 0.8.1)
+printf '%s\n' 'export default defineConfig({});' > "$repo/packages/de-web-sdk-react/tsup.config.ts"
+run_guard "$repo"
+assert_status 1 'SDK config without define'
+assert_contains 'packages/de-web-sdk-react/tsup.config.ts:1: error: tsup.config.ts must define __DE_VERSION__' \
+    'SDK config without define'
+assert_no_success_output 'SDK config without define'
+pass 'SDK build configs must inject the workspace version'
+
+repo=$(new_repo chrome_manifest_real_version 0.8.1)
+printf '%s\n' '{"manifest_version":3,"name":"fixture-extension","version":"0.8.1"}' \
+    > "$repo/packages/de-chrome-extension/manifest.json"
+run_guard "$repo"
+assert_status 1 'Chrome manifest real version'
+assert_contains 'Chrome extension manifest version must stay the 0.0.0 placeholder (found 0.8.1)' \
+    'Chrome manifest real version'
+assert_no_success_output 'Chrome manifest real version'
+pass 'Chrome manifest keeps its placeholder instead of a copied version'
+
+repo=$(new_repo vscode_without_stamp 0.8.1)
+printf '%s\n' '      - run: bunx @vscode/vsce package' > "$repo/.github/workflows/vscode-extension.yml"
+run_guard "$repo"
+assert_status 1 'VS Code without stamp'
+assert_contains 'VS Code packaging must stamp the Cargo workspace version' 'VS Code without stamp'
+assert_no_success_output 'VS Code without stamp'
+pass 'VS Code packaging must stamp the workspace version'
 
 repo=$(new_repo matching_release_tag 0.8.1)
 run_guard "$repo" GITHUB_REF=refs/tags/v0.8.1 GITHUB_REF_NAME=v0.8.1

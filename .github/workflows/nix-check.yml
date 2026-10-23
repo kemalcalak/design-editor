@@ -15,6 +15,10 @@ on:
       - "packages/package.json"
       - "packages/bun.lock"
       - "packages/*/package.json"
+      - "packages/de-web-sdk*/tsup.config.ts"
+      - "packages/de-web-sdk*/vitest.config.ts"
+      - "packages/scripts/workspace-version.mjs"
+      - "scripts/workspace-version.sh"
       - "crates/de-host-desktop/assets/icon.png"
       - ".github/workflows/nix-check.yml"
   push:
@@ -32,6 +36,10 @@ on:
       - "packages/package.json"
       - "packages/bun.lock"
       - "packages/*/package.json"
+      - "packages/de-web-sdk*/tsup.config.ts"
+      - "packages/de-web-sdk*/vitest.config.ts"
+      - "packages/scripts/workspace-version.mjs"
+      - "scripts/workspace-version.sh"
       - "crates/de-host-desktop/assets/icon.png"
       - ".github/workflows/nix-check.yml"
   workflow_dispatch:

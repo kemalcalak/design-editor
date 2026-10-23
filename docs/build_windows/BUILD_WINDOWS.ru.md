@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 Скачайте `rustup-init.exe` с rustup.rs и запустите его. Выполните следующие команды в PowerShell. **Соответствует `design-editor 0.8.4`**:
+    - 2.3 Скачайте `rustup-init.exe` с rustup.rs и запустите его. Выполните следующие команды в PowerShell:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Установите wasm-bindgen-cli для генерации привязок WASM-JS. Выполните следующую команду в PowerShell. **Соответствует `design-editor 0.8.4`**:
+    - 2.4 Установите wasm-bindgen-cli для генерации привязок WASM-JS. Выполните следующую команду в PowerShell:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -177,4 +177,4 @@
     > 
     > Если страница сообщает, что `/pkg/de_host_web.js` не найден, файл отсутствует в `web-bundle/`.
 
-3. Этот документ написан для версии `design-editor 0.8.4`. Версия цепочки инструментов rustup `1.94`, wasm-bindgen-cli `0.2.117` и skia-bindings `0.97.2` соответствуют этой версии — другие версии могут отличаться.
+3. Цепочка инструментов rustup `1.94`, wasm-bindgen-cli `0.2.117` и skia-bindings `0.97.2` соответствуют версиям, закреплённым в `rust-toolchain.toml` и `Cargo.lock`. Если в этих файлах указана другая версия, используйте её.

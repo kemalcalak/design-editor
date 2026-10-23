@@ -7,10 +7,10 @@ set -euo pipefail
 
 script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd)
-sync_source="$script_dir/sync-version.sh"
+bump_source="$script_dir/bump-version.sh"
 reader_source="$script_dir/workspace-version.sh"
 tmp_base=${TMPDIR:-/tmp}
-tmp_dir=$(mktemp -d "${tmp_base%/}/sync-version.XXXXXX")
+tmp_dir=$(mktemp -d "${tmp_base%/}/bump-version.XXXXXX")
 trap 'rm -rf "$tmp_dir"' 0 HUP INT TERM
 
 test_count=0
@@ -67,7 +67,7 @@ assert_file_not_matches() {
 }
 
 cargo() {
-    printf 'cargo:%s:%s\n' "$PWD" "$*" >> "$SYNC_TEST_LOG"
+    printf 'cargo:%s:%s\n' "$PWD" "$*" >> "$BUMP_TEST_LOG"
     if [ -e "$PWD/.fail-cargo" ]; then
         printf 'fake cargo failure\n' >&2
         return 31
@@ -77,39 +77,30 @@ cargo() {
     printf '%s\n' '{"packages":[]}'
 }
 
-bun() {
-    printf 'bun:%s:%s\n' "$PWD" "$*" >> "$SYNC_TEST_LOG"
-    repo_root=$(CDPATH='' cd "$(dirname "$PWD")" && pwd)
-    if [ -e "$repo_root/.fail-bun" ]; then
-        printf 'fake bun failure\n' >&2
-        return 32
-    fi
-    version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$repo_root/Cargo.toml")
-    printf '{"version":"%s"}\n' "$version" > "$PWD/package.json"
-}
-
-export -f cargo bun
+export -f cargo
 
 new_repo() {
     name=$1
     repo="$tmp_dir/$name"
-    mkdir -p "$repo/scripts" "$repo/tools" "$repo/packages" "$repo/outside"
-    ln -s "$sync_source" "$repo/scripts/sync-version.sh"
+    mkdir -p "$repo/scripts" "$repo/tools" "$repo/outside"
+    ln -s "$bump_source" "$repo/scripts/bump-version.sh"
     ln -s "$reader_source" "$repo/scripts/workspace-version.sh"
     printf '%s\n' \
         '[workspace]' \
         'members = []' \
         '' \
         '[workspace.package]' \
-        'version = "2.3.4"' > "$repo/Cargo.toml"
+        'version = "2.3.4"' \
+        '' \
+        '[workspace.dependencies]' \
+        'serde = { version = "1" }' > "$repo/Cargo.toml"
     printf '%s\n' 'lock-version=1.0.0' > "$repo/Cargo.lock"
-    printf '%s\n' '{"version":"1.0.0"}' > "$repo/packages/package.json"
 
     cat > "$repo/tools/check-version-sync.sh" <<'SCRIPT'
 #!/bin/sh
 set -eu
 repo_root=$(CDPATH= cd "$(dirname "$0")/.." && pwd)
-printf 'guard:%s\n' "$PWD" >> "$SYNC_TEST_LOG"
+printf 'guard:%s\n' "$PWD" >> "$BUMP_TEST_LOG"
 if [ -e "$repo_root/.fail-guard" ]; then
     printf 'fake guard failure\n' >&2
     exit 33
@@ -119,19 +110,42 @@ SCRIPT
     printf '%s\n' "$repo"
 }
 
-run_sync() {
+run_bump() {
     repo=$1
     shift
     case_status=0
-    case_output=$(cd "$repo/outside" && env SYNC_TEST_LOG="$repo/calls.log" \
-        bash "$repo/scripts/sync-version.sh" "$@" 2>&1) || case_status=$?
+    case_output=$(cd "$repo/outside" && env BUMP_TEST_LOG="$repo/calls.log" \
+        bash "$repo/scripts/bump-version.sh" "$@" 2>&1) || case_status=$?
 }
 
 case_status=0
-case_output=$("$sync_source" 2.3.4 2>&1) || case_status=$?
+case_output=$("$bump_source" 1.2.3 4.5.6 2>&1) || case_status=$?
 assert_status 2 'argument rejection'
-assert_contains 'usage: scripts/sync-version.sh' 'argument rejection'
-pass 'sync entrypoint rejects positional versions with actionable usage'
+assert_contains 'usage: scripts/bump-version.sh [X.Y.Z]' 'argument rejection'
+pass 'bump entrypoint rejects more than one version with actionable usage'
+
+repo=$(new_repo explicit_version)
+run_bump "$repo" 3.0.0
+assert_status 0 'explicit version'
+assert_file_contains "$repo/Cargo.toml" 'version = "3.0.0"' 'explicit version'
+assert_file_contains "$repo/Cargo.toml" 'serde = { version = "1" }' 'explicit version'
+assert_file_contains "$repo/Cargo.lock" 'lock-version=3.0.0' 'explicit version'
+assert_file_contains "$repo/calls.log" "guard:$repo" 'explicit version'
+pass 'an explicit version rewrites only [workspace.package].version and refreshes the lock'
+
+repo=$(new_repo invalid_version)
+cp "$repo/Cargo.toml" "$repo/Cargo.toml.before"
+run_bump "$repo" 3.0
+assert_status 1 'invalid version'
+assert_contains 'bump-version: 3.0 is not a valid SemVer version; Cargo.toml left unchanged' \
+    'invalid version'
+if ! cmp -s "$repo/Cargo.toml" "$repo/Cargo.toml.before"; then
+    fail 'invalid version modified Cargo.toml'
+fi
+if [[ -e "$repo/calls.log" ]]; then
+    fail 'invalid version invoked Cargo or the version guard'
+fi
+pass 'invalid versions leave Cargo.toml untouched and stop before Cargo'
 
 repo=$(new_repo reader_failure)
 printf '%s\n' \
@@ -140,57 +154,60 @@ printf '%s\n' \
     '' \
     '[workspace.package]' \
     'version = "not-semver"' > "$repo/Cargo.toml"
-run_sync "$repo"
+run_bump "$repo"
 assert_status 1 'canonical reader failure'
-assert_contains 'sync-version: canonical version read failed; set a valid SemVer at [workspace.package].version in Cargo.toml' \
+assert_contains 'bump-version: canonical version read failed; set a valid SemVer at [workspace.package].version in Cargo.toml' \
     'canonical reader failure'
 if [[ -e "$repo/calls.log" ]]; then
     printf '%s\n' "$(cat "$repo/calls.log")" >&2
-    fail 'canonical reader failure invoked Cargo, Bun, or the version guard'
+    fail 'canonical reader failure invoked Cargo or the version guard'
 fi
-pass 'canonical reader failures stop before Cargo, Bun, and the version guard'
+pass 'canonical reader failures stop before Cargo and the version guard'
 
 repo=$(new_repo external_cwd)
-run_sync "$repo"
+run_bump "$repo"
 assert_status 0 'external cwd'
 assert_file_contains "$repo/calls.log" "cargo:$repo:update --workspace --offline" \
     'external cwd'
 assert_file_contains "$repo/calls.log" "cargo:$repo:metadata --locked --no-deps --format-version 1" \
     'external cwd'
-assert_file_contains "$repo/calls.log" "bun:$repo/packages:run sync-version" 'external cwd'
 assert_file_contains "$repo/calls.log" "guard:$repo" 'external cwd'
 assert_file_contains "$repo/Cargo.lock" 'lock-version=2.3.4' 'external cwd'
-assert_file_contains "$repo/packages/package.json" '"version":"2.3.4"' 'external cwd'
-pass 'sync entrypoint locates the repository and runs every stage from an external cwd'
+pass 'bump entrypoint locates the repository and runs every stage from an external cwd'
 
-first_hash=$(shasum "$repo/Cargo.lock" "$repo/packages/package.json")
-run_sync "$repo"
+first_hash=$(shasum "$repo/Cargo.toml" "$repo/Cargo.lock")
+run_bump "$repo"
 assert_status 0 'idempotent rerun'
-second_hash=$(shasum "$repo/Cargo.lock" "$repo/packages/package.json")
+second_hash=$(shasum "$repo/Cargo.toml" "$repo/Cargo.lock")
 if [ "$first_hash" != "$second_hash" ]; then
     fail 'idempotent rerun changed managed file hashes'
 fi
-pass 'running synchronization twice leaves managed file hashes unchanged'
+pass 'refreshing twice leaves Cargo.toml and Cargo.lock unchanged'
 
 repo=$(new_repo cargo_failure)
 touch "$repo/.fail-cargo"
-run_sync "$repo"
+run_bump "$repo"
 assert_status 1 'Cargo stage failure'
-assert_contains 'sync-version: Cargo lock refresh failed' 'Cargo stage failure'
-pass 'Cargo refresh failures identify the failing synchronization stage'
+assert_contains 'bump-version: Cargo lock refresh failed' 'Cargo stage failure'
+pass 'Cargo refresh failures identify the failing stage'
 
-repo=$(new_repo bun_failure)
-touch "$repo/.fail-bun"
-run_sync "$repo"
-assert_status 1 'package stage failure'
-assert_contains 'sync-version: package version synchronization failed' 'package stage failure'
-pass 'package synchronization failures identify the failing stage'
+repo=$(new_repo cargo_failure_after_bump)
+touch "$repo/.fail-cargo"
+run_bump "$repo" 3.0.0
+assert_status 1 'Cargo failure after bump'
+assert_contains 'Cargo.toml already holds the new version' 'Cargo failure after bump'
+assert_contains 'rerun scripts/bump-version.sh without an argument' 'Cargo failure after bump'
+assert_file_contains "$repo/Cargo.toml" 'version = "3.0.0"' 'Cargo failure after bump'
+if ls "$repo"/Cargo.toml.bump-version.* >/dev/null 2>&1; then
+    fail 'Cargo failure after bump left a candidate manifest behind'
+fi
+pass 'a failed refresh after a bump says Cargo.toml changed and how to retry'
 
 repo=$(new_repo guard_failure)
 touch "$repo/.fail-guard"
-run_sync "$repo"
+run_bump "$repo"
 assert_status 1 'guard stage failure'
-assert_contains 'sync-version: version consistency check failed' 'guard stage failure'
+assert_contains 'bump-version: version consistency check failed' 'guard stage failure'
 pass 'guard failures identify the final verification stage'
 
 hook="$repo_root/.githooks/pre-commit"
@@ -218,18 +235,14 @@ assert_file_contains "$workflow" "toolchain: '1.94'" 'version sync exact Rust to
 assert_file_contains "$workflow" 'tools/pinned-release-tools.test.sh' \
     'version sync pinned tool contract tests'
 assert_file_contains "$workflow" \
-    'tools/pinned-release-tools.sh bun "$RUNNER_TEMP/bun-1.3.14"' \
-    'version sync digest-pinned Bun setup'
-assert_file_contains "$workflow" \
     'tools/pinned-release-tools.sh ripgrep "$RUNNER_TEMP/ripgrep-15.2.0"' \
     'version sync digest-pinned ripgrep setup'
 assert_file_contains "$workflow" 'run: rg --version' 'version sync pinned ripgrep gate'
 assert_file_not_matches "$workflow" \
     'uses:[[:space:]]+[^@[:space:]]+@(v[0-9]+|stable|main|master|latest)|setup-bun|apt-get' \
     'version sync immutable tools policy'
-assert_file_contains "$workflow" 'bun install --frozen-lockfile' 'version sync dependency install'
-assert_file_contains "$workflow" 'packages/bun.lock' 'version sync managed paths'
-assert_file_contains "$workflow" 'packages/scripts/sync-version.mjs' 'version sync implementation paths'
+assert_file_not_matches "$workflow" 'bun ' 'version sync needs no SDK toolchain'
+assert_file_contains "$workflow" 'packages/scripts/workspace-version.mjs' 'version sync SDK reader path'
 assert_file_not_matches "$workflow" 'packages/\*\*' 'version sync focused path filters'
 for trigger in pull_request push; do
     trigger_block=$(awk -v trigger="$trigger" '
@@ -249,17 +262,18 @@ for trigger in pull_request push; do
     done
 done
 assert_file_contains "$workflow" 'scripts/workspace-version.test.sh' 'version reader tests'
-assert_file_contains "$workflow" 'scripts/sync-version.test.sh' 'version sync tests'
+assert_file_contains "$workflow" 'scripts/bump-version.test.sh' 'version bump tests'
 assert_file_contains "$workflow" 'tools/check-version-sync.test.sh' 'version guard tests'
 assert_file_contains "$workflow" 'tools/check-version-sync.sh' 'version guard'
 pass 'dedicated CI installs prerequisites and runs the focused version checks'
 
 old_guard_name='check-version-'"fixtures"
-if rg -n "$old_guard_name" "$repo_root" --hidden \
+old_sync_name='sync-'"version"
+if rg -n -e "$old_guard_name" -e "$old_sync_name" "$repo_root" --hidden \
     --glob '!.git/**' --glob '!vendor/**' > "$tmp_dir/old-paths"; then
     sed 's/^/  /' "$tmp_dir/old-paths" >&2
     fail 'old version guard paths remain in the repository'
 fi
-pass 'repository no longer references the retired fixture-only guard name'
+pass 'repository no longer references the retired guard or sync entrypoint names'
 
 printf '1..%s\n' "$test_count"
