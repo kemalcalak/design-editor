@@ -59,7 +59,10 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     // Phase 0: always register spawn_agents (validates + returns request result).
     // Actual parallel execution is deferred to Phase 3 (Task 3.1).
     register_tool!("spawn_agents", spawn_agents_snapshot());
-    register_tool!("ToolSearch", tool_search_snapshot(TOOL_SCHEMAS));
+    register_tool!(
+        "ToolSearch",
+        tool_search_snapshot(super::tools_list::mcp_tool_schemas())
+    );
     register_tool!("get_screenshot", get_screenshot_snapshot(doc));
     register_tool!("export_item", export_item_snapshot(doc));
     register_tool!("export_nodes", export_nodes_snapshot(doc));

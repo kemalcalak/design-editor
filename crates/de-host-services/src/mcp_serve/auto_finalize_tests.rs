@@ -117,8 +117,12 @@ fn disabled_env_keeps_stdio_eof_from_finalizing() {
     .expect("stdio session");
 
     let saved = super::super::load_editor_state(&path).expect("saved document");
-    let children = saved.active_children()[0]
-        .children()
+    // The MCP write lands in front (#37), so find the screen by id.
+    let children = saved
+        .active_children()
+        .iter()
+        .find(|node| node.id_str() == "screen")
+        .and_then(|screen| screen.children())
         .expect("screen children");
     assert_eq!(children.get(1).map(|node| node.id_str()), Some("nav"));
     assert_eq!(children.last().map(|node| node.id_str()), Some("content"));

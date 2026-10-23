@@ -124,6 +124,7 @@ pub mod ref_resolve;
 pub mod rename;
 pub mod render_backend;
 pub mod request_snapshot;
+pub mod root_placement;
 pub mod scene_template_append;
 pub mod scene_template_catalog;
 pub mod scene_template_keyboard;
