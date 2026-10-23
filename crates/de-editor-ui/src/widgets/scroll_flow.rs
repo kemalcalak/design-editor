@@ -266,6 +266,22 @@ pub fn scroll_component_browser(
     )
 }
 
+/// Scroll the Images tab's thumbnail grid — the same contract as
+/// [`scroll_component_browser`]: `None` off the tab, `Some(changed)` once
+/// the wheel belongs to it.
+pub fn scroll_images_tab(
+    state: &mut EditorState,
+    rect: Rect,
+    point: Point2D,
+    delta_y: f32,
+) -> Option<bool> {
+    if !crate::widgets::images_tab::images_tab_on_show(state) || !rect.contains(point) {
+        return None;
+    }
+    let max = crate::widgets::images_tab::current_max_scroll(state, rect);
+    Some(delta_y != 0.0 && scroll_by_max(&mut state.editor_ui.images_tab_scroll, -delta_y, max))
+}
+
 /// Scroll the layer rail: the Layers region below `layers_rows_top`,
 /// the Pages region above it, each on both axes.
 pub fn scroll_layer_panel(

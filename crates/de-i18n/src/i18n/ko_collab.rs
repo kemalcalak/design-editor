@@ -220,6 +220,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.variables" => "변수",
         "leftPanel.tab.components" => "컴포넌트",
         "leftPanel.tab.images" => "이미지",
+        "imagesTab.empty" => "이 페이지에 이미지가 없습니다",
         _ => return None,
     })
 }

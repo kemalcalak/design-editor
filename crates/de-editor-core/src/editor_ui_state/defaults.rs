@@ -211,6 +211,8 @@ impl Default for EditorUiState {
             canvas_hover_node: None,
             entered_container: None,
             component_browser_scroll: jian_core::scroll::ScrollState::default(),
+            images_tab_scroll: jian_core::scroll::ScrollState::default(),
+            images_tab_hover: None,
             component_browser_search: String::new(),
             component_browser_category: None,
             component_browser_hover: None,

@@ -134,6 +134,29 @@ impl WidgetHostNative {
                 *higher_overlay_hover_changed |= changed;
             }
         }
+        // Images tab hover (Search / Generate / thumbnails).
+        {
+            let body = de_editor_ui::widgets::host_canvas_geometry::rail_body_rect(
+                &self.editor_state,
+                self.last_viewport_h,
+            );
+            let (owns_point, changed) = de_editor_ui::widgets::images_tab::update_hover(
+                &mut self.editor_state,
+                body,
+                Point2D::new(x, y),
+            );
+            if changed {
+                self.mark_dirty();
+            }
+            if owns_point {
+                self.clear_lower_overlay_hover();
+                return Some(true);
+            }
+            if changed && !chat_or_picker_owns_point {
+                return Some(true);
+            }
+            *higher_overlay_hover_changed |= changed;
+        }
         if let Some(d) = self.icon_picker_drag {
             self.editor_state.editor_ui.icon_picker_panel_pos =
                 Some((x - d.grab_dx, y - d.grab_dy));

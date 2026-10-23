@@ -218,6 +218,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.variables" => "Variáveis",
         "leftPanel.tab.components" => "Componentes",
         "leftPanel.tab.images" => "Imagens",
+        "imagesTab.empty" => "Nenhuma imagem nesta página",
         _ => return None,
     })
 }

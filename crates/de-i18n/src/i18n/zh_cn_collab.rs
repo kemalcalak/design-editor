@@ -218,6 +218,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.variables" => "变量",
         "leftPanel.tab.components" => "组件",
         "leftPanel.tab.images" => "图片",
+        "imagesTab.empty" => "此页面没有图片",
         _ => return None,
     })
 }

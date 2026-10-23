@@ -218,6 +218,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.variables" => "Biến",
         "leftPanel.tab.components" => "Thành phần",
         "leftPanel.tab.images" => "Hình ảnh",
+        "imagesTab.empty" => "Không có hình ảnh trên trang này",
         _ => return None,
     })
 }

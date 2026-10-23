@@ -60,8 +60,8 @@ impl WidgetHostNative {
             }
         }
         // Components / Images own the body too: the rail paints its card
-        // and tab row, the tab's content paints over the body later (the
-        // component browser in the floating-panel pass, Images in its own).
+        // and tab row; Images paints its body right here, the component
+        // browser later in the floating-panel pass.
         let other_tab_owns_rail = rail_open
             && slides_panel.is_none()
             && !chat_owns_rail
@@ -73,6 +73,15 @@ impl WidgetHostNative {
             if let Some(tabs) = self.slides_tab_row(viewport_height) {
                 self.paint_slides_tab_row(frame, &tabs);
             }
+            let body = de_editor_ui::widgets::host_canvas_geometry::rail_body_rect(
+                &self.editor_state,
+                viewport_height,
+            );
+            de_editor_ui::widgets::images_tab::paint(
+                &mut de_editor_ui::widgets::PaintCx { backend: frame },
+                &self.editor_state,
+                body,
+            );
         }
         if rail_open && slides_panel.is_none() && !chat_owns_rail && !other_tab_owns_rail {
             // Compute the active drop target so the panel can paint

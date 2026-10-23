@@ -326,6 +326,21 @@ impl WidgetHostNative {
                 return true;
             }
         }
+        let body = de_editor_ui::widgets::host_canvas_geometry::rail_body_rect(
+            &self.editor_state,
+            viewport_height,
+        );
+        if let Some(dirty) = scroll_flow::scroll_images_tab(
+            &mut self.editor_state,
+            body,
+            Point2D::new(x, y),
+            delta_y,
+        ) {
+            if dirty {
+                self.mark_dirty();
+            }
+            return true;
+        }
         if !self.layers_panel_visible() {
             return false;
         }

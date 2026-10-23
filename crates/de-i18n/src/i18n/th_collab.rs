@@ -218,6 +218,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.variables" => "ตัวแปร",
         "leftPanel.tab.components" => "คอมโพเนนต์",
         "leftPanel.tab.images" => "รูปภาพ",
+        "imagesTab.empty" => "ไม่มีรูปภาพในหน้านี้",
         _ => return None,
     })
 }

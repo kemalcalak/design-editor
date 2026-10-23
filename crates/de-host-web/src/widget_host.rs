@@ -86,6 +86,7 @@ mod design_md_press;
 #[cfg(test)]
 mod design_md_press_tests;
 pub(crate) mod icon_ingest;
+mod images_tab_press;
 #[cfg(all(test, feature = "canvaskit"))]
 mod preview_hover_tests;
 // Browser file-IO ingestion (Open / Figma import / clipboard paste)

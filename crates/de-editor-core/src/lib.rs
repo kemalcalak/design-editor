@@ -57,6 +57,7 @@ pub mod compositing;
 pub mod conversion;
 pub mod design_md;
 pub mod design_md_button_state;
+pub mod document_images;
 pub mod document_install;
 pub mod drag_mutators;
 pub mod editor_toast;

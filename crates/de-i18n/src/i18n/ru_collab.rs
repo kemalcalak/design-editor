@@ -218,6 +218,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.variables" => "Переменные",
         "leftPanel.tab.components" => "Компоненты",
         "leftPanel.tab.images" => "Изображения",
+        "imagesTab.empty" => "На этой странице нет изображений",
         _ => return None,
     })
 }

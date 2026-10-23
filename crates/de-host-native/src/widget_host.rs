@@ -122,6 +122,7 @@ mod image_panel_overlay_tests;
 mod image_panel_selection;
 #[cfg(test)]
 mod image_panel_selection_tests;
+mod images_tab_press;
 mod ime;
 #[cfg(test)]
 mod ime_punctuation_tests;

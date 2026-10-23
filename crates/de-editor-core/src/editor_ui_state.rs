@@ -694,6 +694,10 @@ pub struct EditorUiState {
     pub component_browser_search_focused: bool,
     /// Vertical scroll of the Components tab's card grid.
     pub component_browser_scroll: jian_core::scroll::ScrollState,
+    /// Vertical scroll of the Images tab's thumbnail grid.
+    pub images_tab_scroll: jian_core::scroll::ScrollState,
+    /// The Images tab button or cell under the cursor.
+    pub images_tab_hover: Option<crate::document_images::ImagesTabHit>,
     /// Current hierarchy focus under the cursor (Select tool, no
     /// drag). Canvas paint outlines the focus solid and all of its
     /// direct visible children dashed.
