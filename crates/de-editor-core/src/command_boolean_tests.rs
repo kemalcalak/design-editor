@@ -4,7 +4,7 @@ use crate::command::EditorCommand;
 use crate::node_id::NodeId;
 use crate::pen_node_ext::PenNodeExt;
 use crate::state::EditorState;
-use crate::test_support::{rect, state_with};
+use crate::test_support::{frame, rect, state_with};
 use jian_ops_schema::node::PenNode;
 
 fn id(s: &str) -> NodeId {
@@ -95,4 +95,35 @@ fn commit_boolean_result_rejects_a_stale_revision_without_mutating() {
     assert!(!s.apply(stale));
     assert_eq!(s.doc, before);
     assert!(s.history.past.is_empty());
+}
+
+#[test]
+fn commit_boolean_result_refuses_a_source_with_children_without_mutating() {
+    let mut s = state_with(vec![
+        frame(
+            "f",
+            "F",
+            0.0,
+            0.0,
+            40.0,
+            40.0,
+            vec![rect("inner", "Inner", 0.0, 0.0, 5.0, 5.0)],
+        ),
+        rect("b", "B", 5.0, 5.0, 15.0, 15.0),
+    ]);
+    let before = s.doc.clone();
+    assert!(!s.apply(commit(&s, &["f", "b"], "n7")));
+    assert_eq!(s.doc, before);
+    assert!(s.history.past.is_empty());
+}
+
+#[test]
+fn commit_boolean_result_accepts_an_empty_frame() {
+    let mut s = state_with(vec![
+        frame("f", "F", 0.0, 0.0, 40.0, 40.0, vec![]),
+        rect("b", "B", 5.0, 5.0, 15.0, 15.0),
+    ]);
+    assert!(s.apply(commit(&s, &["f", "b"], "n7")));
+    let ids: Vec<&str> = s.active_children().iter().map(|n| n.id_str()).collect();
+    assert_eq!(ids, ["n7"]);
 }

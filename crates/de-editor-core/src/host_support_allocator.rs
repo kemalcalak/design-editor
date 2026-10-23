@@ -302,7 +302,9 @@ impl EditorState {
     }
 
     /// Replace boolean-op sources with one path using the caller's id policy.
-    pub fn replace_paths_with_polyline_with_allocator(
+    /// Crate-private: hosts commit through `EditorCommand::CommitBooleanResult`
+    /// (`EditorState::commit_canvas_boolean`), which validates first.
+    pub(crate) fn replace_paths_with_polyline_with_allocator(
         &mut self,
         source_ids: &[NodeId],
         contours: &[Vec<(f64, f64)>],

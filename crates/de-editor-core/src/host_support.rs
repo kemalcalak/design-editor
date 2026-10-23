@@ -8,6 +8,8 @@
 //! collected here as additive, tested `EditorState` methods so the
 //! host never forks tree-mutation logic of its own.
 
+use crate::command::EditorCommand;
+use crate::id_allocator::IdAllocator;
 use crate::node_id::NodeId;
 use crate::state::EditorState;
 use crate::tool::Tool;
@@ -294,38 +296,46 @@ impl EditorState {
         }
     }
 
-    /// Replace the path nodes `source_ids` on the active page with a
-    /// single new `Path` node whose geometry is the boolean `contours`
-    /// (one closed polyline per subpath). Used by the host's path-boolean
-    /// op: the skia `Path::op` math lives in the host layer, but the
-    /// result is committed back through this `EditorState` mutator so the
-    /// host never edits the canonical tree directly.
+    /// Commit a canvas-computed path boolean through
+    /// [`EditorCommand::CommitBooleanResult`], the same command the MCP
+    /// `boolean_op` tool sends, so both share its validation (sources
+    /// exist and have no children, id free, document not moved on),
+    /// naming, undo step and selection. The host keeps its contour math
+    /// (skia on desktop, the axis-aligned fallback on web) and its id
+    /// policy: the new id is minted from `next_id` with the sequential
+    /// allocator, and `next_id` advances only when the commit lands.
     ///
-    /// The contours are emitted as a compound SVG `d` string (one
-    /// `M … L … Z` per contour) rather than the single-contour `anchors`
-    /// form, so holes / disjoint regions (Subtract / Exclude) survive:
-    /// a `d` with ≥2 `Z` commands makes the renderer apply even-odd
-    /// winding. Mirrors TS `boolean-ops.ts`, which also stores the result
-    /// as `d` only.
-    ///
-    /// Returns the new node's id on success; `None` when no contour has
-    /// ≥2 points or the id allocator is exhausted. Caller is responsible
-    /// for the surrounding history snapshot + selection update.
-    pub fn replace_paths_with_polyline(
+    /// The command is built against the live revision, so the stale
+    /// check passes by construction here: the canvas computes and
+    /// commits in one call.
+    pub fn commit_canvas_boolean(
         &mut self,
-        source_ids: &[NodeId],
-        contours: &[Vec<(f64, f64)>],
+        source_ids: Vec<NodeId>,
+        contours: Vec<Vec<(f64, f64)>>,
         next_id: &mut u64,
-    ) -> Option<NodeId> {
-        let mut allocator = crate::SequentialIdAllocator::for_document(&self.doc, *next_id).ok()?;
-        let result = self
-            .replace_paths_with_polyline_with_allocator(source_ids, contours, &mut allocator)
-            .ok()
-            .flatten();
-        if result.is_some() {
+    ) -> bool {
+        let Ok(mut allocator) = crate::SequentialIdAllocator::for_document(&self.doc, *next_id)
+        else {
+            return false;
+        };
+        let Ok(new_id) = allocator.allocate(&mut self.collect_node_ids()) else {
+            return false;
+        };
+        let command = EditorCommand::CommitBooleanResult {
+            source_ids,
+            contours,
+            new_id,
+            revision: self.document_revision(),
+        };
+        // The command carries its own id; the allocator is only the
+        // `apply_with_allocator` argument and mints nothing more.
+        let committed = self
+            .apply_with_allocator(command, &mut allocator)
+            .unwrap_or(false);
+        if committed {
             *next_id = allocator.next_counter();
         }
-        result
+        committed
     }
 }
 
@@ -396,7 +406,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_paths_with_polyline_swaps_sources_for_one_node() {
+    fn commit_canvas_boolean_swaps_sources_for_one_node() {
         let mut s = EditorState::new();
         let mut next = 100u64;
         // Two throwaway source paths.
@@ -407,19 +417,23 @@ mod tests {
             .create_node_for_tool(Tool::Pen, &mut next, 5.0, 5.0, 1.0, 1.0)
             .unwrap();
         assert_eq!(s.active_children().len(), 2);
-        let result = s
-            .replace_paths_with_polyline(
-                &[a, b],
-                &[vec![(10.0, 10.0), (0.0, 0.0), (10.0, 0.0)]],
-                &mut next,
-            )
-            .expect("path committed");
-        assert!(result.is_real());
-        // Both sources gone, one result node remains.
+        let depth = s.history.past.len();
+        assert!(s.commit_canvas_boolean(
+            vec![a, b],
+            vec![vec![(10.0, 10.0), (0.0, 0.0), (10.0, 0.0)]],
+            &mut next,
+        ));
+        // Both sources gone, one result node remains, selected, one
+        // undo step, and the id comes from the host counter.
         assert_eq!(s.active_children().len(), 1);
+        assert_eq!(s.history.past.len(), depth + 1);
         let PenNode::Path(path) = &s.active_children()[0] else {
             panic!("boolean result should be a Path");
         };
+        assert_eq!(path.base.id, "n102");
+        assert_eq!(next, 103);
+        assert_eq!(s.selection.set, vec![NodeId::new("n102")]);
+        assert_eq!(path.base.name.as_deref(), Some("Boolean Result"));
         assert_eq!(path.base.x, Some(0.0));
         assert_eq!(path.base.y, Some(0.0));
         assert_eq!(path.width, Some(SizingBehavior::Number(10.0)));
@@ -436,18 +450,22 @@ mod tests {
     }
 
     #[test]
-    fn replace_paths_with_polyline_rejects_empty_points() {
+    fn commit_canvas_boolean_rejects_empty_input_and_keeps_the_counter() {
         let mut s = EditorState::new();
         let mut next = 100u64;
-        assert!(s.replace_paths_with_polyline(&[], &[], &mut next).is_none());
+        let a = s
+            .create_node_for_tool(Tool::Pen, &mut next, 0.0, 0.0, 1.0, 1.0)
+            .unwrap();
+        let next_before = next;
+        assert!(!s.commit_canvas_boolean(vec![], vec![vec![(0.0, 0.0), (1.0, 1.0)]], &mut next));
         // A contour with <2 points is degenerate and also rejected.
-        assert!(s
-            .replace_paths_with_polyline(&[], &[vec![(1.0, 1.0)]], &mut next)
-            .is_none());
+        assert!(!s.commit_canvas_boolean(vec![a], vec![vec![(1.0, 1.0)]], &mut next));
+        assert_eq!(next, next_before, "a rejected commit mints no id");
+        assert_eq!(s.active_children().len(), 1);
     }
 
     #[test]
-    fn replace_paths_with_polyline_inherits_first_source_style() {
+    fn commit_canvas_boolean_inherits_first_source_style() {
         let src = r##"{
             "version": "1.0.0",
             "children": [
@@ -461,15 +479,39 @@ mod tests {
             .value;
         let mut s = EditorState::from_document(doc);
         let mut next = 100u64;
-        s.replace_paths_with_polyline(
-            &[NodeId::new("n10"), NodeId::new("n11")],
-            &[vec![(0.0, 0.0), (20.0, 0.0), (20.0, 20.0)]],
+        assert!(s.commit_canvas_boolean(
+            vec![NodeId::new("n10"), NodeId::new("n11")],
+            vec![vec![(0.0, 0.0), (20.0, 0.0), (20.0, 20.0)]],
             &mut next,
-        )
-        .expect("path committed");
+        ));
         let PenNode::Path(path) = &s.active_children()[0] else {
             panic!("boolean result should be a Path");
         };
         assert!(path.fill.is_some(), "result should keep first source fill");
+    }
+
+    #[test]
+    fn commit_canvas_boolean_refuses_a_source_with_children() {
+        let src = r##"{
+            "version": "1.0.0",
+            "children": [
+              {"type":"frame","id":"n10","x":0,"y":0,"width":20,"height":20,
+               "children":[{"type":"rectangle","id":"n12","x":0,"y":0,"width":5,"height":5}]},
+              {"type":"rectangle","id":"n11","x":10,"y":0,"width":20,"height":20}
+            ]
+        }"##;
+        let doc = jian_ops_schema::load_str(src)
+            .expect("fixture parses")
+            .value;
+        let mut s = EditorState::from_document(doc);
+        let before = s.doc.clone();
+        let mut next = 100u64;
+        assert!(!s.commit_canvas_boolean(
+            vec![NodeId::new("n10"), NodeId::new("n11")],
+            vec![vec![(0.0, 0.0), (20.0, 0.0), (20.0, 20.0)]],
+            &mut next,
+        ));
+        assert_eq!(s.doc, before, "the frame and its child survive");
+        assert_eq!(next, 100);
     }
 }

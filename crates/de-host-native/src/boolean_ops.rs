@@ -7,13 +7,12 @@
 //! Lives in `shell-native` (not shell-core) so shell-core stays
 //! skia-free. This module is a pure *computation*: given the
 //! layout-resolved `LayoutScene` + the editor's selection set it
-//! returns the source shape ids + the result polyline. The host
-//! commits that result back through an `EditorState` mutator
-//! (`replace_paths_with_polyline`) so the canonical tree is never
-//! edited directly. The MCP `boolean_op` tool (`de-host-services`) runs
-//! the same computation and commits it through
-//! `EditorCommand::CommitBooleanResult`, which is why this module is not
-//! gated on `gl-host`.
+//! returns the source shape ids + the result polyline. Both the canvas
+//! (`EditorState::commit_canvas_boolean`) and the MCP `boolean_op` tool
+//! (`de-host-services`, which is why this module is not gated on
+//! `gl-host`) commit that result through
+//! `EditorCommand::CommitBooleanResult`, so the canonical tree is never
+//! edited directly.
 
 use crate::backend::skia::fit_path_to_rect;
 use de_editor_core::BooleanOp;
@@ -36,7 +35,7 @@ pub struct BooleanResult {
 /// two operands; returns `None` when the selection is unsupported or
 /// the result polyline is empty. The
 /// returned `BooleanResult` is the input the host feeds to
-/// `EditorState::replace_paths_with_polyline`.
+/// `EditorState::commit_canvas_boolean`.
 pub fn compute_boolean_op(
     scene: &LayoutScene,
     selected: &[String],
