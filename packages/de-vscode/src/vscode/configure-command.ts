@@ -23,7 +23,7 @@ function currentAdapter(root: string): McpAdapter {
   return adapterFor(kind);
 }
 
-/** Resolve the workspace folder to write the config into: the active .op file's
+/** Resolve the workspace folder to write the config into: the active .de file's
  *  folder if any, else a single root, else a QuickPick. */
 async function pickWorkspaceRoot(): Promise<string | undefined> {
   const folders = vscode.workspace.workspaceFolders ?? [];

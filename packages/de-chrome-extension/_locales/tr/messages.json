@@ -14,7 +14,7 @@
     "message": "Öğe yakala"
   },
   "downloadButton": {
-    "message": ".op indir"
+    "message": ".de indir"
   },
   "designButton": {
     "message": "design.md dosyasını çıkar"
@@ -122,10 +122,10 @@
     "message": "$1 adresindeki Design Editor bağlantıyı kabul etti ama $2 saniye içinde yanıt vermedi. Uygulama meşgul ya da takılmış olabilir — kontrol edip yeniden deneyin."
   },
   "errorNoIngress": {
-    "message": "Bu Design Editor sürümünde uzantı girişi yok ($1). Uygulamayı güncelleyin veya “.op indir” ile kaydedip dosyayı Design Editor’da açın"
+    "message": "Bu Design Editor sürümünde uzantı girişi yok ($1). Uygulamayı güncelleyin veya “.de indir” ile kaydedip dosyayı Design Editor’da açın"
   },
   "errorTooLarge": {
-    "message": "Bu yakalama $1 MB’tan büyük ve Design Editor’ın anlık görüntü yolu bunu reddediyor. “.op indir” kullanın, ardından dosyayı Design Editor’da açın"
+    "message": "Bu yakalama $1 MB’tan büyük ve Design Editor’ın anlık görüntü yolu bunu reddediyor. “.de indir” kullanın, ardından dosyayı Design Editor’da açın"
   },
   "errorImport": {
     "message": "Design Editor anlık görüntüyü reddetti: $1"

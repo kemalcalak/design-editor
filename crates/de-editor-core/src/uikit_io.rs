@@ -2,7 +2,7 @@
 //! `apps/web/src/uikit/kit-import-export.ts` + `kit-utils.ts` +
 //! `uikit-store.ts` action surface.
 //!
-//! The kit FILE format is just a canonical `.op` `PenDocument` whose
+//! The kit FILE format is just a canonical `.de` `PenDocument` whose
 //! top-level `children` are the reusable component roots (plus the
 //! `$variable` definitions + themes they reference) — exactly what TS
 //! `exportKit` writes and `importKitFromFile` reads, so kits round-trip
@@ -37,7 +37,7 @@ use crate::EditorState;
 /// native file dialogs). Mirrors `DesignMdRequest`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KitIoRequest {
-    /// Pick a `.op` / `.pen` / `.json` file and import its reusable
+    /// Pick a `.de` / `.json` file and import its reusable
     /// components as a new kit (TS `importKitFromFile`).
     Import,
     /// Export the current document's reusable components as a kit
@@ -200,7 +200,7 @@ pub fn build_kit_document(
 }
 
 /// Default export file name — TS:
-/// `` `${kitName.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'kit'}.op` ``.
+/// `` `${kitName.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'kit'}.de` ``.
 pub fn kit_export_file_name(kit_name: &str) -> String {
     let cleaned: String = kit_name
         .chars()
@@ -208,7 +208,7 @@ pub fn kit_export_file_name(kit_name: &str) -> String {
         .collect();
     let cleaned = cleaned.trim();
     let stem = if cleaned.is_empty() { "kit" } else { cleaned };
-    format!("{stem}.op")
+    de_util::document_file::file_name(stem)
 }
 
 // ---------------------------------------------------------------------------
@@ -535,10 +535,10 @@ mod tests {
 
     #[test]
     fn kit_export_file_name_sanitizes_like_ts() {
-        assert_eq!(kit_export_file_name("My Kit"), "My Kit.op");
-        assert_eq!(kit_export_file_name("  Kit/!@#  "), "Kit.op");
-        assert_eq!(kit_export_file_name("///"), "kit.op");
-        assert_eq!(kit_export_file_name(""), "kit.op");
+        assert_eq!(kit_export_file_name("My Kit"), "My Kit.de");
+        assert_eq!(kit_export_file_name("  Kit/!@#  "), "Kit.de");
+        assert_eq!(kit_export_file_name("///"), "kit.de");
+        assert_eq!(kit_export_file_name(""), "kit.de");
     }
 
     #[test]

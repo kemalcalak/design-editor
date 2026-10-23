@@ -64,11 +64,11 @@ fn settings_payload_round_trips_recent_files_and_mcp_preferences() {
     src.editor_ui.agent_settings.experimental_features_enabled = true;
     src.editor_ui.recent_files = vec![
         RecentFile {
-            path: "/tmp/a.op".into(),
+            path: "/tmp/a.de".into(),
             modified_at: 1,
         },
         RecentFile {
-            path: "/tmp/b.op".into(),
+            path: "/tmp/b.de".into(),
             modified_at: 2,
         },
     ];
@@ -88,7 +88,7 @@ fn settings_payload_round_trips_recent_files_and_mcp_preferences() {
     assert!(!dst.editor_ui.agent_settings.auto_update_enabled);
     assert!(dst.editor_ui.agent_settings.experimental_features_enabled);
     assert_eq!(dst.editor_ui.recent_files.len(), 2);
-    assert_eq!(dst.editor_ui.recent_files[0].path, "/tmp/a.op");
+    assert_eq!(dst.editor_ui.recent_files[0].path, "/tmp/a.de");
 }
 
 #[test]
@@ -243,7 +243,7 @@ fn credential_payload_contains_credentials_but_not_document_or_recent_files() {
     state.editor_ui.agent_settings.openverse_client_id = "openverse-client".into();
     state.editor_ui.agent_settings.openverse_client_secret = "openverse-secret".into();
     state.editor_ui.recent_files.push(RecentFile {
-        path: "/tmp/must-not-leak.op".into(),
+        path: "/tmp/must-not-leak.de".into(),
         modified_at: 1,
     });
 

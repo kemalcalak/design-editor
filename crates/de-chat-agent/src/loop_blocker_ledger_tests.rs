@@ -25,7 +25,7 @@ fn clean_document_has_no_blockers() {
 
 #[test]
 fn duplicate_top_level_frame_is_a_structure_blocker() {
-    // Same test0711-1-m3.op shape `duplicate_root_tests` covers in
+    // Same test0711-1-m3.de shape `duplicate_root_tests` covers in
     // design_agent_tools.rs: model abandoned the first `Explore` and
     // rebuilt everything in a second one of the same name.
     let state = state_from_json(

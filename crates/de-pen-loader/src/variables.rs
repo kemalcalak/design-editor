@@ -6,7 +6,7 @@
 //! so every variable mutation — `set_variable_*` AND the newer
 //! `create/delete/rename_variable` CRUD — was applied in memory
 //! but silently dropped on the MCP save path. This module mirrors
-//! `VariableTable` into serde structs so a saved `.op` round-trips
+//! `VariableTable` into serde structs so a saved `.de` round-trips
 //! design tokens.
 
 use std::collections::BTreeMap;
@@ -80,7 +80,7 @@ pub struct ThemeAxisPayload {
 }
 
 /// Full `VariableTable` snapshot. Every field is `#[serde(default)]`
-/// so a legacy `.op` saved before this struct existed still loads
+/// so a legacy `.de` saved before this struct existed still loads
 /// (the table simply comes back empty).
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct VarTablePayload {
@@ -246,7 +246,7 @@ mod tests {
     fn var_table_survives_json_round_trip() {
         let original = sample_table();
         let payload = var_table_to_payload(&original);
-        // Through the actual serde JSON path the `.op` file uses.
+        // Through the actual serde JSON path the `.de` file uses.
         let json = serde_json::to_string(&payload).expect("serialize");
         let back: VarTablePayload = serde_json::from_str(&json).expect("deserialize");
         let restored = var_table_from_payload(&back);
@@ -277,7 +277,7 @@ mod tests {
 
     #[test]
     fn legacy_payload_without_var_table_field_loads_empty() {
-        // A `.op` saved before this field existed: the JSON object
+        // A `.de` saved before this field existed: the JSON object
         // simply omits `var_table`. serde(default) must yield an
         // empty table, not a parse error.
         let legacy = r#"{"variables":[],"themes":[],"active_theme":{}}"#;

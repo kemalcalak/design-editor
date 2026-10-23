@@ -79,7 +79,7 @@ pub fn snapshot_placeholder() -> String {
     ingress::SNAPSHOT_PLACEHOLDER.to_owned()
 }
 
-/// Download file name for the `.op` document of a page titled `title`.
+/// Download file name for the `.de` document of a page titled `title`.
 #[wasm_bindgen(js_name = opFilename)]
 pub fn op_filename(title: &str) -> String {
     filename::op_filename(title)
@@ -246,12 +246,12 @@ pub fn classify_design_md_poll_reply(status: u16, text: &str) -> String {
     value.to_string()
 }
 
-/// Convert an extractor snapshot into a ready-to-open `.op` document.
+/// Convert an extractor snapshot into a ready-to-open `.de` document.
 ///
 /// Returns a small JSON document the popup glue parses with `JSON.parse`:
 ///
 /// * `{"ok":true,"op":"<PenDocument JSON>","nodeCount":N,"warnings":[…]}` —
-///   `op` is the exact text to write to a `.op` file.
+///   `op` is the exact text to write to a `.de` file.
 /// * `{"ok":false,"error":"…"}` — the capture produced no importable content
 ///   (empty page, unsupported snapshot, malformed JSON); the caller must show
 ///   an actionable error instead of downloading a broken file.

@@ -68,7 +68,7 @@ fn labels_match_exact_and_prefix() {
     assert!(!labels_match("", "profile"));
 }
 
-/// Measured (`0718-1-glm-1.op`): screen names carry a brand prefix
+/// Measured (`0718-1-glm-1.de`): screen names carry a brand prefix
 /// ("Wander — Trips" / "Wander — Saved") — neither normalized form is a
 /// prefix of the other ("trips" vs "wandertrips"), so every one of the
 /// document's nav tabs (bare "Trips" / "Saved" labels) went unbound. The
@@ -79,7 +79,7 @@ fn labels_match_handles_cjk_labels() {
     // `normalize_label` filtered on `is_ascii_alphanumeric`, so every CJK
     // label and screen name normalized to "" and NOTHING matched — the whole
     // tab-navigation layer silently no-opped on Chinese apps. Measured on
-    // `0808-k3-2.op`: screen routes were written (that path never reads
+    // `0808-k3-2.de`: screen routes were written (that path never reads
     // labels) while not one of the eight tabs got an `onTap` action.
     assert!(labels_match("星图", "星图"));
     assert!(labels_match("今夜", "Nocturne 今夜"));
@@ -649,7 +649,7 @@ fn mismatched_tab_label_is_not_bound() {
     assert!(node_events_json(settings_tab).is_none());
 }
 
-/// De-identified reproduction of `0718-1-glm-1.op`: three screens already
+/// De-identified reproduction of `0718-1-glm-1.de`: three screens already
 /// spread apart (x = 0 / 430 / 860, non-overlapping), each brand-prefixed
 /// ("Wander — Trips" etc.), one bottom nav with bare tab labels ("Trips" /
 /// "Saved" / "Explore" / "Profile" — the last two have no matching screen

@@ -4,7 +4,7 @@
 Spec: design-editor-docs/superpowers/specs/2026-06-10-element-manifest-v2.md §2.
 Runs the FULL Rust orchestrator (de-smoke headless, `DESIGN_EDITOR_MANIFEST=1`)
 for every corpus prompt × provider, then scores M3 (expected-shape: required
-roles present in the saved .op tree) + M5 (semantic element selection,
+roles present in the saved .de tree) + M5 (semantic element selection,
 version-suffix-stripped) like the TS harness's score-run.ts.
 
 Keys come from env ONLY (never hardcoded — Codex review of the 06-04
@@ -230,7 +230,7 @@ def score_cell(entry, op_path, log_path, rc, duration):
         doc = json.load(open(op_path, encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as err:
         row["m3_success"] = False
-        row["m3_failure_reason"] = f"unreadable .op: {err}"
+        row["m3_failure_reason"] = f"unreadable .de: {err}"
         row["garbage"] = True
         return row
 
@@ -258,7 +258,7 @@ def score_cell(entry, op_path, log_path, rc, duration):
 
 def run_cell(entry, provider_id, cfg, out_dir, write_row):
     cell = f"{provider_id}/{entry['id']}"
-    op_path = os.path.join(out_dir, "op", provider_id, f"{entry['id']}.op")
+    op_path = os.path.join(out_dir, "op", provider_id, f"{entry['id']}.de")
     log_path = os.path.join(out_dir, "logs", provider_id, f"{entry['id']}.log")
     os.makedirs(os.path.dirname(op_path), exist_ok=True)
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
@@ -347,7 +347,7 @@ def main():
         rows = []
         for entry in prompts:
             for model in models:
-                op_path = os.path.join(args.out, "op", model, f"{entry['id']}.op")
+                op_path = os.path.join(args.out, "op", model, f"{entry['id']}.de")
                 log_path = os.path.join(args.out, "logs", model, f"{entry['id']}.log")
                 row = score_cell(entry, op_path, log_path, 0, 0.0)
                 row["model"] = model

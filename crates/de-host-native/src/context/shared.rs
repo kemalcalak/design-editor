@@ -417,7 +417,7 @@ fn build_gl_surface(
         &backend_rt,
         SurfaceOrigin::BottomLeft,
         ColorType::RGBA8888,
-        // Canonical `.op` colours and the native paint API are sRGB. Leaving
+        // Canonical `.de` colours and the native paint API are sRGB. Leaving
         // the destination untagged makes Skia's colour-management contract
         // ambiguous and, on wide-gamut macOS displays, lets sRGB channel
         // values reach a Display-P3 compositor unchanged.

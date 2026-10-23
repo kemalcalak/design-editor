@@ -143,7 +143,7 @@ image would be a remote request)". A `data:` URI cannot execute under this polic
 | **Capture full page** | Captures the whole page and sends it to the Design Editor instance at the endpoint under **Design Editor endpoint** (default `127.0.0.1:3100`).                                                                                    |
 | **Extract design.md** | Aggregates de-identified design-style evidence and downloads a reusable `design.md`. Design Editor uses a compatible evidence-only built-in API model when available; otherwise the extension uses a deterministic local fallback. |
 | **Capture element**   | Lets you point at one element and captures only its subtree. See below.                                                                                                                                                            |
-| **Download .op**      | Captures and saves a ready-to-open `<page-title>.op` document instead of sending it — double-click it to open in Design Editor.                                                                                                    |
+| **Download .de**      | Captures and saves a ready-to-open `<page-title>.de` document instead of sending it — double-click it to open in Design Editor.                                                                                                    |
 
 The status area reports node counts, importer warnings, design evidence counts,
 and whether either bounded collector stopped at its safety cap. The endpoint
@@ -209,7 +209,7 @@ result comes back two ways:
   naming the element and what happened to it.
 
 The capture is delivered the same way as **whichever of "Capture full page" or
-"Download .op" you used last** — the choice is remembered in
+"Download .de" you used last** — the choice is remembered in
 `chrome.storage.local` under `lastAction`, and defaults to sending. There is no
 extra delivery prompt: the element pick reuses a decision you have already
 made.
@@ -271,7 +271,7 @@ privacy allowlist, caps, stable ordering, fallback reasons and busy handoff.
 
 ## The two delivery paths
 
-The **Capture** button always uses path 1; `Download .op` is always path 2.
+The **Capture** button always uses path 1; `Download .de` is always path 2.
 Neither involves an account or any remote host: a capture only ever goes to the
 Design Editor on your own computer or to a file on your disk.
 
@@ -334,15 +334,15 @@ in `chrome://extensions`.
 
 ### 2. Download and open by hand
 
-`Download .op` writes a ready-to-open `.op` document (Design Editor's `PenDocument`
+`Download .de` writes a ready-to-open `.de` document (Design Editor's `PenDocument`
 format — the same conversion `de import:snapshot` performs, run in the browser).
 Open it directly:
 
-- double-click the `<page-title>.op` file, or
+- double-click the `<page-title>.de` file, or
 - drag it onto the app window, or
-- `de open ~/Downloads/example.op`.
+- `de open ~/Downloads/example.de`.
 
-No CLI conversion step is needed — the file is already a `.op` document.
+No CLI conversion step is needed — the file is already a `.de` document.
 
 ## Permissions, and why each is needed
 
@@ -350,7 +350,7 @@ No CLI conversion step is needed — the file is already a `.op` document.
 | -------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `activeTab`                            | Read the one tab where you pressed an action — granted per click, with no standing browsing access. |
 | `scripting`                            | Inject the snapshot extractor, de-identified style collector, transfer harness and picker overlay.  |
-| `downloads`                            | Save a ready-to-open `.op` document or generated `design.md`.                                       |
+| `downloads`                            | Save a ready-to-open `.de` document or generated `design.md`.                                       |
 | `storage`                              | Remember settings plus one pending pick result and one pending design result.                       |
 | `host_permissions: http://127.0.0.1/*` | POST a snapshot or bounded design evidence to your local Design Editor.                             |
 
@@ -501,7 +501,7 @@ either police three identical files or exempt them. The switcher still offers
 | Privacy policy URL        | Publish [`docs/privacy-policy.md`](docs/privacy-policy.md) and link it. It is written to be published verbatim.                                                                                                                      |
 | Single purpose            | "Turn the rendered page the user chooses into editable Design Editor design nodes or a reusable design-system guide."                                                                                                                |
 | `activeTab` + `scripting` | "Runs the snapshot or de-identified style collector only in the tab where the user presses an action."                                                                                                                               |
-| `downloads`               | "Saves a ready-to-open .op document or the generated design.md guide."                                                                                                                                                               |
+| `downloads`               | "Saves a ready-to-open .de document or the generated design.md guide."                                                                                                                                                               |
 | `storage`                 | "Stores settings and the most recent background-action result locally."                                                                                                                                                              |
 | `http://127.0.0.1/*`      | "Delivers a capture or bounded de-identified style evidence with its title removed to Design Editor on the user's computer."                                                                                                         |
 | Data usage disclosures    | No analytics, advertising or sale. Snapshot content goes only to local Design Editor or a local file; bounded style evidence with no page text/title goes to local Design Editor and may be processed by its configured AI provider. |
@@ -540,7 +540,7 @@ or run `design-editor --serve-web 3100`. Check the port with
 
 **"This Design Editor build has no extension ingress"** — the app is listening but
 predates `POST /api/import/web-snapshot`, and its general `/mcp` surface refuses
-browser-extension origins by design. Update the app, or use `Download .op` and
+browser-extension origins by design. Update the app, or use `Download .de` and
 open the file in Design Editor. You will also see this if the editor was started with
 `DESIGN_EDITOR_EXTENSION_ALLOWED_IDS` set to a list that does not include this
 extension's id.
@@ -559,7 +559,7 @@ same isolation contract.
 
 **"This capture is larger than 48 MB"** — the snapshot route caps its body at
 48 MB (it is the one ingress that needs no token, so it does not get to make the
-editor buffer an arbitrary amount). Use `Download .op` and open the file in
+editor buffer an arbitrary amount). Use `Download .de` and open the file in
 Design Editor, which has no such limit.
 
 **"… did not answer within 30s"** — a snapshot connection was accepted but the
@@ -597,7 +597,7 @@ it is what clears the badge.
 the worker statically imports the built core, so it does not register until
 `scripts/build-wasm.sh` has run. Run it, then hit **Reload** on the extension
 card. `chrome://extensions` shows the worker's own error next to the card.
-**Capture full page** and **Download .op** are unaffected; they run in the
+**Capture full page** and **Download .de** are unaffected; they run in the
 popup.
 
 **"The extension is built, but its logic core would not start"** — distinct

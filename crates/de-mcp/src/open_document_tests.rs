@@ -36,11 +36,11 @@ fn open_document_echoes_ts_file_path_without_legacy_warning() {
     let state = sample();
     let tool = open_document_snapshot(&state);
     let mut args = BTreeMap::new();
-    args.insert("filePath".into(), "/tmp/design.op".into());
+    args.insert("filePath".into(), "/tmp/design.de".into());
 
     match tool.call(&args) {
         ToolOutcome::Ok(out) => {
-            assert_eq!(out.get("filePath"), Some(&"/tmp/design.op".to_string()));
+            assert_eq!(out.get("filePath"), Some(&"/tmp/design.de".to_string()));
             assert!(
                 !out.contains_key("warning"),
                 "desktop transports route filePath before dispatch, so open_document should not emit the legacy ignored-filePath warning"

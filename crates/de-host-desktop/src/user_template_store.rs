@@ -5,9 +5,9 @@
 //! `de-host-services`; this desktop residual owns the GUI save and delete
 //! flows that write the three files.
 //!
-//! One directory per template — `<slug>/document.op`, `preview.jpg`,
+//! One directory per template — `<slug>/document.de`, `preview.jpg`,
 //! `meta.json`. A template is a two-file asset, and the directory shape is
-//! what localizes the half-written case: a directory missing `document.op`
+//! what localizes the half-written case: a directory missing `document.de`
 //! or `meta.json` is skipped as an incomplete save, while a flat listing
 //! would have no consistent answer for a template that has a document but no
 //! preview.
@@ -44,7 +44,7 @@ pub(crate) fn load_user_scene_templates_once() {
 
 /// Load every template directory into the runtime registry.
 ///
-/// A directory without a readable `meta.json` or `document.op` is skipped
+/// A directory without a readable `meta.json` or `document.de` is skipped
 /// with a note rather than failing the scan: the directory is user-editable,
 /// and one incomplete save must not cost the rest of the collection. A
 /// missing `preview.jpg` is tolerated — the card then paints a plain block.
@@ -76,7 +76,7 @@ pub(crate) fn persist_user_scene_template(id: &str) -> std::io::Result<PathBuf> 
         })?;
     let dir = templates_dir()?.join(template.slug());
     std::fs::create_dir_all(&dir)?;
-    std::fs::write(dir.join("document.op"), template.document.as_bytes())?;
+    std::fs::write(dir.join("document.de"), template.document.as_bytes())?;
     std::fs::write(dir.join("preview.jpg"), &template.preview_jpeg)?;
     std::fs::write(
         dir.join("meta.json"),

@@ -140,8 +140,8 @@ mod tests {
 
     #[test]
     fn create_assigns_unique_ids() {
-        let a = entry("/a.op", "one");
-        let b = entry("/a.op", "two");
+        let a = entry("/a.de", "one");
+        let b = entry("/a.de", "two");
         assert_ne!(a.id, b.id);
         assert!(a.id.starts_with("gen-1000-"));
         assert_eq!(a.timestamp, "2026-05-17T00:00:00Z");
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn update_feedback_sets_the_field() {
-        let e = entry("/a.op", "one");
+        let e = entry("/a.de", "one");
         assert!(e.feedback.is_none());
         let e = update_feedback(&e, Feedback::Accepted);
         assert_eq!(e.feedback, Some(Feedback::Accepted));
@@ -158,13 +158,13 @@ mod tests {
     #[test]
     fn recent_entries_filters_by_document_and_limits() {
         let entries = vec![
-            entry("/a.op", "1"),
-            entry("/b.op", "2"),
-            entry("/a.op", "3"),
-            entry("/a.op", "4"),
+            entry("/a.de", "1"),
+            entry("/b.de", "2"),
+            entry("/a.de", "3"),
+            entry("/a.de", "4"),
         ];
         // Scoped to /a.op, last 2.
-        let recent = get_recent_entries(&entries, 2, Some("/a.op"));
+        let recent = get_recent_entries(&entries, 2, Some("/a.de"));
         assert_eq!(recent.len(), 2);
         assert_eq!(recent[0].input.prompt, "3");
         assert_eq!(recent[1].input.prompt, "4");
@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn prompt_string_is_empty_for_no_entries() {
         assert_eq!(history_to_prompt_string(&[]), "");
-        let s = history_to_prompt_string(&[entry("/a.op", "design a login")]);
+        let s = history_to_prompt_string(&[entry("/a.de", "design a login")]);
         assert!(s.starts_with("## Recent Generation History"));
         assert!(s.contains("\"design a login\" → 7 nodes"));
     }

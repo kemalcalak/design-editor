@@ -2,7 +2,7 @@
 //!
 //! A scene template is a finished document a user opens and edits — unlike a
 //! Prompt Center entry, which is text handed to the model. That difference
-//! drives the shape here: every entry carries an embedded `.op` document, and
+//! drives the shape here: every entry carries an embedded `.de` document, and
 //! the catalogue refuses to load if an entry's document or preview is
 //! missing. A prompt with a missing preview still works; a template with a
 //! missing document is a dead card.
@@ -38,7 +38,7 @@ macro_rules! template_document {
             Some(include_str!(concat!(
                 "../assets/scene_templates/",
                 $file,
-                ".op"
+                ".de"
             )))
         }
         #[cfg(target_arch = "wasm32")]
@@ -48,7 +48,7 @@ macro_rules! template_document {
                 "scene_templates",
                 "/",
                 $file,
-                ".op"
+                ".de"
             ))
         }
     }};
@@ -67,7 +67,7 @@ pub fn scene_template_document_route(template_id: &str) -> Option<&'static str> 
                 "scene_templates",
                 "/",
                 $file,
-                ".op"
+                ".de"
             ))
         };
     }

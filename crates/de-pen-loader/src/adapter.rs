@@ -1,4 +1,4 @@
-//! Canonical `.op` / `.pen` loader.
+//! Canonical `.de` / `.pen` loader.
 //!
 //! Bridges the `jian-ops-schema` canonical `PenDocument` into the
 //! desktop's private `DocPayload`. Two responsibilities:

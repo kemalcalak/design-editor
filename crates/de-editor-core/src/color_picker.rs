@@ -204,7 +204,7 @@ impl EditorState {
         let (h, s, v) = rgb_to_hsv(parse_hex_rgb(&current_hex).unwrap_or((0.0, 0.0, 0.0)));
         // Preserve authored colour alpha across picker edits. Solid fills
         // normally carry transparency in the separate body-opacity field,
-        // but the canonical schema and older `.op` files also allow an
+        // but the canonical schema and older `.de` files also allow an
         // alpha byte in `color`; the renderer multiplies both channels.
         let alpha = match target {
             ColorTarget::Fill | ColorTarget::GradientStop(_) | ColorTarget::EffectColor(_) => {

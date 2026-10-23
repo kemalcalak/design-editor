@@ -34,7 +34,7 @@ pub(super) fn map_import_html(positionals: &[String], flags: &Flags) -> Result<C
     let source = required_pos(
         positionals,
         1,
-        "Usage: de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.op]",
+        "Usage: de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.de]",
     )?;
     let is_url = source.starts_with("http://") || source.starts_with("https://");
     let viewport_height = match flag_value(flags, "viewport-height") {
@@ -47,6 +47,7 @@ pub(super) fn map_import_html(positionals: &[String], flags: &Flags) -> Result<C
                 "--out requires a local file; URL import needs a running editor",
             ));
         }
+        crate::app_control_cli::require_document_extension(std::path::Path::new(&out_path))?;
         return Ok(Command::ImportHtml {
             html_path: source,
             out_path,
@@ -99,9 +100,10 @@ pub(super) fn map_import_snapshot(
     let json_path = required_pos(
         positionals,
         1,
-        "Usage: de import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.op]",
+        "Usage: de import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.de]",
     )?;
     if let Some(out_path) = flag_value(flags, "out") {
+        crate::app_control_cli::require_document_extension(std::path::Path::new(&out_path))?;
         return Ok(Command::ImportSnapshot {
             json_path,
             out_path,
@@ -307,24 +309,24 @@ mod tests {
             "import:figma".to_string(),
             "/tmp/source.fig".to_string(),
             "--out".to_string(),
-            "/tmp/converted.op".to_string(),
+            "/tmp/converted.de".to_string(),
         ])
         .expect("parse import:figma");
         assert_eq!(
             parsed.command,
             Command::ImportFigma {
                 fig_path: "/tmp/source.fig".to_string(),
-                out_path: "/tmp/converted.op".to_string(),
+                out_path: "/tmp/converted.de".to_string(),
             }
         );
     }
 
     #[test]
     fn figma_default_out_path_matches_ts_suffix_replacement() {
-        assert_eq!(figma_default_out_path("checkout.fig"), "checkout.op");
+        assert_eq!(figma_default_out_path("checkout.fig"), "checkout.de");
         assert_eq!(
             figma_default_out_path("/tmp/checkout.fig"),
-            "/tmp/checkout.op"
+            "/tmp/checkout.de"
         );
         assert_eq!(
             figma_default_out_path("/tmp/checkout.FIG"),
@@ -378,14 +380,14 @@ mod tests {
             "import:html".to_string(),
             "a.html".to_string(),
             "--out".to_string(),
-            "a.op".to_string(),
+            "a.de".to_string(),
         ];
         let parsed = parse_args(&args).expect("parse");
         assert_eq!(
             parsed.command,
             Command::ImportHtml {
                 html_path: "a.html".to_string(),
-                out_path: "a.op".to_string(),
+                out_path: "a.de".to_string(),
                 viewport_height: None,
             }
         );
@@ -397,7 +399,7 @@ mod tests {
             "import:html".to_string(),
             "https://e.com/".to_string(),
             "--out".to_string(),
-            "a.op".to_string(),
+            "a.de".to_string(),
         ];
         assert!(parse_args(&args).is_err());
     }
@@ -405,7 +407,7 @@ mod tests {
     #[test]
     fn local_import_decodes_utf16le_bom() {
         let input = temp_html_path("utf16", "html");
-        let output = temp_html_path("utf16", "op");
+        let output = temp_html_path("utf16", "de");
         let mut bytes = vec![0xFF, 0xFE];
         for unit in "<html><body><p>你好</p></body></html>".encode_utf16() {
             bytes.extend_from_slice(&unit.to_le_bytes());
@@ -456,7 +458,7 @@ mod tests {
             ),
         )
         .expect("write HTML fixture");
-        let output = dir.join("page.op");
+        let output = dir.join("page.de");
 
         let result = super::run_import_html(
             input.to_str().expect("UTF-8 input path"),
@@ -536,14 +538,14 @@ mod tests {
             "import:snapshot".to_string(),
             "s.json".to_string(),
             "--out".to_string(),
-            "s.op".to_string(),
+            "s.de".to_string(),
         ];
         let parsed = parse_args(&args).expect("parse");
         assert_eq!(
             parsed.command,
             Command::ImportSnapshot {
                 json_path: "s.json".to_string(),
-                out_path: "s.op".to_string(),
+                out_path: "s.de".to_string(),
             }
         );
     }

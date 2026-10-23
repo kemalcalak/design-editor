@@ -1,4 +1,4 @@
-//! `.pen` / `.op` payload DTO.
+//! `.pen` / `.de` payload DTO.
 //!
 //! [`DocPayload`] is the layout-resolved intermediate the canonical
 //! loader produces: `adapter::pen_document_to_payload` runs each
@@ -8,7 +8,7 @@
 //! scene.
 //!
 //! Carved out of `design-editor/src/persistence.rs` so library
-//! crates can reuse the canonical `.op` loader; the desktop binary's
+//! crates can reuse the canonical `.de` loader; the desktop binary's
 //! `rfd` Save/Open dialogs + error dialogs stay desktop-side.
 
 use serde::de::DeserializeOwned;
@@ -65,7 +65,7 @@ pub struct PagePayload {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NodePayload {
     pub id: String,
-    /// Original schema id (the string `id` in the `.op` file). Used
+    /// Original schema id (the string `id` in the `.de` file). Used
     /// to look up layout rects after jian-core's `LayoutEngine`
     /// computes them.
     #[serde(default, skip_serializing_if = "String::is_empty")]

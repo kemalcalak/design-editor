@@ -131,7 +131,7 @@ pub(super) fn numeric_vertical_padding(v: &Value) -> Option<f64> {
 /// left]`. The overflow math must compare column widths against the row's
 /// INNER width; a `[12, 16]`-padded 860px row only offers 828px to its cells,
 /// and ignoring that put a real table 2px on the "fits" side of the gate
-/// while its flex column starved to 6px (measured: test0703.op).
+/// while its flex column starved to 6px (measured: test0703.de).
 pub(super) fn horizontal_padding(v: &Value) -> f64 {
     numeric_padding_sides(v)
         .map(|[_, right, _, left]| right + left)

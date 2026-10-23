@@ -390,7 +390,7 @@ fn map_gradient(value: &str, style: &ComputedStyle, context: &mut MapCtx<'_>) ->
         }))
     } else {
         Some(PenFill::LinearGradient(LinearGradientBody {
-            // CSS angles and canonical `.op` angles share the same
+            // CSS angles and canonical `.de` angles share the same
             // convention: 0deg points bottom-to-top, 90deg left-to-right,
             // and the CSS default is 180deg (top-to-bottom). The renderer
             // performs the screen-coordinate projection itself.

@@ -239,6 +239,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.import.penDev" => "从 pen.dev 导入",
         "home.import.penDevSub" => ".pen 文件",
         "dialog.penDevImportToast" => "已从 pen.dev 打开。未能导入：{{details}}",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}} 不是 Design Editor 文档。只能打开 .de 文件；pen.dev 的 .pen 文件会以导入方式打开。",
+        "dialog.loadErrorNotPenDev" => "{{name}} 不是 pen.dev 文件，无法导入。",
         _ => return None,
     })
 }

@@ -163,7 +163,7 @@ fn contiguous_unnamed_rows_with_matching_width_modes_remain_a_table() {
 
 #[test]
 fn padded_row_with_text_fill_column_triggers_on_inner_width() {
-    // test0703.op's exact failure shape: 860px rows padded [12,16] (inner
+    // test0703.de's exact failure shape: 860px rows padded [12,16] (inner
     // 828), fixed columns 220+120+140+166+96 = 742 + 5×16 gaps = 822, one
     // fill_container contact column CARRYING TEXT. Nothing overflows — the
     // flex column just starves to 6px and its email shreds vertically. The

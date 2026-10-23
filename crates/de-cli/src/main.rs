@@ -426,7 +426,7 @@ fn command_from_positionals(positionals: &[String], flags: &Flags) -> Result<Com
         }
         "save" => {
             let file_path =
-                resolve_file_path_arg(&required_pos(positionals, 1, "Usage: de save <file.op>")?);
+                resolve_file_path_arg(&required_pos(positionals, 1, "Usage: de save <file.de>")?);
             let mut args = vec![pair("filePath", file_path)];
             if let Some(source) = flag_value(flags, "file") {
                 args.push(pair("sourceFilePath", resolve_file_path_arg(&source)));

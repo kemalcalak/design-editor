@@ -44,7 +44,7 @@ const MOBILE_WIDTH_RANGE: std::ops::RangeInclusive<f64> = 320.0..=480.0;
 /// Build the rubric JSON for an audited document. `run_summary` is `Some`
 /// only when this audit is running right after a generation this same
 /// process drove (it has a live `RunSummary` to report against); a
-/// pure-render audit that just loaded an existing `.op` off disk
+/// pure-render audit that just loaded an existing `.de` off disk
 /// (`DESIGN_EDITOR_SMOKE_AUDIT`'s standalone path) never had an orchestrator
 /// run to begin with, so it passes `None` and the `completeness` section is
 /// omitted entirely — reporting a fabricated 0/0 would be worse than saying
@@ -560,7 +560,7 @@ mod tests {
     #[test]
     fn completeness_section_is_absent_without_a_run_summary() {
         // A pure-render audit (`DESIGN_EDITOR_SMOKE_AUDIT` loading an existing
-        // `.op` off disk) never drove the orchestrator, so it has no
+        // `.de` off disk) never drove the orchestrator, so it has no
         // `RunSummary` — the section must be missing entirely, not a
         // fabricated `{"plannedSubtasks":0,"deliveredSubtasks":0,...}` that
         // would misreport a document nobody ever planned subtasks for.

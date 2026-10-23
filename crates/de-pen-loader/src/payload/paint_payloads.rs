@@ -90,7 +90,7 @@ pub struct GradientStopPayload {
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum GradientPayload {
     Linear {
-        /// Gradient angle in degrees, canonical `.op` convention:
+        /// Gradient angle in degrees, canonical `.de` convention:
         /// 0° = bottom→top, 90° = left→right, 180° = top→bottom
         /// (matches CSS `to-top`). The renderer subtracts 90° before
         /// projecting endpoints, so storing as authored keeps the
@@ -105,7 +105,7 @@ pub enum GradientPayload {
         /// Centre y as a 0.0..=1.0 fraction of bounds height.
         cy: f32,
         /// Outer radius as a 0.0..=1.0 fraction of `max(w, h)` —
-        /// matches the TS renderer, so the same `.op` file paints at
+        /// matches the TS renderer, so the same `.de` file paints at
         /// the same radial size on native + web + export.
         radius: f32,
         opacity: f32,

@@ -4,7 +4,7 @@
 //! code motion.
 
 /// Build the interactive [`MergeResolveState`] from a conflict bag
-/// — `None` when any conflicted file is not a structured `.op`
+/// — `None` when any conflicted file is not a structured `.de`
 /// document (those cannot be resolved per node, so the caller falls
 /// back to the conflict dialog).
 pub(super) fn build_merge_resolve(
@@ -15,7 +15,7 @@ pub(super) fn build_merge_resolve(
     use de_editor_core::{MergeConflictRow, MergeResolveFile, MergeResolveState};
     let mut files = Vec::new();
     for file in &conflicts.files {
-        // A non-`.op` file carries no merge stages — bail to the
+        // A non-`.de` file carries no merge stages — bail to the
         // dialog rather than offer a partial resolution.
         let stages = file.stages.as_ref()?;
         // A whole-file add / delete conflict (a missing ours or
@@ -89,11 +89,11 @@ pub(super) fn build_hunk_patch(lines: &[String], hunk_index: usize) -> Option<St
 }
 
 /// Build the per-file conflict breakdown for the merge dialog. A
-/// `.op` file's three index stages are run through the structured
+/// `.de` file's three index stages are run through the structured
 /// node-level merge ([`de_opmerge`]) so the report names the
 /// conflicting PenNodes — or flags the file as structurally
 /// auto-mergeable when the node merge is clean despite git's
-/// line-level conflict. Non-`.op` files list as a bare path.
+/// line-level conflict. Non-`.de` files list as a bare path.
 pub(super) fn merge_conflict_detail(
     conflicts: &de_git::ConflictBag,
     locale: de_editor_core::Locale,

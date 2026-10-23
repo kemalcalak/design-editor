@@ -235,7 +235,7 @@ pub fn pump(
                 eprintln!("[import-html] warning: {warning}");
             }
             // A freshly constructed EditorState starts at revision 0 with a
-            // saved baseline of 0. HTML imports have no adjacent `.op` yet,
+            // saved baseline of 0. HTML imports have no adjacent `.de` yet,
             // so explicitly mint an unsaved revision before installation.
             prepared.state.mark_document_changed();
             if !host.install_imported_state_with_drop_hook(prepared.state, || {
@@ -251,7 +251,7 @@ pub fn pump(
             // forwards EVERY warning, not just the first — the old pump only
             // echoed them to a stderr no GUI user ever reads.
             host.show_html_import_diagnostics(diagnostics);
-            // HTML imports do not auto-create an adjacent `.op`; their next
+            // HTML imports do not auto-create an adjacent `.de`; their next
             // Save intentionally routes through Save As.
             *current_path = None;
             refresh_title(window);
@@ -342,7 +342,7 @@ mod tests {
             rx,
         });
         let mut host = WidgetHostNative::new();
-        let mut current_path = Some(PathBuf::from("old.op"));
+        let mut current_path = Some(PathBuf::from("old.de"));
 
         assert_eq!(
             pump(&mut host, &mut session, &mut current_path, None),

@@ -7,7 +7,7 @@ use de_editor_core::EditorState;
 use serde_json::json;
 
 /// A dark design whose ACTIVE (Light) slot carries stock-light border values —
-/// `0808-gm-1.op`'s verbatim palette. `--foreground` is correctly light
+/// `0808-gm-1.de`'s verbatim palette. `--foreground` is correctly light
 /// in both slots and must stay untouched.
 fn dusk_state() -> EditorState {
     let doc: jian_ops_schema::PenDocument = serde_json::from_value(json!({

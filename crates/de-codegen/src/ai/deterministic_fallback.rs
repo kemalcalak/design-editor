@@ -22,7 +22,7 @@ pub(super) enum DeterministicFallbackError {
     EmptyNodeList,
     /// The payload is neither a JSON object nor a JSON array.
     NotObjectOrArray,
-    /// The payload parsed but is not a canonical `.op` node forest.
+    /// The payload parsed but is not a canonical `.de` node forest.
     NotCanonicalNodes(String),
     /// The framework generator ran but emitted only whitespace.
     EmptyGeneratedCode(Framework),
@@ -40,7 +40,7 @@ impl std::fmt::Display for DeterministicFallbackError {
             }
             Self::NotCanonicalNodes(detail) => write!(
                 formatter,
-                "selected nodes are not canonical .op nodes: {detail}"
+                "selected nodes are not canonical .de nodes: {detail}"
             ),
             Self::EmptyGeneratedCode(framework) => write!(
                 formatter,

@@ -74,11 +74,11 @@ for t in "${templates[@]}"; do
   # The documents themselves are the shipped assets and the source of truth
   # (embedded by the scene template catalogue); edit them directly. This
   # directory keeps only the full-resolution renders made from them.
-  op=$R/crates/de-editor-core/assets/scene_templates/$t.op
+  op=$R/crates/de-editor-core/assets/scene_templates/$t.de
   rm -rf "$TMP/$t"; mkdir -p "$TMP/$t"
   DESIGN_EDITOR_RENDER_MARGIN=0 "$BIN" --render-shots "$op" "$TMP/$t" 2 >/dev/null
 
-  # Rename <node-id>.png to <template>-NN.png in the .op children order
+  # Rename <node-id>.png to <template>-NN.png in the .de children order
   python3 - "$op" "$TMP/$t" "$OUT" "$t" <<'PY'
 import json, shutil, sys, pathlib
 op, shots, out, name = sys.argv[1:5]
@@ -98,11 +98,11 @@ PY
   if [ "$n" -gt 1 ]; then
     # `--mcp` writes the document back to disk normalised, so it must never
     # open the shipped asset: work on a throwaway copy.
-    cp "$op" "$TMP/$t/doc.op"
+    cp "$op" "$TMP/$t/doc.de"
     printf '%s\n' \
       '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
       '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"export_item","arguments":{"itemId":"page-1","format":"png","scale":1}}}' \
-    | "$BIN" --mcp "$TMP/$t/doc.op" 2>/dev/null | tail -1 \
+    | "$BIN" --mcp "$TMP/$t/doc.de" 2>/dev/null | tail -1 \
     | python3 -c "
 import sys, json, base64
 t = json.loads(json.load(sys.stdin)['result']['content'][0]['text'])

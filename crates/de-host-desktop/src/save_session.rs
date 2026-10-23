@@ -1,4 +1,4 @@
-//! Background `.op` save serialization for the desktop host.
+//! Background `.de` save serialization for the desktop host.
 //!
 //! The UI thread captures only the canonical document, active-page index, and
 //! revision identity. JSON encoding and the atomic sibling-temp write run on a
@@ -158,7 +158,7 @@ impl SaveSession {
         self.enqueue_impl(state, document_epoch, path, set_current_path, wake, None)
     }
 
-    /// Queue a clean, bound `.op` Save As without cloning the live document.
+    /// Queue a clean, bound `.de` Save As without cloning the live document.
     /// If any eligibility condition changed, fall back to the canonical
     /// snapshot path instead of risking a stale source-file copy.
     pub(crate) fn enqueue_clean_bound_op_save_as(
@@ -171,7 +171,7 @@ impl SaveSession {
         wake: Option<EventLoopProxy<DesktopEvent>>,
     ) -> EnqueueOutcome {
         let clean_source =
-            can_copy_clean_bound_op(state, &source_path, &path).then_some(source_path);
+            can_copy_clean_bound_document(state, &source_path, &path).then_some(source_path);
         self.enqueue_impl(
             state,
             document_epoch,
@@ -555,14 +555,11 @@ fn can_skip_unchanged_current_save(
     !save_active && !state.is_dirty() && current_path == Some(target) && target.is_file()
 }
 
-fn can_copy_clean_bound_op(state: &EditorState, source: &Path, target: &Path) -> bool {
+fn can_copy_clean_bound_document(state: &EditorState, source: &Path, target: &Path) -> bool {
     !state.is_dirty()
         && paths_provably_distinct(source, target)
         && source.is_file()
-        && source
-            .extension()
-            .and_then(|extension| extension.to_str())
-            .is_some_and(|extension| extension.eq_ignore_ascii_case("op"))
+        && de_util::document_file::is_document_path(source)
 }
 
 /// Resolve an existing path, or a not-yet-created leaf below an existing

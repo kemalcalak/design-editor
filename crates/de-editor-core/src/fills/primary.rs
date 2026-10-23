@@ -35,7 +35,7 @@ pub fn set_primary_fill_opacity(node: &mut PenNode, opacity: f32) -> bool {
 }
 
 /// Set the LinearGradient body's `angle` (degrees, canonical
-/// `.op` convention — 0° = bottom→top). No-op when the first fill
+/// `.de` convention — 0° = bottom→top). No-op when the first fill
 /// isn't a linear gradient; returns `false` so callers can detect
 /// the silent rejection (panel input clears without mutation).
 pub fn set_primary_gradient_angle(node: &mut PenNode, angle_deg: f32) -> bool {

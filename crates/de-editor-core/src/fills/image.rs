@@ -15,7 +15,7 @@ pub fn first_image_fill_summary(node: &PenNode) -> Option<ImageFillSummary> {
         .as_ref()
         .map(|m| [m.m00, m.m01, m.m02, m.m10, m.m11, m.m12]);
     let mode = match body.mode.as_ref() {
-        // Older `.op` documents preserve Figma's wire representation:
+        // Older `.de` documents preserve Figma's wire representation:
         // interactively cropped images were serialized as STRETCH plus an
         // affine sampling transform. Expose the actual editing semantics.
         Some(jian_ops_schema::style::ImageFillMode::Stretch)

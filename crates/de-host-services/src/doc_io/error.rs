@@ -1,4 +1,4 @@
-//! Typed failures for the headless `.op` / `.pen` document IO core
+//! Typed failures for the headless `.de` document IO core
 //! (`doc_io.rs` and its `atomic_file` / `canonical_save` / `clean_copy` /
 //! `load` siblings).
 //!
@@ -13,7 +13,8 @@
 //! express: whether a failure is a FILESYSTEM fault on a path the user named
 //! (`Open` / `Stat` / `Map` / `CreateTemp` / `TempAllocExhausted` / `Replace` /
 //! `Io`), a CONTENT fault in the bytes themselves (`SourceEmpty` /
-//! `SourceNotUtf8` / `InvalidUtf8Document` / `Schema` / `LegacyFormat`), or a
+//! `SourceNotUtf8` / `InvalidUtf8Document` / `Schema` / `LegacyFormat` /
+//! `UnsupportedExtension` / `NotPenDevDocument`), or a
 //! SERIALIZER fault while writing (`Serialize`). That middle group is the
 //! client-fault / server-fault split a request boundary needs — a daemon route
 //! handed a bad document answers `400`, while a disk that would not open
@@ -66,7 +67,7 @@ pub enum DocIoError {
     SourceEmpty { path: String },
     /// Memory-mapping a source document failed.
     Map { path: String, detail: String },
-    /// A clean-copy source is not UTF-8, so it cannot be a `.op` file. Worded
+    /// A clean-copy source is not UTF-8, so it cannot be a `.de` file. Worded
     /// as a diagnostic — [`DocIoError::InvalidUtf8Document`] is the localised
     /// end-user twin on the interactive open path.
     SourceNotUtf8 { path: String, detail: String },
@@ -93,6 +94,14 @@ pub enum DocIoError {
     /// The save target is a pen.dev document. Those are import sources:
     /// writing the canonical schema over one would break it for pen.dev.
     PenDevSourceReadOnly { path: String },
+    /// The open path names neither a `.de` document nor a pen.dev `.pen`
+    /// import (for example an old `.op` file). Refused before parsing.
+    /// Carries the LOCALISED `dialog.loadErrorUnsupportedExtension` sentence.
+    UnsupportedExtension(String),
+    /// A `.pen` file whose content is not a pen.dev document. `.pen` only
+    /// opens through the pen.dev importer. Carries the LOCALISED
+    /// `dialog.loadErrorNotPenDev` sentence.
+    NotPenDevDocument(String),
 }
 
 impl fmt::Display for DocIoError {
@@ -118,7 +127,9 @@ impl fmt::Display for DocIoError {
             | DocIoError::Serialize(message)
             | DocIoError::Schema(message)
             | DocIoError::LegacyFormat(message)
-            | DocIoError::InvalidUtf8Document(message) => f.write_str(message),
+            | DocIoError::InvalidUtf8Document(message)
+            | DocIoError::UnsupportedExtension(message)
+            | DocIoError::NotPenDevDocument(message) => f.write_str(message),
             DocIoError::PenDevSourceReadOnly { path } => write!(
                 f,
                 "{path} is a pen.dev document; save the imported design to a new file"

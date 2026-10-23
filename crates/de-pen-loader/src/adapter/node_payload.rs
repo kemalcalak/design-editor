@@ -64,7 +64,7 @@ pub(super) fn node_to_payload_with_text_context(
         }
     }
     // Carry canonical drop-shadow effects across — without this a
-    // `.op` authored with shadows lost them on import (codex
+    // `.de` authored with shadows lost them on import (codex
     // stop-gate). Gaussian layer blur is carried via `layer_blur`;
     // backdrop blur is carried separately via `background_blur`.
     p.effects = crate::effects::shadows_from_canonical(node);

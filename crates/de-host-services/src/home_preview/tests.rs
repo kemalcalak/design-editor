@@ -33,7 +33,7 @@ fn write_doc(dir: &Path, name: &str, body: &str) -> PathBuf {
 #[test]
 fn a_document_renders_to_a_capped_overview() {
     let dir = scratch("capped");
-    let doc = write_doc(&dir, "tall.op", TALL_DOC);
+    let doc = write_doc(&dir, "tall.de", TALL_DOC);
     let bytes = render_document_png(&doc).expect("renders");
     let (width, height) = png_size(&bytes);
     assert_eq!(height, PREVIEW_MAX_EDGE as u32, "long edge is capped");
@@ -47,7 +47,7 @@ fn a_document_renders_to_a_capped_overview() {
 #[test]
 fn an_empty_document_gets_a_blank_preview() {
     let dir = scratch("empty");
-    let doc = write_doc(&dir, "empty.op", EMPTY_DOC);
+    let doc = write_doc(&dir, "empty.de", EMPTY_DOC);
     let bytes = render_document_png(&doc).expect("an empty page still renders");
     assert_eq!(png_size(&bytes), (1, 1));
     let _ = std::fs::remove_dir_all(dir);
@@ -56,7 +56,7 @@ fn an_empty_document_gets_a_blank_preview() {
 #[test]
 fn a_preview_is_stale_until_written_and_again_after_the_document_changes() {
     let dir = scratch("stale");
-    let doc = write_doc(&dir, "doc.op", EMPTY_DOC);
+    let doc = write_doc(&dir, "doc.de", EMPTY_DOC);
     let preview = preview_path(&dir.join("thumbs"), &doc);
     assert!(is_stale(&doc, &preview), "no preview yet");
 
@@ -85,7 +85,7 @@ fn a_preview_is_stale_until_written_and_again_after_the_document_changes() {
     assert!(is_stale(&doc, &preview), "an older copy restored over it");
 
     assert!(
-        !is_stale(&dir.join("missing.op"), &preview),
+        !is_stale(&dir.join("missing.de"), &preview),
         "a missing document needs nothing"
     );
     let _ = std::fs::remove_dir_all(dir);
@@ -94,7 +94,7 @@ fn a_preview_is_stale_until_written_and_again_after_the_document_changes() {
 #[test]
 fn the_worker_renders_a_saved_file_on_demand() {
     let dir = scratch("worker");
-    let doc = write_doc(&dir, "doc.op", TALL_DOC);
+    let doc = write_doc(&dir, "doc.de", TALL_DOC);
     let thumbs = dir.join("thumbs");
     let before = written_count();
     queue_into(&thumbs, &doc);

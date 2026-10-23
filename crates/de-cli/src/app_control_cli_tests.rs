@@ -15,7 +15,7 @@ fn preflight_rejects_malformed_documents_and_accepts_a_valid_one() {
     // bytes that are not valid UTF-8. This must be rejected as a wrong file
     // type, not reported as an unreadable file, and never reach the server
     // (which would exit(1) before binding → opaque "connection refused").
-    let archive = dir.join("archive.op");
+    let archive = dir.join("archive.de");
     fs::write(&archive, b"PK\x03\x04\xff\xfe\x00\x01binary\x80\x81").expect("write archive");
     let err = preflight_document(&archive)
         .expect_err("binary archive must be rejected")
@@ -27,8 +27,8 @@ fn preflight_rejects_malformed_documents_and_accepts_a_valid_one() {
 
     // Valid UTF-8 that isn't a canonical document — exercises the loader's
     // JSON parse-error path (distinct from the invalid-UTF-8 path above).
-    let garbage = dir.join("garbage.op");
-    fs::write(&garbage, b"this is not a .op document").expect("write garbage");
+    let garbage = dir.join("garbage.de");
+    fs::write(&garbage, b"this is not a .de document").expect("write garbage");
     let err = preflight_document(&garbage)
         .expect_err("non-document text must be rejected")
         .to_string();
@@ -39,7 +39,7 @@ fn preflight_rejects_malformed_documents_and_accepts_a_valid_one() {
 
     // The exact starter template `ensure_document_file` writes must load,
     // so a fresh session is never falsely rejected (loader parity).
-    let good = dir.join("good.op");
+    let good = dir.join("good.de");
     fs::write(&good, MINIMAL_DOCUMENT).expect("write good doc");
     assert!(
         preflight_document(&good).is_ok(),
@@ -55,8 +55,8 @@ fn reports_only_files_the_editor_actually_opens() {
     // --file` never claims a documentPath the editor silently ignored.
     let dir = std::env::temp_dir().join(format!("de-start-file-{}", std::process::id()));
     let _ = fs::create_dir_all(&dir);
-    let op = dir.join("doc.op");
-    fs::write(&op, "{}").expect("write .op");
+    let op = dir.join("doc.de");
+    fs::write(&op, "{}").expect("write .de");
     let txt = dir.join("note.txt");
     fs::write(&txt, "x").expect("write .txt");
 
@@ -65,7 +65,7 @@ fn reports_only_files_the_editor_actually_opens() {
     // Existing but unsupported extension → editor ignores it.
     assert!(!editor_will_open(txt.to_str().unwrap()));
     // Supported extension but missing file → editor ignores it.
-    assert!(!editor_will_open(dir.join("missing.op").to_str().unwrap()));
+    assert!(!editor_will_open(dir.join("missing.de").to_str().unwrap()));
     // A directory is not a file.
     assert!(!editor_will_open(dir.to_str().unwrap()));
 
@@ -83,7 +83,7 @@ fn config_store_paths_keep_live_port_and_session_names() {
     );
     assert_eq!(
         default_document_path_in(&store).unwrap(),
-        root.join("cli-session.op")
+        root.join("cli-session.de")
     );
 }
 

@@ -94,31 +94,31 @@ fn parse_serve_web_args_accepts_port_doc_and_host() {
     assert_eq!(o.host, "127.0.0.1");
     assert!(o.allow_origins.is_empty());
     // Port + doc.
-    let o = parse(&["3100", "/tmp/d.op"]).expect("port+doc");
+    let o = parse(&["3100", "/tmp/d.de"]).expect("port+doc");
     assert_eq!(o.port, 3100);
-    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("/tmp/d.op")));
+    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("/tmp/d.de")));
     assert_eq!(o.host, "127.0.0.1");
     // `--host` in both spellings, before or after the doc.
-    let o = parse(&["3100", "--host", "0.0.0.0", "/tmp/d.op"]).expect("host then doc");
+    let o = parse(&["3100", "--host", "0.0.0.0", "/tmp/d.de"]).expect("host then doc");
     assert_eq!(o.port, 3100);
-    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("/tmp/d.op")));
+    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("/tmp/d.de")));
     assert_eq!(o.host, "0.0.0.0");
-    let o = parse(&["3100", "/tmp/d.op", "--host=0.0.0.0"]).expect("doc then host=");
+    let o = parse(&["3100", "/tmp/d.de", "--host=0.0.0.0"]).expect("doc then host=");
     assert_eq!(o.port, 3100);
-    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("/tmp/d.op")));
+    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("/tmp/d.de")));
     assert_eq!(o.host, "0.0.0.0");
     // Malformed shapes are rejected with a message, not silently dropped.
     assert!(parse(&[]).is_err(), "missing port");
     assert!(parse(&["nope"]).is_err(), "non-numeric port");
     assert!(parse(&["3100", "--host"]).is_err(), "--host without value");
-    assert!(parse(&["3100", "a.op", "b.op"]).is_err(), "two docs");
+    assert!(parse(&["3100", "a.de", "b.de"]).is_err(), "two docs");
 }
 
 #[test]
 fn parse_serve_web_args_legacy_positional_unchanged() {
-    let o = parse_serve_web_args(vec!["3100".into(), "doc.op".into()].into_iter()).unwrap();
+    let o = parse_serve_web_args(vec!["3100".into(), "doc.de".into()].into_iter()).unwrap();
     assert_eq!((o.port, o.managed), (3100, false));
-    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("doc.op")));
+    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("doc.de")));
     assert_eq!(o.host, "127.0.0.1");
 }
 
@@ -130,7 +130,7 @@ fn parse_serve_web_args_managed_flag_form() {
             "--port".into(),
             "0".into(),
             "--file".into(),
-            "a.op".into(),
+            "a.de".into(),
             "--allow-origin".into(),
             "vscode-webview://x".into(),
             "--allow-origin".into(),
@@ -141,7 +141,7 @@ fn parse_serve_web_args_managed_flag_form() {
     .unwrap();
     assert!(o.managed);
     assert_eq!(o.port, 0);
-    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("a.op")));
+    assert_eq!(o.path.as_deref(), Some(std::path::Path::new("a.de")));
     assert_eq!(o.allow_origins.len(), 2);
 }
 

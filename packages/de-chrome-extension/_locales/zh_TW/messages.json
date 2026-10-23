@@ -14,7 +14,7 @@
     "message": "擷取元素"
   },
   "downloadButton": {
-    "message": "下載 .op"
+    "message": "下載 .de"
   },
   "designButton": {
     "message": "擷取 design.md"
@@ -122,10 +122,10 @@
     "message": "$1 已接受連線，但 $2 秒內沒有回應。應用程式可能正忙或已卡住，請檢查後再試一次。"
   },
   "errorNoIngress": {
-    "message": "此 Design Editor 版本沒有擴充功能入口（$1）。請更新應用程式，或使用「下載 .op」後在 Design Editor 中開啟該檔案"
+    "message": "此 Design Editor 版本沒有擴充功能入口（$1）。請更新應用程式，或使用「下載 .de」後在 Design Editor 中開啟該檔案"
   },
   "errorTooLarge": {
-    "message": "本次擷取超過 $1 MB，超出 Design Editor 快照入口的上限。請使用「下載 .op」，然後在 Design Editor 中開啟該檔案"
+    "message": "本次擷取超過 $1 MB，超出 Design Editor 快照入口的上限。請使用「下載 .de」，然後在 Design Editor 中開啟該檔案"
   },
   "errorImport": {
     "message": "Design Editor 拒絕了這份快照：$1"

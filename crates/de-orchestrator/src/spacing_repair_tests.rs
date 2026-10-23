@@ -13,7 +13,7 @@ fn card(id: &str) -> Value {
 
 #[test]
 fn transparent_metrics_strip_loses_both_paddings() {
-    // test0703.op shape: "Key Metrics" (transparent, padded [24,32]) inside a
+    // test0703.de shape: "Key Metrics" (transparent, padded [24,32]) inside a
     // [32,40]-padded gap-20 main column — its padding starved the cards.
     let mut root = node(json!({
         "type":"frame","id":"main","layout":"vertical","gap":20,"padding":[32,40],
@@ -72,7 +72,7 @@ fn gapped_but_unpadded_column_strips_only_vertical() {
 
 #[test]
 fn landing_page_sections_keep_their_own_vertical_rhythm() {
-    // 0808-gm-1.op: a marketing page root (no padding, gap 20) whose eight
+    // 0808-gm-1.de: a marketing page root (no padding, gap 20) whose eight
     // sections each carry an 80px vertical inset of their own. A 20px gap
     // cannot stand in for an inset four times its size — this is section
     // rhythm, not a duplicate of the gap, and zeroing it collapsed the whole
@@ -116,7 +116,7 @@ fn a_web_page_keeps_section_padding_a_phone_screen_loses_it() {
         })
     };
 
-    // 1200 x 2977 — 0808-gm-1.op's marketing page. Sections own the rhythm.
+    // 1200 x 2977 — 0808-gm-1.de's marketing page. Sections own the rhythm.
     let mut web = node(tree(1200.0, 2977.0));
     assert!(
         !strip_wrapper_double_inset(&mut web),

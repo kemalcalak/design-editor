@@ -173,7 +173,7 @@ pub fn shadows_from_canonical(node: &PenNode) -> Vec<ShadowPayload> {
 /// Parse a CSS colour string into `[r,g,b,a]` 0..1. Handles hex
 /// (`#rgb` / `#rrggbb` / `#rrggbbaa`) AND the functional
 /// `rgb(r,g,b)` / `rgba(r,g,b,a)` form (`r`/`g`/`b` 0-255, `a`
-/// 0..1) that canonical `.op` shadow colours use. Returns `None`
+/// 0..1) that canonical `.de` shadow colours use. Returns `None`
 /// only for genuinely unparseable input.
 fn parse_css_color(s: &str) -> Option<[f32; 4]> {
     crate::style_payload::parse_color(s)
@@ -227,7 +227,7 @@ mod tests {
                 inner: true,
             }),
         ];
-        // Through the actual serde JSON path the `.op` file uses.
+        // Through the actual serde JSON path the `.de` file uses.
         let payload = effects_to_payload(&original);
         let json = serde_json::to_string(&payload).expect("serialize");
         let back: Vec<ShadowPayload> = serde_json::from_str(&json).expect("deserialize");

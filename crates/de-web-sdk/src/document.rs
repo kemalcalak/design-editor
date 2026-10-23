@@ -4,7 +4,7 @@ use crate::Viewer;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 impl Viewer {
-    /// Parse a canonical `.op` JSON string (best-effort, legacy-tolerant).
+    /// Parse a canonical `.de` JSON string (best-effort, legacy-tolerant).
     /// Immediately rebuilds the cached `LayoutScene` from the loaded document.
     /// Internal Rust API; the JS-facing wrapper is `Viewer::load_str` (maps the
     /// error to a `JsValue` so it surfaces as a thrown exception).

@@ -122,7 +122,7 @@ fn the_batch_applies_in_one_step() {
 #[test]
 fn a_file_that_is_not_pen_dev_is_refused() {
     let dir = temp_dir("refuse");
-    let op = dir.join("doc.op");
+    let op = dir.join("doc.de");
     std::fs::write(&op, r#"{"version":"1.0","children":[]}"#).unwrap();
     let mut args = BTreeMap::new();
     args.insert("penPath".to_string(), op.display().to_string());

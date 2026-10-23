@@ -38,7 +38,7 @@ fn child_names(node: &PenNode) -> Vec<String> {
         .collect()
 }
 
-/// The de-identified `0718-1-glm-1.op` shape: a section wrapper whose only
+/// The de-identified `0718-1-glm-1.de` shape: a section wrapper whose only
 /// child is a "header row" — title text on one side, the ENTIRE checklist
 /// misnested as the row's other flex child, the checklist redundantly
 /// repeating the title as its own first child.

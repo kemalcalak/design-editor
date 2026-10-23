@@ -172,7 +172,7 @@ mod tests {
     #[test]
     fn hidden_home_does_nothing() {
         let mut previews = HomePreviews::default();
-        let mut state = home_listing(Path::new("/nowhere/never-saved.op"));
+        let mut state = home_listing(Path::new("/nowhere/never-saved.de"));
         state.editor_ui.home.visible = false;
         assert!(!previews.poll(&mut state));
         assert!(previews.last_scan.is_none());
@@ -185,7 +185,7 @@ mod tests {
         let _guard = crate::image_decode_host::lock_decode_test_registry();
         let dir = std::env::temp_dir().join(format!("de-home-previews-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("scratch dir");
-        let doc = dir.join("agent-made.op");
+        let doc = dir.join("agent-made.de");
         std::fs::write(&doc, DOC).expect("doc written outside the app");
         let mut state = home_listing(&doc);
         // An explicit folder: previews stay off in this test binary.
@@ -244,7 +244,7 @@ mod tests {
         let _guard = crate::image_decode_host::lock_decode_test_registry();
         let dir = std::env::temp_dir().join(format!("de-home-future-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("scratch dir");
-        let doc = dir.join("from-archive.op");
+        let doc = dir.join("from-archive.de");
         std::fs::write(&doc, DOC).expect("doc");
         let ahead = SystemTime::now() + Duration::from_secs(3600);
         std::fs::File::options()

@@ -631,7 +631,7 @@ fn page_bg_token_stripped_from_inner_node_kept_on_root() {
 
 #[test]
 fn page_bg_token_kept_when_root_paints_a_different_ground() {
-    // 0808-gm-1.op: the page root paints a literal `#0A0A0A` while two of its
+    // 0808-gm-1.de: the page root paints a literal `#0A0A0A` while two of its
     // sections paint `$--background` (#0F172A) — a deliberate darker band,
     // NOT a repaint of the root's own ground. The strip is a redundancy
     // repair, so with nothing to be redundant WITH it must not fire.

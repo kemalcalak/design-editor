@@ -14,7 +14,7 @@
     "message": "요소 캡처"
   },
   "downloadButton": {
-    "message": ".op 다운로드"
+    "message": ".de 다운로드"
   },
   "designButton": {
     "message": "design.md 추출"
@@ -122,10 +122,10 @@
     "message": "$1 서버가 연결은 수락했지만 $2초 안에 응답하지 않았습니다. 앱이 바쁘거나 멈췄을 수 있으니 확인 후 다시 시도하세요."
   },
   "errorNoIngress": {
-    "message": "이 Design Editor 빌드에는 확장 프로그램 수신 경로가 없습니다($1). 앱을 업데이트하거나 [.op 다운로드]를 사용한 뒤 해당 파일을 Design Editor에서 여세요"
+    "message": "이 Design Editor 빌드에는 확장 프로그램 수신 경로가 없습니다($1). 앱을 업데이트하거나 [.de 다운로드]를 사용한 뒤 해당 파일을 Design Editor에서 여세요"
   },
   "errorTooLarge": {
-    "message": "이번 캡처는 $1 MB를 초과하여 Design Editor의 스냅샷 경로가 거부합니다. [.op 다운로드]를 사용한 뒤 해당 파일을 Design Editor에서 여세요"
+    "message": "이번 캡처는 $1 MB를 초과하여 Design Editor의 스냅샷 경로가 거부합니다. [.de 다운로드]를 사용한 뒤 해당 파일을 Design Editor에서 여세요"
   },
   "errorImport": {
     "message": "Design Editor이 스냅샷을 거부했습니다: $1"

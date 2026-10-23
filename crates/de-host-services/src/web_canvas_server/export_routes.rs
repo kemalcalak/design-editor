@@ -253,7 +253,7 @@ pub(super) fn save_current_file(body: &str, state: &mut WebCanvasState) -> WebRe
             let file_name = path
                 .file_name()
                 .map(|n| n.to_string_lossy().into_owned())
-                .unwrap_or_else(|| "untitled.op".to_string());
+                .unwrap_or_else(|| de_util::document_file::UNTITLED_FILE_NAME.to_string());
             WebReply {
                 status: "200 OK",
                 body: serde_json::json!({

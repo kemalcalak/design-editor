@@ -207,7 +207,7 @@ fn snapshot_layout_resolves_fit_content_text_to_measured_bounds() {
          "content":"N490-测试-9","fontSize":14}
       ]}],"children":[]
     }"##;
-    let parsed = jian_ops_schema::load_str(src).expect("parse .op fixture");
+    let parsed = jian_ops_schema::load_str(src).expect("parse .de fixture");
     let s = de_editor_core::EditorState::from_document(parsed.value);
     let mut r = ToolRegistry::default();
     r.register(Box::new(snapshot_layout_snapshot(&s)));

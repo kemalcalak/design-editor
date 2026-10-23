@@ -6,7 +6,7 @@ use super::*;
 
 #[test]
 fn loaded_document_dollar_ref_fill_resolves_without_any_cache() {
-    // The P0 document-compat repro: a TS-authored / reloaded .op whose
+    // The P0 document-compat repro: a TS-authored / reloaded .de whose
     // fill IS the `$ref` string. No transient `fill_refs` cache exists
     // after a load — the render-time resolution pass alone must land
     // the concrete colour (and the palette fallback must cover tokens
@@ -69,7 +69,7 @@ fn loaded_document_spacing_token_gap_reaches_flex_solver() {
 
 #[test]
 fn ref_instance_renders_component_subtree_at_instance_position() {
-    // The P0 document-compat repro: a TS-authored .op with a reusable
+    // The P0 document-compat repro: a TS-authored .de with a reusable
     // component + a ref instance must render the instance's full
     // subtree (previously `PenNode::Ref` collapsed to an empty group).
     let src = r##"{
@@ -221,7 +221,7 @@ fn pen_document_to_layout_scene_matches_editor_state_path() {
 
 #[test]
 fn mesh_gradient_fill_threads_into_scene_node() {
-    // The REAL editor path: a `.op` mesh_gradient first-fill must come
+    // The REAL editor path: a `.de` mesh_gradient first-fill must come
     // out of EditorState → scene as `SceneGradient::Mesh` so the canvas
     // dispatch reaches the backend's Gouraud painter — otherwise the
     // node silently flattens to the first vertex colour.

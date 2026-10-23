@@ -14,7 +14,7 @@ use de_editor_ui::{Color, Rect};
 impl NativeBackend {
     /// Fill a (round-)rectangle with a linear gradient. `stops`
     /// carries `(offset, color)` pairs ordered by ascending offset;
-    /// `angle_deg` is the canonical `.op` angle (0° = bottom→top,
+    /// `angle_deg` is the canonical `.de` angle (0° = bottom→top,
     /// 90° = left→right, matches CSS `to-top`); `opacity` is folded
     /// into each stop's alpha. Endpoints sit on the bounding ellipse,
     /// not the AABB — matches `pen-renderer/src/node-renderer.ts:155`
@@ -59,7 +59,7 @@ impl NativeBackend {
     /// `cy_frac` are 0.0..=1.0 fractions of `rect`'s width / height
     /// for the centre; `radius_frac` is a 0.0..=1.0 fraction of
     /// `max(w, h)` for the outer radius — matches
-    /// `pen-renderer/src/node-renderer.ts:187` so existing `.op`
+    /// `pen-renderer/src/node-renderer.ts:187` so existing `.de`
     /// files render at the same radial size on native + web +
     /// export. Stops + opacity follow the linear convention.
     #[allow(clippy::too_many_arguments)]
@@ -83,7 +83,7 @@ impl NativeBackend {
         );
         // Match `pen-renderer/src/node-renderer.ts:187` — outer
         // radius is `radius_frac × max(w, h)`. Earlier this used
-        // `min(w, h) / 2`, which made existing `.op` radial
+        // `min(w, h) / 2`, which made existing `.de` radial
         // gradients render at roughly 1/4 the size on native vs.
         // web/export.
         let outer = (rect.size.x.max(rect.size.y)) * radius_frac.clamp(0.0, 1.0);
@@ -315,7 +315,7 @@ pub(super) fn fold_opacity(c: Color, opacity: f32) -> Color {
     }
 }
 
-/// Project the canonical `.op` `angle` onto the two gradient
+/// Project the canonical `.de` `angle` onto the two gradient
 /// endpoints, matching `pen-renderer/src/node-renderer.ts:155`
 /// verbatim:
 ///

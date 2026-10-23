@@ -175,7 +175,7 @@ pub enum Icon {
     /// Lucide `upload.svg` — Component-Browser kit-import button.
     Upload,
     /// Lucide glyphs surfaced via `Icon::from_name` for canonical
-    /// `icon_font` nodes. Covers the names that real `.op` files +
+    /// `icon_font` nodes. Covers the names that real `.de` files +
     /// the TS element-builders authored against — extend as new
     /// fixtures surface unknown lucide names.
     Mail,
@@ -448,7 +448,7 @@ impl Icon {
     }
 
     /// Resolve a lucide kebab-case glyph name to an [`Icon`]. Used by
-    /// the canonical `.op` loader: `IconFontNode.iconFontName` carries
+    /// the canonical `.de` loader: `IconFontNode.iconFontName` carries
     /// strings like `pen-tool` / `mail` / `eye-off`; the renderer
     /// looks them up here so authored icons paint as lucide glyphs.
     /// Returns `None` for names the chrome doesn't carry; unresolved

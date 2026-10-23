@@ -12,6 +12,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+de-util = { path = "../de-util" }
 # Pure-Rust font metadata parser — the vendored CanvasKit build exposes no
 # family-name introspection (no Typeface.getFamilyName / FontMgr family APIs),
 # so an imported font's family is extracted here (wasm-safe, unit-testable)

@@ -524,7 +524,7 @@ pub(crate) fn parse_hex(s: &str) -> Option<[f32; 4]> {
     de_util::hex_color::parse_hex_rgba_f32(s, OPTS)
 }
 
-/// Any colour string a canonical `.op` fill may carry → normalized RGBA:
+/// Any colour string a canonical `.de` fill may carry → normalized RGBA:
 /// hex (via [`parse_hex`]) OR the functional `rgb(r,g,b)` /
 /// `rgba(r,g,b,a)` form (`r`/`g`/`b` 0-255, `a` 0..1). Every fill,
 /// gradient-stop, mesh-cell, shader-uniform and text-colour site goes

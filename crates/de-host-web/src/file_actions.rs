@@ -7,7 +7,7 @@
 //! without a DOM.
 //!
 //! Mirrors the desktop's `persistence.rs` split: Save serializes
-//! `editor_state.doc` straight to canonical `.op` JSON. When the
+//! `editor_state.doc` straight to canonical `.de` JSON. When the
 //! web-canvas daemon has a bound local path it performs the real
 //! desktop write, including the `.opmeta` active-page sidecar; the
 //! browser fallback downloads the same JSON as a Blob. Open parses
@@ -278,14 +278,39 @@ pub fn import_kit_source(src: &str, kit_id: String) -> Result<Option<UIKit>, Doc
     Ok(uikit_io::import_kit_from_document(&loaded.value, kit_id))
 }
 
-/// Parse canonical `.op` / `.pen` source into a fresh `EditorState`,
+/// Ingest a picked or dropped file by name: only `.de` documents and
+/// pen.dev `.pen` imports open, matching the desktop open funnel
+/// (`doc_io::load_editor_state_with_report`). The browser `accept` list is
+/// only a hint, so an "All files" pick of an `.op` lands here too.
+pub fn ingest_document_file(
+    src: &str,
+    file_name: &str,
+    previous: &EditorState,
+) -> Result<IngestedDoc, DocumentIngestError> {
+    let path = std::path::Path::new(file_name);
+    let pen_dev_path = de_util::document_file::is_pen_dev_path(path);
+    if !pen_dev_path && !de_util::document_file::is_document_path(path) {
+        return Err(DocumentIngestError::UnsupportedExtension {
+            name: file_name.to_owned(),
+        });
+    }
+    let ingested = ingest_document_source(src, previous)?;
+    if pen_dev_path && ingested.pen_dev.is_none() {
+        return Err(DocumentIngestError::NotPenDevDocument {
+            name: file_name.to_owned(),
+        });
+    }
+    Ok(ingested)
+}
+
+/// Parse canonical `.de` / pen.dev `.pen` source into a fresh `EditorState`,
 /// carrying over the app-level preferences from `previous` (the
 /// state being replaced). Mirrors the desktop's
 /// `persistence::load_editor_state` + `preserve_app_preferences`
-/// pair, minus the legacy `.opmeta` sidecar. Embedded `editorMeta`
+/// pair. Embedded `editorMeta`
 /// restores the active page and Figma Preserve geometry mode; older files
 /// without it open on their first non-empty page, matching desktop.
-pub fn ingest_op_source(
+pub fn ingest_document_source(
     src: &str,
     previous: &EditorState,
 ) -> Result<IngestedDoc, DocumentIngestError> {
@@ -323,7 +348,7 @@ pub fn ingest_figma_bytes(
 
 /// Install payload returned by the isolated Figma import Worker.
 ///
-/// `source` is a complete, ordinary canonical `.op` document (including the
+/// `source` is a complete, ordinary canonical `.de` document (including the
 /// shared `images` / `imageThumbs` tables produced in the Worker). Routing it
 /// through the compatibility loader preserves the exact same old-schema and
 /// image-interning behavior as File → Open; no paged placeholder document is

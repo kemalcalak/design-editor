@@ -1,8 +1,8 @@
 use super::*;
 
-fn temp_op_path(tag: &str) -> PathBuf {
+fn temp_document_path(tag: &str) -> PathBuf {
     std::env::temp_dir().join(format!(
-        "design-editor-save-session-{tag}-{}-{}.op",
+        "design-editor-save-session-{tag}-{}-{}.de",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -13,7 +13,7 @@ fn temp_op_path(tag: &str) -> PathBuf {
 
 #[test]
 fn worker_saves_the_captured_revision_not_later_edits() {
-    let path = temp_op_path("snapshot");
+    let path = temp_document_path("snapshot");
     let mut state = EditorState::new();
     state.doc.name = Some("captured".into());
     state.mark_document_changed();
@@ -37,7 +37,7 @@ fn worker_saves_the_captured_revision_not_later_edits() {
 
 #[test]
 fn identical_in_flight_request_is_not_duplicated() {
-    let path = temp_op_path("dedupe");
+    let path = temp_document_path("dedupe");
     let state = EditorState::new();
     let mut session = SaveSession::new();
     assert_eq!(
@@ -55,7 +55,7 @@ fn identical_in_flight_request_is_not_duplicated() {
 
 #[test]
 fn pending_identity_distinguishes_save_from_save_as() {
-    let path = temp_op_path("operation-identity");
+    let path = temp_document_path("operation-identity");
     let state = EditorState::new();
     let mut session = SaveSession::new();
     assert_eq!(
@@ -79,7 +79,7 @@ fn pending_identity_distinguishes_save_from_save_as() {
 
 #[test]
 fn pending_target_is_scoped_to_the_document_epoch() {
-    let path = temp_op_path("target-epoch");
+    let path = temp_document_path("target-epoch");
     let state = EditorState::new();
     let mut session = SaveSession::new();
     assert_eq!(
@@ -94,7 +94,7 @@ fn pending_target_is_scoped_to_the_document_epoch() {
 
 #[test]
 fn unchanged_bound_document_skips_snapshot_only_while_the_file_exists() {
-    let path = temp_op_path("unchanged-skip");
+    let path = temp_document_path("unchanged-skip");
     std::fs::write(&path, b"existing OP").expect("write bound file marker");
     let mut state = EditorState::new();
     state.mark_saved_revision();
@@ -130,7 +130,7 @@ fn unchanged_bound_document_skips_snapshot_only_while_the_file_exists() {
 
 #[test]
 fn path_comparison_normalizes_equivalent_paths() {
-    let source = temp_op_path("path-identity");
+    let source = temp_document_path("path-identity");
     std::fs::write(&source, b"existing OP").expect("write source");
     let dotted_alias = source
         .parent()
@@ -139,12 +139,12 @@ fn path_comparison_normalizes_equivalent_paths() {
         .join(source.file_name().expect("source file name"));
     assert!(!paths_provably_distinct(&source, &dotted_alias));
 
-    let distinct = temp_op_path("path-identity-distinct");
+    let distinct = temp_document_path("path-identity-distinct");
     assert!(paths_provably_distinct(&source, &distinct));
 
-    let unresolved = temp_op_path("missing-path-parent")
+    let unresolved = temp_document_path("missing-path-parent")
         .with_extension("")
-        .join("copy.op");
+        .join("copy.de");
     assert!(
         !paths_provably_distinct(&source, &unresolved),
         "an unresolved target must fail closed"
@@ -155,8 +155,8 @@ fn path_comparison_normalizes_equivalent_paths() {
 #[cfg(unix)]
 #[test]
 fn path_comparison_rejects_symlink_alias() {
-    let source = temp_op_path("path-symlink-source");
-    let alias = temp_op_path("path-symlink-alias");
+    let source = temp_document_path("path-symlink-source");
+    let alias = temp_document_path("path-symlink-alias");
     std::fs::write(&source, b"existing OP").expect("write source");
     std::os::unix::fs::symlink(&source, &alias).expect("create source alias");
 
@@ -168,7 +168,7 @@ fn path_comparison_rejects_symlink_alias() {
 
 #[test]
 fn next_capture_reuses_only_the_live_in_flight_snapshot() {
-    let path = temp_op_path("capture-anchor");
+    let path = temp_document_path("capture-anchor");
     let mut state = EditorState::new();
     let mut session = SaveSession::new();
     assert_eq!(
@@ -209,7 +209,7 @@ fn next_capture_reuses_only_the_live_in_flight_snapshot() {
 
 #[test]
 fn queued_requests_coalesce_to_the_latest_revision_and_commit_in_order() {
-    let path = temp_op_path("coalesce");
+    let path = temp_document_path("coalesce");
     let mut state = EditorState::new();
     state.doc.name = Some("first".into());
     state.mark_document_changed();
@@ -258,7 +258,7 @@ fn stale_epoch_ack_cannot_rebind_save_as_to_a_replaced_document() {
     assert_ne!(app.host.document_epoch(), old_epoch);
 
     let applied = app.apply_save_completion(SaveCompletion {
-        path: PathBuf::from("stale-save-as.op"),
+        path: PathBuf::from("stale-save-as.de"),
         set_current_path: true,
         document_epoch: old_epoch,
         generation: old_generation,

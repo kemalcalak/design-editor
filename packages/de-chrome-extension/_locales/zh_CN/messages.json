@@ -14,7 +14,7 @@
     "message": "选中捕获"
   },
   "downloadButton": {
-    "message": "下载 .op"
+    "message": "下载 .de"
   },
   "designButton": {
     "message": "提取 design.md"
@@ -122,10 +122,10 @@
     "message": "$1 已建立连接，但 $2 秒内没有响应。应用可能正忙或已卡住，请检查后重试。"
   },
   "errorNoIngress": {
-    "message": "当前 Design Editor 版本没有扩展入口（$1）。请升级应用，或使用「下载 .op」后在 Design Editor 中打开该文件"
+    "message": "当前 Design Editor 版本没有扩展入口（$1）。请升级应用，或使用「下载 .de」后在 Design Editor 中打开该文件"
   },
   "errorTooLarge": {
-    "message": "本次捕获超过 $1 MB，超出 Design Editor 快照入口的上限。请使用「下载 .op」，然后在 Design Editor 中打开该文件"
+    "message": "本次捕获超过 $1 MB，超出 Design Editor 快照入口的上限。请使用「下载 .de」，然后在 Design Editor 中打开该文件"
   },
   "errorImport": {
     "message": "Design Editor 拒绝了该快照：$1"

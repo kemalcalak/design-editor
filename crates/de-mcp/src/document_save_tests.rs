@@ -13,7 +13,7 @@ fn save_document_writes_current_pen_document_to_target_path() {
     state.editor_ui.preserve_authored_geometry = true;
     let dir = temp_dir("save-document");
     std::fs::create_dir_all(&dir).expect("temp dir");
-    let out_path = dir.join("copy.op");
+    let out_path = dir.join("copy.de");
 
     let tool = save_document_snapshot(&state);
     let mut args = BTreeMap::new();
@@ -47,6 +47,27 @@ fn save_document_requires_file_path() {
         }
         other => panic!("expected missing argument, got {other:?}"),
     }
+}
+
+#[test]
+fn save_document_refuses_a_non_document_extension() {
+    let dir = temp_dir("save-document-extension");
+    std::fs::create_dir_all(&dir).expect("temp dir");
+    let tool = save_document_snapshot(&sample());
+    for name in ["copy.op", "copy.pen", "copy"] {
+        let out_path = dir.join(name);
+        let mut args = BTreeMap::new();
+        args.insert("filePath".into(), out_path.display().to_string());
+        match tool.call(&args) {
+            ToolOutcome::Err(code, message) => {
+                assert_eq!(code, ToolErrorCode::InvalidArgument);
+                assert!(message.contains(".de"), "{message}");
+            }
+            other => panic!("expected {name} to be refused, got {other:?}"),
+        }
+        assert!(!out_path.exists(), "{name} must not be written");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 fn temp_dir(label: &str) -> PathBuf {

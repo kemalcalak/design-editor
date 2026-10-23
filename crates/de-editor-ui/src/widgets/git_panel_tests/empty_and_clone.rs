@@ -146,7 +146,7 @@ fn dirty_bound_repo_still_shows_the_ready_view() {
     // view in TS; the commit-milestone flow handles dirty changes).
     let mut state = open_repo();
     state.changed_files = vec![GitFileEntry {
-        path: "x.op".into(),
+        path: "x.de".into(),
         staged: false,
         status: 'M',
     }];

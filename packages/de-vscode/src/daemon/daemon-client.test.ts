@@ -49,7 +49,7 @@ test("forwards --serve-web/--managed/--file/--allow-origin verbatim, in order", 
   const client = await DaemonClient.spawn(
     opts(["--fake-port", "45002", "--echo-argv"], {
       logger,
-      filePath: "/tmp/design.op",
+      filePath: "/tmp/design.de",
       allowOrigin: "vscode-webview://xyz",
     }),
   );
@@ -60,7 +60,7 @@ test("forwards --serve-web/--managed/--file/--allow-origin verbatim, in order", 
   // the client appended must appear in the documented order.
   const daemonArgs = argvLine!.slice(argvLine!.indexOf("--serve-web"));
   expect(daemonArgs).toBe(
-    "--serve-web --managed --port 0 --file /tmp/design.op --allow-origin vscode-webview://xyz",
+    "--serve-web --managed --port 0 --file /tmp/design.de --allow-origin vscode-webview://xyz",
   );
   await client.dispose();
 });

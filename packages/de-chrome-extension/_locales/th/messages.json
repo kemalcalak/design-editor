@@ -14,7 +14,7 @@
     "message": "จับภาพเอลิเมนต์"
   },
   "downloadButton": {
-    "message": "ดาวน์โหลด .op"
+    "message": "ดาวน์โหลด .de"
   },
   "designButton": {
     "message": "แยก design.md"
@@ -122,10 +122,10 @@
     "message": "Design Editor ที่ $1 รับการเชื่อมต่อแล้ว แต่ไม่ตอบกลับภายใน $2 วินาที แอปอาจกำลังทำงานหนักหรือค้างอยู่ — กรุณาตรวจสอบแล้วลองใหม่"
   },
   "errorNoIngress": {
-    "message": "Design Editor รุ่นนี้ไม่มีช่องทางรับข้อมูลจากส่วนขยาย ($1) กรุณาอัปเดตแอป หรือใช้ “ดาวน์โหลด .op” แล้วเปิดไฟล์ใน Design Editor"
+    "message": "Design Editor รุ่นนี้ไม่มีช่องทางรับข้อมูลจากส่วนขยาย ($1) กรุณาอัปเดตแอป หรือใช้ “ดาวน์โหลด .de” แล้วเปิดไฟล์ใน Design Editor"
   },
   "errorTooLarge": {
-    "message": "การจับภาพครั้งนี้ใหญ่กว่า $1 MB ซึ่งเส้นทางสแนปช็อตของ Design Editor ปฏิเสธ กรุณาใช้ “ดาวน์โหลด .op” แล้วเปิดไฟล์ใน Design Editor"
+    "message": "การจับภาพครั้งนี้ใหญ่กว่า $1 MB ซึ่งเส้นทางสแนปช็อตของ Design Editor ปฏิเสธ กรุณาใช้ “ดาวน์โหลด .de” แล้วเปิดไฟล์ใน Design Editor"
   },
   "errorImport": {
     "message": "Design Editor ปฏิเสธสแนปช็อตนี้: $1"

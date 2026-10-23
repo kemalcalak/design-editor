@@ -48,7 +48,7 @@ pub mod well_known {
     /// Live editor discovery file written under `~/.design-editor`.
     pub const LIVE_MCP_PORT: &str = ".de-mcp-port";
     /// Default CLI session document.
-    pub const CLI_SESSION: &str = "cli-session.op";
+    pub const CLI_SESSION: &str = "cli-session.de";
 }
 
 #[derive(Debug, Clone)]
@@ -428,7 +428,7 @@ mod tests {
     fn well_known_files_preserve_existing_names() {
         assert_eq!(well_known::GIT_AUTH, "git-auth.json");
         assert_eq!(well_known::LIVE_MCP_PORT, ".de-mcp-port");
-        assert_eq!(well_known::CLI_SESSION, "cli-session.op");
+        assert_eq!(well_known::CLI_SESSION, "cli-session.de");
     }
 
     #[test]

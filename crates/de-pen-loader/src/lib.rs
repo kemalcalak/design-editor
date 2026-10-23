@@ -1,4 +1,4 @@
-//! Canonical `.op` (`PenDocument`) → `LayoutScene` loader / adapter.
+//! Canonical `.de` (`PenDocument`) → `LayoutScene` loader / adapter.
 //!
 //! Extracted from `de-host-desktop` so library crates (notably
 //! `de-host-native`) can reuse the conversion without
@@ -78,7 +78,7 @@ pub mod variables;
 
 /// Build a paint-only, layout-resolved `LayoutScene` from an
 /// `EditorState`. Reuses the same jian `LayoutEngine` + `SkiaMeasure`
-/// flex pass as the canonical `.op` loader (via
+/// flex pass as the canonical `.de` loader (via
 /// [`pen_document_to_payload`]) and resolves variable `$ref` fills
 /// against the editor's variables + active theme. Builds the scene
 /// directly from the layout-resolved `DocPayload` — no intermediate

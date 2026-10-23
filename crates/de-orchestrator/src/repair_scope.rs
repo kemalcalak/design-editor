@@ -18,7 +18,7 @@
 //! whole per-root cleanup block a no-op — `geometry_validate_and_fix`, the
 //! text-collision echo and every other contract check with it. The comment at
 //! the call site called that "a safe no-op"; it is safe only for the intent
-//! tier. Measured on `0808-gm-2.op`, whose footer shipped with four text
+//! tier. Measured on `0808-gm-2.de`, whose footer shipped with four text
 //! blocks painted on top of each other while the fix loop that repairs exactly
 //! that never ran over it.
 //!

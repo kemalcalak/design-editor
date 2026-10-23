@@ -35,7 +35,7 @@
 //! never pushes before the first daemon document has been applied (subsumed
 //! by `SyncGate::needs_push`'s None-baseline rule). The static host page calls
 //! `/api/mcp/sync-reset` before mounting so a browser refresh starts from the
-//! starter document instead of replaying the previous transient web `.op`
+//! starter document instead of replaying the previous transient web `.de`
 //! state; bootstrap pushes remain disabled so stale page state cannot
 //! overwrite a deliberately opened daemon document. Live screenshot requests
 //! are served by the `--serve-web` daemon's MCP route from this same synced

@@ -1,7 +1,7 @@
 //! Design Editor headless host services — the GUI-free host backend.
 //!
 //! Everything the host does that doesn't need a window: the in-memory
-//! `.op` document daemon (whole-document REST sync + SSE for the browser
+//! `.de` document daemon (whole-document REST sync + SSE for the browser
 //! `de-host-web` shell + external MCP/CLI clients), the stdio + HTTP MCP
 //! servers, the AI chat providers + design orchestration, server-side
 //! PNG/SVG/PDF export (skia raster), document/settings persistence, and

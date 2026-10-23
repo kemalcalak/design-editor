@@ -64,7 +64,7 @@ pub fn select_best_candidate(scores: &[(usize, usize)]) -> (usize, &[(usize, usi
 
 /// Save a candidate to disk with a numbered suffix.
 ///
-/// `out_path` like `/tmp/out.op` → `/tmp/out.cand0.op`.
+/// `out_path` like `/tmp/out.de` → `/tmp/out.cand0.de`.
 pub fn save_candidate(
     candidate_index: usize,
     doc_json: &str,

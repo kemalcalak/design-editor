@@ -1,6 +1,6 @@
 //! Component-library loading + merge.
 //!
-//! A *component library* is an ordinary `.op` / `.lib.op` document whose
+//! A *component library* is an ordinary `.de` / `.lib.de` document whose
 //! top-level (or per-page) frames carry `reusable: true`. Loading one into
 //! a working document makes those masters addressable by `ref` nodes during
 //! AI generation — the "design-kit composition" path.
@@ -38,21 +38,21 @@ use crate::payload::load_canonical;
 /// interpolate the error do not move by a byte.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LibraryMergeError {
-    /// The `.lib.op` file could not be read off disk.
+    /// The `.lib.de` file could not be read off disk.
     Read {
         /// Path the caller asked for.
         path: String,
         /// The underlying `std::io::Error`, rendered.
         error: String,
     },
-    /// The file was read but its canonical `.op` JSON did not load.
+    /// The file was read but its canonical `.de` JSON did not load.
     Load {
         /// Path the caller asked for.
         path: String,
         /// The [`LibraryMergeError::Parse`] message from the source-string core.
         error: String,
     },
-    /// An in-memory library source failed the canonical `.op` parse.
+    /// An in-memory library source failed the canonical `.de` parse.
     Parse {
         /// The `jian_ops_schema` load error, rendered.
         error: String,
@@ -93,7 +93,7 @@ pub struct LibraryMergeReport {
     pub themes_added: usize,
 }
 
-/// Load the `.lib.op` at `path`, harvest its reusable masters, and merge them
+/// Load the `.lib.de` at `path`, harvest its reusable masters, and merge them
 /// (plus its variables + themes) into `state`. Existing document content is
 /// preserved; masters/variables/themes whose ids already exist are skipped so
 /// re-importing the same library is idempotent.
@@ -115,7 +115,7 @@ pub fn merge_library_into_state(
 }
 
 /// Source-string variant of [`merge_library_into_state`] — parses canonical
-/// `.op` JSON already in memory. Shared core so tests can drive it without a
+/// `.de` JSON already in memory. Shared core so tests can drive it without a
 /// temp file.
 pub fn merge_library_src_into_state(
     state: &mut EditorState,
@@ -198,7 +198,7 @@ mod tests {
             .unwrap_or(&[])
     }
 
-    /// One reusable master frame as canonical `.op` JSON (a button-like
+    /// One reusable master frame as canonical `.de` JSON (a button-like
     /// frame whose fill references a `$--primary` token so the merge's
     /// variable handling matters). Built with `serde_json` so color
     /// literals like `#18181B` don't trip the raw-string `r#` prefix rules.
@@ -221,8 +221,8 @@ mod tests {
     }
 
     /// A library document (JSON) with `n` reusable masters + variables + a
-    /// theme axis. Serialized to a canonical `.op` JSON string so it goes
-    /// through the exact same `load_canonical` path a real `.lib.op` file
+    /// theme axis. Serialized to a canonical `.de` JSON string so it goes
+    /// through the exact same `load_canonical` path a real `.lib.de` file
     /// would.
     fn library_src(n: usize) -> String {
         let children: Vec<serde_json::Value> = (0..n)

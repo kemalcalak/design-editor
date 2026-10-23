@@ -205,7 +205,7 @@ fn export_raster_applies_flex_layout_from_editor_state() {
       }],
       "children":[]
     }"##;
-    let parsed = jian_ops_schema::load_str(src).expect("parse .op fixture");
+    let parsed = jian_ops_schema::load_str(src).expect("parse .de fixture");
     let state = de_editor_core::EditorState::from_document(parsed.value);
     let scene = de_pen_loader::editor_state_to_layout_scene(&state);
     // Flex stretched the child to the 375 px root width.

@@ -1,4 +1,4 @@
-// Pure helpers for `.fig` sources: path detection, the sibling `.op` save
+// Pure helpers for `.fig` sources: path detection, the sibling `.de` save
 // target, and byte→base64 encoding for the daemon's `/api/figma/convert`
 // endpoint. Kept vscode-free so these decisions are unit-testable.
 
@@ -8,10 +8,10 @@ export function isFigPath(fsPath: string): boolean {
 }
 
 /** `.fig` files never save back to themselves — every save (implicit or
- *  backup-driven) lands on the sibling `.op`, e.g. `/a/b/design.fig` →
- *  `/a/b/design.op`. */
+ *  backup-driven) lands on the sibling `.de`, e.g. `/a/b/design.fig` →
+ *  `/a/b/design.de`. */
 export function figSaveTargetPath(figFsPath: string): string {
-  return figFsPath.replace(/\.fig$/i, ".op");
+  return figFsPath.replace(/\.fig$/i, ".de");
 }
 
 /** Base64-encode raw `.fig` bytes for the JSON body of the convert request. */

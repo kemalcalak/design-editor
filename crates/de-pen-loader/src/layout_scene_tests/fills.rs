@@ -43,7 +43,7 @@ fn property_panel_fill_type_switch_produces_scene_gradient() {
     // same code path the host calls, then re-build the scene and
     // assert that `SceneNode.gradient` is populated. Catches the
     // case where the live mutation path bypasses the scene's
-    // gradient field — e.g. if the adapter only reads .op files
+    // gradient field — e.g. if the adapter only reads .de files
     // and not in-memory `PenDocument` mutations.
     let src = r##"{
       "version":"1.0.0","pages":[{"id":"p","name":"P","children":[{

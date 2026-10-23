@@ -9,16 +9,16 @@ fn distinct_headless_modes_are_rejected_before_dispatch() {
     assert_eq!(
         conflicting_headless_modes([
             "--render-shots",
-            "input.op",
+            "input.de",
             "shots",
             "--enrich-images",
-            "input.op",
-            "output.op",
+            "input.de",
+            "output.de",
         ]),
         Some(vec!["--render-shots", "--enrich-images"])
     );
     assert_eq!(
-        conflicting_headless_modes(["--mcp-http", "3100", "input.op", "--tcc-selftest"]),
+        conflicting_headless_modes(["--mcp-http", "3100", "input.de", "--tcc-selftest"]),
         Some(vec!["--mcp-http", "--tcc-selftest"])
     );
 }
@@ -26,14 +26,14 @@ fn distinct_headless_modes_are_rejected_before_dispatch() {
 #[test]
 fn one_headless_mode_or_repeated_same_flag_is_not_a_conflict() {
     assert_eq!(
-        conflicting_headless_modes(["--render-shots", "input.op", "shots"]),
+        conflicting_headless_modes(["--render-shots", "input.de", "shots"]),
         None
     );
     assert_eq!(
-        conflicting_headless_modes(["--enrich-images", "input.op", "--enrich-images"]),
+        conflicting_headless_modes(["--enrich-images", "input.de", "--enrich-images"]),
         None
     );
-    assert_eq!(conflicting_headless_modes(["document.op"]), None);
+    assert_eq!(conflicting_headless_modes(["document.de"]), None);
 }
 
 #[test]

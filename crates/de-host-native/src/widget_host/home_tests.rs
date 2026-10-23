@@ -135,11 +135,11 @@ fn recent_items_open_and_the_toggle_switches_views() {
     let mut host = host_with_home();
     host.editor_state_mut().editor_ui.recent_files = vec![
         RecentFile {
-            path: "/Users/me/designs/landing.op".into(),
+            path: "/Users/me/designs/landing.de".into(),
             modified_at: 1,
         },
         RecentFile {
-            path: "/Users/me/designs/deck.op".into(),
+            path: "/Users/me/designs/deck.de".into(),
             modified_at: 2,
         },
     ];

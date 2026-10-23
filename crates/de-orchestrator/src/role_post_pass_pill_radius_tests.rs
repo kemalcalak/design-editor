@@ -1,5 +1,5 @@
 //! Tests for `round_missing_compact_pill_radius` — the structural fallback
-//! for CTA/pill corner rounding. Fixtures mirror 0724-1-gm-3.op's real
+//! for CTA/pill corner rounding. Fixtures mirror 0724-1-gm-3.de's real
 //! shape: hug-sized (`fit_content`) buttons authored via padding + content,
 //! not literal pixel width/height — n180 "已完成" (icon + text), n192
 //! "继续", n203 "开始", none carrying a `cornerRadius`, sitting in a screen
@@ -104,7 +104,7 @@ fn all_sharp_corner_design_is_left_alone() {
 
 #[test]
 fn icon_only_box_is_never_rounded_even_with_rounded_badge_evidence() {
-    // 0724-1-gm-3.op's real n173/n185/n196 shape: a 44x44 painted icon-only
+    // 0724-1-gm-3.de's real n173/n185/n196 shape: a 44x44 painted icon-only
     // tap target sitting right next to CTA buttons — must never be rounded
     // by this pass, however strong the consistency-gate evidence, because
     // it has no text child.

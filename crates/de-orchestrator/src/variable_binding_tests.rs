@@ -1,6 +1,6 @@
 //! Slot-awareness of `bind_generated_color_variables`.
 //!
-//! The fixture is `0808-gm-1.op`'s real palette: a dark design whose
+//! The fixture is `0808-gm-1.de`'s real palette: a dark design whose
 //! ACTIVE (Light-slot) `--border` is the near-white `#E2E8F0`, close
 //! enough to a heading's authored white that colour distance alone bound
 //! every title in the document to the border token.

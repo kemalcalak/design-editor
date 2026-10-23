@@ -1,6 +1,6 @@
 //! Design fonts shipped inside the renderer.
 //!
-//! Designs (Pencil `.pen` / `.op`) reference Google Fonts like Roboto,
+//! Designs (`.de` documents and pen.dev `.pen`) reference Google Fonts like Roboto,
 //! Inter, Space Grotesk or Manrope that are not installed on a typical machine.
 //! Without them the skia paragraph shaper falls back to the platform
 //! default for both painting *and* measuring — wrong glyphs, wrong

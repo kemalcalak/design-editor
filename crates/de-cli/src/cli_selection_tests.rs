@@ -7,7 +7,7 @@ fn parse_args_maps_selection_depth_and_file_to_ts_shape() {
         "--depth".to_string(),
         "0".to_string(),
         "--file".to_string(),
-        "screen.op".to_string(),
+        "screen.de".to_string(),
     ])
     .expect("parse selection");
 
@@ -17,7 +17,7 @@ fn parse_args_maps_selection_depth_and_file_to_ts_shape() {
             tool: "get_selection".to_string(),
             args: vec![
                 ("readDepth".to_string(), "0".to_string()),
-                ("filePath".to_string(), resolve_file_path_arg("screen.op")),
+                ("filePath".to_string(), resolve_file_path_arg("screen.de")),
             ],
         }
     );

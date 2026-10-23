@@ -1,6 +1,6 @@
 {
   "name": "@kemalcalak/de-web-sdk",
-  "description": "Read-only Design Editor .op viewer SDK for the web (wasm-backed)",
+  "description": "Read-only Design Editor .de viewer SDK for the web (wasm-backed)",
   "license": "MIT",
   "type": "module",
   "files": [

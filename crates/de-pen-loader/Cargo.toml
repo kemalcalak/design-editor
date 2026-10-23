@@ -4,14 +4,14 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Canonical .op (PenDocument) → shell Document loader / adapter"
+description = "Canonical .de (PenDocument) → shell Document loader / adapter"
 
 [dependencies]
-# Canonical `.op` / `.pen` schema — the `PenDocument` this crate
+# Canonical `.de` schema — the `PenDocument` this crate
 # converts from.
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 # jian-core ships the taffy-backed `LayoutEngine` — the canonical
-# flex solver for `.op` files.
+# flex solver for `.de` files.
 jian-core = { path = "../../vendor/jian/crates/jian-core" }
 # jian-skia ships `SkiaMeasure` — a real skia paragraph-shaper
 # `MeasureBackend` plugged into the layout engine. Optional: the native +

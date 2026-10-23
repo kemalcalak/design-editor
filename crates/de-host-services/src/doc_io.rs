@@ -1,11 +1,11 @@
-//! Headless `.pen` / `.op` document load / save — the host-free core
+//! Headless `.de` document load / save — the host-free core
 //! carved out of `de-host-desktop`'s `persistence.rs` (Phase 2, Task
 //! 2.3). The rfd / winit dialog flow (`handle_open` / `handle_save` /
 //! `run_action` / `show_error_dialog`) stays desktop-side and imports
 //! these functions back; the web daemon and any other headless caller
 //! reach the same serializer the GUI uses.
 //!
-//! Save serializes `EditorState::doc` straight to canonical `.op` JSON
+//! Save serializes `EditorState::doc` straight to canonical `.de` JSON
 //! (the same schema the TS editor / Jian apps emit); Open parses the
 //! canonical schema and re-seeds `EditorState` via
 //! `EditorState::from_document`. There is no `Document → PenDocument`
@@ -19,8 +19,12 @@
 //! transient. `active_page_index` and the document-derived
 //! `preserve_authored_geometry` layout latch must survive a save / load
 //! round-trip, so Save embeds them under a top-level `editorMeta` extension.
-//! Older files that still have the former `<path>.opmeta` sidecar continue to
-//! load best-effort; new saves remove stale sidecars.
+//!
+//! ## Extensions
+//!
+//! Only `.de` files open and save as documents. A pen.dev `.pen` file opens
+//! as an import (untitled, never written back); anything else is refused
+//! before it is parsed (see [`load_editor_state_with_report`]).
 //!
 //! ## Legacy `DocPayload` files
 //!
@@ -50,27 +54,12 @@ mod pen_dev;
 
 use atomic_file::{create_sibling_temp, replace_file};
 pub use canonical_save::{write_canonical_document, CanonicalSaveSnapshot, StreamingSaveStats};
-pub use clean_copy::{
-    copy_clean_document_with_editor_meta_to_path, copy_document_to_current_schema_path,
-};
+pub use clean_copy::copy_clean_document_with_editor_meta_to_path;
 pub use error::DocIoError;
 #[cfg(test)]
 use load::looks_like_legacy_doc_payload;
 pub use load::{load_editor_state, load_editor_state_from_source, load_editor_state_with_report};
 pub use load_report::{DocumentLoadReport, LoadedEditorState};
-
-/// Legacy sidecar path for a given `.op` / `.pen` file —
-/// `<path>.opmeta`. Public so compatibility tests and stale-sidecar
-/// cleanup use the same path convention older builds wrote.
-pub fn sidecar_path(path: &std::path::Path) -> PathBuf {
-    let mut p = path.to_path_buf();
-    let ext = match path.extension().and_then(|s| s.to_str()) {
-        Some(ext) => format!("{}.opmeta", ext),
-        None => "opmeta".to_string(),
-    };
-    p.set_extension(ext);
-    p
-}
 
 /// Serialize an `EditorState`'s canonical document to `path` without
 /// prompting. Used by Cmd+S once the document already has a path.
@@ -163,26 +152,17 @@ fn save_serializable_document_with_thumbnails_to_path<
     write_result
 }
 
-/// Atomically install a completed sibling `.op` file at its fixed destination.
+/// Atomically install a completed sibling `.de` file at its fixed destination.
 ///
 /// Figma import writes the large document to a hidden sibling first so it can
 /// still observe cancellation before publication. Reusing the save path's
 /// replace primitive keeps re-imports crash-safe while allowing the existing
-/// `<source-stem>.op` to be replaced instead of creating numbered copies.
+/// `<source-stem>.de` to be replaced instead of creating numbered copies.
 pub fn commit_staged_document(
     staging_path: &std::path::Path,
     destination: &std::path::Path,
 ) -> Result<(), DocIoError> {
     replace_file(staging_path, destination)?;
-    // Old builds wrote `<path>.opmeta`. New saves are single-file, so
-    // remove any stale sidecar after the document write has committed.
-    match std::fs::remove_file(sidecar_path(destination)) {
-        Ok(()) => {}
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-        Err(e) => {
-            eprintln!("[save] stale view-state sidecar cleanup failed: {e}");
-        }
-    }
     Ok(())
 }
 
@@ -300,22 +280,19 @@ pub fn active_page_bbox(state: &EditorState) -> Option<(f64, f64, f64, f64)> {
     ))
 }
 
-/// Whether `path` carries a document extension this build opens
-/// (`.op` / `.pen`). Used to filter drag-and-drop drops + the
-/// file-association argv before attempting a load. The extension
-/// match is case-insensitive so `MyDesign.OP` from a case-folding
-/// filesystem / argv still opens.
+/// Whether `path` is something the document open path accepts: a `.de`
+/// document or a pen.dev `.pen` import. Used to filter drag-and-drop drops
+/// and the file-association argv before attempting a load. Case-insensitive
+/// so `MyDesign.DE` from a case-folding filesystem / argv still opens.
 pub fn is_supported_document(path: &std::path::Path) -> bool {
-    path.extension()
-        .and_then(|s| s.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("op") || ext.eq_ignore_ascii_case("pen"))
+    de_util::document_file::is_document_path(path) || de_util::document_file::is_pen_dev_path(path)
 }
 
 /// True for Figma `.fig` binary exports. The bundle declares `.fig`
 /// as a `CFBundleDocumentTypes` extension (macOS / Windows / Linux),
 /// so double-clicking one in Finder / dragging one onto the dock /
 /// the running window all need to route through
-/// `figma_import_session::spawn_approved` rather than the `.op`-only
+/// `figma_import_session::spawn_approved` rather than the `.de`-only
 /// `open_path`. Case-insensitive (Figma's "Save Local Copy" emits
 /// `.fig`; some macOS shares fold to `.FIG`).
 pub fn is_supported_figma_import(path: &std::path::Path) -> bool {
@@ -326,7 +303,7 @@ pub fn is_supported_figma_import(path: &std::path::Path) -> bool {
 
 /// True for HTML pages (`.html` / `.htm`) and packaged HTML projects
 /// (`.zip`) — routed through the desktop `html_import_session`
-/// (de-html structured import) rather than the `.op`-only `open_path`.
+/// (de-html structured import) rather than the `.de`-only `open_path`.
 /// Case-insensitive like the other extension filters.
 pub fn is_supported_html_import(path: &std::path::Path) -> bool {
     path.extension()
@@ -483,29 +460,28 @@ mod tests {
     use super::*;
 
     /// A unique temp path under the OS temp dir for a round-trip test.
-    fn temp_op_path(tag: &str) -> PathBuf {
+    fn temp_document_path(tag: &str) -> PathBuf {
         let mut p = std::env::temp_dir();
         let pid = std::process::id();
         let nanos = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_nanos())
             .unwrap_or(0);
-        p.push(format!("design-editor-test-{tag}-{pid}-{nanos}.op"));
+        p.push(format!("design-editor-test-{tag}-{pid}-{nanos}.de"));
         p
     }
 
     #[test]
     fn active_page_index_survives_a_save_load_round_trip() {
         // Editor view-state (`active_page_index`) is persisted inside
-        // the `.op` file so a save / load round-trip restores it
-        // without a separate `.opmeta` sidecar.
+        // the `.de` file so a save / load round-trip restores it.
         let mut state = EditorState::new();
         // Two extra pages → three total; page index 2 is valid.
         state.add_page();
         state.add_page();
         state.ui.active_page_index = 2;
 
-        let path = temp_op_path("page-roundtrip");
+        let path = temp_document_path("page-roundtrip");
         save_to_path(&state, &path).expect("save succeeds");
 
         let reloaded =
@@ -516,19 +492,14 @@ mod tests {
                 .expect("saved document json");
         assert_eq!(saved["editorMeta"]["activePageIndex"], 2);
         assert_eq!(saved["editorMeta"]["preserveAuthoredGeometry"], false);
-        assert!(
-            !sidecar_path(&path).exists(),
-            "new saves should not create .opmeta sidecars"
-        );
 
         // Cleanup.
         let _ = std::fs::remove_file(&path);
-        let _ = std::fs::remove_file(sidecar_path(&path));
     }
 
     #[test]
     fn sibling_temp_files_are_create_new_and_unique() {
-        let target = temp_op_path("unique-save-temp");
+        let target = temp_document_path("unique-save-temp");
         let (first_path, first_file) = create_sibling_temp(&target).expect("first temp");
         let (second_path, second_file) = create_sibling_temp(&target).expect("second temp");
         assert_ne!(first_path, second_path);
@@ -542,7 +513,7 @@ mod tests {
 
     #[test]
     fn overlapping_saves_use_independent_temps_and_leave_valid_json() {
-        let target = temp_op_path("overlapping-saves");
+        let target = temp_document_path("overlapping-saves");
         let mut workers = Vec::new();
         for index in 0..4 {
             let target = target.clone();
@@ -567,15 +538,15 @@ mod tests {
     }
 
     #[test]
-    fn legacy_sidecar_active_page_index_is_still_loaded_and_clamped() {
-        // A legacy sidecar that names a page that no longer exists must
+    fn out_of_range_embedded_active_page_index_is_clamped() {
+        // An `editorMeta` that names a page that no longer exists must
         // not leave the editor on an out-of-range index.
-        let state = EditorState::new();
-        let path = temp_op_path("page-clamp");
-        save_to_path(&state, &path).expect("save succeeds");
-        // Legacy sidecar from older versions.
-        std::fs::write(sidecar_path(&path), r#"{"active_page_index":99}"#)
-            .expect("sidecar overwrite");
+        let path = temp_document_path("page-clamp");
+        std::fs::write(
+            &path,
+            r#"{"version":"1.0.0","editorMeta":{"activePageIndex":99},"children":[]}"#,
+        )
+        .expect("write document");
 
         let reloaded =
             load_editor_state(&path, de_editor_core::Locale::EnUs).expect("load succeeds");
@@ -583,26 +554,40 @@ mod tests {
         assert_eq!(reloaded.ui.active_page_index, 0);
 
         let _ = std::fs::remove_file(&path);
-        let _ = std::fs::remove_file(sidecar_path(&path));
     }
 
     #[test]
-    fn embedded_editor_meta_takes_precedence_over_legacy_sidecar() {
-        let path = temp_op_path("embedded-meta");
-        std::fs::write(
-            &path,
-            r#"{"version":"1.0.0","editorMeta":{"activePageIndex":1},"children":[],"pages":[{"id":"p1","name":"One","children":[]},{"id":"p2","name":"Two","children":[]}]}"#,
-        )
-        .expect("write merged document");
-        std::fs::write(sidecar_path(&path), r#"{"active_page_index":0}"#)
-            .expect("write stale sidecar");
+    fn only_de_documents_and_pen_dev_imports_are_supported() {
+        use std::path::Path;
+        assert!(is_supported_document(Path::new("Design.de")));
+        assert!(is_supported_document(Path::new("Design.DE")));
+        assert!(is_supported_document(Path::new("untitled.pen")));
+        assert!(!is_supported_document(Path::new("Design.op")));
+        assert!(!is_supported_document(Path::new("Design.json")));
+    }
 
-        let reloaded =
-            load_editor_state(&path, de_editor_core::Locale::EnUs).expect("load succeeds");
-        assert_eq!(reloaded.ui.active_page_index, 1);
-
+    #[test]
+    fn open_refuses_paths_without_the_document_extension() {
+        let mut path = temp_document_path("old-extension");
+        path.set_extension("op");
+        std::fs::write(&path, r#"{"version":"1.0.0","children":[]}"#).expect("write");
+        let Err(error) = load_editor_state(&path, de_editor_core::Locale::EnUs) else {
+            panic!("an .op file must not open");
+        };
+        assert!(matches!(error, DocIoError::UnsupportedExtension(_)));
         let _ = std::fs::remove_file(&path);
-        let _ = std::fs::remove_file(sidecar_path(&path));
+    }
+
+    #[test]
+    fn open_refuses_a_pen_file_that_is_not_a_pen_dev_document() {
+        let mut path = temp_document_path("legacy-pen");
+        path.set_extension("pen");
+        std::fs::write(&path, r#"{"version":"1.0.0","children":[]}"#).expect("write");
+        let Err(error) = load_editor_state(&path, de_editor_core::Locale::EnUs) else {
+            panic!("a canonical document named .pen must not open");
+        };
+        assert!(matches!(error, DocIoError::NotPenDevDocument(_)));
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]
@@ -663,7 +648,7 @@ mod tests {
 
     #[test]
     fn canonical_document_is_not_mistaken_for_legacy() {
-        // A canonical `.op` file has a *string* `version` — it must not
+        // A canonical `.de` file has a *string* `version` — it must not
         // trip the legacy detector.
         let canonical = r#"{"version":"1.0.0","children":[]}"#;
         assert!(!looks_like_legacy_doc_payload(canonical));
@@ -673,7 +658,7 @@ mod tests {
     fn loading_a_legacy_file_surfaces_an_explicit_error() {
         // The load path turns the legacy format into an actionable
         // user-facing message rather than an opaque schema error.
-        let path = temp_op_path("legacy-load");
+        let path = temp_document_path("legacy-load");
         std::fs::write(
             &path,
             r#"{"version":1,"active_page_index":0,"pages":[
@@ -696,10 +681,10 @@ mod tests {
 
     /// A multi-page document whose FIRST page is an empty cover opened onto
     /// plain canvas ("content bbox None") and read as a broken file — the
-    /// content was on page 2 (measured: zwiki-ui-states.op, 16 pages).
+    /// content was on page 2 (measured: zwiki-ui-states, 16 pages).
     #[test]
     fn a_file_with_an_empty_first_page_opens_on_the_first_page_with_content() {
-        let path = temp_op_path("empty-first-page");
+        let path = temp_document_path("empty-first-page");
         std::fs::write(
             &path,
             r##"{ "version": "1.0", "children": [], "pages": [
@@ -721,7 +706,7 @@ mod tests {
 
     #[test]
     fn a_file_whose_first_page_has_content_still_opens_on_it() {
-        let path = temp_op_path("first-page-content");
+        let path = temp_document_path("first-page-content");
         std::fs::write(
             &path,
             r##"{ "version": "1.0", "children": [], "pages": [
@@ -741,7 +726,7 @@ mod tests {
 
     #[test]
     fn an_entirely_empty_file_still_lands_on_page_zero() {
-        let path = temp_op_path("all-empty");
+        let path = temp_document_path("all-empty");
         std::fs::write(
             &path,
             r##"{ "version": "1.0", "children": [], "pages": [

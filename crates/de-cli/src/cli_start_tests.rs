@@ -10,7 +10,7 @@ fn parse_args_maps_start_to_rust_mcp_server() {
         "3200".to_string(),
         "start".to_string(),
         "--file".to_string(),
-        "/tmp/session.op".to_string(),
+        "/tmp/session.de".to_string(),
     ])
     .expect("parse start");
     assert_eq!(p.port, 3200);
@@ -18,7 +18,7 @@ fn parse_args_maps_start_to_rust_mcp_server() {
     assert_eq!(
         p.command,
         Command::StartMcp {
-            document_path: Some("/tmp/session.op".to_string()),
+            document_path: Some("/tmp/session.de".to_string()),
             headless: false,
             web: false,
             host: None,
@@ -62,13 +62,13 @@ fn parse_args_start_web_threads_host_and_file() {
         "--host".to_string(),
         "0.0.0.0".to_string(),
         "--file".to_string(),
-        "/tmp/session.op".to_string(),
+        "/tmp/session.de".to_string(),
     ])
     .expect("parse start --web --host");
     assert_eq!(
         p.command,
         Command::StartMcp {
-            document_path: Some("/tmp/session.op".to_string()),
+            document_path: Some("/tmp/session.de".to_string()),
             headless: false,
             web: true,
             host: Some("0.0.0.0".to_string()),

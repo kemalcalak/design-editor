@@ -12,13 +12,13 @@ use crate::DesktopApp;
 use crate::{git_jobs, persistence};
 
 impl DesktopApp {
-    /// Overflow "切换跟踪文件" — enumerate the repo's `.op` candidates (sorted
+    /// Overflow "切换跟踪文件" — enumerate the repo's `.de` candidates (sorted
     /// newest-commit first, then by path) into the panel and open the picker.
     pub(crate) fn enter_tracked_picker(&mut self) {
         let mut candidates = self
             .git_session
             .repo()
-            .and_then(|r| r.candidate_op_files().ok())
+            .and_then(|r| r.candidate_documents().ok())
             .unwrap_or_default();
         // TS sort: lastCommitAt DESC (None last), tiebreak relativePath ASC.
         candidates.sort_by(|a, b| match (a.last_commit_secs, b.last_commit_secs) {
@@ -52,7 +52,7 @@ impl DesktopApp {
     }
 
     /// Bind the panel to `path` as the tracked file (TS `bindTrackedFile`).
-    /// `open` also loads that `.op` into the editor (TS "track and open").
+    /// `open` also loads that `.de` into the editor (TS "track and open").
     pub(crate) fn bind_tracked_file(&mut self, path: String, open: bool) {
         let path = PathBuf::from(path);
         {

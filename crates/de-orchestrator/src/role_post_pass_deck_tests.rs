@@ -1,5 +1,5 @@
 //! Tests for `fix_deck_front_card_transparency` — the `layout:none`
-//! card/deck-stack front-card transparency contract (0724-1-gm-3.op's
+//! card/deck-stack front-card transparency contract (0724-1-gm-3.de's
 //! Flashcard Deck Stack, where the front card's empty fill let the painted
 //! "Back Layer 1" bleed through the text).
 
@@ -115,7 +115,7 @@ fn donut_ring_ellipse_sibling_behind_a_label_is_not_misfired_on() {
 
 #[test]
 fn image_backed_card_keeps_its_transparent_content_layer() {
-    // 0728-gm.op theme-list card: photo at the bottom, alpha gradient scrim
+    // 0728-gm.de theme-list card: photo at the bottom, alpha gradient scrim
     // in the middle, transparent text-bearing content stack on top. The
     // see-through front IS the composition — filling it hides the photo.
     let nodes: Vec<PenNode> = vec![serde_json::from_value(json!({

@@ -53,7 +53,7 @@ integration = new Integration {
     desktop = "design-editor"
     cli = "de"
   }
-  documentTemplate = "share/design-editor/default.op"
+  documentTemplate = "share/design-editor/default.de"
   mcp = new {
     ["stdio"] = new McpTransport {
       kind = "stdio"

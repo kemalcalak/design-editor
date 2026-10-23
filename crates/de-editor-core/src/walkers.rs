@@ -492,7 +492,7 @@ pub fn is_ancestor_in_set(children: &[PenNode], target: &NodeId, set: &[NodeId])
 /// exactly once, so calling `children_mut` unconditionally here would
 /// silently materialize an empty `children` list on every leaf
 /// Rectangle/Frame in the document on every drag frame — bloating the
-/// in-memory doc and any subsequent `.op` serialization. A node with
+/// in-memory doc and any subsequent `.de` serialization. A node with
 /// no children has nothing left to translate inside it either way, so
 /// skipping it is both cheaper and correct.
 pub fn translate_editable_subtree(

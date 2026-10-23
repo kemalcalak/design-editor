@@ -11,7 +11,7 @@ use de_editor_ui::Color;
 
 /// English Metric Units per doc pixel.
 ///
-/// EMU is defined as 914400 per inch, and the canonical `.op` document
+/// EMU is defined as 914400 per inch, and the canonical `.de` document
 /// is authored at the CSS reference resolution of 96 px per inch, so
 /// one pixel is exactly 9525 EMU with no rounding in the constant
 /// itself. A 1920×1080 board therefore lands as 18288000×10287000 EMU

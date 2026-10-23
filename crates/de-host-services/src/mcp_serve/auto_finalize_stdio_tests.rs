@@ -4,7 +4,7 @@ use de_editor_core::PenNodeExt;
 #[test]
 fn file_mcp_applier_materializes_empty_image_fill_before_save() {
     let path = std::env::temp_dir().join(format!(
-        "design-editor-mcp-image-slot-{}-{}.op",
+        "design-editor-mcp-image-slot-{}-{}.de",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -58,7 +58,7 @@ fn file_mcp_applier_materializes_empty_image_fill_before_save() {
 #[test]
 fn stdio_eof_auto_finalizes_only_the_screen_the_session_created() {
     let path = std::env::temp_dir().join(format!(
-        "design-editor-mcp-stdio-finalize-{}-{}.op",
+        "design-editor-mcp-stdio-finalize-{}-{}.de",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -161,7 +161,7 @@ fn stdio_eof_auto_finalizes_only_the_screen_the_session_created() {
 #[test]
 fn explicit_finalize_design_marks_the_current_revision_finalized() {
     let path = std::env::temp_dir().join(format!(
-        "design-editor-mcp-explicit-finalize-{}-{}.op",
+        "design-editor-mcp-explicit-finalize-{}-{}.de",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

@@ -5,7 +5,7 @@
 
 use super::*;
 
-/// A bare rectangle node fixture, parsed from `.op` JSON so it
+/// A bare rectangle node fixture, parsed from `.de` JSON so it
 /// stays robust to schema growth.
 fn rect_node() -> PenNode {
     let src = r#"{"version":"1.0.0","children":[

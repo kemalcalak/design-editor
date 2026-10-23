@@ -514,7 +514,7 @@ export type PathNode = { iconId: string | null, d: string | null, anchors: Array
 /**
  * Whether this path acts as a sibling mask for the layers above it.
  *
- * This is intentionally optional so existing `.op` documents retain
+ * This is intentionally optional so existing `.de` documents retain
  * their byte shape. It is the legacy opaque-path marker; newer alpha,
  * vector, and luminance semantics use the shared `mask_type` field.
  */

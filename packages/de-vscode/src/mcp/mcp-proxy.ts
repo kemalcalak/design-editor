@@ -1,6 +1,6 @@
 // Stable loopback MCP endpoint. IDE AI agents point at a single, port-stable
 // URL (written once into their MCP config); every request is routed to the
-// CURRENTLY active .op document's daemon — so a daemon restart on a new port is
+// CURRENTLY active .de document's daemon — so a daemon restart on a new port is
 // transparent to the client. No vscode import (the port-persistence lives in
 // extension.ts); the pool is injected as a narrow interface.
 
@@ -16,7 +16,7 @@ interface ActivePool {
   onActiveChanged(cb: () => void): void;
 }
 
-const NO_ACTIVE_MESSAGE = "No active Design Editor document. Open a .op file in the editor first.";
+const NO_ACTIVE_MESSAGE = "No active Design Editor document. Open a .de file in the editor first.";
 
 export class McpProxy {
   private readonly pool: ActivePool;

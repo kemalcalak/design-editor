@@ -393,7 +393,7 @@ fn real_layout_widens_collapsed_savings_goals_rail_end_to_end() {
     use de_editor_core::PenNodeExt;
     use jian_ops_schema::node::PenNode;
 
-    // De-identified extraction of the real user .op's "Savings Goals Rail"
+    // De-identified extraction of the real user .de's "Savings Goals Rail"
     // subtree: a 375px mobile page, [0,24] section padding (327px inner
     // width), a horizontal rail of 3 cards where only the first carries a
     // fixed width. Enough child structure (icon tile + title + amount row)

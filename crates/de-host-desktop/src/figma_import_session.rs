@@ -12,14 +12,14 @@ use crate::persistence::show_error_dialog_public;
 use de_host_services::doc_io::ErrorKind;
 
 mod error;
-pub(crate) use error::{FigmaImportError, OutputStateError};
+pub(crate) use error::FigmaImportError;
 mod image_sources;
 use image_sources::{bind_import_thumbnails, PendingImportThumbs};
 mod output_guard;
 pub(crate) use output_guard::{capture_output_state, OutputEntryState};
 mod publish;
 use publish::{
-    adjacent_op_base_path, persist_import_next_to_source, CompletedImport, PersistResult,
+    adjacent_document_base_path, persist_import_next_to_source, CompletedImport, PersistResult,
 };
 mod worker_control;
 use worker_control::CancellationToken;
@@ -87,7 +87,7 @@ fn select_output_mode(
     source_path: &Path,
     choose_existing: impl FnOnce(&Path) -> ExistingOutputDecision,
 ) -> Result<Option<ImportOutputMode>, FigmaImportError> {
-    let output_path = adjacent_op_base_path(source_path)?;
+    let output_path = adjacent_document_base_path(source_path)?;
     if capture_output_state(&output_path)?.is_missing() {
         return Ok(Some(ImportOutputMode::CreateFixed));
     }

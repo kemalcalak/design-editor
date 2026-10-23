@@ -2,7 +2,7 @@
 //! rewrites stay inside what the run appended.
 //!
 //! One fixture, two calls — the halves are only meaningful against each other.
-//! The pre-existing half carries `0808-gm-2.op`'s starved-row defect (a rigid
+//! The pre-existing half carries `0808-gm-2.de`'s starved-row defect (a rigid
 //! `fill_container` row squeezed below its content width until its columns
 //! spill across the sibling); the appended half carries a transparent padded
 //! wrapper, which is what the intent-tier `strip_wrapper_double_inset` removes.
@@ -120,7 +120,7 @@ fn run(inserted: &[&str]) -> (EditorState, RepairSummary) {
 
 #[test]
 fn contract_reaches_pre_existing_content_intent_does_not() {
-    // The zero-inserted-roots case — the one that shipped `0808-gm-2.op`'s
+    // The zero-inserted-roots case — the one that shipped `0808-gm-2.de`'s
     // overlapping footer. Contract must still cover the target root.
     let (state, summary) = run(&[]);
 

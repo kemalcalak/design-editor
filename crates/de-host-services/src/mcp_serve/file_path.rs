@@ -23,7 +23,12 @@ pub fn process_message_for_file_path_arg(
     let Some(target) = target_file_call(line, current_path)? else {
         return Ok(None);
     };
-    if target.tool == "open_document" && !target.path.exists() {
+    // Only a `.de` path is created on demand; any other extension falls
+    // through to the load, which refuses it without leaving a stray file.
+    if target.tool == "open_document"
+        && !target.path.exists()
+        && de_util::document_file::is_document_path(&target.path)
+    {
         create_empty_document(&target.path)?;
     }
     let mut target_state = super::load_editor_state(&target.path)?;

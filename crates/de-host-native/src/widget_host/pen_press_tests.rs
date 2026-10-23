@@ -9,7 +9,7 @@ use jian_ops_schema::node::{PenNode, PenPathPointType};
 const VW: f32 = 1440.0;
 const VH: f32 = 900.0;
 
-/// Seed a host's `editor_state` from a canonical `.op` JSON snippet.
+/// Seed a host's `editor_state` from a canonical `.de` JSON snippet.
 fn seed(host: &mut WidgetHostNative, json: &str) {
     let doc = jian_ops_schema::load_str(json)
         .expect("fixture JSON parses")

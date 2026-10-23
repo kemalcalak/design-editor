@@ -1,8 +1,8 @@
 # @kemalcalak/de-web-sdk
 
-Read-only Design Editor `.op` file viewer SDK for the web, backed by a Rust/wasm renderer.
+Read-only Design Editor `.de` file viewer SDK for the web, backed by a Rust/wasm renderer.
 
-> **Editing is not supported.** This SDK provides a read-only view of `.op` documents.
+> **Editing is not supported.** This SDK provides a read-only view of `.de` documents.
 > For full editing capability use the [Design Editor app](https://github.com/kemalcalak/design-editor).
 
 ---
@@ -44,8 +44,8 @@ const viewer = await createViewer({
   wasmUrl: '/op-wasm/de_web_sdk_bg.wasm',
 });
 
-// Load a .op document from a fetch response:
-const resp = await fetch('/designs/my-design.op');
+// Load a .de document from a fetch response:
+const resp = await fetch('/designs/my-design.de');
 const bytes = new Uint8Array(await resp.arrayBuffer());
 viewer.load(bytes);
 

@@ -367,7 +367,7 @@ fn shape_inside_offset_root_inherits_canvas_offset() {
 
 #[test]
 fn multi_root_designs_use_authored_canvas_offset() {
-    // pencil-demo.op's 14 designs sit at distinct (x, y) on the
+    // pencil-demo.de's 14 designs sit at distinct (x, y) on the
     // infinite canvas. Each root's taffy layout starts at (0, 0)
     // so we must offset the harvested rects by the root's
     // authored `base.x` / `base.y` — otherwise every design
@@ -390,7 +390,7 @@ fn multi_root_designs_use_authored_canvas_offset() {
 
 #[test]
 fn space_between_preserves_authored_positions() {
-    // Mirror pencil-demo.op's sidebar: vertical flex with
+    // Mirror pencil-demo.de's sidebar: vertical flex with
     // space_between authored on the parent. Authored positions
     // on children (Top at y=0, Bottom at y=600) must survive
     // the layout pass — jian-core's `node_to_style` treats

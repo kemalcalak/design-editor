@@ -329,7 +329,7 @@ fn post_open_recent_prunes_stale_recent_path_without_replacing_doc() {
     use de_editor_core::PenNodeExt;
 
     let missing = std::env::temp_dir().join(format!(
-        "design-editor-web-canvas-missing-{}.op",
+        "design-editor-web-canvas-missing-{}.de",
         std::process::id()
     ));
     let mut s = fresh_state();

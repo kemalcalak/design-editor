@@ -57,7 +57,7 @@ export class DaemonHttp {
   }
 
   /** POST /api/figma/convert: sends raw `.fig` bytes (base64) and returns the
-   *  converted `.op` document, re-serialized as a JSON string (the caller uses
+   *  converted `.de` document, re-serialized as a JSON string (the caller uses
    *  it directly as bootJson). The daemon returns a JSON body on both 200
    *  ({"ok":true,"doc":...}) and 400 ({"ok":false,"error":...}) — any other
    *  status is rejected on status alone, before attempting to parse a body

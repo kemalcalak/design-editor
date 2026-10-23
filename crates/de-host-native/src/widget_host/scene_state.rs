@@ -142,7 +142,7 @@ impl WidgetHostNative {
 
     /// Public dirty-flag — desktop-side code that mutates
     /// `editor_state` through `editor_state_mut()` (settings I/O,
-    /// `.op` load, chat streaming, model discovery) calls this so the
+    /// `.de` load, chat streaming, model discovery) calls this so the
     /// next paint re-derives the snapshot.
     pub fn mark_editor_state_dirty(&mut self) {
         self.editor_state_dirty = true;
@@ -183,7 +183,7 @@ impl WidgetHostNative {
         true
     }
 
-    /// Install a user-opened `.op` document while retaining app and touch
+    /// Install a user-opened `.de` document while retaining app and touch
     /// chrome owned by the live host. The caller must fully parse and validate
     /// the payload before entering this seam.
     pub fn install_open_document(

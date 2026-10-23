@@ -9,16 +9,17 @@ pub(super) fn map_import_figma(positionals: &[String], flags: &Flags) -> Result<
     let fig_path = required_pos(
         positionals,
         1,
-        "Usage: de import:figma <file.fig> [--out output.op]",
+        "Usage: de import:figma <file.fig> [--out output.de]",
     )?;
     let out_path = flag_value(flags, "out").unwrap_or_else(|| figma_default_out_path(&fig_path));
+    crate::app_control_cli::require_document_extension(std::path::Path::new(&out_path))?;
     Ok(Command::ImportFigma { fig_path, out_path })
 }
 
 pub(super) fn figma_default_out_path(fig_path: &str) -> String {
     fig_path
         .strip_suffix(".fig")
-        .map(|base| format!("{base}.op"))
+        .map(de_util::document_file::file_name)
         .unwrap_or_else(|| fig_path.to_string())
 }
 

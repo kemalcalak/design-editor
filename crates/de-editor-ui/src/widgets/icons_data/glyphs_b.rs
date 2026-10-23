@@ -23,7 +23,7 @@ pub(crate) const SMARTPHONE: &[&str] = &[
 // Lucide `chrome.svg` — outer ring + concentric inner ring (r=4
 // at viewBox centre 12,12) + three radial spokes. Previous inner
 // path arced through (12, 8) so the hole rendered as an off-centre
-// "G"-like crescent — visible in login.op's Google button.
+// "G"-like crescent — visible in login.de's Google button.
 pub(crate) const CHROME: &[&str] = &[
     "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z",
     "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
@@ -33,7 +33,7 @@ pub(crate) const CHROME: &[&str] = &[
 ];
 
 // Apple-mark glyph — single closed path; not in upstream lucide
-// but kept here so `.op` files that author `iconFontName:"apple"` get
+// but kept here so `.de` files that author `iconFontName:"apple"` get
 // a recognisable mark instead of an honest-but-blank placeholder.
 pub(crate) const APPLE: &[&str] = &[
     "M16 10c-.6 0-2.1.8-3.5.8-1.4 0-2.4-.8-3.6-.8-1.9 0-4.1 1.6-4.1 4.6 0 2.7 1.5 5.4 3.4 6.4 1 .5 1.7 0 2.3 0 .7 0 1.4.5 2.4 0 1.9-1 3.4-3.7 3.4-6.4 0-3-2.2-4.6-4.1-4.6Z",

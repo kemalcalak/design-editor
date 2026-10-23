@@ -57,7 +57,7 @@ fn merge_mode_remaps_the_action_buttons() {
     // dispatches nothing (a swallowed `Inside`).
     let blocked = state_with(GitPanelState {
         merging: true,
-        conflicted_files: vec!["doc.op".to_string()],
+        conflicted_files: vec!["doc.de".to_string()],
         ..open_repo()
     });
     let panel = GitPanel::for_editor(&blocked).unwrap();

@@ -129,7 +129,7 @@ pub fn fill_element(node: &SceneNode, alpha: f32) -> String {
 /// A resolved gradient as `<a:gradFill>`, or `None` when it has too few
 /// stops to be one (DrawingML requires at least two).
 ///
-/// **Linear angles are exact.** The canonical `.op` convention is CSS's
+/// **Linear angles are exact.** The canonical `.de` convention is CSS's
 /// (0° = bottom→top, growing clockwise) while DrawingML measures
 /// clockwise from due east, so the conversion is a fixed −90° turn.
 ///

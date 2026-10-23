@@ -2,7 +2,7 @@
 //!
 //! Split out of `persistence.rs` so that file stays under the 800-line
 //! cap. Three entry points, all embed-not-link (every one ends in a
-//! `data:` URL — see the shared-.op portability audit, 2026-07-18):
+//! `data:` URL — see the shared-.de portability audit, 2026-07-18):
 //!
 //! - [`handle_import_image_or_svg`] — toolbar shape-picker action:
 //!   pops `rfd::FileDialog`, decodes the file, and inserts a new
@@ -186,7 +186,7 @@ fn apply_pick_fill_image(host: &mut WidgetHostNative, path: &Path) {
 /// portable: share it, and the recipient hits the exact same missing-
 /// image report the Relink button was supposed to resolve, because
 /// their machine doesn't have that path either. Embedding closes that
-/// gap (shared-.op portability audit, 2026-07-18): the fixed reference
+/// gap (shared-.de portability audit, 2026-07-18): the fixed reference
 /// is real content, not another local pointer.
 pub fn handle_relink_image(host: &mut WidgetHostNative) {
     let Some(path) = pick_image_path(host) else {

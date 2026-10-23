@@ -379,17 +379,17 @@ mod tests {
         reset_for_test();
 
         assert!(install(
-            "/pkg/assets/doc.op",
+            "/pkg/assets/doc.de",
             b"{\"version\":\"1.0.0\"}".to_vec()
         ));
         assert_eq!(
-            installed_str("/pkg/assets/doc.op"),
+            installed_str("/pkg/assets/doc.de"),
             Some("{\"version\":\"1.0.0\"}")
         );
 
         // A truncated or misrouted response is a runtime possibility, so it
         // reads as unavailable rather than panicking.
-        assert!(install("/pkg/assets/broken.op", vec![0xff, 0xfe]));
-        assert!(installed_str("/pkg/assets/broken.op").is_none());
+        assert!(install("/pkg/assets/broken.de", vec![0xff, 0xfe]));
+        assert!(installed_str("/pkg/assets/broken.de").is_none());
     }
 }

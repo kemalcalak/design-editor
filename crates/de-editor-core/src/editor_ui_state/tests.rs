@@ -179,7 +179,7 @@ fn dirty_ready_repo_keeps_header_popovers_allowed() {
     };
     assert!(s.header_popovers_allowed(), "clean bound repo");
     s.changed_files = vec![GitFileEntry {
-        path: "a.op".into(),
+        path: "a.de".into(),
         staged: false,
         status: 'M',
     }];

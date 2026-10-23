@@ -425,7 +425,7 @@ fn canvaskit_svg_path_nodes_fit_to_destination_rect() {
     ] {
         assert!(
             bridge.contains(marker),
-            "CanvasKit bridge must preserve `{marker}` so arbitrary .op path nodes fit tight bounds with a compatibility fallback"
+            "CanvasKit bridge must preserve `{marker}` so arbitrary .de path nodes fit tight bounds with a compatibility fallback"
         );
     }
 

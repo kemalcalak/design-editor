@@ -272,7 +272,7 @@ fn set_selected_widget_bind_value_empty_clears_binding() {
         panic!("expected a TextInput node");
     };
     // An empty key removes `bind:value`; with no other bindings the
-    // whole map clears so the serialized `.op` carries no noise.
+    // whole map clears so the serialized `.de` carries no noise.
     let cleared = ti
         .bindings
         .as_ref()

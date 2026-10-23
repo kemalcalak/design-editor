@@ -229,7 +229,7 @@ fn every_shipped_template_has_a_document_route_under_the_shared_prefix() {
         assert_eq!(
             route,
             format!(
-                "{}scene_templates/{}.op",
+                "{}scene_templates/{}.de",
                 crate::web_assets::WEB_ASSET_ROUTE_PREFIX,
                 template.id
             ),

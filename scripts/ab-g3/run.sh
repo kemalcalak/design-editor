@@ -510,7 +510,7 @@ run_cell() {
   local prompt="${10}"
   local cell_dir="$OUT/$model_label/$mode/$prompt_id"
   local result_path="$cell_dir/result.json"
-  local op_path="$cell_dir/$prompt_id.op"
+  local op_path="$cell_dir/$prompt_id.de"
   local audit_path="$cell_dir/audit.json"
   local shots_dir="$cell_dir/shots"
   local gen_log="$cell_dir/generation.log"
@@ -698,8 +698,8 @@ lines.append("")
 lines.append("- `glm-5.2`: `GLM_KEY` is mapped to `DESIGN_EDITOR_LLM_API_KEY`; base URL is `https://open.bigmodel.cn/api/coding/paas/v4`; model is `DESIGN_EDITOR_ORCHESTRATOR_MODEL=glm-5.2`.")
 lines.append("- Both modes use `DESIGN_EDITOR_LLM_PROVIDER=openai-compat`, `DESIGN_EDITOR_LLM_BASE_URL`, `DESIGN_EDITOR_LLM_API_KEY`, `DESIGN_EDITOR_ORCHESTRATOR_MODEL`, and `DESIGN_EDITOR_SMOKE_OUT`.")
 lines.append("- Orchestrator mode adds `DESIGN_EDITOR_SMOKE_DIRECT=1`; loop mode adds `DESIGN_EDITOR_SMOKE_LOOP=1` and currently requires OpenAI-compatible provider wiring.")
-lines.append("- Audit runs `DESIGN_EDITOR_SMOKE_AUDIT=<file.op> de-smoke audit`; current `de-smoke` still constructs the provider before the audit branch, so the harness passes the same `DESIGN_EDITOR_LLM_*` env into audit. Audit output has `issueCount` plus string `issues`, not structured categories.")
-lines.append("- Render shots run `design-editor --render-shots <file.op> <outdir>`.")
+lines.append("- Audit runs `DESIGN_EDITOR_SMOKE_AUDIT=<file.de> de-smoke audit`; current `de-smoke` still constructs the provider before the audit branch, so the harness passes the same `DESIGN_EDITOR_LLM_*` env into audit. Audit output has `issueCount` plus string `issues`, not structured categories.")
+lines.append("- Render shots run `design-editor --render-shots <file.de> <outdir>`.")
 lines.append("")
 lines.append("## Models")
 lines.append("")

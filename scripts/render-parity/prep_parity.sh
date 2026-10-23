@@ -2,7 +2,7 @@
 # prep_parity.sh <source.pen> <name> [scale]
 #
 # Deterministic (no-Pencil) half of the render-parity loop:
-#   1. pen2op converts <source.pen> -> <name>.op   (preserves node ids)
+#   1. pen2op converts <source.pen> -> <name>.de   (preserves node ids)
 #   2. design-editor --render-shots renders our side, one PNG per top node
 #   3. prints the top-level node-id JSON array to paste into the Pencil MCP
 #      export_nodes call that captures the baseline (Pencil's own render).
@@ -18,7 +18,7 @@ PEN="$1"; NAME="$2"; SCALE="${3:-2}"
 ROOT="${RPARITY_ROOT:?set RPARITY_ROOT to a working dir}"
 BIN="${DESIGN_EDITOR_BIN:-/Users/fini/workspace/design-editor/target/debug}"
 
-OP="$ROOT/$NAME.op"
+OP="$ROOT/$NAME.de"
 OURS="$ROOT/$NAME/ours"
 BASE="$ROOT/$NAME/baseline"
 mkdir -p "$OURS" "$BASE"

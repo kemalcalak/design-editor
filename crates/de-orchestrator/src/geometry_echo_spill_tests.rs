@@ -97,7 +97,7 @@ fn rail_width_collapse_is_echoed_for_the_model_under_real_layout() {
     );
 }
 
-/// GLM-5.2 measured (test0711-1.op): a 300px-tall image inside a 42px
+/// GLM-5.2 measured (test0711-1.de): a 300px-tall image inside a 42px
 /// "Avatar" strip painted across half the header. The width-overflow echo
 /// is blind to the vertical axis — this echo covers it.
 #[test]

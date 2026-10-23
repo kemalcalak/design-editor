@@ -520,7 +520,7 @@ pub(crate) fn first_text_content(node: &PenNode) -> Option<&str> {
 /// NOT `is_ascii_alphanumeric`: that dropped every CJK codepoint, so a
 /// Chinese app normalized every label and screen name to the EMPTY string and
 /// `labels_match` refused them all. The whole tab-navigation layer therefore
-/// no-opped on such documents — measured on `0808-k3-2.op`, a two-screen
+/// no-opped on such documents — measured on `0808-k3-2.de`, a two-screen
 /// Chinese star-gazing app whose screen ROUTES were written (that path never
 /// looks at labels) while not one tab received an `onTap` action.
 pub(crate) fn normalize_label(s: &str) -> String {

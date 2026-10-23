@@ -22,7 +22,7 @@ fn find<'a>(scene: &'a LayoutScene, id: &str) -> Option<&'a SceneNode> {
     scene.active_page().and_then(|p| p.find(id))
 }
 
-/// A minimal `.op` document with a single focusable text_input node.
+/// A minimal `.de` document with a single focusable text_input node.
 fn text_input_doc() -> jian_ops_schema::PenDocument {
     let src = r##"{
         "version": "1.1",

@@ -74,7 +74,7 @@ fn only_raster_image_extensions_take_the_drop_path() {
         assert!(is_supported_image_drop(Path::new(name)), "{name}");
     }
     for name in [
-        "design.op",
+        "design.de",
         "design.pen",
         "export.fig",
         "page.html",

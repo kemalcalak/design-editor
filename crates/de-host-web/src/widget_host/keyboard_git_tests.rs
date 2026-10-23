@@ -31,7 +31,7 @@ fn git_commit_input_uses_text_input_state_for_editing() {
         panel.commit_input.set_text("design");
         panel.commit_no_changes = true;
         panel.changed_files = vec![GitFileEntry {
-            path: "design.op".into(),
+            path: "design.de".into(),
             staged: true,
             status: 'M',
         }];
