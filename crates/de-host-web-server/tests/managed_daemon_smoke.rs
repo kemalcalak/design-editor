@@ -96,11 +96,19 @@ fn read_version(port: u16, token: &str) -> u64 {
 fn managed_contract_end_to_end() {
     // --file load coverage: a canonical corpus fixture that MUST exist —
     // spawn/read failures are test failures, never skips.
-    let fixture = concat!(
+    // The jian corpus keeps its `.op` names; the daemon only opens `.de`, so
+    // it gets a `.de` copy.
+    let corpus = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../vendor/jian/crates/jian-ops-schema/tests/corpus/nested-frame.de"
+        "/../../vendor/jian/crates/jian-ops-schema/tests/corpus/nested-frame.op"
     );
-    let fixture_text = std::fs::read_to_string(fixture).expect("fixture exists");
+    let fixture_text = std::fs::read_to_string(corpus).expect("fixture exists");
+    let fixture_path = std::env::temp_dir().join(format!(
+        "de-managed-smoke-{}-nested-frame.de",
+        std::process::id()
+    ));
+    std::fs::write(&fixture_path, &fixture_text).expect("write .de fixture copy");
+    let fixture = fixture_path.to_str().expect("utf-8 temp path");
     // Probe a stable field to prove the daemon loaded the file. The corpus
     // root frame has no "name", so probe its "id" instead.
     let fx: serde_json::Value = serde_json::from_str(&fixture_text).expect("fixture json");
