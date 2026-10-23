@@ -273,7 +273,10 @@ fn property_panel_create_component_click_promotes_selected_frame() {
     let viewport_h = 900.0;
     let panel_left = viewport_w - host.editor_state().editor_ui.property_panel_width;
     let button_x = panel_left + 24.0;
-    let button_y = PROPERTY_PANEL_TOP + 36.0 + 30.0 + 8.0 + 18.0;
+    let button_y = PROPERTY_PANEL_TOP
+        + de_editor_ui::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT
+        + 8.0
+        + 18.0;
     assert!(host.apply_press(button_x, button_y, viewport_w, viewport_h));
     assert!(host
         .editor_state()

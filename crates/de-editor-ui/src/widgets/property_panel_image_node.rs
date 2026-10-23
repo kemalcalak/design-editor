@@ -190,7 +190,7 @@ pub fn paint_image_node_section(
         .unwrap_or("image.fill");
     let label = TextLayout::single_run(
         de_i18n::translate(locale, label_key),
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -285,7 +285,7 @@ fn paint_warning_row(
     );
     let message = TextLayout::single_run(
         warning.message,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         10.0,
         (text).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -300,7 +300,7 @@ fn paint_warning_row(
     path_color.a = 0.8;
     let path = TextLayout::single_run(
         &warning.asset_path,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         9.0,
         (path_color).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -323,7 +323,7 @@ fn paint_warning_row(
     cx.backend.stroke_round_rect(btn, 5.0, border, 1.0);
     let relink = TextLayout::single_run(
         "Relink",
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         9.0,
         (text).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -354,7 +354,7 @@ fn paint_outline_button(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, icon: I
     );
     let layout = TextLayout::single_run(
         label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         11.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),

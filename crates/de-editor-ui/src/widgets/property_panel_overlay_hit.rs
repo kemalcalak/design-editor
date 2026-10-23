@@ -15,7 +15,8 @@ impl PropertyPanel {
         !self.is_multi
             && matches!(self.tab, de_editor_core::PropertyTab::Design)
             && panel_rect.contains(point)
-            && point.y >= panel_rect.origin.y + crate::widgets::property_panel_inputs::TAB_HEIGHT
+            && point.y
+                >= panel_rect.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT
     }
 
     fn popup_action_rects(

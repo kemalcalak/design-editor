@@ -219,6 +219,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "leftPanel.tab.components" => "组件",
         "leftPanel.tab.images" => "图片",
         "imagesTab.empty" => "此页面没有图片",
+        "property.page" => "页面",
         _ => return None,
     })
 }

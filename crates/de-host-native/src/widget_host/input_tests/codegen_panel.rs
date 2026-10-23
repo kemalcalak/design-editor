@@ -95,7 +95,7 @@ fn codegen_hover_tracks_idle_generate_button() {
     use de_editor_core::PropertyTab;
     use de_editor_ui::widgets::property_panel_action::CodegenAction;
     use de_editor_ui::widgets::property_panel_code;
-    use de_editor_ui::widgets::property_panel_inputs::TAB_HEIGHT;
+    use de_editor_ui::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
     let mut host = WidgetHostNative::new();
     seed(
         &mut host,
@@ -111,7 +111,7 @@ fn codegen_hover_tracks_idle_generate_button() {
     let panel_x = host.last_viewport_w - pw;
     let (_, generate_rect) = property_panel_code::code_action_rects(
         panel_x,
-        PROPERTY_PANEL_TOP + TAB_HEIGHT,
+        PROPERTY_PANEL_TOP + PANEL_HEADER_HEIGHT,
         pw,
         &host.editor_state().codegen,
     )
@@ -129,7 +129,7 @@ fn codegen_hover_tracks_idle_generate_button() {
         Some(CodegenHover::Generate)
     );
 
-    assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + TAB_HEIGHT));
+    assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + PANEL_HEADER_HEIGHT));
     assert_eq!(host.editor_state().codegen.action_hover, None);
 }
 
@@ -217,8 +217,19 @@ fn property_tab_hover_tracks_inactive_design_tab() {
         .set_single_selection(NodeId::new("n-tabs"));
     host.editor_state_mut().editor_ui.property_tab = PropertyTab::Code;
 
-    let panel_x = host.last_viewport_w - host.editor_state().editor_ui.property_panel_width;
-    assert!(host.apply_cursor_move(panel_x + 40.0, PROPERTY_PANEL_TOP + 18.0));
+    // The Code view's close button reports the tab it returns to.
+    let panel_w = host.editor_state().editor_ui.property_panel_width;
+    let panel_x = host.last_viewport_w - panel_w;
+    let close = de_editor_ui::widgets::property_panel_header::close_rect(de_editor_ui::Rect::xywh(
+        panel_x,
+        PROPERTY_PANEL_TOP,
+        panel_w,
+        host.last_viewport_h,
+    ));
+    assert!(host.apply_cursor_move(
+        close.origin.x + close.size.x / 2.0,
+        close.origin.y + close.size.y / 2.0
+    ));
     assert_eq!(
         host.editor_state().editor_ui.property_tab_hover,
         Some(PropertyTab::Design)

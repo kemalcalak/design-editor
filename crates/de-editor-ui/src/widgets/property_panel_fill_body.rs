@@ -87,7 +87,7 @@ pub(crate) fn paint_fill_solid_body(
     if !painted_hex {
         let hex_layout = TextLayout::single_run(
             hex_text,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -165,7 +165,7 @@ pub(crate) fn paint_fill_gradient_body(
         }
         let prefix = TextLayout::single_run(
             de_i18n::translate(locale, "fill.angle"),
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -194,7 +194,7 @@ pub(crate) fn paint_fill_gradient_body(
         ) {
             let value = TextLayout::single_run(
                 value_text,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 12.0,
                 (theme.foreground).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -228,7 +228,7 @@ pub(crate) fn paint_fill_gradient_body(
         }
         let unit = TextLayout::single_run(
             "°",
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -245,7 +245,7 @@ pub(crate) fn paint_fill_gradient_body(
     // Color stops header + plus.
     let header = TextLayout::single_run(
         de_i18n::translate(locale, "fill.stops"),
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -317,7 +317,7 @@ pub(crate) fn paint_fill_gradient_body(
         ) {
             let hex_layout = TextLayout::single_run(
                 hex_text,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 12.0,
                 (theme.foreground).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -383,7 +383,7 @@ pub(crate) fn paint_fill_gradient_body(
         ) {
             let pct_layout = TextLayout::single_run(
                 pct_text,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 12.0,
                 (theme.foreground).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -417,7 +417,7 @@ pub(crate) fn paint_fill_gradient_body(
         }
         let pct_unit = TextLayout::single_run(
             "%",
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),

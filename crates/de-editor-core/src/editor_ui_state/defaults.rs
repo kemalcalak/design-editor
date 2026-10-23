@@ -17,7 +17,7 @@ impl Default for EditorUiState {
         Self {
             sidebar_open: true,
             layer_panel_width: 240.0,
-            property_panel_width: 256.0,
+            property_panel_width: 272.0,
             chat_tab_width_bumped: false,
             host_owns_chat: false,
             theme_mode: ThemeMode::Dark,

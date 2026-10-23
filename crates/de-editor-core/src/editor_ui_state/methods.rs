@@ -698,13 +698,11 @@ impl EditorUiState {
     }
 
     /// Flip the right panel between Design and generated Code — the canvas
-    /// `</>` button and Cmd+Shift+C. Interact counts as "not Code", so
-    /// from a form widget's Interact view the toggle opens Code. Returns
-    /// whether the tab changed.
+    /// `</>` button and Cmd+Shift+C. Returns whether the tab changed.
     pub fn toggle_code_view(&mut self) -> bool {
         let next = match self.property_tab {
             crate::PropertyTab::Code => crate::PropertyTab::Design,
-            crate::PropertyTab::Design | crate::PropertyTab::Interact => crate::PropertyTab::Code,
+            crate::PropertyTab::Design => crate::PropertyTab::Code,
         };
         self.set_property_tab(next)
     }

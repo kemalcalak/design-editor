@@ -182,7 +182,12 @@ fn code_hover_at_maps_idle_generate_button() {
         origin: Point2D::new(0.0, 0.0),
         size: Point2D::new(300.0, 700.0),
     };
-    let rects = code_action_rects(panel_rect.origin.x, TAB_HEIGHT, panel_rect.size.x, &s);
+    let rects = code_action_rects(
+        panel_rect.origin.x,
+        PANEL_HEADER_HEIGHT,
+        panel_rect.size.x,
+        &s,
+    );
     let (_, gen_rect) = rects
         .iter()
         .find(|(a, _)| matches!(a, CodegenAction::Generate))
@@ -461,11 +466,11 @@ fn complete_code_preview_hit_test_maps_points_to_code_offsets() {
     let char_w = 11.0 * 0.55;
 
     assert_eq!(
-        code_text_offset_at(panel_rect, &state, Point2D::new(66.0 + char_w * 6.0, 112.0)),
+        code_text_offset_at(panel_rect, &state, Point2D::new(66.0 + char_w * 6.0, 122.0)),
         Some(6)
     );
     assert_eq!(
-        code_text_offset_at(panel_rect, &state, Point2D::new(66.0 + char_w * 5.0, 128.0)),
+        code_text_offset_at(panel_rect, &state, Point2D::new(66.0 + char_w * 5.0, 138.0)),
         Some("import React\n".len() + 5)
     );
     assert_eq!(
@@ -547,7 +552,7 @@ fn complete_code_preview_hit_test_respects_vertical_scroll() {
         code_text_offset_at(
             panel_rect,
             &state,
-            Point2D::new(66.0 + 11.0 * 0.55 * 4.0, 112.0)
+            Point2D::new(66.0 + 11.0 * 0.55 * 4.0, 122.0)
         ),
         Some(expected)
     );

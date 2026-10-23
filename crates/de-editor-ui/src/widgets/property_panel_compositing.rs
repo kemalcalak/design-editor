@@ -323,7 +323,7 @@ pub fn paint_picker(
         };
         let text = TextLayout::single_run(
             label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             11.0,
             (if active {
                 theme.primary
@@ -389,7 +389,7 @@ pub fn action_for_row(target: CompositingTarget, index: usize) -> Option<Propert
 
 impl PropertyPanel {
     fn compositing_picker_viewport(panel_rect: Rect) -> Rect {
-        let top = panel_rect.origin.y + crate::widgets::property_panel_inputs::TAB_HEIGHT;
+        let top = panel_rect.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
         Rect::xywh(
             panel_rect.origin.x,
             top,

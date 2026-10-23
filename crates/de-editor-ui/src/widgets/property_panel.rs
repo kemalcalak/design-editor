@@ -44,7 +44,8 @@ mod paint;
 
 pub use build::ColorVariableOption;
 
-pub const PROPERTY_PANEL_WIDTH: f32 = 280.0;
+/// The right rail's default width (#30 design: 272).
+pub const PROPERTY_PANEL_WIDTH: f32 = 272.0;
 
 // `PropertyPanelAction` lives in `property_panel_action.rs` (split
 // out for the 800-line ceiling); re-exported so every existing
@@ -291,7 +292,8 @@ impl PropertyPanel {
     /// under it (paint clips there; hit-test must agree).
     fn point_in_section_viewport(&self, panel_rect: Rect, point: Point2D) -> bool {
         panel_rect.contains(point)
-            && point.y >= panel_rect.origin.y + crate::widgets::property_panel_inputs::TAB_HEIGHT
+            && point.y
+                >= panel_rect.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT
     }
 
     /// Total height (px) of the panel's section content — drives the

@@ -150,6 +150,9 @@ pub enum CodegenAction {
     ScrollFrameworksLeft,
     /// Scroll the framework tab strip one step right (right chevron).
     ScrollFrameworksRight,
+    /// A Design-view Code chip (#30): pick the framework and open the
+    /// Code view.
+    OpenInCodeView(de_editor_core::codegen::Framework),
 }
 
 /// Button / checkbox actions in the property panel that don't

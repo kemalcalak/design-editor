@@ -13,7 +13,7 @@ use super::property_panel_color_variables::{
     color_variable_picker_layout, row_hex_rect, row_name_budget, row_name_rect,
     ColorVariablePickerLayout, ColorVariableRow, COLOR_VARIABLE_MENU_MAX_H,
 };
-use super::property_panel_inputs::TAB_HEIGHT;
+use super::property_panel_inputs::PANEL_HEADER_HEIGHT;
 use super::property_panel_layout::COLOR_VARIABLE_MENU_ROW_H;
 use super::property_panel_sections as sections;
 use super::property_panel_test_support::{state_from, visible_for};
@@ -171,7 +171,7 @@ fn long_variable_list_caps_height_and_scrolls() {
 #[test]
 fn popup_stays_inside_the_visible_rail() {
     let rect = panel_rect();
-    let rail_top = rect.origin.y + TAB_HEIGHT;
+    let rail_top = rect.origin.y + PANEL_HEADER_HEIGHT;
     let rail_bottom = rect.origin.y + rect.size.y;
     for count in [1usize, 6, 40] {
         let mut state = state_with_variables(count);

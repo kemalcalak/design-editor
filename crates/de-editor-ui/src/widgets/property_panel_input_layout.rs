@@ -6,8 +6,8 @@
 use crate::widgets::property_panel::{EffectSummary, FillSummary, PropertyPanelAction};
 use crate::widgets::property_panel_fill::{fill_head_rects, fill_row_body_height};
 use crate::widgets::property_panel_inputs::{
-    COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, HEADER_HEIGHT, INPUT_HEIGHT, PAD_X, SECTION_GAP,
-    SECTION_HEADER_HEIGHT, TAB_HEIGHT,
+    COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, INPUT_HEIGHT, PAD_X, PANEL_HEADER_HEIGHT,
+    SECTION_GAP, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::property_panel_layout::VisibleSections;
 use crate::widgets::property_panel_stroke::stroke_side_input_rects;
@@ -62,8 +62,7 @@ pub fn editable_input_rects(
     let half_w = (usable_w - 8.0) / 2.0;
 
     let mut y = panel_rect.origin.y;
-    y += TAB_HEIGHT;
-    y += HEADER_HEIGHT;
+    y += PANEL_HEADER_HEIGHT;
     if visible.create_component {
         // Variant-aware: the instance pair adds a second button row.
         y += crate::widgets::property_panel_inputs::create_component_block_height(

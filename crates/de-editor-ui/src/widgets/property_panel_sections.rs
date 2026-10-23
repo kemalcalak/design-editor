@@ -4,12 +4,12 @@
 //! below itself so the parent can chain them.
 
 use crate::theme::Theme;
-use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::icons::Icon;
 use crate::widgets::property_panel::NodeSnapshot;
 use crate::widgets::property_panel_inputs::{
     paint_input_with_icon_focused_state, paint_input_with_prefix_focused_state,
-    paint_section_divider, paint_section_label, paint_text_input_view_value, COMPONENT_ACCENT,
-    HEADER_HEIGHT, INPUT_HEIGHT, INSTANCE_ACCENT, PAD_X, SECTION_GAP, TAB_HEIGHT,
+    paint_section_divider, paint_section_label, paint_text_input_view_value, INPUT_HEIGHT, PAD_X,
+    SECTION_GAP,
 };
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
@@ -56,8 +56,6 @@ pub struct EditContext<'a> {
 /// translation layer.
 #[derive(Debug, Clone, Copy)]
 pub struct PropertyLabels {
-    pub tab_design: &'static str,
-    pub tab_interact: &'static str,
     pub tab_code: &'static str,
     pub create_component: &'static str,
     pub detach_component: &'static str,
@@ -91,13 +89,6 @@ pub struct PropertyLabels {
     pub clip_content: &'static str,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct TabStripState {
-    pub active: de_editor_core::PropertyTab,
-    pub hover: Option<de_editor_core::PropertyTab>,
-    pub show_interact: bool,
-}
-
 impl PropertyLabels {
     /// Resolve every PropertyPanel chrome string against the editor's
     /// active locale (`EditorUiState.locale`).
@@ -115,8 +106,6 @@ impl PropertyLabels {
             }
         };
         Self {
-            tab_design: pick("rightPanel.design", "Design"),
-            tab_interact: pick("rightPanel.interact", "Interact"),
             tab_code: pick("rightPanel.code", "Code"),
             create_component: pick("property.createComponent", "Create Component"),
             detach_component: pick("property.detachComponent", "Detach Component"),
@@ -251,186 +240,6 @@ pub use crate::widgets::property_panel_layout::{
 };
 
 // ── Tab strip ─────────────────────────────────────────────────────
-
-/// Backend-free estimate of `measure_text(label, 13.0)` for the tab strip,
-/// so `paint_tab_strip` and `tab_strip_hit` derive identical geometry and a
-/// click always lands on what's drawn (CJK-aware: ASCII ~0.55em, full-width
-/// glyphs ~1em at 13 px).
-fn tab_label_width(label: &str) -> f32 {
-    label
-        .chars()
-        .map(|c| if c.is_ascii() { 7.0 } else { 13.0 })
-        .sum()
-}
-
-/// The tab rects (Design, [Interact when `show_interact`], Code) for
-/// the pinned strip at panel top-left `(x, y)`, in paint order.
-/// Single source of truth shared by paint + hit-test — a click always
-/// lands on what's drawn because both walk this same vec.
-pub fn tab_strip_rects(
-    labels: &PropertyLabels,
-    x: f32,
-    y: f32,
-    show_interact: bool,
-) -> Vec<(de_editor_core::PropertyTab, Rect)> {
-    use de_editor_core::PropertyTab;
-    let pad = 14.0;
-    let tab_height = 26.0;
-    let tab_y = y + (TAB_HEIGHT - tab_height) / 2.0;
-    let mut cursor_x = x + pad;
-    let mut rects = Vec::with_capacity(3);
-    let design_w = (tab_label_width(labels.tab_design) + 24.0).max(48.0);
-    rects.push((
-        PropertyTab::Design,
-        Rect {
-            origin: Point2D::new(cursor_x, tab_y),
-            size: Point2D::new(design_w, tab_height),
-        },
-    ));
-    cursor_x += design_w + 6.0;
-    if show_interact {
-        let interact_w = (tab_label_width(labels.tab_interact) + 24.0).max(48.0);
-        rects.push((
-            PropertyTab::Interact,
-            Rect {
-                origin: Point2D::new(cursor_x, tab_y),
-                size: Point2D::new(interact_w, tab_height),
-            },
-        ));
-        cursor_x += interact_w + 6.0;
-    }
-    let code_w = (tab_label_width(labels.tab_code) + 24.0).max(48.0);
-    rects.push((
-        PropertyTab::Code,
-        Rect {
-            origin: Point2D::new(cursor_x, tab_y),
-            size: Point2D::new(code_w, tab_height),
-        },
-    ));
-    rects
-}
-
-/// Hit-test the pinned tab strip. `x`/`y` are the panel's top-left
-/// (unscrolled — the strip is pinned). Returns the tab the point
-/// lands on, or `None`. Geometry comes from [`tab_strip_rects`], the
-/// same source `paint_tab_strip` uses, so clicks match the painted
-/// tabs.
-pub fn tab_strip_hit(
-    labels: &PropertyLabels,
-    x: f32,
-    y: f32,
-    point: Point2D,
-    show_interact: bool,
-) -> Option<de_editor_core::PropertyTab> {
-    tab_strip_rects(labels, x, y, show_interact)
-        .into_iter()
-        .find(|(_, rect)| rect.contains(point))
-        .map(|(tab, _)| tab)
-}
-
-pub fn paint_tab_strip(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    labels: &PropertyLabels,
-    state: TabStripState,
-    x: f32,
-    y: f32,
-    width: f32,
-) -> f32 {
-    use de_editor_core::PropertyTab;
-    let active = state.active;
-    let hover = state.hover;
-    let label_for = |tab: PropertyTab| -> &'static str {
-        match tab {
-            PropertyTab::Design => labels.tab_design,
-            PropertyTab::Interact => labels.tab_interact,
-            PropertyTab::Code => labels.tab_code,
-        }
-    };
-    for (tab, rect) in tab_strip_rects(labels, x, y, state.show_interact) {
-        let is_active = tab == active;
-        let is_hovered = hover == Some(tab) && !is_active;
-        if is_active || is_hovered {
-            cx.backend.fill_round_rect(rect, 6.0, theme.muted);
-        }
-        let color = if is_active {
-            theme.foreground
-        } else {
-            theme.muted_foreground
-        };
-        let label = TextLayout::single_run(
-            label_for(tab),
-            "system-ui",
-            13.0,
-            (color).to_jian(),
-            Point2D::new(0.0, 0.0),
-        );
-        cx.backend.draw_text(
-            &label,
-            Point2D::new(
-                rect.origin.x + 12.0,
-                jian_widgets::centered_text_baseline_y(rect, 13.0),
-            ),
-        );
-    }
-    cx.backend.fill_rect(
-        Rect {
-            origin: Point2D::new(x, y + TAB_HEIGHT - 1.0),
-            size: Point2D::new(width, 1.0),
-        },
-        theme.border,
-    );
-    y + TAB_HEIGHT
-}
-
-// ── Header row ────────────────────────────────────────────────────
-
-pub fn paint_node_header(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    snapshot: &NodeSnapshot,
-    x: f32,
-    y: f32,
-    _w: f32,
-) -> f32 {
-    // Show the node's name so the header matches the LayerPanel
-    // row; fall back to the kind label for an unnamed node.
-    let title = if snapshot.name.is_empty() {
-        snapshot.kind.as_str()
-    } else {
-        snapshot.name.as_str()
-    };
-    // Component / instance badging — TS tints the header purple and
-    // prefixes a Diamond glyph (property-panel.tsx:182-187).
-    let (title_color, badge) = if snapshot.is_reusable {
-        (COMPONENT_ACCENT, true)
-    } else if snapshot.is_instance {
-        (INSTANCE_ACCENT, true)
-    } else {
-        (theme.foreground, false)
-    };
-    let mut text_x = x + PAD_X;
-    if badge {
-        draw_icon(
-            cx.backend,
-            Icon::Diamond,
-            Point2D::new(text_x, y + 11.0),
-            12.0,
-            title_color,
-            1.4,
-        );
-        text_x += 18.0;
-    }
-    let label = TextLayout::single_run(
-        title,
-        "system-ui",
-        14.0,
-        (title_color).to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend.draw_text(&label, Point2D::new(text_x, y + 22.0));
-    y + HEADER_HEIGHT
-}
 
 // ── Create-component button ───────────────────────────────────────
 // ── Position section ──────────────────────────────────────────────
@@ -722,7 +531,7 @@ fn paint_check_row(
         crate::widgets::text_metrics::fit_chrome(cx.backend, label, (w - label_x).max(0.0), 12.0);
     let lbl = TextLayout::single_run(
         &label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),

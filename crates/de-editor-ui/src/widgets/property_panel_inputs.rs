@@ -18,7 +18,7 @@ pub(crate) use crate::widgets::property_panel_text_input::paint_text_input_view_
 pub const PAD_X: f32 = 16.0;
 pub const SECTION_GAP: f32 = 8.0;
 pub const ROW_HEIGHT: f32 = 28.0;
-pub const INPUT_HEIGHT: f32 = 30.0;
+pub const INPUT_HEIGHT: f32 = 28.0;
 pub const SIZE_CHECK_ROW_HEIGHT: f32 = 22.0;
 pub const SIZE_CHECK_BOX_SIZE: f32 = 16.0;
 
@@ -38,8 +38,9 @@ pub const COLOR_VARIABLE_BUTTON_W: f32 = 28.0;
 pub const COLOR_VARIABLE_GAP: f32 = 6.0;
 pub const SECTION_HEADER_HEIGHT: f32 = 24.0;
 pub const COLOR_SWATCH_ACTION_WIDTH: f32 = 28.0;
-pub const TAB_HEIGHT: f32 = 36.0;
-pub const HEADER_HEIGHT: f32 = 30.0;
+/// The pinned header band (#30): selection name + kind, or the Code
+/// view title + close. Every section y-walk starts below it.
+pub const PANEL_HEADER_HEIGHT: f32 = 46.0;
 
 /// Hit geometry for the trailing "+" affordance in section headers.
 pub fn section_add_target(x: f32, y: f32, width: f32) -> Rect {
@@ -110,13 +111,16 @@ pub fn paint_section_label(
     y: f32,
     _w: f32,
 ) -> f32 {
+    // #30: section titles are the quieter second text tone at 13 px
+    // medium, so the values below them carry the weight.
     let label_layout = TextLayout::single_run(
         label,
-        "system-ui",
-        12.0,
-        (theme.foreground).to_jian(),
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
+        13.0,
+        (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
-    );
+    )
+    .with_font_weight(500);
     cx.backend
         .draw_text(&label_layout, Point2D::new(x + PAD_X, y + 16.0));
     y + SECTION_HEADER_HEIGHT
@@ -206,9 +210,9 @@ pub fn paint_input_with_prefix_focused_state(
     }
     let prefix_layout = TextLayout::single_run(
         prefix,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
-        (theme.muted_foreground).to_jian(),
+        (theme.muted_subtle).to_jian(),
         Point2D::new(0.0, 0.0),
     );
     cx.backend.draw_text(
@@ -253,7 +257,7 @@ pub fn paint_input_with_prefix_focused_state(
     }
     let value_layout = TextLayout::single_run(
         value,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -351,7 +355,7 @@ pub fn paint_input_with_suffix_focused_state(
         }
         let value_layout = TextLayout::single_run(
             value,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -372,7 +376,7 @@ pub fn paint_input_with_suffix_focused_state(
     }
     let unit_layout = TextLayout::single_run(
         unit,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -479,7 +483,7 @@ pub fn paint_input_with_icon_focused_state(
         }
         let value_layout = TextLayout::single_run(
             value,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -504,7 +508,7 @@ pub fn paint_input_with_icon_focused_state(
         // ("100 %" etc.) where the unit also anchors right.
         let unit_layout = TextLayout::single_run(
             u,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -521,7 +525,7 @@ pub fn paint_dropdown(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, value: &s
     cx.backend.fill_round_rect(rect, INPUT_RADIUS, theme.muted);
     let value_layout = TextLayout::single_run(
         value,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),

@@ -219,6 +219,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "leftPanel.tab.components" => "Bileşenler",
         "leftPanel.tab.images" => "Görseller",
         "imagesTab.empty" => "Bu sayfada görsel yok",
+        "property.page" => "Sayfa",
         _ => return None,
     })
 }

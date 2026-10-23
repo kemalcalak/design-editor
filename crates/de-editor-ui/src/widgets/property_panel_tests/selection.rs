@@ -135,14 +135,6 @@ fn for_selection_design_tab_still_hides_panel_without_selection() {
 }
 
 #[test]
-fn for_selection_interact_tab_still_hides_panel_without_selection() {
-    let mut state = EditorState::sample();
-    state.clear_selection();
-    state.editor_ui.property_tab = PropertyTab::Interact;
-    assert!(PropertyPanel::for_selection(&state).is_none());
-}
-
-#[test]
 fn inactive_property_tab_hover_paints_pill_background() {
     let mut state = EditorState::sample();
     state.editor_ui.property_tab = PropertyTab::Code;

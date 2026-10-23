@@ -333,7 +333,7 @@ fn paint_button(
     );
     let label = TextLayout::single_run(
         &label_text,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         13.0,
         accent.to_jian(),
         Point2D::new(0.0, 0.0),

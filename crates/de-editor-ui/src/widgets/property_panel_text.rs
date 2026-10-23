@@ -314,7 +314,7 @@ pub fn paint_text_section(
     );
     let weight_text = TextLayout::single_run(
         weight_label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -357,7 +357,7 @@ pub fn paint_text_section(
     let caption_color = (theme.muted_foreground).to_jian();
     let lh_caption = TextLayout::single_run(
         de_i18n::translate(locale, "text.lineHeight"),
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         9.0,
         caption_color,
         Point2D::new(0.0, 0.0),
@@ -367,7 +367,7 @@ pub fn paint_text_section(
     let ls_label = de_i18n::translate(locale, "text.letterSpacing");
     let ls_caption = TextLayout::single_run(
         ls_label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         9.0,
         caption_color,
         Point2D::new(0.0, 0.0),
@@ -470,7 +470,7 @@ pub fn paint_font_weight_picker(
         );
         let label = TextLayout::single_run(
             &row_label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (if is_active {
                 theme.primary
@@ -547,8 +547,7 @@ pub(crate) fn sections_top_before_text(
     visible: crate::widgets::property_panel_layout::VisibleSections,
 ) -> f32 {
     let mut y = panel_rect.origin.y;
-    y += crate::widgets::property_panel_inputs::TAB_HEIGHT;
-    y += crate::widgets::property_panel_inputs::HEADER_HEIGHT;
+    y += crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
     if visible.create_component {
         y += crate::widgets::property_panel_inputs::CREATE_COMPONENT_BLOCK_H;
     }
@@ -674,7 +673,7 @@ fn paint_align_row<T: Copy + PartialEq>(
 ) -> f32 {
     let label = TextLayout::single_run(
         de_i18n::translate(locale, label_key),
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         11.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),

@@ -157,7 +157,7 @@ pub(crate) fn paint_effect_add_menu(
         let label = effect_label(labels, *kind);
         let text = TextLayout::single_run(
             label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             theme.foreground.to_jian(),
             Point2D::new(0.0, 0.0),
@@ -220,7 +220,7 @@ fn paint_effect_row(
     let label_size = (10.0 * max_label_w / measured).clamp(8.0, 10.0);
     let label_layout = TextLayout::single_run(
         label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         label_size,
         foreground.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -284,7 +284,7 @@ fn paint_effect_row(
     ) {
         let layout = TextLayout::single_run(
             text,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             11.0,
             foreground.to_jian(),
             Point2D::new(0.0, 0.0),

@@ -31,8 +31,9 @@ fn property_panel_visible_tracks_selection() {
     let mut s = three_rects();
     s.clear_selection();
     assert!(!s.property_panel_visible());
-    s.editor_ui.property_tab = crate::PropertyTab::Interact;
-    assert!(!s.property_panel_visible());
+    // The Code view stays up without a selection (it shows the page).
+    s.editor_ui.property_tab = crate::PropertyTab::Code;
+    assert!(s.property_panel_visible());
     s.editor_ui.property_tab = crate::PropertyTab::Design;
     s.set_single_selection(NodeId::new("n1"));
     assert!(s.property_panel_visible());

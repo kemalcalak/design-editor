@@ -82,7 +82,7 @@ pub(crate) fn paint_mode_popover(
         .stroke_round_rect(pop_box, 8.0, theme.border, 1.0);
     let title = TextLayout::single_run(
         de_i18n::translate(locale, title_key),
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         11.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -107,7 +107,7 @@ pub(crate) fn paint_mode_popover(
         );
         let label = TextLayout::single_run(
             de_i18n::translate(locale, mode.label_key()),
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             11.0,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),

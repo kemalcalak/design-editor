@@ -318,7 +318,7 @@ fn paint_fill_rule_control(
         };
         let text = TextLayout::single_run(
             label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             11.0,
             if rule == active {
                 theme.primary_foreground
@@ -494,7 +494,7 @@ fn paint_one_fill(
     let pct_text = edit.value_for(opacity_focus, &opacity_owned);
     let pct = TextLayout::single_run(
         pct_text,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -544,7 +544,7 @@ fn paint_one_fill(
     }
     let pct_unit = TextLayout::single_run(
         "%",
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),

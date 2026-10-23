@@ -253,7 +253,13 @@ fn draw_text(
     font_size: f32,
     color: crate::Color,
 ) {
-    let layout = TextLayout::single_run(text, "system-ui", font_size, color.to_jian(), origin());
+    let layout = TextLayout::single_run(
+        text,
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
+        font_size,
+        color.to_jian(),
+        origin(),
+    );
     cx.backend.draw_text(&layout, Point2D::new(x, baseline_y));
 }
 

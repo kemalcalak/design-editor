@@ -167,7 +167,7 @@ pub fn paint_video_section(
     );
     let poster = TextLayout::single_run(
         de_i18n::translate(locale, "video.posterThisImage"),
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         11.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -258,7 +258,7 @@ fn paint_toggle(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, label: &str, ch
     let label = text_metrics::fit_chrome(cx.backend, label, (rect.size.x - 22.0).max(0.0), 11.0);
     let layout = TextLayout::single_run(
         &label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         11.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),

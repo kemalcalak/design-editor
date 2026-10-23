@@ -6,7 +6,7 @@ use super::{action_hovered, code_neutral_hover_color};
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::property_panel_inputs::{
-    PAD_X, SECTION_GAP, SECTION_HEADER_HEIGHT, TAB_HEIGHT,
+    PAD_X, PANEL_HEADER_HEIGHT, SECTION_GAP, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
@@ -95,7 +95,7 @@ pub fn framework_row_band(panel_top: f32) -> (f32, f32) {
 
 pub(crate) fn framework_row_band_for(panel_top: f32) -> (f32, f32) {
     let metrics = strip_metrics();
-    let top = panel_top + TAB_HEIGHT + SECTION_HEADER_HEIGHT;
+    let top = panel_top + PANEL_HEADER_HEIGHT + SECTION_HEADER_HEIGHT;
     (top, top + metrics.chip_height)
 }
 

@@ -96,6 +96,13 @@ fn editor_proof_sheets() {
                 let mut h_ = host(theme, w, h, tab);
                 shoot(&mut h_, w, h, &format!("editor-{name}-{size}-{suffix}"));
             }
+            // Right panel: its foot (the Code chips) and the Code view.
+            let mut h_ = host(theme, w, h, LeftPanelTab::Layers);
+            h_.editor_state_mut().editor_ui.property_panel_scroll.offset = 10_000.0;
+            shoot(&mut h_, w, h, &format!("editor-panel-foot-{size}-{suffix}"));
+            let mut h_ = host(theme, w, h, LeftPanelTab::Layers);
+            h_.editor_state_mut().editor_ui.property_tab = de_editor_core::PropertyTab::Code;
+            shoot(&mut h_, w, h, &format!("editor-code-view-{size}-{suffix}"));
         }
     }
 }

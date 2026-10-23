@@ -313,7 +313,7 @@ fn paint_stroke_hex_text(
     }
     let hex_layout = TextLayout::single_run(
         hex_text,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),

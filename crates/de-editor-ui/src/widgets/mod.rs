@@ -74,6 +74,7 @@ mod prompt_center_shared_flow_tests;
 pub mod property_panel;
 pub mod property_panel_action;
 pub mod property_panel_code;
+pub mod property_panel_code_chips;
 pub mod property_panel_commit;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
@@ -90,6 +91,7 @@ mod property_panel_fill_picker;
 #[cfg(test)]
 mod property_panel_fill_tests;
 pub mod property_panel_flex;
+pub mod property_panel_header;
 pub mod property_panel_icon;
 #[cfg(test)]
 mod property_panel_icon_tests;
@@ -126,8 +128,6 @@ pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
 #[cfg(test)]
 mod property_panel_stroke_tests;
-#[cfg(test)]
-mod property_panel_tab_interact_tests;
 #[cfg(test)]
 mod property_panel_test_support;
 #[cfg(test)]

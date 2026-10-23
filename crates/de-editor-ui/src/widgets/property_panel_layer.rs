@@ -175,7 +175,7 @@ fn paint_labeled_input(
     let prefix = text_metrics::fit_chrome(cx.backend, prefix, prefix_budget, 12.0);
     let prefix_layout = TextLayout::single_run(
         &prefix,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -211,7 +211,7 @@ fn paint_labeled_input(
         );
         let value_layout = TextLayout::single_run(
             value,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -238,7 +238,7 @@ fn paint_labeled_input(
         let unit_x = (value_x + value_w + 6.0).min(rect.origin.x + rect.size.x - 8.0 - unit_w);
         let unit_layout = TextLayout::single_run(
             unit,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),

@@ -419,7 +419,7 @@ fn paint_alignment_and_gap(
             .fill_round_rect(gap_rect, INPUT_RADIUS, theme.muted);
         let muted = TextLayout::single_run(
             &gap_text,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -693,7 +693,7 @@ fn paint_gap_row_label(
 ) {
     let label = TextLayout::single_run(
         de_i18n::translate(locale, label_key),
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         10.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -705,7 +705,7 @@ fn paint_gap_row_label(
 fn paint_sub_label(cx: &mut PaintCx<'_>, theme: &Theme, label: &str, x: f32, y: f32) {
     let layout = TextLayout::single_run(
         label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         10.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),

@@ -205,7 +205,7 @@ fn paint_select_popup(
         };
         let lbl = TextLayout::single_run(
             label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (text_color).to_jian(),
             Point2D::new(0.0, 0.0),

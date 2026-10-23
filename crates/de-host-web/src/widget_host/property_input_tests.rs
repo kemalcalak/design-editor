@@ -1,7 +1,7 @@
 use super::WidgetHost;
 use de_editor_core::editor_ui_state::EffectParamFocus;
 use de_editor_core::ui_draft::PropertyFocus;
-use de_editor_core::{own_bounds, EffectField, NodeId, PropertyTab, Tool};
+use de_editor_core::{own_bounds, EffectField, NodeId, Tool};
 use de_editor_ui::widgets::{PropertyPanel, PropertyPanelAction, Toolbar};
 use de_editor_ui::{Point2D, Rect};
 use jian_ops_schema::node::PenNode;
@@ -184,10 +184,7 @@ fn web_property_action_press_commits_prior_property_input() {
     host.editor_state.ui.property_input.set_text("321");
 
     let (x, y) = point_for_property_action(&host, |action| {
-        matches!(
-            action,
-            PropertyPanelAction::SetPropertyTab(PropertyTab::Code)
-        )
+        matches!(action, PropertyPanelAction::ToggleExportScalePicker)
     });
     assert!(host.apply_press(x, y, W, H));
 
@@ -195,7 +192,7 @@ fn web_property_action_press_commits_prior_property_input() {
     assert_eq!(bounds.w, 321.0);
     assert!(host.editor_state.ui.property_focus.is_none());
     assert_eq!(host.editor_state.ui.property_input.text(), "");
-    assert_eq!(host.editor_state.editor_ui.property_tab, PropertyTab::Code);
+    assert!(host.editor_state.editor_ui.export_scale_picker_open);
 }
 
 #[test]

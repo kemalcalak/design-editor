@@ -219,6 +219,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "leftPanel.tab.components" => "Composants",
         "leftPanel.tab.images" => "Images",
         "imagesTab.empty" => "Aucune image sur cette page",
+        "property.page" => "Page",
         _ => return None,
     })
 }

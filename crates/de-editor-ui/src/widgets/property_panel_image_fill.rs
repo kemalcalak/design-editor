@@ -641,7 +641,7 @@ fn paint_label(
 ) {
     let layout = TextLayout::single_run(
         label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         size,
         (color).to_jian(),
         Point2D::new(0.0, 0.0),
