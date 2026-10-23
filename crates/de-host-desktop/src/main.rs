@@ -46,7 +46,7 @@ mod git_overflow_host;
 mod git_session;
 mod git_ssh_host;
 mod heap_pressure;
-mod home_thumbnails;
+mod home_previews;
 mod html_import_error;
 mod html_import_session;
 mod iconify_host;
@@ -151,6 +151,10 @@ enum DesktopEvent {
     /// completion, applies its generation-scoped revision ack, and surfaces
     /// any native error dialog.
     SaveReady,
+    /// The preview worker wrote a Recent card's preview. A visible Home
+    /// repaints; the redraw's scan sees the worker count move and installs
+    /// it.
+    HomePreviewReady,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -319,7 +323,7 @@ struct DesktopApp {
     /// Two-thread local image raster decode pool.
     image_decodes: image_decode_host::ImageDecodeHost,
     /// Loads Home's Recent thumbnails into the image cache.
-    home_thumbnails: home_thumbnails::HomeThumbnails,
+    home_previews: home_previews::HomePreviews,
     /// Cross-thread wake handle used by live MCP connection threads.
     mcp_wake_proxy: Option<EventLoopProxy<DesktopEvent>>,
     /// Paths forwarded by second-launch processes (`single_instance`),
@@ -635,6 +639,15 @@ fn main() {
     macos_app::apply();
     let mut app = DesktopApp::new(initial_file);
     app.image_decodes.set_wake_proxy(mcp_wake_proxy.clone());
+    // This process writes Home previews for its saves; one landing wakes an
+    // idle Home to show it.
+    de_host_services::home_preview::enable();
+    let preview_proxy = std::sync::Mutex::new(mcp_wake_proxy.clone());
+    de_host_services::home_preview::set_written_notifier(move || {
+        if let Ok(proxy) = preview_proxy.lock() {
+            let _ = proxy.send_event(DesktopEvent::HomePreviewReady);
+        }
+    });
     app.mcp_wake_proxy = Some(mcp_wake_proxy);
     // Start accepting forwarded opens from second launches, sharing the queue
     // the UI thread drains in `drain_forwarded_files`.

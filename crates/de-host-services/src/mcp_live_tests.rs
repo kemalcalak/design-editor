@@ -160,6 +160,7 @@ fn pump_yields_after_ui_request_budget() {
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
+        saved_documents: Vec::new(),
     };
     let mut state = EditorState::new();
     let mut acks = Vec::new();
@@ -204,6 +205,7 @@ fn pump_fulfills_screenshot_requests_off_the_live_state() {
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
+        saved_documents: Vec::new(),
     };
     let mut state = EditorState::new();
     assert!(state.apply(EditorCommand::InsertNode {
@@ -251,6 +253,7 @@ fn pump_marks_layout_dirty_only_for_layout_affecting_commands() {
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
+        saved_documents: Vec::new(),
     };
     let mut state = EditorState::new();
     state.selection.anchor = de_editor_core::NodeId::new("n1");
@@ -320,6 +323,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
+        saved_documents: Vec::new(),
     };
     let mut state = EditorState::new();
     let replacement_doc = de_pen_loader::load_canonical(
@@ -477,6 +481,7 @@ fn fresh_mcp_server(req_rx: Receiver<UiRequest>, stop_tx: Sender<()>) -> McpLive
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
+        saved_documents: Vec::new(),
     }
 }
 
@@ -663,8 +668,49 @@ fn client_name_reports_the_initialize_identity() {
         client_identity: Arc::clone(&identity),
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
+        saved_documents: Vec::new(),
     };
     assert_eq!(server.client_name(), None);
     *identity.lock().unwrap() = Some(("Claude Code".to_string(), "#8A8F98".to_string()));
     assert_eq!(server.client_name().as_deref(), Some("Claude Code"));
+}
+
+#[test]
+fn a_save_document_reply_reaches_the_host_through_the_pump() {
+    let (req_tx, req_rx) = mpsc::channel();
+    let (stop_tx, _stop_rx) = mpsc::channel();
+    let woke = Arc::new(AtomicUsize::new(0));
+    let wake_ui: UiWake = {
+        let woke = Arc::clone(&woke);
+        Arc::new(move || {
+            woke.fetch_add(1, Ordering::AcqRel);
+        })
+    };
+    let line = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"save_document","arguments":{"filePath":"/tmp/agent.op"}}}"#;
+    let reply = serde_json::json!({"jsonrpc":"2.0","id":3,"result":{"content":[
+        {"type":"text","text":r#"{"ok":"true","filePath":"/tmp/agent.op"}"#}
+    ]}})
+    .to_string();
+    report_saved_document(line, &reply, &req_tx, &wake_ui);
+    let other = r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"get_node","arguments":{}}}"#;
+    report_saved_document(other, &reply, &req_tx, &wake_ui);
+    assert_eq!(
+        woke.load(Ordering::Acquire),
+        1,
+        "only the save wakes the UI"
+    );
+
+    let mut server = fresh_mcp_server(req_rx, stop_tx);
+    let mut state = EditorState::new();
+    let outcome = server.pump(&mut state);
+    assert!(outcome.repaint);
+    assert!(
+        !outcome.document_edited,
+        "a save does not edit the live document"
+    );
+    assert_eq!(
+        server.take_saved_documents(),
+        vec![std::path::PathBuf::from("/tmp/agent.op")]
+    );
+    assert!(server.take_saved_documents().is_empty());
 }

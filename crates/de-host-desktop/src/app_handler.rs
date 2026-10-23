@@ -46,6 +46,15 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
             event_loop.exit();
             return;
         }
+        // A visible Home looks for Recent files changed outside the app (an
+        // agent saving over `--mcp`) on its timed wake, and paints only when
+        // a preview landed.
+        if self.timed_wake_needs_redraw(&cause)
+            && self.host.editor_state().editor_ui.home.visible
+            && self.poll_home_previews()
+        {
+            self.request_redraw(true);
+        }
         // When a WaitUntil deadline fires, only timed UI activity needs a paint
         // (caret blink, streaming chat, imports, background jobs). Live MCP uses
         // `DesktopEvent::McpWake`, so an idle server no longer creates timer
@@ -418,6 +427,11 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
             }
             DesktopEvent::SaveReady => {
                 if self.poll_background_save() {
+                    self.request_redraw(true);
+                }
+            }
+            DesktopEvent::HomePreviewReady => {
+                if self.host.editor_state().editor_ui.home.visible {
                     self.request_redraw(true);
                 }
             }

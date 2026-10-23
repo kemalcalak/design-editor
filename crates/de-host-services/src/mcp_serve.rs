@@ -68,9 +68,11 @@ use de_mcp::{
 pub(crate) mod auto_finalize;
 pub mod error;
 pub mod file_path;
+mod preview_hook;
 mod sniff;
 
 pub use error::McpServeError;
+pub(crate) use preview_hook::saved_document_path;
 use sniff::{sniff_id_raw, sniff_method};
 
 /// Unwrap an MCP `tools/call` reply to the inner tool-result JSON text,
@@ -98,10 +100,13 @@ pub fn load_editor_state(path: &Path) -> Result<EditorState, McpServeError> {
         .map_err(|error| McpServeError::Document(format!("load {}: {error}", path.display())))
 }
 
-/// Serialize through the same streaming, atomic path as desktop Save.
+/// Serialize through the same streaming, atomic path as desktop Save, then
+/// refresh the file's Home preview.
 fn save_editor_state(state: &EditorState, path: &Path) -> Result<(), McpServeError> {
     crate::doc_io::save_to_path(state, path)
-        .map_err(|error| McpServeError::Document(format!("save {}: {error}", path.display())))
+        .map_err(|error| McpServeError::Document(format!("save {}: {error}", path.display())))?;
+    preview_hook::after_save(path);
+    Ok(())
 }
 
 pub(crate) fn normalize_mobile_screens_after_apply(
@@ -272,9 +277,13 @@ where
     // borrows it once the applier closure mutates it.
     let requested_tool = de_mcp::parse_tool_call(trimmed).map(|call| call.tool);
     let registry = rebuild_registry(state, requested_tool.as_deref());
-    process_tool_message_with_registry(&registry, line, |tool_name, cmd| {
+    let response = process_tool_message_with_registry(&registry, line, |tool_name, cmd| {
         apply(tool_name, state, cmd)
-    })
+    })?;
+    if requested_tool.as_deref() == Some("save_document") {
+        preview_hook::after_save_document(response.as_deref());
+    }
+    Ok(response)
 }
 
 /// Dispatch one already-classified tool call through a caller-provided

@@ -45,7 +45,7 @@ const CARD_GAP: f32 = 14.0;
 pub(crate) const CARD_THUMB_H: f32 = 150.0;
 const CARD_H: f32 = 207.0;
 pub(crate) const LIST_HEADER_H: f32 = 34.0;
-pub(crate) const LIST_ROW_H: f32 = 44.0;
+pub(crate) const LIST_ROW_H: f32 = 56.0;
 const EMPTY_H: f32 = 206.0;
 const MCP_CARD_H: f32 = 82.0;
 

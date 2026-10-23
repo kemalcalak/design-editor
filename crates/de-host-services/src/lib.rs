@@ -79,6 +79,7 @@ pub mod export_pdf;
 pub mod export_pptx;
 mod figma_convert;
 mod figma_convert_error;
+pub mod home_preview;
 pub mod image_relevance_judge;
 mod import_html_url;
 pub mod import_html_url_error;
@@ -103,6 +104,7 @@ pub(crate) mod test_support;
 // re-exports keep every `de_host_services::settings_io*` import stable.
 pub use de_editor_host_core::settings_io;
 pub use de_editor_host_core::settings_io_error;
+mod test_config_root;
 pub mod user_scene_template_store;
 pub mod validation_providers;
 pub mod web_canvas_server;

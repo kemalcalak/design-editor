@@ -83,11 +83,7 @@ pub fn handle_save(
             }
             Ok(()) => {
                 crate::settings_io::touch_recent(host, &path);
-                crate::home_thumbnails::write_after_save(
-                    host,
-                    &path,
-                    crate::home_thumbnails::ThumbnailWrite::Always,
-                );
+                crate::home_previews::queue_after_save(&path);
                 set_display_name(host, Some(&path));
                 host.editor_state_mut().mark_saved_revision();
                 return SaveActionOutcome::Saved;
@@ -142,11 +138,7 @@ fn handle_save_as_with(
     match save(host.editor_state()) {
         Ok(Some(path)) => {
             crate::settings_io::touch_recent(host, &path);
-            crate::home_thumbnails::write_after_save(
-                host,
-                &path,
-                crate::home_thumbnails::ThumbnailWrite::Always,
-            );
+            crate::home_previews::queue_after_save(&path);
             // Mirror handle_save: refresh the in-chrome file name too, not
             // just the OS window title — without this, first Save As writes
             // the file but the TopBar keeps showing "Untitled".
@@ -219,12 +211,6 @@ pub fn handle_open(
         Ok(Some(bound_path)) => {
             fit_loaded_document(host, window);
             crate::settings_io::touch_recent(host, &bound_path);
-            // A file saved by an older build has no thumbnail yet.
-            crate::home_thumbnails::write_after_save(
-                host,
-                &bound_path,
-                crate::home_thumbnails::ThumbnailWrite::IfMissing,
-            );
             *current_path = Some(bound_path);
             refresh_title(current_path, window);
             true
@@ -249,12 +235,6 @@ pub fn open_path(
         Ok(Some(bound_path)) => {
             fit_loaded_document(host, window);
             crate::settings_io::touch_recent(host, &bound_path);
-            // A file saved by an older build has no thumbnail yet.
-            crate::home_thumbnails::write_after_save(
-                host,
-                &bound_path,
-                crate::home_thumbnails::ThumbnailWrite::IfMissing,
-            );
             *current_path = Some(bound_path);
             refresh_title(current_path, window);
             true

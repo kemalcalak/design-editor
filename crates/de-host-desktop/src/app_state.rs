@@ -185,7 +185,7 @@ impl DesktopApp {
             image_panel: image_panel_host::ImagePanelJobs::new(),
             remote_images: remote_image_host::RemoteImageSession::new(),
             image_decodes: image_decode_host::ImageDecodeHost::new(),
-            home_thumbnails: crate::home_thumbnails::HomeThumbnails::default(),
+            home_previews: crate::home_previews::HomePreviews::default(),
             mcp_wake_proxy: None,
             forwarded_files: single_instance::ForwardQueue::default(),
             iconify_job: None,

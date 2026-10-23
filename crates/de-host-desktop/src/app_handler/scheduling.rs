@@ -133,6 +133,10 @@ impl DesktopApp {
             // While the Git panel is open, wake every 2 s for the
             // periodic repository re-snapshot.
             event_loop.set_control_flow(ControlFlow::WaitUntil(self.periodic_wake_instant(2000)));
+        } else if self.host.editor_state().editor_ui.home.visible {
+            // A visible Home rescans its Recent files for outside changes.
+            let period = crate::home_previews::RESCAN.as_millis() as u64;
+            event_loop.set_control_flow(ControlFlow::WaitUntil(self.periodic_wake_instant(period)));
         } else {
             event_loop.set_control_flow(ControlFlow::Wait);
         }

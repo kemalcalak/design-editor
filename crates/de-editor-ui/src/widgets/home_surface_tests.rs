@@ -54,6 +54,29 @@ fn recent_entries_drop_the_extension_and_abbreviate_the_home_folder() {
 }
 
 #[test]
+fn a_recent_card_carries_its_installed_preview_stamp() {
+    let mut state = visible_state();
+    state.editor_ui.recent_files = vec![
+        RecentFile {
+            path: "/tmp/with.op".into(),
+            modified_at: 1,
+        },
+        RecentFile {
+            path: "/tmp/without.op".into(),
+            modified_at: 2,
+        },
+    ];
+    state
+        .editor_ui
+        .home
+        .preview_stamps
+        .insert("/tmp/with.op".into(), 42);
+    let home = HomeSurface::for_editor(&state).unwrap();
+    assert_eq!(home.recent[0].preview_stamp, Some(42));
+    assert_eq!(home.recent[1].preview_stamp, None, "no preview: glyph");
+}
+
+#[test]
 fn every_chip_hits_its_kind() {
     let state = visible_state();
     let home = HomeSurface::for_editor(&state).unwrap();

@@ -69,6 +69,8 @@ pub struct HomeRecent {
     pub folder: String,
     /// Unix seconds when last touched.
     pub modified_at: u64,
+    /// The installed preview's stamp, when there is one.
+    pub preview_stamp: Option<u64>,
 }
 
 /// What the MCP card and its popover show.
@@ -135,7 +137,10 @@ impl<'a> HomeSurface<'a> {
                 .recent_files
                 .iter()
                 .take(RECENT_MAX)
-                .map(|file| recent_entry(&file.path, file.modified_at))
+                .map(|file| {
+                    let stamp = home.preview_stamps.get(&file.path).copied();
+                    recent_entry(&file.path, file.modified_at, stamp)
+                })
                 .collect(),
             mcp: HomeMcpView {
                 running: ui.agent_settings.mcp_server.running,
@@ -325,7 +330,7 @@ impl<'a> HomeSurface<'a> {
 
 /// Split a recent path into the name and `~`-abbreviated folder Home
 /// shows.
-fn recent_entry(path: &str, modified_at: u64) -> HomeRecent {
+fn recent_entry(path: &str, modified_at: u64, preview_stamp: Option<u64>) -> HomeRecent {
     let split = path.rfind(['/', '\\']);
     let (folder, file) = match split {
         Some(index) => (&path[..index], &path[index + 1..]),
@@ -343,6 +348,7 @@ fn recent_entry(path: &str, modified_at: u64) -> HomeRecent {
         name: name.to_string(),
         folder,
         modified_at,
+        preview_stamp,
     }
 }
 

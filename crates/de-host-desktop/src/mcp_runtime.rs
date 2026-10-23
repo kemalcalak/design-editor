@@ -170,6 +170,11 @@ impl DesktopApp {
             };
             let outcome = server.pump(self.host.editor_state_mut());
             let pending_design_md = server.take_pending_design_md_request();
+            // A file an agent saved joins Home's Recent list (its preview
+            // is already queued), just as a UI save would.
+            for path in server.take_saved_documents() {
+                crate::settings_io::touch_recent(&mut self.host, &path);
+            }
             (outcome, pending_design_md, server.client_name())
         };
         let client_changed = self.sync_home_mcp_client(client);

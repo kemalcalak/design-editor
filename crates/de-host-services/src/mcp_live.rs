@@ -85,6 +85,9 @@ pub struct McpLiveServer {
     /// provider worker. Kept separate from `EditorState`: this route neither
     /// reads nor mutates the live document.
     pending_design_md: VecDeque<PendingDesignMdRequest>,
+    /// Files a client wrote with `save_document`, for the host to list on
+    /// Home. Their previews are already queued.
+    saved_documents: Vec<std::path::PathBuf>,
 }
 
 struct ApplyAck {
@@ -147,6 +150,10 @@ enum UiRequest {
     },
     GenerateDesignMd {
         request: PendingDesignMdRequest,
+    },
+    /// A client saved a document with `save_document`.
+    DocumentSaved {
+        path: std::path::PathBuf,
     },
     /// `debug_screenshot` against the LIVE canvas — the connection
     /// thread blocks on `ack` while the UI pump renders the active
@@ -219,6 +226,7 @@ impl McpLiveServer {
             client_identity,
             last_mcp_epoch: 0,
             pending_design_md: VecDeque::new(),
+            saved_documents: Vec::new(),
         })
     }
 
@@ -323,6 +331,10 @@ impl McpLiveServer {
                 Ok(UiRequest::GenerateDesignMd { request }) => {
                     self.pending_design_md.push_back(request);
                 }
+                Ok(UiRequest::DocumentSaved { path }) => {
+                    self.saved_documents.push(path);
+                    outcome.repaint = true;
+                }
                 #[cfg(feature = "mcp-debug-tools")]
                 Ok(UiRequest::Screenshot { spec, ack }) => {
                     // Read-only render of the live state — no repaint needed.
@@ -340,6 +352,12 @@ impl McpLiveServer {
     /// but this queue-shaped API keeps the UI pump non-blocking.
     pub fn take_pending_design_md_request(&mut self) -> Option<PendingDesignMdRequest> {
         self.pending_design_md.pop_front()
+    }
+
+    /// Take the files clients saved with `save_document` since the last
+    /// call, oldest first.
+    pub fn take_saved_documents(&mut self) -> Vec<std::path::PathBuf> {
+        std::mem::take(&mut self.saved_documents)
     }
 
     pub fn stop(&mut self) {
