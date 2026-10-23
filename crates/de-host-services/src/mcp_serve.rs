@@ -688,6 +688,8 @@ mod finalize_tool_advisory_tests;
 #[cfg(test)]
 mod finalize_tool_tests;
 #[cfg(test)]
+mod kit_insert_tools_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod wire_tests;
