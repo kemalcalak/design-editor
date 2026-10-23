@@ -157,7 +157,6 @@ fn receiver_drop_interrupts_the_default_health_probe() {
 #[cfg(unix)]
 mod unix {
     use std::fs;
-    use std::os::unix::fs::PermissionsExt;
     use std::path::{Path, PathBuf};
 
     use super::*;
@@ -176,10 +175,7 @@ mod unix {
 
     fn write_script(label: &str, body: &str) -> PathBuf {
         let path = temp_path(label);
-        fs::write(&path, format!("#!/bin/sh\n{body}\n")).expect("write test script");
-        let mut permissions = fs::metadata(&path).expect("script metadata").permissions();
-        permissions.set_mode(0o700);
-        fs::set_permissions(&path, permissions).expect("make test script executable");
+        crate::test_support::write_executable_stub(&path, &format!("#!/bin/sh\n{body}\n"));
         path
     }
 

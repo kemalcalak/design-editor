@@ -529,7 +529,6 @@ fn probe_until_captured(
 /// trick `cli_probe_support`'s own tests use.
 #[cfg(unix)]
 fn write_fake_cli(label: &str, script_body: &str) -> std::path::PathBuf {
-    use std::os::unix::fs::PermissionsExt;
     let path = std::env::temp_dir().join(format!(
         "design-editor-cli-model-discovery-{label}-{}-{}",
         std::process::id(),
@@ -538,8 +537,7 @@ fn write_fake_cli(label: &str, script_body: &str) -> std::path::PathBuf {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::write(&path, format!("#!/bin/sh\n{script_body}\n")).unwrap();
-    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+    crate::test_support::write_executable_stub(&path, &format!("#!/bin/sh\n{script_body}\n"));
     warm_up_spawn_path();
     path
 }
@@ -560,20 +558,16 @@ fn write_fake_cli(label: &str, script_body: &str) -> std::path::PathBuf {
 /// so running one to completion is not an option. Everything cold here is
 /// shared between the two anyway.
 ///
-/// Failures are ignored — this is an optimisation, not a precondition. If
+/// A failed exec is ignored — this is an optimisation, not a precondition. If
 /// the warm-up cannot run, the escalation still covers the test.
 #[cfg(unix)]
 fn warm_up_spawn_path() {
-    use std::os::unix::fs::PermissionsExt;
     let path = std::env::temp_dir().join(format!(
         "design-editor-cli-model-discovery-warmup-{}",
         std::process::id()
     ));
-    if std::fs::write(&path, "#!/bin/sh\nexit 0\n").is_ok()
-        && std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).is_ok()
-    {
-        let _ = std::process::Command::new(&path).status();
-    }
+    crate::test_support::write_executable_stub(&path, "#!/bin/sh\nexit 0\n");
+    let _ = std::process::Command::new(&path).status();
     let _ = std::fs::remove_file(&path);
 }
 

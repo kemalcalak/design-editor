@@ -270,37 +270,11 @@ fn version_failure_message_falls_back_when_the_cli_said_nothing() {
 /// coding CLIs happen to be installed on the machine running the tests.
 #[cfg(unix)]
 fn fake_cli(name: &str, body: &str) -> (std::path::PathBuf, std::path::PathBuf) {
-    use std::os::unix::fs::PermissionsExt;
     let dir = std::env::temp_dir().join(format!("de-cli-version-{}-{name}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("scratch dir");
     let exe = dir.join(name);
-    std::fs::write(&exe, format!("#!/bin/sh\n{body}")).expect("write fake cli");
-    std::fs::set_permissions(&exe, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+    crate::test_support::write_executable_stub(&exe, &format!("#!/bin/sh\n{body}"));
     (dir, exe)
-}
-
-/// [`cli_version`] with a bounded retry for the /tmp write→exec race
-/// that surfaces as ETXTBSY ("Text file busy") on CI runners' overlay
-/// filesystems. A fake CLI written and executed back-to-back can still be
-/// mid-copy-up when the exec lands, so a single immediate retry keeps the
-/// test's intent (a real subprocess round-trip) without papering over
-/// genuine spawn failures.
-#[cfg(unix)]
-fn cli_version_retry(
-    exe: &std::path::Path,
-    timeout: std::time::Duration,
-) -> Result<String, CliVersionFailure> {
-    for attempt in 0..3 {
-        match cli_version(exe, timeout) {
-            Err(CliVersionFailure::Spawn(message))
-                if attempt < 2 && message.contains("Text file busy") =>
-            {
-                std::thread::sleep(std::time::Duration::from_millis(50));
-            }
-            result => return result,
-        }
-    }
-    unreachable!("the loop returns on its final attempt")
 }
 
 #[cfg(unix)]
@@ -313,7 +287,7 @@ fn cli_version_reports_stderr_from_a_nonzero_exit() {
         "printf 'env: node: No such file or directory\\n' >&2\nexit 127\n",
     );
 
-    let failure = cli_version_retry(&exe, std::time::Duration::from_secs(10))
+    let failure = cli_version(&exe, std::time::Duration::from_secs(10))
         .expect_err("a 127 exit is not a usable version");
     let CliVersionFailure::Exited { status, tail } = &failure else {
         panic!("expected a non-zero exit, got {failure:?}");
@@ -350,7 +324,7 @@ fn cli_version_surfaces_node_optional_dependency_root_cause() {
     );
     let (dir, exe) = fake_cli("broken-codex", &body);
 
-    let failure = cli_version_retry(&exe, std::time::Duration::from_secs(10))
+    let failure = cli_version(&exe, std::time::Duration::from_secs(10))
         .expect_err("a missing platform package must fail the version gate");
     let message = cli_version_failure_message("Codex", &failure);
 
@@ -387,7 +361,7 @@ fn cli_version_does_not_wait_for_a_descendant_holding_its_pipes() {
         "printf 'codex-cli 1.2.3\\n'\nsleep 30 &\nexit 0\n",
     );
     let started = std::time::Instant::now();
-    let version = cli_version_retry(&exe, std::time::Duration::from_secs(10));
+    let version = cli_version(&exe, std::time::Duration::from_secs(10));
     let elapsed = started.elapsed();
 
     assert_eq!(version, Ok("codex-cli 1.2.3".to_string()));
@@ -409,7 +383,7 @@ fn cli_version_accepts_a_healthy_cli_and_bounds_a_hung_one() {
     let budget_cap = std::time::Duration::from_secs(20);
     let mut budget = std::time::Duration::from_secs(5);
     let version = loop {
-        match cli_version_retry(&healthy, budget) {
+        match cli_version(&healthy, budget) {
             Ok(version) => break version,
             Err(failure) if budget >= budget_cap => {
                 panic!("healthy CLI must yield a version: {failure:?}")

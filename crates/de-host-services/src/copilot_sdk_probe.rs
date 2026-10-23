@@ -331,8 +331,6 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn dropping_guard_kills_a_hanging_server_process_tree() {
-        use std::os::unix::fs::PermissionsExt as _;
-
         let script = std::env::temp_dir().join(format!(
             "design-editor-copilot-probe-{}-{}",
             std::process::id(),
@@ -343,13 +341,10 @@ mod tests {
         ));
         let ready = std::path::PathBuf::from(format!("{}.ready", script.display()));
         let survived = std::path::PathBuf::from(format!("{}.survived", script.display()));
-        std::fs::write(
+        crate::test_support::write_executable_stub(
             &script,
             "#!/bin/sh\n(printf ready > \"$0.ready\"; sleep 1; printf survived > \"$0.survived\") &\nwait\n",
-        )
-        .expect("write fake Copilot server");
-        std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755))
-            .expect("make fake server executable");
+        );
 
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -382,8 +377,6 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn hanging_server_returns_the_bounded_timeout_error() {
-        use std::os::unix::fs::PermissionsExt as _;
-
         let script = std::env::temp_dir().join(format!(
             "design-editor-copilot-timeout-{}-{}",
             std::process::id(),
@@ -392,9 +385,7 @@ mod tests {
                 .expect("clock")
                 .as_nanos()
         ));
-        std::fs::write(&script, "#!/bin/sh\nexec sleep 5\n").expect("write fake server");
-        std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755))
-            .expect("make fake server executable");
+        crate::test_support::write_executable_stub(&script, "#!/bin/sh\nexec sleep 5\n");
 
         let result = probe_copilot_cli_with_timeout(&script, Duration::from_millis(50));
         let _ = std::fs::remove_file(&script);
