@@ -289,6 +289,27 @@ pub fn left_rail_strip_rect(state: &EditorState) -> Rect {
     Rect::xywh(0.0, 0.0, state.editor_ui.layer_panel_width, WINDOW_STRIP_H)
 }
 
+/// Whether the left rail is on screen showing `tab`'s body: the rail is
+/// open, nothing hides it (the workspace dock, a presentation), and the
+/// flow resolves `tab` as the one on show.
+pub fn rail_tab_on_show(state: &EditorState, tab: de_editor_core::LeftPanelTab) -> bool {
+    let ui = &state.editor_ui;
+    ui.sidebar_open
+        && !workspace_docked(state)
+        && !ui.preview.mode
+        && slides_panel_flow::body_tab(state) == tab
+}
+
+/// Whether the Components tab owns the rail's body this frame.
+pub fn components_tab_on_show(state: &EditorState) -> bool {
+    rail_tab_on_show(state, de_editor_core::LeftPanelTab::Components)
+}
+
+/// The rail's body below its tab row — what the tab on show paints into.
+pub fn rail_body_rect(state: &EditorState, viewport_h: f32) -> Rect {
+    slides_panel_flow::layers_content_rect(state, layer_panel_rect(state, viewport_h))
+}
+
 /// Right rail. Runs the window's full height. Callers gate on the panel
 /// actually resolving for the current selection — this returns the rect
 /// it WOULD occupy.

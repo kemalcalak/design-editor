@@ -13,7 +13,7 @@ impl WidgetHost {
     /// repaint). Mirrors the native host.
     pub fn update_layer_hover(&mut self, x: f32, y: f32, viewport_h: f32) -> bool {
         use de_editor_ui::widgets::{LayerPanelHit, WINDOW_STRIP_H};
-        let sidebar_open = self.editor_state.editor_ui.sidebar_open;
+        let sidebar_open = self.layers_panel_visible();
         let panel_w = self.editor_state.editor_ui.layer_panel_width;
         let blocked_by_overlay = self
             .chat_model_picker_rect(self.last_viewport_w, viewport_h)

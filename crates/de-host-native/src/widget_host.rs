@@ -338,7 +338,6 @@ pub struct WidgetHostNative {
     /// straight back into `editor_ui.design_md_panel.pos`.
     pub(in crate::widget_host) design_md_drag: Option<DesignMdDragState>,
     /// Active Component-Browser panel drag.
-    pub(in crate::widget_host) component_browser_drag: Option<ComponentBrowserDragState>,
     /// Active Icon-picker panel drag.
     pub(in crate::widget_host) icon_picker_drag: Option<IconPickerDragState>,
     /// Active image-fill adjustment slider drag in the floating
@@ -576,8 +575,7 @@ pub(in crate::widget_host) use de_editor_core::host_drag_state::{
     TextEditSelectionDragState,
 };
 pub(in crate::widget_host) use de_editor_core::host_drag_state::{
-    PanelDragState as ComponentBrowserDragState, PanelDragState as DesignMdDragState,
-    PanelDragState as IconPickerDragState,
+    PanelDragState as DesignMdDragState, PanelDragState as IconPickerDragState,
 };
 
 /// Which panel edge is being dragged, plus the press anchor +

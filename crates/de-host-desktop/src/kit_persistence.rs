@@ -96,7 +96,8 @@ fn save_to(state: &EditorState, path: &std::path::Path) -> Result<(), KitStoreEr
             .filter(|k| !k.built_in)
             .map(kit_to_persisted)
             .collect(),
-        browser_open: Some(state.editor_ui.component_browser_open),
+        // Written by older builds for the floating panel; no longer used.
+        browser_open: None,
     };
     // `serde_json` / `std::io` are not ours to type; carry their messages,
     // which is what the log line always showed.
@@ -188,9 +189,6 @@ fn load_from(state: &mut EditorState, path: &std::path::Path) {
         if let Some(kit) = persisted_to_kit(persisted) {
             state.ui_kits.push(kit);
         }
-    }
-    if let Some(open) = payload.browser_open {
-        state.editor_ui.component_browser_open = open;
     }
 }
 
@@ -302,11 +300,10 @@ mod tests {
     }
 
     #[test]
-    fn save_load_round_trips_imported_kits_and_browser_open() {
+    fn save_load_round_trips_imported_kits() {
         let path = temp_path("roundtrip");
         let mut state = EditorState::new();
         state.import_kit(imported_kit_fixture());
-        state.editor_ui.component_browser_open = true;
         save_to(&state, &path).expect("save");
 
         let mut fresh = EditorState::new();
@@ -324,7 +321,6 @@ mod tests {
             ComponentCategory::Buttons,
             "category string must round-trip"
         );
-        assert!(fresh.editor_ui.component_browser_open);
         let _ = std::fs::remove_file(&path);
     }
 
@@ -381,7 +377,9 @@ mod tests {
         }
         assert_eq!(kit["builtIn"], serde_json::Value::Bool(false));
         assert_eq!(kit["components"][0]["category"], "buttons");
-        assert!(value.get("browserOpen").is_some());
+        // The browser is a rail tab now (#30); its open state is no longer
+        // stored.
+        assert!(value.get("browserOpen").is_none());
         let _ = std::fs::remove_file(&path);
     }
 }

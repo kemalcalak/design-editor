@@ -301,7 +301,6 @@ pub struct WidgetHost {
     /// drag states; one shared shape since all three carry only the
     /// grab offset.
     pub(in crate::widget_host) design_md_drag: Option<PanelDragState>,
-    pub(in crate::widget_host) component_browser_drag: Option<PanelDragState>,
     pub(in crate::widget_host) icon_picker_drag: Option<PanelDragState>,
     /// Active floating-VariablesPanel resize drag (right / bottom /
     /// corner edge). Mirrors the native host; the live size is

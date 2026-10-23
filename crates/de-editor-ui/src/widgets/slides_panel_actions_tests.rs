@@ -242,6 +242,8 @@ fn the_list_band_stops_where_the_bar_starts() {
             &SlidesTabRow {
                 chat_label: "Chat",
                 layers_label: "Layers",
+                components_label: "Components",
+                images_label: "Images",
                 slides_label: "Slides",
                 chat_available: true,
                 slides_available: true,
@@ -269,6 +271,8 @@ fn the_list_band_stops_where_the_bar_starts() {
             &SlidesTabRow {
                 chat_label: "Chat",
                 layers_label: "Layers",
+                components_label: "Components",
+                images_label: "Images",
                 slides_label: "Slides",
                 chat_available: true,
                 slides_available: true,

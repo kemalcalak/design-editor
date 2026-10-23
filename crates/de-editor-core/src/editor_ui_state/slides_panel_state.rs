@@ -35,6 +35,10 @@ pub enum LeftPanelTab {
     Layers,
     /// The Agent conversation, pinned into the rail's body.
     Chat,
+    /// The UIKit component browser (#30) — insert a kit component.
+    Components,
+    /// The document's images plus image search / generation (#30).
+    Images,
     Slides,
 }
 
@@ -64,6 +68,10 @@ pub enum SlidesPanelTarget {
     ChatTab,
     /// The "Layers" tab in the tab row.
     LayersTab,
+    /// The "Components" tab in the tab row.
+    ComponentsTab,
+    /// The "Images" tab in the tab row.
+    ImagesTab,
     /// The "Slides" / "Cards" tab in the tab row.
     SlidesTab,
     /// A slide row, by index in page order.
@@ -78,6 +86,33 @@ pub enum SlidesPanelTarget {
     /// produced while that row is ENABLED, so a disabled row can neither
     /// be hovered nor activated.
     ExportSelectedSlides,
+}
+
+impl LeftPanelTab {
+    /// The tab row's hit target for this tab.
+    pub fn target(self) -> SlidesPanelTarget {
+        match self {
+            Self::Chat => SlidesPanelTarget::ChatTab,
+            Self::Layers => SlidesPanelTarget::LayersTab,
+            Self::Components => SlidesPanelTarget::ComponentsTab,
+            Self::Images => SlidesPanelTarget::ImagesTab,
+            Self::Slides => SlidesPanelTarget::SlidesTab,
+        }
+    }
+}
+
+impl SlidesPanelTarget {
+    /// The tab a tab-row target selects; `None` for every other target.
+    pub fn tab(self) -> Option<LeftPanelTab> {
+        match self {
+            Self::ChatTab => Some(LeftPanelTab::Chat),
+            Self::LayersTab => Some(LeftPanelTab::Layers),
+            Self::ComponentsTab => Some(LeftPanelTab::Components),
+            Self::ImagesTab => Some(LeftPanelTab::Images),
+            Self::SlidesTab => Some(LeftPanelTab::Slides),
+            _ => None,
+        }
+    }
 }
 
 /// Left-rail tab selection + the slides tab's transient pointer state.
@@ -142,6 +177,22 @@ impl EditorUiState {
     /// Whether the Agent conversation can own the left rail.
     pub fn chat_tab_available(&self) -> bool {
         !self.host_owns_chat
+    }
+
+    /// Show the component browser in the left rail with its search box
+    /// focused — Cmd+Shift+K and the app menu's toggle. Returns whether
+    /// anything changed.
+    pub fn open_components_tab(&mut self) -> bool {
+        let changed = !self.sidebar_open
+            || self.slides_panel.tab != LeftPanelTab::Components
+            || !self.component_browser_search_focused;
+        self.sidebar_open = true;
+        if self.slides_panel.tab != LeftPanelTab::Components {
+            self.slides_panel.tab = LeftPanelTab::Components;
+            self.slides_panel.clear_pointer();
+        }
+        self.component_browser_search_focused = true;
+        changed
     }
 
     /// Show the Agent conversation in the left rail: select the Chat

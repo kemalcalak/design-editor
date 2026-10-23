@@ -14,10 +14,12 @@ use super::layer_panel_metrics::{
 };
 
 pub(super) const ROW_FONT: f32 = 13.0;
-/// Heuristic avg-char-width factor for system-ui at the row font.
-/// 0.5 matches the rendered width closely enough that the caret
-/// sits flush against the last glyph without a visible gap.
-const TEXT_WIDTH_FACTOR: f32 = 0.5;
+/// Heuristic avg-char-width factor for the chrome face (Manrope) at the
+/// row font — a touch wider than the old system face, so a page label
+/// ellipsizes before it runs under the delete glyph.
+const TEXT_WIDTH_FACTOR: f32 = 0.56;
+/// Corner radius of a row's selection / hover fill.
+pub(super) const ROW_RADIUS: f32 = 8.0;
 
 /// Approx pixel width — heuristic only, no Skia measurement.
 pub(super) fn approx_text_width(s: &str, font_size: f32) -> f32 {
@@ -44,7 +46,7 @@ pub(super) fn truncate_to_fit_measured(
     font_size: f32,
     max_w: f32,
 ) -> String {
-    const FONT_FAMILY: &str = "system-ui";
+    const FONT_FAMILY: &str = crate::widgets::text_metrics::CHROME_FONT_FAMILY;
     if backend.measure_text_family(s, font_size, FONT_FAMILY) <= max_w {
         return s.to_string();
     }
@@ -177,7 +179,7 @@ pub(super) fn paint_drag_ghost(
     let display = truncate_to_fit_measured(cx.backend, &ghost.label, metrics.row_font, available_w);
     let label = TextLayout::single_run(
         &display,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         metrics.row_font,
         (fg).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -261,14 +263,20 @@ pub(super) fn paint_section_header_with_metrics(
     label: &str,
     metrics: LayerPanelMetrics,
 ) {
+    // Small caps-style heading, like Home's sidebar section labels (#30).
+    let label = label.to_uppercase();
     let header_text = TextLayout::single_run(
-        label,
-        "system-ui",
+        &label,
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         metrics.header_font,
-        (theme.muted_foreground).to_jian(),
+        (theme.muted_subtle).to_jian(),
         Point2D::new(0.0, 0.0),
+    )
+    .with_font_weight(600);
+    let baseline = jian_widgets::centered_text_baseline_y(
+        Rect::xywh(x, y, 0.0, metrics.section_header_height),
+        metrics.header_font,
     );
-    let baseline = y + 19.0;
     cx.backend
         .draw_text(&header_text, Point2D::new(x + metrics.row_pad_x, baseline));
 }

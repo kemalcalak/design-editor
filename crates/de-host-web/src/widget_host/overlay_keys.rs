@@ -68,7 +68,7 @@ impl WidgetHost {
     /// Component-browser search box typing — same contract as the
     /// icon picker's.
     pub(in crate::widget_host) fn component_browser_text(&mut self, c: char) -> Option<bool> {
-        if !self.editor_state.editor_ui.component_browser_open || c.is_control() {
+        if !self.editor_state.editor_ui.component_browser_search_focused || c.is_control() {
             return None;
         }
         if self.editor_state.editor_ui.component_browser_select_all {
@@ -82,7 +82,7 @@ impl WidgetHost {
 
     /// Component-browser search box backspace.
     pub(in crate::widget_host) fn component_browser_backspace(&mut self) -> Option<bool> {
-        if !self.editor_state.editor_ui.component_browser_open {
+        if !self.editor_state.editor_ui.component_browser_search_focused {
             return None;
         }
         if self.editor_state.editor_ui.component_browser_select_all {

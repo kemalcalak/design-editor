@@ -216,6 +216,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.edited" => "已编辑",
         "chrome.notSaved" => "未保存",
         "chrome.variables" => "变量",
+        "leftPanel.tab.components" => "组件",
+        "leftPanel.tab.images" => "图片",
         _ => return None,
     })
 }

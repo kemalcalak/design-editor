@@ -295,6 +295,23 @@ impl WidgetHost {
             }
             return true;
         }
+        if let Some(rect) = self.component_browser_panel_rect(self.last_viewport_w, viewport_height)
+        {
+            if let Some(dirty) = scroll_flow::scroll_component_browser(
+                &mut self.editor_state,
+                rect,
+                Point2D::new(x, y),
+                delta_y,
+            ) {
+                if dirty {
+                    self.mark_dirty();
+                }
+                return true;
+            }
+        }
+        if !self.layers_panel_visible() {
+            return false;
+        }
         let rect = self.layer_panel_rect(viewport_height);
         let panel = self.layer_panel();
         let Some(dirty) = scroll_flow::scroll_layer_panel(

@@ -41,36 +41,33 @@ fn apply_key_unhandled_event_reports_no_change() {
 }
 
 #[test]
-fn keydown_shortcut_cmd_shift_k_toggles_component_browser() {
+fn keydown_shortcut_cmd_shift_k_opens_the_components_tab() {
     let mut host = WidgetHost::new();
     host.editor_state_dirty = false;
 
     assert!(host.apply_keydown_shortcut("K", true, true, false));
-    assert!(host.editor_state.editor_ui.component_browser_open);
+    let ui = &host.editor_state.editor_ui;
+    assert_eq!(
+        ui.slides_panel.tab,
+        de_editor_core::LeftPanelTab::Components
+    );
+    assert!(ui.component_browser_search_focused);
     assert!(host.editor_state_dirty);
-
-    host.editor_state_dirty = false;
-    host.editor_state
-        .editor_ui
-        .component_browser_kit_picker_open = true;
     assert!(
         host.input_active(),
-        "the open component browser owns keyboard input"
+        "the focused component search owns keyboard input"
     );
 
+    // Pressing it again keeps the tab and its search focused.
+    host.editor_state_dirty = false;
     assert!(host.apply_keydown_shortcut("k", true, true, false));
-    assert!(!host.editor_state.editor_ui.component_browser_open);
-    assert!(
-        !host
-            .editor_state
-            .editor_ui
-            .component_browser_kit_picker_open
-    );
-    assert!(host.editor_state_dirty);
+    assert!(host.editor_state.editor_ui.component_browser_search_focused);
 
+    // Alt-modified K is not the shortcut.
+    host.editor_state.editor_ui.component_browser_search_focused = false;
     host.editor_state_dirty = false;
     assert!(!host.apply_keydown_shortcut("K", true, true, true));
-    assert!(!host.editor_state.editor_ui.component_browser_open);
+    assert!(!host.editor_state.editor_ui.component_browser_search_focused);
     assert!(!host.editor_state_dirty);
 }
 
@@ -82,7 +79,7 @@ fn keydown_component_shortcut_does_not_escape_settings_or_git_inputs() {
     host.editor_state_dirty = false;
 
     assert!(host.apply_keydown_shortcut("K", true, true, false));
-    assert!(!host.editor_state.editor_ui.component_browser_open);
+    assert!(!host.editor_state.editor_ui.component_browser_search_focused);
     assert_eq!(
         host.editor_state.editor_ui.agent_settings.focus,
         Some(SettingsFocus::McpPort)
@@ -95,7 +92,7 @@ fn keydown_component_shortcut_does_not_escape_settings_or_git_inputs() {
     host.editor_state.editor_ui.git_panel.commit_focused = true;
 
     assert!(host.apply_keydown_shortcut("K", true, true, false));
-    assert!(!host.editor_state.editor_ui.component_browser_open);
+    assert!(!host.editor_state.editor_ui.component_browser_search_focused);
     assert!(host.editor_state.editor_ui.git_panel.commit_focused);
     assert!(!host.editor_state_dirty);
 }
@@ -170,7 +167,7 @@ fn keydown_import_shortcut_blurs_covered_text_and_ime_owners() {
         ui.chat_model_picker_input.set_text("model");
         ui.font_picker.open = true;
         ui.icon_picker.open = true;
-        ui.component_browser_open = true;
+        ui.component_browser_search_focused = true;
         ui.ime_preedit = Some(Default::default());
     }
 
@@ -194,7 +191,7 @@ fn keydown_import_shortcut_blurs_covered_text_and_ime_owners() {
         .is_empty());
     assert!(!host.editor_state.editor_ui.font_picker.open);
     assert!(!host.editor_state.editor_ui.icon_picker.open);
-    assert!(!host.editor_state.editor_ui.component_browser_open);
+    assert!(!host.editor_state.editor_ui.component_browser_search_focused);
     assert!(host.editor_state.editor_ui.ime_preedit.is_none());
     assert!(host.editor_state.ui.color_picker.is_none());
     assert!(!host.input_active(), "no covered input keeps IME ownership");

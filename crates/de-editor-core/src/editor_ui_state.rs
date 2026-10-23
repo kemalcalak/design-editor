@@ -687,8 +687,13 @@ pub struct EditorUiState {
     pub pinned_style_guide: Option<String>,
 
     // --- Component browser ------------------------------------------
-    /// Whether the floating Component-Browser panel is shown.
-    pub component_browser_open: bool,
+    /// Whether the Components tab's search box owns the keyboard. The
+    /// browser lives in the left rail (#30), so being on show no longer
+    /// means typing goes to it: a press in the search box (or Cmd+Shift+K)
+    /// focuses it, a press elsewhere or Escape lets go.
+    pub component_browser_search_focused: bool,
+    /// Vertical scroll of the Components tab's card grid.
+    pub component_browser_scroll: jian_core::scroll::ScrollState,
     /// Current hierarchy focus under the cursor (Select tool, no
     /// drag). Canvas paint outlines the focus solid and all of its
     /// direct visible children dashed.
@@ -699,9 +704,6 @@ pub struct EditorUiState {
     /// Escape and selecting outside the scope exit it. Transient:
     /// never serialized.
     pub entered_container: Option<NodeId>,
-    /// Top-left corner of the Component-Browser panel in logical px;
-    /// `None` until first opened — the host then centres it.
-    pub component_browser_pos: Option<(f32, f32)>,
     /// Live search filter — names + tags substring-match against this.
     pub component_browser_search: String,
     /// Active category pill (`None` = all categories).

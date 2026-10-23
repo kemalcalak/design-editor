@@ -29,8 +29,8 @@ fn prompt_center_padding_owns_cursor_and_clears_lower_hover() {
     host.editor_state.editor_ui.hovered_layer_id = Some(NodeId::new("covered-layer-row"));
     host.editor_state.editor_ui.property_action_hover = Some(2);
     host.editor_state.editor_ui.chat_footer_hover = Some(ChatFooterButton::PlusMenu);
-    host.editor_state.editor_ui.component_browser_open = true;
-    host.editor_state.editor_ui.component_browser_hover = Some(ComponentBrowserButton::Close);
+    host.editor_state.editor_ui.open_components_tab();
+    host.editor_state.editor_ui.component_browser_hover = Some(ComponentBrowserButton::Card(0));
 
     let rect = panel_rect(&host);
     let padding = Point2D::new(rect.origin.x + 4.0, rect.origin.y + 4.0);

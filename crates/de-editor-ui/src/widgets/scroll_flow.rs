@@ -245,6 +245,27 @@ pub fn scroll_property_panel_body_2d(
     ))
 }
 
+/// Scroll the Components tab's card grid. `None` when the tab is not on
+/// show or the pointer is off its rect, so the caller keeps looking;
+/// `Some(changed)` once the wheel belongs to the grid.
+pub fn scroll_component_browser(
+    state: &mut EditorState,
+    rect: Rect,
+    point: Point2D,
+    delta_y: f32,
+) -> Option<bool> {
+    if !rect.contains(point) {
+        return None;
+    }
+    let max = crate::widgets::ComponentBrowserPanel::for_editor(state)?.current_max_scroll(rect);
+    // Same sign convention as the layer rail: a positive wheel delta
+    // moves the content down (scrolls toward the top).
+    Some(
+        delta_y != 0.0
+            && scroll_by_max(&mut state.editor_ui.component_browser_scroll, -delta_y, max),
+    )
+}
+
 /// Scroll the layer rail: the Layers region below `layers_rows_top`,
 /// the Pages region above it, each on both axes.
 pub fn scroll_layer_panel(

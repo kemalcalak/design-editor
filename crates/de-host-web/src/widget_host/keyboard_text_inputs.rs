@@ -38,7 +38,7 @@ impl WidgetHost {
             // Opens with search active, so the gallery takes typing at once.
             || self.editor_state.editor_ui.scene_template_center.input_active()
             || self.editor_state.editor_ui.chat_model_picker.open
-            || self.editor_state.editor_ui.component_browser_open
+            || self.editor_state.editor_ui.component_browser_search_focused
             || self.editor_state.chat.focused
             || self.git_commit_focus_active()
             || self.git_remote_focus_active()
@@ -61,7 +61,7 @@ impl WidgetHost {
             || editor_ui.icon_picker.open
             || editor_ui.prompt_center.open
             || editor_ui.scene_template_center.input_active()
-            || editor_ui.component_browser_open
+            || editor_ui.component_browser_search_focused
             || self.git_commit_focus_active()
             || self.git_remote_focus_active()
             || self.git_https_focus_active()

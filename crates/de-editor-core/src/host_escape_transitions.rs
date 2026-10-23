@@ -153,17 +153,18 @@ impl EditorUiState {
         true
     }
 
-    /// Close the component (UIKit) browser. One layer per press: an
-    /// open kit-filter popover closes before the panel itself does.
+    /// Step out of the component browser. One layer per press: an open
+    /// kit-filter popover closes before the search box lets go of the
+    /// keyboard (the browser itself stays on show in its rail tab).
     pub fn escape_component_browser(&mut self) -> bool {
-        if !self.component_browser_open {
-            return false;
-        }
         if self.component_browser_kit_picker_open {
             self.component_browser_kit_picker_open = false;
             return true;
         }
-        self.component_browser_open = false;
+        if !self.component_browser_search_focused {
+            return false;
+        }
+        self.component_browser_search_focused = false;
         self.component_browser_select_all = false;
         self.component_browser_hover = None;
         self.component_browser_confirm_delete_kit = None;
@@ -314,7 +315,7 @@ impl EditorUiState {
         self.scene_template_center.search.reset_transient();
         self.scene_template_center.generate.reset_transient();
         self.scene_template_center.import.text.reset_transient();
-        self.component_browser_open = false;
+        self.component_browser_search_focused = false;
         self.component_browser_kit_picker_open = false;
         self.component_browser_hover = None;
         self.component_browser_confirm_delete_kit = None;

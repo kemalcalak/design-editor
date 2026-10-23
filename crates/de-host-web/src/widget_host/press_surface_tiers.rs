@@ -135,7 +135,7 @@ impl WidgetHost {
         //    Pre-seed a `layer_drag` candidate when the press lands
         //    on a Layer row so a subsequent move past the threshold
         //    promotes the gesture to a drag-to-reorder.
-        if self.editor_state.editor_ui.sidebar_open {
+        if self.layers_panel_visible() {
             let layer_rect = self.layer_panel_rect(viewport_height);
             let panel = self.layer_panel();
             if let Some(LayerPanelHit::Layer(node_id)) =

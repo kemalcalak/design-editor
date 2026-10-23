@@ -235,7 +235,7 @@ impl WidgetHostNative {
         if self.editor_state.editor_ui.chat_model_picker.open {
             return self.apply_chat_model_picker_text(c);
         }
-        if self.editor_state.editor_ui.component_browser_open && !c.is_control() {
+        if self.editor_state.editor_ui.component_browser_search_focused && !c.is_control() {
             if self.editor_state.editor_ui.component_browser_select_all {
                 self.editor_state.editor_ui.component_browser_search.clear();
                 self.editor_state.editor_ui.component_browser_select_all = false;

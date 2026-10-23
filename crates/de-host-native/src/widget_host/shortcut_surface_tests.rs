@@ -35,7 +35,11 @@ fn panel_toggle_shortcuts_flip_their_flags() {
     assert!(host.editor_state().editor_ui.design_md_panel.open);
 
     assert!(host.apply_toggle_component_browser());
-    assert!(host.editor_state().editor_ui.component_browser_open);
+    assert!(
+        host.editor_state()
+            .editor_ui
+            .component_browser_search_focused
+    );
 }
 
 #[test]
@@ -162,7 +166,7 @@ fn opening_a_specific_settings_tab_reveals_it_and_commits_prior_input() {
         ui.agent_settings.focus = Some(SettingsFocus::McpPort);
         ui.settings_input.set_text("4321");
         ui.design_md_panel.open = true;
-        ui.component_browser_open = true;
+        ui.component_browser_search_focused = true;
         ui.open_icon_picker(false);
     }
 
@@ -175,7 +179,7 @@ fn opening_a_specific_settings_tab_reveals_it_and_commits_prior_input() {
     assert!(ui.agent_settings.focus.is_none());
     assert_eq!(ui.agent_settings.mcp_server.port, 4321);
     assert!(!ui.design_md_panel.open);
-    assert!(!ui.component_browser_open);
+    assert!(!ui.component_browser_search_focused);
     assert!(!ui.icon_picker.open);
 }
 
@@ -198,7 +202,7 @@ fn import_shortcut_blurs_covered_text_and_ime_owners() {
         ui.chat_model_picker_input.set_text("model");
         ui.font_picker.open = true;
         ui.icon_picker.open = true;
-        ui.component_browser_open = true;
+        ui.component_browser_search_focused = true;
         ui.ime_preedit = Some(Default::default());
     }
 
@@ -212,7 +216,7 @@ fn import_shortcut_blurs_covered_text_and_ime_owners() {
     assert!(state.editor_ui.chat_model_picker_input.text().is_empty());
     assert!(!state.editor_ui.font_picker.open);
     assert!(!state.editor_ui.icon_picker.open);
-    assert!(!state.editor_ui.component_browser_open);
+    assert!(!state.editor_ui.component_browser_search_focused);
     assert!(state.editor_ui.ime_preedit.is_none());
     assert!(state.ui.color_picker.is_none());
     assert!(!host.input_active(), "no covered input keeps IME ownership");

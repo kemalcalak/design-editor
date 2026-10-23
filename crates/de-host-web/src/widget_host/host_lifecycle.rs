@@ -44,7 +44,6 @@ impl WidgetHost {
             marquee_drag: None,
             layer_drag: None,
             design_md_drag: None,
-            component_browser_drag: None,
             icon_picker_drag: None,
             variables_resize: None,
             handle_drag: None,

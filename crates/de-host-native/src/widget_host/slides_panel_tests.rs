@@ -117,8 +117,15 @@ fn a_page_with_no_boards_has_nothing_to_list_and_shows_no_tab() {
     // SLIDES tab, so the row comes back with a zero-width slides rect
     // and a stale Slides selection cannot strand the rail.
     let row = empty.slides_tab_row(VH).expect("the rail always tabs");
-    assert_eq!(row.slides.size.x, 0.0, "no slides tab without boards");
-    assert!(row.chat.size.x > 0.0 && row.layers.size.x > 0.0);
+    assert_eq!(
+        row.rect_of(de_editor_core::LeftPanelTab::Slides).size.x,
+        0.0,
+        "no slides tab without boards"
+    );
+    assert!(
+        row.rect_of(de_editor_core::LeftPanelTab::Chat).size.x > 0.0
+            && row.rect_of(de_editor_core::LeftPanelTab::Layers).size.x > 0.0
+    );
     assert!(empty.slides_panel_frame(VW, VH).is_none());
     assert_eq!(
         empty.layers_content_rect(VH).origin.y,
@@ -308,12 +315,16 @@ fn the_tab_row_switches_the_rail_both_ways() {
     let mut host = host_with(Some(TemplateScene::Slides));
     let tabs = host.slides_tab_row(VH).expect("tab row");
     let layers_tab = Point2D::new(
-        tabs.layers.origin.x + tabs.layers.size.x / 2.0,
-        tabs.layers.origin.y + tabs.layers.size.y / 2.0,
+        tabs.rect_of(de_editor_core::LeftPanelTab::Layers).origin.x
+            + tabs.rect_of(de_editor_core::LeftPanelTab::Layers).size.x / 2.0,
+        tabs.rect_of(de_editor_core::LeftPanelTab::Layers).origin.y
+            + tabs.rect_of(de_editor_core::LeftPanelTab::Layers).size.y / 2.0,
     );
     let slides_tab = Point2D::new(
-        tabs.slides.origin.x + tabs.slides.size.x / 2.0,
-        tabs.slides.origin.y + tabs.slides.size.y / 2.0,
+        tabs.rect_of(de_editor_core::LeftPanelTab::Slides).origin.x
+            + tabs.rect_of(de_editor_core::LeftPanelTab::Slides).size.x / 2.0,
+        tabs.rect_of(de_editor_core::LeftPanelTab::Slides).origin.y
+            + tabs.rect_of(de_editor_core::LeftPanelTab::Slides).size.y / 2.0,
     );
 
     host.apply_press(layers_tab.x, layers_tab.y, VW, VH);

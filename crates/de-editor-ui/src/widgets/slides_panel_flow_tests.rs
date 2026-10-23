@@ -105,8 +105,12 @@ fn presenting_hides_the_row_and_an_empty_desktop_deck_keeps_it() {
     assert!(tab_row_visible(&empty));
     assert!(!slides_tab_available(&empty));
     let tabs = tab_row(&empty, PANEL).expect("the row outlives the boards");
-    assert_eq!(tabs.slides, crate::Rect::ZERO, "no slides pill to click");
-    assert!(tabs.chat.size.x > 0.0);
+    assert_eq!(
+        tabs.rect_of(LeftPanelTab::Slides),
+        crate::Rect::ZERO,
+        "no slides pill to click"
+    );
+    assert!(tabs.rect_of(LeftPanelTab::Chat).size.x > 0.0);
 }
 
 #[test]
@@ -244,8 +248,10 @@ fn the_tabs_switch_and_dropping_the_slides_tab_drops_its_gesture() {
     let (_, layout) = laid_out(&deck);
     let tabs = tab_row(&deck, PANEL).expect("a deck has tabs");
     let layers_tab = Point2D::new(
-        tabs.layers.origin.x + tabs.layers.size.x / 2.0,
-        tabs.layers.origin.y + tabs.layers.size.y / 2.0,
+        tabs.rect_of(LeftPanelTab::Layers).origin.x
+            + tabs.rect_of(LeftPanelTab::Layers).size.x / 2.0,
+        tabs.rect_of(LeftPanelTab::Layers).origin.y
+            + tabs.rect_of(LeftPanelTab::Layers).size.y / 2.0,
     );
     press(&mut deck, &layout, layers_tab);
     assert_eq!(
@@ -272,8 +278,10 @@ fn the_tab_row_takes_clicks_while_the_layers_tab_owns_the_rail() {
     deck.editor_ui.slides_panel.tab = LeftPanelTab::Layers;
     let tabs = tab_row(&deck, PANEL).expect("a deck has tabs");
     let slides_tab = Point2D::new(
-        tabs.slides.origin.x + tabs.slides.size.x / 2.0,
-        tabs.slides.origin.y + tabs.slides.size.y / 2.0,
+        tabs.rect_of(LeftPanelTab::Slides).origin.x
+            + tabs.rect_of(LeftPanelTab::Slides).size.x / 2.0,
+        tabs.rect_of(LeftPanelTab::Slides).origin.y
+            + tabs.rect_of(LeftPanelTab::Slides).size.y / 2.0,
     );
     assert!(tab_cursor_move(&mut deck, &tabs, slides_tab));
     assert_eq!(
@@ -328,35 +336,51 @@ fn the_wheel_scrolls_the_list_only_over_the_rail() {
 /// host resolves the set from, so this is where "Vietnamese at 240 px
 /// shows icons" is either true or a lie the unit tests cannot catch.
 #[test]
-fn the_tab_row_mode_follows_the_documents_own_labels() {
+fn the_tab_row_reads_the_documents_own_labels() {
     let mut deck = deck_state(THREE_BOARDS);
-    let wide = Rect {
-        origin: PANEL.origin,
-        size: Point2D::new(440.0, PANEL.size.y),
-    };
-
     deck.editor_ui.locale = de_editor_core::Locale::EnUs;
-    let (chat, layers, slides) = tab_labels(&deck);
-    assert_eq!((chat, layers, slides), ("Agent", "Layers", "Slides"));
-    assert!(
-        !tab_row(&deck, PANEL).expect("tab row").compact,
-        "English fits the default rail three ways, so it keeps its words"
+    let desc = tab_row_desc(&deck);
+    assert_eq!(
+        (
+            desc.chat_label,
+            desc.layers_label,
+            desc.components_label,
+            desc.images_label,
+            desc.slides_label
+        ),
+        ("Agent", "Layers", "Components", "Images", "Slides")
     );
 
     deck.editor_ui.locale = de_editor_core::Locale::Vi;
-    let (chat, layers, slides) = tab_labels(&deck);
-    assert!(
-        !chat.is_empty() && !layers.is_empty() && !slides.is_empty(),
-        "the Vietnamese catalogue answers for all three tabs"
+    let desc = tab_row_desc(&deck);
+    for label in [
+        desc.chat_label,
+        desc.layers_label,
+        desc.components_label,
+        desc.images_label,
+        desc.slides_label,
+    ] {
+        assert!(
+            !label.is_empty(),
+            "the Vietnamese catalogue answers every tab"
+        );
+    }
+}
+
+/// The body follows the selected tab, falling back to Layers when the
+/// selected one is not on offer.
+#[test]
+fn the_body_tab_falls_back_to_layers_when_its_tab_is_gone() {
+    let mut empty = deck_state(r#"{"version":"1.0.0","children":[]}"#);
+    empty.editor_ui.slides_panel.tab = LeftPanelTab::Slides;
+    assert_eq!(
+        body_tab(&empty),
+        LeftPanelTab::Layers,
+        "no boards, no slides body"
     );
-    assert!(
-        tab_row(&deck, PANEL).expect("tab row").compact,
-        "Vietnamese does not fit the default rail three ways, so it falls back to icons"
-    );
-    assert!(
-        !tab_row(&deck, wide).expect("tab row").compact,
-        "and gets its words back at the maximum width"
-    );
+    empty.editor_ui.slides_panel.tab = LeftPanelTab::Components;
+    assert_eq!(body_tab(&empty), LeftPanelTab::Components);
+    assert!(!layers_tab_active(&empty));
 }
 
 /// The scenario still only picks the WORD, and the word is what the
@@ -380,6 +404,8 @@ fn test_row() -> SlidesTabRow<'static> {
     SlidesTabRow {
         chat_label: chat,
         layers_label: layers,
+        components_label: "Components",
+        images_label: "Images",
         slides_label: slides,
         chat_available: true,
         slides_available: true,

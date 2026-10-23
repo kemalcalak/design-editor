@@ -122,6 +122,8 @@ pub fn tab_row_desc(state: &EditorState) -> SlidesTabRow<'static> {
     SlidesTabRow {
         chat_label: translate(ui, "leftPanel.tab.chat"),
         layers_label: translate(ui, "layers.title"),
+        components_label: translate(ui, "leftPanel.tab.components"),
+        images_label: translate(ui, "leftPanel.tab.images"),
         slides_label: translate(ui, slides_tab_label_key(state)),
         chat_available: ui.chat_tab_available(),
         slides_available: slides_tab_available(state),
@@ -174,6 +176,24 @@ pub fn layers_content_rect(state: &EditorState, panel: Rect) -> Rect {
 /// always available on the chrome that can select it.)
 pub fn slides_tab_active(state: &EditorState) -> bool {
     slides_tab_available(state) && state.editor_ui.slides_panel.tab == LeftPanelTab::Slides
+}
+
+/// The tab whose body the rail shows: the selected tab, or Layers when
+/// the selected one is not on offer (no editor-owned chat, or a page
+/// with no boards). Paint and every input gate read this one answer.
+pub fn body_tab(state: &EditorState) -> LeftPanelTab {
+    match state.editor_ui.slides_panel.tab {
+        LeftPanelTab::Chat if !state.editor_ui.chat_tab_available() => LeftPanelTab::Layers,
+        LeftPanelTab::Slides if !slides_tab_available(state) => LeftPanelTab::Layers,
+        tab => tab,
+    }
+}
+
+/// Whether the Layers tree owns the rail's body — the gate every
+/// layer-row interaction (click, hover, drag, wheel, context menu)
+/// checks, so an unseen tree never takes input under another tab.
+pub fn layers_tab_active(state: &EditorState) -> bool {
+    body_tab(state) == LeftPanelTab::Layers
 }
 
 /// The slides listed in the panel, in page order.
@@ -415,10 +435,15 @@ pub fn release(state: &mut EditorState, layout: &SlidesPanelLayout) -> SlidesRel
     if hover != Some(pressed) {
         return SlidesRelease::Cancelled;
     }
+    if let Some(tab) = pressed.tab() {
+        return SlidesRelease::SelectTab(tab);
+    }
     match pressed {
-        SlidesPanelTarget::ChatTab => SlidesRelease::SelectTab(LeftPanelTab::Chat),
-        SlidesPanelTarget::LayersTab => SlidesRelease::SelectTab(LeftPanelTab::Layers),
-        SlidesPanelTarget::SlidesTab => SlidesRelease::SelectTab(LeftPanelTab::Slides),
+        SlidesPanelTarget::ChatTab
+        | SlidesPanelTarget::LayersTab
+        | SlidesPanelTarget::ComponentsTab
+        | SlidesPanelTarget::ImagesTab
+        | SlidesPanelTarget::SlidesTab => unreachable!("tab targets returned above"),
         SlidesPanelTarget::Slide(index) => SlidesRelease::Activate(index),
         SlidesPanelTarget::Present => SlidesRelease::Present,
         SlidesPanelTarget::ExportMenu => {
@@ -471,8 +496,8 @@ fn queue_selected_slides_pdf_export(state: &mut EditorState) {
     state.editor_ui.pending_file_action = Some(FileAction::ExportDeckPdfSelection);
 }
 
-/// Close a press that landed on the tab row while the LAYERS tab owned
-/// the rail. Same shape as [`release`], minus everything that needs a
+/// Close a press that landed on the tab row while a tab other than
+/// Slides owned the rail. Same shape as [`release`], minus everything that needs a
 /// slides layout.
 pub fn tab_release(state: &mut EditorState) -> SlidesRelease {
     let hover = state.editor_ui.slides_panel.hover;
@@ -484,14 +509,11 @@ pub fn tab_release(state: &mut EditorState) -> SlidesRelease {
     if hover != Some(pressed) {
         return SlidesRelease::Cancelled;
     }
-    match pressed {
-        SlidesPanelTarget::ChatTab => SlidesRelease::SelectTab(LeftPanelTab::Chat),
-        SlidesPanelTarget::LayersTab => SlidesRelease::SelectTab(LeftPanelTab::Layers),
-        SlidesPanelTarget::SlidesTab => SlidesRelease::SelectTab(LeftPanelTab::Slides),
-        // Nothing else on the panel exists while the Layers tab owns the
-        // rail — the action bar is the slides tab's, and so is its menu.
-        _ => SlidesRelease::Cancelled,
-    }
+    // Nothing but the tab row exists while another tab owns the rail —
+    // the action bar is the slides tab's, and so is its menu.
+    pressed
+        .tab()
+        .map_or(SlidesRelease::Cancelled, SlidesRelease::SelectTab)
 }
 
 /// Switch tabs. Returns whether the rail changed what it shows.

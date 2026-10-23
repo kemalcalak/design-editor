@@ -174,9 +174,6 @@ impl WidgetHostNative {
             // Position was updated live; release only ends the drag.
             return true;
         }
-        if self.component_browser_drag.take().is_some() {
-            return true;
-        }
         if self.icon_picker_drag.take().is_some() {
             return true;
         }
@@ -349,9 +346,6 @@ impl WidgetHostNative {
             return true;
         }
         if self.design_md_drag.take().is_some() {
-            return true;
-        }
-        if self.component_browser_drag.take().is_some() {
             return true;
         }
         if self.icon_picker_drag.take().is_some() {

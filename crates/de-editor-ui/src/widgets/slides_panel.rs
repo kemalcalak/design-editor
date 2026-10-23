@@ -57,18 +57,18 @@ pub const FOOTER_HEIGHT: f32 = ACTION_BAR_HEIGHT;
 /// selector, the Layers tree and the example pills do. The 12 px the
 /// wider inset costs is handed back by the tighter per-tab padding
 /// below, so the labels keep exactly the room they had.
-const TAB_INSET_X: f32 = 16.0;
-const TAB_INSET_Y: f32 = 5.0;
-const TAB_RADIUS: f32 = 7.0;
-const TAB_FONT: f32 = 13.0;
-/// Glyph size for a tab in icon mode.
-const TAB_ICON_SIZE: f32 = 14.0;
+const TAB_INSET_X: f32 = 12.0;
+const TAB_INSET_Y: f32 = 7.0;
+const TAB_RADIUS: f32 = 8.0;
+const TAB_FONT: f32 = 14.0;
+/// Glyph size for a tab.
+const TAB_ICON_SIZE: f32 = 16.0;
 /// Padding inside a tab, around whatever it holds.
-const TAB_PAD_X: f32 = 8.0;
-/// Gap between text-mode tabs; they carry their own label widths now.
-pub(crate) const TAB_GAP: f32 = 2.0;
-/// Gap between a tab's glyph and its label, when it keeps one.
-const TAB_ICON_GAP: f32 = 5.0;
+const TAB_PAD_X: f32 = 9.0;
+/// Gap between tabs.
+pub(crate) const TAB_GAP: f32 = 1.0;
+/// Gap between the active tab's glyph and its label.
+const TAB_ICON_GAP: f32 = 7.0;
 
 /// Margin between the rail's edge and a card. Shared with the action
 /// bar so the buttons line up with the cards above them.
@@ -133,7 +133,7 @@ const GHOST_ALPHA: f32 = 0.35;
 #[path = "slides_panel_tabs.rs"]
 pub(crate) mod tabs;
 
-pub use tabs::{text_tabs_fit, SlidesPanelTabs, SlidesTabRow};
+pub use tabs::{SlidesPanelTabs, SlidesTabRow};
 
 /// Where the slides tab's rows, list viewport and action bar sit.
 ///

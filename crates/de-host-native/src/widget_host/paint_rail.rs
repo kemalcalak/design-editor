@@ -59,7 +59,22 @@ impl WidgetHostNative {
                 self.paint_slides_tab_row(frame, &tabs);
             }
         }
-        if rail_open && slides_panel.is_none() && !chat_owns_rail {
+        // Components / Images own the body too: the rail paints its card
+        // and tab row, the tab's content paints over the body later (the
+        // component browser in the floating-panel pass, Images in its own).
+        let other_tab_owns_rail = rail_open
+            && slides_panel.is_none()
+            && !chat_owns_rail
+            && !de_editor_ui::widgets::slides_panel_flow::layers_tab_active(&self.editor_state);
+        if other_tab_owns_rail {
+            let panel = self.layers_content_rect(viewport_height);
+            use de_editor_ui::RenderBackend;
+            frame.fill_rect(panel, self.theme.card);
+            if let Some(tabs) = self.slides_tab_row(viewport_height) {
+                self.paint_slides_tab_row(frame, &tabs);
+            }
+        }
+        if rail_open && slides_panel.is_none() && !chat_owns_rail && !other_tab_owns_rail {
             // Compute the active drop target so the panel can paint
             // the drop-indicator line during a drag-to-reorder.
             // The rail is the tab row's leftovers when a tab row shows,

@@ -432,10 +432,7 @@ pub use ai_chat_transcript_design::{parse_design_json_nodes, DesignParseError};
 pub use align_toolbar::{AlignToolbar, AlignToolbarHit, ALIGN_TOOLBAR_HEIGHT, ALIGN_TOOLBAR_WIDTH};
 pub use canvas_actions::{CanvasActions, CanvasActionsLayout};
 pub use chrome_hit::ChromeHit;
-pub use component_browser_panel::{
-    ComponentBrowserHit, ComponentBrowserPanel, COMPONENT_BROWSER_PANEL_H,
-    COMPONENT_BROWSER_PANEL_W,
-};
+pub use component_browser_panel::{ComponentBrowserHit, ComponentBrowserPanel};
 pub use deck_boards::BoardChip;
 pub use design_md_panel::{DesignMdHit, DesignMdPanel, DESIGN_MD_PANEL_H, DESIGN_MD_PANEL_W};
 pub use editor_toast::{EditorToast, EditorToastHit};

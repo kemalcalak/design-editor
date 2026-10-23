@@ -89,7 +89,7 @@ impl WidgetHost {
                 }
             }
         }
-        if !self.editor_state.editor_ui.sidebar_open {
+        if !self.layers_panel_visible() {
             return was_focused;
         }
         let layer_rect = self.layer_panel_rect(viewport_h);

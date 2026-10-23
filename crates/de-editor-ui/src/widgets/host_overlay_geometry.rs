@@ -18,16 +18,16 @@ use de_editor_core::EditorState;
 use crate::layout_scene::LayoutScene;
 use crate::widgets::file_pill::FILE_PILL_HEIGHT;
 use crate::widgets::host_canvas_geometry::{
-    canvas_rect, canvas_region, chrome_layout, toolbar_rect, CHROME_INSET_TOP, CHROME_INSET_X,
+    canvas_rect, canvas_region, chrome_layout, components_tab_on_show, rail_body_rect,
+    toolbar_rect, CHROME_INSET_TOP, CHROME_INSET_X,
 };
 use crate::widgets::window_strip::WINDOW_STRIP_H;
 use crate::widgets::{
     ExportQuickMenu, ImportMenu, LayoutCx, LocalePicker, ShapePicker, Toolbar, Widget,
-    COMPONENT_BROWSER_PANEL_H, COMPONENT_BROWSER_PANEL_W, DESIGN_MD_PANEL_H, DESIGN_MD_PANEL_W,
-    ICON_PICKER_PANEL_H, ICON_PICKER_PANEL_W, IMPORT_MENU_WIDTH, LOCALE_PICKER_WIDTH,
-    PROMPT_CENTER_MIN_H, PROMPT_CENTER_MIN_W, PROMPT_CENTER_VIEWPORT_H_RATIO,
-    PROMPT_CENTER_VIEWPORT_W_RATIO, SCENE_TEMPLATE_GALLERY_INSET, SHAPE_PICKER_WIDTH,
-    TOOLBAR_WIDTH,
+    DESIGN_MD_PANEL_H, DESIGN_MD_PANEL_W, ICON_PICKER_PANEL_H, ICON_PICKER_PANEL_W,
+    IMPORT_MENU_WIDTH, LOCALE_PICKER_WIDTH, PROMPT_CENTER_MIN_H, PROMPT_CENTER_MIN_W,
+    PROMPT_CENTER_VIEWPORT_H_RATIO, PROMPT_CENTER_VIEWPORT_W_RATIO, SCENE_TEMPLATE_GALLERY_INSET,
+    SHAPE_PICKER_WIDTH, TOOLBAR_WIDTH,
 };
 use crate::{Point2D, Rect};
 
@@ -264,23 +264,25 @@ pub fn design_md_panel_rect(state: &EditorState, viewport_w: f32, viewport_h: f3
     ))
 }
 
-/// Floating Component-Browser panel rect — `None` when closed.
+/// The Components tab's rect — the rail body while that tab is on show,
+/// `None` otherwise. Named for the floating panel it replaced so paint,
+/// press and hover keep one geometry entry point.
 pub fn component_browser_panel_rect(
     state: &EditorState,
-    viewport_w: f32,
+    _viewport_w: f32,
     viewport_h: f32,
 ) -> Option<Rect> {
-    let ui = &state.editor_ui;
-    if !ui.component_browser_open {
-        return None;
-    }
-    Some(floating_panel_rect(
-        ui.component_browser_pos,
-        COMPONENT_BROWSER_PANEL_W,
-        COMPONENT_BROWSER_PANEL_H,
-        viewport_w,
-        viewport_h,
-    ))
+    // One px narrower than the rail so its right hairline (painted before
+    // this pass) stays visible.
+    components_tab_on_show(state).then(|| {
+        let body = rail_body_rect(state, viewport_h);
+        Rect::xywh(
+            body.origin.x,
+            body.origin.y,
+            (body.size.x - 1.0).max(0.0),
+            body.size.y,
+        )
+    })
 }
 
 /// Prompt Center rect — a fraction of the viewport, centred horizontally

@@ -10,7 +10,9 @@ use super::*;
 #[test]
 fn component_browser_open_owns_keyboard_search() {
     let mut host = WidgetHostNative::new();
-    host.editor_state_mut().editor_ui.component_browser_open = true;
+    host.editor_state_mut()
+        .editor_ui
+        .component_browser_search_focused = true;
 
     assert!(host.input_active_pub());
     assert!(host.apply_text('b'));
@@ -19,7 +21,12 @@ fn component_browser_open_owns_keyboard_search() {
     assert!(host.apply_backspace());
     assert_eq!(host.editor_state().editor_ui.component_browser_search, "b");
     assert!(host.apply_escape());
-    assert!(!host.editor_state().editor_ui.component_browser_open);
+    assert!(
+        !host
+            .editor_state()
+            .editor_ui
+            .component_browser_search_focused
+    );
 }
 
 #[test]
@@ -28,17 +35,18 @@ fn component_browser_header_buttons_queue_kit_io_requests() {
     // desktop runner drains the queued request into the rfd dialogs
     // (`de-host-desktop/src/kit_io.rs`).
     let mut host = WidgetHostNative::new();
-    host.editor_state_mut().editor_ui.component_browser_open = true;
+    host.editor_state_mut().editor_ui.home.hide();
+    host.editor_state_mut().editor_ui.open_components_tab();
     let (vw, vh) = (1440.0, 900.0);
     let rect = host
         .component_browser_panel_rect(vw, vh)
         .expect("open panel rect");
     let right = rect.origin.x + rect.size.x;
     let y = rect.origin.y + 20.0; // header-button row centre (HEADER_H / 2)
-                                  // Header buttons right-aligned: ✕ centre at right-26, Upload
-                                  // (import) at right-54, Download (export) at right-82 — from
-                                  // PAD 14 + 24-px buttons + 4-px gaps.
-    assert!(host.apply_press(right - 54.0, y, vw, vh));
+                                  // Header buttons right-aligned: Upload (import) centre at
+                                  // right-26, Download (export) at right-54 — from PAD 14 +
+                                  // 24-px buttons + 4-px gaps.
+    assert!(host.apply_press(right - 26.0, y, vw, vh));
     assert_eq!(
         host.editor_state().editor_ui.component_browser_kit_request,
         Some(de_editor_core::KitIoRequest::Import)
@@ -46,7 +54,7 @@ fn component_browser_header_buttons_queue_kit_io_requests() {
     host.editor_state_mut()
         .editor_ui
         .component_browser_kit_request = None;
-    assert!(host.apply_press(right - 82.0, y, vw, vh));
+    assert!(host.apply_press(right - 54.0, y, vw, vh));
     assert_eq!(
         host.editor_state().editor_ui.component_browser_kit_request,
         Some(de_editor_core::KitIoRequest::Export)
@@ -56,12 +64,13 @@ fn component_browser_header_buttons_queue_kit_io_requests() {
 #[test]
 fn component_browser_header_press_sets_and_release_clears_pressed_button() {
     let mut host = WidgetHostNative::new();
-    host.editor_state_mut().editor_ui.component_browser_open = true;
+    host.editor_state_mut().editor_ui.home.hide();
+    host.editor_state_mut().editor_ui.open_components_tab();
     let (vw, vh) = (1440.0, 900.0);
     let rect = host
         .component_browser_panel_rect(vw, vh)
         .expect("open panel rect");
-    let x = rect.origin.x + rect.size.x - 54.0;
+    let x = rect.origin.x + rect.size.x - 26.0;
     let y = rect.origin.y + 20.0;
 
     assert!(host.apply_press(x, y, vw, vh));
@@ -74,6 +83,32 @@ fn component_browser_header_press_sets_and_release_clears_pressed_button() {
 
     assert!(host.apply_release_with_viewport(vw, vh));
     assert_eq!(host.editor_state().editor_ui.pressed_button, None);
+}
+
+#[test]
+fn cmd_shift_k_opens_the_components_tab_with_search_focused() {
+    let mut host = WidgetHostNative::new();
+    host.editor_state_mut().editor_ui.home.hide();
+    assert!(host.apply_toggle_component_browser());
+    let ui = &host.editor_state().editor_ui;
+    assert_eq!(
+        ui.slides_panel.tab,
+        de_editor_core::LeftPanelTab::Components
+    );
+    assert!(ui.component_browser_search_focused);
+    assert!(ui.sidebar_open);
+}
+
+#[test]
+fn a_hidden_layer_tree_takes_no_clicks_under_the_components_tab() {
+    let mut host = WidgetHostNative::new();
+    host.editor_state_mut().editor_ui.home.hide();
+    assert!(host.layers_panel_visible(), "Layers is the default body");
+    host.editor_state_mut().editor_ui.open_components_tab();
+    assert!(
+        !host.layers_panel_visible(),
+        "the tree is not on show, so its rows must not take input"
+    );
 }
 
 #[test]

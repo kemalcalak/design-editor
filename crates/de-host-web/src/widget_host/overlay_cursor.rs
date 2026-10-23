@@ -237,14 +237,8 @@ impl WidgetHost {
             }
             *upper_hover_changed |= changed;
         }
-        if let Some(d) = self.component_browser_drag {
-            self.editor_state.editor_ui.component_browser_pos =
-                Some((x - d.grab_dx, y - d.grab_dy));
-            self.mark_dirty();
-            return true;
-        }
-        // Component-browser panel hover (close / category pills / cards).
-        if self.editor_state.editor_ui.component_browser_open {
+        // Components tab hover (kit actions / category pills / cards).
+        {
             use de_editor_ui::widgets::component_browser_panel::ComponentBrowserPanel;
             if let Some(panel_rect) =
                 self.component_browser_panel_rect(self.last_viewport_w, self.last_viewport_h)
@@ -556,9 +550,6 @@ impl WidgetHost {
         }
         if self.design_md_drag.take().is_some() {
             // Position was updated live; release only ends the drag.
-            return true;
-        }
-        if self.component_browser_drag.take().is_some() {
             return true;
         }
         if self.icon_picker_drag.take().is_some() {

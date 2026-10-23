@@ -330,10 +330,6 @@ struct DesktopApp {
     /// drained on the UI thread by `drain_forwarded_files`.
     forwarded_files: single_instance::ForwardQueue,
     iconify_job: Option<iconify_host::IconifyJob>,
-    /// The `component_browser_open` value last written to
-    /// `uikits.json` — `drain_kit_io` rewrites the store when the live
-    /// value drifts (TS persists `browserOpen` on every toggle).
-    kit_browser_open_persisted: Option<bool>,
     /// In-flight connect-time provider probe (Settings → Agents →
     /// Connect) — spawned from the `pending_provider_connect`
     /// request seam, drained by `drain_provider_connect`.

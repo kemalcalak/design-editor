@@ -13,8 +13,6 @@ use crate::uikit::ComponentCategory;
 /// no hover wash.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ComponentBrowserButton {
-    /// The header `✕` close button.
-    Close,
     /// The header Download button — export the open document's
     /// components as a kit file.
     ExportKit,

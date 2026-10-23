@@ -21,7 +21,7 @@ impl WidgetHostNative {
             || editor_ui.icon_picker.open
             || editor_ui.prompt_center.open
             || editor_ui.scene_template_center.input_active()
-            || editor_ui.component_browser_open
+            || editor_ui.component_browser_search_focused
             // `active_text_input()` resolves chat before Git. Visible Git /
             // clone inputs must therefore claim ownership before the pointer
             // comparison below when a stale chat-focus bit coexists.
@@ -351,12 +351,13 @@ impl WidgetHostNative {
         self.dispatch_toolbar_action(de_editor_ui::widgets::ToolbarAction::ToggleDesignPanel)
     }
 
-    /// Cmd+Shift+K — toggle the component (UIKit) browser panel.
+    /// Cmd+Shift+K — show the rail's Components tab with its search box
+    /// focused (#30; the browser used to be a floating panel).
     pub fn apply_toggle_component_browser(&mut self) -> bool {
         self.commit_variable_row_focus_if_any();
         self.close_image_popovers_for_higher_overlay();
-        let ui = &mut self.editor_state.editor_ui;
-        ui.component_browser_open = !ui.component_browser_open;
+        self.blur_text_inputs_on_blank_press();
+        self.editor_state.editor_ui.open_components_tab();
         self.mark_dirty();
         true
     }
@@ -474,7 +475,6 @@ impl WidgetHostNative {
         self.commit_settings_focus_if_any();
         shared::commit_editing_for_modal(&mut self.editor_state);
         self.design_md_drag = None;
-        self.component_browser_drag = None;
         self.icon_picker_drag = None;
         {
             let ui = &mut self.editor_state.editor_ui;
@@ -482,7 +482,7 @@ impl WidgetHostNative {
             ui.close_icon_picker();
             ui.design_md_panel.open = false;
             ui.design_md_panel.hover = None;
-            ui.component_browser_open = false;
+            ui.component_browser_search_focused = false;
             ui.component_browser_kit_picker_open = false;
             ui.component_browser_confirm_delete_kit = None;
             ui.component_browser_hover = None;

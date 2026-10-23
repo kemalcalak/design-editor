@@ -166,6 +166,41 @@ pub fn paint_chrome_tooltip(
     ))
 }
 
+/// Name the left rail's icon-only tab under the cursor (#30). The tab on
+/// show already reads its label, so only the others get a tooltip, and
+/// it appears at once — the row is a strip of bare glyphs, not chrome
+/// one crosses on the way somewhere else. Hosts call this in the same
+/// pass as [`paint_chrome_tooltip`].
+pub fn paint_rail_tab_tooltip(
+    cx: &mut PaintCx<'_>,
+    state: &EditorState,
+    viewport_h: f32,
+) -> Option<Rect> {
+    use crate::widgets::slides_panel_flow::{body_tab, tab_row, tab_row_desc};
+    let ui = &state.editor_ui;
+    if !ui.sidebar_open || crate::widgets::host_canvas_geometry::workspace_docked(state) {
+        return None;
+    }
+    let tab = ui.slides_panel.hover?.tab()?;
+    if tab == body_tab(state) {
+        return None;
+    }
+    let panel = crate::widgets::host_canvas_geometry::layer_panel_rect(state, viewport_h);
+    let anchor = tab_row(state, panel)?.rect_of(tab);
+    if anchor.size.x <= 0.0 {
+        return None;
+    }
+    Some(tooltip::paint_tooltip(
+        cx,
+        &theme_for(ui),
+        anchor,
+        tab_row_desc(state).label(tab),
+        None,
+        TooltipPlacement::Below,
+        None,
+    ))
+}
+
 /// Every button the chrome can hover, for exhaustive coverage checks.
 pub const ALL_CHROME_BUTTONS: [ChromeButton; 7] = [
     ChromeButton::Home,

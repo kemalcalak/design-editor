@@ -218,6 +218,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.edited" => "편집됨",
         "chrome.notSaved" => "저장 안 됨",
         "chrome.variables" => "변수",
+        "leftPanel.tab.components" => "컴포넌트",
+        "leftPanel.tab.images" => "이미지",
         _ => return None,
     })
 }

@@ -54,6 +54,17 @@ impl WidgetHost {
     /// slides tab row when this document shows one. Every layer-tree
     /// caller goes through here, so the tab row can never shift the
     /// painted rows out from under their own click targets.
+    /// Whether the Layers tree owns the rail's body — the rail is open,
+    /// the workspace dock is not up, and the Layers tab is the one on
+    /// show. Every layer-row interaction gates on this so an unseen tree
+    /// never takes input under another tab (mirrors the native
+    /// `layers_panel_visible`).
+    pub(in crate::widget_host) fn layers_panel_visible(&self) -> bool {
+        self.editor_state.editor_ui.sidebar_open
+            && !canvas_geometry::workspace_docked(&self.editor_state)
+            && de_editor_ui::widgets::slides_panel_flow::layers_tab_active(&self.editor_state)
+    }
+
     pub(in crate::widget_host) fn layer_panel_rect(&self, viewport_h: f32) -> Rect {
         self.layers_content_rect(viewport_h)
     }

@@ -52,7 +52,7 @@ impl WidgetHost {
             self.mark_dirty();
             return true;
         }
-        if !self.editor_state.editor_ui.sidebar_open {
+        if !self.layers_panel_visible() {
             return self.blur_text_inputs_on_blank_press();
         }
         self.refresh_layout_scene();

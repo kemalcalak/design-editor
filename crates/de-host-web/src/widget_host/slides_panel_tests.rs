@@ -88,8 +88,14 @@ fn empty_page_keeps_chat_and_layers_tabs_without_a_slides_tab() {
     let row = empty
         .slides_tab_row(VH)
         .expect("desktop rail always has tabs");
-    assert_eq!(row.slides.size.x, 0.0);
-    assert!(row.chat.size.x > 0.0 && row.layers.size.x > 0.0);
+    assert_eq!(
+        row.rect_of(de_editor_core::LeftPanelTab::Slides).size.x,
+        0.0
+    );
+    assert!(
+        row.rect_of(de_editor_core::LeftPanelTab::Chat).size.x > 0.0
+            && row.rect_of(de_editor_core::LeftPanelTab::Layers).size.x > 0.0
+    );
     assert!(empty.slides_panel_frame(VW, VH).is_none());
     assert_eq!(
         empty.layers_content_rect(VH).origin.y,
@@ -114,8 +120,11 @@ fn host_owned_chat_hides_agent_and_recovers_a_stale_chat_selection() {
     host.editor_state.editor_ui.host_owns_chat = true;
     host.editor_state.editor_ui.slides_panel.tab = LeftPanelTab::Chat;
     let tabs = host.slides_tab_row(VH).unwrap();
-    assert_eq!(tabs.chat.size.x, 0.0);
-    assert!(tabs.layers.size.x > 0.0 && tabs.slides.size.x > 0.0);
+    assert_eq!(tabs.rect_of(de_editor_core::LeftPanelTab::Chat).size.x, 0.0);
+    assert!(
+        tabs.rect_of(de_editor_core::LeftPanelTab::Layers).size.x > 0.0
+            && tabs.rect_of(de_editor_core::LeftPanelTab::Slides).size.x > 0.0
+    );
     assert_eq!(tabs.active, LeftPanelTab::Layers);
     assert!(!de_editor_ui::widgets::slides_panel_flow::chat_tab_active(
         &host.editor_state
@@ -123,7 +132,14 @@ fn host_owned_chat_hides_agent_and_recovers_a_stale_chat_selection() {
     assert!(!host.editor_state.editor_ui.enter_chat_tab());
 
     host.editor_state.editor_ui.host_owns_chat = false;
-    assert!(host.slides_tab_row(VH).unwrap().chat.size.x > 0.0);
+    assert!(
+        host.slides_tab_row(VH)
+            .unwrap()
+            .rect_of(de_editor_core::LeftPanelTab::Chat)
+            .size
+            .x
+            > 0.0
+    );
 }
 
 #[test]
@@ -168,8 +184,8 @@ fn the_tab_row_switches_the_rail_both_ways() {
             rect.origin.y + rect.size.y / 2.0,
         )
     };
-    let layers_tab = centre(tabs.layers);
-    let slides_tab = centre(tabs.slides);
+    let layers_tab = centre(tabs.rect_of(de_editor_core::LeftPanelTab::Layers));
+    let slides_tab = centre(tabs.rect_of(de_editor_core::LeftPanelTab::Slides));
 
     host.apply_press(layers_tab.x, layers_tab.y, VW, VH);
     host.apply_release_with_viewport(VW, VH);

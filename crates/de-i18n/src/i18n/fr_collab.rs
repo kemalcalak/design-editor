@@ -216,6 +216,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.edited" => "Modifié",
         "chrome.notSaved" => "Non enregistré",
         "chrome.variables" => "Variables",
+        "leftPanel.tab.components" => "Composants",
+        "leftPanel.tab.images" => "Images",
         _ => return None,
     })
 }

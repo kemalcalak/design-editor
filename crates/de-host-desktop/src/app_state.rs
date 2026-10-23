@@ -113,7 +113,6 @@ impl DesktopApp {
         // registry they merge into is memory-only, so it has to be refilled
         // from disk at every launch, exactly like the style guides above.
         crate::user_template_store::load_user_scene_templates_once();
-        let kit_browser_open_persisted = Some(host.editor_state().editor_ui.component_browser_open);
         if fit_blank_frame {
             host.fit_content_to_viewport(INITIAL_VIEWPORT_W, INITIAL_VIEWPORT_H);
         }
@@ -189,7 +188,6 @@ impl DesktopApp {
             mcp_wake_proxy: None,
             forwarded_files: single_instance::ForwardQueue::default(),
             iconify_job: None,
-            kit_browser_open_persisted,
             provider_connect_job: None,
             provider_reconnect_queue: Vec::new(),
             cli_probes_started: false,

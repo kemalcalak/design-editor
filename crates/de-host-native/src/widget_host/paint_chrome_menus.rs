@@ -64,6 +64,11 @@ impl WidgetHostNative {
             viewport_height,
             self.now_ms,
         );
+        de_editor_ui::widgets::chrome_tooltip::paint_rail_tab_tooltip(
+            &mut cx,
+            &self.editor_state,
+            viewport_height,
+        );
     }
 
     /// File-menu dropdown — anchored under the file pill.

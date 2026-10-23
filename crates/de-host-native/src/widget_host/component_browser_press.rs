@@ -1,19 +1,19 @@
-//! Component-Browser panel press dispatch.
+//! Components tab press dispatch.
 //!
-//! Mirrors `design_md_press.rs`: a deliberately-opened top-most
-//! floating panel that owns clicks on its rect ahead of every lower
-//! layer. Hit kinds: close, drag-header, category-pill, insert.
+//! The component browser fills the rail's body while its tab is on show
+//! (#30) and owns clicks on that rect ahead of every lower layer. Hit
+//! kinds: kit actions, search focus, category pill, insert.
 
 use de_editor_ui::widgets::{ComponentBrowserHit, ComponentBrowserPanel};
 use de_editor_ui::Point2D;
 
-use super::{ComponentBrowserDragState, WidgetHostNative};
+use super::WidgetHostNative;
 
 impl WidgetHostNative {
-    /// Dispatch a press inside the floating Component-Browser panel.
+    /// Dispatch a press inside the rail's Components tab.
     ///
-    /// Returns `true` when consumed — a close, a category-pill swap,
-    /// a queued insert request, a drag start, or a swallowed click.
+    /// Returns `true` when consumed — a search focus, a category-pill
+    /// swap, a queued insert request, or a swallowed click.
     pub(in crate::widget_host) fn dispatch_component_browser_press(
         &mut self,
         x: f32,
@@ -41,13 +41,6 @@ impl WidgetHostNative {
                 Some(de_editor_core::ButtonPressTarget::ComponentBrowser(button));
         }
         match hit {
-            ComponentBrowserHit::Close => {
-                let ui = &mut self.editor_state.editor_ui;
-                ui.component_browser_open = false;
-                ui.component_browser_hover = None;
-                ui.component_browser_kit_picker_open = false;
-                ui.component_browser_confirm_delete_kit = None;
-            }
             ComponentBrowserHit::ExportKit => {
                 // The desktop host drains this — it owns the native
                 // save dialog (TS `handleExport`).
@@ -83,11 +76,13 @@ impl WidgetHostNative {
                     .editor_ui
                     .component_browser_confirm_delete_kit = None;
             }
-            ComponentBrowserHit::DragHeader => {
-                self.component_browser_drag = Some(ComponentBrowserDragState {
-                    grab_dx: x - panel_rect.origin.x,
-                    grab_dy: y - panel_rect.origin.y,
-                });
+            ComponentBrowserHit::FocusSearch => {
+                // Every other input lets go first, then the search box
+                // takes the keyboard.
+                self.blur_text_inputs_on_blank_press();
+                let ui = &mut self.editor_state.editor_ui;
+                ui.component_browser_search_focused = true;
+                ui.component_browser_select_all = false;
             }
             ComponentBrowserHit::SelectCategory(cat) => {
                 self.editor_state.editor_ui.component_browser_category = cat;
@@ -100,8 +95,8 @@ impl WidgetHostNative {
                     Some((kit_id, comp_id));
             }
             ComponentBrowserHit::Inside => {
-                // Blank press on panel chrome — blur chrome inputs
-                // (the browser's search box stays live while open).
+                // Blank press on the tab's chrome — blur chrome inputs,
+                // the search box included.
                 self.blur_text_inputs_on_blank_press();
             }
         }

@@ -61,6 +61,8 @@ impl WidgetHostNative {
         // Variables-panel search box defocuses; its typed filter
         // persists (TS keeps the input value on blur).
         eui.variables_search_focus = false;
+        // The Components tab's search box lets go; its filter persists.
+        eui.component_browser_search_focused = false;
         eui.close_chat_model_picker();
         self.editor_state.chat.blur_input(self.now_ms);
         if was_focused {

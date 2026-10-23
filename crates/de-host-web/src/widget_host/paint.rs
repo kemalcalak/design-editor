@@ -210,7 +210,20 @@ impl WidgetHost {
                 self.paint_slides_tab_row(&mut *backend, &tabs);
             }
         }
-        if rail_open && slides_panel.is_none() && !chat_owns_rail {
+        // 3a-2. Components / Images own the body too: the rail paints its
+        //        card and tab row, the tab's content paints over the body
+        //        later (mirrors the native rail).
+        let other_tab_owns_rail = rail_open
+            && slides_panel.is_none()
+            && !chat_owns_rail
+            && !de_editor_ui::widgets::slides_panel_flow::layers_tab_active(&self.editor_state);
+        if other_tab_owns_rail {
+            backend.fill_rect(self.layer_panel_rect(viewport_height), self.theme.card);
+            if let Some(tabs) = self.slides_tab_row(viewport_height) {
+                self.paint_slides_tab_row(&mut *backend, &tabs);
+            }
+        }
+        if rail_open && slides_panel.is_none() && !chat_owns_rail && !other_tab_owns_rail {
             let layer_panel_rect = self.layer_panel_rect(viewport_height);
             // While a drag is active, paint against a panel with the
             // source's subtree excluded — see native paint.rs. The
@@ -536,6 +549,11 @@ impl WidgetHost {
                 viewport_width,
                 viewport_height,
                 self.now_ms,
+            );
+            de_editor_ui::widgets::chrome_tooltip::paint_rail_tab_tooltip(
+                &mut cx,
+                &self.editor_state,
+                viewport_height,
             );
         }
 

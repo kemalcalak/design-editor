@@ -216,6 +216,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chrome.edited" => "Đã chỉnh sửa",
         "chrome.notSaved" => "Chưa lưu",
         "chrome.variables" => "Biến",
+        "leftPanel.tab.components" => "Thành phần",
+        "leftPanel.tab.images" => "Hình ảnh",
         _ => return None,
     })
 }

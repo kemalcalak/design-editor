@@ -9,7 +9,7 @@
 //! (without `DE_PROOF_DIR` the sheets land in the system temp directory).
 
 use de_editor_core::editor_ui_state::ThemeMode;
-use de_editor_core::NodeId;
+use de_editor_core::{LeftPanelTab, NodeId};
 use de_editor_ui::Rect;
 use de_host_native::{NativeBackend, NativeFrameBackend, WidgetHostNative};
 
@@ -26,7 +26,7 @@ fn fixture() -> de_editor_core::EditorState {
     de_editor_core::EditorState::from_document(doc)
 }
 
-fn host(theme: ThemeMode, w: f32, h: f32, agent_tab: bool) -> WidgetHostNative {
+fn host(theme: ThemeMode, w: f32, h: f32, tab: LeftPanelTab) -> WidgetHostNative {
     crate::bundled_fonts::register();
     let mut host = WidgetHostNative::new();
     let mut state = fixture();
@@ -36,8 +36,14 @@ fn host(theme: ThemeMode, w: f32, h: f32, agent_tab: bool) -> WidgetHostNative {
         ui.theme_mode = theme;
         ui.home.hide();
         ui.file_name_display = Some("lumina-landing.op".to_string());
-        if agent_tab {
-            ui.enter_chat_tab();
+        match tab {
+            LeftPanelTab::Chat => {
+                ui.enter_chat_tab();
+            }
+            LeftPanelTab::Components => {
+                ui.open_components_tab();
+            }
+            other => ui.slides_panel.tab = other,
         }
     }
     state.set_single_selection(NodeId::new("n1"));
@@ -81,10 +87,15 @@ fn shoot(host: &mut WidgetHostNative, w: f32, h: f32, name: &str) {
 fn editor_proof_sheets() {
     for (theme, suffix) in [(ThemeMode::Dark, "dark"), (ThemeMode::Light, "light")] {
         for (w, h, size) in [(1440.0, 900.0, "1440"), (1024.0, 700.0, "1024")] {
-            let mut layers = host(theme, w, h, false);
-            shoot(&mut layers, w, h, &format!("editor-layers-{size}-{suffix}"));
-            let mut agent = host(theme, w, h, true);
-            shoot(&mut agent, w, h, &format!("editor-agent-{size}-{suffix}"));
+            for (tab, name) in [
+                (LeftPanelTab::Layers, "layers"),
+                (LeftPanelTab::Chat, "agent"),
+                (LeftPanelTab::Components, "components"),
+                (LeftPanelTab::Images, "images"),
+            ] {
+                let mut h_ = host(theme, w, h, tab);
+                shoot(&mut h_, w, h, &format!("editor-{name}-{size}-{suffix}"));
+            }
         }
     }
 }
