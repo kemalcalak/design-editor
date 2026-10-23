@@ -554,23 +554,12 @@ pub(crate) fn sections_top_before_text(
 ) -> f32 {
     let mut y = panel_rect.origin.y;
     y += crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
-    if visible.create_component {
-        y += crate::widgets::property_panel_inputs::CREATE_COMPONENT_BLOCK_H;
-    }
-    y += SECTION_HEADER_HEIGHT;
-    y += INPUT_HEIGHT + 6.0;
-    y += visible.position_size_row_h();
-    y += INPUT_HEIGHT + 12.0;
-    y += SECTION_GAP;
+    y += visible.component_block_h();
+    y += visible.position_section_h();
     if visible.flex_layout {
         y += crate::widgets::property_panel_flex::flex_section_height(visible.flex_layout_mode);
     }
-    if visible.size_options {
-        y += visible.size_section_lead_h();
-        y += crate::widgets::property_panel_inputs::size_check_row_height()
-            * if visible.clip_content { 3.0 } else { 2.0 };
-        y += 12.0 + SECTION_GAP;
-    }
+    y += visible.size_section_h();
     if visible.icon {
         y += crate::widgets::property_panel_icon::icon_section_height();
     }

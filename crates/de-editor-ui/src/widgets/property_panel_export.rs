@@ -25,8 +25,12 @@ pub fn export_scale_label(scale: f32) -> &'static str {
     }
 }
 
-/// Paint the Export section: title, a row of two dropdowns (scale +
-/// format) and a full-width Export action button below them.
+/// Space below a collapsed Export header (#83), before the Code chips.
+pub const EXPORT_COLLAPSED_GAP: f32 = 8.0;
+
+/// Paint the Export section: title with a "+" / "−" toggle, then —
+/// when `open` — a row of two dropdowns (scale + format) and a
+/// full-width Export action button below them.
 // Paint-context + geometry args threaded through; a struct adds no gain.
 #[allow(clippy::too_many_arguments)]
 pub fn paint_export_section(
@@ -35,11 +39,24 @@ pub fn paint_export_section(
     labels: &PropertyLabels,
     format: de_editor_core::ExportFormat,
     scale: f32,
+    open: bool,
     x: f32,
     y: f32,
     width: f32,
 ) -> f32 {
+    let header_y = y;
     let mut y = paint_section_label(cx, theme, labels.export, x, y, width);
+    draw_icon(
+        cx.backend,
+        if open { Icon::Minus } else { Icon::Plus },
+        Point2D::new(x + width - PAD_X - 14.0, header_y + 6.0),
+        14.0,
+        theme.muted_foreground,
+        1.4,
+    );
+    if !open {
+        return y + EXPORT_COLLAPSED_GAP;
+    }
     let usable_w = width - PAD_X * 2.0;
     let half_w = (usable_w - 8.0) / 2.0;
     // Left dropdown: scale. Right dropdown: format. Clicking either

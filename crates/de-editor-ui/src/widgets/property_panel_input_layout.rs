@@ -63,12 +63,8 @@ pub fn editable_input_rects(
 
     let mut y = panel_rect.origin.y;
     y += PANEL_HEADER_HEIGHT;
-    if visible.create_component {
-        // Variant-aware: the instance pair adds a second button row.
-        y += crate::widgets::property_panel_inputs::create_component_block_height(
-            visible.component_button,
-        );
-    }
+    y += visible.component_block_h();
+    let position_y = y;
     y += SECTION_HEADER_HEIGHT;
     let x_rect = Rect {
         origin: Point2D::new(x0 + PAD_X, y),
@@ -102,8 +98,7 @@ pub fn editable_input_rects(
         origin: Point2D::new(x0 + PAD_X, y),
         size: Point2D::new(half_w, INPUT_HEIGHT),
     };
-    let per_corner_expanded =
-        visible.corner_radius && visible.corner_per_corner && visible.corner_expand;
+    let per_corner_expanded = visible.corner_grid_expanded();
     let radius_rect =
         (visible.corner_radius && !per_corner_expanded).then_some(if visible.corner_per_corner {
             crate::widgets::property_panel_corner::uniform_and_toggle_rects(x0, y, w).0
@@ -125,10 +120,8 @@ pub fn editable_input_rects(
     }
     if per_corner_expanded {
         rects.extend(crate::widgets::property_panel_corner::input_rects(x0, y, w));
-        y += crate::widgets::property_panel_corner::CORNER_GRID_EXTRA_HEIGHT;
     }
-    y += 12.0;
-    y += SECTION_GAP;
+    y = position_y + visible.position_section_h();
     if visible.flex_layout {
         crate::widgets::property_panel_flex::push_flex_input_rects(
             &mut rects,
@@ -140,13 +133,7 @@ pub fn editable_input_rects(
         );
         y += crate::widgets::property_panel_flex::flex_section_height(visible.flex_layout_mode);
     }
-    if visible.size_options {
-        y += visible.size_section_lead_h();
-        let check_h = crate::widgets::property_panel_inputs::size_check_row_height();
-        y += check_h * if visible.clip_content { 3.0 } else { 2.0 };
-        y += 12.0;
-        y += SECTION_GAP;
-    }
+    y += visible.size_section_h();
     if visible.icon {
         y += crate::widgets::property_panel_icon::icon_section_height();
     }

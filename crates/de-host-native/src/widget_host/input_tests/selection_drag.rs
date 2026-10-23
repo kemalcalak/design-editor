@@ -271,12 +271,12 @@ fn property_panel_create_component_click_promotes_selected_frame() {
 
     let viewport_w = 1440.0;
     let viewport_h = 900.0;
-    let panel_left = viewport_w - host.editor_state().editor_ui.property_panel_width;
-    let button_x = panel_left + 24.0;
-    let button_y = PROPERTY_PANEL_TOP
-        + de_editor_ui::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT
-        + 8.0
-        + 18.0;
+    // Create component is the header's right-edge button since #83.
+    let button = de_editor_ui::widgets::property_panel_header::create_component_rect(
+        host.property_rect(viewport_w, viewport_h),
+    );
+    let button_x = button.origin.x + button.size.x / 2.0;
+    let button_y = button.origin.y + button.size.y / 2.0;
     assert!(host.apply_press(button_x, button_y, viewport_w, viewport_h));
     assert!(host
         .editor_state()

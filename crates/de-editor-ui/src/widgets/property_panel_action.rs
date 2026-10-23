@@ -264,6 +264,9 @@ pub enum PropertyPanelAction {
     /// 1x/2x/3x select popup). Does NOT open the Export modal —
     /// that is reached only via File ▸ Export Image (⇧⌘P).
     ToggleExportScalePicker,
+    /// User clicked the Export header's "+" / "−" — expands or
+    /// collapses the section (`editor_ui.export_section_open`).
+    ToggleExportSection,
     /// User clicked the Export section's format dropdown — host
     /// toggles `editor_ui.export_format_picker_open` (the inline
     /// PNG/JPEG/WEBP/SVG/PDF select popup).

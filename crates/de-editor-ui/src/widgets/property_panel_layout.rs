@@ -240,26 +240,19 @@ pub fn action_button_rects_with_fill_picker(
             w,
             visible.component_button,
         ));
-        y += crate::widgets::property_panel_inputs::create_component_block_height(
-            visible.component_button,
-        );
     }
+    y += visible.component_block_h();
     // Position section: X Y, then W H (#30), then rotation / radius.
-    y += SECTION_HEADER_HEIGHT;
-    y += INPUT_HEIGHT + 6.0;
-    y += visible.position_size_row_h();
+    let position_y = y;
+    let radius_row_y =
+        y + SECTION_HEADER_HEIGHT + INPUT_HEIGHT + 6.0 + visible.position_size_row_h();
     if visible.corner_per_corner {
         out.push((
             PropertyPanelAction::ToggleCornerExpand,
-            crate::widgets::property_panel_corner::uniform_and_toggle_rects(x0, y, w).1,
+            crate::widgets::property_panel_corner::uniform_and_toggle_rects(x0, radius_row_y, w).1,
         ));
     }
-    if visible.corner_radius && visible.corner_per_corner && visible.corner_expand {
-        y += INPUT_HEIGHT + crate::widgets::property_panel_corner::CORNER_GRID_EXTRA_HEIGHT + 12.0;
-    } else {
-        y += INPUT_HEIGHT + 12.0;
-    }
-    y += SECTION_GAP;
+    y = position_y + visible.position_section_h();
 
     if visible.flex_layout {
         y += SECTION_HEADER_HEIGHT;
@@ -277,6 +270,7 @@ pub fn action_button_rects_with_fill_picker(
     }
 
     if visible.size_options {
+        let size_y = y;
         y += visible.size_section_lead_h();
         let row_h = crate::widgets::property_panel_inputs::size_check_row_height();
         out.push((
@@ -317,10 +311,8 @@ pub fn action_button_rects_with_fill_picker(
                     size: Point2D::new(usable_w, row_h),
                 },
             ));
-            y += row_h;
         }
-        y += 12.0;
-        y += SECTION_GAP;
+        y = size_y + visible.size_section_h();
     }
 
     if visible.icon {
@@ -484,6 +476,16 @@ pub fn action_button_rects_with_fill_picker(
         y += interactions_section_height(interactions);
     }
     if visible.export {
+        // The header's "+" / "−" expands or collapses the section (#83).
+        out.push((
+            PropertyPanelAction::ToggleExportSection,
+            crate::widgets::property_panel_inputs::section_add_target(x0, y, w),
+        ));
+    }
+    if visible.export && !visible.export_open {
+        y += SECTION_HEADER_HEIGHT + crate::widgets::property_panel_export::EXPORT_COLLAPSED_GAP;
+    }
+    if visible.export && visible.export_open {
         // Export section: header + a row of two dropdowns (scale on
         // the left, format on the right) mirroring
         // `paint_export_section`. Each dropdown is its own toggle

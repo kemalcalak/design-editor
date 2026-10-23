@@ -62,9 +62,10 @@ impl Widget for PropertyPanel {
                         self.page_name.as_str()
                     },
                     kind: page_kind,
+                    create_component: false,
                 }
             } else {
-                node_header(&self.theme, &self.snapshot)
+                node_header(&self.theme, &self.snapshot, self.header_create_component())
             };
             let close_hovered = code && self.close_hovered;
             paint_panel_header(cx, &self.theme, rect, &header, close_hovered);
@@ -323,6 +324,7 @@ impl Widget for PropertyPanel {
                 &self.labels,
                 self.export_format,
                 self.export_scale,
+                self.export_section_open,
                 x,
                 y,
                 w,

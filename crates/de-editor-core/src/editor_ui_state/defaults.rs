@@ -43,6 +43,7 @@ impl Default for EditorUiState {
             export_dialog_open: false,
             export_dialog_hover: None,
             export_format: ExportFormat::Png,
+            export_section_open: false,
             export_scale_picker_open: false,
             export_format_picker_open: false,
             export_picker_hover: None,

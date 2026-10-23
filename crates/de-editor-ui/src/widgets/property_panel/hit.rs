@@ -62,6 +62,12 @@ impl PropertyPanel {
         {
             return Some(PropertyPanelAction::SetPropertyTab(tab));
         }
+        if self.header_create_component()
+            && crate::widgets::property_panel_header::create_component_rect(panel_rect)
+                .contains(point)
+        {
+            return Some(PropertyPanelAction::CreateComponent);
+        }
         if self.is_multi {
             // Multi-select inputs / toggles are inert in v1.
             return None;

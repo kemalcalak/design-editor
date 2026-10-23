@@ -119,7 +119,8 @@ pub(crate) fn action_rects(
 ) -> Vec<(PropertyPanelAction, Rect)> {
     let primary = row_rect(x, y + CREATE_COMPONENT_PAD_TOP, width);
     match state {
-        ComponentButtonState::Create => vec![(PropertyPanelAction::CreateComponent, primary)],
+        // Hit-tested on the pinned header (`create_component_rect`).
+        ComponentButtonState::Create => Vec::new(),
         ComponentButtonState::DetachComponent => {
             vec![(PropertyPanelAction::DetachComponent, primary)]
         }
@@ -175,16 +176,8 @@ pub fn paint_component_block(
 ) -> f32 {
     let rows = block_rects(x, y, width, state);
     match state {
-        ComponentButtonState::Create => paint_button(
-            cx,
-            theme,
-            row_rect(x, y + CREATE_COMPONENT_PAD_TOP, width),
-            labels.create_component,
-            Icon::Component,
-            theme.foreground,
-            true,
-            None,
-        ),
+        // Create component is a header icon since #83 — no block.
+        ComponentButtonState::Create => {}
         ComponentButtonState::DetachComponent => paint_button(
             cx,
             theme,

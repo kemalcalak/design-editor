@@ -375,6 +375,7 @@ impl PropertyPanel {
             stroke_edit_mode,
             stroke_mode_popover_open: ui.stroke_mode_popover_open,
             fill_menu_open: ui.fill_menu_open,
+            export_section_open: ui.export_section_open,
             stroke_mode_popover_hover: ui.stroke_mode_popover_hover,
             is_multi,
             tab: property_tab,

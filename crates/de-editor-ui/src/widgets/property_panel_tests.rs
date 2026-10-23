@@ -13,6 +13,7 @@
 
 use crate::{Color, Point2D, Rect, TextLayout};
 
+mod alignment;
 mod menus;
 mod pickers;
 mod selection;

@@ -163,9 +163,10 @@ fn effects_add_menu_owns_feedback_above_the_covered_interaction_row() {
 
 #[test]
 fn hit_test_action_export_section_returns_picker_toggles() {
-    // Single-frame selection paints every section + Export.
+    // Single-frame selection paints every section + Export (expanded).
     let mut state = EditorState::sample();
     state.set_single_selection(NodeId::new("n10"));
+    state.editor_ui.export_section_open = true;
     let panel = PropertyPanel::for_selection(&state).expect("frame panel");
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),

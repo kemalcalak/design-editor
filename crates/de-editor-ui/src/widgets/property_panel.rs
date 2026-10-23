@@ -199,6 +199,8 @@ pub struct PropertyPanel {
     pub stroke_mode_popover_open: bool,
     /// Fill row whose `⋯` menu is open.
     pub fill_menu_open: Option<usize>,
+    /// Export section expanded.
+    pub export_section_open: bool,
     /// Hovered stroke-mode popover row index (gear popover open).
     pub stroke_mode_popover_hover: Option<usize>,
     /// True for multi-select aggregate (inputs inert, "N items").
@@ -320,6 +322,21 @@ impl PropertyPanel {
 
     /// Section-visibility mask for the current selection, threaded
     /// into every layout walker so paint + hit-test stay aligned.
+    /// Whether the pinned header carries the Create component button
+    /// (#83): a Design-tab single selection that could become a
+    /// component and is neither one nor an instance.
+    pub(crate) fn header_create_component(&self) -> bool {
+        let visible = self.visible_sections();
+        !self.page_only
+            && !self.is_multi
+            && matches!(self.tab, de_editor_core::PropertyTab::Design)
+            && visible.create_component
+            && matches!(
+                visible.component_button,
+                crate::widgets::property_panel_visibility::ComponentButtonState::Create
+            )
+    }
+
     pub(crate) fn visible_sections(&self) -> sections::VisibleSections {
         let caps = self.capabilities();
         let component_button = if self.snapshot.is_instance {
@@ -370,6 +387,7 @@ impl PropertyPanel {
             stroke_edit_mode: self.stroke_edit_mode,
             stroke_mode_popover_open: self.stroke_mode_popover_open,
             fill_menu: self.fill_menu_open,
+            export_open: self.export_section_open,
             color_variable_count: self.color_variable_count,
             fill_variable_bound: self.fill_variable_ref.is_some(),
             stroke_variable_bound: self.stroke_variable_ref.is_some(),

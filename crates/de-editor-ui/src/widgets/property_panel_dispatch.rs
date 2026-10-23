@@ -585,6 +585,14 @@ pub fn apply_property_action(
             state.editor_ui.close_color_variable_picker();
             Handled
         }
+        A::ToggleExportSection => {
+            let ui = &mut state.editor_ui;
+            ui.export_section_open = !ui.export_section_open;
+            ui.export_scale_picker_open = false;
+            ui.export_format_picker_open = false;
+            ui.export_picker_hover = None;
+            Handled
+        }
         A::ToggleExportScalePicker => {
             let ui = &mut state.editor_ui;
             ui.export_scale_picker_open = !ui.export_scale_picker_open;

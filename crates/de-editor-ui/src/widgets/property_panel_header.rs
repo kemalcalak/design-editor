@@ -32,6 +32,8 @@ pub enum PanelHeader<'a> {
         accent: Color,
         title: &'a str,
         kind: &'a str,
+        /// Paint the Create component button at the right edge (#83).
+        create_component: bool,
     },
     Code {
         title: &'a str,
@@ -41,7 +43,11 @@ pub enum PanelHeader<'a> {
 /// The header for a selection: the layer rail's glyph, tinted purple /
 /// violet for components and instances (their diamond) and accent
 /// otherwise.
-pub fn node_header<'a>(theme: &Theme, snapshot: &'a NodeSnapshot) -> PanelHeader<'a> {
+pub fn node_header<'a>(
+    theme: &Theme,
+    snapshot: &'a NodeSnapshot,
+    create_component: bool,
+) -> PanelHeader<'a> {
     let accent = if snapshot.is_reusable {
         COMPONENT_ACCENT
     } else if snapshot.is_instance {
@@ -59,6 +65,7 @@ pub fn node_header<'a>(theme: &Theme, snapshot: &'a NodeSnapshot) -> PanelHeader
         accent,
         title,
         kind: snapshot.kind.as_str(),
+        create_component,
     }
 }
 
@@ -79,6 +86,11 @@ pub fn close_rect(panel_rect: Rect) -> Rect {
         ),
         size: Point2D::new(CLOSE, CLOSE),
     }
+}
+
+/// The header's Create component button, right-aligned in the band.
+pub fn create_component_rect(panel_rect: Rect) -> Rect {
+    close_rect(panel_rect)
 }
 
 /// The tab a press on the header switches to: only the Code view's close
@@ -105,6 +117,7 @@ pub fn paint_panel_header(
             accent,
             title,
             kind,
+            create_component,
         } => {
             draw_icon(
                 cx.backend,
@@ -114,6 +127,20 @@ pub fn paint_panel_header(
                 *accent,
                 1.6,
             );
+            let right = if *create_component {
+                let button = create_component_rect(panel_rect);
+                draw_icon(
+                    cx.backend,
+                    Icon::Component,
+                    Point2D::new(button.origin.x + 4.0, button.origin.y + 4.0),
+                    CLOSE - 8.0,
+                    theme.muted_foreground,
+                    1.6,
+                );
+                button.origin.x - ICON_GAP
+            } else {
+                right
+            };
             let kind_w = text_metrics::measure_chrome(cx.backend, kind, KIND_FONT);
             text(
                 cx,
