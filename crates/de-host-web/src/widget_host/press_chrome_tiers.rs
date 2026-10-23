@@ -1,16 +1,18 @@
 //! Web `apply_press` tiers 4-6 — the rail-overlay band, the floating
-//! VariablesPanel band, and the TopBar.
+//! VariablesPanel band, and the floating chrome (file pill + canvas action
+//! group).
 //!
 //! Tier 4 covers the image-fill popover, the StatusBar controls, and the
-//! slice of the chat model picker that can lift above the TopBar. Tier 5
+//! slice of the chat model picker that can lift over the chrome. Tier 5
 //! is gated on `over_chat_model_picker` so the picker card keeps its
 //! overlap with the panels beneath it.
 
 use super::press_ctx::PressCtx;
 use super::WidgetHost;
-use de_editor_ui::widgets::press_flow::{self, TopBarPress};
-use de_editor_ui::widgets::{PropertyPanel, TopBarHit, TOP_BAR_HEIGHT};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
+use de_editor_ui::widgets::press_flow::{self, ChromePress};
+use de_editor_ui::widgets::PropertyPanel;
+use de_editor_ui::Point2D;
 
 impl WidgetHost {
     /// `None` — no rail overlay claimed the press.
@@ -27,16 +29,12 @@ impl WidgetHost {
         // refusal, while an outside press still commits and closes the popup.
         if self.editor_state.editor_ui.image_fill_popover_open {
             if let Some(panel) = PropertyPanel::for_selection(&self.editor_state) {
-                let property_rect = Rect {
-                    origin: Point2D::new(
-                        viewport_width - self.editor_state.editor_ui.property_panel_width,
-                        TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (viewport_height - TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        viewport_width,
+                        viewport_height,
+                    );
                 let point = Point2D::new(x, y);
                 if panel.image_fill_popover_contains(property_rect, point) {
                     if let Some(focus) = panel.image_fill_popover_input_at(property_rect, point) {
@@ -81,11 +79,16 @@ impl WidgetHost {
             }
         }
 
-        // Chat paints after the TopBar. In a short maximized viewport the
-        // upward model dropdown can cover the bar, so route that visible slice
-        // before the lower TopBar surface. Higher dropdowns/modals already ran.
-        if y < TOP_BAR_HEIGHT
-            && self.apply_chat_model_picker_overlay_press(x, y, viewport_width, viewport_height)
+        // Chat paints after the floating chrome. In a short maximized
+        // viewport the upward model dropdown can cover it, so route that
+        // visible slice before the lower chrome surface. Higher
+        // dropdowns/modals already ran.
+        if canvas_geometry::over_chrome(
+            &self.editor_state,
+            viewport_width,
+            viewport_height,
+            Point2D::new(x, y),
+        ) && self.apply_chat_model_picker_overlay_press(x, y, viewport_width, viewport_height)
         {
             return Some(true);
         }
@@ -119,99 +122,83 @@ impl WidgetHost {
         None
     }
 
-    /// TopBar chrome + the blank-press fall-through for its gaps.
-    /// `None` — the point is outside the bar entirely.
-    pub(in crate::widget_host) fn press_top_bar_tier(&mut self, ctx: &PressCtx) -> Option<bool> {
-        let (x, y) = (ctx.x, ctx.y);
+    /// Floating chrome (file pill + canvas action group) and the
+    /// blank-press fall-through for their padding. `None` — the point is
+    /// off the chrome entirely. Mirrors the native host.
+    pub(in crate::widget_host) fn press_chrome_tier(&mut self, ctx: &PressCtx) -> Option<bool> {
+        let point = Point2D::new(ctx.x, ctx.y);
         let viewport_width = ctx.viewport_width;
         let viewport_height = ctx.viewport_height;
-        let rename_committed = ctx.rename_committed;
-        let text_edit_committed = ctx.text_edit_committed;
-        // 0b. TopBar — sidebar toggle + chrome buttons. Mirrors the
-        //     native host so web + native behave identically.
-        let top_bar_rect = self.top_bar_rect(viewport_width);
-        let top_bar = self.top_bar();
-        if let Some(hit) = top_bar.hit_test(top_bar_rect, Point2D::new(x, y)) {
+        if let Some(hit) = canvas_geometry::chrome_hit_at(
+            &self.editor_state,
+            viewport_width,
+            viewport_height,
+            point,
+        ) {
             self.close_image_popovers_for_higher_overlay();
             self.commit_property_family_focus_if_any();
-            let pressed = de_editor_ui::widgets::editor_state_ext::topbar_button_hover(hit);
             self.editor_state.editor_ui.pressed_button =
-                Some(de_editor_core::ButtonPressTarget::TopBar(pressed));
-            // Arms whose behaviour is identical on both hosts live in
-            // the shared flow; only the platform ones fall through.
-            match press_flow::apply_shared_top_bar_hit(&mut self.editor_state, hit, self.now_ms) {
-                TopBarPress::Handled => {
-                    self.mark_dirty();
-                    return Some(true);
-                }
-                TopBarPress::FileMenuToggled => {
+                Some(de_editor_core::ButtonPressTarget::Chrome(hit.button()));
+            // Arms whose behaviour is identical on both hosts live in the
+            // shared flow; only Preview falls through.
+            match press_flow::apply_shared_chrome_hit(&mut self.editor_state, hit) {
+                ChromePress::Handled => {}
+                ChromePress::FileMenuToggled => {
                     self.clear_layer_panel_hover();
-                    self.mark_dirty();
-                    return Some(true);
                 }
-                TopBarPress::Platform => {}
-            }
-            match hit {
-                // Handled by the shared flow above.
-                TopBarHit::ToggleSidebar
-                | TopBarHit::ToggleTheme
-                | TopBarHit::ToggleLocale
-                | TopBarHit::OpenAgentSettings
-                | TopBarHit::ToggleFileMenu
-                | TopBarHit::OpenExportMenu
-                | TopBarHit::OpenAssetCenter
-                | TopBarHit::OpenImportMenu
-                | TopBarHit::Home => {}
-                TopBarHit::ToggleGitPanel => {
-                    self.editor_state.editor_ui.git_panel.open ^= true;
-                }
-                TopBarHit::ToggleFullscreen => {
-                    // The web host runs in WASM, so it toggles the browser
-                    // Fullscreen API directly — no runner round-trip and no
-                    // unconsumed intent flag (unlike native, where the host
-                    // can't reach the winit window).
-                    if let Some(doc) = web_sys::window().and_then(|w| w.document()) {
-                        if doc.fullscreen_element().is_some() {
-                            doc.exit_fullscreen();
-                        } else if let Some(el) = doc.document_element() {
-                            let _ = el.request_fullscreen();
-                        }
-                    }
-                }
-                TopBarHit::TogglePreview => {
-                    if self.preview.is_some() {
-                        // Exit preview mode. Track M-1: defer the teardown —
-                        // only close the runtime if there is no device frame.
-                        self.exit_preview(viewport_width, viewport_height);
-                    } else {
-                        #[cfg(feature = "canvaskit")]
-                        {
-                            let op_ck = self.op_ck.clone();
-                            let _ = self.enter_preview_from_browser(
-                                viewport_width,
-                                viewport_height,
-                                op_ck.as_ref(),
-                            );
-                        }
-                        #[cfg(not(feature = "canvaskit"))]
-                        {
-                            self.editor_state.editor_ui.preview.mode = false;
-                            self.editor_state.editor_ui.preview.warnings =
-                                vec!["preview: not available in this build".to_string()];
-                        }
-                    }
+                ChromePress::Platform => {
+                    self.toggle_preview_from_chrome(viewport_width, viewport_height)
                 }
             }
             self.mark_dirty();
             return Some(true);
         }
-        if (top_bar_rect).contains(Point2D::new(x, y)) {
-            // Top-bar gaps eat clicks but don't act — still a blank
-            // press, so every text input blurs.
+        if canvas_geometry::over_chrome(&self.editor_state, viewport_width, viewport_height, point)
+        {
+            // The chrome's padding eats clicks but doesn't act — still a
+            // blank press, so every text input blurs.
             let image_closed = self.close_image_popovers_for_higher_overlay();
             let blurred = self.blur_text_inputs_on_blank_press();
-            return Some(image_closed || blurred || rename_committed || text_edit_committed);
+            return Some(
+                image_closed || blurred || ctx.rename_committed || ctx.text_edit_committed,
+            );
         }
         None
+    }
+
+    /// Enter / exit Preview from the canvas action group's Play button.
+    fn toggle_preview_from_chrome(&mut self, viewport_width: f32, viewport_height: f32) {
+        if self.preview.is_some() {
+            // Exit preview mode. Track M-1: defer the teardown — only close
+            // the runtime if there is no device frame.
+            self.exit_preview(viewport_width, viewport_height);
+            return;
+        }
+        #[cfg(feature = "canvaskit")]
+        {
+            let op_ck = self.op_ck.clone();
+            let _ =
+                self.enter_preview_from_browser(viewport_width, viewport_height, op_ck.as_ref());
+        }
+        #[cfg(not(feature = "canvaskit"))]
+        {
+            self.editor_state.editor_ui.preview.mode = false;
+            self.editor_state.editor_ui.preview.warnings =
+                vec!["preview: not available in this build".to_string()];
+        }
+    }
+
+    /// Toggle the browser's Fullscreen API (File ▸ Fullscreen). The web host
+    /// runs in WASM, so it reaches the document directly — no runner
+    /// round-trip and no intent flag (unlike native, where the host can't
+    /// reach the winit window).
+    pub(in crate::widget_host) fn toggle_browser_fullscreen(&self) {
+        if let Some(doc) = web_sys::window().and_then(|w| w.document()) {
+            if doc.fullscreen_element().is_some() {
+                doc.exit_fullscreen();
+            } else if let Some(el) = doc.document_element() {
+                let _ = el.request_fullscreen();
+            }
+        }
     }
 }

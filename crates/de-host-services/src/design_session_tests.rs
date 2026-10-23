@@ -4,7 +4,6 @@
 //! per-topic modules' `use super::*` reaching `design_session`'s items.
 
 use super::*;
-use de_editor_ui::widgets::TOP_BAR_HEIGHT;
 
 #[cfg(test)]
 mod spawn_worker_tests {
@@ -351,17 +350,14 @@ mod viewport_fit_tests {
 
         assert_eq!(
             design_canvas_size(&state, VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-            (VIEWPORT_WIDTH, VIEWPORT_HEIGHT - TOP_BAR_HEIGHT),
+            (VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
             "Design with no selection must use the full canvas width"
         );
 
         state.set_single_selection(de_editor_core::NodeId::new("root"));
         assert_eq!(
             design_canvas_size(&state, VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-            (
-                VIEWPORT_WIDTH - PROPERTY_PANEL_WIDTH,
-                VIEWPORT_HEIGHT - TOP_BAR_HEIGHT
-            ),
+            (VIEWPORT_WIDTH - PROPERTY_PANEL_WIDTH, VIEWPORT_HEIGHT),
             "Design with a live selection must reserve the property rail"
         );
 
@@ -369,10 +365,7 @@ mod viewport_fit_tests {
         state.editor_ui.property_tab = de_editor_core::PropertyTab::Code;
         assert_eq!(
             design_canvas_size(&state, VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-            (
-                VIEWPORT_WIDTH - PROPERTY_PANEL_WIDTH,
-                VIEWPORT_HEIGHT - TOP_BAR_HEIGHT
-            ),
+            (VIEWPORT_WIDTH - PROPERTY_PANEL_WIDTH, VIEWPORT_HEIGHT),
             "Code remains selection-independent and must reserve the property rail"
         );
     }

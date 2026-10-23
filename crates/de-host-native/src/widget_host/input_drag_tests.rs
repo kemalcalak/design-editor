@@ -483,7 +483,6 @@ fn node_drag_not_intercepted_by_align_toolbar_hover() {
     // Codex CONCERN: with 2+ selected, an active node-drag must
     // keep moving the nodes when the cursor sweeps the align
     // toolbar's hit region.
-    use de_editor_ui::widgets::TOP_BAR_HEIGHT;
     let mut host = WidgetHostNative::new();
     seed(
         &mut host,
@@ -509,7 +508,7 @@ fn node_drag_not_intercepted_by_align_toolbar_hover() {
     assert!(host.node_drag.is_some(), "node_drag must seed on press");
     let zoom = host.editor_state().viewport.zoom.max(0.0001);
     let target_x = host.editor_state().editor_ui.layer_panel_width + 400.0;
-    let target_y = TOP_BAR_HEIGHT + 24.0;
+    let target_y = cy0 + 64.0;
     let expected_dx = (target_x - press_x) / zoom;
     let expected_dy = (target_y - press_y) / zoom;
     host.apply_cursor_move(target_x, target_y);

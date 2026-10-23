@@ -1,62 +1,52 @@
+//! Web wiring for the floating chrome (file pill + canvas action group):
+//! hover, press routing and the tooltip pump, mirroring the native host.
+
 use super::WidgetHost;
-use de_editor_ui::widgets::{TopBar, TopBarHit, TOP_BAR_HEIGHT};
+use de_editor_core::ChromeButton;
+use de_editor_ui::widgets::chrome_tooltip::button_anchor;
 use de_editor_ui::{Color, Point2D, Rect, RenderBackend, TextLayout};
 
-#[test]
-fn web_cursor_move_ignores_topbar_traffic_cluster() {
+fn hosted() -> WidgetHost {
     let mut host = WidgetHost::new();
     host.last_viewport_w = 1440.0;
     host.last_viewport_h = 900.0;
-    let topbar = Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(host.last_viewport_w, TOP_BAR_HEIGHT),
-    };
-    let traffic = TopBar::traffic_cluster_rect(topbar);
-    let over = Point2D::new(
-        traffic.origin.x + traffic.size.x / 2.0,
-        traffic.origin.y + traffic.size.y / 2.0,
+    host
+}
+
+fn centre(host: &WidgetHost, button: ChromeButton) -> Point2D {
+    let rect = button_anchor(&host.editor_state, 1440.0, 900.0, button).expect("button paints");
+    Point2D::new(
+        rect.origin.x + rect.size.x / 2.0,
+        rect.origin.y + rect.size.y / 2.0,
+    )
+}
+
+#[test]
+fn web_cursor_move_lights_the_hovered_chrome_button() {
+    let mut host = hosted();
+    let point = centre(&host, ChromeButton::OpenExportMenu);
+    host.apply_cursor_move(point.x, point.y);
+    assert_eq!(
+        host.editor_state.editor_ui.chrome_button_hover,
+        Some(ChromeButton::OpenExportMenu)
     );
-
-    host.apply_cursor_move(over.x, over.y);
-
-    assert!(!host.editor_state.editor_ui.topbar_traffic_hover);
+    // The browser has no window controls to reveal.
+    assert!(!host.editor_state.editor_ui.window_control_hover);
 }
 
 #[test]
-fn web_topbar_sidebar_button_has_no_traffic_gap() {
-    let mut host = WidgetHost::new();
-    host.last_viewport_w = 1440.0;
-    host.last_viewport_h = 900.0;
-    assert!(host.editor_state.editor_ui.sidebar_open);
-
-    assert!(host.apply_press(26.0, TOP_BAR_HEIGHT / 2.0, 1440.0, 900.0));
-
-    assert!(!host.editor_state.editor_ui.sidebar_open);
+fn web_file_pill_name_opens_the_file_menu() {
+    let mut host = hosted();
+    let point = centre(&host, ChromeButton::ToggleFileMenu);
+    assert!(host.apply_press(point.x, point.y, 1440.0, 900.0));
+    assert!(host.editor_state.editor_ui.file_menu_open);
 }
 
 #[test]
-fn web_topbar_preview_button_press_is_routed_and_leaves_no_half_state() {
-    let mut host = WidgetHost::new();
-    host.last_viewport_w = 1440.0;
-    host.last_viewport_h = 900.0;
+fn web_preview_button_press_is_routed_and_leaves_no_half_state() {
+    let mut host = hosted();
     assert!(!host.editor_state.editor_ui.preview.mode);
-    // The canvas Preview (Play) button graduated out of the
-    // experimental-features gate (2026-07) — it's a regular always-on
-    // button now, no opt-in flag needed before probing for its hit target.
-
-    let topbar_rect = host.top_bar_rect(host.last_viewport_w);
-    let topbar = host.top_bar();
-    let mut point = None;
-    let mut x = topbar_rect.origin.x;
-    while x < topbar_rect.origin.x + topbar_rect.size.x {
-        let p = Point2D::new(x, TOP_BAR_HEIGHT / 2.0);
-        if topbar.hit_test(topbar_rect, p) == Some(TopBarHit::TogglePreview) {
-            point = Some(p);
-            break;
-        }
-        x += 1.0;
-    }
-    let point = point.expect("preview button point");
+    let point = centre(&host, ChromeButton::TogglePreview);
 
     assert!(host.apply_press(point.x, point.y, 1440.0, 900.0));
 
@@ -84,29 +74,27 @@ fn web_topbar_preview_button_press_is_routed_and_leaves_no_half_state() {
 /// that the tooltip would appear only if the user moved the mouse again
 /// after waiting.
 #[test]
-fn web_topbar_hover_reports_a_pending_tooltip_until_it_is_due() {
-    const DWELL: u64 = de_editor_ui::widgets::top_bar_tooltip::TOOLTIP_DWELL_MS;
-    let mut host = WidgetHost::new();
-    host.last_viewport_w = 1440.0;
-    host.last_viewport_h = 900.0;
-    assert!(!host.top_bar_tooltip_pending());
+fn web_chrome_hover_reports_a_pending_tooltip_until_it_is_due() {
+    const DWELL: u64 = de_editor_ui::widgets::chrome_tooltip::TOOLTIP_DWELL_MS;
+    let mut host = hosted();
+    assert!(!host.chrome_tooltip_pending());
 
     host.set_now_ms(1_000);
-    // The sidebar toggle sits at the bar's left edge on web (no traffic gap).
-    host.apply_cursor_move(26.0, TOP_BAR_HEIGHT / 2.0);
+    let point = centre(&host, ChromeButton::ToggleCodeView);
+    host.apply_cursor_move(point.x, point.y);
     assert_eq!(
-        host.editor_state.editor_ui.topbar_button_hover,
-        Some(de_editor_core::TopBarButton::ToggleSidebar)
+        host.editor_state.editor_ui.chrome_button_hover,
+        Some(ChromeButton::ToggleCodeView)
     );
     assert_eq!(
-        host.editor_state.editor_ui.topbar_hover_since_ms,
+        host.editor_state.editor_ui.chrome_hover_since_ms,
         Some(1_000)
     );
-    assert!(host.top_bar_tooltip_pending());
+    assert!(host.chrome_tooltip_pending());
 
     // Once due there is nothing further to wake for, so the pump retires.
     host.set_now_ms(1_000 + DWELL);
-    assert!(!host.top_bar_tooltip_pending());
+    assert!(!host.chrome_tooltip_pending());
 }
 
 #[derive(Default)]
@@ -138,16 +126,16 @@ impl RenderBackend for CaptureBackend {
 }
 
 #[test]
-fn web_topbar_does_not_paint_traffic_dots() {
+fn web_does_not_paint_window_control_dots() {
     let mut host = WidgetHost::new();
     let mut backend = CaptureBackend::default();
 
     host.paint_editor(&mut backend, 1440.0, 900.0);
 
-    let left_topbar_ovals = backend
+    let strip_ovals = backend
         .ovals
         .iter()
-        .filter(|r| r.origin.x < 80.0 && r.origin.y < TOP_BAR_HEIGHT)
+        .filter(|r| r.origin.x < 80.0 && r.origin.y < de_editor_ui::widgets::WINDOW_STRIP_H)
         .count();
-    assert_eq!(left_topbar_ovals, 0);
+    assert_eq!(strip_ovals, 0);
 }

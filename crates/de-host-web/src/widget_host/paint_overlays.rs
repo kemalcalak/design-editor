@@ -9,7 +9,7 @@
 use super::WidgetHost;
 use de_editor_ui::widgets::{
     ComponentBrowserPanel, DesignMdPanel, IconPickerPanel, PaintCx, PromptCenterPanel,
-    SceneTemplatePanel, Widget, TOP_BAR_HEIGHT,
+    SceneTemplatePanel, Widget,
 };
 use de_editor_ui::{Point2D, Rect, RenderBackend};
 
@@ -29,8 +29,7 @@ impl WidgetHost {
         // Re-bound here with the same expression `paint_editor` used, so the
         // moved block reads exactly the state it read inline.
         let ui = &self.editor_state.editor_ui;
-        // File-menu dropdown — anchored under TopBar's folder+chevron
-        // button (native §10b).
+        // File-menu dropdown — anchored under the file pill (native §10b).
         if let Some(menu_rect) = self.file_menu_rect(viewport_width) {
             use de_editor_ui::widgets::file_menu::FileMenu;
             let menu = FileMenu::from_editor_ui(&self.editor_state.editor_ui, self.wall_now_secs);
@@ -40,7 +39,7 @@ impl WidgetHost {
             menu.paint(&mut cx, menu_rect);
         }
 
-        // Export quick menu — anchored under the TopBar download button,
+        // Export quick menu — anchored under the action group's Download button,
         // same overlay band as the file menu it shortcuts (native §10b).
         if ui.export_quick_menu_open {
             use de_editor_ui::widgets::ExportQuickMenu;
@@ -230,10 +229,10 @@ impl WidgetHost {
         // `file_drop_active` yet; painting the guard keeps z-order
         // parity for when DOM drag events get wired.
         if self.editor_state.editor_ui.file_drop_active {
-            let (drop_left, _y, drop_w, drop_h) =
+            let (drop_left, drop_y, drop_w, drop_h) =
                 self.canvas_region(viewport_width, viewport_height);
             let drop_rect = Rect {
-                origin: Point2D::new(drop_left, TOP_BAR_HEIGHT),
+                origin: Point2D::new(drop_left, drop_y),
                 size: Point2D::new(drop_w, drop_h),
             };
             de_editor_ui::widgets::file_drop_overlay::paint_file_drop_overlay(

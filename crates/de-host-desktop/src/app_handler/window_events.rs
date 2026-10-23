@@ -10,7 +10,7 @@ use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
 
 impl DesktopApp {
-    /// The window's close (traffic light or TopBar dot). Closing a
+    /// The window's close (traffic light or window-strip dot). Closing a
     /// document returns to Home; closing Home itself quits. Cmd+Q
     /// always quits through `MenuAction::Quit`.
     pub(super) fn on_close_requested(&mut self, event_loop: &ActiveEventLoop) {
@@ -88,7 +88,7 @@ impl DesktopApp {
             self.win_size = Some((size.width, size.height));
         }
         // Fullscreen enter / exit arrives as a `Resized` on
-        // macOS — refresh the flag so the TopBar drops its
+        // macOS — refresh the flag so the chrome drops its
         // traffic-light reservation when the native lights
         // hide in fullscreen.
         let fullscreen = self

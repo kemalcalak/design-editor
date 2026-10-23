@@ -7,7 +7,7 @@ use de_editor_ui::widgets::property_panel_action::CodegenAction;
 use de_editor_ui::widgets::property_panel_action::{
     LayoutAlignValue, LayoutJustifyValue, TextAlignValue, TextGrowthValue,
 };
-use de_editor_ui::widgets::{PropertyPanel, PropertyPanelAction, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::{PropertyPanel, PropertyPanelAction};
 use de_editor_ui::{Point2D, Rect};
 use jian_ops_schema::node::container::{AlignItems, JustifyContent, LayoutMode};
 use jian_ops_schema::node::text::{TextAlign, TextGrowth};
@@ -86,8 +86,8 @@ fn seed(host: &mut WidgetHost, json: &str) {
 fn property_rect(host: &WidgetHost) -> Rect {
     let width = host.editor_state.editor_ui.property_panel_width;
     Rect {
-        origin: Point2D::new(VIEWPORT_W - width, TOP_BAR_HEIGHT),
-        size: Point2D::new(width, VIEWPORT_H - TOP_BAR_HEIGHT),
+        origin: Point2D::new(VIEWPORT_W - width, 0.0),
+        size: Point2D::new(width, VIEWPORT_H),
     }
 }
 

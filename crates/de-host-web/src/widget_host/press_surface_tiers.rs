@@ -14,7 +14,7 @@ use super::{
 };
 use de_editor_core::host_press_transitions as core_press;
 use de_editor_ui::widgets::chat_click_flow;
-use de_editor_ui::widgets::{AIChatHit, AIChatPlaceholder, LayerPanelHit, Toolbar, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::{AIChatHit, AIChatPlaceholder, LayerPanelHit, Toolbar};
 use de_editor_ui::Point2D;
 
 impl WidgetHost {
@@ -156,9 +156,9 @@ impl WidgetHost {
         //      that happens to share screen y (matches native order).
         {
             use de_editor_ui::widgets::{AlignToolbar, AlignToolbarHit};
-            let (acx, _, acw, ach) = self.canvas_region(viewport_width, viewport_height);
+            let (acx, acy, acw, ach) = self.canvas_region(viewport_width, viewport_height);
             let canvas_region = de_editor_ui::Rect {
-                origin: Point2D::new(acx, TOP_BAR_HEIGHT),
+                origin: Point2D::new(acx, acy),
                 size: Point2D::new(acw, ach),
             };
             if let Some(hit) = AlignToolbar::for_canvas_region(canvas_region, &self.editor_state)

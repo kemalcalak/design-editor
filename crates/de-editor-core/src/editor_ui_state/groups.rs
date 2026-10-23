@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 pub struct PreviewState {
     /// Whether the canvas is in Preview (Play) mode. Entering does NOT
     /// mutate `doc`; exiting drops the runtime and leaves `doc`
-    /// byte-identical. The TopBar Play/Stop button + `Esc` toggle it.
+    /// byte-identical. The canvas Play/Stop button + `Esc` toggle it.
     pub mode: bool,
     /// Non-fatal warnings raised when the runtime was last built from
     /// `doc` for Preview — e.g. legacy role-frames promoted to widget

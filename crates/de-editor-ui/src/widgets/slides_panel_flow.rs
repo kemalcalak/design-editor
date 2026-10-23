@@ -323,7 +323,7 @@ pub fn widget<'a>(
 /// is neither on one of its rows nor on its chrome closes it and is
 /// swallowed, so the click that dismisses a menu never also does
 /// something underneath it. That is the same contract
-/// `press_flow::press_export_quick_menu` gives the TopBar's dropdown.
+/// `press_flow::press_export_quick_menu` gives the chrome's export dropdown.
 pub fn press(state: &mut EditorState, layout: &SlidesPanelLayout, point: Point2D) -> SlidesPress {
     if state.editor_ui.slides_panel.export_menu_open
         && !layout.actions.over_menu(point)
@@ -441,12 +441,12 @@ pub fn release(state: &mut EditorState, layout: &SlidesPanelLayout) -> SlidesRel
 
 /// Queue the slide-per-page PDF export for the whole deck.
 ///
-/// The SAME action the TopBar's export dropdown raises for its PDF row
+/// The SAME action the chrome's export dropdown raises for its PDF row
 /// (`press_flow::apply_export_quick_row`): set the format, then commit
 /// straight to the save picker rather than opening the format/scale
 /// dialog, because picking "Export PDF" already IS that choice. Routing
 /// through the shared file action is what stops the rail's bar and the
-/// TopBar from writing two different PDFs.
+/// chrome from writing two different PDFs.
 fn queue_deck_pdf_export(state: &mut EditorState) {
     use de_editor_core::editor_ui_state::{ExportFormat, FileAction};
     state.editor_ui.export_format = ExportFormat::Pdf;

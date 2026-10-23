@@ -99,11 +99,12 @@ pub(crate) fn fade(color: Color, factor: f32) -> Color {
     }
 }
 
-/// The editor `Theme` the Settings modal paints with: Home's tokens
-/// mapped onto the shadcn-style slots every Settings section already
-/// reads, so the modal shares Home's v2 look without each section
-/// learning a second palette.
-pub fn settings_theme(mode: ThemeMode) -> Theme {
+/// The editor chrome's `Theme`: Home's tokens mapped onto the shadcn-style
+/// slots every widget already reads, so the editor (#30), the Settings
+/// modal and the chat panel share Home's v2 look without each widget
+/// learning a second palette. The canvas sits on the page background,
+/// with the rails and floating chrome on `surface` above it.
+pub fn chrome_theme(mode: ThemeMode) -> Theme {
     let p = HomePalette::for_mode(mode);
     let base = match mode {
         ThemeMode::Dark => Theme::dark(),
@@ -134,6 +135,7 @@ pub fn settings_theme(mode: ThemeMode) -> Theme {
         user_bubble_foreground: p.text,
         muted_subtle: p.text_3,
         status_success: p.ok,
+        canvas_surface: p.bg,
         ..base
     }
 }

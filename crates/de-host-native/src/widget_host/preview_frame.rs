@@ -6,7 +6,6 @@
 //! host's state + decoration on top of it.
 
 use de_editor_core::PreviewDeviceKind;
-use de_editor_ui::widgets::TOP_BAR_HEIGHT;
 use de_editor_ui::{Point2D, Rect};
 
 pub(crate) use de_preview_core::device_frame::{
@@ -342,7 +341,7 @@ impl super::WidgetHostNative {
 
         // The outward ring masks square clip bleed without covering the
         // rounded-frame interior. Clip it to the canvas so it cannot touch
-        // the TopBar or rails painted earlier.
+        // the floating chrome or rails painted earlier.
         frame_backend.save();
         frame_backend.clip_rect(canvas_rect);
         paint_corner_notches(
@@ -438,11 +437,11 @@ impl super::WidgetHostNative {
     /// Canvas rect shared by switcher paint and hit-testing.
     pub(crate) fn preview_canvas_rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
         if self.preview_slideshow_active() {
-            // Presenting hides the rails; the TopBar stays painted.
-            let top = TOP_BAR_HEIGHT;
+            // Presenting hides the rails, so the stage is the whole window;
+            // the floating chrome (and its Stop button) stays over it.
             return Rect {
-                origin: Point2D::new(0.0, top),
-                size: Point2D::new(viewport_w, (viewport_h - top).max(0.0)),
+                origin: Point2D::new(0.0, 0.0),
+                size: Point2D::new(viewport_w, viewport_h.max(0.0)),
             };
         }
         let (canvas_x, canvas_y, canvas_w, canvas_h) = self.canvas_region(viewport_w, viewport_h);

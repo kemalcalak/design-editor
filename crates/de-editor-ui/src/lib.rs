@@ -8,7 +8,7 @@
 //! Modules:
 //! - [`widgets`] — the `Widget` facade trait, render primitives, the
 //!   editor-UI compositions (`LayerPanel` / `PropertyPanel` / `Toolbar`
-//!   / `TopBar` / settings modal / pickers), the `CanvasViewport`
+//!   / floating chrome / settings modal / pickers), the `CanvasViewport`
 //!   center canvas, the lucide icon glyph drawer, and `editor_state_ext`
 //!   (theme / translation derivations over `EditorUiState`).
 //! - [`image_runtime`] — host-facing encoded-image cache and decode-queue

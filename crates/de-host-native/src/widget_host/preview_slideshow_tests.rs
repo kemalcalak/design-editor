@@ -402,7 +402,8 @@ fn a_non_presenting_preview_still_routes_presses_to_the_runtime() {
 
 // ── presenting hides the editing chrome ───────────────────────────────────
 
-/// The stage a presentation paints on: everything under the TopBar.
+/// The stage a presentation paints on: the whole window (the floating
+/// chrome keeps its Stop button over it).
 ///
 /// This is the whole mechanism — no panel state changes, so the rails come
 /// back on their own the moment the presentation ends.
@@ -422,7 +423,10 @@ fn presenting_takes_the_full_stage_and_gives_it_back_on_exit() {
     let presenting_stage = host.preview_canvas_rect(VW, VH);
     assert_eq!(presenting_stage.origin.x, 0.0);
     assert_eq!(presenting_stage.size.x, VW);
-    assert!(presenting_stage.origin.y > 0.0, "the TopBar keeps its band");
+    assert_eq!(
+        presenting_stage.origin.y, 0.0,
+        "no title bar takes a band any more"
+    );
 
     host.apply_escape();
 
@@ -516,7 +520,7 @@ fn the_rails_are_not_painted_while_presenting() {
             None,
         );
         assert!(surface.read_pixels(&info, &mut pixels, stride, (0, 0)));
-        // Inside the left rail, well below the TopBar.
+        // Inside the left rail, well below its window strip.
         let offset = 300 * stride + 40 * 4;
         [pixels[offset], pixels[offset + 1], pixels[offset + 2]]
     }

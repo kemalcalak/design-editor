@@ -1,4 +1,4 @@
-//! TopBar export quick-menu host behaviour: opening it from the download
+//! Export quick-menu host behaviour: opening it from the download
 //! button, what each row queues, and how it coexists with the other
 //! chrome dropdowns and with a running presentation.
 
@@ -6,8 +6,8 @@ use super::WidgetHostNative;
 use de_editor_core::editor_ui_state::{ExportFormat, FileAction};
 use de_editor_core::scene_template_catalog::TemplateScene;
 use de_editor_core::{EditorState, ExportQuickRow};
-use de_editor_ui::widgets::{ExportQuickMenu, TopBar, TOP_BAR_HEIGHT};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::ExportQuickMenu;
+use de_editor_ui::Point2D;
 
 const VIEWPORT_W: f32 = 1400.0;
 const VIEWPORT_H: f32 = 900.0;
@@ -52,17 +52,15 @@ fn plain_host() -> WidgetHostNative {
     host
 }
 
-fn top_bar_rect() -> Rect {
-    Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(VIEWPORT_W, TOP_BAR_HEIGHT),
-    }
-}
-
-/// Center of the TopBar download button.
+/// Center of the canvas action group's Download button.
 fn export_button_point(host: &WidgetHostNative) -> Point2D {
-    let bar = TopBar::for_editor_ui(&host.editor_state.editor_ui);
-    let rect = bar.export_button_rect(top_bar_rect());
+    let rect = de_editor_ui::widgets::chrome_tooltip::button_anchor(
+        &host.editor_state,
+        VIEWPORT_W,
+        host.last_viewport_h,
+        de_editor_core::ChromeButton::OpenExportMenu,
+    )
+    .expect("the action group paints");
     Point2D::new(
         rect.origin.x + rect.size.x / 2.0,
         rect.origin.y + rect.size.y / 2.0,
@@ -223,7 +221,7 @@ fn hovering_a_row_records_it_and_leaving_the_menu_clears_it() {
 }
 
 #[test]
-fn opening_another_top_bar_dropdown_closes_the_export_menu() {
+fn opening_another_chrome_dropdown_closes_the_export_menu() {
     let mut host = plain_host();
     // Locale picker first, then the export button: the export menu must
     // take the tier over, not stack under an already-open picker.
@@ -258,8 +256,8 @@ fn escape_closes_the_export_menu_one_layer_at_a_time() {
     assert_eq!(host.editor_state.editor_ui.export_quick_menu_hover, None);
 }
 
-/// The TopBar stays painted while a deck presents (it carries the exit
-/// control), so its buttons must keep working — including this one, which
+/// The floating chrome stays painted while a deck presents (it carries the
+/// exit control), so its buttons must keep working — including this one, which
 /// is how a presenter exports the deck they are showing.
 ///
 /// Windows-gated for the same reason the other preview host tests are:

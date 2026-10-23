@@ -41,32 +41,39 @@ fn centre(rect: Rect) -> Point2D {
 }
 
 #[test]
-fn the_top_bar_palette_button_opens_the_panel() {
-    use crate::widgets::{TopBar, TopBarHit, TOP_BAR_HEIGHT};
-
-    let bar = TopBar::new("Untitled");
-    let rect = Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(1000.0, TOP_BAR_HEIGHT),
-    };
-    let button = bar.asset_center_button_rect(rect);
-    assert_eq!(
-        bar.hit_test(rect, centre(button)),
-        Some(TopBarHit::OpenAssetCenter)
-    );
+fn the_file_menu_footer_palette_opens_the_panel() {
+    use crate::widgets::file_menu::{FileMenu, FileMenuChoice, FileMenuTool, MenuHit};
 
     let mut state = EditorState::default();
+    let menu = FileMenu::from_editor_ui(&state.editor_ui, 0);
+    let panel = menu.rect_at(Rect::xywh(20.0, 14.0, 160.0, 34.0));
+    // Walk the footer row (the menu's last 40 px) for the palette tool.
+    let footer_y = panel.origin.y + panel.size.y - 26.0;
+    let choice = (0..300)
+        .map(|dx| Point2D::new(panel.origin.x + dx as f32, footer_y))
+        .find_map(|p| match menu.hit(panel, p) {
+            MenuHit::Row(row) => menu
+                .choice_for_row(row)
+                .filter(|c| *c == FileMenuChoice::Tool(FileMenuTool::AssetCenter)),
+            _ => None,
+        })
+        .expect("the footer offers the Asset Center");
+
     assert!(!state.editor_ui.scene_template_center.open);
-    crate::widgets::press_flow::apply_shared_top_bar_hit(&mut state, TopBarHit::OpenAssetCenter, 0);
+    crate::widgets::press_flow::apply_file_menu_app_choice(&mut state, choice, 0);
     assert!(state.editor_ui.scene_template_center.open);
+    assert!(
+        !state.editor_ui.file_menu_open,
+        "choosing a tool closes the menu"
+    );
 }
 
 /// The panel covers the middle of the window, so any dropdown left open
 /// would float over a grid the user can no longer reach past. This is the
 /// same dismissal set the export button applies.
 #[test]
-fn opening_the_asset_center_dismisses_the_other_top_bar_menus() {
-    use crate::widgets::TopBarHit;
+fn opening_the_asset_center_dismisses_the_other_chrome_menus() {
+    use crate::widgets::file_menu::{FileMenuChoice, FileMenuTool};
 
     let mut state = EditorState::default();
     state.editor_ui.file_menu_open = true;
@@ -75,7 +82,11 @@ fn opening_the_asset_center_dismisses_the_other_top_bar_menus() {
     state.editor_ui.locale_picker.open = true;
     state.editor_ui.prompt_center.open = true;
 
-    crate::widgets::press_flow::apply_shared_top_bar_hit(&mut state, TopBarHit::OpenAssetCenter, 0);
+    crate::widgets::press_flow::apply_file_menu_app_choice(
+        &mut state,
+        FileMenuChoice::Tool(FileMenuTool::AssetCenter),
+        0,
+    );
 
     assert!(state.editor_ui.scene_template_center.open);
     assert!(!state.editor_ui.file_menu_open);

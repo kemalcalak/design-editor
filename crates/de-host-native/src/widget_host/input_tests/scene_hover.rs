@@ -115,22 +115,17 @@ fn opening_file_menu_clears_stale_layer_hover() {
     host.editor_state_mut().editor_ui.hovered_layer_id = Some(NodeId::new("n1"));
     host.editor_state_mut().editor_ui.hovered_page_index = Some(0);
 
-    let top_bar_rect = de_editor_ui::Rect {
-        origin: de_editor_ui::Point2D::new(0.0, 0.0),
-        size: de_editor_ui::Point2D::new(host.last_viewport_w, TOP_BAR_HEIGHT),
-    };
-    let top_bar = TopBar::for_editor_ui(&host.editor_state().editor_ui);
-    let mut file_button = None;
-    let mut x = top_bar_rect.origin.x;
-    while x < top_bar_rect.origin.x + top_bar_rect.size.x {
-        let p = de_editor_ui::Point2D::new(x, TOP_BAR_HEIGHT / 2.0);
-        if top_bar.hit_test(top_bar_rect, p) == Some(TopBarHit::ToggleFileMenu) {
-            file_button = Some(p);
-            break;
-        }
-        x += 1.0;
-    }
-    let point = file_button.expect("top-bar file button point");
+    let rect = de_editor_ui::widgets::chrome_tooltip::button_anchor(
+        host.editor_state(),
+        host.last_viewport_w,
+        host.last_viewport_h,
+        de_editor_core::ChromeButton::ToggleFileMenu,
+    )
+    .expect("file pill paints");
+    let point = de_editor_ui::Point2D::new(
+        rect.origin.x + rect.size.x / 2.0,
+        rect.origin.y + rect.size.y / 2.0,
+    );
 
     assert!(host.apply_press(point.x, point.y, host.last_viewport_w, host.last_viewport_h));
 

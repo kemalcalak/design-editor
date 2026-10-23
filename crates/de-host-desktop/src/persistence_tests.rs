@@ -132,7 +132,7 @@ fn new_file_action_resets_to_starter_frame() {
     let v = host.editor_state().viewport;
     assert!((v.zoom - 0.8933333).abs() < 1e-3, "zoom {}", v.zoom);
     assert!((v.pan_x - 64.0).abs() < 1e-2, "pan_x {}", v.pan_x);
-    assert!((v.pan_y - 72.66669).abs() < 1e-2, "pan_y {}", v.pan_y);
+    assert!((v.pan_y - 92.66669).abs() < 1e-2, "pan_y {}", v.pan_y);
 }
 
 #[test]

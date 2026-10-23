@@ -40,7 +40,7 @@ impl ImportProgressOverlay {
 
     pub fn rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
         let x = ((viewport_w - CARD_WIDTH) / 2.0).max(16.0);
-        let y = ((viewport_h - CARD_HEIGHT) / 2.0).max(crate::widgets::TOP_BAR_HEIGHT + 16.0);
+        let y = ((viewport_h - CARD_HEIGHT) / 2.0).max(crate::widgets::WINDOW_STRIP_H + 16.0);
         Rect {
             origin: Point2D::new(x, y),
             size: Point2D::new(CARD_WIDTH, CARD_HEIGHT),

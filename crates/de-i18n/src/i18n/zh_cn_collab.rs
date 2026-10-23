@@ -212,6 +212,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "环境变量（可选）",
         "settings.agents.notInstalledHint" => "未安装？",
         "settings.agents.notTestedYet" => "尚未测试",
+        "chrome.saved" => "已保存",
+        "chrome.edited" => "已编辑",
+        "chrome.notSaved" => "未保存",
+        "chrome.variables" => "变量",
         _ => return None,
     })
 }

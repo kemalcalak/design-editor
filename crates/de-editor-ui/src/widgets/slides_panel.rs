@@ -131,7 +131,7 @@ const DROP_BAR_H: f32 = 2.0;
 const GHOST_ALPHA: f32 = 0.35;
 
 #[path = "slides_panel_tabs.rs"]
-mod tabs;
+pub(crate) mod tabs;
 
 pub use tabs::{text_tabs_fit, SlidesPanelTabs, SlidesTabRow};
 

@@ -331,14 +331,7 @@ impl WidgetHostNative {
     /// Cmd+Shift+C — toggle the PropertyPanel between Design / Code.
     pub fn apply_toggle_code_panel(&mut self) -> bool {
         self.commit_variable_row_focus_if_any();
-        use de_editor_core::PropertyTab;
-        let ui = &mut self.editor_state.editor_ui;
-        let next = match ui.property_tab {
-            PropertyTab::Design => PropertyTab::Code,
-            PropertyTab::Interact => PropertyTab::Code,
-            PropertyTab::Code => PropertyTab::Design,
-        };
-        if ui.set_property_tab(next) {
+        if self.editor_state.editor_ui.toggle_code_view() {
             self.mark_dirty();
         }
         true

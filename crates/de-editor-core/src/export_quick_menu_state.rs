@@ -1,15 +1,15 @@
-//! State-layer row identity for the TopBar export quick menu.
+//! State-layer row identity for the export quick menu.
 //!
 //! `ExportQuickRow` mirrors the rows `de_editor_ui::widgets::ExportQuickMenu`
 //! paints so the host can record hover on `EditorUiState` without
 //! `de-editor-core` depending on the widget crate (same discipline as
-//! `topbar_state::TopBarButton`).
+//! `chrome_button_state::ChromeButton`).
 //!
 //! Which rows a given document actually offers is decided in the widget
 //! layer (`widgets::export_menu_rows`), shared with the File menu's export
 //! section so the two can never disagree about what is available.
 
-/// One row of the TopBar export dropdown. The order here is the order a
+/// One row of the export dropdown. The order here is the order a
 /// deck shows them in; a non-deck document offers only the last two.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExportQuickRow {

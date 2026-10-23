@@ -64,17 +64,24 @@ impl WidgetHost {
         if !self.editor_state.editor_ui.file_menu_open {
             return None;
         }
-        let top_bar_rect = self.top_bar_rect(viewport_w);
-        let anchor = self.top_bar().file_menu_rect_for(top_bar_rect);
+        let anchor = overlay_geometry::file_menu_anchor(
+            &self.editor_state,
+            viewport_w,
+            self.last_viewport_h,
+        );
         let menu = FileMenu::from_editor_ui(&self.editor_state.editor_ui, self.wall_now_secs);
         Some(menu.rect_at(anchor))
     }
 
-    /// The export quick-menu dropdown rect — anchored under the TopBar
-    /// download button. Shared with paint + hit-test through
-    /// `host_overlay_geometry` so the three can never drift.
+    /// The export quick-menu dropdown rect — anchored under the canvas
+    /// action group's Download button. Shared with paint + hit-test
+    /// through `host_overlay_geometry` so the three can never drift.
     pub(in crate::widget_host) fn export_quick_menu_rect(&self, viewport_w: f32) -> Rect {
-        overlay_geometry::export_quick_menu_rect(&self.editor_state, viewport_w)
+        overlay_geometry::export_quick_menu_rect(
+            &self.editor_state,
+            viewport_w,
+            self.last_viewport_h,
+        )
     }
 
     /// Whether `point` is inside an open chrome dropdown that paints

@@ -36,7 +36,7 @@ pub(super) fn paint_home(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, rect: 
     paint_window_control_dots(
         cx.backend,
         Rect::xywh(0.0, 0.0, layout.sidebar.size.x, super::WINDOW_STRIP_H),
-        surface.ui.topbar_traffic_hover,
+        surface.ui.window_control_hover,
     );
 }
 

@@ -1,13 +1,14 @@
 use super::WidgetHost;
 use de_editor_core::{EditorState, NodeId, SettingsFocus};
-use de_editor_ui::widgets::{LayerPanel, LayerPanelHit, TopBarHit, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::file_menu::{FileMenu, FileMenuChoice, FileMenuTool, MenuHit};
+use de_editor_ui::widgets::{LayerPanel, LayerPanelHit};
 use de_editor_ui::Point2D;
 
 const VIEWPORT_W: f32 = 1200.0;
 const VIEWPORT_H: f32 = 800.0;
 
 #[test]
-fn topbar_modal_takes_input_ownership_from_image_search() {
+fn settings_from_the_file_menu_take_input_ownership_from_image_search() {
     let mut host = WidgetHost::new();
     let _ = host
         .editor_state
@@ -19,22 +20,44 @@ fn topbar_modal_takes_input_ownership_from_image_search() {
         .search_query
         .set_text("hero query");
 
-    let rect = host.top_bar_rect(VIEWPORT_W);
-    let topbar = host.top_bar();
-    let mut point = None;
-    let mut x = rect.origin.x;
-    while x < rect.origin.x + rect.size.x {
-        let candidate = Point2D::new(x, TOP_BAR_HEIGHT / 2.0);
-        if topbar.hit_test(rect, candidate) == Some(TopBarHit::OpenAgentSettings) {
-            point = Some(candidate);
-            break;
-        }
-        x += 1.0;
-    }
-    let point = point.expect("settings button");
+    host.last_viewport_w = VIEWPORT_W;
+    host.last_viewport_h = VIEWPORT_H;
+    // The file pill opens the menu — a higher overlay, so the image
+    // popover closes on that first press.
+    let pill = de_editor_ui::widgets::chrome_tooltip::button_anchor(
+        &host.editor_state,
+        VIEWPORT_W,
+        VIEWPORT_H,
+        de_editor_core::ChromeButton::ToggleFileMenu,
+    )
+    .expect("file pill paints");
+    assert!(host.apply_press(
+        pill.origin.x + pill.size.x / 2.0,
+        pill.origin.y + pill.size.y / 2.0,
+        VIEWPORT_W,
+        VIEWPORT_H
+    ));
+    assert!(!host.editor_state.editor_ui.image_panel.search_open);
+
+    let menu = FileMenu::from_editor_ui(&host.editor_state.editor_ui, 0);
+    let panel = menu.rect_at(
+        de_editor_ui::widgets::host_overlay_geometry::file_menu_anchor(
+            &host.editor_state,
+            VIEWPORT_W,
+            VIEWPORT_H,
+        ),
+    );
+    let wanted = FileMenuChoice::Tool(FileMenuTool::Settings);
+    let point = (0..panel.size.y as i32)
+        .flat_map(|dy| (0..panel.size.x as i32).step_by(2).map(move |dx| (dx, dy)))
+        .map(|(dx, dy)| Point2D::new(panel.origin.x + dx as f32, panel.origin.y + dy as f32))
+        .find(|p| match menu.hit(panel, *p) {
+            MenuHit::Row(row) => menu.choice_for_row(row) == Some(wanted),
+            _ => false,
+        })
+        .expect("the footer offers Settings");
     assert!(host.apply_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H));
     assert!(host.editor_state.editor_ui.agent_settings_open);
-    assert!(!host.editor_state.editor_ui.image_panel.search_open);
 
     host.editor_state.editor_ui.agent_settings.focus = Some(SettingsFocus::McpPort);
     host.editor_state.editor_ui.settings_input.set_text("123");

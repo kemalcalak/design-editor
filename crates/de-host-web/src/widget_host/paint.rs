@@ -13,7 +13,7 @@ use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::variables_panel::VariablesPanel;
 use de_editor_ui::widgets::{
     AIChatPlaceholder, CanvasViewport, LayerPanel, LayoutCx, LocalePicker, PaintCx, PropertyPanel,
-    ShapePicker, StatusBar, Toolbar, Widget, TOOLBAR_WIDTH, TOP_BAR_HEIGHT,
+    ShapePicker, StatusBar, Toolbar, Widget, TOOLBAR_WIDTH,
 };
 use de_editor_ui::{Point2D, Rect, RenderBackend};
 
@@ -32,7 +32,7 @@ impl WidgetHost {
     /// Backend-generic composition pass. Layer order matches the
     /// native shell so paint output is cross-platform identical:
     ///   1. background fill (+ document-import progress early-return)
-    ///   2. TopBar
+    ///   2. Left-rail strip (the floating chrome paints after the toolbar)
     ///   3. LayerPanel (left rail, sidebar-gated)
     ///   4. CanvasViewport (center band)
     ///   5. PropertyPanel (right rail, selection-gated) + variables rail
@@ -179,13 +179,13 @@ impl WidgetHost {
             self.frame_slideshow_board((viewport_width, viewport_height));
         }
 
-        let top_bar = self.top_bar();
-        let top_bar_rect = self.top_bar_rect(viewport_width);
-        {
-            let mut cx = PaintCx {
-                backend: &mut *backend,
-            };
-            top_bar.paint(&mut cx, top_bar_rect);
+        // 3. The left rail's top strip — empty on the web (no window to
+        //    drag), but kept so the rail's body lines up with the desktop.
+        if rail_open {
+            backend.fill_rect(
+                canvas_geometry::left_rail_strip_rect(&self.editor_state),
+                self.theme.card,
+            );
         }
 
         // 3a. Slides tab — the same rail showing the deck's page
@@ -280,10 +280,10 @@ impl WidgetHost {
             }
         }
 
-        let (canvas_left, _canvas_y, canvas_w, canvas_h) =
+        let (canvas_left, canvas_y, canvas_w, canvas_h) =
             self.canvas_region(viewport_width, viewport_height);
         let canvas_rect = Rect {
-            origin: Point2D::new(canvas_left, TOP_BAR_HEIGHT),
+            origin: Point2D::new(canvas_left, canvas_y),
             size: Point2D::new(canvas_w, canvas_h),
         };
         if canvas_w > 0.0 && canvas_h > 0.0 {
@@ -427,6 +427,23 @@ impl WidgetHost {
             toolbar.paint(&mut cx, toolbar_rect);
         }
 
+        // Floating chrome — the file pill and the canvas action group.
+        {
+            let ui = &self.editor_state.editor_ui;
+            let chrome =
+                canvas_geometry::chrome_layout(&self.editor_state, viewport_width, viewport_height);
+            let mut cx = PaintCx {
+                backend: &mut *backend,
+            };
+            if let Some(layout) = chrome.file_pill {
+                de_editor_ui::widgets::FilePill::for_editor_ui(ui).paint_layout(&mut cx, &layout);
+            }
+            if let Some(layout) = chrome.actions {
+                de_editor_ui::widgets::CanvasActions::for_editor_ui(ui)
+                    .paint_layout(&mut cx, &layout);
+            }
+        }
+
         if let Some(chat_rect) = self.ai_chat_rect(viewport_width, viewport_height) {
             // Owner-stamp so paint stores the canonical build under THIS host's
             // owner (mirrors native).
@@ -454,7 +471,7 @@ impl WidgetHost {
         {
             use de_editor_ui::widgets::AlignToolbar;
             let canvas_region = Rect {
-                origin: Point2D::new(canvas_left, TOP_BAR_HEIGHT),
+                origin: Point2D::new(canvas_left, canvas_y),
                 size: Point2D::new(canvas_w, canvas_h),
             };
             if let Some(tb) = AlignToolbar::for_canvas_region(canvas_region, &self.editor_state) {
@@ -501,19 +518,18 @@ impl WidgetHost {
                 panel.image_popover_input_geometry(property_rect, &mut *backend);
         }
 
-        // TopBar hover tooltip — hangs off a chrome button into whatever
-        // is under the bar, so it paints after the rails and canvas but
-        // below every dropdown and modal (native §8.65).
+        // Chrome hover tooltip — hangs off a chrome button into whatever is
+        // under it, so it paints after the rails and canvas but below every
+        // dropdown and modal (native §8.65).
         {
             let mut cx = PaintCx {
                 backend: &mut *backend,
             };
-            de_editor_ui::widgets::top_bar_tooltip::paint_top_bar_tooltip(
+            de_editor_ui::widgets::chrome_tooltip::paint_chrome_tooltip(
                 &mut cx,
-                &self.editor_state.editor_ui,
-                &top_bar,
-                top_bar_rect,
+                &self.editor_state,
                 viewport_width,
+                viewport_height,
                 self.now_ms,
             );
         }

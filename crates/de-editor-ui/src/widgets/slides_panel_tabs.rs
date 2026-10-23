@@ -18,7 +18,6 @@ use super::{
 };
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::text_metrics;
-use crate::widgets::top_bar_geometry::estimated_text_width;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout, Theme};
 
@@ -375,4 +374,22 @@ pub fn text_tabs_fit(inner_w: f32, count: usize, widest_label_w: f32) -> bool {
     }
     let share = inner_w / count as f32;
     share >= widest_label_w + TAB_PAD_X * 2.0
+}
+
+/// Backend-free width estimate, deliberately conservative: ASCII is
+/// charged 0.68 em and everything else a full em, so the answer runs a
+/// little wide of what the shaper will produce. The row needs the SAME
+/// number at paint time and at hit-test time and has no backend at
+/// hit-test time — over-estimating drops the row to icons a few pixels
+/// early rather than clipping a label.
+pub(crate) fn estimated_text_width(text: &str, font_size: f32) -> f32 {
+    text.chars()
+        .map(|c| {
+            if c.is_ascii() {
+                font_size * 0.68
+            } else {
+                font_size
+            }
+        })
+        .sum()
 }

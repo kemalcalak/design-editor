@@ -8,7 +8,7 @@ use crate::widgets::ai_chat_panel_controls::{paint_attachment_row, ATTACHMENT_RO
 use crate::widgets::ai_chat_panel_footer::paint_bottom_toolbar;
 use crate::widgets::ai_chat_panel_paint::paint_panel_surface;
 use crate::widgets::editor_state_ext::translate;
-use crate::widgets::home_surface::{settings_theme, HomePalette};
+use crate::widgets::home_surface::{chrome_theme, HomePalette};
 use crate::widgets::icons::Icon;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Point2D, Rect};
@@ -223,7 +223,7 @@ impl<'a> AIChatPlaceholder<'a> {
         let active_tab_index = state.chat.active_index();
         Self {
             id: WidgetId::new(7000),
-            theme: settings_theme(ui.effective_theme_mode()),
+            theme: chrome_theme(ui.effective_theme_mode()),
             palette: HomePalette::for_mode(ui.effective_theme_mode()),
             state: &state.chat,
             now_ms,

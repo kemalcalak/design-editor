@@ -63,7 +63,7 @@ pub fn sanitize_name_component(name: &str, max_chars: usize) -> String {
 /// The document half of an export name: the bound file's name without
 /// its extension, else the document's own name, else `untitled`.
 ///
-/// `file_name_display` is the same string the TopBar shows, so the
+/// `file_name_display` is the same string the file pill shows, so the
 /// exported file is named after what the user believes they are
 /// editing.
 pub fn document_export_stem(state: &EditorState) -> String {

@@ -1,5 +1,5 @@
 //! Which export rows a document offers — the single source shared by the
-//! File menu's export section (`file_menu.rs`) and the TopBar export quick
+//! File menu's export section (`file_menu.rs`) and the export quick
 //! menu (`export_quick_menu.rs`).
 //!
 //! The two surfaces offer the same actions in a different order, so the

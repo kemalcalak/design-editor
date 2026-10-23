@@ -37,7 +37,7 @@ use crate::{Rect, RenderBackend};
 /// The font family every chrome string is DRAWN with — the `family`
 /// argument of the `TextLayout::single_run` calls all over `widgets/`.
 /// Measurement has to name the same one.
-pub const CHROME_FONT_FAMILY: &str = "system-ui";
+pub const CHROME_FONT_FAMILY: &str = "Manrope";
 
 /// Painted width of `text` at `font_size` in the chrome font family.
 ///

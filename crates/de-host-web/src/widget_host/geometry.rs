@@ -3,18 +3,10 @@
 use super::WidgetHost;
 use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::host_overlay_geometry as overlay_geometry;
-use de_editor_ui::widgets::{Toolbar, TopBar};
+use de_editor_ui::widgets::Toolbar;
 use de_editor_ui::{Point2D, Rect};
 
 impl WidgetHost {
-    pub(in crate::widget_host) fn top_bar(&self) -> TopBar {
-        TopBar::for_editor_ui(&self.editor_state.editor_ui).with_traffic_controls(false)
-    }
-
-    pub(in crate::widget_host) fn top_bar_rect(&self, viewport_w: f32) -> Rect {
-        overlay_geometry::top_bar_rect(viewport_w)
-    }
-
     /// Canvas region (logical px, viewport-relative). The math is
     /// single-sourced with the native host — see the coordinate invariant
     /// in `de_editor_ui::widgets::host_canvas_geometry`.
@@ -36,9 +28,9 @@ impl WidgetHost {
         canvas_geometry::over_canvas(&self.editor_state, x, y, viewport_w, viewport_h)
     }
 
-    /// `(anchor, viewport)` for the top-bar import dropdown — mirrors
+    /// `(anchor, viewport)` for the import dropdown — mirrors
     /// the native host so both chromes clamp the popup identically.
-    /// `(anchor, viewport)` for the top-bar import dropdown — shared with
+    /// `(anchor, viewport)` for the import dropdown — shared with
     /// the native host so both chromes clamp the popup identically.
     pub(in crate::widget_host) fn import_menu_anchor(
         &self,
@@ -55,7 +47,7 @@ impl WidgetHost {
     }
 
     pub(in crate::widget_host) fn locale_picker_rect(&self, viewport_w: f32) -> Rect {
-        overlay_geometry::locale_picker_rect(&self.editor_state, viewport_w)
+        overlay_geometry::locale_picker_rect(&self.editor_state, viewport_w, self.last_viewport_h)
     }
 
     /// The rail rect the LAYERS tree gets — the whole rail, less the

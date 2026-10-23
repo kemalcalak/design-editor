@@ -9,7 +9,11 @@ use super::{CursorHint, WidgetHostNative};
 use de_editor_core::ui_draft::PropertyFocus;
 use de_editor_core::PenNodeExt;
 use de_editor_core::{own_bounds, NodeId};
-use de_editor_ui::widgets::{PropertyPanel, TopBar, TopBarHit, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::PropertyPanel;
+
+/// The right rail runs from the window's top edge — there is no title
+/// bar above it (#30).
+const PROPERTY_PANEL_TOP: f32 = 0.0;
 
 mod chat_panel;
 mod chrome_overlays;

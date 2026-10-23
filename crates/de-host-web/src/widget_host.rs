@@ -18,9 +18,8 @@
 //! Layout (matches `apps/web/src/components/editor/editor-layout.tsx`):
 //!
 //! ```text
-//! ┌─────────────────────────────────────────────────┐
-//! │ TopBar (full width × 48 px)                     │
-//! ├──────────┬──────────────────────────────────────┤
+//! ┌──────────┬──────────────────────────────────────┐
+//! │ (strip)  │ [file pill]          [action group]  │
 //! │ Layer    │ Toolbar  Canvas (fills the middle)   │
 //! │ Panel    │ ┌────┐                               │
 //! │  (240)   │ │ ◯  │   AIChatPlaceholder           │
@@ -36,7 +35,6 @@
 //! in this file (per spec §1.4). Phase B4 boundary check enforces.
 
 use de_editor_ui::widgets::host_frame_bookkeeping as bookkeeping;
-use de_editor_ui::widgets::TOP_BAR_HEIGHT;
 use de_editor_ui::{Point2D, Rect, Theme};
 
 mod a11y_bridge;
@@ -92,6 +90,8 @@ pub(crate) mod icon_ingest;
 mod preview_hover_tests;
 // Browser file-IO ingestion (Open / Figma import / clipboard paste)
 // — needs the codegen-gated document-pipeline deps (jian-ops-schema).
+#[cfg(test)]
+mod chrome_hover_tests;
 #[cfg(feature = "canvaskit")]
 mod file_ingest;
 #[cfg(test)]
@@ -202,8 +202,6 @@ mod text_edit_caret;
 #[cfg(test)]
 mod theme_tests;
 mod toolbar_actions;
-#[cfg(test)]
-mod topbar_hover_tests;
 mod variables_panel_commit;
 mod variables_panel_geometry;
 mod variables_panel_press;
@@ -476,12 +474,12 @@ impl WidgetHost {
         bookkeeping::fold_preview_deadline(next, self.preview_wake_deadline_ms(), self.now_ms)
     }
 
-    /// Whether a top-bar tooltip is waiting out its dwell — i.e. a
+    /// Whether a chrome tooltip is waiting out its dwell — i.e. a
     /// repaint is owed at a future instant with no DOM event to carry
     /// it. The mount's rAF pump (`tooltip_pump`) drives that repaint,
     /// standing in for the deadline scheduler the browser host lacks.
-    pub fn top_bar_tooltip_pending(&self) -> bool {
-        de_editor_ui::widgets::top_bar_tooltip::next_deadline_ms(
+    pub fn chrome_tooltip_pending(&self) -> bool {
+        de_editor_ui::widgets::chrome_tooltip::next_deadline_ms(
             &self.editor_state.editor_ui,
             self.now_ms,
         )

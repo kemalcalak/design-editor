@@ -59,7 +59,7 @@ impl<'a> MissingFontsPanel<'a> {
     }
 
     pub fn rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
-        let top = crate::widgets::TOP_BAR_HEIGHT + VIEWPORT_MARGIN;
+        let top = crate::widgets::WINDOW_STRIP_H + VIEWPORT_MARGIN;
         let max_height = (viewport_h - top - VIEWPORT_MARGIN).max(1.0);
         let natural_height = BASE_HEIGHT + ROW_HEIGHT * self.prompt.entries.len() as f32;
         let height = natural_height.min(max_height);

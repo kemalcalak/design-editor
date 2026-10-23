@@ -94,7 +94,7 @@ fn a_tiny_viewport_still_keeps_the_card_below_the_top_bar() {
     let rect = HtmlImportDiagnosticsPanel::for_editor(&state)
         .expect("open")
         .rect(320.0, 120.0);
-    assert!(rect.origin.y >= crate::widgets::TOP_BAR_HEIGHT);
+    assert!(rect.origin.y >= crate::widgets::WINDOW_STRIP_H);
     assert!(rect.origin.x >= 0.0);
 }
 

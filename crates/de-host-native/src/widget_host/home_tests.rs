@@ -4,6 +4,7 @@
 use super::*;
 use de_editor_core::agent_settings::McpCli;
 use de_editor_core::{HomeFamily, HomeSize, RecentFile, RecentView};
+use de_editor_ui::Rect;
 
 const W: f32 = 1440.0;
 const H: f32 = 900.0;

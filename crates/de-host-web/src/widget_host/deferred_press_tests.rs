@@ -7,7 +7,7 @@ use de_editor_core::{AgentSettingsButton, ButtonPressTarget};
 use de_editor_ui::widgets::agent_settings_panel::AgentSettingsPanel;
 use de_editor_ui::widgets::{
     ai_chat_model_picker, AIChatPlaceholder, LayerPanel, LayerPanelHit, PropertyPanel,
-    PropertyPanelAction, TOP_BAR_HEIGHT,
+    PropertyPanelAction,
 };
 use de_editor_ui::{Point2D, Rect};
 
@@ -207,7 +207,7 @@ fn chat_model_picker_visible_over_topbar_wins_press() {
     let picker = panel.model_picker_bounds(chat).unwrap();
     let search_top = picker.origin.y.max(0.0);
     let search_bottom = (picker.origin.y + ai_chat_model_picker::MODEL_SEARCH_H)
-        .min(de_editor_ui::widgets::TOP_BAR_HEIGHT);
+        .min(de_editor_ui::widgets::WINDOW_STRIP_H);
     assert!(search_top < search_bottom);
     let point = Point2D::new(picker.origin.x + 24.0, (search_top + search_bottom) / 2.0);
     assert_eq!(
@@ -313,12 +313,9 @@ fn font_weight_row_press_defers_selection_until_release() {
     let property_rect = Rect {
         origin: Point2D::new(
             1200.0 - host.editor_state.editor_ui.property_panel_width,
-            TOP_BAR_HEIGHT,
+            0.0,
         ),
-        size: Point2D::new(
-            host.editor_state.editor_ui.property_panel_width,
-            800.0 - TOP_BAR_HEIGHT,
-        ),
+        size: Point2D::new(host.editor_state.editor_ui.property_panel_width, 800.0),
     };
     let panel = PropertyPanel::for_selection(&host.editor_state).unwrap();
     let before_weight = selected_font_weight(&host.editor_state);

@@ -384,7 +384,7 @@ fn the_wheel_over_the_rail_scrolls_the_list_and_not_the_canvas() {
 #[test]
 fn the_rail_resize_gutter_drags_narrower_as_well_as_wider() {
     let _guard = test_lock();
-    let y = de_editor_ui::widgets::TOP_BAR_HEIGHT + 200.0;
+    let y = de_editor_ui::widgets::WINDOW_STRIP_H + 200.0;
 
     let mut host = host_with(Some(TemplateScene::Slides));
     // Start wide of the 240 px floor so the drag arithmetic is visible:
@@ -427,7 +427,7 @@ fn the_inner_half_of_the_gutter_starts_a_resize_too() {
     // Same reason as above: start wide of the 240 px floor.
     host.editor_state.editor_ui.layer_panel_width = 320.0;
     let start = 320.0_f32;
-    let y = de_editor_ui::widgets::TOP_BAR_HEIGHT + 200.0;
+    let y = de_editor_ui::widgets::WINDOW_STRIP_H + 200.0;
     host.apply_press(start - 2.0, y, VW, VH);
     assert!(
         host.is_resizing_panel(),

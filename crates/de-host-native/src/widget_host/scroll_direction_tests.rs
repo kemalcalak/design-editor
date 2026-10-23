@@ -44,11 +44,8 @@ fn host_with_text_selection() -> WidgetHostNative {
 fn property_rect() -> Rect {
     let width = 280.0;
     Rect {
-        origin: Point2D::new(VIEWPORT_W - width, de_editor_ui::widgets::TOP_BAR_HEIGHT),
-        size: Point2D::new(
-            width,
-            (VIEWPORT_H - de_editor_ui::widgets::TOP_BAR_HEIGHT).max(0.0),
-        ),
+        origin: Point2D::new(VIEWPORT_W - width, 0.0),
+        size: Point2D::new(width, VIEWPORT_H.max(0.0)),
     }
 }
 

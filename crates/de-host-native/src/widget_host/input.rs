@@ -631,8 +631,8 @@ impl WidgetHostNative {
         if let Some(consumed) = self.cursor_move_status_align_picker_tiers(&mut ctx) {
             return consumed;
         }
-        // Tier 7 — TopBar traffic cluster + chrome-button hover wash.
-        if let Some(consumed) = self.cursor_move_topbar_tiers(&mut ctx) {
+        // Tier 7 — window-control cluster + chrome-button hover wash.
+        if let Some(consumed) = self.cursor_move_chrome_tiers(&mut ctx) {
             return consumed;
         }
         // Tier 7b — the left rail's slides tab. Above the base tier's

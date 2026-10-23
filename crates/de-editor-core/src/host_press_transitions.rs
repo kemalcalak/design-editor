@@ -28,9 +28,9 @@ pub fn close_shape_picker(ui: &mut EditorUiState) {
     ui.shape_picker.pressed = None;
 }
 
-// ─── TopBar dropdowns ──────────────────────────────────────────────────
+// ─── Chrome dropdowns ──────────────────────────────────────────────────
 
-/// Toggle the TopBar locale dropdown (same open/reset shape as the
+/// Toggle the locale dropdown (same open/reset shape as the
 /// shape picker).
 pub fn toggle_locale_picker(ui: &mut EditorUiState) {
     let opened = {
@@ -54,7 +54,7 @@ pub fn close_locale_picker(ui: &mut EditorUiState) {
     ui.locale_picker.hover = None;
 }
 
-/// Toggle the TopBar import dropdown — a second click on the button
+/// Toggle the import dropdown — a second click on the button
 /// closes the menu rather than re-opening it under the cursor.
 pub fn toggle_import_menu(ui: &mut EditorUiState) {
     let open = !ui.import_menu_open;
@@ -66,7 +66,7 @@ pub fn toggle_import_menu(ui: &mut EditorUiState) {
     }
 }
 
-/// Toggle the TopBar file menu. The host still clears the layer-panel
+/// Toggle the file menu. The host still clears the layer-panel
 /// hover afterwards (that wash lives in host geometry state).
 pub fn toggle_file_menu(ui: &mut EditorUiState) {
     ui.file_menu_open ^= true;
@@ -76,8 +76,8 @@ pub fn toggle_file_menu(ui: &mut EditorUiState) {
     }
 }
 
-/// Toggle the TopBar export quick menu. Opening it closes the other
-/// TopBar dropdowns: they share one overlay tier, so two open menus would
+/// Toggle the export quick menu. Opening it closes the other
+/// chrome dropdowns: they share one overlay tier, so two open menus would
 /// leave the lower one painted but unreachable.
 pub fn toggle_export_quick_menu(ui: &mut EditorUiState) {
     let open = !ui.export_quick_menu_open;

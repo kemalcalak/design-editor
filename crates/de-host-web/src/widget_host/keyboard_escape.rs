@@ -77,7 +77,7 @@ impl WidgetHost {
             self.mark_dirty();
             return true;
         }
-        // The slides rail's export dropdown — same rung as the TopBar
+        // The slides rail's export dropdown — same rung as the chrome's
         // dropdown it mirrors, and the same rung native puts it on.
         if self.editor_state.editor_ui.slides_panel.close_export_menu() {
             self.mark_dirty();

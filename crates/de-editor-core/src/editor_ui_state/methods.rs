@@ -57,7 +57,7 @@ impl EditorUiState {
         self.pressed_button = None;
     }
 
-    /// Record which TopBar button the cursor rests on, keeping the
+    /// Record which chrome button the cursor rests on, keeping the
     /// tooltip dwell clock in step. Returns whether anything changed —
     /// hosts use that as their repaint signal.
     ///
@@ -66,18 +66,18 @@ impl EditorUiState {
     /// single visit keeps the original stamp, so the tooltip follows
     /// the cursor immediately instead of making the user wait again at
     /// every button.
-    pub fn set_topbar_button_hover(
+    pub fn set_chrome_button_hover(
         &mut self,
-        next: Option<crate::topbar_state::TopBarButton>,
+        next: Option<crate::chrome_button_state::ChromeButton>,
         now_ms: u64,
     ) -> bool {
-        if self.topbar_button_hover == next {
+        if self.chrome_button_hover == next {
             return false;
         }
-        if self.topbar_button_hover.is_none() {
-            self.topbar_hover_since_ms = Some(now_ms);
+        if self.chrome_button_hover.is_none() {
+            self.chrome_hover_since_ms = Some(now_ms);
         }
-        self.topbar_button_hover = next;
+        self.chrome_button_hover = next;
         true
     }
 
@@ -85,7 +85,7 @@ impl EditorUiState {
     /// stopping its detail card's dwell clock. Returns whether anything
     /// changed — hosts use that as their repaint signal.
     ///
-    /// Unlike the top bar's row-wide clock this restarts on every entry,
+    /// Unlike the chrome's group-wide clock this restarts on every entry,
     /// because there is only one chip to enter: there is no neighbouring
     /// target for an already-earned card to follow the cursor onto.
     pub fn set_chat_style_chip_hover(&mut self, hovering: bool, now_ms: u64) -> bool {
@@ -695,5 +695,17 @@ impl EditorUiState {
         let changed = self.property_tab != requested;
         self.property_tab = requested;
         changed
+    }
+
+    /// Flip the right panel between Design and generated Code — the canvas
+    /// `</>` button and Cmd+Shift+C. Interact counts as "not Code", so
+    /// from a form widget's Interact view the toggle opens Code. Returns
+    /// whether the tab changed.
+    pub fn toggle_code_view(&mut self) -> bool {
+        let next = match self.property_tab {
+            crate::PropertyTab::Code => crate::PropertyTab::Design,
+            crate::PropertyTab::Design | crate::PropertyTab::Interact => crate::PropertyTab::Code,
+        };
+        self.set_property_tab(next)
     }
 }

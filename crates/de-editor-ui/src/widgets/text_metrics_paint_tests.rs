@@ -197,23 +197,27 @@ fn variables_panel_holds_its_panel_in_the_painted_family() {
 }
 
 #[test]
-fn top_bar_holds_the_bar_in_the_painted_family() {
-    use crate::widgets::{TopBar, TOP_BAR_HEIGHT};
+fn floating_chrome_holds_its_labels_in_the_painted_family() {
+    use crate::widgets::{CanvasActions, FilePill};
 
     for locale in de_i18n::Locale::ALL {
         let ui = de_editor_core::editor_ui_state::EditorUiState {
             locale,
+            file_name_display: Some("pricing.op".to_string()),
             ..Default::default()
         };
-        let bar = TopBar::for_editor_ui(&ui);
-        let rect = Rect {
-            origin: Point2D::ZERO,
-            size: Point2D::new(1400.0, TOP_BAR_HEIGHT),
-        };
-
-        assert_no_new_overflow(&format!("top bar {locale:?}"), rect, |cx| {
-            bar.paint(cx, rect)
+        let pill = FilePill::for_editor_ui(&ui);
+        let pill_layout = pill.layout_at(Point2D::new(16.0, 14.0));
+        assert_no_new_overflow(&format!("file pill {locale:?}"), pill_layout.rect, |cx| {
+            pill.paint_layout(cx, &pill_layout)
         });
+        let actions = CanvasActions::for_editor_ui(&ui);
+        let actions_layout = actions.layout_right(1400.0, 14.0);
+        assert_no_new_overflow(
+            &format!("canvas actions {locale:?}"),
+            actions_layout.rect,
+            |cx| actions.paint_layout(cx, &actions_layout),
+        );
     }
 }
 

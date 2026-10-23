@@ -166,6 +166,7 @@ pub mod toolbar;
 
 // Step 3 — center canvas that renders document nodes as actual
 // visual primitives (frame fills, rect strokes, text strings).
+pub mod canvas_actions;
 mod canvas_agent_cursor;
 mod canvas_agent_cursor_motion;
 #[cfg(test)]
@@ -209,6 +210,8 @@ pub mod editor_state_ext;
 
 // Host-shared press/click dispatch flows (native + web widget hosts).
 pub mod chat_click_flow;
+pub mod chrome_hit;
+pub mod chrome_tooltip;
 pub mod cursor_hover_flow;
 pub mod drag_flow;
 mod drag_flow_index;
@@ -342,6 +345,7 @@ pub mod figma_import;
 pub mod figma_import_progress;
 pub mod file_drop_overlay;
 pub mod file_menu;
+pub mod file_pill;
 pub mod git_panel;
 mod git_panel_clone;
 mod git_panel_commit_card;
@@ -382,24 +386,10 @@ pub mod slides_panel_flow;
 pub mod slideshow_toolbar;
 pub mod status_bar;
 pub mod tooltip;
-pub mod top_bar;
-mod top_bar_geometry;
-#[cfg(test)]
-#[path = "top_bar_home_tests.rs"]
-mod top_bar_home_tests;
-mod top_bar_paint;
-#[cfg(test)]
-mod top_bar_tests;
-mod top_bar_title;
-pub mod top_bar_tooltip;
-#[cfg(test)]
-mod top_bar_tooltip_tests;
-#[cfg(test)]
-mod top_bar_vscode_tests;
-mod top_bar_window_control;
 pub mod variables_panel;
 pub mod variables_panel_geometry_flow;
 mod variables_preset_menu;
+pub mod window_strip;
 
 // Test-support: shared RenderBackend stubs (never ships in non-test builds).
 #[cfg(test)]
@@ -440,6 +430,8 @@ pub use ai_chat_panel::{
 pub use ai_chat_panel_minimized::{AI_CHAT_MINIMIZED_HEIGHT, AI_CHAT_MINIMIZED_MIN_WIDTH};
 pub use ai_chat_transcript_design::{parse_design_json_nodes, DesignParseError};
 pub use align_toolbar::{AlignToolbar, AlignToolbarHit, ALIGN_TOOLBAR_HEIGHT, ALIGN_TOOLBAR_WIDTH};
+pub use canvas_actions::{CanvasActions, CanvasActionsLayout};
+pub use chrome_hit::ChromeHit;
 pub use component_browser_panel::{
     ComponentBrowserHit, ComponentBrowserPanel, COMPONENT_BROWSER_PANEL_H,
     COMPONENT_BROWSER_PANEL_W,
@@ -449,6 +441,7 @@ pub use design_md_panel::{DesignMdHit, DesignMdPanel, DESIGN_MD_PANEL_H, DESIGN_
 pub use editor_toast::{EditorToast, EditorToastHit};
 pub use export_dialog::{ExportDialog, ExportDialogHit, ExportFormat};
 pub use export_quick_menu::{ExportQuickMenu, ExportQuickMenuHit};
+pub use file_pill::{FilePill, FilePillLayout, SaveState};
 pub use git_panel::{GitPanel, GitPanelHit, GIT_PANEL_INSET, GIT_PANEL_WIDTH};
 pub use html_import_diagnostics_panel::{HtmlImportDiagnosticsHit, HtmlImportDiagnosticsPanel};
 pub use icon_picker_panel::{
@@ -470,8 +463,7 @@ pub use slides_panel_actions::{
     SlidesActionLabels, SlidesActionLayout, SlidesActionState, ACTION_BAR_HEIGHT,
 };
 pub use status_bar::{StatusBar, STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH};
-pub use top_bar::{TopBar, TopBarHit, TOP_BAR_HEIGHT};
-pub use top_bar_window_control::{paint_window_control_dots, WindowControl};
+pub use window_strip::{paint_window_control_dots, WindowControl, WINDOW_STRIP_H};
 // Re-export panel/toolbar width constants + hit enums so the host
 // can size them consistently and route hits.
 pub use layer_panel::{DropPosition, DropTarget, LayerPanelHit, LAYER_PANEL_WIDTH};

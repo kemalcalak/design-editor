@@ -4,20 +4,18 @@ use de_editor_core::{EditorState, PropertyTab};
 use de_editor_ui::widgets::property_panel_action::CodegenAction;
 use de_editor_ui::widgets::property_panel_code;
 use de_editor_ui::widgets::property_panel_inputs::TAB_HEIGHT;
-use de_editor_ui::widgets::{PropertyPanel, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::PropertyPanel;
 use de_editor_ui::{Point2D, Rect};
 
+/// The right rail runs from the window's top edge — no title bar (#30).
+const PROPERTY_PANEL_TOP: f32 = 0.0;
+
 fn property_rect(host: &WidgetHost) -> Rect {
-    Rect {
-        origin: Point2D::new(
-            host.last_viewport_w - host.editor_state.editor_ui.property_panel_width,
-            TOP_BAR_HEIGHT,
-        ),
-        size: Point2D::new(
-            host.editor_state.editor_ui.property_panel_width,
-            (host.last_viewport_h - TOP_BAR_HEIGHT).max(0.0),
-        ),
-    }
+    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+        &host.editor_state,
+        host.last_viewport_w,
+        host.last_viewport_h,
+    )
 }
 
 fn point_inside_property_panel_without_target(host: &WidgetHost) -> Point2D {
@@ -52,13 +50,13 @@ fn property_tab_hover_tracks_inactive_design_tab() {
     host.editor_state.editor_ui.property_tab = PropertyTab::Code;
 
     let panel_x = host.last_viewport_w - host.editor_state.editor_ui.property_panel_width;
-    assert!(host.apply_cursor_move(panel_x + 40.0, TOP_BAR_HEIGHT + 18.0));
+    assert!(host.apply_cursor_move(panel_x + 40.0, PROPERTY_PANEL_TOP + 18.0));
     assert_eq!(
         host.editor_state.editor_ui.property_tab_hover,
         Some(PropertyTab::Design)
     );
 
-    assert!(host.apply_cursor_move(panel_x - 12.0, TOP_BAR_HEIGHT + 18.0));
+    assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + 18.0));
     assert_eq!(host.editor_state.editor_ui.property_tab_hover, None);
 }
 
@@ -180,7 +178,7 @@ fn codegen_hover_tracks_idle_generate_button() {
     let panel_x = host.last_viewport_w - pw;
     let (_, generate_rect) = property_panel_code::code_action_rects(
         panel_x,
-        TOP_BAR_HEIGHT + TAB_HEIGHT,
+        PROPERTY_PANEL_TOP + TAB_HEIGHT,
         pw,
         &host.editor_state.codegen,
     )
@@ -196,7 +194,7 @@ fn codegen_hover_tracks_idle_generate_button() {
         Some(CodegenHover::Generate)
     );
 
-    assert!(host.apply_cursor_move(panel_x - 12.0, TOP_BAR_HEIGHT + TAB_HEIGHT));
+    assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + TAB_HEIGHT));
     assert_eq!(host.editor_state.codegen.action_hover, None);
 }
 
@@ -215,8 +213,8 @@ fn codegen_preview_drag_selects_code_text() {
 
     let panel_x = viewport_w - host.editor_state.editor_ui.property_panel_width;
     let char_w = 11.0 * 0.55;
-    let start = de_editor_ui::Point2D::new(panel_x + 66.0, TOP_BAR_HEIGHT + 112.0);
-    let end = de_editor_ui::Point2D::new(panel_x + 66.0 + char_w * 6.0, TOP_BAR_HEIGHT + 112.0);
+    let start = de_editor_ui::Point2D::new(panel_x + 66.0, PROPERTY_PANEL_TOP + 112.0);
+    let end = de_editor_ui::Point2D::new(panel_x + 66.0 + char_w * 6.0, PROPERTY_PANEL_TOP + 112.0);
 
     assert!(host.apply_press(start.x, start.y, viewport_w, viewport_h));
     assert!(host.apply_cursor_move(end.x, end.y));
@@ -404,7 +402,7 @@ fn codegen_preview_wheel_scrolls_code_not_property_panel() {
     let panel_x = viewport_w - host.editor_state.editor_ui.property_panel_width;
     assert!(host.apply_wheel(
         panel_x + 80.0,
-        TOP_BAR_HEIGHT + 112.0,
+        PROPERTY_PANEL_TOP + 112.0,
         -160.0,
         viewport_w,
         viewport_h

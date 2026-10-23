@@ -67,7 +67,7 @@ pub fn scroll_design_md_panel(
     ))
 }
 
-/// Scroll the TopBar locale dropdown. Scrolling always drops the row
+/// Scroll the locale dropdown. Scrolling always drops the row
 /// hover so the highlight can't stick to a row that moved away.
 pub fn scroll_locale_picker(
     state: &mut EditorState,

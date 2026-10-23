@@ -1,13 +1,43 @@
-//! `TopBar`'s window-control (traffic-light) dot cluster — geometry +
-//! hit-test. Split out of `top_bar.rs` to keep that file under the
-//! repo's 800-line cap (same rationale as the `top_bar_paint` sibling).
+//! The borderless window's title strip.
+//!
+//! The editor has no title bar (#30), so the window chrome lives in a
+//! 40 px strip across the top of the left panel — the same strip Home
+//! reserves above its sidebar. It carries the macOS traffic lights (or
+//! the custom close / minimise / maximise dots on Windows / Linux) and
+//! is where a press drags the window. When the left panel is closed the
+//! strip's controls sit over the canvas top-left instead, and the file
+//! pill moves right to clear them (see `host_canvas_geometry`).
 
-use crate::widgets::top_bar::*;
 use crate::{Color, Point2D, Rect, RenderBackend};
 
-/// A window-control dot in the TopBar's left cluster. Resolved by
-/// [`TopBar::window_control_at`]; the desktop runner maps each onto
-/// the matching winit `Window` call.
+/// Height of the window strip. The native traffic lights are centred on
+/// it (`de-host-desktop`'s `reposition_traffic_lights` inset), so it is a
+/// shared constant rather than a per-surface choice.
+pub const WINDOW_STRIP_H: f32 = 40.0;
+
+/// Whether this build owns a window at all. The browser host has none:
+/// no controls, no strip reservation, nothing to drag.
+pub const WINDOW_CONTROLS_AVAILABLE: bool = !cfg!(target_arch = "wasm32");
+
+/// Left padding of the custom dot cluster.
+const PAD: f32 = 12.0;
+/// Diameter of a macOS-style window-control dot.
+const TRAFFIC_DOT: f32 = 12.0;
+/// Centre-to-centre spacing of the 3 window-control dots.
+const TRAFFIC_STEP: f32 = 20.0;
+/// Horizontal span the window controls reserve at the window's left
+/// edge. macOS uses the *native* traffic-light buttons — they end
+/// ~x=70, so reserve enough that the app chrome clears them. Windows /
+/// Linux paint the custom dots from `PAD`, so the reservation is the
+/// dot cluster plus a small gap.
+pub const TRAFFIC_CLUSTER_W: f32 = if cfg!(target_os = "macos") {
+    66.0
+} else {
+    TRAFFIC_STEP * 2.0 + TRAFFIC_DOT + 16.0
+};
+
+/// A window-control dot. Resolved by [`window_control_at`]; the desktop
+/// runner maps each onto the matching winit `Window` call.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WindowControl {
     /// Red dot — close the window / quit.
@@ -18,80 +48,52 @@ pub enum WindowControl {
     Maximize,
 }
 
-impl TopBar {
-    /// Left-edge reservation for the window controls. Collapses to
-    /// `0` in fullscreen on macOS — the native traffic lights hide
-    /// then, so the gap would be dead space. Other platforms keep
-    /// the custom-dot cluster's inset in every mode.
-    pub(super) fn left_inset_for(fullscreen: bool) -> f32 {
-        if fullscreen && cfg!(target_os = "macos") {
-            0.0
-        } else {
-            TRAFFIC_CLUSTER_W
-        }
+/// Width the window controls take from the window's left edge. `0` on
+/// the web (no window) and in macOS fullscreen, where the native traffic
+/// lights hide and the gap would be dead space.
+pub fn window_controls_inset(fullscreen: bool) -> f32 {
+    if !WINDOW_CONTROLS_AVAILABLE || (fullscreen && cfg!(target_os = "macos")) {
+        0.0
+    } else {
+        TRAFFIC_CLUSTER_W
     }
+}
 
-    pub(super) fn left_inset(&self) -> f32 {
-        if self.show_traffic_controls {
-            Self::left_inset_for(self.fullscreen)
-        } else {
-            0.0
-        }
-    }
+/// Bounds of the 3-dot cluster at the window's top-left — the cursor-move
+/// handler uses this to drive `window_control_hover` (the glyph reveal).
+pub fn window_controls_rect() -> Rect {
+    Rect::xywh(PAD, 0.0, TRAFFIC_STEP * 2.0 + TRAFFIC_DOT, WINDOW_STRIP_H)
+}
 
-    /// Bounds of the 3-dot window-control cluster — the host's
-    /// cursor-move handler uses this to drive `topbar_traffic_hover`
-    /// (the glyph reveal).
-    pub fn traffic_cluster_rect(top_bar_rect: Rect) -> Rect {
-        Rect {
-            origin: Point2D::new(top_bar_rect.origin.x + PAD, top_bar_rect.origin.y),
-            size: Point2D::new(TRAFFIC_STEP * 2.0 + TRAFFIC_DOT, top_bar_rect.size.y),
-        }
+/// Resolve a press on the custom window-control dots. `None` anywhere
+/// else, and always on macOS (native traffic lights) and the web.
+pub fn window_control_at(point: Point2D) -> Option<WindowControl> {
+    if !WINDOW_CONTROLS_AVAILABLE || cfg!(target_os = "macos") {
+        return None;
     }
-
-    /// Resolve a press on the left-edge window-control dots.
-    /// `None` for a press anywhere else (including the app's own
-    /// buttons). The desktop runner consults this before its normal
-    /// TopBar hit-test so a dot click drives the window, not the app.
-    pub fn window_control_at(&self, rect: Rect, point: Point2D) -> Option<WindowControl> {
-        // macOS uses the native traffic-light buttons — the custom
-        // dots (and this hit-test) exist only for Windows / Linux.
-        // Returning `None` here also avoids a false positive in
-        // macOS fullscreen, where the left inset collapses and the
-        // app's own icons would otherwise sit in the dot region.
-        if !self.show_traffic_controls || cfg!(target_os = "macos") {
-            return None;
-        }
-        if !(rect).contains(point) {
-            return None;
-        }
-        let cy = rect.origin.y + rect.size.y / 2.0;
-        let first_cx = rect.origin.x + PAD + TRAFFIC_DOT / 2.0;
-        for (i, ctl) in [
-            WindowControl::Close,
-            WindowControl::Minimize,
-            WindowControl::Maximize,
-        ]
-        .into_iter()
-        .enumerate()
-        {
-            let dot_cx = first_cx + i as f32 * TRAFFIC_STEP;
-            // Square slop around the dot — adjacent zones tile
-            // without overlap (±TRAFFIC_STEP/2 in x).
-            if (point.x - dot_cx).abs() <= TRAFFIC_STEP / 2.0
-                && (point.y - cy).abs() <= rect.size.y / 2.0
-            {
-                return Some(ctl);
-            }
-        }
-        None
+    if point.y < 0.0 || point.y >= WINDOW_STRIP_H {
+        return None;
     }
+    let first_cx = PAD + TRAFFIC_DOT / 2.0;
+    [
+        WindowControl::Close,
+        WindowControl::Minimize,
+        WindowControl::Maximize,
+    ]
+    .into_iter()
+    .enumerate()
+    .find_map(|(i, ctl)| {
+        let dot_cx = first_cx + i as f32 * TRAFFIC_STEP;
+        // Square slop around the dot — adjacent zones tile without
+        // overlap (±TRAFFIC_STEP/2 in x).
+        ((point.x - dot_cx).abs() <= TRAFFIC_STEP / 2.0).then_some(ctl)
+    })
 }
 
 /// Paint the Windows / Linux window-control dots at `bar`'s left edge
 /// (macOS keeps the native traffic lights, so this paints nothing
-/// there). Shared by the TopBar and Home, which both sit under the
-/// borderless window's title strip; `hover` reveals each dot's glyph.
+/// there). Shared by the editor's window strip and Home, which both sit under
+/// the borderless window's title strip; `hover` reveals each dot's glyph.
 pub fn paint_window_control_dots(backend: &mut dyn RenderBackend, bar: Rect, hover: bool) {
     let rect = bar;
     let center_y = rect.origin.y + rect.size.y / 2.0;

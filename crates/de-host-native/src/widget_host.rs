@@ -61,6 +61,10 @@ mod chat_model_picker_caret_tests;
 mod chat_send_tests;
 #[cfg(test)]
 mod chat_style_card_tests;
+#[cfg(test)]
+mod chrome_press_tests;
+#[cfg(test)]
+mod chrome_tooltip_tests;
 mod click;
 #[cfg(test)]
 mod codegen_framework_tests;
@@ -236,10 +240,6 @@ mod theme_tests;
 mod toolbar_actions;
 mod toolbar_hover;
 #[cfg(test)]
-mod top_bar_home_tests;
-#[cfg(test)]
-mod top_bar_tooltip_tests;
-#[cfg(test)]
 mod variables_panel_add_tests;
 mod variables_panel_commit;
 mod variables_panel_geometry;
@@ -367,7 +367,7 @@ pub struct WidgetHostNative {
     /// hit-testing OUTSIDE the paint pass (press / drag / arrow-key
     /// line mapping). Same `measure_text_weighted` implementation the
     /// paint backend uses, so hit geometry matches painted glyphs. Interior
-    /// mutability also lets read-only TopBar geometry (hover + Git popover
+    /// mutability also lets read-only chrome geometry (hover + Git popover
     /// placement) use the same metrics without widening those APIs to `&mut`.
     pub(in crate::widget_host) text_measure: std::cell::RefCell<Option<crate::NativeBackend>>,
     /// Active panel-resize drag — set when the cursor is pressed

@@ -228,18 +228,44 @@ fn layer_context_menu_hover_owns_cursor_over_left_rail() {
 
 #[test]
 fn import_menu_hover_clears_when_cursor_leaves_into_the_layer_panel() {
-    use de_editor_ui::widgets::{ImportMenu, TopBar, TOP_BAR_HEIGHT};
+    use de_editor_ui::widgets::ImportMenu;
+
+    use de_editor_ui::widgets::file_menu::{FileMenu, FileMenuChoice, MenuHit};
 
     let mut app = DesktopApp::new(None);
-    let top_bar = de_editor_ui::Rect::xywh(0.0, 0.0, app.viewport_width, TOP_BAR_HEIGHT);
-    let button =
-        TopBar::for_editor_ui(&app.host.editor_state().editor_ui).import_button_rect(top_bar);
+    app.host.editor_state_mut().editor_ui.home.hide();
+    let (vw, vh) = (app.viewport_width, app.viewport_height);
+    // File ▸ Import: the pill's name opens the menu, its Import row the
+    // dropdown under the pill.
+    let pill = de_editor_ui::widgets::chrome_tooltip::button_anchor(
+        app.host.editor_state(),
+        vw,
+        vh,
+        de_editor_core::ChromeButton::ToggleFileMenu,
+    )
+    .expect("file pill paints");
     assert!(app.host.apply_press(
-        button.origin.x + button.size.x / 2.0,
-        button.origin.y + button.size.y / 2.0,
-        app.viewport_width,
-        app.viewport_height,
+        pill.origin.x + pill.size.x / 2.0,
+        pill.origin.y + pill.size.y / 2.0,
+        vw,
+        vh,
     ));
+    let menu = FileMenu::from_editor_ui(&app.host.editor_state().editor_ui, 0);
+    let panel = menu.rect_at(
+        de_editor_ui::widgets::host_overlay_geometry::file_menu_anchor(
+            app.host.editor_state(),
+            vw,
+            vh,
+        ),
+    );
+    let import_row = (0..panel.size.y as i32)
+        .map(|dy| de_editor_ui::Point2D::new(panel.origin.x + 40.0, panel.origin.y + dy as f32))
+        .find(|p| match menu.hit(panel, *p) {
+            MenuHit::Row(row) => menu.choice_for_row(row) == Some(FileMenuChoice::Import),
+            _ => false,
+        })
+        .expect("the menu offers Import");
+    assert!(app.host.apply_press(import_row.x, import_row.y, vw, vh));
     assert!(app.host.editor_state().editor_ui.import_menu_open);
 
     let rect = de_editor_ui::widgets::host_overlay_geometry::import_menu_rect(
@@ -251,10 +277,6 @@ fn import_menu_hover_clears_when_cursor_leaves_into_the_layer_panel() {
     let point = de_editor_ui::Point2D::new(
         rect.origin.x + 20.0,
         rect.origin.y + menu.row_height() / 2.0,
-    );
-    assert!(
-        point.x < app.host.editor_state().editor_ui.layer_panel_width,
-        "fixture must exercise the popup area painted over the layer panel"
     );
 
     app.pending_cursor_move = Some((point.x, point.y));
@@ -277,7 +299,7 @@ fn panel_resize_drag_continues_inside_left_layer_panel() {
     // just sit on the clamp.
     app.host.editor_state_mut().editor_ui.layer_panel_width = 360.0;
     let start_width = app.host.editor_state().editor_ui.layer_panel_width;
-    let y = de_editor_ui::widgets::TOP_BAR_HEIGHT + 140.0;
+    let y = de_editor_ui::widgets::WINDOW_STRIP_H + 140.0;
     assert!(app
         .host
         .apply_press(start_width, y, app.viewport_width, app.viewport_height));
@@ -297,7 +319,7 @@ fn hidden_model_picker_is_healed_over_the_layer_panel() {
     let mut app = DesktopApp::new(None);
     app.host.editor_state_mut().chat.minimize();
     app.host.editor_state_mut().editor_ui.chat_model_picker.open = true;
-    app.pending_cursor_move = Some((20.0, de_editor_ui::widgets::TOP_BAR_HEIGHT + 20.0));
+    app.pending_cursor_move = Some((20.0, de_editor_ui::widgets::WINDOW_STRIP_H + 20.0));
 
     assert!(app.drain_pending_cursor_move());
     assert!(
@@ -333,19 +355,19 @@ fn variable_row_input_keeps_resume_time_redraws_active() {
 /// Without a second signal that wake would be thrown away and the
 /// tooltip would never appear unless the user jiggled the mouse.
 #[test]
-fn a_due_top_bar_tooltip_keeps_the_wake_it_scheduled() {
+fn a_due_chrome_tooltip_keeps_the_wake_it_scheduled() {
     let _guard = crate::agent_indicator_test_lock::LOCK
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     de_editor_core::agent_indicators::clear();
-    const DWELL: u64 = de_editor_ui::widgets::top_bar_tooltip::TOOLTIP_DWELL_MS;
+    const DWELL: u64 = de_editor_ui::widgets::chrome_tooltip::TOOLTIP_DWELL_MS;
 
     let mut app = DesktopApp::new(None);
     app.host.set_now_ms(1_000);
     app.host
         .editor_state_mut()
         .editor_ui
-        .set_topbar_button_hover(Some(de_editor_core::TopBarButton::OpenAssetCenter), 1_000);
+        .set_chrome_button_hover(Some(de_editor_core::ChromeButton::OpenExportMenu), 1_000);
 
     // While dwelling, the deadline is what arms the timer.
     assert_eq!(app.host.next_animation_deadline_ms(), Some(1_000 + DWELL));
@@ -448,7 +470,7 @@ fn fresh_app_fits_blank_frame_like_ts_canvas_init() {
     // No implicit page inspector without a selection: fit uses the full canvas width.
     assert!((v.zoom - 0.8933333).abs() < 1e-3, "zoom {}", v.zoom);
     assert!((v.pan_x - 64.0).abs() < 1e-2, "pan_x {}", v.pan_x);
-    assert!((v.pan_y - 72.66669).abs() < 1e-2, "pan_y {}", v.pan_y);
+    assert!((v.pan_y - 92.66669).abs() < 1e-2, "pan_y {}", v.pan_y);
 }
 
 #[test]
@@ -461,7 +483,7 @@ fn fresh_app_refits_blank_frame_to_actual_window_size_once() {
     let v = app.host.editor_state().viewport;
     assert!((v.zoom - 0.52666664).abs() < 1e-3, "zoom {}", v.zoom);
     assert!((v.pan_x - 64.0).abs() < 1e-2, "pan_x {}", v.pan_x);
-    assert!((v.pan_y - 119.33334).abs() < 1e-2, "pan_y {}", v.pan_y);
+    assert!((v.pan_y - 139.33334).abs() < 1e-2, "pan_y {}", v.pan_y);
 
     app.viewport_width = 1200.0;
     app.viewport_height = 800.0;

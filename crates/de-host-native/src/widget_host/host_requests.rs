@@ -165,7 +165,7 @@ impl WidgetHostNative {
             || self.create_drag.is_some()
     }
 
-    /// Whether a top-bar hover tooltip is currently due to be on screen.
+    /// Whether a chrome hover tooltip is currently due to be on screen.
     ///
     /// The runner needs this SEPARATELY from
     /// [`Self::next_animation_deadline_ms`]. That deadline goes to
@@ -173,8 +173,8 @@ impl WidgetHostNative {
     /// the wake that has to repaint. A runner gating its redraw on the
     /// deadline alone would wake up, find nothing pending, and go back
     /// to sleep without ever drawing the tooltip.
-    pub fn top_bar_tooltip_showing(&self) -> bool {
-        de_editor_ui::widgets::top_bar_tooltip::visible_button(
+    pub fn chrome_tooltip_showing(&self) -> bool {
+        de_editor_ui::widgets::chrome_tooltip::visible_button(
             &self.editor_state.editor_ui,
             self.now_ms,
         )

@@ -246,12 +246,12 @@ impl WidgetHostNative {
             return consumed;
         }
         // Tier 3 — image-fill popover, StatusBar, resize gutter, and the
-        // model-picker slice that lifts above the TopBar.
+        // model-picker slice that lifts over the floating chrome.
         if let Some(consumed) = self.press_rail_overlay_tiers(&ctx) {
             return consumed;
         }
         // Tier 3c — the generation workspace's chrome (header, toolbar,
-        // deck strip, dock handle) claims presses ahead of the top bar
+        // deck strip, dock handle) claims presses ahead of the floating chrome
         // and rails, after Home and the modal tiers. Presses on the
         // docked canvas and the pinned chat fall through to their
         // ordinary tiers below.
@@ -260,8 +260,8 @@ impl WidgetHostNative {
                 return consumed;
             }
         }
-        // Tier 4 — TopBar chrome (and its blank-press gaps).
-        if let Some(consumed) = self.press_top_bar_tier(&ctx) {
+        // Tier 4 — floating chrome (and its blank-press padding).
+        if let Some(consumed) = self.press_chrome_tier(&ctx) {
             return consumed;
         }
         // Tier 5 — Preview (Play) mode swallows everything else.

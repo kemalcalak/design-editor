@@ -215,7 +215,7 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
-        // The slides rail's export dropdown — same rung as the TopBar
+        // The slides rail's export dropdown — same rung as the chrome's
         // dropdown it mirrors, so Escape dismisses whichever one is open
         // before it reaches the selection below.
         if self.editor_state.editor_ui.slides_panel.close_export_menu() {

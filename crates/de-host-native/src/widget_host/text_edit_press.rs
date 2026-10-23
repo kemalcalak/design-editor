@@ -90,55 +90,6 @@ impl WidgetHostNative {
         out
     }
 
-    /// Width (px) of the agent chip's text at the paint font size (11),
-    /// measured with the shared measure-only backend so `TopBar`'s
-    /// agent-chip hit area matches the painted chip exactly instead of a
-    /// char-count estimate that overran into the file-name gap.
-    ///
-    /// Family-aware, and it has to stay that way: `top_bar_paint` sizes the
-    /// painted chip through `de_editor_ui::widgets::text_metrics`, so a
-    /// family-blind number here would resolve the bundled Roboto and hand
-    /// back a hit rect narrower than the chip the user can see.
-    pub(in crate::widget_host) fn topbar_chip_text_w(
-        &self,
-        top_bar: &de_editor_ui::widgets::TopBar,
-    ) -> f32 {
-        let chip_text = top_bar.chip_text();
-        self.with_measure_only(|backend| {
-            de_editor_ui::widgets::text_metrics::measure_chrome(backend, &chip_text, 11.0)
-        })
-    }
-
-    /// Family-aware TopBar hit-test. The centered title group's horizontal
-    /// position depends on its actual glyph advances, so the native target must
-    /// use the same system-font measurement as paint.
-    pub(in crate::widget_host) fn topbar_hit_test(
-        &self,
-        top_bar: &de_editor_ui::widgets::TopBar,
-        rect: Rect,
-        point: Point2D,
-    ) -> Option<de_editor_ui::widgets::TopBarHit> {
-        self.with_measure_only(|backend| {
-            top_bar.hit_test_with_measure(rect, point, |text, size| {
-                backend.measure_text_family(text, size, "system-ui")
-            })
-        })
-    }
-
-    /// Exact center of the painted TopBar Git button, shared by the Git
-    /// popover body and caret placement.
-    pub(in crate::widget_host) fn topbar_git_button_center_x(
-        &self,
-        top_bar: &de_editor_ui::widgets::TopBar,
-        rect: Rect,
-    ) -> Option<f32> {
-        self.with_measure_only(|backend| {
-            top_bar.git_button_center_x_with_measure(rect, |text, size| {
-                backend.measure_text_family(text, size, "system-ui")
-            })
-        })
-    }
-
     /// The edited Text node's resolved scene node, cloned out of the
     /// layout scene so no scene borrow survives into the mutators.
     fn text_edit_scene_node(&mut self) -> Option<SceneNode> {

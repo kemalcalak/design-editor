@@ -212,6 +212,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "ตัวแปรสภาพแวดล้อม (ไม่บังคับ)",
         "settings.agents.notInstalledHint" => "ยังไม่ได้ติดตั้ง?",
         "settings.agents.notTestedYet" => "ยังไม่ได้ทดสอบ",
+        "chrome.saved" => "บันทึกแล้ว",
+        "chrome.edited" => "แก้ไขแล้ว",
+        "chrome.notSaved" => "ยังไม่บันทึก",
+        "chrome.variables" => "ตัวแปร",
         _ => return None,
     })
 }

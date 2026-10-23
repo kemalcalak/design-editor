@@ -146,14 +146,13 @@ impl WidgetHostNative {
     ) {
         use de_editor_core::editor_ui_state::FileAction;
         use de_editor_ui::widgets::file_menu::{FileMenu, FileMenuChoice, MenuHit};
-        use de_editor_ui::widgets::top_bar::TopBar;
+        use de_editor_ui::widgets::press_flow::{self, FileMenuStep};
         self.refresh_layout_scene();
-        let top_bar_rect = de_editor_ui::Rect {
-            origin: de_editor_ui::Point2D::new(0.0, 0.0),
-            size: de_editor_ui::Point2D::new(viewport_width, de_editor_ui::widgets::TOP_BAR_HEIGHT),
-        };
-        let anchor =
-            TopBar::file_menu_rect(top_bar_rect, self.editor_state.editor_ui.window_fullscreen);
+        let anchor = de_editor_ui::widgets::host_overlay_geometry::file_menu_anchor(
+            &self.editor_state,
+            viewport_width,
+            self.last_viewport_h,
+        );
         let now_secs = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_secs())
@@ -166,6 +165,31 @@ impl WidgetHostNative {
                 let Some(choice) = menu.choice_for_row(row) else {
                     return;
                 };
+                if let Some(step) = press_flow::apply_file_menu_app_choice(
+                    &mut self.editor_state,
+                    choice,
+                    self.now_ms,
+                ) {
+                    match step {
+                        FileMenuStep::Handled => {}
+                        FileMenuStep::SettingsOpened => {
+                            // The modal paints above the inspector: release
+                            // its whole input family first.
+                            self.release_property_keyboard_owner();
+                        }
+                        FileMenuStep::Toolbar(action) => {
+                            self.dispatch_toolbar_action(action);
+                        }
+                        FileMenuStep::Fullscreen => {
+                            // The widget host doesn't own the winit window —
+                            // raise an intent the desktop runner consumes.
+                            self.editor_state.editor_ui.pending_fullscreen_toggle = true;
+                        }
+                        FileMenuStep::Git => self.toggle_git_panel(),
+                    }
+                    self.mark_dirty();
+                    return;
+                }
                 if choice == FileMenuChoice::NewFromTemplate {
                     self.editor_state
                         .editor_ui
@@ -197,9 +221,14 @@ impl WidgetHostNative {
                     FileMenuChoice::ExportPptx => FileAction::ExportPptx,
                     FileMenuChoice::OpenRecent(i) => FileAction::OpenRecent(i),
                     FileMenuChoice::ClearRecent => FileAction::ClearRecent,
-                    // Handled above — it opens a panel rather than queuing a
-                    // file action.
-                    FileMenuChoice::NewFromTemplate | FileMenuChoice::SaveAsTemplate => return,
+                    // Handled above — they open a panel or act on the app
+                    // rather than queuing a file action.
+                    FileMenuChoice::NewFromTemplate
+                    | FileMenuChoice::SaveAsTemplate
+                    | FileMenuChoice::Import
+                    | FileMenuChoice::Undo
+                    | FileMenuChoice::Redo
+                    | FileMenuChoice::Tool(_) => return,
                 });
                 self.editor_state.editor_ui.file_menu_open = false;
                 self.editor_state.editor_ui.file_menu.hover = None;

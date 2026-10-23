@@ -209,7 +209,7 @@ impl WidgetHost {
             return Some(true);
         }
         // Export quick menu — same tier as the file menu it shortcuts, and
-        // above the TopBar so a second press on the download button closes
+        // above the chrome tier so a second press on the download button closes
         // it instead of re-toggling it open (native §0a).
         if self.editor_state.editor_ui.export_quick_menu_open {
             self.close_image_popovers_for_higher_overlay();
@@ -217,7 +217,7 @@ impl WidgetHost {
             return Some(true);
         }
         // The slides rail's export dropdown, same rung as native's twin:
-        // the rail's own press tier is far below the TopBar, so this is
+        // the rail's own press tier is far below the chrome tier, so this is
         // what makes a press anywhere else dismiss the menu.
         if self.editor_state.editor_ui.slides_panel.export_menu_open
             && self.slides_panel_press(x, y, viewport_width, viewport_height)

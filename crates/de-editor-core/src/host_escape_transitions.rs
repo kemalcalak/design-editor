@@ -25,7 +25,7 @@ impl EditorUiState {
         true
     }
 
-    /// Close the TopBar file menu.
+    /// Close the file menu.
     pub fn escape_file_menu(&mut self) -> bool {
         if !self.file_menu_open {
             return false;
@@ -35,7 +35,7 @@ impl EditorUiState {
         true
     }
 
-    /// Close the TopBar export quick menu.
+    /// Close the export quick menu.
     pub fn escape_export_quick_menu(&mut self) -> bool {
         if !self.export_quick_menu_open {
             return false;
@@ -61,7 +61,7 @@ impl EditorUiState {
         true
     }
 
-    /// Close the TopBar locale picker.
+    /// Close the locale picker.
     pub fn escape_locale_picker(&mut self) -> bool {
         if !self.locale_picker.open {
             return false;
@@ -357,9 +357,9 @@ impl EditorUiState {
         self.property_tab_hover = None;
         self.toolbar_hover = None;
         self.align_toolbar_hover = None;
-        self.topbar_traffic_hover = false;
-        self.topbar_button_hover = None;
-        self.topbar_hover_since_ms = None;
+        self.window_control_hover = false;
+        self.chrome_button_hover = None;
+        self.chrome_hover_since_ms = None;
         self.statusbar_hover = None;
         self.chat_design_block_hover = None;
         self.chat_example_hover = None;

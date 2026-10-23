@@ -53,7 +53,7 @@ pub struct EditorUiState {
     pub host_owns_chat: bool,
 
     // --- Theme + locale --------------------------------------------
-    /// User's Design Editor theme preference — TopBar Sun icon flips it.
+    /// User's Design Editor theme preference — the File menu footer's theme toggle flips it.
     pub theme_mode: ThemeMode,
     /// Page-lifetime color scheme imposed by an embedding host. Paint-only;
     /// separate from `theme_mode`, so host theme changes never persist.
@@ -68,7 +68,7 @@ pub struct EditorUiState {
     /// Studio generation-workspace chrome state (docked chat + real
     /// canvas on the same document). Fully transient — never persisted.
     pub workspace: WorkspaceState,
-    /// UI locale — TopBar Globe cycles.
+    /// UI locale — File ▸ Language picks it.
     pub locale: Locale,
     /// A runtime catalog selected in the web picker but not installed yet.
     /// Transient by design: settings persist only after the catalog is ready
@@ -81,7 +81,7 @@ pub struct EditorUiState {
     /// Page-lifetime locale imposed by an embedding host. Presentation-only
     /// like the host theme; never persisted as the user's locale.
     pub host_locale_override: Option<Locale>,
-    /// TopBar Globe dropdown state.
+    /// File ▸ Language dropdown state.
     pub locale_picker: jian_widgets::components::select::SelectState,
     /// User's last-set ⚡Nx parallel-agents team size — an app-level
     /// preference (persisted via `settings_io`), NOT the per-tab
@@ -97,7 +97,7 @@ pub struct EditorUiState {
     /// Shared file-menu interaction state; `hover = None` means no
     /// actionable row hovered.
     pub file_menu: jian_widgets::components::menu::MenuState,
-    /// TopBar export quick-menu dropdown open (anchored under the
+    /// Export quick-menu dropdown open (anchored under the
     /// download button in the right cluster). Shares the file menu's
     /// overlay tier — only one chrome dropdown is reachable at a time.
     pub export_quick_menu_open: bool,
@@ -107,10 +107,10 @@ pub struct EditorUiState {
     pub pending_file_action: Option<FileAction>,
     /// Recent files (head = newest, cap 10).
     pub recent_files: Vec<RecentFile>,
-    /// TopBar display name; `None` = "Untitled".
+    /// File pill display name; `None` = "Untitled".
     pub file_name_display: Option<String>,
     /// Derived from `EditorState::revision != saved_revision`; painted
-    /// by the TopBar only, never serialized.
+    /// by the file pill only, never serialized.
     pub document_dirty: bool,
 
     // --- Modals -----------------------------------------------------
@@ -305,29 +305,29 @@ pub struct EditorUiState {
     pub component_browser_select_all: bool,
 
     // --- Window chrome ---------------------------------------------
-    /// Cursor is over the TopBar's window-control (traffic-light)
+    /// Cursor is over the window strip's window-control (traffic-light)
     /// cluster — reveals the close / minimise / maximise glyphs.
-    pub topbar_traffic_hover: bool,
-    /// Which TopBar chrome button the cursor is over — drives the
+    pub window_control_hover: bool,
+    /// Which floating chrome button the cursor is over — drives the
     /// `theme.button_hover` wash on the sidebar / file-menu / figma /
     /// theme / locale / fullscreen / git / agent-chip buttons.
-    pub topbar_button_hover: Option<crate::topbar_state::TopBarButton>,
-    /// When the cursor entered the TopBar's button row — the dwell clock
+    pub chrome_button_hover: Option<crate::chrome_button_state::ChromeButton>,
+    /// When the cursor entered the floating chrome — the dwell clock
     /// the hover tooltip waits out before it appears. Set on the
     /// None → Some transition only, so sliding between buttons inside
     /// one visit does not restart the wait (standard desktop
-    /// behaviour). Meaningless while `topbar_button_hover` is `None`,
+    /// behaviour). Meaningless while `chrome_button_hover` is `None`,
     /// which is why no clear path has to reset it: the next entry
     /// re-stamps it.
-    pub topbar_hover_since_ms: Option<u64>,
+    pub chrome_hover_since_ms: Option<u64>,
     /// Which floating status-bar control the cursor is over — drives
     /// the `theme.button_hover` wash on the search / zoom-out / zoom-in
     /// controls.
     pub statusbar_hover: Option<crate::statusbar_state::StatusBarButton>,
     /// Window is in fullscreen. macOS hides the native traffic
-    /// lights then, so the TopBar drops its left-edge reservation.
+    /// lights then, so the chrome drops its left-edge reservation.
     pub window_fullscreen: bool,
-    /// Raised when the TopBar fullscreen button is clicked. The host
+    /// Raised by File ▸ Fullscreen. The host
     /// runner (which owns the window) consumes it next frame to toggle
     /// the actual window fullscreen, then clears it.
     pub pending_fullscreen_toggle: bool,

@@ -9,7 +9,7 @@ use de_editor_core::{
 use de_editor_ui::widgets::agent_settings_panel::AgentSettingsPanel;
 use de_editor_ui::widgets::{
     ai_chat_model_picker, AIChatPlaceholder, GitPanel, LayerPanel, LayerPanelHit, PropertyPanel,
-    PropertyPanelAction, TOP_BAR_HEIGHT,
+    PropertyPanelAction, WINDOW_STRIP_H,
 };
 use de_editor_ui::{Point2D, Rect};
 
@@ -63,9 +63,9 @@ fn seed_layer_for_context_menu(host: &mut WidgetHostNative) {
 fn first_layer_row_point(host: &WidgetHostNative, viewport_h: f32) -> Point2D {
     let rect = Rect::xywh(
         0.0,
-        TOP_BAR_HEIGHT,
+        WINDOW_STRIP_H,
         host.editor_state().editor_ui.layer_panel_width,
-        viewport_h - TOP_BAR_HEIGHT,
+        viewport_h - WINDOW_STRIP_H,
     );
     let panel = LayerPanel::from_editor(host.editor_state());
     let x = 48.0;
@@ -459,16 +459,11 @@ fn font_weight_row_press_defers_selection_until_release() {
     host.editor_state_mut().editor_ui.enter_chat_tab();
     *host.editor_state_mut() = de_editor_core::EditorState::sample();
     host.editor_state_mut().editor_ui.font_weight_picker_open = true;
-    let property_rect = Rect {
-        origin: Point2D::new(
-            1200.0 - host.editor_state().editor_ui.property_panel_width,
-            TOP_BAR_HEIGHT,
-        ),
-        size: Point2D::new(
-            host.editor_state().editor_ui.property_panel_width,
-            800.0 - TOP_BAR_HEIGHT,
-        ),
-    };
+    let property_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+        host.editor_state(),
+        1200.0,
+        800.0,
+    );
     let panel = PropertyPanel::for_selection(host.editor_state()).unwrap();
     let before_weight = selected_font_weight(host.editor_state());
     let (point, choice) = find_font_weight_action_point(&panel, property_rect, before_weight);

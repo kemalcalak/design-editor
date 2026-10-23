@@ -91,7 +91,7 @@ impl WidgetHost {
 
     /// Prepare the editor for a real preview entry.
     ///
-    /// This is shared by the top-bar preview button and the slide-presentation
+    /// This is shared by the canvas preview button and the slide-presentation
     /// action. It commits drafts, clears pointer capture, invalidates any
     /// in-flight Figma import ownership, and closes transient chrome before
     /// the session is built. Missing CanvasKit must skip this entirely so the
@@ -154,7 +154,7 @@ impl WidgetHost {
 
     /// Real preview entry for the web shell.
     ///
-    /// The helper exists so the top-bar toggle and the Slides panel present
+    /// The helper exists so the canvas preview toggle and the Slides panel present
     /// action share the same build path, and so missing CanvasKit can leave
     /// the host untouched instead of pretending preview started.
     #[cfg(feature = "canvaskit")]

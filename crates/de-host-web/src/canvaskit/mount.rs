@@ -432,7 +432,7 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
                         crate::repaint_coalescer::request();
                     }
                 }
-                // Landing on a top-bar button owes a repaint once its
+                // Landing on a chrome button owes a repaint once its
                 // tooltip's dwell expires, and no further DOM event is
                 // coming to carry it. Arm the rAF pump after the borrow
                 // is released so it can read the host it just updated.

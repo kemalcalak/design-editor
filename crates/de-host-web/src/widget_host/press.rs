@@ -164,7 +164,7 @@ impl WidgetHost {
             return consumed;
         }
         // Tier 4 — image-fill popover, StatusBar, and the model-picker
-        // slice that lifts above the TopBar.
+        // slice that lifts over the floating chrome.
         if let Some(consumed) = self.press_rail_overlay_tiers(&ctx) {
             return consumed;
         }
@@ -175,8 +175,8 @@ impl WidgetHost {
         if let Some(consumed) = self.press_variables_tiers(&ctx) {
             return consumed;
         }
-        // Tier 6 — TopBar chrome (and its blank-press gaps).
-        if let Some(consumed) = self.press_top_bar_tier(&ctx) {
+        // Tier 6 — floating chrome (and its blank-press padding).
+        if let Some(consumed) = self.press_chrome_tier(&ctx) {
             return consumed;
         }
         // Tier 7 — property-panel popovers, then the fonts + model-picker

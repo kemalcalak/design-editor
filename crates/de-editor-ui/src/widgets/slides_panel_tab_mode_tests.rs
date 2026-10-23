@@ -158,7 +158,7 @@ fn resizing_the_rail_switches_modes_monotonically() {
 #[test]
 fn the_fit_rule_scales_with_the_tab_count() {
     let inner_w = 240.0 - 8.0 * 2.0;
-    let slides_w = crate::widgets::top_bar_geometry::estimated_text_width("Slides", 12.0);
+    let slides_w = crate::widgets::slides_panel::tabs::estimated_text_width("Slides", 12.0);
     assert!(
         text_tabs_fit(inner_w, 3, slides_w),
         "three English tabs fit the default rail"

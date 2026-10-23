@@ -12,7 +12,7 @@ impl WidgetHost {
     /// Returns true if hover state changed (caller should
     /// repaint). Mirrors the native host.
     pub fn update_layer_hover(&mut self, x: f32, y: f32, viewport_h: f32) -> bool {
-        use de_editor_ui::widgets::{LayerPanelHit, TOP_BAR_HEIGHT};
+        use de_editor_ui::widgets::{LayerPanelHit, WINDOW_STRIP_H};
         let sidebar_open = self.editor_state.editor_ui.sidebar_open;
         let panel_w = self.editor_state.editor_ui.layer_panel_width;
         let blocked_by_overlay = self
@@ -22,7 +22,7 @@ impl WidgetHost {
             || self.over_dropdown_overlay(x, y, self.last_viewport_w, viewport_h);
         let (new_layer, new_page) = if sidebar_open
             && !blocked_by_overlay
-            && y >= TOP_BAR_HEIGHT
+            && y >= WINDOW_STRIP_H
             && x >= 0.0
             && x <= panel_w
         {
@@ -145,7 +145,7 @@ impl WidgetHost {
             changed |= ui.toolbar_hover.take().is_some();
             changed |= ui.align_toolbar_hover.take().is_some();
             changed |= ui.statusbar_hover.take().is_some();
-            changed |= ui.topbar_button_hover.take().is_some();
+            changed |= ui.chrome_button_hover.take().is_some();
             if clear_chat_model_picker {
                 changed |= ui.chat_model_picker.hover.take().is_some();
             }

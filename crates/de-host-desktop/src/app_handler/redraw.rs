@@ -461,7 +461,7 @@ impl DesktopApp {
         // final `Resized` before `window.fullscreen()`
         // flips, so the `Resized` handler alone could miss
         // the exit. Polling here self-corrects so the
-        // TopBar's traffic-light reservation is restored.
+        // window-control reservation is restored.
         let fullscreen = self
             .window
             .as_ref()
