@@ -220,6 +220,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "leftPanel.tab.images" => "图片",
         "imagesTab.empty" => "此页面没有图片",
         "property.page" => "页面",
+        "property.autoLayout" => "自动布局",
         _ => return None,
     })
 }

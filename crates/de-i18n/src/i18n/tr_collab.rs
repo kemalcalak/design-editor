@@ -220,6 +220,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "leftPanel.tab.images" => "Görseller",
         "imagesTab.empty" => "Bu sayfada görsel yok",
         "property.page" => "Sayfa",
+        "property.autoLayout" => "Otomatik yerleşim",
         _ => return None,
     })
 }

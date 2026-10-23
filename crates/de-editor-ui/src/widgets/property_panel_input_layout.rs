@@ -79,6 +79,25 @@ pub fn editable_input_rects(
         size: Point2D::new(half_w, INPUT_HEIGHT),
     };
     y += INPUT_HEIGHT + 6.0;
+    let size_rects = visible.size_options.then(|| {
+        [
+            (
+                PropertyFocus::SizeW,
+                Rect {
+                    origin: Point2D::new(x0 + PAD_X, y),
+                    size: Point2D::new(half_w, INPUT_HEIGHT),
+                },
+            ),
+            (
+                PropertyFocus::SizeH,
+                Rect {
+                    origin: Point2D::new(x0 + PAD_X + half_w + 8.0, y),
+                    size: Point2D::new(half_w, INPUT_HEIGHT),
+                },
+            ),
+        ]
+    });
+    y += visible.position_size_row_h();
     let rotation_rect = Rect {
         origin: Point2D::new(x0 + PAD_X, y),
         size: Point2D::new(half_w, INPUT_HEIGHT),
@@ -100,6 +119,7 @@ pub fn editable_input_rects(
         (PropertyFocus::PositionY, y_rect),
         (PropertyFocus::Rotation, rotation_rect),
     ];
+    rects.extend(size_rects.into_iter().flatten());
     if let Some(radius_rect) = radius_rect {
         rects.push((PropertyFocus::PositionR, radius_rect));
     }
@@ -125,22 +145,7 @@ pub fn editable_input_rects(
         );
     }
     if visible.size_options {
-        y += SECTION_HEADER_HEIGHT;
-        rects.push((
-            PropertyFocus::SizeW,
-            Rect {
-                origin: Point2D::new(x0 + PAD_X, y),
-                size: Point2D::new(half_w, INPUT_HEIGHT),
-            },
-        ));
-        rects.push((
-            PropertyFocus::SizeH,
-            Rect {
-                origin: Point2D::new(x0 + PAD_X + half_w + 8.0, y),
-                size: Point2D::new(half_w, INPUT_HEIGHT),
-            },
-        ));
-        y += INPUT_HEIGHT + 10.0;
+        y += visible.size_section_lead_h();
         let check_h = crate::widgets::property_panel_inputs::size_check_row_height();
         y += check_h * if visible.clip_content { 3.0 } else { 2.0 };
         y += 12.0;

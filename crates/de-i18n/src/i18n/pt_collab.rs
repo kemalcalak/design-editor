@@ -220,6 +220,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "leftPanel.tab.images" => "Imagens",
         "imagesTab.empty" => "Nenhuma imagem nesta página",
         "property.page" => "Página",
+        "property.autoLayout" => "Layout automático",
         _ => return None,
     })
 }

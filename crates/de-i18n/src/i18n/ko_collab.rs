@@ -222,6 +222,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "leftPanel.tab.images" => "이미지",
         "imagesTab.empty" => "이 페이지에 이미지가 없습니다",
         "property.page" => "페이지",
+        "property.autoLayout" => "자동 레이아웃",
         _ => return None,
     })
 }

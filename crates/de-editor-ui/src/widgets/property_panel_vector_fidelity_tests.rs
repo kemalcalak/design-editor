@@ -100,7 +100,9 @@ fn per_corner_expand_emits_grid_focuses_and_shifts_later_sections() {
         assert!(expanded_texts.iter().any(|text| text == prefix));
     }
 
-    let size_y = |panel: &PropertyPanel| {
+    // W / H sit above the corner grid now (#30); the Layer section's
+    // opacity is the next input below it.
+    let later_y = |panel: &PropertyPanel| {
         sections::editable_input_rects(
             rect,
             visible_for(panel),
@@ -108,14 +110,14 @@ fn per_corner_expand_emits_grid_focuses_and_shifts_later_sections() {
             &panel.snapshot.effects,
         )
         .into_iter()
-        .find(|(focus, _)| *focus == PropertyFocus::SizeW)
+        .find(|(focus, _)| *focus == PropertyFocus::Opacity)
         .unwrap()
         .1
         .origin
         .y
     };
     assert_eq!(
-        size_y(&panel) - size_y(&collapsed),
+        later_y(&panel) - later_y(&collapsed),
         super::property_panel_corner::CORNER_GRID_EXTRA_HEIGHT
     );
 }

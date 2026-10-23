@@ -17,9 +17,7 @@ use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::{FlexLayout, PaddingEditMode, PropertyFocus};
 
-const DIR_BUTTON_W: f32 = 56.0;
-const DIR_BUTTON_H: f32 = 32.0;
-const DIR_GAP: f32 = 8.0;
+const DIR_BUTTON_H: f32 = 28.0;
 const ADVANCED_TOP_GAP: f32 = 10.0;
 const SUB_LABEL_H: f32 = 18.0;
 const GRID_CELL_W: f32 = 34.0;
@@ -47,6 +45,22 @@ const RADIO_SIZE: f32 = 13.0;
 /// + the 14px circle).
 const RADIO_GUTTER: f32 = 6.0 + RADIO_SIZE;
 const PADDING_ROW_GAP: f32 = 6.0;
+
+/// The direction control's segments (#30): full width, in the design's
+/// order — vertical, horizontal, then free. Paint and the action walker
+/// both read this, so a click lands on the segment drawn.
+const DIRECTIONS: [(FlexLayout, Icon); 3] = [
+    (FlexLayout::Vertical, Icon::ArrowDown),
+    (FlexLayout::Horizontal, Icon::ArrowRight),
+    (FlexLayout::Free, Icon::LayoutGrid),
+];
+
+fn direction_control_rect(x0: f32, y: f32, width: f32) -> Rect {
+    Rect {
+        origin: Point2D::new(x0 + PAD_X, y),
+        size: Point2D::new((width - PAD_X * 2.0).max(0.0), DIR_BUTTON_H),
+    }
+}
 
 fn grid_cell_h() -> f32 {
     GRID_CELL_H
@@ -124,19 +138,22 @@ pub fn paint_flex_section(
     labels: &PropertyLabels,
     locale: de_editor_core::Locale,
     padding_mode: PaddingEditMode,
+    divider: bool,
     x: f32,
     y: f32,
     width: f32,
 ) -> f32 {
-    let mut y = paint_section_label(cx, theme, labels.flex_layout, x, y, width);
-    paint_direction_buttons(cx, theme, snapshot.flex_layout, x, y);
+    let mut y = paint_section_label(cx, theme, labels.auto_layout, x, y, width);
+    paint_direction_buttons(cx, theme, snapshot.flex_layout, x, y, width);
     y += DIR_BUTTON_H + 12.0;
     if snapshot.flex_layout != FlexLayout::Free {
         y += ADVANCED_TOP_GAP;
         y = paint_alignment_and_gap(cx, theme, snapshot, edit, locale, x, y, width);
         y = paint_padding_inputs(cx, theme, snapshot, edit, locale, padding_mode, x, y, width);
     }
-    paint_section_divider(cx, theme, x, y, width);
+    if divider {
+        paint_section_divider(cx, theme, x, y, width);
+    }
     y + SECTION_GAP
 }
 
@@ -222,19 +239,14 @@ pub fn push_flex_action_rects(
     justify: LayoutJustifyValue,
     padding_mode_popover_open: bool,
 ) {
-    let row_x = x0 + PAD_X;
-    let modes = [
-        FlexLayout::Free,
-        FlexLayout::Vertical,
-        FlexLayout::Horizontal,
-    ];
     // Continuous even cells over the same footprint the ToggleGroup paints.
-    let cell_w = (DIR_BUTTON_W * 3.0 + DIR_GAP * 2.0) / 3.0;
-    for (i, mode) in modes.iter().enumerate() {
+    let control = direction_control_rect(x0, y, width);
+    let cell_w = control.size.x / DIRECTIONS.len() as f32;
+    for (i, (mode, _)) in DIRECTIONS.iter().enumerate() {
         out.push((
             PropertyPanelAction::SetFlexLayout(*mode),
             Rect {
-                origin: Point2D::new(row_x + i as f32 * cell_w, y),
+                origin: Point2D::new(control.origin.x + i as f32 * cell_w, y),
                 size: Point2D::new(cell_w, DIR_BUTTON_H),
             },
         ));
@@ -330,19 +342,16 @@ fn paint_direction_buttons(
     active: FlexLayout,
     x: f32,
     y: f32,
+    width: f32,
 ) {
-    let modes = [
-        (FlexLayout::Free, Icon::LayoutGrid),
-        (FlexLayout::Vertical, Icon::Rows3),
-        (FlexLayout::Horizontal, Icon::Columns3),
-    ];
-    // Fixed-width icon segmented control via jian ToggleGroup; font_size 14
-    // yields an 18px icon (font + 4), matching the previous cells. The outer
-    // rect spans the same footprint (3 buttons + 2 gaps) the hit walker covers.
-    let labels: Vec<&str> = modes.iter().map(|_| "").collect();
-    let icon_paths: Vec<&[&str]> = modes.iter().map(|(_, icon)| icon.paths()).collect();
-    let active_idx = modes.iter().position(|(m, _)| *m == active).unwrap_or(0);
-    let total_w = DIR_BUTTON_W * 3.0 + DIR_GAP * 2.0;
+    // Icon segmented control via jian ToggleGroup; font_size 14 yields an
+    // 18px icon (font + 4).
+    let labels: Vec<&str> = DIRECTIONS.iter().map(|_| "").collect();
+    let icon_paths: Vec<&[&str]> = DIRECTIONS.iter().map(|(_, icon)| icon.paths()).collect();
+    let active_idx = DIRECTIONS
+        .iter()
+        .position(|(m, _)| *m == active)
+        .unwrap_or(0);
     jian_widgets::components::toggle_group::ToggleGroup {
         options: &labels,
         icons: Some(&icon_paths),
@@ -352,10 +361,7 @@ fn paint_direction_buttons(
     }
     .paint(
         cx.backend,
-        Rect {
-            origin: Point2D::new(x + PAD_X, y),
-            size: Point2D::new(total_w, DIR_BUTTON_H),
-        },
+        direction_control_rect(x, y, width),
         &crate::widgets::button::tokens_from_theme(theme),
     );
 }

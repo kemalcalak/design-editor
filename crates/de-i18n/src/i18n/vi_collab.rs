@@ -220,6 +220,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "leftPanel.tab.images" => "Hình ảnh",
         "imagesTab.empty" => "Không có hình ảnh trên trang này",
         "property.page" => "Trang",
+        "property.autoLayout" => "Bố cục tự động",
         _ => return None,
     })
 }

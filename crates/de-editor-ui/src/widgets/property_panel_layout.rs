@@ -243,9 +243,10 @@ pub fn action_button_rects_with_fill_picker(
             visible.component_button,
         );
     }
-    // Position section.
+    // Position section: X Y, then W H (#30), then rotation / radius.
     y += SECTION_HEADER_HEIGHT;
     y += INPUT_HEIGHT + 6.0;
+    y += visible.position_size_row_h();
     if visible.corner_per_corner {
         out.push((
             PropertyPanelAction::ToggleCornerExpand,
@@ -277,10 +278,7 @@ pub fn action_button_rects_with_fill_picker(
     }
 
     if visible.size_options {
-        y += SECTION_HEADER_HEIGHT;
-        // W/H remain editable in every sizing mode. Committing a number
-        // switches only that axis back to fixed sizing.
-        y += INPUT_HEIGHT + 10.0;
+        y += visible.size_section_lead_h();
         let row_h = crate::widgets::property_panel_inputs::size_check_row_height();
         out.push((
             PropertyPanelAction::ToggleSizeFillWidth,

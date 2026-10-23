@@ -553,6 +553,7 @@ pub(crate) fn sections_top_before_text(
     }
     y += SECTION_HEADER_HEIGHT;
     y += INPUT_HEIGHT + 6.0;
+    y += visible.position_size_row_h();
     y += INPUT_HEIGHT + 12.0;
     y += SECTION_GAP;
     if visible.flex_layout {
@@ -562,8 +563,7 @@ pub(crate) fn sections_top_before_text(
         );
     }
     if visible.size_options {
-        y += SECTION_HEADER_HEIGHT;
-        y += INPUT_HEIGHT + 10.0;
+        y += visible.size_section_lead_h();
         y += crate::widgets::property_panel_inputs::size_check_row_height()
             * if visible.clip_content { 3.0 } else { 2.0 };
         y += 12.0 + SECTION_GAP;

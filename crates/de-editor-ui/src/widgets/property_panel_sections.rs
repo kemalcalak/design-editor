@@ -66,6 +66,7 @@ pub struct PropertyLabels {
     pub corner_per_corner: &'static str,
     pub mixed: &'static str,
     pub flex_layout: &'static str,
+    pub auto_layout: &'static str,
     pub size: &'static str,
     pub layer: &'static str,
     pub opacity: &'static str,
@@ -116,6 +117,7 @@ impl PropertyLabels {
             corner_per_corner: pick("property.cornerPerCorner", "Edit corners independently"),
             mixed: pick("property.mixed", "Mixed"),
             flex_layout: pick("layout.flexLayout", "Flex Layout"),
+            auto_layout: pick("property.autoLayout", "Auto layout"),
             size: pick("layout.dimensions", "Size"),
             layer: pick("appearance.layer", "Layer"),
             opacity: pick("appearance.opacity", "Opacity"),
@@ -254,6 +256,7 @@ pub fn paint_position_section(
     labels: &PropertyLabels,
     show_radius: bool,
     corner_expanded: bool,
+    show_size: bool,
     x: f32,
     y: f32,
     width: f32,
@@ -297,6 +300,10 @@ pub fn paint_position_section(
         edit.now_ms,
     );
     y += INPUT_HEIGHT + 6.0;
+    if show_size {
+        paint_size_inputs(cx, theme, snapshot, edit, x, y, half_w);
+        y += INPUT_HEIGHT + 6.0;
+    }
     // Rotation input — TS uses RotateCw glyph; we render with an
     // icon-prefixed pill that accepts editable degree values.
     let rotation_rect = Rect {
@@ -379,25 +386,16 @@ pub fn paint_position_section(
     y + SECTION_GAP
 }
 
-// ── Size section ──────────────────────────────────────────────────
-
-// Paint-context + geometry args threaded through; a struct adds no gain.
-#[allow(clippy::too_many_arguments)]
-pub fn paint_size_section(
+/// The W / H pair, painted on Position's second row (#30).
+fn paint_size_inputs(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
     snapshot: &NodeSnapshot,
     edit: &EditContext<'_>,
-    labels: &PropertyLabels,
-    flags: SizeFlags,
-    show_clip_content: bool,
     x: f32,
     y: f32,
-    width: f32,
-) -> f32 {
-    let mut y = paint_section_label(cx, theme, labels.size, x, y, width);
-    let usable_w = width - PAD_X * 2.0;
-    let half_w = (usable_w - 8.0) / 2.0;
+    half_w: f32,
+) {
     let w_rect = Rect {
         origin: Point2D::new(x + PAD_X, y),
         size: Point2D::new(half_w, INPUT_HEIGHT),
@@ -435,7 +433,32 @@ pub fn paint_size_section(
         edit.input_at(PropertyFocus::SizeH),
         edit.now_ms,
     );
-    y += INPUT_HEIGHT + 10.0;
+}
+
+// ── Size section ──────────────────────────────────────────────────
+
+// Paint-context + geometry args threaded through; a struct adds no gain.
+#[allow(clippy::too_many_arguments)]
+pub fn paint_size_section(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    labels: &PropertyLabels,
+    flags: SizeFlags,
+    show_clip_content: bool,
+    titled: bool,
+    x: f32,
+    y: f32,
+    width: f32,
+) -> f32 {
+    // Under Auto layout the boxes are its closing rows (#30); alone they
+    // keep a title.
+    let mut y = if titled {
+        paint_section_label(cx, theme, labels.size, x, y, width)
+    } else {
+        y
+    };
+    let usable_w = width - PAD_X * 2.0;
+    let half_w = (usable_w - 8.0) / 2.0;
     let row_h = crate::widgets::property_panel_inputs::size_check_row_height();
     paint_check_row(
         cx,
