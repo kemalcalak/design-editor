@@ -86,10 +86,12 @@ expected_sha_for_label() {
 }
 
 sha256_file() {
+    # Hash from stdin: GNU sha256sum (Git Bash on Windows) starts its line with
+    # a backslash when the file name holds one, which breaks the compare.
   if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "$1" | awk '{print $1}'
+    sha256sum < "$1" | awk '{print $1}'
   elif command -v shasum >/dev/null 2>&1; then
-    shasum -a 256 "$1" | awk '{print $1}'
+    shasum -a 256 < "$1" | awk '{print $1}'
   else
     echo "error: sha256sum or shasum is required for checksum verification" >&2
     exit 1
