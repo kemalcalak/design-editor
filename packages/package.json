@@ -1,6 +1,6 @@
 {
   "name": "@kemalcalak/design-editor-packages",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Web SDK workspace for Design Editor (the Rust product lives in ../crates). Hosts the wasm-backed de-web-sdk viewer family plus the JS build glue that feeds the Rust web target.",
   "author": {

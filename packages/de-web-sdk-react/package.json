@@ -1,6 +1,6 @@
 {
   "name": "@kemalcalak/de-web-sdk-react",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "React adapter for the Design Editor read-only web viewer SDK",
   "license": "MIT",
   "type": "module",

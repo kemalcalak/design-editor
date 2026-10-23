@@ -1,4 +1,4 @@
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.1';
 export { viewerKey } from './injection.js';
 export { provideViewer, provideViewerRef, useViewer } from './use-viewer.js';
 export { useDocument, useViewport, useActivePage } from './composables.js';
