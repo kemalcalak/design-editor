@@ -238,6 +238,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.import.penDev" => "pen.dev에서 가져오기",
         "home.import.penDevSub" => ".pen 파일",
         "dialog.penDevImportToast" => "pen.dev에서 열었습니다. 가져오지 못한 항목: {{details}}",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}}은(는) Design Editor 문서가 아닙니다. .de 파일만 열 수 있으며, pen.dev .pen 파일은 가져오기로 열립니다.",
+        "dialog.loadErrorNotPenDev" => "{{name}}은(는) pen.dev 파일이 아니므로 가져올 수 없습니다.",
         _ => return None,
     })
 }

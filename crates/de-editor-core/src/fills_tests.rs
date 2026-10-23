@@ -150,7 +150,7 @@ fn moving_across_primary_keeps_ref_with_its_fill_and_clears_primary_cache() {
 /// Otherwise the scene resolver's `fill_for` (a registered fill ref wins
 /// over `container.fill`) keeps painting the variable colour after the
 /// fill row is gone — the "deleted the fill but the colour stays" bug on
-/// token-based (old .de) designs.
+/// token-based (old .op) designs.
 #[test]
 fn remove_selected_fill_clears_the_variable_ref() {
     use crate::node_id::NodeId;

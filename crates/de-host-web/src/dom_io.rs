@@ -135,12 +135,12 @@ pub(crate) fn drain_pending_kit_io<C: RepaintContext + 'static>(inner: &InnerRc<
     }
 }
 
-/// Component Browser → Import kit: hidden `.de` / `.pen` / `.json`
+/// Component Browser → Import kit: hidden `.de` / `.json`
 /// picker → extract reusable components → append session kit.
 fn import_kit_file<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
     let inner = inner.clone();
     open_file_picker(
-        ".de,.pen,.json",
+        ".de,.json",
         Box::new(move |file| {
             let name = file.name();
             let inner2 = inner.clone();

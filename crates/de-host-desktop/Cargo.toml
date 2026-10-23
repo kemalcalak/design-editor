@@ -47,10 +47,14 @@ ext = "de"
 name = "Design Editor Document"
 role = "Editor"
 
+# pen.dev `.pen` — a secondary, import-only type (opened untitled, never
+# written back), hence role Viewer. cargo-bundle has no `rank` key;
+# `scripts/bundle-macos.sh` rewrites this entry with
+# `LSHandlerRank = Alternate` (and gives `.de` its exported UTI).
 [[package.metadata.bundle.file_associations]]
 ext = "pen"
 name = "pen.dev Document (import)"
-role = "Editor"
+role = "Viewer"
 
 # Figma `.fig` binary exports — routes through the desktop's
 # background `figma_import_session` worker (see

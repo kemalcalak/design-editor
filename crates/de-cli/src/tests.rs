@@ -112,6 +112,40 @@ fn start_document_file_is_minimal_op_when_missing() {
 }
 
 #[test]
+fn ensure_document_file_refuses_non_document_extensions_without_writing() {
+    let dir = std::env::temp_dir().join(format!(
+        "design-editor-cli-extension-{}",
+        std::process::id()
+    ));
+    for name in ["session.op", "session.pen", "session"] {
+        let path = dir.join(name);
+        assert!(
+            app_control_cli::ensure_document_file(&path).is_err(),
+            "{name}"
+        );
+        assert!(!path.exists(), "{name} must not be created");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn import_out_paths_must_be_documents() {
+    for args in [
+        vec!["import:pen", "a.pen", "--out", "a.op"],
+        vec!["import:figma", "a.fig", "--out", "a.pen"],
+        vec!["import:snapshot", "a.json", "--out", "a.json"],
+    ] {
+        let args: Vec<String> = args.into_iter().map(String::from).collect();
+        assert!(parse_args(&args).is_err(), "{args:?}");
+    }
+    let args: Vec<String> = ["import:pen", "a.pen", "--out", "a.de"]
+        .into_iter()
+        .map(String::from)
+        .collect();
+    assert!(parse_args(&args).is_ok());
+}
+
+#[test]
 fn install_codex_writes_bundle_and_uninstall_removes_it() {
     let home = std::env::temp_dir().join(format!("de-cli-skill-codex-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&home);

@@ -12,12 +12,15 @@ pub(super) fn map_import_pen(positionals: &[String], flags: &Flags) -> Result<Co
         "Usage: de import:pen <file.pen> [--out output.de]",
     )?;
     let out_path = flag_value(flags, "out").unwrap_or_else(|| pen_default_out_path(&pen_path));
+    crate::app_control_cli::require_document_extension(Path::new(&out_path))?;
     Ok(Command::ImportPen { pen_path, out_path })
 }
 
 pub(super) fn pen_default_out_path(pen_path: &str) -> String {
-    let base = pen_path.strip_suffix(".pen").unwrap_or(pen_path);
-    format!("{base}.de")
+    let base = pen_path
+        .strip_suffix(de_util::document_file::PEN_DEV_SUFFIX)
+        .unwrap_or(pen_path);
+    de_util::document_file::file_name(base)
 }
 
 /// Convert a pen.dev `.pen` into a new `.de`, inlining the image files it

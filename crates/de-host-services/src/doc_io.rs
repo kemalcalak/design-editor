@@ -574,7 +574,7 @@ mod tests {
         let Err(error) = load_editor_state(&path, de_editor_core::Locale::EnUs) else {
             panic!("an .op file must not open");
         };
-        assert!(matches!(error, DocIoError::UnsupportedExtension { .. }));
+        assert!(matches!(error, DocIoError::UnsupportedExtension(_)));
         let _ = std::fs::remove_file(&path);
     }
 
@@ -586,7 +586,7 @@ mod tests {
         let Err(error) = load_editor_state(&path, de_editor_core::Locale::EnUs) else {
             panic!("a canonical document named .pen must not open");
         };
-        assert!(matches!(error, DocIoError::NotPenDevDocument { .. }));
+        assert!(matches!(error, DocIoError::NotPenDevDocument(_)));
         let _ = std::fs::remove_file(&path);
     }
 

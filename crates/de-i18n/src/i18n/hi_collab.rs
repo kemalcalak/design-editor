@@ -236,6 +236,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.import.penDev" => "pen.dev से आयात करें",
         "home.import.penDevSub" => ".pen फ़ाइल",
         "dialog.penDevImportToast" => "pen.dev से खोला गया। नहीं लाया जा सका: {{details}}",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}} Design Editor दस्तावेज़ नहीं है। केवल .de फ़ाइलें खुलती हैं; pen.dev की .pen फ़ाइलें आयात के रूप में खुलती हैं।",
+        "dialog.loadErrorNotPenDev" => "{{name}} pen.dev फ़ाइल नहीं है, इसलिए इसे आयात नहीं किया जा सकता।",
         _ => return None,
     })
 }

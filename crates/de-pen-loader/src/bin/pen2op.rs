@@ -1,4 +1,4 @@
-//! `pen2op` — convert a plaintext canonical `.pen` (or legacy `.de`) file into
+//! `pen2op` — convert a plaintext canonical `.pen` (or legacy `.op`) file into
 //! a current-schema `.de` file by routing it THROUGH the canonical
 //! `load_canonical` + `normalize_legacy_doc` path the desktop uses to open
 //! files. A naive rename does NOT work: the normalize step (version 2.x →

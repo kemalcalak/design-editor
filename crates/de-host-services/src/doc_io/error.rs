@@ -13,7 +13,8 @@
 //! express: whether a failure is a FILESYSTEM fault on a path the user named
 //! (`Open` / `Stat` / `Map` / `CreateTemp` / `TempAllocExhausted` / `Replace` /
 //! `Io`), a CONTENT fault in the bytes themselves (`SourceEmpty` /
-//! `SourceNotUtf8` / `InvalidUtf8Document` / `Schema` / `LegacyFormat`), or a
+//! `SourceNotUtf8` / `InvalidUtf8Document` / `Schema` / `LegacyFormat` /
+//! `UnsupportedExtension` / `NotPenDevDocument`), or a
 //! SERIALIZER fault while writing (`Serialize`). That middle group is the
 //! client-fault / server-fault split a request boundary needs — a daemon route
 //! handed a bad document answers `400`, while a disk that would not open
@@ -94,11 +95,13 @@ pub enum DocIoError {
     /// writing the canonical schema over one would break it for pen.dev.
     PenDevSourceReadOnly { path: String },
     /// The open path names neither a `.de` document nor a pen.dev `.pen`
-    /// import (for example an old `.de` file). Refused before parsing.
-    UnsupportedExtension { path: String },
+    /// import (for example an old `.op` file). Refused before parsing.
+    /// Carries the LOCALISED `dialog.loadErrorUnsupportedExtension` sentence.
+    UnsupportedExtension(String),
     /// A `.pen` file whose content is not a pen.dev document. `.pen` only
-    /// opens through the pen.dev importer.
-    NotPenDevDocument { path: String },
+    /// opens through the pen.dev importer. Carries the LOCALISED
+    /// `dialog.loadErrorNotPenDev` sentence.
+    NotPenDevDocument(String),
 }
 
 impl fmt::Display for DocIoError {
@@ -124,20 +127,13 @@ impl fmt::Display for DocIoError {
             | DocIoError::Serialize(message)
             | DocIoError::Schema(message)
             | DocIoError::LegacyFormat(message)
-            | DocIoError::InvalidUtf8Document(message) => f.write_str(message),
+            | DocIoError::InvalidUtf8Document(message)
+            | DocIoError::UnsupportedExtension(message)
+            | DocIoError::NotPenDevDocument(message) => f.write_str(message),
             DocIoError::PenDevSourceReadOnly { path } => write!(
                 f,
                 "{path} is a pen.dev document; save the imported design to a new file"
             ),
-            DocIoError::UnsupportedExtension { path } => {
-                write!(
-                    f,
-                    "{path} is not a Design Editor document (expected a .de file)"
-                )
-            }
-            DocIoError::NotPenDevDocument { path } => {
-                write!(f, "{path} is not a pen.dev document")
-            }
         }
     }
 }

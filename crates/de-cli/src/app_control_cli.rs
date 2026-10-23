@@ -479,7 +479,21 @@ pub(crate) fn token_for_port(port: u16) -> String {
         .unwrap_or_default()
 }
 
+/// Refuse a document path that is not `.de` before anything is created or
+/// handed to a server that would refuse it anyway.
+pub(crate) fn require_document_extension(path: &Path) -> Result<(), CliError> {
+    if de_util::document_file::is_document_path(path) {
+        return Ok(());
+    }
+    Err(CliError::Document(format!(
+        "{} is not a Design Editor document: expected a .de file. \
+         pen.dev .pen / .fig files must be imported.",
+        path.display()
+    )))
+}
+
 pub(crate) fn ensure_document_file(path: &Path) -> Result<(), CliError> {
+    require_document_extension(path)?;
     if path.exists() {
         if path.is_file() {
             return Ok(());
@@ -509,13 +523,7 @@ pub(crate) fn ensure_document_file(path: &Path) -> Result<(), CliError> {
 /// check never mutates the file, so a corrupt-but-valuable document is
 /// preserved rather than silently replaced.
 fn preflight_document(path: &Path) -> Result<(), CliError> {
-    if !de_util::document_file::is_document_path(path) {
-        return Err(CliError::Document(format!(
-            "{} is not a Design Editor document: expected a .de file. \
-             pen.dev .pen / .fig files must be imported.",
-            path.display()
-        )));
-    }
+    require_document_extension(path)?;
     let bytes =
         fs::read(path).map_err(|e| CliError::Io(format!("read {}: {e}", path.display())))?;
     // A `.de` document is UTF-8 JSON; a real `.fig` / `.pen` is a binary ZIP

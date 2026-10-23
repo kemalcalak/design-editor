@@ -575,14 +575,7 @@ fn post_file_save_writes_current_path_and_embedded_editor_meta() {
     let saved_json: serde_json::Value = serde_json::from_str(&saved).expect("saved json");
     assert_eq!(saved_json["editorMeta"]["activePageIndex"], 1);
     assert_eq!(saved_json["editorMeta"]["preserveAuthoredGeometry"], true);
-    let mut sidecar = path.clone();
-    sidecar.set_extension("op.opmeta");
-    assert!(
-        !sidecar.exists(),
-        "new saves should keep active page metadata inside the .de file"
-    );
     let _ = std::fs::remove_file(path);
-    let _ = std::fs::remove_file(sidecar);
 }
 
 #[test]

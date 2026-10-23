@@ -67,7 +67,7 @@ fn import_staging_path(source_path: &Path) -> Result<PathBuf, FigmaImportError> 
     let name = base
         .file_name()
         .map(|name| name.to_string_lossy())
-        .unwrap_or_else(|| "Figma Import.de".into());
+        .unwrap_or_else(|| de_util::document_file::file_name("Figma Import").into());
     for _ in 0..100 {
         let sequence = IMPORT_OUTPUT_SEQUENCE.fetch_add(1, Ordering::Relaxed);
         let candidate = parent.join(format!(
@@ -117,7 +117,9 @@ pub(super) fn publish_numbered_copy(
         .map(|stem| stem.to_string_lossy())
         .unwrap_or_else(|| "Figma Import".into());
     for suffix in 1..=10_000 {
-        let candidate = parent.join(format!("{stem} ({suffix}).de"));
+        let candidate = parent.join(de_util::document_file::file_name(&format!(
+            "{stem} ({suffix})"
+        )));
         match publish_new_link(staging_path, &candidate) {
             Ok(path) => return Ok(path),
             Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
@@ -134,7 +136,7 @@ pub(super) fn publish_numbered_copy(
     })
 }
 
-fn publish_staged_op(
+fn publish_staged_document(
     staging_path: &Path,
     source_path: &Path,
     output_mode: ImportOutputMode,
@@ -229,7 +231,8 @@ pub(super) fn persist_import_next_to_source(
             remove_import_artifact(&staging_path);
             return Err(FigmaImportError::Cancelled);
         }
-        let output_path = publish_staged_op(&staging_path, source_path, output_mode, cancellation);
+        let output_path =
+            publish_staged_document(&staging_path, source_path, output_mode, cancellation);
         remove_import_artifact(&staging_path);
         Ok(PersistedFile::new(output_path?))
     })();

@@ -152,7 +152,7 @@ fn save_serializes_the_canonical_document_json() {
     assert!(json.contains("\"version\""));
     // And it round-trips through the same canonical loader the web
     // Open path uses.
-    let ingested = crate::file_actions::ingest_op_source(&json, host.editor_state())
+    let ingested = crate::file_actions::ingest_document_source(&json, host.editor_state())
         .expect("canonical round-trip parses");
     assert_eq!(
         ingested.state.doc.children.len(),
@@ -172,7 +172,7 @@ fn figma_preserve_geometry_survives_web_save_open_round_trip() {
     let parsed: serde_json::Value = serde_json::from_str(&json).expect("saved JSON");
     assert_eq!(parsed["editorMeta"]["preserveAuthoredGeometry"], true);
 
-    let ingested = crate::file_actions::ingest_op_source(&json, host.editor_state())
+    let ingested = crate::file_actions::ingest_document_source(&json, host.editor_state())
         .expect("canonical round-trip parses");
     assert_eq!(ingested.state.ui.active_page_index, 1);
     assert!(ingested.state.editor_ui.preserve_authored_geometry);
@@ -194,7 +194,7 @@ fn legacy_op_without_preserve_metadata_reopens_in_layout_mode() {
       "editorMeta":{"activePageIndex":1}
     }"#;
 
-    let ingested = crate::file_actions::ingest_op_source(legacy, host.editor_state())
+    let ingested = crate::file_actions::ingest_document_source(legacy, host.editor_state())
         .expect("legacy canonical document parses");
     assert_eq!(ingested.state.ui.active_page_index, 1);
     assert!(!ingested.state.editor_ui.preserve_authored_geometry);
@@ -321,7 +321,7 @@ fn ingest_preserves_app_preferences_from_the_previous_state() {
     host.editor_state.editor_ui.locale = de_editor_core::Locale::ZhCn;
     let json =
         crate::file_actions::serialize_document(host.editor_state()).expect("serialize succeeds");
-    let ingested = crate::file_actions::ingest_op_source(&json, host.editor_state())
+    let ingested = crate::file_actions::ingest_document_source(&json, host.editor_state())
         .expect("canonical parse succeeds");
     assert_eq!(ingested.state.editor_ui.theme_mode, ThemeMode::Light);
     assert_eq!(
@@ -423,13 +423,13 @@ fn unsaved_import_is_dirty_while_an_opened_document_install_stays_clean() {
 }
 
 #[test]
-fn opened_op_state_arms_missing_font_detection_through_ingest_install() {
+fn opened_document_state_arms_missing_font_detection_through_ingest_install() {
     let mut host = WidgetHost::new();
     let source = r#"{"version":"0.8.0","children":[
         {"type":"text","id":"t1","name":"Title","x":0,"y":0,"width":100,"height":24,
          "content":"Hello","fontFamily":"__WebOpenedOpMissingFont__"}
     ]}"#;
-    let mut ingested = crate::file_actions::ingest_op_source(source, host.editor_state())
+    let mut ingested = crate::file_actions::ingest_document_source(source, host.editor_state())
         .expect("canonical .de source");
     ingested.state.editor_ui.file_name_display = Some("font-check.de".to_string());
 

@@ -19,6 +19,10 @@ pub enum DocumentIngestError {
     HtmlProject(String),
     /// The HTML project parsed but produced no nodes.
     HtmlProjectEmpty,
+    /// The picked file is neither a `.de` document nor a pen.dev `.pen`.
+    UnsupportedExtension { name: String },
+    /// A `.pen` file whose content is not a pen.dev document.
+    NotPenDevDocument { name: String },
 }
 
 impl std::fmt::Display for DocumentIngestError {
@@ -32,6 +36,15 @@ impl std::fmt::Display for DocumentIngestError {
             DocumentIngestError::HtmlProject(error) => write!(f, "{error}"),
             DocumentIngestError::HtmlProjectEmpty => {
                 write!(f, "HTML project contains no importable content")
+            }
+            DocumentIngestError::UnsupportedExtension { name } => {
+                write!(
+                    f,
+                    "{name} is not a Design Editor document (expected a .de file)"
+                )
+            }
+            DocumentIngestError::NotPenDevDocument { name } => {
+                write!(f, "{name} is not a pen.dev document")
             }
         }
     }

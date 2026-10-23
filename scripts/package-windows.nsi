@@ -11,12 +11,14 @@
 ;                           de-cli-<target>.zip in the release; $INSTDIR is
 ;                           NOT added to PATH — doing so reliably needs the
 ;                           non-stock EnVar plugin, deferred)
-;   design-editor.ico          icon used by shortcuts + the .de/.pen ProgID
+;   design-editor.ico          icon used by shortcuts + the .de/.pen ProgIDs
 ;   Uninstall.exe           uninstaller (registered in Add/Remove Programs)
 ;
 ; File association: ProgID "DesignEditor.Document" under HKCR with DefaultIcon
-; and an open command, claimed by .de and .pen (pen.dev files, which open
-; as an untitled import and are never written back). Writing the machine hive
+; and an open command, claimed by .de; a separate ProgID
+; "DesignEditor.PenDevImport" (same icon + command) is claimed by .pen
+; (pen.dev files, which open as an untitled import and are never written
+; back). Writing the machine hive
 ; requires elevation, hence RequestExecutionLevel admin + $PROGRAMFILES64 —
 ; an intentional divergence from electron-builder's per-user install
 ; (perMachine: false): a per-user HKCU\Software\Classes claim silently loses
@@ -82,6 +84,7 @@ Unicode true
 !define EXE_NAME "design-editor.exe"
 !define CLI_NAME "de.exe"
 !define PROG_ID "DesignEditor.Document"
+!define PEN_PROG_ID "DesignEditor.PenDevImport"
 !define REG_APP_KEY "Software\${PRODUCT_NAME}"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define VC_RUNTIME_REG_KEY "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\${ARCH}"
@@ -322,16 +325,22 @@ Section "Design Editor" SecMain
   WriteRegDWORD HKLM "${UNINST_KEY}" "NoModify" 1
   WriteRegDWORD HKLM "${UNINST_KEY}" "NoRepair" 1
 
-  ; File association: one ProgID claimed by .de and the pen.dev .pen import.
+  ; File association: .de documents get their own ProgID.
   WriteRegStr HKCR "${PROG_ID}" "" "Design Editor Document"
   WriteRegStr HKCR "${PROG_ID}\DefaultIcon" "" "$INSTDIR\design-editor.ico"
   WriteRegStr HKCR "${PROG_ID}\shell" "" "open"
   WriteRegStr HKCR "${PROG_ID}\shell\open\command" "" '"$INSTDIR\${EXE_NAME}" "%1"'
 
+  ; pen.dev .pen files are a separate, import-only type with their own ProgID.
+  WriteRegStr HKCR "${PEN_PROG_ID}" "" "pen.dev Document (import)"
+  WriteRegStr HKCR "${PEN_PROG_ID}\DefaultIcon" "" "$INSTDIR\design-editor.ico"
+  WriteRegStr HKCR "${PEN_PROG_ID}\shell" "" "open"
+  WriteRegStr HKCR "${PEN_PROG_ID}\shell\open\command" "" '"$INSTDIR\${EXE_NAME}" "%1"'
+
   WriteRegStr HKCR ".de" "" "${PROG_ID}"
   WriteRegStr HKCR ".de" "Content Type" "application/x-design-editor"
-  WriteRegStr HKCR ".pen" "" "${PROG_ID}"
-  WriteRegStr HKCR ".pen" "Content Type" "application/x-design-editor"
+  WriteRegStr HKCR ".pen" "" "${PEN_PROG_ID}"
+  WriteRegStr HKCR ".pen" "Content Type" "application/x-pen-dev"
 
   ; SHCNE_ASSOCCHANGED — tell the shell to refresh icon/association caches.
   System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
@@ -354,9 +363,10 @@ Section "Uninstall"
   StrCmp $0 "${PROG_ID}" 0 +2
     DeleteRegKey HKCR ".de"
   ReadRegStr $0 HKCR ".pen" ""
-  StrCmp $0 "${PROG_ID}" 0 +2
+  StrCmp $0 "${PEN_PROG_ID}" 0 +2
     DeleteRegKey HKCR ".pen"
   DeleteRegKey HKCR "${PROG_ID}"
+  DeleteRegKey HKCR "${PEN_PROG_ID}"
 
   DeleteRegKey HKLM "${UNINST_KEY}"
   DeleteRegKey HKLM "${REG_APP_KEY}"

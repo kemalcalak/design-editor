@@ -236,6 +236,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.import.penDev" => "pen.dev から読み込む",
         "home.import.penDevSub" => ".pen ファイル",
         "dialog.penDevImportToast" => "pen.dev から開きました。読み込めなかったもの: {{details}}",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}} は Design Editor のドキュメントではありません。開けるのは .de ファイルのみです。pen.dev の .pen ファイルはインポートとして開きます。",
+        "dialog.loadErrorNotPenDev" => "{{name}} は pen.dev のファイルではないため、インポートできません。",
         _ => return None,
     })
 }

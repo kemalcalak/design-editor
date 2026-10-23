@@ -340,11 +340,8 @@ fn recent_entry(path: &str, modified_at: u64, preview_stamp: Option<u64>) -> Hom
         Some(index) => (&path[..index], &path[index + 1..]),
         None => ("", path),
     };
-    let name = file
-        .strip_suffix(de_util::document_file::SUFFIX)
-        // pen.dev imports stay listed under their `.pen` source.
-        .or_else(|| file.strip_suffix(".pen"))
-        .unwrap_or(file);
+    // pen.dev imports stay listed under their `.pen` source.
+    let name = de_util::document_file::strip_known_suffix(file);
     let folder = home_dir_prefix(folder)
         .map(|rest| format!("~{rest}"))
         .unwrap_or_else(|| folder.to_string());

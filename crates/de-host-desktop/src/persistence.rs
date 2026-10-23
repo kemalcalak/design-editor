@@ -1,4 +1,4 @@
-//! Desktop `.pen` / `.de` Save and Open dialog flow.
+//! Desktop `.de` Save and Open dialog flow (pen.dev `.pen` opens as an import).
 //!
 //! Owns native pickers, [`run_action`] routing, and error dialogs.
 
@@ -54,6 +54,7 @@ pub fn pick_save_as_path(state: &EditorState) -> Option<PathBuf> {
         .add_filter(de_editor_ui::PRODUCT_NAME, DOCUMENT_EXTENSIONS)
         .set_file_name(de_util::document_file::UNTITLED_FILE_NAME)
         .save_file()
+        .map(de_util::document_file::with_document_suffix)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

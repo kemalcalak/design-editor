@@ -22,10 +22,27 @@ fn metadata_free_open_uses_first_nonempty_page_and_legacy_layout_mode() {
       ]
     }"#;
 
-    let ingested = ingest_op_source(source, &previous).expect("legacy document loads");
+    let ingested = ingest_document_source(source, &previous).expect("legacy document loads");
 
     assert_eq!(ingested.state.ui.active_page_index, 1);
     assert!(!ingested.state.editor_ui.preserve_authored_geometry);
+}
+
+#[test]
+fn opening_by_file_name_accepts_only_de_documents_and_pen_dev_imports() {
+    let previous = EditorState::new();
+    let canonical = r#"{"version":"1.0.0","children":[]}"#;
+    assert!(ingest_document_file(canonical, "Design.de", &previous).is_ok());
+    assert!(matches!(
+        ingest_document_file(canonical, "Design.op", &previous),
+        Err(DocumentIngestError::UnsupportedExtension { .. })
+    ));
+    assert!(matches!(
+        ingest_document_file(canonical, "Design.pen", &previous),
+        Err(DocumentIngestError::NotPenDevDocument { .. })
+    ));
+    assert!(matches!(drop_kind("Design.op"), DropKind::Unsupported));
+    assert!(matches!(drop_kind("Design.DE"), DropKind::Document));
 }
 
 #[test]

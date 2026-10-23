@@ -19,17 +19,35 @@ pub fn load_editor_state_with_report(
 ) -> Result<LoadedEditorState, DocIoError> {
     let pen_dev_path = de_util::document_file::is_pen_dev_path(path);
     if !pen_dev_path && !de_util::document_file::is_document_path(path) {
-        return Err(DocIoError::UnsupportedExtension {
-            path: path.display().to_string(),
-        });
+        return Err(DocIoError::UnsupportedExtension(localized_with_name(
+            locale,
+            "dialog.loadErrorUnsupportedExtension",
+            path,
+        )));
     }
     let loaded = read_editor_state_with_report(path, locale)?;
     if pen_dev_path && loaded.report.pen_dev_import.is_none() {
-        return Err(DocIoError::NotPenDevDocument {
-            path: path.display().to_string(),
-        });
+        return Err(DocIoError::NotPenDevDocument(localized_with_name(
+            locale,
+            "dialog.loadErrorNotPenDev",
+            path,
+        )));
     }
     Ok(loaded)
+}
+
+/// `de_i18n` owns these sentences; `{{name}}` is the file name, not the full
+/// path, so the dialog line stays short.
+fn localized_with_name(
+    locale: de_editor_core::Locale,
+    key: &'static str,
+    path: &std::path::Path,
+) -> String {
+    let name = path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_else(|| path.display().to_string());
+    de_i18n::translate(locale, key).replace("{{name}}", &name)
 }
 
 fn read_editor_state_with_report(

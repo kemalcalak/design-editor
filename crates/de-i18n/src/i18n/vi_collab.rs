@@ -236,6 +236,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.import.penDev" => "Nhập từ pen.dev",
         "home.import.penDevSub" => "Tệp .pen",
         "dialog.penDevImportToast" => "Đã mở từ pen.dev. Không chuyển được: {{details}}",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}} không phải tài liệu Design Editor. Chỉ mở được tệp .de; tệp .pen của pen.dev sẽ mở dưới dạng nhập.",
+        "dialog.loadErrorNotPenDev" => "{{name}} không phải tệp pen.dev nên không thể nhập.",
         _ => return None,
     })
 }

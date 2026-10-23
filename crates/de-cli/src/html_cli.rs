@@ -47,6 +47,7 @@ pub(super) fn map_import_html(positionals: &[String], flags: &Flags) -> Result<C
                 "--out requires a local file; URL import needs a running editor",
             ));
         }
+        crate::app_control_cli::require_document_extension(std::path::Path::new(&out_path))?;
         return Ok(Command::ImportHtml {
             html_path: source,
             out_path,
@@ -102,6 +103,7 @@ pub(super) fn map_import_snapshot(
         "Usage: de import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.de]",
     )?;
     if let Some(out_path) = flag_value(flags, "out") {
+        crate::app_control_cli::require_document_extension(std::path::Path::new(&out_path))?;
         return Ok(Command::ImportSnapshot {
             json_path,
             out_path,

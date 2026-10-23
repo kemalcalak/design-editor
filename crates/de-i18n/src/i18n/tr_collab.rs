@@ -236,6 +236,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.import.penDev" => "pen.dev'den içe aktar",
         "home.import.penDevSub" => ".pen dosyası",
         "dialog.penDevImportToast" => "pen.dev'den açıldı. Aktarılamayanlar: {{details}}",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}} bir Design Editor belgesi değil. Yalnızca .de dosyaları açılır; pen.dev .pen dosyaları içe aktarma olarak açılır.",
+        "dialog.loadErrorNotPenDev" => "{{name}} bir pen.dev dosyası değil, bu yüzden içe aktarılamaz.",
         _ => return None,
     })
 }

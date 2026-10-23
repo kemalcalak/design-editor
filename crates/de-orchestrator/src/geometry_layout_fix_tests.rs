@@ -374,9 +374,11 @@ fn resolved_rect_probe() {
     }
 }
 
-/// Manual corpus replay: load p01.de..p52.de from DE_GEOMETRY_REPLAY_DIR, run
+/// Manual corpus replay: load p01.op..p52.op from DE_GEOMETRY_REPLAY_DIR, run
 /// geometry_validate_and_fix on every active root, and assert the parsed doc is
 /// unchanged. This is the dirty-diff gate for geometry-only replay.
+/// The external corpus predates the `.op` -> `.de` rename, so its files keep
+/// the old `.op` extension.
 #[test]
 #[ignore]
 fn replay_geometry_validate_corpus() {
@@ -464,7 +466,7 @@ fn replay_geometry_validate_corpus() {
         dirty,
         baseline_input_dirty
     );
-    assert_eq!(files.len(), 52, "expected p01.de..p52.de corpus");
+    assert_eq!(files.len(), 52, "expected p01.op..p52.op corpus");
     assert!(
         dirty.is_empty(),
         "dirty geometry replay files versus baseline: {dirty:?}"

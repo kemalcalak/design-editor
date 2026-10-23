@@ -142,10 +142,11 @@ fn geometry_validate_and_fix_without_card_rows(sink: &mut dyn DocSink, root_id: 
     rounds
 }
 
+// The external corpus predates the `.de` rename and keeps its `.op` names.
 fn is_numbered_corpus_op(name: &str) -> bool {
-    name.len() == "p01.de".len()
+    name.len() == "p01.op".len()
         && name.starts_with('p')
-        && name.ends_with(".de")
+        && name.ends_with(".op")
         && name[1..3].chars().all(|c| c.is_ascii_digit())
 }
 

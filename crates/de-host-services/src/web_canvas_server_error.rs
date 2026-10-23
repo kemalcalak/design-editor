@@ -155,12 +155,15 @@ impl From<crate::doc_io::DocIoError> for WebCanvasError {
         use crate::doc_io::DocIoError as E;
         match error {
             // Content faults: the document itself is empty, not UTF-8, off
-            // schema, or from a build whose format this one cannot read.
+            // schema, from a build whose format this one cannot read, or not
+            // a `.de` / pen.dev file at all.
             E::SourceEmpty { .. }
             | E::SourceNotUtf8 { .. }
             | E::InvalidUtf8Document(_)
             | E::Schema(_)
-            | E::LegacyFormat(_) => WebCanvasError::Document(error.to_string()),
+            | E::LegacyFormat(_)
+            | E::UnsupportedExtension(_)
+            | E::NotPenDevDocument(_) => WebCanvasError::Document(error.to_string()),
             // Everything else is the filesystem or the serializer around it.
             other => WebCanvasError::Io(other.to_string()),
         }

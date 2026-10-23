@@ -299,7 +299,7 @@ fn existing_adjacent_output_maps_replace_copy_and_cancel_choices() {
         Some(ImportOutputMode::CreateFixed)
     );
 
-    std::fs::write(dir.join("Design.de"), b"existing OP").expect("write existing OP");
+    std::fs::write(dir.join("Design.de"), b"existing document").expect("write existing document");
     assert_eq!(
         select_output_mode(&source, |_| ExistingOutputDecision::Replace).unwrap(),
         Some(confirmed_replace_mode(&dir.join("Design.de")))

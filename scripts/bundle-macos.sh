@@ -144,15 +144,16 @@ echo "==> patching Info.plist (name, identifier, icon, doc-types, UTI)"
 /usr/libexec/PlistBuddy -c "Delete :CFBundleDocumentTypes"         "$PLIST" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Add    :CFBundleDocumentTypes array"   "$PLIST"
 
-# Group 0: .de (canonical Design Editor documents) + .pen (pen.dev files,
-# opened as an untitled import and never written back).
+# Group 0: .de — canonical Design Editor documents, bound to our exported
+# UTI (declared in UTExportedTypeDeclarations below).
 /usr/libexec/PlistBuddy \
   -c "Add :CFBundleDocumentTypes:0 dict" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeName string 'Design Editor Document'" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeRole string Editor" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions array" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions:0 string de" \
-  -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions:1 string pen" \
+  -c "Add :CFBundleDocumentTypes:0:LSItemContentTypes array" \
+  -c "Add :CFBundleDocumentTypes:0:LSItemContentTypes:0 string com.kemalcalak.design-editor.document" \
   -c "Add :CFBundleDocumentTypes:0:LSHandlerRank string Owner" \
   "$PLIST"
 
@@ -167,6 +168,34 @@ echo "==> patching Info.plist (name, identifier, icon, doc-types, UTI)"
   -c "Add :CFBundleDocumentTypes:1:LSItemContentTypes array" \
   -c "Add :CFBundleDocumentTypes:1:LSItemContentTypes:0 string com.figma.document" \
   -c "Add :CFBundleDocumentTypes:1:LSHandlerRank string Alternate" \
+  "$PLIST"
+
+# Group 2: .pen (pen.dev files) — a secondary type: opened as an untitled
+# import and never written back, so we only view it and never claim it.
+/usr/libexec/PlistBuddy \
+  -c "Add :CFBundleDocumentTypes:2 dict" \
+  -c "Add :CFBundleDocumentTypes:2:CFBundleTypeName string 'pen.dev Document (import)'" \
+  -c "Add :CFBundleDocumentTypes:2:CFBundleTypeRole string Viewer" \
+  -c "Add :CFBundleDocumentTypes:2:CFBundleTypeExtensions array" \
+  -c "Add :CFBundleDocumentTypes:2:CFBundleTypeExtensions:0 string pen" \
+  -c "Add :CFBundleDocumentTypes:2:LSHandlerRank string Alternate" \
+  "$PLIST"
+
+# UTExportedTypeDeclarations — we own the .de format, so we export its UTI.
+/usr/libexec/PlistBuddy -c "Delete :UTExportedTypeDeclarations" "$PLIST" 2>/dev/null || true
+/usr/libexec/PlistBuddy \
+  -c "Add :UTExportedTypeDeclarations array" \
+  -c "Add :UTExportedTypeDeclarations:0 dict" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeIdentifier string com.kemalcalak.design-editor.document" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeDescription string 'Design Editor Document'" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeConformsTo array" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeConformsTo:0 string public.json" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeConformsTo:1 string public.data" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeTagSpecification dict" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeTagSpecification:public.filename-extension array" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeTagSpecification:public.filename-extension:0 string de" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeTagSpecification:public.mime-type array" \
+  -c "Add :UTExportedTypeDeclarations:0:UTTypeTagSpecification:public.mime-type:0 string application/x-design-editor" \
   "$PLIST"
 
 # UTImportedTypeDeclarations — declare we KNOW about com.figma.document

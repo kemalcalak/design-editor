@@ -37,7 +37,7 @@ use crate::EditorState;
 /// native file dialogs). Mirrors `DesignMdRequest`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KitIoRequest {
-    /// Pick a `.de` / `.pen` / `.json` file and import its reusable
+    /// Pick a `.de` / `.json` file and import its reusable
     /// components as a new kit (TS `importKitFromFile`).
     Import,
     /// Export the current document's reusable components as a kit

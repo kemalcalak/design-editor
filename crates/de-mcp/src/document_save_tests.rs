@@ -49,6 +49,27 @@ fn save_document_requires_file_path() {
     }
 }
 
+#[test]
+fn save_document_refuses_a_non_document_extension() {
+    let dir = temp_dir("save-document-extension");
+    std::fs::create_dir_all(&dir).expect("temp dir");
+    let tool = save_document_snapshot(&sample());
+    for name in ["copy.op", "copy.pen", "copy"] {
+        let out_path = dir.join(name);
+        let mut args = BTreeMap::new();
+        args.insert("filePath".into(), out_path.display().to_string());
+        match tool.call(&args) {
+            ToolOutcome::Err(code, message) => {
+                assert_eq!(code, ToolErrorCode::InvalidArgument);
+                assert!(message.contains(".de"), "{message}");
+            }
+            other => panic!("expected {name} to be refused, got {other:?}"),
+        }
+        assert!(!out_path.exists(), "{name} must not be written");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 fn temp_dir(label: &str) -> PathBuf {
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

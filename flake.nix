@@ -200,7 +200,7 @@
                 Type=Application
                 Icon=design-editor
                 Categories=Graphics;
-                MimeType=application/x-design-editor;
+                MimeType=application/x-design-editor;application/x-pen-dev;
               ''} $out/share/applications/design-editor.desktop
               install -Dm644 ${pkgs.writeText "design-editor.xml" ''
                 <?xml version="1.0" encoding="UTF-8"?>
@@ -208,6 +208,9 @@
                   <mime-type type="application/x-design-editor">
                     <comment>Design Editor Document</comment>
                     <glob pattern="*.de"/>
+                  </mime-type>
+                  <mime-type type="application/x-pen-dev">
+                    <comment>pen.dev Document (import)</comment>
                     <glob pattern="*.pen"/>
                   </mime-type>
                 </mime-info>

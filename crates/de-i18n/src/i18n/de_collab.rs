@@ -236,6 +236,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.import.penDev" => "Aus pen.dev importieren",
         "home.import.penDevSub" => ".pen-Datei",
         "dialog.penDevImportToast" => "Aus pen.dev geöffnet. Nicht übernommen: {{details}}",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}} ist kein Design-Editor-Dokument. Nur .de-Dateien lassen sich öffnen; .pen-Dateien von pen.dev werden als Import geöffnet.",
+        "dialog.loadErrorNotPenDev" => "{{name}} ist keine pen.dev-Datei und kann daher nicht importiert werden.",
         _ => return None,
     })
 }
