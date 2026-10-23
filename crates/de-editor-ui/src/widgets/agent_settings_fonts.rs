@@ -3,7 +3,7 @@
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::translate;
 use crate::widgets::missing_fonts_panel::{
-    paint_missing_font_row, paint_text, row_button_rect, ROW_HEIGHT,
+    paint_missing_font_row, paint_text, row_button_rect, row_download_hit_rect, ROW_HEIGHT,
 };
 use crate::widgets::property_panel_typography::{
     font_picker_action_in_layout, font_picker_entries, font_picker_hit_in_layout,
@@ -12,7 +12,7 @@ use crate::widgets::property_panel_typography::{
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::editor_ui_state::EditorUiState;
-use de_editor_core::missing_fonts::MissingFontEntry;
+use de_editor_core::missing_fonts::{MissingFontEntry, MissingFontsHover};
 use jian_widgets::centered_text_baseline_y;
 
 const TOP_PAD: f32 = 12.0;
@@ -21,17 +21,47 @@ const EMPTY_BODY_HEIGHT: f32 = 44.0;
 const SECTION_GAP: f32 = 28.0;
 const BOTTOM_PAD: f32 = 24.0;
 const REMOVE_HEIGHT: f32 = 28.0;
-const IMPORTED_ROW_HEIGHT: f32 = 44.0;
+const FAMILY_ROW_HEIGHT: f32 = 44.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FontsHit {
     ChooseFont(usize),
+    /// Download this missing row's family from Google Fonts.
+    Download(usize),
     SelectFont(usize),
     ImportFont(usize),
     ClosePicker,
     PickerInside,
+    /// Index into [`user_imported_families`].
     RemoveImportedFont(usize),
+    /// Index into `downloaded_font_families`.
+    RemoveDownloadedFont(usize),
     None,
+}
+
+fn is_downloaded(ui: &EditorUiState, family: &str) -> bool {
+    ui.downloaded_font_families
+        .iter()
+        .any(|downloaded| downloaded.eq_ignore_ascii_case(family))
+}
+
+/// Families the user imported from disk: `imported_font_families` minus the
+/// ones that came from Google Fonts downloads, which get their own section.
+pub(crate) fn user_imported_families(ui: &EditorUiState) -> Vec<String> {
+    ui.imported_font_families
+        .iter()
+        .filter(|family| !is_downloaded(ui, family))
+        .cloned()
+        .collect()
+}
+
+/// `user_imported_families(ui).len()` without building the list — layout
+/// and hit-testing only need the row count.
+fn user_imported_count(ui: &EditorUiState) -> usize {
+    ui.imported_font_families
+        .iter()
+        .filter(|family| !is_downloaded(ui, family))
+        .count()
 }
 
 fn missing_entries(ui: &EditorUiState) -> &[MissingFontEntry] {
@@ -50,8 +80,21 @@ fn missing_body_height(ui: &EditorUiState) -> f32 {
     }
 }
 
-fn imported_section_top(content: Rect, ui: &EditorUiState) -> f32 {
+fn downloaded_section_top(content: Rect, ui: &EditorUiState) -> f32 {
     content.origin.y + TOP_PAD + SECTION_TITLE_HEIGHT + missing_body_height(ui) + SECTION_GAP
+}
+
+/// Height of the downloaded section, title included; the section is left
+/// out entirely while nothing has been downloaded.
+fn downloaded_section_height(ui: &EditorUiState) -> f32 {
+    match ui.downloaded_font_families.len() {
+        0 => 0.0,
+        rows => SECTION_TITLE_HEIGHT + rows as f32 * FAMILY_ROW_HEIGHT + SECTION_GAP,
+    }
+}
+
+fn imported_section_top(content: Rect, ui: &EditorUiState) -> f32 {
+    downloaded_section_top(content, ui) + downloaded_section_height(ui)
 }
 
 pub(crate) fn missing_row_rect(content: Rect, row: usize) -> Rect {
@@ -63,14 +106,22 @@ pub(crate) fn missing_row_rect(content: Rect, row: usize) -> Rect {
     )
 }
 
-fn imported_row_rect(content: Rect, ui: &EditorUiState, row: usize) -> Rect {
-    let row_height = IMPORTED_ROW_HEIGHT;
+/// One row of a family list section whose title sits at `section_top`.
+fn family_row_rect(content: Rect, section_top: f32, row: usize) -> Rect {
     Rect::xywh(
         content.origin.x,
-        imported_section_top(content, ui) + SECTION_TITLE_HEIGHT + row as f32 * row_height,
+        section_top + SECTION_TITLE_HEIGHT + row as f32 * FAMILY_ROW_HEIGHT,
         content.size.x,
-        row_height,
+        FAMILY_ROW_HEIGHT,
     )
+}
+
+fn imported_row_rect(content: Rect, ui: &EditorUiState, row: usize) -> Rect {
+    family_row_rect(content, imported_section_top(content, ui), row)
+}
+
+fn downloaded_row_rect(content: Rect, ui: &EditorUiState, row: usize) -> Rect {
+    family_row_rect(content, downloaded_section_top(content, ui), row)
 }
 
 fn settings_row_button_rect(row: Rect, ui: &EditorUiState) -> Rect {
@@ -78,7 +129,14 @@ fn settings_row_button_rect(row: Rect, ui: &EditorUiState) -> Rect {
 }
 
 pub(crate) fn imported_remove_rect(content: Rect, ui: &EditorUiState, row: usize) -> Rect {
-    let row = imported_row_rect(content, ui, row);
+    remove_rect_in(imported_row_rect(content, ui, row), ui)
+}
+
+pub(crate) fn downloaded_remove_rect(content: Rect, ui: &EditorUiState, row: usize) -> Rect {
+    remove_rect_in(downloaded_row_rect(content, ui, row), ui)
+}
+
+fn remove_rect_in(row: Rect, ui: &EditorUiState) -> Rect {
     let font_size = 11.0;
     let height = REMOVE_HEIGHT;
     let width =
@@ -98,8 +156,9 @@ pub(super) fn content_height(ui: &EditorUiState) -> f32 {
         + SECTION_TITLE_HEIGHT
         + missing_body_height(ui)
         + SECTION_GAP
+        + downloaded_section_height(ui)
         + SECTION_TITLE_HEIGHT
-        + ui.imported_font_families.len() as f32 * IMPORTED_ROW_HEIGHT
+        + user_imported_count(ui) as f32 * FAMILY_ROW_HEIGHT
         + BOTTOM_PAD
 }
 
@@ -163,8 +222,9 @@ pub fn hit_test(
                 return match action {
                     FontPickerAction::Select(index) => FontsHit::SelectFont(index),
                     FontPickerAction::Import => FontsHit::ImportFont(row),
-                    FontPickerAction::Remove(index) => imported_index_for_picker_entry(ui, index)
-                        .map_or(FontsHit::PickerInside, FontsHit::RemoveImportedFont),
+                    FontPickerAction::Remove(index) => {
+                        remove_hit_for_picker_entry(ui, index).unwrap_or(FontsHit::PickerInside)
+                    }
                 };
             }
             return match font_picker_hit_in_layout(&layout, point) {
@@ -176,13 +236,23 @@ pub fn hit_test(
     }
     let scrolled = Point2D::new(point.x, point.y + scroll_y);
     for (row, entry) in missing_entries(ui).iter().enumerate() {
-        if !entry.resolved
-            && settings_row_button_rect(missing_row_rect(content, row), ui).contains(scrolled)
-        {
+        if entry.resolved {
+            continue;
+        }
+        let row_rect = missing_row_rect(content, row);
+        if settings_row_button_rect(row_rect, ui).contains(scrolled) {
             return FontsHit::ChooseFont(row);
         }
+        if row_download_hit_rect(row_rect, ui, entry).is_some_and(|rect| rect.contains(scrolled)) {
+            return FontsHit::Download(row);
+        }
     }
-    for row in 0..ui.imported_font_families.len() {
+    for row in 0..ui.downloaded_font_families.len() {
+        if downloaded_remove_rect(content, ui, row).contains(scrolled) {
+            return FontsHit::RemoveDownloadedFont(row);
+        }
+    }
+    for row in 0..user_imported_count(ui) {
         if imported_remove_rect(content, ui, row).contains(scrolled) {
             return FontsHit::RemoveImportedFont(row);
         }
@@ -231,19 +301,28 @@ pub(super) fn paint_picker(
     );
 }
 
-fn imported_index_for_picker_entry(ui: &EditorUiState, entry_index: usize) -> Option<usize> {
+/// The section remove a picker row's remove button stands for: a
+/// downloaded family maps into the downloaded section, any other imported
+/// family into the imported section.
+fn remove_hit_for_picker_entry(ui: &EditorUiState, entry_index: usize) -> Option<FontsHit> {
     let entries = font_picker_entries(
         &ui.imported_font_families,
         &ui.bundled_font_families,
         &ui.system_font_families,
         &ui.font_picker_search,
     );
-    let entry = entries.get(entry_index)?;
-    entry.imported.then(|| {
-        ui.imported_font_families
-            .iter()
-            .position(|family| family == &entry.family)
-    })?
+    let entry = entries.get(entry_index).filter(|entry| entry.imported)?;
+    if let Some(index) = ui
+        .downloaded_font_families
+        .iter()
+        .position(|family| family.eq_ignore_ascii_case(&entry.family))
+    {
+        return Some(FontsHit::RemoveDownloadedFont(index));
+    }
+    user_imported_families(ui)
+        .iter()
+        .position(|family| family == &entry.family)
+        .map(FontsHit::RemoveImportedFont)
 }
 
 pub(super) fn paint_fonts_tab(
@@ -287,6 +366,26 @@ pub(super) fn paint_fonts_tab(
         }
     }
 
+    if !ui.downloaded_font_families.is_empty() {
+        let top = downloaded_section_top(content, ui);
+        paint_section_title(
+            cx,
+            theme,
+            translate(ui, "missingFonts.downloadedSection"),
+            content.origin.x,
+            top,
+        );
+        paint_family_rows(
+            cx,
+            theme,
+            ui,
+            content,
+            top,
+            &ui.downloaded_font_families,
+            MissingFontsHover::RemoveDownloaded,
+        );
+    }
+
     let imported_top = imported_section_top(content, ui);
     paint_section_title(
         cx,
@@ -295,9 +394,30 @@ pub(super) fn paint_fonts_tab(
         content.origin.x,
         imported_top,
     );
-    for (row, family) in ui.imported_font_families.iter().enumerate() {
-        let row_rect = imported_row_rect(content, ui, row);
-        let remove = imported_remove_rect(content, ui, row);
+    paint_family_rows(
+        cx,
+        theme,
+        ui,
+        content,
+        imported_top,
+        &user_imported_families(ui),
+        MissingFontsHover::RemoveImported,
+    );
+}
+
+/// Rows of family name + Delete button under the section title at `top`.
+fn paint_family_rows(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    ui: &EditorUiState,
+    content: Rect,
+    top: f32,
+    families: &[String],
+    hover_of: fn(usize) -> MissingFontsHover,
+) {
+    for (row, family) in families.iter().enumerate() {
+        let row_rect = family_row_rect(content, top, row);
+        let remove = remove_rect_in(row_rect, ui);
         if row > 0 {
             cx.backend.fill_rect(
                 Rect::xywh(row_rect.origin.x, row_rect.origin.y, row_rect.size.x, 1.0),
@@ -329,8 +449,7 @@ pub(super) fn paint_fonts_tab(
             theme.foreground,
         );
         cx.backend.restore();
-        let remove_hovered = ui.missing_fonts_hover
-            == Some(de_editor_core::missing_fonts::MissingFontsHover::RemoveImported(row));
+        let remove_hovered = ui.missing_fonts_hover == Some(hover_of(row));
         let remove_bg = if remove_hovered {
             theme.border
         } else {

@@ -26,8 +26,79 @@ pub struct MissingFontEntry {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MissingFontsHover {
     ChooseFile(usize),
+    Download(usize),
+    DownloadAll,
     RemoveImported(usize),
+    RemoveDownloaded(usize),
     Dismiss,
+}
+
+/// A requested Google Fonts download that has not (yet) made the family
+/// available. Success removes the entry instead.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FontDownloadStatus {
+    Downloading,
+    /// Google Fonts has no such family; Download is no longer offered.
+    NotOnGoogle,
+    /// The download failed (usually offline); Download is offered again.
+    Failed,
+}
+
+/// The key download state is stored under: trimmed, lower-cased family.
+/// Shared by the UI's `font_downloads` and the desktop's tracked statuses.
+pub fn font_download_key(family: &str) -> String {
+    family.trim().to_ascii_lowercase()
+}
+
+/// The download state of `family`, if one was requested.
+pub fn font_download_status(ui: &EditorUiState, family: &str) -> Option<FontDownloadStatus> {
+    ui.font_downloads.get(&font_download_key(family)).copied()
+}
+
+/// Whether a row offers Download: the host can download, the family is
+/// still missing, and no download is running or known to be pointless.
+pub fn can_download(ui: &EditorUiState, entry: &MissingFontEntry) -> bool {
+    ui.font_download_supported
+        && !entry.resolved
+        && !matches!(
+            font_download_status(ui, &entry.family),
+            Some(FontDownloadStatus::Downloading | FontDownloadStatus::NotOnGoogle)
+        )
+}
+
+/// Queue a download of `family` for the host and mark it downloading.
+/// Returns `false` (and queues nothing) when the host cannot download or
+/// the family is already downloading.
+pub fn request_font_download(ui: &mut EditorUiState, family: &str) -> bool {
+    let family = family.trim();
+    if !ui.font_download_supported
+        || family.is_empty()
+        || font_download_status(ui, family) == Some(FontDownloadStatus::Downloading)
+    {
+        return false;
+    }
+    ui.font_downloads
+        .insert(font_download_key(family), FontDownloadStatus::Downloading);
+    ui.font_download_requests.push(family.to_string());
+    true
+}
+
+/// Record a finished download: `None` for success (the family is now
+/// registered), otherwise the failure status to show on its row.
+pub fn finish_font_download(
+    ui: &mut EditorUiState,
+    family: &str,
+    failure: Option<FontDownloadStatus>,
+) {
+    let key = font_download_key(family);
+    match failure {
+        Some(status) => {
+            ui.font_downloads.insert(key, status);
+        }
+        None => {
+            ui.font_downloads.remove(&key);
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -46,19 +117,20 @@ fn family_available(family: &str, ui: &EditorUiState) -> bool {
         || ui.system_font_families.iter().any(matches)
 }
 
-fn family_stack_available(stack: &str, ui: &EditorUiState) -> bool {
-    split_font_family_stack(stack)
-        .iter()
-        .any(|family| family_available(family, ui))
+fn family_stack_available(stack: &str, available: &dyn Fn(&str) -> bool) -> bool {
+    split_font_family_stack(stack).iter().any(|family| {
+        let family = family.trim();
+        is_generic_or_system_font_alias(family) || available(family)
+    })
 }
 
 fn add_missing_stack(
     missing: &mut BTreeMap<String, MissingFontEntry>,
     stack: &str,
     run_count: u32,
-    ui: &EditorUiState,
+    available: &dyn Fn(&str) -> bool,
 ) {
-    if stack.trim().is_empty() || family_stack_available(stack, ui) {
+    if stack.trim().is_empty() || family_stack_available(stack, available) {
         return;
     }
     let Some(family) = primary_concrete_font_family(stack) else {
@@ -171,17 +243,27 @@ pub fn detect_missing_fonts(state: &EditorState) -> Option<MissingFontsPrompt> {
         return None;
     }
 
+    let entries = missing_font_entries(state, &|family| family_available(family, &state.editor_ui));
+    (!entries.is_empty()).then_some(MissingFontsPrompt { entries })
+}
+
+/// The document's missing families against an arbitrary availability test
+/// (`available` gets one concrete family name; generic aliases are always
+/// available). [`detect_missing_fonts`] answers it from the UI snapshots;
+/// a host without them (the MCP quality report) asks its font manager.
+pub fn missing_font_entries(
+    state: &EditorState,
+    available: &dyn Fn(&str) -> bool,
+) -> Vec<MissingFontEntry> {
     let plan = FontPlan::scan(&state.doc);
     let mut missing = BTreeMap::<String, MissingFontEntry>::new();
     for (stack, usage) in plan.families().filter(|(family, _)| !family.is_empty()) {
-        add_missing_stack(&mut missing, stack, usage.run_count, &state.editor_ui);
+        add_missing_stack(&mut missing, stack, usage.run_count, available);
     }
     for stack in component_override_font_family_stacks(state) {
-        add_missing_stack(&mut missing, &stack, 1, &state.editor_ui);
+        add_missing_stack(&mut missing, &stack, 1, available);
     }
-    let entries = missing.into_values().collect::<Vec<_>>();
-
-    (!entries.is_empty()).then_some(MissingFontsPrompt { entries })
+    missing.into_values().collect()
 }
 
 /// Re-check prompt entries against the current available-family snapshots.
@@ -404,5 +486,62 @@ mod tests {
 
         assert!(!refresh_prompt(&mut prompt, &EditorUiState::default()));
         assert!(!prompt.entries[0].resolved);
+    }
+
+    fn entry(family: &str) -> MissingFontEntry {
+        MissingFontEntry {
+            family: family.into(),
+            run_count: 1,
+            mismatch_note: None,
+            resolved: false,
+        }
+    }
+
+    #[test]
+    fn download_is_only_offered_by_hosts_that_can_download() {
+        let mut ui = EditorUiState::default();
+        assert!(!can_download(&ui, &entry("Montserrat")));
+        assert!(!request_font_download(&mut ui, "Montserrat"));
+        assert!(ui.font_download_requests.is_empty());
+
+        ui.font_download_supported = true;
+        assert!(can_download(&ui, &entry("Montserrat")));
+    }
+
+    #[test]
+    fn a_request_queues_once_and_hides_download_while_running() {
+        let mut ui = EditorUiState {
+            font_download_supported: true,
+            ..EditorUiState::default()
+        };
+        assert!(request_font_download(&mut ui, " Montserrat "));
+        assert!(
+            !request_font_download(&mut ui, "montserrat"),
+            "no double queue"
+        );
+        assert_eq!(ui.font_download_requests, vec!["Montserrat"]);
+        assert_eq!(
+            font_download_status(&ui, "MONTSERRAT"),
+            Some(FontDownloadStatus::Downloading)
+        );
+        assert!(!can_download(&ui, &entry("Montserrat")));
+    }
+
+    #[test]
+    fn finished_downloads_clear_or_record_their_failure() {
+        let mut ui = EditorUiState {
+            font_download_supported: true,
+            ..EditorUiState::default()
+        };
+        request_font_download(&mut ui, "Nope Sans");
+        finish_font_download(&mut ui, "Nope Sans", Some(FontDownloadStatus::NotOnGoogle));
+        assert!(!can_download(&ui, &entry("Nope Sans")), "pointless retry");
+
+        request_font_download(&mut ui, "Space Mono");
+        finish_font_download(&mut ui, "Space Mono", Some(FontDownloadStatus::Failed));
+        assert!(can_download(&ui, &entry("Space Mono")), "offline may retry");
+
+        finish_font_download(&mut ui, "Space Mono", None);
+        assert_eq!(font_download_status(&ui, "Space Mono"), None);
     }
 }

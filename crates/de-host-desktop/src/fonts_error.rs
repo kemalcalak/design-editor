@@ -63,3 +63,95 @@ impl fmt::Display for FontStoreError {
 }
 
 impl std::error::Error for FontStoreError {}
+
+/// Why a downloaded face's `name` table could not be rewritten
+/// (`google_font_names.rs`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum FontNameError {
+    /// A collection, WOFF, or anything that is not one sfnt face.
+    NotASingleFace,
+    /// A table or record points past the end of the file.
+    Truncated,
+    /// The face has no table with this tag.
+    MissingTable(&'static str),
+    /// The rebuilt `name` table would overflow its 16-bit offsets.
+    NameTooLarge,
+}
+
+impl fmt::Display for FontNameError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FontNameError::NotASingleFace => f.write_str("not a single TrueType/OpenType face"),
+            FontNameError::Truncated => f.write_str("font file is truncated"),
+            FontNameError::MissingTable(tag) => write!(f, "font has no `{tag}` table"),
+            FontNameError::NameTooLarge => f.write_str("font name table is too large"),
+        }
+    }
+}
+
+impl std::error::Error for FontNameError {}
+
+/// Why a Google Fonts family could not be made available
+/// (`google_font_download.rs`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum FontDownloadError {
+    /// The network half failed or Google Fonts has no such family.
+    Google(de_host_services::google_fonts::GoogleFontsError),
+    /// A downloaded face could not be renamed to the requested family.
+    Name(FontNameError),
+    /// A downloaded face could not be persisted or registered.
+    Store(FontStoreError),
+    /// The font store under the config dir could not be opened.
+    OpenStore(String),
+    /// The download worker panicked.
+    Panicked,
+}
+
+impl FontDownloadError {
+    /// Google Fonts has no such family; retrying will not help.
+    pub(crate) fn is_not_on_google(&self) -> bool {
+        matches!(self, FontDownloadError::Google(error) if error.is_not_on_google())
+    }
+
+    /// The row / quality-report status this failure leaves behind.
+    pub(crate) fn status(&self) -> de_editor_core::missing_fonts::FontDownloadStatus {
+        use de_editor_core::missing_fonts::FontDownloadStatus;
+        if self.is_not_on_google() {
+            FontDownloadStatus::NotOnGoogle
+        } else {
+            FontDownloadStatus::Failed
+        }
+    }
+}
+
+impl fmt::Display for FontDownloadError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FontDownloadError::Google(error) => error.fmt(f),
+            FontDownloadError::Name(error) => write!(f, "downloaded font: {error}"),
+            FontDownloadError::Store(error) => error.fmt(f),
+            FontDownloadError::OpenStore(message) => write!(f, "open font store: {message}"),
+            FontDownloadError::Panicked => f.write_str("the font download worker panicked"),
+        }
+    }
+}
+
+impl std::error::Error for FontDownloadError {}
+
+impl From<de_host_services::google_fonts::GoogleFontsError> for FontDownloadError {
+    fn from(error: de_host_services::google_fonts::GoogleFontsError) -> Self {
+        FontDownloadError::Google(error)
+    }
+}
+
+impl From<FontNameError> for FontDownloadError {
+    fn from(error: FontNameError) -> Self {
+        FontDownloadError::Name(error)
+    }
+}
+
+impl From<FontStoreError> for FontDownloadError {
+    fn from(error: FontStoreError) -> Self {
+        FontDownloadError::Store(error)
+    }
+}

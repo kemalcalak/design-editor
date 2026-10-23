@@ -212,6 +212,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "環境変数（任意）",
         "settings.agents.notInstalledHint" => "未インストールですか？",
         "settings.agents.notTestedYet" => "未テスト",
+        "missingFonts.download" => "ダウンロード",
+        "missingFonts.downloadAll" => "すべてダウンロード",
+        "missingFonts.downloading" => "ダウンロード中…",
+        "missingFonts.retryDownload" => "再試行",
+        "missingFonts.notOnGoogle" => "Google Fonts にありません",
+        "missingFonts.downloadFailed" => "ダウンロードに失敗しました — 接続を確認してください",
+        "missingFonts.downloadedSection" => "Google Fonts からダウンロードしたフォント",
         _ => return None,
     })
 }

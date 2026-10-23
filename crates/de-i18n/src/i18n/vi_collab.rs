@@ -212,6 +212,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Biến môi trường (tùy chọn)",
         "settings.agents.notInstalledHint" => "Chưa cài đặt?",
         "settings.agents.notTestedYet" => "Chưa kiểm thử",
+        "missingFonts.download" => "Tải xuống",
+        "missingFonts.downloadAll" => "Tải xuống tất cả",
+        "missingFonts.downloading" => "Đang tải xuống…",
+        "missingFonts.retryDownload" => "Thử lại",
+        "missingFonts.notOnGoogle" => "Không có trên Google Fonts",
+        "missingFonts.downloadFailed" => "Tải xuống thất bại — kiểm tra kết nối",
+        "missingFonts.downloadedSection" => "Đã tải từ Google Fonts",
         _ => return None,
     })
 }

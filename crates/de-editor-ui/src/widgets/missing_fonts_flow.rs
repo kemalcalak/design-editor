@@ -116,6 +116,8 @@ pub fn press(
         MissingFontsHit::ImportFont(row) => {
             state.editor_ui.missing_fonts_import_row = Some(row);
         }
+        MissingFontsHit::Download(row) => request_download(state, Some(row)),
+        MissingFontsHit::DownloadAll => request_download(state, None),
         MissingFontsHit::ClosePicker => {
             state.editor_ui.close_font_picker();
         }
@@ -127,6 +129,32 @@ pub fn press(
         MissingFontsHit::PickerInside | MissingFontsHit::Inside | MissingFontsHit::Outside => {}
     }
     true
+}
+
+/// Queue the Google Fonts download of one row (`Some(row)`) or of every row
+/// that offers it (`None`). Shared by the modal and the Settings Fonts tab.
+pub fn request_download(state: &mut EditorState, row: Option<usize>) {
+    let ui = &mut state.editor_ui;
+    let families: Vec<String> = ui
+        .missing_fonts_prompt
+        .as_ref()
+        .map(|prompt| {
+            prompt
+                .entries
+                .iter()
+                .enumerate()
+                .filter(|(index, entry)| {
+                    row.is_none_or(|row| row == *index)
+                        && de_editor_core::missing_fonts::can_download(ui, entry)
+                })
+                .map(|(_, entry)| entry.family.clone())
+                .collect()
+        })
+        .unwrap_or_default();
+    for family in families {
+        de_editor_core::missing_fonts::request_font_download(ui, &family);
+    }
+    ui.missing_fonts_hover = None;
 }
 
 /// Record that a font scan is owed, along with whether its result may

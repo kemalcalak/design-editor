@@ -212,6 +212,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Переменные окружения (необязательно)",
         "settings.agents.notInstalledHint" => "Не установлен?",
         "settings.agents.notTestedYet" => "Ещё не проверялся",
+        "missingFonts.download" => "Скачать",
+        "missingFonts.downloadAll" => "Скачать все",
+        "missingFonts.downloading" => "Загрузка…",
+        "missingFonts.retryDownload" => "Повторить",
+        "missingFonts.notOnGoogle" => "Нет в Google Fonts",
+        "missingFonts.downloadFailed" => "Не удалось скачать — проверьте подключение",
+        "missingFonts.downloadedSection" => "Скачано из Google Fonts",
         _ => return None,
     })
 }

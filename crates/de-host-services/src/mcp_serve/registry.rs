@@ -100,6 +100,7 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     register_tool!("get_selection_set", get_selection_set_snapshot(doc));
     register_tool!("get_editor_state", get_editor_state_snapshot(doc));
     register_tool!("get_design_quality", get_design_quality_snapshot(doc));
+    register_tool!("load_fonts", load_fonts_snapshot());
     #[cfg(feature = "mcp-debug-tools")]
     if debug_tools_enabled() {
         register_tool!(

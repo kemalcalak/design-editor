@@ -312,6 +312,18 @@ impl WidgetHost {
                     None,
                     false,
                 ),
+                AgentSettingsHit::Fonts(FontsHit::RemoveDownloadedFont(row)) => (
+                    Some(de_editor_core::missing_fonts::MissingFontsHover::RemoveDownloaded(row)),
+                    None,
+                    false,
+                ),
+                AgentSettingsHit::Fonts(FontsHit::Download(row)) => (
+                    Some(de_editor_core::missing_fonts::MissingFontsHover::Download(
+                        row,
+                    )),
+                    None,
+                    false,
+                ),
                 AgentSettingsHit::Fonts(FontsHit::SelectFont(index)) => (None, Some(index), false),
                 AgentSettingsHit::Fonts(FontsHit::ImportFont(_)) => (None, None, true),
                 _ => (None, None, false),

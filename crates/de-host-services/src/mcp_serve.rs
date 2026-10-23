@@ -666,6 +666,8 @@ pub(crate) mod finalize_tool;
 use finalize_tool::finalize_design_snapshot;
 pub(crate) mod design_quality_tool;
 use design_quality_tool::get_design_quality_snapshot;
+pub(crate) mod font_tools;
+use font_tools::load_fonts_snapshot;
 pub(crate) mod enrich_images_tool;
 use enrich_images_tool::enrich_images_snapshot;
 pub(crate) mod design_agent_run_error;
