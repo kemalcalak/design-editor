@@ -6,6 +6,9 @@
 //! language (`agent_settings_rows`), separated by hairlines.
 
 use crate::theme::Theme;
+use crate::widgets::agent_settings_detail_chrome::{
+    button_width_estimate, paint_button, ButtonKind,
+};
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_metrics::CONTENT_TAIL_PAD;
 use crate::widgets::agent_settings_rows::{
@@ -34,11 +37,19 @@ const SEGMENT_ICON_GAP: f32 = 6.0;
 const SEGMENT_PAD_X: f32 = 6.0;
 const CURSOR_SWATCH: f32 = 38.0;
 const CURSOR_SWATCH_GAP: f32 = 8.0;
+/// The Auto-update row's Update / Restart button (#111), left of the switch;
+/// it grows with its label (`Перезапустить`) from this floor.
+const UPDATE_BUTTON_MIN_W: f32 = 96.0;
+const UPDATE_BUTTON_H: f32 = 30.0;
+const UPDATE_BUTTON_GAP: f32 = 12.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SystemHit {
     SelectThemeMode(ThemeMode),
     ToggleAutoUpdate,
+    /// The Update button (starts the download) or, once a build is staged,
+    /// the Restart button (reopens the modal on it).
+    UpdateButton,
     ToggleExperimental,
     /// Click on one of the pencil-cursor swatches.
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
@@ -50,6 +61,19 @@ pub enum SystemHit {
 /// no updater — hide the row there instead of painting a switch that
 /// silently does nothing (same pattern as `GIT_BUTTON_AVAILABLE`).
 pub(super) const AUTO_UPDATE_AVAILABLE: bool = !cfg!(target_arch = "wasm32");
+
+/// Platforms with a published installer (`rust-release.yml`: macOS arm64,
+/// Windows x64) — the only ones that can update in place, so the only ones
+/// that get the Update button (#111).
+const IN_APP_UPDATE_AVAILABLE: bool = cfg!(any(
+    all(target_os = "macos", target_arch = "aarch64"),
+    all(target_os = "windows", target_arch = "x86_64")
+));
+
+/// Whether the Auto-update row carries its Update / Restart button now.
+fn shows_update_button(ui: &EditorUiState) -> bool {
+    IN_APP_UPDATE_AVAILABLE && ui.update_button_version().is_some()
+}
 
 /// Row order. Auto-update drops out on the web, and every row below it
 /// moves up one slot — one table so paint and hit-test can't disagree
@@ -164,6 +188,34 @@ pub(super) fn auto_update_switch_rect(content: Rect) -> Rect {
     switch_rect_for(content, SystemRow::AutoUpdate)
 }
 
+/// Label and icon of the Update / Restart button.
+fn update_button_face(ui: &EditorUiState) -> (&'static str, Icon) {
+    if ui.update_staged() {
+        (
+            t_settings(ui, "settings.system.restartButton"),
+            Icon::RefreshCw,
+        )
+    } else {
+        (
+            t_settings(ui, "settings.system.updateButton"),
+            Icon::Download,
+        )
+    }
+}
+
+/// The Update / Restart button, between the row label and the switch.
+fn update_button_rect(content: Rect, ui: &EditorUiState) -> Rect {
+    let switch = switch_rect_for(content, SystemRow::AutoUpdate);
+    let width = button_width_estimate(update_button_face(ui).0, true).max(UPDATE_BUTTON_MIN_W);
+    Rect {
+        origin: Point2D::new(
+            switch.origin.x - UPDATE_BUTTON_GAP - width,
+            switch.origin.y + (switch.size.y - UPDATE_BUTTON_H) / 2.0,
+        ),
+        size: Point2D::new(width, UPDATE_BUTTON_H),
+    }
+}
+
 fn switch_rect_for(content: Rect, row: SystemRow) -> Rect {
     row_control_rect(rect_for(content, row), SETTINGS_SWITCH_W, SETTINGS_SWITCH_H)
 }
@@ -186,7 +238,7 @@ fn cursor_swatch_rect(content: Rect, i: usize) -> Rect {
     }
 }
 
-pub fn hit_test(content: Rect, scrolled: Point2D) -> SystemHit {
+pub fn hit_test(content: Rect, ui: &EditorUiState, scrolled: Point2D) -> SystemHit {
     for (i, mode) in SEGMENT_MODES.iter().enumerate() {
         if segment_rect(content, i).contains(scrolled) {
             return SystemHit::SelectThemeMode(*mode);
@@ -194,6 +246,12 @@ pub fn hit_test(content: Rect, scrolled: Point2D) -> SystemHit {
     }
     if AUTO_UPDATE_AVAILABLE && switch_rect_for(content, SystemRow::AutoUpdate).contains(scrolled) {
         return SystemHit::ToggleAutoUpdate;
+    }
+    if AUTO_UPDATE_AVAILABLE
+        && shows_update_button(ui)
+        && update_button_rect(content, ui).contains(scrolled)
+    {
+        return SystemHit::UpdateButton;
     }
     if switch_rect_for(content, SystemRow::Experimental).contains(scrolled) {
         return SystemHit::ToggleExperimental;
@@ -257,17 +315,24 @@ pub(super) fn paint_system_tab(
 
     if AUTO_UPDATE_AVAILABLE {
         let (_, _, description_key) = status_view(theme, &ui.update_status);
+        let current = format!(
+            "{}: v{}",
+            t_settings(ui, "settings.system.currentVersion"),
+            env!("CARGO_PKG_VERSION"),
+        );
+        // "Click Update…" would point at a button this platform never shows.
+        let available = matches!(ui.update_status, UpdateStatus::Available { .. });
+        let footnote = if available && !IN_APP_UPDATE_AVAILABLE {
+            current
+        } else {
+            format!("{current} — {}", t_settings(ui, description_key))
+        };
         paint_footnote(
             cx,
             theme,
             content,
             body_top(content) + rows_block_height(&kinds) + FOOTNOTE_GAP,
-            &format!(
-                "{}: v{} — {}",
-                t_settings(ui, "settings.system.currentVersion"),
-                env!("CARGO_PKG_VERSION"),
-                t_settings(ui, description_key)
-            ),
+            &footnote,
         );
     }
 }
@@ -352,12 +417,21 @@ fn paint_auto_update_row(
     row: Rect,
     enabled: bool,
 ) {
+    let show_button = shows_update_button(ui);
+    let switch = switch_rect_for(content, SystemRow::AutoUpdate);
+    // Reserve from the leftmost control to the switch's right edge.
+    let controls_left = if show_button {
+        update_button_rect(content, ui).origin.x
+    } else {
+        switch.origin.x
+    };
+    let control_w = switch.origin.x + switch.size.x - controls_left + 16.0;
     paint_row_label_above_status(
         cx,
         theme,
         row,
         t_settings(ui, "agents.autoUpdate"),
-        SETTINGS_SWITCH_W + 16.0,
+        control_w,
     );
     let (color, status_key, _) = status_view(theme, &ui.update_status);
     let status_text = match &ui.update_status {
@@ -367,6 +441,17 @@ fn paint_auto_update_row(
         _ => t_settings(ui, status_key).to_string(),
     };
     paint_row_status_line(cx, row, &status_text, color);
+    if show_button {
+        let (label, icon) = update_button_face(ui);
+        paint_button(
+            cx,
+            theme,
+            update_button_rect(content, ui),
+            label,
+            Some(icon),
+            ButtonKind::Primary,
+        );
+    }
     paint_settings_switch(
         cx,
         theme,

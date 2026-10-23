@@ -247,6 +247,12 @@ pub fn apply_agent_settings_hit(
             state.editor_ui.agent_settings.auto_update_enabled ^= true;
             SettingsPressOutcome::handled()
         }
+        AgentSettingsHit::UpdateButton => {
+            if let Some(version) = state.editor_ui.update_button_version().map(str::to_string) {
+                state.editor_ui.start_update(&version);
+            }
+            SettingsPressOutcome::handled()
+        }
         AgentSettingsHit::SelectThemeMode(mode) => {
             state.editor_ui.theme_mode = mode;
             SettingsPressOutcome::handled()

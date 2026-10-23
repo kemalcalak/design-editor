@@ -87,6 +87,8 @@ impl DesktopApp {
             || self.current_html_import.is_some()
             || self.pending_figma_paste.is_some()
             || self.pending_html_paste.is_some()
+            // Repaint the update modal's progress bar as bytes arrive.
+            || self.update_job.as_ref().is_some_and(|job| job.is_pending())
         {
             event_loop.set_control_flow(ControlFlow::WaitUntil(self.periodic_wake_instant(100)));
         } else if let Some(deadline_ms) = self.host.next_animation_deadline_ms() {
@@ -175,6 +177,7 @@ impl DesktopApp {
             // scheduled for it would be thrown away unpainted.
             || self.host.chrome_tooltip_showing()
             || self.update_probe.is_pending()
+            || self.update_job.as_ref().is_some_and(|job| job.is_pending())
             || self.model_probe.is_pending()
             || self.image_search.is_pending()
             || self.image_panel.is_pending()

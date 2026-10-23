@@ -241,6 +241,8 @@ pub enum AgentSettingsHit {
     },
     Fonts(FontsHit),
     ToggleAutoUpdate,
+    /// System tab Update / Restart button (#111).
+    UpdateButton,
     ToggleExperimental,
     SelectThemeMode(de_editor_core::editor_ui_state::ThemeMode),
     SelectPencilCursor(de_editor_core::PencilCursorStyle),

@@ -1,19 +1,16 @@
 //! Background auto-update check.
 //!
-//! The TS Electron app ships a full `electron-updater` pipeline
-//! (download + signature-verify + self-install). The Rust desktop
-//! host has no signed-installer pipeline yet, so this module does
-//! the part that is safe and useful without one: a background probe
-//! of the GitHub releases API that compares the running build to
-//! the latest published release and surfaces the result.
+//! A background probe of the GitHub releases API that compares the
+//! running build to the latest published release and surfaces the
+//! result.
 //!
 //! Flow: [`UpdateProbe::spawn`] runs one HTTPS request on a worker
 //! thread (never the UI thread); the runner drains the outcome with
 //! [`UpdateProbe::poll`] and writes it into
 //! `EditorUiState::update_status` (rendered by the settings System
-//! tab). When a newer release is found the runner offers to download
-//! and open the platform installer via [`download_and_open_installer`],
-//! falling back to the releases page.
+//! tab). When a newer release is found the runner opens the in-app
+//! update modal; the download / verify / install job lives in
+//! `update_install.rs` (#111).
 //!
 //! Every failure mode (offline, rate-limited, malformed JSON)
 //! degrades to `UpdateStatus::Error` — the probe never panics and
@@ -218,37 +215,9 @@ fn select_latest_release_tag(json: &serde_json::Value) -> Option<String> {
         .find_map(|release| release.get("tag_name")?.as_str().map(str::to_string))
 }
 
-/// Download the platform installer for `version` on a worker thread
-/// and open it when done (macOS mounts the DMG, Windows launches the
-/// NSIS setup). Any failure — a platform without a published installer,
-/// network error, missing asset — falls back to opening the releases
-/// page, so the user always ends up with a path to the update. There is
-/// no signature verification yet: the rust-release.yml assets are
-/// unsigned.
-pub fn download_and_open_installer(version: &str) {
-    use std::sync::atomic::{AtomicBool, Ordering};
-    // One download at a time — a second "Yes" (or re-check) while a
-    // worker is still transferring must not spawn a duplicate writer
-    // onto the same temp path.
-    static IN_FLIGHT: AtomicBool = AtomicBool::new(false);
-    if IN_FLIGHT
-        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
-        .is_err()
-    {
-        return;
-    }
-    let version = version.to_string();
-    std::thread::spawn(move || {
-        if !download_and_open_blocking(&version) {
-            open_url(&releases_url());
-        }
-        IN_FLIGHT.store(false, Ordering::SeqCst);
-    });
-}
-
 /// The release-asset filename rust-release.yml publishes for this
 /// platform, or `None` on an unsupported os/arch pair.
-fn installer_asset_name(version: &str) -> Option<String> {
+pub(crate) fn installer_asset_name(version: &str) -> Option<String> {
     asset_name_for(std::env::consts::OS, std::env::consts::ARCH, version)
 }
 
@@ -263,42 +232,9 @@ fn asset_name_for(os: &str, arch: &str, version: &str) -> Option<String> {
     }
 }
 
-/// Blocking download + open. Only ever runs on the worker thread.
-fn download_and_open_blocking(version: &str) -> bool {
-    let Some(name) = installer_asset_name(version) else {
-        return false;
-    };
-    let url = format!(
-        "https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/download/v{version}/{name}"
-    );
-    let dest = std::env::temp_dir().join(&name);
-    // Shared runtime, not a private one — see `fetch_latest_tag`.
-    let downloaded = de_host_services::chat_runtime::block_on_anywhere(async {
-        let client = reqwest::Client::builder()
-            .use_rustls_tls()
-            // Installers run tens of MB — allow a long transfer.
-            .timeout(std::time::Duration::from_secs(600))
-            .user_agent(concat!("design-editor/", env!("CARGO_PKG_VERSION")))
-            .build()
-            .ok()?;
-        let mut resp = client.get(&url).send().await.ok()?;
-        if !resp.status().is_success() {
-            return None;
-        }
-        // Stream to disk chunk by chunk — installers run tens of MB
-        // and must not be buffered whole in memory.
-        let mut file = std::fs::File::create(&dest).ok()?;
-        use std::io::Write;
-        while let Some(chunk) = resp.chunk().await.ok()? {
-            file.write_all(&chunk).ok()?;
-        }
-        file.flush().ok()?;
-        Some(())
-    });
-    if downloaded.is_none() {
-        return false;
-    }
-    open_installer_path(&dest)
+/// Download URL prefix for the assets of release `v<version>`.
+pub(crate) fn release_download_base(version: &str) -> String {
+    format!("https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/download/v{version}")
 }
 
 /// Args for `cmd /C start "" "<target>"` with the target double-quoted
@@ -322,17 +258,6 @@ fn windows_start(target: &str) -> std::io::Result<std::process::Child> {
     c.raw_arg(windows_start_args(target));
     c.creation_flags(CREATE_NO_WINDOW);
     c.spawn()
-}
-
-/// Open the downloaded installer with the platform launcher.
-fn open_installer_path(path: &std::path::Path) -> bool {
-    #[cfg(target_os = "macos")]
-    let result = std::process::Command::new("open").arg(path).spawn();
-    #[cfg(target_os = "windows")]
-    let result = windows_start(&path.display().to_string());
-    #[cfg(target_os = "linux")]
-    let result = std::process::Command::new("xdg-open").arg(path).spawn();
-    result.is_ok()
 }
 
 /// Whether `latest` is a strictly newer version than `current`.
@@ -517,7 +442,15 @@ mod tests {
 
 #[cfg(test)]
 mod installer_asset_tests {
-    use super::asset_name_for;
+    use super::{asset_name_for, release_download_base};
+
+    #[test]
+    fn download_base_points_at_the_tagged_release() {
+        assert_eq!(
+            release_download_base("0.2.1"),
+            "https://github.com/kemalcalak/design-editor/releases/download/v0.2.1"
+        );
+    }
 
     #[test]
     fn asset_names_cover_the_release_matrix() {

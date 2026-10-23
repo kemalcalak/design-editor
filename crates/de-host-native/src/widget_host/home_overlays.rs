@@ -84,6 +84,7 @@ impl WidgetHostNative {
             picker.paint(&mut cx, rect);
         }
         self.paint_home_model_picker(frame, viewport_width, viewport_height);
+        self.paint_update_modal(frame, viewport_width, viewport_height);
     }
 
     /// The agent-settings modal: dim scrim across the viewport plus the

@@ -208,6 +208,8 @@ impl DesktopApp {
             recent_menu_paths: Vec::new(),
             update_probe,
             update_prompt_shown: false,
+            update_job: None,
+            staged_update: None,
             win_pos: None,
             win_size: None,
             win_maximized: false,

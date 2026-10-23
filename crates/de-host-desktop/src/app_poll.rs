@@ -2,12 +2,13 @@
 //! `DesktopApp`. Carved out of the `main.rs` spine to keep it under the
 //! 800-line cap; pure code motion.
 
-use crate::{prompt_update_available, DesktopApp};
+use crate::DesktopApp;
 
 impl DesktopApp {
     /// Drain the background auto-update probe into `update_status`.
-    /// When the probe reports a newer release, offer to download and
-    /// open the installer — once per check.
+    /// When the probe reports a newer release, open the in-app update
+    /// modal on its offer — once per check, and never over a job that is
+    /// already running or staged.
     pub(crate) fn poll_update_probe(&mut self) -> bool {
         let Some(status) = self.update_probe.poll() else {
             return false;
@@ -18,8 +19,16 @@ impl DesktopApp {
         if available && !self.update_prompt_shown {
             self.update_prompt_shown = true;
             if let de_editor_core::UpdateStatus::Available { version } = &status {
-                let locale = self.host.editor_state().editor_ui.locale;
-                prompt_update_available(locale, version);
+                let ui = &mut self.host.editor_state_mut().editor_ui;
+                // Only where a release installer exists: elsewhere the
+                // offer could only end in "can't update itself".
+                let installable = crate::update_check::installer_asset_name(version).is_some();
+                if installable && ui.update_modal.is_none() {
+                    ui.update_modal = Some(de_editor_core::UpdateModalState::new(
+                        version.clone(),
+                        de_editor_core::UpdatePhase::Offer,
+                    ));
+                }
             }
         }
         true

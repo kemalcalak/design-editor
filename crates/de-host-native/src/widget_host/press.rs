@@ -178,7 +178,11 @@ impl WidgetHostNative {
         // event before document chrome or canvas tiers can see it — but the
         // overlays Home itself opens (agent settings, the language menu, the
         // Home-anchored model picker) paint ABOVE the takeover, so their
-        // presses must arrive first.
+        // presses must arrive first. The update modal (#111) sits above all
+        // of them.
+        if let Some(consumed) = self.press_update_modal(x, y, viewport_width, viewport_height) {
+            return consumed;
+        }
         if let Some(consumed) = self.press_home_overlays(x, y, viewport_width, viewport_height) {
             return consumed;
         }
