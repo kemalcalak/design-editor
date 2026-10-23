@@ -103,12 +103,24 @@ pub(crate) enum FontDownloadError {
     Store(FontStoreError),
     /// The font store under the config dir could not be opened.
     OpenStore(String),
+    /// The download worker panicked.
+    Panicked,
 }
 
 impl FontDownloadError {
     /// Google Fonts has no such family; retrying will not help.
     pub(crate) fn is_not_on_google(&self) -> bool {
         matches!(self, FontDownloadError::Google(error) if error.is_not_on_google())
+    }
+
+    /// The row / quality-report status this failure leaves behind.
+    pub(crate) fn status(&self) -> de_editor_core::missing_fonts::FontDownloadStatus {
+        use de_editor_core::missing_fonts::FontDownloadStatus;
+        if self.is_not_on_google() {
+            FontDownloadStatus::NotOnGoogle
+        } else {
+            FontDownloadStatus::Failed
+        }
     }
 }
 
@@ -119,6 +131,7 @@ impl fmt::Display for FontDownloadError {
             FontDownloadError::Name(error) => write!(f, "downloaded font: {error}"),
             FontDownloadError::Store(error) => error.fmt(f),
             FontDownloadError::OpenStore(message) => write!(f, "open font store: {message}"),
+            FontDownloadError::Panicked => f.write_str("the font download worker panicked"),
         }
     }
 }

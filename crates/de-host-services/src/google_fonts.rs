@@ -35,7 +35,7 @@ const MAX_CSS_BYTES: usize = 256 * 1024;
 /// faces are a few MiB.
 pub const MAX_FACE_BYTES: usize = 16 * 1024 * 1024;
 
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
+pub const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// A status code plus body, enough for the API's success / 400 split.
 pub struct HttpReply {
@@ -152,14 +152,30 @@ fn title_case(family: &str) -> String {
         .join(" ")
 }
 
-/// Fetch the CSS answer for `family`, retrying once title-cased when the
-/// exact spelling is unknown.
+/// Fetch the CSS answer for `family`, retrying title-cased and then with
+/// an upper-cased acronym when the exact spelling is unknown.
 fn fetch_css(transport: &dyn FontTransport, family: &str) -> Result<String, GoogleFontsError> {
     let family = family.trim();
-    let mut candidates = vec![family.to_string()];
     let titled = title_case(family);
-    if titled != family {
-        candidates.push(titled);
+    // Acronym families ("IBM Plex Sans", "PT Serif", "DM Sans") upper-case
+    // their short leading words.
+    let acronym = titled
+        .split(' ')
+        .enumerate()
+        .map(|(index, word)| {
+            if index == 0 && word.chars().count() <= 3 {
+                word.to_uppercase()
+            } else {
+                word.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+    let mut candidates = vec![family.to_string()];
+    for candidate in [titled, acronym] {
+        if !candidates.contains(&candidate) {
+            candidates.push(candidate);
+        }
     }
     for candidate in candidates {
         let url = css_url(&candidate)?;
@@ -407,5 +423,23 @@ mod tests {
             download_family(&transport, "Space Mono"),
             Err(GoogleFontsError::HttpStatus { status: 404, .. })
         ));
+    }
+
+    #[test]
+    fn acronym_families_are_found_from_a_lower_case_spelling() {
+        let transport = FakeTransport {
+            replies: BTreeMap::from([(
+                css_url("IBM Plex Sans").unwrap(),
+                Ok((200, CSS.as_bytes().to_vec())),
+            )]),
+            requested: Mutex::new(Vec::new()),
+        };
+        // The faces of the fixture CSS are not served, so the download
+        // fails after the CSS lookup: what matters is which spellings ran.
+        let _ = download_family(&transport, "ibm plex sans");
+        let requested = transport.requested.lock().unwrap();
+        assert_eq!(requested[0], css_url("ibm plex sans").unwrap());
+        assert_eq!(requested[1], css_url("Ibm Plex Sans").unwrap());
+        assert_eq!(requested[2], css_url("IBM Plex Sans").unwrap());
     }
 }

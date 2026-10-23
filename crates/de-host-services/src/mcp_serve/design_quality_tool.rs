@@ -24,12 +24,13 @@ impl McpTool for GetDesignQuality {
         let report = de_chat_agent::design_agent_tools::collect_design_quality(&self.state);
         // Font availability is host state (installed / downloaded faces),
         // not document state, so it rides on the tool output rather than
-        // the design loop's shared report. No font host: nothing to report.
-        let font_issues = crate::font_host::installed()
-            .map(|host| host.font_issues(&self.state))
-            .unwrap_or_default();
+        // the design loop's shared report. A host that cannot tell (no font
+        // host installed) leaves the field out instead of claiming `[]`.
+        let font_issues = crate::font_host::installed().map(|host| host.font_issues(&self.state));
         let report = serde_json::to_value(&report).map(|mut value| {
-            value["fontIssues"] = serde_json::json!(font_issues);
+            if let Some(issues) = font_issues {
+                value["fontIssues"] = serde_json::json!(issues);
+            }
             value
         });
         match report.and_then(|value| serde_json::to_string(&value)) {
@@ -70,7 +71,6 @@ mod tests {
             "variableIssues",
             "imageSlots",
             "navIssues",
-            "fontIssues",
         ] {
             assert!(value[key].is_array(), "missing array field {key}: {value}");
         }

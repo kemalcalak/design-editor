@@ -74,7 +74,9 @@ pub fn with_identity(bytes: &[u8], face: FaceIdentity<'_>) -> Result<Vec<u8>, Fo
         .filter(|record| !REPLACED_IDS.contains(&record.name_id))
         .collect();
     let style = style_name(weight, italic);
-    let ribbi = match (weight >= 700, italic) {
+    // Legacy style linking: only the 700 face is "Bold", matching the
+    // fsSelection / macStyle bits below.
+    let ribbi = match (weight == 700, italic) {
         (false, false) => "Regular",
         (false, true) => "Italic",
         (true, false) => "Bold",

@@ -27,14 +27,15 @@ pub fn load_fonts_snapshot() -> LoadFonts {
     }
 }
 
-/// `families` as a JSON array string or a comma-separated list, trimmed,
-/// without empties or case-insensitive duplicates.
+/// `families` as a JSON array string or a CSS-style comma-separated list
+/// (quotes allowed), trimmed, without empties or case-insensitive
+/// duplicates.
 fn parse_families(raw: &str) -> Vec<String> {
     let listed: Vec<String> = serde_json::from_str::<Vec<String>>(raw.trim())
-        .unwrap_or_else(|_| raw.split(',').map(str::to_string).collect());
+        .unwrap_or_else(|_| de_editor_core::font_catalog::split_font_family_stack(raw));
     let mut families: Vec<String> = Vec::new();
     for family in listed {
-        let family = family.trim().trim_matches(|c| c == '\'' || c == '"').trim();
+        let family = family.trim();
         if !family.is_empty() && !families.iter().any(|f| f.eq_ignore_ascii_case(family)) {
             families.push(family.to_string());
         }
@@ -82,7 +83,7 @@ impl McpTool for LoadFonts {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::font_host::{FontIssue, FontLoadResult};
+    use crate::font_host::{FontIssue, FontLoadResult, FontLoadStatus};
     use de_editor_core::EditorState;
     use std::sync::Mutex;
 
@@ -98,9 +99,9 @@ mod tests {
                 .map(|family| FontLoadResult {
                     family: family.clone(),
                     status: if family == "Nope" {
-                        "notOnGoogle"
+                        FontLoadStatus::NotOnGoogle
                     } else {
-                        "downloaded"
+                        FontLoadStatus::Downloaded
                     },
                     faces: (family != "Nope").then_some(4),
                     detail: None,

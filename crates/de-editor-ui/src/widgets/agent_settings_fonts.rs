@@ -21,7 +21,7 @@ const EMPTY_BODY_HEIGHT: f32 = 44.0;
 const SECTION_GAP: f32 = 28.0;
 const BOTTOM_PAD: f32 = 24.0;
 const REMOVE_HEIGHT: f32 = 28.0;
-const IMPORTED_ROW_HEIGHT: f32 = 44.0;
+const FAMILY_ROW_HEIGHT: f32 = 44.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FontsHit {
@@ -39,18 +39,29 @@ pub enum FontsHit {
     None,
 }
 
+fn is_downloaded(ui: &EditorUiState, family: &str) -> bool {
+    ui.downloaded_font_families
+        .iter()
+        .any(|downloaded| downloaded.eq_ignore_ascii_case(family))
+}
+
 /// Families the user imported from disk: `imported_font_families` minus the
 /// ones that came from Google Fonts downloads, which get their own section.
 pub(crate) fn user_imported_families(ui: &EditorUiState) -> Vec<String> {
     ui.imported_font_families
         .iter()
-        .filter(|family| {
-            !ui.downloaded_font_families
-                .iter()
-                .any(|downloaded| downloaded.eq_ignore_ascii_case(family))
-        })
+        .filter(|family| !is_downloaded(ui, family))
         .cloned()
         .collect()
+}
+
+/// `user_imported_families(ui).len()` without building the list — layout
+/// and hit-testing only need the row count.
+fn user_imported_count(ui: &EditorUiState) -> usize {
+    ui.imported_font_families
+        .iter()
+        .filter(|family| !is_downloaded(ui, family))
+        .count()
 }
 
 fn missing_entries(ui: &EditorUiState) -> &[MissingFontEntry] {
@@ -78,7 +89,7 @@ fn downloaded_section_top(content: Rect, ui: &EditorUiState) -> f32 {
 fn downloaded_section_height(ui: &EditorUiState) -> f32 {
     match ui.downloaded_font_families.len() {
         0 => 0.0,
-        rows => SECTION_TITLE_HEIGHT + rows as f32 * IMPORTED_ROW_HEIGHT + SECTION_GAP,
+        rows => SECTION_TITLE_HEIGHT + rows as f32 * FAMILY_ROW_HEIGHT + SECTION_GAP,
     }
 }
 
@@ -99,9 +110,9 @@ pub(crate) fn missing_row_rect(content: Rect, row: usize) -> Rect {
 fn family_row_rect(content: Rect, section_top: f32, row: usize) -> Rect {
     Rect::xywh(
         content.origin.x,
-        section_top + SECTION_TITLE_HEIGHT + row as f32 * IMPORTED_ROW_HEIGHT,
+        section_top + SECTION_TITLE_HEIGHT + row as f32 * FAMILY_ROW_HEIGHT,
         content.size.x,
-        IMPORTED_ROW_HEIGHT,
+        FAMILY_ROW_HEIGHT,
     )
 }
 
@@ -147,7 +158,7 @@ pub(super) fn content_height(ui: &EditorUiState) -> f32 {
         + SECTION_GAP
         + downloaded_section_height(ui)
         + SECTION_TITLE_HEIGHT
-        + user_imported_families(ui).len() as f32 * IMPORTED_ROW_HEIGHT
+        + user_imported_count(ui) as f32 * FAMILY_ROW_HEIGHT
         + BOTTOM_PAD
 }
 
@@ -241,7 +252,7 @@ pub fn hit_test(
             return FontsHit::RemoveDownloadedFont(row);
         }
     }
-    for row in 0..user_imported_families(ui).len() {
+    for row in 0..user_imported_count(ui) {
         if imported_remove_rect(content, ui, row).contains(scrolled) {
             return FontsHit::RemoveImportedFont(row);
         }

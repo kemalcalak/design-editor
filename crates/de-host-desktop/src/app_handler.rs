@@ -409,6 +409,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                 self.request_redraw(true);
             }
             DesktopEvent::FontsRegistered => {
+                crate::font_host_desktop::take_fonts_changed();
                 self.host.refresh_imported_fonts();
                 crate::font_import_host::refresh_downloaded_fonts(&mut self.host);
                 self.host.refresh_missing_fonts_prompt();

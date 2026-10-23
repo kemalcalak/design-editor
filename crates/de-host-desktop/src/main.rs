@@ -594,8 +594,12 @@ fn main() {
         Err(err) => eprintln!("[fonts] skipping imported-font rescan: {err}"),
     }
     // MCP `load_fonts` / `get_design_quality` ask this host about fonts in
-    // every mode (GUI, `--mcp`, `--serve-web`).
-    font_host_desktop::install();
+    // the GUI and `--mcp` / `--mcp-http`, where this process paints. Not
+    // under `--serve-web`: the browser canvas registers fonts in CanvasKit,
+    // so a download here would report success the viewer never sees.
+    if !std::env::args_os().any(|arg| arg == OsStr::new("--serve-web")) {
+        font_host_desktop::install();
+    }
     init_tracing();
     if let Some(modes) = conflicting_headless_modes(std::env::args_os().skip(1)) {
         eprintln!(

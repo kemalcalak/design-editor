@@ -7,6 +7,7 @@
 //! same [`ensure_user_family`] as the missing-fonts modal, so both share the
 //! store, the cache and the tracked status.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
@@ -15,9 +16,12 @@ use de_editor_core::missing_fonts::{
     document_concrete_font_families, missing_font_entries, FontDownloadStatus,
 };
 use de_editor_core::EditorState;
-use de_host_services::font_host::{FontHost, FontIssue, FontLoadResult};
+use de_host_services::font_host::{
+    FontHost, FontIssue, FontIssueStatus, FontLoadResult, FontLoadStatus,
+};
 
 use crate::fonts::{FontOrigin, FontStore};
+use crate::fonts_error::FontDownloadError;
 use crate::google_font_download::{ensure_user_family, tracked_status, FontDownloadOk};
 
 /// Called after a download registered new faces, from the download's
@@ -43,7 +47,19 @@ pub(crate) fn set_fonts_changed_notifier(notify: impl Fn() + Send + Sync + 'stat
     }
 }
 
+/// Set between a download's notification and the UI's refresh, so a
+/// `load_fonts` of many families wakes the loop once, not once per family.
+static CHANGE_PENDING: AtomicBool = AtomicBool::new(false);
+
+/// Clear the pending-change flag; the UI calls this as it refreshes.
+pub(crate) fn take_fonts_changed() -> bool {
+    CHANGE_PENDING.swap(false, Ordering::AcqRel)
+}
+
 fn notify_fonts_changed() {
+    if CHANGE_PENDING.swap(true, Ordering::AcqRel) {
+        return;
+    }
     if let Ok(slot) = on_change().lock() {
         if let Some(notify) = slot.as_ref() {
             notify();
@@ -51,14 +67,19 @@ fn notify_fonts_changed() {
     }
 }
 
-/// Families `jian-skia` or the native font manager can resolve, among
-/// `candidates`, compared case-insensitively.
-fn resolvable(candidates: &[String]) -> Vec<String> {
-    let mut known: Vec<String> = jian_skia::list_families()
+/// Families registered with `jian-skia` (bundled, imported, downloaded).
+fn registered_families() -> Vec<String> {
+    jian_skia::list_families()
         .into_iter()
         .map(|meta| meta.family)
         .chain(jian_skia::list_bundled_families())
-        .collect();
+        .collect()
+}
+
+/// Families `jian-skia` or the native font manager can resolve, among
+/// `candidates`, compared case-insensitively.
+fn resolvable(candidates: &[String]) -> Vec<String> {
+    let mut known = registered_families();
     known.extend(de_host_native::backend::resolvable_system_font_families(
         candidates,
     ));
@@ -69,37 +90,37 @@ fn resolvable(candidates: &[String]) -> Vec<String> {
         .collect()
 }
 
-fn issue_status(status: Option<FontDownloadStatus>) -> (&'static str, &'static str) {
+fn issue_status(status: Option<FontDownloadStatus>) -> (FontIssueStatus, &'static str) {
     match status {
         Some(FontDownloadStatus::Downloading) => (
-            "downloading",
+            FontIssueStatus::Downloading,
             "Downloading from Google Fonts; text uses a fallback face until it lands.",
         ),
         Some(FontDownloadStatus::NotOnGoogle) => (
-            "notOnGoogle",
+            FontIssueStatus::NotOnGoogle,
             "Not on Google Fonts; choose an available family.",
         ),
         Some(FontDownloadStatus::Failed) => (
-            "failed",
+            FontIssueStatus::Failed,
             "The download failed (offline?); call load_fonts to retry or choose another family.",
         ),
         None => (
-            "missing",
+            FontIssueStatus::Missing,
             "Renders and measures with a fallback face; call load_fonts with this family.",
         ),
     }
 }
 
-fn load_result(
-    family: &str,
-    result: &Result<FontDownloadOk, String>,
-    not_on_google: bool,
-) -> FontLoadResult {
+fn load_result(family: &str, result: &Result<FontDownloadOk, FontDownloadError>) -> FontLoadResult {
     let (status, faces, detail) = match result {
-        Ok(FontDownloadOk::Downloaded { faces, .. }) => ("downloaded", Some(*faces), None),
-        Ok(FontDownloadOk::Cached { .. }) => ("cached", None, None),
-        Err(detail) if not_on_google => ("notOnGoogle", None, Some(detail.clone())),
-        Err(detail) => ("failed", None, Some(detail.clone())),
+        Ok(FontDownloadOk::Downloaded { faces, .. }) => {
+            (FontLoadStatus::Downloaded, Some(*faces), None)
+        }
+        Ok(FontDownloadOk::Cached { .. }) => (FontLoadStatus::Cached, None, None),
+        Err(error) if error.is_not_on_google() => {
+            (FontLoadStatus::NotOnGoogle, None, Some(error.to_string()))
+        }
+        Err(error) => (FontLoadStatus::Failed, None, Some(error.to_string())),
     };
     FontLoadResult {
         family: family.to_string(),
@@ -124,7 +145,7 @@ impl FontHost for DesktopFontHost {
             if !is_downloaded && available.iter().any(|a| a.eq_ignore_ascii_case(family)) {
                 results[index] = Some(FontLoadResult {
                     family: family.clone(),
-                    status: "available",
+                    status: FontLoadStatus::Available,
                     faces: None,
                     detail: None,
                 });
@@ -140,9 +161,7 @@ impl FontHost for DesktopFontHost {
                 if matches!(result, Ok(FontDownloadOk::Downloaded { .. })) {
                     notify_fonts_changed();
                 }
-                let not_on_google = result.as_ref().is_err_and(|e| e.is_not_on_google());
-                let result = result.map_err(|e| e.to_string());
-                let _ = tx.send((index, load_result(&family, &result, not_on_google)));
+                let _ = tx.send((index, load_result(&family, &result)));
             });
         }
         drop(tx);
@@ -160,7 +179,7 @@ impl FontHost for DesktopFontHost {
             .map(|(result, family)| {
                 result.unwrap_or_else(|| FontLoadResult {
                     family: family.clone(),
-                    status: "downloading",
+                    status: FontLoadStatus::Downloading,
                     faces: None,
                     detail: None,
                 })
@@ -169,7 +188,17 @@ impl FontHost for DesktopFontHost {
     }
 
     fn font_issues(&self, state: &EditorState) -> Vec<FontIssue> {
-        let available = resolvable(&document_concrete_font_families(state));
+        // The GUI's snapshot already carries the enumerated system fonts;
+        // reuse them rather than querying the font manager under the global
+        // font lock on every quality call. Headless `--mcp` has none.
+        let ui = &state.editor_ui;
+        let available = if ui.system_fonts_loaded {
+            let mut known = registered_families();
+            known.extend(ui.system_font_families.iter().cloned());
+            known
+        } else {
+            resolvable(&document_concrete_font_families(state))
+        };
         missing_font_entries(state, &|family| {
             available.iter().any(|a| a.eq_ignore_ascii_case(family))
         })
@@ -210,7 +239,7 @@ mod tests {
         let issues = DesktopFontHost.font_issues(&state_with_text("Zz Unheard Of Sans"));
         assert_eq!(issues.len(), 1, "{issues:?}");
         assert_eq!(issues[0].family, "Zz Unheard Of Sans");
-        assert_eq!(issues[0].status, "missing");
+        assert_eq!(issues[0].status, FontIssueStatus::Missing);
         assert!(issues[0].hint.contains("load_fonts"));
     }
 
@@ -230,6 +259,6 @@ mod tests {
         crate::bundled_fonts::register();
         let results =
             DesktopFontHost.load(&["Space Grotesk".to_string()], Duration::from_millis(1));
-        assert_eq!(results[0].status, "available");
+        assert_eq!(results[0].status, FontLoadStatus::Available);
     }
 }

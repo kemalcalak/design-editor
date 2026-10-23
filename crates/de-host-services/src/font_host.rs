@@ -13,17 +13,39 @@ use std::time::Duration;
 use de_editor_core::EditorState;
 use serde::Serialize;
 
+/// What `load_fonts` did for one family (wire: camelCase).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FontLoadStatus {
+    /// Installed, bundled or imported already; nothing fetched.
+    Available,
+    /// Downloaded on an earlier run.
+    Cached,
+    Downloaded,
+    /// Still running when the wait ended; it finishes in the background.
+    Downloading,
+    NotOnGoogle,
+    Failed,
+}
+
+/// Why a family in `fontIssues` falls back (wire: camelCase).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FontIssueStatus {
+    /// Not available and no download was asked for.
+    Missing,
+    Downloading,
+    NotOnGoogle,
+    Failed,
+}
+
 /// The outcome of making one family available.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FontLoadResult {
     /// The family as requested.
     pub family: String,
-    /// `available` (installed, bundled or imported already), `cached`
-    /// (downloaded on an earlier run), `downloaded`, `downloading` (still
-    /// running when the wait ended; it finishes in the background),
-    /// `notOnGoogle`, or `failed`.
-    pub status: &'static str,
+    pub status: FontLoadStatus,
     /// Faces stored by a fresh download.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub faces: Option<usize>,
@@ -39,8 +61,7 @@ pub struct FontIssue {
     pub family: String,
     /// Text runs that use the family.
     pub run_count: u32,
-    /// `missing`, `downloading`, `notOnGoogle`, or `failed`.
-    pub status: &'static str,
+    pub status: FontIssueStatus,
     /// What the agent can do about it.
     pub hint: String,
 }

@@ -11,14 +11,21 @@
 //! Download button (worker thread, [`FontDownloads`]) or the MCP
 //! `load_fonts` tool (its own connection thread).
 
+use std::collections::BTreeMap;
 use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use de_editor_core::missing_fonts::FontDownloadStatus;
+use de_editor_core::missing_fonts::{font_download_key, FontDownloadStatus};
 use de_host_services::google_fonts::{download_family, FontTransport, HttpFontTransport};
 
 use crate::fonts::{FontOrigin, FontStore};
 use crate::fonts_error::FontDownloadError;
 use crate::google_font_names::{with_identity, FaceIdentity};
+
+// A served face must fit the store's import cap, or a download would fetch
+// a face only to have `FontStore` refuse it.
+const _: () =
+    assert!(de_host_services::google_fonts::MAX_FACE_BYTES <= crate::fonts::MAX_FONT_BYTES);
 
 /// A family that is available after the call.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,16 +44,19 @@ pub(crate) fn ensure_family(
     family: &str,
 ) -> Result<FontDownloadOk, FontDownloadError> {
     let family = family.trim();
+    // A stored family counts as cached only once it is registered here too:
+    // another process may have stored it after this one's startup rescan.
     if let Some(cached) = store
         .families_from(FontOrigin::Google)
         .into_iter()
         .find(|known| known.eq_ignore_ascii_case(family))
+        .filter(|known| store.ensure_registered(known))
     {
         return Ok(FontDownloadOk::Cached { family: cached });
     }
     let downloaded = download_family(transport, family)?;
-    // Rename every face before storing any, so a malformed file leaves
-    // nothing half-stored behind.
+    // Rename every face before storing any, and store them as one
+    // transaction, so a failure leaves nothing half-stored behind.
     let faces = downloaded
         .faces
         .iter()
@@ -61,55 +71,61 @@ pub(crate) fn ensure_family(
             )
         })
         .collect::<Result<Vec<_>, _>>()?;
-    let count = faces.len();
-    for face in faces {
-        store.import_from(face, FontOrigin::Google)?;
-    }
+    let count = store.import_all_from(faces, FontOrigin::Google)?.len();
     Ok(FontDownloadOk::Downloaded {
         family: downloaded.family,
         faces: count,
     })
 }
 
-/// Downloads running or failed in this process, keyed by lower-cased
-/// family — what `get_design_quality` reports as a family's status. The UI
-/// keeps its own per-row copy in `EditorUiState::font_downloads`.
-static TRACKED: std::sync::Mutex<std::collections::BTreeMap<String, FontDownloadStatus>> =
-    std::sync::Mutex::new(std::collections::BTreeMap::new());
+type StatusMap = BTreeMap<String, FontDownloadStatus>;
 
-fn tracked(
-) -> std::sync::MutexGuard<'static, std::collections::BTreeMap<String, FontDownloadStatus>> {
-    TRACKED
+/// Downloads running or failed in this process, keyed by
+/// [`font_download_key`] — what `get_design_quality` reports as a family's
+/// status. The UI keeps its own per-row copy in
+/// `EditorUiState::font_downloads`.
+static TRACKED: Mutex<StatusMap> = Mutex::new(BTreeMap::new());
+
+/// One lock per family being fetched, so a UI Download and an MCP
+/// `load_fonts` for the same family download it once: the second caller
+/// waits, then finds it cached.
+static FAMILY_LOCKS: Mutex<BTreeMap<String, Arc<Mutex<()>>>> = Mutex::new(BTreeMap::new());
+
+fn tracked() -> MutexGuard<'static, StatusMap> {
+    TRACKED.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+fn family_lock(key: &str) -> Arc<Mutex<()>> {
+    FAMILY_LOCKS
         .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .unwrap_or_else(PoisonError::into_inner)
+        .entry(key.to_string())
+        .or_default()
+        .clone()
 }
 
 /// The tracked state of `family`: downloading now, or the last failure.
 pub(crate) fn tracked_status(family: &str) -> Option<FontDownloadStatus> {
-    tracked().get(&family.trim().to_ascii_lowercase()).copied()
+    tracked().get(&font_download_key(family)).copied()
 }
 
 /// [`ensure_family`] against the user's store over HTTP, recording the
 /// family as downloading meanwhile and keeping a failure for the quality
 /// report.
 pub(crate) fn ensure_user_family(family: &str) -> Result<FontDownloadOk, FontDownloadError> {
-    let key = family.trim().to_ascii_lowercase();
+    let key = font_download_key(family);
     tracked().insert(key.clone(), FontDownloadStatus::Downloading);
-    let result = FontStore::user()
-        .map_err(|e| FontDownloadError::OpenStore(e.to_string()))
-        .and_then(|store| ensure_family(&HttpFontTransport, &store, family));
-    let mut tracked = tracked();
-    match &result {
-        Ok(_) => {
-            tracked.remove(&key);
-        }
-        Err(error) if error.is_not_on_google() => {
-            tracked.insert(key, FontDownloadStatus::NotOnGoogle);
-        }
-        Err(_) => {
-            tracked.insert(key, FontDownloadStatus::Failed);
-        }
-    }
+    let lock = family_lock(&key);
+    let result = {
+        let _single_flight = lock.lock().unwrap_or_else(PoisonError::into_inner);
+        FontStore::user()
+            .map_err(|e| FontDownloadError::OpenStore(e.to_string()))
+            .and_then(|store| ensure_family(&HttpFontTransport, &store, family))
+    };
+    match result.as_ref().err().map(FontDownloadError::status) {
+        None => tracked().remove(&key),
+        Some(status) => tracked().insert(key, status),
+    };
     result
 }
 
@@ -137,17 +153,10 @@ impl crate::DesktopApp {
             return started;
         }
         for FontDownloadDone { requested, result } in done {
-            let failure = match result {
-                Ok(_) => None,
-                Err(error) => {
-                    eprintln!("[fonts] could not download \"{requested}\": {error}");
-                    Some(if error.is_not_on_google() {
-                        FontDownloadStatus::NotOnGoogle
-                    } else {
-                        FontDownloadStatus::Failed
-                    })
-                }
-            };
+            let failure = result.err().map(|error| {
+                eprintln!("[fonts] could not download \"{requested}\": {error}");
+                error.status()
+            });
             self.host.finish_font_download(&requested, failure);
         }
         crate::font_import_host::refresh_downloaded_fonts(&mut self.host);
@@ -179,11 +188,14 @@ impl FontDownloads {
     pub(crate) fn spawn(&mut self, family: String) {
         let tx = self.tx.clone();
         self.in_flight += 1;
-        // Detached and safe to leave so: every request carries a 20 s
-        // timeout and a size cap, and a dropped receiver only turns the
-        // final send into a no-op.
+        // Detached and safe to leave so: every request carries
+        // `google_fonts::REQUEST_TIMEOUT` and a size cap, and a dropped
+        // receiver only turns the final send into a no-op. A panic is
+        // reported as a failure so `in_flight` still drains and the loop
+        // stops waking for it.
         std::thread::spawn(move || {
-            let result = ensure_user_family(&family);
+            let result = std::panic::catch_unwind(|| ensure_user_family(&family))
+                .unwrap_or(Err(FontDownloadError::Panicked));
             let _ = tx.send(FontDownloadDone {
                 requested: family,
                 result,
@@ -328,16 +340,16 @@ mod tests {
     }
 
     #[test]
-    fn cache_hit_fetches_nothing_and_survives_a_restart_offline() {
+    fn cache_hit_fetches_nothing_and_registers_the_stored_family_offline() {
         const FAMILY: &str = "Zz Cached Serif";
         let root = TempRoot::new();
         let store = FontStore::at(&root.0);
         ensure_family(&fake(FAMILY, false), &store, FAMILY).expect("first download");
 
-        // A "restart": the live registry is empty, the disk is not.
+        // Another process stored it, or this one restarted: the disk has
+        // the family, the live registry does not. A cache hit registers it.
         jian_skia::remove_imported_font(FAMILY);
-        FontStore::at(&root.0).rescan_and_register();
-        assert!(registered(FAMILY), "startup rescan restores the family");
+        assert!(!registered(FAMILY));
 
         let offline = fake(FAMILY, true);
         let ok = ensure_family(&offline, &store, "zz cached serif").expect("cache hit");
@@ -348,6 +360,7 @@ mod tests {
             }
         );
         assert_eq!(offline.requests.load(Ordering::Relaxed), 0, "no network");
+        assert!(registered(FAMILY), "a cache hit registers the stored faces");
         jian_skia::remove_imported_font(FAMILY);
     }
 

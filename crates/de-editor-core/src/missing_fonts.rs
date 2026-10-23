@@ -44,11 +44,15 @@ pub enum FontDownloadStatus {
     Failed,
 }
 
+/// The key download state is stored under: trimmed, lower-cased family.
+/// Shared by the UI's `font_downloads` and the desktop's tracked statuses.
+pub fn font_download_key(family: &str) -> String {
+    family.trim().to_ascii_lowercase()
+}
+
 /// The download state of `family`, if one was requested.
 pub fn font_download_status(ui: &EditorUiState, family: &str) -> Option<FontDownloadStatus> {
-    ui.font_downloads
-        .get(&family.trim().to_ascii_lowercase())
-        .copied()
+    ui.font_downloads.get(&font_download_key(family)).copied()
 }
 
 /// Whether a row offers Download: the host can download, the family is
@@ -74,7 +78,7 @@ pub fn request_font_download(ui: &mut EditorUiState, family: &str) -> bool {
         return false;
     }
     ui.font_downloads
-        .insert(family.to_ascii_lowercase(), FontDownloadStatus::Downloading);
+        .insert(font_download_key(family), FontDownloadStatus::Downloading);
     ui.font_download_requests.push(family.to_string());
     true
 }
@@ -86,7 +90,7 @@ pub fn finish_font_download(
     family: &str,
     failure: Option<FontDownloadStatus>,
 ) {
-    let key = family.trim().to_ascii_lowercase();
+    let key = font_download_key(family);
     match failure {
         Some(status) => {
             ui.font_downloads.insert(key, status);
