@@ -387,11 +387,16 @@ fn load_canonical_inner(
     src: &str,
     assets: Option<crate::pen_dev::AssetReader<'_>>,
 ) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
-    // A pen.dev file can be valid canonical JSON with different defaults
-    // (frames lay out horizontally), so a converted one never takes the
-    // as-is path.
-    let assets = assets.filter(|_| crate::pen_dev::sniff_pen_dev_version(src).is_some());
-    if assets.is_none() {
+    // `assets` reads files beside the document: a folder-layout `.de` names
+    // its images there, and a pen.dev source converts with them. A pen.dev
+    // file can be valid canonical JSON with different defaults (frames lay
+    // out horizontally), so a converted one never takes the as-is path.
+    let folder_assets = assets;
+    let pen_dev_assets = assets.filter(|_| crate::pen_dev::sniff_pen_dev_version(src).is_some());
+    // The fast path deserializes straight from the text, so a document that
+    // names files in its asset folder takes the DOM path that resolves them.
+    let names_files = folder_assets.is_some() && crate::asset_folder::mentions_asset_folder(src);
+    if pen_dev_assets.is_none() && !names_files {
         if let Some(loaded) = fast_load::try_load_preserve(src) {
             return Ok(CanonicalLoad {
                 loaded,
@@ -400,13 +405,15 @@ fn load_canonical_inner(
         }
     }
     if looks_deeply_nested(src) {
-        return load_canonical_deep(src, assets);
+        return load_canonical_deep(src, pen_dev_assets, folder_assets);
     }
     let mut best_effort_version = None;
     let mut normalized_legacy = false;
     let mut pen_dev = None;
+    let mut missing_images = Vec::new();
     let loaded = load_str_with_preprocess(src, |value| {
-        pen_dev = convert_pen_dev(value, assets);
+        pen_dev = convert_pen_dev(value, pen_dev_assets);
+        missing_images = resolve_folder_assets(value, folder_assets);
         normalized_legacy = normalize_legacy_value(value);
         best_effort_version = patch_unsupported_version(value);
     });
@@ -420,13 +427,30 @@ fn load_canonical_inner(
                 normalized_legacy,
                 patched_legacy_version: best_effort_version,
                 pen_dev,
+                missing_images,
             },
         }),
         Err(jian_ops_schema::OpsSchemaError::Json(err)) if is_recursion_limit_error(&err) => {
-            load_canonical_deep(src, assets)
+            load_canonical_deep(src, pen_dev_assets, folder_assets)
         }
         Err(other) => Err(other),
     }
+}
+
+/// Read the files a folder-layout `.de` names ([`crate::asset_folder`]) back
+/// into `data:` URLs. Returns the paths that could not be read.
+fn resolve_folder_assets(
+    value: &mut serde_json::Value,
+    assets: Option<crate::pen_dev::AssetReader<'_>>,
+) -> Vec<String> {
+    let Some(assets) = assets else {
+        return Vec::new();
+    };
+    let missing = crate::asset_folder::resolve(value, assets);
+    if !missing.is_empty() {
+        eprintln!("[open] missing image files: {}", missing.join(", "));
+    }
+    missing
 }
 
 /// Convert a pen.dev document in place. `assets` is `Some` only when the
@@ -661,13 +685,15 @@ fn collect_viewport_writes_deep(
 
 fn load_canonical_deep(
     src: &str,
-    assets: Option<crate::pen_dev::AssetReader<'_>>,
+    pen_dev_assets: Option<crate::pen_dev::AssetReader<'_>>,
+    folder_assets: Option<crate::pen_dev::AssetReader<'_>>,
 ) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
     // Always use one stack-protected DOM for the deep compatibility pipeline.
     // Legacy repair and version patching must not depend on the presence of an
     // image table, and consuming that same DOM avoids a second full parse.
     let mut raw: serde_json::Value = deserialize_deep(src)?;
-    let pen_dev = convert_pen_dev(&mut raw, assets);
+    let pen_dev = convert_pen_dev(&mut raw, pen_dev_assets);
+    let missing_images = resolve_folder_assets(&mut raw, folder_assets);
     let normalized_legacy = normalize_legacy_value(&mut raw);
     reject_unsupported_format_version(&raw)?;
     let patched_legacy_version = patch_unsupported_version(&mut raw);
@@ -690,6 +716,7 @@ fn load_canonical_deep(
             normalized_legacy,
             patched_legacy_version,
             pen_dev,
+            missing_images,
         },
     })
 }

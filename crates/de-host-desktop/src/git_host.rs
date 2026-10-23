@@ -449,7 +449,14 @@ impl DesktopApp {
                 // Roll the tracked document back to that commit, then
                 // reload so the editor reflects it (TS `restoreCommit`).
                 if let Some(path) = self.git_session.tracked_file().map(|p| p.to_path_buf()) {
-                    self.run_reloading_git_op("restore", move |repo| repo.restore(&path, &rev));
+                    self.run_reloading_git_op("restore", move |repo| {
+                        repo.restore(&path, &rev)?;
+                        // The document names its images in `<stem>.assets/`.
+                        match de_pen_loader::asset_folder::folder_path(&path) {
+                            Some(folder) => repo.restore_folder(&folder, &rev),
+                            None => Ok(()),
+                        }
+                    });
                 }
             }
             GitPanelAction::CopyHash(rev) => {

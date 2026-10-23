@@ -67,7 +67,15 @@ mod tests {
         let copy = dir.join("design.de");
         super::super::save_to_path(&loaded.state, &copy).expect("save to a new file");
         let saved = std::fs::read_to_string(&copy).unwrap();
-        assert!(saved.contains("data:image/png;base64,iVBORw=="));
+        // The image lands in the output's asset folder, named by path.
+        let files: Vec<_> = std::fs::read_dir(dir.join("design.assets"))
+            .expect("asset folder")
+            .map(|entry| entry.expect("entry").path())
+            .collect();
+        assert_eq!(files.len(), 1);
+        assert_eq!(std::fs::read(&files[0]).unwrap(), [0x89, b'P', b'N', b'G']);
+        let name = files[0].file_name().unwrap().to_str().unwrap();
+        assert!(saved.contains(&format!("\"design.assets/{name}\"")));
 
         let _ = std::fs::remove_dir_all(dir);
     }

@@ -1,6 +1,7 @@
 //! Allocation-bounded Save As for an unchanged, already-bound `.de` file.
 
-use super::{commit_staged_document, create_sibling_temp, DocIoError};
+use super::atomic_file::create_sibling_temp;
+use super::{commit_staged_document, DocIoError};
 use de_pen_loader::EditorMeta;
 use std::path::Path;
 

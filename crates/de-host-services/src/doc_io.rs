@@ -40,6 +40,7 @@ use std::path::PathBuf;
 
 use de_editor_core::EditorState;
 
+mod asset_layout;
 pub mod atomic_file;
 mod canonical_save;
 mod clean_copy;
@@ -52,13 +53,19 @@ mod load_report;
 mod load_report_tests;
 mod pen_dev;
 
-use atomic_file::{create_sibling_temp, replace_file};
+use asset_layout::{write_document_bytes, write_document_with_asset_folder};
+#[cfg(test)]
+use atomic_file::create_sibling_temp;
+use atomic_file::replace_file;
 pub use canonical_save::{write_canonical_document, CanonicalSaveSnapshot, StreamingSaveStats};
 pub use clean_copy::copy_clean_document_with_editor_meta_to_path;
 pub use error::DocIoError;
 #[cfg(test)]
 use load::looks_like_legacy_doc_payload;
-pub use load::{load_editor_state, load_editor_state_from_source, load_editor_state_with_report};
+pub use load::{
+    load_editor_state, load_editor_state_from_source, load_editor_state_from_source_beside,
+    load_editor_state_with_report,
+};
 pub use load_report::{DocumentLoadReport, LoadedEditorState};
 
 /// Serialize an `EditorState`'s canonical document to `path` without
@@ -74,6 +81,26 @@ pub fn save_to_path(state: &EditorState, path: &std::path::Path) -> Result<(), D
         &thumbnails,
         path,
     )
+}
+
+/// Save `state` as ONE self-contained file with every image embedded: the
+/// form a document takes before its name is final (Figma import staging) or
+/// when it is shared as a single file. Opening and re-saving such a file
+/// moves its images into the folder layout.
+pub fn save_single_file_to_path(
+    state: &EditorState,
+    path: &std::path::Path,
+) -> Result<(), DocIoError> {
+    pen_dev::refuse_overwrite(path)?;
+    let thumbnails = jian_ops_schema::image_thumbs::capture_snapshot();
+    let mut source = Vec::new();
+    canonical_save::write_serializable_document_with_thumbnails(
+        &mut source,
+        &state.doc,
+        de_pen_loader::EditorMeta::from_state(state),
+        &thumbnails,
+    )?;
+    write_document_bytes(&source, path)
 }
 
 /// Save a borrowed canonical document without first cloning it. Synchronous
@@ -131,25 +158,14 @@ fn save_serializable_document_with_thumbnails_to_path<
     path: &std::path::Path,
 ) -> Result<(), DocIoError> {
     pen_dev::refuse_overwrite(path)?;
-    // Write through a sibling temp file so a crash mid-write doesn't
-    // leave a half-written file on disk.
-    let (tmp, file) = create_sibling_temp(path)?;
-    let write_result = (|| {
-        let mut writer = std::io::BufWriter::with_capacity(1024 * 1024, file);
-        canonical_save::write_serializable_document_with_thumbnails(
-            &mut writer,
-            document,
-            meta,
-            thumbnails,
-        )?;
-        std::io::Write::flush(&mut writer).map_err(|e| DocIoError::Io(e.to_string()))?;
-        drop(writer);
-        commit_staged_document(&tmp, path)
-    })();
-    if write_result.is_err() {
-        let _ = std::fs::remove_file(&tmp);
-    }
-    write_result
+    let mut source = Vec::new();
+    canonical_save::write_serializable_document_with_thumbnails(
+        &mut source,
+        document,
+        meta,
+        thumbnails,
+    )?;
+    write_document_with_asset_folder(source, path)
 }
 
 /// Atomically install a completed sibling `.de` file at its fixed destination.
