@@ -25,6 +25,9 @@ pub enum StagedUpdate {
 }
 
 /// What the update replaces: the `.app` bundle on macOS, the exe on Windows.
+// Read only by the macOS / Windows `stage`; elsewhere `install_target`
+// never succeeds, so the field is never read.
+#[cfg_attr(not(any(target_os = "macos", target_os = "windows")), allow(dead_code))]
 #[derive(Debug, Clone)]
 pub struct InstallTarget(PathBuf);
 
