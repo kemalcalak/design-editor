@@ -80,16 +80,28 @@ pub(crate) fn is_inside_document_folder(relative: &str) -> bool {
             .all(|part| !part.is_empty() && part != "..")
 }
 
+/// The image types read from and written to files, as
+/// `(extension, mime type)`. One list for the pen.dev reader, the `.de`
+/// asset folder writer and its prune, so they cannot drift apart.
+pub(crate) const IMAGE_TYPES: &[(&str, &str)] = &[
+    ("png", "image/png"),
+    ("jpg", "image/jpeg"),
+    ("gif", "image/gif"),
+    ("webp", "image/webp"),
+    ("svg", "image/svg+xml"),
+];
+
 pub(crate) fn mime_type(relative: &str) -> Option<&'static str> {
     let extension = relative.rsplit_once('.')?.1.to_ascii_lowercase();
-    Some(match extension.as_str() {
-        "png" => "image/png",
-        "jpg" | "jpeg" => "image/jpeg",
-        "gif" => "image/gif",
-        "webp" => "image/webp",
-        "svg" => "image/svg+xml",
-        _ => return None,
-    })
+    let extension = if extension == "jpeg" {
+        "jpg"
+    } else {
+        &extension
+    };
+    IMAGE_TYPES
+        .iter()
+        .find(|(known, _)| *known == extension)
+        .map(|(_, mime)| *mime)
 }
 
 #[cfg(test)]

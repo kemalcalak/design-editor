@@ -4,34 +4,14 @@
 use super::atomic_file::create_sibling_temp;
 use super::{commit_staged_document, DocIoError};
 
-/// Write a serialized single-file document at `path` in the folder layout:
-/// its images go to `<stem>.assets/` first, then the JSON naming them
-/// replaces `path` atomically, then images the document no longer names are
-/// pruned. A crash before the rename leaves the previous document and every
-/// file it names intact.
+/// Write a serialized single-file document at `path` in the folder layout
+/// (`de_pen_loader::asset_folder::write_with` owns the crash-safe order),
+/// publishing the JSON through this crate's atomic writer.
 pub(super) fn write_document_with_asset_folder(
     source: Vec<u8>,
     path: &std::path::Path,
 ) -> Result<(), DocIoError> {
-    use de_pen_loader::asset_folder;
-    let folder = asset_folder::folder_path(path);
-    let (bytes, files) = match asset_folder::folder_name(path) {
-        Some(name) => asset_folder::externalize_source(source, &name)
-            .map_err(|e| DocIoError::Serialize(e.to_string()))?,
-        None => (source, Vec::new()),
-    };
-    if let Some(folder) = folder.as_deref() {
-        asset_folder::write_files(folder, &files).map_err(|e| DocIoError::Io(e.to_string()))?;
-    }
-    write_document_bytes(&bytes, path)?;
-    if let Some(folder) = folder.as_deref() {
-        // The document is already safe on disk; a failed cleanup only
-        // leaves unused images behind.
-        if let Err(error) = asset_folder::prune(folder, &files) {
-            eprintln!("[save] asset folder cleanup failed: {error}");
-        }
-    }
-    Ok(())
+    de_pen_loader::asset_folder::write_with(path, source, |bytes| write_document_bytes(bytes, path))
 }
 
 /// Write `bytes` through a sibling temp file so a crash mid-write doesn't

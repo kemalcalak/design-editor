@@ -49,8 +49,8 @@ pub(super) fn run_import_pen(pen_path: &str, out_path: &str) -> Result<String, C
     // editor save so the result diffs line by line.
     let value = serde_json::to_value(&document)
         .map_err(|e| CliError::Payload(format!("serialize {out_path:?}: {e}")))?;
-    de_pen_loader::asset_folder::write_document_value(Path::new(out_path), value)
-        .map_err(|e| CliError::Io(format!("write {out_path:?}: {e}")))?;
+    de_pen_loader::asset_folder::write_document_value(Path::new(out_path), &value)
+        .map_err(|e| crate::cli_error::write_error(out_path, e))?;
     Ok(json!({
         "ok": true,
         "filePath": out_path,

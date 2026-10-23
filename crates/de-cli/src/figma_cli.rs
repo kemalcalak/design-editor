@@ -37,8 +37,8 @@ pub(super) fn run_import_figma(fig_path: &str, out_path: &str) -> Result<String,
     // each one lands once in `<out>.assets/` and every fill names that file.
     let value = serde_json::to_value(&import.document)
         .map_err(|e| CliError::Payload(format!("serialize {out_path:?}: {e}")))?;
-    de_pen_loader::asset_folder::write_document_value(Path::new(out_path), value)
-        .map_err(|e| CliError::Io(format!("write {out_path:?}: {e}")))?;
+    de_pen_loader::asset_folder::write_document_value(Path::new(out_path), &value)
+        .map_err(|e| crate::cli_error::write_error(out_path, e))?;
     let page_count = import.document.pages.as_ref().map_or(1, Vec::len);
     let node_count = import
         .document

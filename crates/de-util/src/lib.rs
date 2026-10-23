@@ -9,6 +9,7 @@
 
 pub mod cli_output;
 pub mod document_file;
+pub mod fnv;
 pub mod hex_color;
 pub mod image_dimensions;
 pub mod json_escape;

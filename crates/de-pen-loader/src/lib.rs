@@ -21,6 +21,7 @@
 
 mod adapter;
 pub mod asset_folder;
+mod asset_folder_error;
 mod authored_geometry;
 mod editor_meta;
 mod editor_meta_error;

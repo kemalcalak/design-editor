@@ -32,16 +32,30 @@ fn temp_dir(tag: &str) -> PathBuf {
 }
 
 fn state_with_images(urls: &[String]) -> EditorState {
-    let children: Vec<String> = urls
+    state_with_images_moved(urls, None)
+}
+
+/// Image nodes in a row, plus a frame filled with the first image; `moved`
+/// sets one image node's `x`.
+fn state_with_images_moved(urls: &[String], moved: Option<(usize, usize)>) -> EditorState {
+    let mut children: Vec<String> = urls
         .iter()
         .enumerate()
         .map(|(index, url)| {
+            let x = match moved {
+                Some((node, x)) if node == index => x,
+                _ => index * 20,
+            };
             format!(
-                r#"{{"type":"image","id":"img{index}","x":{x},"y":0,"width":10,"height":10,"src":"{url}"}}"#,
-                x = index * 20
+                r#"{{"type":"image","id":"img{index}","x":{x},"y":0,"width":10,"height":10,"src":"{url}"}}"#
             )
         })
         .collect();
+    if let Some(url) = urls.first() {
+        children.push(format!(
+            r#"{{"type":"frame","id":"card","x":0,"y":40,"width":40,"height":40,"fill":[{{"type":"image","url":"{url}"}}]}}"#
+        ));
+    }
     let source = format!(
         r#"{{"version":"1.0.0","children":[{}]}}"#,
         children.join(",")
@@ -50,13 +64,20 @@ fn state_with_images(urls: &[String]) -> EditorState {
         .expect("fixture loads")
 }
 
+/// Every image `src` and image-fill `url`, in document order.
 fn image_srcs(state: &EditorState) -> Vec<String> {
     let value = serde_json::to_value(&state.doc).expect("document value");
     value["children"]
         .as_array()
         .expect("children")
         .iter()
-        .map(|child| child["src"].as_str().expect("src").to_owned())
+        .map(|child| match child["src"].as_str() {
+            Some(src) => src.to_owned(),
+            None => child["fill"][0]["url"]
+                .as_str()
+                .expect("fill url")
+                .to_owned(),
+        })
         .collect()
 }
 
@@ -73,6 +94,7 @@ fn images_round_trip_through_the_sibling_folder() {
     assert!(!saved.contains("base64"), "no payload left in the JSON");
     assert!(!saved.contains("\"images\""), "no image table");
     assert!(saved.contains("\"src\": \"logo.assets/"));
+    assert!(saved.contains("\"url\": \"logo.assets/"));
     let files: Vec<_> = std::fs::read_dir(dir.join("logo.assets"))
         .expect("asset folder")
         .map(|entry| entry.expect("entry").file_name())
@@ -80,7 +102,33 @@ fn images_round_trip_through_the_sibling_folder() {
     assert_eq!(files.len(), 2, "one file per distinct image: {files:?}");
 
     let reloaded = load_editor_state(&path, de_editor_core::Locale::EnUs).expect("reload");
-    assert_eq!(image_srcs(&reloaded), urls);
+    let mut expected = urls.clone();
+    expected.push(urls[0].clone());
+    assert_eq!(image_srcs(&reloaded), expected);
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn moving_one_node_changes_only_its_lines() {
+    let dir = temp_dir("move");
+    let path = dir.join("logo.de");
+    let urls = vec![png_url(8), png_url(9)];
+    save_to_path(&state_with_images(&urls), &path).expect("first save");
+    let before = std::fs::read_to_string(&path).expect("before");
+
+    save_to_path(&state_with_images_moved(&urls, Some((1, 500))), &path).expect("moved save");
+    let after = std::fs::read_to_string(&path).expect("after");
+
+    let before: Vec<&str> = before.lines().collect();
+    let after: Vec<&str> = after.lines().collect();
+    assert_eq!(before.len(), after.len());
+    let changed: Vec<_> = before
+        .iter()
+        .zip(&after)
+        .filter(|(old, new)| old != new)
+        .collect();
+    assert_eq!(changed.len(), 1, "only the moved node's x: {changed:?}");
+    assert!(changed[0].1.contains("500"));
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -127,18 +175,31 @@ fn single_file_save_embeds_images_and_still_opens() {
     assert!(!dir.join("share.assets").exists());
     assert!(std::fs::read_to_string(&path).unwrap().contains("base64"));
     let reloaded = load_editor_state(&path, de_editor_core::Locale::EnUs).expect("reload");
-    assert_eq!(image_srcs(&reloaded), urls);
+    assert_eq!(
+        image_srcs(&reloaded),
+        vec![urls[0].clone(), urls[0].clone()]
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
 
 #[test]
-fn a_missing_image_file_opens_as_a_missing_image() {
+fn a_missing_image_file_opens_as_missing_and_a_resave_keeps_the_rest() {
     let dir = temp_dir("missing");
     let path = dir.join("logo.de");
-    save_to_path(&state_with_images(&[png_url(7)]), &path).expect("save");
-    std::fs::remove_dir_all(dir.join("logo.assets")).expect("delete folder");
+    save_to_path(&state_with_images(&[png_url(7), png_url(10)]), &path).expect("save");
+    let folder = dir.join("logo.assets");
+    let mut files: Vec<_> = std::fs::read_dir(&folder)
+        .expect("folder")
+        .map(|entry| entry.expect("entry").path())
+        .collect();
+    files.sort();
+    std::fs::remove_file(&files[0]).expect("delete one image");
 
     let reloaded = load_editor_state(&path, de_editor_core::Locale::EnUs).expect("still opens");
-    assert!(image_srcs(&reloaded)[0].starts_with("logo.assets/"));
+    assert!(image_srcs(&reloaded)
+        .iter()
+        .any(|src| src.starts_with("logo.assets/")));
+    save_to_path(&reloaded, &path).expect("resave");
+    assert!(files[1].is_file(), "the readable image survives the resave");
     let _ = std::fs::remove_dir_all(dir);
 }

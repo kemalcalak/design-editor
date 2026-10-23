@@ -104,9 +104,11 @@ impl GitRepo {
         })
     }
 
-    /// Stage `paths` (relative to the repo root or absolute). Uses
-    /// `add_all`, which stages additions, modifications AND deletions
-    /// of the matched paths — mirroring `git add -- <path>`.
+    /// Stage `paths` (relative to the repo root or absolute): additions,
+    /// modifications AND deletions of the matched paths, mirroring
+    /// `git add -- <path>`. `add_all` only sees files that exist, so
+    /// `update_all` records the deletions (a file inside a staged folder
+    /// that a save pruned, or a staged path that is gone).
     pub fn stage(&self, paths: &[&Path]) -> Result<(), GitError> {
         if paths.is_empty() {
             return Ok(());
@@ -115,6 +117,7 @@ impl GitRepo {
         let mut index = repo.index()?;
         let specs: Vec<PathBuf> = paths.iter().map(|p| self.rel_to_workdir(p)).collect();
         index.add_all(specs.iter(), git2::IndexAddOption::DEFAULT, None)?;
+        index.update_all(specs.iter(), None)?;
         index.write()?;
         Ok(())
     }

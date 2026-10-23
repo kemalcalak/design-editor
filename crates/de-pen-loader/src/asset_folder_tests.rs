@@ -10,6 +10,10 @@ fn png_url() -> String {
     )
 }
 
+fn thumb() -> String {
+    base64::engine::general_purpose::STANDARD.encode([0xff, 0xd8, 9])
+}
+
 fn temp_dir(tag: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!(
         "de-asset-folder-{tag}-{}-{}",
@@ -23,6 +27,18 @@ fn temp_dir(tag: &str) -> PathBuf {
     dir
 }
 
+/// Reader over the files an [`externalize`] call produced.
+fn reader<'a>(folder: &'a str, out: &'a Externalized) -> impl Fn(&str) -> Option<Vec<u8>> + 'a {
+    let prefix = format!("{folder}/");
+    move |relative: &str| {
+        let name = relative.strip_prefix(&prefix)?;
+        out.files
+            .iter()
+            .find(|file| file.name == name)
+            .map(|file| file.bytes.clone())
+    }
+}
+
 #[test]
 fn folder_is_named_after_the_document_stem() {
     assert_eq!(
@@ -33,12 +49,16 @@ fn folder_is_named_after_the_document_stem() {
         folder_path(Path::new("/a/logo.de")),
         Some(PathBuf::from("/a/logo.assets"))
     );
+    // `:` (a `/` typed in Finder) would make every path unreadable on load.
+    assert_eq!(
+        folder_name(Path::new("Q1:plan.de")).as_deref(),
+        Some("Q1_plan.assets")
+    );
 }
 
 #[test]
 fn externalize_moves_table_and_inline_payloads_into_files() {
     let url = png_url();
-    let thumb = base64::engine::general_purpose::STANDARD.encode([0xff, 0xd8, 9]);
     let mut root = json!({
         "version": "1.0.0",
         "children": [
@@ -48,13 +68,19 @@ fn externalize_moves_table_and_inline_payloads_into_files() {
             {"type": "frame", "id": "f", "fill": [{"type": "image", "url": url}]}
         ],
         "images": {"t1": url},
-        "imageThumbs": {"42": thumb}
+        "imageThumbs": {"42": thumb()}
     });
 
-    let files = externalize(&mut root, "logo.assets");
+    let out = externalize(&mut root, "logo.assets");
 
-    assert_eq!(files.len(), 2, "one image, one thumbnail: {files:?}");
-    let image = files
+    assert_eq!(
+        out.files.len(),
+        2,
+        "one image, one thumbnail: {:?}",
+        out.files
+    );
+    let image = out
+        .files
         .iter()
         .find(|file| file.name.ends_with(".png"))
         .unwrap();
@@ -68,30 +94,32 @@ fn externalize_moves_table_and_inline_payloads_into_files() {
     let thumb_path = root["imageThumbs"]["42"].as_str().unwrap();
     assert!(thumb_path.starts_with("logo.assets/") && thumb_path.ends_with(".jpg"));
     assert!(!serde_json::to_string(&root).unwrap().contains("base64"));
+    assert_eq!(out.names.len(), 2);
 }
 
 #[test]
-fn resolve_restores_the_payloads_externalize_wrote() {
+fn resolve_shares_one_payload_per_file_and_round_trips() {
     let url = png_url();
-    let thumb = base64::engine::general_purpose::STANDARD.encode([0xff, 0xd8, 9]);
     let original = json!({
-        "children": [{"type": "image", "id": "a", "src": url}],
-        "imageThumbs": {"42": thumb}
+        "children": [
+            {"type": "image", "id": "a", "src": url},
+            {"type": "image", "id": "b", "src": url}
+        ],
+        "imageThumbs": {"42": thumb()}
     });
     let mut root = original.clone();
-    let files = externalize(&mut root, "logo.assets");
-    let reader = |relative: &str| {
-        let name = relative.strip_prefix("logo.assets/")?;
-        files
-            .iter()
-            .find(|file| file.name == name)
-            .map(|file| file.bytes.clone())
-    };
+    let out = externalize(&mut root, "logo.assets");
 
-    let missing = resolve(&mut root, &reader);
+    let missing = resolve(&mut root, &reader("logo.assets", &out));
 
     assert!(missing.is_empty());
-    assert_eq!(root, original);
+    assert_eq!(root["children"][0]["src"], root["children"][1]["src"]);
+    let reference = root["children"][0]["src"].as_str().unwrap();
+    let id = reference
+        .strip_prefix("op-image:")
+        .expect("a table reference");
+    assert_eq!(root["images"][id], url);
+    assert_eq!(root["imageThumbs"], original["imageThumbs"]);
 }
 
 #[test]
@@ -109,13 +137,36 @@ fn resolve_keeps_unreadable_paths_and_drops_unreadable_thumbnails() {
 }
 
 #[test]
-fn resolve_never_reads_outside_the_document_folder() {
+fn resolve_reads_only_asset_folder_paths_below_the_document() {
     let mut root = json!({
-        "children": [{"type": "image", "id": "a", "src": "../secret.png"}]
+        "children": [
+            {"type": "image", "id": "a", "src": "../secret.png"},
+            {"type": "image", "id": "b", "src": "private.jpg"},
+            {"type": "image", "id": "c", "src": "Downloads/x.png"}
+        ]
     });
     let reader = |_: &str| -> Option<Vec<u8>> { panic!("must not be asked") };
+    let before = root.clone();
     resolve(&mut root, &reader);
-    assert_eq!(root["children"][0]["src"], "../secret.png");
+    assert_eq!(root, before);
+}
+
+#[test]
+fn an_unread_path_stays_named_so_prune_keeps_its_file() {
+    let mut root = json!({
+        "children": [
+            {"type": "image", "id": "a", "src": "logo.assets/00000000000000aa.png"},
+            {"type": "image", "id": "b", "src": png_url()}
+        ],
+        "imageThumbs": {"42": "logo.assets/00000000000000bb.jpg"}
+    });
+
+    let out = externalize(&mut root, "logo.assets");
+
+    assert_eq!(out.files.len(), 1, "only the payload becomes a new file");
+    assert!(out.names.contains("00000000000000aa.png"));
+    assert!(out.names.contains("00000000000000bb.jpg"));
+    assert_eq!(out.names.len(), 3);
 }
 
 #[test]
@@ -127,6 +178,20 @@ fn file_names_are_stable_content_hashes() {
         externalize(&mut second, "x.assets")
     );
     assert_eq!(first, second);
+}
+
+#[test]
+fn every_image_type_written_is_read_back_and_pruned() {
+    for (extension, mime) in IMAGE_TYPES {
+        let name = format!("00000000000000aa.{extension}");
+        assert_eq!(mime_type(&name), Some(*mime));
+        assert!(is_asset_file_name(&name), "{name}");
+        let url = format!("data:{mime};base64,AAAA");
+        assert_eq!(
+            decode_image_data_url(&url).map(|(ext, _)| ext),
+            Some(*extension)
+        );
+    }
 }
 
 #[test]
@@ -144,14 +209,32 @@ fn write_then_prune_keeps_only_named_files() {
     write_files(&folder, &[keep.clone(), stale.clone()]).expect("write");
     std::fs::write(folder.join("notes.txt"), b"mine").unwrap();
 
-    prune(&folder, std::slice::from_ref(&keep)).expect("prune");
+    prune(&folder, &BTreeSet::from([keep.name.clone()])).expect("prune");
 
     assert!(folder.join(&keep.name).is_file());
     assert!(!folder.join(&stale.name).exists());
     assert!(folder.join("notes.txt").is_file(), "foreign files stay");
 
     std::fs::remove_file(folder.join("notes.txt")).unwrap();
-    prune(&folder, &[]).expect("prune all");
+    prune(&folder, &BTreeSet::new()).expect("prune all");
     assert!(!folder.exists(), "an emptied folder is removed");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn write_document_publishes_images_and_json_together() {
+    let dir = temp_dir("write-document");
+    let path = dir.join("logo.de");
+    let source = serde_json::to_vec(&json!({
+        "version": "1.0.0",
+        "children": [{"type": "image", "id": "a", "src": png_url()}]
+    }))
+    .unwrap();
+
+    write_document(&path, source).expect("write");
+
+    let saved: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    let src = saved["children"][0]["src"].as_str().unwrap();
+    assert_eq!(std::fs::read(dir.join(src)).unwrap(), PNG);
     let _ = std::fs::remove_dir_all(dir);
 }

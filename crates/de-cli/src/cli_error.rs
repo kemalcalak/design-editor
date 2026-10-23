@@ -69,3 +69,16 @@ impl CliError {
         CliError::Usage(message.into())
     }
 }
+
+/// A folder-layout document write (`de_pen_loader::asset_folder`): a JSON
+/// failure is a payload problem, anything else the filesystem's.
+pub(crate) fn write_error(
+    out_path: &str,
+    error: de_pen_loader::asset_folder::AssetFolderError,
+) -> CliError {
+    use de_pen_loader::asset_folder::AssetFolderError as E;
+    match error {
+        E::Json(error) => CliError::Payload(format!("serialize {out_path:?}: {error}")),
+        E::Io(error) => CliError::Io(format!("write {out_path:?}: {error}")),
+    }
+}

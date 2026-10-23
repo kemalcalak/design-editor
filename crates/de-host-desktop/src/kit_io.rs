@@ -80,8 +80,10 @@ impl DesktopApp {
                 return;
             }
         };
-        let doc = match de_pen_loader::load_canonical(&src) {
-            Ok(loaded) => loaded.value,
+        // A kit saved as a `.de` names its images in its own `.assets/`.
+        let assets = de_pen_loader::pen_dev::folder_assets(&path);
+        let doc = match de_pen_loader::payload::load_canonical_with_assets(&src, &assets) {
+            Ok(loaded) => loaded.loaded.value,
             Err(err) => {
                 eprintln!("design-editor: kit import parse failed: {err}");
                 return;
