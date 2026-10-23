@@ -995,7 +995,7 @@ export async function opCkInit(canvasId) {
   };
   const pathIsFinite = (bounds) => bounds && bounds.length >= 4 && bounds.every((v) => Number.isFinite(v));
   const fitPathToRect = (path, x, y, w, h) => {
-    if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w < 0 || h < 0) {
       path.transform(CK.Matrix.translated(x, y));
       return path;
     }
@@ -1016,6 +1016,14 @@ export async function opCkInit(canvasId) {
     }
     const nativeW = bounds[2] - bounds[0];
     const nativeH = bounds[3] - bounds[1];
+    // A flat path (straight horizontal / vertical line) has no extent on one
+    // axis, so a zero box side there is expected and the other axis still
+    // fits; only a zero side the path actually spans falls back.
+    const degenerateSide = (side, native) => side === 0 && Math.abs(native) > 0.01;
+    if (degenerateSide(w, nativeW) || degenerateSide(h, nativeH)) {
+      path.transform(CK.Matrix.translated(x, y));
+      return path;
+    }
     const sx = Math.abs(nativeW) > 0.01 ? w / nativeW : 1;
     const sy = Math.abs(nativeH) > 0.01 ? h / nativeH : 1;
     const tx = x - bounds[0] * sx;

@@ -417,6 +417,7 @@ fn canvaskit_svg_path_nodes_fit_to_destination_rect() {
         "const fitPathToRect = (path, x, y, w, h)",
         "path.computeTightBounds()",
         "path.getBounds()",
+        "const degenerateSide = (side, native) => side === 0 && Math.abs(native) > 0.01;",
         "const sx = Math.abs(nativeW) > 0.01 ? w / nativeW : 1;",
         "const sy = Math.abs(nativeH) > 0.01 ? h / nativeH : 1;",
         "fillSvgPathInRect(d, x, y, w, h, evenOdd, r, g, b, a)",
