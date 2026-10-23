@@ -125,7 +125,12 @@ impl AgentSettingsPanel<'_> {
                 return self.agents_tab().hit(agents_body(content), scrolled);
             }
             AgentSettingsTab::Mcp => {
-                match agent_settings_mcp::hit_test(content, &self.settings, scrolled) {
+                match agent_settings_mcp::hit_test(
+                    content,
+                    &self.settings,
+                    self.ui.effective_locale(),
+                    scrolled,
+                ) {
                     McpHit::ToggleServer => return AgentSettingsHit::ToggleMcpServer,
                     McpHit::ToggleCli(cli) => return AgentSettingsHit::ToggleMcpCli(cli),
                     McpHit::CopyClientConfig => return AgentSettingsHit::CopyMcpClientConfig,

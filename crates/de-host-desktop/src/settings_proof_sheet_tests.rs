@@ -139,6 +139,16 @@ fn settings_proof_sheets() {
         settings.builtin_preset_menu_open =
             Some(de_editor_core::agent_settings::BuiltinAgentPresetMenuTarget::Draft);
         shoot(&mut h, &format!("agents-custom-{suffix}"));
+
+        // MCP server card (#86): the endpoint well and its Copy chip, in
+        // English and in Turkish, whose "Kopyala" overflowed a fixed chip.
+        let mut h = host(theme);
+        let ui = &mut h.editor_state_mut().editor_ui;
+        ui.agent_settings.tab = de_editor_core::AgentSettingsTab::Mcp;
+        ui.agent_settings.mcp_server.running = true;
+        shoot(&mut h, &format!("mcp-en-{suffix}"));
+        h.editor_state_mut().editor_ui.locale = de_i18n::Locale::Tr;
+        shoot(&mut h, &format!("mcp-tr-{suffix}"));
     }
 }
 
