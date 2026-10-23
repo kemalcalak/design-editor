@@ -17,9 +17,7 @@ impl WidgetHostNative {
         // edit first so the dirty draft lands before this op runs.
         self.commit_variable_row_focus_if_any();
         // The skia `Path::op` math runs against the layout-resolved
-        // `LayoutScene` + the editor selection; the result polyline
-        // is committed back through an `EditorState` mutator so the
-        // host never edits the canonical tree directly.
+        // `LayoutScene` + the editor selection.
         self.refresh_layout_scene();
         let selected: Vec<String> = self
             .editor_state
@@ -33,26 +31,26 @@ impl WidgetHostNative {
             return false;
         };
         // Scene ids are the canonical `.de` ids — wrap straight into
-        // `de_editor_core::NodeId`.
+        // `de_editor_core::NodeId`. The commit runs through
+        // `EditorCommand::CommitBooleanResult` (the MCP `boolean_op`
+        // path), minting the id from this host's counter.
         let source_ids: Vec<de_editor_core::NodeId> = result
             .source_ids
             .iter()
             .map(de_editor_core::NodeId::new)
             .collect();
-        let pre = self.editor_state.snapshot_for_history();
-        let new_id = self.editor_state.replace_paths_with_polyline(
-            &source_ids,
-            &result.contours,
+        let committed = self.editor_state.commit_canvas_boolean(
+            source_ids,
+            result.contours,
             &mut self.next_node_id,
         );
-        match new_id {
-            Some(id) => {
-                self.editor_state.history_push_past(pre);
-                self.editor_state.set_single_selection(id);
-                self.mark_dirty();
-                true
-            }
-            None => false,
+        if committed {
+            self.mark_dirty();
         }
+        committed
     }
 }
+
+#[cfg(all(test, feature = "gl-host"))]
+#[path = "boolean_op_tests.rs"]
+mod tests;
