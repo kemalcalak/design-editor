@@ -1,0 +1,36 @@
+# apt packages the Linux leg of rust-check.yml installs, one per line.
+# Whole-line `#` comments only: text after a package name is passed to apt-get.
+# The apt archive cache key hashes this file: editing it starts a fresh cache.
+
+# winit's x11+wayland link-time deps; the wayland-csd-adwaita feature pulls
+# in xkbcommon + wayland-client.
+libxkbcommon-dev
+libxkbcommon-x11-dev
+libwayland-dev
+libxcb-render0-dev
+libxcb-shape0-dev
+libxcb-xfixes0-dev
+
+# GL / EGL for the native host.
+libegl1-mesa-dev
+libgles2-mesa-dev
+libgbm-dev
+mesa-utils
+
+# Skia's system FontMgr (fontconfig + freetype). fonts-noto-cjk (61 MB) gives
+# it CJK + Hangul coverage; without it 7 tests fail (probe PR #71): Hangul
+# fallback and a top-bar hit test in de-host-native, and the CJK-fixture
+# board text wrap / text collision tests in de-orchestrator.
+libfreetype-dev
+libfontconfig1-dev
+fonts-noto-cjk
+
+pkg-config
+libssl-dev
+
+# `check-rustls-client-policy.sh` matches with ripgrep's multiline
+# + PCRE2 lookahead, which grep cannot replicate portably. Without
+# it the script's `rg` calls fail as "command not found" and the
+# policy reports a violation that is not there — red on every
+# Linux/macOS run since 215100234 introduced the dependency.
+ripgrep
