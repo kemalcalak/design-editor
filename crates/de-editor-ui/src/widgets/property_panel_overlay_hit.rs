@@ -19,7 +19,7 @@ impl PropertyPanel {
                 >= panel_rect.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT
     }
 
-    fn popup_action_rects(
+    pub(crate) fn popup_action_rects(
         &self,
         panel_rect: Rect,
     ) -> Vec<(crate::widgets::property_panel::PropertyPanelAction, Rect)> {
@@ -111,6 +111,28 @@ impl PropertyPanel {
                 )
             })
             .is_some_and(|popup| popup.contains(point))
+    }
+
+    /// Whether `point` falls inside an open fill row's `⋯` menu.
+    pub fn fill_menu_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
+        use crate::widgets::property_panel::PropertyPanelAction as A;
+
+        let Some(index) = self.fill_menu_open else {
+            return false;
+        };
+        if !self.point_in_design_popup_clip(panel_rect, point) {
+            return false;
+        }
+        self.popup_action_rects(panel_rect)
+            .into_iter()
+            .find_map(|(action, button)| {
+                matches!(action, A::ToggleFillMenu(i) if i == index).then_some(button)
+            })
+            .map(|button| {
+                crate::widgets::property_panel_fill_menu::fill_menu_rects(button, panel_rect.size.x)
+                    .frame
+            })
+            .is_some_and(|menu| menu.contains(point))
     }
 
     /// Whether `point` falls inside the open stroke-mode gear popup,

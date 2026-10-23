@@ -64,6 +64,7 @@ pub(super) fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         stroke: caps.stroke,
         stroke_edit_mode: panel.stroke_edit_mode,
         stroke_mode_popover_open: panel.stroke_mode_popover_open,
+        fill_menu: panel.fill_menu_open,
         color_variable_count: panel.color_variable_count,
         fill_variable_bound: panel.fill_variable_ref.is_some(),
         stroke_variable_bound: panel.stroke_variable_ref.is_some(),

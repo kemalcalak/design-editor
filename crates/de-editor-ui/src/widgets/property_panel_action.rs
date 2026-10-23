@@ -212,6 +212,9 @@ pub enum PropertyPanelAction {
     /// component id. The host writes this into the existing `ref`
     /// field; no extra persisted instance schema is involved.
     SetInstanceComponent(String),
+    /// User clicked fill `index`'s `⋯` button — toggles its menu
+    /// (`editor_ui.fill_menu_open`).
+    ToggleFillMenu(usize),
     /// User clicked fill `index`'s fill-type dropdown — host toggles
     /// the picker open for that fill (`fill_type_picker` + the index
     /// it targets).

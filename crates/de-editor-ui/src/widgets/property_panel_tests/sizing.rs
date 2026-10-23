@@ -289,3 +289,43 @@ fn open_alignment_popover_paints_its_distribution_rows() {
     state.editor_ui.layout_align_popover_open = true;
     assert!(paints_rows(&state), "open popover paints its rows");
 }
+
+#[test]
+fn open_alignment_popover_rows_win_over_the_sections_beneath() {
+    let mut state = state_from(
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"frame","id":"f","name":"Frame",
+               "x":40,"y":40,"width":360,"height":240,
+               "layout":"vertical","gap":8,"children":[]}
+        ]}"##,
+    );
+    state.set_single_selection(NodeId::new("f"));
+    state.editor_ui.layout_align_popover_open = true;
+    let panel = PropertyPanel::for_selection(&state).expect("frame panel");
+    let rect = Rect {
+        origin: Point2D::ZERO,
+        size: Point2D::new(280.0, 1200.0),
+    };
+    let rows: Vec<(PropertyPanelAction, Rect)> = sections::action_button_rects_with_fill_picker(
+        rect,
+        visible_for(&panel),
+        &panel.snapshot.effects,
+        &panel.snapshot.fills,
+        &panel.snapshot.interactions,
+        false,
+        0,
+        false,
+        false,
+        false,
+        false,
+        true,
+    )
+    .into_iter()
+    .filter(|(a, _)| crate::widgets::property_panel_flex::is_layout_align_popover_row(a))
+    .collect();
+    assert_eq!(rows.len(), 12);
+    for (action, r) in rows {
+        let centre = Point2D::new(r.origin.x + r.size.x / 2.0, r.origin.y + r.size.y / 2.0);
+        assert_eq!(panel.hit_test_action(rect, centre), Some(action.clone()));
+    }
+}

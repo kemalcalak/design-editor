@@ -4,7 +4,7 @@
 //! and input-rect walker stay under the repository file-size cap.
 
 use crate::widgets::property_panel::{EffectSummary, FillSummary, PropertyPanelAction};
-use crate::widgets::property_panel_fill::{fill_head_rects, fill_row_body_height};
+use crate::widgets::property_panel_fill::{fill_row_body_height, fill_row_rects};
 use crate::widgets::property_panel_inputs::{
     COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, INPUT_HEIGHT, PAD_X, PANEL_HEADER_HEIGHT,
     SECTION_GAP, SECTION_HEADER_HEIGHT,
@@ -226,33 +226,16 @@ pub fn editable_input_rects(
         for (fi, fill) in fills.iter().enumerate() {
             let is_primary = fi == 0;
             let fill_type = fill.fill_type;
-            // Head row: per-fill opacity input (the `%` box).
-            rects.push((
-                PropertyFocus::FillOpacity(fi),
-                fill_head_rects(x0, y, w).opacity,
-            ));
+            // The row: opacity, plus the hex for a solid fill. A
+            // variable-bound primary fill paints a `$name` chip, not an
+            // editable hex.
+            let row = fill_row_rects(x0, y, w, visible.fill_row_shows_variable(fi));
+            rects.push((PropertyFocus::FillOpacity(fi), row.opacity));
+            if fill_type == FillType::Solid && !(is_primary && visible.fill_variable_bound) {
+                rects.push((PropertyFocus::FillHex(fi), row.value));
+            }
             y += INPUT_HEIGHT + 6.0;
             match fill_type {
-                FillType::Solid => {
-                    let show_var = is_primary
-                        && (visible.color_variable_count > 0 || visible.fill_variable_bound);
-                    let variable_w = if show_var {
-                        COLOR_VARIABLE_BUTTON_W + COLOR_VARIABLE_GAP
-                    } else {
-                        0.0
-                    };
-                    // A variable-bound primary fill paints a `$name` chip,
-                    // not an editable hex input.
-                    if !(is_primary && visible.fill_variable_bound) {
-                        rects.push((
-                            PropertyFocus::FillHex(fi),
-                            Rect {
-                                origin: Point2D::new(x0 + PAD_X, y),
-                                size: Point2D::new(usable_w - variable_w, INPUT_HEIGHT),
-                            },
-                        ));
-                    }
-                }
                 // Gradient / image bodies only paint editable inputs for
                 // the primary fill (they key off `fills[0]`).
                 FillType::LinearGradient if is_primary => {
@@ -282,8 +265,10 @@ pub fn editable_input_rects(
                         visible.gradient_stop_count,
                     );
                 }
-                // Mesh has no editable inputs (per-vertex editing deferred).
-                FillType::LinearGradient
+                // Solid edits on the row itself; Mesh has no editable
+                // inputs (per-vertex editing deferred).
+                FillType::Solid
+                | FillType::LinearGradient
                 | FillType::RadialGradient
                 | FillType::MeshGradient
                 | FillType::Shader
@@ -374,91 +359,40 @@ pub(crate) fn push_fill_action_rects(
     y += SECTION_HEADER_HEIGHT;
     let primary_stop_count = visible.gradient_stop_count;
     // One row per fill — mirror `paint_one_fill`'s y-walk.
+    let mut menu = None;
     for (fi, fill) in fills.iter().enumerate() {
         let is_primary = fi == 0;
         let fill_type = fill.fill_type;
-        // Head row: type dropdown + opacity + adjacent reorder / remove controls.
-        let head = fill_head_rects(x0, y, w);
-        let dropdown_rect = head.dropdown;
-        out.push((PropertyPanelAction::ToggleFillTypePicker(fi), dropdown_rect));
-        if fi > 0 {
-            out.push((
-                PropertyPanelAction::MoveFill {
-                    from: fi,
-                    to: fi - 1,
-                },
-                head.move_up,
-            ));
-        }
-        if fi + 1 < fills.len() {
-            out.push((
-                PropertyPanelAction::MoveFill {
-                    from: fi,
-                    to: fi + 1,
-                },
-                head.move_down,
-            ));
-        }
-        out.push((PropertyPanelAction::RemoveFill(fi), head.remove));
-        y += INPUT_HEIGHT + 6.0; // head row
-                                 // Body action rects, keyed off this fill's type.
-        match fill_type {
-            FillType::Solid => {
-                // Solid body: leading swatch opens the colour picker
-                // (the hex-input focus hit-test runs after this, so a
-                // swatch click opens the picker instead of focusing).
-                if is_primary {
-                    let show_var = visible.color_variable_count > 0 || visible.fill_variable_bound;
-                    let variable_w = if show_var {
-                        COLOR_VARIABLE_BUTTON_W + COLOR_VARIABLE_GAP
-                    } else {
-                        0.0
-                    };
-                    let hex_w = usable_w - variable_w;
-                    if !visible.fill_variable_bound {
-                        out.push((
-                            PropertyPanelAction::OpenColorPicker(de_editor_core::ColorTarget::Fill),
-                            Rect {
-                                origin: Point2D::new(x0 + PAD_X, y),
-                                size: Point2D::new(
-                                    crate::widgets::property_panel_inputs::color_swatch_action_width(
-                                    ),
-                                    INPUT_HEIGHT,
-                                ),
-                            },
-                        ));
-                    }
-                    if show_var {
-                        let var_rect = Rect {
-                            origin: Point2D::new(x0 + PAD_X + hex_w + COLOR_VARIABLE_GAP, y),
-                            size: Point2D::new(COLOR_VARIABLE_BUTTON_W, INPUT_HEIGHT),
-                        };
-                        out.push((
-                            PropertyPanelAction::ToggleColorVariablePicker(
-                                de_editor_core::ColorTarget::Fill,
-                            ),
-                            var_rect,
-                        ));
-                    }
-                } else {
-                    // Non-primary solid: swatch opens a picker bound to
-                    // THIS fill (no colour-variable button — the variable
-                    // subsystem keys off the primary fill).
-                    out.push((
-                        PropertyPanelAction::OpenFillColorPicker(fi),
-                        Rect {
-                            origin: Point2D::new(x0 + PAD_X, y),
-                            size: Point2D::new(
-                                crate::widgets::property_panel_inputs::color_swatch_action_width(),
-                                INPUT_HEIGHT,
-                            ),
-                        },
-                    ));
-                }
+        let row = fill_row_rects(x0, y, w, visible.fill_row_shows_variable(fi));
+        // The swatch opens the colour picker for a solid fill (the hex
+        // focus hit-test runs after this, so a swatch click opens the
+        // picker instead of focusing). The primary fill's picker drives
+        // the colour-variable subsystem; other fills bind their own.
+        if fill_type == FillType::Solid {
+            if !is_primary {
+                out.push((PropertyPanelAction::OpenFillColorPicker(fi), row.swatch_hit));
+            } else if !visible.fill_variable_bound {
+                out.push((
+                    PropertyPanelAction::OpenColorPicker(de_editor_core::ColorTarget::Fill),
+                    row.swatch_hit,
+                ));
             }
+        }
+        if let Some(rect) = row.variable {
+            out.push((
+                PropertyPanelAction::ToggleColorVariablePicker(de_editor_core::ColorTarget::Fill),
+                rect,
+            ));
+        }
+        out.push((PropertyPanelAction::ToggleFillMenu(fi), row.menu));
+        if visible.fill_menu == Some(fi) {
+            menu = Some((fi, row.menu));
+        }
+        y += INPUT_HEIGHT + 6.0; // the row
+        match fill_type {
             // Gradient / image bodies key off the primary fill, so only
-            // the primary fill emits their action rects (the non-primary
-            // head row's dropdown is enough to retype it).
+            // the primary fill emits their action rects (other fills are
+            // retyped from their `⋯` menu).
             FillType::Image if is_primary => {
                 out.push((
                     PropertyPanelAction::ToggleImageFillPopover,
@@ -503,25 +437,27 @@ pub(crate) fn push_fill_action_rects(
                     stop_y += INPUT_HEIGHT + 4.0;
                 }
             }
-            // Mesh emits no body action rects (per-vertex editing deferred).
-            FillType::LinearGradient
+            // Solid acts on the row itself; Mesh emits no body action
+            // rects (per-vertex editing deferred).
+            FillType::Solid
+            | FillType::LinearGradient
             | FillType::RadialGradient
             | FillType::MeshGradient
             | FillType::Shader
             | FillType::Image => {}
         }
-        let blend_y = y + crate::widgets::property_panel_fill::fill_content_body_height(
-            fill_type,
-            is_primary,
-            primary_stop_count,
-        );
-        out.push((
-            PropertyPanelAction::ToggleCompositingPicker(
-                crate::widgets::property_panel_action::CompositingTarget::FillBlend(fi),
-            ),
-            crate::widgets::property_panel_compositing::fill_trigger_rect(x0, blend_y, w),
-        ));
         y += fill_row_body_height(fill_type, is_primary, primary_stop_count);
+    }
+    // The open `⋯` menu overlays the rows below it, so its targets go
+    // after every row; `hit_test_action` also checks them first.
+    if let Some((index, button)) = menu {
+        crate::widgets::property_panel_fill_menu::push_fill_menu_action_rects(
+            out,
+            index,
+            fills.len(),
+            button,
+            w,
+        );
     }
     y + 12.0 // trailing gap before the divider
 }

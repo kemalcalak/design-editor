@@ -160,6 +160,7 @@ pub(super) fn paint_settings_input_view_masked(
     let mut backend = BaselineAdjustingBackend {
         inner: cx.backend,
         baseline_delta_y: text_baseline_y - text_top_y,
+        font_family: None,
     };
     view.paint(&mut backend, rect, &tokens_from_theme(theme));
 }
@@ -191,6 +192,7 @@ pub(super) fn paint_settings_text_area(
     let mut backend = BaselineAdjustingBackend {
         inner: cx.backend,
         baseline_delta_y: font_size,
+        font_family: None,
     };
     area.paint(&mut backend, rect, &tokens_from_theme(theme));
 }

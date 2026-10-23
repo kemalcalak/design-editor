@@ -38,6 +38,7 @@ impl EditorUiState {
             self.close_font_picker();
             self.font_weight_picker_open = false;
             self.layout_align_popover_open = false;
+            self.fill_menu_open = None;
             self.stroke_mode_popover_open = false;
             self.export_scale_picker_open = false;
             self.export_format_picker_open = false;

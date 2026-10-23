@@ -415,6 +415,31 @@ impl Widget for PropertyPanel {
                 );
             }
         }
+        // A fill row's `⋯` menu — under the fill-type / blend pickers
+        // it opens, over everything else.
+        if caps.fill {
+            if let Some(index) = self.fill_menu_open {
+                let button = self
+                    .popup_action_rects(rect)
+                    .into_iter()
+                    .find_map(|(a, r)| {
+                        matches!(a, PropertyPanelAction::ToggleFillMenu(i) if i == index)
+                            .then_some(r)
+                    });
+                if let (Some(button), Some(fill)) = (button, self.snapshot.fills.get(index)) {
+                    crate::widgets::property_panel_fill_menu::paint_fill_menu(
+                        cx,
+                        &self.theme,
+                        self.locale,
+                        fill,
+                        index,
+                        self.snapshot.fills.len(),
+                        button,
+                        rect.size.x,
+                    );
+                }
+            }
+        }
         // Fill-type picker overlay sits on top of everything below
         // the Fill section so it can extend past the section divider.
         if caps.fill && self.fill_type_picker.open {

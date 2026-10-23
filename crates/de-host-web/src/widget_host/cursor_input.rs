@@ -67,6 +67,7 @@ impl WidgetHost {
             || self.editor_state.editor_ui.interaction_menu_open
             || self.editor_state.editor_ui.layout_align_popover_open
             || self.editor_state.editor_ui.stroke_mode_popover_open
+            || self.editor_state.editor_ui.fill_menu_open.is_some()
             || self.editor_state.editor_ui.font_weight_picker_open
             || self.editor_state.editor_ui.font_picker.open
             || self
@@ -209,6 +210,7 @@ impl WidgetHost {
             }
             if self.editor_state.editor_ui.layout_align_popover_open
                 || self.editor_state.editor_ui.stroke_mode_popover_open
+                || self.editor_state.editor_ui.fill_menu_open.is_some()
             {
                 use de_editor_ui::widgets::PropertyPanelAction as A;
                 let hovered = panel.hit_test_action(property_rect, point);
@@ -240,7 +242,8 @@ impl WidgetHost {
                 let over_popup = (self.editor_state.editor_ui.layout_align_popover_open
                     && panel.layout_align_popover_contains(property_rect, point))
                     || (self.editor_state.editor_ui.stroke_mode_popover_open
-                        && panel.stroke_mode_popover_contains(property_rect, point));
+                        && panel.stroke_mode_popover_contains(property_rect, point))
+                    || panel.fill_menu_contains(property_rect, point);
                 if over_popup {
                     self.clear_chat_and_lower_hover();
                     return true;

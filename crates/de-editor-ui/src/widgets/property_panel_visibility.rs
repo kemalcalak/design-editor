@@ -264,6 +264,8 @@ pub struct VisibleSections {
     pub stroke_edit_mode: de_editor_core::PaddingEditMode,
     /// Whether the stroke-mode gear popover is open.
     pub stroke_mode_popover_open: bool,
+    /// Fill row whose `⋯` menu is open; its rows join the action walker.
+    pub fill_menu: Option<usize>,
     pub color_variable_count: usize,
     pub fill_variable_bound: bool,
     pub stroke_variable_bound: bool,
@@ -289,6 +291,13 @@ impl VisibleSections {
 
     /// Space above the fill / hug / clip boxes. Under Auto layout they
     /// read as its last rows and take no title of their own.
+    /// Whether fill row `index` shows the colour-variable button: only
+    /// the primary fill (the variable subsystem keys off `fills[0]`),
+    /// and only when there are colour variables or one is bound.
+    pub fn fill_row_shows_variable(&self, index: usize) -> bool {
+        index == 0 && (self.color_variable_count > 0 || self.fill_variable_bound)
+    }
+
     pub fn size_section_lead_h(&self) -> f32 {
         if self.flex_layout {
             0.0
@@ -329,6 +338,7 @@ impl VisibleSections {
         stroke: true,
         stroke_edit_mode: de_editor_core::PaddingEditMode::Individual,
         stroke_mode_popover_open: false,
+        fill_menu: None,
         color_variable_count: 0,
         fill_variable_bound: false,
         stroke_variable_bound: false,

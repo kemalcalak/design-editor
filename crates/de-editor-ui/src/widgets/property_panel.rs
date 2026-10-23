@@ -197,6 +197,8 @@ pub struct PropertyPanel {
     pub layout_align_popover_hover: Option<usize>,
     pub stroke_edit_mode: de_editor_core::PaddingEditMode,
     pub stroke_mode_popover_open: bool,
+    /// Fill row whose `⋯` menu is open.
+    pub fill_menu_open: Option<usize>,
     /// Hovered stroke-mode popover row index (gear popover open).
     pub stroke_mode_popover_hover: Option<usize>,
     /// True for multi-select aggregate (inputs inert, "N items").
@@ -367,6 +369,7 @@ impl PropertyPanel {
             stroke: caps.stroke,
             stroke_edit_mode: self.stroke_edit_mode,
             stroke_mode_popover_open: self.stroke_mode_popover_open,
+            fill_menu: self.fill_menu_open,
             color_variable_count: self.color_variable_count,
             fill_variable_bound: self.fill_variable_ref.is_some(),
             stroke_variable_bound: self.stroke_variable_ref.is_some(),

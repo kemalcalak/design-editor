@@ -87,6 +87,7 @@ mod property_panel_export_tests;
 pub mod property_panel_fill;
 mod property_panel_fill_body;
 mod property_panel_fill_image_body;
+pub mod property_panel_fill_menu;
 mod property_panel_fill_picker;
 #[cfg(test)]
 mod property_panel_fill_tests;

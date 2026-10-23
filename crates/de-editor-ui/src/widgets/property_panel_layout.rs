@@ -43,7 +43,7 @@ pub fn effects_section_height(effects: &[EffectSummary]) -> f32 {
 }
 
 /// Total vertical space the Fill section consumes: the section header
-/// plus one row per fill (head row + body), plus the 12 px trailing
+/// plus one row per fill (the row + any body), plus the 12 px trailing
 /// gap painted before the divider. `primary_stop_count` sizes the
 /// primary fill's gradient body (the gradient-stop editor keys off the
 /// primary fill). Mirrors the y-walk in `paint_fill_section`.
@@ -84,7 +84,8 @@ pub fn fill_body_height_with_stops(fill_type: FillType, stop_count: usize) -> f3
         + stops as f32 * (INPUT_HEIGHT + 4.0)
         + if stops == 0 { 0.0 } else { 2.0 };
     match fill_type {
-        FillType::Solid => INPUT_HEIGHT + 6.0,
+        // The hex lives on the fill row itself (#83).
+        FillType::Solid => 0.0,
         FillType::LinearGradient => INPUT_HEIGHT + 6.0 + stops_block + 6.0,
         FillType::RadialGradient => stops_block + 6.0,
         // Mesh + Shader show head-row only (per-vertex editing / shader

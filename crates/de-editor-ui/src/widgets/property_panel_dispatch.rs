@@ -220,6 +220,7 @@ pub fn apply_property_action(
         A::SetFillBlendMode { index, mode } => {
             let _ = state.set_selected_fill_blend_mode(*index, mode.clone());
             state.editor_ui.close_compositing_picker();
+            state.editor_ui.fill_menu_open = None;
             Handled
         }
         A::ClearPageBackground => {
@@ -298,6 +299,10 @@ pub fn apply_property_action(
             }
             Handled
         }
+        A::ToggleFillMenu(index) => {
+            state.editor_ui.toggle_fill_menu(*index);
+            Handled
+        }
         A::ToggleFillTypePicker(index) => {
             let ui = &mut state.editor_ui;
             ui.toggle_fill_type_picker_for(*index);
@@ -311,22 +316,26 @@ pub fn apply_property_action(
             state.set_selected_fill_type_at(*index, *fill_type);
             let ui = &mut state.editor_ui;
             ui.close_fill_type_picker();
+            ui.fill_menu_open = None;
             ui.image_fill_popover_open = false;
             ui.close_color_variable_picker();
             Handled
         }
         A::AddFill => {
             let _ = state.add_selected_fill();
+            state.editor_ui.fill_menu_open = None;
             Handled
         }
         A::MoveFill { from, to } => {
             let _ = state.move_selected_fill(*from, *to);
+            state.editor_ui.fill_menu_open = None;
             Handled
         }
         A::RemoveFill(index) => {
             let _ = state.remove_selected_fill(*index);
             let ui = &mut state.editor_ui;
             ui.close_fill_type_picker();
+            ui.fill_menu_open = None;
             ui.image_fill_popover_open = false;
             ui.close_color_variable_picker();
             Handled

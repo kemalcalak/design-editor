@@ -378,3 +378,43 @@ fn alignment_popover_opens_from_the_auto_layout_header_and_sets_distribution() {
     );
     assert!(host.editor_state().editor_ui.layout_align_popover_open);
 }
+
+#[test]
+fn fill_menu_opens_from_the_row_and_removes_that_fill() {
+    let mut host = WidgetHostNative::new();
+    seed(
+        &mut host,
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"rectangle","id":"r","name":"R",
+               "x":40,"y":40,"width":180,"height":120,
+               "fill":[{"type":"solid","color":"#112233"},
+                       {"type":"solid","color":"#445566"}]}
+        ]}"##,
+    );
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("r"));
+
+    let button = point_for_action(&host, |action| {
+        matches!(action, PropertyPanelAction::ToggleFillMenu(1))
+    });
+    assert!(host.apply_press(button.x, button.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    assert_eq!(host.editor_state().editor_ui.fill_menu_open, Some(1));
+
+    let remove = point_for_action(&host, |action| {
+        matches!(action, PropertyPanelAction::RemoveFill(1))
+    });
+    assert!(host.apply_press(remove.x, remove.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    let fills = de_editor_core::fills::node_fills(host.editor_state().selected_node().unwrap())
+        .map(|f| f.len())
+        .unwrap_or(0);
+    assert_eq!(fills, 1);
+    assert_eq!(host.editor_state().editor_ui.fill_menu_open, None);
+
+    // A press outside an open menu closes it without acting.
+    host.editor_state_mut().editor_ui.fill_menu_open = Some(0);
+    let outside = point_inside_property_panel_without_target(&host);
+    assert!(host.apply_press(outside.x, outside.y, VIEWPORT_W, VIEWPORT_H));
+    assert_eq!(host.editor_state().editor_ui.fill_menu_open, None);
+}

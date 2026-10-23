@@ -128,6 +128,7 @@ impl WidgetHostNative {
             || self.editor_state.editor_ui.interaction_menu_open
             || self.editor_state.editor_ui.layout_align_popover_open
             || self.editor_state.editor_ui.stroke_mode_popover_open
+            || self.editor_state.editor_ui.fill_menu_open.is_some()
             || self.editor_state.editor_ui.font_weight_picker_open
             || self.editor_state.editor_ui.font_picker.open
             || self
@@ -286,12 +287,14 @@ impl WidgetHostNative {
                 return Some(true);
             }
         }
-        // Alignment / stroke-mode popover row hover (no-op when closed).
+        // Alignment / stroke-mode popover row hover (no-op when closed);
+        // the fill `⋯` menu only shields the rows beneath it.
         let over_padding_or_stroke_popup = property_panel.is_some_and(|panel| {
             (self.editor_state.editor_ui.layout_align_popover_open
                 && panel.layout_align_popover_contains(property_rect, point))
                 || (self.editor_state.editor_ui.stroke_mode_popover_open
                     && panel.stroke_mode_popover_contains(property_rect, point))
+                || panel.fill_menu_contains(property_rect, point)
         });
         let padding_hover_changed = self.update_layout_align_popover_hover(x, y, property_panel);
         if over_padding_or_stroke_popup {

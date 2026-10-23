@@ -295,8 +295,15 @@ fn paint_stroke_hex_text(
         .as_deref()
         .unwrap_or_else(|| edit.value_for(PropertyFocus::StrokeHex, &hex_owned));
     let hex_x = hex_rect.origin.x + 30.0;
+    // Hex values paint in the mono face (#83); a `$variable` chip stays
+    // in the chrome face.
+    let family = if stroke_variable_ref.is_some() {
+        text_metrics::CHROME_FONT_FAMILY
+    } else {
+        text_metrics::MONO_FONT_FAMILY
+    };
     let painted_hex = stroke_variable_ref.is_none()
-        && edit.paint_input_view_at(
+        && edit.paint_mono_input_view_at(
             cx,
             theme,
             PropertyFocus::StrokeHex,
@@ -316,7 +323,7 @@ fn paint_stroke_hex_text(
     }
     let hex_layout = TextLayout::single_run(
         hex_text,
-        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
+        family,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -342,10 +349,11 @@ fn paint_stroke_hex_text(
     );
     if stroke_variable_ref.is_none() {
         if let Some(pos) = edit.caret_at(PropertyFocus::StrokeHex) {
-            let w = text_metrics::measure_chrome(
+            let w = text_metrics::measure_in_family(
                 cx.backend,
                 &hex_text[..pos.min(hex_text.len())],
                 12.0,
+                family,
             );
             cx.backend.fill_rect(
                 Rect {

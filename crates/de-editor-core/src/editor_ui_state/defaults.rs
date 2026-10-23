@@ -110,6 +110,7 @@ impl Default for EditorUiState {
             flex_layout: FlexLayout::Free,
             layout_align_popover_open: false,
             layout_align_popover_hover: None,
+            fill_menu_open: None,
             stroke_edit_mode: None,
             stroke_edit_mode_anchor: String::new(),
             stroke_mode_popover_open: false,

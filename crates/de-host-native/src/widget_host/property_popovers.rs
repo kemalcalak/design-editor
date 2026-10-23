@@ -157,6 +157,7 @@ impl WidgetHostNative {
         use de_editor_ui::Point2D;
         if !self.editor_state.editor_ui.layout_align_popover_open
             && !self.editor_state.editor_ui.stroke_mode_popover_open
+            && self.editor_state.editor_ui.fill_menu_open.is_none()
         {
             return false;
         }
@@ -165,6 +166,8 @@ impl WidgetHostNative {
             let property_rect = self.property_rect(viewport_width, viewport_height);
             if let Some(action) = panel.hit_test_action(property_rect, Point2D::new(x, y)) {
                 if de_editor_ui::widgets::property_panel_flex::is_layout_align_popover_action(
+                    &action,
+                ) || de_editor_ui::widgets::property_panel_fill_menu::is_fill_menu_action(
                     &action,
                 ) || matches!(action, A::SetStrokeMode(_) | A::ToggleStrokeModePopover)
                 {
@@ -177,6 +180,7 @@ impl WidgetHostNative {
         self.editor_state.editor_ui.layout_align_popover_hover = None;
         self.editor_state.editor_ui.stroke_mode_popover_open = false;
         self.editor_state.editor_ui.stroke_mode_popover_hover = None;
+        self.editor_state.editor_ui.fill_menu_open = None;
         self.mark_dirty();
         true
     }

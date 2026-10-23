@@ -1,148 +1,20 @@
 //! Fill-section per-type body paints — extracted from
 //! `property_panel_fill.rs` to honour the 800-line ceiling. Contains
-//! the Solid hex-input body, the Linear / Radial gradient body
-//! (angle row + stop rows), and the small hex / angle formatters they
-//! share. `paint_fill_image_body` lives in
+//! the Linear / Radial gradient body (angle row + stop rows) and the
+//! small hex / angle formatters it uses. `paint_fill_image_body` lives in
 //! `property_panel_fill_image_body.rs`.
 
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::property_panel::NodeSnapshot;
-use crate::widgets::property_panel_color_variables::paint_color_variable_button;
 use crate::widgets::property_panel_inputs::{
-    COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, INPUT_HEIGHT, INPUT_RADIUS, PAD_X,
-    SECTION_HEADER_HEIGHT,
+    INPUT_HEIGHT, INPUT_RADIUS, PAD_X, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
-use crate::{Color, Point2D, Rect, TextLayout};
+use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::PropertyFocus;
-
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn paint_fill_solid_body(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    edit: &EditContext<'_>,
-    fill_index: usize,
-    fill: Color,
-    variable_ref: Option<&str>,
-    show_variable_button: bool,
-    x: f32,
-    y: f32,
-    width: f32,
-) {
-    let hex_focus = PropertyFocus::FillHex(fill_index);
-    let usable_w = width - PAD_X * 2.0;
-    // A canonical solid may carry alpha in its colour (`#RRGGBBAA`) as well
-    // as in the fill body's opacity. Surface all eight digits so merely
-    // focusing and blurring an imported/legacy colour cannot make it opaque.
-    let hex_owned = crate::util::color_to_hex_with_alpha(fill);
-    let hex_focused = edit.focus == Some(hex_focus);
-    let variable_text = variable_ref.map(|name| format!("${name}"));
-    let hex_text = variable_text
-        .as_deref()
-        .unwrap_or_else(|| edit.value_for(hex_focus, &hex_owned));
-    let variable_w = if show_variable_button {
-        COLOR_VARIABLE_BUTTON_W + COLOR_VARIABLE_GAP
-    } else {
-        0.0
-    };
-    let hex_rect = Rect {
-        origin: Point2D::new(x + PAD_X, y),
-        size: Point2D::new(usable_w - variable_w, INPUT_HEIGHT),
-    };
-    cx.backend
-        .fill_round_rect(hex_rect, INPUT_RADIUS, theme.muted);
-    if hex_focused && variable_ref.is_none() {
-        cx.backend
-            .stroke_round_rect(hex_rect, INPUT_RADIUS, theme.primary, 1.5);
-    }
-    cx.backend.fill_round_rect(
-        Rect {
-            // Vertically centre the 16-tall swatch in the input row.
-            origin: Point2D::new(
-                hex_rect.origin.x + 6.0,
-                hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_SWATCH_INSET,
-            ),
-            size: Point2D::new(16.0, 16.0),
-        },
-        3.0,
-        fill,
-    );
-    let hex_x = hex_rect.origin.x + 30.0;
-    let painted_hex = variable_ref.is_none()
-        && edit.paint_input_view_at(
-            cx,
-            theme,
-            hex_focus,
-            Rect {
-                origin: Point2D::new(hex_x, hex_rect.origin.y),
-                size: Point2D::new(
-                    (hex_rect.origin.x + hex_rect.size.x - 8.0 - hex_x).max(0.0),
-                    hex_rect.size.y,
-                ),
-            },
-            12.0,
-            0.0,
-            hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
-        );
-    if !painted_hex {
-        let hex_layout = TextLayout::single_run(
-            hex_text,
-            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
-            12.0,
-            (theme.foreground).to_jian(),
-            Point2D::new(0.0, 0.0),
-        );
-        if variable_ref.is_none() {
-            edit.paint_selection_at(
-                cx,
-                theme,
-                hex_focus,
-                hex_text,
-                hex_x,
-                hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
-                12.0,
-                hex_rect.origin.x + hex_rect.size.x - 8.0,
-            );
-        }
-        cx.backend.draw_text(
-            &hex_layout,
-            Point2D::new(
-                hex_x,
-                hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
-            ),
-        );
-        if variable_ref.is_none() {
-            if let Some(pos) = edit.caret_at(hex_focus) {
-                let w = text_metrics::measure_chrome(
-                    cx.backend,
-                    &hex_text[..pos.min(hex_text.len())],
-                    12.0,
-                );
-                cx.backend.fill_rect(
-                    Rect {
-                        origin: Point2D::new(hex_x + w, hex_rect.origin.y + 6.0),
-                        size: Point2D::new(1.5, hex_rect.size.y - 12.0),
-                    },
-                    theme.foreground,
-                );
-            }
-        }
-    }
-    if show_variable_button {
-        paint_color_variable_button(
-            cx,
-            theme,
-            Rect {
-                origin: Point2D::new(hex_rect.origin.x + hex_rect.size.x + COLOR_VARIABLE_GAP, y),
-                size: Point2D::new(COLOR_VARIABLE_BUTTON_W, INPUT_HEIGHT),
-            },
-            variable_ref.is_some(),
-        );
-    }
-}
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn paint_fill_gradient_body(

@@ -355,6 +355,9 @@ pub struct EditorUiState {
     /// Index (into the popover's Packed / Space between / Space around
     /// rows) under the cursor while it is open — drives the hover wash.
     pub layout_align_popover_hover: Option<usize>,
+    /// Fill row whose `⋯` menu (type / blend / reorder / remove) is
+    /// open, if any.
+    pub fill_menu_open: Option<usize>,
     /// Stroke-width edit mode pinned via the stroke-section gear.
     /// Scoped to [`Self::stroke_edit_mode_anchor`] like padding.
     pub stroke_edit_mode: Option<PaddingEditMode>,

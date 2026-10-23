@@ -160,6 +160,36 @@ impl PropertyPanel {
                 InteractionMenuHit::Outside => {}
             }
         }
+        // An open fill `⋯` menu overlays the rows and sections below it:
+        // its rows win and its chrome swallows the press.
+        if self.fill_menu_contains(panel_rect, point) {
+            return self
+                .popup_action_rects(panel_rect)
+                .into_iter()
+                .find_map(|(action, rect)| {
+                    (crate::widgets::property_panel_fill_menu::is_fill_menu_row(&action)
+                        && rect.contains(point))
+                    .then_some(action)
+                });
+        }
+        // The Auto layout alignment popover overlays the sections below
+        // its header; its rows win and its chrome swallows the press.
+        if self.layout_align_popover_open {
+            if let Some(action) =
+                self.popup_action_rects(panel_rect)
+                    .into_iter()
+                    .find_map(|(action, rect)| {
+                        (crate::widgets::property_panel_flex::is_layout_align_popover_row(&action)
+                            && rect.contains(point))
+                        .then_some(action)
+                    })
+            {
+                return Some(action);
+            }
+            if self.layout_align_popover_contains(panel_rect, point) {
+                return None;
+            }
+        }
         if !self.point_in_section_viewport(panel_rect, point) {
             return None;
         }

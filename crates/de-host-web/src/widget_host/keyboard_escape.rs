@@ -196,6 +196,10 @@ impl WidgetHost {
             self.mark_dirty();
             return true;
         }
+        if self.editor_state.editor_ui.escape_fill_menu() {
+            self.mark_dirty();
+            return true;
+        }
         if self.editor_state.editor_ui.escape_image_fill_popover() {
             self.mark_dirty();
             return true;

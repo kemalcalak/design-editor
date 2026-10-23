@@ -72,6 +72,13 @@ pub fn is_layout_align_popover_action(action: &PropertyPanelAction) -> bool {
     )
 }
 
+/// True for the open popover's own targets (grid cells and
+/// distribution rows), excluding the header toggle that opens it.
+pub fn is_layout_align_popover_row(action: &PropertyPanelAction) -> bool {
+    is_layout_align_popover_action(action)
+        && !matches!(action, PropertyPanelAction::ToggleLayoutAlignPopover)
+}
+
 /// The [`JUSTIFY_ROWS`] index an action hovers, for the popover's
 /// hover wash. `None` for anything that is not a distribution row.
 pub fn layout_align_popover_hover_row(action: &PropertyPanelAction) -> Option<usize> {

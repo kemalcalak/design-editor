@@ -170,6 +170,7 @@ impl WidgetHost {
         if self.editor_state.editor_ui.font_weight_picker_open
             || self.editor_state.editor_ui.layout_align_popover_open
             || self.editor_state.editor_ui.stroke_mode_popover_open
+            || self.editor_state.editor_ui.fill_menu_open.is_some()
         {
             use de_editor_ui::widgets::PropertyPanelAction as A;
             if let Some(panel) = PropertyPanel::for_selection(&self.editor_state) {
@@ -181,6 +182,8 @@ impl WidgetHost {
                     );
                 if let Some(action) = panel.hit_test_action(property_rect, Point2D::new(x, y)) {
                     if de_editor_ui::widgets::property_panel_flex::is_layout_align_popover_action(
+                        &action,
+                    ) || de_editor_ui::widgets::property_panel_fill_menu::is_fill_menu_action(
                         &action,
                     ) || matches!(
                         action,
@@ -209,6 +212,7 @@ impl WidgetHost {
             self.editor_state.editor_ui.layout_align_popover_hover = None;
             self.editor_state.editor_ui.stroke_mode_popover_open = false;
             self.editor_state.editor_ui.stroke_mode_popover_hover = None;
+            self.editor_state.editor_ui.fill_menu_open = None;
             self.mark_dirty();
             return Some(true);
         }

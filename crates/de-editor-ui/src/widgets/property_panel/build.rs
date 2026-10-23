@@ -374,6 +374,7 @@ impl PropertyPanel {
             layout_align_popover_hover: ui.layout_align_popover_hover,
             stroke_edit_mode,
             stroke_mode_popover_open: ui.stroke_mode_popover_open,
+            fill_menu_open: ui.fill_menu_open,
             stroke_mode_popover_hover: ui.stroke_mode_popover_hover,
             is_multi,
             tab: property_tab,
