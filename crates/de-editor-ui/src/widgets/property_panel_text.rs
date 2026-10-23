@@ -552,32 +552,16 @@ pub(crate) fn sections_top_before_text(
     panel_rect: Rect,
     visible: crate::widgets::property_panel_layout::VisibleSections,
 ) -> f32 {
-    let mut y = panel_rect.origin.y;
-    y += crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
-    if visible.create_component {
-        y += crate::widgets::property_panel_inputs::CREATE_COMPONENT_BLOCK_H;
-    }
-    y += SECTION_HEADER_HEIGHT;
-    y += INPUT_HEIGHT + 6.0;
-    y += visible.position_size_row_h();
-    y += INPUT_HEIGHT + 12.0;
-    y += SECTION_GAP;
-    if visible.flex_layout {
-        y += crate::widgets::property_panel_flex::flex_section_height(
-            visible.flex_layout_mode,
-            visible.padding_edit_mode,
-        );
-    }
-    if visible.size_options {
-        y += visible.size_section_lead_h();
-        y += crate::widgets::property_panel_inputs::size_check_row_height()
-            * if visible.clip_content { 3.0 } else { 2.0 };
-        y += 12.0 + SECTION_GAP;
-    }
-    if visible.icon {
-        y += crate::widgets::property_panel_icon::icon_section_height();
-    }
-    y
+    // Only sections above Text matter here, so the data-driven ones
+    // below it (fills, effects, interactions) can be empty.
+    crate::widgets::property_panel_section_tops::section_tops(
+        panel_rect.origin.y,
+        visible,
+        &[],
+        &[],
+        &crate::widgets::property_panel_interactions::InteractionSummary::default(),
+    )
+    .text
 }
 
 #[allow(clippy::too_many_arguments)]

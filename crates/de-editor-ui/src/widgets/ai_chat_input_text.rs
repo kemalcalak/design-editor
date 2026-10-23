@@ -324,6 +324,7 @@ pub(crate) fn paint_input_text_area(
     let mut backend = BaselineAdjustingBackend {
         inner: cx.backend,
         baseline_delta_y: INPUT_BASELINE_ASCENT,
+        font_family: None,
     };
     let view = input_text_view(&mut backend, state, input_rect, input_area_h);
     let area = TextArea {

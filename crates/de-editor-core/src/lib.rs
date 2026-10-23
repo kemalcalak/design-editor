@@ -111,6 +111,7 @@ pub mod missing_fonts;
 pub mod mutators;
 pub mod node_defaults;
 pub mod node_id;
+pub mod padding_shorthand;
 pub mod page_mutators;
 pub mod path_bounds;
 pub mod path_edit;
@@ -186,6 +187,8 @@ mod command_authored_subtree_tests;
 mod command_batch_page_tests;
 #[cfg(test)]
 mod command_batch_tests;
+#[cfg(test)]
+mod command_boolean_tests;
 #[cfg(test)]
 mod command_component_tests;
 #[cfg(test)]

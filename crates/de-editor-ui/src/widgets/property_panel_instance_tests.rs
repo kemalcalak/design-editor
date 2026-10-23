@@ -311,8 +311,13 @@ fn instance_block_height_matches_two_rows() {
         create_component_block_height, CREATE_COMPONENT_BLOCK_H, CREATE_COMPONENT_BTN_H,
         CREATE_COMPONENT_ROW_GAP,
     };
+    // Create component is a header icon since #83, so it takes no block.
     assert_eq!(
         create_component_block_height(ComponentButtonState::Create),
+        0.0
+    );
+    assert_eq!(
+        create_component_block_height(ComponentButtonState::DetachComponent),
         CREATE_COMPONENT_BLOCK_H
     );
     assert_eq!(

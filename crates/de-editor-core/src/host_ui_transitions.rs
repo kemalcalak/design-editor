@@ -31,13 +31,19 @@ impl EditorUiState {
         self.compositing_picker.hover = None;
         self.compositing_picker.pressed = None;
         self.compositing_picker.scroll.offset = 0.0;
+        // A fill's Blend picker opens from that fill's `⋯` menu and
+        // anchors to the menu's trigger, so the menu stays open under it.
+        let keeps_fill_menu = matches!(target, CompositingPickerTarget::FillBlend(_));
         self.compositing_picker_target = opening.then_some(target);
         if opening {
             self.close_fill_type_picker();
             self.image_fill_popover_open = false;
             self.close_font_picker();
             self.font_weight_picker_open = false;
-            self.padding_mode_popover_open = false;
+            self.layout_align_popover_open = false;
+            if !keeps_fill_menu {
+                self.fill_menu_open = None;
+            }
             self.stroke_mode_popover_open = false;
             self.export_scale_picker_open = false;
             self.export_format_picker_open = false;

@@ -110,6 +110,7 @@ pub(super) fn paint_composer(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, la
     let mut backend = crate::widgets::text_input_backend::BaselineAdjustingBackend {
         inner: cx.backend,
         baseline_delta_y: INPUT_FONT,
+        font_family: None,
     };
     backend.save();
     backend.clip_rect(layout.input_box);

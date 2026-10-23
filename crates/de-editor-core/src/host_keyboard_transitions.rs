@@ -256,6 +256,10 @@ pub fn property_focus_accepts(focus: PropertyFocus, input: &TextInputState, c: c
         // Widget text rows (placeholder / value / label / icon names /
         // bind key) take any non-control character.
         !c.is_control()
+    } else if focus == PropertyFocus::Padding {
+        // CSS shorthand: up to four space-separated non-negative
+        // numbers, each may carry its own decimal point.
+        c.is_ascii_digit() || c == '.' || c == ' '
     } else if focus.is_hex() {
         // Most colour rows cap at `#RRGGBB`; fill and page background
         // rows additionally author `#RRGGBBAA`. Keep that exception on

@@ -220,6 +220,7 @@ pub fn apply_property_action(
         A::SetFillBlendMode { index, mode } => {
             let _ = state.set_selected_fill_blend_mode(*index, mode.clone());
             state.editor_ui.close_compositing_picker();
+            state.editor_ui.fill_menu_open = None;
             Handled
         }
         A::ClearPageBackground => {
@@ -298,6 +299,10 @@ pub fn apply_property_action(
             }
             Handled
         }
+        A::ToggleFillMenu(index) => {
+            state.editor_ui.toggle_fill_menu(*index);
+            Handled
+        }
         A::ToggleFillTypePicker(index) => {
             let ui = &mut state.editor_ui;
             ui.toggle_fill_type_picker_for(*index);
@@ -311,22 +316,26 @@ pub fn apply_property_action(
             state.set_selected_fill_type_at(*index, *fill_type);
             let ui = &mut state.editor_ui;
             ui.close_fill_type_picker();
+            ui.fill_menu_open = None;
             ui.image_fill_popover_open = false;
             ui.close_color_variable_picker();
             Handled
         }
         A::AddFill => {
             let _ = state.add_selected_fill();
+            state.editor_ui.fill_menu_open = None;
             Handled
         }
         A::MoveFill { from, to } => {
             let _ = state.move_selected_fill(*from, *to);
+            state.editor_ui.fill_menu_open = None;
             Handled
         }
         A::RemoveFill(index) => {
             let _ = state.remove_selected_fill(*index);
             let ui = &mut state.editor_ui;
             ui.close_fill_type_picker();
+            ui.fill_menu_open = None;
             ui.image_fill_popover_open = false;
             ui.close_color_variable_picker();
             Handled
@@ -489,10 +498,11 @@ pub fn apply_property_action(
             state.editor_ui.font_weight_picker_hover = None;
             Handled
         }
-        A::TogglePaddingModePopover => {
+        A::ToggleLayoutAlignPopover => {
             let ui = &mut state.editor_ui;
-            ui.padding_mode_popover_open = !ui.padding_mode_popover_open;
-            ui.padding_mode_popover_hover = None;
+            ui.layout_align_popover_open = !ui.layout_align_popover_open;
+            ui.layout_align_popover_hover = None;
+            ui.fill_menu_open = None;
             ui.stroke_mode_popover_open = false;
             ui.stroke_mode_popover_hover = None;
             ui.font_weight_picker_open = false;
@@ -504,24 +514,13 @@ pub fn apply_property_action(
             ui.close_color_variable_picker();
             Handled
         }
-        A::SetPaddingMode(mode) => {
-            // Scope the pin to the node it was set for so it can't leak
-            // into the next selection.
-            let anchor = state.selection.anchor.as_str().to_string();
-            state.editor_ui.padding_edit_mode = Some(*mode);
-            state.editor_ui.padding_edit_mode_anchor = anchor;
-            state.editor_ui.padding_mode_popover_open = false;
-            state.editor_ui.padding_mode_popover_hover = None;
-            state.commit_history();
-            let _ = state.set_selected_padding_mode_shape(*mode);
-            Handled
-        }
         A::ToggleStrokeModePopover => {
             let ui = &mut state.editor_ui;
             ui.stroke_mode_popover_open = !ui.stroke_mode_popover_open;
             ui.stroke_mode_popover_hover = None;
-            ui.padding_mode_popover_open = false;
-            ui.padding_mode_popover_hover = None;
+            ui.fill_menu_open = None;
+            ui.layout_align_popover_open = false;
+            ui.layout_align_popover_hover = None;
             ui.font_weight_picker_open = false;
             ui.close_font_picker();
             ui.close_fill_type_picker();
@@ -586,6 +585,14 @@ pub fn apply_property_action(
             state.commit_history();
             let _ = state.unbind_selected_color_variable(color_target(*target));
             state.editor_ui.close_color_variable_picker();
+            Handled
+        }
+        A::ToggleExportSection => {
+            let ui = &mut state.editor_ui;
+            ui.export_section_open = !ui.export_section_open;
+            ui.export_scale_picker_open = false;
+            ui.export_format_picker_open = false;
+            ui.export_picker_hover = None;
             Handled
         }
         A::ToggleExportScalePicker => {

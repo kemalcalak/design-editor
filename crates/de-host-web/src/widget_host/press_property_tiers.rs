@@ -163,13 +163,14 @@ impl WidgetHost {
             return Some(true);
         }
 
-        // 0c0c. Font-weight dropdown + padding mode-selector popover —
+        // 0c0c. Font-weight dropdown + alignment / stroke-mode popovers —
         //       outside-click dismiss. A click on a picker row / toggle
         //       is applied; any other click closes the popover and is
         //       swallowed (mirrors the native host's dismiss handlers).
         if self.editor_state.editor_ui.font_weight_picker_open
-            || self.editor_state.editor_ui.padding_mode_popover_open
+            || self.editor_state.editor_ui.layout_align_popover_open
             || self.editor_state.editor_ui.stroke_mode_popover_open
+            || self.editor_state.editor_ui.fill_menu_open.is_some()
         {
             use de_editor_ui::widgets::PropertyPanelAction as A;
             if let Some(panel) = PropertyPanel::for_selection(&self.editor_state) {
@@ -180,12 +181,14 @@ impl WidgetHost {
                         viewport_height,
                     );
                 if let Some(action) = panel.hit_test_action(property_rect, Point2D::new(x, y)) {
-                    if matches!(
+                    if de_editor_ui::widgets::property_panel_flex::is_layout_align_popover_action(
+                        &action,
+                    ) || de_editor_ui::widgets::property_panel_fill_menu::is_fill_menu_action(
+                        &action,
+                    ) || matches!(
                         action,
                         A::SetFontWeight(_)
                             | A::ToggleFontWeightPicker
-                            | A::SetPaddingMode(_)
-                            | A::TogglePaddingModePopover
                             | A::SetStrokeMode(_)
                             | A::ToggleStrokeModePopover
                     ) {
@@ -205,10 +208,11 @@ impl WidgetHost {
             }
             self.editor_state.editor_ui.font_weight_picker_open = false;
             self.editor_state.editor_ui.font_weight_picker_hover = None;
-            self.editor_state.editor_ui.padding_mode_popover_open = false;
-            self.editor_state.editor_ui.padding_mode_popover_hover = None;
+            self.editor_state.editor_ui.layout_align_popover_open = false;
+            self.editor_state.editor_ui.layout_align_popover_hover = None;
             self.editor_state.editor_ui.stroke_mode_popover_open = false;
             self.editor_state.editor_ui.stroke_mode_popover_hover = None;
+            self.editor_state.editor_ui.fill_menu_open = None;
             self.mark_dirty();
             return Some(true);
         }

@@ -62,6 +62,7 @@ fn export_scale_picker_open_emits_option_rows() {
     state.set_single_selection(NodeId::new("n10"));
     // Opening the scale picker makes the option rows part of the
     // panel's hit surface.
+    state.editor_ui.export_section_open = true;
     state.editor_ui.export_scale_picker_open = true;
     let panel = PropertyPanel::for_selection(&state).expect("frame panel");
     let rect = Rect {

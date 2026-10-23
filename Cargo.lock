@@ -1491,6 +1491,7 @@ dependencies = [
  "de-editor-host-core",
  "de-editor-ui",
  "de-figma",
+ "de-host-native",
  "de-html",
  "de-i18n",
  "de-image-enrich",

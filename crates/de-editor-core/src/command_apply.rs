@@ -37,6 +37,8 @@ use jian_ops_schema::conversion::{ConversionEntry, ConversionKind};
 use jian_ops_schema::variable::{VariableKind, VariableScalar};
 
 mod app_state;
+mod boolean;
+mod clipboard;
 mod helpers;
 
 pub(crate) use helpers::command_marks_document_dirty;
@@ -640,26 +642,18 @@ impl EditorState {
                 // motion.
                 self.align_selected(parsed)
             }
+            EditorCommand::CommitBooleanResult {
+                source_ids,
+                contours,
+                new_id,
+                revision,
+            } => self.commit_boolean_result(&source_ids, &contours, new_id, revision)?,
 
             // --- Clipboard -----------------------------------------
-            EditorCommand::CopySelected => self.copy_selected(),
-            EditorCommand::CutSelected => {
-                let snap = self.snapshot_for_history();
-                if self.cut_selected() {
-                    self.history_push_past(snap);
-                    true
-                } else {
-                    false
-                }
-            }
-            EditorCommand::PasteClipboard { offset_px } => {
-                let snap = self.snapshot_for_history();
-                let new_ids = self.paste_clipboard_with_allocator(allocator, offset_px as f64)?;
-                if new_ids.is_empty() {
-                    return Ok(false);
-                }
-                self.history_push_past(snap);
-                true
+            cmd @ (EditorCommand::CopySelected
+            | EditorCommand::CutSelected
+            | EditorCommand::PasteClipboard { .. }) => {
+                self.apply_clipboard_command(cmd, allocator)?
             }
             EditorCommand::ImportSvg {
                 svg,

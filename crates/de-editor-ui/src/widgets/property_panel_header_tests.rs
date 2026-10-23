@@ -38,6 +38,7 @@ fn a_node_header_paints_name_and_kind() {
         accent: theme.primary,
         title: "Pricing",
         kind: "Frame",
+        create_component: false,
     };
     let mut backend = CaptureBackend::default();
     let mut cx = PaintCx {

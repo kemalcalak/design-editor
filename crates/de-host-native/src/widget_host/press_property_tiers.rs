@@ -120,9 +120,10 @@ impl WidgetHostNative {
             return Some(true);
         }
 
-        // 0c0a3. Padding mode-selector popover — outside-click dismiss.
+        // 0c0a3. Alignment / stroke-mode popovers + fill `⋯` menu —
+        //        outside-click dismiss.
         if !in_git_panel
-            && self.dismiss_padding_mode_popover_on_press(x, y, viewport_width, viewport_height)
+            && self.dismiss_property_popovers_on_press(x, y, viewport_width, viewport_height)
         {
             return Some(true);
         }

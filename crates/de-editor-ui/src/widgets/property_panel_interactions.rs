@@ -25,8 +25,8 @@
 use crate::theme::Theme;
 use crate::widgets::property_panel::PropertyPanelAction;
 use crate::widgets::property_panel_inputs::{
-    paint_dropdown, paint_section_divider, paint_section_label, INPUT_HEIGHT, INPUT_RADIUS, PAD_X,
-    SECTION_GAP, SECTION_HEADER_HEIGHT,
+    paint_dropdown, paint_section_divider, paint_section_label, paint_section_label_with_add,
+    INPUT_HEIGHT, INPUT_RADIUS, PAD_X, SECTION_GAP, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
@@ -161,13 +161,15 @@ pub fn document_screen_paths(state: &de_editor_core::EditorState) -> Vec<String>
 // ── Section paint + geometry ────────────────────────────────────────
 
 /// Number of rows the section paints: an optional Screen row, plus
-/// either one clickable row (empty / single action) or N read-only
-/// rows + a trailing "Remove all" row (multiple actions). Shared by
-/// the height calc + the action-rect walker so they can't drift.
+/// one clickable row (single action) or N read-only rows + a trailing
+/// "Remove all" row (multiple actions). With no action the section is
+/// its header alone and the header's "+" opens the menu (#83). Shared
+/// by the height calc + the action-rect walker so they can't drift.
 fn interaction_row_count(interactions: &InteractionSummary) -> usize {
     let screen_row = usize::from(interactions.screen.is_some());
     let tap_rows = match interactions.on_tap.len() {
-        0 | 1 => 1,
+        0 => 0,
+        1 => 1,
         n => n + 1,
     };
     screen_row + tap_rows
@@ -181,8 +183,8 @@ pub fn interactions_section_height(interactions: &InteractionSummary) -> f32 {
     SECTION_HEADER_HEIGHT + n * (INPUT_HEIGHT + 6.0) + 6.0 + SECTION_GAP
 }
 
-/// Emit the section's clickable-row rects: the empty-state / single
-/// tap row (`ToggleInteractionMenu`), or a multi-action row's
+/// Emit the section's clickable-row rects: the empty state's header
+/// "+" or the single tap row (`ToggleInteractionMenu`), or a multi-action row's
 /// trailing `RemoveInteraction` row. The Screen row and read-only
 /// multi-action rows contribute height but no rect — matches
 /// `paint_interactions_section` exactly.
@@ -203,7 +205,13 @@ pub fn push_interaction_action_rects(
         size: Point2D::new(usable_w, INPUT_HEIGHT),
     };
     match interactions.on_tap.len() {
-        0 | 1 => {
+        0 => {
+            out.push((
+                PropertyPanelAction::ToggleInteractionMenu,
+                crate::widgets::property_panel_inputs::section_add_target(x, y, width),
+            ));
+        }
+        1 => {
             out.push((PropertyPanelAction::ToggleInteractionMenu, row_rect(row_y)));
         }
         n => {
@@ -222,14 +230,12 @@ pub fn paint_interactions_section(
     y: f32,
     width: f32,
 ) -> f32 {
-    let mut y = paint_section_label(
-        cx,
-        theme,
-        translate(locale, "interactions.title", "Interactions"),
-        x,
-        y,
-        width,
-    );
+    let title = translate(locale, "interactions.title", "Interactions");
+    let mut y = if interactions.on_tap.is_empty() {
+        paint_section_label_with_add(cx, theme, title, x, y, width)
+    } else {
+        paint_section_label(cx, theme, title, x, y, width)
+    };
     let row_w = width - PAD_X * 2.0;
     let row_rect = |y: f32| Rect {
         origin: Point2D::new(x + PAD_X, y),
@@ -249,15 +255,7 @@ pub fn paint_interactions_section(
         y += INPUT_HEIGHT + 6.0;
     }
     match interactions.on_tap.len() {
-        0 => {
-            paint_dropdown(
-                cx,
-                theme,
-                row_rect(y),
-                translate(locale, "interactions.addInteraction", "+ Add interaction"),
-            );
-            y += INPUT_HEIGHT + 6.0;
-        }
+        0 => {}
         1 => {
             paint_dropdown(
                 cx,

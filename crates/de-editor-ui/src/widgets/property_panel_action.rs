@@ -212,6 +212,9 @@ pub enum PropertyPanelAction {
     /// component id. The host writes this into the existing `ref`
     /// field; no extra persisted instance schema is involved.
     SetInstanceComponent(String),
+    /// User clicked fill `index`'s `⋯` button — toggles its menu
+    /// (`editor_ui.fill_menu_open`).
+    ToggleFillMenu(usize),
     /// User clicked fill `index`'s fill-type dropdown — host toggles
     /// the picker open for that fill (`fill_type_picker` + the index
     /// it targets).
@@ -261,6 +264,9 @@ pub enum PropertyPanelAction {
     /// 1x/2x/3x select popup). Does NOT open the Export modal —
     /// that is reached only via File ▸ Export Image (⇧⌘P).
     ToggleExportScalePicker,
+    /// User clicked the Export header's "+" / "−" — expands or
+    /// collapses the section (`editor_ui.export_section_open`).
+    ToggleExportSection,
     /// User clicked the Export section's format dropdown — host
     /// toggles `editor_ui.export_format_picker_open` (the inline
     /// PNG/JPEG/WEBP/SVG/PDF select popup).
@@ -399,12 +405,9 @@ pub enum PropertyPanelAction {
     ToggleFontWeightPicker,
     /// User picked a named weight from the dropdown.
     SetFontWeight(FontWeightChoice),
-    /// User clicked the padding-section gear — host toggles
-    /// `editor_ui.padding_mode_popover_open`.
-    TogglePaddingModePopover,
-    /// User picked a padding edit mode in the gear popover — host pins
-    /// `editor_ui.padding_edit_mode` + reshapes the value.
-    SetPaddingMode(de_editor_core::PaddingEditMode),
+    /// User clicked the Auto layout header's alignment button — host
+    /// toggles `editor_ui.layout_align_popover_open`.
+    ToggleLayoutAlignPopover,
     /// User clicked the stroke-section gear — host toggles
     /// `editor_ui.stroke_mode_popover_open`.
     ToggleStrokeModePopover,

@@ -189,6 +189,12 @@ impl EditorUiState {
         true
     }
 
+    /// Close a fill row's `⋯` menu. Runs after the fill-type picker
+    /// tier, so Escape first closes a picker opened from the menu.
+    pub fn escape_fill_menu(&mut self) -> bool {
+        self.fill_menu_open.take().is_some()
+    }
+
     /// Close the property-panel image-fill popover.
     pub fn escape_image_fill_popover(&mut self) -> bool {
         if !self.image_fill_popover_open {
@@ -299,10 +305,9 @@ impl EditorUiState {
         self.font_picker_import_hover = false;
         self.font_weight_picker_open = false;
         self.font_weight_picker_hover = None;
-        self.padding_edit_mode = None;
-        self.padding_edit_mode_anchor.clear();
-        self.padding_mode_popover_open = false;
-        self.padding_mode_popover_hover = None;
+        self.layout_align_popover_open = false;
+        self.layout_align_popover_hover = None;
+        self.fill_menu_open = None;
         self.stroke_edit_mode = None;
         self.stroke_edit_mode_anchor.clear();
         self.stroke_mode_popover_open = false;

@@ -329,6 +329,10 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
+        if self.editor_state.editor_ui.escape_fill_menu() {
+            self.mark_dirty();
+            return true;
+        }
         if self.editor_state.editor_ui.interaction_menu_open {
             self.editor_state.editor_ui.close_interaction_menu();
             self.mark_dirty();
