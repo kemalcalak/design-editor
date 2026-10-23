@@ -212,6 +212,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "ตัวแปรสภาพแวดล้อม (ไม่บังคับ)",
         "settings.agents.notInstalledHint" => "ยังไม่ได้ติดตั้ง?",
         "settings.agents.notTestedYet" => "ยังไม่ได้ทดสอบ",
+        "missingFonts.download" => "ดาวน์โหลด",
+        "missingFonts.downloadAll" => "ดาวน์โหลดทั้งหมด",
+        "missingFonts.downloading" => "กำลังดาวน์โหลด…",
+        "missingFonts.retryDownload" => "ลองอีกครั้ง",
+        "missingFonts.notOnGoogle" => "ไม่มีใน Google Fonts",
+        "missingFonts.downloadFailed" => "ดาวน์โหลดไม่สำเร็จ — ตรวจสอบการเชื่อมต่อ",
+        "missingFonts.downloadedSection" => "ดาวน์โหลดจาก Google Fonts",
         _ => return None,
     })
 }

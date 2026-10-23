@@ -16,8 +16,8 @@ use jian_widgets::centered_text_baseline_y;
 #[cfg(test)]
 use crate::widgets::missing_fonts_row::{family_label_lines, row_text_rect, TEXT_BUTTON_GAP};
 pub(crate) use crate::widgets::missing_fonts_row::{
-    fit_button_width, paint_missing_font_row, paint_text, row_button_rect, BUTTON_HEIGHT,
-    ROW_HEIGHT,
+    fit_button_width, paint_missing_font_row, paint_text, row_button_rect, row_download_hit_rect,
+    BUTTON_HEIGHT, ROW_HEIGHT,
 };
 
 const PANEL_WIDTH: f32 = 480.0;
@@ -29,6 +29,10 @@ const HORIZONTAL_PAD: f32 = 20.0;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MissingFontsHit {
     ChooseFont(usize),
+    /// Download this row's family from Google Fonts.
+    Download(usize),
+    /// Download every row that offers Download.
+    DownloadAll,
     SelectFont(usize),
     ImportFont(usize),
     ClosePicker,
@@ -153,15 +157,24 @@ impl<'a> MissingFontsPanel<'a> {
         }
 
         let rows = self.rows_rect(panel);
+        let scroll = self.rows_scroll(panel);
         for (row, entry) in self.prompt.entries.iter().enumerate() {
-            if rows.contains(point)
-                && !entry.resolved
-                && self.row_button_rect(panel, row).contains(point)
-            {
+            if !rows.contains(point) || entry.resolved {
+                continue;
+            }
+            if self.row_button_rect(panel, row).contains(point) {
                 return MissingFontsHit::ChooseFont(row);
+            }
+            if row_download_hit_rect(modal_row_rect(panel, row, scroll), self.ui, entry)
+                .is_some_and(|rect| rect.contains(point))
+            {
+                return MissingFontsHit::Download(row);
             }
         }
 
+        if download_all_rect(panel, self.ui, self.prompt).is_some_and(|rect| rect.contains(point)) {
+            return MissingFontsHit::DownloadAll;
+        }
         if dismiss_rect(panel, self.ui).contains(point) {
             MissingFontsHit::Dismiss
         } else {
@@ -236,6 +249,25 @@ fn modal_row_rect(panel: Rect, row: usize, scroll: f32) -> Rect {
     }
 }
 
+/// Footer "Download all", left of Dismiss — only when two or more rows offer
+/// Download (one row has its own button).
+fn download_all_rect(panel: Rect, ui: &EditorUiState, prompt: &MissingFontsPrompt) -> Option<Rect> {
+    let downloadable = prompt
+        .entries
+        .iter()
+        .filter(|entry| de_editor_core::missing_fonts::can_download(ui, entry))
+        .count();
+    if downloadable < 2 {
+        return None;
+    }
+    let dismiss = dismiss_rect(panel, ui);
+    let width = fit_button_width(translate(ui, "missingFonts.downloadAll"), 12.0);
+    Some(Rect {
+        origin: Point2D::new(dismiss.origin.x - 8.0 - width, dismiss.origin.y),
+        size: Point2D::new(width, BUTTON_HEIGHT),
+    })
+}
+
 fn dismiss_rect(panel: Rect, ui: &EditorUiState) -> Rect {
     let width = fit_button_width(translate(ui, "missingFonts.dismiss"), 12.0);
     Rect {
@@ -300,6 +332,28 @@ impl Widget for MissingFontsPanel<'_> {
             paint_missing_font_row(cx, &self.theme, self.ui, entry, row, row_rect, row > 0);
         }
         cx.backend.restore();
+
+        if let Some(all) = download_all_rect(panel, self.ui, self.prompt) {
+            let hovered = self.ui.missing_fonts_hover
+                == Some(de_editor_core::missing_fonts::MissingFontsHover::DownloadAll);
+            cx.backend.fill_round_rect(
+                all,
+                6.0,
+                if hovered {
+                    self.theme.border
+                } else {
+                    self.theme.muted
+                },
+            );
+            paint_text(
+                cx,
+                translate(self.ui, "missingFonts.downloadAll"),
+                Point2D::new(all.origin.x + 12.0, centered_text_baseline_y(all, 12.0)),
+                12.0,
+                500,
+                self.theme.primary,
+            );
+        }
 
         let dismiss = dismiss_rect(panel, self.ui);
         let dismiss_hovered = self.ui.missing_fonts_hover

@@ -2,7 +2,7 @@
 
 #[test]
 fn missing_fonts_keys_exist_in_every_locale_table() {
-    const KEYS: [&str; 11] = [
+    const KEYS: [&str; 18] = [
         "settings.tab.fonts",
         "missingFonts.title",
         "missingFonts.subtitle",
@@ -14,6 +14,13 @@ fn missing_fonts_keys_exist_in_every_locale_table() {
         "missingFonts.mismatch",
         "missingFonts.importedSection",
         "missingFonts.noneMissing",
+        "missingFonts.download",
+        "missingFonts.downloadAll",
+        "missingFonts.downloading",
+        "missingFonts.retryDownload",
+        "missingFonts.notOnGoogle",
+        "missingFonts.downloadFailed",
+        "missingFonts.downloadedSection",
     ];
     type Lookup = fn(&str) -> Option<&'static str>;
     let tables: [(&str, Lookup); 15] = [

@@ -212,6 +212,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Lingkungan (opsional)",
         "settings.agents.notInstalledHint" => "Belum terpasang?",
         "settings.agents.notTestedYet" => "Belum diuji",
+        "missingFonts.download" => "Unduh",
+        "missingFonts.downloadAll" => "Unduh semua",
+        "missingFonts.downloading" => "Mengunduh…",
+        "missingFonts.retryDownload" => "Coba lagi",
+        "missingFonts.notOnGoogle" => "Tidak ada di Google Fonts",
+        "missingFonts.downloadFailed" => "Gagal mengunduh — periksa koneksi Anda",
+        "missingFonts.downloadedSection" => "Diunduh dari Google Fonts",
         _ => return None,
     })
 }

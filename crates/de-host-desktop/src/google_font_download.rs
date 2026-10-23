@@ -13,6 +13,7 @@
 
 use std::sync::mpsc::{self, Receiver, Sender};
 
+use de_editor_core::missing_fonts::FontDownloadStatus;
 use de_host_services::google_fonts::{download_family, FontTransport, HttpFontTransport};
 
 use crate::fonts::{FontOrigin, FontStore};
@@ -76,6 +77,40 @@ pub(crate) struct FontDownloadDone {
     /// The family as requested (the missing-fonts row's spelling).
     pub requested: String,
     pub result: Result<FontDownloadOk, FontDownloadError>,
+}
+
+impl crate::DesktopApp {
+    /// Start the downloads the user asked for and apply the finished ones:
+    /// a downloaded family is registered already, so refreshing the font
+    /// snapshots resolves its missing-font row and the next paint reflows
+    /// the document with it. Returns whether anything changed.
+    pub(crate) fn drain_font_downloads(&mut self) -> bool {
+        let requests = self.host.take_font_download_requests();
+        let started = !requests.is_empty();
+        for family in requests {
+            self.font_downloads.spawn(family);
+        }
+        let done = self.font_downloads.poll();
+        if done.is_empty() {
+            return started;
+        }
+        for FontDownloadDone { requested, result } in done {
+            let failure = match result {
+                Ok(_) => None,
+                Err(error) => {
+                    eprintln!("[fonts] could not download \"{requested}\": {error}");
+                    Some(if error.is_not_on_google() {
+                        FontDownloadStatus::NotOnGoogle
+                    } else {
+                        FontDownloadStatus::Failed
+                    })
+                }
+            };
+            self.host.finish_font_download(&requested, failure);
+        }
+        crate::font_import_host::refresh_downloaded_fonts(&mut self.host);
+        true
+    }
 }
 
 /// Background downloads requested from the UI. One worker thread per

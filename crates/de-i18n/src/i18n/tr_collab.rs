@@ -212,6 +212,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Ortam (isteğe bağlı)",
         "settings.agents.notInstalledHint" => "Kurulu değil mi?",
         "settings.agents.notTestedYet" => "Henüz test edilmedi",
+        "missingFonts.download" => "İndir",
+        "missingFonts.downloadAll" => "Tümünü indir",
+        "missingFonts.downloading" => "İndiriliyor…",
+        "missingFonts.retryDownload" => "Tekrar dene",
+        "missingFonts.notOnGoogle" => "Google Fonts'ta yok",
+        "missingFonts.downloadFailed" => "İndirilemedi — bağlantınızı kontrol edin",
+        "missingFonts.downloadedSection" => "Google Fonts'tan indirilenler",
         _ => return None,
     })
 }

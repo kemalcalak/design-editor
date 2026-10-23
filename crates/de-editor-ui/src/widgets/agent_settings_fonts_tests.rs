@@ -107,3 +107,63 @@ fn desktop_font_geometry_keeps_legacy_density() {
     );
     assert_eq!(content_height(&state.editor_ui), 252.0);
 }
+
+#[test]
+fn downloaded_families_get_their_own_section_and_remove_button() {
+    let mut state = state_with_missing(&["Katibeh"]);
+    state.editor_ui.imported_font_families =
+        Arc::new(vec!["Montserrat".into(), "My Import".into()]);
+    state.editor_ui.downloaded_font_families = Arc::new(vec!["Montserrat".into()]);
+    let ui = &state.editor_ui;
+
+    assert_eq!(user_imported_families(ui), vec!["My Import"]);
+    let text = painted_text(&state, 492.0);
+    assert!(text
+        .iter()
+        .any(|(value, _)| value == translate(ui, "missingFonts.downloadedSection")));
+
+    let content = content_rect(492.0);
+    let panel = Rect::xywh(0.0, 0.0, 492.0, 1000.0);
+    let centre = |rect: Rect| {
+        Point2D::new(
+            rect.origin.x + rect.size.x / 2.0,
+            rect.origin.y + rect.size.y / 2.0,
+        )
+    };
+    assert_eq!(
+        hit_test(
+            panel,
+            content,
+            ui,
+            centre(downloaded_remove_rect(content, ui, 0)),
+            0.0
+        ),
+        FontsHit::RemoveDownloadedFont(0)
+    );
+    assert_eq!(
+        hit_test(
+            panel,
+            content,
+            ui,
+            centre(imported_remove_rect(content, ui, 0)),
+            0.0
+        ),
+        FontsHit::RemoveImportedFont(0)
+    );
+}
+
+#[test]
+fn settings_rows_offer_download_when_the_host_can_download() {
+    let mut state = state_with_missing(&["Montserrat"]);
+    let content = content_rect(492.0);
+    let panel = Rect::xywh(0.0, 0.0, 492.0, 1000.0);
+    let row = missing_row_rect(content, 0);
+    let hits = |ui: &EditorUiState| {
+        (0..row.size.x as i32)
+            .map(|dx| Point2D::new(row.origin.x + dx as f32, row.origin.y + 36.0))
+            .any(|point| hit_test(panel, content, ui, point, 0.0) == FontsHit::Download(0))
+    };
+    assert!(!hits(&state.editor_ui));
+    state.editor_ui.font_download_supported = true;
+    assert!(hits(&state.editor_ui));
+}

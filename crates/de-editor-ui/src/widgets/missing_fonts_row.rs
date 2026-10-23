@@ -6,7 +6,9 @@ use crate::theme::Theme;
 use crate::widgets::editor_state_ext::translate;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
-use de_editor_core::missing_fonts::MissingFontEntry;
+use de_editor_core::missing_fonts::{
+    can_download, font_download_status, FontDownloadStatus, MissingFontEntry, MissingFontsHover,
+};
 use de_editor_core::EditorUiState;
 use jian_widgets::centered_text_baseline_y;
 
@@ -46,8 +48,63 @@ pub(crate) fn row_button_rect(row: Rect, ui: &EditorUiState) -> Rect {
     }
 }
 
+/// Gap between the Download slot and the choose-font button.
+const ACTION_GAP: f32 = 8.0;
+
+/// Labels the Download slot can show; the slot is as wide as the longest so
+/// the row does not reflow while a download runs.
+const DOWNLOAD_LABELS: [&str; 3] = [
+    "missingFonts.download",
+    "missingFonts.downloading",
+    "missingFonts.retryDownload",
+];
+
+/// Whether a row has a Download slot at all: the host can download, the
+/// family is unresolved, and Google Fonts was not found to lack it.
+fn has_download_slot(ui: &EditorUiState, entry: &MissingFontEntry) -> bool {
+    ui.font_download_supported
+        && !entry.resolved
+        && font_download_status(ui, &entry.family) != Some(FontDownloadStatus::NotOnGoogle)
+}
+
+/// The Download slot left of the choose-font button, when the row has one.
+pub(crate) fn row_download_rect(
+    row: Rect,
+    ui: &EditorUiState,
+    entry: &MissingFontEntry,
+) -> Option<Rect> {
+    if !has_download_slot(ui, entry) {
+        return None;
+    }
+    let width = DOWNLOAD_LABELS
+        .iter()
+        .map(|key| fit_button_width(translate(ui, key), 11.0))
+        .fold(0.0, f32::max);
+    let choose = row_button_rect(row, ui);
+    Some(Rect {
+        origin: Point2D::new(choose.origin.x - ACTION_GAP - width, choose.origin.y),
+        size: Point2D::new(width, BUTTON_HEIGHT),
+    })
+}
+
+/// The Download slot's rect when it is pressable right now (not while the
+/// download runs).
+pub(crate) fn row_download_hit_rect(
+    row: Rect,
+    ui: &EditorUiState,
+    entry: &MissingFontEntry,
+) -> Option<Rect> {
+    can_download(ui, entry)
+        .then(|| row_download_rect(row, ui, entry))
+        .flatten()
+}
+
+#[cfg(test)]
 pub(crate) fn row_text_rect(row: Rect, ui: &EditorUiState) -> Rect {
-    let button = row_button_rect(row, ui);
+    row_text_rect_before(row, row_button_rect(row, ui))
+}
+
+fn row_text_rect_before(row: Rect, button: Rect) -> Rect {
     Rect {
         origin: Point2D::new(row.origin.x, row.origin.y + 1.0),
         size: Point2D::new(
@@ -131,8 +188,8 @@ pub(crate) fn paint_missing_font_row(
     row: Rect,
     divider: bool,
 ) {
-    let choose_hovered = ui.missing_fonts_hover
-        == Some(de_editor_core::missing_fonts::MissingFontsHover::ChooseFile(row_index));
+    let choose_hovered = ui.missing_fonts_hover == Some(MissingFontsHover::ChooseFile(row_index));
+    let download = row_download_rect(row, ui, entry);
     if divider {
         cx.backend.fill_rect(
             Rect {
@@ -142,7 +199,7 @@ pub(crate) fn paint_missing_font_row(
             theme.border,
         );
     }
-    let text_rect = row_text_rect(row, ui);
+    let text_rect = row_text_rect_before(row, download.unwrap_or(row_button_rect(row, ui)));
     let family_lines = family_label_lines(&entry.family, text_rect.size.x, |text| {
         cx.backend
             .measure_text_weighted(text, FAMILY_FONT_SIZE, FAMILY_FONT_WEIGHT)
@@ -151,10 +208,26 @@ pub(crate) fn paint_missing_font_row(
     let usage = crate::util::ellipsize_to_width(&usage, text_rect.size.x, |text| {
         cx.backend.measure_text_weighted(text, 11.0, 400)
     });
-    let mismatch_note = entry.mismatch_note.as_deref().map(|note| {
-        crate::util::ellipsize_to_width(note, text_rect.size.x, |text| {
+    let status = font_download_status(ui, &entry.family).filter(|_| !entry.resolved);
+    // A mismatch note (a wrong file was imported) outranks the download
+    // status: it is what the user did last.
+    let note = match (entry.mismatch_note.as_deref(), status) {
+        (Some(note), _) => Some((note, theme.destructive)),
+        (None, Some(FontDownloadStatus::NotOnGoogle)) => Some((
+            translate(ui, "missingFonts.notOnGoogle"),
+            theme.muted_foreground,
+        )),
+        (None, Some(FontDownloadStatus::Failed)) => Some((
+            translate(ui, "missingFonts.downloadFailed"),
+            theme.destructive,
+        )),
+        _ => None,
+    };
+    let mismatch_note = note.map(|(note, color)| {
+        let text = crate::util::ellipsize_to_width(note, text_rect.size.x, |text| {
             cx.backend.measure_text_weighted(text, 11.0, 400)
-        })
+        });
+        (text, color)
     });
 
     // Guard backend shaping differences so glyphs cannot overlap the action.
@@ -185,14 +258,14 @@ pub(crate) fn paint_missing_font_row(
         400,
         theme.muted_foreground,
     );
-    if let Some(note) = &mismatch_note {
+    if let Some((note, color)) = &mismatch_note {
         paint_text(
             cx,
             note,
             Point2D::new(row.origin.x, row.origin.y + 67.0),
             11.0,
             400,
-            theme.destructive,
+            *color,
         );
     }
     cx.backend.restore();
@@ -233,4 +306,45 @@ pub(crate) fn paint_missing_font_row(
             theme.foreground,
         );
     }
+    if let Some(download) = download {
+        paint_download_slot(cx, theme, ui, row_index, download, status);
+    }
+}
+
+/// The Download button, or its in-flight label while the family downloads.
+fn paint_download_slot(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    ui: &EditorUiState,
+    row_index: usize,
+    slot: Rect,
+    status: Option<FontDownloadStatus>,
+) {
+    if status == Some(FontDownloadStatus::Downloading) {
+        paint_text(
+            cx,
+            translate(ui, "missingFonts.downloading"),
+            Point2D::new(slot.origin.x + 12.0, centered_text_baseline_y(slot, 11.0)),
+            11.0,
+            500,
+            theme.muted_foreground,
+        );
+        return;
+    }
+    let hovered = ui.missing_fonts_hover == Some(MissingFontsHover::Download(row_index));
+    cx.backend
+        .fill_round_rect(slot, 6.0, if hovered { theme.border } else { theme.muted });
+    let label = if status == Some(FontDownloadStatus::Failed) {
+        "missingFonts.retryDownload"
+    } else {
+        "missingFonts.download"
+    };
+    paint_text(
+        cx,
+        translate(ui, label),
+        Point2D::new(slot.origin.x + 12.0, centered_text_baseline_y(slot, 11.0)),
+        11.0,
+        500,
+        theme.primary,
+    );
 }

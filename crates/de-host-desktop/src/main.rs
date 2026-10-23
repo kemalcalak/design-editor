@@ -41,12 +41,12 @@ mod fonts;
 mod fonts_error;
 mod frame;
 mod git_host;
-mod google_font_download;
-mod google_font_names;
 mod git_jobs;
 mod git_overflow_host;
 mod git_session;
 mod git_ssh_host;
+mod google_font_download;
+mod google_font_names;
 mod heap_pressure;
 mod home_previews;
 mod html_import_error;
@@ -332,6 +332,9 @@ struct DesktopApp {
     /// drained on the UI thread by `drain_forwarded_files`.
     forwarded_files: single_instance::ForwardQueue,
     iconify_job: Option<iconify_host::IconifyJob>,
+    /// Google Fonts downloads the user asked for (missing-fonts modal or
+    /// Settings Fonts tab), drained by the redraw pump.
+    font_downloads: google_font_download::FontDownloads,
     /// The `component_browser_open` value last written to
     /// `uikits.json` — `drain_kit_io` rewrites the store when the live
     /// value drifts (TS persists `browserOpen` on every toggle).
