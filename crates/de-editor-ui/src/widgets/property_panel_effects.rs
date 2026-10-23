@@ -12,7 +12,8 @@ use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::PropertyFocus;
 
-pub const EFFECT_ROW_HEIGHT: f32 = 36.0;
+/// One input-height row per effect (#83), like the Fill and Stroke rows.
+pub const EFFECT_ROW_HEIGHT: f32 = crate::widgets::property_panel_inputs::INPUT_HEIGHT;
 pub const EFFECT_ROW_GAP: f32 = 6.0;
 
 #[derive(Debug, Clone, Copy)]
@@ -26,7 +27,7 @@ pub struct EffectRowRects {
 
 pub fn effect_row_rects(x: f32, y: f32, width: f32) -> EffectRowRects {
     let row = Rect::xywh(x + PAD_X, y, width - PAD_X * 2.0, EFFECT_ROW_HEIGHT);
-    let action_size = 24.0;
+    let action_size = 22.0;
     let action_y = y + (EFFECT_ROW_HEIGHT - action_size) / 2.0;
     let remove = Rect::xywh(
         row.origin.x + row.size.x - action_size - 2.0,
@@ -40,8 +41,8 @@ pub fn effect_row_rects(x: f32, y: f32, width: f32) -> EffectRowRects {
         action_size,
         action_size,
     );
-    let value = Rect::xywh(eye.origin.x - 42.0, y + 4.0, 38.0, 28.0);
-    let slider_h = 20.0;
+    let value = Rect::xywh(eye.origin.x - 42.0, y + 3.0, 38.0, EFFECT_ROW_HEIGHT - 6.0);
+    let slider_h = 16.0;
     let slider = Rect::xywh(
         value.origin.x - 58.0,
         y + (EFFECT_ROW_HEIGHT - slider_h) / 2.0,
@@ -198,9 +199,8 @@ fn paint_effect_row(
     width: f32,
 ) {
     let rects = effect_row_rects(x, y, width);
-    cx.backend.fill_round_rect(rects.row, 8.0, theme.muted);
     cx.backend
-        .stroke_round_rect(rects.row, 8.0, theme.border, 1.0);
+        .fill_round_rect(rects.row, INPUT_RADIUS, theme.muted);
     let foreground = if effect.visible {
         theme.foreground
     } else {
@@ -209,8 +209,11 @@ fn paint_effect_row(
     draw_icon(
         cx.backend,
         effect_icon(effect.kind),
-        Point2D::new(rects.row.origin.x + 7.0, y + 10.0),
-        16.0,
+        Point2D::new(
+            rects.row.origin.x + 7.0,
+            y + (EFFECT_ROW_HEIGHT - 14.0) / 2.0,
+        ),
+        14.0,
         foreground,
         1.3,
     );
@@ -218,8 +221,11 @@ fn paint_effect_row(
     let max_label_w = (rects.slider.origin.x - (rects.row.origin.x + 27.0) - 4.0).max(1.0);
     let measured = text_metrics::measure_chrome(cx.backend, label, 10.0).max(1.0);
     let label_size = (10.0 * max_label_w / measured).clamp(8.0, 10.0);
+    // Below the minimum size the label still overflows into the slider,
+    // so ellipsize what is left.
+    let label = text_metrics::fit_chrome(cx.backend, label, max_label_w, label_size);
     let label_layout = TextLayout::single_run(
-        label,
+        &label,
         crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         label_size,
         foreground.to_jian(),
@@ -227,7 +233,7 @@ fn paint_effect_row(
     );
     cx.backend.draw_text(
         &label_layout,
-        Point2D::new(rects.row.origin.x + 27.0, y + 22.0),
+        Point2D::new(rects.row.origin.x + 27.0, y + EFFECT_ROW_HEIGHT / 2.0 + 4.0),
     );
 
     let value = effect.blur.clamp(0.0, 100.0);
@@ -280,7 +286,7 @@ fn paint_effect_row(
         rects.value,
         11.0,
         7.0,
-        rects.value.origin.y + 18.0,
+        rects.value.origin.y + rects.value.size.y / 2.0 + 4.0,
     ) {
         let layout = TextLayout::single_run(
             text,
@@ -291,7 +297,10 @@ fn paint_effect_row(
         );
         cx.backend.draw_text(
             &layout,
-            Point2D::new(rects.value.origin.x + 7.0, rects.value.origin.y + 18.0),
+            Point2D::new(
+                rects.value.origin.x + 7.0,
+                rects.value.origin.y + rects.value.size.y / 2.0 + 4.0,
+            ),
         );
     }
 

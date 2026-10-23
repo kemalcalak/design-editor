@@ -256,19 +256,6 @@ impl PropertyPanel {
             hug_height: snapshot.size_hug_height,
             clip_content: snapshot.size_clip_content,
         };
-        // Padding edit mode: the user's gear pin (only while it still
-        // applies to the selected node — see `padding_edit_mode_anchor`),
-        // else derived from the node's four effective values (TS
-        // default-derives each frame). Anchor-scoping stops one node's
-        // pinned mode leaking into the next selection.
-        let pin_applies = ui.padding_edit_mode_anchor == state.selection.anchor.as_str();
-        let padding_edit_mode = ui
-            .padding_edit_mode
-            .filter(|_| pin_applies)
-            .unwrap_or_else(|| {
-                let p = snapshot.layout_padding;
-                de_editor_core::PaddingEditMode::from_values(p.top, p.right, p.bottom, p.left)
-            });
         let stroke_pin_applies = ui.stroke_edit_mode_anchor == state.selection.anchor.as_str();
         let stroke_edit_mode = ui
             .stroke_edit_mode
@@ -383,11 +370,12 @@ impl PropertyPanel {
                     _ => None,
                 }
             },
-            padding_edit_mode,
-            padding_mode_popover_open: ui.padding_mode_popover_open,
-            padding_mode_popover_hover: ui.padding_mode_popover_hover,
+            layout_align_popover_open: ui.layout_align_popover_open,
+            layout_align_popover_hover: ui.layout_align_popover_hover,
             stroke_edit_mode,
             stroke_mode_popover_open: ui.stroke_mode_popover_open,
+            fill_menu_open: ui.fill_menu_open,
+            export_section_open: ui.export_section_open,
             stroke_mode_popover_hover: ui.stroke_mode_popover_hover,
             is_multi,
             tab: property_tab,

@@ -21,6 +21,11 @@ use crate::{
 pub(crate) struct BaselineAdjustingBackend<'a> {
     pub(crate) inner: &'a mut dyn RenderBackend,
     pub(crate) baseline_delta_y: f32,
+    /// When set, every text draw and family measurement uses this face
+    /// instead of the one the wrapped widget asked for — so a focused
+    /// jian `TextInputView` (fixed chrome face) can render a monospace
+    /// hex value without changing font as it gains focus.
+    pub(crate) font_family: Option<&'a str>,
 }
 
 impl RenderBackend for BaselineAdjustingBackend<'_> {
@@ -42,7 +47,20 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
 
     fn draw_text(&mut self, layout: &TextLayout, origin: Point2D) {
         let draw_origin = Point2D::new(origin.x, origin.y + self.baseline_delta_y);
-        self.inner.draw_text(layout, draw_origin);
+        match (self.font_family, layout.runs().first()) {
+            (Some(family), Some(run)) => {
+                let restyled = TextLayout::single_run(
+                    &run.content,
+                    family,
+                    run.font_size,
+                    run.color,
+                    Point2D::new(0.0, 0.0),
+                )
+                .with_font_weight(run.font_weight);
+                self.inner.draw_text(&restyled, draw_origin);
+            }
+            _ => self.inner.draw_text(layout, draw_origin),
+        }
     }
 
     fn clip_rect(&mut self, rect: Rect) {
@@ -511,6 +529,7 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
     }
 
     fn measure_text_family(&mut self, text: &str, font_size: f32, family: &str) -> f32 {
+        let family = self.font_family.unwrap_or(family);
         self.inner.measure_text_family(text, font_size, family)
     }
 
@@ -522,6 +541,7 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
         weight: u16,
         italic: bool,
     ) -> f32 {
+        let family = self.font_family.unwrap_or(family);
         self.inner
             .measure_text_family_styled(text, font_size, family, weight, italic)
     }

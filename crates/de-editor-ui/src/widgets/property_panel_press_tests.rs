@@ -36,7 +36,7 @@ fn property_action_pressed_uses_shared_feedback() {
         panel.font_weight_picker_open,
         panel.export_scale_picker_open,
         panel.export_format_picker_open,
-        panel.padding_mode_popover_open,
+        panel.layout_align_popover_open,
     );
     assert!(
         !action_rects.is_empty(),

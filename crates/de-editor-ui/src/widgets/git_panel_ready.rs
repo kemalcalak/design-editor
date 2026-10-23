@@ -422,6 +422,7 @@ impl GitPanel<'_> {
                 let mut baselined = crate::widgets::text_input_backend::BaselineAdjustingBackend {
                     inner: cx.backend,
                     baseline_delta_y: 12.0,
+                    font_family: None,
                 };
                 TextArea {
                     state: &self.state.commit_input,

@@ -222,9 +222,6 @@ pub struct VisibleSections {
     pub component_button: ComponentButtonState,
     pub flex_layout: bool,
     pub flex_layout_mode: de_editor_core::FlexLayout,
-    /// Resolved padding edit mode (UI pin or derived from values) —
-    /// drives the padding row count so all walkers agree.
-    pub padding_edit_mode: de_editor_core::PaddingEditMode,
     pub layout_justify: LayoutJustifyValue,
     pub layout_align: LayoutAlignValue,
     pub size_options: bool,
@@ -267,6 +264,10 @@ pub struct VisibleSections {
     pub stroke_edit_mode: de_editor_core::PaddingEditMode,
     /// Whether the stroke-mode gear popover is open.
     pub stroke_mode_popover_open: bool,
+    /// Fill row whose `⋯` menu is open; its rows join the action walker.
+    pub fill_menu: Option<usize>,
+    /// Export section expanded (else just its header and "+").
+    pub export_open: bool,
     pub color_variable_count: usize,
     pub fill_variable_bound: bool,
     pub stroke_variable_bound: bool,
@@ -290,6 +291,71 @@ impl VisibleSections {
         }
     }
 
+    /// Whether fill row `index` shows the colour-variable button: only
+    /// the primary fill (the variable subsystem keys off `fills[0]`),
+    /// and only when there are colour variables or one is bound.
+    pub fn fill_row_shows_variable(&self, index: usize) -> bool {
+        index == 0 && (self.color_variable_count > 0 || self.fill_variable_bound)
+    }
+
+    /// Whether fill row `index` edits its hex in place. A primary fill
+    /// bound to a colour variable shows the `$name` chip instead.
+    pub fn fill_hex_editable(&self, index: usize) -> bool {
+        !(index == 0 && self.fill_variable_bound)
+    }
+
+    /// Height of the component block under the header (instance /
+    /// detach rows; Create lives in the header since #83).
+    pub fn component_block_h(&self) -> f32 {
+        if self.create_component {
+            crate::widgets::property_panel_inputs::create_component_block_height(
+                self.component_button,
+            )
+        } else {
+            0.0
+        }
+    }
+
+    /// Whether the per-corner radius grid is expanded.
+    pub fn corner_grid_expanded(&self) -> bool {
+        self.corner_radius && self.corner_per_corner && self.corner_expand
+    }
+
+    /// Height of the Position section: X / Y, W / H, rotation / radius
+    /// (plus the expanded corner grid), trailing gap included. Every
+    /// y-walk advances past Position with this.
+    pub fn position_section_h(&self) -> f32 {
+        use crate::widgets::property_panel_inputs::{
+            INPUT_HEIGHT, SECTION_GAP, SECTION_HEADER_HEIGHT,
+        };
+        let corner_grid = if self.corner_grid_expanded() {
+            crate::widgets::property_panel_corner::CORNER_GRID_EXTRA_HEIGHT
+        } else {
+            0.0
+        };
+        SECTION_HEADER_HEIGHT
+            + INPUT_HEIGHT
+            + 6.0
+            + self.position_size_row_h()
+            + INPUT_HEIGHT
+            + corner_grid
+            + 12.0
+            + SECTION_GAP
+    }
+
+    /// Height of the fill / hug / clip boxes block (zero when the node
+    /// does not size), trailing gap included.
+    pub fn size_section_h(&self) -> f32 {
+        if !self.size_options {
+            return 0.0;
+        }
+        let rows = if self.clip_content { 3.0 } else { 2.0 };
+        self.size_section_lead_h()
+            + crate::widgets::property_panel_inputs::size_check_row_height() * rows
+            + 12.0
+            + crate::widgets::property_panel_inputs::SECTION_GAP
+    }
+
     /// Space above the fill / hug / clip boxes. Under Auto layout they
     /// read as its last rows and take no title of their own.
     pub fn size_section_lead_h(&self) -> f32 {
@@ -305,7 +371,6 @@ impl VisibleSections {
         component_button: ComponentButtonState::Create,
         flex_layout: true,
         flex_layout_mode: de_editor_core::FlexLayout::Free,
-        padding_edit_mode: de_editor_core::PaddingEditMode::Individual,
         layout_justify: LayoutJustifyValue::Start,
         layout_align: LayoutAlignValue::Start,
         size_options: true,
@@ -333,6 +398,8 @@ impl VisibleSections {
         stroke: true,
         stroke_edit_mode: de_editor_core::PaddingEditMode::Individual,
         stroke_mode_popover_open: false,
+        fill_menu: None,
+        export_open: true,
         color_variable_count: 0,
         fill_variable_bound: false,
         stroke_variable_bound: false,

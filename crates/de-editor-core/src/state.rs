@@ -540,7 +540,6 @@ mod tests {
         s.editor_ui
             .collapsed_layers
             .insert(crate::NodeId::new("old-2"));
-        s.editor_ui.padding_edit_mode_anchor = "old-3".to_string();
         // Set by a prior Figma import — must not carry into the synced doc.
         s.editor_ui.preserve_authored_geometry = true;
 
@@ -560,7 +559,6 @@ mod tests {
         // Document-derived editor_ui state cleared (no stale node-id refs).
         assert!(s.editor_ui.hovered_layer_id.is_none());
         assert!(s.editor_ui.collapsed_layers.is_empty());
-        assert!(s.editor_ui.padding_edit_mode_anchor.is_empty());
         assert!(!s.editor_ui.preserve_authored_geometry);
     }
 

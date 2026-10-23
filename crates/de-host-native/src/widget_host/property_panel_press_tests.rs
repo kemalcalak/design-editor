@@ -340,3 +340,123 @@ fn codegen_action_press_sets_and_release_clears_pressed_button() {
     assert!(host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H));
     assert_eq!(host.editor_state().editor_ui.pressed_button, None);
 }
+
+#[test]
+fn alignment_popover_opens_from_the_auto_layout_header_and_sets_distribution() {
+    use de_editor_ui::widgets::property_panel_action::LayoutJustifyValue;
+    let mut host = WidgetHostNative::new();
+    seed(
+        &mut host,
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"frame","id":"f","name":"Frame",
+               "x":40,"y":40,"width":360,"height":240,
+               "layout":"vertical","gap":8,"children":[]}
+        ]}"##,
+    );
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("f"));
+
+    let button = point_for_action(&host, |action| {
+        matches!(action, PropertyPanelAction::ToggleLayoutAlignPopover)
+    });
+    assert!(host.apply_press(button.x, button.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    assert!(host.editor_state().editor_ui.layout_align_popover_open);
+
+    let between = point_for_action(&host, |action| {
+        matches!(
+            action,
+            PropertyPanelAction::SetLayoutJustify(LayoutJustifyValue::SpaceBetween)
+        )
+    });
+    assert!(host.apply_press(between.x, between.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    let panel = PropertyPanel::for_selection(host.editor_state()).expect("panel");
+    assert_eq!(
+        panel.snapshot.layout_justify,
+        LayoutJustifyValue::SpaceBetween
+    );
+    assert!(host.editor_state().editor_ui.layout_align_popover_open);
+}
+
+#[test]
+fn fill_menu_opens_from_the_row_and_removes_that_fill() {
+    let mut host = WidgetHostNative::new();
+    seed(
+        &mut host,
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"rectangle","id":"r","name":"R",
+               "x":40,"y":40,"width":180,"height":120,
+               "fill":[{"type":"solid","color":"#112233"},
+                       {"type":"solid","color":"#445566"}]}
+        ]}"##,
+    );
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("r"));
+
+    let button = point_for_action(&host, |action| {
+        matches!(action, PropertyPanelAction::ToggleFillMenu(1))
+    });
+    assert!(host.apply_press(button.x, button.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    assert_eq!(host.editor_state().editor_ui.fill_menu_open, Some(1));
+
+    let remove = point_for_action(&host, |action| {
+        matches!(action, PropertyPanelAction::RemoveFill(1))
+    });
+    assert!(host.apply_press(remove.x, remove.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    let fills = de_editor_core::fills::node_fills(host.editor_state().selected_node().unwrap())
+        .map(|f| f.len())
+        .unwrap_or(0);
+    assert_eq!(fills, 1);
+    assert_eq!(host.editor_state().editor_ui.fill_menu_open, None);
+
+    // A press outside an open menu closes it without acting.
+    host.editor_state_mut().editor_ui.fill_menu_open = Some(0);
+    let outside = point_inside_property_panel_without_target(&host);
+    assert!(host.apply_press(outside.x, outside.y, VIEWPORT_W, VIEWPORT_H));
+    assert_eq!(host.editor_state().editor_ui.fill_menu_open, None);
+}
+
+#[test]
+fn fill_menu_blend_trigger_opens_the_blend_picker_under_the_open_menu() {
+    use de_editor_ui::widgets::property_panel_action::CompositingTarget;
+    let mut host = WidgetHostNative::new();
+    seed(
+        &mut host,
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"rectangle","id":"r","name":"R",
+               "x":40,"y":40,"width":180,"height":120,
+               "fill":[{"type":"solid","color":"#112233"}]}
+        ]}"##,
+    );
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("r"));
+    host.apply_property_action(PropertyPanelAction::ToggleFillMenu(0));
+
+    let blend = point_for_action(&host, |action| {
+        matches!(
+            action,
+            PropertyPanelAction::ToggleCompositingPicker(CompositingTarget::FillBlend(0))
+        )
+    });
+    assert!(host.apply_press(blend.x, blend.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    let ui = &host.editor_state().editor_ui;
+    assert!(ui.compositing_picker.open, "the blend picker opens");
+    assert_eq!(
+        ui.fill_menu_open,
+        Some(0),
+        "the menu its trigger lives in stays open, so the picker can anchor"
+    );
+    let panel = PropertyPanel::for_selection(host.editor_state()).expect("panel");
+    let rect = host.property_rect(VIEWPORT_W, VIEWPORT_H);
+    // The picker drops below its trigger or flips above it near the
+    // panel's bottom edge; either way it is next to the trigger.
+    let near = (-400..=400)
+        .step_by(4)
+        .map(|dy| Point2D::new(blend.x, blend.y + dy as f32))
+        .any(|p| panel.compositing_picker_contains(rect, p));
+    assert!(near, "the picker paints next to its trigger");
+}

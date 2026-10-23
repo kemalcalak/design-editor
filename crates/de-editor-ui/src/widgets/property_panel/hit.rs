@@ -62,6 +62,12 @@ impl PropertyPanel {
         {
             return Some(PropertyPanelAction::SetPropertyTab(tab));
         }
+        if self.header_create_component()
+            && crate::widgets::property_panel_header::create_component_rect(panel_rect)
+                .contains(point)
+        {
+            return Some(PropertyPanelAction::CreateComponent);
+        }
         if self.is_multi {
             // Multi-select inputs / toggles are inert in v1.
             return None;
@@ -160,6 +166,32 @@ impl PropertyPanel {
                 InteractionMenuHit::Outside => {}
             }
         }
+        // The open fill `⋯` menu and Auto layout alignment popover
+        // overlay the sections below them: their rows win and their
+        // chrome swallows the press. One walk serves both checks and the
+        // section hit-test below.
+        let popups_open = self.fill_menu_open.is_some() || self.layout_align_popover_open;
+        let walked = (popups_open && self.point_in_design_popup_clip(panel_rect, point))
+            .then(|| self.popup_action_rects(panel_rect));
+        if let Some(rects) = walked.as_deref() {
+            let row_at = |is_row: fn(&PropertyPanelAction) -> bool| {
+                rects
+                    .iter()
+                    .find(|(action, rect)| is_row(action) && rect.contains(point))
+                    .map(|(action, _)| action.clone())
+            };
+            if self.fill_menu_contains_in(rects, panel_rect, point) {
+                return row_at(crate::widgets::property_panel_fill_menu::is_fill_menu_row);
+            }
+            if let Some(action) =
+                row_at(crate::widgets::property_panel_flex::is_layout_align_popover_row)
+            {
+                return Some(action);
+            }
+            if self.layout_align_popover_contains_in(rects, panel_rect, point) {
+                return None;
+            }
+        }
         if !self.point_in_section_viewport(panel_rect, point) {
             return None;
         }
@@ -177,20 +209,7 @@ impl PropertyPanel {
                 return Some(PropertyPanelAction::SetInstanceComponent(option.id.clone()));
             }
         }
-        let rects = sections::action_button_rects_with_fill_picker(
-            scrolled,
-            self.visible_sections(),
-            &self.snapshot.effects,
-            &self.snapshot.fills,
-            &self.snapshot.interactions,
-            self.fill_type_picker.open,
-            self.fill_type_picker_index,
-            self.font_picker.open,
-            self.font_weight_picker_open,
-            self.export_scale_picker_open,
-            self.export_format_picker_open,
-            self.padding_mode_popover_open,
-        );
+        let rects = walked.unwrap_or_else(|| self.popup_action_rects(panel_rect));
         // Picker rows live in `rects` AFTER the dropdown rect, so
         // a row hit takes priority — `rev()` makes the picker rows
         // tested first and short-circuits before the dropdown
@@ -240,7 +259,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         )
         .into_iter()
         .filter(|(a, _)| {
@@ -293,7 +312,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         )
         .into_iter()
         .find_map(|(action, rect)| match action {
@@ -423,7 +442,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         )
         .iter()
         .position(|(_, r)| (*r).contains(point))

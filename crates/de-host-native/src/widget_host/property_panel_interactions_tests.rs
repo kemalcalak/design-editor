@@ -273,10 +273,12 @@ fn interaction_menu_hover_is_a_no_op_while_closed() {
 #[test]
 fn effect_popover_hover_clears_the_covered_inspector_action_hover() {
     let mut host = WidgetHostNative::new();
+    // A tap action gives Interactions a full-width row for the effect
+    // menu to cover (an empty Interactions section is just its header).
     seed(
         &mut host,
         r#"{ "version": "1.0.0", "children": [
-            {"type":"frame","id":"f1","name":"Frame"}
+            {"type":"frame","id":"f1","name":"Frame","events":{"onTap":[{"pop":null}]}}
         ]}"#,
     );
     host.last_viewport_w = VIEWPORT_W;

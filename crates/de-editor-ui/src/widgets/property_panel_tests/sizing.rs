@@ -1,6 +1,6 @@
 //! Size / layout geometry tests — fill + hug sizing keeping their
-//! numeric inputs, the padding edit-mode input count, and the flex
-//! section's gap-mode column not colliding with the padding rows.
+//! numeric inputs, the single shorthand padding input, and the
+//! alignment controls living in the Auto layout header popover.
 //!
 //! Split out of `property_panel_tests.rs` to keep both files under
 //! the design-editor 800-line cap.
@@ -150,27 +150,13 @@ fn fill_and_hug_inputs_paint_snapshot_size_and_numeric_commit_makes_fixed() {
 }
 
 #[test]
-fn padding_mode_derives_from_values_and_drives_input_count() {
-    use de_editor_core::{PaddingEditMode, PropertyFocus};
-    // from_values mirrors TS parsePaddingValues.
-    assert_eq!(
-        PaddingEditMode::from_values(10.0, 10.0, 10.0, 10.0),
-        PaddingEditMode::Single
-    );
-    assert_eq!(
-        PaddingEditMode::from_values(10.0, 20.0, 10.0, 20.0),
-        PaddingEditMode::Axis
-    );
-    assert_eq!(
-        PaddingEditMode::from_values(8.0, 24.0, 32.0, 24.0),
-        PaddingEditMode::Individual
-    );
-
+fn padding_is_one_shorthand_input_whatever_the_values() {
+    use de_editor_core::PropertyFocus;
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),
         size: Point2D::new(280.0, 1200.0),
     };
-    let padding_rects = |padding: &str| {
+    let padding = |padding: &str| {
         let json = format!(
             r##"{{ "version": "1.0.0", "children": [
                   {{"type":"frame","id":"f","name":"F","x":0,"y":0,
@@ -181,36 +167,27 @@ fn padding_mode_derives_from_values_and_drives_input_count() {
         let mut s = state_from(&json);
         s.set_single_selection(NodeId::new("f"));
         let panel = PropertyPanel::for_selection(&s).expect("frame panel");
-        sections::editable_input_rects(
+        let inputs = sections::editable_input_rects(
             rect,
             visible_for(&panel),
             &panel.snapshot.fills,
             &panel.snapshot.effects,
         )
         .into_iter()
-        .filter(|(f, _)| {
-            matches!(
-                f,
-                PropertyFocus::PaddingTop
-                    | PropertyFocus::PaddingRight
-                    | PropertyFocus::PaddingBottom
-                    | PropertyFocus::PaddingLeft
-            )
-        })
-        .count()
+        .filter(|(f, _)| *f == PropertyFocus::Padding)
+        .count();
+        (inputs, panel.snapshot.layout_padding.shorthand())
     };
-    // Single → 1 input, Axis → 2, Individual → 4.
-    assert_eq!(padding_rects("12"), 1, "uniform padding → 1 input");
-    assert_eq!(padding_rects("[10, 20]"), 2, "axis padding → 2 inputs");
-    assert_eq!(
-        padding_rects("[8, 24, 32, 24]"),
-        4,
-        "individual padding → 4 inputs"
-    );
+    assert_eq!(padding("12"), (1, "12".to_string()));
+    assert_eq!(padding("[10, 20]"), (1, "10 20".to_string()));
+    assert_eq!(padding("[8, 24, 32, 24]"), (1, "8 24 32".to_string()));
+    assert_eq!(padding("[8, 24, 32, 4]"), (1, "8 24 32 4".to_string()));
 }
 
 #[test]
-fn flex_advanced_rows_do_not_overlap_gap_modes() {
+fn alignment_controls_live_in_the_header_popover() {
+    use crate::widgets::property_panel::LayoutJustifyValue;
+    use crate::widgets::property_panel_flex::align_popover_rect_from_button;
     let mut state = state_from(
         r##"{ "version": "1.0.0", "children": [
               {"type":"frame","id":"f","name":"Frame",
@@ -226,9 +203,112 @@ fn flex_advanced_rows_do_not_overlap_gap_modes() {
         size: Point2D::new(280.0, 1200.0),
     };
     let visible = visible_for(&panel);
-    let actions = sections::action_button_rects_with_fill_picker(
+    let actions = |open: bool| {
+        sections::action_button_rects_with_fill_picker(
+            rect,
+            visible,
+            &panel.snapshot.effects,
+            &panel.snapshot.fills,
+            &panel.snapshot.interactions,
+            false,
+            0,
+            false,
+            false,
+            false,
+            false,
+            open,
+        )
+    };
+    let is_alignment = |action: &PropertyPanelAction| {
+        matches!(
+            action,
+            PropertyPanelAction::SetLayoutAlignment { .. }
+                | PropertyPanelAction::SetLayoutAlign(_)
+                | PropertyPanelAction::SetLayoutJustify(_)
+        )
+    };
+    let closed = actions(false);
+    assert!(
+        !closed.iter().any(|(a, _)| is_alignment(a)),
+        "a closed popover leaves no alignment targets in the section"
+    );
+    let button = closed
+        .iter()
+        .find_map(|(a, r)| matches!(a, PropertyPanelAction::ToggleLayoutAlignPopover).then_some(*r))
+        .expect("header alignment button");
+    let popover = align_popover_rect_from_button(button, rect.size.x);
+    let open = actions(true);
+    let targets: Vec<Rect> = open
+        .iter()
+        .filter(|(a, _)| is_alignment(a))
+        .map(|(_, r)| *r)
+        .collect();
+    assert_eq!(targets.len(), 12, "3x3 grid + 3 distribution rows");
+    for r in targets {
+        assert!(
+            r.origin.x >= popover.origin.x
+                && r.origin.y >= popover.origin.y
+                && r.origin.x + r.size.x <= popover.origin.x + popover.size.x
+                && r.origin.y + r.size.y <= popover.origin.y + popover.size.y,
+            "alignment target {r:?} must sit inside the popover {popover:?}"
+        );
+    }
+    assert!(open.iter().any(|(a, _)| matches!(
+        a,
+        PropertyPanelAction::SetLayoutJustify(LayoutJustifyValue::SpaceAround)
+    )));
+}
+
+#[test]
+fn open_alignment_popover_paints_its_distribution_rows() {
+    let mut state = state_from(
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"frame","id":"f","name":"Frame",
+               "x":40,"y":40,"width":360,"height":240,
+               "layout":"vertical","gap":8,"children":[]}
+        ]}"##,
+    );
+    state.set_single_selection(NodeId::new("f"));
+    state.editor_ui.locale = de_editor_core::Locale::EnUs;
+    let paints_rows = |state: &de_editor_core::EditorState| {
+        let panel = PropertyPanel::for_selection(state).expect("frame panel");
+        let mut backend = CountingBackend::default();
+        let mut cx = PaintCx {
+            backend: &mut backend,
+        };
+        panel.paint(
+            &mut cx,
+            Rect {
+                origin: Point2D::ZERO,
+                size: Point2D::new(280.0, 1200.0),
+            },
+        );
+        backend.texts.iter().any(|text| text == "Space Between")
+    };
+    assert!(!paints_rows(&state), "closed popover paints nothing");
+    state.editor_ui.layout_align_popover_open = true;
+    assert!(paints_rows(&state), "open popover paints its rows");
+}
+
+#[test]
+fn open_alignment_popover_rows_win_over_the_sections_beneath() {
+    let mut state = state_from(
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"frame","id":"f","name":"Frame",
+               "x":40,"y":40,"width":360,"height":240,
+               "layout":"vertical","gap":8,"children":[]}
+        ]}"##,
+    );
+    state.set_single_selection(NodeId::new("f"));
+    state.editor_ui.layout_align_popover_open = true;
+    let panel = PropertyPanel::for_selection(&state).expect("frame panel");
+    let rect = Rect {
+        origin: Point2D::ZERO,
+        size: Point2D::new(280.0, 1200.0),
+    };
+    let rows: Vec<(PropertyPanelAction, Rect)> = sections::action_button_rects_with_fill_picker(
         rect,
-        visible,
+        visible_for(&panel),
         &panel.snapshot.effects,
         &panel.snapshot.fills,
         &panel.snapshot.interactions,
@@ -238,33 +318,14 @@ fn flex_advanced_rows_do_not_overlap_gap_modes() {
         false,
         false,
         false,
-        false,
-    );
-    let last_gap_mode = actions
-        .iter()
-        .find(|(action, _)| {
-            matches!(
-                action,
-                PropertyPanelAction::SetLayoutJustify(
-                    crate::widgets::property_panel::LayoutJustifyValue::SpaceAround
-                )
-            )
-        })
-        .map(|(_, r)| *r)
-        .expect("space-around hit rect");
-    let padding_top = sections::editable_input_rects(
-        rect,
-        visible,
-        &panel.snapshot.fills,
-        &panel.snapshot.effects,
+        true,
     )
     .into_iter()
-    .find(|(focus, _)| *focus == de_editor_core::PropertyFocus::PaddingTop)
-    .map(|(_, r)| r)
-    .expect("padding top input rect");
-
-    assert!(
-        padding_top.origin.y >= last_gap_mode.origin.y + last_gap_mode.size.y + 18.0,
-        "padding inputs must start below the full gap-mode column"
-    );
+    .filter(|(a, _)| crate::widgets::property_panel_flex::is_layout_align_popover_row(a))
+    .collect();
+    assert_eq!(rows.len(), 12);
+    for (action, r) in rows {
+        let centre = Point2D::new(r.origin.x + r.size.x / 2.0, r.origin.y + r.size.y / 2.0);
+        assert_eq!(panel.hit_test_action(rect, centre), Some(action.clone()));
+    }
 }
