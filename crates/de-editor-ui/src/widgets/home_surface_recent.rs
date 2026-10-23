@@ -267,19 +267,23 @@ fn paint_list(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &HomeLayo
         cx.backend.fill_round_rect(thumb, 6.0, p.subtle);
         cx.backend.save();
         cx.backend.clip_round_rect(thumb, 6.0);
-        paint_thumbnail(cx, entry, thumb, ROW_THUMB_PAD);
+        let previewed = paint_thumbnail(cx, entry, thumb, ROW_THUMB_PAD);
         cx.backend.restore();
-        let glyph_x = thumb.origin.x + thumb.size.x + 14.0;
-        draw_glyph(
-            cx.backend,
-            HomeGlyph::File,
-            Point2D::new(glyph_x, rect.origin.y + (rect.size.y - 15.0) / 2.0),
-            15.0,
-            p.text_3,
-            1.6,
-        );
+        if !previewed {
+            draw_glyph(
+                cx.backend,
+                HomeGlyph::File,
+                Point2D::new(
+                    thumb.origin.x + (thumb.size.x - 15.0) / 2.0,
+                    thumb.origin.y + (thumb.size.y - 15.0) / 2.0,
+                ),
+                15.0,
+                p.text_3,
+                1.6,
+            );
+        }
         let name_end = if folder_x > 0.0 { folder_x } else { edited_x } - 16.0;
-        let name_x = glyph_x + 25.0;
+        let name_x = thumb.origin.x + thumb.size.x + 14.0;
         let name = fit_in_family(cx.backend, &entry.name, name_end - name_x, 13.0, SANS);
         draw_text(cx, &name, SANS, 13.0, p.text, Point2D::new(name_x, y));
         if folder_x > 0.0 {
