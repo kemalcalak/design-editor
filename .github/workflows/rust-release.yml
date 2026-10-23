@@ -19,19 +19,38 @@ name: Release
 # The Rust check and version-sync workflows run inside this pipeline
 # (`workflow_call`), so a release never depends on their path filters having
 # fired for the commit being released.
+#
+# Pull requests that touch release files get a dry run: the same build jobs
+# produce the dmg and the installer as short-lived artifacts, but nothing is
+# tagged or published. The PR's own Rust check / version-sync workflows cover
+# the checks, so the dry run skips them.
 
 on:
   push:
     branches: [main]
+  pull_request:
+    paths:
+      - '.github/workflows/rust-release.yml'
+      - 'tools/pinned-release-tools.sh'
+      - 'tools/install-pinned-nsis.ps1'
+      - 'tools/stage-pinned-angle.ps1'
+      - 'tools/stage-pinned-vcredist.ps1'
+      - 'scripts/build-rust-release-host.sh'
+      - 'scripts/bundle-macos.sh'
+      - 'scripts/package-windows.nsi'
+      - 'scripts/workspace-version.sh'
+      - 'crates/de-host-desktop/assets/icon.*'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 # Never run two releases side by side; a newer push waits for the older one.
+# A PR dry run has its own group (a newer push to the PR cancels the older run)
+# so it never queues behind, or blocks, a real release.
 concurrency:
-  group: release
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('release-dry-run-{0}', github.event.pull_request.number) || 'release' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   version:
@@ -40,6 +59,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       release: ${{ steps.version.outputs.release }}
+      build: ${{ steps.version.outputs.build }}
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
@@ -57,18 +77,26 @@ jobs:
             echo "::error::checkout does not match the pushed commit"
             exit 1
           }
+          version=$(scripts/workspace-version.sh)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            echo "Pull request: dry-run build of v$version, nothing is published."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           [[ "$GITHUB_REF" == refs/heads/main ]] || {
             echo "::error::releases are cut from main only (got $GITHUB_REF)"
             exit 1
           }
-          version=$(scripts/workspace-version.sh)
-          echo "version=$version" >> "$GITHUB_OUTPUT"
           if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v$version" >/dev/null 2>&1; then
             echo "v$version is already tagged; nothing to release."
             echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "build=false" >> "$GITHUB_OUTPUT"
           else
             echo "v$version has no tag yet; releasing."
             echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "build=true" >> "$GITHUB_OUTPUT"
           fi
 
   rust-check:
@@ -86,6 +114,10 @@ jobs:
   build:
     name: ${{ matrix.label }}
     needs: [version, rust-check, version-sync]
+    # On a release the checks must pass; on a PR dry run they are skipped.
+    if: >-
+      !cancelled() && needs.version.outputs.build == 'true' &&
+      !contains(needs.*.result, 'failure')
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -225,10 +257,12 @@ jobs:
             de-cli-${{ matrix.label }}.tar.gz
             de-cli-${{ matrix.label }}.zip
           if-no-files-found: error
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 90 }}
 
   publish:
     name: Tag and publish v${{ needs.version.outputs.version }}
     needs: [version, build]
+    if: needs.version.outputs.release == 'true' && github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
