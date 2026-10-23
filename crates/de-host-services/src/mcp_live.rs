@@ -113,6 +113,13 @@ pub struct McpPumpOutcome {
     pub document_edited: bool,
 }
 
+/// The unplaced form of a root-placed MCP write and the document revision
+/// placement assumed (see `mcp_serve::McpWrite::unplaced`).
+struct UnplacedWrite {
+    revision: u64,
+    command: EditorCommand,
+}
+
 enum UiRequest {
     Snapshot {
         ack: SyncSender<EditorState>,
@@ -131,6 +138,10 @@ enum UiRequest {
         /// (`design_agent_tools.rs::should_register_batch_reveals`).
         tool_name: String,
         cmd: EditorCommand,
+        /// Set when `cmd` is a root-placed write (#37): apply this unplaced
+        /// command instead if the live document is no longer at the
+        /// revision placement was computed against.
+        unplaced: Option<Box<UnplacedWrite>>,
         ack: SyncSender<ApplyAck>,
     },
     /// Whole-document sync (TS REST `/api/mcp/document` parity). The document
@@ -278,8 +289,15 @@ impl McpLiveServer {
                 Ok(UiRequest::Apply {
                     tool_name,
                     cmd,
+                    unplaced,
                     ack,
                 }) => {
+                    let cmd = match unplaced {
+                        Some(fallback) if fallback.revision != state.document_revision() => {
+                            fallback.command
+                        }
+                        _ => cmd,
+                    };
                     let layout_dirty = command_invalidates_layout(&cmd);
                     // Snapshot BEFORE apply, only for the one tool the canvas
                     // radar-scan cares about — `design_agent_tools.rs`'s
@@ -510,6 +528,9 @@ use connection::*;
 use doc_sync::*;
 use ui_requests::*;
 
+#[cfg(test)]
+#[path = "mcp_live_placement_tests.rs"]
+mod placement_tests;
 #[cfg(test)]
 #[path = "mcp_live_tests.rs"]
 mod tests;

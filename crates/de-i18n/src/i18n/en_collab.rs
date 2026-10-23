@@ -221,6 +221,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "imagesTab.empty" => "No images on this page",
         "property.page" => "Page",
         "property.autoLayout" => "Auto layout",
+        "missingFonts.download" => "Download",
+        "missingFonts.downloadAll" => "Download all",
+        "missingFonts.downloading" => "Downloading…",
+        "missingFonts.retryDownload" => "Retry",
+        "missingFonts.notOnGoogle" => "Not on Google Fonts",
+        "missingFonts.downloadFailed" => "Download failed — check your connection",
+        "missingFonts.downloadedSection" => "Downloaded from Google Fonts",
         _ => return None,
     })
 }

@@ -106,6 +106,7 @@ impl DesktopApp {
                 .iconify_job
                 .as_ref()
                 .is_some_and(crate::iconify_host::IconifyJob::is_pending)
+            || self.font_downloads.is_pending()
             || self.provider_connect_pending()
             || self.acp_agent_connect_pending()
             || self.builtin_model_refresh_pending()
@@ -183,6 +184,7 @@ impl DesktopApp {
                 .iconify_job
                 .as_ref()
                 .is_some_and(crate::iconify_host::IconifyJob::is_pending)
+            || self.font_downloads.is_pending()
             || self.provider_connect_pending()
             || self.acp_agent_connect_pending()
             || self.builtin_model_refresh_pending()

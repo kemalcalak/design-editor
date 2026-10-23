@@ -221,6 +221,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "imagesTab.empty" => "此页面没有图片",
         "property.page" => "页面",
         "property.autoLayout" => "自动布局",
+        "missingFonts.download" => "下载",
+        "missingFonts.downloadAll" => "全部下载",
+        "missingFonts.downloading" => "正在下载…",
+        "missingFonts.retryDownload" => "重试",
+        "missingFonts.notOnGoogle" => "Google Fonts 中没有此字体",
+        "missingFonts.downloadFailed" => "下载失败，请检查网络连接",
+        "missingFonts.downloadedSection" => "从 Google Fonts 下载的字体",
         _ => return None,
     })
 }

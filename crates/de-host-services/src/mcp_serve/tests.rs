@@ -19,7 +19,7 @@ fn tools_list_response_includes_all_registered_tools() {
     // TOOL_SCHEMAS without being added to the list below.
     assert_eq!(
         TOOL_SCHEMAS.len(),
-        136,
+        137,
         "tools/list catalog count must match the registered tools — add the new tool to this test"
     );
     // Production catalog excludes debug tools (we removed the
@@ -88,6 +88,7 @@ fn tools_list_response_includes_all_registered_tools() {
         "get_guidelines",
         "get_design_agent_prompt",
         "get_design_quality",
+        "load_fonts",
         "spawn_agents",
         "ToolSearch",
         "get_screenshot",

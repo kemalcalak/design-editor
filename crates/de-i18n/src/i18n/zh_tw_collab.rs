@@ -221,6 +221,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "imagesTab.empty" => "此頁面沒有圖片",
         "property.page" => "頁面",
         "property.autoLayout" => "自動佈局",
+        "missingFonts.download" => "下載",
+        "missingFonts.downloadAll" => "全部下載",
+        "missingFonts.downloading" => "正在下載…",
+        "missingFonts.retryDownload" => "重試",
+        "missingFonts.notOnGoogle" => "Google Fonts 中沒有此字型",
+        "missingFonts.downloadFailed" => "下載失敗，請檢查網路連線",
+        "missingFonts.downloadedSection" => "從 Google Fonts 下載的字型",
         _ => return None,
     })
 }

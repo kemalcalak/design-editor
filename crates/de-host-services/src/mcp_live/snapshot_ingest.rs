@@ -224,18 +224,19 @@ pub(super) fn serve_snapshot_ingest<S: std::io::Read + std::io::Write>(
         .lock()
         .unwrap_or_else(|poison| poison.into_inner());
     let mut state = request_snapshot(req_tx, wake_ui)?;
-    let response = crate::mcp_serve::process_message_with_applier(
+    let response = crate::mcp_serve::process_message_with_write_applier(
         &mut state,
         &call,
-        |tool_name, local_state, cmd| match request_apply(
+        |tool_name, local_state, write| match request_apply(
             req_tx,
             wake_ui,
             tool_name.to_string(),
-            cmd.clone(),
+            write.command.clone(),
+            unplaced_write(write),
         ) {
             Ok(ack) => {
                 if ack.applied {
-                    let _ = local_state.apply(cmd.clone());
+                    let _ = local_state.apply(write.command.clone());
                 }
                 ack.applied
             }

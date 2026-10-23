@@ -221,6 +221,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "imagesTab.empty" => "Không có hình ảnh trên trang này",
         "property.page" => "Trang",
         "property.autoLayout" => "Bố cục tự động",
+        "missingFonts.download" => "Tải xuống",
+        "missingFonts.downloadAll" => "Tải xuống tất cả",
+        "missingFonts.downloading" => "Đang tải xuống…",
+        "missingFonts.retryDownload" => "Thử lại",
+        "missingFonts.notOnGoogle" => "Không có trên Google Fonts",
+        "missingFonts.downloadFailed" => "Tải xuống thất bại — kiểm tra kết nối",
+        "missingFonts.downloadedSection" => "Đã tải từ Google Fonts",
         _ => return None,
     })
 }

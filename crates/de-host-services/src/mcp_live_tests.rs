@@ -96,6 +96,7 @@ fn set_active_page_fast_path_sends_apply_without_full_snapshot() {
         tool_name,
         cmd: EditorCommand::SetActivePage { index },
         ack,
+        ..
     } = request
     else {
         panic!("set_active_page must not request a full EditorState snapshot");
@@ -175,6 +176,7 @@ fn pump_yields_after_ui_request_budget() {
                     pan_y: None,
                     zoom_percent: None,
                 },
+                unplaced: None,
                 ack: ack_tx,
             })
             .expect("queue apply request");
@@ -264,6 +266,7 @@ fn pump_marks_layout_dirty_only_for_layout_affecting_commands() {
         .send(UiRequest::Apply {
             tool_name: "clear_selection".to_string(),
             cmd: EditorCommand::ClearSelection,
+            unplaced: None,
             ack: selection_ack_tx,
         })
         .expect("queue selection request");
@@ -289,6 +292,7 @@ fn pump_marks_layout_dirty_only_for_layout_affecting_commands() {
                 target_parent: de_editor_core::NodeId::NONE,
                 page_id: None,
             },
+            unplaced: None,
             ack: insert_ack_tx,
         })
         .expect("queue insert request");
@@ -393,6 +397,7 @@ fn pump_flags_document_edited_only_when_the_document_changes() {
         .send(UiRequest::Apply {
             tool_name: "clear_selection".to_string(),
             cmd: EditorCommand::ClearSelection,
+            unplaced: None,
             ack: selection_ack_tx,
         })
         .expect("queue selection request");
@@ -411,6 +416,7 @@ fn pump_flags_document_edited_only_when_the_document_changes() {
                 pan_y: Some(40),
                 zoom_percent: Some(150),
             },
+            unplaced: None,
             ack: viewport_ack_tx,
         })
         .expect("queue viewport request");
@@ -436,6 +442,7 @@ fn pump_flags_document_edited_only_when_the_document_changes() {
                 target_parent: de_editor_core::NodeId::NONE,
                 page_id: None,
             },
+            unplaced: None,
             ack: insert_ack_tx,
         })
         .expect("queue insert request");
@@ -516,6 +523,7 @@ fn send_batch_design_insert(req_tx: &Sender<UiRequest>, node: PenNode) -> mpsc::
                 parent_id: de_editor_core::NodeId::NONE,
                 page_id: None,
             },
+            unplaced: None,
             ack: ack_tx,
         })
         .expect("queue batch_design apply");
@@ -577,6 +585,7 @@ fn batch_design_apply_is_a_noop_when_nothing_new_landed() {
                 parent_id: de_editor_core::NodeId::NONE,
                 page_id: None,
             },
+            unplaced: None,
             ack: ack_tx,
         })
         .expect("queue batch_design apply");

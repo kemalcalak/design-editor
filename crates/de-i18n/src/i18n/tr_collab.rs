@@ -221,6 +221,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "imagesTab.empty" => "Bu sayfada görsel yok",
         "property.page" => "Sayfa",
         "property.autoLayout" => "Otomatik yerleşim",
+        "missingFonts.download" => "İndir",
+        "missingFonts.downloadAll" => "Tümünü indir",
+        "missingFonts.downloading" => "İndiriliyor…",
+        "missingFonts.retryDownload" => "Tekrar dene",
+        "missingFonts.notOnGoogle" => "Google Fonts'ta yok",
+        "missingFonts.downloadFailed" => "İndirilemedi — bağlantınızı kontrol edin",
+        "missingFonts.downloadedSection" => "Google Fonts'tan indirilenler",
         _ => return None,
     })
 }

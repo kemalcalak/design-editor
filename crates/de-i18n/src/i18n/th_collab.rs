@@ -221,6 +221,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "imagesTab.empty" => "ไม่มีรูปภาพในหน้านี้",
         "property.page" => "หน้า",
         "property.autoLayout" => "เลย์เอาต์อัตโนมัติ",
+        "missingFonts.download" => "ดาวน์โหลด",
+        "missingFonts.downloadAll" => "ดาวน์โหลดทั้งหมด",
+        "missingFonts.downloading" => "กำลังดาวน์โหลด…",
+        "missingFonts.retryDownload" => "ลองอีกครั้ง",
+        "missingFonts.notOnGoogle" => "ไม่มีใน Google Fonts",
+        "missingFonts.downloadFailed" => "ดาวน์โหลดไม่สำเร็จ — ตรวจสอบการเชื่อมต่อ",
+        "missingFonts.downloadedSection" => "ดาวน์โหลดจาก Google Fonts",
         _ => return None,
     })
 }

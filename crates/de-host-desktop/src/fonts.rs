@@ -1,7 +1,9 @@
-//! Native persistence for user-imported fonts.
+//! Native persistence for user-imported and downloaded fonts.
 //!
-//! User-imported `.ttf` / `.otf` faces live under `<config>/fonts/` next to a
-//! small `index.json`. On startup [`FontStore::rescan_and_register`]
+//! User-imported `.ttf` / `.otf` faces, and faces downloaded from Google
+//! Fonts on request, live under `<config>/fonts/` next to a small
+//! `index.json` that records where each face came from
+//! ([`FontOrigin`]). On startup [`FontStore::rescan_and_register`]
 //! re-registers every stored face with `jian-skia` so an imported family
 //! survives a restart; [`FontStore::import`] validates + copies a new file in
 //! and registers it; [`FontStore::remove`] drops a whole family from both disk
@@ -24,6 +26,32 @@ pub(crate) const MAX_FONT_BYTES: usize = 16 * 1024 * 1024;
 const FONTS_SUBDIR: &str = "fonts";
 const INDEX_FILE: &str = "fonts/index.json";
 
+/// Serializes every read-modify-write of `index.json` in this process.
+/// Google Fonts downloads import from worker threads (the UI's and MCP's)
+/// while the UI thread may import or remove, and an unserialized
+/// load-modify-save would drop one writer's entries.
+static INDEX_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn index_guard() -> std::sync::MutexGuard<'static, ()> {
+    // A writer that panicked mid-save leaves at worst a stale index, which
+    // the next load tolerates, so a poisoned lock is still usable.
+    INDEX_LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// Where a stored face came from. Entries written before downloads existed
+/// carry no field and read as [`FontOrigin::Imported`].
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum FontOrigin {
+    /// Picked from disk by the user.
+    #[default]
+    Imported,
+    /// Downloaded from Google Fonts (OFL / Apache licensed).
+    Google,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct FontIndexEntry {
     family: String,
@@ -32,6 +60,8 @@ struct FontIndexEntry {
     hash: u64,
     /// File name within the fonts dir (e.g. `"a1b2c3d4e5f60718.ttf"`).
     file: String,
+    #[serde(default)]
+    source: FontOrigin,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -75,6 +105,7 @@ impl FontStore {
     /// corrupt entry is dropped from the index (and logged), never fatal — a
     /// bad file must not block startup.
     pub fn rescan_and_register(&self) {
+        let _guard = index_guard();
         let index = self.load_index();
         let mut kept: Vec<FontIndexEntry> = Vec::with_capacity(index.fonts.len());
         let mut changed = false;
@@ -119,22 +150,62 @@ impl FontStore {
     /// this session but gone on restart — if a disk write then failed while
     /// the caller reported the import as failed.
     pub fn import(&self, bytes: Vec<u8>) -> Result<jian_skia::FontBlob, FontStoreError> {
-        if bytes.len() > MAX_FONT_BYTES {
-            return Err(FontStoreError::TooLarge { bytes: bytes.len() });
-        }
+        self.import_from(bytes, FontOrigin::Imported)
+    }
+
+    /// [`Self::import`], recording `origin` in the index.
+    pub(crate) fn import_from(
+        &self,
+        bytes: Vec<u8>,
+        origin: FontOrigin,
+    ) -> Result<jian_skia::FontBlob, FontStoreError> {
+        let mut blobs = self.import_all_from(vec![bytes], origin)?;
+        blobs.pop().ok_or(FontStoreError::NotAFontFile)
+    }
+
+    /// Store several faces as one transaction: every face is validated
+    /// before any file is written, and one index save commits them all, so
+    /// a failure leaves none of them indexed (a downloaded family is never
+    /// half stored). Returns the registered blobs in input order.
+    pub(crate) fn import_all_from(
+        &self,
+        faces: Vec<Vec<u8>>,
+        origin: FontOrigin,
+    ) -> Result<Vec<jian_skia::FontBlob>, FontStoreError> {
+        let _guard = index_guard();
         // Parse WITHOUT registering — validates the bytes and yields the
         // family/style/weight/hash the on-disk entry is keyed on.
-        let meta =
-            jian_skia::parse_imported_font_meta(&bytes).ok_or(FontStoreError::NotAFontFile)?;
+        let mut parsed = Vec::with_capacity(faces.len());
+        for bytes in faces {
+            if bytes.len() > MAX_FONT_BYTES {
+                return Err(FontStoreError::TooLarge { bytes: bytes.len() });
+            }
+            let meta =
+                jian_skia::parse_imported_font_meta(&bytes).ok_or(FontStoreError::NotAFontFile)?;
+            parsed.push((meta, bytes));
+        }
 
         // `std::io::Error` and `jian-skia`'s error belong to code this pass
         // does not own, so their messages ride along as text.
-        let file = format!("{:016x}.ttf", meta.hash);
         std::fs::create_dir_all(&self.dir).map_err(|e| FontStoreError::CreateDir(e.to_string()))?;
-        std::fs::write(self.dir.join(&file), &bytes)
-            .map_err(|e| FontStoreError::WriteFile(e.to_string()))?;
+        let mut written: Vec<String> = Vec::with_capacity(parsed.len());
+        // Files this call created; a failure removes only these, never a
+        // same-named file an existing entry already points at.
+        let mut created: Vec<String> = Vec::new();
+        for (meta, bytes) in &parsed {
+            let file = format!("{:016x}.ttf", meta.hash);
+            let path = self.dir.join(&file);
+            let existed = path.exists();
+            if let Err(e) = std::fs::write(&path, bytes) {
+                self.remove_files(&created);
+                return Err(FontStoreError::WriteFile(e.to_string()));
+            }
+            if !existed {
+                created.push(file.clone());
+            }
+            written.push(file);
+        }
 
-        let italic = matches!(meta.style, FontStyleKind::Italic);
         let mut index = self.load_index();
         // Replace any prior entry for the same face (last-import-wins, matching
         // the in-memory registry). COLLECT the superseded files but do NOT
@@ -142,39 +213,98 @@ impl FontStore {
         // would lose the previous font if `save_index` then failed, leaving
         // the on-disk index pointing at a file we already removed.
         let mut superseded: Vec<String> = Vec::new();
-        index.fonts.retain(|e| {
-            let same = e.family == meta.family && e.italic == italic && e.weight == meta.weight;
-            if same && e.file != file {
-                superseded.push(e.file.clone());
-            }
-            !same
-        });
-        index.fonts.push(FontIndexEntry {
-            family: meta.family.clone(),
-            italic,
-            weight: meta.weight,
-            hash: meta.hash,
-            file,
-        });
-        self.save_index(&index)
-            .map_err(|e| FontStoreError::WriteIndex(e.to_string()))?;
+        for ((meta, _), file) in parsed.iter().zip(&written) {
+            let italic = matches!(meta.style, FontStyleKind::Italic);
+            index.fonts.retain(|e| {
+                let same = e.family == meta.family && e.italic == italic && e.weight == meta.weight;
+                if same && &e.file != file {
+                    superseded.push(e.file.clone());
+                }
+                !same
+            });
+            index.fonts.push(FontIndexEntry {
+                family: meta.family.clone(),
+                italic,
+                weight: meta.weight,
+                hash: meta.hash,
+                file: file.clone(),
+                source: origin,
+            });
+        }
+        if let Err(e) = self.save_index(&index) {
+            self.remove_files(&created);
+            return Err(FontStoreError::WriteIndex(e.to_string()));
+        }
 
         // The new index is durable — only now is it safe to prune the files
         // it no longer references.
-        for old in superseded {
-            let _ = std::fs::remove_file(self.dir.join(&old));
-        }
+        superseded.retain(|old| !written.contains(old));
+        self.remove_files(&superseded);
 
         // Persistence is durable — now commit the live registration. This
         // re-parses the same bytes, so it cannot fail after `parse_*` above
         // succeeded, but propagate any error rather than unwrap.
-        jian_skia::register_imported_font(bytes)
-            .map_err(|e| FontStoreError::Register(e.to_string()))
+        parsed
+            .into_iter()
+            .map(|(_, bytes)| {
+                jian_skia::register_imported_font(bytes)
+                    .map_err(|e| FontStoreError::Register(e.to_string()))
+            })
+            .collect()
+    }
+
+    fn remove_files(&self, files: &[String]) {
+        for file in files {
+            let _ = std::fs::remove_file(self.dir.join(file));
+        }
+    }
+
+    /// Register `family`'s stored faces when the live registry lacks them —
+    /// another process (a headless `--mcp`, a second instance) stored the
+    /// family after this one's startup rescan. Returns whether the family
+    /// is registered afterwards.
+    pub(crate) fn ensure_registered(&self, family: &str) -> bool {
+        let registered = || {
+            jian_skia::list_families()
+                .iter()
+                .any(|meta| meta.family.eq_ignore_ascii_case(family))
+        };
+        if registered() {
+            return true;
+        }
+        let _guard = index_guard();
+        for entry in self
+            .load_index()
+            .fonts
+            .iter()
+            .filter(|entry| entry.family.eq_ignore_ascii_case(family))
+        {
+            if let Ok(bytes) = std::fs::read(self.dir.join(&entry.file)) {
+                let _ = jian_skia::register_imported_font(bytes);
+            }
+        }
+        registered()
+    }
+
+    /// Families with at least one stored face from `origin`, sorted and
+    /// deduplicated case-insensitively.
+    pub(crate) fn families_from(&self, origin: FontOrigin) -> Vec<String> {
+        let mut families: Vec<String> = self
+            .load_index()
+            .fonts
+            .into_iter()
+            .filter(|entry| entry.source == origin)
+            .map(|entry| entry.family)
+            .collect();
+        families.sort_by_key(|family| family.to_ascii_lowercase());
+        families.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
+        families
     }
 
     /// Remove every imported face of `family` from the live registry and disk.
     /// Returns whether anything was removed.
     pub fn remove(&self, family: &str) -> bool {
+        let _guard = index_guard();
         let removed_live = jian_skia::remove_imported_font(family);
         let mut index = self.load_index();
         let before = index.fonts.len();
@@ -381,6 +511,7 @@ mod tests {
                     weight: meta.weight,
                     hash: 1,
                     file: old_file.to_string(),
+                    source: FontOrigin::Imported,
                 }],
             })
             .unwrap();
@@ -407,5 +538,40 @@ mod tests {
         );
 
         jian_skia::remove_imported_font(FAMILY2);
+    }
+
+    #[test]
+    fn legacy_index_entries_read_as_imported() {
+        let root = TempRoot::new();
+        let fonts_dir = root.0.join(FONTS_SUBDIR);
+        std::fs::create_dir_all(&fonts_dir).unwrap();
+        std::fs::write(
+            root.0.join(INDEX_FILE),
+            r#"{"fonts":[{"family":"Old Face","italic":false,"weight":400,"hash":7,"file":"x.ttf"}]}"#,
+        )
+        .unwrap();
+        let store = FontStore::at(&root.0);
+        assert_eq!(store.families_from(FontOrigin::Imported), vec!["Old Face"]);
+        assert!(store.families_from(FontOrigin::Google).is_empty());
+    }
+
+    #[test]
+    fn a_batch_with_one_bad_face_stores_none_of_them() {
+        let root = TempRoot::new();
+        let store = FontStore::at(&root.0);
+        let result = store.import_all_from(
+            vec![FONT2.to_vec(), b"not a font".to_vec()],
+            FontOrigin::Google,
+        );
+        assert!(matches!(result, Err(FontStoreError::NotAFontFile)));
+        assert!(!root.0.join(INDEX_FILE).exists(), "nothing indexed");
+        assert!(
+            !root.0.join(FONTS_SUBDIR).exists()
+                || std::fs::read_dir(root.0.join(FONTS_SUBDIR))
+                    .unwrap()
+                    .next()
+                    .is_none(),
+            "no face file left behind"
+        );
     }
 }

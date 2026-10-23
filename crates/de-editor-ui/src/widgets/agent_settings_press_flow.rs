@@ -327,8 +327,22 @@ fn apply_fonts_hit(state: &mut EditorState, hit: FontsHit) -> SettingsPressOutco
             state.editor_ui.close_font_picker();
             SettingsPressOutcome::handled()
         }
+        FontsHit::Download(row) => {
+            crate::widgets::missing_fonts_flow::request_download(state, Some(row));
+            SettingsPressOutcome::handled()
+        }
         FontsHit::RemoveImportedFont(index) => {
-            if let Some(family) = state.editor_ui.imported_font_families.get(index).cloned() {
+            let family =
+                crate::widgets::agent_settings_fonts::user_imported_families(&state.editor_ui)
+                    .into_iter()
+                    .nth(index);
+            if let Some(family) = family {
+                state.editor_ui.pending_font_remove = Some(family);
+            }
+            SettingsPressOutcome::handled()
+        }
+        FontsHit::RemoveDownloadedFont(index) => {
+            if let Some(family) = state.editor_ui.downloaded_font_families.get(index).cloned() {
                 state.editor_ui.pending_font_remove = Some(family);
             }
             SettingsPressOutcome::handled()

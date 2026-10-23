@@ -132,6 +132,9 @@ pub mod read_tools_extra;
 pub mod reparent_tools;
 #[cfg(test)]
 mod replace_node_tests;
+pub mod root_placement;
+#[cfg(test)]
+mod root_placement_tests;
 pub mod scalar_vars;
 #[cfg(test)]
 mod scalar_vars_tests;

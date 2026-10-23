@@ -529,6 +529,20 @@ pub struct EditorUiState {
     pub missing_fonts_pending_open_modal: bool,
     /// Row whose choose-file action is waiting for a platform import drain.
     pub missing_fonts_import_row: Option<usize>,
+    /// Whether this host can download Google Fonts families (desktop).
+    /// `false` hides every Download action.
+    pub font_download_supported: bool,
+    /// Families the user asked to download, waiting for the host to start
+    /// them. Drained by the desktop host.
+    pub font_download_requests: Vec<String>,
+    /// Per-family state of a requested download, keyed by lower-cased
+    /// family. Absent once a download succeeded (the family is then
+    /// available) or before one was asked for. Survives re-detection.
+    pub font_downloads:
+        std::collections::BTreeMap<String, crate::missing_fonts::FontDownloadStatus>,
+    /// Families stored from Google Fonts downloads, for the Settings Fonts
+    /// tab's own section. Also listed in `imported_font_families`.
+    pub downloaded_font_families: std::sync::Arc<Vec<String>>,
     /// Hovered missing-fonts control (modal button / settings row) —
     /// cursor-move updates it, paint tints from it.
     pub missing_fonts_hover: Option<crate::missing_fonts::MissingFontsHover>,

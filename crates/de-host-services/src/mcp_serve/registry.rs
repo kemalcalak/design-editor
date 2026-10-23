@@ -17,8 +17,10 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
         };
     }
 
+    // Kit tools are named `insert_<component>`; skip walking the kits for
+    // any direct call outside that namespace.
     if requested_tool
-        .map(|name| name.starts_with("add_"))
+        .map(|name| name.starts_with(de_mcp::element_tools::ELEMENT_TOOL_PREFIX))
         .unwrap_or(true)
     {
         for tool in de_mcp::element_tools::insert_kit_component_tools(doc) {
@@ -57,7 +59,10 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     // Phase 0: always register spawn_agents (validates + returns request result).
     // Actual parallel execution is deferred to Phase 3 (Task 3.1).
     register_tool!("spawn_agents", spawn_agents_snapshot());
-    register_tool!("ToolSearch", tool_search_snapshot(TOOL_SCHEMAS));
+    register_tool!(
+        "ToolSearch",
+        tool_search_snapshot(super::tools_list::mcp_tool_schemas())
+    );
     register_tool!("get_screenshot", get_screenshot_snapshot(doc));
     register_tool!("export_item", export_item_snapshot(doc));
     register_tool!("export_nodes", export_nodes_snapshot(doc));
@@ -98,6 +103,7 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     register_tool!("get_selection_set", get_selection_set_snapshot(doc));
     register_tool!("get_editor_state", get_editor_state_snapshot(doc));
     register_tool!("get_design_quality", get_design_quality_snapshot(doc));
+    register_tool!("load_fonts", load_fonts_snapshot());
     #[cfg(feature = "mcp-debug-tools")]
     if debug_tools_enabled() {
         register_tool!(

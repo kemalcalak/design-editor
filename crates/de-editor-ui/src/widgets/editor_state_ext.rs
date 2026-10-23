@@ -140,6 +140,8 @@ pub fn missing_fonts_button(
     use de_editor_core::missing_fonts::MissingFontsHover;
     match hit {
         MissingFontsHit::ChooseFont(row) => Some(MissingFontsHover::ChooseFile(row)),
+        MissingFontsHit::Download(row) => Some(MissingFontsHover::Download(row)),
+        MissingFontsHit::DownloadAll => Some(MissingFontsHover::DownloadAll),
         MissingFontsHit::Dismiss => Some(MissingFontsHover::Dismiss),
         MissingFontsHit::SelectFont(_)
         | MissingFontsHit::ImportFont(_)

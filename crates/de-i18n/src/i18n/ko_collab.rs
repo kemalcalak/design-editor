@@ -223,6 +223,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "imagesTab.empty" => "이 페이지에 이미지가 없습니다",
         "property.page" => "페이지",
         "property.autoLayout" => "자동 레이아웃",
+        "missingFonts.download" => "다운로드",
+        "missingFonts.downloadAll" => "모두 다운로드",
+        "missingFonts.downloading" => "다운로드 중…",
+        "missingFonts.retryDownload" => "다시 시도",
+        "missingFonts.notOnGoogle" => "Google Fonts에 없음",
+        "missingFonts.downloadFailed" => "다운로드 실패 — 연결을 확인하세요",
+        "missingFonts.downloadedSection" => "Google Fonts에서 다운로드한 글꼴",
         _ => return None,
     })
 }

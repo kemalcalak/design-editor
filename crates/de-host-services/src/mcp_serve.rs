@@ -242,6 +242,23 @@ fn mcp_response_succeeded(response: &str) -> bool {
         != Some(true)
 }
 
+/// One MCP write as the host should apply it.
+pub struct McpWrite<'a> {
+    /// The command to apply: the tool's own, or its root-placed form (#37).
+    pub command: &'a EditorCommand,
+    /// The tool's own command when `command` is the placed form. Placement
+    /// names the new roots by the ids the insert will mint on the state it
+    /// was computed against, so a host whose document may have moved on
+    /// since (the live UI thread) applies this instead when the revision
+    /// differs: an unplaced insert, never a move of somebody else's node.
+    pub unplaced: Option<&'a EditorCommand>,
+    /// `document_revision()` of the state placement was computed against.
+    pub revision: u64,
+}
+
+/// [`process_message_with_write_applier`] for hosts that apply against the
+/// same state the call was dispatched on, so the placed command is always
+/// the right one.
 pub fn process_message_with_applier<F>(
     state: &mut EditorState,
     line: &str,
@@ -249,6 +266,19 @@ pub fn process_message_with_applier<F>(
 ) -> Result<Option<String>, McpServeError>
 where
     F: FnMut(&str, &mut EditorState, &EditorCommand) -> bool,
+{
+    process_message_with_write_applier(state, line, |tool_name, state, write| {
+        apply(tool_name, state, write.command)
+    })
+}
+
+pub fn process_message_with_write_applier<F>(
+    state: &mut EditorState,
+    line: &str,
+    mut apply: F,
+) -> Result<Option<String>, McpServeError>
+where
+    F: FnMut(&str, &mut EditorState, &McpWrite) -> bool,
 {
     let trimmed = line.trim();
     if trimmed.is_empty() {
@@ -275,10 +305,23 @@ where
     // Fall through: tools/call or legacy direct dispatch. The
     // registry snapshots `state` at build time, so it no longer
     // borrows it once the applier closure mutates it.
-    let requested_tool = de_mcp::parse_tool_call(trimmed).map(|call| call.tool);
+    let call = de_mcp::parse_tool_call(trimmed);
+    let requested_tool = call.as_ref().map(|call| call.tool.clone());
     let registry = rebuild_registry(state, requested_tool.as_deref());
     let response = process_tool_message_with_registry(&registry, line, |tool_name, cmd| {
-        apply(tool_name, state, cmd)
+        // New page roots land in free canvas space, in front (#37). Placing
+        // here, before the host applier runs, gives every transport the
+        // same command to apply.
+        let revision = state.document_revision();
+        let placed = call.as_ref().and_then(|call| {
+            de_mcp::root_placement::place_new_roots(state, tool_name, &call.arguments, cmd)
+        });
+        let write = McpWrite {
+            command: placed.as_ref().unwrap_or(cmd),
+            unplaced: placed.is_some().then_some(cmd),
+            revision,
+        };
+        apply(tool_name, state, &write)
     })?;
     if requested_tool.as_deref() == Some("save_document") {
         preview_hook::after_save_document(response.as_deref());
@@ -666,6 +709,8 @@ pub(crate) mod finalize_tool;
 use finalize_tool::finalize_design_snapshot;
 pub(crate) mod design_quality_tool;
 use design_quality_tool::get_design_quality_snapshot;
+pub(crate) mod font_tools;
+use font_tools::load_fonts_snapshot;
 pub(crate) mod enrich_images_tool;
 use enrich_images_tool::enrich_images_snapshot;
 pub(crate) mod design_agent_run_error;
@@ -687,6 +732,10 @@ mod enrich_images_tool_tests;
 mod finalize_tool_advisory_tests;
 #[cfg(test)]
 mod finalize_tool_tests;
+#[cfg(test)]
+mod kit_insert_tools_tests;
+#[cfg(test)]
+mod root_placement_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

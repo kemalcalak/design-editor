@@ -71,12 +71,16 @@ impl DesktopApp {
             // registry that `fonts::FontStore::rescan_and_register`
             // repopulated in `main`, so restored fonts show at once.
             host.refresh_imported_fonts();
+            crate::font_import_host::refresh_downloaded_fonts(&mut host);
         }
         // Desktop is the host that drains the import / remove requests,
         // so it advertises the capability (unconditionally, incl. tests)
         // — the picker paints the Import row + imported group here, and
         // web leaves the default `false` so those controls stay hidden.
         host.editor_state_mut().editor_ui.font_import_supported = true;
+        // Desktop also runs the Google Fonts downloads behind the
+        // missing-font rows' Download action; web has no fetcher.
+        host.editor_state_mut().editor_ui.font_download_supported = true;
         // Same rationale for the File-menu batch-export row: desktop
         // owns the directory picker + offscreen exporter it needs.
         host.editor_state_mut()
@@ -188,6 +192,7 @@ impl DesktopApp {
             mcp_wake_proxy: None,
             forwarded_files: single_instance::ForwardQueue::default(),
             iconify_job: None,
+            font_downloads: Default::default(),
             provider_connect_job: None,
             provider_reconnect_queue: Vec::new(),
             cli_probes_started: false,
