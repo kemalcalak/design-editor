@@ -368,6 +368,8 @@ fn command_dispatch_has_no_legacy_allocator_escape_hatch() {
     let source = [
         include_str!("command_apply.rs"),
         include_str!("command_apply/helpers.rs"),
+        include_str!("command_apply/clipboard.rs"),
+        include_str!("command_apply/boolean.rs"),
     ]
     .concat();
     for required in [
@@ -389,6 +391,7 @@ fn command_dispatch_has_no_legacy_allocator_escape_hatch() {
         "instantiate_component_with_allocator",
         "apply_kit_component_on_page",
         "cmd_batch_with_allocator",
+        "replace_paths_with_polyline_with_allocator",
     ] {
         assert!(
             source.contains(required),

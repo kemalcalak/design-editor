@@ -534,7 +534,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**123 static-schema tools** registered today. The authoritative list
+**139 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in
@@ -571,6 +571,13 @@ By category:
   / `paste_clipboard` / `set_active_tool` / `set_viewport` /
   `set_node_hidden|locked|collapsed` / `undo` / `redo`
   (`de-mcp/src/selected_ops_tools.rs` + `de-mcp/src/component_tools.rs`).
+- **Path booleans** — `boolean_op` (`nodeIds` + `union|subtract|intersect|exclude`;
+  `de-host-services/src/mcp_serve/boolean_op_tool.rs`). Runs the desktop
+  canvas's own `de_host_native::boolean_ops::compute_boolean_op` on the snapshot
+  (on every host; the web canvas keeps its axis-aligned fallback) and commits
+  through `EditorCommand::CommitBooleanResult` (one undo step). The command
+  carries the predicted path id and the snapshot's document revision, so a
+  document edited since the snapshot rejects. Sources with children are refused.
 - **Pages + components** — `add_page` / `rename_page` /
   `delete_page` / `duplicate_page` / `reorder_page` /
   `set_active_page` / `instantiate_component` / `create_component`

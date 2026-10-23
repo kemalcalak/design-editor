@@ -237,7 +237,7 @@ fn render_pdf(scene: &LayoutScene, node_ids: &[String], scale: f32) -> ToolOutco
 /// Parse a JSON array string like `["a","b"]` into `Vec<String>`.
 /// Falls back to splitting on commas when the value is not a JSON array
 /// (defensive: some older MCP wires pass comma-separated plain strings).
-fn parse_string_array(s: &str) -> Vec<String> {
+pub(super) fn parse_string_array(s: &str) -> Vec<String> {
     let trimmed = s.trim();
     if trimmed.starts_with('[') {
         if let Ok(serde_json::Value::Array(arr)) = serde_json::from_str(trimmed) {
