@@ -653,6 +653,15 @@ assert_contains 'packages/de-web-sdk/package.json:3: error: package manifests mu
 assert_no_success_output 'package manifest version'
 pass 'package manifests that carry a version are rejected with file and line'
 
+repo=$(new_repo malformed_package_manifest 0.8.1)
+printf '%s\n' '{"name": ' > "$repo/packages/de-web-sdk-react/package.json"
+run_guard "$repo"
+assert_status 1 'malformed package manifest'
+assert_contains 'packages/de-web-sdk-react/package.json:1: error: failed to parse package manifest' \
+    'malformed package manifest'
+assert_no_success_output 'malformed package manifest'
+pass 'malformed package manifests fail instead of passing silently'
+
 repo=$(new_repo sdk_literal_version 0.8.1)
 printf '%s\n' "export const VERSION = '0.8.1';" > "$repo/packages/de-web-sdk-vue/src/index.ts"
 run_guard "$repo"

@@ -59,7 +59,7 @@ for argument in "$@"; do
   case "${argument}" in
     --skip-tests) SKIP_TESTS=1 ;;
     -h|--help)
-      sed -n '2,47p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '2,/^$/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *) printf 'unknown option: %s\n' "${argument}" >&2; exit 2 ;;
@@ -157,7 +157,8 @@ printf '  ✓ %d runtime file(s) + %s locale catalogs\n' "${#RUNTIME_FILES[@]}" 
 
 # The committed manifest carries a 0.0.0 placeholder; the product version
 # lives only in the root Cargo.toml.
-VERSION="$(sh "${WORKSPACE_ROOT}/scripts/workspace-version.sh")"
+VERSION="$(sh "${WORKSPACE_ROOT}/scripts/workspace-version.sh")" || \
+  fail "cannot read [workspace.package].version from Cargo.toml"
 node -e '
   const fs = require("fs");
   const [file, version] = process.argv.slice(1);
@@ -174,7 +175,6 @@ done
 printf '  ✓ pt_BR, pt_PT (manifest name/description only; the popup uses pt)\n'
 
 step 7 "Zip"
-[ -n "${VERSION}" ] || fail "Cargo.toml carries no workspace version"
 ARCHIVE="${DIST_DIR}/de-chrome-extension-${VERSION}.zip"
 rm -f "${ARCHIVE}"
 # `-X` drops the extra file attributes (uid/gid, macOS resource forks) that

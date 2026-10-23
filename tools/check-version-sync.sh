@@ -341,7 +341,11 @@ validate_workspace_package_versions() {
 validate_package_manifests_carry_no_version() {
     for manifest in packages/package.json packages/*/package.json; do
         [[ -f "$manifest" ]] || continue
-        if jq -e 'has("version")' "$manifest" >/dev/null; then
+        jq_status=0
+        jq -e 'has("version")' "$manifest" >/dev/null || jq_status=$?
+        if [[ "$jq_status" -gt 1 ]]; then
+            report_missing "$manifest" "failed to parse package manifest (jq status ${jq_status})"
+        elif [[ "$jq_status" -eq 0 ]]; then
             line=$(rg --line-number --max-count 1 '^[[:space:]]*"version"[[:space:]]*:' \
                 "$manifest" | cut -d: -f1 || true)
             printf '%s:%s: error: package manifests must not carry a version; build and packaging steps read it from Cargo.toml\n' \
@@ -352,7 +356,9 @@ validate_package_manifests_carry_no_version() {
 }
 
 validate_sdk_version_sources() {
-    for sdk in de-web-sdk de-web-sdk-react de-web-sdk-vue; do
+    for sdk_dir in packages/de-web-sdk*/; do
+        sdk=${sdk_dir#packages/}
+        sdk=${sdk%/}
         require_statement "packages/$sdk/src/index.ts" \
             'export const VERSION: string = __DE_VERSION__;' \
             'SDK VERSION must come from the build-time __DE_VERSION__ define, not a literal'

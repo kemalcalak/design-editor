@@ -191,6 +191,18 @@ assert_status 1 'Cargo stage failure'
 assert_contains 'bump-version: Cargo lock refresh failed' 'Cargo stage failure'
 pass 'Cargo refresh failures identify the failing stage'
 
+repo=$(new_repo cargo_failure_after_bump)
+touch "$repo/.fail-cargo"
+run_bump "$repo" 3.0.0
+assert_status 1 'Cargo failure after bump'
+assert_contains 'Cargo.toml already holds the new version' 'Cargo failure after bump'
+assert_contains 'rerun scripts/bump-version.sh without an argument' 'Cargo failure after bump'
+assert_file_contains "$repo/Cargo.toml" 'version = "3.0.0"' 'Cargo failure after bump'
+if ls "$repo"/Cargo.toml.bump-version.* >/dev/null 2>&1; then
+    fail 'Cargo failure after bump left a candidate manifest behind'
+fi
+pass 'a failed refresh after a bump says Cargo.toml changed and how to retry'
+
 repo=$(new_repo guard_failure)
 touch "$repo/.fail-guard"
 run_bump "$repo"

@@ -7,7 +7,7 @@ cd "$repo_root"
 
 echo "[pre-commit] checking version consistency"
 if ! tools/check-version-sync.sh; then
-  echo "[pre-commit] version consistency check failed. Run: scripts/bump-version.sh"
+  echo "[pre-commit] version consistency check failed. Fix the reported file; if Cargo.lock is stale, run scripts/bump-version.sh"
   exit 1
 fi
 

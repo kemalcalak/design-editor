@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 Téléchargez `rustup-init.exe` depuis rustup.rs et exécutez-le. Dans PowerShell, lancez les commandes suivantes:
+    - 2.3 Téléchargez `rustup-init.exe` depuis rustup.rs et exécutez-le. Dans PowerShell, lancez les commandes suivantes :
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Installez wasm-bindgen-cli pour la génération des liaisons WASM-JS. Dans PowerShell, lancez la commande suivante:
+    - 2.4 Installez wasm-bindgen-cli pour la génération des liaisons WASM-JS. Dans PowerShell, lancez la commande suivante :
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117

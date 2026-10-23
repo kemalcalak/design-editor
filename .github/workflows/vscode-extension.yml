@@ -19,6 +19,7 @@ on:
       - 'crates/de-cli/assets/skill-bundle.json'
       # The VSIX version is read from the workspace manifest.
       - 'Cargo.toml'
+      - 'scripts/workspace-version.sh'
       - '.github/workflows/vscode-extension.yml'
   pull_request:
     paths:
@@ -27,6 +28,7 @@ on:
       - 'packages/bun.lock'
       - 'crates/de-cli/assets/skill-bundle.json'
       - 'Cargo.toml'
+      - 'scripts/workspace-version.sh'
       - '.github/workflows/vscode-extension.yml'
 
 # One run per PR (or per branch push); a newer push to a PR cancels the

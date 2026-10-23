@@ -25,10 +25,18 @@ script_dir=$(CDPATH= cd "$(dirname "$0")" && pwd)
 repo_root=$(CDPATH= cd "$script_dir/.." && pwd)
 manifest="$repo_root/Cargo.toml"
 
+if ! "$repo_root/scripts/workspace-version.sh" >/dev/null; then
+    printf 'bump-version: canonical version read failed; set a valid SemVer at [workspace.package].version in Cargo.toml\n' >&2
+    exit 1
+fi
+
 if [ "$#" -eq 1 ]; then
     new_version=$1
     candidate="$manifest.bump-version.$$"
-    trap 'rm -f "$candidate"' 0 HUP INT TERM
+    trap 'rm -f "$candidate"' 0
+    trap 'rm -f "$candidate"; exit 130' HUP INT TERM
+    # The current manifest parsed above, so a reader failure on the candidate
+    # can only come from the new value.
     # Rewrite only the version line inside [workspace.package]; dependency
     # versions elsewhere in the manifest are left alone.
     awk -v version="$new_version" '
@@ -40,19 +48,27 @@ if [ "$#" -eq 1 ]; then
         }
         { print }
     ' "$manifest" > "$candidate"
-    if ! written=$("$repo_root/scripts/workspace-version.sh" "$candidate") ||
-            [ "$written" != "$new_version" ]; then
+    if ! written=$("$repo_root/scripts/workspace-version.sh" "$candidate" 2>/dev/null); then
         printf 'bump-version: %s is not a valid SemVer version; Cargo.toml left unchanged\n' \
             "$new_version" >&2
         exit 1
     fi
-    cat "$candidate" > "$manifest"
+    if [ "$written" != "$new_version" ]; then
+        printf 'bump-version: could not rewrite [workspace.package].version (expected a double-quoted value); Cargo.toml left unchanged\n' >&2
+        exit 1
+    fi
+    # Same directory, so the rename is atomic: Cargo.toml is never half-written.
+    mv "$candidate" "$manifest"
+    bumped=1
 fi
 
-if ! canonical_version=$("$repo_root/scripts/workspace-version.sh"); then
-    printf 'bump-version: canonical version read failed; set a valid SemVer at [workspace.package].version in Cargo.toml\n' >&2
-    exit 1
-fi
+retry_hint() {
+    if [ "${bumped:-0}" = 1 ]; then
+        printf 'bump-version: Cargo.toml already holds the new version; fix the error above, then rerun scripts/bump-version.sh without an argument\n' >&2
+    fi
+}
+
+canonical_version=$("$repo_root/scripts/workspace-version.sh")
 
 printf 'bump-version: canonical Cargo workspace version is %s\n' "$canonical_version"
 
@@ -60,11 +76,13 @@ if ! (cd "$repo_root" && \
         cargo update --workspace --offline && \
         cargo metadata --locked --no-deps --format-version 1 >/dev/null); then
     printf 'bump-version: Cargo lock refresh failed\n' >&2
+    retry_hint
     exit 1
 fi
 
 if ! (cd "$repo_root" && "$repo_root/tools/check-version-sync.sh"); then
     printf 'bump-version: version consistency check failed\n' >&2
+    retry_hint
     exit 1
 fi
 

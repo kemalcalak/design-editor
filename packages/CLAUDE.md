@@ -10,7 +10,7 @@ Run these from `packages/`:
 
 - **Lint / format the SDK:** `bun run lint` (oxlint, plus the extension's extractor drift check) / `bun run format` (oxfmt).
 - **Iconify catalog (Rust assets):** `bun run generate-iconify-catalog` — `scripts/generate-iconify-catalog.mjs` reads `@iconify-json/*` and writes `crates/de-editor-ui/assets/iconify-catalog-{core,brands}.json` (the icon catalog embedded in / served by the Rust web target).
-- **Versions:** no `package.json` carries a version. SDK `VERSION` is the `__DE_VERSION__` define that `tsup`/`vitest` fill from root `Cargo.toml` (`scripts/workspace-version.mjs`); the Chrome manifest keeps a `0.0.0` placeholder that `package-extension.sh` stamps. Bump with `scripts/bump-version.sh` at the repo root.
+- **Versions:** no `package.json` carries a version. SDK `VERSION` is the `__DE_VERSION__` define that `tsup`/`vitest` fill from root `Cargo.toml` (`scripts/workspace-version.mjs`); the Chrome manifest keeps a `0.0.0` placeholder that `package-extension.sh` stamps. Bump with `scripts/bump-version.sh` at the repo root (its header lists every artifact that reads the version).
 
 ## de-web-sdk (`de-web-sdk/`)
 

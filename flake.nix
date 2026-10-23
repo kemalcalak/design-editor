@@ -427,9 +427,23 @@
           installPhase = ''
             runHook preInstall
             mkdir -p $out
-            (cd packages/de-web-sdk && bun pm pack --destination $out)
-            (cd packages/de-web-sdk-react && bun pm pack --destination $out)
-            (cd packages/de-web-sdk-vue && bun pm pack --destination $out)
+            # package.json carries no version (Cargo.toml is the only copy).
+            # bun pm pack needs one, and resolves workspace:* ranges from the
+            # lockfile, which has none either: stamp both before packing.
+            for workspace in de-web-sdk de-web-sdk-react de-web-sdk-vue; do
+              (cd packages/$workspace && node -e '
+                const fs = require("fs");
+                const version = process.argv[1];
+                const manifest = JSON.parse(fs.readFileSync("package.json", "utf8"));
+                manifest.version = version;
+                for (const field of ["dependencies", "peerDependencies", "optionalDependencies"]) {
+                  for (const [name, range] of Object.entries(manifest[field] || {})) {
+                    if (range.startsWith("workspace:")) manifest[field][name] = version;
+                  }
+                }
+                fs.writeFileSync("package.json", JSON.stringify(manifest, null, 2) + "\n");
+              ' ${version} && bun pm pack --destination $out)
+            done
             runHook postInstall
           '';
         };
