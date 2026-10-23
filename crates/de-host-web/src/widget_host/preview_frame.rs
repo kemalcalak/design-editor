@@ -492,6 +492,11 @@ impl super::WidgetHost {
         let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
         let hit = PreviewDeviceSwitcher::hit_test(canvas, Point2D::new(x, y));
         self.editor_state.editor_ui.preview.switcher_pressed = hit;
+        // Seed hover like the native host: a tap with no move before it
+        // must still pass the release's hover == pressed check.
+        if hit.is_some() {
+            self.editor_state.editor_ui.preview.switcher_hover = hit;
+        }
         hit.is_some()
     }
 
