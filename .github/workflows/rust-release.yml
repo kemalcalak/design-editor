@@ -29,7 +29,7 @@ name: Release
 # fired for the commit being released.
 #
 # Pull requests that touch release files get a dry run: the same build jobs
-# produce the dmg and the installer as short-lived artifacts, but nothing is
+# produce the dmg, the installer and the Linux tarballs as short-lived artifacts, but nothing is
 # tagged or published. The PR's own Rust check / version-sync workflows cover
 # the checks, so the dry run skips them.
 
@@ -48,6 +48,7 @@ on:
       - 'scripts/package-windows.nsi'
       - 'scripts/workspace-version.sh'
       - 'crates/de-host-desktop/assets/icon.*'
+      - '.github/ci/rust-check-apt-packages.txt'
   workflow_dispatch:
 
 permissions:
@@ -173,8 +174,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Same list and the same third-party-source cleanup as the Linux leg
-          # of rust-check.yml, which builds and tests these crates every PR.
+          # The package list and third-party-source cleanup of rust-check.yml's
+          # Linux leg, which builds and tests these crates on every PR (no apt
+          # archive cache here: releases are rare).
           sudo rm -f /etc/apt/sources.list.d/google-chrome*.list /etc/apt/sources.list.d/google-chrome*.sources \
                      /etc/apt/sources.list.d/microsoft-*.list /etc/apt/sources.list.d/microsoft-*.sources
           mapfile -t packages < <(grep -Ev '^[[:space:]]*(#|$)' .github/ci/rust-check-apt-packages.txt)
@@ -184,8 +186,8 @@ jobs:
           }
           apt_options=(-o Acquire::ForceIPv4=true -o Acquire::Retries=3 -o Acquire::http::Timeout=30)
           for attempt in 1 2 3 4; do
-            if sudo apt-get "${apt_options[@]}" update && \
-              sudo apt-get "${apt_options[@]}" install --yes "${packages[@]}"; then
+            if sudo DEBIAN_FRONTEND=noninteractive timeout 180s apt-get "${apt_options[@]}" update && \
+              sudo DEBIAN_FRONTEND=noninteractive timeout 600s apt-get "${apt_options[@]}" install --yes "${packages[@]}"; then
               break
             fi
             if [[ "$attempt" == 4 ]]; then
