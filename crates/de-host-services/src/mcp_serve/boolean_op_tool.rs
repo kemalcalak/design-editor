@@ -11,16 +11,16 @@
 //! The skia math is the desktop canvas's own `compute_boolean_op`, run
 //! at dispatch against the layout-resolved snapshot (the web canvas has
 //! its own axis-aligned fallback; MCP always uses skia). The result rides
-//! home as `EditorCommand::CommitBooleanResult`, which commits through
-//! the same `EditorState` mutator the canvas uses, as one undo step. The
-//! id is predicted with the sequential allocator `EditorState::apply`
-//! uses and carried in the command together with the snapshot's
-//! document revision, so a live document that moved on since the
-//! snapshot rejects instead of committing stale geometry.
+//! home as `EditorCommand::CommitBooleanResult`, the command the canvas
+//! commits through too (`EditorState::commit_canvas_boolean`), as one
+//! undo step. The id is predicted with the sequential allocator
+//! `EditorState::apply` uses and carried in the command together with
+//! the snapshot's document revision, so a live document that moved on
+//! since the snapshot rejects instead of committing stale geometry.
 //!
 //! A source with children (a frame holding content) is refused: the
-//! commit removes each source with its subtree, and an agent cannot see
-//! that loss happen.
+//! commit removes each source with its subtree. The command refuses it
+//! too; the check here only names the node in the error.
 
 use std::collections::BTreeMap;
 

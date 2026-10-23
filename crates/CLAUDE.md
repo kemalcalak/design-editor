@@ -578,6 +578,9 @@ By category:
   through `EditorCommand::CommitBooleanResult` (one undo step). The command
   carries the predicted path id and the snapshot's document revision, so a
   document edited since the snapshot rejects. Sources with children are refused.
+  The canvas boolean (desktop skia, web axis-aligned fallback) commits through the
+  same command via `EditorState::commit_canvas_boolean`, minting the id from the
+  host's `next_node_id` counter.
 - **Pages + components** — `add_page` / `rename_page` /
   `delete_page` / `duplicate_page` / `reorder_page` /
   `set_active_page` / `instantiate_component` / `create_component`

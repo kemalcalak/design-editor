@@ -44,20 +44,16 @@ impl WidgetHost {
         let Some(contours) = axis_aligned_boolean_contours(&rects, op) else {
             return false;
         };
-        let snap = self.editor_state.snapshot_for_history();
-        match self.editor_state.replace_paths_with_polyline(
-            &selected,
-            &contours,
-            &mut self.next_node_id,
-        ) {
-            Some(id) => {
-                self.editor_state.history_push_past(snap);
-                self.editor_state.set_single_selection(id);
-                self.mark_dirty();
-                true
-            }
-            None => false,
+        // Same commit as the desktop canvas and the MCP `boolean_op`
+        // tool: `EditorCommand::CommitBooleanResult`, id from this
+        // host's counter.
+        let committed =
+            self.editor_state
+                .commit_canvas_boolean(selected, contours, &mut self.next_node_id);
+        if committed {
+            self.mark_dirty();
         }
+        committed
     }
 }
 
