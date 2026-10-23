@@ -37,7 +37,7 @@ mkdir -p "$DEST_DIR"
 
 if [ -f "$DEST" ]; then
   if [ -n "$EXPECTED_SHA256" ]; then
-    actual="$(shasum -a 256 "$DEST" | awk '{print $1}')"
+    actual="$(shasum -a 256 < "$DEST" | awk '{print $1}')"
     if [ "$actual" = "$EXPECTED_SHA256" ]; then
       echo "skia artifact present and SHA matches: $DEST"
       exit 0
@@ -59,7 +59,7 @@ echo "fetching skia artifact: $RELEASE_URL"
 curl -fL "$RELEASE_URL" -o "$DEST"
 
 if [ -n "$EXPECTED_SHA256" ]; then
-  actual="$(shasum -a 256 "$DEST" | awk '{print $1}')"
+  actual="$(shasum -a 256 < "$DEST" | awk '{print $1}')"
   if [ "$actual" != "$EXPECTED_SHA256" ]; then
     echo "skia artifact SHA still mismatched after fetch: have=$actual want=$EXPECTED_SHA256" >&2
     exit 1
