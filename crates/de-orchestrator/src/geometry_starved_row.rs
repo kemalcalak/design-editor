@@ -4,7 +4,7 @@
 //! `collect_row_overfull_fixes` repairs an overfull row from the INSIDE, by
 //! retargeting its widest rigid child to `fill_container` so flex min-size 0
 //! absorbs the deficit. That has two dead ends, and a footer hit both at once
-//! (measured, `0808-gm-2.op`):
+//! (measured, `0808-gm-2.de`):
 //!
 //! * every column was 96px — under `MIN_FLEXIFY_W`, so there was no candidate
 //!   to flexify; and

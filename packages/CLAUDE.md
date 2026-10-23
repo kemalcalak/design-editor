@@ -14,7 +14,7 @@ Run these from `packages/`:
 
 ## de-web-sdk (`de-web-sdk/`)
 
-Read-only Design Editor `.op` **viewer** SDK for the web, wasm-backed. Wraps the `de-host-web` CanvasKit wasm bundle behind a small JS/TS embedding API (mount / load `.op` / viewport control / zoom-to-fit). Replaces the public role of the retired `pen-react` (viewing only — editing is not a goal of the public SDK).
+Read-only Design Editor `.de` **viewer** SDK for the web, wasm-backed. Wraps the `de-host-web` CanvasKit wasm bundle behind a small JS/TS embedding API (mount / load `.de` / viewport control / zoom-to-fit). Replaces the public role of the retired `pen-react` (viewing only — editing is not a goal of the public SDK).
 
 - Zero runtime dependencies; ships its own wasm under `wasm/`.
 - Build: `tsup` (`bun run build` inside the package). Tests: `vitest`.
@@ -64,7 +64,7 @@ member — load it unpacked from `chrome://extensions`.
   or compatible model generation is unavailable.
   See `snapshot_ingest.rs` and `design_md_route.rs` under
   `crates/de-host-services/src/mcp_live/`. The extension's offline path is
-  **Download .op**, which converts the capture locally into a ready-to-open
+  **Download .de**, which converts the capture locally into a ready-to-open
   document.
 - **Store packaging.** `bun run package-extension` (or
   `de-chrome-extension/scripts/package-extension.sh`) builds the wasm, runs

@@ -64,7 +64,7 @@ mod tests {
 
         let err = super::super::save_to_path(&loaded.state, &path).expect_err("source is kept");
         assert!(matches!(err, DocIoError::PenDevSourceReadOnly { .. }));
-        let copy = dir.join("design.op");
+        let copy = dir.join("design.de");
         super::super::save_to_path(&loaded.state, &copy).expect("save to a new file");
         let saved = std::fs::read_to_string(&copy).unwrap();
         assert!(saved.contains("data:image/png;base64,iVBORw=="));
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn a_clean_copy_cannot_land_on_a_pen_dev_file() {
         let dir = temp_dir("clean-copy");
-        let source = dir.join("doc.op");
+        let source = dir.join("doc.de");
         std::fs::write(&source, r#"{"version":"1.0","children":[]}"#).unwrap();
         let pen = dir.join("design.pen");
         let original = r#"{"version":"2.21","children":[]}"#;
@@ -94,10 +94,10 @@ mod tests {
     #[test]
     fn canonical_files_can_still_be_overwritten() {
         let dir = temp_dir("canonical");
-        let path = dir.join("doc.op");
+        let path = dir.join("doc.de");
         std::fs::write(&path, r#"{"version":"1.0","children":[]}"#).unwrap();
         assert!(refuse_overwrite(&path).is_ok());
-        assert!(refuse_overwrite(&dir.join("missing.op")).is_ok());
+        assert!(refuse_overwrite(&dir.join("missing.de")).is_ok());
         let _ = std::fs::remove_dir_all(dir);
     }
 

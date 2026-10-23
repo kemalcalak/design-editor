@@ -115,7 +115,7 @@ fn unmatched_tab_label_is_not_echoed() {
     assert!(scan_nav_issues(&state).is_empty());
 }
 
-/// `0808-k3-2.op`'s shape: a four-tab bar over a two-screen document. 今夜 and
+/// `0808-k3-2.de`'s shape: a four-tab bar over a two-screen document. 今夜 and
 /// 星图 have screens; 地点 and 我的 do not.
 const CJK_FOUR_TABS_TWO_SCREENS: &str = r##"{ "version": "1.0", "children": [
     { "type": "frame", "id": "s1", "name": "Nocturne 今夜", "screen": "/",

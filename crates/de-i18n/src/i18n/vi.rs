@@ -636,7 +636,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "a11y.aiChat" => "Trò chuyện AI",
         "designMd.emptyHint" => "Nhập tệp .md để đính kèm bản tóm tắt thiết kế",
         "componentBrowser.empty" => "Không tìm thấy thành phần",
-        "dialog.dropToOpen" => "Thả để mở  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "Thả để mở  ·  .de / .pen / .fig / .html / .zip",
         "text.weight.extralight" => "Extra Light",
         "text.weight.extrabold" => "Extra Bold",
         "interactions.title" => "Tương tác",

@@ -321,7 +321,7 @@ fn doc_fingerprint(state: &WebCanvasState) -> (u64, String) {
 #[test]
 fn failed_reset_errors_and_mutates_nothing() {
     let mut state = fresh_state();
-    state.current_path = Some(std::path::PathBuf::from("/nonexistent/x.op"));
+    state.current_path = Some(std::path::PathBuf::from("/nonexistent/x.de"));
     let before = doc_fingerprint(&state);
     // the reset MUST fail here — a silent success is itself a bug:
     assert!(state.reset_document_guarded().is_err());

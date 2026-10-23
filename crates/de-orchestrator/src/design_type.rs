@@ -340,7 +340,7 @@ mod tests {
 
     #[test]
     fn root_form_reads_the_artboard_not_the_prompt() {
-        // 0808-gm-1.op's page: 1200 x 2977 marketing site.
+        // 0808-gm-1.de's page: 1200 x 2977 marketing site.
         assert_eq!(
             classify_root_form(Some(1200.0), Some(2977.0)),
             DesignForm::Page

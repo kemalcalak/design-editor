@@ -23,7 +23,7 @@ enum EntryState {
 }
 
 /// Cheap identity and mutation indicators avoid hashing a potentially huge
-/// `.op` on the UI thread while detecting replacement and ordinary edits.
+/// `.de` on the UI thread while detecting replacement and ordinary edits.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct OutputFingerprint {
     len: u64,

@@ -1,4 +1,4 @@
-//! Offline `.fig` → `.op` conversion for the managed daemon: the VS Code
+//! Offline `.fig` → `.de` conversion for the managed daemon: the VS Code
 //! extension cannot parse fig-kiwi, so it POSTs the raw bytes here and
 //! boots the returned document JSON through the normal open-document push.
 

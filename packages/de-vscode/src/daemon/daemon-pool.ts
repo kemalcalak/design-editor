@@ -1,4 +1,4 @@
-// One managed daemon per open .op file. Concurrent acquires for the same file
+// One managed daemon per open .de file. Concurrent acquires for the same file
 // coalesce onto a single spawn. Tracks the routing "active" file (the McpProxy
 // target) and applies the crash policy: a non-dispose exit respawns once, then
 // evicts. No vscode import — the spawn factory is injected so it's unit-testable.

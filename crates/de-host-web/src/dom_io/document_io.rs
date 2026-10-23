@@ -492,12 +492,12 @@ pub(super) fn export_image<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
     }
 }
 
-/// File → Open: hidden `.op` / `.pen` picker → canonical ingest →
+/// File → Open: hidden `.de` / pen.dev `.pen` picker → canonical ingest →
 /// state swap → viewport fit.
 pub(super) fn open_document<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
     let inner = inner.clone();
     open_file_picker(
-        ".op,.pen",
+        ".de,.pen",
         Box::new(move |file| {
             read_open_document_file(&inner, file);
         }),
@@ -539,7 +539,7 @@ pub(super) fn read_open_document_file<C: RepaintContext + 'static>(
     );
 }
 
-/// Shared `.op` / `.pen` ingestion for the Open picker and drag-drop.
+/// Shared `.de` / `.pen` ingestion for the Open picker and drag-drop.
 fn apply_opened_document<C: RepaintContext + 'static>(
     inner: &InnerRc<C>,
     generation: u64,
@@ -560,7 +560,7 @@ fn apply_opened_document<C: RepaintContext + 'static>(
             // a new document, not written back over the `.pen`.
             state.editor_ui.file_name_display =
                 ingested.pen_dev.is_none().then(|| file_name.to_string());
-            // Use the shared ingestion path so an opened `.op` / `.pen` gets
+            // Use the shared ingestion path so an opened `.de` / `.pen` gets
             // the same cache invalidation and missing-font detection as Figma
             // and HTML document imports.
             b.host_mut().install_ingested_state(state);

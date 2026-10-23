@@ -6,7 +6,7 @@
 //! `fill_container`; an explicit `layout: none` slot pins the image to the
 //! slot's numeric size because fill sizing has no flex parent. Models routinely
 //! violate that contract (measured:
-//! GLM-5.2 test0711-2.op built an 88×44 pill holding a 44×44 image — on
+//! GLM-5.2 test0711-2.de built an 88×44 pill holding a 44×44 image — on
 //! canvas it reads as an empty grey circle NEXT TO a square photo). The
 //! shape is a CONTRACT (a round avatar slot is round), so it is repaired
 //! deterministically; what picture belongs inside stays the model's call.

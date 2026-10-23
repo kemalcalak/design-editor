@@ -695,9 +695,9 @@ fn a_save_document_reply_reaches_the_host_through_the_pump() {
             woke.fetch_add(1, Ordering::AcqRel);
         })
     };
-    let line = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"save_document","arguments":{"filePath":"/tmp/agent.op"}}}"#;
+    let line = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"save_document","arguments":{"filePath":"/tmp/agent.de"}}}"#;
     let reply = serde_json::json!({"jsonrpc":"2.0","id":3,"result":{"content":[
-        {"type":"text","text":r#"{"ok":"true","filePath":"/tmp/agent.op"}"#}
+        {"type":"text","text":r#"{"ok":"true","filePath":"/tmp/agent.de"}"#}
     ]}})
     .to_string();
     report_saved_document(line, &reply, &req_tx, &wake_ui);
@@ -719,7 +719,7 @@ fn a_save_document_reply_reaches_the_host_through_the_pump() {
     );
     assert_eq!(
         server.take_saved_documents(),
-        vec![std::path::PathBuf::from("/tmp/agent.op")]
+        vec![std::path::PathBuf::from("/tmp/agent.de")]
     );
     assert!(server.take_saved_documents().is_empty());
 }

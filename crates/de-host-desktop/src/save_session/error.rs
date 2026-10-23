@@ -1,4 +1,4 @@
-//! Typed failure for the background `.op` save worker (`save_session.rs`).
+//! Typed failure for the background `.de` save worker (`save_session.rs`).
 //!
 //! Style follows `de_orchestrator::OrchestratorError`: a plain enum plus a
 //! hand-written `Display`, no `thiserror` and no new dependency. `Display` is

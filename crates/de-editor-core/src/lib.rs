@@ -1,7 +1,7 @@
 //! Design Editor editor core.
 //!
 //! Owns the editor's runtime state — `EditorState` — built on the
-//! canonical `.op` document model (`jian_ops_schema::PenDocument`).
+//! canonical `.de` document model (`jian_ops_schema::PenDocument`).
 //! There is no second document model: the node tree, pages, variables
 //! and themes all live on `PenDocument`; this crate adds only the
 //! editor-only state (selection, tool, viewport, history, transient

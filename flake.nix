@@ -207,7 +207,7 @@
                 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
                   <mime-type type="application/x-design-editor">
                     <comment>Design Editor Document</comment>
-                    <glob pattern="*.op"/>
+                    <glob pattern="*.de"/>
                     <glob pattern="*.pen"/>
                   </mime-type>
                 </mime-info>
@@ -227,7 +227,7 @@
           name = "design-editor-runtime-${version}";
           paths = [nativePackage];
           postBuild = ''
-            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.op"
+            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.de"
           '';
         };
 
@@ -360,7 +360,7 @@
           '';
         };
 
-        defaultDocument = pkgs.writeText "design-editor-default-${version}.op" ''
+        defaultDocument = pkgs.writeText "design-editor-default-${version}.de" ''
           {
             "version": "${version}",
             "name": "Design Editor Nix Session",
@@ -496,7 +496,7 @@
             rm -f "$out/bin/de"
             makeWrapper ${prebuiltCliPackage}/bin/de "$out/bin/de" \
               --set-default DESIGN_EDITOR_DESKTOP_BIN "$out/bin/design-editor"
-            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.op"
+            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.de"
           '';
         };
 

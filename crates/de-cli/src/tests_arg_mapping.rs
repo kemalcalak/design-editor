@@ -244,7 +244,7 @@ fn parse_args_maps_codegen_plan_to_structured_mcp_args() {
         "codegen:plan".to_string(),
         r#"{"chunks":[],"sharedStyles":[],"rootLayout":{"nodeId":"n1"}}"#.to_string(),
         "--file".to_string(),
-        "/tmp/design.op".to_string(),
+        "/tmp/design.de".to_string(),
         "--page".to_string(),
         "page-1".to_string(),
     ];
@@ -252,7 +252,7 @@ fn parse_args_maps_codegen_plan_to_structured_mcp_args() {
     match p.command {
         Command::ToolCallJson { tool, args_json } => {
             assert_eq!(tool, "codegen_plan");
-            let design_path = resolve_file_path_arg("/tmp/design.op");
+            let design_path = resolve_file_path_arg("/tmp/design.de");
             assert_eq!(
                 serde_json::from_str::<serde_json::Value>(&args_json).expect("args json"),
                 serde_json::json!({

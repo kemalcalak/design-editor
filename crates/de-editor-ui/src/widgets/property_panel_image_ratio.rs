@@ -15,7 +15,7 @@ use jian_ops_schema::node::PenNode;
 /// dropped or imported, so that is the primary source. The fallback
 /// reads the size out of the encoded raster header for the two cases
 /// that have no authored value: a standalone `PenNode::Image`, whose
-/// schema carries no `originalSize` field at all, and `.op` files
+/// schema carries no `originalSize` field at all, and `.de` files
 /// written before fills recorded one. It reads through the same shared
 /// byte cache the popover's preview thumbnail already paints from, so
 /// it costs a cache lookup rather than a decode, and it covers

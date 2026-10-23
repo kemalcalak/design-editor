@@ -212,7 +212,7 @@ fn live_mcp_http_server_routes_file_path_requests_to_target_file() {
         std::process::id()
     ));
     std::fs::create_dir_all(&dir).expect("temp dir");
-    let alternate_path = dir.join("alternate.op");
+    let alternate_path = dir.join("alternate.de");
     write_named_doc(&alternate_path, "n2", "Alternate");
     let file_path_json =
         serde_json::to_string(&alternate_path.to_string_lossy()).expect("path json");
@@ -508,10 +508,10 @@ fn parse_live_mcp_port_accepts_all_three_forms() {
     // `--live-mcp=<port>`
     assert_eq!(v(&["--live-mcp=4321"]), Some(4321));
     // bare `--live-mcp` (with a following non-port arg) → default port
-    assert_eq!(v(&["--live-mcp", "/tmp/a.op"]), Some(DEFAULT_LIVE_MCP_PORT));
+    assert_eq!(v(&["--live-mcp", "/tmp/a.de"]), Some(DEFAULT_LIVE_MCP_PORT));
     assert_eq!(v(&["--live-mcp"]), Some(DEFAULT_LIVE_MCP_PORT));
     // absent → None (normal GUI launch keeps settings-gated MCP behavior)
-    assert_eq!(v(&["/tmp/a.op"]), None);
+    assert_eq!(v(&["/tmp/a.de"]), None);
     assert_eq!(v(&[]), None);
 }
 
@@ -533,7 +533,7 @@ fn a_live_save_document_lists_the_file_on_home() {
     // save hook); this checks the hand-off to Home's Recent list.
     let dir = std::env::temp_dir().join(format!("de-live-save-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("scratch dir");
-    let doc = dir.join("agent.op");
+    let doc = dir.join("agent.de");
     let doc_json = serde_json::to_string(&doc.to_string_lossy()).expect("path json");
 
     let mut app = DesktopApp::new(None);

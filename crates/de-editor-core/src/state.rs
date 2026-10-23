@@ -1,5 +1,5 @@
 //! `EditorState` — Design Editor's editor runtime state, built on the
-//! canonical `.op` document model.
+//! canonical `.de` document model.
 //!
 //! This is the strangler-reorg replacement for
 //! `design-editor-shell-core::document::Document`. The crucial change
@@ -10,7 +10,7 @@
 //! model anywhere in the editor.
 //!
 //! `EditorState` wraps that canonical document with the *editor*
-//! state that is not part of a `.op` file:
+//! state that is not part of a `.de` file:
 //!
 //!   - `selection` — selected node id(s) + anchor (page-scoped).
 //!   - `tool` — the active canvas tool.
@@ -26,7 +26,7 @@
 //!
 //!   - **Persisted** `variables` + `themes` → `EditorState.doc`
 //!     (`PenDocument::variables` / `PenDocument::themes`). They
-//!     serialize with the `.op` file. They are NOT duplicated on
+//!     serialize with the `.de` file. They are NOT duplicated on
 //!     `EditorState`.
 //!   - **Transient** `active_theme` selection + `fill_refs` /
 //!     `stroke_refs` resolution caches → `EditorState.ui.variables`
@@ -54,7 +54,7 @@ use jian_ops_schema::node::PenNode;
 /// editor-only state layered on top of it.
 #[derive(Debug, Clone)]
 pub struct EditorState {
-    /// The canonical `.op` document — node tree + pages + variables +
+    /// The canonical `.de` document — node tree + pages + variables +
     /// themes. The single source of truth for everything that
     /// serializes to a file.
     pub doc: jian_ops_schema::PenDocument,
@@ -87,7 +87,7 @@ pub struct EditorState {
     pub(crate) history_push_count: u64,
     /// Cross-action clipboard buffer. Copy / cut fill it; paste
     /// drains it (clones, so repeated paste works). Not part of the
-    /// `.op` file — transient editor state.
+    /// `.de` file — transient editor state.
     pub clipboard: Vec<jian_ops_schema::node::PenNode>,
     /// Transient UI state — draft buffers, focus, active page index,
     /// rebuilt-on-load variable/theme caches.
@@ -112,12 +112,12 @@ pub struct EditorState {
     pub components: ComponentLibrary,
     /// UIKit catalogue — the built-in starter kit plus any imported
     /// kits. Read by the Component-Browser panel and instantiated
-    /// from there. Transient (not part of the `.op` file).
+    /// from there. Transient (not part of the `.de` file).
     pub ui_kits: Vec<crate::uikit::UIKit>,
     /// Saved theme presets — app-level like `ui_kits` (TS
     /// `theme-preset-store.ts` persists them in localStorage; the
     /// desktop host mirrors them in `theme-presets.json`). Not part
-    /// of the `.op` file and not undo history.
+    /// of the `.de` file and not undo history.
     pub theme_presets: Vec<crate::theme_presets::ThemePreset>,
     /// Raised by every preset-list mutation; the desktop host drains
     /// it into a persist (TS `persist()` runs inline on each store
@@ -139,7 +139,7 @@ pub struct EditorState {
 impl EditorState {
     /// Build an editor state around an existing canonical document.
     /// Selection / history / tool / viewport / ui all start fresh —
-    /// the transient state is not part of the `.op` file, so a freshly
+    /// the transient state is not part of the `.de` file, so a freshly
     /// loaded document always opens with an empty selection, the
     /// Select tool, the identity viewport and page 0 active.
     pub fn from_document(doc: jian_ops_schema::PenDocument) -> Self {

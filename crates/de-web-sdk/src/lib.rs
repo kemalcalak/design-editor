@@ -1,4 +1,4 @@
-//! Design Editor read-only web embedding SDK. Parses a `.op` document and
+//! Design Editor read-only web embedding SDK. Parses a `.de` document and
 //! renders it to a `<canvas>` via CanvasKit, with pan/zoom navigation,
 //! read-only snapshots, and SVG export. No editing.
 // `dirty_state` is compiled unconditionally (not gated behind the
@@ -22,7 +22,7 @@ use wasm_bindgen::prelude::*;
 /// Read-only viewer handle. Owns the parsed document + paint scene.
 #[wasm_bindgen]
 pub struct Viewer {
-    /// Parsed canonical `.op` document; `None` until `load` is called.
+    /// Parsed canonical `.de` document; `None` until `load` is called.
     doc: Option<jian_ops_schema::PenDocument>,
     /// Index of the currently visible page (0-based).
     active_page: usize,
@@ -51,7 +51,7 @@ impl Viewer {
         }
     }
 
-    /// Parse a canonical `.op` JSON string and render. Wraps `load` for JS.
+    /// Parse a canonical `.de` JSON string and render. Wraps `load` for JS.
     pub fn load_str(&mut self, src: &str) -> Result<(), JsValue> {
         self.load(src)
             .map_err(|e| JsValue::from_str(&e.to_string()))

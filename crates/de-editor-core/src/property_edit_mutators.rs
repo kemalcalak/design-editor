@@ -638,7 +638,7 @@ impl EditorState {
         // WIN over `container.fill`, so a dangling ref keeps painting the
         // variable colour after the fill row is removed. Drop it when the
         // bound (primary) fill goes — the "deleted the fill but the colour
-        // stays" bug on token-based (old .op) designs.
+        // stays" bug on token-based (old .de) designs.
         if removed && index == 0 {
             self.ui.variables.fill_refs.remove(&sel);
         }

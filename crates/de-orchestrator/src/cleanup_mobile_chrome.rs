@@ -6,7 +6,7 @@ use jian_ops_schema::node::PenNode;
 /// the mobile root's LAST child. Models "catch up" on forgotten sections by
 /// appending them after the nav (measured: MiniMax-M3 appended the
 /// greeting+search header as the final root child, below the tab bar —
-/// test0710-1-m3.op). Nav-last is a structural CONTRACT (independent of
+/// test0710-1-m3.de). Nav-last is a structural CONTRACT (independent of
 /// intent), so it is deterministically repaired here with one Move; where
 /// the late section actually belongs is intent — the geometry echo tells
 /// the model to relocate it with `M()`.

@@ -13,7 +13,7 @@
 //!
 //!   - Node targets are [`NodeId`] (the string newtype) rather than the
 //!     `u64` the shell-core wire layer carried. There is no
-//!     `from_mcp_u64` round-trip: the canonical `.op` schema's ids are
+//!     `from_mcp_u64` round-trip: the canonical `.de` schema's ids are
 //!     strings, so commands carry them directly.
 //!   - Node payloads describe leaf geometry with plain scalars; the
 //!     applier builds the canonical `jian_ops_schema::PenNode` variant.

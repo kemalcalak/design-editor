@@ -21,7 +21,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum RenderCliError {
-    /// The `.op` named on argv could not be read or parsed.
+    /// The `.de` named on argv could not be read or parsed.
     LoadDocument { file: String, message: String },
 }
 

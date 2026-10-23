@@ -3,7 +3,7 @@
 //! actually "two (or more) perfectly well-formed, single-nav screens with
 //! no canvas position, silently overlapping at the same default origin".
 //!
-//! Measured (`0718-1-glm.op`, GLM-5.2 built-in loop provider, "Wander"
+//! Measured (`0718-1-glm.de`, GLM-5.2 built-in loop provider, "Wander"
 //! travel app, 3-screen prompt): "Trips Overview" / "Destination Detail" /
 //! "Saved Places" are three CLEAN top-level frames, each with exactly one
 //! bottom nav and correct internal structure — but all three carry

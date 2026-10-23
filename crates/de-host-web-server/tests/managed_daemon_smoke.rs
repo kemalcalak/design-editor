@@ -98,7 +98,7 @@ fn managed_contract_end_to_end() {
     // spawn/read failures are test failures, never skips.
     let fixture = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../vendor/jian/crates/jian-ops-schema/tests/corpus/nested-frame.op"
+        "/../../vendor/jian/crates/jian-ops-schema/tests/corpus/nested-frame.de"
     );
     let fixture_text = std::fs::read_to_string(fixture).expect("fixture exists");
     // Probe a stable field to prove the daemon loaded the file. The corpus

@@ -9,7 +9,7 @@ pub(super) fn map_import_pen(positionals: &[String], flags: &Flags) -> Result<Co
     let pen_path = required_pos(
         positionals,
         1,
-        "Usage: de import:pen <file.pen> [--out output.op]",
+        "Usage: de import:pen <file.pen> [--out output.de]",
     )?;
     let out_path = flag_value(flags, "out").unwrap_or_else(|| pen_default_out_path(&pen_path));
     Ok(Command::ImportPen { pen_path, out_path })
@@ -17,10 +17,10 @@ pub(super) fn map_import_pen(positionals: &[String], flags: &Flags) -> Result<Co
 
 pub(super) fn pen_default_out_path(pen_path: &str) -> String {
     let base = pen_path.strip_suffix(".pen").unwrap_or(pen_path);
-    format!("{base}.op")
+    format!("{base}.de")
 }
 
-/// Convert a pen.dev `.pen` into a new `.op`, inlining the image files it
+/// Convert a pen.dev `.pen` into a new `.de`, inlining the image files it
 /// keeps in its folder. The source is never written.
 pub(super) fn run_import_pen(pen_path: &str, out_path: &str) -> Result<String, CliError> {
     let src = std::fs::read_to_string(pen_path)
@@ -73,8 +73,8 @@ mod tests {
 
     #[test]
     fn default_out_path_swaps_the_extension() {
-        assert_eq!(pen_default_out_path("/tmp/design.pen"), "/tmp/design.op");
-        assert_eq!(pen_default_out_path("/tmp/design"), "/tmp/design.op");
+        assert_eq!(pen_default_out_path("/tmp/design.pen"), "/tmp/design.de");
+        assert_eq!(pen_default_out_path("/tmp/design"), "/tmp/design.de");
     }
 
     #[test]
@@ -88,7 +88,7 @@ mod tests {
                 "fill":{"type":"image","url":"images/a.png"},"children":[{"type":"note","id":"n"}]}]}"#,
         )
         .unwrap();
-        let out = dir.join("design.op");
+        let out = dir.join("design.de");
         let result =
             run_import_pen(pen.to_str().unwrap(), out.to_str().unwrap()).expect("import succeeds");
         let result: serde_json::Value = serde_json::from_str(&result).unwrap();
@@ -117,9 +117,9 @@ mod tests {
             std::fs::read_to_string(&pen).unwrap(),
             r#"{"version":"2.21","children":[]}"#
         );
-        let op = dir.join("plain.op");
+        let op = dir.join("plain.de");
         std::fs::write(&op, r#"{"version":"1.0","children":[]}"#).unwrap();
-        let out = dir.join("out.op");
+        let out = dir.join("out.de");
         assert!(run_import_pen(op.to_str().unwrap(), out.to_str().unwrap()).is_err());
         let _ = std::fs::remove_dir_all(dir);
     }

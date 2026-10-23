@@ -65,7 +65,7 @@ WASM_OPT_CANDIDATE_FEATURES=(
 #
 # Measured 2026-08-09: this bundle gzips to 5 200 519 bytes, having taken the
 # same benefit as de-host-web from moving the preview JPEGs and scene-template
-# `.op` documents out of the binary (7 472 939 -> 5 200 519 across both
+# `.de` documents out of the binary (7 472 939 -> 5 200 519 across both
 # rounds). The ceiling is that measurement + ~20% headroom, rounded up to a
 # whole MiB: a tripwire 3 MiB above the real number catches nothing, which is
 # why it moves down with the bundle rather than staying where it was set.

@@ -203,7 +203,7 @@ fn floating_chrome_holds_its_labels_in_the_painted_family() {
     for locale in de_i18n::Locale::ALL {
         let ui = de_editor_core::editor_ui_state::EditorUiState {
             locale,
-            file_name_display: Some("pricing.op".to_string()),
+            file_name_display: Some("pricing.de".to_string()),
             ..Default::default()
         };
         let pill = FilePill::for_editor_ui(&ui);

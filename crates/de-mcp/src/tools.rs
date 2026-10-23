@@ -29,7 +29,7 @@ use crate::read_nodes::node_snapshot_value;
 /// Node `type` label — the node's own serialized `type` tag (jian
 /// `#[serde(tag = "type", rename_all = "snake_case")]`), which is also
 /// exactly TS `PenNodeType`. Read tools that surface a node's kind MUST
-/// use this so their output matches both the canonical `.op` JSON and the
+/// use this so their output matches both the canonical `.de` JSON and the
 /// TS MCP (`rectangle`, not `rect`; `image`/`icon_font`/`ref`, not `other`).
 pub(crate) fn kind_label(node: &PenNode) -> &'static str {
     match node {
@@ -298,7 +298,7 @@ pub fn list_pages_snapshot(state: &EditorState) -> ListPages {
 // --- get_node --------------------------------------------------------
 
 /// First-party `get_node` tool — given a `node_id` argument (the
-/// canonical `.op` string id), returns kind / bounds / parent. The
+/// canonical `.de` string id), returns kind / bounds / parent. The
 /// snapshot pattern pre-computes a map of every node id → its details.
 pub struct GetNode {
     pub nodes: BTreeMap<String, NodeRecord>,

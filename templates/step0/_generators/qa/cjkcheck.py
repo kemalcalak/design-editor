@@ -2,7 +2,7 @@
 """CJK 断行自检：从 snapshot_layout 拿每个文本节点的实测宽度，模拟贪心折行，
 报出 (a) 行首标点（中文行首禁则）(b) 末行 ≤2 字的孤字 (c) 疑似超框。
 
-usage: cjkcheck.py <file.op>
+usage: cjkcheck.py <file.de>
 """
 import json
 import subprocess

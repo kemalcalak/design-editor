@@ -1,5 +1,5 @@
 use super::load_report::is_strict_format_version;
-use super::{sidecar_path, DocIoError, DocumentLoadReport, LoadedEditorState};
+use super::{DocIoError, DocumentLoadReport, LoadedEditorState};
 use de_editor_core::EditorState;
 use de_pen_loader::{apply_editor_meta, extract_editor_meta_with_report, EditorMeta};
 
@@ -10,7 +10,29 @@ pub fn load_editor_state(
     load_editor_state_with_report(path, locale).map(|loaded| loaded.state)
 }
 
+/// Load a document from disk. Only `.de` documents and pen.dev `.pen`
+/// imports open; any other extension is refused before the file is read,
+/// and a `.pen` whose content is not pen.dev is refused after the sniff.
 pub fn load_editor_state_with_report(
+    path: &std::path::Path,
+    locale: de_editor_core::Locale,
+) -> Result<LoadedEditorState, DocIoError> {
+    let pen_dev_path = de_util::document_file::is_pen_dev_path(path);
+    if !pen_dev_path && !de_util::document_file::is_document_path(path) {
+        return Err(DocIoError::UnsupportedExtension {
+            path: path.display().to_string(),
+        });
+    }
+    let loaded = read_editor_state_with_report(path, locale)?;
+    if pen_dev_path && loaded.report.pen_dev_import.is_none() {
+        return Err(DocIoError::NotPenDevDocument {
+            path: path.display().to_string(),
+        });
+    }
+    Ok(loaded)
+}
+
+fn read_editor_state_with_report(
     path: &std::path::Path,
     locale: de_editor_core::Locale,
 ) -> Result<LoadedEditorState, DocIoError> {
@@ -26,7 +48,6 @@ pub fn load_editor_state_with_report(
             state,
             embedded_meta,
             report,
-            path,
         ));
     }
     // SAFETY: The map is read-only and lives through this synchronous parse.
@@ -48,7 +69,6 @@ pub fn load_editor_state_with_report(
         state,
         embedded_meta,
         report,
-        path,
     ))
 }
 
@@ -102,7 +122,6 @@ fn parse_editor_state_source(
         inferred_editor_meta: embedded
             .as_ref()
             .is_some_and(|extraction| extraction.inferred_preserve_authored_geometry),
-        used_legacy_sidecar: false,
         rewrite_blocked_by_schema_warning,
         pen_dev_import: canonical.compatibility.pen_dev,
     };
@@ -116,16 +135,10 @@ fn parse_editor_state_source(
 fn finish_loaded_state_with_report(
     state: EditorState,
     embedded_meta: Option<EditorMeta>,
-    mut report: DocumentLoadReport,
-    path: &std::path::Path,
+    report: DocumentLoadReport,
 ) -> LoadedEditorState {
-    let sidecar_meta = embedded_meta
-        .is_none()
-        .then(|| legacy_sidecar_meta(path))
-        .flatten();
-    report.used_legacy_sidecar = sidecar_meta.is_some();
     LoadedEditorState {
-        state: finish_loaded_state(state, embedded_meta.or(sidecar_meta)),
+        state: finish_loaded_state(state, embedded_meta),
         report,
     }
 }
@@ -176,11 +189,6 @@ fn first_page_with_content(state: &EditorState) -> usize {
         .iter()
         .position(|page| !page.children.is_empty())
         .unwrap_or(0)
-}
-
-fn legacy_sidecar_meta(path: &std::path::Path) -> Option<EditorMeta> {
-    let meta_src = std::fs::read_to_string(sidecar_path(path)).ok()?;
-    serde_json::from_str::<EditorMeta>(&meta_src).ok()
 }
 
 pub(super) fn looks_like_legacy_doc_payload(src: &str) -> bool {

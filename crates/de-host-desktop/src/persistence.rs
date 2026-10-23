@@ -1,4 +1,4 @@
-//! Desktop `.pen` / `.op` Save and Open dialog flow.
+//! Desktop `.pen` / `.de` Save and Open dialog flow.
 //!
 //! Owns native pickers, [`run_action`] routing, and error dialogs.
 
@@ -15,10 +15,15 @@ use de_host_services::doc_io::{
 
 use crate::persistence_error::DocumentOpenError;
 
-/// Document extensions for the native file-dialog filter (`.op` is the
-/// canonical format, `.pen` the legacy alias). Order is cosmetic — save
-/// dialogs always seed an explicit `.op` file name.
-pub(crate) const DOCUMENT_EXTENSIONS: &[&str] = &["op", "pen"];
+/// Extensions for the Save dialog filter: only `.de` documents are written.
+pub(crate) const DOCUMENT_EXTENSIONS: &[&str] = &[de_util::document_file::EXTENSION];
+
+/// Extensions for the Open dialog filter: `.de` documents plus pen.dev
+/// `.pen` files, which open as an untitled import.
+const OPEN_EXTENSIONS: &[&str] = &[
+    de_util::document_file::EXTENSION,
+    de_util::document_file::PEN_DEV_EXTENSION,
+];
 
 /// Pop a Save dialog (rfd native) and write a standalone document to the
 /// chosen path. `Ok(Some(path))` on success, `Ok(None)` on user cancel, `Err`
@@ -47,7 +52,7 @@ pub fn pick_save_as_path(state: &EditorState) -> Option<PathBuf> {
             "dialog.pickerSaveTitle",
         ))
         .add_filter(de_editor_ui::PRODUCT_NAME, DOCUMENT_EXTENSIONS)
-        .set_file_name("untitled.op")
+        .set_file_name(de_util::document_file::UNTITLED_FILE_NAME)
         .save_file()
 }
 
@@ -181,7 +186,6 @@ fn load_into_host(
     host: &mut WidgetHostNative,
     path: &std::path::Path,
 ) -> Result<Option<OpenedDocument>, DocumentOpenError> {
-    let loaded_source_state = crate::figma_import_session::capture_output_state(path)?;
     let locale = host.editor_state().editor_ui.locale;
     let loaded = load_editor_state_with_report(path, locale);
     crate::heap_pressure::schedule_relief("document load parse");
@@ -190,15 +194,7 @@ fn load_into_host(
     preserve_app_preferences(host.editor_state(), &mut state);
     state.editor_ui.home.hide();
     let pen_dev_import = loaded.report.pen_dev_import.clone();
-    let bound_path = match pen_dev_import {
-        Some(_) => None,
-        None => Some(crate::legacy_op_upgrade::prompt_and_save(
-            &mut state,
-            path,
-            &loaded.report,
-            loaded_source_state,
-        )?),
-    };
+    let bound_path = pen_dev_import.is_none().then(|| path.to_path_buf());
     set_file_name_display(&mut state, bound_path.as_deref());
     state.clear_selection();
     eprintln!(
@@ -255,7 +251,7 @@ pub fn handle_open(
             host.editor_state().editor_ui.locale,
             "dialog.pickerOpenTitle",
         ))
-        .add_filter(de_editor_ui::PRODUCT_NAME, DOCUMENT_EXTENSIONS)
+        .add_filter(de_editor_ui::PRODUCT_NAME, OPEN_EXTENSIONS)
         .pick_file()
     {
         Some(p) => p,
@@ -573,7 +569,7 @@ pub fn run_action(
                     host.editor_state().editor_ui.locale,
                     "dialog.pickerOpenTitle",
                 ))
-                .add_filter("pen.dev", &["pen"])
+                .add_filter("pen.dev", &[de_util::document_file::PEN_DEV_EXTENSION])
                 .pick_file()
             else {
                 return ActionOutcome::Noop;

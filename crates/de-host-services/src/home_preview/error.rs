@@ -9,7 +9,7 @@ use crate::export::ExportError;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HomePreviewError {
-    /// The `.op` file could not be loaded.
+    /// The `.de` file could not be loaded.
     Load(DocIoError),
     /// The page could not be rasterised.
     Render(ExportError),

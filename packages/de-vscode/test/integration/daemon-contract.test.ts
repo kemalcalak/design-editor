@@ -6,7 +6,8 @@
 // FAILS (never skips) so a broken build is visible.
 
 import { test, expect, afterEach } from "bun:test";
-import { existsSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { DaemonClient, type DaemonLogger } from "../../src/daemon/daemon-client";
@@ -31,8 +32,9 @@ test("real daemon: handshake → version → mcp-via-proxy → auth/origin defen
     `de-host-web-server not built — run: cargo build -p de-host-web-server`,
   ).toBe(true);
 
-  // A minimal .op file to open.
-  const fixture = join(
+  // A minimal document to open. The jian corpus names it `.op`; the editor
+  // only opens `.de`, so open a `.de` copy.
+  const corpus = join(
     repoRoot,
     "vendor",
     "jian",
@@ -42,9 +44,16 @@ test("real daemon: handshake → version → mcp-via-proxy → auth/origin defen
     "corpus",
     "nested-frame.op",
   );
+  let fixture: string | undefined;
+  if (existsSync(corpus)) {
+    const dir = mkdtempSync(join(tmpdir(), "de-vscode-contract-"));
+    cleanups.push(() => rmSync(dir, { recursive: true, force: true }));
+    fixture = join(dir, "nested-frame.de");
+    copyFileSync(corpus, fixture);
+  }
   const client = await DaemonClient.spawn({
     command: [BINARY],
-    filePath: existsSync(fixture) ? fixture : undefined,
+    filePath: fixture,
     allowOrigin: "vscode-webview://smoke",
     logger: silent,
   });

@@ -497,7 +497,7 @@ fn tracked_picker_row_press_defers_selection_until_release() {
             branch: Some("main".into()),
             overflow_open: true,
             overflow_view: GitOverflowView::TrackedPicker,
-            candidate_files: vec![candidate("a.op"), candidate("b.op")],
+            candidate_files: vec![candidate("a.de"), candidate("b.de")],
             ..Default::default()
         };
     }

@@ -25,7 +25,7 @@ pub enum VariableKind {
 }
 
 /// Single typed scalar — the leaf value of a variable. Untagged
-/// because `.op` JSON uses raw scalars: `"#ff0000"` / `12.5` / `true`.
+/// because `.de` JSON uses raw scalars: `"#ff0000"` / `12.5` / `true`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum VariableScalar {
     Bool(bool),
@@ -104,7 +104,7 @@ pub struct ThemeAxis {
 }
 
 /// Per-document variable + theme registry. Populated by the
-/// canonical `.op` loader from `PenDocument.variables` /
+/// canonical `.de` loader from `PenDocument.variables` /
 /// `PenDocument.themes`. v1 preserves the data + supports lookup +
 /// active-theme selection; paint-time `$ref` substitution is a
 /// follow-up.

@@ -1,5 +1,5 @@
 //! Tests for [`crate::op_export`] — turning an extractor snapshot into a
-//! ready-to-open `.op` (`PenDocument`) document. Exercised natively; the wasm
+//! ready-to-open `.de` (`PenDocument`) document. Exercised natively; the wasm
 //! boundary is a thin type conversion over this.
 
 use crate::op_export::{snapshot_to_op, OpExport};
@@ -55,9 +55,9 @@ fn converts_a_snapshot_into_a_valid_op_document() {
         panic!("a non-empty snapshot must convert");
     };
 
-    // The `op` string is the exact `.op` file contents: it must round-trip
+    // The `op` string is the exact `.de` file contents: it must round-trip
     // back into the canonical schema, which is what makes it double-click open.
-    let document: PenDocument = serde_json::from_str(&op).expect(".op must be valid PenDocument");
+    let document: PenDocument = serde_json::from_str(&op).expect(".de must be valid PenDocument");
 
     // The snapshot path names the document from the snapshot's own `title`
     // field (the extractor fills it with the page title).
@@ -78,7 +78,7 @@ fn passes_a_non_blank_title_through_as_document_name() {
     let OpExport::Ready { op, .. } = snapshot_to_op(&no_title, Some("  My Tab Title  ")) else {
         panic!("snapshot without a title must still convert");
     };
-    let document: PenDocument = serde_json::from_str(&op).expect(".op must be valid");
+    let document: PenDocument = serde_json::from_str(&op).expect(".de must be valid");
     assert_eq!(document.name.as_deref(), Some("Web Snapshot"));
 }
 

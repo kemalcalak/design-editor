@@ -227,7 +227,7 @@ impl GitRepo {
         };
         // `<rev>:<path>` addresses a *tree* entry, and git tree entries are
         // `/`-separated on every platform. `rel_to_workdir` hands back an OS
-        // path, so on Windows this is `designs\home.op` and the lookup misses
+        // path, so on Windows this is `designs\home.de` and the lookup misses
         // for anything below the repository root — only a root-level file, which
         // has no separator, resolves. `git_session::tracked_relpath` normalizes
         // for the same reason; `MAIN_SEPARATOR` keeps a literal backslash in a

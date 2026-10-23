@@ -1,7 +1,7 @@
 //! Hidden `--render-shots` headless raster mode.
 //!
-//! `design-editor --render-shots <file.op> <out_dir> [scale]`
-//! loads a canonical `.op`, runs the SAME jian layout pass the editor
+//! `design-editor --render-shots <file.de> <out_dir> [scale]`
+//! loads a canonical `.de`, runs the SAME jian layout pass the editor
 //! canvas uses (`de_pen_loader::editor_state_to_layout_scene`), and
 //! writes one cropped PNG per top-level node on the active page via
 //! [`de_host_services::export::export_node_raster`] — node-only screenshots (no
@@ -22,7 +22,7 @@ use crate::render_cli_error::RenderCliError;
 /// When `--render-shots` is present on argv, render node PNGs and return
 /// `true` so `main` exits 0; otherwise return `false` and let the normal
 /// GUI path continue. Any failure (bad args, unreadable / unparsable
-/// `.op`, no nodes, or a node that fails to render) exits non-zero — a
+/// `.de`, no nodes, or a node that fails to render) exits non-zero — a
 /// benchmark driver must not read success when no PNG was produced.
 pub fn run_cli_if_requested() -> bool {
     let args: Vec<String> = std::env::args().collect();
@@ -30,7 +30,7 @@ pub fn run_cli_if_requested() -> bool {
         return false;
     };
     let (Some(file), Some(out_dir)) = (args.get(pos + 1), args.get(pos + 2)) else {
-        eprintln!("usage: design-editor --render-shots <file.op> <out_dir> [scale]");
+        eprintln!("usage: design-editor --render-shots <file.de> <out_dir> [scale]");
         std::process::exit(2);
     };
     let scale: f32 = args
@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn load_render_state_accepts_future_version_and_restores_editor_meta() {
         let path = std::env::temp_dir().join(format!(
-            "design-editor-render-shots-future-version-{}.op",
+            "design-editor-render-shots-future-version-{}.de",
             std::process::id()
         ));
         std::fs::write(

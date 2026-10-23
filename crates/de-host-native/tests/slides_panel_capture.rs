@@ -1,5 +1,5 @@
 //! End-to-end capture of the left rail's slides tab against a real deck
-//! template: open `pitch-deck-dark.op`, paint frames until every board
+//! template: open `pitch-deck-dark.de`, paint frames until every board
 //! thumbnail has rendered, and write the rail out as a PNG for review.
 //!
 //! Also reports the per-thumbnail render cost, which is the number the
@@ -20,7 +20,7 @@ use de_host_native::WidgetHostNative;
 const VW: i32 = 1_400;
 const VH: i32 = 900;
 const TEMPLATE: &str =
-    include_str!("../../de-editor-core/assets/scene_templates/pitch-deck-dark.op");
+    include_str!("../../de-editor-core/assets/scene_templates/pitch-deck-dark.de");
 
 #[test]
 fn a_real_deck_fills_the_rail_with_rendered_thumbnails() {

@@ -2,7 +2,7 @@
 //!
 //! A normal `git merge` runs in the live working tree. For a design
 //! tool that is dangerous: a conflicting merge writes `<<<<<<<`
-//! markers straight into the open `.op` document, corrupting the
+//! markers straight into the open `.de` document, corrupting the
 //! JSON the editor is rendering, and leaves the repo in a
 //! `MERGE_HEAD` state the user did not ask for.
 //!

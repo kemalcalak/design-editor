@@ -1,4 +1,4 @@
-//! Tests for the structured `.op` three-way merge.
+//! Tests for the structured `.de` three-way merge.
 
 use std::collections::HashMap;
 

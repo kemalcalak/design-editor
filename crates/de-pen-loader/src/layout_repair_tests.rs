@@ -7,7 +7,7 @@ use super::state_from;
 fn vertical_centered_text_child_infers_center_text_align_like_ts_layout() {
     // TS layout parity: a text child in a vertical flex container with
     // alignItems:center is centered inside its own text box even when
-    // textAlign is omitted. Bottom-tab labels in pencil-demo.op rely on this.
+    // textAlign is omitted. Bottom-tab labels in pencil-demo.de rely on this.
     let src = r##"{
       "version":"1.0.0","pages":[{"id":"p","name":"P","children":[
         {"type":"frame","id":"tab","width":88,"height":57,
@@ -30,7 +30,7 @@ fn vertical_centered_text_child_infers_center_text_align_like_ts_layout() {
 #[test]
 fn implicit_horizontal_layout_applies_padding_to_children_like_ts_layout() {
     // TS `inferLayout` treats a frame with padding as horizontal auto-layout.
-    // Badge labels in pencil-demo.op rely on that padding even though the
+    // Badge labels in pencil-demo.de rely on that padding even though the
     // frame has no explicit `layout` field and the child carries stale x/y=0.
     let src = r##"{
       "version":"1.0.0","pages":[{"id":"p","name":"P","children":[
@@ -125,7 +125,7 @@ fn overflowing_fixed_width_horizontal_wrapper_expands_before_parent_space_betwee
 
 #[test]
 fn legacy_fixed_width_text_badge_centers_label_like_badge_builder() {
-    // Older generated `.op` files used fixed-width Badge frames with
+    // Older generated `.de` files used fixed-width Badge frames with
     // padding but omitted the badge builder's explicit layout/align
     // fields. They should still render as a centered pill label, not
     // as stale child x/y at the top-left.

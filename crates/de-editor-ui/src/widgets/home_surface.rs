@@ -63,7 +63,7 @@ mod top_bar;
 pub struct HomeRecent {
     /// The full path, for opening and for the thumbnail lookup.
     pub path: String,
-    /// The file name without its folder or `.op` extension.
+    /// The file name without its folder or `.de` extension.
     pub name: String,
     /// The folder, `~`-abbreviated when it sits under the home dir.
     pub folder: String,
@@ -341,7 +341,8 @@ fn recent_entry(path: &str, modified_at: u64, preview_stamp: Option<u64>) -> Hom
         None => ("", path),
     };
     let name = file
-        .strip_suffix(".op")
+        .strip_suffix(de_util::document_file::SUFFIX)
+        // pen.dev imports stay listed under their `.pen` source.
         .or_else(|| file.strip_suffix(".pen"))
         .unwrap_or(file);
     let folder = home_dir_prefix(folder)

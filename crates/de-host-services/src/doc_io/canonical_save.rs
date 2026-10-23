@@ -1,4 +1,4 @@
-//! Allocation-bounded canonical `.op` writer.
+//! Allocation-bounded canonical `.de` writer.
 //!
 //! The typed document streams directly into the destination. A one-byte tail
 //! adapter holds back the root `}` so the image tables collected by
@@ -287,7 +287,7 @@ mod tests {
         assert!(parsed.get("images").is_none());
 
         let path = std::env::temp_dir().join(format!(
-            "design-editor-stream-load-{}.op",
+            "design-editor-stream-load-{}.de",
             std::process::id()
         ));
         std::fs::write(&path, streamed).expect("write fixture");

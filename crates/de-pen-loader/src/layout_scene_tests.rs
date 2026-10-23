@@ -28,10 +28,10 @@ mod widget_stroke;
 
 use de_editor_core::EditorState;
 
-/// Build an `EditorState` from a `.op` JSON source — mirrors how the
+/// Build an `EditorState` from a `.de` JSON source — mirrors how the
 /// `adapter_tests` fixtures parse a `PenDocument`.
 fn state_from(src: &str) -> EditorState {
-    let parsed = jian_ops_schema::load_str(src).expect("parse .op fixture");
+    let parsed = jian_ops_schema::load_str(src).expect("parse .de fixture");
     EditorState::from_document(parsed.value)
 }
 

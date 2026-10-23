@@ -13,7 +13,7 @@ fn save_document_writes_current_pen_document_to_target_path() {
     state.editor_ui.preserve_authored_geometry = true;
     let dir = temp_dir("save-document");
     std::fs::create_dir_all(&dir).expect("temp dir");
-    let out_path = dir.join("copy.op");
+    let out_path = dir.join("copy.de");
 
     let tool = save_document_snapshot(&state);
     let mut args = BTreeMap::new();

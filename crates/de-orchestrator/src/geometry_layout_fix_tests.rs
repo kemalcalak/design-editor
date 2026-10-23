@@ -274,7 +274,7 @@ fn vertical_ring_badge_overlay_is_not_reported_as_an_overlap() {
 
 /// Manual repair harness (not part of the suite): load DE_REPAIR_IN, run the
 /// whole-doc loop finalize (Class-A + cleanup + geometry), save DE_REPAIR_OUT.
-/// `DE_REPAIR_IN=/path/in.op DE_REPAIR_OUT=/path/out.op cargo test -p
+/// `DE_REPAIR_IN=/path/in.de DE_REPAIR_OUT=/path/out.de cargo test -p
 /// de-orchestrator repair_harness -- --ignored --nocapture`
 #[test]
 #[ignore]
@@ -282,7 +282,7 @@ fn repair_harness_finalizes_an_op_file() {
     let inp = std::env::var("DE_REPAIR_IN").expect("DE_REPAIR_IN");
     let out = std::env::var("DE_REPAIR_OUT").expect("DE_REPAIR_OUT");
     let text = std::fs::read_to_string(&inp).expect("read input");
-    let doc: jian_ops_schema::PenDocument = serde_json::from_str(&text).expect("parse .op");
+    let doc: jian_ops_schema::PenDocument = serde_json::from_str(&text).expect("parse .de");
     let mut state = de_editor_core::EditorState::from_document(doc);
     crate::loop_finalize::apply_loop_finalize(&mut state);
     std::fs::write(&out, serde_json::to_string_pretty(&state.doc).unwrap()).expect("write output");
@@ -298,7 +298,7 @@ fn finalize_only_harness() {
     let inp = std::env::var("DE_REPAIR_IN").expect("DE_REPAIR_IN");
     let out = std::env::var("DE_REPAIR_OUT").expect("DE_REPAIR_OUT");
     let text = std::fs::read_to_string(&inp).expect("read input");
-    let doc: jian_ops_schema::PenDocument = serde_json::from_str(&text).expect("parse .op");
+    let doc: jian_ops_schema::PenDocument = serde_json::from_str(&text).expect("parse .de");
     let mut state = de_editor_core::EditorState::from_document(doc);
     use de_editor_core::PenNodeExt;
     let root_id = state.active_children()[0].id_str().to_string();
@@ -326,7 +326,7 @@ fn resolved_rect_probe() {
         .to_lowercase();
     let under = std::env::var("DE_PROBE_UNDER").is_ok();
     let text = std::fs::read_to_string(&inp).expect("read input");
-    let doc: jian_ops_schema::PenDocument = serde_json::from_str(&text).expect("parse .op");
+    let doc: jian_ops_schema::PenDocument = serde_json::from_str(&text).expect("parse .de");
     let state = de_editor_core::EditorState::from_document(doc);
     let rects = resolved_rects(&state);
     for root in state.active_children() {
@@ -374,7 +374,7 @@ fn resolved_rect_probe() {
     }
 }
 
-/// Manual corpus replay: load p01.op..p52.op from DE_GEOMETRY_REPLAY_DIR, run
+/// Manual corpus replay: load p01.de..p52.de from DE_GEOMETRY_REPLAY_DIR, run
 /// geometry_validate_and_fix on every active root, and assert the parsed doc is
 /// unchanged. This is the dirty-diff gate for geometry-only replay.
 #[test]
@@ -443,7 +443,7 @@ fn replay_geometry_validate_corpus() {
         }
         if baseline_after != current_after {
             if let Some(out_dir) = &out_dir {
-                let out_path = std::path::Path::new(out_dir).join(format!("{name}.current.op"));
+                let out_path = std::path::Path::new(out_dir).join(format!("{name}.current.de"));
                 std::fs::write(
                     out_path,
                     serde_json::to_string_pretty(&current_state.doc).expect("serialize dirty doc"),
@@ -464,7 +464,7 @@ fn replay_geometry_validate_corpus() {
         dirty,
         baseline_input_dirty
     );
-    assert_eq!(files.len(), 52, "expected p01.op..p52.op corpus");
+    assert_eq!(files.len(), 52, "expected p01.de..p52.de corpus");
     assert!(
         dirty.is_empty(),
         "dirty geometry replay files versus baseline: {dirty:?}"

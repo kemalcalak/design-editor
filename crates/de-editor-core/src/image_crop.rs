@@ -17,7 +17,7 @@ const SIZE_EPSILON: f32 = 1e-6;
 
 /// Whether a primary image-fill body has crop semantics.
 ///
-/// Older `.op` files may still contain Figma's raw `Stretch + transform`
+/// Older `.de` files may still contain Figma's raw `Stretch + transform`
 /// representation. Treat that combination as Crop without changing the wire
 /// value so those documents remain editable.
 pub fn image_fill_body_is_crop(body: &ImageFillBody) -> bool {

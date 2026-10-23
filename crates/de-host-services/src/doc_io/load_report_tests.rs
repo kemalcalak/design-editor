@@ -1,9 +1,9 @@
-use super::{load_editor_state_with_report, sidecar_path};
+use super::load_editor_state_with_report;
 use std::path::PathBuf;
 
 fn temp_path(tag: &str) -> PathBuf {
     std::env::temp_dir().join(format!(
-        "design-editor-load-report-{tag}-{}-{}.op",
+        "design-editor-load-report-{tag}-{}-{}.de",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -68,20 +68,7 @@ fn reports_normalization_and_allows_unknown_field_preserving_rewrites() {
 }
 
 #[test]
-fn reports_only_adopted_sidecar_and_reliable_editor_meta_inference() {
-    let sidecar_doc = temp_path("sidecar");
-    std::fs::write(&sidecar_doc, r#"{"version":"1.0","children":[]}"#)
-        .expect("write sidecar document");
-    std::fs::write(
-        sidecar_path(&sidecar_doc),
-        r#"{"active_page_index":0,"preserve_authored_geometry":true}"#,
-    )
-    .expect("write legacy sidecar");
-    let loaded = load_editor_state_with_report(&sidecar_doc, de_editor_core::Locale::EnUs)
-        .expect("sidecar document loads");
-    assert!(loaded.report.used_legacy_sidecar);
-    assert!(loaded.report.needs_schema_upgrade());
-
+fn reports_only_reliable_editor_meta_inference() {
     let inferred = temp_path("inferred");
     std::fs::write(
         &inferred,
@@ -100,8 +87,6 @@ fn reports_only_adopted_sidecar_and_reliable_editor_meta_inference() {
         .expect("ordinary document loads");
     assert!(!loaded.report.needs_schema_upgrade());
 
-    let _ = std::fs::remove_file(sidecar_path(&sidecar_doc));
-    let _ = std::fs::remove_file(sidecar_doc);
     let _ = std::fs::remove_file(inferred);
     let _ = std::fs::remove_file(ordinary);
 }

@@ -496,7 +496,7 @@ mod tests {
         let directory =
             std::env::temp_dir().join(format!("design-editor-enrich-retry-{}", std::process::id()));
         std::fs::create_dir_all(&directory).expect("create fixture directory");
-        let output = directory.join("output.op");
+        let output = directory.join("output.de");
         std::fs::write(&output, b"keep-existing-output").expect("seed output");
 
         let result = super::super::save_enriched_state(&mut state, &output, summary);

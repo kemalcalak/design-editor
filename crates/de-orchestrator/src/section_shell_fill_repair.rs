@@ -3,7 +3,7 @@
 //! chevron/badge), and that body redundantly repeats the header's own
 //! title as its own first child.
 //!
-//! Measured (`0718-1-glm-1.op`, GLM-5.2 built-in loop provider): a
+//! Measured (`0718-1-glm-1.de`, GLM-5.2 built-in loop provider): a
 //! "Must-See" checklist section wanted the shape `[header-row(title),
 //! content-section]` as two SIBLINGS, but the model instead nested the
 //! whole `ChecklistSection` INSIDE the header row as its second

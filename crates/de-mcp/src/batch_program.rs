@@ -673,7 +673,7 @@ fn execute_move(args: &str, ctx: &mut ProgramCtx) -> Result<String> {
 /// same type and (non-empty) name is a REDRAFT, not a new node: a weak model
 /// deliberating in-channel re-emits its section several times ("Let me
 /// redo…"), and appending every draft shipped SEVEN stacked navbars from one
-/// response (measured: minimax-m3, test0703-m3.op). Delete the superseded
+/// response (measured: minimax-m3, test0703-m3.de). Delete the superseded
 /// draft before the re-insert so the LAST draft wins. Scratch-style binding
 /// reuse (`t=I(cardA, …)` then `t=I(cardB, …)` — different parent, or unnamed
 /// leaves) keeps appending exactly as before; all four gates must agree

@@ -1,8 +1,8 @@
-//! Node-level three-way merge for Design Editor `.op` documents.
+//! Node-level three-way merge for Design Editor `.de` documents.
 //!
-//! A `.op` file is JSON; a textual git merge of it produces broken
+//! A `.de` file is JSON; a textual git merge of it produces broken
 //! JSON the moment two branches touch nearby lines. This crate
-//! merges `.op` documents *structurally* instead: it keys every
+//! merges `.de` documents *structurally* instead: it keys every
 //! `PenNode` by its `id`, runs a three-way merge per node, and
 //! reports the residue as a list of [`NodeConflict`]s the editor
 //! can resolve one node at a time.
@@ -71,7 +71,7 @@ impl NodeConflictKind {
     }
 }
 
-/// One unresolved node-level conflict from a structured `.op` merge.
+/// One unresolved node-level conflict from a structured `.de` merge.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NodeConflict {
     /// The conflicting node's `id`.
@@ -89,7 +89,7 @@ pub struct NodeConflict {
     pub theirs_applicable: bool,
 }
 
-/// The outcome of a structured `.op` merge.
+/// The outcome of a structured `.de` merge.
 #[derive(Debug, Clone)]
 pub struct OpMergeResult {
     /// The merged document — the local (`ours`) tree with every
@@ -127,7 +127,7 @@ struct NodeRecord {
     parent_id: Option<String>,
 }
 
-/// Three-way merge the `.op` documents `base` → (`ours`, `theirs`).
+/// Three-way merge the `.de` documents `base` → (`ours`, `theirs`).
 ///
 /// `base` is the merge-base revision, `ours` the local branch,
 /// `theirs` the branch being merged in. Returns the merged tree plus

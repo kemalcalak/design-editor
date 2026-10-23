@@ -385,7 +385,7 @@ fn mixed_text_band_not_filled() {
 
 fn next_panel_fixture() -> serde_json::Value {
     let document: serde_json::Value =
-        serde_json::from_str(include_str!("test_fixtures/next_panel_before_cleanup.op"))
+        serde_json::from_str(include_str!("test_fixtures/next_panel_before_cleanup.de"))
             .expect("next panel fixture JSON");
     document["children"][0]["children"][2].clone()
 }
@@ -393,7 +393,7 @@ fn next_panel_fixture() -> serde_json::Value {
 #[test]
 fn next_panel_fixture_cleanup_keeps_white_surface_and_border() {
     let document: jian_ops_schema::PenDocument =
-        serde_json::from_str(include_str!("test_fixtures/next_panel_before_cleanup.op"))
+        serde_json::from_str(include_str!("test_fixtures/next_panel_before_cleanup.de"))
             .expect("next panel fixture document");
     let mut sink = VecDocSink {
         state: EditorState::from_document(document),

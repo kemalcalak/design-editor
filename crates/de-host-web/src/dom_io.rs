@@ -135,12 +135,12 @@ pub(crate) fn drain_pending_kit_io<C: RepaintContext + 'static>(inner: &InnerRc<
     }
 }
 
-/// Component Browser → Import kit: hidden `.op` / `.pen` / `.json`
+/// Component Browser → Import kit: hidden `.de` / `.pen` / `.json`
 /// picker → extract reusable components → append session kit.
 fn import_kit_file<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
     let inner = inner.clone();
     open_file_picker(
-        ".op,.pen,.json",
+        ".de,.pen,.json",
         Box::new(move |file| {
             let name = file.name();
             let inner2 = inner.clone();
@@ -170,7 +170,7 @@ fn apply_imported_kit<C: RepaintContext + 'static>(inner: &InnerRc<C>, src: &str
 }
 
 /// Component Browser → Export kit: collect reusable components into
-/// the shared kit file format and download it as `.op`.
+/// the shared kit file format and download it as `.de`.
 fn export_kit_file<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
     let b = inner.borrow();
     match file_actions::export_kit_document(b.host().editor_state()) {

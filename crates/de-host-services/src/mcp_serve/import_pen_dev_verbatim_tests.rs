@@ -33,7 +33,7 @@ fn an_imported_phone_screen_keeps_its_own_children() {
             "children":[{"type":"text","id":"t","content":"Hello","fill":"#000000"}]}]}"##,
     )
     .expect("write pen");
-    let path = dir.join("doc.op");
+    let path = dir.join("doc.de");
     let mut state = de_editor_core::EditorState::new();
     let line = serde_json::json!({
         "jsonrpc": "2.0",

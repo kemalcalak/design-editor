@@ -1,6 +1,6 @@
 //! Fixed-input DESIGN_MODIFY mode for prompt-thumbnail generation.
 //!
-//! `DESIGN_EDITOR_SMOKE_MODIFY_INPUT=<baseline.op>` takes a real document through
+//! `DESIGN_EDITOR_SMOKE_MODIFY_INPUT=<baseline.de>` takes a real document through
 //! the same `build_modify_plan` -> `run_modify_turn` -> scoped host apply path
 //! as the desktop. The baseline is never overwritten: output must use a
 //! distinct `DESIGN_EDITOR_SMOKE_OUT` path, and both files are SHA-256 addressed

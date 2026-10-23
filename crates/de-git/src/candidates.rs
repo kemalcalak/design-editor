@@ -1,5 +1,5 @@
-//! `.op` candidate enumeration for the tracked-file picker — lists the
-//! repository's `.op` files with their commit history stats (TS
+//! `.de` candidate enumeration for the tracked-file picker — lists the
+//! repository's `.de` files with their commit history stats (TS
 //! `gitClient.listCandidates` / `GitCandidateFileInfo`).
 
 use std::collections::HashMap;
@@ -7,9 +7,9 @@ use std::path::Path;
 
 use crate::{GitError, GitRepo};
 
-/// One `.op` candidate file with its history stats.
+/// One `.de` candidate file with its history stats.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CandidateOpFile {
+pub struct CandidateDocument {
     /// Absolute path.
     pub path: String,
     /// Path relative to the repo work-tree root (POSIX separators).
@@ -28,22 +28,22 @@ pub struct CandidateOpFile {
 const SCAN_LIMIT: usize = 300;
 
 impl GitRepo {
-    /// Enumerate the `.op` files in the work tree with their history stats.
-    /// Walks the working directory for `*.op` files (skipping `.git`), then a
+    /// Enumerate the `.de` files in the work tree with their history stats.
+    /// Walks the working directory for `*.de` files (skipping `.git`), then a
     /// single bounded revwalk attributes commits to the files they touched.
-    pub fn candidate_op_files(&self) -> Result<Vec<CandidateOpFile>, GitError> {
+    pub fn candidate_documents(&self) -> Result<Vec<CandidateDocument>, GitError> {
         let repo = self.open()?;
         let workdir = self.workdir().to_path_buf();
 
-        // 1. Find every `.op` file under the work tree.
-        let mut files: HashMap<String, CandidateOpFile> = HashMap::new();
-        collect_op_files(&workdir, &workdir, &mut files);
+        // 1. Find every `.de` file under the work tree.
+        let mut files: HashMap<String, CandidateDocument> = HashMap::new();
+        collect_documents(&workdir, &workdir, &mut files);
         if files.is_empty() {
             return Ok(Vec::new());
         }
 
         // 2. One bounded revwalk; per commit, diff against its first parent
-        //    and credit each changed `.op` path (newest commit seen first, so
+        //    and credit each changed `.de` path (newest commit seen first, so
         //    the first credit per file is its latest commit).
         if let Ok(mut walk) = repo.revwalk() {
             walk.set_sorting(git2::Sort::TIME).ok();
@@ -101,8 +101,8 @@ impl GitRepo {
     }
 }
 
-/// Recursively collect `*.op` files under `dir`, keyed by repo-relative path.
-fn collect_op_files(dir: &Path, root: &Path, out: &mut HashMap<String, CandidateOpFile>) {
+/// Recursively collect `*.de` files under `dir`, keyed by repo-relative path.
+fn collect_documents(dir: &Path, root: &Path, out: &mut HashMap<String, CandidateDocument>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
     };
@@ -113,15 +113,15 @@ fn collect_op_files(dir: &Path, root: &Path, out: &mut HashMap<String, Candidate
             continue;
         }
         if path.is_dir() {
-            collect_op_files(&path, root, out);
-        } else if path.extension().and_then(|e| e.to_str()) == Some("op") {
+            collect_documents(&path, root, out);
+        } else if de_util::document_file::is_document_path(&path) {
             let Ok(rel) = path.strip_prefix(root) else {
                 continue;
             };
             let rel = rel.to_string_lossy().replace('\\', "/");
             out.insert(
                 rel.clone(),
-                CandidateOpFile {
+                CandidateDocument {
                     path: path.to_string_lossy().into_owned(),
                     relative_path: rel,
                     milestone_count: 0,

@@ -326,7 +326,7 @@ fn nav_rows_do_not_get_table_gap() {
 
 #[test]
 fn gap_reaches_rows_behind_an_unnamed_wrapper() {
-    // test07021.op's verbatim shape: "Client List Table" holds a toolbar row
+    // test07021.de's verbatim shape: "Client List Table" holds a toolbar row
     // and an UNNAMED vertical wrapper that holds the actual gap-less rows —
     // the gap must reach through the wrapper.
     let mut root: PenNode = serde_json::from_value(json!({
@@ -389,7 +389,7 @@ fn striped_table(name: &str, row_extra: fn(&mut Value)) -> PenNode {
 
 #[test]
 fn positive_striped_rows_get_flushed() {
-    // test0703.op shape: table gap=16 while every row already carries a
+    // test0703.de shape: table gap=16 while every row already carries a
     // bottom hairline — the gap turns it into floating stripes; flush it.
     let mut root = striped_table("Client List Table", |row| {
         row.as_object_mut().unwrap().insert(

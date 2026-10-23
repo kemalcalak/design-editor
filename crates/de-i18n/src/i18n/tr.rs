@@ -636,7 +636,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "a11y.aiChat" => "Yapay zekâ sohbeti",
         "designMd.emptyHint" => "Bir tasarım özeti eklemek için bir .md dosyası içe aktarın",
         "componentBrowser.empty" => "Bileşen bulunamadı",
-        "dialog.dropToOpen" => "Açmak için bırakın  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "Açmak için bırakın  ·  .de / .pen / .fig / .html / .zip",
         "text.weight.extralight" => "Extra Light",
         "text.weight.extrabold" => "Extra Bold",
         "interactions.title" => "Etkileşimler",

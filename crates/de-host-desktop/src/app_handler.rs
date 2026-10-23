@@ -326,7 +326,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         }
 
         // File-association launch path: open the document handed in
-        // via argv now that the host + window are ready. Routes `.op`
+        // via argv now that the host + window are ready. Routes `.de`
         // / `.pen` through `open_path`; `.fig` goes through the
         // background Figma import worker so the launch doesn't freeze
         // on a multi-second parse.

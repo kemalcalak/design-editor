@@ -1,6 +1,6 @@
 //! `collect_starved_rigid_row_fixes` — the footer-overlap repair.
 //!
-//! The fixture is `0808-gm-2.op`'s footer verbatim, reduced to the three
+//! The fixture is `0808-gm-2.de`'s footer verbatim, reduced to the three
 //! columns that produce the failure.
 
 use super::*;
@@ -15,7 +15,7 @@ fn rect(x: f64, w: f64) -> Rect {
     }
 }
 
-/// `0808-gm-2.op` footer: a 1040px row holding a fixed 280px brand column, a
+/// `0808-gm-2.de` footer: a 1040px row holding a fixed 280px brand column, a
 /// `fill_container` nav block of four 96px columns (gap 48 → needs 528), and a
 /// `fill_container` newsletter block. The two flex siblings split the 680px of
 /// free space evenly, so the nav block resolved 340 and its last two columns

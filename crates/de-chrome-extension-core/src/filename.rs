@@ -20,8 +20,8 @@
 //! .replace(/[\s.]+$/, '')
 //! ```
 //!
-//! The offline download is a ready-to-open `.op` document (Design Editor's
-//! `PenDocument` format), so the sanitised stem carries the `.op` suffix and
+//! The offline download is a ready-to-open `.de` document (Design Editor's
+//! `PenDocument` format), so the sanitised stem carries the `.de` suffix and
 //! the file opens by double-click without any CLI step.
 
 use crate::js_text::{is_js_space, js_trim, truncate_utf16};
@@ -38,8 +38,8 @@ pub fn design_md_filename() -> &'static str {
 /// Longest title stem kept, in UTF-16 code units (JS `slice(0, 80)`).
 const MAX_STEM_UNITS: usize = 80;
 
-/// Suffix every `.op` download carries.
-const SUFFIX: &str = ".op";
+/// Suffix every `.de` download carries.
+const SUFFIX: &str = de_util::document_file::SUFFIX;
 
 /// Stem used when the title sanitises down to nothing.
 const FALLBACK_STEM: &str = "page";
@@ -49,7 +49,7 @@ const FALLBACK_STEM: &str = "page";
 /// `chrome.downloads` is a needless second decoding layer.
 const FORBIDDEN: [char; 10] = ['<', '>', ':', '"', '/', '\\', '|', '?', '*', '%'];
 
-/// Build the `.op` download file name for a captured page titled `title`.
+/// Build the `.de` download file name for a captured page titled `title`.
 pub fn op_filename(title: &str) -> String {
     let replaced = replace_forbidden_runs(title);
     let collapsed = collapse_space_runs(&replaced);

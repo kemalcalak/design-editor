@@ -31,7 +31,7 @@ Design Editor is an open-source, AI-native vector design tool (Design-as-Code). 
 
 ```text
 crates/
-├── de-editor-core/       Canonical `.op` (PenDocument) editor state + EditorCommand + design-variable resolution
+├── de-editor-core/       Canonical `.de` (PenDocument) editor state + EditorCommand + design-variable resolution
 ├── de-editor-ui/         Platform-free widgets + RenderBackend facade (wasm32-clean)
 ├── de-editor-host-core/  Transport-free host state machines shared by all hosts
 ├── de-host-native/       Native host lib (winit + skia-safe GL) — desktop
@@ -46,7 +46,7 @@ crates/
    de-smoke / …
 
 packages/
-├── de-web-sdk/           Read-only `.op` web viewer SDK (wraps the de-host-web wasm bundle)
+├── de-web-sdk/           Read-only `.de` web viewer SDK (wraps the de-host-web wasm bundle)
 ├── de-web-sdk-react/     React 19 adapter for de-web-sdk
 └── de-web-sdk-vue/       Vue 3 adapter for de-web-sdk
 ```

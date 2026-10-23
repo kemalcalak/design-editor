@@ -165,7 +165,7 @@ pub(crate) fn open_file_picker(accept: &str, on_file: Box<dyn FnOnce(web_sys::Fi
 /// How to read a `File` — maps onto the three `FileReader` modes the
 /// ingestion paths need.
 pub(crate) enum ReadMode {
-    /// `readAsText` → `.op` / `.pen` / `.svg` sources.
+    /// `readAsText` → `.de` / `.pen` / `.svg` sources.
     Text,
     /// `readAsArrayBuffer` → binary `.fig` and HTML-project resources.
     Bytes,

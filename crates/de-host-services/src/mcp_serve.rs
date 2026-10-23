@@ -1,11 +1,11 @@
 //! Stdio MCP server mode for the desktop binary.
 //!
 //! `design-editor --mcp <path>` runs JSON-RPC stdio against a
-//! `.op` file. External CLIs can spawn this mode to drive the Rust
+//! `.de` file. External CLIs can spawn this mode to drive the Rust
 //! editor the way they drive TS pen-mcp today.
-//! The server backs the `.op` file with an `de_editor_core::
+//! The server backs the `.de` file with an `de_editor_core::
 //! EditorState` (the canonical `jian_ops_schema::PenDocument`), not
-//! the old shell-core `Document`. Loading a `.op` into a `PenDocument`
+//! the old shell-core `Document`. Loading a `.de` into a `PenDocument`
 //! is plain `jian-ops-schema` deserialization — no `pen_doc_adapter`
 //! needed for this path. Write tools apply through
 //! `EditorState::apply(EditorCommand)`; on every successful write the
@@ -95,7 +95,7 @@ pub fn tool_text(response: &str) -> String {
         .to_string()
 }
 
-/// Load a `.op` file into an `EditorState` via the schema compat layer.
+/// Load a `.de` file into an `EditorState` via the schema compat layer.
 pub fn load_editor_state(path: &Path) -> Result<EditorState, McpServeError> {
     crate::doc_io::load_editor_state(path, de_editor_core::Locale::EnUs)
         .map_err(|error| McpServeError::Document(format!("load {}: {error}", path.display())))

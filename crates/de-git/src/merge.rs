@@ -7,7 +7,7 @@
 //! `git2::Repository` opened fresh for each call. The worktree-merge
 //! orchestration still goes through [`MergeWorktree`] so a
 //! conflicting merge is computed in a throwaway worktree and never
-//! marks up the live `.op` document.
+//! marks up the live `.de` document.
 
 use std::path::{Path, PathBuf};
 
@@ -234,7 +234,7 @@ impl GitRepo {
     ///
     /// This is the orchestrator the in-app Git uses for branch
     /// merges: a normal `git merge` would write conflict markers
-    /// straight into the open `.op` document. Here the merge is
+    /// straight into the open `.de` document. Here the merge is
     /// computed in a detached [`MergeWorktree`]; only a *clean*
     /// result is fast-forwarded back into the live tree, and a
     /// conflicting one is reported as a [`ConflictBag`] with the
@@ -604,7 +604,7 @@ pub struct ConflictedFile {
     pub path: String,
     /// How the path conflicts.
     pub kind: ConflictKind,
-    /// The three merge-stage blobs — populated for `.op` documents
+    /// The three merge-stage blobs — populated for `.de` documents
     /// so the caller can run a structured node-level merge; `None`
     /// for other files.
     pub stages: Option<ConflictStages>,
@@ -612,7 +612,7 @@ pub struct ConflictedFile {
 
 /// The set of unresolved conflicts a worktree merge produced.
 ///
-/// File-granular today; node-level (per-`.op`-node) conflict
+/// File-granular today; node-level (per-`.de`-node) conflict
 /// detail is the deeper, still-pending increment.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ConflictBag {
@@ -686,7 +686,7 @@ fn merge_worktree_dir() -> PathBuf {
 /// the index's unmerged (conflict) entries are collected, in the order
 /// the conflict iterator yields them.
 ///
-/// `.op` documents carry their three merge-stage blobs so the caller
+/// `.de` documents carry their three merge-stage blobs so the caller
 /// can run a structured node-level merge; other files do not.
 fn collect_conflicts(repo: &GitRepo) -> Result<ConflictBag, GitError> {
     let git = repo.open()?;
@@ -698,9 +698,10 @@ fn collect_conflicts(repo: &GitRepo) -> Result<ConflictBag, GitError> {
             continue;
         };
         let kind = conflict_kind(&conflict);
-        // `.op` documents carry their three merge-stage blobs so the
+        // `.de` documents carry their three merge-stage blobs so the
         // caller can run a structured node-level merge.
-        let stages = path.ends_with(".op").then(|| repo.conflict_stages(&path));
+        let stages = de_util::document_file::is_document_path(Path::new(&path))
+            .then(|| repo.conflict_stages(&path));
         files.push(ConflictedFile { path, kind, stages });
     }
     Ok(ConflictBag { files })

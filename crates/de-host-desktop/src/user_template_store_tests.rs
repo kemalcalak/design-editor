@@ -45,7 +45,7 @@ fn a_saved_template_is_stored_as_a_directory_and_reloads_with_the_same_id() {
     let dir = persist_user_scene_template(&saved.id).expect("persists");
 
     assert_eq!(dir.file_name().unwrap(), "my-deck");
-    assert!(dir.join("document.op").exists());
+    assert!(dir.join("document.de").exists());
     assert!(dir.join("preview.jpg").exists());
     assert!(dir.join("meta.json").exists());
 
@@ -72,7 +72,7 @@ fn persist_writes_a_template_the_save_flow_registered() {
     .expect("saves");
     let dir = persist_user_scene_template(&saved.id).expect("persists");
     assert_eq!(
-        std::fs::read_to_string(dir.join("document.op")).expect("read"),
+        std::fs::read_to_string(dir.join("document.de")).expect("read"),
         "{\"version\":\"1.0.0\",\"children\":[]}"
     );
 
@@ -255,11 +255,11 @@ fn a_half_written_directory_is_skipped_and_the_rest_of_the_scan_survives() {
         r#"{"name":"Good","frames":1,"frameWidth":10,"frameHeight":10}"#,
     )
     .expect("write");
-    std::fs::write(dir.join("good-one/document.op"), "{}").expect("write");
+    std::fs::write(dir.join("good-one/document.de"), "{}").expect("write");
     // A directory with a document but no meta, and one with a meta but no
     // document, and a stray file — all skipped, none fatal.
     std::fs::create_dir_all(dir.join("no-meta")).expect("create");
-    std::fs::write(dir.join("no-meta/document.op"), "{}").expect("write");
+    std::fs::write(dir.join("no-meta/document.de"), "{}").expect("write");
     std::fs::create_dir_all(dir.join("no-document")).expect("create");
     std::fs::write(
         dir.join("no-document/meta.json"),

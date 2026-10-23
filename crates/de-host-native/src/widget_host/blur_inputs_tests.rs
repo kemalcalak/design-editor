@@ -16,7 +16,7 @@ const VH: f32 = 800.0;
 
 const ONE_RECT: &str = r#"{"version":"1.0.0","children":[{"type":"rectangle","id":"n1","name":"n1","x":0,"y":0,"width":100,"height":50}]}"#;
 
-/// Seed a host's `editor_state` from a canonical `.op` JSON snippet.
+/// Seed a host's `editor_state` from a canonical `.de` JSON snippet.
 fn seed(host: &mut WidgetHostNative, json: &str) {
     let doc = jian_ops_schema::load_str(json)
         .expect("fixture JSON parses")

@@ -4,7 +4,7 @@
 //!
 //! Ported off shell-core's `McpCommand` onto `de_editor_core::
 //! EditorCommand`. The biggest model change: node ids are now the
-//! canonical `.op` schema's string ids (`NodeId`), not the old `u64`.
+//! canonical `.de` schema's string ids (`NodeId`), not the old `u64`.
 //! `parse_node_id` accepts any non-empty string.
 
 use std::collections::BTreeMap;
@@ -25,7 +25,7 @@ pub use crate::write_tools_variables::{
 };
 
 /// Parse a `node_id`-style argument into a `NodeId`. Node ids are
-/// canonical `.op` schema strings — any non-empty string is valid; an
+/// canonical `.de` schema strings — any non-empty string is valid; an
 /// empty string (the NONE sentinel) is rejected.
 // `ToolOutcome` is the shared MCP outcome type — boxing it broadly to
 // shrink the `Err` variant would destabilize every tool signature.

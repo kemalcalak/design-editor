@@ -62,7 +62,7 @@ You choose one of two destinations, both on your own computer:
    `127.0.0.1`), and
    the manifest grants no other host for this purpose. The data never leaves
    your machine.
-2. **A file on this computer.** **Download .op** writes a ready-to-open `.op`
+2. **A file on this computer.** **Download .de** writes a ready-to-open `.de`
    document to your downloads folder and sends it nowhere.
    **Design generation is separate from those snapshot destinations.** The
    extension POSTs only bounded style evidence with its title field blanked to
@@ -95,7 +95,7 @@ No token or password is ever written to storage. Uninstalling the extension remo
 | -------------------- | -------------------------------------------------------------------------------------------------------- |
 | `activeTab`          | Read the page you pressed the button on — one tab, one action, revoked afterwards.                       |
 | `scripting`          | Inject the snapshot extractor, de-identified style collector, transfer harness and picker into that tab. |
-| `downloads`          | Save the `.op` document or generated `design.md`.                                                        |
+| `downloads`          | Save the `.de` document or generated `design.md`.                                                        |
 | `storage`            | Remember the settings in the table above.                                                                |
 | `http://127.0.0.1/*` | Deliver a snapshot or bounded design evidence to Design Editor on your computer.                         |
 
@@ -157,7 +157,7 @@ id。最多 120 字符的已清理页面标题仅在扩展内部用于本地确�
    为 `127.0.0.1:3100`。扩展只能寻址回环：目标地址会经过 `127.0.0.1` 与
    `localhost`（会改写为 `127.0.0.1`）的白名单校验，清单文件也没有为此授予其他主机。数据不会离开你的
    电脑。
-2. **本机的一个文件。** **下载 .op** 会把可直接打开的 `.op` 文档写入下载文件夹，不发往任何地方。
+2. **本机的一个文件。** **下载 .de** 会把可直接打开的 `.de` 文档写入下载文件夹，不发往任何地方。
    **设计生成与上述快照目的地相互独立。** 扩展只会把有界样式证据 POST 到本机
    Design Editor 回环端点的 `/api/generate/design-md`（发送前页面标题会被清空），随后轮询
    本机任务且不会重复发送证据。Design Editor 可能将其交给你在应用中配置、且兼容这条
@@ -186,7 +186,7 @@ id。最多 120 字符的已清理页面标题仅在扩展内部用于本地确�
 | -------------------- | -------------------------------------------------------------------- |
 | `activeTab`          | 读取你按下按钮的那个页面：一个标签页、一次操作，随后收回。           |
 | `scripting`          | 向该标签页注入快照提取器、去标识化样式采集器、传输桥和元素选取浮层。 |
-| `downloads`          | 保存 `.op` 文档或生成的 `design.md`。                                |
+| `downloads`          | 保存 `.de` 文档或生成的 `design.md`。                                |
 | `storage`            | 记住上表中的设置。                                                   |
 | `http://127.0.0.1/*` | 把快照或有界设计证据送到你电脑上运行的 Design Editor。               |
 

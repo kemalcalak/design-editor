@@ -1,9 +1,9 @@
-//! Staging and publication of the converted `.op` beside its `.fig` source.
+//! Staging and publication of the converted `.de` beside its `.fig` source.
 //!
 //! Pure code motion out of `figma_import_session.rs`: the spine kept the
 //! session state machine and the worker plumbing, while this sibling owns the
 //! filesystem tail — allocate a hidden staging file, serialize into it, and
-//! publish it under the fixed `Design.op` name or a numbered `Design (N).op`
+//! publish it under the fixed `Design.de` name or a numbered `Design (N).de`
 //! copy. The split keeps both files under the repo's 800-line-per-file cap
 //! now that the failure paths carry [`FigmaImportError`] instead of `String`.
 
@@ -48,30 +48,30 @@ pub(super) struct CompletedImport {
 
 pub(super) type PersistResult = Result<CompletedImport, FigmaImportError>;
 
-/// The primary imported document is the fixed sibling `Design.op`. Re-imports
-/// replace it only after confirmation; keeping both publishes `Design (N).op`.
-pub(super) fn adjacent_op_base_path(source_path: &Path) -> Result<PathBuf, FigmaImportError> {
+/// The primary imported document is the fixed sibling `Design.de`. Re-imports
+/// replace it only after confirmation; keeping both publishes `Design (N).de`.
+pub(super) fn adjacent_document_base_path(source_path: &Path) -> Result<PathBuf, FigmaImportError> {
     if source_path.file_name().is_none() {
         return Err(FigmaImportError::SourceHasNoFileName);
     }
-    let output_path = source_path.with_extension("op");
+    let output_path = source_path.with_extension(de_util::document_file::EXTENSION);
     if output_path == source_path {
-        return Err(FigmaImportError::SourceAlreadyOp);
+        return Err(FigmaImportError::SourceAlreadyDocument);
     }
     Ok(output_path)
 }
 
 fn import_staging_path(source_path: &Path) -> Result<PathBuf, FigmaImportError> {
-    let base = adjacent_op_base_path(source_path)?;
+    let base = adjacent_document_base_path(source_path)?;
     let parent = base.parent().unwrap_or_else(|| Path::new(""));
     let name = base
         .file_name()
         .map(|name| name.to_string_lossy())
-        .unwrap_or_else(|| "Figma Import.op".into());
+        .unwrap_or_else(|| "Figma Import.de".into());
     for _ in 0..100 {
         let sequence = IMPORT_OUTPUT_SEQUENCE.fetch_add(1, Ordering::Relaxed);
         let candidate = parent.join(format!(
-            ".{name}.op-import-{}-{sequence}",
+            ".{name}.de-import-{}-{sequence}",
             std::process::id()
         ));
         // `std::io::Error` is not ours to type; carry its message.
@@ -101,20 +101,8 @@ fn remove_import_artifact(path: &Path) {
     }
 }
 
-fn remove_legacy_sidecar(path: &Path) {
-    match std::fs::remove_file(de_host_services::doc_io::sidecar_path(path)) {
-        Ok(()) => {}
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => eprintln!(
-            "[import-figma] stale view-state sidecar cleanup failed for {}: {error}",
-            path.display()
-        ),
-    }
-}
-
 fn publish_new_link(staging_path: &Path, output_path: &Path) -> Result<PathBuf, std::io::Error> {
     std::fs::hard_link(staging_path, output_path)?;
-    remove_legacy_sidecar(output_path);
     Ok(output_path.to_path_buf())
 }
 
@@ -122,14 +110,14 @@ pub(super) fn publish_numbered_copy(
     staging_path: &Path,
     source_path: &Path,
 ) -> Result<PathBuf, FigmaImportError> {
-    let base = adjacent_op_base_path(source_path)?;
+    let base = adjacent_document_base_path(source_path)?;
     let parent = base.parent().unwrap_or_else(|| Path::new(""));
     let stem = base
         .file_stem()
         .map(|stem| stem.to_string_lossy())
         .unwrap_or_else(|| "Figma Import".into());
     for suffix in 1..=10_000 {
-        let candidate = parent.join(format!("{stem} ({suffix}).op"));
+        let candidate = parent.join(format!("{stem} ({suffix}).de"));
         match publish_new_link(staging_path, &candidate) {
             Ok(path) => return Ok(path),
             Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
@@ -152,7 +140,7 @@ fn publish_staged_op(
     output_mode: ImportOutputMode,
     cancellation: &CancellationToken,
 ) -> Result<PathBuf, FigmaImportError> {
-    let output_path = adjacent_op_base_path(source_path)?;
+    let output_path = adjacent_document_base_path(source_path)?;
     if cancellation.is_cancelled() {
         return Err(FigmaImportError::Cancelled);
     }

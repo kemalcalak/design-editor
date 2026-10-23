@@ -11,8 +11,8 @@ fn temp_doc_paths(test_name: &str) -> (std::path::PathBuf, std::path::PathBuf, s
         std::process::id()
     ));
     std::fs::create_dir_all(&dir).expect("temp dir");
-    let primary = dir.join("primary.op");
-    let alternate = dir.join("alternate.op");
+    let primary = dir.join("primary.de");
+    let alternate = dir.join("alternate.de");
     (dir, primary, alternate)
 }
 
@@ -63,7 +63,7 @@ fn load_editor_state_accepts_ts_future_version_files() {
     )
     .expect("write future-version doc");
 
-    let state = load_editor_state(&primary_path).expect("future TS .op should load");
+    let state = load_editor_state(&primary_path).expect("future TS .de should load");
 
     assert_eq!(state.active_children()[0].base().id, "future-node");
     let _ = std::fs::remove_dir_all(dir);
@@ -164,7 +164,7 @@ fn process_message_open_document_creates_missing_ts_file_path_target() {
 
     assert!(
         alternate_path.exists(),
-        "open_document should create the target .op file"
+        "open_document should create the target .de file"
     );
     assert_response_file_path_matches(&response, &alternate_path);
     let created = std::fs::read_to_string(&alternate_path).expect("created document");
@@ -213,7 +213,7 @@ fn process_message_writes_document_to_ts_file_path_arg() {
 #[test]
 fn process_message_save_document_can_copy_ts_file_path_source_to_target() {
     let (dir, primary_path, source_path) = temp_doc_paths("save-source");
-    let target_path = dir.join("saved-target.op");
+    let target_path = dir.join("saved-target.de");
     write_named_doc(&primary_path, "n1", "Primary");
     write_named_doc(&source_path, "n2", "Source");
     let mut state = load_editor_state(&primary_path).expect("primary state");
@@ -645,7 +645,7 @@ fn http_transport_serves_initialize() {
     serve_http_connection(
         &mut stream,
         &mut state,
-        std::path::Path::new("/tmp/unused.op"),
+        std::path::Path::new("/tmp/unused.de"),
     )
     .expect("serve_http_connection");
     let resp = String::from_utf8(stream.output).unwrap();
@@ -671,7 +671,7 @@ fn http_transport_serves_options_preflight() {
     serve_http_connection(
         &mut stream,
         &mut state,
-        std::path::Path::new("/tmp/unused.op"),
+        std::path::Path::new("/tmp/unused.de"),
     )
     .expect("serve_http_connection");
     let resp = String::from_utf8(stream.output).unwrap();

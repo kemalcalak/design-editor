@@ -14,7 +14,7 @@
     "message": "Capturer un élément"
   },
   "downloadButton": {
-    "message": "Télécharger le .op"
+    "message": "Télécharger le .de"
   },
   "designButton": {
     "message": "Extraire design.md"
@@ -122,10 +122,10 @@
     "message": "Design Editor à l’adresse $1 a accepté la connexion mais n’a pas répondu en $2 s. L’application est peut-être occupée ou bloquée — vérifiez-la, puis réessayez."
   },
   "errorNoIngress": {
-    "message": "Cette version d’Design Editor ne dispose d’aucun point d’entrée pour les extensions ($1). Mettez l’application à jour, ou utilisez « Télécharger le .op » puis ouvrez le fichier dans Design Editor"
+    "message": "Cette version d’Design Editor ne dispose d’aucun point d’entrée pour les extensions ($1). Mettez l’application à jour, ou utilisez « Télécharger le .de » puis ouvrez le fichier dans Design Editor"
   },
   "errorTooLarge": {
-    "message": "Cette capture dépasse $1 Mo, ce que la route de capture d’Design Editor refuse. Utilisez « Télécharger le .op », puis ouvrez le fichier dans Design Editor"
+    "message": "Cette capture dépasse $1 Mo, ce que la route de capture d’Design Editor refuse. Utilisez « Télécharger le .de », puis ouvrez le fichier dans Design Editor"
   },
   "errorImport": {
     "message": "Design Editor a refusé la capture : $1"

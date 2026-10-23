@@ -7,7 +7,7 @@
 //! without a DOM.
 //!
 //! Mirrors the desktop's `persistence.rs` split: Save serializes
-//! `editor_state.doc` straight to canonical `.op` JSON. When the
+//! `editor_state.doc` straight to canonical `.de` JSON. When the
 //! web-canvas daemon has a bound local path it performs the real
 //! desktop write, including the `.opmeta` active-page sidecar; the
 //! browser fallback downloads the same JSON as a Blob. Open parses
@@ -278,7 +278,7 @@ pub fn import_kit_source(src: &str, kit_id: String) -> Result<Option<UIKit>, Doc
     Ok(uikit_io::import_kit_from_document(&loaded.value, kit_id))
 }
 
-/// Parse canonical `.op` / `.pen` source into a fresh `EditorState`,
+/// Parse canonical `.de` / `.pen` source into a fresh `EditorState`,
 /// carrying over the app-level preferences from `previous` (the
 /// state being replaced). Mirrors the desktop's
 /// `persistence::load_editor_state` + `preserve_app_preferences`
@@ -323,7 +323,7 @@ pub fn ingest_figma_bytes(
 
 /// Install payload returned by the isolated Figma import Worker.
 ///
-/// `source` is a complete, ordinary canonical `.op` document (including the
+/// `source` is a complete, ordinary canonical `.de` document (including the
 /// shared `images` / `imageThumbs` tables produced in the Worker). Routing it
 /// through the compatibility loader preserves the exact same old-schema and
 /// image-interning behavior as File → Open; no paged placeholder document is

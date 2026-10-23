@@ -18,7 +18,7 @@ const DPI: f32 = 2.0;
 /// The landing page fixture at the repository root — a real design with
 /// text, images and nested auto layout, not a synthetic box.
 fn fixture() -> de_editor_core::EditorState {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../lumina-landing.op");
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../lumina-landing.de");
     let json = std::fs::read_to_string(path).expect("fixture readable");
     let doc = jian_ops_schema::load_str(&json)
         .expect("fixture parses")
@@ -35,7 +35,7 @@ fn host(theme: ThemeMode, w: f32, h: f32, tab: LeftPanelTab) -> WidgetHostNative
         ui.locale = de_i18n::Locale::EnUs;
         ui.theme_mode = theme;
         ui.home.hide();
-        ui.file_name_display = Some("lumina-landing.op".to_string());
+        ui.file_name_display = Some("lumina-landing.de".to_string());
         match tab {
             LeftPanelTab::Chat => {
                 ui.enter_chat_tab();

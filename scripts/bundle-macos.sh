@@ -144,13 +144,14 @@ echo "==> patching Info.plist (name, identifier, icon, doc-types, UTI)"
 /usr/libexec/PlistBuddy -c "Delete :CFBundleDocumentTypes"         "$PLIST" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Add    :CFBundleDocumentTypes array"   "$PLIST"
 
-# Group 0: .op / .pen (canonical Design Editor documents).
+# Group 0: .de (canonical Design Editor documents) + .pen (pen.dev files,
+# opened as an untitled import and never written back).
 /usr/libexec/PlistBuddy \
   -c "Add :CFBundleDocumentTypes:0 dict" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeName string 'Design Editor Document'" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeRole string Editor" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions array" \
-  -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions:0 string op" \
+  -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions:0 string de" \
   -c "Add :CFBundleDocumentTypes:0:CFBundleTypeExtensions:1 string pen" \
   -c "Add :CFBundleDocumentTypes:0:LSHandlerRank string Owner" \
   "$PLIST"

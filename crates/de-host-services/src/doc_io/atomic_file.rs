@@ -1,4 +1,4 @@
-//! Sibling-temp creation and atomic destination replacement for `.op` saves.
+//! Sibling-temp creation and atomic destination replacement for `.de` saves.
 //!
 //! Public: de-host-desktop's `mcp_config_io` reuses these primitives for its
 //! crash-safe MCP-integration config writes instead of keeping its own copy
@@ -40,7 +40,7 @@ fn unique_sibling_temp_path(path: &Path) -> PathBuf {
     let file_name = path
         .file_name()
         .and_then(|name| name.to_str())
-        .unwrap_or("document.op");
+        .unwrap_or(de_util::document_file::UNTITLED_FILE_NAME);
     path.with_file_name(format!(".{file_name}.{pid}.{sequence}.tmp"))
 }
 

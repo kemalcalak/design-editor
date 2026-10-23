@@ -48,7 +48,7 @@ pub struct UserSceneTemplate {
     /// First top-level node's resolved width / height, rounded.
     pub frame_width: u32,
     pub frame_height: u32,
-    /// Canonical `.op` JSON — the same bytes the host wrote to disk, so a
+    /// Canonical `.de` JSON — the same bytes the host wrote to disk, so a
     /// click can rebuild the document without touching the filesystem.
     pub document: String,
     /// JPEG preview of the first top-level node. Empty when the document had

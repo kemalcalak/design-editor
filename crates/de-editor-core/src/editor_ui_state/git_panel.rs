@@ -27,7 +27,7 @@ pub struct GitCommitSummary {
     pub is_initial: bool,
 }
 
-/// One `.op` candidate in the tracked-file picker (TS `GitCandidateFileInfo`).
+/// One `.de` candidate in the tracked-file picker (TS `GitCandidateFileInfo`).
 /// Plain data the host enumerates from the repo; the widget only paints it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GitCandidateFile {
@@ -140,7 +140,7 @@ pub struct MergeConflictRow {
     pub take_theirs: bool,
 }
 
-/// One conflicted `.op` file in the merge-resolution view.
+/// One conflicted `.de` file in the merge-resolution view.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MergeResolveFile {
     /// Repo-relative path.
@@ -155,13 +155,13 @@ pub struct MergeResolveFile {
 }
 
 /// Interactive merge-conflict-resolution state — set when a branch
-/// merge conflicts entirely in structured `.op` files. The panel
+/// merge conflicts entirely in structured `.de` files. The panel
 /// shows each conflicting node with an ours/theirs choice.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct MergeResolveState {
     /// The branch being merged in.
     pub branch: String,
-    /// The conflicted `.op` files.
+    /// The conflicted `.de` files.
     pub files: Vec<MergeResolveFile>,
 }
 
@@ -203,7 +203,7 @@ pub enum GitOverflowView {
     Menu,
     /// The remote-settings subview — origin URL + HTTPS credential.
     RemoteSettings,
-    /// The tracked-file picker subview — pick which `.op` the panel tracks.
+    /// The tracked-file picker subview — pick which `.de` the panel tracks.
     TrackedPicker,
     /// The SSH-keys subview — list keys + import / generate.
     SshKeys,
@@ -244,7 +244,7 @@ pub enum GitPanelAction {
     /// `commit_input`.
     Commit,
     /// Ready-view "Save milestone": save the current design to the
-    /// tracked `.op`, stage it, and commit with the panel's
+    /// tracked `.de`, stage it, and commit with the panel's
     /// `commit_input` — the TS `commitMilestone` flow. Unlike
     /// [`GitPanelAction::Commit`] (which commits a pre-assembled staged
     /// index) this snapshots the live editor state in one click.
@@ -294,10 +294,10 @@ pub enum GitPanelAction {
     /// parent and store it in `expanded_commit_diff` (TS `computeDiff`,
     /// triggered when a commit row's detail card is expanded).
     LoadCommitDiff(usize),
-    /// Overflow "切换跟踪文件" — enumerate the repo's `.op` candidates into
+    /// Overflow "切换跟踪文件" — enumerate the repo's `.de` candidates into
     /// `candidate_files` and open the tracked-file picker subview.
     EnterTrackedPicker,
-    /// Bind the panel to the given `.op` path (TS `bindTrackedFile`). The
+    /// Bind the panel to the given `.de` path (TS `bindTrackedFile`). The
     /// `bool` is "also load it into the editor" (TS "track and open").
     BindTrackedFile(String, bool),
     /// Overflow "清除提交作者" — clear the stored commit-author identity.
@@ -442,7 +442,7 @@ pub struct GitPanelState {
     /// `None` when no card is open; otherwise loading / initial / ready /
     /// error. The host fills it after a `LoadCommitDiff` action.
     pub expanded_commit_diff: Option<CommitDiffView>,
-    /// Candidate `.op` files for the tracked-file picker subview, host-filled
+    /// Candidate `.de` files for the tracked-file picker subview, host-filled
     /// when the picker opens (TS `RepoMeta.candidateFiles`).
     pub candidate_files: Vec<GitCandidateFile>,
     /// The picker's currently-selected candidate index, if any.

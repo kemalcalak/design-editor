@@ -1,6 +1,6 @@
 //! `collect_buried_overlay_fixes` — the 星图 starfield repair.
 //!
-//! Fixture is `0808-k3-2.op`'s 星空视窗容器 reduced to the stack that fails:
+//! Fixture is `0808-k3-2.de`'s 星空视窗容器 reduced to the stack that fails:
 //! an opaque 297px circle at `children[0]` (topmost) with three floating
 //! controls authored after it.
 

@@ -1,7 +1,7 @@
 {
   "name": "design-editor-vscode",
   "displayName": "Design Editor",
-  "description": "Design Editor design-as-code integration for VS Code: .op file editing, MCP configuration, AI skills, and code generation.",
+  "description": "Design Editor design-as-code integration for VS Code: .de file editing, MCP configuration, AI skills, and code generation.",
   "version": "0.8.3",
   "publisher": "design-editor",
   "private": true,
@@ -26,7 +26,7 @@
   "keywords": [
     "design",
     "design-as-code",
-    ".op",
+    ".de",
     "MCP",
     "AI",
     "vector",
@@ -37,7 +37,7 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Without trust, .op files show a read-only placeholder; no local daemon is started and no MCP config is written."
+      "description": "Without trust, .de files show a read-only placeholder; no local daemon is started and no MCP config is written."
     }
   },
   "contributes": {
@@ -47,7 +47,7 @@
         "displayName": "Design Editor",
         "selector": [
           {
-            "filenamePattern": "*.op"
+            "filenamePattern": "*.de"
           },
           {
             "filenamePattern": "*.fig"

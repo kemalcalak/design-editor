@@ -1,8 +1,8 @@
 use super::*;
 
-fn temp_op_path(tag: &str) -> PathBuf {
+fn temp_document_path(tag: &str) -> PathBuf {
     std::env::temp_dir().join(format!(
-        "design-editor-save-clean-copy-{tag}-{}-{}.op",
+        "design-editor-save-clean-copy-{tag}-{}-{}.de",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -13,8 +13,8 @@ fn temp_op_path(tag: &str) -> PathBuf {
 
 #[test]
 fn clean_bound_op_save_as_streams_source_and_captures_current_editor_meta() {
-    let source = temp_op_path("source");
-    let target = temp_op_path("target");
+    let source = temp_document_path("source");
+    let target = temp_document_path("target");
     std::fs::write(
         &source,
         r#"{
@@ -76,23 +76,23 @@ fn clean_bound_op_save_as_streams_source_and_captures_current_editor_meta() {
 
 #[test]
 fn clean_copy_eligibility_falls_back_for_dirty_missing_or_non_op_sources() {
-    let source = temp_op_path("eligibility");
-    let target = temp_op_path("eligibility-target");
+    let source = temp_document_path("eligibility");
+    let target = temp_document_path("eligibility-target");
     std::fs::write(&source, b"{}").expect("write source");
     let mut state = EditorState::new();
     state.mark_saved_revision();
-    assert!(can_copy_clean_bound_op(&state, &source, &target));
-    assert!(!can_copy_clean_bound_op(&state, &source, &source));
+    assert!(can_copy_clean_bound_document(&state, &source, &target));
+    assert!(!can_copy_clean_bound_document(&state, &source, &source));
 
     state.mark_document_changed();
-    assert!(!can_copy_clean_bound_op(&state, &source, &target));
+    assert!(!can_copy_clean_bound_document(&state, &source, &target));
     state.mark_saved_revision();
     std::fs::remove_file(&source).expect("remove source");
-    assert!(!can_copy_clean_bound_op(&state, &source, &target));
+    assert!(!can_copy_clean_bound_document(&state, &source, &target));
 
     let pen_source = source.with_extension("pen");
     std::fs::write(&pen_source, b"{}").expect("write pen source");
-    assert!(!can_copy_clean_bound_op(&state, &pen_source, &target));
+    assert!(!can_copy_clean_bound_document(&state, &pen_source, &target));
 
     let _ = std::fs::remove_file(pen_source);
 }

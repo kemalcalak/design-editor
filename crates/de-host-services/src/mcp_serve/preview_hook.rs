@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use crate::home_preview::queue;
 
-/// Queue a preview of the `.op` file a transport just saved.
+/// Queue a preview of the `.de` file a transport just saved.
 pub(super) fn after_save(path: &Path) {
     queue(path);
 }
@@ -47,7 +47,7 @@ mod tests {
 
     fn call(tool: &str) -> String {
         format!(
-            r#"{{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{{"name":"{tool}","arguments":{{"filePath":"/tmp/a.op"}}}}}}"#
+            r#"{{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{{"name":"{tool}","arguments":{{"filePath":"/tmp/a.de"}}}}}}"#
         )
     }
 
@@ -58,10 +58,10 @@ mod tests {
 
     #[test]
     fn only_a_successful_save_document_names_its_file() {
-        let ok = reply(r#"{"ok":"true","filePath":"/tmp/a.op"}"#);
+        let ok = reply(r#"{"ok":"true","filePath":"/tmp/a.de"}"#);
         assert_eq!(
             saved_document_path(&call("save_document"), &ok),
-            Some(PathBuf::from("/tmp/a.op"))
+            Some(PathBuf::from("/tmp/a.de"))
         );
         assert_eq!(saved_document_path(&call("get_node"), &ok), None);
         let failed = reply("save document failed: denied");
@@ -72,7 +72,7 @@ mod tests {
     fn an_mcp_save_writes_the_files_preview() {
         let dir = std::env::temp_dir().join(format!("de-mcp-preview-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("scratch dir");
-        let doc = dir.join("agent.op");
+        let doc = dir.join("agent.de");
         let state = crate::doc_io::load_editor_state_from_source(
             r##"{"version":"1.0.0","children":[{"id":"r","type":"rectangle","x":0,"y":0,"width":80,"height":40,"fill":[{"type":"solid","color":"#123456"}]}]}"##,
             de_editor_core::Locale::EnUs,

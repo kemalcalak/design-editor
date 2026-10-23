@@ -88,7 +88,7 @@ fn git_commit_input_uses_text_input_state_for_editing() {
         panel.commit_focused = true;
         panel.commit_input.set_text("设计");
         panel.changed_files = vec![GitFileEntry {
-            path: "design.op".into(),
+            path: "design.de".into(),
             staged: true,
             status: 'M',
         }];
@@ -229,7 +229,7 @@ fn stale_git_popover_flag_does_not_dead_end_input() {
         // Dirty tree → NOT the ready view (so `hit_test` won't capture
         // the popover), yet the flag is stale-true.
         panel.changed_files = vec![de_editor_core::GitFileEntry {
-            path: "x.op".into(),
+            path: "x.de".into(),
             staged: false,
             status: 'M',
         }];

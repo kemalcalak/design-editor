@@ -9,7 +9,7 @@
 //! - **Untouched starter** → replace the document. Nothing is lost, and the
 //!   template simply *is* the new document. It becomes an UNSAVED document
 //!   with no bound path, like File > New rather than File > Open: the shipped
-//!   `.op` is read-only content, and binding it as the save target would let
+//!   `.de` is read-only content, and binding it as the save target would let
 //!   the first Cmd+S overwrite the template for every future use.
 //! - **Anything else** → append the template's boards beside the existing
 //!   content, leaving the document, its path, and its history intact. A user

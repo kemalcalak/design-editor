@@ -154,7 +154,7 @@ fn node_opacity_dims_drop_shadow_color() {
 
 #[test]
 fn inner_shadow_flag_survives_into_scene() {
-    // An `inner: true` shadow in the .op must reach the scene as an
+    // An `inner: true` shadow in the .de must reach the scene as an
     // inset shadow (the risk-monitor pedestal's top hexagon uses one
     // for its recessed glow).
     let src = r##"{

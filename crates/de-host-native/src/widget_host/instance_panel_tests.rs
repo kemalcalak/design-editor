@@ -659,7 +659,7 @@ fn remove_all_multi_fills_clears_scene_fill() {
 }
 
 /// End-to-end repro of the reported bug: a fill bound to a colour
-/// variable (`$brand`, as token-based old .op designs use). The scene
+/// variable (`$brand`, as token-based old .de designs use). The scene
 /// resolves the colour via `fill_for` (fill ref wins over container.fill),
 /// so removing the fill must ALSO drop the `fill_refs` binding or the
 /// colour keeps painting. Guards the full chain end-to-end.

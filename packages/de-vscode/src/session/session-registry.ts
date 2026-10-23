@@ -19,7 +19,7 @@ export class SessionRegistry {
   }
 
   /** undefined clears the active pointer — the provider MUST call this when the
-   *  user selects a non-Design Editor editor, else the last .op stays the target. */
+   *  user selects a non-Design Editor editor, else the last .de stays the target. */
   setActive(filePath: string | undefined): void {
     if (filePath !== undefined && !this.sessions.has(filePath)) return;
     this.activeFile = filePath;

@@ -1,6 +1,6 @@
 //! Hidden headless image-enrichment mode for batch design artifacts.
 //!
-//! `design-editor --enrich-images <input.op> <output.op> [timeout_seconds]`
+//! `design-editor --enrich-images <input.de> <output.de> [timeout_seconds]`
 //! loads and saves through the canonical document I/O layer while delegating
 //! every target decision and mutation to `ImageSearchSession`. The command
 //! runs before the desktop event loop and single-instance gate. It is
@@ -28,7 +28,7 @@ mod retry;
 
 const DEFAULT_TIMEOUT_SECONDS: u64 = 120;
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
-const USAGE: &str = "usage: design-editor --enrich-images <input.op> <output.op> [timeout_seconds]";
+const USAGE: &str = "usage: design-editor --enrich-images <input.de> <output.de> [timeout_seconds]";
 const MODE_CONTRACT: &str = "search-only mode: Auto/Search targets use stock search; \
 explicit Generate targets fail and are never converted to search";
 
@@ -275,14 +275,14 @@ mod tests {
 
     #[test]
     fn parser_accepts_default_and_explicit_timeout() {
-        let default = parse_cli_args(args(&["app", "--enrich-images", "in.op", "out.op"]))
+        let default = parse_cli_args(args(&["app", "--enrich-images", "in.de", "out.de"]))
             .expect("valid arguments")
             .expect("requested");
-        assert_eq!(default.input, Path::new("in.op"));
-        assert_eq!(default.output, Path::new("out.op"));
+        assert_eq!(default.input, Path::new("in.de"));
+        assert_eq!(default.output, Path::new("out.de"));
         assert_eq!(default.timeout, Duration::from_secs(120));
 
-        let explicit = parse_cli_args(args(&["app", "--enrich-images", "in.op", "out.op", "7"]))
+        let explicit = parse_cli_args(args(&["app", "--enrich-images", "in.de", "out.de", "7"]))
             .expect("valid arguments")
             .expect("requested");
         assert_eq!(explicit.timeout, Duration::from_secs(7));
@@ -295,19 +295,19 @@ mod tests {
             Err(ArgumentError::MissingInput)
         );
         assert_eq!(
-            parse_cli_args(args(&["app", "--enrich-images", "in.op"])),
+            parse_cli_args(args(&["app", "--enrich-images", "in.de"])),
             Err(ArgumentError::MissingOutput)
         );
         assert_eq!(
-            parse_cli_args(args(&["app", "--enrich-images", "in.op", "out.op", "soon"])),
+            parse_cli_args(args(&["app", "--enrich-images", "in.de", "out.de", "soon"])),
             Err(ArgumentError::InvalidTimeout("soon".to_string()))
         );
         assert_eq!(
             parse_cli_args(args(&[
                 "app",
                 "--enrich-images",
-                "in.op",
-                "out.op",
+                "in.de",
+                "out.de",
                 "1",
                 "extra"
             ])),
@@ -328,8 +328,8 @@ mod tests {
         );
         let directory = std::env::temp_dir().join(unique);
         std::fs::create_dir_all(&directory).expect("create fixture directory");
-        let input = directory.join("input.op");
-        let output = directory.join("output.op");
+        let input = directory.join("input.de");
+        let output = directory.join("output.de");
         let original = EditorState::new();
         de_host_services::doc_io::save_to_path(&original, &input).expect("save input");
 
@@ -369,8 +369,8 @@ mod tests {
         );
         let directory = std::env::temp_dir().join(unique);
         std::fs::create_dir_all(&directory).expect("create fixture directory");
-        let input = directory.join("input.op");
-        let output = directory.join("output.op");
+        let input = directory.join("input.de");
+        let output = directory.join("output.de");
         std::fs::write(
             &input,
             r#"{"version":"1.0","children":[{"type":"image","id":"generated","name":"Generated art","src":"","imagePrompt":"paint a moonlit forest","width":160,"height":90}]}"#,
@@ -455,8 +455,8 @@ mod tests {
         );
         let directory = std::env::temp_dir().join(unique);
         std::fs::create_dir_all(&directory).expect("create fixture directory");
-        let input = directory.join("input.op");
-        let output = directory.join("output.op");
+        let input = directory.join("input.de");
+        let output = directory.join("output.de");
         std::fs::write(
             &input,
             r#"{"version":"1.0","formatVersion":"1.3","children":[]}"#,
@@ -493,8 +493,8 @@ mod tests {
         );
         let directory = std::env::temp_dir().join(unique);
         std::fs::create_dir_all(&directory).expect("create fixture directory");
-        let input = directory.join("input.op");
-        let output = directory.join("output.op");
+        let input = directory.join("input.de");
+        let output = directory.join("output.de");
         std::fs::write(
             &input,
             r#"{"version":"1.0","children":[{"type":"path","id":"duplicate","geometry":"M0 0L1 1"},{"type":"path","id":"duplicate","geometry":"M1 1L2 2"}]}"#,

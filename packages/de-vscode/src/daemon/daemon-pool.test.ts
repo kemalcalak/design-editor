@@ -65,8 +65,8 @@ function poolWithSpawns() {
 
 test("acquire spawns once per file; second acquire reuses", async () => {
   const { pool, spawned } = poolWithSpawns();
-  const a = await pool.acquire("/a.op", "vscode-webview://x");
-  const b = await pool.acquire("/a.op", "vscode-webview://x");
+  const a = await pool.acquire("/a.de", "vscode-webview://x");
+  const b = await pool.acquire("/a.de", "vscode-webview://x");
   expect(spawned.length).toBe(1);
   expect(a).toBe(b);
 });
@@ -74,8 +74,8 @@ test("acquire spawns once per file; second acquire reuses", async () => {
 test("concurrent acquires for the same file coalesce onto one spawn", async () => {
   const { pool, spawned } = poolWithSpawns();
   const [a, b] = await Promise.all([
-    pool.acquire("/a.op", "o"),
-    pool.acquire("/a.op", "o"),
+    pool.acquire("/a.de", "o"),
+    pool.acquire("/a.de", "o"),
   ]);
   expect(spawned.length).toBe(1);
   expect(a).toBe(b);
@@ -83,10 +83,10 @@ test("concurrent acquires for the same file coalesce onto one spawn", async () =
 
 test("release disposes and evicts; re-acquire spawns fresh", async () => {
   const { pool, spawned } = poolWithSpawns();
-  await pool.acquire("/a.op", "o");
-  await pool.release("/a.op");
+  await pool.acquire("/a.de", "o");
+  await pool.release("/a.de");
   expect((spawned[0] as unknown as FakeClient).disposed).toBe(true);
-  await pool.acquire("/a.op", "o");
+  await pool.acquire("/a.de", "o");
   expect(spawned.length).toBe(2);
 });
 
@@ -96,9 +96,9 @@ test("setActive/active track the routing target; undefined clears", async () => 
   pool.onActiveChanged(() => {
     changes += 1;
   });
-  const client = await pool.acquire("/a.op", "o");
-  pool.setActive("/a.op");
-  expect(pool.active?.filePath).toBe("/a.op");
+  const client = await pool.acquire("/a.de", "o");
+  pool.setActive("/a.de");
+  expect(pool.active?.filePath).toBe("/a.de");
   expect(pool.active?.client).toBe(client);
   expect(changes).toBe(1);
   pool.setActive(undefined);
@@ -108,7 +108,7 @@ test("setActive/active track the routing target; undefined clears", async () => 
 
 test("setActive to a file with no live daemon is treated as clear", async () => {
   const { pool } = poolWithSpawns();
-  pool.setActive("/never-spawned.op");
+  pool.setActive("/never-spawned.de");
   expect(pool.active).toBeUndefined();
 });
 
@@ -116,58 +116,58 @@ test("crash restarts once and notifies with the new client", async () => {
   const { pool, spawned } = poolWithSpawns();
   const restarts: Array<{ file: string; hasClient: boolean }> = [];
   pool.onRestart((file, client) => restarts.push({ file, hasClient: client !== undefined }));
-  await pool.acquire("/a.op", "o");
+  await pool.acquire("/a.de", "o");
   (spawned[0] as unknown as FakeClient).crash();
   await new Promise((r) => setTimeout(r, 0));
   expect(spawned.length).toBe(2); // respawned once
-  expect(restarts).toEqual([{ file: "/a.op", hasClient: true }]);
-  expect(pool.clientFor("/a.op")).toBe(asClient(spawned[1]));
+  expect(restarts).toEqual([{ file: "/a.de", hasClient: true }]);
+  expect(pool.clientFor("/a.de")).toBe(asClient(spawned[1]));
 });
 
 test("second crash gives up, evicts, notifies with no client", async () => {
   const { pool, spawned } = poolWithSpawns();
   const restarts: Array<boolean> = [];
   pool.onRestart((_file, client) => restarts.push(client !== undefined));
-  await pool.acquire("/a.op", "o");
+  await pool.acquire("/a.de", "o");
   (spawned[0] as unknown as FakeClient).crash();
   await new Promise((r) => setTimeout(r, 0));
   (spawned[1] as unknown as FakeClient).crash();
   await new Promise((r) => setTimeout(r, 0));
   expect(spawned.length).toBe(2); // no third spawn
   expect(restarts).toEqual([true, false]);
-  expect(pool.clientFor("/a.op")).toBeUndefined();
+  expect(pool.clientFor("/a.de")).toBeUndefined();
 });
 
 test("restart failure evicts and notifies with no client", async () => {
   const { pool, spawned, setFailNext } = poolWithSpawns();
   const restarts: Array<boolean> = [];
   pool.onRestart((_f, client) => restarts.push(client !== undefined));
-  await pool.acquire("/a.op", "o");
+  await pool.acquire("/a.de", "o");
   setFailNext();
   (spawned[0] as unknown as FakeClient).crash();
   await new Promise((r) => setTimeout(r, 0));
   expect(restarts).toEqual([false]);
-  expect(pool.clientFor("/a.op")).toBeUndefined();
+  expect(pool.clientFor("/a.de")).toBeUndefined();
 });
 
 test("releasing during a respawn disposes the newly spawned daemon (no orphan)", async () => {
   const { pool, spawned, gateNextSpawn } = poolWithSpawns();
   const restarts: Array<boolean> = [];
   pool.onRestart((_f, client) => restarts.push(client !== undefined));
-  await pool.acquire("/a.op", "o");
+  await pool.acquire("/a.de", "o");
   // Crash A: handleCrash starts respawning, but the spawn is gated (in flight).
   const releaseSpawn = gateNextSpawn();
   (spawned[0] as unknown as FakeClient).crash();
   await new Promise((r) => setTimeout(r, 0)); // let handleCrash reach the await
   // User closes the panel now → release during the respawn window.
-  await pool.release("/a.op");
+  await pool.release("/a.de");
   // Now the respawn completes.
   releaseSpawn();
   await new Promise((r) => setTimeout(r, 0));
   // A second daemon WAS spawned, but must have been disposed immediately.
   expect(spawned.length).toBe(2);
   expect((spawned[1] as unknown as FakeClient).disposed).toBe(true);
-  expect(pool.clientFor("/a.op")).toBeUndefined(); // no lingering entry
+  expect(pool.clientFor("/a.de")).toBeUndefined(); // no lingering entry
   expect(restarts).toEqual([]); // no restart-with-client emitted for an owner-less daemon
 });
 
@@ -177,8 +177,8 @@ test("dispose()-driven exit does not trigger a restart", async () => {
   pool.onRestart(() => {
     restartCalls += 1;
   });
-  await pool.acquire("/a.op", "o");
-  await pool.release("/a.op"); // dispose → onExit fires but entry.disposed
+  await pool.acquire("/a.de", "o");
+  await pool.release("/a.de"); // dispose → onExit fires but entry.disposed
   (spawned[0] as unknown as FakeClient).crash(); // late exit signal
   await new Promise((r) => setTimeout(r, 0));
   expect(restartCalls).toBe(0);
@@ -187,11 +187,11 @@ test("dispose()-driven exit does not trigger a restart", async () => {
 
 test("disposeAll disposes every client and clears active", async () => {
   const { pool, spawned } = poolWithSpawns();
-  await pool.acquire("/a.op", "o");
-  await pool.acquire("/b.op", "o");
-  pool.setActive("/a.op");
+  await pool.acquire("/a.de", "o");
+  await pool.acquire("/b.de", "o");
+  pool.setActive("/a.de");
   await pool.disposeAll();
   expect(spawned.every((f) => (f as unknown as FakeClient).disposed)).toBe(true);
   expect(pool.active).toBeUndefined();
-  expect(pool.clientFor("/a.op")).toBeUndefined();
+  expect(pool.clientFor("/a.de")).toBeUndefined();
 });

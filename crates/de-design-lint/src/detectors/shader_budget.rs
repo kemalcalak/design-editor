@@ -43,7 +43,7 @@ use crate::node_util::{children, node_fills, node_id, numeric_height, numeric_wi
 /// Largest SkSL source we consider authored rather than pasted. Comfortably
 /// above a hand-written mesh-gradient or aurora shader; well below a
 /// shader-toy scene dropped in whole. Source is stored RAW in the document,
-/// so this also bounds what a shader costs the `.op` file.
+/// so this also bounds what a shader costs the `.de` file.
 const MAX_SKSL_CHARS: usize = 8_192;
 
 /// Uniform count past which a fill is doing something other than being a

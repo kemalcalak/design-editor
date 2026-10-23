@@ -1,6 +1,6 @@
 //! Stable node identity for the editor.
 //!
-//! `NodeId` is a `String`-backed newtype matching the canonical `.op`
+//! `NodeId` is a `String`-backed newtype matching the canonical `.de`
 //! schema's `PenNodeBase.id` (and `PenPage.id`). The empty string is
 //! the `NONE` sentinel meaning "no node"; `NodeId::new` rejects it.
 //!
@@ -11,7 +11,7 @@
 //! `crate::widgets::WidgetId`, which lives in the widget layer, not the
 //! editor-state layer.
 
-/// Stable node identity — a string id matching the canonical `.op`
+/// Stable node identity — a string id matching the canonical `.de`
 /// schema's `PenNodeBase.id`. The empty string is the `NONE` sentinel
 /// meaning "no node"; `NodeId::new` rejects it.
 ///

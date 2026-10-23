@@ -9,7 +9,7 @@
 /// A source document that could not be turned into an `EditorState`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DocumentIngestError {
-    /// The canonical `.op` / `.pen` loader rejected the source.
+    /// The canonical `.de` / `.pen` loader rejected the source.
     LoadCanonical(String),
     /// The Figma `.fig` binary parser rejected the bytes.
     FigmaParse(String),

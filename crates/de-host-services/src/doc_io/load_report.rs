@@ -6,7 +6,6 @@ pub struct DocumentLoadReport {
     pub normalized_legacy: bool,
     pub patched_legacy_version: Option<String>,
     pub inferred_editor_meta: bool,
-    pub used_legacy_sidecar: bool,
     /// The declared schema is malformed or newer than this build can write.
     pub rewrite_blocked_by_schema_warning: bool,
     /// The file was a pen.dev document converted on open. It stays an
@@ -21,8 +20,7 @@ impl DocumentLoadReport {
             && self.pen_dev_import.is_none()
             && (self.normalized_legacy
                 || self.patched_legacy_version.is_some()
-                || self.inferred_editor_meta
-                || self.used_legacy_sidecar)
+                || self.inferred_editor_meta)
     }
 }
 

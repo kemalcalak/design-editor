@@ -158,7 +158,7 @@ fn collect_number_variables(root: &serde_json::Value) -> std::collections::HashM
 }
 
 /// Iterative (explicit stack, not recursion — deep trees must not blow the
-/// stack) walk that repairs known legacy `.pen` / `.op` shapes the strict
+/// stack) walk that repairs known legacy `.pen` / `.de` shapes the strict
 /// canonical schema rejects but the TS runtime tolerated:
 ///
 /// - PenNode `fill` written as a bare color/`$ref` string → wrap into the

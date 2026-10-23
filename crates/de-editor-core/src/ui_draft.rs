@@ -62,7 +62,7 @@ pub enum PropertyFocus {
     FillOpacity(usize),
     /// Primary image fill's Figma TILE scale.
     ImageTileScale,
-    /// LinearGradient angle input — degrees in the canonical `.op`
+    /// LinearGradient angle input — degrees in the canonical `.de`
     /// convention (0° = bottom→top, 90° = left→right). Only valid
     /// while the selected node's first fill is `LinearGradient`.
     GradientAngle,
@@ -125,7 +125,7 @@ pub enum PropertyFocus {
 impl PropertyFocus {
     /// Maximum complete draft length for a hex input, including `#`.
     /// Fill colours and page backgrounds accept `#RRGGBBAA`; imported and
-    /// legacy `.op` files may carry alpha in the colour itself in addition to
+    /// legacy `.de` files may carry alpha in the colour itself in addition to
     /// the paint body's separate opacity field.
     pub fn hex_max_len(self) -> Option<usize> {
         match self {
@@ -329,7 +329,7 @@ pub struct ColorPickerState {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct VariableUiState {
     /// Current selection per theme axis. e.g. `{"mode": "dark"}`.
-    /// Rebuilt to a default on load; not part of the `.op` file.
+    /// Rebuilt to a default on load; not part of the `.de` file.
     pub active_theme: BTreeMap<String, String>,
     /// Resolution cache: `node id → variable name` for nodes whose
     /// fill is a `$ref`. Paint reads this first, then falls back to

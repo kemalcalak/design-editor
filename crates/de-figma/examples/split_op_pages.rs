@@ -1,6 +1,6 @@
-//! Extract named pages from a multi-page `.op` into standalone files.
+//! Extract named pages from a multi-page `.de` into standalone files.
 //!
-//! Usage: `split_op_pages <input.op> <output-dir> <page-name>...`
+//! Usage: `split_op_pages <input.de> <output-dir> <page-name>...`
 
 use std::fs::File;
 use std::io::BufWriter;
@@ -24,7 +24,7 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     assert!(
         args.len() >= 3,
-        "usage: split_op_pages <input.op> <output-dir> <page-name>..."
+        "usage: split_op_pages <input.de> <output-dir> <page-name>..."
     );
     let input = &args[0];
     let output_dir = PathBuf::from(&args[1]);
@@ -46,7 +46,7 @@ fn main() {
         document.pages = Some(vec![page]);
         let mut value = serde_json::to_value(&document).expect("serialize selected page");
         jian_ops_schema::image_table::externalize_images(&mut value);
-        let target = output_dir.join(format!("{}.op", safe_name(&page_name)));
+        let target = output_dir.join(format!("{}.de", safe_name(&page_name)));
         let writer = BufWriter::new(File::create(&target).expect("create selected-page file"));
         serde_json::to_writer(writer, &value).expect("write selected-page file");
         println!("{}\t{}", page_name, display_path(&target));

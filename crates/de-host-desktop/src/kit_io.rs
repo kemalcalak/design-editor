@@ -57,7 +57,7 @@ impl DesktopApp {
         }
     }
 
-    /// Pick a `.op` / `.pen` / `.json` file and import its reusable
+    /// Pick a `.de` / `.pen` / `.json` file and import its reusable
     /// components as a kit (TS `importKitFromFile`: cancel and
     /// parse-failure are silent, a file with no reusable components
     /// imports nothing).
@@ -65,7 +65,10 @@ impl DesktopApp {
         let locale = self.host.editor_state().editor_ui.locale;
         let picked = rfd::FileDialog::new()
             .set_title(de_i18n::translate(locale, "componentBrowser.importKit"))
-            .add_filter("Design Editor File", &["op", "pen", "json"])
+            .add_filter(
+                "Design Editor File",
+                &[de_util::document_file::EXTENSION, "json"],
+            )
             .pick_file();
         let Some(path) = picked else {
             return;

@@ -32,7 +32,7 @@ impl WidgetHostNative {
         let Some(result) = outcome else {
             return false;
         };
-        // Scene ids are the canonical `.op` ids — wrap straight into
+        // Scene ids are the canonical `.de` ids — wrap straight into
         // `de_editor_core::NodeId`.
         let source_ids: Vec<de_editor_core::NodeId> = result
             .source_ids

@@ -665,7 +665,7 @@ fn tab(id: &str, label: &str, icon: &str) -> serde_json::Value {
 
 #[test]
 fn late_section_after_bottom_nav_moves_nav_back_to_last() {
-    // test0710-1-m3.op shape: mobile root (fit_content height!) whose model
+    // test0710-1-m3.de shape: mobile root (fit_content height!) whose model
     // appended the greeting+search header AFTER the bottom tab bar.
     let doc: jian_ops_schema::PenDocument = serde_json::from_value(serde_json::json!({
         "version": "1.0",
@@ -742,7 +742,7 @@ fn nav_already_last_and_desktop_roots_are_untouched() {
     );
 }
 
-/// GLM-5.2 measured shape (test0711-1.op): root is 390×`fit_content` and the
+/// GLM-5.2 measured shape (test0711-1.de): root is 390×`fit_content` and the
 /// whole screen — nav included — lives inside one "Content Wrapper". The old
 /// `is_mobile_root` height gate (>= 500px resolved) skipped every nav repair
 /// for exactly this shape, so the hand-built nav shipped crooked.

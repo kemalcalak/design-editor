@@ -205,7 +205,7 @@ fn collect_fill_colors(value: &serde_json::Value, counts: &mut Vec<(String, usiz
     }
 }
 
-/// The hex a colour variable declares, across both shapes a `.op` uses.
+/// The hex a colour variable declares, across both shapes a `.de` uses.
 ///
 /// A themed variable states one value per theme-axis value
 /// (`[{value, theme: {Mode: "Light"}}, …]`) and the document does not record
@@ -249,7 +249,7 @@ fn push_unique(palette: &mut Vec<String>, hex: String) {
     }
 }
 
-/// Only the two fields a palette needs. Everything else in a `.op` document —
+/// Only the two fields a palette needs. Everything else in a `.de` document —
 /// the whole node tree's geometry and typography — is skipped by serde rather
 /// than materialized, which is most of why one parse per template is cheap
 /// enough to do at all.

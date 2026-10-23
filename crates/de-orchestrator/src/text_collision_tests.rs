@@ -10,7 +10,7 @@ fn rect(x: f64, y: f64, w: f64, h: f64) -> Rect {
     Rect { x, y, w, h }
 }
 
-// ── positive: reproduces the measured 0724-1-gm-2.op "今日词卡" shape ──
+// ── positive: reproduces the measured 0724-1-gm-2.de "今日词卡" shape ──
 //
 // A `layout:none` deck stacks a front card over a back card. Both anchor
 // their own text near the bottom of their own card, and because the two
@@ -221,14 +221,14 @@ fn empty_and_hidden_text_are_excluded() {
 
 // ── real-sample harness (manual, not part of the default suite) ──
 //
-// `DE_TEXT_COLLISION_SAMPLE=/path/to/0724-1-gm-2.op cargo test -p
+// `DE_TEXT_COLLISION_SAMPLE=/path/to/0724-1-gm-2.de cargo test -p
 // de-orchestrator text_collision -- --ignored --nocapture`
 #[test]
 #[ignore]
 fn detects_the_measured_stacked_word_card_sample() {
     let path = std::env::var("DE_TEXT_COLLISION_SAMPLE").expect("DE_TEXT_COLLISION_SAMPLE");
-    let text = std::fs::read_to_string(&path).expect("read sample .op");
-    let doc: jian_ops_schema::PenDocument = serde_json::from_str(&text).expect("parse .op");
+    let text = std::fs::read_to_string(&path).expect("read sample .de");
+    let doc: jian_ops_schema::PenDocument = serde_json::from_str(&text).expect("parse .de");
     let state = de_editor_core::EditorState::from_document(doc);
     let issues = crate::geometry_validation::geometry_diagnostics(&state);
     assert!(
@@ -315,7 +315,7 @@ fn a_translucent_but_readable_label_still_collides() {
 
 #[test]
 fn the_measured_footer_column_overlap_still_reports() {
-    // `0808-gm-2.op`'s footer, real resolved rects: the legal-links column
+    // `0808-gm-2.de`'s footer, real resolved rects: the legal-links column
     // spilled across the newsletter block. Same artboard, ordinary opacity —
     // the watermark gate must not touch it.
     let footer = json!({

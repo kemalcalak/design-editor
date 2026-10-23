@@ -632,7 +632,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "a11y.aiChat" => "AI 채팅",
         "designMd.emptyHint" => ".md 파일을 가져와 디자인 명세를 첨부하세요",
         "componentBrowser.empty" => "구성 요소를 찾을 수 없음",
-        "dialog.dropToOpen" => "놓아서 열기  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "놓아서 열기  ·  .de / .pen / .fig / .html / .zip",
         "text.weight.extralight" => "Extra Light",
         "text.weight.extrabold" => "Extra Bold",
         "interactions.title" => "인터랙션",

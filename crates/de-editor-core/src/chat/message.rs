@@ -82,7 +82,7 @@ pub struct ChatMessage {
     pub tool_call_expanded_overrides: Vec<Option<bool>>,
     /// Per-design-JSON-block expanded-state overrides. Missing /
     /// `None` entries fall back to the transcript default: streaming
-    /// design blocks open so the incoming .op preview is visible,
+    /// design blocks open so the incoming .de preview is visible,
     /// completed blocks stay collapsed.
     pub design_block_expanded_overrides: Vec<Option<bool>>,
     /// Per-action-step (subtask card) expanded-state overrides. Missing

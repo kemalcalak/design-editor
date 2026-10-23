@@ -11,7 +11,7 @@
 //! MCP could build a deck and then had no way to hand it to anyone.
 //!
 //! **The output argument is `outputPath`, not `filePath`.** `filePath` is
-//! reserved workspace-wide for "the `.op` document this call targets" and is
+//! reserved workspace-wide for "the `.de` document this call targets" and is
 //! intercepted before dispatch (`mcp_serve/file_path.rs`); naming the
 //! destination `filePath` would route the call at a document that does not
 //! exist instead of writing a deck.

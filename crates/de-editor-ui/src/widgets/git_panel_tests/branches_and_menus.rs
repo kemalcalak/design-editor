@@ -217,15 +217,15 @@ fn tracked_picker_maps_rows_and_actions() {
         overflow_view: GitOverflowView::TrackedPicker,
         candidate_files: vec![
             GitCandidateFile {
-                path: "/r/a.op".into(),
-                relative_path: "a.op".into(),
+                path: "/r/a.de".into(),
+                relative_path: "a.de".into(),
                 milestone_count: 2,
                 last_commit_time: "1h".into(),
                 last_commit_message: Some("hi".into()),
             },
             GitCandidateFile {
-                path: "/r/b.op".into(),
-                relative_path: "b.op".into(),
+                path: "/r/b.de".into(),
+                relative_path: "b.de".into(),
                 milestone_count: 0,
                 last_commit_time: String::new(),
                 last_commit_message: None,

@@ -46,7 +46,7 @@ const GAP_DUPLICATE_FACTOR: f64 = 1.5;
 /// it, it is carrying rhythm the gap cannot express, and zeroing it deletes
 /// authored spacing instead of de-duplicating it.
 ///
-/// Measured on `0808-gm-1.op`: a marketing page root gapped 20 with eight
+/// Measured on `0808-gm-1.de`: a marketing page root gapped 20 with eight
 /// sections each carrying 24–80px of their own vertical inset came back with
 /// ALL EIGHT at `[0, H, 0, H]`, collapsing the page's section rhythm into a
 /// flat 20px stack — the user's "web 顶部和底部应该有空间" report.

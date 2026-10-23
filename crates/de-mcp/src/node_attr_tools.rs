@@ -2,7 +2,7 @@
 //! radius / font size / font weight / stroke / fill / name).
 //!
 //! Ported off shell-core's `McpCommand` onto `de_editor_core::
-//! EditorCommand`. Node ids are now canonical `.op` schema strings.
+//! EditorCommand`. Node ids are now canonical `.de` schema strings.
 
 use std::collections::BTreeMap;
 

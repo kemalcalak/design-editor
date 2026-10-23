@@ -264,7 +264,7 @@ fn real_layout_overfull_top_bar_flexifies_until_it_fits() {
     use de_editor_core::PenNodeExt;
     use jian_ops_schema::node::PenNode;
 
-    // test0703.op (MAISON) verbatim shape: a space_between top bar whose fit
+    // test0703 (MAISON) verbatim shape: a space_between top bar whose fit
     // title block + fit actions cluster (280px search + date + button) sum
     // wider than the row — the title ran into the search box and the button
     // clipped at the page edge. No single child is wider than the row, so

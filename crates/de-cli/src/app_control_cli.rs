@@ -77,7 +77,7 @@ fn reachable_headless_server() -> Option<RunningMcp> {
 }
 
 /// Whether the live editor will actually open `path` on launch — mirrors
-/// the desktop's `initial_file_from_argv` gate: a supported `.op` / `.pen` /
+/// the desktop's `initial_file_from_argv` gate: a supported `.de` / `.pen` /
 /// `.fig` extension AND an existing file. The editor silently ignores
 /// anything else (blank canvas), so `de start --file` must not claim such a
 /// path in its `documentPath`.
@@ -86,11 +86,9 @@ fn editor_will_open(path: &str) -> bool {
     let supported = p
         .extension()
         .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| {
-            ext.eq_ignore_ascii_case("op")
-                || ext.eq_ignore_ascii_case("pen")
-                || ext.eq_ignore_ascii_case("fig")
-        });
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("fig"))
+        || de_util::document_file::is_document_path(p)
+        || de_util::document_file::is_pen_dev_path(p);
     supported && p.is_file()
 }
 
@@ -282,7 +280,7 @@ fn start_web_json(pid: u32, port: u16, document_path: Option<&Path>, host: Optio
     value.to_string()
 }
 
-/// Legacy windowless mode: spawn `--mcp-http` against a `.op` file and
+/// Legacy windowless mode: spawn `--mcp-http` against a `.de` file and
 /// track it via the `$TMPDIR` pid/port manager files.
 fn run_start_headless(port: u16, document_path: Option<&str>) -> Result<String, CliError> {
     let document = match document_path {
@@ -511,24 +509,31 @@ pub(crate) fn ensure_document_file(path: &Path) -> Result<(), CliError> {
 /// check never mutates the file, so a corrupt-but-valuable document is
 /// preserved rather than silently replaced.
 fn preflight_document(path: &Path) -> Result<(), CliError> {
+    if !de_util::document_file::is_document_path(path) {
+        return Err(CliError::Document(format!(
+            "{} is not a Design Editor document: expected a .de file. \
+             pen.dev .pen / .fig files must be imported.",
+            path.display()
+        )));
+    }
     let bytes =
         fs::read(path).map_err(|e| CliError::Io(format!("read {}: {e}", path.display())))?;
-    // A `.op` document is UTF-8 JSON; a real `.fig` / `.pen` is a binary ZIP
+    // A `.de` document is UTF-8 JSON; a real `.fig` / `.pen` is a binary ZIP
     // archive (invalid UTF-8). Reject the binary case here as a wrong file type
     // rather than letting the server's `read_to_string` fail with an IO-flavored
     // error that reads like the file is unreadable.
     let src = std::str::from_utf8(&bytes).map_err(|_| {
         CliError::Document(format!(
             "{} is not a valid Design Editor document: not UTF-8 text \
-             (looks like a binary archive). Only .op (JSON) documents open \
-             directly; legacy .pen / .fig files must be imported.",
+             (looks like a binary archive). Only .de (JSON) documents open \
+             directly; pen.dev .pen / .fig files must be imported.",
             path.display()
         ))
     })?;
     de_pen_loader::load_canonical(src).map(|_| ()).map_err(|e| {
         CliError::Document(format!(
             "{} is not a valid Design Editor document: {e}\n\
-             Only .op (JSON) documents open directly; legacy .pen / .fig files must be imported.",
+             Only .de (JSON) documents open directly; pen.dev .pen / .fig files must be imported.",
             path.display()
         ))
     })
@@ -619,7 +624,7 @@ fn default_document_path_in(store: &de_config_store::ConfigStore) -> std::io::Re
 
 fn home_dir() -> Result<PathBuf, CliError> {
     de_config_store::home_dir()
-        .map_err(|_| CliError::Io("home directory not available; pass --file <path.op>".into()))
+        .map_err(|_| CliError::Io("home directory not available; pass --file <path.de>".into()))
 }
 
 fn find_desktop_binary() -> Result<PathBuf, CliError> {

@@ -205,7 +205,7 @@ impl ComponentLibrary {
 
     /// Build a runtime component registry from persisted canonical
     /// `reusable: true` frame nodes. TS treats reusable nodes in the
-    /// document tree as component definitions; this keeps loaded `.op`
+    /// document tree as component definitions; this keeps loaded `.de`
     /// files addressable even though the registry itself is transient.
     pub fn from_document(doc: &PenDocument) -> Self {
         fn walk(

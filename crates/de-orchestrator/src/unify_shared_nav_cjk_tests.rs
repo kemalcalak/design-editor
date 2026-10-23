@@ -8,7 +8,7 @@ use super::tests::{run_pass, screen_json, state_from, ACTIVE, INACTIVE};
 use super::*;
 
 /// A CJK two-screen app: the continuation screen cloned screen 1's nav with
-/// screen 1's tab still active. `0808-k3-2.op`'s shape.
+/// screen 1's tab still active. `0808-k3-2.de`'s shape.
 fn cjk_two_screen_doc() -> serde_json::Value {
     fn cjk_nav(nav_id: &str, prefix: &str, active_label: &str) -> serde_json::Value {
         let tabs = [
@@ -58,7 +58,7 @@ fn a_cjk_continuation_screen_gets_its_own_tab_active() {
     // `normalize_label` used to filter on `is_ascii_alphanumeric`, so every
     // CJK label normalized to "" — `find_tab_index_for_screen` matched
     // nothing and this whole retarget degraded to a no-op on Chinese apps.
-    // Measured on `0808-k3-2.op`, where the 星图 screen shipped highlighting
+    // Measured on `0808-k3-2.de`, where the 星图 screen shipped highlighting
     // 今夜 and no tab received an `onTap` action either.
     let mut state = state_from(cjk_two_screen_doc());
     run_pass(&mut state);

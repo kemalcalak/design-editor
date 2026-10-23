@@ -58,7 +58,7 @@ pub fn color(c: Color) -> String {
 /// A resolved gradient as a CSS `<image>` value, or `None` when the
 /// gradient has no CSS equivalent (mesh) and the caller must raster.
 ///
-/// **Linear angles are exact.** The canonical `.op` convention (0° =
+/// **Linear angles are exact.** The canonical `.de` convention (0° =
 /// bottom→top, 90° = left→right) is literally CSS's `<angle>` for
 /// `linear-gradient`, so no conversion is applied. What does drift is
 /// the gradient LINE LENGTH: the scene projects endpoints onto half

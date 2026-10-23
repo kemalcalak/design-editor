@@ -289,7 +289,7 @@ impl EditorState {
         }
         if matches!(flag, NodeFlag::Collapsed) {
             // No `collapsed` field on `PenNodeBase` — collapse is a
-            // layer-panel UI flag, not part of the `.op` document.
+            // layer-panel UI flag, not part of the `.de` document.
             return false;
         }
         let Some(node) = find_node_mut(self.active_children_mut(), node_id) else {
@@ -424,7 +424,7 @@ impl EditorState {
 
     /// `RemoveNodeEffect` — drop the effect at `index`. Rejects an
     /// out-of-range index; clears the list to `None` once empty so the
-    /// serialized `.op` carries no empty `effects` array.
+    /// serialized `.de` carries no empty `effects` array.
     pub(crate) fn cmd_remove_node_effect(&mut self, node_id: &NodeId, index: u32) -> bool {
         if !node_id.is_real() {
             return false;
@@ -546,7 +546,7 @@ impl EditorState {
             return false;
         };
         // An empty string clears the optional prop so the serialized
-        // `.op` carries no empty placeholder / value / label.
+        // `.de` carries no empty placeholder / value / label.
         let next = if text.is_empty() {
             None
         } else {
@@ -558,7 +558,7 @@ impl EditorState {
     /// Write the `bind:value` two-way binding on a widget node as
     /// `$state.<key>`. An empty `key` removes the `bind:value` entry
     /// (dropping the whole `bindings` map when it becomes empty) so the
-    /// serialized `.op` carries no orphan binding. A `$state.` prefix
+    /// serialized `.de` carries no orphan binding. A `$state.` prefix
     /// the user already typed is stripped so the key isn't doubled.
     /// Returns true only when the node variant carries `bindings`.
     pub(crate) fn cmd_set_node_widget_bind_value(&mut self, node_id: &NodeId, key: &str) -> bool {

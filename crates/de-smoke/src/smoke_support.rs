@@ -139,7 +139,7 @@ pub(crate) fn describe_cmd(cmd: &EditorCommand) -> String {
 }
 
 /// Honor `DESIGN_EDITOR_SMOKE_LIBRARY=<path>` by merging a harvested component
-/// library (`.lib.op`) into `state` before generation. Unset ⇒ no-op (`Ok`),
+/// library (`.lib.de`) into `state` before generation. Unset ⇒ no-op (`Ok`),
 /// preserving today's byte-for-byte behavior. On a load/parse error returns
 /// `Err(ExitCode)` so the caller aborts — a benchmark that asked for a library
 /// must not silently run without it. Shared by both smoke modes (orchestrator +

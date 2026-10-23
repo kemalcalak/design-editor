@@ -1,11 +1,11 @@
-//! `pen2op` — convert a plaintext canonical `.pen` (or legacy `.op`) file into
-//! a current-schema `.op` file by routing it THROUGH the canonical
+//! `pen2op` — convert a plaintext canonical `.pen` (or legacy `.de`) file into
+//! a current-schema `.de` file by routing it THROUGH the canonical
 //! `load_canonical` + `normalize_legacy_doc` path the desktop uses to open
 //! files. A naive rename does NOT work: the normalize step (version 2.x →
 //! rewrite, image nodes missing `src`, `fill`-as-string, etc.) is required for
 //! the file to load in current Design Editor.
 //!
-//! Usage: `pen2op <in.pen> <out.op>`
+//! Usage: `pen2op <in.pen> <out.de>`
 //!
 //! The output uses the same canonical-PenDocument serialization as `de-smoke`
 //! and carries an existing top-level `editorMeta` extension through unchanged.
@@ -15,7 +15,7 @@ use std::process::ExitCode;
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
     let (Some(in_path), Some(out_path)) = (args.next(), args.next()) else {
-        eprintln!("usage: pen2op <in.pen> <out.op>");
+        eprintln!("usage: pen2op <in.pen> <out.de>");
         return ExitCode::from(2);
     };
 

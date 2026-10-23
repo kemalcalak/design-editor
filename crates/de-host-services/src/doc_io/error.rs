@@ -1,4 +1,4 @@
-//! Typed failures for the headless `.op` / `.pen` document IO core
+//! Typed failures for the headless `.de` document IO core
 //! (`doc_io.rs` and its `atomic_file` / `canonical_save` / `clean_copy` /
 //! `load` siblings).
 //!
@@ -66,7 +66,7 @@ pub enum DocIoError {
     SourceEmpty { path: String },
     /// Memory-mapping a source document failed.
     Map { path: String, detail: String },
-    /// A clean-copy source is not UTF-8, so it cannot be a `.op` file. Worded
+    /// A clean-copy source is not UTF-8, so it cannot be a `.de` file. Worded
     /// as a diagnostic — [`DocIoError::InvalidUtf8Document`] is the localised
     /// end-user twin on the interactive open path.
     SourceNotUtf8 { path: String, detail: String },
@@ -93,6 +93,12 @@ pub enum DocIoError {
     /// The save target is a pen.dev document. Those are import sources:
     /// writing the canonical schema over one would break it for pen.dev.
     PenDevSourceReadOnly { path: String },
+    /// The open path names neither a `.de` document nor a pen.dev `.pen`
+    /// import (for example an old `.de` file). Refused before parsing.
+    UnsupportedExtension { path: String },
+    /// A `.pen` file whose content is not a pen.dev document. `.pen` only
+    /// opens through the pen.dev importer.
+    NotPenDevDocument { path: String },
 }
 
 impl fmt::Display for DocIoError {
@@ -123,6 +129,15 @@ impl fmt::Display for DocIoError {
                 f,
                 "{path} is a pen.dev document; save the imported design to a new file"
             ),
+            DocIoError::UnsupportedExtension { path } => {
+                write!(
+                    f,
+                    "{path} is not a Design Editor document (expected a .de file)"
+                )
+            }
+            DocIoError::NotPenDevDocument { path } => {
+                write!(f, "{path} is not a pen.dev document")
+            }
         }
     }
 }

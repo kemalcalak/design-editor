@@ -95,7 +95,7 @@ fn multi_root_designs_keep_authored_canvas_offset() {
             trips a real main-axis overflow (tab section bottom 2456 > root bottom 2418) in \
             the jian growth path being reworked around jian 57068a6; run with --ignored"]
 fn pencil_demo_monochrome_tab_bar_children_stay_inside_artboard() {
-    let path = "/Users/kayshen/Desktop/pencil-demo.op";
+    let path = "/Users/kayshen/Desktop/pencil-demo.de";
     let Ok(bytes) = std::fs::read(path) else {
         return;
     };
