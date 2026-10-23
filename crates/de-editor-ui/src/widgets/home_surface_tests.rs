@@ -51,6 +51,9 @@ fn recent_entries_drop_the_extension_and_abbreviate_the_home_folder() {
     assert_eq!(home.recent[1].name, "deck");
     assert_eq!(home.recent[1].folder, "~\\Desktop");
     assert_eq!(home.recent[2].folder, "/tmp");
+    assert_eq!(home.recent[0].parent, "design");
+    assert_eq!(home.recent[1].parent, "Desktop");
+    assert_eq!(home.recent[2].parent, "tmp");
 }
 
 #[test]

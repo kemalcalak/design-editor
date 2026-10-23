@@ -67,6 +67,9 @@ pub struct HomeRecent {
     pub name: String,
     /// The folder, `~`-abbreviated when it sits under the home dir.
     pub folder: String,
+    /// The folder's own name, which the list view leads the file name
+    /// with (`design / landing`, as Pencil does); empty at a root.
+    pub parent: String,
     /// Unix seconds when last touched.
     pub modified_at: u64,
     /// The installed preview's stamp, when there is one.
@@ -343,10 +346,12 @@ fn recent_entry(path: &str, modified_at: u64, preview_stamp: Option<u64>) -> Hom
     let folder = home_dir_prefix(folder)
         .map(|rest| format!("~{rest}"))
         .unwrap_or_else(|| folder.to_string());
+    let parent = folder.rsplit(['/', '\\']).next().unwrap_or("").to_string();
     HomeRecent {
         path: path.to_string(),
         name: name.to_string(),
         folder,
+        parent,
         modified_at,
         preview_stamp,
     }

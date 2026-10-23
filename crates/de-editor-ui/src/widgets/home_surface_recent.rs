@@ -5,7 +5,7 @@ use super::copy::{edited_label, tr};
 use super::icons::{draw_glyph, HomeGlyph};
 use super::layout::{CARD_THUMB_H, LIST_HEADER_H};
 use super::paint::{baseline, caption, draw_text, draw_text_weighted};
-use super::{HomeLayout, HomeRecent, HomeSurface, MONO, SANS};
+use super::{HomeLayout, HomeRecent, HomeSurface, SANS};
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::text_metrics::fit_in_family;
 use crate::widgets::PaintCx;
@@ -13,7 +13,6 @@ use crate::{Point2D, Rect};
 use de_editor_core::{HomeHit, RecentView};
 
 /// List column widths after the flexible name column.
-const FOLDER_W: f32 = 360.0;
 const EDITED_W: f32 = 140.0;
 
 pub(super) fn paint_recent(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &HomeLayout) {
@@ -203,7 +202,7 @@ fn paint_list(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &HomeLayo
     let frame = layout.recent_frame;
     cx.backend.fill_round_rect(frame, 10.0, p.surface);
     cx.backend.stroke_round_rect(frame, 10.0, p.border, 1.0);
-    let (folder_x, edited_x) = list_columns(frame);
+    let edited_x = frame.origin.x + frame.size.x - 16.0 - EDITED_W;
     let head = Rect::xywh(frame.origin.x, frame.origin.y, frame.size.x, LIST_HEADER_H);
     let head_y = baseline(head, 11.0);
     caption(
@@ -213,15 +212,6 @@ fn paint_list(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &HomeLayo
         frame.origin.x + 16.0,
         head_y,
     );
-    if folder_x > 0.0 {
-        caption(
-            cx,
-            surface,
-            tr(surface.locale, "home.recent.folder"),
-            folder_x,
-            head_y,
-        );
-    }
     caption(
         cx,
         surface,
@@ -282,21 +272,18 @@ fn paint_list(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &HomeLayo
                 1.6,
             );
         }
-        let name_end = if folder_x > 0.0 { folder_x } else { edited_x } - 16.0;
-        let name_x = thumb.origin.x + thumb.size.x + 14.0;
+        // Pencil's list: the folder's name, dimmed, then the file name.
+        let name_end = edited_x - 16.0;
+        let mut name_x = thumb.origin.x + thumb.size.x + 14.0;
+        if !entry.parent.is_empty() {
+            let prefix = format!("{} / ", entry.parent);
+            let room = ((name_end - name_x) * 0.5).max(0.0);
+            let prefix = fit_in_family(cx.backend, &prefix, room, 13.0, SANS);
+            draw_text(cx, &prefix, SANS, 13.0, p.text_3, Point2D::new(name_x, y));
+            name_x += cx.backend.measure_text_family(&prefix, 13.0, SANS);
+        }
         let name = fit_in_family(cx.backend, &entry.name, name_end - name_x, 13.0, SANS);
         draw_text(cx, &name, SANS, 13.0, p.text, Point2D::new(name_x, y));
-        if folder_x > 0.0 {
-            let folder = fit_in_family(cx.backend, &entry.folder, FOLDER_W - 16.0, 11.0, MONO);
-            draw_text(
-                cx,
-                &folder,
-                MONO,
-                11.0,
-                p.text_3,
-                Point2D::new(folder_x, baseline(*rect, 11.0)),
-            );
-        }
         draw_text(
             cx,
             &age(surface, entry),
@@ -305,18 +292,6 @@ fn paint_list(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, layout: &HomeLayo
             p.text_2,
             Point2D::new(edited_x, y),
         );
-    }
-}
-
-/// The folder and edited column x positions; the folder column drops
-/// out (`0`) when the list is too narrow to give the name room.
-fn list_columns(frame: Rect) -> (f32, f32) {
-    let edited_x = frame.origin.x + frame.size.x - 16.0 - EDITED_W;
-    let folder_x = edited_x - 16.0 - FOLDER_W;
-    if folder_x - frame.origin.x < 220.0 {
-        (0.0, edited_x)
-    } else {
-        (folder_x, edited_x)
     }
 }
 
