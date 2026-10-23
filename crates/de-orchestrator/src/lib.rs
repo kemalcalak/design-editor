@@ -94,6 +94,28 @@ pub mod cleanup_image_slots {
         })
     }
 
+    /// [`materialize_empty_image_fill_slots`] limited to the slots whose id
+    /// `in_scope` accepts, so an MCP write converts only the slots it created
+    /// or changed (#107).
+    pub fn materialize_empty_image_fill_slots_for_ids(
+        state: &mut EditorState,
+        in_scope: impl Fn(&str) -> bool,
+    ) -> bool {
+        let root_ids: Vec<String> = state
+            .active_children()
+            .iter()
+            .map(|node| node.id_str().to_string())
+            .collect();
+        let mut sink = EditorStateSink { state };
+        root_ids.into_iter().fold(false, |changed, root_id| {
+            let root_changed =
+                crate::cleanup::cleanup_image_slots::materialize_empty_image_fill_slots_for_ids(
+                    &mut sink, &root_id, &in_scope,
+                );
+            changed || root_changed
+        })
+    }
+
     struct EditorStateSink<'a> {
         state: &'a mut EditorState,
     }
@@ -209,7 +231,9 @@ pub use loop_finalize::{
     apply_loop_finalize, apply_loop_finalize_counted, record_loop_finalize_counted,
     RecordLoopFinalizeError, RecordedLoopFinalize,
 };
-pub use mobile_reflow::repair_mobile_trailing_nav_reflow;
+pub use mobile_reflow::{
+    repair_mobile_trailing_nav_reflow, repair_mobile_trailing_nav_reflow_for_roots,
+};
 pub use model_profile::{
     accepts_thinking_body_field, is_acp_capability_marker, reasoning_wire_control,
     resolve_model_profile, ModelProfile, ModelTier, ReasoningWireControl,

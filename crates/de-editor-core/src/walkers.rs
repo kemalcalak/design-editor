@@ -166,7 +166,7 @@ pub fn append_into(
     node: PenNode,
 ) -> Result<(), PenNode> {
     if let Some(idx) = children.iter().position(|n| n.id_str() == parent.as_str()) {
-        match children[idx].children_mut() {
+        match children[idx].children_mut_or_insert() {
             Some(grand) => {
                 grand.push(node);
                 return Ok(());
@@ -198,7 +198,7 @@ pub fn prepend_into(
     node: PenNode,
 ) -> Result<(), PenNode> {
     if let Some(idx) = children.iter().position(|n| n.id_str() == parent.as_str()) {
-        match children[idx].children_mut() {
+        match children[idx].children_mut_or_insert() {
             Some(grand) => {
                 grand.insert(0, node);
                 return Ok(());
@@ -408,7 +408,7 @@ pub fn insert_into_parent(
     let Some(container) = find_node_mut(children, parent_id) else {
         return false;
     };
-    let Some(slot) = container.children_mut() else {
+    let Some(slot) = container.children_mut_or_insert() else {
         return false;
     };
     let at = index.unwrap_or(slot.len()).min(slot.len());

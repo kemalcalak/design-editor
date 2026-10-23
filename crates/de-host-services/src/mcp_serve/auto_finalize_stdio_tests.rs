@@ -56,7 +56,7 @@ fn file_mcp_applier_materializes_empty_image_fill_before_save() {
 }
 
 #[test]
-fn stdio_eof_auto_finalizes_and_saves_the_file_document() {
+fn stdio_eof_auto_finalizes_only_the_screen_the_session_created() {
     let path = std::env::temp_dir().join(format!(
         "design-editor-mcp-stdio-finalize-{}-{}.op",
         std::process::id(),
@@ -65,6 +65,8 @@ fn stdio_eof_auto_finalizes_and_saves_the_file_document() {
             .expect("system clock")
             .as_nanos()
     ));
+    // A hand-made screen whose bottom nav is not the last child: finalize
+    // would anchor it, but the session never made this screen (#107).
     std::fs::write(
         &path,
         r##"{
@@ -81,8 +83,21 @@ fn stdio_eof_auto_finalizes_and_saves_the_file_document() {
         }"##,
     )
     .expect("seed document");
+    // Round-trip once so the comparison starts from the saved shape (the
+    // writer spells empty containers as `"children": []`).
     let mut state = load_editor_state(&path).expect("load document");
-    let write = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"batch_design","arguments":{"operations":"I(null,{\"type\":\"rectangle\",\"name\":\"Write\",\"x\":500,\"y\":0,\"width\":20,\"height\":20})"}}}"#;
+    save_editor_state(&state, &path).expect("save seed");
+    let authored_before =
+        serde_json::to_value(&state.active_children()[0]).expect("serialize authored screen");
+    // The session builds a second screen with the same misplaced nav.
+    let operations = r##"I(null,{"type":"frame","name":"Generated","x":600,"y":0,"width":390,"height":844,"layout":"vertical","children":[{"type":"frame","name":"Status Bar","role":"status-bar","width":"fill_container","height":62},{"type":"frame","name":"Bottom Tab Bar","role":"bottom-tab-bar","width":"fill_container","height":72,"layout":"horizontal"},{"type":"frame","name":"Content","width":"fill_container","height":200}]})"##;
+    let write = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "tools/call",
+        "params": {"name": "batch_design", "arguments": {"operations": operations}}
+    })
+    .to_string();
     let mut input = std::io::Cursor::new(format!("{write}\n").into_bytes());
     let mut output = Vec::new();
     let mut auto = auto_finalize::AutoFinalize::for_test(std::time::Duration::ZERO);
@@ -98,22 +113,40 @@ fn stdio_eof_auto_finalizes_and_saves_the_file_document() {
     .expect("stdio session");
 
     let saved = load_editor_state(&path).expect("saved finalized document");
-    // The MCP write lands in front (#37), so find the screen by id.
-    let children = saved
+    let authored = saved
         .active_children()
         .iter()
         .find(|node| node.id_str() == "screen")
-        .and_then(|screen| screen.children())
-        .expect("screen children");
+        .expect("authored screen");
     assert_eq!(
-        children.last().map(|node| node.id_str()),
-        Some("nav"),
-        "EOF finalize must anchor the bottom nav as the last child"
+        serde_json::to_value(authored).expect("serialize authored screen"),
+        authored_before,
+        "auto-finalize must leave the hand-made screen as it was"
+    );
+    let generated = saved
+        .active_children()
+        .iter()
+        .find(|node| node.base().name.as_deref() == Some("Generated"))
+        .and_then(|screen| screen.children())
+        .expect("generated screen children");
+    assert_eq!(
+        generated
+            .last()
+            .and_then(|node| node.base().role.as_deref()),
+        Some("bottom-tab-bar"),
+        "EOF finalize must anchor the generated screen's bottom nav as the last child"
     );
     assert!(
         !auto.due(std::time::Instant::now(), state.document_revision()),
         "EOF finalize must record the finalized revision"
     );
+    // Finalize is one ordinary undo step over the whole page: undoing it
+    // keeps the hand-made screen.
+    assert!(state.apply(de_editor_core::EditorCommand::Undo));
+    assert!(state
+        .active_children()
+        .iter()
+        .any(|node| node.id_str() == "screen"));
     assert!(String::from_utf8_lossy(&output).contains(r#""id":3"#));
     // The reloaded document starts a fresh in-memory revision counter, so the
     // proof that EOF finalize ran is the recorded revision on the session
@@ -147,7 +180,13 @@ fn explicit_finalize_design_marks_the_current_revision_finalized() {
     .expect("seed document");
     let mut state = load_editor_state(&path).expect("load document");
     let mut auto = auto_finalize::AutoFinalize::for_test(std::time::Duration::ZERO);
-    auto.note_write(std::time::Instant::now());
+    auto.note_write(
+        std::time::Instant::now(),
+        &WriteScope {
+            new_roots: vec!["root".to_string()],
+            ..WriteScope::default()
+        },
+    );
     let line = r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"finalize_design","arguments":{}}}"#;
 
     let response = process_message_with_auto_finalize(&mut state, &path, line, Some(&mut auto))

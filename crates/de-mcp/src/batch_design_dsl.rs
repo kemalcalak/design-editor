@@ -126,7 +126,7 @@ fn build_tree(
     let mut node = inserts[idx].node.clone();
     for child_idx in &children_by_parent[idx] {
         let child = build_tree(*child_idx, inserts, children_by_parent, visit)?;
-        let Some(children) = node.children_mut() else {
+        let Some(children) = node.children_mut_or_insert() else {
             return Err(InsertDslError::NotAContainer(inserts[idx].binding.clone()));
         };
         children.push(child);

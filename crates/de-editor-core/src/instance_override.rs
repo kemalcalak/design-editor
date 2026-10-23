@@ -224,7 +224,7 @@ impl EditorState {
         // Strip the subtree: panel writes only ever target the anchor
         // node's own props, and the component's original child ids
         // must not coexist with the live component subtree.
-        if let Some(children) = display.children_mut() {
+        if let Some(children) = display.children_mut_or_insert() {
             children.clear();
         }
         let display_before = match serde_json::to_value(&display) {

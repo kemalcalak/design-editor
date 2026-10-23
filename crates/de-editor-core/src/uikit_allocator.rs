@@ -120,7 +120,7 @@ impl EditorState {
             let Some(parent) = walkers::find_node_mut(self.active_children_mut(), parent_id) else {
                 return Ok(None);
             };
-            let Some(children) = parent.children_mut() else {
+            let Some(children) = parent.children_mut_or_insert() else {
                 return Ok(None);
             };
             children.push(clone);

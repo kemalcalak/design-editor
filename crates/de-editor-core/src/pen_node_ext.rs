@@ -36,9 +36,15 @@ pub trait PenNodeExt {
 
     /// Borrow this node's children, if it is a container variant.
     fn children(&self) -> Option<&Vec<PenNode>>;
-    /// Mutably borrow this node's children, if it is a container
-    /// variant. Frame / Group / Rectangle / Ref carry `children`.
+    /// Mutably borrow this node's children, if it is a container variant
+    /// that has a `children` list. A walk that only passes through nodes
+    /// uses this: it never adds an empty `children: []` to a childless
+    /// container, so it cannot rewrite nodes it does not change.
     fn children_mut(&mut self) -> Option<&mut Vec<PenNode>>;
+    /// Like [`Self::children_mut`], but gives a container without a
+    /// `children` list an empty one first. For callers that insert into the
+    /// node, or that treat `None` as "not a container".
+    fn children_mut_or_insert(&mut self) -> Option<&mut Vec<PenNode>>;
 
     /// True when this variant can hold children (Frame / Group /
     /// Rectangle / Ref). Used by reparenting + group ops.
@@ -213,6 +219,17 @@ impl PenNodeExt for PenNode {
     }
 
     fn children_mut(&mut self) -> Option<&mut Vec<PenNode>> {
+        match self {
+            PenNode::Frame(n) => n.children.as_mut(),
+            PenNode::Group(n) => n.children.as_mut(),
+            PenNode::Rectangle(n) => n.children.as_mut(),
+            PenNode::Tabs(n) => n.children.as_mut(),
+            PenNode::Ref(n) => n.children.as_mut(),
+            _ => None,
+        }
+    }
+
+    fn children_mut_or_insert(&mut self) -> Option<&mut Vec<PenNode>> {
         match self {
             PenNode::Frame(n) => Some(n.children.get_or_insert_with(Vec::new)),
             PenNode::Group(n) => Some(n.children.get_or_insert_with(Vec::new)),

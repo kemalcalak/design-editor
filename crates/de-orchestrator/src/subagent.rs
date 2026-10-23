@@ -573,7 +573,7 @@ fn has_content_node(node: &PenNode) -> bool {
 fn section_content_slot(primary: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     let primary_empty = primary.children().map(|c| c.is_empty()).unwrap_or(true);
     if primary_empty {
-        return primary.children_mut();
+        return primary.children_mut_or_insert();
     }
     primary
         .children_mut()?
@@ -582,7 +582,7 @@ fn section_content_slot(primary: &mut PenNode) -> Option<&mut Vec<PenNode>> {
             matches!(c, PenNode::Frame(_) | PenNode::Group(_))
                 && c.children().map(|cc| cc.is_empty()).unwrap_or(true)
         })
-        .and_then(|c| c.children_mut())
+        .and_then(|c| c.children_mut_or_insert())
 }
 
 /// Weak-model deterministic floor (TS `applyPostStreamingTreeHeuristics`
@@ -661,7 +661,7 @@ fn coalesce_subtask_section(nodes: &mut Vec<PenNode>) {
         slot.extend(after);
     } else if orphans_all_foldable {
         // Stray decorations: heading-before prepends, badge/icon-after appends.
-        if let Some(kids) = primary.children_mut() {
+        if let Some(kids) = primary.children_mut_or_insert() {
             let existing = std::mem::take(kids);
             kids.extend(before);
             kids.extend(existing);

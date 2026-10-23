@@ -438,7 +438,7 @@ fn build_jsonl_tree(
 ) -> Option<PenNode> {
     let mut node = nodes_by_id.remove(id)?;
     if let Some(child_ids) = children_by_parent.remove(id) {
-        if let Some(children) = node.children_mut() {
+        if let Some(children) = node.children_mut_or_insert() {
             for child_id in child_ids {
                 if let Some(child) = build_jsonl_tree(&child_id, nodes_by_id, children_by_parent) {
                     children.push(child);

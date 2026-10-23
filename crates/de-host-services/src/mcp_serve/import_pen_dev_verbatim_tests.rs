@@ -6,8 +6,10 @@ use super::{load_editor_state, process_message, writes_verbatim};
 use de_editor_core::PenNodeExt;
 
 #[test]
-fn only_the_pen_dev_import_skips_the_write_repairs() {
+fn only_imports_and_history_steps_skip_the_write_repairs() {
     assert!(writes_verbatim("import_pen_dev"));
+    assert!(writes_verbatim("undo"));
+    assert!(writes_verbatim("redo"));
     assert!(!writes_verbatim("import_html"));
     assert!(!writes_verbatim("batch_design"));
 }

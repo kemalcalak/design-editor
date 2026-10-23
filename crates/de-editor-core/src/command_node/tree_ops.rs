@@ -55,7 +55,7 @@ fn insert_into_parent(
     index: Option<usize>,
 ) -> Result<(), PenNode> {
     if let Some(idx) = children.iter().position(|n| n.id_str() == parent.as_str()) {
-        match children[idx].children_mut() {
+        match children[idx].children_mut_or_insert() {
             Some(grand) => {
                 let insert_idx = index.unwrap_or(grand.len()).min(grand.len());
                 grand.insert(insert_idx, node);

@@ -5,12 +5,13 @@ use std::time::{Duration, Instant};
 /// Nap between non-blocking accept attempts while no client is connected.
 const ACCEPT_POLL_INTERVAL: Duration = Duration::from_millis(250);
 
+use std::collections::BTreeSet;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use de_editor_core::EditorState;
+use de_editor_core::{EditorState, PenNodeExt};
 use de_orchestrator::repair_summary::RepairSummary;
 
 use super::*;
@@ -25,6 +26,10 @@ pub struct AutoFinalize {
     last_write_at: Option<Instant>,
     finalized_at_revision: Option<u64>,
     idle_after: Duration,
+    /// Top-level roots this session's writes created: the only roots
+    /// auto-finalize may rewrite (#107). Everything else on the page was
+    /// there before the session and stays as authored.
+    session_roots: BTreeSet<String>,
 }
 
 impl AutoFinalize {
@@ -34,6 +39,7 @@ impl AutoFinalize {
             last_write_at: None,
             finalized_at_revision: None,
             idle_after,
+            session_roots: BTreeSet::new(),
         }
     }
 
@@ -57,15 +63,18 @@ impl AutoFinalize {
             last_write_at: None,
             finalized_at_revision: None,
             idle_after,
+            session_roots: BTreeSet::new(),
         }
     }
 
-    pub fn note_write(&mut self, now: Instant) {
+    pub(crate) fn note_write(&mut self, now: Instant, scope: &WriteScope) {
         self.last_write_at = Some(now);
+        self.session_roots.extend(scope.new_roots.iter().cloned());
     }
 
     pub fn due(&self, now: Instant, current_revision: u64) -> bool {
         self.enabled()
+            && !self.session_roots.is_empty()
             && self.last_write_at.is_some_and(|written| {
                 now.checked_duration_since(written)
                     .is_some_and(|idle| idle >= self.idle_after)
@@ -87,39 +96,113 @@ impl AutoFinalize {
         }
     }
 
-    /// Finalize the document if this session applied a write. A read-only
-    /// session must leave the file untouched, so it never finalizes (the
-    /// caller saves only when this returns `Some`).
+    /// Finalize the roots this session created. A read-only session must
+    /// leave the file untouched, so it never finalizes (the caller saves only
+    /// when this returns `Some`); neither does a session that only edited
+    /// roots that were already there.
+    ///
+    /// The finalizer runs on a copy that holds only the session's roots; its
+    /// recorded commands then apply to the real document as one batch, so
+    /// undo history sees one ordinary step over the whole page. A replay that
+    /// is rejected, touches another root, or diverges from the finalizer's
+    /// own result is skipped.
     pub fn run(&mut self, state: &mut EditorState, reason: &'static str) -> Option<RepairSummary> {
         let revision = state.document_revision();
         if !self.enabled()
             || self.last_write_at.is_none()
-            || state.active_children().is_empty()
             || self.finalized_at_revision == Some(revision)
         {
             return None;
         }
-        let recorded = match de_orchestrator::record_loop_finalize_counted(state) {
+        // Every skip below still marks this revision handled, so the idle
+        // loop does not retry the same document on every poll.
+        self.finalized_at_revision = Some(revision);
+        let scoped = session_scoped_state(state, &self.session_roots)?;
+        let recorded = match de_orchestrator::record_loop_finalize_counted(&scoped) {
             Ok(recorded) => recorded,
             Err(error) => {
                 eprintln!("design-editor mcp: auto-finalize ({reason}) failed: {error}");
                 return None;
             }
         };
-        let summary = recorded.summary;
-        *state = recorded.state;
+        if !recorded.commands.is_empty() {
+            let Some(finalized) = replay_on_page(state, &recorded, &self.session_roots) else {
+                eprintln!(
+                    "design-editor mcp: auto-finalize ({reason}) skipped: its commands did not replay onto the session's roots alone"
+                );
+                return None;
+            };
+            *state = finalized;
+        }
         let finalized_revision = state.document_revision();
         self.finalized_at_revision = Some(finalized_revision);
         eprintln!(
             "design-editor mcp: auto-finalize ({reason}) repairs={} revision={finalized_revision}",
-            summary.total_repairs()
+            recorded.summary.total_repairs()
         );
-        Some(summary)
+        Some(recorded.summary)
     }
 
     fn enabled(&self) -> bool {
         self.idle_after != Duration::MAX
     }
+}
+
+/// A clone of `state` whose active page holds only the session's roots, or
+/// `None` when none of them is still on the page.
+fn session_scoped_state(
+    state: &EditorState,
+    session_roots: &BTreeSet<String>,
+) -> Option<EditorState> {
+    if !state
+        .active_children()
+        .iter()
+        .any(|root| session_roots.contains(root.id_str()))
+    {
+        return None;
+    }
+    let mut scoped = state.clone();
+    scoped
+        .active_children_mut()
+        .retain(|root| session_roots.contains(root.id_str()));
+    Some(scoped)
+}
+
+/// Apply the finalizer's recorded commands to a copy of the whole document.
+/// `None` unless the batch applies, every root outside the session is left
+/// exactly as it was, and the session's roots come out as the finalizer
+/// produced them.
+fn replay_on_page(
+    state: &EditorState,
+    recorded: &de_orchestrator::RecordedLoopFinalize,
+    session_roots: &BTreeSet<String>,
+) -> Option<EditorState> {
+    let outside_roots = |state: &EditorState| -> Vec<serde_json::Value> {
+        state
+            .active_children()
+            .iter()
+            .filter(|root| !session_roots.contains(root.id_str()))
+            .filter_map(|root| serde_json::to_value(root).ok())
+            .collect()
+    };
+    let mut next = state.clone();
+    if !next.apply(EditorCommand::Batch {
+        commands: recorded.commands.clone(),
+    }) {
+        return None;
+    }
+    if outside_roots(&next) != outside_roots(state) {
+        return None;
+    }
+    let finalized_roots_match = recorded.state.active_children().iter().all(|expected| {
+        next.active_children()
+            .iter()
+            .find(|root| root.id_str() == expected.id_str())
+            .is_some_and(|root| {
+                serde_json::to_value(root).ok() == serde_json::to_value(expected).ok()
+            })
+    });
+    finalized_roots_match.then_some(next)
 }
 
 pub(super) fn run(path: PathBuf) -> Result<(), McpServeError> {
