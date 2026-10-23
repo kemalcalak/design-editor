@@ -11,7 +11,7 @@ use crate::{Point2D, Rect};
 use jian_widgets::components::select::SelectHit;
 
 impl PropertyPanel {
-    fn point_in_design_popup_clip(&self, panel_rect: Rect, point: Point2D) -> bool {
+    pub(crate) fn point_in_design_popup_clip(&self, panel_rect: Rect, point: Point2D) -> bool {
         !self.is_multi
             && matches!(self.tab, de_editor_core::PropertyTab::Design)
             && panel_rect.contains(point)
@@ -90,43 +90,64 @@ impl PropertyPanel {
     /// Whether `point` falls inside the open Auto layout alignment
     /// popover, padding included.
     pub fn layout_align_popover_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        self.layout_align_popover_contains_logical(panel_rect, point)
+        self.layout_align_popover_open
+            && self.point_in_design_popup_clip(panel_rect, point)
+            && self.layout_align_popover_contains_in(
+                &self.popup_action_rects(panel_rect),
+                panel_rect,
+                point,
+            )
     }
 
-    fn layout_align_popover_contains_logical(&self, panel_rect: Rect, point: Point2D) -> bool {
+    /// [`Self::layout_align_popover_contains`] against action rects the
+    /// caller already walked (`popup_action_rects`), so one hit-test
+    /// walks the panel once.
+    pub(crate) fn layout_align_popover_contains_in(
+        &self,
+        rects: &[(crate::widgets::property_panel::PropertyPanelAction, Rect)],
+        panel_rect: Rect,
+        point: Point2D,
+    ) -> bool {
         use crate::widgets::property_panel::PropertyPanelAction as A;
 
-        if !self.layout_align_popover_open || !self.point_in_design_popup_clip(panel_rect, point) {
-            return false;
-        }
-        self.popup_action_rects(panel_rect)
-            .into_iter()
-            .find_map(|(action, button)| {
-                matches!(action, A::ToggleLayoutAlignPopover).then_some(button)
-            })
-            .map(|button| {
-                crate::widgets::property_panel_flex::align_popover_rect_from_button(
-                    button,
-                    panel_rect.size.x,
-                )
-            })
-            .is_some_and(|popup| popup.contains(point))
+        self.layout_align_popover_open
+            && rects
+                .iter()
+                .find_map(|(action, button)| {
+                    matches!(action, A::ToggleLayoutAlignPopover).then_some(*button)
+                })
+                .map(|button| {
+                    crate::widgets::property_panel_flex::align_popover_rect_from_button(
+                        button,
+                        panel_rect.size.x,
+                    )
+                })
+                .is_some_and(|popup| popup.contains(point))
     }
 
     /// Whether `point` falls inside an open fill row's `⋯` menu.
     pub fn fill_menu_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
+        self.fill_menu_open.is_some()
+            && self.point_in_design_popup_clip(panel_rect, point)
+            && self.fill_menu_contains_in(&self.popup_action_rects(panel_rect), panel_rect, point)
+    }
+
+    /// [`Self::fill_menu_contains`] against already-walked action rects.
+    pub(crate) fn fill_menu_contains_in(
+        &self,
+        rects: &[(crate::widgets::property_panel::PropertyPanelAction, Rect)],
+        panel_rect: Rect,
+        point: Point2D,
+    ) -> bool {
         use crate::widgets::property_panel::PropertyPanelAction as A;
 
         let Some(index) = self.fill_menu_open else {
             return false;
         };
-        if !self.point_in_design_popup_clip(panel_rect, point) {
-            return false;
-        }
-        self.popup_action_rects(panel_rect)
-            .into_iter()
+        rects
+            .iter()
             .find_map(|(action, button)| {
-                matches!(action, A::ToggleFillMenu(i) if i == index).then_some(button)
+                matches!(action, A::ToggleFillMenu(i) if *i == index).then_some(*button)
             })
             .map(|button| {
                 crate::widgets::property_panel_fill_menu::fill_menu_rects(button, panel_rect.size.x)

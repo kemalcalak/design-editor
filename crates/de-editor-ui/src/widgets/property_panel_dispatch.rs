@@ -502,6 +502,7 @@ pub fn apply_property_action(
             let ui = &mut state.editor_ui;
             ui.layout_align_popover_open = !ui.layout_align_popover_open;
             ui.layout_align_popover_hover = None;
+            ui.fill_menu_open = None;
             ui.stroke_mode_popover_open = false;
             ui.stroke_mode_popover_hover = None;
             ui.font_weight_picker_open = false;
@@ -517,6 +518,7 @@ pub fn apply_property_action(
             let ui = &mut state.editor_ui;
             ui.stroke_mode_popover_open = !ui.stroke_mode_popover_open;
             ui.stroke_mode_popover_hover = None;
+            ui.fill_menu_open = None;
             ui.layout_align_popover_open = false;
             ui.layout_align_popover_hover = None;
             ui.font_weight_picker_open = false;

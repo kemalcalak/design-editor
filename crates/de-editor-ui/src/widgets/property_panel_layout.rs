@@ -9,13 +9,12 @@
 use crate::widgets::property_panel::{EffectSummary, FillSummary, PropertyPanelAction};
 use crate::widgets::property_panel_fill::fill_row_height;
 use crate::widgets::property_panel_inputs::{
-    COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, INPUT_HEIGHT, PAD_X, PANEL_HEADER_HEIGHT,
-    SECTION_GAP, SECTION_HEADER_HEIGHT,
+    COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, INPUT_HEIGHT, PAD_X, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::property_panel_interactions::{
-    interactions_section_height, push_interaction_action_rects, InteractionSummary,
+    push_interaction_action_rects, InteractionSummary,
 };
-use crate::widgets::property_panel_stroke::{push_stroke_action_rects, stroke_section_body_height};
+use crate::widgets::property_panel_stroke::push_stroke_action_rects;
 use crate::{Point2D, Rect};
 use de_editor_core::FillType;
 
@@ -66,7 +65,7 @@ pub struct SizeFlags {
     pub clip_content: bool,
 }
 
-/// Height of the body that follows the head row in the Fill
+/// Height of the body that follows a fill's row in the Fill
 /// section, per fill type. Used by every layout walker so the
 /// y-offset of sections after Fill stays aligned with paint when
 /// the user flips fill types.
@@ -88,9 +87,9 @@ pub fn fill_body_height_with_stops(fill_type: FillType, stop_count: usize) -> f3
         FillType::Solid => 0.0,
         FillType::LinearGradient => INPUT_HEIGHT + 6.0 + stops_block + 6.0,
         FillType::RadialGradient => stops_block + 6.0,
-        // Mesh + Shader show head-row only (per-vertex editing / shader
+        // Mesh + Shader show the row only (per-vertex editing / shader
         // authoring deferred — shader is render-only in v1) — no body
-        // block, so they contribute nothing past the head row.
+        // block, so they contribute nothing past the row.
         FillType::MeshGradient | FillType::Shader => 0.0,
         FillType::Image => INPUT_HEIGHT + 6.0,
     }
@@ -231,47 +230,47 @@ pub fn action_button_rects_with_fill_picker(
     let half_w = (usable_w - 8.0) / 2.0;
     let mut out: Vec<(PropertyPanelAction, Rect)> = Vec::new();
 
-    let mut y = panel_rect.origin.y;
-    y += PANEL_HEADER_HEIGHT;
+    // Every section starts at its shared top (#83), so this walker, the
+    // input walker and paint cannot drift apart.
+    let tops = crate::widgets::property_panel_section_tops::section_tops(
+        panel_rect.origin.y,
+        visible,
+        effects,
+        fills,
+        interactions,
+    );
     if visible.create_component {
         out.extend(crate::widgets::property_panel_instance::action_rects(
             x0,
-            y,
+            tops.component,
             w,
             visible.component_button,
         ));
     }
-    y += visible.component_block_h();
     // Position section: X Y, then W H (#30), then rotation / radius.
-    let position_y = y;
     let radius_row_y =
-        y + SECTION_HEADER_HEIGHT + INPUT_HEIGHT + 6.0 + visible.position_size_row_h();
+        tops.position + SECTION_HEADER_HEIGHT + INPUT_HEIGHT + 6.0 + visible.position_size_row_h();
     if visible.corner_per_corner {
         out.push((
             PropertyPanelAction::ToggleCornerExpand,
             crate::widgets::property_panel_corner::uniform_and_toggle_rects(x0, radius_row_y, w).1,
         ));
     }
-    y = position_y + visible.position_section_h();
 
     if visible.flex_layout {
-        y += SECTION_HEADER_HEIGHT;
         crate::widgets::property_panel_flex::push_flex_action_rects(
             &mut out,
             x0,
-            y,
+            tops.flex + SECTION_HEADER_HEIGHT,
             w,
             visible.flex_layout_mode,
             visible.layout_justify,
             layout_align_popover_open,
         );
-        y += crate::widgets::property_panel_flex::flex_section_height(visible.flex_layout_mode)
-            - SECTION_HEADER_HEIGHT;
     }
 
     if visible.size_options {
-        let size_y = y;
-        y += visible.size_section_lead_h();
+        let mut y = tops.size + visible.size_section_lead_h();
         let row_h = crate::widgets::property_panel_inputs::size_check_row_height();
         out.push((
             PropertyPanelAction::ToggleSizeFillWidth,
@@ -312,15 +311,14 @@ pub fn action_button_rects_with_fill_picker(
                 },
             ));
         }
-        y = size_y + visible.size_section_h();
     }
 
     if visible.icon {
-        crate::widgets::property_panel_icon::push_icon_action_rects(&mut out, x0, y, w);
-        y += crate::widgets::property_panel_icon::icon_section_height();
+        crate::widgets::property_panel_icon::push_icon_action_rects(&mut out, x0, tops.icon, w);
     }
 
     if visible.text {
+        let y = tops.text;
         out.extend(crate::widgets::property_panel_text::text_action_rects(
             x0, y, usable_w,
         ));
@@ -335,8 +333,6 @@ pub fn action_button_rects_with_fill_picker(
                 ),
             );
         }
-        y += crate::widgets::property_panel_text::text_section_height();
-        y += SECTION_GAP;
     }
 
     if let Some(kind) = visible.widget {
@@ -345,58 +341,46 @@ pub fn action_button_rects_with_fill_picker(
             kind,
             visible.widget_checked,
             x0,
-            y,
+            tops.widget,
             usable_w,
         );
-        y += crate::widgets::property_panel_widget::widget_section_height(kind);
-        y += SECTION_GAP;
     }
 
     if visible.image {
         crate::widgets::property_panel_image_node::push_image_action_rects_with_video(
             &mut out,
             x0,
-            y,
+            tops.image,
             w,
             visible.image_warning,
             visible.video,
         );
-        y += crate::widgets::property_panel_image_node::image_section_height_with_video(
-            visible.image_warning,
-            visible.video,
-        );
-        y += SECTION_GAP;
     }
     if visible.video {
-        crate::widgets::property_panel_video::push_video_action_rects(&mut out, x0, y, w);
-        y += crate::widgets::property_panel_video::video_section_height();
+        crate::widgets::property_panel_video::push_video_action_rects(&mut out, x0, tops.video, w);
     }
 
-    if visible.opacity {
-        if visible.compositing {
-            let mut compositing_y = y + SECTION_HEADER_HEIGHT + INPUT_HEIGHT;
-            if visible.ellipse_arc {
-                compositing_y += INPUT_HEIGHT + 6.0;
-            }
-            compositing_y += crate::widgets::property_panel_compositing::COMPOSITING_ROW_GAP;
-            for (target, rect) in
-                crate::widgets::property_panel_compositing::node_trigger_rects(x0, compositing_y, w)
-            {
-                out.push((PropertyPanelAction::ToggleCompositingPicker(target), rect));
-            }
+    if visible.opacity && visible.compositing {
+        let mut compositing_y = tops.layer + SECTION_HEADER_HEIGHT + INPUT_HEIGHT;
+        if visible.ellipse_arc {
+            compositing_y += INPUT_HEIGHT + 6.0;
         }
-        y += layer_section_height(visible);
-        y += SECTION_GAP;
+        compositing_y += crate::widgets::property_panel_compositing::COMPOSITING_ROW_GAP;
+        for (target, rect) in
+            crate::widgets::property_panel_compositing::node_trigger_rects(x0, compositing_y, w)
+        {
+            out.push((PropertyPanelAction::ToggleCompositingPicker(target), rect));
+        }
     }
     if visible.fill {
-        y = crate::widgets::property_panel_input_layout::push_fill_action_rects(
-            &mut out, panel_rect, visible, fills, y,
+        crate::widgets::property_panel_input_layout::push_fill_action_rects(
+            &mut out, panel_rect, visible, fills, tops.fill,
         );
-        y += SECTION_GAP;
     }
     if visible.stroke {
         // Mirrors paint_stroke_section: header + hex/width row + side grid.
-        let section_y = y;
+        let section_y = tops.stroke;
+        let mut y = section_y;
         push_stroke_action_rects(&mut out, x0, section_y, w, visible.stroke_mode_popover_open);
         y += SECTION_HEADER_HEIGHT;
         // The stroke hex row's leading colour swatch opens the picker.
@@ -435,10 +419,9 @@ pub fn action_button_rects_with_fill_picker(
                 var_rect,
             ));
         }
-        y += stroke_section_body_height(visible.stroke_edit_mode);
-        y += SECTION_GAP;
     }
     if visible.effects {
+        let mut y = tops.effects;
         // Mirrors `paint_effects_section`: header + one block per
         // effect. The header's "+" opens the three-kind add-menu.
         let plus = crate::widgets::property_panel_inputs::section_add_target(x0, y, w);
@@ -466,26 +449,19 @@ pub fn action_button_rects_with_fill_picker(
             ));
             y += EFFECT_ROW_HEIGHT + EFFECT_ROW_GAP;
         }
-        if effects.is_empty() {
-            y += 8.0;
-        }
-        y += SECTION_GAP;
     }
     if visible.interactions {
-        push_interaction_action_rects(&mut out, interactions, x0, y, w);
-        y += interactions_section_height(interactions);
+        push_interaction_action_rects(&mut out, interactions, x0, tops.interactions, w);
     }
     if visible.export {
         // The header's "+" / "−" expands or collapses the section (#83).
         out.push((
             PropertyPanelAction::ToggleExportSection,
-            crate::widgets::property_panel_inputs::section_add_target(x0, y, w),
+            crate::widgets::property_panel_inputs::section_add_target(x0, tops.export, w),
         ));
     }
-    if visible.export && !visible.export_open {
-        y += SECTION_HEADER_HEIGHT + crate::widgets::property_panel_export::EXPORT_COLLAPSED_GAP;
-    }
     if visible.export && visible.export_open {
+        let mut y = tops.export;
         // Export section: header + a row of two dropdowns (scale on
         // the left, format on the right) mirroring
         // `paint_export_section`. Each dropdown is its own toggle
@@ -512,7 +488,6 @@ pub fn action_button_rects_with_fill_picker(
                 size: Point2D::new(usable_w, INPUT_HEIGHT),
             },
         ));
-        y += INPUT_HEIGHT + 12.0;
         // The Export section is the last section, pinned to the
         // bottom of the panel — so its select popups open UPWARD,
         // stacking their option rows directly above the dropdown.
@@ -564,7 +539,7 @@ pub fn action_button_rects_with_fill_picker(
     }
     // The closing Code section (#30). Export's popups open upward, so
     // they never cover these chips.
-    for (fw, rect) in crate::widgets::property_panel_code_chips::chip_rects(x0, y, w) {
+    for (fw, rect) in crate::widgets::property_panel_code_chips::chip_rects(x0, tops.code, w) {
         out.push((
             PropertyPanelAction::Codegen(
                 crate::widgets::property_panel_action::CodegenAction::OpenInCodeView(fw),

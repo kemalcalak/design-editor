@@ -129,6 +129,16 @@ impl Widget for PropertyPanel {
         // `tab_bottom - scroll` == `scrolled.origin.y + PANEL_HEADER_HEIGHT`,
         // matching the layout walker's `+= PANEL_HEADER_HEIGHT` step.
         let mut y = tab_bottom - scroll;
+        // Each section paints from its shared top (#83) — the origin the
+        // action and input walkers use — and debug builds check that the
+        // section above ended exactly there.
+        let tops = crate::widgets::property_panel_section_tops::section_tops(
+            scrolled.origin.y,
+            self.visible_sections(),
+            &self.snapshot.effects,
+            &self.snapshot.fills,
+            &self.snapshot.interactions,
+        );
         if self.visible_sections().create_component {
             y = crate::widgets::property_panel_instance::paint_component_block(
                 cx,
@@ -144,6 +154,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.position, "component block");
         y = sections::paint_position_section(
             cx,
             &self.theme,
@@ -157,6 +168,7 @@ impl Widget for PropertyPanel {
             y,
             w,
         );
+        y = section_start(y, tops.flex, "position");
         let flex_section_y = y;
         if caps.flex_layout {
             y = crate::widgets::property_panel_flex::paint_flex_section(
@@ -173,6 +185,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.size, "auto layout");
         if caps.size_options {
             y = sections::paint_size_section(
                 cx,
@@ -186,6 +199,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.icon, "size");
         if self.snapshot.icon.is_some() {
             y = crate::widgets::property_panel_icon::paint_icon_section(
                 cx,
@@ -197,6 +211,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.text, "icon");
         if caps.text && self.snapshot.text.is_some() {
             y = crate::widgets::property_panel_text::paint_text_section(
                 cx,
@@ -209,6 +224,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.widget, "text");
         if self.snapshot.widget.is_some() {
             y = crate::widgets::property_panel_widget::paint_widget_section(
                 cx,
@@ -221,6 +237,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.image, "widget");
         if caps.image && self.snapshot.is_image_node {
             y = crate::widgets::property_panel_image_node::paint_image_node_section(
                 cx,
@@ -235,6 +252,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.video, "image");
         if caps.image && self.snapshot.video.is_some() {
             y = crate::widgets::property_panel_video::paint_video_section(
                 cx,
@@ -247,6 +265,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.layer, "video");
         if caps.opacity {
             y = sections::paint_layer_section(
                 cx,
@@ -261,6 +280,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.fill, "layer");
         if caps.fill {
             y = sections::paint_fill_section(
                 cx,
@@ -268,16 +288,14 @@ impl Widget for PropertyPanel {
                 &self.snapshot,
                 &edit_ctx,
                 &self.labels,
-                self.fill_type,
-                self.fill_type_picker.open,
-                self.fill_variable_ref.as_deref(),
-                self.color_variable_count > 0 || self.fill_variable_ref.is_some(),
+                self.visible_sections(),
                 self.locale,
                 x,
                 y,
                 w,
             );
         }
+        y = section_start(y, tops.stroke, "fill");
         let stroke_section_y = y;
         if caps.stroke {
             y = crate::widgets::property_panel_stroke::paint_stroke_section(
@@ -294,6 +312,7 @@ impl Widget for PropertyPanel {
                 self.stroke_edit_mode,
             );
         }
+        y = section_start(y, tops.effects, "stroke");
         if caps.effects {
             y = sections::paint_effects_section(
                 cx,
@@ -306,6 +325,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.interactions, "effects");
         if caps.interactions {
             y = sections::paint_interactions_section(
                 cx,
@@ -317,6 +337,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.export, "interactions");
         if caps.export {
             y = sections::paint_export_section(
                 cx,
@@ -330,6 +351,7 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        y = section_start(y, tops.code, "export");
         crate::widgets::property_panel_code_chips::paint_code_chips_section(
             cx,
             &self.theme,
@@ -643,4 +665,16 @@ impl PropertyPanel {
             );
         }
     }
+}
+
+/// Paint resumes each section at its shared top. In debug builds, check
+/// that the section above (`above`) ended exactly there, so a paint
+/// routine whose height drifts from `section_tops` fails every panel
+/// paint test instead of silently misaligning hit targets.
+fn section_start(painted_end: f32, top: f32, above: &str) -> f32 {
+    debug_assert!(
+        (painted_end - top).abs() < 0.5,
+        "{above} section painted to {painted_end}, but the next section starts at {top}"
+    );
+    top
 }

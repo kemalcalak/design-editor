@@ -159,3 +159,50 @@ fn a_design_frame_fits_position_through_code_at_1440x900() {
         "Position through Code must fit a 900 px panel, content is {content} px"
     );
 }
+
+#[test]
+fn painted_input_values_sit_inside_the_input_walker_rects() {
+    use de_editor_core::PropertyFocus;
+    let frame = r##"{ "version": "1.0.0", "children": [
+          {"type":"frame","id":"f","name":"Pricing","x":0,"y":0,"width":1440,"height":900,
+           "layout":"vertical","gap":24,"padding":[96,120],
+           "fill":[{"type":"solid","color":"#0F1A14"},{"type":"solid","color":"#445566"}],
+           "children":[]}
+    ]}"##;
+    let state = select(frame, "f");
+    let panel = PropertyPanel::for_selection(&state).expect("frame panel");
+    let rect = tall_rect();
+    let inputs = sections::editable_input_rects(
+        rect,
+        visible_for(&panel),
+        &panel.snapshot.fills,
+        &panel.snapshot.effects,
+    );
+    let mut backend = CaptureBackend::default();
+    panel.paint(
+        &mut PaintCx {
+            backend: &mut backend,
+        },
+        rect,
+    );
+    for (focus, value) in [
+        (PropertyFocus::LayoutGap, "24"),
+        (PropertyFocus::Padding, "96 120"),
+        (PropertyFocus::FillHex(0), "#0F1A14"),
+        (PropertyFocus::FillHex(1), "#445566"),
+        (PropertyFocus::FillOpacity(1), "100"),
+    ] {
+        let field = inputs
+            .iter()
+            .find_map(|(f, r)| (*f == focus).then_some(*r))
+            .unwrap_or_else(|| panic!("{focus:?}: input rect"));
+        assert!(
+            backend.texts.iter().any(|(text, origin)| {
+                text == value
+                    && origin.y > field.origin.y
+                    && origin.y < field.origin.y + field.size.y
+            }),
+            "{focus:?}: `{value}` must paint inside its input rect {field:?}"
+        );
+    }
+}

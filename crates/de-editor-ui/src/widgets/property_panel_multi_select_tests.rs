@@ -1,6 +1,6 @@
 //! Multi-selection behaviour for `widgets::property_panel`: the
-//! aggregate snapshot, inert hit-testing, the reduced capability mask,
-//! and the selection-scoped padding-mode pin.
+//! aggregate snapshot, inert hit-testing and the reduced capability
+//! mask.
 
 use super::property_panel::PropertyPanel;
 use super::property_panel_test_support::{paint_and_count, state_from};

@@ -48,7 +48,7 @@ const FILL_ROW_GAP: f32 = 4.0;
 /// and the trailing `⋯` menu button.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct FillRowRects {
-    pub(crate) field: Rect,
+    pub(crate) frame: Rect,
     pub(crate) swatch: Rect,
     pub(crate) swatch_hit: Rect,
     pub(crate) value: Rect,
@@ -79,7 +79,7 @@ pub(crate) fn fill_row_rects(x: f32, y: f32, width: f32, show_variable: bool) ->
     );
     let value_x = field_x + FILL_VALUE_X;
     FillRowRects {
-        field,
+        frame: field,
         swatch: Rect::xywh(
             field_x + 6.0,
             y + (INPUT_HEIGHT - FILL_SWATCH_SIZE) / 2.0,
@@ -116,7 +116,7 @@ pub fn fill_type_label(
         FillType::MeshGradient => "fill.mesh",
         // No dedicated TS-generated `fill.shader` key yet; the translate
         // fallback yields the key literal, acceptable for the render-only
-        // head-row label (v1 ships no shader authoring UI).
+        // row label (v1 ships no shader authoring UI).
         FillType::Shader => "fill.shader",
         FillType::Image => "fill.image",
     };
@@ -158,24 +158,11 @@ pub fn paint_fill_type_picker(
 }
 // ── Fill section ──────────────────────────────────────────────────
 
-/// Total height the body that follows fill `index`'s head row
-/// consumes. The primary fill (index 0) paints its full editable body
-/// (solid hex / gradient stops / image). A non-primary gradient /
-/// image fill renders head-row only (the gradient-stop / image-fill
-/// editors key off the primary fill), so it contributes no body. A
-/// Solid fill at any index always paints its hex row.
+/// Height of the body under fill `index`'s row. Only the primary fill
+/// (index 0) paints a gradient-stop or image editor (they key off the
+/// primary fill); every other fill, and a Solid fill at any index
+/// (its hex lives on the row, #83), is the row alone.
 pub fn fill_row_body_height(
-    fill_type: de_editor_core::FillType,
-    is_primary: bool,
-    primary_stop_count: usize,
-) -> f32 {
-    fill_content_body_height(fill_type, is_primary, primary_stop_count)
-}
-
-/// Height of only the type-specific body, before the common per-fill
-/// Blend dropdown. Exposed to the action walker so its trigger lands
-/// at exactly the same y as paint.
-pub(crate) fn fill_content_body_height(
     fill_type: de_editor_core::FillType,
     is_primary: bool,
     primary_stop_count: usize,
@@ -184,7 +171,7 @@ pub(crate) fn fill_content_body_height(
     match fill_type {
         // The hex lives on the row itself (#83), so Solid has no body.
         FillType::Solid => 0.0,
-        // Mesh + Shader join the gradient/image group: head-row only
+        // Mesh + Shader join the gradient/image group: row only
         // (mesh's per-vertex editor and shader authoring are both
         // deferred — shader is render-only in v1), so no body.
         FillType::LinearGradient
@@ -201,8 +188,8 @@ pub(crate) fn fill_content_body_height(
     }
 }
 
-/// Total height (px) one fill row consumes — its head row plus its
-/// body. Mirrors the y-walk in `paint_one_fill`.
+/// Total height (px) one fill consumes — its row plus its body.
+/// Mirrors the y-walk in `paint_one_fill`.
 pub fn fill_row_height(
     fill_type: de_editor_core::FillType,
     is_primary: bool,
@@ -211,10 +198,32 @@ pub fn fill_row_height(
     INPUT_HEIGHT + 6.0 + fill_row_body_height(fill_type, is_primary, primary_stop_count)
 }
 
-/// Vertical offset (px) of fill `index`'s head row relative to the
-/// first fill's head row — the sum of every prior fill row's height.
-/// `0.0` for `index == 0`. Used to anchor a fill row's type-picker
-/// overlay below its own dropdown.
+/// Each fill with the top y of its row, starting at `first_row_y` (the
+/// row under the section header). Paint and both walkers step through
+/// the fills with this, so a fill's body height moves every later row
+/// identically in all three.
+pub(crate) fn fill_row_tops<'a>(
+    fills: &'a [crate::widgets::property_panel_snapshot::FillSummary],
+    first_row_y: f32,
+    primary_stop_count: usize,
+) -> impl Iterator<
+    Item = (
+        usize,
+        &'a crate::widgets::property_panel_snapshot::FillSummary,
+        f32,
+    ),
+> + 'a {
+    let mut y = first_row_y;
+    fills.iter().enumerate().map(move |(index, fill)| {
+        let row_y = y;
+        y += fill_row_height(fill.fill_type, index == 0, primary_stop_count);
+        (index, fill, row_y)
+    })
+}
+
+/// Vertical offset (px) of fill `index`'s row relative to the first
+/// fill's row — the sum of every prior fill's height. `0.0` for
+/// `index == 0`.
 pub fn fill_row_offset(
     fills: &[crate::widgets::property_panel_snapshot::FillSummary],
     index: usize,
@@ -236,10 +245,7 @@ pub fn paint_fill_section(
     snapshot: &NodeSnapshot,
     edit: &EditContext<'_>,
     labels: &PropertyLabels,
-    _fill_type: de_editor_core::FillType,
-    _fill_picker_open: bool,
-    _fill_variable_ref: Option<&str>,
-    show_variable_button: bool,
+    visible: crate::widgets::property_panel_layout::VisibleSections,
     locale: de_editor_core::Locale,
     x: f32,
     y: f32,
@@ -252,7 +258,7 @@ pub fn paint_fill_section(
         paint_fill_rule_control(cx, theme, labels, rule, x, header_y, width);
     }
     let primary_stop_count = snapshot.gradient_stops.len();
-    for (index, fill) in snapshot.fills.iter().enumerate() {
+    for (index, fill, row_y) in fill_row_tops(&snapshot.fills, y, primary_stop_count) {
         y = paint_one_fill(
             cx,
             theme,
@@ -261,17 +267,15 @@ pub fn paint_fill_section(
             index,
             fill,
             index == 0,
-            // The colour-variable button only shows on the primary fill
-            // (the variable subsystem keys off `fills[0]`).
-            if index == 0 {
-                fill.variable_ref.as_deref()
-            } else {
-                None
-            },
-            index == 0 && show_variable_button,
+            // The same rules the input and action walkers apply, so the
+            // painted chip / button match the click targets.
+            fill.variable_ref
+                .as_deref()
+                .filter(|_| !visible.fill_hex_editable(index)),
+            visible.fill_row_shows_variable(index),
             locale,
             x,
-            y,
+            row_y,
             width,
             primary_stop_count,
         );
@@ -374,15 +378,15 @@ fn paint_one_fill(
     let hex_focus = PropertyFocus::FillHex(fill_index);
     let opacity_focus = PropertyFocus::FillOpacity(fill_index);
     cx.backend
-        .fill_round_rect(row.field, INPUT_RADIUS, theme.muted);
+        .fill_round_rect(row.frame, INPUT_RADIUS, theme.muted);
     let field_focused = (edit.focus == Some(hex_focus) && fill_variable_ref.is_none())
         || edit.focus == Some(opacity_focus);
     if field_focused {
         cx.backend
-            .stroke_round_rect(row.field, INPUT_RADIUS, theme.primary, 1.5);
+            .stroke_round_rect(row.frame, INPUT_RADIUS, theme.primary, 1.5);
     }
     paint_fill_swatch(cx, theme, fill_type, fill.color, row.swatch);
-    let baseline = row.field.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE;
+    let baseline = row.frame.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE;
     match (fill_type, fill_variable_ref) {
         (FillType::Solid, Some(name)) => {
             paint_row_text(
@@ -463,7 +467,7 @@ fn paint_one_fill(
         }
         _ => {}
     }
-    body_y + fill_content_body_height(fill_type, is_primary, primary_stop_count)
+    body_y + fill_row_body_height(fill_type, is_primary, primary_stop_count)
 }
 
 /// One run of row text (hex, `$variable` or fill type), clipped to its

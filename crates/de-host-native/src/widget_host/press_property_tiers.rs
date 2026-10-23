@@ -123,7 +123,7 @@ impl WidgetHostNative {
         // 0c0a3. Alignment / stroke-mode popovers + fill `⋯` menu —
         //        outside-click dismiss.
         if !in_git_panel
-            && self.dismiss_layout_align_popover_on_press(x, y, viewport_width, viewport_height)
+            && self.dismiss_property_popovers_on_press(x, y, viewport_width, viewport_height)
         {
             return Some(true);
         }

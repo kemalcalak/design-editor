@@ -552,18 +552,16 @@ pub(crate) fn sections_top_before_text(
     panel_rect: Rect,
     visible: crate::widgets::property_panel_layout::VisibleSections,
 ) -> f32 {
-    let mut y = panel_rect.origin.y;
-    y += crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
-    y += visible.component_block_h();
-    y += visible.position_section_h();
-    if visible.flex_layout {
-        y += crate::widgets::property_panel_flex::flex_section_height(visible.flex_layout_mode);
-    }
-    y += visible.size_section_h();
-    if visible.icon {
-        y += crate::widgets::property_panel_icon::icon_section_height();
-    }
-    y
+    // Only sections above Text matter here, so the data-driven ones
+    // below it (fills, effects, interactions) can be empty.
+    crate::widgets::property_panel_section_tops::section_tops(
+        panel_rect.origin.y,
+        visible,
+        &[],
+        &[],
+        &crate::widgets::property_panel_interactions::InteractionSummary::default(),
+    )
+    .text
 }
 
 #[allow(clippy::too_many_arguments)]

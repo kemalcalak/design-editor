@@ -2,7 +2,7 @@ use super::WidgetHost;
 use de_editor_core::codegen::{CodegenHover, CodegenPhase};
 use de_editor_core::image_panel_state::{ImageAssetCheck, ImageAssetStatus};
 use de_editor_core::{ButtonPressTarget, NodeId, PropertyFocus};
-use de_editor_core::{FlexLayout, PaddingEditMode, PropertyTab};
+use de_editor_core::{FlexLayout, PropertyTab};
 use de_editor_ui::widgets::property_panel_action::CodegenAction;
 use de_editor_ui::widgets::property_panel_action::{
     LayoutAlignValue, LayoutJustifyValue, TextAlignValue, TextGrowthValue,
@@ -484,6 +484,11 @@ fn web_property_panel_layout_actions_write_selected_node() {
         Some(&SizingBehavior::Keyword(SizingKeyword::FillContainer))
     );
 
+    // The alignment grid lives in the Auto layout header popover (#83).
+    let align_button = point_for_action(&host, |action| {
+        matches!(action, PropertyPanelAction::ToggleLayoutAlignPopover)
+    });
+    assert!(host.apply_press(align_button.x, align_button.y, VIEWPORT_W, VIEWPORT_H));
     let align_center = point_for_action(&host, |action| {
         matches!(
             action,
@@ -502,49 +507,6 @@ fn web_property_panel_layout_actions_write_selected_node() {
         selected_rectangle(&host).container.align_items,
         Some(AlignItems::Center)
     );
-}
-
-#[test]
-fn web_property_panel_alignment_popover_opens_and_sets_distribution() {
-    let mut host = WidgetHost::new();
-    seed(
-        &mut host,
-        r##"{ "version": "1.0.0", "children": [
-              {"type":"group","id":"text_group","name":"Text Group",
-               "layout":"vertical","gap":8,
-               "children":[
-                 {"type":"text","id":"label","name":"Label","content":"Hello"}
-               ]}
-        ]}"##,
-    );
-    host.editor_state
-        .set_single_selection(NodeId::new("text_group"));
-
-    let button = point_for_action(&host, |action| {
-        matches!(action, PropertyPanelAction::ToggleLayoutAlignPopover)
-    });
-    assert!(host.apply_press(button.x, button.y, VIEWPORT_W, VIEWPORT_H));
-    assert!(host.editor_state.editor_ui.layout_align_popover_open);
-
-    let between = point_for_action(&host, |action| {
-        matches!(
-            action,
-            PropertyPanelAction::SetLayoutJustify(LayoutJustifyValue::SpaceBetween)
-        )
-    });
-    assert!(host.apply_press(between.x, between.y, VIEWPORT_W, VIEWPORT_H));
-    assert_eq!(
-        PropertyPanel::for_selection(&host.editor_state)
-            .expect("panel")
-            .snapshot
-            .layout_justify,
-        LayoutJustifyValue::SpaceBetween
-    );
-    // Picking a row keeps the popover open for further tweaks; a press
-    // outside it closes it.
-    assert!(host.editor_state.editor_ui.layout_align_popover_open);
-    assert!(host.apply_press(4.0, VIEWPORT_H - 4.0, VIEWPORT_W, VIEWPORT_H));
-    assert!(!host.editor_state.editor_ui.layout_align_popover_open);
 }
 
 #[test]
@@ -570,6 +532,11 @@ fn web_property_panel_fill_add_and_remove_match_native() {
         Some(PenFill::Solid(_))
     ));
 
+    // Remove lives in the fill row's `⋯` menu (#83).
+    let menu = point_for_action(&host, |action| {
+        matches!(action, PropertyPanelAction::ToggleFillMenu(0))
+    });
+    assert!(host.apply_press(menu.x, menu.y, VIEWPORT_W, VIEWPORT_H));
     let remove = point_for_action(&host, |action| {
         matches!(action, PropertyPanelAction::RemoveFill(0))
     });
@@ -795,3 +762,8 @@ fn pick_fill_image_queues_web_file_picker_like_native() {
         "the image popover must stay open so Fill/Fit/Crop/Tile remain selectable",
     );
 }
+
+// The #83 popover press tests, split off for the 800-line cap; they
+// reuse this module's fixtures through `super::*`.
+#[path = "property_panel_popover_press_tests.rs"]
+mod popover;

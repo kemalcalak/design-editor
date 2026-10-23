@@ -28,6 +28,17 @@ pub fn export_scale_label(scale: f32) -> &'static str {
 /// Space below a collapsed Export header (#83), before the Code chips.
 pub const EXPORT_COLLAPSED_GAP: f32 = 8.0;
 
+/// The whole Export section: its header, plus the dropdown row and the
+/// Export button when expanded.
+pub fn export_section_height(open: bool) -> f32 {
+    crate::widgets::property_panel_inputs::SECTION_HEADER_HEIGHT
+        + if open {
+            (INPUT_HEIGHT + 12.0) * 2.0
+        } else {
+            EXPORT_COLLAPSED_GAP
+        }
+}
+
 /// Paint the Export section: title with a "+" / "−" toggle, then —
 /// when `open` — a row of two dropdowns (scale + format) and a
 /// full-width Export action button below them.

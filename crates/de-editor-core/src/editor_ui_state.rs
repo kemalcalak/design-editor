@@ -363,7 +363,7 @@ pub struct EditorUiState {
     /// open, if any.
     pub fill_menu_open: Option<usize>,
     /// Stroke-width edit mode pinned via the stroke-section gear.
-    /// Scoped to [`Self::stroke_edit_mode_anchor`] like padding.
+    /// Scoped to [`Self::stroke_edit_mode_anchor`].
     pub stroke_edit_mode: Option<PaddingEditMode>,
     /// Node id (anchor) the stroke edit-mode pin was set for.
     pub stroke_edit_mode_anchor: String,

@@ -124,6 +124,7 @@ mod property_panel_overlay_hit;
 mod property_panel_page;
 #[cfg(test)]
 mod property_panel_press_tests;
+pub mod property_panel_section_tops;
 pub mod property_panel_sections;
 pub mod property_panel_snapshot;
 pub mod property_panel_stroke;

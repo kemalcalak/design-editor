@@ -212,17 +212,13 @@ impl WidgetHost {
                 || self.editor_state.editor_ui.stroke_mode_popover_open
                 || self.editor_state.editor_ui.fill_menu_open.is_some()
             {
-                use de_editor_ui::widgets::PropertyPanelAction as A;
                 let hovered = panel.hit_test_action(property_rect, point);
                 let align_hover = hovered.as_ref().and_then(
                     de_editor_ui::widgets::property_panel_flex::layout_align_popover_hover_row,
                 );
-                let stroke_hover = match hovered {
-                    Some(A::SetStrokeMode(mode)) => de_editor_core::PaddingEditMode::ALL
-                        .iter()
-                        .position(|candidate| *candidate == mode),
-                    _ => None,
-                };
+                let stroke_hover = hovered.as_ref().and_then(
+                    de_editor_ui::widgets::property_panel_stroke::stroke_mode_popover_hover_row,
+                );
                 let mut changed = false;
                 if self.editor_state.editor_ui.layout_align_popover_open
                     && align_hover != self.editor_state.editor_ui.layout_align_popover_hover

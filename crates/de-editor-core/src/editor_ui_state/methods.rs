@@ -364,9 +364,6 @@ impl EditorUiState {
         self.toggle_fill_type_picker_for(0);
     }
 
-    /// Toggle the fill-type dropdown for fill `index`. Opening on a
-    /// different row than the one currently open re-targets the picker
-    /// (stays open, new index); toggling the same row closes it.
     /// Toggle fill `index`'s `⋯` menu and close the other inspector
     /// popovers it would overlap.
     pub fn toggle_fill_menu(&mut self, index: usize) {
@@ -387,6 +384,9 @@ impl EditorUiState {
         self.close_color_variable_picker();
     }
 
+    /// Toggle the fill-type dropdown for fill `index`. Opening on a
+    /// different row than the one currently open re-targets the picker
+    /// (stays open, new index); toggling the same row closes it.
     pub fn toggle_fill_type_picker_for(&mut self, index: usize) {
         let opening = !(self.fill_type_picker.open && self.fill_type_picker_index == index);
         self.fill_type_picker.open = opening;

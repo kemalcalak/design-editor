@@ -418,3 +418,45 @@ fn fill_menu_opens_from_the_row_and_removes_that_fill() {
     assert!(host.apply_press(outside.x, outside.y, VIEWPORT_W, VIEWPORT_H));
     assert_eq!(host.editor_state().editor_ui.fill_menu_open, None);
 }
+
+#[test]
+fn fill_menu_blend_trigger_opens_the_blend_picker_under_the_open_menu() {
+    use de_editor_ui::widgets::property_panel_action::CompositingTarget;
+    let mut host = WidgetHostNative::new();
+    seed(
+        &mut host,
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"rectangle","id":"r","name":"R",
+               "x":40,"y":40,"width":180,"height":120,
+               "fill":[{"type":"solid","color":"#112233"}]}
+        ]}"##,
+    );
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("r"));
+    host.apply_property_action(PropertyPanelAction::ToggleFillMenu(0));
+
+    let blend = point_for_action(&host, |action| {
+        matches!(
+            action,
+            PropertyPanelAction::ToggleCompositingPicker(CompositingTarget::FillBlend(0))
+        )
+    });
+    assert!(host.apply_press(blend.x, blend.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    let ui = &host.editor_state().editor_ui;
+    assert!(ui.compositing_picker.open, "the blend picker opens");
+    assert_eq!(
+        ui.fill_menu_open,
+        Some(0),
+        "the menu its trigger lives in stays open, so the picker can anchor"
+    );
+    let panel = PropertyPanel::for_selection(host.editor_state()).expect("panel");
+    let rect = host.property_rect(VIEWPORT_W, VIEWPORT_H);
+    // The picker drops below its trigger or flips above it near the
+    // panel's bottom edge; either way it is next to the trigger.
+    let near = (-400..=400)
+        .step_by(4)
+        .map(|dy| Point2D::new(blend.x, blend.y + dy as f32))
+        .any(|p| panel.compositing_picker_contains(rect, p));
+    assert!(near, "the picker paints next to its trigger");
+}

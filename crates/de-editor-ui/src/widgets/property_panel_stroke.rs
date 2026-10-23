@@ -47,6 +47,13 @@ pub(crate) fn stroke_section_body_height(mode: PaddingEditMode) -> f32 {
         + SECTION_TRAILING_GAP
 }
 
+/// The whole Stroke section — header, row(s) and trailing gap.
+pub(crate) fn stroke_section_height(mode: PaddingEditMode) -> f32 {
+    crate::widgets::property_panel_inputs::SECTION_HEADER_HEIGHT
+        + stroke_section_body_height(mode)
+        + SECTION_GAP
+}
+
 fn side_grid_y(row_y: f32) -> f32 {
     row_y + INPUT_HEIGHT + SIDE_GRID_TOP_GAP
 }
@@ -91,6 +98,17 @@ fn stroke_mode_popover_layout(x0: f32, y: f32, width: f32) -> (Rect, Rect, [Rect
     };
     let pop_box = mode_popover::mode_popover_rect_from_gear(gear, width);
     (gear, pop_box, mode_popover::mode_popover_rows(pop_box))
+}
+
+/// The stroke-mode popover row (`PaddingEditMode::ALL` index) an action
+/// hovers, for the popover's hover wash. Shared by both hosts.
+pub fn stroke_mode_popover_hover_row(action: &PropertyPanelAction) -> Option<usize> {
+    match action {
+        PropertyPanelAction::SetStrokeMode(mode) => {
+            PaddingEditMode::ALL.iter().position(|m| m == mode)
+        }
+        _ => None,
+    }
 }
 
 pub(crate) fn push_stroke_action_rects(

@@ -298,6 +298,12 @@ impl VisibleSections {
         index == 0 && (self.color_variable_count > 0 || self.fill_variable_bound)
     }
 
+    /// Whether fill row `index` edits its hex in place. A primary fill
+    /// bound to a colour variable shows the `$name` chip instead.
+    pub fn fill_hex_editable(&self, index: usize) -> bool {
+        !(index == 0 && self.fill_variable_bound)
+    }
+
     /// Height of the component block under the header (instance /
     /// detach rows; Create lives in the header since #83).
     pub fn component_block_h(&self) -> f32 {

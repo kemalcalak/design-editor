@@ -182,6 +182,9 @@ fn web_property_action_press_commits_prior_property_input() {
     host.editor_state.set_single_selection(NodeId::new("n62"));
     host.editor_state.ui.property_focus = Some(PropertyFocus::SizeW);
     host.editor_state.ui.property_input.set_text("321");
+    // Export is collapsed by default (#83); expand it so its dropdown
+    // is a press target.
+    host.editor_state.editor_ui.export_section_open = true;
 
     let (x, y) = point_for_property_action(&host, |action| {
         matches!(action, PropertyPanelAction::ToggleExportScalePicker)
