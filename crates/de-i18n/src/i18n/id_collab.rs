@@ -232,6 +232,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.downloadedSection" => "Diunduh dari Google Fonts",
         "dialog.penDevImportTitle" => "Diimpor dari pen.dev",
         "dialog.penDevImportBody" => "Beberapa bagian “{{name}}” tidak dapat dibawa:\n\n{{details}}\n\nSisanya dibuka sebagai dokumen baru yang belum disimpan. File asli tidak diubah.",
+        "import.fromPenDev" => "Impor dari pen.dev",
+        "home.import.penDev" => "Impor dari pen.dev",
+        "home.import.penDevSub" => "File .pen",
+        "dialog.penDevImportToast" => "Dibuka dari pen.dev. Tidak terbawa: {{details}}",
         _ => return None,
     })
 }

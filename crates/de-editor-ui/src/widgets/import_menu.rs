@@ -26,16 +26,23 @@ pub enum ImportMenuChoice {
     Figma,
     /// Open a file dialog for a saved page / snapshot (`.html`).
     Html,
+    /// Open a pen.dev design (`.pen`) as a new document.
+    PenDev,
 }
 
 impl ImportMenuChoice {
-    pub const ALL: [ImportMenuChoice; 2] = [ImportMenuChoice::Figma, ImportMenuChoice::Html];
+    pub const ALL: [ImportMenuChoice; 3] = [
+        ImportMenuChoice::Figma,
+        ImportMenuChoice::Html,
+        ImportMenuChoice::PenDev,
+    ];
 
     /// Locale key for the row label.
     fn label_key(self) -> &'static str {
         match self {
             ImportMenuChoice::Figma => "import.fromFigma",
             ImportMenuChoice::Html => "import.fromHtml",
+            ImportMenuChoice::PenDev => "import.fromPenDev",
         }
     }
 
@@ -46,6 +53,7 @@ impl ImportMenuChoice {
         match self {
             ImportMenuChoice::Figma => "Import from Figma",
             ImportMenuChoice::Html => "Import from HTML",
+            ImportMenuChoice::PenDev => "Import from pen.dev",
         }
     }
 
@@ -64,6 +72,8 @@ impl ImportMenuChoice {
         match self {
             ImportMenuChoice::Figma => "⌘⇧F",
             ImportMenuChoice::Html => "⌘⇧H",
+            // No chord: File ▸ Open (⌘O) already opens a `.pen`.
+            ImportMenuChoice::PenDev => "",
         }
     }
 }
@@ -152,6 +162,9 @@ impl ImportMenu {
         cx.backend.clip_rect(popup);
         for (index, choice) in ImportMenuChoice::ALL.iter().enumerate() {
             let shortcut = choice.shortcut_label();
+            if shortcut.is_empty() {
+                continue;
+            }
             let width = text_metrics::measure_chrome(cx.backend, shortcut, SHORTCUT_FONT_SIZE);
             let layout = TextLayout::single_run(
                 shortcut,
@@ -315,5 +328,7 @@ mod tests {
     fn rows_expose_their_documented_shortcuts() {
         assert_eq!(ImportMenuChoice::Figma.shortcut_label(), "⌘⇧F");
         assert_eq!(ImportMenuChoice::Html.shortcut_label(), "⌘⇧H");
+        // No chord: File ▸ Open already opens a `.pen`; the row paints none.
+        assert_eq!(ImportMenuChoice::PenDev.shortcut_label(), "");
     }
 }

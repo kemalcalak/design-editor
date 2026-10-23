@@ -232,6 +232,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.downloadedSection" => "從 Google Fonts 下載的字型",
         "dialog.penDevImportTitle" => "已從 pen.dev 匯入",
         "dialog.penDevImportBody" => "「{{name}}」中有部分內容無法匯入：\n\n{{details}}\n\n其餘內容已作為新的未儲存文件開啟。原始檔案未被修改。",
+        "import.fromPenDev" => "從 pen.dev 匯入",
+        "home.import.penDev" => "從 pen.dev 匯入",
+        "home.import.penDevSub" => ".pen 檔案",
+        "dialog.penDevImportToast" => "已從 pen.dev 開啟。未能匯入：{{details}}",
         _ => return None,
     })
 }

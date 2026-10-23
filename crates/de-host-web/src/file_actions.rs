@@ -289,17 +289,20 @@ pub fn ingest_op_source(
     src: &str,
     previous: &EditorState,
 ) -> Result<IngestedDoc, DocumentIngestError> {
-    if let Some(version) = de_pen_loader::pen_dev::sniff_pen_dev_version(src) {
-        return Err(DocumentIngestError::PenDevDocument { version });
-    }
     let editor_meta = de_pen_loader::extract_editor_meta(src);
-    let loaded = de_pen_loader::load_canonical(src)
-        .map_err(|e| DocumentIngestError::LoadCanonical(e.to_string()))?;
+    // A browser upload has no folder to read pen.dev image files from, so
+    // they come through as missing and the report says so.
+    let canonical =
+        de_pen_loader::payload::load_canonical_with_assets(src, &de_pen_loader::pen_dev::no_assets)
+            .map_err(|e| DocumentIngestError::LoadCanonical(e.to_string()))?;
+    let loaded = canonical.loaded;
     let warnings = loaded.warnings.iter().map(|w| format!("{w:?}")).collect();
     let mut state = EditorState::from_document(loaded.value);
     de_pen_loader::apply_editor_meta_or_legacy_fallback(&mut state, editor_meta);
     preserve_app_preferences(previous, &mut state);
-    Ok(IngestedDoc::new(state, warnings))
+    let mut ingested = IngestedDoc::new(state, warnings);
+    ingested.pen_dev = canonical.compatibility.pen_dev;
+    Ok(ingested)
 }
 
 /// Parse a binary Figma `.fig` export into a fresh `EditorState`.

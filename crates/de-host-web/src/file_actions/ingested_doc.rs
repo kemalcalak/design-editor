@@ -17,6 +17,10 @@ pub struct IngestedDoc {
     /// Typed HTML-import degradations, for the post-import diagnostics
     /// overlay. Empty for every non-HTML ingest path.
     pub diagnostics: Vec<HtmlImportDiagnostic>,
+    /// Set when the source was a pen.dev document converted on open: it
+    /// opens untitled, and anything it lost (image files included — a
+    /// browser upload carries no folder) is shown to the user.
+    pub pen_dev: Option<de_pen_loader::pen_dev::PenDevReport>,
 }
 
 impl IngestedDoc {
@@ -26,6 +30,7 @@ impl IngestedDoc {
             state,
             warnings,
             diagnostics: Vec::new(),
+            pen_dev: None,
         }
     }
 
@@ -42,6 +47,7 @@ impl IngestedDoc {
             diagnostics: de_editor_core::html_import_diagnostics::rows_from_parts(
                 de_html::diagnostic_parts(typed),
             ),
+            pen_dev: None,
         }
     }
 }

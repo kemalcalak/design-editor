@@ -36,8 +36,11 @@ pub(crate) const SIZE_MENU_HEADER_H: f32 = 26.0;
 pub(crate) const SIZE_ROW_H: f32 = 32.0;
 const IMPORT_H: f32 = 64.0;
 const IMPORT_GAP: f32 = 12.0;
-/// Columns narrower than this stack the three import cards.
+/// Columns narrower than this stack the four import cards.
 const IMPORT_STACK_W: f32 = 720.0;
+/// Narrowest column that still fits all four import cards on one row with
+/// their titles unclipped; between this and `IMPORT_STACK_W` they wrap 2×2.
+const IMPORT_ONE_ROW_W: f32 = 920.0;
 const RECENT_HEADER_H: f32 = 27.0;
 const CARD_GAP: f32 = 14.0;
 pub(crate) const CARD_THUMB_H: f32 = 150.0;
@@ -97,7 +100,7 @@ pub struct HomeLayout {
     pub send: Rect,
     pub size_menu: Rect,
     pub size_rows: [Rect; 3],
-    pub imports: [Rect; 3],
+    pub imports: [Rect; 4],
     pub recent_header: Rect,
     pub view_grid: Rect,
     pub view_list: Rect,
@@ -265,18 +268,23 @@ pub fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
     y = composer.origin.y + composer.size.y + 44.0;
 
     // Import cards.
-    let mut imports = [Rect::ZERO; 3];
+    let mut imports = [Rect::ZERO; 4];
     if col_w >= IMPORT_STACK_W {
-        let card_w = (col_w - 2.0 * IMPORT_GAP) / 3.0;
+        // One row of four once each card keeps room for its title;
+        // otherwise two rows of two.
+        let per_row = if col_w >= IMPORT_ONE_ROW_W { 4 } else { 2 };
+        let card_w = (col_w - (per_row - 1) as f32 * IMPORT_GAP) / per_row as f32;
         for (i, slot) in imports.iter_mut().enumerate() {
+            let (row, column) = (i / per_row, i % per_row);
             *slot = Rect::xywh(
-                col_x + i as f32 * (card_w + IMPORT_GAP),
-                y,
+                col_x + column as f32 * (card_w + IMPORT_GAP),
+                y + row as f32 * (IMPORT_H + IMPORT_GAP),
                 card_w,
                 IMPORT_H,
             );
         }
-        y += IMPORT_H;
+        let rows = imports.len().div_ceil(per_row);
+        y += rows as f32 * IMPORT_H + (rows - 1) as f32 * IMPORT_GAP;
     } else {
         for slot in &mut imports {
             *slot = Rect::xywh(col_x, y, col_w, IMPORT_H);

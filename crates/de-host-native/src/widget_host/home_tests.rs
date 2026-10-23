@@ -90,6 +90,11 @@ fn import_cards_route_to_the_existing_file_actions() {
         host.editor_state_mut().editor_ui.pending_file_action.take(),
         Some(FileAction::ImportHtml)
     );
+    press(&mut host, imports[3]);
+    assert_eq!(
+        host.editor_state_mut().editor_ui.pending_file_action.take(),
+        Some(FileAction::ImportPenDev)
+    );
     press(&mut host, imports[2]);
     assert!(host.editor_state().chat.pending_attachment_pick);
     assert!(

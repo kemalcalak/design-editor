@@ -218,6 +218,10 @@ impl WidgetHostNative {
                 Some(ImportMenuChoice::Html) => {
                     self.apply_open_html_import();
                 }
+                Some(ImportMenuChoice::PenDev) => {
+                    self.editor_state.editor_ui.pending_file_action =
+                        Some(de_editor_core::editor_ui_state::FileAction::ImportPenDev);
+                }
                 None => {
                     // Silent outside-close is a blank press — blur inputs too.
                     self.blur_text_inputs_on_blank_press();

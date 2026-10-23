@@ -85,6 +85,7 @@ fn content_tools_are_in_scope_and_offset_tools_are_not() {
         "design_content",
         "import_svg",
         "import_html",
+        "import_pen_dev",
         "import_html_url",
         "import_web_snapshot",
         "upsert_screen",

@@ -234,6 +234,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.downloadedSection" => "Google Fonts에서 다운로드한 글꼴",
         "dialog.penDevImportTitle" => "pen.dev에서 가져옴",
         "dialog.penDevImportBody" => "“{{name}}”의 일부를 가져오지 못했습니다:\n\n{{details}}\n\n나머지는 저장되지 않은 새 문서로 열렸습니다. 원본 파일은 변경되지 않았습니다.",
+        "import.fromPenDev" => "pen.dev에서 가져오기",
+        "home.import.penDev" => "pen.dev에서 가져오기",
+        "home.import.penDevSub" => ".pen 파일",
+        "dialog.penDevImportToast" => "pen.dev에서 열었습니다. 가져오지 못한 항목: {{details}}",
         _ => return None,
     })
 }

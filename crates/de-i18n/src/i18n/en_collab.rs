@@ -232,6 +232,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.downloadedSection" => "Downloaded from Google Fonts",
         "dialog.penDevImportTitle" => "Imported from pen.dev",
         "dialog.penDevImportBody" => "Some parts of “{{name}}” could not be brought over:\n\n{{details}}\n\nThe rest opened as a new, unsaved document. The original file is not changed.",
+        "import.fromPenDev" => "Import from pen.dev",
+        "home.import.penDev" => "Import from pen.dev",
+        "home.import.penDevSub" => ".pen file",
+        "dialog.penDevImportToast" => "Opened from pen.dev. Not carried over: {{details}}",
         _ => return None,
     })
 }

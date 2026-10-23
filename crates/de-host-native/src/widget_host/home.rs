@@ -98,6 +98,7 @@ impl WidgetHostNative {
             }
             HomeHit::ImportFigma => ui.pending_file_action = Some(FileAction::ImportFigma),
             HomeHit::ImportWeb => ui.pending_file_action = Some(FileAction::ImportHtml),
+            HomeHit::ImportPenDev => ui.pending_file_action = Some(FileAction::ImportPenDev),
             HomeHit::Recent(index) => {
                 if index < ui.recent_files.len() {
                     ui.pending_file_action = Some(FileAction::OpenRecent(index));

@@ -19,7 +19,7 @@ fn tools_list_response_includes_all_registered_tools() {
     // TOOL_SCHEMAS without being added to the list below.
     assert_eq!(
         TOOL_SCHEMAS.len(),
-        137,
+        138,
         "tools/list catalog count must match the registered tools — add the new tool to this test"
     );
     // Production catalog excludes debug tools (we removed the
@@ -171,6 +171,7 @@ fn tools_list_response_includes_all_registered_tools() {
         "insert_node",
         "import_svg",
         "import_html",
+        "import_pen_dev",
         "import_html_url",
         "import_web_snapshot",
         "update_node",
@@ -292,6 +293,10 @@ fn tools_list_schemas_advertise_ts_file_path_args() {
         (
             "import_html",
             vec!["filePath", "htmlPath", "parent", "pageId"],
+        ),
+        (
+            "import_pen_dev",
+            vec!["filePath", "penPath", "parent", "pageId"],
         ),
         (
             "import_html_url",
