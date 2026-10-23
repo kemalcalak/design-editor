@@ -141,8 +141,11 @@ impl WidgetHost {
                 Some(de_editor_core::ButtonPressTarget::Chrome(hit.button()));
             // Arms whose behaviour is identical on both hosts live in the
             // shared flow; only Preview falls through.
-            match press_flow::apply_shared_chrome_hit(&mut self.editor_state, hit) {
+            match press_flow::apply_shared_chrome_hit(&mut self.editor_state, hit, self.now_ms) {
                 ChromePress::Handled => {}
+                // The web host routes keys through the focused DOM input,
+                // so there is no keyboard owner to release (cf. native).
+                ChromePress::SettingsOpened => {}
                 ChromePress::FileMenuToggled => {
                     self.clear_layer_panel_hover();
                 }

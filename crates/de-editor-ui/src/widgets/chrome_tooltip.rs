@@ -76,8 +76,8 @@ pub fn tooltip_for(ui: &EditorUiState, button: ChromeButton) -> ChromeTooltip {
             DESKTOP_SHORTCUTS.then_some("⌘P"),
         ),
         ChromeButton::OpenExportMenu => (translate(ui, "export.title"), None),
-        // The button reads "Export" already.
-        ChromeButton::OpenExportDialog => ("", None),
+        // These buttons say what they are in their own text.
+        ChromeButton::OpenExportDialog | ChromeButton::OpenAgentSettings => ("", None),
     };
     ChromeTooltip { label, shortcut }
 }
@@ -88,7 +88,7 @@ pub fn suppressed(ui: &EditorUiState, button: ChromeButton) -> bool {
     match button {
         ChromeButton::ToggleFileMenu => ui.file_menu_open,
         ChromeButton::OpenExportMenu => ui.export_quick_menu_open,
-        ChromeButton::OpenExportDialog => true,
+        ChromeButton::OpenExportDialog | ChromeButton::OpenAgentSettings => true,
         ChromeButton::Home
         | ChromeButton::Save
         | ChromeButton::ToggleCodeView
@@ -202,7 +202,7 @@ pub fn paint_rail_tab_tooltip(
 }
 
 /// Every button the chrome can hover, for exhaustive coverage checks.
-pub const ALL_CHROME_BUTTONS: [ChromeButton; 7] = [
+pub const ALL_CHROME_BUTTONS: [ChromeButton; 8] = [
     ChromeButton::Home,
     ChromeButton::ToggleFileMenu,
     ChromeButton::Save,
@@ -210,4 +210,5 @@ pub const ALL_CHROME_BUTTONS: [ChromeButton; 7] = [
     ChromeButton::TogglePreview,
     ChromeButton::OpenExportMenu,
     ChromeButton::OpenExportDialog,
+    ChromeButton::OpenAgentSettings,
 ];

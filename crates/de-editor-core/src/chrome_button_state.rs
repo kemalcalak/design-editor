@@ -25,4 +25,6 @@ pub enum ChromeButton {
     OpenExportMenu,
     /// Export — opens the export dialog.
     OpenExportDialog,
+    /// The agent / MCP status chip — opens the Agents & MCP settings.
+    OpenAgentSettings,
 }

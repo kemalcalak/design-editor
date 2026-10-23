@@ -372,10 +372,17 @@ pub enum ChromePress {
     FileMenuToggled,
     /// Platform-specific hit (preview) — the host handles it itself.
     Platform,
+    /// The Settings modal opened — the host releases whatever owns the
+    /// keyboard underneath it (same as File ▸ Settings), then marks dirty.
+    SettingsOpened,
 }
 
 /// Apply the chrome hits whose behaviour is identical on both hosts.
-pub fn apply_shared_chrome_hit(state: &mut EditorState, hit: ChromeHit) -> ChromePress {
+pub fn apply_shared_chrome_hit(
+    state: &mut EditorState,
+    hit: ChromeHit,
+    now_ms: u64,
+) -> ChromePress {
     use de_editor_core::editor_ui_state::FileAction;
     let ui = &mut state.editor_ui;
     match hit {
@@ -409,6 +416,12 @@ pub fn apply_shared_chrome_hit(state: &mut EditorState, hit: ChromeHit) -> Chrom
             ChromePress::Handled
         }
         ChromeHit::TogglePreview => ChromePress::Platform,
+        // Same path as File ▸ Settings.
+        ChromeHit::OpenAgentSettings => {
+            ui.agent_settings_open = true;
+            state.chat.blur_input(now_ms);
+            ChromePress::SettingsOpened
+        }
     }
 }
 

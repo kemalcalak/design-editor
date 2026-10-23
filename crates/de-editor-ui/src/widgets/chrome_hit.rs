@@ -22,6 +22,8 @@ pub enum ChromeHit {
     OpenExportMenu,
     /// Export — open the export dialog.
     OpenExportDialog,
+    /// Agent / MCP status chip — open the Agents & MCP settings.
+    OpenAgentSettings,
 }
 
 impl ChromeHit {
@@ -36,6 +38,7 @@ impl ChromeHit {
             Self::TogglePreview => B::TogglePreview,
             Self::OpenExportMenu => B::OpenExportMenu,
             Self::OpenExportDialog => B::OpenExportDialog,
+            Self::OpenAgentSettings => B::OpenAgentSettings,
         }
     }
 }

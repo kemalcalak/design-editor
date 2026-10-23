@@ -212,7 +212,7 @@ fn floating_chrome_holds_its_labels_in_the_painted_family() {
             pill.paint_layout(cx, &pill_layout)
         });
         let actions = CanvasActions::for_editor_ui(&ui);
-        let actions_layout = actions.layout_right(1400.0, 14.0);
+        let actions_layout = actions.layout_right(1400.0, 14.0, false);
         assert_no_new_overflow(
             &format!("canvas actions {locale:?}"),
             actions_layout.rect,

@@ -343,8 +343,6 @@ pub fn chrome_layout(state: &EditorState, viewport_w: f32, viewport_h: f32) -> C
     let (cx0, cy0, cw, _ch) = canvas_region(state, viewport_w, viewport_h);
     let top = cy0 + CHROME_INSET_TOP;
     let actions_widget = CanvasActions::for_editor_ui(ui);
-    let actions = (cw >= actions_widget.width() + CHROME_INSET_X * 2.0)
-        .then(|| actions_widget.layout_right(cx0 + cw - CHROME_INSET_X, top));
     // With the left rail shut, the window controls sit over the canvas's
     // top-left corner, so the pill starts right of them.
     let controls = if ui.sidebar_open {
@@ -355,9 +353,21 @@ pub fn chrome_layout(state: &EditorState, viewport_w: f32, viewport_h: f32) -> C
     let left = cx0 + CHROME_INSET_X.max(controls + CHROME_MIN_GAP);
     let pill = FilePill::for_editor_ui(ui).layout_at(Point2D::new(left, top));
     let pill_right = pill.rect.origin.x + pill.rect.size.x;
-    let limit = actions.map_or(cx0 + cw, |a| a.rect.origin.x - CHROME_MIN_GAP);
+    let place = |compact: bool| {
+        (cw >= actions_widget.width(compact) + CHROME_INSET_X * 2.0)
+            .then(|| actions_widget.layout_right(cx0 + cw - CHROME_INSET_X, top, compact))
+    };
+    let fits = |actions: &Option<crate::widgets::canvas_actions::CanvasActionsLayout>| {
+        pill_right <= actions.map_or(cx0 + cw, |a| a.rect.origin.x - CHROME_MIN_GAP)
+    };
+    // The agent / MCP chip gives up its text before the file pill gives
+    // up its place.
+    let mut actions = place(false);
+    if !fits(&actions) {
+        actions = place(true);
+    }
     ChromeLayout {
-        file_pill: (pill_right <= limit).then_some(pill),
+        file_pill: fits(&actions).then_some(pill),
         actions,
     }
 }
