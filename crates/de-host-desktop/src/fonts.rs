@@ -1,7 +1,8 @@
-//! Native persistence for user-imported fonts.
+//! Native persistence for user-imported and downloaded fonts.
 //!
-//! User-imported `.ttf` / `.otf` faces live under `<config>/fonts/` next to a
-//! small `index.json`. On startup [`FontStore::rescan_and_register`]
+//! User-imported `.ttf` / `.otf` faces, and faces downloaded from Google
+//! Fonts on request, live under `<config>/fonts/` next to a small
+//! `index.json` that records where each face came from ([`FontOrigin`]). On startup [`FontStore::rescan_and_register`]
 //! re-registers every stored face with `jian-skia` so an imported family
 //! survives a restart; [`FontStore::import`] validates + copies a new file in
 //! and registers it; [`FontStore::remove`] drops a whole family from both disk
@@ -24,6 +25,18 @@ pub(crate) const MAX_FONT_BYTES: usize = 16 * 1024 * 1024;
 const FONTS_SUBDIR: &str = "fonts";
 const INDEX_FILE: &str = "fonts/index.json";
 
+/// Where a stored face came from. Entries written before downloads existed
+/// carry no field and read as [`FontOrigin::Imported`].
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum FontOrigin {
+    /// Picked from disk by the user.
+    #[default]
+    Imported,
+    /// Downloaded from Google Fonts (OFL / Apache licensed).
+    Google,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct FontIndexEntry {
     family: String,
@@ -32,6 +45,8 @@ struct FontIndexEntry {
     hash: u64,
     /// File name within the fonts dir (e.g. `"a1b2c3d4e5f60718.ttf"`).
     file: String,
+    #[serde(default)]
+    source: FontOrigin,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -119,6 +134,15 @@ impl FontStore {
     /// this session but gone on restart — if a disk write then failed while
     /// the caller reported the import as failed.
     pub fn import(&self, bytes: Vec<u8>) -> Result<jian_skia::FontBlob, FontStoreError> {
+        self.import_from(bytes, FontOrigin::Imported)
+    }
+
+    /// [`Self::import`], recording `origin` in the index.
+    pub(crate) fn import_from(
+        &self,
+        bytes: Vec<u8>,
+        origin: FontOrigin,
+    ) -> Result<jian_skia::FontBlob, FontStoreError> {
         if bytes.len() > MAX_FONT_BYTES {
             return Err(FontStoreError::TooLarge { bytes: bytes.len() });
         }
@@ -155,6 +179,7 @@ impl FontStore {
             weight: meta.weight,
             hash: meta.hash,
             file,
+            source: origin,
         });
         self.save_index(&index)
             .map_err(|e| FontStoreError::WriteIndex(e.to_string()))?;
@@ -170,6 +195,21 @@ impl FontStore {
         // succeeded, but propagate any error rather than unwrap.
         jian_skia::register_imported_font(bytes)
             .map_err(|e| FontStoreError::Register(e.to_string()))
+    }
+
+    /// Families with at least one stored face from `origin`, sorted and
+    /// deduplicated case-insensitively.
+    pub(crate) fn families_from(&self, origin: FontOrigin) -> Vec<String> {
+        let mut families: Vec<String> = self
+            .load_index()
+            .fonts
+            .into_iter()
+            .filter(|entry| entry.source == origin)
+            .map(|entry| entry.family)
+            .collect();
+        families.sort_by_key(|family| family.to_ascii_lowercase());
+        families.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
+        families
     }
 
     /// Remove every imported face of `family` from the live registry and disk.
@@ -381,6 +421,7 @@ mod tests {
                     weight: meta.weight,
                     hash: 1,
                     file: old_file.to_string(),
+                    source: FontOrigin::Imported,
                 }],
             })
             .unwrap();
@@ -407,5 +448,20 @@ mod tests {
         );
 
         jian_skia::remove_imported_font(FAMILY2);
+    }
+
+    #[test]
+    fn legacy_index_entries_read_as_imported() {
+        let root = TempRoot::new();
+        let fonts_dir = root.0.join(FONTS_SUBDIR);
+        std::fs::create_dir_all(&fonts_dir).unwrap();
+        std::fs::write(
+            root.0.join(INDEX_FILE),
+            r#"{"fonts":[{"family":"Old Face","italic":false,"weight":400,"hash":7,"file":"x.ttf"}]}"#,
+        )
+        .unwrap();
+        let store = FontStore::at(&root.0);
+        assert_eq!(store.families_from(FontOrigin::Imported), vec!["Old Face"]);
+        assert!(store.families_from(FontOrigin::Google).is_empty());
     }
 }

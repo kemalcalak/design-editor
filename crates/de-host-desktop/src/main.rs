@@ -41,6 +41,8 @@ mod fonts;
 mod fonts_error;
 mod frame;
 mod git_host;
+mod google_font_download;
+mod google_font_names;
 mod git_jobs;
 mod git_overflow_host;
 mod git_session;
