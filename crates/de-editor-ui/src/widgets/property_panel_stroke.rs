@@ -237,7 +237,10 @@ fn paint_stroke_main_row(
     }
     cx.backend.fill_round_rect(
         Rect {
-            origin: Point2D::new(hex_rect.origin.x + 6.0, hex_rect.origin.y + 7.0),
+            origin: Point2D::new(
+                hex_rect.origin.x + 6.0,
+                hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_SWATCH_INSET,
+            ),
             size: Point2D::new(16.0, 16.0),
         },
         3.0,
@@ -306,7 +309,7 @@ fn paint_stroke_hex_text(
             },
             12.0,
             0.0,
-            hex_rect.origin.y + 19.0,
+            hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
         );
     if painted_hex {
         return;
@@ -325,13 +328,18 @@ fn paint_stroke_hex_text(
             PropertyFocus::StrokeHex,
             hex_text,
             hex_x,
-            hex_rect.origin.y + 19.0,
+            hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
             12.0,
             hex_rect.origin.x + hex_rect.size.x - 8.0,
         );
     }
-    cx.backend
-        .draw_text(&hex_layout, Point2D::new(hex_x, hex_rect.origin.y + 19.0));
+    cx.backend.draw_text(
+        &hex_layout,
+        Point2D::new(
+            hex_x,
+            hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+        ),
+    );
     if stroke_variable_ref.is_none() {
         if let Some(pos) = edit.caret_at(PropertyFocus::StrokeHex) {
             let w = text_metrics::measure_chrome(

@@ -204,7 +204,7 @@ fn codegen_preview_wheel_scrolls_code_not_property_panel() {
 }
 
 #[test]
-fn property_tab_hover_tracks_inactive_design_tab() {
+fn code_view_close_button_tracks_hover() {
     use de_editor_core::PropertyTab;
     let mut host = WidgetHostNative::new();
     seed(
@@ -230,13 +230,10 @@ fn property_tab_hover_tracks_inactive_design_tab() {
         close.origin.x + close.size.x / 2.0,
         close.origin.y + close.size.y / 2.0
     ));
-    assert_eq!(
-        host.editor_state().editor_ui.property_tab_hover,
-        Some(PropertyTab::Design)
-    );
+    assert!(host.editor_state().editor_ui.property_close_hover);
 
     assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + 18.0));
-    assert_eq!(host.editor_state().editor_ui.property_tab_hover, None);
+    assert!(!host.editor_state().editor_ui.property_close_hover);
 }
 
 #[test]

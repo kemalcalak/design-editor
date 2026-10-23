@@ -160,7 +160,7 @@ fn paint_labeled_input(
     cx.backend.save();
     cx.backend.clip_rect(rect);
 
-    let baseline_y = rect.origin.y + 19.0;
+    let baseline_y = rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE;
     let prefix_x = rect.origin.x + 10.0;
     // The prefix label yields to the value: it is fitted to whatever is left
     // of the box after the value, its unit and the gaps between them. The

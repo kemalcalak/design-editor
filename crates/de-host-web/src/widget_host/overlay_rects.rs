@@ -126,14 +126,9 @@ impl WidgetHost {
         overlay_geometry::design_md_panel_rect(&self.editor_state, viewport_w, viewport_h)
     }
 
-    /// Floating Component-Browser panel rect — `None` when closed.
-    /// Same centred-on-open + clamped placement as the Design-MD panel.
-    pub(in crate::widget_host) fn component_browser_panel_rect(
-        &self,
-        viewport_w: f32,
-        viewport_h: f32,
-    ) -> Option<Rect> {
-        overlay_geometry::component_browser_panel_rect(&self.editor_state, viewport_w, viewport_h)
+    /// The Components rail tab's rect — `None` when another tab is on show.
+    pub(in crate::widget_host) fn components_tab_rect(&self, viewport_h: f32) -> Option<Rect> {
+        overlay_geometry::components_tab_rect(&self.editor_state, viewport_h)
     }
 
     /// Asset Center gallery rect — `None` when closed.
@@ -218,9 +213,8 @@ impl WidgetHost {
             || self
                 .prompt_center_panel_rect(viewport_w, viewport_h)
                 .is_some_and(|r| (r).contains(p))
-            || self
-                .component_browser_panel_rect(viewport_w, viewport_h)
-                .is_some_and(|r| (r).contains(p))
+        // The component browser is a rail tab now (#30), not a floating
+        // panel: the rail's own wheel / press tiers own its rect.
     }
 
     /// Panels painted above Chat. Variables is intentionally excluded:
@@ -239,9 +233,6 @@ impl WidgetHost {
                 .is_some_and(|rect| rect.contains(point))
             || self
                 .prompt_center_panel_rect(viewport_w, viewport_h)
-                .is_some_and(|rect| rect.contains(point))
-            || self
-                .component_browser_panel_rect(viewport_w, viewport_h)
                 .is_some_and(|rect| rect.contains(point))
     }
 }

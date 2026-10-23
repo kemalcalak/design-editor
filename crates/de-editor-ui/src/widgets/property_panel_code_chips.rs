@@ -8,6 +8,7 @@
 use de_editor_core::codegen::Framework;
 
 use crate::theme::Theme;
+use crate::widgets::property_panel_code::framework::framework_tab_label;
 use crate::widgets::property_panel_inputs::{paint_section_label, PAD_X, SECTION_HEADER_HEIGHT};
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
@@ -28,19 +29,6 @@ const CHIP_RADIUS: f32 = 6.0;
 const CHIP_FONT: f32 = 12.0;
 const BOTTOM_PAD: f32 = 16.0;
 
-fn label(fw: Framework) -> &'static str {
-    match fw {
-        Framework::React => "React",
-        Framework::Vue => "Vue",
-        Framework::Html => "HTML",
-        Framework::SwiftUi => "SwiftUI",
-        Framework::Svelte => "Svelte",
-        Framework::Flutter => "Flutter",
-        Framework::Compose => "Compose",
-        Framework::ReactNative => "React Native",
-    }
-}
-
 /// Backend-free label width — a little wide of the shaper, so the chip
 /// never clips its label.
 fn label_width(s: &str) -> f32 {
@@ -59,7 +47,7 @@ pub fn chip_rects(x0: f32, y: f32, width: f32) -> Vec<(Framework, Rect)> {
     let mut x = x0 + PAD_X;
     let mut out = Vec::with_capacity(CODE_CHIPS.len());
     for fw in CODE_CHIPS {
-        let w = label_width(label(fw)) + CHIP_PAD_X * 2.0;
+        let w = label_width(framework_tab_label(fw)) + CHIP_PAD_X * 2.0;
         if x + w > right {
             break;
         }
@@ -89,7 +77,7 @@ pub fn paint_code_chips_section(
             cx.backend
                 .stroke_round_rect(rect, CHIP_RADIUS, theme.border, 1.0);
         }
-        let text = label(fw);
+        let text = framework_tab_label(fw);
         let w = text_metrics::measure_chrome_weighted(cx.backend, text, CHIP_FONT, 500);
         cx.backend.draw_text(
             &TextLayout::single_run(

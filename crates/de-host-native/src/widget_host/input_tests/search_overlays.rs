@@ -38,9 +38,7 @@ fn component_browser_header_buttons_queue_kit_io_requests() {
     host.editor_state_mut().editor_ui.home.hide();
     host.editor_state_mut().editor_ui.open_components_tab();
     let (vw, vh) = (1440.0, 900.0);
-    let rect = host
-        .component_browser_panel_rect(vw, vh)
-        .expect("open panel rect");
+    let rect = host.components_tab_rect(vh).expect("open panel rect");
     let right = rect.origin.x + rect.size.x;
     let y = rect.origin.y + 20.0; // header-button row centre (HEADER_H / 2)
                                   // Header buttons right-aligned: Upload (import) centre at
@@ -67,9 +65,7 @@ fn component_browser_header_press_sets_and_release_clears_pressed_button() {
     host.editor_state_mut().editor_ui.home.hide();
     host.editor_state_mut().editor_ui.open_components_tab();
     let (vw, vh) = (1440.0, 900.0);
-    let rect = host
-        .component_browser_panel_rect(vw, vh)
-        .expect("open panel rect");
+    let rect = host.components_tab_rect(vh).expect("open panel rect");
     let x = rect.origin.x + rect.size.x - 26.0;
     let y = rect.origin.y + 20.0;
 
@@ -109,6 +105,52 @@ fn a_hidden_layer_tree_takes_no_clicks_under_the_components_tab() {
         !host.layers_panel_visible(),
         "the tree is not on show, so its rows must not take input"
     );
+}
+
+#[test]
+fn the_wheel_scrolls_the_components_tab_grid() {
+    // The browser left its floating panel for the rail (#30); the old
+    // floating-panel wheel guard must not swallow the rail's scroll.
+    let mut host = WidgetHostNative::new();
+    host.editor_state_mut().editor_ui.home.hide();
+    host.editor_state_mut().editor_ui.open_components_tab();
+    let (vw, vh) = (1440.0, 900.0);
+    let rect = host
+        .components_tab_rect(vh)
+        .expect("components tab on show");
+    let (x, y) = (
+        rect.origin.x + rect.size.x / 2.0,
+        rect.origin.y + rect.size.y - 40.0,
+    );
+    assert!(host.apply_wheel(x, y, -200.0, vw, vh));
+    assert!(
+        host.editor_state()
+            .editor_ui
+            .component_browser_scroll
+            .offset
+            > 0.0
+    );
+}
+
+#[test]
+fn an_open_settings_modal_keeps_rail_tab_presses() {
+    // Agents & MCP is modal: a press on the rail's Images tab behind it
+    // must not insert a placeholder or open a popover.
+    let mut host = WidgetHostNative::new();
+    host.editor_state_mut().editor_ui.home.hide();
+    host.editor_state_mut().editor_ui.sidebar_open = true;
+    host.editor_state_mut().editor_ui.slides_panel.tab = de_editor_core::LeftPanelTab::Images;
+    host.editor_state_mut().editor_ui.agent_settings_open = true;
+    let (vw, vh) = (1440.0, 900.0);
+    let body = de_editor_ui::widgets::host_canvas_geometry::rail_body_rect(host.editor_state(), vh);
+    let generate = de_editor_ui::widgets::images_tab::layout(body, 0, 0.0).generate;
+    host.apply_press(
+        generate.origin.x + generate.size.x / 2.0,
+        generate.origin.y + generate.size.y / 2.0,
+        vw,
+        vh,
+    );
+    assert!(!host.editor_state().editor_ui.image_panel.generate_open);
 }
 
 #[test]

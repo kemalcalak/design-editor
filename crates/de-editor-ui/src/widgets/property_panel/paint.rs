@@ -66,7 +66,7 @@ impl Widget for PropertyPanel {
             } else {
                 node_header(&self.theme, &self.snapshot)
             };
-            let close_hovered = code && self.tab_hover == Some(de_editor_core::PropertyTab::Design);
+            let close_hovered = code && self.close_hovered;
             paint_panel_header(cx, &self.theme, rect, &header, close_hovered);
         }
         let tab_bottom = rect.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;

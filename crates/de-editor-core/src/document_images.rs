@@ -23,8 +23,9 @@ pub struct DocumentImage {
     pub node_id: NodeId,
     /// Layer name, or empty when the node has none.
     pub name: String,
-    /// The node's `src` as authored (data URL, remote URL or path).
-    pub src: String,
+    /// The node's `src` as authored (data URL, remote URL or path), shared
+    /// with the document: an embedded image is megabytes of base64.
+    pub src: std::sync::Arc<str>,
 }
 
 /// Every image node on the active page, depth first.
@@ -40,7 +41,7 @@ fn collect(children: &[PenNode], out: &mut Vec<DocumentImage>) {
             out.push(DocumentImage {
                 node_id: NodeId::new(child.id_str()),
                 name: image.base.name.clone().unwrap_or_default(),
-                src: image.src.to_string(),
+                src: image.src.as_arc(),
             });
         }
         if let Some(grand) = child.children() {

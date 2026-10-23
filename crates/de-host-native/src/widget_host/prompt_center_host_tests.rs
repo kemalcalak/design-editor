@@ -149,7 +149,7 @@ fn prompt_hover_clears_covered_component_browser_hover() {
         ui.component_browser_hover = Some(ComponentBrowserButton::Card(0));
     }
     let component_rect = host
-        .component_browser_panel_rect(VIEWPORT_W, VIEWPORT_H)
+        .components_tab_rect(VIEWPORT_H)
         .expect("component browser rect");
     // Where the gallery overlaps the rail's Components tab.
     let point = Point2D::new(

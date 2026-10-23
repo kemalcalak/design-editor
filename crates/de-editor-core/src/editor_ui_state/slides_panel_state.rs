@@ -1,8 +1,10 @@
 //! Left-rail tab selection + the slides tab's pointer bookkeeping.
 //!
-//! The left rail is a three-tab surface: the Agent conversation
-//! (`Chat`), the ordinary Pages + Layers tree, and a page navigator
-//! that lists one thumbnail per top-level board. Which tab is showing,
+//! The left rail is a tabbed surface (#30): the Agent conversation
+//! (`Chat`), the ordinary Pages + Layers tree, the component browser,
+//! the page's images, and — for a deck — a page navigator that lists
+//! one thumbnail per top-level board. The names say "slides" because the
+//! navigator came first; the tab row serves every tab. Which tab is showing,
 //! which row the cursor is on, and the reorder gesture in flight are
 //! all transient UI state and live here. The Slides tab only exists for documents that have boards to list.
 //!

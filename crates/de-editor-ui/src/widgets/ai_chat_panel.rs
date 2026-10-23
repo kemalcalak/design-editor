@@ -551,7 +551,7 @@ impl<'a> AIChatPlaceholder<'a> {
             .min(crate::widgets::home_surface::HOME_MODEL_PICKER_W);
         // Above the composer. In a short window it slides down rather than
         // leave the screen: pinned into the rail it stops at the rail's top
-        // (just under the top bar); the floating panel and the composer-only
+        // (just under the window strip); the floating panel and the composer-only
         // card are overlays, so their picker may leave them but stops at the
         // window's top.
         let above = card.origin.y - 6.0 - height;

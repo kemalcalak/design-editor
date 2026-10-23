@@ -241,8 +241,6 @@ pub use crate::widgets::property_panel_layout::{
     VisibleSections,
 };
 
-// ── Tab strip ─────────────────────────────────────────────────────
-
 // ── Create-component button ───────────────────────────────────────
 // ── Position section ──────────────────────────────────────────────
 

@@ -131,6 +131,18 @@ impl WidgetHost {
         if self.slides_panel_press(x, y, viewport_width, viewport_height) {
             return Some(true);
         }
+        // 2c. The Components / Images tabs fill the rail body the same way
+        //     (#30), on the rail's tier like native. A consumed component
+        //     press may queue an insert — drain it against this viewport
+        //     (web has no per-frame runner drain like the desktop loop).
+        if self.dispatch_images_tab_press(x, y, viewport_width, viewport_height) {
+            return Some(true);
+        }
+        if self.dispatch_component_browser_press(x, y, viewport_height) {
+            self.close_image_popovers_for_higher_overlay();
+            let _ = self.drain_component_browser_insert(viewport_width, viewport_height);
+            return Some(true);
+        }
         // 3. apply_click — LayerPanel + chat-defocus.
         //    Pre-seed a `layer_drag` candidate when the press lands
         //    on a Layer row so a subsequent move past the threshold

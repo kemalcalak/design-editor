@@ -212,7 +212,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Lingkungan (opsional)",
         "settings.agents.notInstalledHint" => "Belum terpasang?",
         "settings.agents.notTestedYet" => "Belum diuji",
-        "chrome.saved" => "Tersimpan",
         "chrome.edited" => "Diedit",
         "chrome.notSaved" => "Belum disimpan",
         "chrome.variables" => "Variabel",

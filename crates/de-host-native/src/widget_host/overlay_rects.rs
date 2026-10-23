@@ -203,14 +203,9 @@ impl WidgetHostNative {
             .is_some_and(|card| (card).contains(Point2D::new(x, y)))
     }
 
-    /// Floating Component-Browser panel rect — `None` when closed.
-    /// Same centred-on-open + clamped placement as the Design-MD panel.
-    pub(in crate::widget_host) fn component_browser_panel_rect(
-        &self,
-        viewport_w: f32,
-        viewport_h: f32,
-    ) -> Option<Rect> {
-        overlay_geometry::component_browser_panel_rect(&self.editor_state, viewport_w, viewport_h)
+    /// The Components rail tab's rect — `None` when another tab is on show.
+    pub(in crate::widget_host) fn components_tab_rect(&self, viewport_h: f32) -> Option<Rect> {
+        overlay_geometry::components_tab_rect(&self.editor_state, viewport_h)
     }
 
     /// Floating Prompt Center rect — `None` when closed.
@@ -300,9 +295,8 @@ impl WidgetHostNative {
             || self
                 .prompt_center_panel_rect(viewport_w, viewport_h)
                 .is_some_and(|r| (r).contains(p))
-            || self
-                .component_browser_panel_rect(viewport_w, viewport_h)
-                .is_some_and(|r| (r).contains(p))
+        // The component browser is a rail tab now (#30), not a floating
+        // panel: the rail's own wheel / press tiers own its rect.
     }
 
     /// The open File-menu dropdown rect, or `None` when closed. The

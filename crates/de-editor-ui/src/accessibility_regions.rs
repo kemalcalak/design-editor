@@ -21,8 +21,8 @@ use de_editor_core::EditorState;
 use crate::accessibility::{assemble_tree_update, PlacedWidget};
 use crate::layout_scene::LayoutScene;
 use crate::widgets::host_canvas_geometry::{
-    chrome_layout, layer_panel_rect as rail_body_rect, property_panel_rect as rail_rect,
-    toolbar_fits, toolbar_rect as rail_toolbar_rect,
+    chrome_layout, layer_panel_rect as left_rail_body_rect, property_panel_rect as right_rail_rect,
+    toolbar_fits, toolbar_rect as tool_rail_rect,
 };
 use crate::widgets::{
     AIChatPlaceholder, CanvasActions, CanvasViewport, FilePill, LayerPanel, LayoutCx,
@@ -107,7 +107,7 @@ pub fn editor_tree_update(
     let actions = CanvasActions::for_editor_ui(ui);
 
     // 2. LayerPanel — left rail, only when the sidebar is open.
-    let layer_panel_rect = rail_body_rect(state, viewport_height);
+    let layer_panel_rect = left_rail_body_rect(state, viewport_height);
 
     // 3. CanvasViewport — middle band (sidebar / right-rail aware). There
     // is no title bar, so the band starts at the window's top edge.
@@ -119,7 +119,7 @@ pub fn editor_tree_update(
 
     // 4. PropertyPanel — right rail, only with a selection.
     let property_panel = PropertyPanel::for_selection_at(state, now_ms);
-    let property_rect = rail_rect(state, viewport_width, viewport_height);
+    let property_rect = right_rail_rect(state, viewport_width, viewport_height);
 
     // 5. Toolbar — floating vertical column over the canvas.
     let toolbar = Toolbar::for_editor(state);
@@ -131,7 +131,7 @@ pub fn editor_tree_update(
         .rect
         .size
         .y;
-    let toolbar_rect = rail_toolbar_rect(state, viewport_width, viewport_height, toolbar_h);
+    let toolbar_rect = tool_rail_rect(state, viewport_width, viewport_height, toolbar_h);
     let toolbar_visible = toolbar_fits(canvas_width);
 
     // 6. AIChatPlaceholder — floating chat panel.

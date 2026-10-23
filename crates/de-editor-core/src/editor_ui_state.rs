@@ -138,9 +138,9 @@ pub struct EditorUiState {
     /// `theme.button_hover` wash. Stable per frame (same VisibleSections
     /// + fill-picker state feed paint + the host hover update).
     pub property_action_hover: Option<usize>,
-    /// PropertyPanel Design / Code tab currently under the cursor. Drives a
-    /// visible pill on inactive tabs.
-    pub property_tab_hover: Option<PropertyTab>,
+    /// Whether the cursor is on the Code view's close button in the right
+    /// panel header (#30) — drives its hover wash.
+    pub property_close_hover: bool,
     /// Vertical scroll offset of the right-rail PropertyPanel, in px
     /// (≥ 0). A wheel / trackpad pan over the inspector advances it;
     /// paint + hit-test shift the section content up by this amount
@@ -296,7 +296,7 @@ pub struct EditorUiState {
     pub parallel_agents_picker_hover: Option<u32>,
 
     /// Primary-pointer pressed button target. Button feedback is exclusive
-    /// across chrome families, so one field covers toolbar / topbar /
+    /// across chrome families, so one field covers toolbar / chrome /
     /// statusbar / chat buttons without duplicating every hover field.
     pub pressed_button: Option<crate::button_press_state::ButtonPressTarget>,
 

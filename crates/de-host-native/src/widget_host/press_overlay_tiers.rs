@@ -83,18 +83,6 @@ impl WidgetHostNative {
             self.close_image_popovers_for_higher_overlay();
             return Some(true);
         }
-        // Floating Component-Browser panel — painted just under the
-        // Design-MD panel; hit-tests right after it.
-        // The rail's Images tab — same tier as the Components tab: both
-        // fill the rail body, and only one is ever on show. No popover
-        // close here: its buttons are what open the image popovers.
-        if self.dispatch_images_tab_press(x, y, viewport_width, viewport_height) {
-            return Some(true);
-        }
-        if self.dispatch_component_browser_press(x, y, viewport_width, viewport_height) {
-            self.close_image_popovers_for_higher_overlay();
-            return Some(true);
-        }
         if self.editor_state.editor_ui.agent_settings_open
             && self.dispatch_agent_settings_press(x, y, viewport_width, viewport_height)
         {

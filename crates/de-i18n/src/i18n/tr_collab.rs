@@ -212,7 +212,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Ortam (isteğe bağlı)",
         "settings.agents.notInstalledHint" => "Kurulu değil mi?",
         "settings.agents.notTestedYet" => "Henüz test edilmedi",
-        "chrome.saved" => "Kaydedildi",
         "chrome.edited" => "Düzenlendi",
         "chrome.notSaved" => "Kaydedilmedi",
         "chrome.variables" => "Değişkenler",

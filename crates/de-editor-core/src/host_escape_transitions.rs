@@ -355,7 +355,7 @@ impl EditorUiState {
         self.editor_toast = None;
         self.pressed_button = None;
         self.property_action_hover = None;
-        self.property_tab_hover = None;
+        self.property_close_hover = false;
         self.toolbar_hover = None;
         self.align_toolbar_hover = None;
         self.window_control_hover = false;

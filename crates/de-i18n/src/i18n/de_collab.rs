@@ -212,7 +212,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Umgebung (optional)",
         "settings.agents.notInstalledHint" => "Nicht installiert?",
         "settings.agents.notTestedYet" => "Noch nicht getestet",
-        "chrome.saved" => "Gespeichert",
         "chrome.edited" => "Bearbeitet",
         "chrome.notSaved" => "Nicht gespeichert",
         "chrome.variables" => "Variablen",

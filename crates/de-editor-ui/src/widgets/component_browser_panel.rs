@@ -145,6 +145,10 @@ pub struct ComponentBrowserPanel<'a> {
     pub(in crate::widgets) pressed: Option<ComponentBrowserButton>,
     /// Frame clock for the search field's caret blink.
     pub(in crate::widgets) now_ms: u64,
+    /// [`Self::visible_categories`], scanned once per build: the pill
+    /// layout feeds every rect below it (search, grid, cards), so one
+    /// paint or hit-test asks for it several times.
+    categories: std::cell::OnceCell<Vec<(Option<ComponentCategory>, &'static str)>>,
 }
 
 impl<'a> ComponentBrowserPanel<'a> {
@@ -171,6 +175,7 @@ impl<'a> ComponentBrowserPanel<'a> {
                 _ => None,
             },
             now_ms,
+            categories: std::cell::OnceCell::new(),
         })
     }
 
@@ -242,7 +247,11 @@ impl<'a> ComponentBrowserPanel<'a> {
     /// Categories actually present across the in-scope kits — pills
     /// for empty categories are hidden. "All" is always shown. The
     /// active kit filter narrows the scope when set.
-    fn visible_categories(&self) -> Vec<(Option<ComponentCategory>, &'static str)> {
+    fn visible_categories(&self) -> &[(Option<ComponentCategory>, &'static str)] {
+        self.categories.get_or_init(|| self.scan_categories())
+    }
+
+    fn scan_categories(&self) -> Vec<(Option<ComponentCategory>, &'static str)> {
         let kit_filter = self.state.editor_ui.component_browser_kit_id.as_deref();
         let mut have = std::collections::HashSet::new();
         for kit in self.kits() {
@@ -353,7 +362,7 @@ impl<'a> ComponentBrowserPanel<'a> {
         let mut x = left;
         let mut y =
             panel.origin.y + HEADER_H + self.kit_strip_height() + (PILL_ROW_H - PILL_H) / 2.0;
-        for (cat, label_key) in pills {
+        for &(cat, label_key) in pills {
             let label = self.t(label_key);
             let w = label.chars().count() as f32 * CHAR_W + PILL_PAD_X * 2.0;
             if x > left && x + w > right {

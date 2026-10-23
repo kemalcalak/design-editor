@@ -212,7 +212,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Biến môi trường (tùy chọn)",
         "settings.agents.notInstalledHint" => "Chưa cài đặt?",
         "settings.agents.notTestedYet" => "Chưa kiểm thử",
-        "chrome.saved" => "Đã lưu",
         "chrome.edited" => "Đã chỉnh sửa",
         "chrome.notSaved" => "Chưa lưu",
         "chrome.variables" => "Biến",

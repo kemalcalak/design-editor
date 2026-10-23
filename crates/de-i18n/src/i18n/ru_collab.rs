@@ -212,7 +212,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Переменные окружения (необязательно)",
         "settings.agents.notInstalledHint" => "Не установлен?",
         "settings.agents.notTestedYet" => "Ещё не проверялся",
-        "chrome.saved" => "Сохранено",
         "chrome.edited" => "Изменено",
         "chrome.notSaved" => "Не сохранено",
         "chrome.variables" => "Переменные",

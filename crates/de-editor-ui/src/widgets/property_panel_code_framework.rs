@@ -34,7 +34,7 @@ fn strip_metrics() -> FrameworkStripMetrics {
     }
 }
 
-fn framework_tab_label(fw: Framework) -> &'static str {
+pub(crate) fn framework_tab_label(fw: Framework) -> &'static str {
     match fw {
         Framework::React => "React",
         Framework::Vue => "Vue",

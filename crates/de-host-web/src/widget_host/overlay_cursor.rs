@@ -237,53 +237,6 @@ impl WidgetHost {
             }
             *upper_hover_changed |= changed;
         }
-        // Components tab hover (kit actions / category pills / cards).
-        {
-            use de_editor_ui::widgets::component_browser_panel::ComponentBrowserPanel;
-            if let Some(panel_rect) =
-                self.component_browser_panel_rect(self.last_viewport_w, self.last_viewport_h)
-            {
-                let point = Point2D::new(x, y);
-                let new_hover = ComponentBrowserPanel::for_editor(&self.editor_state)
-                    .and_then(|p| p.hover_at(panel_rect, point));
-                let changed = new_hover != self.editor_state.editor_ui.component_browser_hover;
-                if changed {
-                    self.editor_state.editor_ui.component_browser_hover = new_hover;
-                    self.mark_dirty();
-                }
-                if panel_rect.contains(point) {
-                    self.clear_hover_below_topmost_panel();
-                    return true;
-                }
-                if changed && !chat_or_picker_owns_point {
-                    return true;
-                }
-                *upper_hover_changed |= changed;
-            }
-        }
-        // Images tab hover (Search / Generate / thumbnails).
-        {
-            let body = de_editor_ui::widgets::host_canvas_geometry::rail_body_rect(
-                &self.editor_state,
-                self.last_viewport_h,
-            );
-            let (owns_point, changed) = de_editor_ui::widgets::images_tab::update_hover(
-                &mut self.editor_state,
-                body,
-                Point2D::new(x, y),
-            );
-            if changed {
-                self.mark_dirty();
-            }
-            if owns_point {
-                self.clear_hover_below_topmost_panel();
-                return true;
-            }
-            if changed && !chat_or_picker_owns_point {
-                return true;
-            }
-            *upper_hover_changed |= changed;
-        }
         if let Some(d) = self.icon_picker_drag {
             self.editor_state.editor_ui.icon_picker_panel_pos =
                 Some((x - d.grab_dx, y - d.grab_dy));
@@ -364,6 +317,49 @@ impl WidgetHost {
                 return true;
             }
         }
+        // The Components / Images rail tabs (#30) — below every floating
+        // panel and dropdown, in the same order as the press ladder.
+        // Components tab hover (kit actions / category pills / cards).
+        {
+            use de_editor_ui::widgets::component_browser_panel::ComponentBrowserPanel;
+            if let Some(panel_rect) = self.components_tab_rect(self.last_viewport_h) {
+                let point = Point2D::new(x, y);
+                let new_hover = ComponentBrowserPanel::for_editor(&self.editor_state)
+                    .and_then(|p| p.hover_at(panel_rect, point));
+                let changed = new_hover != self.editor_state.editor_ui.component_browser_hover;
+                if changed {
+                    self.editor_state.editor_ui.component_browser_hover = new_hover;
+                    self.mark_dirty();
+                }
+                if panel_rect.contains(point) {
+                    self.clear_hover_below_topmost_panel();
+                    return true;
+                }
+                if changed && !chat_or_picker_owns_point {
+                    return true;
+                }
+                *upper_hover_changed |= changed;
+            }
+        }
+        // Images tab hover (Search / Generate / thumbnails).
+        {
+            let (owns_point, changed) = de_editor_ui::widgets::images_tab::update_hover(
+                &mut self.editor_state,
+                self.last_viewport_h,
+                Point2D::new(x, y),
+            );
+            if changed {
+                self.mark_dirty();
+            }
+            if owns_point {
+                self.clear_hover_below_topmost_panel();
+                return true;
+            }
+            if changed && !chat_or_picker_owns_point {
+                return true;
+            }
+            *upper_hover_changed |= changed;
+        }
         false
     }
 
@@ -396,7 +392,7 @@ impl WidgetHost {
             changed |= ui.parallel_agents_picker_hover.take().is_some();
             changed |= ui.export_picker_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             if let Some(menu) = ui.layer_context_menu.as_mut() {
                 changed |= menu.menu.hover.take().is_some();
             }

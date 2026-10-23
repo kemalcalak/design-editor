@@ -284,7 +284,10 @@ pub fn paint_text_section(
     );
     cx.backend.draw_text(
         &family,
-        Point2D::new(family_rect.origin.x + 10.0, family_rect.origin.y + 19.0),
+        Point2D::new(
+            family_rect.origin.x + 10.0,
+            family_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+        ),
     );
     draw_icon(
         cx.backend,
@@ -321,7 +324,10 @@ pub fn paint_text_section(
     );
     cx.backend.draw_text(
         &weight_text,
-        Point2D::new(weight_rect.origin.x + 10.0, weight_rect.origin.y + 19.0),
+        Point2D::new(
+            weight_rect.origin.x + 10.0,
+            weight_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+        ),
     );
     draw_icon(
         cx.backend,

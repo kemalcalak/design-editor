@@ -513,7 +513,7 @@ fn paint_one_fill(
         },
         12.0,
         0.0,
-        pct_rect.origin.y + 19.0,
+        pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
     ) {
         edit.paint_selection_at(
             cx,
@@ -521,12 +521,17 @@ fn paint_one_fill(
             opacity_focus,
             pct_text,
             pct_x,
-            pct_rect.origin.y + 19.0,
+            pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
             12.0,
             pct_rect.origin.x + pct_rect.size.x - 8.0,
         );
-        cx.backend
-            .draw_text(&pct, Point2D::new(pct_x, pct_rect.origin.y + 19.0));
+        cx.backend.draw_text(
+            &pct,
+            Point2D::new(
+                pct_x,
+                pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+            ),
+        );
         if let Some(pos) = edit.caret_at(opacity_focus) {
             let w = text_metrics::measure_chrome(
                 cx.backend,
@@ -553,7 +558,7 @@ fn paint_one_fill(
         &pct_unit,
         Point2D::new(
             pct_rect.origin.x + pct_rect.size.x - 14.0,
-            pct_rect.origin.y + 19.0,
+            pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
         ),
     );
     let move_icon_size = 12.0;

@@ -48,7 +48,7 @@ fn seed_chat_and_lower_hover(host: &mut WidgetHostNative) {
     ui.variables_preset_menu_hover =
         Some(de_editor_core::variables_panel_state::PresetMenuButton::SaveCurrent);
     ui.property_action_hover = Some(2);
-    ui.property_tab_hover = Some(de_editor_core::PropertyTab::Design);
+    ui.property_close_hover = true;
     ui.fill_type_picker.hover = Some(0);
     ui.chrome_button_hover = Some(de_editor_core::ChromeButton::Home);
     ui.window_control_hover = true;
@@ -74,7 +74,7 @@ fn assert_chat_and_lower_hover_cleared(host: &WidgetHostNative) {
     assert_eq!(ui.variables_panel_hover, None);
     assert_eq!(ui.variables_preset_menu_hover, None);
     assert_eq!(ui.property_action_hover, None);
-    assert_eq!(ui.property_tab_hover, None);
+    assert!(!ui.property_close_hover);
     assert_eq!(ui.fill_type_picker.hover, None);
     assert_eq!(ui.chrome_button_hover, None);
     assert!(!ui.window_control_hover);

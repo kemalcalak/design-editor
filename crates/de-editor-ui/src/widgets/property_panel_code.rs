@@ -25,7 +25,7 @@ mod complete;
 #[path = "property_panel_code_error.rs"]
 mod error;
 #[path = "property_panel_code_framework.rs"]
-mod framework;
+pub(crate) mod framework;
 #[path = "property_panel_code_generating.rs"]
 mod generating;
 

@@ -391,7 +391,7 @@ impl PropertyPanel {
             stroke_mode_popover_hover: ui.stroke_mode_popover_hover,
             is_multi,
             tab: property_tab,
-            tab_hover: ui.property_tab_hover,
+            close_hovered: ui.property_close_hover,
             export_format: ui.export_format,
             export_scale: ui.export_scale,
             export_scale_picker_open: ui.export_scale_picker_open,

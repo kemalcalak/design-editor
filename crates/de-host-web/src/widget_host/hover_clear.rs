@@ -88,7 +88,7 @@ impl WidgetHost {
             changed |= ui.variables_panel_hover.take().is_some();
             changed |= ui.variables_preset_menu_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             changed |= ui.fill_type_picker.hover.take().is_some();
         }
         changed |= self.editor_state.codegen.framework_hover.take().is_some();
@@ -120,7 +120,7 @@ impl WidgetHost {
             changed |= ui.variables_panel_hover.take().is_some();
             changed |= ui.variables_preset_menu_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
         }
         changed |= self.editor_state.codegen.framework_hover.take().is_some();
         changed |= self.editor_state.codegen.action_hover.take().is_some();
@@ -160,7 +160,7 @@ impl WidgetHost {
             changed |= ui.variables_panel_hover.take().is_some();
             changed |= ui.variables_preset_menu_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             if let Some(menu) = ui.layer_context_menu.as_mut() {
                 changed |= menu.menu.hover.take().is_some();
             }

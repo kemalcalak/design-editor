@@ -105,7 +105,7 @@ pub fn path_anchor_menu_contains(state: &EditorState, point: Point2D) -> bool {
 
 // ─── Right rail ────────────────────────────────────────────────────────
 
-/// PropertyPanel base hover wash (tab strip, fill-type and compositing
+/// PropertyPanel base hover wash (header close button, fill-type and compositing
 /// rows, action buttons). `panel` is `None` when the rail is not
 /// eligible for this move, which clears every retained hover instead.
 pub fn property_base_hover(
@@ -116,9 +116,9 @@ pub fn property_base_hover(
 ) -> bool {
     let mut changed = false;
     if let Some(panel) = panel {
-        let new_tab_hover = panel.tab_hover_at(property_rect, point);
-        if new_tab_hover != state.editor_ui.property_tab_hover {
-            state.editor_ui.property_tab_hover = new_tab_hover;
+        let new_close_hover = panel.close_hover_at(property_rect, point);
+        if new_close_hover != state.editor_ui.property_close_hover {
+            state.editor_ui.property_close_hover = new_close_hover;
             changed = true;
         }
         let new_fill_type_hover = panel.fill_type_picker_row_at(property_rect, point);
@@ -138,7 +138,7 @@ pub fn property_base_hover(
         }
     } else {
         let ui = &mut state.editor_ui;
-        changed |= ui.property_tab_hover.take().is_some();
+        changed |= std::mem::take(&mut ui.property_close_hover);
         changed |= ui.fill_type_picker.hover.take().is_some();
         changed |= ui.compositing_picker.hover.take().is_some();
         changed |= ui.property_action_hover.take().is_some();

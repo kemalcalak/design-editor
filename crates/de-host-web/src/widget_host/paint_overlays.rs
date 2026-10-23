@@ -162,7 +162,7 @@ impl WidgetHost {
         // absolute-top (native §11.5).
         if let (Some(panel), Some(panel_rect)) = (
             ComponentBrowserPanel::for_editor_at(&self.editor_state, self.now_ms),
-            self.component_browser_panel_rect(viewport_width, viewport_height),
+            self.components_tab_rect(viewport_height),
         ) {
             let mut cx = PaintCx {
                 backend: &mut *backend,

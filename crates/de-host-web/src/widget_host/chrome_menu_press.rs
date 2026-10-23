@@ -39,6 +39,9 @@ impl WidgetHost {
                     self.now_ms,
                 ) {
                     match step {
+                        // Native also releases its property keyboard owner on
+                        // SettingsOpened; the web host routes keys through
+                        // the focused DOM input instead, so there is none.
                         FileMenuStep::Handled | FileMenuStep::SettingsOpened => {}
                         FileMenuStep::Toolbar(action) => {
                             self.dispatch_toolbar_action(action);

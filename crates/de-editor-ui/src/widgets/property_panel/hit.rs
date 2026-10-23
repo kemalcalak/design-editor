@@ -429,13 +429,34 @@ impl PropertyPanel {
         .position(|(_, r)| (*r).contains(point))
     }
 
-    /// The header control under the cursor (the Code view's close button,
-    /// reported as the tab it switches to).
-    pub fn tab_hover_at(
+    /// The button a press on `action` lights up while held. The Code
+    /// view's own buttons track presses on the codegen state; everything
+    /// else in the panel, Design-view Code chips included, is a panel
+    /// action addressed by its index.
+    pub fn pressed_target(
         &self,
+        action: &PropertyPanelAction,
         panel_rect: Rect,
         point: Point2D,
-    ) -> Option<de_editor_core::PropertyTab> {
-        crate::widgets::property_panel_header::header_hit(self.tab, panel_rect, point)
+    ) -> Option<de_editor_core::ButtonPressTarget> {
+        match action {
+            PropertyPanelAction::Codegen(codegen_action)
+                if !matches!(
+                    codegen_action,
+                    crate::widgets::property_panel_action::CodegenAction::OpenInCodeView(_)
+                ) =>
+            {
+                crate::widgets::property_panel_code::codegen_hover_for_action(*codegen_action)
+                    .map(de_editor_core::ButtonPressTarget::Codegen)
+            }
+            _ => self
+                .action_hover_index(panel_rect, point)
+                .map(de_editor_core::ButtonPressTarget::PropertyPanel),
+        }
+    }
+
+    /// Whether `point` is on the Code view's header close button.
+    pub fn close_hover_at(&self, panel_rect: Rect, point: Point2D) -> bool {
+        crate::widgets::property_panel_header::header_hit(self.tab, panel_rect, point).is_some()
     }
 }

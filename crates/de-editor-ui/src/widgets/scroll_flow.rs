@@ -271,11 +271,15 @@ pub fn scroll_component_browser(
 /// the wheel belongs to it.
 pub fn scroll_images_tab(
     state: &mut EditorState,
-    rect: Rect,
+    viewport_h: f32,
     point: Point2D,
     delta_y: f32,
 ) -> Option<bool> {
-    if !crate::widgets::images_tab::images_tab_on_show(state) || !rect.contains(point) {
+    if !crate::widgets::images_tab::images_tab_on_show(state) {
+        return None;
+    }
+    let rect = crate::widgets::host_canvas_geometry::rail_body_rect(state, viewport_h);
+    if !rect.contains(point) {
         return None;
     }
     let max = crate::widgets::images_tab::current_max_scroll(state, rect);

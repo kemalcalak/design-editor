@@ -445,6 +445,8 @@ impl WidgetHost {
     /// Cmd+Shift+K — show the rail's Components tab with its search box
     /// focused. Mirrors the native host's `apply_toggle_component_browser`.
     pub fn apply_toggle_component_browser(&mut self) -> bool {
+        self.commit_variable_row_focus_if_any();
+        self.close_image_popovers_for_higher_overlay();
         self.blur_text_inputs_on_blank_press();
         self.editor_state.editor_ui.open_components_tab();
         self.mark_dirty();

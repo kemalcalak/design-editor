@@ -135,7 +135,7 @@ fn paint_background_input(
         input_view,
         12.0,
         0.0,
-        rect.origin.y + 19.0,
+        rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
     ) {
         edit.paint_selection_at(
             cx,
@@ -143,7 +143,7 @@ fn paint_background_input(
             focus,
             value,
             value_x,
-            rect.origin.y + 19.0,
+            rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
             12.0,
             rect.origin.x + rect.size.x - 8.0,
         );
@@ -154,8 +154,13 @@ fn paint_background_input(
             theme.foreground.to_jian(),
             Point2D::new(0.0, 0.0),
         );
-        cx.backend
-            .draw_text(&text, Point2D::new(value_x, rect.origin.y + 19.0));
+        cx.backend.draw_text(
+            &text,
+            Point2D::new(
+                value_x,
+                rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+            ),
+        );
         if let Some(pos) = edit.caret_at(focus) {
             let prefix = &value[..pos.min(value.len())];
             let caret_x = value_x + text_metrics::measure_chrome(cx.backend, prefix, 12.0);

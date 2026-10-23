@@ -125,6 +125,7 @@ impl NodeSnapshot {
             // Neutral default — the Code tab never consults the
             // kind-driven capability mask.
             kind_variant: NodeKind::Frame,
+            kind_icon: crate::widgets::icons::Icon::Hash,
             is_instance: false,
             is_reusable: false,
         }
@@ -205,6 +206,7 @@ impl NodeSnapshot {
             // of `for_kind`, see `paint`. Frame chosen so any
             // future kind-specific lookups paint a neutral default.
             kind_variant: NodeKind::Frame,
+            kind_icon: crate::widgets::icons::Icon::Hash,
             is_instance: false,
             is_reusable: false,
         })
@@ -311,6 +313,7 @@ impl NodeSnapshot {
                 is_top_level,
             ),
             kind_variant: kind,
+            kind_icon: crate::widgets::layer_panel_walkers::icon_for_node(node),
             is_instance: false,
             is_reusable: matches!(node, PenNode::Frame(f) if f.reusable == Some(true)),
         }

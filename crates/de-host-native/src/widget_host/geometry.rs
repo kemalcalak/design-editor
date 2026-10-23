@@ -134,7 +134,7 @@ impl WidgetHostNative {
             changed |= ui.variables_panel_hover.take().is_some();
             changed |= ui.variables_preset_menu_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             changed |= ui.fill_type_picker.hover.take().is_some();
             changed |= ui.chrome_button_hover.take().is_some();
             changed |= std::mem::take(&mut ui.window_control_hover);
@@ -208,7 +208,7 @@ impl WidgetHostNative {
             // Right-rail panel hovers — cleared so a wash doesn't linger
             // under a floating panel covering the rail.
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             if let Some(menu) = ui.layer_context_menu.as_mut() {
                 changed |= menu.menu.hover.take().is_some();
             }

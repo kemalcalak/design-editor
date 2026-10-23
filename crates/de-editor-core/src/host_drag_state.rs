@@ -35,9 +35,9 @@ pub struct ChatDragState {
     pub pos_y: f32,
 }
 
-/// Header drag on a floating panel (Design-MD / Component-Browser /
-/// Icon-picker). All three carry only the grab offset, so they share one
-/// shape; the native host aliases its three historical names onto it.
+/// Header drag on a floating panel (Design-MD / Icon-picker). Both carry
+/// only the grab offset, so they share one shape; the component browser
+/// that used to be the third is a rail tab now (#30).
 #[derive(Debug, Clone, Copy)]
 pub struct PanelDragState {
     pub grab_dx: f32,

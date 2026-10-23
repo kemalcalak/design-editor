@@ -231,6 +231,23 @@ impl WidgetHostNative {
         {
             return false;
         }
+        // A selection's handles reach a few px outside its node, so a node
+        // sitting just under the band still owns its handle presses.
+        let (cx, cy, cw, ch) = de_editor_ui::widgets::host_canvas_geometry::canvas_region(
+            &self.editor_state,
+            viewport_width,
+            viewport_height,
+        );
+        if de_editor_ui::widgets::selection_handle_at_point(
+            de_editor_ui::Rect::xywh(cx, cy, cw, ch),
+            &self.layout_scene,
+            &self.editor_state,
+            point,
+        )
+        .is_some()
+        {
+            return false;
+        }
         match de_editor_ui::widgets::host_canvas_geometry::canvas_doc_point(
             &self.editor_state,
             x,

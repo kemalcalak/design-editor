@@ -39,11 +39,11 @@ use crate::{Point2D, Rect};
 /// as a layer above the editor rather than as a window that replaced it.
 pub const PROMPT_CENTER_VIEWPORT_W_RATIO: f32 = 0.88;
 
-/// Fraction of the space *below the top bar* the Prompt Center spans.
+/// Fraction of the space *below the window strip* the Prompt Center spans.
 ///
 /// Measured against that band rather than the whole viewport so the panel is
 /// centred in the room it actually has; centring it in the full height would
-/// push its top edge under the top bar on short windows.
+/// push its top edge into the strip on short windows.
 pub const PROMPT_CENTER_VIEWPORT_H_RATIO: f32 = 0.88;
 
 /// Floor for the panel width on a small window.

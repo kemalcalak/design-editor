@@ -13,7 +13,7 @@ use de_editor_core::document_images::{
 use de_editor_core::{EditorState, NodeId};
 
 use crate::widgets::editor_state_ext::{theme_for, translate};
-use crate::widgets::host_canvas_geometry::rail_tab_on_show;
+use crate::widgets::host_canvas_geometry::{rail_body_rect, rail_tab_on_show};
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::property_panel_image_preview::paint_image_source;
 use crate::widgets::text_metrics;
@@ -155,11 +155,27 @@ pub fn apply_hit(state: &mut EditorState, hit: ImagesTabHit, now_ms: u64) -> Opt
     }
 }
 
+/// [`hit_test`] for a host that has not laid the rail out: the body rect
+/// is only resolved once the tab is known to be on show, because that walk
+/// is not free and this runs for every press anywhere in the editor.
+pub fn hit_at(state: &EditorState, viewport_h: f32, point: Point2D) -> Option<ImagesTabHit> {
+    if !images_tab_on_show(state) {
+        return None;
+    }
+    hit_test(state, rail_body_rect(state, viewport_h), point)
+}
+
 /// Track the hovered button / cell. Returns `(owns_point, changed)` in the
 /// shape of `cursor_hover_flow::prompt_center_hover`: the whole tab body is
 /// cursor-owned chrome, so its gutters never leak hover to the canvas.
-pub fn update_hover(state: &mut EditorState, body: Rect, point: Point2D) -> (bool, bool) {
-    let owns_point = images_tab_on_show(state) && body.contains(point);
+/// Runs on every cursor move, so it bails before any layout when the tab
+/// is not on show.
+pub fn update_hover(state: &mut EditorState, viewport_h: f32, point: Point2D) -> (bool, bool) {
+    if !images_tab_on_show(state) {
+        return (false, state.editor_ui.images_tab_hover.take().is_some());
+    }
+    let body = rail_body_rect(state, viewport_h);
+    let owns_point = body.contains(point);
     let next = hit_test(state, body, point).filter(|h| *h != ImagesTabHit::Inside);
     let changed = state.editor_ui.images_tab_hover != next;
     state.editor_ui.images_tab_hover = next;
@@ -228,7 +244,7 @@ pub fn paint(cx: &mut PaintCx<'_>, state: &EditorState, body: Rect) {
         {
             continue;
         }
-        let hovered = hover == Some(&ImagesTabHit::Image(image.node_id.clone()));
+        let hovered = matches!(hover, Some(ImagesTabHit::Image(id)) if *id == image.node_id);
         paint_cell(
             cx,
             &theme,

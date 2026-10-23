@@ -312,8 +312,7 @@ impl WidgetHostNative {
             }
             return true;
         }
-        if let Some(rect) = self.component_browser_panel_rect(self.last_viewport_w, viewport_height)
-        {
+        if let Some(rect) = self.components_tab_rect(viewport_height) {
             if let Some(dirty) = scroll_flow::scroll_component_browser(
                 &mut self.editor_state,
                 rect,
@@ -326,13 +325,9 @@ impl WidgetHostNative {
                 return true;
             }
         }
-        let body = de_editor_ui::widgets::host_canvas_geometry::rail_body_rect(
-            &self.editor_state,
-            viewport_height,
-        );
         if let Some(dirty) = scroll_flow::scroll_images_tab(
             &mut self.editor_state,
-            body,
+            viewport_height,
             Point2D::new(x, y),
             delta_y,
         ) {

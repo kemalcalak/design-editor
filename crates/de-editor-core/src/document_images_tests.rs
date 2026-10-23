@@ -26,7 +26,7 @@ fn lists_image_nodes_depth_first() {
     assert_eq!(ids, ["a", "b"]);
     assert_eq!(images[0].name, "Photo");
     assert_eq!(images[1].name, "");
-    assert_eq!(images[1].src, "https://example.com/b.png");
+    assert_eq!(&*images[1].src, "https://example.com/b.png");
 }
 
 #[test]

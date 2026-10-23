@@ -9,7 +9,6 @@
 
 use de_editor_core::PropertyTab;
 
-use crate::layout_scene::NodeKind;
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::property_panel_inputs::{
@@ -39,15 +38,16 @@ pub enum PanelHeader<'a> {
     },
 }
 
-/// The kind glyph and its tint for a selection: components and instances
-/// keep their purple / violet diamond, everything else takes the accent.
+/// The header for a selection: the layer rail's glyph, tinted purple /
+/// violet for components and instances (their diamond) and accent
+/// otherwise.
 pub fn node_header<'a>(theme: &Theme, snapshot: &'a NodeSnapshot) -> PanelHeader<'a> {
-    let (icon, accent) = if snapshot.is_reusable {
-        (Icon::Diamond, COMPONENT_ACCENT)
+    let accent = if snapshot.is_reusable {
+        COMPONENT_ACCENT
     } else if snapshot.is_instance {
-        (Icon::Diamond, INSTANCE_ACCENT)
+        INSTANCE_ACCENT
     } else {
-        (kind_icon(&snapshot.kind_variant), theme.primary)
+        theme.primary
     };
     let title = if snapshot.name.is_empty() {
         snapshot.kind.as_str()
@@ -55,25 +55,10 @@ pub fn node_header<'a>(theme: &Theme, snapshot: &'a NodeSnapshot) -> PanelHeader
         snapshot.name.as_str()
     };
     PanelHeader::Node {
-        icon,
+        icon: snapshot.kind_icon,
         accent,
         title,
         kind: snapshot.kind.as_str(),
-    }
-}
-
-/// The layer rail's glyph for a scene kind.
-fn kind_icon(kind: &NodeKind) -> Icon {
-    match kind {
-        NodeKind::Frame => Icon::Hash,
-        NodeKind::Group | NodeKind::Rect => Icon::Square,
-        NodeKind::Ellipse => Icon::Circle,
-        NodeKind::Polygon => Icon::Triangle,
-        NodeKind::Line => Icon::Minus,
-        NodeKind::Path => Icon::PenTool,
-        NodeKind::Text => Icon::Type,
-        NodeKind::Other(name) if name.eq_ignore_ascii_case("image") => Icon::Image,
-        NodeKind::Other(_) => Icon::Square,
     }
 }
 

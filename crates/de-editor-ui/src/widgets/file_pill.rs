@@ -96,7 +96,7 @@ impl FilePill {
                 .clone()
                 .unwrap_or_else(|| translate(ui, "common.untitled").to_string()),
             save_state: SaveState::for_editor_ui(ui),
-            label_saved: translate(ui, "chrome.saved"),
+            label_saved: translate(ui, "fileMenu.saved"),
             label_edited: translate(ui, "chrome.edited"),
             label_not_saved: translate(ui, "chrome.notSaved"),
             theme: theme_for(ui),

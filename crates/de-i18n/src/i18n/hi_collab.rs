@@ -212,7 +212,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "एनवायरनमेंट (वैकल्पिक)",
         "settings.agents.notInstalledHint" => "इंस्टॉल नहीं है?",
         "settings.agents.notTestedYet" => "अभी टेस्ट नहीं हुआ",
-        "chrome.saved" => "सहेजा गया",
         "chrome.edited" => "संपादित",
         "chrome.notSaved" => "सहेजा नहीं गया",
         "chrome.variables" => "वेरिएबल",

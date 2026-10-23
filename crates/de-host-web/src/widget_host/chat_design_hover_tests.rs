@@ -169,7 +169,7 @@ fn chat_blank_surface_blocks_lower_hover_and_stable_move_needs_no_repaint() {
         ));
         ui.variables_panel_hover = Some(de_editor_core::VariablesPanelButton::Close);
         ui.property_action_hover = Some(2);
-        ui.property_tab_hover = Some(de_editor_core::PropertyTab::Design);
+        ui.property_close_hover = true;
         ui.fill_type_picker.hover = Some(0);
     }
 
@@ -181,7 +181,7 @@ fn chat_blank_surface_blocks_lower_hover_and_stable_move_needs_no_repaint() {
     assert_eq!(ui.toolbar_hover, None);
     assert_eq!(ui.variables_panel_hover, None);
     assert_eq!(ui.property_action_hover, None);
-    assert_eq!(ui.property_tab_hover, None);
+    assert!(!ui.property_close_hover);
     assert_eq!(ui.fill_type_picker.hover, None);
     assert!(
         !host.apply_cursor_move(point.x, point.y),

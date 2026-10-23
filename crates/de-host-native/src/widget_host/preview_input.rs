@@ -208,7 +208,7 @@ impl WidgetHostNative {
     /// AND not over a floating overlay panel, so chrome hover and
     /// floating-panel hover still work while previewing. (Other
     /// floating chrome — e.g. the chat panel — is already
-    /// non-interactive in preview: `press.rs` swallows all non-topbar
+    /// non-interactive in preview: `press.rs` swallows all non-chrome
     /// presses, so preview owning its hover is consistent.)
     pub fn preview_dispatch_move(&mut self, screen_x: f32, screen_y: f32) -> bool {
         self.preview_dispatch_move_id(LEGACY_PREVIEW_POINTER_ID, screen_x, screen_y)

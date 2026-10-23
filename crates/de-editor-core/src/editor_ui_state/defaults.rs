@@ -47,7 +47,7 @@ impl Default for EditorUiState {
             export_format_picker_open: false,
             export_picker_hover: None,
             property_action_hover: None,
-            property_tab_hover: None,
+            property_close_hover: false,
             property_panel_scroll: Default::default(),
             layer_pages_scroll: Default::default(),
             layer_layers_scroll: Default::default(),

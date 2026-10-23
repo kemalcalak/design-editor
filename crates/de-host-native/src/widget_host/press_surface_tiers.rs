@@ -174,6 +174,17 @@ impl WidgetHostNative {
         if self.slides_panel_press(x, y, viewport_width, viewport_height) {
             return Some(true);
         }
+        // 2c. The Components / Images tabs fill the rail body the same way
+        //     (#30). They sit here, with the rest of the rail, so modals,
+        //     the Git popover and menu dismissal above still come first.
+        //     No popover close for Images: its buttons open the popovers.
+        if self.dispatch_images_tab_press(x, y, viewport_width, viewport_height) {
+            return Some(true);
+        }
+        if self.dispatch_component_browser_press(x, y, viewport_height) {
+            self.close_image_popovers_for_higher_overlay();
+            return Some(true);
+        }
         // 3. apply_click — LayerPanel + chat-defocus. Peek the
         //    LayerPanel hit-test for a drag-to-reorder candidate.
         if self.layers_panel_visible() {

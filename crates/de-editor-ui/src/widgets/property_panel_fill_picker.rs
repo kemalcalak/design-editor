@@ -27,7 +27,7 @@ pub fn fill_type_dropdown_rect(action_rect: Rect) -> Rect {
 }
 
 /// Visible part of the property rail where scrolling section overlays
-/// may paint. The pinned Design / Code tabs are deliberately excluded.
+/// may paint. The pinned header is deliberately excluded.
 pub fn fill_type_picker_viewport(panel_rect: Rect) -> Rect {
     let top = panel_rect.origin.y + PANEL_HEADER_HEIGHT;
     let bottom = panel_rect.origin.y + panel_rect.size.y;

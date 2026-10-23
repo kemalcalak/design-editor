@@ -3,7 +3,7 @@
 //! (`de_editor_ui::widgets::images_tab`), framing a pressed thumbnail is
 //! this host's camera work.
 
-use de_editor_ui::widgets::{host_canvas_geometry, host_overlay_geometry, images_tab};
+use de_editor_ui::widgets::{host_overlay_geometry, images_tab};
 use de_editor_ui::Point2D;
 
 use super::WidgetHost;
@@ -18,8 +18,8 @@ impl WidgetHost {
         viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
-        let body = host_canvas_geometry::rail_body_rect(&self.editor_state, viewport_height);
-        let Some(hit) = images_tab::hit_test(&self.editor_state, body, Point2D::new(x, y)) else {
+        let Some(hit) = images_tab::hit_at(&self.editor_state, viewport_height, Point2D::new(x, y))
+        else {
             return false;
         };
         // Every input lets go first, so a popover the press opens keeps
@@ -45,6 +45,7 @@ impl WidgetHost {
 mod tests {
     use super::*;
     use de_editor_core::LeftPanelTab;
+    use de_editor_ui::widgets::host_canvas_geometry;
     use jian_ops_schema::node::PenNode;
 
     #[test]

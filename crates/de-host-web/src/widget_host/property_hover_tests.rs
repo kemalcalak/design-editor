@@ -28,7 +28,7 @@ fn point_inside_property_panel_without_target(host: &WidgetHost) -> Point2D {
             let point = Point2D::new(x, y);
             let no_action = panel.hit_test_action(rect, point).is_none();
             let no_input = panel.hit_test(rect, point).is_none();
-            let no_tab = panel.tab_hover_at(rect, point).is_none();
+            let no_tab = !panel.close_hover_at(rect, point);
             let no_fill_type = panel.fill_type_picker_row_at(rect, point).is_none();
             if no_action && no_input && no_tab && no_fill_type {
                 return point;
@@ -41,7 +41,7 @@ fn point_inside_property_panel_without_target(host: &WidgetHost) -> Point2D {
 }
 
 #[test]
-fn property_tab_hover_tracks_inactive_design_tab() {
+fn code_view_close_button_tracks_hover() {
     let mut host = WidgetHost::new();
     host.editor_state = EditorState::sample();
     host.mark_dirty();
@@ -62,13 +62,10 @@ fn property_tab_hover_tracks_inactive_design_tab() {
         close.origin.x + close.size.x / 2.0,
         close.origin.y + close.size.y / 2.0
     ));
-    assert_eq!(
-        host.editor_state.editor_ui.property_tab_hover,
-        Some(PropertyTab::Design)
-    );
+    assert!(host.editor_state.editor_ui.property_close_hover);
 
     assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + 18.0));
-    assert_eq!(host.editor_state.editor_ui.property_tab_hover, None);
+    assert!(!host.editor_state.editor_ui.property_close_hover);
 }
 
 #[test]
@@ -350,7 +347,7 @@ fn component_browser_press_sets_and_release_clears_pressed_button() {
     host.last_viewport_h = viewport_h;
     host.editor_state.editor_ui.open_components_tab();
     let panel = host
-        .component_browser_panel_rect(viewport_w, viewport_h)
+        .components_tab_rect(viewport_h)
         .expect("component browser panel visible");
     let point =
         de_editor_ui::Point2D::new(panel.origin.x + panel.size.x - 54.0, panel.origin.y + 20.0);
@@ -375,7 +372,7 @@ fn component_browser_header_buttons_queue_kit_io_requests_like_native() {
     host.last_viewport_h = viewport_h;
     host.editor_state.editor_ui.open_components_tab();
     let rect = host
-        .component_browser_panel_rect(viewport_w, viewport_h)
+        .components_tab_rect(viewport_h)
         .expect("component browser panel visible");
     let right = rect.origin.x + rect.size.x;
     let y = rect.origin.y + 20.0;

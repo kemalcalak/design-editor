@@ -76,21 +76,6 @@ impl WidgetHost {
             self.close_image_popovers_for_higher_overlay();
             return Some(true);
         }
-        // Floating Component-Browser panel — painted just under the
-        // Design-MD panel; hit-tests right after it. A consumed press
-        // may queue an insert — drain it against this viewport (web
-        // has no per-frame runner drain like the desktop loop).
-        // The rail's Images tab — same tier as the Components tab: both
-        // fill the rail body, and only one is ever on show. No popover
-        // close here: its buttons are what open the image popovers.
-        if self.dispatch_images_tab_press(x, y, viewport_width, viewport_height) {
-            return Some(true);
-        }
-        if self.dispatch_component_browser_press(x, y, viewport_width, viewport_height) {
-            self.close_image_popovers_for_higher_overlay();
-            let _ = self.drain_component_browser_insert(viewport_width, viewport_height);
-            return Some(true);
-        }
         if self.editor_state.editor_ui.agent_settings_open
             && self.dispatch_agent_settings_press(x, y, viewport_width, viewport_height)
         {

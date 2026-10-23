@@ -224,7 +224,7 @@ pub fn export_quick_menu_rect(state: &EditorState, viewport_w: f32, viewport_h: 
     ExportQuickMenu::for_editor_ui(&state.editor_ui).rect_at(anchor, viewport_w)
 }
 
-/// Placement shared by all three draggable floating panels: centred on
+/// Placement shared by the draggable floating panels: centred on
 /// first open, then the stored top-left clamped so at least the header
 /// bar (80 × 40 px of it) stays reachable after a viewport resize.
 pub fn floating_panel_rect(
@@ -265,13 +265,8 @@ pub fn design_md_panel_rect(state: &EditorState, viewport_w: f32, viewport_h: f3
 }
 
 /// The Components tab's rect — the rail body while that tab is on show,
-/// `None` otherwise. Named for the floating panel it replaced so paint,
-/// press and hover keep one geometry entry point.
-pub fn component_browser_panel_rect(
-    state: &EditorState,
-    _viewport_w: f32,
-    viewport_h: f32,
-) -> Option<Rect> {
+/// `None` otherwise. Paint, press and hover all take it from here.
+pub fn components_tab_rect(state: &EditorState, viewport_h: f32) -> Option<Rect> {
     // One px narrower than the rail so its right hairline (painted before
     // this pass) stays visible.
     components_tab_on_show(state).then(|| {
