@@ -30,6 +30,8 @@ jian-scene = { path = "../../vendor/jian/crates/jian-scene" }
 de-editor-core = { path = "../de-editor-core" }
 # Canonical hex-color parsing (dependency-free, wasm-clean).
 de-util = { path = "../de-util" }
+# pen.dev image files are inlined as `data:` URLs on import.
+base64 = "0.22"
 # Payload DTOs round-trip through serde JSON.
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -368,18 +368,34 @@ pub fn load_canonical(
 pub fn load_canonical_with_compatibility(
     src: &str,
 ) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
-    if let Some(loaded) = fast_load::try_load_preserve(src) {
-        return Ok(CanonicalLoad {
-            loaded,
-            compatibility: CompatibilityReport::default(),
-        });
+    load_canonical_with_assets(src, &crate::pen_dev::no_assets)
+}
+
+/// [`load_canonical_with_compatibility`] for a document that may be a pen.dev
+/// file: `assets` reads the image files it references next to it.
+pub fn load_canonical_with_assets(
+    src: &str,
+    assets: crate::pen_dev::AssetReader<'_>,
+) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
+    // A pen.dev file can be valid canonical JSON with different defaults
+    // (frames lay out horizontally), so it must never take the as-is path.
+    let pen_dev_source = crate::pen_dev::sniff_pen_dev_version(src).is_some();
+    if !pen_dev_source {
+        if let Some(loaded) = fast_load::try_load_preserve(src) {
+            return Ok(CanonicalLoad {
+                loaded,
+                compatibility: CompatibilityReport::default(),
+            });
+        }
     }
     if looks_deeply_nested(src) {
-        return load_canonical_deep(src);
+        return load_canonical_deep(src, assets);
     }
     let mut best_effort_version = None;
     let mut normalized_legacy = false;
+    let mut pen_dev = None;
     let loaded = load_str_with_preprocess(src, |value| {
+        pen_dev = convert_pen_dev(value, assets);
         normalized_legacy = normalize_legacy_value(value);
         best_effort_version = patch_unsupported_version(value);
     });
@@ -392,13 +408,37 @@ pub fn load_canonical_with_compatibility(
             compatibility: CompatibilityReport {
                 normalized_legacy,
                 patched_legacy_version: best_effort_version,
+                pen_dev,
             },
         }),
         Err(jian_ops_schema::OpsSchemaError::Json(err)) if is_recursion_limit_error(&err) => {
-            load_canonical_deep(src)
+            load_canonical_deep(src, assets)
         }
         Err(other) => Err(other),
     }
+}
+
+/// Convert a pen.dev document in place; `None` for every other document.
+/// Runs before the legacy repairs, which finish the solid-colour and
+/// gradient spellings pen.dev shares with the older Pencil files.
+fn convert_pen_dev(
+    value: &mut serde_json::Value,
+    assets: crate::pen_dev::AssetReader<'_>,
+) -> Option<crate::pen_dev::PenDevReport> {
+    if !crate::pen_dev::is_pen_dev_document(value) {
+        return None;
+    }
+    let report = crate::pen_dev::convert(value, assets);
+    eprintln!(
+        "[open] converted pen.dev {} document{}",
+        report.source_version,
+        if report.has_losses() {
+            format!(": {}", report.summary())
+        } else {
+            String::new()
+        }
+    );
+    Some(report)
 }
 
 fn load_str_with_preprocess(
@@ -609,11 +649,15 @@ fn collect_viewport_writes_deep(
     }
 }
 
-fn load_canonical_deep(src: &str) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
+fn load_canonical_deep(
+    src: &str,
+    assets: crate::pen_dev::AssetReader<'_>,
+) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
     // Always use one stack-protected DOM for the deep compatibility pipeline.
     // Legacy repair and version patching must not depend on the presence of an
     // image table, and consuming that same DOM avoids a second full parse.
     let mut raw: serde_json::Value = deserialize_deep(src)?;
+    let pen_dev = convert_pen_dev(&mut raw, assets);
     let normalized_legacy = normalize_legacy_value(&mut raw);
     reject_unsupported_format_version(&raw)?;
     let patched_legacy_version = patch_unsupported_version(&mut raw);
@@ -635,6 +679,7 @@ fn load_canonical_deep(src: &str) -> Result<CanonicalLoad, jian_ops_schema::OpsS
         compatibility: CompatibilityReport {
             normalized_legacy,
             patched_legacy_version,
+            pen_dev,
         },
     })
 }

@@ -230,6 +230,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "Not on Google Fonts",
         "missingFonts.downloadFailed" => "Download failed — check your connection",
         "missingFonts.downloadedSection" => "Downloaded from Google Fonts",
+        "dialog.penDevImportTitle" => "Imported from pen.dev",
+        "dialog.penDevImportBody" => "Some parts of “{{name}}” could not be brought over:\n\n{{details}}\n\nThe rest opened as a new, unsaved document. The original file is not changed.",
         _ => return None,
     })
 }

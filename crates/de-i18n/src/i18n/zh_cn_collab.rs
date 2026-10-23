@@ -230,6 +230,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "Google Fonts 中没有此字体",
         "missingFonts.downloadFailed" => "下载失败，请检查网络连接",
         "missingFonts.downloadedSection" => "从 Google Fonts 下载的字体",
+        "dialog.penDevImportTitle" => "已从 pen.dev 导入",
+        "dialog.penDevImportBody" => "“{{name}}”中有部分内容无法导入：\n\n{{details}}\n\n其余内容已作为新的未保存文档打开。原文件未被修改。",
         _ => return None,
     })
 }

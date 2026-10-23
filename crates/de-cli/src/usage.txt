@@ -74,6 +74,7 @@ COMMON COMMANDS:
   de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.op]
   de import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.op]
   de import:figma <file.fig> [--out output.op]
+  de import:pen <file.pen> [--out output.op]
   de codegen:plan <plan-json|@file|->
   de codegen:submit <planId> <chunk-result|@file|->
   de codegen:assemble <planId> [--framework react]

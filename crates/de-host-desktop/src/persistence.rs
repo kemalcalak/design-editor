@@ -156,10 +156,31 @@ fn handle_save_as_with(
     }
 }
 
+/// A document that replaced the editor state.
+struct OpenedDocument {
+    /// The file the user opened; recent files list it.
+    source: PathBuf,
+    /// Where Cmd+S writes. `None` for a pen.dev import, which stays a
+    /// read-only source: the first save asks for a new file.
+    bound: Option<PathBuf>,
+}
+
+fn finish_open(
+    host: &mut WidgetHostNative,
+    opened: OpenedDocument,
+    current_path: &mut Option<PathBuf>,
+    window: Option<&winit::window::Window>,
+) {
+    fit_loaded_document(host, window);
+    crate::settings_io::touch_recent(host, &opened.source);
+    *current_path = opened.bound;
+    refresh_title(current_path, window);
+}
+
 fn load_into_host(
     host: &mut WidgetHostNative,
     path: &std::path::Path,
-) -> Result<Option<PathBuf>, DocumentOpenError> {
+) -> Result<Option<OpenedDocument>, DocumentOpenError> {
     let loaded_source_state = crate::figma_import_session::capture_output_state(path)?;
     let locale = host.editor_state().editor_ui.locale;
     let loaded = load_editor_state_with_report(path, locale);
@@ -168,13 +189,17 @@ fn load_into_host(
     let mut state = loaded.state;
     preserve_app_preferences(host.editor_state(), &mut state);
     state.editor_ui.home.hide();
-    let bound_path = crate::legacy_op_upgrade::prompt_and_save(
-        &mut state,
-        path,
-        &loaded.report,
-        loaded_source_state,
-    )?;
-    set_file_name_display(&mut state, Some(&bound_path));
+    let pen_dev_import = loaded.report.pen_dev_import.clone();
+    let bound_path = match pen_dev_import {
+        Some(_) => None,
+        None => Some(crate::legacy_op_upgrade::prompt_and_save(
+            &mut state,
+            path,
+            &loaded.report,
+            loaded_source_state,
+        )?),
+    };
+    set_file_name_display(&mut state, bound_path.as_deref());
     state.clear_selection();
     eprintln!(
         "[open] {} active-page top-level nodes",
@@ -187,7 +212,35 @@ fn load_into_host(
     host.force_rotate_layer_panel_owner();
     host.mark_editor_state_dirty();
     host.arm_missing_fonts_detection();
-    Ok(Some(bound_path))
+    if let Some(report) = pen_dev_import.filter(|report| report.has_losses()) {
+        alert_pen_dev_losses(host, path, &report);
+    }
+    Ok(Some(OpenedDocument {
+        source: path.to_path_buf(),
+        bound: bound_path,
+    }))
+}
+
+/// Tell the user what a pen.dev import could not bring over (shader fills,
+/// notes, missing image files, …) instead of dropping it silently.
+fn alert_pen_dev_losses(
+    host: &WidgetHostNative,
+    path: &std::path::Path,
+    report: &de_pen_loader::pen_dev::PenDevReport,
+) {
+    let locale = host.editor_state().editor_ui.locale;
+    let name = path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_else(|| path.display().to_string());
+    let body = de_i18n::translate(locale, "dialog.penDevImportBody")
+        .replace("{{name}}", &name)
+        .replace("{{details}}", &report.summary());
+    crate::message_dialog::alert(
+        de_i18n::translate(locale, "dialog.penDevImportTitle"),
+        &body,
+        rfd::MessageLevel::Warning,
+    );
 }
 
 /// Cmd+O — pop the Open dialog and replace the current document.
@@ -208,11 +261,8 @@ pub fn handle_open(
         None => return false,
     };
     match load_into_host(host, &path) {
-        Ok(Some(bound_path)) => {
-            fit_loaded_document(host, window);
-            crate::settings_io::touch_recent(host, &bound_path);
-            *current_path = Some(bound_path);
-            refresh_title(current_path, window);
+        Ok(Some(opened)) => {
+            finish_open(host, opened, current_path, window);
             true
         }
         Ok(None) => false,
@@ -232,11 +282,8 @@ pub fn open_path(
     window: Option<&winit::window::Window>,
 ) -> bool {
     match load_into_host(host, &path) {
-        Ok(Some(bound_path)) => {
-            fit_loaded_document(host, window);
-            crate::settings_io::touch_recent(host, &bound_path);
-            *current_path = Some(bound_path);
-            refresh_title(current_path, window);
+        Ok(Some(opened)) => {
+            finish_open(host, opened, current_path, window);
             true
         }
         Ok(None) => false,
@@ -458,11 +505,8 @@ pub fn run_action(
             };
             let path = std::path::PathBuf::from(&entry.path);
             match load_into_host(host, &path) {
-                Ok(Some(bound_path)) => {
-                    fit_loaded_document(host, window);
-                    crate::settings_io::touch_recent(host, &bound_path);
-                    *current_path = Some(bound_path);
-                    refresh_title(current_path, window);
+                Ok(Some(opened)) => {
+                    finish_open(host, opened, current_path, window);
                     ActionOutcome::Saved
                 }
                 Ok(None) => ActionOutcome::Noop,

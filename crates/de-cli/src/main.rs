@@ -15,6 +15,7 @@ mod html_cli;
 mod mcp_http_cli;
 mod page_theme_cli;
 mod path_args;
+mod pen_cli;
 mod skill_export_cli;
 mod skill_install_cli;
 mod skill_install_error;
@@ -101,6 +102,7 @@ fn run(args: &[String]) -> Result<String, CliError> {
         Command::ImportFigma { fig_path, out_path } => {
             figma_cli::run_import_figma(&fig_path, &out_path)?
         }
+        Command::ImportPen { pen_path, out_path } => pen_cli::run_import_pen(&pen_path, &out_path)?,
         Command::ImportHtml {
             html_path,
             out_path,
@@ -220,6 +222,10 @@ enum Command {
     ToolsList,
     ImportFigma {
         fig_path: String,
+        out_path: String,
+    },
+    ImportPen {
+        pen_path: String,
         out_path: String,
     },
     ImportHtml {
@@ -459,6 +465,7 @@ fn command_from_positionals(positionals: &[String], flags: &Flags) -> Result<Com
         "import:html" => html_cli::map_import_html(positionals, flags),
         "import:snapshot" => html_cli::map_import_snapshot(positionals, flags),
         "import:figma" => figma_cli::map_import_figma(positionals, flags),
+        "import:pen" => pen_cli::map_import_pen(positionals, flags),
         "codegen:plan" | "codegen:submit" | "codegen:assemble" | "codegen:clean" => {
             codegen_cli::map_codegen(positionals, flags)
         }

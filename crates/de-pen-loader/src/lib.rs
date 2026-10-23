@@ -73,6 +73,7 @@ mod path_layout_tests;
 mod widget_payload_tests;
 
 pub mod payload;
+pub mod pen_dev;
 pub mod variables;
 
 /// Build a paint-only, layout-resolved `LayoutScene` from an

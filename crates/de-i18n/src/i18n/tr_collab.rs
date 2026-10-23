@@ -230,6 +230,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "Google Fonts'ta yok",
         "missingFonts.downloadFailed" => "İndirilemedi — bağlantınızı kontrol edin",
         "missingFonts.downloadedSection" => "Google Fonts'tan indirilenler",
+        "dialog.penDevImportTitle" => "pen.dev'den içe aktarıldı",
+        "dialog.penDevImportBody" => "“{{name}}” dosyasının bazı kısımları aktarılamadı:\n\n{{details}}\n\nGeri kalanı kaydedilmemiş yeni bir belge olarak açıldı. Özgün dosya değiştirilmedi.",
         _ => return None,
     })
 }

@@ -20,7 +20,8 @@ pub fn load_editor_state_with_report(
         .map_err(|e| DocIoError::Io(e.to_string()))?
         .len();
     if file_len == 0 {
-        let (state, embedded_meta, report) = parse_editor_state_source("", locale)?;
+        let (state, embedded_meta, report) =
+            parse_editor_state_source("", locale, &de_pen_loader::pen_dev::no_assets)?;
         return Ok(finish_loaded_state_with_report(
             state,
             embedded_meta,
@@ -41,7 +42,8 @@ pub fn load_editor_state_with_report(
                 .replace("{{detail}}", &error.to_string()),
         )
     })?;
-    let (state, embedded_meta, report) = parse_editor_state_source(src, locale)?;
+    let assets = super::pen_dev::document_assets(path);
+    let (state, embedded_meta, report) = parse_editor_state_source(src, locale, &assets)?;
     Ok(finish_loaded_state_with_report(
         state,
         embedded_meta,
@@ -54,16 +56,18 @@ pub fn load_editor_state_from_source(
     src: &str,
     locale: de_editor_core::Locale,
 ) -> Result<EditorState, DocIoError> {
-    let (state, embedded_meta, _) = parse_editor_state_source(src, locale)?;
+    let (state, embedded_meta, _) =
+        parse_editor_state_source(src, locale, &de_pen_loader::pen_dev::no_assets)?;
     Ok(finish_loaded_state(state, embedded_meta))
 }
 
 fn parse_editor_state_source(
     src: &str,
     locale: de_editor_core::Locale,
+    assets: de_pen_loader::pen_dev::AssetReader<'_>,
 ) -> Result<(EditorState, Option<EditorMeta>, DocumentLoadReport), DocIoError> {
     let embedded = extract_editor_meta_with_report(src);
-    let canonical = match de_pen_loader::payload::load_canonical_with_compatibility(src) {
+    let canonical = match de_pen_loader::payload::load_canonical_with_assets(src, assets) {
         Ok(loaded) => loaded,
         Err(error) => {
             if looks_like_legacy_doc_payload(src) {
@@ -100,6 +104,7 @@ fn parse_editor_state_source(
             .is_some_and(|extraction| extraction.inferred_preserve_authored_geometry),
         used_legacy_sidecar: false,
         rewrite_blocked_by_schema_warning,
+        pen_dev_import: canonical.compatibility.pen_dev,
     };
     Ok((
         EditorState::from_document(loaded.value),

@@ -46,6 +46,7 @@ mod load;
 mod load_report;
 #[cfg(test)]
 mod load_report_tests;
+mod pen_dev;
 
 use atomic_file::{create_sibling_temp, replace_file};
 pub use canonical_save::{write_canonical_document, CanonicalSaveSnapshot, StreamingSaveStats};
@@ -140,6 +141,7 @@ fn save_serializable_document_with_thumbnails_to_path<
     thumbnails: &jian_ops_schema::image_thumbs::ImageThumbSnapshot,
     path: &std::path::Path,
 ) -> Result<(), DocIoError> {
+    pen_dev::refuse_overwrite(path)?;
     // Write through a sibling temp file so a crash mid-write doesn't
     // leave a half-written file on disk.
     let (tmp, file) = create_sibling_temp(path)?;
