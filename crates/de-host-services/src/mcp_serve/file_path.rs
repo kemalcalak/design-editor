@@ -30,11 +30,12 @@ pub fn process_message_for_file_path_arg(
     let mut applier_failed: Option<String> = None;
     let response =
         super::process_message_with_applier(&mut target_state, line, |tool_name, state, cmd| {
+            let baseline = super::WriteBaseline::for_tool(tool_name, state);
             if !state.apply(cmd.clone()) {
                 return false;
             }
-            if !super::writes_verbatim(tool_name) {
-                super::run_write_repairs_after_apply(state);
+            if let Some(baseline) = baseline {
+                super::run_write_repairs_after_apply(state, &baseline.scope_after(state));
             }
             if let Err(e) = super::save_editor_state(state, &target.path) {
                 applier_failed = Some(format!("save {} failed: {e}", target.path.display()));

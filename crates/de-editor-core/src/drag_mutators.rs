@@ -209,7 +209,7 @@ impl EditorState {
         let Some(parent_node) = find_node_mut(children, parent) else {
             return false;
         };
-        let Some(siblings) = parent_node.children_mut() else {
+        let Some(siblings) = parent_node.children_mut_or_insert() else {
             return false;
         };
         let Some(cur) = siblings.iter().position(|n| n.id_str() == child.as_str()) else {

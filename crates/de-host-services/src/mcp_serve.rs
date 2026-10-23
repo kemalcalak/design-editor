@@ -71,10 +71,14 @@ pub mod error;
 pub mod file_path;
 mod preview_hook;
 mod sniff;
+mod write_repairs;
 
 pub use error::McpServeError;
 pub(crate) use preview_hook::saved_document_path;
 use sniff::{sniff_id_raw, sniff_method};
+#[cfg(test)]
+use write_repairs::writes_verbatim;
+pub(crate) use write_repairs::{run_write_repairs_after_apply, WriteBaseline, WriteScope};
 
 /// Unwrap an MCP `tools/call` reply to the inner tool-result JSON text,
 /// so tests assert on the flat result fields directly. Strips an HTTP
@@ -110,80 +114,6 @@ fn save_editor_state(state: &EditorState, path: &Path) -> Result<(), McpServeErr
     Ok(())
 }
 
-pub(crate) fn normalize_mobile_screens_after_apply(
-    state: &mut EditorState,
-) -> de_chat_agent::MobileNormalizeReport {
-    let report = de_chat_agent::normalize_mobile_screens(state);
-    let mut changes = Vec::new();
-    if report.status_bars_inserted > 0 {
-        changes.push(format!(
-            "status_bars_inserted={}",
-            report.status_bars_inserted
-        ));
-    }
-    if report.status_bars_replaced > 0 {
-        changes.push(format!(
-            "status_bars_replaced={}",
-            report.status_bars_replaced
-        ));
-    }
-    if report.duplicate_status_bars_removed > 0 {
-        changes.push(format!(
-            "duplicate_status_bars_removed={}",
-            report.duplicate_status_bars_removed
-        ));
-    }
-    if report.viewport_heights_fixed > 0 {
-        changes.push(format!(
-            "viewport_heights_fixed={}",
-            report.viewport_heights_fixed
-        ));
-    }
-    if !changes.is_empty() {
-        eprintln!(
-            "design-editor mcp: mobile normalization: {}",
-            changes.join(", ")
-        );
-    }
-    report
-}
-
-pub(crate) fn normalize_icon_paths_after_apply(
-    state: &mut EditorState,
-) -> de_editor_core::icon_path_normalize::IconPathNormalizeReport {
-    let report = de_editor_core::icon_path_normalize::normalize_icon_paths(
-        state,
-        de_editor_ui::widgets::icons::lucide_name_for_path_d,
-    );
-    if report != Default::default() {
-        eprintln!(
-            "design-editor mcp: icon path normalization: converted_to_icon_font={}, refit_uniform={}",
-            report.converted_to_icon_font, report.refit_uniform
-        );
-    }
-    report
-}
-
-/// Tools whose writes must land exactly as authored. The repairs in
-/// [`run_write_repairs_after_apply`] and file-mode auto-finalize exist to
-/// tidy AI-generated designs (status bars on phone screens, icon paths, empty
-/// image slots); applied to an imported design they rewrite someone else's
-/// work. A later write still repairs the whole document (#107).
-pub(crate) fn writes_verbatim(tool_name: &str) -> bool {
-    tool_name == "import_pen_dev"
-}
-
-/// Run the two cheap, idempotent repair passes shared by every bare-MCP
-/// document write after the command itself has applied and before it saves.
-pub(crate) fn run_write_repairs_after_apply(state: &mut EditorState) -> bool {
-    normalize_mobile_screens_after_apply(state);
-    normalize_icon_paths_after_apply(state);
-    let mobile_nav_reflowed = de_orchestrator::repair_mobile_trailing_nav_reflow(state);
-    let image_slots_materialized =
-        de_orchestrator::cleanup_image_slots::materialize_empty_image_fill_slots(state);
-    mobile_nav_reflowed || image_slots_materialized
-}
-
 /// Process one JSON-RPC message line against the editor state.
 #[cfg(test)]
 fn process_message(
@@ -210,6 +140,7 @@ fn process_message_with_auto_finalize(
     // File-backed mode has no live canvas for any tool call to animate; the
     // tool name only decides whether the write lands verbatim.
     let response = process_message_with_applier(state, line, |tool_name, state, cmd| {
+        let baseline = WriteBaseline::for_tool(tool_name, state);
         // `EditorState::apply` runs the pre-validate-then-mutate
         // discipline; `false` means the command rejected and the
         // document was NOT changed.
@@ -217,9 +148,9 @@ fn process_message_with_auto_finalize(
             apply_rejected = true;
             return false;
         }
-        let verbatim = writes_verbatim(tool_name);
-        if !verbatim {
-            run_write_repairs_after_apply(state);
+        let scope = baseline.map(|baseline| baseline.scope_after(state));
+        if let Some(scope) = &scope {
+            run_write_repairs_after_apply(state, scope);
         }
         if let Err(e) = save_editor_state(state, path) {
             applier_failed = Some(format!("save failed: {e}"));
@@ -227,8 +158,8 @@ fn process_message_with_auto_finalize(
         }
         // A verbatim write does not arm auto-finalize: finalizing would run
         // the same repairs over it at session end.
-        if let Some(auto_finalize) = auto_finalize.as_deref_mut().filter(|_| !verbatim) {
-            auto_finalize.note_write(Instant::now());
+        if let (Some(auto_finalize), Some(scope)) = (auto_finalize.as_deref_mut(), &scope) {
+            auto_finalize.note_write(Instant::now(), scope);
         }
         true
     })?;

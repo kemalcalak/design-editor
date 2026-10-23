@@ -37,6 +37,28 @@ where
     normalize_icon_paths_in_nodes(state.active_children_mut(), &lookup)
 }
 
+/// [`normalize_icon_paths`] limited to the paths whose id `in_scope` accepts.
+/// The whole active page is still walked, so an in-scope path nested under
+/// an untouched container is found; every other path stays as authored.
+/// MCP hosts use this to repair only what a write created or changed (#107).
+pub fn normalize_icon_paths_for_ids<F>(
+    state: &mut EditorState,
+    lookup: F,
+    in_scope: impl Fn(&str) -> bool,
+) -> IconPathNormalizeReport
+where
+    F: Fn(&str) -> Option<&'static str>,
+{
+    let mut report = IconPathNormalizeReport::default();
+    normalize_icon_paths_in_nodes_with_report(
+        state.active_children_mut(),
+        &lookup,
+        &in_scope,
+        &mut report,
+    );
+    report
+}
+
 /// Normalize a detached subtree with the same rules as the active-page pass.
 /// Orchestrator sinks use this before sending an `InsertSubtree` over their
 /// transport, because a remote sink's editor mirror is intentionally read-only
@@ -46,13 +68,14 @@ where
     F: Fn(&str) -> Option<&'static str>,
 {
     let mut report = IconPathNormalizeReport::default();
-    normalize_icon_paths_in_nodes_with_report(nodes, &lookup, &mut report);
+    normalize_icon_paths_in_nodes_with_report(nodes, &lookup, &|_| true, &mut report);
     report
 }
 
 fn normalize_icon_paths_in_nodes_with_report<F>(
     nodes: &mut [PenNode],
     lookup: &F,
+    in_scope: &dyn Fn(&str) -> bool,
     report: &mut IconPathNormalizeReport,
 ) where
     F: Fn(&str) -> Option<&'static str>,
@@ -64,8 +87,9 @@ fn normalize_icon_paths_in_nodes_with_report<F>(
         if is_status_bar_node(node) {
             continue;
         }
+        let node_in_scope = in_scope(node.id_str());
         let change = match node {
-            PenNode::Path(path) => normalize_path(path, lookup),
+            PenNode::Path(path) if node_in_scope => normalize_path(path, lookup),
             _ => None,
         };
         match change {
@@ -88,7 +112,7 @@ fn normalize_icon_paths_in_nodes_with_report<F>(
             None => {}
         }
         if let Some(children) = node.children_mut() {
-            normalize_icon_paths_in_nodes_with_report(children, lookup, report);
+            normalize_icon_paths_in_nodes_with_report(children, lookup, in_scope, report);
         }
     }
 }

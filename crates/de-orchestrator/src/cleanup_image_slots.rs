@@ -18,12 +18,22 @@ use jian_ops_schema::style::PenFill;
 /// fill is an image fill with a still-empty url by a `PenNode::Image` in
 /// place, keeping the node id and the geometry fields both types share.
 pub(crate) fn materialize_empty_image_fill_slots(sink: &mut dyn DocSink, root_id: &str) -> bool {
+    materialize_empty_image_fill_slots_for_ids(sink, root_id, &|_| true)
+}
+
+/// [`materialize_empty_image_fill_slots`] limited to the slots whose id
+/// `in_scope` accepts; other slots in the root keep their authored shape.
+pub(crate) fn materialize_empty_image_fill_slots_for_ids(
+    sink: &mut dyn DocSink,
+    root_id: &str,
+    in_scope: &dyn Fn(&str) -> bool,
+) -> bool {
     let patches: Vec<(NodeId, String)> = {
         let Some(root) = find_root(sink.state(), root_id) else {
             return false;
         };
         let mut patches = Vec::new();
-        collect_materialize_patches(root, &mut patches);
+        collect_materialize_patches(root, in_scope, &mut patches);
         patches
     };
     let mut changed = false;
@@ -37,15 +47,21 @@ pub(crate) fn materialize_empty_image_fill_slots(sink: &mut dyn DocSink, root_id
     changed
 }
 
-fn collect_materialize_patches(node: &PenNode, patches: &mut Vec<(NodeId, String)>) {
+fn collect_materialize_patches(
+    node: &PenNode,
+    in_scope: &dyn Fn(&str) -> bool,
+    patches: &mut Vec<(NodeId, String)>,
+) {
     if let Some(patch) = materialize_patch(node) {
-        patches.push((NodeId::new(node.id_str().to_string()), patch));
+        if in_scope(node.id_str()) {
+            patches.push((NodeId::new(node.id_str().to_string()), patch));
+        }
         // A validated slot is childless by definition — nothing below to scan.
         return;
     }
     if let Some(children) = node.children() {
         for child in children {
-            collect_materialize_patches(child, patches);
+            collect_materialize_patches(child, in_scope, patches);
         }
     }
 }

@@ -40,6 +40,28 @@ pub fn repair_mobile_trailing_nav_reflow(state: &mut EditorState) -> bool {
     repair_mobile_trailing_nav_reflow_in_sink(&mut sink)
 }
 
+/// [`repair_mobile_trailing_nav_reflow`] limited to the top-level roots
+/// whose id `in_scope` accepts, so an MCP write reflows only the screens it
+/// built or extended and never a design someone else made (#107).
+pub fn repair_mobile_trailing_nav_reflow_for_roots(
+    state: &mut EditorState,
+    in_scope: impl Fn(&str) -> bool,
+) -> bool {
+    let root_ids: Vec<String> = state
+        .active_children()
+        .iter()
+        .map(|root| root.id_str().to_string())
+        .filter(|id| in_scope(id))
+        .collect();
+    let mut sink = EditorStateSink { state };
+    root_ids.iter().fold(false, |changed, root_id| {
+        // Bound first so every root is visited, not only those up to the
+        // first change.
+        let root_changed = repair_mobile_trailing_nav_reflow_for_root_in_sink(&mut sink, root_id);
+        changed || root_changed
+    })
+}
+
 pub(crate) fn repair_mobile_trailing_nav_reflow_in_sink(sink: &mut dyn DocSink) -> bool {
     let candidates = collect_candidates(sink.state());
     apply_candidates(sink, candidates)
