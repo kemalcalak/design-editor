@@ -289,6 +289,9 @@ pub fn ingest_op_source(
     src: &str,
     previous: &EditorState,
 ) -> Result<IngestedDoc, DocumentIngestError> {
+    if let Some(version) = de_pen_loader::pen_dev::sniff_pen_dev_version(src) {
+        return Err(DocumentIngestError::PenDevDocument { version });
+    }
     let editor_meta = de_pen_loader::extract_editor_meta(src);
     let loaded = de_pen_loader::load_canonical(src)
         .map_err(|e| DocumentIngestError::LoadCanonical(e.to_string()))?;

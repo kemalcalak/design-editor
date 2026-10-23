@@ -13,13 +13,16 @@ pub struct CompatibilityReport {
     /// A legacy top-level `version` (with no `formatVersion`) used an
     /// unsupported product-version major and was interpreted as schema v1.
     pub patched_legacy_version: Option<String>,
+    /// The source was a pen.dev document converted on load. Such a file is
+    /// an import source: it is never rewritten in place.
+    pub pen_dev: Option<crate::pen_dev::PenDevReport>,
 }
 
 impl CompatibilityReport {
     /// Whether the loader performed an explicit, understood compatibility
     /// repair worth persisting through the raw-preserving migration writer.
     pub fn needs_schema_upgrade(&self) -> bool {
-        self.normalized_legacy || self.patched_legacy_version.is_some()
+        self.pen_dev.is_none() && (self.normalized_legacy || self.patched_legacy_version.is_some())
     }
 }
 

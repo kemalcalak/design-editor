@@ -230,6 +230,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "Tidak ada di Google Fonts",
         "missingFonts.downloadFailed" => "Gagal mengunduh — periksa koneksi Anda",
         "missingFonts.downloadedSection" => "Diunduh dari Google Fonts",
+        "dialog.penDevImportTitle" => "Diimpor dari pen.dev",
+        "dialog.penDevImportBody" => "Beberapa bagian “{{name}}” tidak dapat dibawa:\n\n{{details}}\n\nSisanya dibuka sebagai dokumen baru yang belum disimpan. File asli tidak diubah.",
         _ => return None,
     })
 }

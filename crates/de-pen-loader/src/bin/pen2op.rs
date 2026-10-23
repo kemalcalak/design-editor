@@ -27,6 +27,15 @@ fn main() -> ExitCode {
         }
     };
 
+    // pen.dev documents need their image folder and report what they lose;
+    // `de import:pen` does that conversion.
+    if let Some(version) = de_pen_loader::pen_dev::sniff_pen_dev_version(&src) {
+        eprintln!(
+            "[pen2op] {in_path} is a pen.dev {version} document; use `de import:pen` instead"
+        );
+        return ExitCode::FAILURE;
+    }
+
     // Load THROUGH the canonical loader so the legacy-tolerance normalize runs.
     let loaded = match de_pen_loader::load_canonical(&src) {
         Ok(loaded) => loaded,

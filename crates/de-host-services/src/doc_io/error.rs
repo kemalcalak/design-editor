@@ -90,6 +90,9 @@ pub enum DocIoError {
     /// `dialog.loadErrorInvalidUtf8` sentence with its `{{detail}}` already
     /// substituted.
     InvalidUtf8Document(String),
+    /// The save target is a pen.dev document. Those are import sources:
+    /// writing the canonical schema over one would break it for pen.dev.
+    PenDevSourceReadOnly { path: String },
 }
 
 impl fmt::Display for DocIoError {
@@ -116,6 +119,10 @@ impl fmt::Display for DocIoError {
             | DocIoError::Schema(message)
             | DocIoError::LegacyFormat(message)
             | DocIoError::InvalidUtf8Document(message) => f.write_str(message),
+            DocIoError::PenDevSourceReadOnly { path } => write!(
+                f,
+                "{path} is a pen.dev document; save the imported design to a new file"
+            ),
         }
     }
 }

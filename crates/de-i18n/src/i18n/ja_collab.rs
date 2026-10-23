@@ -230,6 +230,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "Google Fonts にありません",
         "missingFonts.downloadFailed" => "ダウンロードに失敗しました — 接続を確認してください",
         "missingFonts.downloadedSection" => "Google Fonts からダウンロードしたフォント",
+        "dialog.penDevImportTitle" => "pen.dev から読み込みました",
+        "dialog.penDevImportBody" => "“{{name}}” の一部を読み込めませんでした:\n\n{{details}}\n\n残りは未保存の新規ドキュメントとして開きました。元のファイルは変更されていません。",
         _ => return None,
     })
 }

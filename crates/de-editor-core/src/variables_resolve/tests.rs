@@ -268,3 +268,31 @@ fn legacy_color_refs_resolve_via_compat_fallback() {
     assert_eq!(resolve_numeric_ref("$radius-md", None, &light), Some(8.0));
     assert!(has_palette_fallback("color-surface"));
 }
+
+#[test]
+fn a_node_theme_scopes_its_subtree() {
+    let doc = doc_from(
+        r##"{
+          "version": "1.0",
+          "themes": { "mode": ["light", "dark"] },
+          "variables": { "bg": { "type": "color", "value": [
+            { "value": "#FFFFFF", "theme": { "mode": "light" } },
+            { "value": "#000000", "theme": { "mode": "dark" } }
+          ]}},
+          "children": [
+            { "type": "frame", "id": "light", "fill": [{ "type": "solid", "color": "$bg" }] },
+            { "type": "frame", "id": "dark", "theme": { "mode": "dark" }, "children": [
+              { "type": "rectangle", "id": "inner", "fill": [{ "type": "solid", "color": "$bg" }] }
+            ]}
+          ]
+        }"##,
+    );
+    let resolved = resolve_document_for_canvas(&doc, &Theme::new());
+    let color = |node: &PenNode| match crate::fills::node_fills(node).and_then(|f| f.first()) {
+        Some(PenFill::Solid(body)) => body.color.clone(),
+        _ => panic!("solid fill expected"),
+    };
+    assert_eq!(color(&resolved.children[0]), "#FFFFFF");
+    let inner = &resolved.children[1].children().expect("children")[0];
+    assert_eq!(color(inner), "#000000");
+}
