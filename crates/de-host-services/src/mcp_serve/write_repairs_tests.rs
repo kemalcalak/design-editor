@@ -35,7 +35,7 @@ impl Doc {
                 .unwrap_or(0)
         ));
         std::fs::create_dir_all(&dir).expect("temp dir");
-        let path = dir.join("doc.op");
+        let path = dir.join("doc.de");
         std::fs::write(&path, HAND_MADE).expect("seed document");
         // Round-trip once so every comparison below starts from the saved
         // shape (the writer spells empty containers as `"children": []`).
