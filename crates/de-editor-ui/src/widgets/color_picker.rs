@@ -58,7 +58,7 @@ impl ColorPicker {
                 (right_rail_left - PICKER_WIDTH - 8.0).max(8.0)
             });
         let mut y = self.state.anchor_y - PICKER_HEIGHT / 2.0;
-        let top_min = crate::widgets::TOP_BAR_HEIGHT + 8.0;
+        let top_min = crate::widgets::WINDOW_STRIP_H + 8.0;
         let bottom_max = (viewport_h - PICKER_HEIGHT - 8.0).max(top_min);
         if y < top_min {
             y = top_min;

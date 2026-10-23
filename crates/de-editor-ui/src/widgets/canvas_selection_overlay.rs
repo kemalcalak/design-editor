@@ -3,18 +3,18 @@ use crate::theme::Theme;
 use crate::widgets::canvas_overlay_transform::OverlayTransform;
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
-use crate::{Color, Point2D, Rect, TextLayout};
+use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::agent_indicators::AgentIndicators;
 use de_editor_core::Viewport;
 use std::collections::HashSet;
 
-const LABEL_FONT_SIZE: f32 = 12.0;
+const LABEL_FONT_SIZE: f32 = 11.0;
 /// Weight the pill's label run paints at — measurement names it too, so the
-/// pill is sized against the medium face it actually shows.
-const LABEL_FONT_WEIGHT: u16 = 500;
-const LABEL_HEIGHT: f32 = 22.0;
-const LABEL_PAD_X: f32 = 8.0;
-const LABEL_GAP: f32 = 6.0;
+/// pill is sized against the semibold face it actually shows.
+const LABEL_FONT_WEIGHT: u16 = 600;
+const LABEL_HEIGHT: f32 = 20.0;
+const LABEL_PAD_X: f32 = 7.0;
+const LABEL_GAP: f32 = 8.0;
 const LABEL_MARGIN: f32 = 4.0;
 
 pub(super) struct SelectionPaintInput<'a> {
@@ -224,28 +224,24 @@ fn paint_selection_label(
         canvas_top,
         canvas_bottom - LABEL_HEIGHT,
     );
+    // An accent pill with the on-accent label (#30), so the size reads as
+    // part of the selection rather than as a floating card.
     let pill = Rect::xywh(x, y, label_width, LABEL_HEIGHT);
-    let bg = Color {
-        a: 0.95,
-        ..input.theme.card
-    };
-    let stroke = Color {
-        a: 0.85,
-        ..input.theme.primary
-    };
-    cx.backend.fill_round_rect(pill, 7.0, bg);
-    cx.backend.stroke_round_rect(pill, 7.0, stroke, 1.0);
+    cx.backend.fill_round_rect(pill, 6.0, input.theme.primary);
     let layout = TextLayout::single_run(
         &text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         LABEL_FONT_SIZE,
-        input.theme.primary.to_jian(),
+        input.theme.primary_foreground.to_jian(),
         Point2D::ZERO,
     )
     .with_font_weight(LABEL_FONT_WEIGHT);
     cx.backend.draw_text(
         &layout,
-        Point2D::new(pill.origin.x + LABEL_PAD_X, pill.origin.y + 15.0),
+        Point2D::new(
+            pill.origin.x + LABEL_PAD_X,
+            jian_widgets::centered_text_baseline_y(pill, LABEL_FONT_SIZE),
+        ),
     );
 }
 

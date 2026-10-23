@@ -11,7 +11,7 @@ use super::helpers::PANEL_RESIZE_GUTTER;
 use super::{PanelResizeKind, WidgetHostNative};
 use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::host_overlay_geometry as overlay_geometry;
-use de_editor_ui::widgets::{AIChatPlaceholder, ChatResizeEdge, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::{AIChatPlaceholder, ChatResizeEdge, WINDOW_STRIP_H};
 use de_editor_ui::{Point2D, Rect};
 
 impl WidgetHostNative {
@@ -38,10 +38,9 @@ impl WidgetHostNative {
         if canvas_geometry::workspace_docked(&self.editor_state) {
             return None;
         }
-        if y < TOP_BAR_HEIGHT {
-            return None;
-        }
-        if self.editor_state.editor_ui.sidebar_open {
+        // The left rail's edge starts below the window strip, where a press
+        // drags the window instead; the right rail runs full height.
+        if self.editor_state.editor_ui.sidebar_open && y >= WINDOW_STRIP_H {
             let edge = self.editor_state.editor_ui.layer_panel_width;
             if (x - edge).abs() <= PANEL_RESIZE_GUTTER {
                 return Some(PanelResizeKind::LayerRight);
@@ -135,10 +134,10 @@ impl WidgetHostNative {
             changed |= ui.variables_panel_hover.take().is_some();
             changed |= ui.variables_preset_menu_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             changed |= ui.fill_type_picker.hover.take().is_some();
-            changed |= ui.topbar_button_hover.take().is_some();
-            changed |= std::mem::take(&mut ui.topbar_traffic_hover);
+            changed |= ui.chrome_button_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.window_control_hover);
         }
         changed |= self.editor_state.codegen.framework_hover.take().is_some();
         changed |= self.editor_state.codegen.action_hover.take().is_some();
@@ -191,8 +190,8 @@ impl WidgetHostNative {
             changed |= ui.compositing_picker.hover.take().is_some();
             changed |= ui.toolbar_hover.take().is_some();
             changed |= ui.align_toolbar_hover.take().is_some();
-            changed |= ui.topbar_button_hover.take().is_some();
-            changed |= std::mem::take(&mut ui.topbar_traffic_hover);
+            changed |= ui.chrome_button_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.window_control_hover);
             if clear_chat_model_picker {
                 changed |= ui.chat_model_picker.hover.take().is_some();
             }
@@ -209,7 +208,7 @@ impl WidgetHostNative {
             // Right-rail panel hovers — cleared so a wash doesn't linger
             // under a floating panel covering the rail.
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             if let Some(menu) = ui.layer_context_menu.as_mut() {
                 changed |= menu.menu.hover.take().is_some();
             }
@@ -246,7 +245,7 @@ impl WidgetHostNative {
         y: f32,
         over_topmost: bool,
     ) -> bool {
-        use de_editor_ui::{Point2D, Rect};
+        use de_editor_ui::Point2D;
         if over_topmost
             && !self.over_dropdown_overlay(x, y, self.last_viewport_w, self.last_viewport_h)
         {
@@ -254,14 +253,12 @@ impl WidgetHostNative {
         }
         if self.editor_state.editor_ui.file_menu_open {
             use de_editor_ui::widgets::file_menu::FileMenu;
-            use de_editor_ui::widgets::top_bar::TopBar;
             self.refresh_layout_scene();
-            let top_bar_rect = Rect {
-                origin: Point2D::new(0.0, 0.0),
-                size: Point2D::new(self.last_viewport_w, de_editor_ui::widgets::TOP_BAR_HEIGHT),
-            };
-            let anchor =
-                TopBar::file_menu_rect(top_bar_rect, self.editor_state.editor_ui.window_fullscreen);
+            let anchor = de_editor_ui::widgets::host_overlay_geometry::file_menu_anchor(
+                &self.editor_state,
+                self.last_viewport_w,
+                self.last_viewport_h,
+            );
             let now_secs = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|d| d.as_secs())
@@ -448,7 +445,7 @@ impl WidgetHostNative {
                 .is_some_and(|rect| rect.contains(point));
         let (new_layer, new_page) = if sidebar_open
             && !blocked_by_overlay
-            && y >= TOP_BAR_HEIGHT
+            && y >= WINDOW_STRIP_H
             && x >= 0.0
             && x <= panel_w
         {
@@ -493,7 +490,7 @@ impl WidgetHostNative {
             && !self.chat_panel_surface_contains(x, y, viewport_w, viewport_h)
             && !self.over_topmost_panel(x, y, viewport_w, viewport_h)
             && !self.over_dropdown_overlay(x, y, viewport_w, viewport_h)
-            && y >= TOP_BAR_HEIGHT
+            && y >= WINDOW_STRIP_H
             && x >= 0.0
             && x <= self.editor_state.editor_ui.layer_panel_width
     }

@@ -110,36 +110,6 @@ impl WidgetHostNative {
             }
             *higher_overlay_hover_changed |= changed;
         }
-        if let Some(d) = self.component_browser_drag {
-            self.editor_state.editor_ui.component_browser_pos =
-                Some((x - d.grab_dx, y - d.grab_dy));
-            self.mark_dirty();
-            return Some(true);
-        }
-        // Component-browser panel hover (close / category pills / cards).
-        if self.editor_state.editor_ui.component_browser_open {
-            use de_editor_ui::widgets::component_browser_panel::ComponentBrowserPanel;
-            if let Some(panel_rect) =
-                self.component_browser_panel_rect(self.last_viewport_w, self.last_viewport_h)
-            {
-                let point = Point2D::new(x, y);
-                let new_hover = ComponentBrowserPanel::for_editor(&self.editor_state)
-                    .and_then(|p| p.hover_at(panel_rect, point));
-                let changed = new_hover != self.editor_state.editor_ui.component_browser_hover;
-                if changed {
-                    self.editor_state.editor_ui.component_browser_hover = new_hover;
-                    self.mark_dirty();
-                }
-                if panel_rect.contains(point) {
-                    self.clear_lower_overlay_hover();
-                    return Some(true);
-                }
-                if changed && !chat_or_picker_owns_point {
-                    return Some(true);
-                }
-                *higher_overlay_hover_changed |= changed;
-            }
-        }
         if let Some(d) = self.icon_picker_drag {
             self.editor_state.editor_ui.icon_picker_panel_pos =
                 Some((x - d.grab_dx, y - d.grab_dy));
@@ -217,6 +187,49 @@ impl WidgetHostNative {
                 self.mark_dirty();
                 return Some(true);
             }
+        }
+        // The Components / Images rail tabs (#30) — below every floating
+        // panel and dropdown, in the same order as the press ladder.
+        // Components tab hover (kit actions / category pills / cards).
+        {
+            use de_editor_ui::widgets::component_browser_panel::ComponentBrowserPanel;
+            if let Some(panel_rect) = self.components_tab_rect(self.last_viewport_h) {
+                let point = Point2D::new(x, y);
+                let new_hover = ComponentBrowserPanel::for_editor(&self.editor_state)
+                    .and_then(|p| p.hover_at(panel_rect, point));
+                let changed = new_hover != self.editor_state.editor_ui.component_browser_hover;
+                if changed {
+                    self.editor_state.editor_ui.component_browser_hover = new_hover;
+                    self.mark_dirty();
+                }
+                if panel_rect.contains(point) {
+                    self.clear_lower_overlay_hover();
+                    return Some(true);
+                }
+                if changed && !chat_or_picker_owns_point {
+                    return Some(true);
+                }
+                *higher_overlay_hover_changed |= changed;
+            }
+        }
+        // Images tab hover (Search / Generate / thumbnails).
+        {
+            let (owns_point, changed) = de_editor_ui::widgets::images_tab::update_hover(
+                &mut self.editor_state,
+                self.last_viewport_h,
+                Point2D::new(x, y),
+            );
+            if changed {
+                self.mark_dirty();
+            }
+            if owns_point {
+                self.clear_lower_overlay_hover();
+                return Some(true);
+            }
+            if changed && !chat_or_picker_owns_point {
+                return Some(true);
+            }
+            *higher_overlay_hover_changed |= changed;
         }
         None
     }

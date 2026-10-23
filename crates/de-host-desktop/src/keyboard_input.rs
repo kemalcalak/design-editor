@@ -260,7 +260,7 @@ impl DesktopApp {
                         "a" => consumed = self.host.apply_select_all(),
                         _ if image_popover_open => consumed = true,
                         _ if settings_focused => {}
-                        // Cmd+P mirrors the TopBar Preview button.
+                        // Cmd+P mirrors the canvas Preview button.
                         "p" => {
                             consumed = self.host.toggle_preview_with_cached_viewport();
                         }

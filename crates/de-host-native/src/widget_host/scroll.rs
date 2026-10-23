@@ -298,12 +298,9 @@ impl WidgetHostNative {
         delta_y: f32,
         viewport_height: f32,
     ) -> bool {
-        if !self.layers_panel_visible() {
-            return false;
-        }
-        // The slides tab owns the rail's wheel while it is on show; the
-        // layer tree only sees the event when the tree is what the rail
-        // is showing.
+        // The slides tab and the Components tab own the rail's wheel while
+        // they are on show; the layer tree only sees the event when the
+        // tree is what the rail is showing.
         if let Some(dirty) = self.slides_panel_scroll(
             Point2D::new(x, y),
             delta_y,
@@ -314,6 +311,33 @@ impl WidgetHostNative {
                 self.mark_dirty();
             }
             return true;
+        }
+        if let Some(rect) = self.components_tab_rect(viewport_height) {
+            if let Some(dirty) = scroll_flow::scroll_component_browser(
+                &mut self.editor_state,
+                rect,
+                Point2D::new(x, y),
+                delta_y,
+            ) {
+                if dirty {
+                    self.mark_dirty();
+                }
+                return true;
+            }
+        }
+        if let Some(dirty) = scroll_flow::scroll_images_tab(
+            &mut self.editor_state,
+            viewport_height,
+            Point2D::new(x, y),
+            delta_y,
+        ) {
+            if dirty {
+                self.mark_dirty();
+            }
+            return true;
+        }
+        if !self.layers_panel_visible() {
+            return false;
         }
         let rect = self.layers_content_rect(viewport_height);
         let panel = self.layer_panel();

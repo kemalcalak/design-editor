@@ -3,6 +3,7 @@
 
 use super::WidgetHostNative;
 use crate::NativeFrameBackend;
+use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::{LayerPanel, PaintCx, Widget};
 use de_editor_ui::Point2D;
 
@@ -25,6 +26,9 @@ impl WidgetHostNative {
         //    Layers tree.
         let presenting = self.preview_slideshow_active();
         let rail_open = self.left_rail_visible() && !presenting;
+        if rail_open {
+            self.paint_left_rail_strip(frame);
+        }
         let slides_panel = if rail_open {
             self.slides_panel_frame(viewport_width, viewport_height)
         } else {
@@ -55,7 +59,31 @@ impl WidgetHostNative {
                 self.paint_slides_tab_row(frame, &tabs);
             }
         }
-        if rail_open && slides_panel.is_none() && !chat_owns_rail {
+        // Components / Images own the body too: the rail paints its card
+        // and tab row; Images paints its body right here, the component
+        // browser later in the floating-panel pass.
+        let other_tab_owns_rail = rail_open
+            && slides_panel.is_none()
+            && !chat_owns_rail
+            && !de_editor_ui::widgets::slides_panel_flow::layers_tab_active(&self.editor_state);
+        if other_tab_owns_rail {
+            let panel = self.layers_content_rect(viewport_height);
+            use de_editor_ui::RenderBackend;
+            frame.fill_rect(panel, self.theme.card);
+            if let Some(tabs) = self.slides_tab_row(viewport_height) {
+                self.paint_slides_tab_row(frame, &tabs);
+            }
+            let body = de_editor_ui::widgets::host_canvas_geometry::rail_body_rect(
+                &self.editor_state,
+                viewport_height,
+            );
+            de_editor_ui::widgets::images_tab::paint(
+                &mut de_editor_ui::widgets::PaintCx { backend: frame },
+                &self.editor_state,
+                body,
+            );
+        }
+        if rail_open && slides_panel.is_none() && !chat_owns_rail && !other_tab_owns_rail {
             // Compute the active drop target so the panel can paint
             // the drop-indicator line during a drag-to-reorder.
             // The rail is the tab row's leftovers when a tab row shows,
@@ -135,6 +163,19 @@ impl WidgetHostNative {
         }
     }
 
+    /// The rail's window strip: the traffic lights' (or the custom
+    /// window dots') home and the window's drag handle.
+    fn paint_left_rail_strip(&self, frame: &mut NativeFrameBackend<'_>) {
+        use de_editor_ui::RenderBackend;
+        let strip = canvas_geometry::left_rail_strip_rect(&self.editor_state);
+        frame.fill_rect(strip, self.theme.card);
+        de_editor_ui::widgets::paint_window_control_dots(
+            frame,
+            strip,
+            self.editor_state.editor_ui.window_control_hover,
+        );
+    }
+
     /// One hard edge between the rail and the canvas.
     ///
     /// Painted AFTER the pinned chat, not at the end of the rail pass:
@@ -151,10 +192,7 @@ impl WidgetHostNative {
             return;
         }
         use de_editor_ui::RenderBackend;
-        let panel = de_editor_ui::widgets::host_canvas_geometry::layer_panel_rect(
-            &self.editor_state,
-            viewport_height,
-        );
+        let panel = canvas_geometry::left_rail_rect(&self.editor_state, viewport_height);
         frame.fill_rect(
             de_editor_ui::Rect::xywh(
                 panel.origin.x + panel.size.x - 1.0,

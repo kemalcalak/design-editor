@@ -1,5 +1,5 @@
 //! `LocalePicker` — dropdown panel listing the 15 native-script
-//! UI locales. Anchored under the TopBar Globe button when
+//! UI locales. Anchored under the file pill (File ▸ Language) when
 //! `Document.ui.locale_picker.open == true`.
 //!
 //! Mirrors the TS app's i18n switcher: vertical list of locale
@@ -32,8 +32,8 @@ impl LocalePicker {
         Self {
             id: WidgetId::new(5100),
             // Home's v2 tokens, so the menu matches Home and Settings in
-            // both the Home top bar and the editor TopBar.
-            theme: crate::widgets::home_surface::settings_theme(ui.effective_theme_mode()),
+            // both the Home top bar and the editor chrome.
+            theme: crate::widgets::home_surface::chrome_theme(ui.effective_theme_mode()),
             selected: ui.effective_locale(),
             state: ui.locale_picker.clone(),
         }

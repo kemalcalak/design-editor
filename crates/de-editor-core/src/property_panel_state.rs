@@ -1,14 +1,11 @@
 //! Property-panel state enums shared by editor core and widget hosts.
 
-/// Which PropertyPanel tab is active — toggled by `Cmd+Shift+C`.
-/// Variant order is the tab strip's left-to-right paint order:
-/// 设计 (Design) | 交互 (Interact) | 代码 (Code). `Interact` is gated
-/// behind the same `agent_settings.experimental_features_enabled`
-/// flag as the Widget section / Preview — see `PropertyPanel.show_interact`.
+/// What the right panel shows — toggled by the canvas `</>` button and
+/// `Cmd+Shift+C`. There is no tab strip (#30): the Code view has its own
+/// header with a close button back to Design.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PropertyTab {
     Design,
-    Interact,
     Code,
 }
 

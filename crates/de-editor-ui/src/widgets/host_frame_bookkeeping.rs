@@ -119,7 +119,7 @@ pub fn fold_preview_deadline(
 /// The platform-independent part of the next animation wake-up: agent
 /// reveal + generation-scan indicators, the canvas layout transition,
 /// the focused text input's caret blink, and the two hover dwells (the
-/// top-bar tooltip's and the chat's pinned-style card's). `None` =
+/// chrome tooltip's and the chat's pinned-style card's). `None` =
 /// nothing animating from these sources.
 ///
 /// Hosts fold their own platform clauses on top through [`earliest`].
@@ -140,11 +140,11 @@ pub fn base_animation_deadline_ms(
     if let Some(input) = state.active_text_input() {
         next = earliest(next, input.next_blink_flip_ms(now_ms));
     }
-    // A dwelling top-bar tooltip becomes due without any further input,
+    // A dwelling chrome tooltip becomes due without any further input,
     // so its instant has to reach the scheduler or the tooltip would
     // only ever appear on the user's next mouse jiggle.
     if let Some(deadline) =
-        crate::widgets::top_bar_tooltip::next_deadline_ms(&state.editor_ui, now_ms)
+        crate::widgets::chrome_tooltip::next_deadline_ms(&state.editor_ui, now_ms)
     {
         next = earliest(next, deadline);
     }

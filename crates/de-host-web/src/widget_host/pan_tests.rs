@@ -326,12 +326,8 @@ fn middle_pan_press_is_blocked_by_every_topmost_floating_panel() {
         .expect("Prompt Center rect");
     assert_panel_blocks_middle_pan(&mut prompt, rect, "Prompt Center");
 
-    let mut components = WidgetHost::new();
-    components.editor_state.editor_ui.component_browser_open = true;
-    let rect = components
-        .component_browser_panel_rect(VIEWPORT_W, VIEWPORT_H)
-        .expect("Component Browser rect");
-    assert_panel_blocks_middle_pan(&mut components, rect, "Component Browser");
+    // The component browser is no longer a floating panel over the canvas
+    // — it is the left rail's Components tab (#30), off the canvas.
 
     // The HTML-import diagnostics card is non-modal but opaque: a wheel or
     // pan started on its header must not reach the canvas beneath it.

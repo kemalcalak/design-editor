@@ -20,9 +20,13 @@ use de_editor_core::EditorState;
 
 use crate::accessibility::{assemble_tree_update, PlacedWidget};
 use crate::layout_scene::LayoutScene;
+use crate::widgets::host_canvas_geometry::{
+    chrome_layout, layer_panel_rect as left_rail_body_rect, property_panel_rect as right_rail_rect,
+    toolbar_fits, toolbar_rect as tool_rail_rect,
+};
 use crate::widgets::{
-    AIChatPlaceholder, CanvasViewport, LayerPanel, LayoutCx, PropertyPanel, StatusBar, Toolbar,
-    TopBar, Widget, WidgetId, ROOT_WIDGET_ID, TOOLBAR_WIDTH, TOP_BAR_HEIGHT,
+    AIChatPlaceholder, CanvasActions, CanvasViewport, FilePill, LayerPanel, LayoutCx,
+    PropertyPanel, StatusBar, Toolbar, Widget, WidgetId, ROOT_WIDGET_ID, TOOLBAR_WIDTH,
 };
 use crate::{Point2D, Rect};
 
@@ -44,7 +48,8 @@ const TOOLBAR_LAYOUT_DPI: f32 = 1.0;
 
 /// Host-resolved placement of the floating / band regions.
 ///
-/// The fixed rails (top bar, layer panel, property panel) are derived
+/// The fixed rails (layer panel, property panel) and the floating chrome
+/// (file pill, canvas action group) are derived
 /// here from `EditorState` — both hosts computed them from the same two
 /// fields — while the canvas band and the two floating panels come from
 /// the host helpers paint uses, so the a11y tree and the painted frame
@@ -65,12 +70,6 @@ pub struct RegionPlacement {
     pub ai_chat_rect: Option<Rect>,
     /// Floating status pill rect, `None` when the canvas is too narrow.
     pub status_bar_rect: Option<Rect>,
-    /// Host toolbar inset from the canvas band's top-left corner (the
-    /// hosts own these constants, so they stay the single source of
-    /// truth rather than being re-spelled here).
-    pub toolbar_inset_x: f32,
-    /// Vertical half of [`Self::toolbar_inset_x`].
-    pub toolbar_inset_y: f32,
 }
 
 /// Assemble the accessibility tree for the current editor frame.
@@ -94,8 +93,6 @@ pub fn editor_tree_update(
         canvas_height,
         ai_chat_rect,
         status_bar_rect,
-        toolbar_inset_x,
-        toolbar_inset_y,
     } = placement;
 
     let window_bounds = Rect {
@@ -104,41 +101,25 @@ pub fn editor_tree_update(
     };
     let ui = &state.editor_ui;
 
-    // 1. TopBar — full-width top strip. Built without the host's
-    // traffic-control tweak on purpose: `TopBar::access_node()` is a
-    // fixed `Header` / "Title bar" node, so the platform chrome flag
-    // cannot change what the tree reports.
-    let top_bar = TopBar::for_editor_ui(ui);
-    let top_bar_rect = Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(viewport_width, TOP_BAR_HEIGHT),
-    };
+    // 1. Floating chrome — the file pill and the canvas action group.
+    let chrome = chrome_layout(state, viewport_width, viewport_height);
+    let file_pill = FilePill::for_editor_ui(ui);
+    let actions = CanvasActions::for_editor_ui(ui);
 
     // 2. LayerPanel — left rail, only when the sidebar is open.
-    let layer_panel_rect = Rect {
-        origin: Point2D::new(0.0, TOP_BAR_HEIGHT),
-        size: Point2D::new(
-            ui.layer_panel_width,
-            (viewport_height - TOP_BAR_HEIGHT).max(0.0),
-        ),
-    };
+    let layer_panel_rect = left_rail_body_rect(state, viewport_height);
 
-    // 3. CanvasViewport — middle band (sidebar / right-rail aware).
+    // 3. CanvasViewport — middle band (sidebar / right-rail aware). There
+    // is no title bar, so the band starts at the window's top edge.
     let canvas = CanvasViewport::from_editor(state, scene);
     let canvas_rect = Rect {
-        origin: Point2D::new(canvas_left, TOP_BAR_HEIGHT),
+        origin: Point2D::new(canvas_left, 0.0),
         size: Point2D::new(canvas_width, canvas_height),
     };
 
     // 4. PropertyPanel — right rail, only with a selection.
     let property_panel = PropertyPanel::for_selection_at(state, now_ms);
-    let property_rect = Rect {
-        origin: Point2D::new(viewport_width - ui.property_panel_width, TOP_BAR_HEIGHT),
-        size: Point2D::new(
-            ui.property_panel_width,
-            (viewport_height - TOP_BAR_HEIGHT).max(0.0),
-        ),
-    };
+    let property_rect = right_rail_rect(state, viewport_width, viewport_height);
 
     // 5. Toolbar — floating vertical column over the canvas.
     let toolbar = Toolbar::for_editor(state);
@@ -150,14 +131,8 @@ pub fn editor_tree_update(
         .rect
         .size
         .y;
-    let toolbar_rect = Rect {
-        origin: Point2D::new(
-            canvas_left + toolbar_inset_x,
-            TOP_BAR_HEIGHT + toolbar_inset_y,
-        ),
-        size: Point2D::new(TOOLBAR_WIDTH, toolbar_h),
-    };
-    let toolbar_visible = canvas_width > TOOLBAR_WIDTH + toolbar_inset_x * 2.0;
+    let toolbar_rect = tool_rail_rect(state, viewport_width, viewport_height, toolbar_h);
+    let toolbar_visible = toolbar_fits(canvas_width);
 
     // 6. AIChatPlaceholder — floating chat panel.
     let chat = AIChatPlaceholder::from_editor_at(state, now_ms);
@@ -167,7 +142,12 @@ pub fn editor_tree_update(
 
     // Assemble the ordered, present set. Order = reading order.
     let mut placed: Vec<PlacedWidget<'_>> = Vec::with_capacity(8);
-    placed.push(PlacedWidget::new(&top_bar, top_bar_rect));
+    if let Some(layout) = chrome.file_pill {
+        placed.push(PlacedWidget::new(&file_pill, layout.rect));
+    }
+    if let Some(layout) = chrome.actions {
+        placed.push(PlacedWidget::new(&actions, layout.rect));
+    }
     if ui.sidebar_open {
         placed.push(PlacedWidget::new(layer_panel, layer_panel_rect));
     }

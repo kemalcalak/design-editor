@@ -318,7 +318,7 @@ fn paint_fill_rule_control(
         };
         let text = TextLayout::single_run(
             label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             11.0,
             if rule == active {
                 theme.primary_foreground
@@ -494,7 +494,7 @@ fn paint_one_fill(
     let pct_text = edit.value_for(opacity_focus, &opacity_owned);
     let pct = TextLayout::single_run(
         pct_text,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -513,7 +513,7 @@ fn paint_one_fill(
         },
         12.0,
         0.0,
-        pct_rect.origin.y + 19.0,
+        pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
     ) {
         edit.paint_selection_at(
             cx,
@@ -521,12 +521,17 @@ fn paint_one_fill(
             opacity_focus,
             pct_text,
             pct_x,
-            pct_rect.origin.y + 19.0,
+            pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
             12.0,
             pct_rect.origin.x + pct_rect.size.x - 8.0,
         );
-        cx.backend
-            .draw_text(&pct, Point2D::new(pct_x, pct_rect.origin.y + 19.0));
+        cx.backend.draw_text(
+            &pct,
+            Point2D::new(
+                pct_x,
+                pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+            ),
+        );
         if let Some(pos) = edit.caret_at(opacity_focus) {
             let w = text_metrics::measure_chrome(
                 cx.backend,
@@ -544,7 +549,7 @@ fn paint_one_fill(
     }
     let pct_unit = TextLayout::single_run(
         "%",
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -553,7 +558,7 @@ fn paint_one_fill(
         &pct_unit,
         Point2D::new(
             pct_rect.origin.x + pct_rect.size.x - 14.0,
-            pct_rect.origin.y + 19.0,
+            pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
         ),
     );
     let move_icon_size = 12.0;

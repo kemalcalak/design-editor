@@ -3,8 +3,8 @@
 use crate::theme::Theme;
 use crate::widgets::property_panel::{PropertyPanel, PropertyPanelAction};
 use crate::widgets::property_panel_inputs::{
-    paint_section_divider, paint_section_label, HEADER_HEIGHT, INPUT_HEIGHT, INPUT_RADIUS, PAD_X,
-    SECTION_GAP, TAB_HEIGHT,
+    paint_section_divider, paint_section_label, INPUT_HEIGHT, INPUT_RADIUS, PAD_X,
+    PANEL_HEADER_HEIGHT, SECTION_GAP,
 };
 use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::text_metrics;
@@ -17,8 +17,7 @@ const CLEAR_W: f32 = 58.0;
 
 pub fn background_input_rect(panel_rect: Rect, has_background: bool) -> Rect {
     let y = panel_rect.origin.y
-        + TAB_HEIGHT
-        + HEADER_HEIGHT
+        + PANEL_HEADER_HEIGHT
         + crate::widgets::property_panel_inputs::SECTION_HEADER_HEIGHT;
     let clear_space = if has_background {
         CLEAR_W + CLEAR_GAP
@@ -46,8 +45,7 @@ pub fn clear_rect(panel_rect: Rect, has_background: bool) -> Option<Rect> {
 }
 
 pub fn content_height() -> f32 {
-    TAB_HEIGHT
-        + HEADER_HEIGHT
+    PANEL_HEADER_HEIGHT
         + crate::widgets::property_panel_inputs::SECTION_HEADER_HEIGHT
         + INPUT_HEIGHT
         + 12.0
@@ -60,15 +58,12 @@ pub fn paint_page_inspector(
     theme: &Theme,
     edit: &EditContext<'_>,
     locale: de_editor_core::Locale,
-    page_name: &str,
     background: Option<&str>,
     panel_rect: Rect,
 ) {
     let x = panel_rect.origin.x;
     let width = panel_rect.size.x;
-    let mut y = panel_rect.origin.y + TAB_HEIGHT;
-    paint_page_header(cx, theme, page_name, x, y, width);
-    y += HEADER_HEIGHT;
+    let mut y = panel_rect.origin.y + PANEL_HEADER_HEIGHT;
     y = paint_section_label(
         cx,
         theme,
@@ -102,34 +97,6 @@ pub fn paint_page_inspector(
     }
     y += INPUT_HEIGHT + 12.0;
     paint_section_divider(cx, theme, x, y, width);
-}
-
-fn paint_page_header(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    page_name: &str,
-    x: f32,
-    y: f32,
-    width: f32,
-) {
-    let text = if page_name.is_empty() {
-        "Page"
-    } else {
-        page_name
-    };
-    let layout = TextLayout::single_run(
-        text,
-        "system-ui",
-        13.0,
-        theme.foreground.to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend
-        .draw_text(&layout, Point2D::new(x + PAD_X, y + 20.0));
-    cx.backend.fill_rect(
-        Rect::xywh(x + PAD_X, y + HEADER_HEIGHT - 1.0, width - PAD_X * 2.0, 1.0),
-        theme.border,
-    );
 }
 
 fn paint_background_input(
@@ -168,7 +135,7 @@ fn paint_background_input(
         input_view,
         12.0,
         0.0,
-        rect.origin.y + 19.0,
+        rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
     ) {
         edit.paint_selection_at(
             cx,
@@ -176,19 +143,24 @@ fn paint_background_input(
             focus,
             value,
             value_x,
-            rect.origin.y + 19.0,
+            rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
             12.0,
             rect.origin.x + rect.size.x - 8.0,
         );
         let text = TextLayout::single_run(
             value,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             theme.foreground.to_jian(),
             Point2D::new(0.0, 0.0),
         );
-        cx.backend
-            .draw_text(&text, Point2D::new(value_x, rect.origin.y + 19.0));
+        cx.backend.draw_text(
+            &text,
+            Point2D::new(
+                value_x,
+                rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+            ),
+        );
         if let Some(pos) = edit.caret_at(focus) {
             let prefix = &value[..pos.min(value.len())];
             let caret_x = value_x + text_metrics::measure_chrome(cx.backend, prefix, 12.0);

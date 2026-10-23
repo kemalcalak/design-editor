@@ -60,8 +60,11 @@ pub(crate) fn paint_fill_solid_body(
     }
     cx.backend.fill_round_rect(
         Rect {
-            // Vertically centre the 16-tall swatch in the 30-tall row.
-            origin: Point2D::new(hex_rect.origin.x + 6.0, hex_rect.origin.y + 7.0),
+            // Vertically centre the 16-tall swatch in the input row.
+            origin: Point2D::new(
+                hex_rect.origin.x + 6.0,
+                hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_SWATCH_INSET,
+            ),
             size: Point2D::new(16.0, 16.0),
         },
         3.0,
@@ -82,12 +85,12 @@ pub(crate) fn paint_fill_solid_body(
             },
             12.0,
             0.0,
-            hex_rect.origin.y + 19.0,
+            hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
         );
     if !painted_hex {
         let hex_layout = TextLayout::single_run(
             hex_text,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -99,13 +102,18 @@ pub(crate) fn paint_fill_solid_body(
                 hex_focus,
                 hex_text,
                 hex_x,
-                hex_rect.origin.y + 19.0,
+                hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
                 12.0,
                 hex_rect.origin.x + hex_rect.size.x - 8.0,
             );
         }
-        cx.backend
-            .draw_text(&hex_layout, Point2D::new(hex_x, hex_rect.origin.y + 19.0));
+        cx.backend.draw_text(
+            &hex_layout,
+            Point2D::new(
+                hex_x,
+                hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+            ),
+        );
         if variable_ref.is_none() {
             if let Some(pos) = edit.caret_at(hex_focus) {
                 let w = text_metrics::measure_chrome(
@@ -165,14 +173,17 @@ pub(crate) fn paint_fill_gradient_body(
         }
         let prefix = TextLayout::single_run(
             de_i18n::translate(locale, "fill.angle"),
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
         );
         cx.backend.draw_text(
             &prefix,
-            Point2D::new(angle_rect.origin.x + 10.0, angle_rect.origin.y + 19.0),
+            Point2D::new(
+                angle_rect.origin.x + 10.0,
+                angle_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+            ),
         );
         let angle_owned = format_angle(snapshot.gradient_angle.unwrap_or(0.0));
         let value_text = edit.value_for(angle_focus, &angle_owned);
@@ -190,11 +201,11 @@ pub(crate) fn paint_fill_gradient_body(
             },
             12.0,
             0.0,
-            angle_rect.origin.y + 19.0,
+            angle_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
         ) {
             let value = TextLayout::single_run(
                 value_text,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 12.0,
                 (theme.foreground).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -205,12 +216,18 @@ pub(crate) fn paint_fill_gradient_body(
                 angle_focus,
                 value_text,
                 value_x,
-                angle_rect.origin.y + 19.0,
+                angle_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
                 12.0,
                 angle_rect.origin.x + angle_rect.size.x - 8.0,
             );
-            cx.backend
-                .draw_text(&value, Point2D::new(value_x, angle_rect.origin.y + 19.0));
+            cx.backend.draw_text(
+                &value,
+                Point2D::new(
+                    value_x,
+                    angle_rect.origin.y
+                        + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+                ),
+            );
             if let Some(pos) = edit.caret_at(angle_focus) {
                 let w = text_metrics::measure_chrome(
                     cx.backend,
@@ -228,7 +245,7 @@ pub(crate) fn paint_fill_gradient_body(
         }
         let unit = TextLayout::single_run(
             "°",
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -237,7 +254,7 @@ pub(crate) fn paint_fill_gradient_body(
             &unit,
             Point2D::new(
                 angle_rect.origin.x + angle_rect.size.x - 14.0,
-                angle_rect.origin.y + 19.0,
+                angle_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
             ),
         );
         yy += INPUT_HEIGHT + 6.0;
@@ -245,7 +262,7 @@ pub(crate) fn paint_fill_gradient_body(
     // Color stops header + plus.
     let header = TextLayout::single_run(
         de_i18n::translate(locale, "fill.stops"),
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -313,11 +330,11 @@ pub(crate) fn paint_fill_gradient_body(
             },
             12.0,
             0.0,
-            hex_rect.origin.y + 19.0,
+            hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
         ) {
             let hex_layout = TextLayout::single_run(
                 hex_text,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 12.0,
                 (theme.foreground).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -328,13 +345,16 @@ pub(crate) fn paint_fill_gradient_body(
                 hex_focus,
                 hex_text,
                 hex_text_x,
-                hex_rect.origin.y + 19.0,
+                hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
                 12.0,
                 hex_rect.origin.x + hex_rect.size.x - 8.0,
             );
             cx.backend.draw_text(
                 &hex_layout,
-                Point2D::new(hex_text_x, hex_rect.origin.y + 19.0),
+                Point2D::new(
+                    hex_text_x,
+                    hex_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+                ),
             );
             if let Some(pos) = edit.caret_at(hex_focus) {
                 let w = text_metrics::measure_chrome(
@@ -379,11 +399,11 @@ pub(crate) fn paint_fill_gradient_body(
             },
             12.0,
             0.0,
-            pct_rect.origin.y + 19.0,
+            pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
         ) {
             let pct_layout = TextLayout::single_run(
                 pct_text,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 12.0,
                 (theme.foreground).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -394,12 +414,17 @@ pub(crate) fn paint_fill_gradient_body(
                 offset_focus,
                 pct_text,
                 pct_x,
-                pct_rect.origin.y + 19.0,
+                pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
                 12.0,
                 pct_rect.origin.x + pct_rect.size.x - 8.0,
             );
-            cx.backend
-                .draw_text(&pct_layout, Point2D::new(pct_x, pct_rect.origin.y + 19.0));
+            cx.backend.draw_text(
+                &pct_layout,
+                Point2D::new(
+                    pct_x,
+                    pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
+                ),
+            );
             if let Some(pos) = edit.caret_at(offset_focus) {
                 let w = text_metrics::measure_chrome(
                     cx.backend,
@@ -417,7 +442,7 @@ pub(crate) fn paint_fill_gradient_body(
         }
         let pct_unit = TextLayout::single_run(
             "%",
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -426,7 +451,7 @@ pub(crate) fn paint_fill_gradient_body(
             &pct_unit,
             Point2D::new(
                 pct_rect.origin.x + pct_rect.size.x - 14.0,
-                pct_rect.origin.y + 19.0,
+                pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
             ),
         );
         if show_remove {

@@ -4,7 +4,7 @@
 //! carries owned `String` payloads, so it is not `Copy` and can't live
 //! on `EditorUiState`. These small `Copy` enums capture just the chat
 //! controls that need hover paint state — same wasm32-clean discipline
-//! as `topbar_state` / `statusbar_state`.
+//! as `chrome_button_state` / `statusbar_state`.
 
 /// Which bare header button of the AI chat panel the cursor is over.
 /// `None` on `EditorUiState.chat_header_hover` = no hover wash. The

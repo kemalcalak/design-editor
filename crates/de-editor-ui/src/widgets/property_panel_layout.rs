@@ -9,8 +9,8 @@
 use crate::widgets::property_panel::{EffectSummary, FillSummary, PropertyPanelAction};
 use crate::widgets::property_panel_fill::fill_row_height;
 use crate::widgets::property_panel_inputs::{
-    COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, HEADER_HEIGHT, INPUT_HEIGHT, PAD_X, SECTION_GAP,
-    SECTION_HEADER_HEIGHT, TAB_HEIGHT,
+    COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, INPUT_HEIGHT, PAD_X, PANEL_HEADER_HEIGHT,
+    SECTION_GAP, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::property_panel_interactions::{
     interactions_section_height, push_interaction_action_rects, InteractionSummary,
@@ -231,8 +231,7 @@ pub fn action_button_rects_with_fill_picker(
     let mut out: Vec<(PropertyPanelAction, Rect)> = Vec::new();
 
     let mut y = panel_rect.origin.y;
-    y += TAB_HEIGHT;
-    y += HEADER_HEIGHT;
+    y += PANEL_HEADER_HEIGHT;
     if visible.create_component {
         out.extend(crate::widgets::property_panel_instance::action_rects(
             x0,
@@ -244,9 +243,10 @@ pub fn action_button_rects_with_fill_picker(
             visible.component_button,
         );
     }
-    // Position section.
+    // Position section: X Y, then W H (#30), then rotation / radius.
     y += SECTION_HEADER_HEIGHT;
     y += INPUT_HEIGHT + 6.0;
+    y += visible.position_size_row_h();
     if visible.corner_per_corner {
         out.push((
             PropertyPanelAction::ToggleCornerExpand,
@@ -278,10 +278,7 @@ pub fn action_button_rects_with_fill_picker(
     }
 
     if visible.size_options {
-        y += SECTION_HEADER_HEIGHT;
-        // W/H remain editable in every sizing mode. Committing a number
-        // switches only that axis back to fixed sizing.
-        y += INPUT_HEIGHT + 10.0;
+        y += visible.size_section_lead_h();
         let row_h = crate::widgets::property_panel_inputs::size_check_row_height();
         out.push((
             PropertyPanelAction::ToggleSizeFillWidth,
@@ -564,7 +561,16 @@ pub fn action_button_rects_with_fill_picker(
             }
         }
     }
-    let _ = y; // suppress unused-write lint if export is last
+    // The closing Code section (#30). Export's popups open upward, so
+    // they never cover these chips.
+    for (fw, rect) in crate::widgets::property_panel_code_chips::chip_rects(x0, y, w) {
+        out.push((
+            PropertyPanelAction::Codegen(
+                crate::widgets::property_panel_action::CodegenAction::OpenInCodeView(fw),
+            ),
+            rect,
+        ));
+    }
 
     out
 }

@@ -1,27 +1,25 @@
-//! `ComponentBrowserPanel` — the floating UIKit-browser panel.
+//! `ComponentBrowserPanel` — the left rail's Components tab (#30).
 //!
-//! The Rust counterpart of the TS `component-browser-panel.tsx`: a
-//! draggable floating panel listing every UIKit component the editor
-//! ships with, grouped by category pills. Clicking a card queues an
-//! instantiate request the desktop host drains against the viewport
-//! centre. The panel is platform-free: the host paints it, maps a
-//! click to a [`ComponentBrowserHit`], and owns the drag + insert.
+//! Lists every UIKit component the editor ships with (plus imported
+//! kits), grouped by category pills that wrap onto as many lines as the
+//! rail needs, above a scrolling two-column card grid. Clicking a card
+//! queues an instantiate request the host drains against the viewport
+//! centre. It used to be a draggable floating panel; it now fills the
+//! rail's body, so it has no close button and no drag. The panel is
+//! platform-free: the host paints it into the rail body, maps a click
+//! to a [`ComponentBrowserHit`], and owns the insert.
 
 use crate::theme::Theme;
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::editor_state_ext::theme_for;
 use crate::widgets::property_panel_text_input::paint_text_input_view;
+use crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 use crate::widgets::{draw_icon, Icon, PaintCx};
 use crate::{Color, Point2D, Rect, TextLayout};
 use de_editor_core::{
     ButtonPressTarget, ComponentBrowserButton, ComponentCategory, EditorState, KitComponent,
     Locale, UIKit,
 };
-
-/// Panel width in logical px.
-pub const COMPONENT_BROWSER_PANEL_W: f32 = 520.0;
-/// Panel height in logical px.
-pub const COMPONENT_BROWSER_PANEL_H: f32 = 460.0;
 
 pub(in crate::widgets) const PAD: f32 = 14.0;
 pub(in crate::widgets) const HEADER_H: f32 = 40.0;
@@ -35,7 +33,7 @@ const CLOSE_BTN: f32 = 24.0;
 /// Gap between the header action buttons (TS `gap-1`).
 const HEADER_BTN_GAP: f32 = 4.0;
 const CARD_GAP: f32 = 8.0;
-const CARD_COLS: usize = 3;
+const CARD_COLS: usize = 2;
 const CARD_H: f32 = 96.0;
 /// Card preview-rect inset from the card edges.
 const PREVIEW_INSET: f32 = 10.0;
@@ -103,8 +101,6 @@ const CATEGORIES: [(Option<ComponentCategory>, &str); 9] = [
 /// What a click landed on inside the Component-Browser panel.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ComponentBrowserHit {
-    /// The header ✕ — close the panel.
-    Close,
     /// The header Download button — queue a kit export (TS
     /// `handleExport`).
     ExportKit,
@@ -123,8 +119,8 @@ pub enum ComponentBrowserHit {
     ConfirmDeleteKit(String),
     /// The inline Cancel button — disarm the confirmation.
     CancelDeleteKit,
-    /// The header bar (not on a button) — start a panel drag.
-    DragHeader,
+    /// The search box — give it the keyboard.
+    FocusSearch,
     /// A category pill — set the active category filter.
     SelectCategory(Option<ComponentCategory>),
     /// A component card — queue an instantiate of `(kit_id, comp_id)`.
@@ -133,7 +129,7 @@ pub enum ComponentBrowserHit {
     Inside,
 }
 
-/// The floating Component-Browser panel, built from an [`EditorState`].
+/// The Components tab, built from an [`EditorState`].
 /// Field visibility is widgets-scoped so the kit-management strip
 /// (`component_browser_kits.rs`, sibling at the 800-line cap) can
 /// share geometry + state.
@@ -149,18 +145,23 @@ pub struct ComponentBrowserPanel<'a> {
     pub(in crate::widgets) pressed: Option<ComponentBrowserButton>,
     /// Frame clock for the search field's caret blink.
     pub(in crate::widgets) now_ms: u64,
+    /// [`Self::visible_categories`], scanned once per build: the pill
+    /// layout feeds every rect below it (search, grid, cards), so one
+    /// paint or hit-test asks for it several times.
+    categories: std::cell::OnceCell<Vec<(Option<ComponentCategory>, &'static str)>>,
 }
 
 impl<'a> ComponentBrowserPanel<'a> {
-    /// Build the panel for the editor, or `None` when it is closed. Non-paint
-    /// callers (hit-test) don't need the caret clock and pass `0`.
+    /// Build the panel for the editor, or `None` when the rail is not
+    /// showing the Components tab. Non-paint callers (hit-test) don't need
+    /// the caret clock and pass `0`.
     pub fn for_editor(state: &'a EditorState) -> Option<ComponentBrowserPanel<'a>> {
         Self::for_editor_at(state, 0)
     }
 
     /// Build the panel with a frame clock so the search caret blinks.
     pub fn for_editor_at(state: &'a EditorState, now_ms: u64) -> Option<ComponentBrowserPanel<'a>> {
-        if !state.editor_ui.component_browser_open {
+        if !crate::widgets::host_canvas_geometry::components_tab_on_show(state) {
             return None;
         }
         Some(ComponentBrowserPanel {
@@ -174,6 +175,7 @@ impl<'a> ComponentBrowserPanel<'a> {
                 _ => None,
             },
             now_ms,
+            categories: std::cell::OnceCell::new(),
         })
     }
 
@@ -189,9 +191,6 @@ impl<'a> ComponentBrowserPanel<'a> {
         // The open kit-picker popover sits over everything else.
         if self.state.editor_ui.component_browser_kit_picker_open {
             return self.hover_kit_picker(panel, point);
-        }
-        if Self::close_rect(panel).contains(point) {
-            return Some(B::Close);
         }
         if Self::import_rect(panel).contains(point) {
             return Some(B::ImportKit);
@@ -209,6 +208,9 @@ impl<'a> ComponentBrowserPanel<'a> {
             if rect.contains(point) {
                 return Some(B::Category(cat));
             }
+        }
+        if point.y < self.grid_clip_top(panel) {
+            return None;
         }
         let count = self.filtered().len();
         self.card_rects(panel, count)
@@ -245,7 +247,11 @@ impl<'a> ComponentBrowserPanel<'a> {
     /// Categories actually present across the in-scope kits — pills
     /// for empty categories are hidden. "All" is always shown. The
     /// active kit filter narrows the scope when set.
-    fn visible_categories(&self) -> Vec<(Option<ComponentCategory>, &'static str)> {
+    fn visible_categories(&self) -> &[(Option<ComponentCategory>, &'static str)] {
+        self.categories.get_or_init(|| self.scan_categories())
+    }
+
+    fn scan_categories(&self) -> Vec<(Option<ComponentCategory>, &'static str)> {
         let kit_filter = self.state.editor_ui.component_browser_kit_id.as_deref();
         let mut have = std::collections::HashSet::new();
         for kit in self.kits() {
@@ -322,21 +328,11 @@ impl<'a> ComponentBrowserPanel<'a> {
         out
     }
 
-    /// The three header buttons — Download (export), Upload (import),
-    /// ✕ (close), right-aligned in TS order.
-    fn close_rect(panel: Rect) -> Rect {
+    /// Upload — import a kit file (the header's right-most button).
+    pub(in crate::widgets) fn import_rect(panel: Rect) -> Rect {
         let y = panel.origin.y + (HEADER_H - CLOSE_BTN) / 2.0;
         Rect {
             origin: Point2D::new(panel.origin.x + panel.size.x - PAD - CLOSE_BTN, y),
-            size: Point2D::new(CLOSE_BTN, CLOSE_BTN),
-        }
-    }
-
-    /// Upload — import a kit file (left of the close button).
-    pub(in crate::widgets) fn import_rect(panel: Rect) -> Rect {
-        let close = Self::close_rect(panel);
-        Rect {
-            origin: Point2D::new(close.origin.x - HEADER_BTN_GAP - CLOSE_BTN, close.origin.y),
             size: Point2D::new(CLOSE_BTN, CLOSE_BTN),
         }
     }
@@ -354,17 +350,25 @@ impl<'a> ComponentBrowserPanel<'a> {
         }
     }
 
-    /// The pill row's rects + their categories, in paint order. The
-    /// pill row sits below the kit strip (TS panel order: header /
-    /// kit selector / imported kits / pills / search / grid).
+    /// The pills' rects + their categories, in paint order, wrapped onto
+    /// as many lines as the rail's width needs. They sit below the kit
+    /// strip (panel order: header / kit selector / imported kits / pills /
+    /// search / grid).
     fn pill_rects(&self, panel: Rect) -> Vec<(Rect, Option<ComponentCategory>)> {
         let pills = self.visible_categories();
         let mut out = Vec::with_capacity(pills.len());
-        let mut x = panel.origin.x + PAD;
-        let y = panel.origin.y + HEADER_H + self.kit_strip_height() + (PILL_ROW_H - PILL_H) / 2.0;
-        for (cat, label_key) in pills {
+        let left = panel.origin.x + PAD;
+        let right = panel.origin.x + panel.size.x - PAD;
+        let mut x = left;
+        let mut y =
+            panel.origin.y + HEADER_H + self.kit_strip_height() + (PILL_ROW_H - PILL_H) / 2.0;
+        for &(cat, label_key) in pills {
             let label = self.t(label_key);
             let w = label.chars().count() as f32 * CHAR_W + PILL_PAD_X * 2.0;
+            if x > left && x + w > right {
+                x = left;
+                y += PILL_H + PILL_GAP;
+            }
             out.push((
                 Rect {
                     origin: Point2D::new(x, y),
@@ -377,9 +381,49 @@ impl<'a> ComponentBrowserPanel<'a> {
         out
     }
 
+    /// Height of the pill block — one [`PILL_ROW_H`] line, plus a line
+    /// per wrap.
+    fn pills_height(&self, panel: Rect) -> f32 {
+        let lines = self.pill_rects(panel).last().map_or(1.0, |(last, _)| {
+            let first_y =
+                panel.origin.y + HEADER_H + self.kit_strip_height() + (PILL_ROW_H - PILL_H) / 2.0;
+            ((last.origin.y - first_y) / (PILL_H + PILL_GAP)).round() + 1.0
+        });
+        PILL_ROW_H + (lines - 1.0) * (PILL_H + PILL_GAP)
+    }
+
+    /// The search box.
+    fn search_rect(&self, panel: Rect) -> Rect {
+        Rect {
+            origin: Point2D::new(
+                panel.origin.x + PAD,
+                panel.origin.y
+                    + HEADER_H
+                    + self.kit_strip_height()
+                    + self.pills_height(panel)
+                    + 8.0,
+            ),
+            size: Point2D::new(panel.size.x - PAD * 2.0, 28.0),
+        }
+    }
+
     /// Top edge of the (clipped) card grid region.
     fn grid_clip_top(&self, panel: Rect) -> f32 {
-        panel.origin.y + HEADER_H + self.kit_strip_height() + PILL_ROW_H + SEARCH_H
+        panel.origin.y + HEADER_H + self.kit_strip_height() + self.pills_height(panel) + SEARCH_H
+    }
+
+    /// How far the card grid can scroll for `count` cards in `panel`.
+    pub fn max_scroll(&self, panel: Rect, count: usize) -> f32 {
+        let rows = count.div_ceil(CARD_COLS) as f32;
+        let content = CARD_GAP + rows * (CARD_H + CARD_GAP);
+        let visible = panel.origin.y + panel.size.y - self.grid_clip_top(panel);
+        (content - visible).max(0.0)
+    }
+
+    /// The scroll ceiling for the panel's current filter — what the hosts
+    /// clamp a wheel step against.
+    pub fn current_max_scroll(&self, panel: Rect) -> f32 {
+        self.max_scroll(panel, self.filtered().len())
     }
 
     /// Card slot rects, in row-major order — paint + hit-test share
@@ -391,7 +435,13 @@ impl<'a> ComponentBrowserPanel<'a> {
     /// cross-frame cache).
     fn card_rects(&self, panel: Rect, count: usize) -> Vec<Rect> {
         let left = panel.origin.x + PAD;
-        let top = self.grid_clip_top(panel) + CARD_GAP;
+        let scroll = self
+            .state
+            .editor_ui
+            .component_browser_scroll
+            .offset
+            .clamp(0.0, self.max_scroll(panel, count));
+        let top = self.grid_clip_top(panel) + CARD_GAP - scroll;
         let cols = CARD_COLS as f32;
         let inner_w = panel.size.x - PAD * 2.0;
         let card_w = (inner_w - CARD_GAP * (cols - 1.0)) / cols;
@@ -421,18 +471,17 @@ impl<'a> ComponentBrowserPanel<'a> {
         if self.state.editor_ui.component_browser_kit_picker_open {
             return Some(self.hit_test_kit_picker(panel, point));
         }
-        if Self::close_rect(panel).contains(point) {
-            return Some(ComponentBrowserHit::Close);
-        }
         if Self::import_rect(panel).contains(point) {
             return Some(ComponentBrowserHit::ImportKit);
         }
         if Self::export_rect(panel).contains(point) {
             return Some(ComponentBrowserHit::ExportKit);
         }
-        // The header bar (above the kit strip) starts a drag.
         if point.y <= panel.origin.y + HEADER_H {
-            return Some(ComponentBrowserHit::DragHeader);
+            return Some(ComponentBrowserHit::Inside);
+        }
+        if self.search_rect(panel).contains(point) {
+            return Some(ComponentBrowserHit::FocusSearch);
         }
         if let Some(hit) = self.hit_test_kit_strip(panel, point) {
             return Some(hit);
@@ -441,6 +490,9 @@ impl<'a> ComponentBrowserPanel<'a> {
             if rect.contains(point) {
                 return Some(ComponentBrowserHit::SelectCategory(cat));
             }
+        }
+        if point.y < self.grid_clip_top(panel) {
+            return Some(ComponentBrowserHit::Inside);
         }
         let filtered = self.filtered();
         for (i, rect) in self
@@ -459,13 +511,11 @@ impl<'a> ComponentBrowserPanel<'a> {
         Some(ComponentBrowserHit::Inside)
     }
 
-    /// Paint the panel into `rect`.
+    /// Paint the tab into the rail body `rect`.
     pub fn paint(&self, cx: &mut PaintCx<'_>, rect: Rect) {
-        cx.backend.fill_round_rect(rect, 12.0, self.theme.card);
-        cx.backend
-            .stroke_round_rect(rect, 12.0, self.theme.border, 1.0);
+        cx.backend.fill_rect(rect, self.theme.card);
 
-        // Header: title + close.
+        // Header: title + kit actions.
         self.text(
             cx,
             self.t("componentBrowser.title"),
@@ -473,24 +523,6 @@ impl<'a> ComponentBrowserPanel<'a> {
             rect.origin.y + HEADER_H / 2.0 + 4.0,
             13.0,
             self.theme.foreground,
-        );
-        let close = Self::close_rect(rect);
-        cx.backend.fill_round_rect(close, 6.0, self.theme.muted);
-        let close_hovered = self.hover == Some(ComponentBrowserButton::Close);
-        let close_pressed = self.is_pressed(ComponentBrowserButton::Close);
-        jian_widgets::components::icon_button::IconButton {
-            icon_paths: Icon::Close.paths(),
-            hovered: close_hovered,
-            pressed: close_pressed,
-            active: false,
-            enabled: true,
-            icon_size: CLOSE_BTN - 10.0,
-            stroke_width: 1.5,
-        }
-        .paint(
-            cx.backend,
-            close,
-            &crate::widgets::button::tokens_from_theme(&self.theme),
         );
         // Header kit actions — Download (export) + Upload (import),
         // TS `component-browser-panel.tsx` header buttons.
@@ -534,15 +566,10 @@ impl<'a> ComponentBrowserPanel<'a> {
         // Kit-filter row + imported-kit management rows (sibling file).
         self.paint_kit_strip(cx, rect);
 
-        // Search field. The native host routes keyboard input to this
-        // filter whenever the panel is open.
-        let search_rect = Rect {
-            origin: Point2D::new(
-                rect.origin.x + PAD,
-                rect.origin.y + HEADER_H + self.kit_strip_height() + PILL_ROW_H + 8.0,
-            ),
-            size: Point2D::new(rect.size.x - PAD * 2.0, 28.0),
-        };
+        // Search field. The hosts route keyboard input to this filter
+        // while it holds the focus (`component_browser_search_focused`).
+        let search_rect = self.search_rect(rect);
+        let search_focused = self.state.editor_ui.component_browser_search_focused;
         cx.backend
             .fill_round_rect(search_rect, 6.0, self.theme.muted);
         cx.backend
@@ -558,7 +585,7 @@ impl<'a> ComponentBrowserPanel<'a> {
         // Value + placeholder + caret + select-all highlight render through the
         // unified jian TextInputView (one caret implementation, family-aware so
         // it doesn't drift). The buffer is rebuilt from the filter String each
-        // frame; the panel owns the keyboard while open, so it reads as focused.
+        // frame.
         let placeholder = self.t("componentBrowser.searchComponents");
         let mut search_input = jian_core::text_input::TextInputState::with_text(
             self.state.editor_ui.component_browser_search.clone(),
@@ -580,7 +607,7 @@ impl<'a> ComponentBrowserPanel<'a> {
             search_rect.origin.y + 19.0,
             self.now_ms,
             placeholder,
-            true,
+            search_focused,
         );
 
         // Category pills.
@@ -698,7 +725,9 @@ impl<'a> ComponentBrowserPanel<'a> {
             ),
             size: Point2D::new(pw, ph),
         };
-        cx.backend.fill_round_rect(preview, 4.0, self.theme.accent);
+        // `accent` is the card surface itself in the chrome palette, so the
+        // footprint takes the border tone to stay visible.
+        cx.backend.fill_round_rect(preview, 4.0, self.theme.border);
         // Component name.
         let label = truncate(&comp.name, 22);
         let label_w = label.chars().count() as f32 * CHAR_W;
@@ -723,7 +752,7 @@ impl<'a> ComponentBrowserPanel<'a> {
     ) {
         let layout = TextLayout::single_run(
             s,
-            "system-ui",
+            CHROME_FONT_FAMILY,
             size,
             (color).to_jian(),
             Point2D::new(0.0, 0.0),

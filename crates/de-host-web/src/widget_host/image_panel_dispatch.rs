@@ -9,8 +9,8 @@
 
 use super::WidgetHost;
 use de_editor_core::host_image_panel_transitions as image_ops;
-use de_editor_ui::widgets::{PropertyPanel, TOP_BAR_HEIGHT};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::PropertyPanel;
+use de_editor_ui::Point2D;
 
 impl WidgetHost {
     pub(in crate::widget_host) fn toggle_image_search_popover(&mut self) {
@@ -161,16 +161,11 @@ impl WidgetHost {
         }
         self.refresh_layout_scene();
         if let Some(panel) = PropertyPanel::for_selection(&self.editor_state) {
-            let rect = Rect {
-                origin: Point2D::new(
-                    viewport_width - self.editor_state.editor_ui.property_panel_width,
-                    TOP_BAR_HEIGHT,
-                ),
-                size: Point2D::new(
-                    self.editor_state.editor_ui.property_panel_width,
-                    (viewport_height - TOP_BAR_HEIGHT).max(0.0),
-                ),
-            };
+            let rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                &self.editor_state,
+                viewport_width,
+                viewport_height,
+            );
             let point = Point2D::new(x, y);
             if let Some(action) = panel.hit_test_action(rect, point) {
                 if matches!(

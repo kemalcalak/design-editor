@@ -1,15 +1,11 @@
-//! `ShapePicker` — dropdown panel listing the seven shape options
-//! the Toolbar's shape slot exposes (mirrors
-//! `apps/web/src/components/editor/shape-tool-dropdown.tsx`).
+//! `ShapePicker` — the shape menu a right-click on the tool rail's
+//! Rectangle slot opens (#30): Rectangle, Polygon, Line, Icon.
 //!
-//! Anchored to the right of the Toolbar shape slot when
-//! `Document.ui.shape_picker.open == true`. Picking a row sets
-//! `ui.shape_tool` (drives the toolbar slot's icon), sets
-//! `doc.tool` (active tool), and closes the panel. Two of the
-//! seven rows are one-shot actions rather than tool changes:
-//! `Icon` opens an icon picker (Step N+ follow-up) and
-//! `ImportImageOrSvg` opens a file dialog. Both are reported
-//! verbatim by the host so it can dispatch to the right place.
+//! Ellipse, Pen and image import have their own rail buttons, so the
+//! menu carries only what the rail does not. Anchored to the right of
+//! the slot when `EditorUiState::shape_picker.open == true`. Picking a
+//! shape sets `ui.shape_tool` (drives the slot's icon), sets the active
+//! tool, and closes the menu; `Icon` opens the icon picker.
 
 use crate::theme::Theme;
 use crate::widgets::button::paint_button_feedback_wash;
@@ -26,7 +22,7 @@ pub const SHAPE_PICKER_WIDTH: f32 = 220.0;
 const ROW_HEIGHT: f32 = 36.0;
 const ROW_PAD_X: f32 = 12.0;
 const ICON_SIZE: f32 = 16.0;
-const ROW_COUNT: usize = 7;
+const ROW_COUNT: usize = 4;
 /// Top + bottom padding inside the panel, so the first / last rows don't sit
 /// flush against the rounded panel edge. Hit-testing accounts for it (see
 /// `hit_popup`), so paint + hit stay aligned.
@@ -38,24 +34,22 @@ const ROW_HL_INSET_Y: f32 = 4.0;
 /// What the user picked from the dropdown.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShapeChoice {
-    /// Pick a shape tool (Rect / Ellipse / Polygon / Line / Pen).
+    /// Pick a shape tool (Rect / Polygon / Line).
     Tool(Tool),
     /// Open the icon picker (host concern; this widget only
     /// reports the intent).
     OpenIconPicker,
-    /// Open a file dialog to import an image / SVG.
+    /// Open a file dialog to import an image / SVG (no menu row since the
+    /// rail's Image button took it over; kept for the shared press flow).
     ImportImageOrSvg,
 }
 
 /// Localised row strings — looked up once at panel construction.
 struct PickerLabels {
     rectangle: String,
-    ellipse: String,
     polygon: String,
     line: String,
     icon: String,
-    import_image: String,
-    pen: String,
 }
 
 impl PickerLabels {
@@ -70,12 +64,9 @@ impl PickerLabels {
         };
         Self {
             rectangle: pick("shapes.rectangle", "Rectangle"),
-            ellipse: pick("shapes.ellipse", "Ellipse"),
             polygon: pick("shapes.polygon", "Polygon"),
             line: pick("shapes.line", "Line"),
             icon: pick("shapes.icon", "Icon"),
-            import_image: pick("shapes.importImageSvg", "Import Image or SVG\u{2026}"),
-            pen: pick("shapes.pen", "Pen"),
         }
     }
 }
@@ -104,11 +95,6 @@ impl ShapePicker {
                 choice: ShapeChoice::Tool(Tool::Rect),
             },
             PickerRow {
-                icon: Icon::Circle,
-                label: labels.ellipse,
-                choice: ShapeChoice::Tool(Tool::Ellipse),
-            },
-            PickerRow {
                 icon: Icon::Triangle,
                 label: labels.polygon,
                 choice: ShapeChoice::Tool(Tool::Polygon),
@@ -122,16 +108,6 @@ impl ShapePicker {
                 icon: Icon::Sparkles,
                 label: labels.icon,
                 choice: ShapeChoice::OpenIconPicker,
-            },
-            PickerRow {
-                icon: Icon::ImagePlus,
-                label: labels.import_image,
-                choice: ShapeChoice::ImportImageOrSvg,
-            },
-            PickerRow {
-                icon: Icon::PenTool,
-                label: labels.pen,
-                choice: ShapeChoice::Tool(Tool::Pen),
             },
         ];
         Self {
@@ -312,7 +288,7 @@ mod tests {
     }
 
     #[test]
-    fn panel_height_covers_seven_rows() {
+    fn panel_height_covers_every_row() {
         assert_eq!(
             ShapePicker::panel_height(),
             PANEL_PAD_Y * 2.0 + ROW_HEIGHT * ROW_COUNT as f32
@@ -353,7 +329,7 @@ mod tests {
     }
 
     #[test]
-    fn last_row_resolves_to_pen() {
+    fn last_row_opens_the_icon_picker() {
         let mut ui = de_editor_core::editor_ui_state::EditorUiState::new();
         ui.shape_picker.open = true;
         let picker = ShapePicker::for_editor_ui(&ui);
@@ -363,7 +339,7 @@ mod tests {
         };
         let last_y = (ROW_COUNT as f32 - 0.5) * ROW_HEIGHT;
         let hit = picker.hit_test(panel_rect, Point2D::new(50.0, last_y));
-        assert_eq!(hit, Some(ShapeChoice::Tool(Tool::Pen)));
+        assert_eq!(hit, Some(ShapeChoice::OpenIconPicker));
     }
 
     #[test]

@@ -74,6 +74,7 @@ mod prompt_center_shared_flow_tests;
 pub mod property_panel;
 pub mod property_panel_action;
 pub mod property_panel_code;
+pub mod property_panel_code_chips;
 pub mod property_panel_commit;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
@@ -90,6 +91,7 @@ mod property_panel_fill_picker;
 #[cfg(test)]
 mod property_panel_fill_tests;
 pub mod property_panel_flex;
+pub mod property_panel_header;
 pub mod property_panel_icon;
 #[cfg(test)]
 mod property_panel_icon_tests;
@@ -126,8 +128,6 @@ pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
 #[cfg(test)]
 mod property_panel_stroke_tests;
-#[cfg(test)]
-mod property_panel_tab_interact_tests;
 #[cfg(test)]
 mod property_panel_test_support;
 #[cfg(test)]
@@ -166,6 +166,7 @@ pub mod toolbar;
 
 // Step 3 — center canvas that renders document nodes as actual
 // visual primitives (frame fills, rect strokes, text strings).
+pub mod canvas_actions;
 mod canvas_agent_cursor;
 mod canvas_agent_cursor_motion;
 #[cfg(test)]
@@ -209,6 +210,8 @@ pub mod editor_state_ext;
 
 // Host-shared press/click dispatch flows (native + web widget hosts).
 pub mod chat_click_flow;
+pub mod chrome_hit;
+pub mod chrome_tooltip;
 pub mod cursor_hover_flow;
 pub mod drag_flow;
 mod drag_flow_index;
@@ -217,6 +220,7 @@ pub mod host_frame_bookkeeping;
 pub mod host_overlay_geometry;
 pub mod image_crop_flow;
 pub mod image_popover_input_flow;
+pub mod images_tab;
 mod layer_context_flow;
 pub mod press_flow;
 mod prompt_center_press_flow;
@@ -342,6 +346,7 @@ pub mod figma_import;
 pub mod figma_import_progress;
 pub mod file_drop_overlay;
 pub mod file_menu;
+pub mod file_pill;
 pub mod git_panel;
 mod git_panel_clone;
 mod git_panel_commit_card;
@@ -383,24 +388,10 @@ pub mod slides_panel_flow;
 pub mod slideshow_toolbar;
 pub mod status_bar;
 pub mod tooltip;
-pub mod top_bar;
-mod top_bar_geometry;
-#[cfg(test)]
-#[path = "top_bar_home_tests.rs"]
-mod top_bar_home_tests;
-mod top_bar_paint;
-#[cfg(test)]
-mod top_bar_tests;
-mod top_bar_title;
-pub mod top_bar_tooltip;
-#[cfg(test)]
-mod top_bar_tooltip_tests;
-#[cfg(test)]
-mod top_bar_vscode_tests;
-mod top_bar_window_control;
 pub mod variables_panel;
 pub mod variables_panel_geometry_flow;
 mod variables_preset_menu;
+pub mod window_strip;
 
 // Test-support: shared RenderBackend stubs (never ships in non-test builds).
 #[cfg(test)]
@@ -441,15 +432,15 @@ pub use ai_chat_panel::{
 pub use ai_chat_panel_minimized::{AI_CHAT_MINIMIZED_HEIGHT, AI_CHAT_MINIMIZED_MIN_WIDTH};
 pub use ai_chat_transcript_design::{parse_design_json_nodes, DesignParseError};
 pub use align_toolbar::{AlignToolbar, AlignToolbarHit, ALIGN_TOOLBAR_HEIGHT, ALIGN_TOOLBAR_WIDTH};
-pub use component_browser_panel::{
-    ComponentBrowserHit, ComponentBrowserPanel, COMPONENT_BROWSER_PANEL_H,
-    COMPONENT_BROWSER_PANEL_W,
-};
+pub use canvas_actions::{CanvasActions, CanvasActionsLayout};
+pub use chrome_hit::ChromeHit;
+pub use component_browser_panel::{ComponentBrowserHit, ComponentBrowserPanel};
 pub use deck_boards::BoardChip;
 pub use design_md_panel::{DesignMdHit, DesignMdPanel, DESIGN_MD_PANEL_H, DESIGN_MD_PANEL_W};
 pub use editor_toast::{EditorToast, EditorToastHit};
 pub use export_dialog::{ExportDialog, ExportDialogHit, ExportFormat};
 pub use export_quick_menu::{ExportQuickMenu, ExportQuickMenuHit};
+pub use file_pill::{FilePill, FilePillLayout, SaveState};
 pub use git_panel::{GitPanel, GitPanelHit, GIT_PANEL_INSET, GIT_PANEL_WIDTH};
 pub use html_import_diagnostics_panel::{HtmlImportDiagnosticsHit, HtmlImportDiagnosticsPanel};
 pub use icon_picker_panel::{
@@ -471,8 +462,7 @@ pub use slides_panel_actions::{
     SlidesActionLabels, SlidesActionLayout, SlidesActionState, ACTION_BAR_HEIGHT,
 };
 pub use status_bar::{StatusBar, STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH};
-pub use top_bar::{TopBar, TopBarHit, TOP_BAR_HEIGHT};
-pub use top_bar_window_control::{paint_window_control_dots, WindowControl};
+pub use window_strip::{paint_window_control_dots, WindowControl, WINDOW_STRIP_H};
 // Re-export panel/toolbar width constants + hit enums so the host
 // can size them consistently and route hits.
 pub use layer_panel::{DropPosition, DropTarget, LayerPanelHit, LAYER_PANEL_WIDTH};

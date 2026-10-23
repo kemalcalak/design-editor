@@ -50,9 +50,9 @@ fn the_asset_center_spans_its_scrim_and_clears_the_top_bar() {
     );
     // It overlaps the left rail on purpose; only the top bar stays clear.
     assert!(rect.origin.x < state.editor_ui.layer_panel_width);
-    assert!(rect.origin.y > TOP_BAR_HEIGHT);
+    assert!(rect.origin.y > WINDOW_STRIP_H);
     assert_eq!(
-        rect.origin.y - TOP_BAR_HEIGHT,
+        rect.origin.y - WINDOW_STRIP_H,
         VIEWPORT_H - (rect.origin.y + rect.size.y),
         "the top and bottom margins match"
     );
@@ -96,7 +96,7 @@ fn the_prompt_center_scales_with_the_viewport() {
     for (viewport_w, viewport_h) in [(1_800.0_f32, 1_100.0_f32), (VIEWPORT_W, VIEWPORT_H)] {
         let rect =
             prompt_center_panel_rect(&state, viewport_w, viewport_h).expect("the panel is open");
-        let available_h = viewport_h - TOP_BAR_HEIGHT;
+        let available_h = viewport_h - WINDOW_STRIP_H;
         assert!(
             (rect.size.x - viewport_w * PROMPT_CENTER_VIEWPORT_W_RATIO).abs() < 0.01,
             "width must track the viewport, got {}",
@@ -111,11 +111,11 @@ fn the_prompt_center_scales_with_the_viewport() {
             rect.size.x > 720.0 && rect.size.y > 520.0,
             "a window this size must yield more than the retired fixed dialog"
         );
-        assert!(rect.origin.x >= 0.0 && rect.origin.y >= TOP_BAR_HEIGHT);
+        assert!(rect.origin.x >= 0.0 && rect.origin.y >= WINDOW_STRIP_H);
         assert!(rect.origin.x + rect.size.x <= viewport_w + 0.01);
         assert!(rect.origin.y + rect.size.y <= viewport_h + 0.01);
         assert!(
-            (rect.origin.y - TOP_BAR_HEIGHT - (viewport_h - (rect.origin.y + rect.size.y))).abs()
+            (rect.origin.y - WINDOW_STRIP_H - (viewport_h - (rect.origin.y + rect.size.y))).abs()
                 < 0.01,
             "top and bottom margins match"
         );

@@ -210,18 +210,7 @@ impl WidgetHostNative {
             let point = Point2D::new(x, y);
             if let Some(action) = panel.hit_test_action(property_rect, point) {
                 self.editor_state.editor_ui.pressed_button =
-                    if let de_editor_ui::widgets::PropertyPanelAction::Codegen(codegen_action) =
-                        action
-                    {
-                        de_editor_ui::widgets::property_panel_code::codegen_hover_for_action(
-                            codegen_action,
-                        )
-                        .map(de_editor_core::ButtonPressTarget::Codegen)
-                    } else {
-                        panel
-                            .action_hover_index(property_rect, point)
-                            .map(de_editor_core::ButtonPressTarget::PropertyPanel)
-                    };
+                    panel.pressed_target(&action, property_rect, point);
                 self.commit_property_focus_if_any();
                 if let de_editor_ui::widgets::PropertyPanelAction::OpenColorPicker(target) = action
                 {

@@ -1,4 +1,4 @@
-//! Toolbar panel actions, chat-input caret/selection, the Escape overlay
+//! Panel actions, tool-rail buttons, chat-input caret/selection, the Escape overlay
 //! ladder, rename caret fall-through, and the floating-pill / dialog
 //! press-feedback round trips.
 //!
@@ -8,7 +8,7 @@
 use super::*;
 
 #[test]
-fn toolbar_panel_actions_open_variables_and_design_panels() {
+fn panel_actions_open_variables_and_design_panels() {
     let mut host = WidgetHostNative::new();
     // The expanded chat panel lives in the rail's Agent tab; anywhere
     // else the chat is composer-only, so put the rail on its home.
@@ -22,25 +22,10 @@ fn toolbar_panel_actions_open_variables_and_design_panels() {
     let viewport_w = 1200.0;
     let viewport_h = 800.0;
 
-    let (variables_x, variables_y) = toolbar_action_point_for_test(
-        &host,
-        de_editor_ui::widgets::ToolbarAction::ToggleVariablesPanel,
-        viewport_w,
-        viewport_h,
-    );
-    let toolbar = de_editor_ui::widgets::Toolbar::for_editor(host.editor_state());
-    assert_eq!(
-        toolbar.hit_test(
-            host.toolbar_rect(viewport_w, viewport_h),
-            de_editor_ui::Point2D::new(variables_x, variables_y)
-        ),
-        Some(de_editor_ui::widgets::ToolbarHit::Action(
-            de_editor_ui::widgets::ToolbarAction::ToggleVariablesPanel
-        ))
-    );
     // The VariablesPanel is a floating canvas overlay, not a right-rail
     // tab. With no node selected the rail stays hidden, so toggling
-    // Variables must not affect its visibility.
+    // Variables must not affect its visibility. (The toggle moved from
+    // the tool rail to the File menu footer, which runs this dispatch.)
     assert!(!host.editor_state().right_rail_visible());
     let (canvas_left, _, canvas_width, _) = host.canvas_region(viewport_w, viewport_h);
     assert_eq!(
@@ -48,25 +33,55 @@ fn toolbar_panel_actions_open_variables_and_design_panels() {
         viewport_w - canvas_left,
         "an empty Design selection must not reserve a blank right rail"
     );
-    assert!(host.apply_press(variables_x, variables_y, viewport_w, viewport_h));
+    use de_editor_ui::widgets::ToolbarAction;
+    assert!(host.dispatch_toolbar_action(ToolbarAction::ToggleVariablesPanel));
     assert!(host.editor_state().editor_ui.variables_panel_open);
     assert!(!host.editor_state().right_rail_visible());
     assert_eq!(
         host.editor_state().editor_ui.property_tab,
         de_editor_core::PropertyTab::Design
     );
-    assert!(host.apply_press(variables_x, variables_y, viewport_w, viewport_h));
+    assert!(host.dispatch_toolbar_action(ToolbarAction::ToggleVariablesPanel));
     assert!(!host.editor_state().editor_ui.variables_panel_open);
     assert!(!host.editor_state().right_rail_visible());
 
-    let (design_x, design_y) = toolbar_action_point_for_test(
+    assert!(host.dispatch_toolbar_action(ToolbarAction::ToggleDesignPanel));
+    assert!(host.editor_state().editor_ui.design_md_panel.open);
+}
+
+#[test]
+fn the_rail_image_button_queues_an_image_import() {
+    let mut host = WidgetHostNative::new();
+    host.editor_state_mut().editor_ui.home.hide();
+    let (viewport_w, viewport_h) = (1200.0, 800.0);
+    let (x, y) = toolbar_action_point_for_test(
         &host,
-        de_editor_ui::widgets::ToolbarAction::ToggleDesignPanel,
+        de_editor_ui::widgets::ToolbarAction::ImportImage,
         viewport_w,
         viewport_h,
     );
-    assert!(host.apply_press(design_x, design_y, viewport_w, viewport_h));
-    assert!(host.editor_state().editor_ui.design_md_panel.open);
+    assert!(host.apply_press(x, y, viewport_w, viewport_h));
+    assert_eq!(
+        host.editor_state().editor_ui.pending_file_action,
+        Some(de_editor_core::editor_ui_state::FileAction::ImportImageOrSvg)
+    );
+}
+
+#[test]
+fn right_click_on_the_rectangle_slot_opens_the_shape_menu() {
+    let mut host = WidgetHostNative::new();
+    host.editor_state_mut().editor_ui.home.hide();
+    let (viewport_w, viewport_h) = (1200.0, 800.0);
+    let rect = host.toolbar_rect(viewport_w, viewport_h);
+    let slot = de_editor_ui::widgets::Toolbar::for_editor(host.editor_state())
+        .shape_slot_rect(rect)
+        .expect("the rail has a shape slot");
+    let (x, y) = (
+        slot.origin.x + slot.size.x / 2.0,
+        slot.origin.y + slot.size.y / 2.0,
+    );
+    assert!(host.apply_right_press(x, y, viewport_w, viewport_h));
+    assert!(host.editor_state().editor_ui.shape_picker.open);
 }
 
 #[test]
@@ -294,7 +309,7 @@ fn rename_caret_arrows_move_caret_then_fall_through() {
 }
 
 #[test]
-fn status_bar_search_click_frames_content_in_viewport() {
+fn status_bar_percentage_click_frames_content_in_viewport() {
     // Three rects spread across doc space (union ≈ x[100,400] y[100,300]).
     let mut host = WidgetHostNative::new();
     // The expanded chat panel lives in the rail's Agent tab; anywhere
@@ -321,10 +336,15 @@ fn status_bar_search_click_frames_content_in_viewport() {
     let r = host
         .status_bar_rect(vw, vh)
         .expect("status bar visible at this size");
-    // Click the search icon (left section of the pill).
-    let consumed = host.apply_press(r.origin.x + 5.0, r.origin.y + r.size.y / 2.0, vw, vh);
+    // Click the percentage — it frames the content.
+    let consumed = host.apply_press(
+        r.origin.x + r.size.x / 2.0,
+        r.origin.y + r.size.y / 2.0,
+        vw,
+        vh,
+    );
 
-    assert!(consumed, "search-icon click must be consumed");
+    assert!(consumed, "percentage click must be consumed");
     let v = host.editor_state().viewport;
     let expected_pan_x = canvas_w / 2.0 - 250.0;
     let expected_pan_y = canvas_h / 2.0 - 200.0;
@@ -343,14 +363,14 @@ fn status_bar_press_sets_and_release_clears_pressed_button() {
     let r = host
         .status_bar_rect(vw, vh)
         .expect("status bar visible at this size");
-    let x = r.origin.x + 5.0;
+    let x = r.origin.x + r.size.x / 2.0;
     let y = r.origin.y + r.size.y / 2.0;
 
     assert!(host.apply_press(x, y, vw, vh));
     assert_eq!(
         host.editor_state().editor_ui.pressed_button,
         Some(de_editor_core::ButtonPressTarget::StatusBar(
-            de_editor_core::StatusBarButton::Search
+            de_editor_core::StatusBarButton::ZoomToFit
         ))
     );
 

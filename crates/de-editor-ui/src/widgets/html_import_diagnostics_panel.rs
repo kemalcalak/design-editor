@@ -124,7 +124,7 @@ impl<'a> HtmlImportDiagnosticsPanel<'a> {
         let height = self.height();
         let x = (viewport_w - PANEL_WIDTH - VIEWPORT_MARGIN).max(VIEWPORT_MARGIN);
         let y = (viewport_h - BOTTOM_INSET - height)
-            .max(crate::widgets::TOP_BAR_HEIGHT + VIEWPORT_MARGIN);
+            .max(crate::widgets::WINDOW_STRIP_H + VIEWPORT_MARGIN);
         Rect {
             origin: Point2D::new(x, y),
             size: Point2D::new(PANEL_WIDTH, height),

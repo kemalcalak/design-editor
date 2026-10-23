@@ -470,7 +470,7 @@ fn pump_commands_refits_viewport_after_design_insert() {
     let after = host.editor_state().viewport;
     assert_ne!(before, after, "design insert should refit viewport");
     assert!(
-        (after.zoom - 0.905).abs() < 0.01,
+        (after.zoom - 0.9526).abs() < 0.01,
         "mobile root should fit viewport height, got zoom {}",
         after.zoom
     );
@@ -544,7 +544,7 @@ fn fit_design_viewport_uses_resolved_layout_for_fit_content_root() {
         bounds.h
     );
     assert!(
-        (state.viewport.zoom - 0.905).abs() < 0.01,
+        (state.viewport.zoom - 0.9526).abs() < 0.01,
         "full mobile root should remain fully visible, got zoom {}",
         state.viewport.zoom
     );

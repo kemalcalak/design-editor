@@ -96,12 +96,12 @@ fn the_chat_tab_pins_the_chat_into_the_left_rail() {
     assert_eq!(host.editor_state().editor_ui.layer_panel_width, 320.0);
 
     let rect = host.ai_chat_rect(W, H).expect("the rail owns the chat");
-    let top_bar = de_editor_ui::widgets::TOP_BAR_HEIGHT;
+    let strip = de_editor_ui::widgets::WINDOW_STRIP_H;
     let tab_row = de_editor_ui::widgets::SLIDES_TAB_ROW_HEIGHT;
     assert_eq!(rect.origin.x, 0.0);
-    assert_eq!(rect.origin.y, top_bar + tab_row, "below the tab row");
+    assert_eq!(rect.origin.y, strip + tab_row, "below the tab row");
     assert_eq!(rect.size.x, 320.0);
-    assert_eq!(rect.size.y, H - top_bar - tab_row);
+    assert_eq!(rect.size.y, H - strip - tab_row);
 
     // Closing the left panel no longer removes the chat — the composer
     // card takes over at the canvas floor (the floating branch does

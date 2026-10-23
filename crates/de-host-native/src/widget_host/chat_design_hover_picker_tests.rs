@@ -86,8 +86,8 @@ fn open_model_picker_owns_hover_without_repainting_unchanged_rows() {
         ui.variables_panel_hover = Some(de_editor_core::VariablesPanelButton::Close);
         ui.variables_preset_menu_hover =
             Some(de_editor_core::variables_panel_state::PresetMenuButton::SaveCurrent);
-        ui.topbar_button_hover = Some(de_editor_core::TopBarButton::ToggleSidebar);
-        ui.topbar_traffic_hover = true;
+        ui.chrome_button_hover = Some(de_editor_core::ChromeButton::Home);
+        ui.window_control_hover = true;
     }
 
     assert!(host.apply_cursor_move(point.x, point.y));
@@ -110,8 +110,8 @@ fn open_model_picker_owns_hover_without_repainting_unchanged_rows() {
         host.editor_state().editor_ui.variables_preset_menu_hover,
         None
     );
-    assert_eq!(host.editor_state().editor_ui.topbar_button_hover, None);
-    assert!(!host.editor_state().editor_ui.topbar_traffic_hover);
+    assert_eq!(host.editor_state().editor_ui.chrome_button_hover, None);
+    assert!(!host.editor_state().editor_ui.window_control_hover);
 
     assert!(
         !host.apply_cursor_move(point.x, point.y),

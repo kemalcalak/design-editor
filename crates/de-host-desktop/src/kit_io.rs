@@ -45,19 +45,15 @@ impl DesktopApp {
             Some(KitIoRequest::Export) => self.export_kit_file(),
             None => {}
         }
-        // Persistence: `ui_kits_changed` (import / delete) or a
-        // browser-open flip both rewrite `uikits.json` — TS persists
-        // `importedKits` + `browserOpen` together on every mutation.
-        let open = self.host.editor_state().editor_ui.component_browser_open;
+        // Persistence: `ui_kits_changed` (import / delete) rewrites
+        // `uikits.json`. The browser's open state is no longer stored — it
+        // is a rail tab now (#30), and the rail's tab is not persisted.
         let kits_changed =
             std::mem::take(&mut self.host.editor_state_mut().editor_ui.ui_kits_changed);
-        if kits_changed || self.kit_browser_open_persisted != Some(open) {
-            // Tests must never write a developer machine's real
-            // `uikits.json` (the load side is skipped the same way).
-            if !cfg!(test) {
-                crate::kit_persistence::save(self.host.editor_state());
-            }
-            self.kit_browser_open_persisted = Some(open);
+        // Tests must never write a developer machine's real `uikits.json`
+        // (the load side is skipped the same way).
+        if kits_changed && !cfg!(test) {
+            crate::kit_persistence::save(self.host.editor_state());
         }
     }
 

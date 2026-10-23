@@ -310,7 +310,7 @@ fn tap_action_label(locale: de_editor_core::Locale, action: &TapActionSummary) -
 fn paint_plain_row(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -422,7 +422,7 @@ pub(crate) fn paint_interaction_menu(
         }
         let text = TextLayout::single_run(
             label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             theme.foreground.to_jian(),
             Point2D::new(0.0, 0.0),

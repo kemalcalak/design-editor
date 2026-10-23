@@ -135,18 +135,10 @@ fn for_selection_design_tab_still_hides_panel_without_selection() {
 }
 
 #[test]
-fn for_selection_interact_tab_still_hides_panel_without_selection() {
-    let mut state = EditorState::sample();
-    state.clear_selection();
-    state.editor_ui.property_tab = PropertyTab::Interact;
-    assert!(PropertyPanel::for_selection(&state).is_none());
-}
-
-#[test]
-fn inactive_property_tab_hover_paints_pill_background() {
+fn hovered_code_view_close_button_paints_a_wash() {
     let mut state = EditorState::sample();
     state.editor_ui.property_tab = PropertyTab::Code;
-    state.editor_ui.property_tab_hover = Some(PropertyTab::Design);
+    state.editor_ui.property_close_hover = true;
     let panel = PropertyPanel::for_selection(&state).expect("sample doc has a selection");
     let rect = Rect {
         origin: Point2D::new(0.0, 0.0),
@@ -160,14 +152,13 @@ fn inactive_property_tab_hover_paints_pill_background() {
         panel.paint(&mut cx, rect);
     }
 
-    let muted_pills = backend
-        .fills
-        .iter()
-        .filter(|(_, color)| color_eq(*color, panel.theme.muted))
-        .count();
+    let close = crate::widgets::property_panel_header::close_rect(rect);
     assert!(
-        muted_pills >= 2,
-        "active Code tab and hovered inactive Design tab should both paint a visible pill"
+        backend
+            .fills
+            .iter()
+            .any(|(r, color)| *r == close && color_eq(*color, panel.theme.button_hover)),
+        "the hovered close button paints its wash"
     );
 }
 

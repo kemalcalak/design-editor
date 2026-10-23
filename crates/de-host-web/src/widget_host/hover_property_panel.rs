@@ -21,7 +21,6 @@ impl WidgetHost {
         self.variables_resize.is_some()
             || color_picker_drag
             || self.design_md_drag.is_some()
-            || self.component_browser_drag.is_some()
             || self.icon_picker_drag.is_some()
             || self.code_selection_drag.is_some()
             || self.image_input_selection_drag.is_some()

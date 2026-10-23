@@ -9,17 +9,20 @@
 //! `property_panel/` submodules. Splitting the file keeps the pieces
 //! under the design-editor 800-line ceiling.
 //!
-//! Sections (top → bottom, mirroring TS order):
-//!   1. Tab strip (Design / Code)
-//!   2. Header (kind label) + Create component button
-//!   3. Position — X / Y / rotation / R
-//!   4. Flex layout — 3 layout-mode buttons
-//!   5. Size — W / H + 5 sizing checkboxes
-//!   6. Layer — opacity row
-//!   7. Fill — solid color rows + add affordance
+//! Sections (top → bottom, #30):
+//!   1. Pinned header — kind glyph + name + kind, or the Code view's
+//!      title + close (`property_panel_header.rs`)
+//!   2. Create component button
+//!   3. Position — X / Y, W / H, rotation / R
+//!   4. Auto layout — direction segments, alignment / gap / padding,
+//!      then the fill / hug / clip boxes
+//!   5. Kind sections (icon, text, widget, image, video)
+//!   6. Layer — opacity + blend / mask
+//!   7. Fill — rows + add affordance
 //!   8. Stroke — color + width row
-//!   9. Effects — empty list + add affordance
-//!  10. Export — scale + format dropdowns
+//!   9. Effects — list + add affordance
+//!  10. Interactions, Export — scale + format dropdowns
+//!  11. Code — framework chips that open the Code view
 //!
 //! Conditional rendering: TS app does `{hasSelection && <RightPanel/>}`.
 //! Host calls [`PropertyPanel::for_selection`] which returns
@@ -44,7 +47,8 @@ mod paint;
 
 pub use build::ColorVariableOption;
 
-pub const PROPERTY_PANEL_WIDTH: f32 = 280.0;
+/// The right rail's default width (#30 design: 272).
+pub const PROPERTY_PANEL_WIDTH: f32 = 272.0;
 
 // `PropertyPanelAction` lives in `property_panel_action.rs` (split
 // out for the 800-line ceiling); re-exported so every existing
@@ -201,8 +205,8 @@ pub struct PropertyPanel {
     pub is_multi: bool,
     /// Active header tab — toggled by Cmd+Shift+C.
     pub tab: de_editor_core::PropertyTab,
-    /// Header tab currently hovered. Used only for the pinned tab strip.
-    pub tab_hover: Option<de_editor_core::PropertyTab>,
+    /// Whether the Code view's close button is hovered.
+    pub close_hovered: bool,
     /// Current export format + scale, shown on the Export section's
     /// two dropdowns. Clicking a dropdown opens its inline select
     /// popup (NOT the Export modal).
@@ -286,12 +290,13 @@ impl PropertyPanel {
     }
 
     /// Whether `point` is inside the scrolling section viewport —
-    /// the panel below the pinned tab strip. A click in the tab-strip
-    /// band must not fall through to a section row scrolled up
+    /// the panel below the pinned header. A click in the header band
+    /// must not fall through to a section row scrolled up
     /// under it (paint clips there; hit-test must agree).
     fn point_in_section_viewport(&self, panel_rect: Rect, point: Point2D) -> bool {
         panel_rect.contains(point)
-            && point.y >= panel_rect.origin.y + crate::widgets::property_panel_inputs::TAB_HEIGHT
+            && point.y
+                >= panel_rect.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT
     }
 
     /// Total height (px) of the panel's section content — drives the

@@ -230,6 +230,31 @@ impl<'a> Widget for FileMenu<'a> {
                 h(self.recent_row_start() + self.recent.len()),
             );
         }
+        y += ROW_HEIGHT;
+        y = paint_divider(cx, &self.theme, rect, y);
+        let tail = self.tail_row_start();
+        for (i, (icon, key, shortcut)) in [
+            (Icon::Upload, "tooltip.topbar.import", ""),
+            (Icon::Undo, "toolbar.undo", "⌘Z"),
+            (Icon::Redo, "toolbar.redo", "⌘⇧Z"),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            paint_row(
+                cx,
+                &self.theme,
+                rect.origin.x,
+                y,
+                icon,
+                crate::widgets::editor_state_ext::translate(self.ui, key),
+                shortcut,
+                h(tail + i),
+            );
+            y += ROW_HEIGHT;
+        }
+        y = paint_divider(cx, &self.theme, rect, y);
+        self.paint_footer(cx, rect, y);
     }
 
     fn access_node(&self) -> accesskit::Node {

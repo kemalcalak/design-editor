@@ -57,6 +57,7 @@ pub mod compositing;
 pub mod conversion;
 pub mod design_md;
 pub mod design_md_button_state;
+pub mod document_images;
 pub mod document_install;
 pub mod drag_mutators;
 pub mod editor_toast;
@@ -153,6 +154,7 @@ pub fn svg_path_data_bounds(d: &str) -> Option<(f32, f32, f32, f32)> {
         bounds.h as f32,
     ))
 }
+pub mod chrome_button_state;
 pub mod text_edit;
 pub mod text_input_focus;
 pub mod text_script;
@@ -160,7 +162,6 @@ mod text_script_tests;
 pub mod theme_presets;
 pub mod tool;
 pub mod toolbar_state;
-pub mod topbar_state;
 pub mod ui_draft;
 pub mod uikit;
 mod uikit_allocator;
@@ -285,6 +286,7 @@ pub use chat::{
 pub use chat_activity::{ChatActivity, ChatActivityStatus, ChatCompletion, PendingSubtaskRetry};
 pub use chat_button_state::{ChatFooterButton, ChatHeaderButton};
 pub use chat_sessions::{adjust_running_tab_after_close, ChatSessions};
+pub use chrome_button_state::ChromeButton;
 pub use color_picker::{hsv_to_rgb, parse_hex_alpha, parse_hex_rgb, rgb_to_hex, rgb_to_hsv};
 pub use command::{
     BatchInsertItem, EditorCommand, EffectField, LayoutPropValue, NodeFlag, StrokeSide,
@@ -365,7 +367,6 @@ pub use statusbar_state::StatusBarButton;
 pub use theme_presets::ThemePreset;
 pub use tool::Tool;
 pub use toolbar_state::{ToolbarAction, ToolbarHover};
-pub use topbar_state::TopBarButton;
 pub use ui_draft::{
     ColorPickerDrag, ColorPickerState, ColorTarget, LayerContextTarget, LayerRenameState,
     PathAnchorMenuState, PropertyFocus, UiDraftState, VariableUiState,

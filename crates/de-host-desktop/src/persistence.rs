@@ -141,7 +141,7 @@ fn handle_save_as_with(
             crate::home_previews::queue_after_save(&path);
             // Mirror handle_save: refresh the in-chrome file name too, not
             // just the OS window title — without this, first Save As writes
-            // the file but the TopBar keeps showing "Untitled".
+            // the file but the file pill keeps showing "Untitled".
             set_display_name(host, Some(&path));
             host.editor_state_mut().mark_saved_revision();
             *current_path = Some(path);

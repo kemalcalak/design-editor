@@ -1,4 +1,4 @@
-//! TopBar chrome-overlay press dispatch for the web `WidgetHost` —
+//! Chrome-overlay press dispatch for the web `WidgetHost` —
 //! file-menu dropdown, export dialog, and Figma-import modal.
 //! Mirrors the native host's dispatchers in
 //! `widget_host/property_dispatch.rs`. File / export actions raise
@@ -18,9 +18,13 @@ impl WidgetHost {
     ) {
         use de_editor_core::editor_ui_state::FileAction;
         use de_editor_ui::widgets::file_menu::{FileMenu, FileMenuChoice, MenuHit};
+        use de_editor_ui::widgets::press_flow::{self, FileMenuStep};
         self.refresh_layout_scene();
-        let top_bar_rect = self.top_bar_rect(viewport_width);
-        let anchor = self.top_bar().file_menu_rect_for(top_bar_rect);
+        let anchor = de_editor_ui::widgets::host_overlay_geometry::file_menu_anchor(
+            &self.editor_state,
+            viewport_width,
+            self.last_viewport_h,
+        );
         let menu = FileMenu::from_editor_ui(&self.editor_state.editor_ui, self.wall_now_secs);
         let menu_rect = menu.rect_at(anchor);
         let point = de_editor_ui::Point2D::new(x, y);
@@ -29,6 +33,27 @@ impl WidgetHost {
                 let Some(choice) = menu.choice_for_row(row) else {
                     return;
                 };
+                if let Some(step) = press_flow::apply_file_menu_app_choice(
+                    &mut self.editor_state,
+                    choice,
+                    self.now_ms,
+                ) {
+                    match step {
+                        // Native also releases its property keyboard owner on
+                        // SettingsOpened; the web host routes keys through
+                        // the focused DOM input instead, so there is none.
+                        FileMenuStep::Handled | FileMenuStep::SettingsOpened => {}
+                        FileMenuStep::Toolbar(action) => {
+                            self.dispatch_toolbar_action(action);
+                        }
+                        FileMenuStep::Fullscreen => self.toggle_browser_fullscreen(),
+                        // The footer offers no Git on the web (no git
+                        // backend), so this is unreachable here.
+                        FileMenuStep::Git => {}
+                    }
+                    self.mark_dirty();
+                    return;
+                }
                 // Opening the centre is not a file action: it shows a panel,
                 // and the document is replaced later by whichever card the
                 // user picks.
@@ -59,8 +84,14 @@ impl WidgetHost {
                     FileMenuChoice::ExportPptx => FileAction::ExportPptx,
                     FileMenuChoice::OpenRecent(i) => FileAction::OpenRecent(i),
                     FileMenuChoice::ClearRecent => FileAction::ClearRecent,
-                    // Handled above — it opens a panel, not a file action.
-                    FileMenuChoice::NewFromTemplate | FileMenuChoice::SaveAsTemplate => return,
+                    // Handled above — they open a panel or act on the app,
+                    // not a file action.
+                    FileMenuChoice::NewFromTemplate
+                    | FileMenuChoice::SaveAsTemplate
+                    | FileMenuChoice::Import
+                    | FileMenuChoice::Undo
+                    | FileMenuChoice::Redo
+                    | FileMenuChoice::Tool(_) => return,
                 });
                 self.editor_state.editor_ui.file_menu_open = false;
                 self.editor_state.editor_ui.file_menu.hover = None;

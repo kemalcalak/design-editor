@@ -1,4 +1,4 @@
-//! Export quick menu — the compact dropdown behind the TopBar download
+//! Export quick menu — the compact dropdown behind the canvas action group's download
 //! button.
 //!
 //! Every row is a shortcut to an export the File menu already offers; the

@@ -86,7 +86,7 @@ pub enum FileAction {
     /// Complete or cancel a prepared multi-page Figma import. Native
     /// desktop owns the prepared tree; web safely ignores this action.
     FinishFigmaImport(crate::figma_import_state::FigmaImportSelection),
-    /// User chose `从 HTML 导入` in the top-bar import menu — host
+    /// User chose `从 HTML 导入` in the File ▸ Import menu — host
     /// opens a file dialog for a saved page / snapshot and hands the
     /// path to the background HTML import worker.
     ImportHtml,

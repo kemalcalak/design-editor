@@ -9,8 +9,8 @@ use super::press_ctx::PressCtx;
 use super::{CodeSelectionDragState, WidgetHost};
 use de_editor_core::codegen::CodeSelection;
 use de_editor_ui::widgets::press_flow;
-use de_editor_ui::widgets::{PropertyPanel, TOP_BAR_HEIGHT};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::PropertyPanel;
+use de_editor_ui::Point2D;
 
 impl WidgetHost {
     /// Fill-type, compositing, effects, colour-variable, and export
@@ -84,16 +84,12 @@ impl WidgetHost {
             || self.editor_state.editor_ui.export_format_picker_open
         {
             if let Some(panel) = PropertyPanel::for_selection(&self.editor_state) {
-                let property_rect = Rect {
-                    origin: Point2D::new(
-                        viewport_width - self.editor_state.editor_ui.property_panel_width,
-                        TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (viewport_height - TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        viewport_width,
+                        viewport_height,
+                    );
                 if let Some(action) = panel.hit_test_action(property_rect, Point2D::new(x, y)) {
                     if matches!(
                         action,
@@ -138,16 +134,12 @@ impl WidgetHost {
         if self.editor_state.editor_ui.font_picker.open {
             use de_editor_ui::widgets::PropertyPanelAction as A;
             if let Some(panel) = PropertyPanel::for_selection(&self.editor_state) {
-                let property_rect = Rect {
-                    origin: Point2D::new(
-                        viewport_width - self.editor_state.editor_ui.property_panel_width,
-                        TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (viewport_height - TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        viewport_width,
+                        viewport_height,
+                    );
                 let point = Point2D::new(x, y);
                 if let Some(action) = panel.hit_test_action(property_rect, point) {
                     if matches!(
@@ -181,16 +173,12 @@ impl WidgetHost {
         {
             use de_editor_ui::widgets::PropertyPanelAction as A;
             if let Some(panel) = PropertyPanel::for_selection(&self.editor_state) {
-                let property_rect = Rect {
-                    origin: Point2D::new(
-                        viewport_width - self.editor_state.editor_ui.property_panel_width,
-                        TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (viewport_height - TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        viewport_width,
+                        viewport_height,
+                    );
                 if let Some(action) = panel.hit_test_action(property_rect, Point2D::new(x, y)) {
                     if matches!(
                         action,
@@ -246,21 +234,16 @@ impl WidgetHost {
         let viewport_height = ctx.viewport_height;
 
         // 0c. PropertyPanel button / checkbox — flex modes + size
-        //     flags. Runs AFTER locale picker + TopBar so the
+        //     flags. Runs AFTER locale picker + chrome so the
         //     dropdown overlays still win.
         if let Some(panel) =
             PropertyPanel::for_selection_with_scene(&self.editor_state, &self.layout_scene)
         {
-            let property_rect = Rect {
-                origin: Point2D::new(
-                    viewport_width - self.editor_state.editor_ui.property_panel_width,
-                    TOP_BAR_HEIGHT,
-                ),
-                size: Point2D::new(
-                    self.editor_state.editor_ui.property_panel_width,
-                    (viewport_height - TOP_BAR_HEIGHT).max(0.0),
-                ),
-            };
+            let property_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                &self.editor_state,
+                viewport_width,
+                viewport_height,
+            );
             if let Some(anchor) = self.code_text_offset_at_screen(x, y) {
                 self.commit_property_family_focus_if_any();
                 self.editor_state.codegen.code_selection = Some(CodeSelection {
@@ -278,18 +261,7 @@ impl WidgetHost {
             let point = Point2D::new(x, y);
             if let Some(action) = panel.hit_test_action(property_rect, point) {
                 self.editor_state.editor_ui.pressed_button =
-                    if let de_editor_ui::widgets::PropertyPanelAction::Codegen(codegen_action) =
-                        action
-                    {
-                        de_editor_ui::widgets::property_panel_code::codegen_hover_for_action(
-                            codegen_action,
-                        )
-                        .map(de_editor_core::ButtonPressTarget::Codegen)
-                    } else {
-                        panel
-                            .action_hover_index(property_rect, point)
-                            .map(de_editor_core::ButtonPressTarget::PropertyPanel)
-                    };
+                    panel.pressed_target(&action, property_rect, point);
                 self.commit_property_focus_if_any();
                 // Anchor the colour picker at the clicked y so it
                 // pops next to the swatch row, not at the panel top.

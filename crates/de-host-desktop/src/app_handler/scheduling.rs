@@ -168,12 +168,12 @@ impl DesktopApp {
             || self.pending_figma_paste.is_some()
             || self.pending_html_paste.is_some()
             || self.host.next_animation_deadline_ms().is_some()
-            // The top-bar tooltip's dwell deadline retires the moment it
+            // The chrome tooltip's dwell deadline retires the moment it
             // elapses, so by the time this wake runs the clock has
             // already moved past it and the deadline above reports
             // nothing. Ask about the tooltip itself or the wake we
             // scheduled for it would be thrown away unpainted.
-            || self.host.top_bar_tooltip_showing()
+            || self.host.chrome_tooltip_showing()
             || self.update_probe.is_pending()
             || self.model_probe.is_pending()
             || self.image_search.is_pending()

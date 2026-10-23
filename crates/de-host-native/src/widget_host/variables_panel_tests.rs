@@ -5,7 +5,7 @@ use super::{
 use de_editor_core::editor_ui_state::VariableRowFocus;
 use de_editor_core::{ButtonPressTarget, VariablesPanelButton};
 use de_editor_ui::widgets::variables_panel::{VariablesPanel, VariablesPanelHit};
-use de_editor_ui::widgets::{TOOLBAR_WIDTH, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::TOOLBAR_WIDTH;
 use de_editor_ui::Point2D;
 use jian_ops_schema::variable::{VariableKind, VariableScalar, VariableValue};
 
@@ -67,10 +67,10 @@ fn variables_panel_floats_next_to_toolbar_like_ts() {
     ));
     host.editor_state_mut().editor_ui.variables_panel_open = true;
 
-    let (canvas_left, _canvas_top, _canvas_w, _canvas_h) =
+    let (canvas_left, canvas_top, _canvas_w, _canvas_h) =
         host.canvas_region(VIEWPORT_W, VIEWPORT_H);
     let panel_x = canvas_left + TOOLBAR_INSET_X + TOOLBAR_WIDTH + 8.0;
-    let panel_y = TOP_BAR_HEIGHT + TOOLBAR_INSET_Y;
+    let panel_y = canvas_top + TOOLBAR_INSET_Y;
     let row_point_x = panel_x + 16.0;
     let row_point_y = panel_y + 44.0 + 36.0 + 18.0;
 

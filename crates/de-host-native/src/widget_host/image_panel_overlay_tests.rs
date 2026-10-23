@@ -1,28 +1,42 @@
 use super::WidgetHostNative;
 use de_editor_core::agent_settings::SettingsFocus;
 use de_editor_core::chat::{AgentProvider, ModelEntry};
+use de_editor_core::ChromeButton;
 use de_editor_core::{EditorState, NodeId};
-use de_editor_ui::widgets::{
-    LayerPanel, LayerPanelHit, PropertyPanel, TopBar, TopBarHit, TOP_BAR_HEIGHT,
-};
+use de_editor_ui::widgets::chrome_tooltip::button_anchor;
+use de_editor_ui::widgets::file_menu::{FileMenu, FileMenuChoice, FileMenuTool, MenuHit};
+use de_editor_ui::widgets::host_overlay_geometry::file_menu_anchor;
+use de_editor_ui::widgets::{LayerPanel, LayerPanelHit, PropertyPanel};
 use de_editor_ui::{Point2D, Rect};
 
 const VIEWPORT_W: f32 = 1200.0;
 const VIEWPORT_H: f32 = 800.0;
 
-fn topbar_point(host: &mut WidgetHostNative, target: TopBarHit) -> Point2D {
-    let rect = Rect::xywh(0.0, 0.0, VIEWPORT_W, TOP_BAR_HEIGHT);
-    let mut topbar = TopBar::for_editor_ui(&host.editor_state().editor_ui);
-    topbar.chip_text_w = Some(host.topbar_chip_text_w(&topbar));
-    let mut x = rect.origin.x;
-    while x < rect.origin.x + rect.size.x {
-        let point = Point2D::new(x, TOP_BAR_HEIGHT / 2.0);
-        if host.topbar_hit_test(&topbar, rect, point) == Some(target) {
-            return point;
-        }
-        x += 1.0;
-    }
-    panic!("no topbar point for {target:?}");
+fn chrome_point(host: &WidgetHostNative, button: ChromeButton) -> Point2D {
+    let rect = button_anchor(host.editor_state(), VIEWPORT_W, VIEWPORT_H, button)
+        .expect("chrome button paints");
+    Point2D::new(
+        rect.origin.x + rect.size.x / 2.0,
+        rect.origin.y + rect.size.y / 2.0,
+    )
+}
+
+/// A point on the open File menu that resolves to `wanted`.
+fn file_menu_point(host: &WidgetHostNative, wanted: FileMenuChoice) -> Point2D {
+    let menu = FileMenu::from_editor_ui(&host.editor_state().editor_ui, 0);
+    let panel = menu.rect_at(file_menu_anchor(
+        host.editor_state(),
+        VIEWPORT_W,
+        VIEWPORT_H,
+    ));
+    (0..panel.size.y as i32)
+        .flat_map(|dy| (0..panel.size.x as i32).step_by(2).map(move |dx| (dx, dy)))
+        .map(|(dx, dy)| Point2D::new(panel.origin.x + dx as f32, panel.origin.y + dy as f32))
+        .find(|p| match menu.hit(panel, *p) {
+            MenuHit::Row(row) => menu.choice_for_row(row) == Some(wanted),
+            _ => false,
+        })
+        .expect("the menu offers the choice")
 }
 
 fn layer_row_point(host: &WidgetHostNative, target: &NodeId) -> Point2D {
@@ -58,7 +72,7 @@ fn image_popup_point(panel: &PropertyPanel, rect: Rect) -> Point2D {
 }
 
 #[test]
-fn topbar_modal_takes_input_ownership_from_image_search() {
+fn settings_from_the_file_menu_take_input_ownership_from_image_search() {
     let mut host = WidgetHostNative::new();
     // The expanded chat panel lives in the rail's Agent tab; anywhere
     // else the chat is composer-only, so put the rail on its home.
@@ -72,11 +86,19 @@ fn topbar_modal_takes_input_ownership_from_image_search() {
         .search_query
         .set_text("hero query");
     *host.editor_state_mut() = state;
-    let point = topbar_point(&mut host, TopBarHit::OpenAgentSettings);
+    host.editor_state_mut().editor_ui.home.hide();
+    host.last_viewport_h = VIEWPORT_H;
 
+    // The file pill opens the menu — a higher overlay, so the image
+    // popover closes on that first press.
+    let point = chrome_point(&host, ChromeButton::ToggleFileMenu);
+    assert!(host.apply_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H));
+    assert!(host.editor_state().editor_ui.file_menu_open);
+    assert!(!host.editor_state().editor_ui.image_panel.search_open);
+
+    let point = file_menu_point(&host, FileMenuChoice::Tool(FileMenuTool::Settings));
     assert!(host.apply_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H));
     assert!(host.editor_state().editor_ui.agent_settings_open);
-    assert!(!host.editor_state().editor_ui.image_panel.search_open);
 
     let ui = &mut host.editor_state_mut().editor_ui;
     ui.agent_settings.focus = Some(SettingsFocus::McpPort);

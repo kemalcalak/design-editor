@@ -103,7 +103,12 @@ impl AlignToolbar {
         if x > max_x {
             x = max_x;
         }
-        let y = canvas_region.origin.y + 16.0;
+        // Below the floating chrome row (file pill + action group, #30),
+        // which now shares the canvas's top edge.
+        let y = canvas_region.origin.y
+            + crate::widgets::host_canvas_geometry::CHROME_INSET_TOP
+            + crate::widgets::canvas_actions::CANVAS_ACTIONS_HEIGHT
+            + 8.0;
         Some(Self {
             rect: Rect::xywh(x, y, toolbar_width, ALIGN_TOOLBAR_HEIGHT),
             boolean_ops,
@@ -431,8 +436,8 @@ mod tests {
         // Horizontally centered in canvas (cx = 500).
         let expected_x = 500.0 - ALIGN_TOOLBAR_WIDTH / 2.0;
         assert!((tb.rect.origin.x - expected_x).abs() < 0.5);
-        // Sits 16 px below canvas top.
-        assert_eq!(tb.rect.origin.y, 16.0);
+        // Sits just below the floating chrome row (14 + 38 + 8).
+        assert_eq!(tb.rect.origin.y, 60.0);
         assert_eq!(tb.rect.size.x, ALIGN_TOOLBAR_WIDTH);
         assert_eq!(tb.rect.size.y, ALIGN_TOOLBAR_HEIGHT);
     }

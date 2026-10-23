@@ -78,9 +78,9 @@ pub enum Icon {
     Hash,
     /// PanelLeft — sidebar collapse button.
     PanelLeft,
-    /// FolderOpen — TopBar folder.
+    /// FolderOpen — folder glyph.
     FolderOpen,
-    /// GitBranch — TopBar git-panel toggle next to the file name.
+    /// GitBranch — the File menu footer's Git-panel toggle.
     GitBranch,
     /// History — git empty-state clock glyph.
     History,
@@ -278,6 +278,7 @@ pub enum Icon {
     /// Lucide `palette.svg` — color/style palette affordance in the
     /// AI chat bottom toolbar (#27 design: inert icon-only button).
     Palette,
+    Code,
     /// Custom stacked plates — the left rail's Layers tab, icon mode.
     LayersStack,
     /// Custom presentation screen — the left rail's Slides tab, icon mode.
@@ -442,6 +443,7 @@ impl Icon {
             Icon::PresentationScreen => PRESENTATION_SCREEN,
             Icon::Layers => LAYERS,
             Icon::Palette => PALETTE,
+            Icon::Code => CODE,
         }
     }
 
@@ -624,7 +626,7 @@ pub fn draw_icon(
     }
 }
 
-/// Paint the filled import glyph supplied for Design Editor's top-bar import
+/// Paint the filled import glyph supplied for Design Editor's import
 /// launcher. Its source SVG uses a non-square `1201 × 1024` viewBox, so the
 /// vertical offset keeps the original aspect ratio centred in the requested
 /// square without rewriting either authored path.

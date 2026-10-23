@@ -583,7 +583,7 @@ pub fn select_all_focused_input(state: &mut EditorState, now_ms: u64) -> bool {
         state.editor_ui.chat_model_picker_input.touch(now_ms);
         return true;
     }
-    if state.editor_ui.component_browser_open {
+    if state.editor_ui.component_browser_search_focused {
         state.editor_ui.component_browser_select_all = true;
         return true;
     }
@@ -632,7 +632,7 @@ pub fn delete_owned_by_chrome_input(state: &EditorState) -> bool {
         || state.editor_ui.icon_picker.open
         || state.editor_ui.prompt_center.open
         || state.editor_ui.chat_model_picker.open
-        || state.editor_ui.component_browser_open
+        || state.editor_ui.component_browser_search_focused
         || state.chat.focused
 }
 
@@ -748,7 +748,7 @@ pub fn commit_editing_for_modal(state: &mut EditorState) {
 pub fn open_import_modal(ui: &mut EditorUiState, source: ImportSource) {
     ui.close_font_picker();
     ui.close_icon_picker();
-    ui.component_browser_open = false;
+    ui.component_browser_search_focused = false;
     ui.component_browser_kit_picker_open = false;
     ui.component_browser_confirm_delete_kit = None;
     ui.component_browser_hover = None;

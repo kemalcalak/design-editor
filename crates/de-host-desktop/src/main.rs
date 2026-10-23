@@ -340,10 +340,6 @@ struct DesktopApp {
     /// Google Fonts downloads the user asked for (missing-fonts modal or
     /// Settings Fonts tab), drained by the redraw pump.
     font_downloads: google_font_download::FontDownloads,
-    /// The `component_browser_open` value last written to
-    /// `uikits.json` — `drain_kit_io` rewrites the store when the live
-    /// value drifts (TS persists `browserOpen` on every toggle).
-    kit_browser_open_persisted: Option<bool>,
     /// In-flight connect-time provider probe (Settings → Agents →
     /// Connect) — spawned from the `pending_provider_connect`
     /// request seam, drained by `drain_provider_connect`.
@@ -718,6 +714,10 @@ mod page_paint_identity_tests;
 
 #[cfg(test)]
 mod keyboard_shortcut_tests;
+
+#[cfg(test)]
+#[path = "editor_proof_sheet_tests.rs"]
+mod editor_proof_sheet_tests;
 
 #[cfg(test)]
 #[path = "settings_proof_sheet_tests.rs"]

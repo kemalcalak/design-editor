@@ -1,178 +1,92 @@
-//! The tab row's text / icon modes: how three tabs share the rail at
-//! each end of the 240–440 drag range, what a board-less document
-//! drops, and the touch row's 44-point targets.
+//! The tab row's design layout (#30): the tab on show is a labelled
+//! pill, every other tab is its glyph alone, across the rail's drag
+//! range and with or without the optional tabs.
 //!
 //! Sibling of `slides_panel_tests.rs`, split out at the 800-line cap.
 
 use super::*;
 
-/// The row's geometry and hit-test at the two ends of the drag range:
-/// three tabs at 240 (text mode in English) and at 440, every tab still
-/// its own click target in row order.
+const ALL_TABS: [(LeftPanelTab, SlidesPanelTarget); 5] = [
+    (LeftPanelTab::Chat, SlidesPanelTarget::ChatTab),
+    (LeftPanelTab::Layers, SlidesPanelTarget::LayersTab),
+    (LeftPanelTab::Components, SlidesPanelTarget::ComponentsTab),
+    (LeftPanelTab::Images, SlidesPanelTarget::ImagesTab),
+    (LeftPanelTab::Slides, SlidesPanelTarget::SlidesTab),
+];
+
+/// Every tab hit-tests where it paints, in row order, at both ends of
+/// the drag range, and the row never overhangs the rail.
 #[test]
-fn three_tabs_hit_test_across_the_drag_range() {
+fn five_tabs_hit_test_across_the_drag_range() {
     for width in [240.0, 440.0] {
         let tabs = tabs_at(width, LeftPanelTab::Chat, &EN_ROW);
-        assert!(!tabs.compact, "English keeps its words at {width}");
         let mid_y = tabs.row.origin.y + tabs.row.size.y / 2.0;
-        let expected = [
-            (tabs.chat, SlidesPanelTarget::ChatTab),
-            (tabs.layers, SlidesPanelTarget::LayersTab),
-            (tabs.slides, SlidesPanelTarget::SlidesTab),
-        ];
-        for (rect, target) in expected {
-            assert!(rect.size.x > 0.0, "the tab exists at {width}: {rect:?}");
+        let mut previous_right = 0.0_f32;
+        for (tab, target) in ALL_TABS {
+            let rect = tabs.rect_of(tab);
+            assert!(rect.size.x > 0.0, "{tab:?} exists at {width}: {rect:?}");
+            assert!(rect.origin.x >= previous_right, "row order at {width}");
             let inside = Point2D::new(rect.origin.x + rect.size.x / 2.0, mid_y);
             assert_eq!(tabs.hit(inside), Some(target), "at {width}");
+            previous_right = rect.origin.x + rect.size.x;
         }
-        // The three rects run left to right inside the rail without
-        // overlapping, each at its own label's width — they no longer
-        // tile it, because equal shares are what made the row look like
-        // a segmented control.
-        let inner_w = width - 32.0;
-        let laid = tabs.chat.size.x + tabs.layers.size.x + tabs.slides.size.x;
-        assert!(laid <= inner_w + 0.01, "the tabs fit the rail at {width}");
-        assert!(tabs.chat.origin.x + tabs.chat.size.x <= tabs.layers.origin.x);
-        assert!(tabs.layers.origin.x + tabs.layers.size.x <= tabs.slides.origin.x);
+        assert!(previous_right <= width, "the tabs fit the rail at {width}");
     }
 }
 
-/// Vietnamese is the counterweight: at the chat-bumped default width its
-/// labels do not fit three ways, so the row drops to icons — and at the
-/// maximum width it gets its words back.
+/// The labelled pill follows whichever tab is active; the others are the
+/// same glyph-sized squares wherever they sit.
 #[test]
-fn a_rail_too_narrow_for_its_labels_falls_back_to_icons() {
-    let tabs = tabs_at(240.0, LeftPanelTab::Slides, &VI_ROW);
-    assert!(
-        tabs.compact,
-        "Vietnamese labels do not fit three ways across a 240 px rail"
-    );
-    // The active tab keeps `[icon label]`; the others shrink to glyphs.
-    assert!(
-        tabs.slides.size.x > tabs.layers.size.x,
-        "the active tab is the one that keeps its label: {:?} vs {:?}",
-        tabs.slides.size,
-        tabs.layers.size
-    );
-    let inner_w = 240.0 - 8.0 * 2.0;
-    assert!(
-        tabs.chat.size.x + tabs.layers.size.x + tabs.slides.size.x <= inner_w + 0.01,
-        "the tabs must not overhang the row"
-    );
-    // All three are still clickable, exactly where they paint.
-    let mid_y = tabs.row.origin.y + tabs.row.size.y / 2.0;
-    for (rect, target) in [
-        (tabs.chat, SlidesPanelTarget::ChatTab),
-        (tabs.layers, SlidesPanelTarget::LayersTab),
-        (tabs.slides, SlidesPanelTarget::SlidesTab),
-    ] {
-        assert_eq!(
-            tabs.hit(Point2D::new(rect.origin.x + rect.size.x / 2.0, mid_y)),
-            Some(target)
-        );
+fn the_labelled_pill_follows_whichever_tab_is_active() {
+    for (active, _) in ALL_TABS {
+        let tabs = tabs_at(320.0, active, &EN_ROW);
+        let active_w = tabs.rect_of(active).size.x;
+        for (tab, _) in ALL_TABS.into_iter().filter(|(t, _)| *t != active) {
+            assert!(
+                active_w > tabs.rect_of(tab).size.x,
+                "{active:?}'s pill is wider than {tab:?}'s glyph"
+            );
+        }
     }
-    // And the widest rail gives the words back.
+    let on_chat = tabs_at(320.0, LeftPanelTab::Chat, &EN_ROW);
+    let on_images = tabs_at(320.0, LeftPanelTab::Images, &EN_ROW);
     assert!(
-        !tabs_at(440.0, LeftPanelTab::Slides, &VI_ROW).compact,
-        "Vietnamese keeps its words at 440"
+        (on_chat.rect_of(LeftPanelTab::Layers).size.x
+            - on_images.rect_of(LeftPanelTab::Slides).size.x)
+            .abs()
+            < 0.01
     );
 }
 
-/// A document with no boards shows two tabs, not a dead Slides pill:
-/// the row splits in halves and the slides rect is nobody's.
+/// A document with no boards drops the slides tab, not the row; a host
+/// that owns the chat drops the Agent tab.
 #[test]
-fn a_boardless_document_drops_the_slides_tab_not_the_row() {
+fn optional_tabs_drop_out_of_the_row() {
     let row = SlidesTabRow {
         slides_available: false,
+        chat_available: false,
         ..EN_ROW
     };
     let tabs = SlidesPanelTabs::new(PANEL, LeftPanelTab::Layers, &row);
-    assert!(!tabs.compact);
-    // Two tabs at their own label widths, not two halves.
-    assert!(tabs.chat.size.x > 0.0 && tabs.layers.size.x > 0.0);
-    assert!(tabs.chat.origin.x + tabs.chat.size.x <= tabs.layers.origin.x);
-    assert!(
-        tabs.layers.origin.x + tabs.layers.size.x < tabs.row.size.x,
-        "two labels never fill the rail"
-    );
-    assert_eq!(tabs.slides, Rect::ZERO, "no slides rect to click");
-    let mid_y = tabs.row.origin.y + tabs.row.size.y / 2.0;
-    assert_eq!(
-        tabs.hit(Point2D::new(
-            tabs.chat.origin.x + tabs.chat.size.x / 2.0,
-            mid_y
-        )),
-        Some(SlidesPanelTarget::ChatTab)
-    );
-    assert_eq!(
-        tabs.hit(Point2D::new(
-            tabs.layers.origin.x + tabs.layers.size.x / 2.0,
-            mid_y
-        )),
-        Some(SlidesPanelTarget::LayersTab)
-    );
-    assert_eq!(tabs.hit(Point2D::new(236.0, mid_y)), None);
-}
-
-#[test]
-fn the_labelled_pill_follows_whichever_tab_is_active() {
-    let on_chat = tabs_at(240.0, LeftPanelTab::Chat, &VI_ROW);
-    let on_slides = tabs_at(240.0, LeftPanelTab::Slides, &VI_ROW);
-    let on_layers = tabs_at(240.0, LeftPanelTab::Layers, &VI_ROW);
-    assert!(on_chat.compact && on_slides.compact && on_layers.compact);
-    assert!(on_chat.chat.size.x > on_chat.layers.size.x);
-    assert!(on_slides.slides.size.x > on_slides.layers.size.x);
-    assert!(on_layers.layers.size.x > on_layers.slides.size.x);
-    // The un-labelled tabs are the same squares either way — each holds
-    // one glyph and nothing else, wherever it happens to sit.
-    assert!((on_chat.layers.size.x - on_layers.slides.size.x).abs() < 0.01);
-}
-
-/// Dragging the rail switches modes at the measured width, and never
-/// switches back the wrong way: once the labels stop fitting they stay
-/// not-fitting as the rail keeps narrowing.
-#[test]
-fn resizing_the_rail_switches_modes_monotonically() {
-    let compact_at = |w: f32| tabs_at(w, LeftPanelTab::Slides, &VI_ROW).compact;
-    assert!(compact_at(240.0), "at the minimum rail width, icons");
-    assert!(!compact_at(440.0), "at the maximum, words");
-    let mut seen_text = false;
-    for step in 0..=40 {
-        let width = 240.0 + step as f32 * 5.0;
-        let compact = compact_at(width);
-        if !compact {
-            seen_text = true;
-        }
-        assert!(
-            !(compact && seen_text),
-            "the row went back to icons at {width} after already fitting its labels"
-        );
+    assert_eq!(tabs.rect_of(LeftPanelTab::Slides), Rect::ZERO);
+    assert_eq!(tabs.rect_of(LeftPanelTab::Chat), Rect::ZERO);
+    let first = tabs.rect_of(LeftPanelTab::Layers);
+    assert!(first.size.x > 0.0, "Layers leads when Agent is absent");
+    for tab in [LeftPanelTab::Components, LeftPanelTab::Images] {
+        assert!(tabs.rect_of(tab).origin.x > first.origin.x);
     }
-    assert!(seen_text);
 }
 
-/// English is short enough that three tabs fit at every rail width we
-/// allow, so the fallback is inert for it today — that is the measured
-/// answer, not an oversight, and it is what stops us shrinking a row
-/// that has room.
+/// Even a very narrow rail never paints a tab past its edge: each tab is
+/// capped at what its predecessors left.
 #[test]
-fn the_fit_rule_scales_with_the_tab_count() {
-    let inner_w = 240.0 - 8.0 * 2.0;
-    let slides_w = crate::widgets::top_bar_geometry::estimated_text_width("Slides", 12.0);
-    assert!(
-        text_tabs_fit(inner_w, 3, slides_w),
-        "three English tabs fit the default rail"
-    );
-    assert!(
-        !text_tabs_fit(inner_w, 5, slides_w),
-        "five would not — the row compacts on tab count, not only on rail width"
-    );
-    // And the three we ship never compact anywhere in the resize range.
-    for step in 0..=40 {
-        let width = 240.0 + step as f32 * 5.0;
+fn a_narrow_rail_caps_the_tabs_inside_the_row() {
+    let tabs = tabs_at(120.0, LeftPanelTab::Images, &VI_ROW);
+    for (tab, _) in ALL_TABS {
+        let rect = tabs.rect_of(tab);
         assert!(
-            !tabs_at(width, LeftPanelTab::Slides, &EN_ROW).compact,
-            "English compacted at {width}, which means the estimate drifted"
+            rect.origin.x + rect.size.x <= 120.0 + 0.01,
+            "{tab:?}: {rect:?}"
         );
     }
 }

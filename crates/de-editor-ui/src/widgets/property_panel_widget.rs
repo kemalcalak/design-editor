@@ -298,7 +298,7 @@ fn paint_check_row(
     );
     let lbl = TextLayout::single_run(
         label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -325,7 +325,7 @@ fn paint_list_count_row(
     let baseline_y = rect.origin.y + rect.size.y / 2.0 + 4.0;
     let label_layout = TextLayout::single_run(
         label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -337,7 +337,7 @@ fn paint_list_count_row(
     let count_text = count.to_string();
     let count_layout = TextLayout::single_run(
         &count_text,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),

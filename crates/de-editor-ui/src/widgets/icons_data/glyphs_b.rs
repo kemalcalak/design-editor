@@ -465,3 +465,6 @@ pub(crate) const BRAIN: &[&str] = &[
     "M6 18a4 4 0 0 1-2-7.464",
     "M6.003 5.125a4 4 0 0 0-2.526 5.77",
 ];
+
+/// Lucide `code` — the canvas action group's Code-view toggle.
+pub const CODE: &[&str] = &["m16 18 6-6-6-6", "m8 6-6 6 6 6"];

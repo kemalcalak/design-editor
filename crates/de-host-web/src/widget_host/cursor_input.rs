@@ -1,12 +1,12 @@
 //! Cursor-move dispatch for the web `WidgetHost` — canvas pan-drag,
 //! marquee / layer / chat drags, and every hover wash (agent
-//! settings, toolbar, top bar, status bar, chat, property panel,
+//! settings, toolbar, floating chrome, status bar, chat, property panel,
 //! code panel, align toolbar). Split out of `widget_host.rs` to keep
 //! the spine under the repo's 800-line cap (mirrors the native
 //! host's `widget_host/input.rs` split).
 
 use de_editor_ui::widgets::cursor_hover_flow as hover_flow;
-use de_editor_ui::widgets::{PropertyPanel, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::PropertyPanel;
 use de_editor_ui::{Point2D, Rect};
 
 use super::WidgetHost;
@@ -141,16 +141,12 @@ impl WidgetHost {
                 property_panel_probe = Some(PropertyPanel::for_selection(&self.editor_state));
             }
             if let Some(panel) = property_panel_probe.as_ref().and_then(Option::as_ref) {
-                let property_rect = Rect {
-                    origin: Point2D::new(
-                        self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                        de_editor_ui::widgets::TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (self.last_viewport_h - de_editor_ui::widgets::TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        self.last_viewport_w,
+                        self.last_viewport_h,
+                    );
                 let point = Point2D::new(x, y);
                 let over_popup = panel.export_picker_contains(property_rect, point);
                 let new_hover = panel.export_picker_row_at(property_rect, point);
@@ -173,16 +169,11 @@ impl WidgetHost {
             }
         }
         if let Some(panel) = property_panel_probe.as_ref().and_then(Option::as_ref) {
-            let property_rect = Rect {
-                origin: Point2D::new(
-                    self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                    TOP_BAR_HEIGHT,
-                ),
-                size: Point2D::new(
-                    self.editor_state.editor_ui.property_panel_width,
-                    (self.last_viewport_h - TOP_BAR_HEIGHT).max(0.0),
-                ),
-            };
+            let property_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                &self.editor_state,
+                self.last_viewport_w,
+                self.last_viewport_h,
+            );
             let point = Point2D::new(x, y);
             if self.editor_state.editor_ui.interaction_menu_open {
                 let new_hover = panel.interaction_menu_row_at(property_rect, point);
@@ -377,16 +368,12 @@ impl WidgetHost {
                 property_panel_probe = Some(PropertyPanel::for_selection(&self.editor_state));
             }
             if let Some(panel) = property_panel_probe.as_ref().and_then(Option::as_ref) {
-                let property_rect = Rect {
-                    origin: Point2D::new(
-                        self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                        de_editor_ui::widgets::TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (self.last_viewport_h - de_editor_ui::widgets::TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        self.last_viewport_w,
+                        self.last_viewport_h,
+                    );
                 if let Some(action) = panel.image_adjustment_drag_action(property_rect, field, x) {
                     self.apply_property_action(action);
                     return true;
@@ -398,16 +385,12 @@ impl WidgetHost {
                 property_panel_probe = Some(PropertyPanel::for_selection(&self.editor_state));
             }
             if let Some(panel) = property_panel_probe.as_ref().and_then(Option::as_ref) {
-                let property_rect = Rect {
-                    origin: Point2D::new(
-                        self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                        TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (self.last_viewport_h - TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        self.last_viewport_w,
+                        self.last_viewport_h,
+                    );
                 if let Some(action) = panel.effect_radius_drag_action(property_rect, effect, x) {
                     self.apply_property_action(action);
                     return true;
@@ -471,10 +454,10 @@ impl WidgetHost {
         // picker. Its whole opaque pill (including padding and group gutters)
         // receives first refusal, not only the action buttons.
         let (new_align_hover, align_owns_point) = if self.editor_state.selection_count() >= 2 {
-            use de_editor_ui::widgets::{AlignToolbar, TOP_BAR_HEIGHT};
-            let (cx, _, cw, ch) = self.canvas_region(self.last_viewport_w, self.last_viewport_h);
+            use de_editor_ui::widgets::AlignToolbar;
+            let (cx, cy, cw, ch) = self.canvas_region(self.last_viewport_w, self.last_viewport_h);
             let canvas_region = de_editor_ui::Rect {
-                origin: Point2D::new(cx, TOP_BAR_HEIGHT),
+                origin: Point2D::new(cx, cy),
                 size: Point2D::new(cw, ch),
             };
             AlignToolbar::for_canvas_region(canvas_region, &self.editor_state)
@@ -510,18 +493,22 @@ impl WidgetHost {
             let lower_changed = self.clear_hover_below_chat_model_picker();
             return upper_hover_changed || hover_changed || lower_changed;
         }
-        // TopBar chrome-button hover wash (sidebar / file-menu / figma /
-        // theme / locale / fullscreen / agent chip). Git and Preview are
-        // compiled out on wasm32; every visible button lights up the same
-        // as native. Reuses the click hit-test so paint can't drift.
+        // Floating chrome hover wash (file pill + canvas action group), the
+        // same as native. Reuses the click hit-test so paint can't drift.
         {
-            let tb_rect = self.top_bar_rect(self.last_viewport_w);
             let new_hover = (!chat_surface_owns_point)
-                .then(|| self.top_bar().hit_test(tb_rect, point))
+                .then(|| {
+                    de_editor_ui::widgets::host_canvas_geometry::chrome_hit_at(
+                        &self.editor_state,
+                        self.last_viewport_w,
+                        self.last_viewport_h,
+                        point,
+                    )
+                })
                 .flatten()
-                .map(de_editor_ui::widgets::editor_state_ext::topbar_button_hover);
+                .map(|hit| hit.button());
             let ui = &mut self.editor_state.editor_ui;
-            if ui.set_topbar_button_hover(new_hover, self.now_ms) {
+            if ui.set_chrome_button_hover(new_hover, self.now_ms) {
                 self.mark_dirty();
                 if chat_surface_owns_point {
                     retained_hover_changed = true;
@@ -676,16 +663,11 @@ impl WidgetHost {
         }
         // PropertyPanel tab/action hover wash. Shown with a selection.
         let mut property_hover_changed = false;
-        let property_rect = Rect {
-            origin: Point2D::new(
-                self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                TOP_BAR_HEIGHT,
-            ),
-            size: Point2D::new(
-                self.editor_state.editor_ui.property_panel_width,
-                (self.last_viewport_h - TOP_BAR_HEIGHT).max(0.0),
-            ),
-        };
+        let property_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+            &self.editor_state,
+            self.last_viewport_w,
+            self.last_viewport_h,
+        );
         let point = Point2D::new(x, y);
         let over_property_panel = self.editor_state.property_panel_visible()
             && !over_topmost

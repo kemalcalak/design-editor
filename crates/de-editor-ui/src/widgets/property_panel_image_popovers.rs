@@ -61,7 +61,7 @@ fn paint_centered_label(
 ) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         size,
         (color).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -200,7 +200,7 @@ pub fn paint_search_popover(
             );
             let layout_text = TextLayout::single_run(
                 &label,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 9.0,
                 (theme.muted_foreground).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -335,7 +335,7 @@ pub fn paint_generate_popover(
             if state.generate_phase == ImageGeneratePhase::Error {
                 let err = TextLayout::single_run(
                     &state.generate_error,
-                    "system-ui",
+                    crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                     10.0,
                     theme.destructive.to_jian(),
                     Point2D::new(0.0, 0.0),
@@ -373,7 +373,7 @@ pub fn paint_generate_popover(
                 );
                 let label = TextLayout::single_run(
                     generate_label,
-                    "system-ui",
+                    crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                     11.0,
                     (fg).to_jian(),
                     Point2D::new(0.0, 0.0),

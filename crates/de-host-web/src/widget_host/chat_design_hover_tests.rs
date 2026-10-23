@@ -1,7 +1,7 @@
 use super::WidgetHost;
 use de_editor_core::chat::{AgentProvider, ModelEntry};
 use de_editor_core::{EditorState, NodeId, PathAnchorMenuState, Tool};
-use de_editor_ui::widgets::{AIChatPlaceholder, AlignToolbar, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::{AIChatPlaceholder, AlignToolbar};
 use de_editor_ui::{Point2D, Rect};
 
 fn open_model_picker(host: &mut WidgetHost) {
@@ -169,7 +169,7 @@ fn chat_blank_surface_blocks_lower_hover_and_stable_move_needs_no_repaint() {
         ));
         ui.variables_panel_hover = Some(de_editor_core::VariablesPanelButton::Close);
         ui.property_action_hover = Some(2);
-        ui.property_tab_hover = Some(de_editor_core::PropertyTab::Design);
+        ui.property_close_hover = true;
         ui.fill_type_picker.hover = Some(0);
     }
 
@@ -181,7 +181,7 @@ fn chat_blank_surface_blocks_lower_hover_and_stable_move_needs_no_repaint() {
     assert_eq!(ui.toolbar_hover, None);
     assert_eq!(ui.variables_panel_hover, None);
     assert_eq!(ui.property_action_hover, None);
-    assert_eq!(ui.property_tab_hover, None);
+    assert!(!ui.property_close_hover);
     assert_eq!(ui.fill_type_picker.hover, None);
     assert!(
         !host.apply_cursor_move(point.x, point.y),
@@ -312,9 +312,9 @@ fn align_toolbar_padding_clears_stale_chat_hover() {
     host.editor_state.editor_ui.chat_header_hover = Some(de_editor_core::ChatHeaderButton::NewChat);
     host.editor_state.editor_ui.canvas_hover_node = Some(NodeId::new("stale-canvas"));
 
-    let (cx, _, cw, ch) = host.canvas_region(viewport_w, viewport_h);
+    let (cx, cy, cw, ch) = host.canvas_region(viewport_w, viewport_h);
     let canvas_region = Rect {
-        origin: Point2D::new(cx, TOP_BAR_HEIGHT),
+        origin: Point2D::new(cx, cy),
         size: Point2D::new(cw, ch),
     };
     let toolbar =
@@ -456,18 +456,13 @@ fn property_image_popup_clears_stale_chat_model_picker_hover() {
     seed_stale_chat_and_lower_hover(&mut host);
     let panel = de_editor_ui::widgets::PropertyPanel::for_selection(&host.editor_state)
         .expect("image property panel");
-    let property_rect = Rect {
-        origin: Point2D::new(
-            viewport_w - host.editor_state.editor_ui.property_panel_width,
-            TOP_BAR_HEIGHT,
-        ),
-        size: Point2D::new(
-            host.editor_state.editor_ui.property_panel_width,
-            viewport_h - TOP_BAR_HEIGHT,
-        ),
-    };
+    let property_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+        &host.editor_state,
+        viewport_w,
+        viewport_h,
+    );
     let mut owned_point = None;
-    let mut y = TOP_BAR_HEIGHT;
+    let mut y = 0.0;
     while y < viewport_h && owned_point.is_none() {
         let mut x = 0.0;
         while x < viewport_w {

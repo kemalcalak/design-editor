@@ -11,15 +11,12 @@
 //! these instead of the old `doc.theme()` / `doc.t(key)`.
 
 use crate::theme::Theme;
-use de_editor_core::editor_ui_state::{EditorUiState, ThemeMode};
+use de_editor_core::editor_ui_state::EditorUiState;
 
 /// Resolve the active editor [`Theme`] from the UI theme mode.
 /// Mirrors the old `Document::theme()`.
 pub fn theme_for(ui: &EditorUiState) -> Theme {
-    match ui.effective_theme_mode() {
-        ThemeMode::Dark => Theme::dark(),
-        ThemeMode::Light => Theme::light(),
-    }
+    crate::widgets::home_surface::chrome_theme(ui.effective_theme_mode())
 }
 
 /// Translate a chrome string key against the active UI locale.
@@ -63,6 +60,7 @@ pub fn toolbar_action(a: crate::widgets::toolbar::ToolbarAction) -> de_editor_co
         W::Redo => O::Redo,
         W::ToggleVariablesPanel => O::ToggleVariablesPanel,
         W::ToggleDesignPanel => O::ToggleDesignPanel,
+        W::ImportImage => O::ImportImage,
     }
 }
 
@@ -250,30 +248,6 @@ pub fn chat_header_hover(
         W::NewChat => Some(O::NewChat),
         W::ToggleSessionMenu => Some(O::SessionMenu),
         _ => None,
-    }
-}
-
-/// Map a widget-layer `TopBarHit` onto the canonical
-/// `de_editor_core::TopBarButton` so the host can store the hovered
-/// top-bar chrome button on `EditorUiState.topbar_button_hover`.
-pub fn topbar_button_hover(
-    hit: crate::widgets::top_bar::TopBarHit,
-) -> de_editor_core::TopBarButton {
-    use crate::widgets::top_bar::TopBarHit as W;
-    use de_editor_core::TopBarButton as O;
-    match hit {
-        W::ToggleSidebar => O::ToggleSidebar,
-        W::ToggleFileMenu => O::ToggleFileMenu,
-        W::OpenImportMenu => O::OpenImportMenu,
-        W::Home => O::Home,
-        W::ToggleTheme => O::ToggleTheme,
-        W::ToggleLocale => O::ToggleLocale,
-        W::OpenExportMenu => O::OpenExportMenu,
-        W::OpenAssetCenter => O::OpenAssetCenter,
-        W::OpenAgentSettings => O::OpenAgentSettings,
-        W::ToggleGitPanel => O::ToggleGitPanel,
-        W::ToggleFullscreen => O::ToggleFullscreen,
-        W::TogglePreview => O::TogglePreview,
     }
 }
 

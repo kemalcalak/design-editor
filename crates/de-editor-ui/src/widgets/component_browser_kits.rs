@@ -417,7 +417,6 @@ impl ComponentBrowserPanel<'_> {
 mod tests {
     use super::*;
     use crate::widgets::test_capture_backend::CaptureBackend;
-    use crate::widgets::{COMPONENT_BROWSER_PANEL_H, COMPONENT_BROWSER_PANEL_W};
     use de_editor_core::uikit::{KitComponent, UIKit};
     use de_editor_core::ButtonPressTarget;
     use de_editor_core::EditorState;
@@ -449,7 +448,7 @@ mod tests {
 
     fn open_state_with_import() -> EditorState {
         let mut state = EditorState::new();
-        state.editor_ui.component_browser_open = true;
+        state.editor_ui.open_components_tab();
         state.ui_kits.push(imported_kit("imp-1"));
         state
     }
@@ -457,7 +456,8 @@ mod tests {
     fn panel_rect() -> Rect {
         Rect {
             origin: Point2D::new(0.0, 0.0),
-            size: Point2D::new(COMPONENT_BROWSER_PANEL_W, COMPONENT_BROWSER_PANEL_H),
+            // A rail-sized body: the Components tab fills the left rail.
+            size: Point2D::new(320.0, 760.0),
         }
     }
 
@@ -466,7 +466,7 @@ mod tests {
     }
 
     #[test]
-    fn header_buttons_hit_export_import_close() {
+    fn header_buttons_hit_export_and_import() {
         let state = open_state_with_import();
         let panel = ComponentBrowserPanel::for_editor(&state).expect("open");
         let rect = panel_rect();

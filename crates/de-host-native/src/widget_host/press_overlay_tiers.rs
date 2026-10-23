@@ -83,12 +83,6 @@ impl WidgetHostNative {
             self.close_image_popovers_for_higher_overlay();
             return Some(true);
         }
-        // Floating Component-Browser panel — painted just under the
-        // Design-MD panel; hit-tests right after it.
-        if self.dispatch_component_browser_press(x, y, viewport_width, viewport_height) {
-            self.close_image_popovers_for_higher_overlay();
-            return Some(true);
-        }
         if self.editor_state.editor_ui.agent_settings_open
             && self.dispatch_agent_settings_press(x, y, viewport_width, viewport_height)
         {
@@ -106,7 +100,7 @@ impl WidgetHostNative {
         // picker / overflow / its subview) is open it is MODAL: route
         // every press to the Git panel first so a click anywhere
         // outside the popover dismisses it. The popover extends past the
-        // panel rect, so the rail / top-bar / canvas blocks below cannot
+        // panel rect, so the rail / chrome / canvas blocks below cannot
         // be relied on to forward an outside click — `hit_test` returns
         // `DismissPopover` for any outside-popover point.
         //
@@ -177,7 +171,7 @@ impl WidgetHostNative {
             return Some(true);
         }
         // Export quick menu — same tier as the file menu it shortcuts. It
-        // must sit above the TopBar tier so a second press on the download
+        // must sit above the chrome tier so a second press on the download
         // button closes it instead of re-toggling it open.
         if self.editor_state.editor_ui.export_quick_menu_open {
             self.close_image_popovers_for_higher_overlay();
@@ -185,8 +179,8 @@ impl WidgetHostNative {
             return Some(true);
         }
         // The slides rail's export dropdown, on the same rung and for the
-        // same reason. The rail's own press tier sits far BELOW the TopBar,
-        // so without this rung a click on the top bar would leave the menu
+        // same reason. The rail's own press tier sits far BELOW the chrome tier,
+        // so without this rung a click on the chrome would leave the menu
         // open behind it; here it is dismissed like any other dropdown.
         // Routed through the rail's ordinary entry point rather than a
         // second dispatcher — `slides_panel_flow::press` already answers

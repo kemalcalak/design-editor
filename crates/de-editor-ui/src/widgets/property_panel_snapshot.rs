@@ -169,6 +169,9 @@ pub struct NodeSnapshot {
     pub interactions: crate::widgets::property_panel_interactions::InteractionSummary,
     /// Drives per-kind section filtering (Line hides fill, etc.).
     pub kind_variant: crate::layout_scene::NodeKind,
+    /// The selection's layer-rail glyph, shown in the panel header — the
+    /// same `icon_for_node` the layer row uses, so the two never disagree.
+    pub kind_icon: crate::widgets::icons::Icon,
     /// True when the selection is a component INSTANCE (`Ref`) shown
     /// through its merged display node — drives the purple badge +
     /// the Go-to-component / Detach-instance rows.

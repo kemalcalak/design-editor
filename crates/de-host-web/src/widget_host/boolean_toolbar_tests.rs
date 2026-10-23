@@ -1,6 +1,6 @@
 use super::WidgetHost;
 use de_editor_core::{walkers::find_node, BooleanOp, EditorState, NodeId, PenNodeExt, Tool};
-use de_editor_ui::widgets::{AlignToolbar, AlignToolbarHit, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::{AlignToolbar, AlignToolbarHit};
 use de_editor_ui::{Point2D, Rect};
 
 fn seed_two_selected_rects(host: &mut WidgetHost) -> (NodeId, NodeId) {
@@ -26,9 +26,9 @@ fn toolbar_point_for(
     viewport_h: f32,
     hit: AlignToolbarHit,
 ) -> Point2D {
-    let (cx, _, cw, ch) = host.canvas_region(viewport_w, viewport_h);
+    let (cx, cy, cw, ch) = host.canvas_region(viewport_w, viewport_h);
     let canvas_region = Rect {
-        origin: Point2D::new(cx, TOP_BAR_HEIGHT),
+        origin: Point2D::new(cx, cy),
         size: Point2D::new(cw, ch),
     };
     let toolbar = AlignToolbar::for_canvas_region(canvas_region, &host.editor_state)

@@ -17,7 +17,7 @@ impl WidgetHostNative {
     ) {
         if let (Some(panel), Some(rect)) = (
             ComponentBrowserPanel::for_editor_at(&self.editor_state, self.now_ms),
-            self.component_browser_panel_rect(viewport_width, viewport_height),
+            self.components_tab_rect(viewport_height),
         ) {
             panel.paint(
                 &mut PaintCx {

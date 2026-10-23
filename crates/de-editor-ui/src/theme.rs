@@ -144,7 +144,7 @@ impl Theme {
     }
 
     /// Light palette stub. Step 4 boots the editor in dark; light is
-    /// kept so the TopBar's theme toggle has somewhere to land in
+    /// kept so the theme toggle has somewhere to land in
     /// Step 5 without another schema change.
     pub const fn light() -> Self {
         Self {

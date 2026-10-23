@@ -253,7 +253,7 @@ pub(super) fn kind_label(node: &PenNode) -> &'static str {
 
 /// Map a `PenNode` variant onto a LayerPanel row icon. Reusable
 /// component definitions + Ref instances paint the TS Diamond glyph.
-pub(super) fn icon_for_node(node: &PenNode) -> Icon {
+pub(crate) fn icon_for_node(node: &PenNode) -> Icon {
     match node {
         PenNode::Frame(f) if f.reusable == Some(true) => Icon::Diamond,
         PenNode::Ref(_) => Icon::Diamond,

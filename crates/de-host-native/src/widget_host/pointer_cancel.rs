@@ -108,7 +108,6 @@ impl WidgetHostNative {
         cancelled |= self.chat_drag.take().is_some();
         cancelled |= self.chat_resize.take().is_some();
         cancelled |= self.design_md_drag.take().is_some();
-        cancelled |= self.component_browser_drag.take().is_some();
         cancelled |= self.icon_picker_drag.take().is_some();
         cancelled |= self.image_adjustment_drag.take().is_some();
         cancelled |= self.image_crop_drag.take().is_some();

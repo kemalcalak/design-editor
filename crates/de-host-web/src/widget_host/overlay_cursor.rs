@@ -237,36 +237,6 @@ impl WidgetHost {
             }
             *upper_hover_changed |= changed;
         }
-        if let Some(d) = self.component_browser_drag {
-            self.editor_state.editor_ui.component_browser_pos =
-                Some((x - d.grab_dx, y - d.grab_dy));
-            self.mark_dirty();
-            return true;
-        }
-        // Component-browser panel hover (close / category pills / cards).
-        if self.editor_state.editor_ui.component_browser_open {
-            use de_editor_ui::widgets::component_browser_panel::ComponentBrowserPanel;
-            if let Some(panel_rect) =
-                self.component_browser_panel_rect(self.last_viewport_w, self.last_viewport_h)
-            {
-                let point = Point2D::new(x, y);
-                let new_hover = ComponentBrowserPanel::for_editor(&self.editor_state)
-                    .and_then(|p| p.hover_at(panel_rect, point));
-                let changed = new_hover != self.editor_state.editor_ui.component_browser_hover;
-                if changed {
-                    self.editor_state.editor_ui.component_browser_hover = new_hover;
-                    self.mark_dirty();
-                }
-                if panel_rect.contains(point) {
-                    self.clear_hover_below_topmost_panel();
-                    return true;
-                }
-                if changed && !chat_or_picker_owns_point {
-                    return true;
-                }
-                *upper_hover_changed |= changed;
-            }
-        }
         if let Some(d) = self.icon_picker_drag {
             self.editor_state.editor_ui.icon_picker_panel_pos =
                 Some((x - d.grab_dx, y - d.grab_dy));
@@ -300,16 +270,11 @@ impl WidgetHost {
         let point = Point2D::new(x, y);
         let over_dropdown =
             self.over_dropdown_overlay(x, y, self.last_viewport_w, self.last_viewport_h);
-        let property_rect = de_editor_ui::Rect {
-            origin: Point2D::new(
-                self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                de_editor_ui::widgets::TOP_BAR_HEIGHT,
-            ),
-            size: Point2D::new(
-                self.editor_state.editor_ui.property_panel_width,
-                (self.last_viewport_h - de_editor_ui::widgets::TOP_BAR_HEIGHT).max(0.0),
-            ),
-        };
+        let property_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+            &self.editor_state,
+            self.last_viewport_w,
+            self.last_viewport_h,
+        );
         let over_property_dropdown = property_panel.is_some_and(|panel| {
             (self.editor_state.editor_ui.fill_type_picker.open
                 && !matches!(
@@ -352,6 +317,49 @@ impl WidgetHost {
                 return true;
             }
         }
+        // The Components / Images rail tabs (#30) — below every floating
+        // panel and dropdown, in the same order as the press ladder.
+        // Components tab hover (kit actions / category pills / cards).
+        {
+            use de_editor_ui::widgets::component_browser_panel::ComponentBrowserPanel;
+            if let Some(panel_rect) = self.components_tab_rect(self.last_viewport_h) {
+                let point = Point2D::new(x, y);
+                let new_hover = ComponentBrowserPanel::for_editor(&self.editor_state)
+                    .and_then(|p| p.hover_at(panel_rect, point));
+                let changed = new_hover != self.editor_state.editor_ui.component_browser_hover;
+                if changed {
+                    self.editor_state.editor_ui.component_browser_hover = new_hover;
+                    self.mark_dirty();
+                }
+                if panel_rect.contains(point) {
+                    self.clear_hover_below_topmost_panel();
+                    return true;
+                }
+                if changed && !chat_or_picker_owns_point {
+                    return true;
+                }
+                *upper_hover_changed |= changed;
+            }
+        }
+        // Images tab hover (Search / Generate / thumbnails).
+        {
+            let (owns_point, changed) = de_editor_ui::widgets::images_tab::update_hover(
+                &mut self.editor_state,
+                self.last_viewport_h,
+                Point2D::new(x, y),
+            );
+            if changed {
+                self.mark_dirty();
+            }
+            if owns_point {
+                self.clear_hover_below_topmost_panel();
+                return true;
+            }
+            if changed && !chat_or_picker_owns_point {
+                return true;
+            }
+            *upper_hover_changed |= changed;
+        }
         false
     }
 
@@ -373,7 +381,7 @@ impl WidgetHost {
             changed |= ui.toolbar_hover.take().is_some();
             changed |= ui.align_toolbar_hover.take().is_some();
             changed |= ui.statusbar_hover.take().is_some();
-            changed |= ui.topbar_button_hover.take().is_some();
+            changed |= ui.chrome_button_hover.take().is_some();
             changed |= ui.chat_model_picker.hover.take().is_some();
             changed |= ui.chat_header_hover.take().is_some();
             changed |= ui.chat_tab_hover.take().is_some();
@@ -384,7 +392,7 @@ impl WidgetHost {
             changed |= ui.parallel_agents_picker_hover.take().is_some();
             changed |= ui.export_picker_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             if let Some(menu) = ui.layer_context_menu.as_mut() {
                 changed |= menu.menu.hover.take().is_some();
             }
@@ -422,8 +430,11 @@ impl WidgetHost {
         if self.editor_state.editor_ui.file_menu_open {
             use de_editor_ui::widgets::file_menu::FileMenu;
             self.refresh_layout_scene();
-            let top_bar_rect = self.top_bar_rect(self.last_viewport_w);
-            let anchor = self.top_bar().file_menu_rect_for(top_bar_rect);
+            let anchor = de_editor_ui::widgets::host_overlay_geometry::file_menu_anchor(
+                &self.editor_state,
+                self.last_viewport_w,
+                self.last_viewport_h,
+            );
             let menu = FileMenu::from_editor_ui(&self.editor_state.editor_ui, self.wall_now_secs);
             let panel = menu.rect_at(anchor);
             let new_hover = menu.hovered_at(panel, Point2D::new(x, y));
@@ -495,19 +506,14 @@ impl WidgetHost {
             }
         }
         if self.editor_state.editor_ui.fill_type_picker.open {
-            use de_editor_ui::widgets::TOP_BAR_HEIGHT;
             self.refresh_layout_scene();
             if let Some(panel) = property_panel {
-                let property_rect = de_editor_ui::Rect {
-                    origin: Point2D::new(
-                        self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                        TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (self.last_viewport_h - TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        self.last_viewport_w,
+                        self.last_viewport_h,
+                    );
                 let new_hover = panel.fill_type_picker_row_at(property_rect, Point2D::new(x, y));
                 if new_hover != self.editor_state.editor_ui.fill_type_picker.hover {
                     self.editor_state.editor_ui.fill_type_picker.hover = new_hover;
@@ -517,19 +523,14 @@ impl WidgetHost {
             }
         }
         if self.editor_state.editor_ui.compositing_picker.open {
-            use de_editor_ui::widgets::TOP_BAR_HEIGHT;
             self.refresh_layout_scene();
             if let Some(panel) = property_panel {
-                let property_rect = de_editor_ui::Rect {
-                    origin: Point2D::new(
-                        self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                        TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (self.last_viewport_h - TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        self.last_viewport_w,
+                        self.last_viewport_h,
+                    );
                 let new_hover = panel.compositing_picker_row_at(property_rect, Point2D::new(x, y));
                 if new_hover != self.editor_state.editor_ui.compositing_picker.hover {
                     self.editor_state.editor_ui.compositing_picker.hover = new_hover;
@@ -539,19 +540,14 @@ impl WidgetHost {
             }
         }
         if self.editor_state.editor_ui.effect_add_picker_open {
-            use de_editor_ui::widgets::TOP_BAR_HEIGHT;
             self.refresh_layout_scene();
             if let Some(panel) = property_panel {
-                let property_rect = de_editor_ui::Rect {
-                    origin: Point2D::new(
-                        self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                        TOP_BAR_HEIGHT,
-                    ),
-                    size: Point2D::new(
-                        self.editor_state.editor_ui.property_panel_width,
-                        (self.last_viewport_h - TOP_BAR_HEIGHT).max(0.0),
-                    ),
-                };
+                let property_rect =
+                    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                        &self.editor_state,
+                        self.last_viewport_w,
+                        self.last_viewport_h,
+                    );
                 let new_hover = panel.effect_add_menu_row_at(property_rect, Point2D::new(x, y));
                 if new_hover != self.editor_state.editor_ui.effect_add_menu_hover {
                     self.editor_state.editor_ui.effect_add_menu_hover = new_hover;
@@ -573,9 +569,6 @@ impl WidgetHost {
         }
         if self.design_md_drag.take().is_some() {
             // Position was updated live; release only ends the drag.
-            return true;
-        }
-        if self.component_browser_drag.take().is_some() {
             return true;
         }
         if self.icon_picker_drag.take().is_some() {

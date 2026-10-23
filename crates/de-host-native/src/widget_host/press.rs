@@ -94,6 +94,16 @@ impl WidgetHostNative {
         if self.try_open_path_anchor_menu(x, y, viewport_w, viewport_h) {
             return true;
         }
+        // Right-click on the tool rail's Rectangle slot opens the shape menu.
+        if press_flow::press_toolbar_secondary(
+            &mut self.editor_state,
+            viewport_w,
+            viewport_h,
+            Point2D::new(x, y),
+        ) {
+            self.mark_dirty();
+            return true;
+        }
         if !self.layers_panel_visible() {
             // No layer panel to hit — the right press is blank chrome;
             // blur inputs like the sidebar-open fall-through below.
@@ -246,12 +256,12 @@ impl WidgetHostNative {
             return consumed;
         }
         // Tier 3 — image-fill popover, StatusBar, resize gutter, and the
-        // model-picker slice that lifts above the TopBar.
+        // model-picker slice that lifts over the floating chrome.
         if let Some(consumed) = self.press_rail_overlay_tiers(&ctx) {
             return consumed;
         }
         // Tier 3c — the generation workspace's chrome (header, toolbar,
-        // deck strip, dock handle) claims presses ahead of the top bar
+        // deck strip, dock handle) claims presses ahead of the floating chrome
         // and rails, after Home and the modal tiers. Presses on the
         // docked canvas and the pinned chat fall through to their
         // ordinary tiers below.
@@ -260,8 +270,8 @@ impl WidgetHostNative {
                 return consumed;
             }
         }
-        // Tier 4 — TopBar chrome (and its blank-press gaps).
-        if let Some(consumed) = self.press_top_bar_tier(&ctx) {
+        // Tier 4 — floating chrome (and its blank-press padding).
+        if let Some(consumed) = self.press_chrome_tier(&ctx) {
             return consumed;
         }
         // Tier 5 — Preview (Play) mode swallows everything else.

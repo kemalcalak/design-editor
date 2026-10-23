@@ -12,8 +12,8 @@ impl WidgetHost {
     /// Returns true if hover state changed (caller should
     /// repaint). Mirrors the native host.
     pub fn update_layer_hover(&mut self, x: f32, y: f32, viewport_h: f32) -> bool {
-        use de_editor_ui::widgets::{LayerPanelHit, TOP_BAR_HEIGHT};
-        let sidebar_open = self.editor_state.editor_ui.sidebar_open;
+        use de_editor_ui::widgets::{LayerPanelHit, WINDOW_STRIP_H};
+        let sidebar_open = self.layers_panel_visible();
         let panel_w = self.editor_state.editor_ui.layer_panel_width;
         let blocked_by_overlay = self
             .chat_model_picker_rect(self.last_viewport_w, viewport_h)
@@ -22,7 +22,7 @@ impl WidgetHost {
             || self.over_dropdown_overlay(x, y, self.last_viewport_w, viewport_h);
         let (new_layer, new_page) = if sidebar_open
             && !blocked_by_overlay
-            && y >= TOP_BAR_HEIGHT
+            && y >= WINDOW_STRIP_H
             && x >= 0.0
             && x <= panel_w
         {
@@ -88,7 +88,7 @@ impl WidgetHost {
             changed |= ui.variables_panel_hover.take().is_some();
             changed |= ui.variables_preset_menu_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             changed |= ui.fill_type_picker.hover.take().is_some();
         }
         changed |= self.editor_state.codegen.framework_hover.take().is_some();
@@ -120,7 +120,7 @@ impl WidgetHost {
             changed |= ui.variables_panel_hover.take().is_some();
             changed |= ui.variables_preset_menu_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
         }
         changed |= self.editor_state.codegen.framework_hover.take().is_some();
         changed |= self.editor_state.codegen.action_hover.take().is_some();
@@ -145,7 +145,7 @@ impl WidgetHost {
             changed |= ui.toolbar_hover.take().is_some();
             changed |= ui.align_toolbar_hover.take().is_some();
             changed |= ui.statusbar_hover.take().is_some();
-            changed |= ui.topbar_button_hover.take().is_some();
+            changed |= ui.chrome_button_hover.take().is_some();
             if clear_chat_model_picker {
                 changed |= ui.chat_model_picker.hover.take().is_some();
             }
@@ -160,7 +160,7 @@ impl WidgetHost {
             changed |= ui.variables_panel_hover.take().is_some();
             changed |= ui.variables_preset_menu_hover.take().is_some();
             changed |= ui.property_action_hover.take().is_some();
-            changed |= ui.property_tab_hover.take().is_some();
+            changed |= std::mem::take(&mut ui.property_close_hover);
             if let Some(menu) = ui.layer_context_menu.as_mut() {
                 changed |= menu.menu.hover.take().is_some();
             }

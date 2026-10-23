@@ -280,6 +280,26 @@ pub struct VisibleSections {
 }
 
 impl VisibleSections {
+    /// Position's W / H row (#30): the size inputs live with X / Y now,
+    /// for every node that sizes at all.
+    pub fn position_size_row_h(&self) -> f32 {
+        if self.size_options {
+            crate::widgets::property_panel_inputs::INPUT_HEIGHT + 6.0
+        } else {
+            0.0
+        }
+    }
+
+    /// Space above the fill / hug / clip boxes. Under Auto layout they
+    /// read as its last rows and take no title of their own.
+    pub fn size_section_lead_h(&self) -> f32 {
+        if self.flex_layout {
+            0.0
+        } else {
+            crate::widgets::property_panel_inputs::SECTION_HEADER_HEIGHT
+        }
+    }
+
     pub const ALL: Self = Self {
         create_component: true,
         component_button: ComponentButtonState::Create,

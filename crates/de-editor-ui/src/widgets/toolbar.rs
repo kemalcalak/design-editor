@@ -1,72 +1,62 @@
-//! `Toolbar` — vertical icon-only tool column anchored to the left
-//! edge of the canvas (Step 4 visual lift).
+//! `Toolbar` — the floating tool rail at the canvas's left edge (#30).
 //!
-//! Layout matches `apps/web/src/components/editor/toolbar.tsx`:
-//! tools at the top (Select / Rect / Text / Frame / Hand), a hairline
-//! separator, undo/redo, another separator, then panel toggles
-//! (Variables / Design system).
+//! Eight flat buttons, top to bottom: Select, Rectangle, Ellipse, Pen,
+//! Text, Frame, Image, Hand. The Rectangle button is a slot: it carries
+//! whichever of Rectangle / Polygon / Line the user last chose (its icon
+//! follows), and a right-click on it opens the shape menu for the other
+//! two plus the icon picker. Image is a one-shot action — it imports an
+//! image or SVG file. Undo / Redo and the panel toggles live in the File
+//! menu now.
 //!
-//! Active tool gets a `theme.primary` filled rounded square + the
-//! white foreground icon. Inactive items render the icon in
-//! `theme.muted_foreground` with a transparent background.
-//!
-//! Click events are wired by the host in P6; the toolbar exposes
-//! [`Toolbar::hit_test`] so a `(x, y)` mouse position resolves to
-//! either a `Tool` change or an `Action` (Undo / Redo / TogglePanel).
+//! The active tool gets a `theme.primary` filled rounded square + the
+//! white foreground icon; the others paint their icon in
+//! `theme.muted_foreground` on a transparent background.
 
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::theme_for;
-use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::icons::Icon;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Point2D, Rect};
 use de_editor_core::EditorState;
 use de_editor_core::Tool;
 
-/// Outer column width (matches the TS app's `w-12` toolbar).
-pub const TOOLBAR_WIDTH: f32 = 44.0;
+/// Outer rail width.
+pub const TOOLBAR_WIDTH: f32 = 42.0;
 const BUTTON_SIZE: f32 = 32.0;
-const ICON_SIZE: f32 = 18.0;
-const STROKE_W: f32 = 1.6;
-const BUTTON_GAP: f32 = 4.0;
-/// Extra vertical room reserved AFTER the shape slot so the
-/// chevron-down affordance has space to sit below the button
-/// without overlapping the next item (matches the TS layout).
-const SHAPE_SLOT_BOTTOM_EXTRA: f32 = 10.0;
-const SECTION_GAP: f32 = 12.0;
-const PAD_TOP: f32 = 8.0;
-const PAD_BOTTOM: f32 = 8.0;
+const ICON_SIZE: f32 = 16.0;
+const STROKE_W: f32 = 1.5;
+const BUTTON_GAP: f32 = 2.0;
+const PAD_Y: f32 = 5.0;
+const RADIUS: f32 = 12.0;
 
-/// Each entry in the toolbar — either a tool button (selectable),
-/// an action button (one-shot), a separator that paints a
-/// hairline, or the shape-tool dropdown slot (icon driven by
-/// `Document.ui.shape_tool`, click toggles the picker).
+/// Each button on the rail — a tool (selectable), an action (one-shot),
+/// or the shape slot (Rectangle / Polygon / Line, icon driven by
+/// `EditorUiState::shape_tool`).
 #[derive(Debug, Clone, Copy)]
 pub enum ToolbarItem {
     Tool(Tool, Icon),
     Action(ToolbarAction, Icon),
-    Separator,
-    /// Compound shape slot. Paints the icon for whichever shape
-    /// variant the user last picked; click toggles the dropdown
-    /// listing all shape options.
     ShapeSlot,
 }
 
-/// One-shot action a toolbar button can dispatch. Wired in P6.
+/// One-shot action a toolbar button (or its File-menu twin) dispatches.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ToolbarAction {
     Undo,
     Redo,
     ToggleVariablesPanel,
     ToggleDesignPanel,
+    /// Import an image or SVG file onto the canvas.
+    ImportImage,
 }
 
-/// Hit-test result for a mouse click inside the toolbar rect.
+/// Hit-test result for a press inside the rail.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ToolbarHit {
     Tool(Tool),
     Action(ToolbarAction),
-    /// User clicked the shape slot — host should toggle the
-    /// shape-tool picker (`Document.ui.shape_picker.open`).
+    /// Right-click on the shape slot — the host toggles the shape menu
+    /// (`EditorUiState::shape_picker.open`).
     ToggleShapePicker,
 }
 
@@ -75,44 +65,40 @@ pub struct Toolbar {
     pub items: Vec<ToolbarItem>,
     pub active: Tool,
     pub theme: Theme,
-    /// Which shape variant the shape slot paints. Read from
-    /// `Document.ui.shape_tool` so the icon flips after the user
-    /// picks a shape from the dropdown.
+    /// Which shape variant the shape slot carries. Read from
+    /// `EditorUiState::shape_tool` so the icon flips after the user picks
+    /// a shape from the menu.
     pub shape_tool: Tool,
-    /// Which item the cursor is over — drives the per-button hover
-    /// wash. `None` = no hover (cursor off the bar or over an
-    /// active item where the active fill already reads).
+    /// Which item the cursor is over — drives the per-button hover wash.
     pub hover: Option<de_editor_core::ToolbarHover>,
     pub pressed: Option<de_editor_core::ToolbarHover>,
 }
 
+/// Whether `tool` is one the shape slot carries.
+fn slot_carries(tool: Tool) -> bool {
+    matches!(tool, Tool::Rect | Tool::Polygon | Tool::Line)
+}
+
 impl Toolbar {
-    /// Default Step 4 set — TS app order:
-    /// Select / Rect / Text / Frame / Hand · Undo / Redo · Variables / Design.
+    /// The rail bound to a fresh editor state.
     pub fn default_set() -> Self {
         Self::for_editor(&EditorState::new())
     }
 
-    /// Build the toolbar bound to the editor's active tool + theme.
-    /// The active highlight reads `state.tool`; theme reads the editor UI's
-    /// effective mode so it follows either the user's preference or a
-    /// transient embedding-host override.
+    /// Build the rail bound to the editor's active tool + theme.
     pub fn for_editor(state: &EditorState) -> Self {
-        // Form-widget tools are intentionally NOT in the toolbar: widget
+        // Form-widget tools are intentionally NOT on the rail: widget
         // nodes are authored via the component kit (uikit) / AI+MCP and
         // matched by the jian runtime, not dropped as primitive tools.
         let items = vec![
             ToolbarItem::Tool(Tool::Select, Icon::Cursor),
             ToolbarItem::ShapeSlot,
+            ToolbarItem::Tool(Tool::Ellipse, Icon::Circle),
+            ToolbarItem::Tool(Tool::Pen, Icon::PenTool),
             ToolbarItem::Tool(Tool::Text, Icon::Type),
             ToolbarItem::Tool(Tool::Frame, Icon::Frame),
+            ToolbarItem::Action(ToolbarAction::ImportImage, Icon::Image),
             ToolbarItem::Tool(Tool::Hand, Icon::Hand),
-            ToolbarItem::Separator,
-            ToolbarItem::Action(ToolbarAction::Undo, Icon::Undo),
-            ToolbarItem::Action(ToolbarAction::Redo, Icon::Redo),
-            ToolbarItem::Separator,
-            ToolbarItem::Action(ToolbarAction::ToggleVariablesPanel, Icon::Braces),
-            ToolbarItem::Action(ToolbarAction::ToggleDesignPanel, Icon::BookOpen),
         ];
         Self {
             id: WidgetId::new(3000),
@@ -128,188 +114,104 @@ impl Toolbar {
         }
     }
 
-    /// True when `hover` matches `item`. The active state takes
-    /// visual precedence (active button paints the primary fill,
-    /// not the hover wash), so an active+hovered item is
-    /// considered not-hovered here.
-    fn item_hovered(&self, item: &ToolbarItem) -> bool {
-        use de_editor_core::ToolbarHover as H;
-        let Some(hover) = self.hover else {
-            return false;
-        };
-        match item {
-            ToolbarItem::Tool(tool, _) => {
-                matches!(hover, H::Tool(t) if t == *tool) && *tool != self.active
-            }
-            ToolbarItem::Action(action, _) => {
-                use crate::widgets::editor_state_ext::toolbar_action;
-                matches!(hover, H::Action(a) if a == toolbar_action(*action))
-            }
-            ToolbarItem::ShapeSlot => matches!(hover, H::ShapeSlot) && !self.active.is_shape(),
-            ToolbarItem::Separator => false,
+    /// The tool a left-click on the shape slot selects: the last shape the
+    /// slot carried, Rectangle until one was picked.
+    pub fn slot_tool(&self) -> Tool {
+        if slot_carries(self.shape_tool) {
+            self.shape_tool
+        } else {
+            Tool::Rect
         }
     }
 
-    fn item_pressed(&self, item: &ToolbarItem) -> bool {
-        use de_editor_core::ToolbarHover as H;
-        let Some(pressed) = self.pressed else {
-            return false;
-        };
+    fn item_tool(&self, item: &ToolbarItem) -> Option<Tool> {
         match item {
-            ToolbarItem::Tool(tool, _) => {
-                matches!(pressed, H::Tool(t) if t == *tool) && *tool != self.active
-            }
-            ToolbarItem::Action(action, _) => {
-                use crate::widgets::editor_state_ext::toolbar_action;
-                matches!(pressed, H::Action(a) if a == toolbar_action(*action))
-            }
-            ToolbarItem::ShapeSlot => matches!(pressed, H::ShapeSlot) && !self.active.is_shape(),
-            ToolbarItem::Separator => false,
+            ToolbarItem::Tool(tool, _) => Some(*tool),
+            ToolbarItem::ShapeSlot => Some(self.slot_tool()),
+            ToolbarItem::Action(..) => None,
         }
     }
 
-    /// Total intrinsic height = padding + each item's slot.
+    fn item_active(&self, item: &ToolbarItem) -> bool {
+        match item {
+            ToolbarItem::Tool(tool, _) => *tool == self.active,
+            ToolbarItem::ShapeSlot => slot_carries(self.active),
+            ToolbarItem::Action(..) => false,
+        }
+    }
+
+    /// Whether `state` (hover or pressed) names `item`. An active item
+    /// never reads as hovered — the active fill already says it.
+    fn item_matches(
+        &self,
+        item: &ToolbarItem,
+        state: Option<de_editor_core::ToolbarHover>,
+    ) -> bool {
+        use crate::widgets::editor_state_ext::toolbar_action;
+        use de_editor_core::ToolbarHover as H;
+        let Some(state) = state else {
+            return false;
+        };
+        if self.item_active(item) {
+            return false;
+        }
+        match (item, state) {
+            (ToolbarItem::Action(action, _), H::Action(a)) => a == toolbar_action(*action),
+            (ToolbarItem::ShapeSlot, H::ShapeSlot) => true,
+            (_, H::Tool(t)) => self.item_tool(item) == Some(t),
+            _ => false,
+        }
+    }
+
     fn intrinsic_height(&self) -> f32 {
-        let mut h = PAD_TOP;
-        let mut prev_was_item = false;
-        for item in &self.items {
-            match item {
-                ToolbarItem::Separator => {
-                    h += if prev_was_item { SECTION_GAP } else { 0.0 };
-                    prev_was_item = false;
-                }
-                ToolbarItem::Tool(_, _) | ToolbarItem::Action(_, _) => {
-                    if prev_was_item {
-                        h += BUTTON_GAP;
-                    }
-                    h += BUTTON_SIZE;
-                    prev_was_item = true;
-                }
-                ToolbarItem::ShapeSlot => {
-                    if prev_was_item {
-                        h += BUTTON_GAP;
-                    }
-                    h += BUTTON_SIZE + SHAPE_SLOT_BOTTOM_EXTRA;
-                    prev_was_item = true;
-                }
-            }
-        }
-        h + PAD_BOTTOM
+        let n = self.items.len() as f32;
+        PAD_Y * 2.0 + n * BUTTON_SIZE + (n - 1.0).max(0.0) * BUTTON_GAP
     }
 
-    /// Returns the on-screen rect of the shape slot. Used by the
-    /// host to anchor the shape-tool picker dropdown immediately
-    /// to the right of this button. `None` if the toolbar wasn't
-    /// built with a shape slot (e.g. test fixtures).
+    /// Every item with its button rect, for a rail painted at `rect`.
+    fn item_rects(&self, rect: Rect) -> impl Iterator<Item = (&ToolbarItem, Rect)> {
+        let x = rect.origin.x + (rect.size.x - BUTTON_SIZE) / 2.0;
+        let top = rect.origin.y + PAD_Y;
+        self.items.iter().enumerate().map(move |(i, item)| {
+            let y = top + i as f32 * (BUTTON_SIZE + BUTTON_GAP);
+            (item, Rect::xywh(x, y, BUTTON_SIZE, BUTTON_SIZE))
+        })
+    }
+
+    /// On-screen rect of the shape slot — the shape menu's anchor.
+    /// `None` if the rail was built without one (test fixtures).
     pub fn shape_slot_rect(&self, rect: Rect) -> Option<Rect> {
-        let button_x = rect.origin.x + (rect.size.x - BUTTON_SIZE) / 2.0;
-        let mut y = rect.origin.y + PAD_TOP;
-        let mut prev_was_item = false;
-        for item in &self.items {
-            match item {
-                ToolbarItem::Separator => {
-                    if prev_was_item {
-                        y += SECTION_GAP;
-                    }
-                    prev_was_item = false;
-                }
-                ToolbarItem::ShapeSlot => {
-                    if prev_was_item {
-                        y += BUTTON_GAP;
-                    }
-                    return Some(Rect {
-                        origin: Point2D::new(button_x, y),
-                        size: Point2D::new(BUTTON_SIZE, BUTTON_SIZE),
-                    });
-                }
-                _ => {
-                    if prev_was_item {
-                        y += BUTTON_GAP;
-                    }
-                    y += BUTTON_SIZE;
-                    prev_was_item = true;
-                }
-            }
-        }
-        None
+        self.item_rects(rect)
+            .find(|(item, _)| matches!(item, ToolbarItem::ShapeSlot))
+            .map(|(_, r)| r)
     }
 
-    /// Resolve a pointer at `point` (host-coordinates, top-left of
-    /// the toolbar rect at `rect.origin`) to a tool / action.
-    /// Returns `None` for a click outside any button or on a
-    /// separator gap.
+    /// Resolve a left press at `point` to a tool / action. `None` for a
+    /// press outside any button (the rail's padding and gaps).
     pub fn hit_test(&self, rect: Rect, point: Point2D) -> Option<ToolbarHit> {
-        if point.x < rect.origin.x
-            || point.x > rect.origin.x + rect.size.x
-            || point.y < rect.origin.y
-            || point.y > rect.origin.y + rect.size.y
-        {
+        if !rect.contains(point) {
             return None;
         }
-        let button_x = rect.origin.x + (rect.size.x - BUTTON_SIZE) / 2.0;
-        let mut y = rect.origin.y + PAD_TOP;
-        let mut prev_was_item = false;
-        for item in &self.items {
-            match item {
-                ToolbarItem::Separator => {
-                    if prev_was_item {
-                        y += SECTION_GAP;
-                    }
-                    prev_was_item = false;
-                }
-                ToolbarItem::Tool(tool, _) => {
-                    if prev_was_item {
-                        y += BUTTON_GAP;
-                    }
-                    let button_rect = Rect {
-                        origin: Point2D::new(button_x, y),
-                        size: Point2D::new(BUTTON_SIZE, BUTTON_SIZE),
-                    };
-                    if button_rect.contains(point) {
-                        return Some(ToolbarHit::Tool(*tool));
-                    }
-                    y += BUTTON_SIZE;
-                    prev_was_item = true;
-                }
-                ToolbarItem::Action(action, _) => {
-                    if prev_was_item {
-                        y += BUTTON_GAP;
-                    }
-                    let button_rect = Rect {
-                        origin: Point2D::new(button_x, y),
-                        size: Point2D::new(BUTTON_SIZE, BUTTON_SIZE),
-                    };
-                    if button_rect.contains(point) {
-                        return Some(ToolbarHit::Action(*action));
-                    }
-                    y += BUTTON_SIZE;
-                    prev_was_item = true;
-                }
-                ToolbarItem::ShapeSlot => {
-                    if prev_was_item {
-                        y += BUTTON_GAP;
-                    }
-                    // Hit area covers the button + its chevron
-                    // gutter so a click on the chevron itself
-                    // also opens the picker.
-                    let button_rect = Rect {
-                        origin: Point2D::new(button_x, y),
-                        size: Point2D::new(BUTTON_SIZE, BUTTON_SIZE + SHAPE_SLOT_BOTTOM_EXTRA),
-                    };
-                    if button_rect.contains(point) {
-                        return Some(ToolbarHit::ToggleShapePicker);
-                    }
-                    y += BUTTON_SIZE + SHAPE_SLOT_BOTTOM_EXTRA;
-                    prev_was_item = true;
-                }
-            }
-        }
-        None
+        self.item_rects(rect)
+            .find(|(_, r)| r.contains(point))
+            .map(|(item, _)| match item {
+                ToolbarItem::Tool(tool, _) => ToolbarHit::Tool(*tool),
+                ToolbarItem::ShapeSlot => ToolbarHit::Tool(self.slot_tool()),
+                ToolbarItem::Action(action, _) => ToolbarHit::Action(*action),
+            })
+    }
+
+    /// Resolve a right press: the shape slot opens the shape menu; every
+    /// other button has no secondary action.
+    pub fn secondary_hit_test(&self, rect: Rect, point: Point2D) -> Option<ToolbarHit> {
+        self.shape_slot_rect(rect)
+            .filter(|r| r.contains(point))
+            .map(|_| ToolbarHit::ToggleShapePicker)
     }
 }
 
-/// Lucide icon for a shape variant. Used by the toolbar shape
-/// slot AND the dropdown rows so both stay visually aligned.
+/// Lucide icon for a shape variant. Used by the shape slot AND the menu
+/// rows so both stay visually aligned.
 pub fn icon_for_shape(tool: Tool) -> Icon {
     match tool {
         Tool::Rect => Icon::Square,
@@ -336,98 +238,24 @@ impl Widget for Toolbar {
     }
 
     fn paint(&self, cx: &mut PaintCx<'_>, rect: Rect) {
-        // Floating column on top of the canvas — paint a translucent
-        // popover-ish background so it reads as a panel against any
-        // canvas content beneath.
-        cx.backend.fill_round_rect(rect, 12.0, self.theme.popover);
+        cx.backend.fill_round_rect(rect, RADIUS, self.theme.card);
         cx.backend
-            .stroke_round_rect(rect, 12.0, self.theme.border, 1.0);
-
-        let button_x = rect.origin.x + (rect.size.x - BUTTON_SIZE) / 2.0;
-        let mut y = rect.origin.y + PAD_TOP;
-        let mut prev_was_item = false;
-        for item in &self.items {
-            match item {
-                ToolbarItem::Separator => {
-                    if prev_was_item {
-                        y += SECTION_GAP / 2.0;
-                    }
-                    let sep_x = rect.origin.x + 10.0;
-                    let sep_w = rect.size.x - 20.0;
-                    cx.backend.fill_rect(
-                        Rect {
-                            origin: Point2D::new(sep_x, y),
-                            size: Point2D::new(sep_w, 1.0),
-                        },
-                        self.theme.border,
-                    );
-                    y += SECTION_GAP / 2.0;
-                    prev_was_item = false;
-                }
-                ToolbarItem::Tool(tool, icon) => {
-                    if prev_was_item {
-                        y += BUTTON_GAP;
-                    }
-                    let active = *tool == self.active;
-                    let hovered = self.item_hovered(item);
-                    let pressed = self.item_pressed(item);
-                    paint_button(
-                        cx,
-                        &self.theme,
-                        button_x,
-                        y,
-                        *icon,
-                        active,
-                        hovered,
-                        pressed,
-                    );
-                    y += BUTTON_SIZE;
-                    prev_was_item = true;
-                }
-                ToolbarItem::Action(_, icon) => {
-                    if prev_was_item {
-                        y += BUTTON_GAP;
-                    }
-                    let hovered = self.item_hovered(item);
-                    let pressed = self.item_pressed(item);
-                    paint_button(cx, &self.theme, button_x, y, *icon, false, hovered, pressed);
-                    y += BUTTON_SIZE;
-                    prev_was_item = true;
-                }
-                ToolbarItem::ShapeSlot => {
-                    if prev_was_item {
-                        y += BUTTON_GAP;
-                    }
-                    let active = self.active.is_shape();
-                    let hovered = self.item_hovered(item);
-                    let pressed = self.item_pressed(item);
-                    paint_button(
-                        cx,
-                        &self.theme,
-                        button_x,
-                        y,
-                        icon_for_shape(self.shape_tool),
-                        active,
-                        hovered,
-                        pressed,
-                    );
-                    // Chevron-down sits just BELOW the button,
-                    // horizontally centered — matches the TS
-                    // shape-tool-dropdown affordance (caret in the
-                    // gutter, not overlapping the icon).
-                    let chev_size = 10.0;
-                    draw_icon(
-                        cx.backend,
-                        Icon::ChevronDown,
-                        Point2D::new(button_x + (BUTTON_SIZE - chev_size) / 2.0, y + BUTTON_SIZE),
-                        chev_size,
-                        self.theme.muted_foreground,
-                        1.4,
-                    );
-                    y += BUTTON_SIZE + SHAPE_SLOT_BOTTOM_EXTRA;
-                    prev_was_item = true;
-                }
-            }
+            .stroke_round_rect(rect, RADIUS, self.theme.border, 1.0);
+        for (item, button) in self.item_rects(rect) {
+            let icon = match item {
+                ToolbarItem::Tool(_, icon) | ToolbarItem::Action(_, icon) => *icon,
+                ToolbarItem::ShapeSlot => icon_for_shape(self.slot_tool()),
+            };
+            paint_button(
+                cx,
+                &self.theme,
+                button.origin.x,
+                button.origin.y,
+                icon,
+                self.item_active(item),
+                self.item_matches(item, self.hover),
+                self.item_matches(item, self.pressed),
+            );
         }
     }
 
@@ -473,130 +301,111 @@ fn paint_button(
 mod tests {
     use super::*;
 
-    #[test]
-    fn default_set_has_base_tools_shape_slot_and_actions_no_widgets() {
-        let toolbar = Toolbar::default_set();
-        let tool_count = toolbar
-            .items
-            .iter()
-            .filter(|i| matches!(i, ToolbarItem::Tool(..)))
-            .count();
-        let widget_tool_count = toolbar
-            .items
-            .iter()
-            .filter(|i| matches!(i, ToolbarItem::Tool(t, _) if t.is_widget()))
-            .count();
-        let action_count = toolbar
-            .items
-            .iter()
-            .filter(|i| matches!(i, ToolbarItem::Action(..)))
-            .count();
-        let shape_slot_count = toolbar
-            .items
-            .iter()
-            .filter(|i| matches!(i, ToolbarItem::ShapeSlot))
-            .count();
-        // Select / Text / Frame / Hand are direct tool buttons;
-        // Rect / Ellipse / Polygon / Line / Pen live behind the single
-        // ShapeSlot dropdown. Form widgets are NOT toolbar tools — they
-        // are authored via the component kit / AI+MCP, not primitive
-        // drop tools.
-        assert_eq!(tool_count, 4);
-        assert_eq!(widget_tool_count, 0);
-        assert_eq!(shape_slot_count, 1);
-        assert_eq!(action_count, 4);
-        assert_eq!(toolbar.active, Tool::Select);
+    fn rail(toolbar: &Toolbar) -> Rect {
+        Rect::xywh(0.0, 0.0, TOOLBAR_WIDTH, toolbar.intrinsic_height())
+    }
+
+    fn centre_of(toolbar: &Toolbar, index: usize) -> Point2D {
+        let (_, r) = toolbar.item_rects(rail(toolbar)).nth(index).unwrap();
+        Point2D::new(r.origin.x + r.size.x / 2.0, r.origin.y + r.size.y / 2.0)
     }
 
     #[test]
-    fn intrinsic_height_accommodates_all_items() {
+    fn the_rail_carries_the_eight_design_buttons_in_order() {
         let toolbar = Toolbar::default_set();
-        let h = toolbar.intrinsic_height();
-        // 4 direct tools + shape slot + 4 action buttons = 9 button
-        // slots; total is at least 9 * BUTTON_SIZE plus padding + gaps.
-        let buttons = 9.0;
-        assert!(
-            h > buttons * BUTTON_SIZE,
-            "toolbar shorter than its buttons"
-        );
-        assert!(h < buttons * BUTTON_SIZE + 200.0, "toolbar bloated: {h}");
-    }
-
-    #[test]
-    fn for_editor_picks_up_active_tool() {
-        let mut state = EditorState::new();
-        state.tool = de_editor_core::Tool::Frame;
-        let toolbar = Toolbar::for_editor(&state);
-        assert_eq!(toolbar.active, Tool::Frame);
-    }
-
-    #[test]
-    fn hit_test_inside_first_button_returns_select() {
-        let toolbar = Toolbar::default_set();
-        let rect = Rect {
-            origin: Point2D::new(0.0, 0.0),
-            size: Point2D::new(TOOLBAR_WIDTH, toolbar.intrinsic_height()),
-        };
-        // Center of the first button.
-        let center = Point2D::new((TOOLBAR_WIDTH) / 2.0, PAD_TOP + BUTTON_SIZE / 2.0);
+        let hits: Vec<_> = (0..toolbar.items.len())
+            .map(|i| toolbar.hit_test(rail(&toolbar), centre_of(&toolbar, i)))
+            .collect();
         assert_eq!(
-            toolbar.hit_test(rect, center),
-            Some(ToolbarHit::Tool(Tool::Select))
+            hits,
+            vec![
+                Some(ToolbarHit::Tool(Tool::Select)),
+                Some(ToolbarHit::Tool(Tool::Rect)),
+                Some(ToolbarHit::Tool(Tool::Ellipse)),
+                Some(ToolbarHit::Tool(Tool::Pen)),
+                Some(ToolbarHit::Tool(Tool::Text)),
+                Some(ToolbarHit::Tool(Tool::Frame)),
+                Some(ToolbarHit::Action(ToolbarAction::ImportImage)),
+                Some(ToolbarHit::Tool(Tool::Hand)),
+            ]
         );
+    }
+
+    #[test]
+    fn height_is_eight_buttons_plus_gaps_and_padding() {
+        let toolbar = Toolbar::default_set();
+        assert_eq!(
+            toolbar.intrinsic_height(),
+            PAD_Y * 2.0 + 8.0 * BUTTON_SIZE + 7.0 * BUTTON_GAP
+        );
+    }
+
+    #[test]
+    fn the_shape_slot_follows_the_last_picked_shape() {
+        let mut state = EditorState::new();
+        state.editor_ui.shape_tool = Tool::Polygon;
+        let toolbar = Toolbar::for_editor(&state);
+        assert_eq!(
+            toolbar.hit_test(rail(&toolbar), centre_of(&toolbar, 1)),
+            Some(ToolbarHit::Tool(Tool::Polygon))
+        );
+        // Ellipse / Pen have their own buttons, so the slot falls back to
+        // Rectangle rather than duplicating them.
+        state.editor_ui.shape_tool = Tool::Ellipse;
+        let toolbar = Toolbar::for_editor(&state);
+        assert_eq!(toolbar.slot_tool(), Tool::Rect);
+    }
+
+    #[test]
+    fn right_click_on_the_shape_slot_opens_the_shape_menu() {
+        let toolbar = Toolbar::default_set();
+        let rect = rail(&toolbar);
+        assert_eq!(
+            toolbar.secondary_hit_test(rect, centre_of(&toolbar, 1)),
+            Some(ToolbarHit::ToggleShapePicker)
+        );
+        assert_eq!(
+            toolbar.secondary_hit_test(rect, centre_of(&toolbar, 0)),
+            None
+        );
+    }
+
+    #[test]
+    fn the_slot_reads_active_for_any_shape_it_carries() {
+        let mut state = EditorState::new();
+        state.tool = Tool::Line;
+        let toolbar = Toolbar::for_editor(&state);
+        assert!(toolbar.item_active(&ToolbarItem::ShapeSlot));
+        state.tool = Tool::Ellipse;
+        let toolbar = Toolbar::for_editor(&state);
+        assert!(!toolbar.item_active(&ToolbarItem::ShapeSlot));
     }
 
     #[test]
     fn hit_test_outside_returns_none() {
         let toolbar = Toolbar::default_set();
-        let rect = Rect {
-            origin: Point2D::new(0.0, 0.0),
-            size: Point2D::new(TOOLBAR_WIDTH, toolbar.intrinsic_height()),
-        };
+        let rect = rail(&toolbar);
         assert_eq!(toolbar.hit_test(rect, Point2D::new(-10.0, -10.0)), None);
         assert_eq!(toolbar.hit_test(rect, Point2D::new(1000.0, 1000.0)), None);
     }
 
     #[test]
-    fn for_editor_picks_up_pressed_button() {
+    fn for_editor_picks_up_active_tool_and_pressed_button() {
         let mut state = EditorState::new();
+        state.tool = Tool::Frame;
         state.editor_ui.pressed_button = Some(de_editor_core::ButtonPressTarget::Toolbar(
-            de_editor_core::ToolbarHover::Action(de_editor_core::ToolbarAction::Undo),
+            de_editor_core::ToolbarHover::Tool(Tool::Hand),
         ));
         let toolbar = Toolbar::for_editor(&state);
+        assert_eq!(toolbar.active, Tool::Frame);
         assert_eq!(
             toolbar.pressed,
-            Some(de_editor_core::ToolbarHover::Action(
-                de_editor_core::ToolbarAction::Undo
-            ))
+            Some(de_editor_core::ToolbarHover::Tool(Tool::Hand))
         );
     }
 
     #[test]
-    fn hit_test_resolves_action_button() {
-        let toolbar = Toolbar::default_set();
-        let rect = Rect {
-            origin: Point2D::new(0.0, 0.0),
-            size: Point2D::new(TOOLBAR_WIDTH, toolbar.intrinsic_height()),
-        };
-        // The Undo button sits below the (now longer) tool sections;
-        // rather than re-derive its y by hand, scan every row down the
-        // bar centre for the first Undo hit. Decouples the test from
-        // the exact item layout.
-        let cx = TOOLBAR_WIDTH / 2.0;
-        let undo_hit = (0..(toolbar.intrinsic_height() as i32)).find(|y| {
-            toolbar.hit_test(rect, Point2D::new(cx, *y as f32))
-                == Some(ToolbarHit::Action(ToolbarAction::Undo))
-        });
-        assert!(
-            undo_hit.is_some(),
-            "expected an Undo action button somewhere down the bar"
-        );
-    }
-
-    #[test]
-    fn no_widget_tools_in_toolbar() {
-        // Widgets are authored via the component kit / AI+MCP, never as
-        // toolbar drop-tools — so none appear in the bar.
+    fn no_widget_tools_on_the_rail() {
         let toolbar = Toolbar::default_set();
         assert!(!toolbar
             .items

@@ -27,7 +27,7 @@ impl LayerPanelMetrics {
         layer_row_height: 28.0,
         row_pad_x: 12.0,
         section_gap: 8.0,
-        header_font: 12.0,
+        header_font: 11.0,
         row_font: 13.0,
         glyph_size: 14.0,
         trailing_glyph_size: 12.0,

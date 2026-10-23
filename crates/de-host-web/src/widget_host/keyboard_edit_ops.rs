@@ -442,19 +442,13 @@ impl WidgetHost {
         false
     }
 
-    /// Cmd+Shift+K — toggle the component (UIKit) browser panel.
-    /// Mirrors the native host's `apply_toggle_component_browser`
-    /// (TS `editor-layout.tsx` Cmd+Shift+K → `toggleBrowser`); the
-    /// open-position default is the viewport centre via the
-    /// `component_browser_panel_rect` `None`-position fallback.
+    /// Cmd+Shift+K — show the rail's Components tab with its search box
+    /// focused. Mirrors the native host's `apply_toggle_component_browser`.
     pub fn apply_toggle_component_browser(&mut self) -> bool {
-        let ui = &mut self.editor_state.editor_ui;
-        ui.component_browser_open = !ui.component_browser_open;
-        if !ui.component_browser_open {
-            ui.component_browser_kit_picker_open = false;
-            ui.component_browser_confirm_delete_kit = None;
-            ui.component_browser_hover = None;
-        }
+        self.commit_variable_row_focus_if_any();
+        self.close_image_popovers_for_higher_overlay();
+        self.blur_text_inputs_on_blank_press();
+        self.editor_state.editor_ui.open_components_tab();
         self.mark_dirty();
         true
     }
@@ -475,10 +469,10 @@ impl WidgetHost {
             return true;
         }
         if key.eq_ignore_ascii_case("k") {
-            // K may close its own component browser even though that search
+            // K may re-focus its own component search even though that
             // surface counts as an active input. Every other focused input
             // keeps ownership, matching the native settings/Git guards.
-            if self.editor_state.editor_ui.component_browser_open {
+            if self.editor_state.editor_ui.component_browser_search_focused {
                 self.apply_toggle_component_browser()
             } else if self.input_active() {
                 true

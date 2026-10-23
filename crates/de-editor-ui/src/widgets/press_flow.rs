@@ -11,12 +11,14 @@ use de_editor_core::host_press_transitions as core_press;
 use de_editor_core::ui_draft::LayerContextTarget;
 use de_editor_core::{editor_ui_state::EditorUiState, EditorState, ExportQuickRow, Locale, Tool};
 
+use crate::widgets::chrome_hit::ChromeHit;
 use crate::widgets::export_quick_menu::{ExportQuickMenu, ExportQuickMenuHit};
+use crate::widgets::file_menu::{FileMenuChoice, FileMenuTool};
 use crate::widgets::layer_context_menu::LayerContextAction;
 use crate::widgets::property_panel_fill;
 use crate::widgets::{
     LayerPanelHit, LocalePicker, PropertyPanel, PropertyPanelAction, ShapeChoice, ShapePicker,
-    TopBarHit,
+    ToolbarAction,
 };
 use crate::{Point2D, Rect};
 
@@ -191,7 +193,7 @@ pub fn press_color_variable_picker_in_rect(
 
 // ─── Locale picker ─────────────────────────────────────────────────────
 
-/// Outcome of a press routed to the open TopBar locale dropdown.
+/// Outcome of a press routed to the open locale dropdown.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LocalePickerPress {
     /// A row was picked: a ready locale is applied, or its catalog is queued
@@ -232,7 +234,7 @@ fn select_locale(ui: &mut EditorUiState, locale: Locale, catalog_ready: bool) ->
 
 // ─── Export quick menu ─────────────────────────────────────────────────
 
-/// Outcome of a press routed to the open TopBar export dropdown.
+/// Outcome of a press routed to the open export dropdown.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExportQuickMenuPress {
     /// A row was picked: its file action is queued and the menu closed.
@@ -333,84 +335,171 @@ pub fn press_shape_picker(
     }
 }
 
-// ─── TopBar ────────────────────────────────────────────────────────────
+// ─── Tool rail secondary press ─────────────────────────────────────────
 
-/// Outcome of a TopBar hit routed through the shared arms.
+/// A right press on the tool rail's shape slot toggles the shape menu.
+/// Returns whether the press landed there (the host then marks dirty and
+/// consumes it); any other right press on the rail falls through.
+pub fn press_toolbar_secondary(
+    state: &mut EditorState,
+    viewport_w: f32,
+    viewport_h: f32,
+    point: Point2D,
+) -> bool {
+    use crate::widgets::host_canvas_geometry::{canvas_region, toolbar_fits, toolbar_rect_for};
+    let (_x, _y, canvas_w, _h) = canvas_region(state, viewport_w, viewport_h);
+    if !toolbar_fits(canvas_w) || state.editor_ui.workspace.visible {
+        return false;
+    }
+    let rect = toolbar_rect_for(state, viewport_w, viewport_h);
+    let hit = crate::widgets::Toolbar::for_editor(state).secondary_hit_test(rect, point);
+    if hit != Some(crate::widgets::ToolbarHit::ToggleShapePicker) {
+        return false;
+    }
+    core_press::toggle_shape_picker(&mut state.editor_ui);
+    true
+}
+
+// ─── Floating chrome (file pill + canvas action group) ─────────────────
+
+/// Outcome of a chrome hit routed through the shared arms.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum TopBarPress {
+pub enum ChromePress {
     /// Handled — the host marks dirty and consumes the press.
     Handled,
     /// The file menu was toggled: the host also clears the layer-panel
     /// hover wash, then marks dirty and consumes the press.
     FileMenuToggled,
-    /// Platform-specific hit (fullscreen / preview / git panel) — the
-    /// host handles it itself.
+    /// Platform-specific hit (preview) — the host handles it itself.
     Platform,
+    /// The Settings modal opened — the host releases whatever owns the
+    /// keyboard underneath it (same as File ▸ Settings), then marks dirty.
+    SettingsOpened,
 }
 
-/// Apply the TopBar hits whose behaviour is identical on both hosts.
-/// The platform arms stay in each host's `press.rs`.
-pub fn apply_shared_top_bar_hit(
+/// Apply the chrome hits whose behaviour is identical on both hosts.
+pub fn apply_shared_chrome_hit(
     state: &mut EditorState,
-    hit: TopBarHit,
+    hit: ChromeHit,
     now_ms: u64,
-) -> TopBarPress {
+) -> ChromePress {
+    use de_editor_core::editor_ui_state::FileAction;
+    let ui = &mut state.editor_ui;
     match hit {
-        TopBarHit::ToggleSidebar => {
-            let v = &mut state.editor_ui.sidebar_open;
-            *v = !*v;
-            TopBarPress::Handled
+        ChromeHit::Home => {
+            // Same path as File ▸ Home (`FileMenuChoice::Home`).
+            ui.pending_file_action = Some(FileAction::Home);
+            ui.file_menu_open = false;
+            ui.file_menu.hover = None;
+            ChromePress::Handled
         }
-        TopBarHit::ToggleTheme => {
-            state.editor_ui.theme_mode = state.editor_ui.theme_mode.flipped();
-            TopBarPress::Handled
+        ChromeHit::ToggleFileMenu => {
+            core_press::toggle_file_menu(ui);
+            ChromePress::FileMenuToggled
         }
-        TopBarHit::ToggleLocale => {
-            core_press::toggle_locale_picker(&mut state.editor_ui);
-            TopBarPress::Handled
+        ChromeHit::Save => {
+            ui.pending_file_action = Some(FileAction::Save);
+            ChromePress::Handled
         }
-        TopBarHit::OpenExportMenu => {
-            core_press::toggle_export_quick_menu(&mut state.editor_ui);
-            TopBarPress::Handled
+        ChromeHit::ToggleCodeView => {
+            ui.toggle_code_view();
+            ChromePress::Handled
         }
-        // Same dismissal set the export button applies: the Asset Center is
-        // a full-size panel, so leaving a dropdown open would float it over
-        // a grid the user can no longer reach past.
-        TopBarHit::OpenAssetCenter => {
-            core_press::close_export_quick_menu(&mut state.editor_ui);
-            core_press::close_locale_picker(&mut state.editor_ui);
-            state.editor_ui.file_menu_open = false;
-            state.editor_ui.file_menu.hover = None;
-            state.editor_ui.import_menu_open = false;
-            state.editor_ui.import_menu.open = false;
-            state.editor_ui.import_menu.hover = None;
-            state.editor_ui.open_scene_template_center(now_ms);
+        ChromeHit::OpenExportMenu => {
+            core_press::toggle_export_quick_menu(ui);
+            ChromePress::Handled
+        }
+        // Same path as File ▸ Export image: the host opens its dialog.
+        ChromeHit::OpenExportDialog => {
+            core_press::close_export_quick_menu(ui);
+            ui.pending_file_action = Some(FileAction::ExportImage);
+            ChromePress::Handled
+        }
+        ChromeHit::TogglePreview => ChromePress::Platform,
+        // Same path as File ▸ Settings.
+        ChromeHit::OpenAgentSettings => {
+            ui.agent_settings_open = true;
             state.chat.blur_input(now_ms);
-            TopBarPress::Handled
+            ChromePress::SettingsOpened
         }
-        TopBarHit::OpenAgentSettings => {
-            state.editor_ui.agent_settings_open = true;
-            state.chat.blur_input(now_ms);
-            TopBarPress::Handled
-        }
-        TopBarHit::OpenImportMenu => {
+    }
+}
+
+/// Residual host work for a File-menu choice that is not a file action.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum FileMenuStep {
+    /// Done — the menu is closed; the host marks dirty.
+    Handled,
+    /// The Settings modal opened — the host releases whatever owns the
+    /// keyboard underneath it, then marks dirty.
+    SettingsOpened,
+    /// Run this toolbar action through the host's toolbar dispatch
+    /// (undo / redo and the two floating panels keep one code path).
+    Toolbar(ToolbarAction),
+    /// Toggle window fullscreen — the host owns the window.
+    Fullscreen,
+    /// Toggle the Git panel — the host owns the repository scan.
+    Git,
+}
+
+/// Apply the File-menu choices that moved there from the retired title
+/// bar (#30). `None` for the file actions and template rows, which keep
+/// their per-host handling. Closes the menu whenever it returns `Some`.
+pub fn apply_file_menu_app_choice(
+    state: &mut EditorState,
+    choice: FileMenuChoice,
+    now_ms: u64,
+) -> Option<FileMenuStep> {
+    let step = match choice {
+        FileMenuChoice::Import => {
             core_press::toggle_import_menu(&mut state.editor_ui);
-            TopBarPress::Handled
+            FileMenuStep::Handled
         }
-        TopBarHit::Home => {
-            // Same path as File ▸ 制图台 (`FileMenuChoice::Home`).
-            state.editor_ui.pending_file_action =
-                Some(de_editor_core::editor_ui_state::FileAction::Home);
-            state.editor_ui.file_menu_open = false;
-            state.editor_ui.file_menu.hover = None;
-            TopBarPress::Handled
+        FileMenuChoice::Undo => FileMenuStep::Toolbar(ToolbarAction::Undo),
+        FileMenuChoice::Redo => FileMenuStep::Toolbar(ToolbarAction::Redo),
+        FileMenuChoice::Tool(tool) => apply_file_menu_tool(state, tool, now_ms),
+        _ => return None,
+    };
+    state.editor_ui.file_menu_open = false;
+    state.editor_ui.file_menu.hover = None;
+    Some(step)
+}
+
+fn apply_file_menu_tool(state: &mut EditorState, tool: FileMenuTool, now_ms: u64) -> FileMenuStep {
+    let ui = &mut state.editor_ui;
+    match tool {
+        FileMenuTool::ToggleSidebar => {
+            ui.sidebar_open = !ui.sidebar_open;
+            FileMenuStep::Handled
         }
-        TopBarHit::ToggleFileMenu => {
-            core_press::toggle_file_menu(&mut state.editor_ui);
-            TopBarPress::FileMenuToggled
+        FileMenuTool::Variables => FileMenuStep::Toolbar(ToolbarAction::ToggleVariablesPanel),
+        FileMenuTool::DesignSystem => FileMenuStep::Toolbar(ToolbarAction::ToggleDesignPanel),
+        // The Asset Center is a full-size panel, so no dropdown may stay
+        // open over a grid the user can no longer reach past.
+        FileMenuTool::AssetCenter => {
+            core_press::close_export_quick_menu(ui);
+            core_press::close_locale_picker(ui);
+            ui.import_menu_open = false;
+            ui.import_menu.open = false;
+            ui.import_menu.hover = None;
+            ui.open_scene_template_center(now_ms);
+            state.chat.blur_input(now_ms);
+            FileMenuStep::Handled
         }
-        TopBarHit::ToggleFullscreen | TopBarHit::TogglePreview | TopBarHit::ToggleGitPanel => {
-            TopBarPress::Platform
+        FileMenuTool::ToggleTheme => {
+            ui.theme_mode = ui.theme_mode.flipped();
+            FileMenuStep::Handled
+        }
+        FileMenuTool::Language => {
+            core_press::toggle_locale_picker(ui);
+            FileMenuStep::Handled
+        }
+        FileMenuTool::ToggleFullscreen => FileMenuStep::Fullscreen,
+        FileMenuTool::Git => FileMenuStep::Git,
+        FileMenuTool::Settings => {
+            ui.agent_settings_open = true;
+            state.chat.blur_input(now_ms);
+            FileMenuStep::SettingsOpened
         }
     }
 }

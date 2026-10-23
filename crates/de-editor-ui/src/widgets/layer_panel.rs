@@ -39,7 +39,7 @@ pub(crate) const ROW_PAD_X: f32 = 12.0;
 use crate::widgets::layer_panel_paint::{
     layer_content_clip_rect_with_metrics, layer_label_available_width_with_metrics,
     paint_drag_ghost, paint_layer_action_backing, paint_rename_input_with_metrics,
-    paint_section_header_with_metrics, truncate_to_fit, truncate_to_fit_measured,
+    paint_section_header_with_metrics, truncate_to_fit, truncate_to_fit_measured, ROW_RADIUS,
 };
 
 /// One row in the layers tree — flat depth-walked view.
@@ -425,10 +425,10 @@ impl Widget for LayerPanel {
             let page_hovered = self.is_page_hovered(index);
             if page.active {
                 cx.backend
-                    .fill_round_rect(row, 6.0, self.theme.row_selected);
+                    .fill_round_rect(row, ROW_RADIUS, self.theme.row_selected);
             } else if page_hovered {
                 cx.backend
-                    .fill_round_rect(row, 6.0, self.theme.button_hover);
+                    .fill_round_rect(row, ROW_RADIUS, self.theme.button_hover);
             }
             let label_x = row.origin.x + 12.0;
             let delete_target = delete_page_target(rect, y, self.metrics);
@@ -449,7 +449,7 @@ impl Widget for LayerPanel {
                 let display = truncate_to_fit(&page.label, self.metrics.row_font, available_w);
                 let label = TextLayout::single_run(
                     &display,
-                    "system-ui",
+                    crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                     self.metrics.row_font,
                     (if page.active {
                         self.theme.foreground
@@ -459,7 +459,7 @@ impl Widget for LayerPanel {
                     .to_jian(),
                     Point2D::new(0.0, 0.0),
                 );
-                let baseline = row.origin.y + 19.0;
+                let baseline = jian_widgets::centered_text_baseline_y(row, self.metrics.row_font);
                 cx.backend
                     .draw_text(&label, Point2D::new(label_x, baseline));
             }
@@ -528,10 +528,10 @@ impl Widget for LayerPanel {
                 // TS uses bg-blue-500/15 + primary text + primary
                 // icon for the selected layer row.
                 cx.backend
-                    .fill_round_rect(row, 6.0, self.theme.row_selected_primary);
+                    .fill_round_rect(row, ROW_RADIUS, self.theme.row_selected_primary);
             } else if hovered {
                 cx.backend
-                    .fill_round_rect(row, 6.0, self.theme.button_hover);
+                    .fill_round_rect(row, ROW_RADIUS, self.theme.button_hover);
             }
 
             let indent = self.metrics.row_pad_x + item.depth as f32 * 12.0;
@@ -629,12 +629,12 @@ impl Widget for LayerPanel {
                 );
                 let label = TextLayout::single_run(
                     &display,
-                    "system-ui",
+                    crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                     self.metrics.row_font,
                     (label_color).to_jian(),
                     Point2D::new(0.0, 0.0),
                 );
-                let baseline = row.origin.y + 17.0;
+                let baseline = jian_widgets::centered_text_baseline_y(row, self.metrics.row_font);
                 cx.backend
                     .draw_text(&label, Point2D::new(label_x, baseline));
             }

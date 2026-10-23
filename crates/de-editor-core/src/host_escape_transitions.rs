@@ -25,7 +25,7 @@ impl EditorUiState {
         true
     }
 
-    /// Close the TopBar file menu.
+    /// Close the file menu.
     pub fn escape_file_menu(&mut self) -> bool {
         if !self.file_menu_open {
             return false;
@@ -35,7 +35,7 @@ impl EditorUiState {
         true
     }
 
-    /// Close the TopBar export quick menu.
+    /// Close the export quick menu.
     pub fn escape_export_quick_menu(&mut self) -> bool {
         if !self.export_quick_menu_open {
             return false;
@@ -61,7 +61,7 @@ impl EditorUiState {
         true
     }
 
-    /// Close the TopBar locale picker.
+    /// Close the locale picker.
     pub fn escape_locale_picker(&mut self) -> bool {
         if !self.locale_picker.open {
             return false;
@@ -153,17 +153,18 @@ impl EditorUiState {
         true
     }
 
-    /// Close the component (UIKit) browser. One layer per press: an
-    /// open kit-filter popover closes before the panel itself does.
+    /// Step out of the component browser. One layer per press: an open
+    /// kit-filter popover closes before the search box lets go of the
+    /// keyboard (the browser itself stays on show in its rail tab).
     pub fn escape_component_browser(&mut self) -> bool {
-        if !self.component_browser_open {
-            return false;
-        }
         if self.component_browser_kit_picker_open {
             self.component_browser_kit_picker_open = false;
             return true;
         }
-        self.component_browser_open = false;
+        if !self.component_browser_search_focused {
+            return false;
+        }
+        self.component_browser_search_focused = false;
         self.component_browser_select_all = false;
         self.component_browser_hover = None;
         self.component_browser_confirm_delete_kit = None;
@@ -314,7 +315,7 @@ impl EditorUiState {
         self.scene_template_center.search.reset_transient();
         self.scene_template_center.generate.reset_transient();
         self.scene_template_center.import.text.reset_transient();
-        self.component_browser_open = false;
+        self.component_browser_search_focused = false;
         self.component_browser_kit_picker_open = false;
         self.component_browser_hover = None;
         self.component_browser_confirm_delete_kit = None;
@@ -354,12 +355,12 @@ impl EditorUiState {
         self.editor_toast = None;
         self.pressed_button = None;
         self.property_action_hover = None;
-        self.property_tab_hover = None;
+        self.property_close_hover = false;
         self.toolbar_hover = None;
         self.align_toolbar_hover = None;
-        self.topbar_traffic_hover = false;
-        self.topbar_button_hover = None;
-        self.topbar_hover_since_ms = None;
+        self.window_control_hover = false;
+        self.chrome_button_hover = None;
+        self.chrome_hover_since_ms = None;
         self.statusbar_hover = None;
         self.chat_design_block_hover = None;
         self.chat_example_hover = None;

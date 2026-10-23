@@ -51,7 +51,7 @@ pub(super) fn paint_fill_image_body(
         .unwrap_or("fill.title");
     let label = TextLayout::single_run(
         de_i18n::translate(locale, label_key),
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),

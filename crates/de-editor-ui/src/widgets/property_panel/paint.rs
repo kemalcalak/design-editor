@@ -40,22 +40,36 @@ impl Widget for PropertyPanel {
 
         let x = rect.origin.x;
         let w = rect.size.x;
-        // The Design / Code tab strip is pinned to the panel top —
-        // painted fixed, above (and never scrolled with) the section
-        // content.
-        let tab_bottom = sections::paint_tab_strip(
-            cx,
-            &self.theme,
-            &self.labels,
-            sections::TabStripState {
-                active: self.tab,
-                hover: self.tab_hover,
-                show_interact: self.snapshot.widget.is_some(),
-            },
-            x,
-            rect.origin.y,
-            w,
-        );
+        // The header is pinned to the panel top — painted fixed, above
+        // (and never scrolled with) the section content.
+        {
+            use crate::widgets::property_panel_header::{
+                node_header, paint_panel_header, PanelHeader,
+            };
+            let code = matches!(self.tab, de_editor_core::PropertyTab::Code);
+            let page_kind = de_i18n::translate(self.locale, "property.page");
+            let header = if code {
+                PanelHeader::Code {
+                    title: self.labels.tab_code,
+                }
+            } else if self.page_only {
+                PanelHeader::Node {
+                    icon: crate::widgets::icons::Icon::FileText,
+                    accent: self.theme.primary,
+                    title: if self.page_name.is_empty() {
+                        page_kind
+                    } else {
+                        self.page_name.as_str()
+                    },
+                    kind: page_kind,
+                }
+            } else {
+                node_header(&self.theme, &self.snapshot)
+            };
+            let close_hovered = code && self.close_hovered;
+            paint_panel_header(cx, &self.theme, rect, &header, close_hovered);
+        }
+        let tab_bottom = rect.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
         let edit_ctx = sections::EditContext {
             focus: self.focus,
             draft: self.draft.as_str(),
@@ -88,7 +102,6 @@ impl Widget for PropertyPanel {
                 &self.theme,
                 &edit_ctx,
                 self.locale,
-                &self.page_name,
                 self.page_background.as_deref(),
                 rect,
             );
@@ -99,7 +112,7 @@ impl Widget for PropertyPanel {
         // so a scrolled-up section can't paint over the tabs or bleed
         // onto the neighbouring rail. Overlays (fill / export pickers)
         // anchor to `scrolled` — the same shifted rect the layout
-        // walker uses (it adds `TAB_HEIGHT`), so paint + hit-test of
+        // walker uses (it adds `PANEL_HEADER_HEIGHT`), so paint + hit-test of
         // the sections agree.
         cx.backend.save();
         cx.backend.clip_rect(Rect {
@@ -112,10 +125,9 @@ impl Widget for PropertyPanel {
             size: rect.size,
         };
         // First section sits just below the pinned tab strip:
-        // `tab_bottom - scroll` == `scrolled.origin.y + TAB_HEIGHT`,
-        // matching the layout walker's `+= TAB_HEIGHT` step.
+        // `tab_bottom - scroll` == `scrolled.origin.y + PANEL_HEADER_HEIGHT`,
+        // matching the layout walker's `+= PANEL_HEADER_HEIGHT` step.
         let mut y = tab_bottom - scroll;
-        y = sections::paint_node_header(cx, &self.theme, &self.snapshot, x, y, w);
         if self.visible_sections().create_component {
             y = crate::widgets::property_panel_instance::paint_component_block(
                 cx,
@@ -139,6 +151,7 @@ impl Widget for PropertyPanel {
             &self.labels,
             self.snapshot.has_corner_radius,
             self.corner_expand_open,
+            caps.size_options,
             x,
             y,
             w,
@@ -153,6 +166,8 @@ impl Widget for PropertyPanel {
                 &self.labels,
                 self.locale,
                 self.padding_edit_mode,
+                // The sizing boxes close the section when they follow.
+                !caps.size_options,
                 x,
                 y,
                 w,
@@ -162,11 +177,10 @@ impl Widget for PropertyPanel {
             y = sections::paint_size_section(
                 cx,
                 &self.theme,
-                &self.snapshot,
-                &edit_ctx,
                 &self.labels,
                 self.size_flags,
                 self.snapshot.can_clip_content,
+                !caps.flex_layout,
                 x,
                 y,
                 w,
@@ -304,7 +318,7 @@ impl Widget for PropertyPanel {
             );
         }
         if caps.export {
-            let _ = sections::paint_export_section(
+            y = sections::paint_export_section(
                 cx,
                 &self.theme,
                 &self.labels,
@@ -315,6 +329,15 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
+        crate::widgets::property_panel_code_chips::paint_code_chips_section(
+            cx,
+            &self.theme,
+            self.labels.tab_code,
+            self.codegen.framework,
+            x,
+            y,
+            w,
+        );
         // Base-action feedback belongs to the scrolling panel body. Paint it
         // before every floating menu so a stale hover/press wash can never be
         // composited over popup chrome. The menu-specific hover states below

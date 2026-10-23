@@ -229,7 +229,7 @@ fn paint_font_picker_layout(
                 };
                 let label = TextLayout::single_run(
                     label_str,
-                    "system-ui",
+                    crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                     group_font,
                     (theme.muted_foreground).to_jian(),
                     Point2D::new(0.0, 0.0),
@@ -246,7 +246,7 @@ fn paint_font_picker_layout(
                 let label_str = de_i18n::translate(locale, "text.font.noResults");
                 let label = TextLayout::single_run(
                     label_str,
-                    "system-ui",
+                    crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                     secondary_font,
                     (theme.muted_foreground).to_jian(),
                     Point2D::new(0.0, 0.0),
@@ -306,7 +306,7 @@ fn paint_font_picker_layout(
                 );
                 let label = TextLayout::single_run(
                     de_i18n::translate(locale, "text.font.importAction"),
-                    "system-ui",
+                    crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                     body_font,
                     (theme.foreground).to_jian(),
                     Point2D::new(0.0, 0.0),

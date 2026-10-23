@@ -223,20 +223,11 @@ impl DesktopApp {
                 true
             }
             A::ToggleComponentBrowserPanel => {
+                // The browser lives in the rail's Components tab (#30): the
+                // menu item takes the user there with the search focused.
                 let ui = &mut self.host.editor_state_mut().editor_ui;
-                let opening = !ui.component_browser_open;
-                if opening {
-                    ui.image_panel.close_popovers();
-                    ui.component_browser_pos = Some((
-                        ((self.viewport_width - de_editor_ui::widgets::COMPONENT_BROWSER_PANEL_W)
-                            / 2.0)
-                            .max(0.0),
-                        ((self.viewport_height - de_editor_ui::widgets::COMPONENT_BROWSER_PANEL_H)
-                            / 2.0)
-                            .max(0.0),
-                    ));
-                }
-                ui.component_browser_open = opening;
+                ui.image_panel.close_popovers();
+                ui.open_components_tab();
                 self.host.mark_editor_state_dirty();
                 true
             }

@@ -2,18 +2,13 @@
 
 use super::WidgetHostNative;
 use de_editor_ui::widgets::file_menu::{FileMenu, FileMenuChoice};
-use de_editor_ui::widgets::{TopBar, TOP_BAR_HEIGHT};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::host_overlay_geometry::file_menu_anchor;
+use de_editor_ui::Point2D;
 
 const VIEWPORT_W: f32 = 1200.0;
 
 fn save_as_template_point(host: &WidgetHostNative) -> Point2D {
-    let top_bar_rect = Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(VIEWPORT_W, TOP_BAR_HEIGHT),
-    };
-    let top_bar = TopBar::for_editor_ui(&host.editor_state().editor_ui);
-    let anchor = top_bar.file_menu_rect_for(top_bar_rect);
+    let anchor = file_menu_anchor(host.editor_state(), VIEWPORT_W, host.last_viewport_h);
     let menu = FileMenu::from_editor_ui(&host.editor_state().editor_ui, 0);
     let panel = menu.rect_at(anchor);
     let x = panel.origin.x + 20.0;

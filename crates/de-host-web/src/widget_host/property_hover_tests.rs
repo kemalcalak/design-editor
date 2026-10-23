@@ -3,21 +3,19 @@ use de_editor_core::codegen::{CodeSelection, CodegenHover, CodegenPhase};
 use de_editor_core::{EditorState, PropertyTab};
 use de_editor_ui::widgets::property_panel_action::CodegenAction;
 use de_editor_ui::widgets::property_panel_code;
-use de_editor_ui::widgets::property_panel_inputs::TAB_HEIGHT;
-use de_editor_ui::widgets::{PropertyPanel, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
+use de_editor_ui::widgets::PropertyPanel;
 use de_editor_ui::{Point2D, Rect};
 
+/// The right rail runs from the window's top edge — no title bar (#30).
+const PROPERTY_PANEL_TOP: f32 = 0.0;
+
 fn property_rect(host: &WidgetHost) -> Rect {
-    Rect {
-        origin: Point2D::new(
-            host.last_viewport_w - host.editor_state.editor_ui.property_panel_width,
-            TOP_BAR_HEIGHT,
-        ),
-        size: Point2D::new(
-            host.editor_state.editor_ui.property_panel_width,
-            (host.last_viewport_h - TOP_BAR_HEIGHT).max(0.0),
-        ),
-    }
+    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+        &host.editor_state,
+        host.last_viewport_w,
+        host.last_viewport_h,
+    )
 }
 
 fn point_inside_property_panel_without_target(host: &WidgetHost) -> Point2D {
@@ -30,7 +28,7 @@ fn point_inside_property_panel_without_target(host: &WidgetHost) -> Point2D {
             let point = Point2D::new(x, y);
             let no_action = panel.hit_test_action(rect, point).is_none();
             let no_input = panel.hit_test(rect, point).is_none();
-            let no_tab = panel.tab_hover_at(rect, point).is_none();
+            let no_tab = !panel.close_hover_at(rect, point);
             let no_fill_type = panel.fill_type_picker_row_at(rect, point).is_none();
             if no_action && no_input && no_tab && no_fill_type {
                 return point;
@@ -43,7 +41,7 @@ fn point_inside_property_panel_without_target(host: &WidgetHost) -> Point2D {
 }
 
 #[test]
-fn property_tab_hover_tracks_inactive_design_tab() {
+fn code_view_close_button_tracks_hover() {
     let mut host = WidgetHost::new();
     host.editor_state = EditorState::sample();
     host.mark_dirty();
@@ -51,15 +49,23 @@ fn property_tab_hover_tracks_inactive_design_tab() {
     host.last_viewport_h = 800.0;
     host.editor_state.editor_ui.property_tab = PropertyTab::Code;
 
-    let panel_x = host.last_viewport_w - host.editor_state.editor_ui.property_panel_width;
-    assert!(host.apply_cursor_move(panel_x + 40.0, TOP_BAR_HEIGHT + 18.0));
-    assert_eq!(
-        host.editor_state.editor_ui.property_tab_hover,
-        Some(PropertyTab::Design)
-    );
+    // The Code view's close button reports the tab it returns to.
+    let panel_w = host.editor_state.editor_ui.property_panel_width;
+    let panel_x = host.last_viewport_w - panel_w;
+    let close = de_editor_ui::widgets::property_panel_header::close_rect(Rect::xywh(
+        panel_x,
+        PROPERTY_PANEL_TOP,
+        panel_w,
+        host.last_viewport_h,
+    ));
+    assert!(host.apply_cursor_move(
+        close.origin.x + close.size.x / 2.0,
+        close.origin.y + close.size.y / 2.0
+    ));
+    assert!(host.editor_state.editor_ui.property_close_hover);
 
-    assert!(host.apply_cursor_move(panel_x - 12.0, TOP_BAR_HEIGHT + 18.0));
-    assert_eq!(host.editor_state.editor_ui.property_tab_hover, None);
+    assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + 18.0));
+    assert!(!host.editor_state.editor_ui.property_close_hover);
 }
 
 #[test]
@@ -180,7 +186,7 @@ fn codegen_hover_tracks_idle_generate_button() {
     let panel_x = host.last_viewport_w - pw;
     let (_, generate_rect) = property_panel_code::code_action_rects(
         panel_x,
-        TOP_BAR_HEIGHT + TAB_HEIGHT,
+        PROPERTY_PANEL_TOP + PANEL_HEADER_HEIGHT,
         pw,
         &host.editor_state.codegen,
     )
@@ -196,7 +202,7 @@ fn codegen_hover_tracks_idle_generate_button() {
         Some(CodegenHover::Generate)
     );
 
-    assert!(host.apply_cursor_move(panel_x - 12.0, TOP_BAR_HEIGHT + TAB_HEIGHT));
+    assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + PANEL_HEADER_HEIGHT));
     assert_eq!(host.editor_state.codegen.action_hover, None);
 }
 
@@ -215,8 +221,8 @@ fn codegen_preview_drag_selects_code_text() {
 
     let panel_x = viewport_w - host.editor_state.editor_ui.property_panel_width;
     let char_w = 11.0 * 0.55;
-    let start = de_editor_ui::Point2D::new(panel_x + 66.0, TOP_BAR_HEIGHT + 112.0);
-    let end = de_editor_ui::Point2D::new(panel_x + 66.0 + char_w * 6.0, TOP_BAR_HEIGHT + 112.0);
+    let start = de_editor_ui::Point2D::new(panel_x + 66.0, PROPERTY_PANEL_TOP + 112.0);
+    let end = de_editor_ui::Point2D::new(panel_x + 66.0 + char_w * 6.0, PROPERTY_PANEL_TOP + 112.0);
 
     assert!(host.apply_press(start.x, start.y, viewport_w, viewport_h));
     assert!(host.apply_cursor_move(end.x, end.y));
@@ -239,14 +245,14 @@ fn status_bar_press_sets_and_release_clears_pressed_button() {
     let r = host
         .status_bar_rect(viewport_w, viewport_h)
         .expect("status bar visible at this size");
-    let x = r.origin.x + 5.0;
+    let x = r.origin.x + r.size.x / 2.0;
     let y = r.origin.y + r.size.y / 2.0;
 
     assert!(host.apply_press(x, y, viewport_w, viewport_h));
     assert_eq!(
         host.editor_state.editor_ui.pressed_button,
         Some(de_editor_core::ButtonPressTarget::StatusBar(
-            de_editor_core::StatusBarButton::Search
+            de_editor_core::StatusBarButton::ZoomToFit
         ))
     );
 
@@ -339,12 +345,12 @@ fn component_browser_press_sets_and_release_clears_pressed_button() {
     let (viewport_w, viewport_h) = (1200.0, 800.0);
     host.last_viewport_w = viewport_w;
     host.last_viewport_h = viewport_h;
-    host.editor_state.editor_ui.component_browser_open = true;
+    host.editor_state.editor_ui.open_components_tab();
     let panel = host
-        .component_browser_panel_rect(viewport_w, viewport_h)
+        .components_tab_rect(viewport_h)
         .expect("component browser panel visible");
     let point =
-        de_editor_ui::Point2D::new(panel.origin.x + panel.size.x - 82.0, panel.origin.y + 20.0);
+        de_editor_ui::Point2D::new(panel.origin.x + panel.size.x - 54.0, panel.origin.y + 20.0);
 
     assert!(host.apply_press(point.x, point.y, viewport_w, viewport_h));
     assert_eq!(
@@ -364,21 +370,21 @@ fn component_browser_header_buttons_queue_kit_io_requests_like_native() {
     let (viewport_w, viewport_h) = (1440.0, 900.0);
     host.last_viewport_w = viewport_w;
     host.last_viewport_h = viewport_h;
-    host.editor_state.editor_ui.component_browser_open = true;
+    host.editor_state.editor_ui.open_components_tab();
     let rect = host
-        .component_browser_panel_rect(viewport_w, viewport_h)
+        .components_tab_rect(viewport_h)
         .expect("component browser panel visible");
     let right = rect.origin.x + rect.size.x;
     let y = rect.origin.y + 20.0;
 
-    assert!(host.apply_press(right - 54.0, y, viewport_w, viewport_h));
+    assert!(host.apply_press(right - 26.0, y, viewport_w, viewport_h));
     assert_eq!(
         host.editor_state.editor_ui.component_browser_kit_request,
         Some(de_editor_core::KitIoRequest::Import)
     );
 
     host.editor_state.editor_ui.component_browser_kit_request = None;
-    assert!(host.apply_press(right - 82.0, y, viewport_w, viewport_h));
+    assert!(host.apply_press(right - 54.0, y, viewport_w, viewport_h));
     assert_eq!(
         host.editor_state.editor_ui.component_browser_kit_request,
         Some(de_editor_core::KitIoRequest::Export)
@@ -404,7 +410,7 @@ fn codegen_preview_wheel_scrolls_code_not_property_panel() {
     let panel_x = viewport_w - host.editor_state.editor_ui.property_panel_width;
     assert!(host.apply_wheel(
         panel_x + 80.0,
-        TOP_BAR_HEIGHT + 112.0,
+        PROPERTY_PANEL_TOP + 112.0,
         -160.0,
         viewport_w,
         viewport_h

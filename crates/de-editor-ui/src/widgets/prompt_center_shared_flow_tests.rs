@@ -1,7 +1,7 @@
 use de_editor_core::EditorState;
 
 use super::{cursor_hover_flow, host_overlay_geometry, scroll_flow, PromptCenterPanel};
-use crate::widgets::TOP_BAR_HEIGHT;
+use crate::widgets::WINDOW_STRIP_H;
 use crate::{Point2D, Rect};
 
 fn open_state() -> EditorState {
@@ -103,7 +103,7 @@ fn small_viewport_keeps_the_entire_panel_and_close_action_visible() {
     // window this short the height floor is what it gets — clamped to the
     // space below the top bar so nothing hangs off the bottom edge.
     assert!(rect.size.x < viewport_w && rect.size.x > viewport_w / 2.0);
-    assert!(rect.size.y <= viewport_h - TOP_BAR_HEIGHT);
+    assert!(rect.size.y <= viewport_h - WINDOW_STRIP_H);
 
     let close = PromptCenterPanel::close_rect(rect);
     let close_center = Point2D::new(

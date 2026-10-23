@@ -10,7 +10,7 @@ use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::{
     variables_panel::VariablesPanel, AIChatPlaceholder, AlignToolbar, CanvasViewport, GitPanel,
     HomeSurface, LayoutCx, LocalePicker, PaintCx, PropertyPanel, ShapePicker, StatusBar, Toolbar,
-    TopBar, Widget, TOOLBAR_WIDTH, TOP_BAR_HEIGHT,
+    Widget, TOOLBAR_WIDTH,
 };
 use de_editor_ui::{Point2D, Rect, RenderBackend};
 
@@ -139,11 +139,11 @@ impl WidgetHostNative {
         // Presenting a deck hides the EDITING chrome — rails, tool column,
         // chat, status bar. It is paint-side policy only: no panel state is
         // touched, so leaving the presentation restores exactly the layout
-        // the user had without anything having to remember it. The TopBar
-        // stays: it carries the preview toggle, so there is always a visible
-        // way out besides Esc and the toolbar's own exit.
+        // the user had without anything having to remember it. The floating
+        // chrome stays: it carries the preview toggle, so there is always a
+        // visible way out besides Esc and the toolbar's own exit.
         let presenting = self.preview_slideshow_active();
-        // The generation workspace chrome replaces the TopBar / rails
+        // The generation workspace chrome replaces the floating chrome / rails
         // while docked: header + toolbar + dock background paint UNDER
         // the canvas here, and the deck strip's board rasters paint
         // over the canvas bottom after the pinned chat (§8.1 below).
@@ -165,21 +165,6 @@ impl WidgetHostNative {
             let stage = self.preview_canvas_rect(viewport_width, viewport_height);
             self.frame_slideshow_board((stage.size.x, stage.size.y));
         }
-        // 2. TopBar.
-        let top_bar = TopBar::for_editor_ui(&self.editor_state.editor_ui);
-        let top_bar_rect = Rect {
-            origin: Point2D::new(0.0, 0.0),
-            size: Point2D::new(viewport_width, TOP_BAR_HEIGHT),
-        };
-        if !workspace_visible {
-            {
-                let mut cx = PaintCx {
-                    backend: &mut *frame,
-                };
-                top_bar.paint(&mut cx, top_bar_rect);
-            }
-        }
-
         // 3. The left rail — painted BEFORE the canvas (it pushes the
         //    canvas).
         if !workspace_visible {
@@ -206,7 +191,7 @@ impl WidgetHostNative {
                     // A deck is PRESENTED: one board, letterboxed, no device
                     // silhouette and no switchers — neither a phone bezel nor
                     // a screen router says anything about a slide. The stage
-                    // is the full width under the TopBar, since the rails
+                    // is the whole window, since the rails
                     // that would have bounded it are not painted.
                     let stage = self.preview_canvas_rect(viewport_width, viewport_height);
                     frame.fill_rect(stage, self.theme.canvas_surface);
@@ -358,12 +343,23 @@ impl WidgetHostNative {
             .rect
             .size
             .y;
-        let toolbar_rect = canvas_geometry::toolbar_rect(&self.editor_state, toolbar_h);
+        let toolbar_rect = canvas_geometry::toolbar_rect(
+            &self.editor_state,
+            viewport_width,
+            viewport_height,
+            toolbar_h,
+        );
         if canvas_geometry::toolbar_fits(canvas_w) && !presenting && !workspace_visible {
             let mut cx = PaintCx {
                 backend: &mut *frame,
             };
             toolbar.paint(&mut cx, toolbar_rect);
+        }
+
+        // 6b. Floating chrome — the file pill and the canvas action group.
+        //     Kept while presenting: it carries the Stop button.
+        if !workspace_visible {
+            self.paint_floating_chrome(frame, viewport_width, viewport_height);
         }
 
         // 7. AIChatPlaceholder — painted LAST so it sits on top
@@ -461,11 +457,11 @@ impl WidgetHostNative {
                 panel.image_popover_input_geometry(property_rect, &mut *frame);
         }
 
-        // 8.65. TopBar hover tooltip — over the rails, under every menu.
-        self.paint_top_bar_tooltip_overlay(frame, &top_bar, top_bar_rect, viewport_width);
+        // 8.65. Chrome hover tooltip — over the rails, under every menu.
+        self.paint_chrome_tooltip_overlay(frame, viewport_width, viewport_height);
 
-        // 8.7. Floating Git panel — a popover hanging off the TopBar
-        //      Git button (centred by `git_panel_rect`). Painted here —
+        // 8.7. Floating Git panel — a popover hanging off the file pill
+        //      (File ▸ Git; placed by `git_panel_rect`). Painted here —
         //      ABOVE the align toolbar / marquee / property overlays but
         //      BELOW the shape / locale pickers and modals — so its
         //      paint z-order matches its hit-test priority (press block
@@ -481,10 +477,12 @@ impl WidgetHostNative {
             };
             panel.paint(&mut cx, panel_rect);
 
-            // Up-caret connecting the panel to the Git button — drawn
+            // Up-caret connecting the panel to the file pill — drawn
             // after the panel so its base covers the panel's top border
             // and reads as one continuous popover surface.
-            if let Some(btn_cx) = self.topbar_git_button_center_x(&top_bar, top_bar_rect) {
+            {
+                let anchor = self.git_panel_anchor(viewport_width, viewport_height);
+                let btn_cx = anchor.origin.x + anchor.size.x / 2.0;
                 let half = GIT_PANEL_CARET_HALF;
                 let top = panel_rect.origin.y;
                 let caret_x = btn_cx.clamp(
@@ -536,12 +534,12 @@ impl WidgetHostNative {
             picker.paint(&mut cx, picker_rect);
         }
 
-        // 10b. TopBar dropdowns — the File menu and the export quick menu
+        // 10b. Chrome dropdowns — the File menu and the export quick menu
         //      (bodies in `paint_chrome_menus.rs`). Only one is open at a
         //      time; the file menu paints first so a stale flag can never
         //      hide the shortcut behind it.
         if ui.file_menu_open {
-            self.paint_file_menu_overlay(frame, viewport_width);
+            self.paint_file_menu_overlay(frame, viewport_width, viewport_height);
         }
         if ui.export_quick_menu_open {
             self.paint_export_quick_menu_overlay(frame, viewport_width);

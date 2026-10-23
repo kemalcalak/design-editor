@@ -65,7 +65,7 @@ impl WidgetHostNative {
     /// cached viewport (`last_viewport_w/h`) instead of a caller-supplied
     /// size — the keyboard shortcut's entry point (`de-host-desktop`,
     /// which has no access to this crate's private canvas-region math)
-    /// is otherwise identical to the TopBar Play button's `press.rs` call
+    /// is otherwise identical to the canvas Play button's `press.rs` call
     /// site. `last_viewport_w/h` can be a frame stale right after a
     /// resize (same caveat `center_canvas_on`'s doc already accepts for
     /// this cache), which only affects entry centering, never whether
@@ -205,10 +205,10 @@ impl WidgetHostNative {
     /// Route a cursor move into the live preview runtime — a drag
     /// (`Move`) while the preview press is held, a `Hover` otherwise.
     /// Returns `true` (move consumed) only when the point is on-canvas
-    /// AND not over a floating overlay panel, so top-bar hover and
+    /// AND not over a floating overlay panel, so chrome hover and
     /// floating-panel hover still work while previewing. (Other
     /// floating chrome — e.g. the chat panel — is already
-    /// non-interactive in preview: `press.rs` swallows all non-topbar
+    /// non-interactive in preview: `press.rs` swallows all non-chrome
     /// presses, so preview owning its hover is consistent.)
     pub fn preview_dispatch_move(&mut self, screen_x: f32, screen_y: f32) -> bool {
         self.preview_dispatch_move_id(LEGACY_PREVIEW_POINTER_ID, screen_x, screen_y)

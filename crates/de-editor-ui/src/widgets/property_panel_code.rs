@@ -9,7 +9,7 @@ use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::property_panel_action::{CodegenAction, PropertyPanelAction};
 use crate::widgets::property_panel_inputs::{
-    paint_section_label, INPUT_HEIGHT, PAD_X, SECTION_HEADER_HEIGHT, TAB_HEIGHT,
+    INPUT_HEIGHT, PAD_X, PANEL_HEADER_HEIGHT, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
@@ -25,7 +25,7 @@ mod complete;
 #[path = "property_panel_code_error.rs"]
 mod error;
 #[path = "property_panel_code_framework.rs"]
-mod framework;
+pub(crate) mod framework;
 #[path = "property_panel_code_generating.rs"]
 mod generating;
 
@@ -151,7 +151,7 @@ fn code_body_y(panel_rect: Rect) -> f32 {
 }
 
 fn code_body_y_for(panel_rect: Rect) -> f32 {
-    let tab_bottom = panel_rect.origin.y + TAB_HEIGHT;
+    let tab_bottom = panel_rect.origin.y + PANEL_HEADER_HEIGHT;
     let chips_y = tab_bottom + SECTION_HEADER_HEIGHT;
     chips_body_top_for(chips_y)
 }
@@ -189,7 +189,8 @@ struct CodePanelLayout {
 
 pub fn codegen_hover_for_action(action: CodegenAction) -> Option<CodegenHover> {
     match action {
-        CodegenAction::SelectFramework(_) => None,
+        // Design-view chips get the panel's generic action wash instead.
+        CodegenAction::SelectFramework(_) | CodegenAction::OpenInCodeView(_) => None,
         CodegenAction::Generate => Some(CodegenHover::Generate),
         CodegenAction::Regenerate => Some(CodegenHover::Regenerate),
         CodegenAction::Cancel => Some(CodegenHover::Cancel),
@@ -216,7 +217,13 @@ fn code_neutral_hover_color(theme: &Theme) -> Color {
 
 /// Draw a 13px system-ui line of text at the `(px, py)` baseline.
 fn draw_line(cx: &mut PaintCx<'_>, text: &str, color: Color, px: f32, py: f32) {
-    let layout = TextLayout::single_run(text, "system-ui", 13.0, (color).to_jian(), origin());
+    let layout = TextLayout::single_run(
+        text,
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
+        13.0,
+        (color).to_jian(),
+        origin(),
+    );
     cx.backend.draw_text(&layout, Point2D::new(px, py));
 }
 
@@ -532,7 +539,7 @@ pub(crate) fn paint_code_panel_in_panel_with_locale_pressed_and_touch(
         CodePanelStrings::new(locale),
         CodePanelLayout {
             x: panel_rect.origin.x,
-            y: panel_rect.origin.y + TAB_HEIGHT,
+            y: panel_rect.origin.y + PANEL_HEADER_HEIGHT,
             w: panel_rect.size.x,
             panel_bottom: Some(panel_bottom(panel_rect)),
         },
@@ -551,10 +558,11 @@ fn paint_code_panel_with_bottom(
     now_ms: u64,
     pressed: Option<CodegenHover>,
 ) -> f32 {
-    // A faint section label keeps the panel head consistent with Design.
+    // The pinned header already reads "Code" (#30); the label's slot stays
+    // as breathing room so the framework strip keeps its hit geometry.
     let x = layout.x;
     let w = layout.w;
-    let mut y = paint_section_label(cx, theme, strings.title(), x, layout.y, w);
+    let mut y = layout.y + SECTION_HEADER_HEIGHT;
     y = paint_framework_chips(cx, theme, state, x, y, w);
     match state.phase {
         CodegenPhase::Idle => paint_idle_body(cx, theme, state, strings, x, y, w),
@@ -613,7 +621,7 @@ pub(crate) fn code_action_rects_in_panel_with_locale_for_touch(
 ) -> Vec<(CodegenAction, Rect)> {
     code_action_rects_with_bottom(
         panel_rect.origin.x,
-        panel_rect.origin.y + TAB_HEIGHT,
+        panel_rect.origin.y + PANEL_HEADER_HEIGHT,
         panel_rect.size.x,
         state,
         Some(panel_bottom(panel_rect)),

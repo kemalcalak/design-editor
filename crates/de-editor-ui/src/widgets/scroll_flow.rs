@@ -67,7 +67,7 @@ pub fn scroll_design_md_panel(
     ))
 }
 
-/// Scroll the TopBar locale dropdown. Scrolling always drops the row
+/// Scroll the locale dropdown. Scrolling always drops the row
 /// hover so the highlight can't stick to a row that moved away.
 pub fn scroll_locale_picker(
     state: &mut EditorState,
@@ -243,6 +243,47 @@ pub fn scroll_property_panel_body_2d(
         -delta_y,
         max,
     ))
+}
+
+/// Scroll the Components tab's card grid. `None` when the tab is not on
+/// show or the pointer is off its rect, so the caller keeps looking;
+/// `Some(changed)` once the wheel belongs to the grid.
+pub fn scroll_component_browser(
+    state: &mut EditorState,
+    rect: Rect,
+    point: Point2D,
+    delta_y: f32,
+) -> Option<bool> {
+    if !rect.contains(point) {
+        return None;
+    }
+    let max = crate::widgets::ComponentBrowserPanel::for_editor(state)?.current_max_scroll(rect);
+    // Same sign convention as the layer rail: a positive wheel delta
+    // moves the content down (scrolls toward the top).
+    Some(
+        delta_y != 0.0
+            && scroll_by_max(&mut state.editor_ui.component_browser_scroll, -delta_y, max),
+    )
+}
+
+/// Scroll the Images tab's thumbnail grid — the same contract as
+/// [`scroll_component_browser`]: `None` off the tab, `Some(changed)` once
+/// the wheel belongs to it.
+pub fn scroll_images_tab(
+    state: &mut EditorState,
+    viewport_h: f32,
+    point: Point2D,
+    delta_y: f32,
+) -> Option<bool> {
+    if !crate::widgets::images_tab::images_tab_on_show(state) {
+        return None;
+    }
+    let rect = crate::widgets::host_canvas_geometry::rail_body_rect(state, viewport_h);
+    if !rect.contains(point) {
+        return None;
+    }
+    let max = crate::widgets::images_tab::current_max_scroll(state, rect);
+    Some(delta_y != 0.0 && scroll_by_max(&mut state.editor_ui.images_tab_scroll, -delta_y, max))
 }
 
 /// Scroll the layer rail: the Layers region below `layers_rows_top`,

@@ -187,8 +187,7 @@ fn expanded_instance_swap_rows_paint_and_hit_the_component_target() {
         size: Point2D::new(280.0, 1200.0),
     };
     let button_state = panel.visible_sections().component_button;
-    let block_y =
-        super::property_panel_inputs::TAB_HEIGHT + super::property_panel_inputs::HEADER_HEIGHT;
+    let block_y = super::property_panel_inputs::PANEL_HEADER_HEIGHT;
     let rows = super::property_panel_instance::block_rects(0.0, block_y, 280.0, button_state);
     let banner = rows.option_rect(0).expect("first option row");
     let banner_center = Point2D::new(

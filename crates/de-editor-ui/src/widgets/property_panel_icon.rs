@@ -106,7 +106,7 @@ fn paint_icon_name_row(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, family: 
     }
     let label = TextLayout::single_run(
         name,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),

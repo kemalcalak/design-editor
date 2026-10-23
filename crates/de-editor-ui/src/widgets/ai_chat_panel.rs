@@ -8,7 +8,7 @@ use crate::widgets::ai_chat_panel_controls::{paint_attachment_row, ATTACHMENT_RO
 use crate::widgets::ai_chat_panel_footer::paint_bottom_toolbar;
 use crate::widgets::ai_chat_panel_paint::paint_panel_surface;
 use crate::widgets::editor_state_ext::translate;
-use crate::widgets::home_surface::{settings_theme, HomePalette};
+use crate::widgets::home_surface::{chrome_theme, HomePalette};
 use crate::widgets::icons::Icon;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Point2D, Rect};
@@ -223,7 +223,7 @@ impl<'a> AIChatPlaceholder<'a> {
         let active_tab_index = state.chat.active_index();
         Self {
             id: WidgetId::new(7000),
-            theme: settings_theme(ui.effective_theme_mode()),
+            theme: chrome_theme(ui.effective_theme_mode()),
             palette: HomePalette::for_mode(ui.effective_theme_mode()),
             state: &state.chat,
             now_ms,
@@ -551,7 +551,7 @@ impl<'a> AIChatPlaceholder<'a> {
             .min(crate::widgets::home_surface::HOME_MODEL_PICKER_W);
         // Above the composer. In a short window it slides down rather than
         // leave the screen: pinned into the rail it stops at the rail's top
-        // (just under the top bar); the floating panel and the composer-only
+        // (just under the window strip); the floating panel and the composer-only
         // card are overlays, so their picker may leave them but stops at the
         // window's top.
         let above = card.origin.y - 6.0 - height;

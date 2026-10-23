@@ -64,17 +64,24 @@ impl WidgetHost {
         if !self.editor_state.editor_ui.file_menu_open {
             return None;
         }
-        let top_bar_rect = self.top_bar_rect(viewport_w);
-        let anchor = self.top_bar().file_menu_rect_for(top_bar_rect);
+        let anchor = overlay_geometry::file_menu_anchor(
+            &self.editor_state,
+            viewport_w,
+            self.last_viewport_h,
+        );
         let menu = FileMenu::from_editor_ui(&self.editor_state.editor_ui, self.wall_now_secs);
         Some(menu.rect_at(anchor))
     }
 
-    /// The export quick-menu dropdown rect — anchored under the TopBar
-    /// download button. Shared with paint + hit-test through
-    /// `host_overlay_geometry` so the three can never drift.
+    /// The export quick-menu dropdown rect — anchored under the canvas
+    /// action group's Download button. Shared with paint + hit-test
+    /// through `host_overlay_geometry` so the three can never drift.
     pub(in crate::widget_host) fn export_quick_menu_rect(&self, viewport_w: f32) -> Rect {
-        overlay_geometry::export_quick_menu_rect(&self.editor_state, viewport_w)
+        overlay_geometry::export_quick_menu_rect(
+            &self.editor_state,
+            viewport_w,
+            self.last_viewport_h,
+        )
     }
 
     /// Whether `point` is inside an open chrome dropdown that paints
@@ -119,14 +126,9 @@ impl WidgetHost {
         overlay_geometry::design_md_panel_rect(&self.editor_state, viewport_w, viewport_h)
     }
 
-    /// Floating Component-Browser panel rect — `None` when closed.
-    /// Same centred-on-open + clamped placement as the Design-MD panel.
-    pub(in crate::widget_host) fn component_browser_panel_rect(
-        &self,
-        viewport_w: f32,
-        viewport_h: f32,
-    ) -> Option<Rect> {
-        overlay_geometry::component_browser_panel_rect(&self.editor_state, viewport_w, viewport_h)
+    /// The Components rail tab's rect — `None` when another tab is on show.
+    pub(in crate::widget_host) fn components_tab_rect(&self, viewport_h: f32) -> Option<Rect> {
+        overlay_geometry::components_tab_rect(&self.editor_state, viewport_h)
     }
 
     /// Asset Center gallery rect — `None` when closed.
@@ -211,9 +213,8 @@ impl WidgetHost {
             || self
                 .prompt_center_panel_rect(viewport_w, viewport_h)
                 .is_some_and(|r| (r).contains(p))
-            || self
-                .component_browser_panel_rect(viewport_w, viewport_h)
-                .is_some_and(|r| (r).contains(p))
+        // The component browser is a rail tab now (#30), not a floating
+        // panel: the rail's own wheel / press tiers own its rect.
     }
 
     /// Panels painted above Chat. Variables is intentionally excluded:
@@ -232,9 +233,6 @@ impl WidgetHost {
                 .is_some_and(|rect| rect.contains(point))
             || self
                 .prompt_center_panel_rect(viewport_w, viewport_h)
-                .is_some_and(|rect| rect.contains(point))
-            || self
-                .component_browser_panel_rect(viewport_w, viewport_h)
                 .is_some_and(|rect| rect.contains(point))
     }
 }

@@ -150,6 +150,9 @@ pub enum CodegenAction {
     ScrollFrameworksLeft,
     /// Scroll the framework tab strip one step right (right chevron).
     ScrollFrameworksRight,
+    /// A Design-view Code chip (#30): pick the framework and open the
+    /// Code view.
+    OpenInCodeView(de_editor_core::codegen::Framework),
 }
 
 /// Button / checkbox actions in the property panel that don't
@@ -162,8 +165,8 @@ pub enum CodegenAction {
 /// than relying on an implicit bitwise copy.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PropertyPanelAction {
-    /// User clicked a tab in the pinned Design / Code strip — the host
-    /// switches `editor_ui.property_tab`.
+    /// Switch `editor_ui.property_tab` — the Code view header's close
+    /// button returns to Design.
     SetPropertyTab(de_editor_core::PropertyTab),
     SetFlexLayout(de_editor_core::FlexLayout),
     ToggleCornerExpand,

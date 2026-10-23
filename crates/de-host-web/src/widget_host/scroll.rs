@@ -4,8 +4,8 @@
 
 use de_editor_ui::util::scroll_by_max;
 use de_editor_ui::widgets::scroll_flow;
-use de_editor_ui::widgets::{PropertyPanel, TOP_BAR_HEIGHT};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::PropertyPanel;
+use de_editor_ui::Point2D;
 
 use super::WidgetHost;
 
@@ -214,11 +214,11 @@ impl WidgetHost {
         let Some(panel) = PropertyPanel::for_selection(&self.editor_state) else {
             return false;
         };
-        let pw = self.editor_state.editor_ui.property_panel_width;
-        let property_rect = Rect {
-            origin: Point2D::new(viewport_width - pw, TOP_BAR_HEIGHT),
-            size: Point2D::new(pw, (viewport_height - TOP_BAR_HEIGHT).max(0.0)),
-        };
+        let property_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+            &self.editor_state,
+            viewport_width,
+            viewport_height,
+        );
         if self.editor_state.editor_ui.compositing_picker.open
             && panel.compositing_picker_contains(property_rect, Point2D::new(x, y))
         {
@@ -294,6 +294,33 @@ impl WidgetHost {
                 self.mark_dirty();
             }
             return true;
+        }
+        if let Some(rect) = self.components_tab_rect(viewport_height) {
+            if let Some(dirty) = scroll_flow::scroll_component_browser(
+                &mut self.editor_state,
+                rect,
+                Point2D::new(x, y),
+                delta_y,
+            ) {
+                if dirty {
+                    self.mark_dirty();
+                }
+                return true;
+            }
+        }
+        if let Some(dirty) = scroll_flow::scroll_images_tab(
+            &mut self.editor_state,
+            viewport_height,
+            Point2D::new(x, y),
+            delta_y,
+        ) {
+            if dirty {
+                self.mark_dirty();
+            }
+            return true;
+        }
+        if !self.layers_panel_visible() {
+            return false;
         }
         let rect = self.layer_panel_rect(viewport_height);
         let panel = self.layer_panel();

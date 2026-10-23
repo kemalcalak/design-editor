@@ -10,7 +10,7 @@ use de_editor_core::{EditorState, NodeId, PathAnchorMenuState, Tool};
 use de_editor_ui::widgets::path_anchor_context_menu::PathAnchorContextMenu;
 use de_editor_ui::widgets::{
     DesignMdPanel, LayerPanel, LayerPanelHit, PropertyPanel, ShapeChoice, ShapePicker, Toolbar,
-    TopBarHit, TOP_BAR_HEIGHT,
+    WINDOW_STRIP_H,
 };
 use de_editor_ui::{Color, Point2D, Rect, RenderBackend, TextLayout};
 
@@ -76,12 +76,7 @@ fn empty_design_selection_reclaims_property_rail_until_a_node_is_selected() {
     );
 
     let property_width = host.editor_state.editor_ui.property_panel_width;
-    let property_rect = Rect::xywh(
-        W - property_width,
-        TOP_BAR_HEIGHT,
-        property_width,
-        H - TOP_BAR_HEIGHT,
-    );
+    let property_rect = Rect::xywh(W - property_width, 0.0, property_width, H);
     let (canvas_left, _, canvas_width, _) = host.canvas_region(W, H);
     assert!(
         (canvas_left + canvas_width - W).abs() < f32::EPSILON,
@@ -145,7 +140,7 @@ fn topmost_design_panel_right_press_does_not_open_layer_context_menu() {
     let mut host = WidgetHost::new();
     seed_layer_doc(&mut host);
     host.editor_state.editor_ui.design_md_panel.open = true;
-    host.editor_state.editor_ui.design_md_panel.pos = Some((0.0, TOP_BAR_HEIGHT));
+    host.editor_state.editor_ui.design_md_panel.pos = Some((0.0, WINDOW_STRIP_H));
     let point = point_for_layer_row(&host, "n1");
 
     assert!(host.apply_right_press(point.x, point.y, W, H));
@@ -158,7 +153,7 @@ fn topmost_design_panel_cursor_move_does_not_hover_toolbar_underneath() {
     let mut host = WidgetHost::new();
     host.last_viewport_w = W;
     host.last_viewport_h = H;
-    let toolbar_rect = host.toolbar_rect(W);
+    let toolbar_rect = host.toolbar_rect(W, H);
     let toolbar = Toolbar::for_editor(&host.editor_state);
     let mut point = None;
     let mut y = toolbar_rect.origin.y;
@@ -373,19 +368,7 @@ fn opening_file_menu_clears_stale_layer_hover() {
     host.editor_state.editor_ui.hovered_layer_id = Some(NodeId::new("n1"));
     host.editor_state.editor_ui.hovered_page_index = Some(0);
 
-    let top_bar_rect = host.top_bar_rect(W);
-    let top_bar = host.top_bar();
-    let mut file_button = None;
-    let mut x = top_bar_rect.origin.x;
-    while x < top_bar_rect.origin.x + top_bar_rect.size.x {
-        let p = Point2D::new(x, TOP_BAR_HEIGHT / 2.0);
-        if top_bar.hit_test(top_bar_rect, p) == Some(TopBarHit::ToggleFileMenu) {
-            file_button = Some(p);
-            break;
-        }
-        x += 1.0;
-    }
-    let point = file_button.expect("top-bar file button point");
+    let point = chrome_centre(&host, de_editor_core::ChromeButton::ToggleFileMenu);
 
     assert!(host.apply_press(point.x, point.y, W, H));
 
@@ -462,18 +445,18 @@ fn shape_picker_paints_and_row_press_selects_tool() {
     while probe < picker_rect.origin.y + picker_rect.size.y {
         if matches!(
             picker.hit_test(picker_rect, Point2D::new(x, probe)),
-            Some(ShapeChoice::Tool(Tool::Ellipse))
+            Some(ShapeChoice::Tool(Tool::Polygon))
         ) {
             row_y = Some(probe);
             break;
         }
         probe += 2.0;
     }
-    let row_y = row_y.expect("ellipse row present in the shape picker");
+    let row_y = row_y.expect("polygon row present in the shape menu");
 
     assert!(host.apply_press(x, row_y, W, H));
-    assert_eq!(host.editor_state.tool, Tool::Ellipse);
-    assert_eq!(host.editor_state.editor_ui.shape_tool, Tool::Ellipse);
+    assert_eq!(host.editor_state.tool, Tool::Polygon);
+    assert_eq!(host.editor_state.editor_ui.shape_tool, Tool::Polygon);
     assert!(!host.editor_state.editor_ui.shape_picker.open);
 }
 
@@ -505,8 +488,8 @@ fn color_picker_opens_from_swatch_press_and_paints() {
         .expect("sample state selects a node so the right rail is up");
     let pw = host.editor_state.editor_ui.property_panel_width;
     let property_rect = Rect {
-        origin: Point2D::new(W - pw, TOP_BAR_HEIGHT),
-        size: Point2D::new(pw, H - TOP_BAR_HEIGHT),
+        origin: Point2D::new(W - pw, 0.0),
+        size: Point2D::new(pw, H),
     };
     // Locate the fill/stroke swatch through the panel's own action
     // hit-test so the test doesn't bake in section layout math.
@@ -673,35 +656,25 @@ fn export_quick_menu_row_press_raises_pending_file_action() {
     );
 }
 
-/// The download button and its dropdown must agree with each other and
-/// stay clear of the theme / Play buttons around them.
+/// The canvas action group's Download button opens the export menu.
 #[test]
 fn download_button_press_opens_the_export_menu() {
     let mut host = WidgetHost::new();
-    let bar = de_editor_ui::widgets::TopBar::for_editor_ui(&host.editor_state.editor_ui);
-    let top_bar_rect = Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(W, TOP_BAR_HEIGHT),
-    };
-    let button = bar.export_button_rect(top_bar_rect);
-    assert_eq!(
-        bar.hit_test(
-            top_bar_rect,
-            Point2D::new(
-                button.origin.x + button.size.x / 2.0,
-                button.origin.y + button.size.y / 2.0
-            )
-        ),
-        Some(TopBarHit::OpenExportMenu)
-    );
-
-    assert!(host.apply_press(
-        button.origin.x + button.size.x / 2.0,
-        button.origin.y + button.size.y / 2.0,
-        W,
-        H,
-    ));
+    host.last_viewport_h = H;
+    let point = chrome_centre(&host, de_editor_core::ChromeButton::OpenExportMenu);
+    assert!(host.apply_press(point.x, point.y, W, H));
     assert!(host.editor_state.editor_ui.export_quick_menu_open);
+}
+
+/// Centre of a floating-chrome button at the test viewport.
+fn chrome_centre(host: &WidgetHost, button: de_editor_core::ChromeButton) -> Point2D {
+    let rect =
+        de_editor_ui::widgets::chrome_tooltip::button_anchor(&host.editor_state, W, H, button)
+            .expect("chrome button paints");
+    Point2D::new(
+        rect.origin.x + rect.size.x / 2.0,
+        rect.origin.y + rect.size.y / 2.0,
+    )
 }
 
 #[test]

@@ -42,7 +42,17 @@ impl WidgetHost {
         if self.try_open_path_anchor_menu(x, y, viewport_w, viewport_h) {
             return true;
         }
-        if !self.editor_state.editor_ui.sidebar_open {
+        // Right-click on the tool rail's Rectangle slot opens the shape menu.
+        if de_editor_ui::widgets::press_flow::press_toolbar_secondary(
+            &mut self.editor_state,
+            viewport_w,
+            viewport_h,
+            Point2D::new(x, y),
+        ) {
+            self.mark_dirty();
+            return true;
+        }
+        if !self.layers_panel_visible() {
             return self.blur_text_inputs_on_blank_press();
         }
         self.refresh_layout_scene();
@@ -164,7 +174,7 @@ impl WidgetHost {
             return consumed;
         }
         // Tier 4 — image-fill popover, StatusBar, and the model-picker
-        // slice that lifts above the TopBar.
+        // slice that lifts over the floating chrome.
         if let Some(consumed) = self.press_rail_overlay_tiers(&ctx) {
             return consumed;
         }
@@ -175,8 +185,8 @@ impl WidgetHost {
         if let Some(consumed) = self.press_variables_tiers(&ctx) {
             return consumed;
         }
-        // Tier 6 — TopBar chrome (and its blank-press gaps).
-        if let Some(consumed) = self.press_top_bar_tier(&ctx) {
+        // Tier 6 — floating chrome (and its blank-press padding).
+        if let Some(consumed) = self.press_chrome_tier(&ctx) {
             return consumed;
         }
         // Tier 7 — property-panel popovers, then the fonts + model-picker

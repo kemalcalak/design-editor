@@ -39,7 +39,7 @@ fn single_selection_overlay_omits_name_and_paints_dimensions() {
 }
 
 #[test]
-fn single_selection_dimension_label_uses_active_color() {
+fn single_selection_dimension_label_reads_on_the_accent() {
     let _guard = crate::agent_indicator_test_support::lock();
     de_editor_core::agent_indicators::clear();
     let mut state = EditorState::new();
@@ -61,7 +61,9 @@ fn single_selection_dimension_label_uses_active_color() {
         .zip(backend.text_colors.iter())
         .find_map(|(text, color)| (text == "120 × 40").then_some(*color))
         .expect("selected dimensions label should be painted");
-    assert_eq!(color, viewport.theme.primary.to_jian());
+    // The pill is filled with the accent, so the label paints in the
+    // on-accent colour.
+    assert_eq!(color, viewport.theme.primary_foreground.to_jian());
 }
 
 #[test]

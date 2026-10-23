@@ -1,4 +1,4 @@
-//! `ImportMenu` — the TopBar import-button dropdown. Two rows:
+//! `ImportMenu` — the File ▸ Import dropdown. Two rows:
 //! import a Figma export (`.fig`) or a saved web page (`.html`).
 //!
 //! Built on the shared `Select` component (same as `LocalePicker` and

@@ -25,10 +25,11 @@ impl WidgetHost {
         if x < panel_x || x > self.last_viewport_w {
             return None;
         }
-        let panel_rect = Rect {
-            origin: Point2D::new(panel_x, TOP_BAR_HEIGHT),
-            size: Point2D::new(pw, (self.last_viewport_h - TOP_BAR_HEIGHT).max(0.0)),
-        };
+        let panel_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+            &self.editor_state,
+            self.last_viewport_w,
+            self.last_viewport_h,
+        );
         de_editor_ui::widgets::PropertyPanel::for_selection(&self.editor_state)?
             .code_text_offset_at(panel_rect, Point2D::new(x, y))
     }

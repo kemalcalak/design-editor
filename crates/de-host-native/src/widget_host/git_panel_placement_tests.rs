@@ -1,7 +1,7 @@
 //! Placement + overlay-cursor tests for the floating Git panel.
 //!
 //! Locks two behaviours the desktop relies on: the panel hangs
-//! centred under the TopBar Git button (TS popover parity), and the
+//! under the file pill (File ▸ Git opens it), and the
 //! cursor stays neutral over it — no canvas Move / Crosshair bleeding
 //! through a node sitting underneath the popover.
 
@@ -9,7 +9,7 @@ use super::helpers::GIT_PANEL_CARET_GAP;
 use super::{CursorHint, WidgetHostNative};
 use de_editor_core::chat::{AgentProvider, ModelEntry};
 use de_editor_core::{ButtonPressTarget, GitButton, GitFileEntry, GitPanelAction};
-use de_editor_ui::widgets::{ai_chat_model_picker, GitPanel, GitPanelHit, TopBar, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::{ai_chat_model_picker, GitPanel, GitPanelHit};
 use de_editor_ui::{Point2D, Rect};
 
 /// A host with the Git panel open in its no-repo onboarding state
@@ -246,29 +246,25 @@ fn stale_git_popover_flag_does_not_dead_end_input() {
 }
 
 #[test]
-fn git_panel_hangs_centred_under_the_git_button() {
+fn git_panel_hangs_under_the_file_pill() {
     let host = host_with_git_panel_open();
     let (vw, vh) = (1400.0, 900.0);
     let r = host.git_panel_rect(vw, vh).expect("panel open => Some");
 
-    // Centre-x aligns with the Git button centre (a wide viewport
-    // leaves the centred panel un-clamped).
-    let top_bar_rect = Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(vw, TOP_BAR_HEIGHT),
-    };
-    let top_bar = TopBar::for_editor_ui(&host.editor_state().editor_ui);
-    let btn_cx = host
-        .topbar_git_button_center_x(&top_bar, top_bar_rect)
-        .expect("Git button is shown on desktop");
-    let panel_cx = r.origin.x + r.size.x / 2.0;
+    // Left edge on the pill's (a wide viewport leaves it un-clamped).
+    let pill = host.git_panel_anchor(vw, vh);
     assert!(
-        (panel_cx - btn_cx).abs() < 0.5,
-        "panel centre {panel_cx} should align with button centre {btn_cx}",
+        (r.origin.x - pill.origin.x).abs() < 0.5,
+        "panel left {} should align with the pill's {}",
+        r.origin.x,
+        pill.origin.x,
     );
 
-    // Hangs just below the top bar, leaving room for the up-caret.
-    assert_eq!(r.origin.y, TOP_BAR_HEIGHT + GIT_PANEL_CARET_GAP);
+    // Hangs just below the pill, leaving room for the up-caret.
+    assert_eq!(
+        r.origin.y,
+        pill.origin.y + pill.size.y + GIT_PANEL_CARET_GAP
+    );
 }
 
 #[test]
@@ -324,7 +320,7 @@ fn cursor_stays_neutral_over_the_git_panel() {
     // treated as an overlay — otherwise the fix would be too greedy.
     let (canvas_left, _t, canvas_w, canvas_h) = host.canvas_region(vw, vh);
     let bare_x = canvas_left + canvas_w / 2.0;
-    let bare_y = TOP_BAR_HEIGHT + canvas_h / 2.0;
+    let bare_y = canvas_h / 2.0 + 60.0;
     assert!(
         !host.over_floating_overlay(bare_x, bare_y, vw, vh),
         "bare canvas must not be flagged as an overlay",
@@ -336,11 +332,13 @@ fn caret_bridge_catches_cursor_and_clicks() {
     let mut host = host_with_git_panel_open();
     let (vw, vh) = (1400.0, 900.0);
     let body = host.git_panel_rect(vw, vh).expect("panel open => Some");
-    // A probe in the caret bridge: below the top bar, above the body.
+    // A probe in the caret bridge: below the pill, above the body.
+    let pill = host.git_panel_anchor(vw, vh);
+    let pill_bottom = pill.origin.y + pill.size.y;
     let caret_x = body.origin.x + body.size.x / 2.0;
-    let caret_y = (TOP_BAR_HEIGHT + body.origin.y) / 2.0;
+    let caret_y = (pill_bottom + body.origin.y) / 2.0;
     assert!(
-        caret_y > TOP_BAR_HEIGHT && caret_y < body.origin.y,
+        caret_y > pill_bottom && caret_y < body.origin.y,
         "probe sits in the gap above the painted body",
     );
 
@@ -509,7 +507,7 @@ fn moving_from_chat_into_git_clears_chat_and_lower_hover_in_one_event() {
     let point = find_git_hit(&panel, body, GitPanelHit::Overflow);
     // RETIRED PREMISE: the maximized chat panel used to cover the Git
     // popover, so the move genuinely left the chat surface. The Git
-    // popover hangs under the TopBar's Git button over the canvas, and
+    // popover hangs under the file pill over the canvas, and
     // no chat surface can reach it any more (the rail is west of the
     // canvas, the composer card is pinned to its floor) — what is
     // still load-bearing is the ONE-EVENT semantics: a stale Chat

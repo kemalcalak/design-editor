@@ -268,7 +268,7 @@ impl<'a> AgentSettingsPanel<'a> {
     pub fn for_editor_at(state: &'a EditorState, now_ms: u64) -> Self {
         Self {
             id: WidgetId::new(5200),
-            theme: crate::widgets::home_surface::settings_theme(
+            theme: crate::widgets::home_surface::chrome_theme(
                 state.editor_ui.effective_theme_mode(),
             ),
             settings: state.editor_ui.agent_settings.clone(),
@@ -286,7 +286,7 @@ impl<'a> AgentSettingsPanel<'a> {
     pub fn for_web_editor_at(state: &'a EditorState, now_ms: u64) -> Self {
         Self {
             id: WidgetId::new(5200),
-            theme: crate::widgets::home_surface::settings_theme(
+            theme: crate::widgets::home_surface::chrome_theme(
                 state.editor_ui.effective_theme_mode(),
             ),
             settings: state.editor_ui.agent_settings.clone(),
@@ -301,12 +301,12 @@ impl<'a> AgentSettingsPanel<'a> {
     /// shrink below their ceiling when the window is small, so the dialog
     /// never runs off screen or under the top bar.
     pub fn rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
-        let top_limit = crate::widgets::TOP_BAR_HEIGHT + 8.0;
+        let top_limit = crate::widgets::WINDOW_STRIP_H + 8.0;
         let w = PANEL_WIDTH
             .min(viewport_w - VIEWPORT_MARGIN_X * 2.0)
             .max(PANEL_MIN_WIDTH);
         let h = PANEL_HEIGHT
-            .min(viewport_h - crate::widgets::TOP_BAR_HEIGHT - VIEWPORT_MARGIN_BOTTOM)
+            .min(viewport_h - crate::widgets::WINDOW_STRIP_H - VIEWPORT_MARGIN_BOTTOM)
             .max(PANEL_MIN_HEIGHT);
         let x = ((viewport_w - w) / 2.0).max(8.0);
         let y = ((viewport_h - h) / 2.0).max(top_limit);

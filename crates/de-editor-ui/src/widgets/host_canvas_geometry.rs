@@ -14,8 +14,13 @@ use de_editor_core::host_drag_state::{AnchorDragTarget, MarqueeDragState};
 use de_editor_core::EditorState;
 
 use crate::layout_scene::LayoutScene;
+use crate::widgets::canvas_actions::{CanvasActions, CanvasActionsLayout};
+use crate::widgets::file_pill::{FilePill, FilePillLayout};
 use crate::widgets::slides_panel_flow;
-use crate::widgets::{STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH, TOOLBAR_WIDTH, TOP_BAR_HEIGHT};
+use crate::widgets::window_strip::{
+    window_controls_inset, WINDOW_CONTROLS_AVAILABLE, WINDOW_STRIP_H,
+};
+use crate::widgets::{STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH, TOOLBAR_WIDTH};
 use crate::{Point2D, Rect};
 
 /// Breathing room between the floating chrome and the canvas edges, so
@@ -23,8 +28,18 @@ use crate::{Point2D, Rect};
 /// asked for a little vertical spacing under the chat pill).
 pub const AICHAT_INSET_BOTTOM: f32 = 12.0;
 pub const AICHAT_INSET_LEFT: f32 = 12.0;
-pub const TOOLBAR_INSET_X: f32 = 12.0;
-pub const TOOLBAR_INSET_Y: f32 = 12.0;
+pub const TOOLBAR_INSET_X: f32 = 16.0;
+/// Top clearance for the floating column under the file pill, which owns
+/// the canvas's top-left corner: the tool rail never rises above it, and
+/// the Variables panel opening beside the rail starts here.
+pub const TOOLBAR_INSET_Y: f32 = 64.0;
+/// Inset of the file pill and the canvas action group from the canvas's
+/// top edge and its left / right edges.
+pub const CHROME_INSET_TOP: f32 = 14.0;
+pub const CHROME_INSET_X: f32 = 16.0;
+/// Minimum gap between the file pill and the action group before the
+/// pill gives way on a narrow canvas.
+const CHROME_MIN_GAP: f32 = 8.0;
 pub const STATUS_INSET: f32 = 16.0;
 /// Width of the composer-only card docked at the canvas floor. Wide
 /// enough for a sentence and the control row, narrow enough that it
@@ -85,7 +100,7 @@ pub fn minimized_chat_bar_rect(
 
 /// Whether the generation workspace currently owns the layout: its
 /// docked chat column IS the left panel (the rail's own tab row is not
-/// shown while the workspace header/toolbar replace the TopBar), and
+/// shown while the workspace header/toolbar replace the floating chrome), and
 /// the dock's open/width read the shared `sidebar_open` /
 /// `layer_panel_width`.
 pub fn workspace_docked(state: &EditorState) -> bool {
@@ -174,7 +189,8 @@ pub fn pinned_chat(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Opt
 
 /// Top-left of the canvas region in viewport-logical px. Collapses to
 /// `x = 0` when the sidebar is closed — the whole point of the
-/// invariant. The top edge sits below the TopBar.
+/// invariant. There is no title bar (#30): the canvas runs to the
+/// window's top edge and its chrome floats over it.
 ///
 /// While the workspace is docked, the canvas starts at the dock edge —
 /// which is the LEFT PANEL's edge (`layer_panel_width`, 0 when the
@@ -196,7 +212,7 @@ pub fn canvas_origin(state: &EditorState) -> (f32, f32) {
     } else {
         0.0
     };
-    (cx0, TOP_BAR_HEIGHT)
+    (cx0, 0.0)
 }
 
 /// Canvas region `(x, y, w, h)` in viewport-logical px. The right rail
@@ -241,35 +257,191 @@ pub fn canvas_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rec
     }
 }
 
-/// Left rail. Callers gate on `editor_ui.sidebar_open` themselves — this
-/// returns the rect the panel WOULD occupy.
+/// Left rail's body — everything below the window strip. Callers gate on
+/// `editor_ui.sidebar_open` themselves — this returns the rect the panel
+/// WOULD occupy. Its tab row, layer rows and pinned chat all measure from
+/// here, so the strip above can never shift them out from under their
+/// click targets.
 pub fn layer_panel_rect(state: &EditorState, viewport_h: f32) -> Rect {
     Rect {
-        origin: Point2D::new(0.0, TOP_BAR_HEIGHT),
+        origin: Point2D::new(0.0, WINDOW_STRIP_H),
         size: Point2D::new(
             state.editor_ui.layer_panel_width,
-            (viewport_h - TOP_BAR_HEIGHT).max(0.0),
+            (viewport_h - WINDOW_STRIP_H).max(0.0),
         ),
     }
 }
 
-/// Right rail. Callers gate on the panel actually resolving for the
-/// current selection — this returns the rect it WOULD occupy.
+/// The whole left rail, window strip included — what its background and
+/// right hairline paint over.
+pub fn left_rail_rect(state: &EditorState, viewport_h: f32) -> Rect {
+    Rect::xywh(
+        0.0,
+        0.0,
+        state.editor_ui.layer_panel_width,
+        viewport_h.max(0.0),
+    )
+}
+
+/// The left rail's window strip (traffic lights / window controls, drag
+/// area).
+pub fn left_rail_strip_rect(state: &EditorState) -> Rect {
+    Rect::xywh(0.0, 0.0, state.editor_ui.layer_panel_width, WINDOW_STRIP_H)
+}
+
+/// Whether the left rail is on screen showing `tab`'s body: the rail is
+/// open, nothing hides it (the workspace dock, a presentation), and the
+/// flow resolves `tab` as the one on show.
+pub fn rail_tab_on_show(state: &EditorState, tab: de_editor_core::LeftPanelTab) -> bool {
+    let ui = &state.editor_ui;
+    ui.sidebar_open
+        && !workspace_docked(state)
+        && !ui.preview.mode
+        && slides_panel_flow::body_tab(state) == tab
+}
+
+/// Whether the Components tab owns the rail's body this frame.
+pub fn components_tab_on_show(state: &EditorState) -> bool {
+    rail_tab_on_show(state, de_editor_core::LeftPanelTab::Components)
+}
+
+/// The rail's body below its tab row — what the tab on show paints into.
+pub fn rail_body_rect(state: &EditorState, viewport_h: f32) -> Rect {
+    slides_panel_flow::layers_content_rect(state, layer_panel_rect(state, viewport_h))
+}
+
+/// Right rail. Runs the window's full height. Callers gate on the panel
+/// actually resolving for the current selection — this returns the rect
+/// it WOULD occupy.
 pub fn property_panel_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
     let width = state.editor_ui.property_panel_width;
     Rect {
-        origin: Point2D::new(viewport_w - width, TOP_BAR_HEIGHT),
-        size: Point2D::new(width, (viewport_h - TOP_BAR_HEIGHT).max(0.0)),
+        origin: Point2D::new(viewport_w - width, 0.0),
+        size: Point2D::new(width, viewport_h.max(0.0)),
     }
 }
 
-/// Floating vertical toolbar, inset from the canvas top-left. `toolbar_h`
-/// comes from the widget's own layout pass (it depends on how many tool
-/// slots are live), which is why it is a parameter rather than derived.
-pub fn toolbar_rect(state: &EditorState, toolbar_h: f32) -> Rect {
-    let (canvas_left, canvas_top) = canvas_origin(state);
+/// Where the floating chrome sits for this frame. Each half is `None` when
+/// it does not paint: neither while the generation workspace owns the
+/// layout (it has its own header), the action group when the canvas is
+/// narrower than the group, and the file pill when it would run into the
+/// group — the group keeps Preview's Stop button reachable, so it wins.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ChromeLayout {
+    pub file_pill: Option<FilePillLayout>,
+    pub actions: Option<CanvasActionsLayout>,
+}
+
+pub fn chrome_layout(state: &EditorState, viewport_w: f32, viewport_h: f32) -> ChromeLayout {
+    if workspace_docked(state) {
+        return ChromeLayout {
+            file_pill: None,
+            actions: None,
+        };
+    }
+    let ui = &state.editor_ui;
+    let (cx0, cy0, cw, _ch) = canvas_region(state, viewport_w, viewport_h);
+    let top = cy0 + CHROME_INSET_TOP;
+    let actions_widget = CanvasActions::for_editor_ui(ui);
+    // With the left rail shut, the window controls sit over the canvas's
+    // top-left corner, so the pill starts right of them.
+    let controls = if ui.sidebar_open {
+        0.0
+    } else {
+        window_controls_inset(ui.window_fullscreen)
+    };
+    let left = cx0 + CHROME_INSET_X.max(controls + CHROME_MIN_GAP);
+    let pill = FilePill::for_editor_ui(ui).layout_at(Point2D::new(left, top));
+    let pill_right = pill.rect.origin.x + pill.rect.size.x;
+    let place = |compact: bool| {
+        (cw >= actions_widget.width(compact) + CHROME_INSET_X * 2.0)
+            .then(|| actions_widget.layout_right(cx0 + cw - CHROME_INSET_X, top, compact))
+    };
+    let fits = |actions: &Option<crate::widgets::canvas_actions::CanvasActionsLayout>| {
+        pill_right <= actions.map_or(cx0 + cw, |a| a.rect.origin.x - CHROME_MIN_GAP)
+    };
+    // The agent / MCP chip gives up its text before the file pill gives
+    // up its place.
+    let mut actions = place(false);
+    if !fits(&actions) {
+        actions = place(true);
+    }
+    ChromeLayout {
+        file_pill: fits(&actions).then_some(pill),
+        actions,
+    }
+}
+
+/// What the floating chrome has under `point`, if anything — the one
+/// hit-test press, hover and tooltip routing all share.
+pub fn chrome_hit_at(
+    state: &EditorState,
+    viewport_w: f32,
+    viewport_h: f32,
+    point: Point2D,
+) -> Option<crate::widgets::ChromeHit> {
+    let chrome = chrome_layout(state, viewport_w, viewport_h);
+    let ui = &state.editor_ui;
+    chrome
+        .file_pill
+        .and_then(|layout| FilePill::for_editor_ui(ui).hit_test(&layout, point))
+        .or_else(|| {
+            chrome
+                .actions
+                .and_then(|layout| CanvasActions::for_editor_ui(ui).hit_test(&layout, point))
+        })
+}
+
+/// Whether `point` lands on the floating chrome's surface at all (a press
+/// in a pill's padding is still the pill's, never the canvas's).
+pub fn over_chrome(state: &EditorState, viewport_w: f32, viewport_h: f32, point: Point2D) -> bool {
+    let chrome = chrome_layout(state, viewport_w, viewport_h);
+    chrome.file_pill.is_some_and(|p| p.rect.contains(point))
+        || chrome.actions.is_some_and(|a| a.rect.contains(point))
+}
+
+/// Whether a press at `point` belongs to the window rather than the app:
+/// the left rail's window strip, or the canvas's top band where no
+/// floating chrome sits. Desktop only — the web host has no window. The
+/// caller still has to rule out a canvas node under the point (that
+/// needs the scene) before it drags.
+pub fn window_drag_band_at(
+    state: &EditorState,
+    viewport_w: f32,
+    viewport_h: f32,
+    point: Point2D,
+) -> bool {
+    if !WINDOW_CONTROLS_AVAILABLE || workspace_docked(state) {
+        return false;
+    }
+    if point.y < 0.0 || point.y >= WINDOW_STRIP_H {
+        return false;
+    }
+    let ui = &state.editor_ui;
+    if ui.sidebar_open && left_rail_strip_rect(state).contains(point) {
+        return true;
+    }
+    let (cx0, _cy0, cw, _ch) = canvas_region(state, viewport_w, viewport_h);
+    if point.x < cx0 || point.x >= cx0 + cw {
+        return false;
+    }
+    !over_chrome(state, viewport_w, viewport_h, point)
+        && !toolbar_rect_for(state, viewport_w, viewport_h).contains(point)
+}
+
+/// The floating tool rail: inset from the canvas's left edge and centred
+/// on its height, never rising into the file pill's band
+/// ([`TOOLBAR_INSET_Y`]). `toolbar_h` comes from the widget's own layout
+/// pass, which is why it is a parameter rather than derived.
+pub fn toolbar_rect(state: &EditorState, viewport_w: f32, viewport_h: f32, toolbar_h: f32) -> Rect {
+    let (canvas_left, canvas_top, _canvas_w, canvas_h) =
+        canvas_region(state, viewport_w, viewport_h);
+    let centred = canvas_top + (canvas_h - toolbar_h) / 2.0;
     Rect {
-        origin: Point2D::new(canvas_left + TOOLBAR_INSET_X, canvas_top + TOOLBAR_INSET_Y),
+        origin: Point2D::new(
+            canvas_left + TOOLBAR_INSET_X,
+            centred.max(canvas_top + TOOLBAR_INSET_Y),
+        ),
         size: Point2D::new(TOOLBAR_WIDTH, toolbar_h),
     }
 }
@@ -298,8 +470,8 @@ pub fn toolbar_layout_height(state: &EditorState) -> f32 {
 /// [`toolbar_rect`] measured against the live [`toolbar_layout_height`]
 /// — the form every hit-test / hover site wants (paint already has the
 /// height in hand from its own layout pass).
-pub fn toolbar_rect_for(state: &EditorState) -> Rect {
-    toolbar_rect(state, toolbar_layout_height(state))
+pub fn toolbar_rect_for(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
+    toolbar_rect(state, viewport_w, viewport_h, toolbar_layout_height(state))
 }
 
 /// Bottom-right floating StatusBar pill. `None` when the canvas is too

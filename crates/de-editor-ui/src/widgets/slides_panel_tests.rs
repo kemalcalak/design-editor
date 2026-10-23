@@ -9,7 +9,7 @@ use super::*;
 
 /// The rail's one gutter: the tab row, the tree and the chat body all
 /// start here.
-const RAIL_GUTTER: f32 = 16.0;
+const RAIL_GUTTER: f32 = 12.0;
 use crate::widgets::test_capture_backend::CaptureBackend;
 use de_editor_core::LeftPanelTab;
 
@@ -21,6 +21,8 @@ use de_editor_core::LeftPanelTab;
 const EN_ROW: SlidesTabRow<'static> = SlidesTabRow {
     chat_label: "Chat",
     layers_label: "Layers",
+    components_label: "Components",
+    images_label: "Images",
     slides_label: "Slides",
     chat_available: true,
     slides_available: true,
@@ -28,6 +30,8 @@ const EN_ROW: SlidesTabRow<'static> = SlidesTabRow {
 const VI_ROW: SlidesTabRow<'static> = SlidesTabRow {
     chat_label: "Trò chuyện",
     layers_label: "Lớp",
+    components_label: "Thành phần",
+    images_label: "Hình ảnh",
     slides_label: "Trang chiếu",
     chat_available: true,
     slides_available: true,
@@ -63,44 +67,16 @@ fn layout_with(aspects: &[f32], offset: f32, actions: SlidesActionState) -> Slid
 }
 
 #[test]
-fn the_tab_row_lays_the_labels_out_at_their_own_widths() {
+fn the_tab_row_starts_at_the_rail_gutter_with_the_active_pill() {
     let tabs = SlidesPanelTabs::new(PANEL, LeftPanelTab::Slides, &EN_ROW);
     assert_eq!(tabs.row.size.y, SLIDES_TAB_ROW_HEIGHT);
-    // Agent · Layers · Slides, each as wide as its own label. Equal
-    // thirds made the row read as a segmented control bolted onto the
-    // rail; Pencil's row is three headings sitting on the panel itself.
-    let mut previous_right = PANEL.origin.x + RAIL_GUTTER;
-    for (rect, label) in [
-        (tabs.chat, EN_ROW.chat_label),
-        (tabs.layers, EN_ROW.layers_label),
-        (tabs.slides, EN_ROW.slides_label),
-    ] {
-        assert_eq!(rect.origin.x, previous_right, "the tabs run left to right");
-        assert!(rect.size.x > 0.0);
-        assert!(
-            rect.size.x < PANEL.size.x / 2.0,
-            "no tab takes half the rail: {label} -> {rect:?}"
-        );
-        previous_right = rect.origin.x + rect.size.x + 2.0;
-    }
-    // A wider label must claim a wider tab — the whole point of
-    // dropping equal shares.
-    assert!(
-        tabs.slides.size.x > tabs.chat.size.x,
-        "Slides is a longer word than Agent"
+    assert_eq!(
+        tabs.rect_of(LeftPanelTab::Chat).origin.x,
+        PANEL.origin.x + RAIL_GUTTER,
+        "the first tab sits on the rail's gutter"
     );
-    // Each tab hit-tests exactly where it paints.
-    let mid_y = tabs.row.origin.y + tabs.row.size.y / 2.0;
-    for (rect, target) in [
-        (tabs.chat, SlidesPanelTarget::ChatTab),
-        (tabs.layers, SlidesPanelTarget::LayersTab),
-        (tabs.slides, SlidesPanelTarget::SlidesTab),
-    ] {
-        assert_eq!(
-            tabs.hit(Point2D::new(rect.origin.x + rect.size.x / 2.0, mid_y)),
-            Some(target)
-        );
-    }
+    // The active tab carries its label, so it is the widest.
+    assert!(tabs.rect_of(LeftPanelTab::Slides).size.x > tabs.rect_of(LeftPanelTab::Chat).size.x);
     // Below the row is nobody's.
     assert_eq!(tabs.hit(Point2D::new(120.0, 200.0)), None);
 }

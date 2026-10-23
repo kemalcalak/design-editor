@@ -1,4 +1,4 @@
-//! File-menu dropdown anchored under TopBar's folder+chevron button.
+//! File-menu dropdown anchored under the file pill's name (#30).
 //!
 //! Mirrors `apps/web/src/components/editor/top-bar.tsx` file menu
 //! verbatim: New / Open / Save / Save As / Export image, then a
@@ -12,6 +12,10 @@
 //! deck have the same host requirements, a save picker plus the
 //! offscreen rasteriser, so one flag answers for both). Everything after
 //! the export section shifts with however many of them are present.
+//!
+//! Since the title bar was retired (#30) the menu also ends with an
+//! app-level tail — Import / Undo / Redo rows and an icon footer holding
+//! the old title-bar buttons; see `file_menu_tools.rs`.
 
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::theme_for;
@@ -63,11 +67,15 @@ const HEADER_HEIGHT: f32 = 22.0;
 const DIVIDER_GAP: f32 = 4.0;
 const ICON_SIZE: f32 = 16.0;
 const SHORTCUT_FONT: f32 = 11.0;
-const FONT_FAMILY: &str = "system-ui";
+const FONT_FAMILY: &str = crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 const RECENT_COLUMN_GAP: f32 = 10.0;
 
 #[path = "file_menu_paint.rs"]
 mod paint;
+#[path = "file_menu_tools.rs"]
+mod tools;
+
+pub use tools::{tool_label, FileMenuTool};
 
 // The paint bodies moved to `file_menu_paint.rs` at the 800-line cap. The
 // re-export keeps `file_menu::truncate_to_width` at the path its callers
@@ -103,6 +111,12 @@ pub enum FileMenuChoice {
     ExportPptx,
     OpenRecent(usize),
     ClearRecent,
+    /// Open the import dropdown (Figma / HTML / image), under the pill.
+    Import,
+    Undo,
+    Redo,
+    /// An icon in the app-level footer.
+    Tool(FileMenuTool),
 }
 
 pub struct FileMenu<'a> {
@@ -172,7 +186,7 @@ impl<'a> FileMenu<'a> {
     }
 
     /// Whether the deck-export rows are offered — same predicate the
-    /// TopBar quick menu gates its deck rows on.
+    /// export quick menu gates its deck rows on.
     fn has_deck_export_rows(&self) -> bool {
         export_menu_rows::deck_export_available(self.ui)
     }
@@ -229,6 +243,10 @@ impl<'a> FileMenu<'a> {
         h += ROW_HEIGHT * recent_len as f32;
         h += DIVIDER_GAP * 2.0 + 1.0;
         h += ROW_HEIGHT; // Clear history
+        h += DIVIDER_GAP * 2.0 + 1.0;
+        h += ROW_HEIGHT * tools::TAIL_ROWS as f32; // Import / Undo / Redo
+        h += DIVIDER_GAP * 2.0 + 1.0;
+        h += tools::FOOTER_HEIGHT;
         h += PAD_Y;
         h
     }
@@ -281,6 +299,13 @@ impl<'a> FileMenu<'a> {
             row if !self.recent.is_empty() && row == recent_start + self.recent.len() => {
                 Some(FileMenuChoice::ClearRecent)
             }
+            row if row == self.tail_row_start() => Some(FileMenuChoice::Import),
+            row if row == self.tail_row_start() + 1 => Some(FileMenuChoice::Undo),
+            row if row == self.tail_row_start() + 2 => Some(FileMenuChoice::Redo),
+            row if row >= self.footer_row_start() => tools::footer_tools(self.ui)
+                .get(row - self.footer_row_start())
+                .copied()
+                .map(FileMenuChoice::Tool),
             _ => None,
         }
     }
@@ -327,8 +352,26 @@ impl<'a> FileMenu<'a> {
             y += ROW_HEIGHT;
         }
         y += DIVIDER_GAP * 2.0 + 1.0;
-        if !self.recent.is_empty() && row_hit(panel.origin.x, y, point) {
-            return MenuHit::Row(row);
+        if !self.recent.is_empty() {
+            if row_hit(panel.origin.x, y, point) {
+                return MenuHit::Row(row);
+            }
+            row += 1;
+        }
+        y += ROW_HEIGHT;
+        y += DIVIDER_GAP * 2.0 + 1.0;
+        for _ in 0..tools::TAIL_ROWS {
+            if row_hit(panel.origin.x, y, point) {
+                return MenuHit::Row(row);
+            }
+            y += ROW_HEIGHT;
+            row += 1;
+        }
+        y += DIVIDER_GAP * 2.0 + 1.0;
+        for (i, (_, slot)) in self.footer_slots(panel, y).into_iter().enumerate() {
+            if slot.contains(point) {
+                return MenuHit::Row(row + i);
+            }
         }
         MenuHit::Inside
     }

@@ -34,7 +34,7 @@ use crate::Rect;
 
 /// A top-level widget placed at a host-resolved screen rect.
 ///
-/// Hosts build one of these per region they paint (top bar, toolbar,
+/// Hosts build one of these per region they paint (file pill, toolbar,
 /// layer panel, canvas, property panel, chat, status bar, plus any open
 /// overlays). The assembler reads `widget.id()` + `widget.access_node()`
 /// and stamps `bounds` from `rect`.

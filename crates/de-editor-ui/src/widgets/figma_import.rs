@@ -90,7 +90,7 @@ impl FigmaImportModal {
         } else {
             MODAL_HEIGHT
         };
-        let y = ((viewport_h - height) / 2.0).max(crate::widgets::TOP_BAR_HEIGHT + 16.0);
+        let y = ((viewport_h - height) / 2.0).max(crate::widgets::WINDOW_STRIP_H + 16.0);
         Rect {
             origin: Point2D::new(x, y),
             size: Point2D::new(MODAL_WIDTH, height),

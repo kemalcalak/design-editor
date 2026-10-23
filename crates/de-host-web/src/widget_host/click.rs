@@ -67,7 +67,7 @@ impl WidgetHost {
         let was_focused = self.blur_text_inputs_on_blank_press();
         self.mark_dirty();
 
-        let toolbar_rect = self.toolbar_rect(viewport_w);
+        let toolbar_rect = self.toolbar_rect(viewport_w, viewport_h);
         let toolbar = Toolbar::for_editor(&self.editor_state);
         if let Some(hit) = toolbar.hit_test(toolbar_rect, Point2D::new(x, y)) {
             self.editor_state.editor_ui.pressed_button =
@@ -89,7 +89,7 @@ impl WidgetHost {
                 }
             }
         }
-        if !self.editor_state.editor_ui.sidebar_open {
+        if !self.layers_panel_visible() {
             return was_focused;
         }
         let layer_rect = self.layer_panel_rect(viewport_h);

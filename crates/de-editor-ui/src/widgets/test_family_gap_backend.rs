@@ -183,6 +183,18 @@ impl RenderBackend for FamilyGapBackend {
         };
         width(text, font_size, ratio)
     }
+    /// Weight-agnostic: the gap this backend models is between families,
+    /// so a weighted measurement in the painted family must see it too.
+    fn measure_text_family_styled(
+        &mut self,
+        text: &str,
+        font_size: f32,
+        family: &str,
+        _weight: u16,
+        _italic: bool,
+    ) -> f32 {
+        self.measure_text_family(text, font_size, family)
+    }
     fn save(&mut self) {
         self.clip_stack.push(self.clip());
     }

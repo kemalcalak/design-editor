@@ -61,6 +61,8 @@ impl WidgetHost {
         // cells), mirroring the native blur helper; the search box
         // just defocuses, keeping its typed filter.
         self.editor_state.editor_ui.variables_search_focus = false;
+        // The Components tab's search box lets go; its filter persists.
+        self.editor_state.editor_ui.component_browser_search_focused = false;
         // Settings-modal inputs (MCP port, agent / image-gen fields).
         self.commit_settings_focus();
         // Preset save-as-name input discards on blur, matching native

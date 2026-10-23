@@ -12,9 +12,7 @@ pub const SIDEBAR_W: f32 = 240.0;
 pub const RAIL_W: f32 = 64.0;
 /// Home's own top bar; the column scrolls under it.
 pub const HOME_TOPBAR_H: f32 = 60.0;
-/// The borderless window's title strip (the editor TopBar's height): the
-/// window-control dots and the drag band live here.
-pub const WINDOW_STRIP_H: f32 = 40.0;
+pub use crate::widgets::window_strip::WINDOW_STRIP_H;
 /// Most files the Recent section lists (two grid rows of four).
 pub const RECENT_MAX: usize = de_editor_core::HOME_RECENT_MAX;
 

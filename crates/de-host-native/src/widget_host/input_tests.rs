@@ -9,7 +9,11 @@ use super::{CursorHint, WidgetHostNative};
 use de_editor_core::ui_draft::PropertyFocus;
 use de_editor_core::PenNodeExt;
 use de_editor_core::{own_bounds, NodeId};
-use de_editor_ui::widgets::{PropertyPanel, TopBar, TopBarHit, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::PropertyPanel;
+
+/// The right rail runs from the window's top edge — there is no title
+/// bar above it (#30).
+const PROPERTY_PANEL_TOP: f32 = 0.0;
 
 mod chat_panel;
 mod chrome_overlays;
@@ -38,7 +42,7 @@ fn point_inside_property_panel_without_target(host: &WidgetHostNative) -> de_edi
             let point = de_editor_ui::Point2D::new(x, y);
             let no_action = panel.hit_test_action(rect, point).is_none();
             let no_input = panel.hit_test(rect, point).is_none();
-            let no_tab = panel.tab_hover_at(rect, point).is_none();
+            let no_tab = !panel.close_hover_at(rect, point);
             let no_fill_type = panel.fill_type_picker_row_at(rect, point).is_none();
             if no_action && no_input && no_tab && no_fill_type {
                 return point;

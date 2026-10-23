@@ -32,7 +32,7 @@ impl WidgetHostNative {
     }
 
     /// The chrome tier — runs after Home and the modal tiers, ahead of
-    /// the top bar / rails. `None` lets the chat and canvas tiers run.
+    /// the floating chrome / rails. `None` lets the chat and canvas tiers run.
     pub(in crate::widget_host) fn press_workspace(
         &mut self,
         x: f32,

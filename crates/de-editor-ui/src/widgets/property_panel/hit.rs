@@ -56,14 +56,10 @@ impl PropertyPanel {
         panel_rect: Rect,
         point: Point2D,
     ) -> Option<PropertyPanelAction> {
-        // Design / Code tab strip — clickable on either tab, incl. multi-select.
-        if let Some(tab) = sections::tab_strip_hit(
-            &self.labels,
-            panel_rect.origin.x,
-            panel_rect.origin.y,
-            point,
-            self.snapshot.widget.is_some(),
-        ) {
+        // Header — the Code view's close button, incl. multi-select.
+        if let Some(tab) =
+            crate::widgets::property_panel_header::header_hit(self.tab, panel_rect, point)
+        {
             return Some(PropertyPanelAction::SetPropertyTab(tab));
         }
         if self.is_multi {
@@ -168,9 +164,8 @@ impl PropertyPanel {
             return None;
         }
         let scrolled = self.scrolled_rect(panel_rect);
-        let component_block_y = scrolled.origin.y
-            + crate::widgets::property_panel_inputs::TAB_HEIGHT
-            + crate::widgets::property_panel_inputs::HEADER_HEIGHT;
+        let component_block_y =
+            scrolled.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
         if let Some(index) = crate::widgets::property_panel_instance::option_index_at(
             scrolled.origin.x,
             component_block_y,
@@ -434,18 +429,34 @@ impl PropertyPanel {
         .position(|(_, r)| (*r).contains(point))
     }
 
-    /// Pinned Design / Code tab under the cursor.
-    pub fn tab_hover_at(
+    /// The button a press on `action` lights up while held. The Code
+    /// view's own buttons track presses on the codegen state; everything
+    /// else in the panel, Design-view Code chips included, is a panel
+    /// action addressed by its index.
+    pub fn pressed_target(
         &self,
+        action: &PropertyPanelAction,
         panel_rect: Rect,
         point: Point2D,
-    ) -> Option<de_editor_core::PropertyTab> {
-        sections::tab_strip_hit(
-            &self.labels,
-            panel_rect.origin.x,
-            panel_rect.origin.y,
-            point,
-            self.snapshot.widget.is_some(),
-        )
+    ) -> Option<de_editor_core::ButtonPressTarget> {
+        match action {
+            PropertyPanelAction::Codegen(codegen_action)
+                if !matches!(
+                    codegen_action,
+                    crate::widgets::property_panel_action::CodegenAction::OpenInCodeView(_)
+                ) =>
+            {
+                crate::widgets::property_panel_code::codegen_hover_for_action(*codegen_action)
+                    .map(de_editor_core::ButtonPressTarget::Codegen)
+            }
+            _ => self
+                .action_hover_index(panel_rect, point)
+                .map(de_editor_core::ButtonPressTarget::PropertyPanel),
+        }
+    }
+
+    /// Whether `point` is on the Code view's header close button.
+    pub fn close_hover_at(&self, panel_rect: Rect, point: Point2D) -> bool {
+        crate::widgets::property_panel_header::header_hit(self.tab, panel_rect, point).is_some()
     }
 }

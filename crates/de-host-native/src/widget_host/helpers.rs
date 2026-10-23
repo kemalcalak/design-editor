@@ -19,7 +19,7 @@ pub(in crate::widget_host) use de_editor_ui::widgets::host_canvas_geometry::{
     AICHAT_INSET_BOTTOM, AICHAT_INSET_LEFT, STATUS_INSET, TOOLBAR_INSET_X, TOOLBAR_INSET_Y,
 };
 
-/// Floating Git panel — gap below the TopBar (room for the caret that
+/// Floating Git panel — gap below the file pill (room for the caret that
 /// connects the panel to its toggle button) + the caret's height and
 /// half-width. Shared by `overlay_rects::git_panel_rect` (placement)
 /// and `paint` (the caret triangle) so they can't drift.

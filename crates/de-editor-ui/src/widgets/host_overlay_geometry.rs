@@ -1,14 +1,13 @@
 //! On-screen rects for the floating overlays — dropdowns anchored to
-//! the TopBar / toolbar, and the three draggable floating panels — plus
-//! the StatusBar's two zoom actions.
+//! the file pill / canvas action group / toolbar, and the three draggable
+//! floating panels — plus the StatusBar's two zoom actions.
 //!
 //! Both hosts carried byte-identical copies in
 //! `widget_host/overlay_rects.rs` (native) and
 //! `widget_host/{overlay_rects,geometry}.rs` (web). Every entry here is
 //! pure over `EditorState` (plus the layout scene, for zoom-to-fit), so
 //! it lives here; the hosts keep only the `mark_dirty` / scene-refresh
-//! glue and the genuinely platform-shaped rects (the native Git panel,
-//! the File menu's traffic-light-aware anchor).
+//! glue and the genuinely platform-shaped rects (the native Git panel).
 //!
 //! Paint and event-time hit-testing MUST read the same answer from these
 //! — a dropdown whose painted rect and hit rect disagree eats clicks on
@@ -17,26 +16,57 @@
 use de_editor_core::EditorState;
 
 use crate::layout_scene::LayoutScene;
+use crate::widgets::file_pill::FILE_PILL_HEIGHT;
 use crate::widgets::host_canvas_geometry::{
-    canvas_rect, canvas_region, TOOLBAR_INSET_X, TOOLBAR_INSET_Y,
+    canvas_rect, canvas_region, chrome_layout, components_tab_on_show, rail_body_rect,
+    toolbar_rect, CHROME_INSET_TOP, CHROME_INSET_X,
 };
+use crate::widgets::window_strip::WINDOW_STRIP_H;
 use crate::widgets::{
-    ExportQuickMenu, ImportMenu, LayoutCx, LocalePicker, ShapePicker, Toolbar, TopBar, Widget,
-    COMPONENT_BROWSER_PANEL_H, COMPONENT_BROWSER_PANEL_W, DESIGN_MD_PANEL_H, DESIGN_MD_PANEL_W,
-    ICON_PICKER_PANEL_H, ICON_PICKER_PANEL_W, IMPORT_MENU_WIDTH, LOCALE_PICKER_WIDTH,
-    PROMPT_CENTER_MIN_H, PROMPT_CENTER_MIN_W, PROMPT_CENTER_VIEWPORT_H_RATIO,
-    PROMPT_CENTER_VIEWPORT_W_RATIO, SCENE_TEMPLATE_GALLERY_INSET, SHAPE_PICKER_WIDTH,
-    TOOLBAR_WIDTH, TOP_BAR_HEIGHT,
+    ExportQuickMenu, ImportMenu, LayoutCx, LocalePicker, ShapePicker, Toolbar, Widget,
+    DESIGN_MD_PANEL_H, DESIGN_MD_PANEL_W, ICON_PICKER_PANEL_H, ICON_PICKER_PANEL_W,
+    IMPORT_MENU_WIDTH, LOCALE_PICKER_WIDTH, PROMPT_CENTER_MIN_H, PROMPT_CENTER_MIN_W,
+    PROMPT_CENTER_VIEWPORT_H_RATIO, PROMPT_CENTER_VIEWPORT_W_RATIO, SCENE_TEMPLATE_GALLERY_INSET,
+    SHAPE_PICKER_WIDTH, TOOLBAR_WIDTH,
 };
 use crate::{Point2D, Rect};
 
-/// The full-width TopBar rect — the anchor frame every TopBar-hosted
-/// dropdown measures its button from.
-pub fn top_bar_rect(viewport_w: f32) -> Rect {
-    Rect {
-        origin: Point2D::new(0.0, 0.0),
-        size: Point2D::new(viewport_w, TOP_BAR_HEIGHT),
+/// The file pill's rect — the anchor every pill-hosted dropdown (File
+/// menu, Import, Language, Git) hangs from. When a narrow canvas hides the
+/// pill, its would-be slot at the canvas top-left stands in, so a menu
+/// opened from the keyboard still lands somewhere sensible.
+pub fn file_pill_anchor(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
+    if let Some(pill) = chrome_layout(state, viewport_w, viewport_h).file_pill {
+        return pill.rect;
     }
+    let (cx0, cy0, _cw, _ch) = canvas_region(state, viewport_w, viewport_h);
+    Rect::xywh(
+        cx0 + CHROME_INSET_X,
+        cy0 + CHROME_INSET_TOP,
+        0.0,
+        FILE_PILL_HEIGHT,
+    )
+}
+
+/// The canvas action group's Download button — the export quick menu's
+/// anchor. Falls back to the group's slot at the canvas top-right.
+pub fn export_button_anchor(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
+    if let Some(actions) = chrome_layout(state, viewport_w, viewport_h).actions {
+        return actions.download;
+    }
+    let (cx0, cy0, cw, _ch) = canvas_region(state, viewport_w, viewport_h);
+    Rect::xywh(
+        cx0 + cw - CHROME_INSET_X,
+        cy0 + CHROME_INSET_TOP,
+        0.0,
+        FILE_PILL_HEIGHT,
+    )
+}
+
+/// File-menu dropdown anchor: the pill, so the menu hangs left-aligned
+/// under it.
+pub fn file_menu_anchor(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
+    file_pill_anchor(state, viewport_w, viewport_h)
 }
 
 /// Step the canvas zoom from a StatusBar `[-]` / `[+]` click, anchored
@@ -111,15 +141,12 @@ fn toolbar_height(toolbar: &Toolbar, dpi: f32) -> f32 {
         .y
 }
 
-/// Shape-picker dropdown rect — anchored to the right of the toolbar's
+/// Shape-menu rect — anchored to the right of the tool rail's
 /// shape slot, clamped so it never overhangs the canvas right edge.
 pub fn shape_picker_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
     let (cx0, _cy, cw, _ch) = canvas_region(state, viewport_w, viewport_h);
     let toolbar = Toolbar::for_editor(state);
-    let toolbar_rect = Rect {
-        origin: Point2D::new(cx0 + TOOLBAR_INSET_X, TOP_BAR_HEIGHT + TOOLBAR_INSET_Y),
-        size: Point2D::new(TOOLBAR_WIDTH, toolbar_height(&toolbar, 1.0)),
-    };
+    let toolbar_rect = toolbar_rect(state, viewport_w, viewport_h, toolbar_height(&toolbar, 1.0));
     let slot = toolbar
         .shape_slot_rect(toolbar_rect)
         .unwrap_or(toolbar_rect);
@@ -131,11 +158,10 @@ pub fn shape_picker_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) 
     }
 }
 
-/// `(anchor, viewport)` for the top-bar import dropdown, so both chromes
-/// clamp the popup identically.
+/// `(anchor, viewport)` for the import dropdown (opened from File ▸
+/// Import), so both hosts clamp the popup identically.
 pub fn import_menu_anchor(state: &EditorState, viewport_w: f32, viewport_h: f32) -> (Rect, Rect) {
-    let button =
-        TopBar::for_editor_ui(&state.editor_ui).import_button_rect(top_bar_rect(viewport_w));
+    let button = file_pill_anchor(state, viewport_w, viewport_h);
     let anchor = Rect {
         origin: button.origin,
         size: Point2D::new(IMPORT_MENU_WIDTH, button.size.y),
@@ -165,15 +191,21 @@ pub fn close_import_menu(state: &mut EditorState) {
     state.editor_ui.import_menu.hover = None;
 }
 
-/// Locale-picker dropdown rect — centred under the TopBar globe button,
-/// clamped 8 px inside both viewport edges.
-pub fn locale_picker_rect(state: &EditorState, viewport_w: f32) -> Rect {
-    let globe = TopBar::for_editor_ui(&state.editor_ui).globe_rect(top_bar_rect(viewport_w));
-    locale_picker_rect_under(globe, viewport_w)
+/// Locale-picker dropdown rect (File ▸ Language) — left-aligned under
+/// the file pill, clamped 8 px inside both viewport edges.
+pub fn locale_picker_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
+    let pill = file_pill_anchor(state, viewport_w, viewport_h);
+    let anchor = Rect::xywh(
+        pill.origin.x,
+        pill.origin.y,
+        LOCALE_PICKER_WIDTH,
+        pill.size.y,
+    );
+    locale_picker_rect_under(anchor, viewport_w)
 }
 
-/// The locale picker hung under `anchor`: the TopBar globe, or Home's
-/// language button on the native host (web never paints Home).
+/// The locale picker centred under `anchor`: the file pill's slot, or
+/// Home's language button on the native host (web never paints Home).
 pub fn locale_picker_rect_under(anchor: Rect, viewport_w: f32) -> Rect {
     let globe = anchor;
     let x = (globe.origin.x + globe.size.x / 2.0 - LOCALE_PICKER_WIDTH / 2.0)
@@ -185,15 +217,14 @@ pub fn locale_picker_rect_under(anchor: Rect, viewport_w: f32) -> Rect {
     }
 }
 
-/// Export quick-menu dropdown rect — hangs under the TopBar download
-/// button, right-aligned to it and clamped inside the viewport.
-pub fn export_quick_menu_rect(state: &EditorState, viewport_w: f32) -> Rect {
-    let bar = top_bar_rect(viewport_w);
-    let anchor = TopBar::for_editor_ui(&state.editor_ui).export_button_rect(bar);
+/// Export quick-menu dropdown rect — hangs under the action group's
+/// Download button, right-aligned to it and clamped inside the viewport.
+pub fn export_quick_menu_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
+    let anchor = export_button_anchor(state, viewport_w, viewport_h);
     ExportQuickMenu::for_editor_ui(&state.editor_ui).rect_at(anchor, viewport_w)
 }
 
-/// Placement shared by all three draggable floating panels: centred on
+/// Placement shared by the draggable floating panels: centred on
 /// first open, then the stored top-left clamped so at least the header
 /// bar (80 × 40 px of it) stays reachable after a viewport resize.
 pub fn floating_panel_rect(
@@ -233,28 +264,25 @@ pub fn design_md_panel_rect(state: &EditorState, viewport_w: f32, viewport_h: f3
     ))
 }
 
-/// Floating Component-Browser panel rect — `None` when closed.
-pub fn component_browser_panel_rect(
-    state: &EditorState,
-    viewport_w: f32,
-    viewport_h: f32,
-) -> Option<Rect> {
-    let ui = &state.editor_ui;
-    if !ui.component_browser_open {
-        return None;
-    }
-    Some(floating_panel_rect(
-        ui.component_browser_pos,
-        COMPONENT_BROWSER_PANEL_W,
-        COMPONENT_BROWSER_PANEL_H,
-        viewport_w,
-        viewport_h,
-    ))
+/// The Components tab's rect — the rail body while that tab is on show,
+/// `None` otherwise. Paint, press and hover all take it from here.
+pub fn components_tab_rect(state: &EditorState, viewport_h: f32) -> Option<Rect> {
+    // One px narrower than the rail so its right hairline (painted before
+    // this pass) stays visible.
+    components_tab_on_show(state).then(|| {
+        let body = rail_body_rect(state, viewport_h);
+        Rect::xywh(
+            body.origin.x,
+            body.origin.y,
+            (body.size.x - 1.0).max(0.0),
+            body.size.y,
+        )
+    })
 }
 
 /// Prompt Center rect — a fraction of the viewport, centred horizontally
 /// within the live canvas region so open side rails do not visually displace
-/// it, and vertically within the band below the top bar.
+/// it, and vertically within the band below the window strip.
 ///
 /// It has no intrinsic size. Like the Asset Center it is a gallery: the
 /// bigger the window, the bigger the previews, because everything inside it
@@ -266,9 +294,9 @@ pub fn component_browser_panel_rect(
 /// ([`PROMPT_CENTER_MIN_W`] / [`PROMPT_CENTER_MIN_H`]) keep a small window
 /// usable — each floor is itself clamped to what the viewport has, so a
 /// window smaller than the floor yields a full-bleed panel rather than one
-/// hanging off the edge. Height is measured against the space below the top
-/// bar rather than the whole viewport, so the panel is centred in the room it
-/// actually has instead of being clamped up under the chrome.
+/// hanging off the edge. Height is measured against the space below the
+/// window strip rather than the whole viewport, so the panel never covers the
+/// strip a press drags the window by.
 pub fn prompt_center_panel_rect(
     state: &EditorState,
     viewport_w: f32,
@@ -280,7 +308,7 @@ pub fn prompt_center_panel_rect(
     let canvas = canvas_rect(state, viewport_w, viewport_h);
     let viewport_w = viewport_w.max(0.0);
     let viewport_h = viewport_h.max(0.0);
-    let available_h = (viewport_h - TOP_BAR_HEIGHT).max(0.0);
+    let available_h = (viewport_h - WINDOW_STRIP_H).max(0.0);
     let panel_w =
         (viewport_w * PROMPT_CENTER_VIEWPORT_W_RATIO).max(PROMPT_CENTER_MIN_W.min(viewport_w));
     let panel_h =
@@ -297,7 +325,7 @@ pub fn prompt_center_panel_rect(
 }
 
 /// Asset Center rect — inset by [`SCENE_TEMPLATE_GALLERY_INSET`] from the
-/// host viewport, keeping the persistent top bar clear.
+/// host viewport, keeping the window strip clear.
 ///
 /// Unlike the Prompt Center it has no intrinsic size. It is a gallery: the
 /// bigger the window, the bigger the previews, because everything inside
@@ -323,7 +351,7 @@ pub fn scene_template_panel_rect(
         return None;
     }
     let available_w = viewport_w.max(0.0);
-    let top = TOP_BAR_HEIGHT;
+    let top = WINDOW_STRIP_H;
     let available_h = (viewport_h - top).max(0.0);
     let inset = SCENE_TEMPLATE_GALLERY_INSET
         .min(available_w / 8.0)
@@ -342,7 +370,7 @@ pub fn scene_template_panel_rect(
 /// viewport, chrome included.
 ///
 /// It covers more than the panel's own canvas region on purpose: dimming only
-/// the canvas would leave the top bar and rails at full brightness around a
+/// the canvas would leave the chrome and rails at full brightness around a
 /// darkened middle, which reads as a popup on a lit page rather than as an
 /// editor that stepped back. A press anywhere on it dismisses the gallery.
 pub fn scene_template_scrim_rect(

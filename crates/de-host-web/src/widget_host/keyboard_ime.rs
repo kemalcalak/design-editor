@@ -1,8 +1,8 @@
 //! IME and paste text routing for the web widget host.
 
 use super::WidgetHost;
-use de_editor_ui::widgets::{AIChatPlaceholder, PropertyPanel, TOP_BAR_HEIGHT};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::{AIChatPlaceholder, PropertyPanel};
+use de_editor_ui::Rect;
 
 impl WidgetHost {
     /// Whether the browser's hidden IME capture input should own DOM focus.
@@ -53,16 +53,11 @@ impl WidgetHost {
                 return Some(rect);
             }
             let panel = PropertyPanel::for_selection(&self.editor_state)?;
-            let property_rect = Rect {
-                origin: Point2D::new(
-                    self.last_viewport_w - self.editor_state.editor_ui.property_panel_width,
-                    TOP_BAR_HEIGHT,
-                ),
-                size: Point2D::new(
-                    self.editor_state.editor_ui.property_panel_width,
-                    (self.last_viewport_h - TOP_BAR_HEIGHT).max(0.0),
-                ),
-            };
+            let property_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+                &self.editor_state,
+                self.last_viewport_w,
+                self.last_viewport_h,
+            );
             return panel.image_popover_input_caret_rect(property_rect);
         }
         if self.editor_state.chat.focused && !self.non_chat_input_owns_keyboard() {

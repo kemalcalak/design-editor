@@ -1,6 +1,6 @@
 // Browser boundary: requestAnimationFrame scheduling needs browser smoke; the
 // CanvasKit bundle gate covers wasm linkability.
-//! Wake the shell once a hovering top-bar tooltip comes due.
+//! Wake the shell once a hovering chrome tooltip comes due.
 //!
 //! The tooltip waits out a dwell before it appears, and a dwell expiring
 //! is not a DOM event. The web shell paints on events only, so without
@@ -36,7 +36,7 @@ pub(crate) fn ensure<C: RepaintContext + 'static>(inner: &Rc<RefCell<C>>) {
             // arms the pump itself once it is done.
             return;
         };
-        if !borrowed.host().top_bar_tooltip_pending() {
+        if !borrowed.host().chrome_tooltip_pending() {
             // Nothing due — either no hover, a suppressed button, or the
             // tooltip is already on screen.
             return;
@@ -61,7 +61,7 @@ pub(crate) fn ensure<C: RepaintContext + 'static>(inner: &Rc<RefCell<C>>) {
         let _ = inner_mut.repaint();
         // Paint happens BEFORE this check, so the frame that crosses the
         // dwell draws the tooltip and then retires the pump.
-        let alive = inner_mut.host().top_bar_tooltip_pending();
+        let alive = inner_mut.host().chrome_tooltip_pending();
         if !alive {
             RUNNING.with(|running| running.set(false));
         }

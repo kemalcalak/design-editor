@@ -216,7 +216,7 @@ impl A11yDomMirror {
 /// | accesskit Role     | region            | ARIA role     |
 /// | ------------------ | ----------------- | ------------- |
 /// | `Window`           | host root frame   | `application` |
-/// | `Header`           | TopBar            | `banner`      |
+/// | `Header`           | (unused)          | `banner`      |
 /// | `Tree`             | LayerPanel        | `tree`        |
 /// | `Canvas`           | CanvasViewport    | `img`         |
 /// | `Toolbar`          | Toolbar           | `toolbar`     |
@@ -231,7 +231,7 @@ fn aria_role_for(role: Role) -> &'static str {
         // The host root frame; the container already carries this, but map
         // it for completeness if a caller mirrors the root directly.
         Role::Window => "application",
-        // The TopBar is the editor's banner region.
+        // A header is a banner region (the editor itself no longer has one).
         Role::Header => "banner",
         Role::Tree => "tree",
         // A canvas has no DOM-native semantic; `img` with a label is the

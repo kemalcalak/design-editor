@@ -12,7 +12,7 @@ use super::helpers::GIT_PANEL_CARET_GAP;
 use super::WidgetHostNative;
 use de_editor_ui::widgets::host_overlay_geometry as overlay_geometry;
 use de_editor_ui::widgets::{
-    AIChatPlaceholder, AlignToolbar, GitPanel, GitPanelHit, TopBar, GIT_PANEL_INSET, TOP_BAR_HEIGHT,
+    AIChatPlaceholder, AlignToolbar, GitPanel, GitPanelHit, GIT_PANEL_INSET,
 };
 use de_editor_ui::{Point2D, Rect};
 
@@ -21,10 +21,8 @@ impl WidgetHostNative {
     /// Single source of truth for the panel placement: `paint.rs`
     /// calls this so the caret + hit-test + cursor logic can't drift.
     ///
-    /// The panel hangs centred under the TopBar Git button (a popover,
-    /// TS parity), clamped to the canvas region. When the button is
-    /// hidden (wasm) or the canvas is too narrow it falls back to the
-    /// top-left float.
+    /// The panel hangs under the file pill (File ▸ Git opens it), its
+    /// left edge on the pill's, clamped to the canvas region.
     pub(in crate::widget_host) fn git_panel_rect(
         &self,
         viewport_w: f32,
@@ -34,26 +32,29 @@ impl WidgetHostNative {
         let pw = panel.panel_width();
         let ph = panel.height();
         let (canvas_left, _cy, canvas_w, _ch) = self.canvas_region(viewport_w, viewport_h);
-
-        let top_bar_rect = Rect {
-            origin: Point2D::new(0.0, 0.0),
-            size: Point2D::new(viewport_w, TOP_BAR_HEIGHT),
-        };
-        let top_bar = TopBar::for_editor_ui(&self.editor_state.editor_ui);
+        let anchor = self.git_panel_anchor(viewport_w, viewport_h);
         let min_x = canvas_left + GIT_PANEL_INSET;
         let max_x = (canvas_left + canvas_w - pw - GIT_PANEL_INSET).max(min_x);
-        let origin_x = match self.topbar_git_button_center_x(&top_bar, top_bar_rect) {
-            Some(cx) => (cx - pw / 2.0).clamp(min_x, max_x),
-            None => min_x,
-        };
         Some(Rect {
-            origin: Point2D::new(origin_x, TOP_BAR_HEIGHT + GIT_PANEL_CARET_GAP),
+            origin: Point2D::new(
+                anchor.origin.x.clamp(min_x, max_x),
+                anchor.origin.y + anchor.size.y + GIT_PANEL_CARET_GAP,
+            ),
             size: Point2D::new(pw, ph),
         })
     }
 
+    /// The file pill the Git panel hangs from (its caret points at it).
+    pub(in crate::widget_host) fn git_panel_anchor(
+        &self,
+        viewport_w: f32,
+        viewport_h: f32,
+    ) -> Rect {
+        overlay_geometry::file_pill_anchor(&self.editor_state, viewport_w, viewport_h)
+    }
+
     /// The Git panel's full interactive footprint — the body plus the
-    /// caret bridge above it (up to the top bar). [`git_panel_rect`] is
+    /// caret bridge above it (up to the file pill). [`git_panel_rect`] is
     /// the painted body; the caret is painted in that gap, so the
     /// hit-test, cursor, and outside-click logic must use THIS rect, or
     /// a click / hover on the caret falls through to the canvas under it.
@@ -63,9 +64,9 @@ impl WidgetHostNative {
         viewport_h: f32,
     ) -> Option<Rect> {
         self.git_panel_rect(viewport_w, viewport_h).map(|r| {
-            let extra = r.origin.y - TOP_BAR_HEIGHT; // == GIT_PANEL_CARET_GAP
+            let extra = GIT_PANEL_CARET_GAP;
             Rect {
-                origin: Point2D::new(r.origin.x, TOP_BAR_HEIGHT),
+                origin: Point2D::new(r.origin.x, r.origin.y - extra),
                 size: Point2D::new(r.size.x, r.size.y + extra),
             }
         })
@@ -202,14 +203,9 @@ impl WidgetHostNative {
             .is_some_and(|card| (card).contains(Point2D::new(x, y)))
     }
 
-    /// Floating Component-Browser panel rect — `None` when closed.
-    /// Same centred-on-open + clamped placement as the Design-MD panel.
-    pub(in crate::widget_host) fn component_browser_panel_rect(
-        &self,
-        viewport_w: f32,
-        viewport_h: f32,
-    ) -> Option<Rect> {
-        overlay_geometry::component_browser_panel_rect(&self.editor_state, viewport_w, viewport_h)
+    /// The Components rail tab's rect — `None` when another tab is on show.
+    pub(in crate::widget_host) fn components_tab_rect(&self, viewport_h: f32) -> Option<Rect> {
+        overlay_geometry::components_tab_rect(&self.editor_state, viewport_h)
     }
 
     /// Floating Prompt Center rect — `None` when closed.
@@ -299,9 +295,8 @@ impl WidgetHostNative {
             || self
                 .prompt_center_panel_rect(viewport_w, viewport_h)
                 .is_some_and(|r| (r).contains(p))
-            || self
-                .component_browser_panel_rect(viewport_w, viewport_h)
-                .is_some_and(|r| (r).contains(p))
+        // The component browser is a rail tab now (#30), not a floating
+        // panel: the rail's own wheel / press tiers own its rect.
     }
 
     /// The open File-menu dropdown rect, or `None` when closed. The
@@ -312,21 +307,24 @@ impl WidgetHostNative {
         if !self.editor_state.editor_ui.file_menu_open {
             return None;
         }
-        let top_bar_rect = Rect {
-            origin: Point2D::new(0.0, 0.0),
-            size: Point2D::new(viewport_w, TOP_BAR_HEIGHT),
-        };
-        let anchor =
-            TopBar::file_menu_rect(top_bar_rect, self.editor_state.editor_ui.window_fullscreen);
+        let anchor = overlay_geometry::file_menu_anchor(
+            &self.editor_state,
+            viewport_w,
+            self.last_viewport_h,
+        );
         let menu = FileMenu::from_editor_ui(&self.editor_state.editor_ui, 0);
         Some(menu.rect_at(anchor))
     }
 
-    /// The export quick-menu dropdown rect — anchored under the TopBar
-    /// download button. Shared with paint + hit-test through
-    /// `host_overlay_geometry` so the three can never drift.
+    /// The export quick-menu dropdown rect — anchored under the canvas
+    /// action group's Download button. Shared with paint + hit-test
+    /// through `host_overlay_geometry` so the three can never drift.
     pub(in crate::widget_host) fn export_quick_menu_rect(&self, viewport_w: f32) -> Rect {
-        overlay_geometry::export_quick_menu_rect(&self.editor_state, viewport_w)
+        overlay_geometry::export_quick_menu_rect(
+            &self.editor_state,
+            viewport_w,
+            self.last_viewport_h,
+        )
     }
 
     /// Whether `point` is inside an open chrome dropdown that paints
@@ -451,9 +449,9 @@ impl WidgetHostNative {
         overlay_geometry::shape_picker_rect(&self.editor_state, viewport_w, viewport_h)
     }
 
-    /// `(anchor, viewport)` for the top-bar import dropdown. The
-    /// anchor is the import button itself, so the shared `Select`
-    /// clamps the popup into the window like every other dropdown.
+    /// `(anchor, viewport)` for the import dropdown (File ▸ Import). The
+    /// anchor is the file pill, so the shared `Select` clamps the popup
+    /// into the window like every other dropdown.
     pub(in crate::widget_host) fn import_menu_anchor(
         &self,
         viewport_w: f32,
@@ -468,7 +466,7 @@ impl WidgetHostNative {
     }
 
     /// Under Home's language button while Home is up (Home paints its own
-    /// top bar), else under the TopBar globe.
+    /// top bar), else under the file pill (File ▸ Language).
     pub(in crate::widget_host) fn locale_picker_rect(&self, viewport_w: f32) -> Rect {
         // The button depends only on the width, so any height works.
         match de_editor_ui::widgets::HomeSurface::for_editor(&self.editor_state) {
@@ -476,7 +474,11 @@ impl WidgetHostNative {
                 home.layout(viewport_w, 900.0).locale_button,
                 viewport_w,
             ),
-            None => overlay_geometry::locale_picker_rect(&self.editor_state, viewport_w),
+            None => overlay_geometry::locale_picker_rect(
+                &self.editor_state,
+                viewport_w,
+                self.last_viewport_h,
+            ),
         }
     }
 
@@ -488,11 +490,11 @@ impl WidgetHostNative {
         viewport_w: f32,
         viewport_h: f32,
     ) -> Option<Rect> {
-        let (canvas_left, _t, canvas_w, canvas_h) = self.canvas_region(viewport_w, viewport_h);
-        let canvas_region = Rect {
-            origin: Point2D::new(canvas_left, TOP_BAR_HEIGHT),
-            size: Point2D::new(canvas_w, canvas_h),
-        };
+        let canvas_region = de_editor_ui::widgets::host_canvas_geometry::canvas_rect(
+            &self.editor_state,
+            viewport_w,
+            viewport_h,
+        );
         AlignToolbar::for_canvas_region(canvas_region, &self.editor_state).map(|t| t.rect())
     }
 

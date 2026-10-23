@@ -98,7 +98,7 @@ impl DesktopApp {
             self.redraw_dirty = true;
         }
         // Borderless-window edge resize (Windows / Linux). A press on the
-        // outer ring hands the drag to the OS, ahead of the TopBar
+        // outer ring hands the drag to the OS, ahead of the window strip
         // window-drag and every app hit-test. macOS keeps native edges.
         #[cfg(not(target_os = "macos"))]
         if let Some(w) = self.window.as_ref() {
@@ -116,20 +116,15 @@ impl DesktopApp {
                 }
             }
         }
-        // Custom window chrome — the native title bar is
-        // hidden, so a press on the TopBar's window-control
-        // dots drives the window, and a press on the bar's
-        // blank area starts a window drag.
-        if self.cursor_y < de_editor_ui::widgets::TOP_BAR_HEIGHT {
-            use de_editor_ui::widgets::{TopBar, WindowControl};
-            use de_editor_ui::{Point2D, Rect};
-            let tb_rect = Rect {
-                origin: Point2D::new(0.0, 0.0),
-                size: Point2D::new(self.viewport_width, de_editor_ui::widgets::TOP_BAR_HEIGHT),
-            };
-            let tb = TopBar::for_editor_ui(&self.host.editor_state().editor_ui);
-            let p = Point2D::new(self.cursor_x, self.cursor_y);
-            if let Some(ctl) = tb.window_control_at(tb_rect, p) {
+        // Custom window chrome — the native title bar is hidden, so a
+        // press on the window-control dots drives the window, and a press
+        // on the window strip (or the canvas's empty top band) starts a
+        // window drag.
+        if self.cursor_y < de_editor_ui::widgets::WINDOW_STRIP_H {
+            use de_editor_ui::widgets::window_strip::window_control_at;
+            use de_editor_ui::widgets::WindowControl;
+            let p = de_editor_ui::Point2D::new(self.cursor_x, self.cursor_y);
+            if let Some(ctl) = window_control_at(p) {
                 match ctl {
                     // Same path as `WindowEvent::CloseRequested`, so the
                     // dot and the traffic light can't drift apart.
@@ -147,9 +142,8 @@ impl DesktopApp {
                 }
                 return false;
             }
-            // A press on the bar that hits none of the app's
-            // own buttons is a window-drag grab. Home paints its own
-            // chrome under the strip, so it answers for itself.
+            // Home paints its own chrome under the strip, so it answers
+            // for itself.
             let drag = if self.host.home_visible() {
                 self.host.home_window_drag_at(
                     self.cursor_x,
@@ -158,7 +152,12 @@ impl DesktopApp {
                     self.viewport_height,
                 )
             } else {
-                tb.hit_test(tb_rect, p).is_none()
+                self.host.editor_window_drag_at(
+                    self.cursor_x,
+                    self.cursor_y,
+                    self.viewport_width,
+                    self.viewport_height,
+                )
             };
             if drag {
                 if let Some(w) = self.window.as_ref() {
@@ -176,7 +175,7 @@ impl DesktopApp {
         // Press may focus/blur an input or reposition its caret.
         // Publish the anchor before enabling composition.
         self.sync_native_ime();
-        // TopBar fullscreen button raised an intent — toggle the
+        // File ▸ Fullscreen raised an intent — toggle the
         // real window through the shared menu-action path.
         if self.host.editor_state().editor_ui.pending_fullscreen_toggle {
             self.host

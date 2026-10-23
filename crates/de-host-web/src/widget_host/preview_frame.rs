@@ -405,7 +405,7 @@ impl super::WidgetHost {
         }
 
         // The outward ring masks square clip bleed without covering the
-        // rounded interior; clip it so it cannot touch the TopBar.
+        // rounded interior; clip it so it cannot touch the floating chrome.
         backend.save();
         backend.clip_rect(canvas_rect);
         paint_corner_notches(

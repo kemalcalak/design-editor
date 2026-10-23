@@ -30,8 +30,12 @@ fn prompt_center_padding_owns_cursor_and_clears_lower_hover() {
     // resize gutter now owns at the canvas floor — over bare canvas when
     // the panel is closed, which is what makes the control below
     // meaningful.
+    // Left of the zoom pill, which owns the canvas's bottom-right corner.
+    let zoom_pill = host
+        .status_bar_rect(VIEWPORT_W, VIEWPORT_H)
+        .expect("zoom pill visible");
     let point = Point2D::new(
-        panel.origin.x + panel.size.x - 24.0,
+        (panel.origin.x + panel.size.x - 24.0).min(zoom_pill.origin.x - 24.0),
         panel.origin.y + panel.size.y - 4.0,
     );
 
@@ -141,16 +145,20 @@ fn prompt_hover_clears_covered_component_browser_hover() {
         .expect("prompt center rect");
     {
         let ui = &mut host.editor_state_mut().editor_ui;
-        ui.component_browser_open = true;
-        ui.component_browser_pos = Some((prompt_rect.origin.x, prompt_rect.origin.y));
+        ui.open_components_tab();
         ui.component_browser_hover = Some(ComponentBrowserButton::Card(0));
     }
     let component_rect = host
-        .component_browser_panel_rect(VIEWPORT_W, VIEWPORT_H)
+        .components_tab_rect(VIEWPORT_H)
         .expect("component browser rect");
+    // Where the gallery overlaps the rail's Components tab.
     let point = Point2D::new(
-        component_rect.origin.x + component_rect.size.x / 2.0,
-        component_rect.origin.y + component_rect.size.y / 2.0,
+        prompt_rect.origin.x.max(component_rect.origin.x) + 10.0,
+        prompt_rect.origin.y.max(component_rect.origin.y) + 10.0,
+    );
+    assert!(
+        component_rect.contains(point),
+        "the gallery overlaps the rail"
     );
     assert!(prompt_rect.contains(point));
 

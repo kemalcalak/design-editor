@@ -138,7 +138,7 @@ impl WidgetHostNative {
         // runtime). Runs below the modal guards (they own the cursor
         // while open); floating overlays are excluded inside
         // `preview_dispatch_move` via `over_topmost_panel`, and
-        // off-canvas moves fall through so top-bar hover still works
+        // off-canvas moves fall through so chrome hover still works
         // while previewing.
         if self.preview.is_some() {
             // Neither switcher paints while a deck is presenting, so only the

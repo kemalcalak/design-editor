@@ -62,6 +62,7 @@ pub fn apply_codegen_action(
 ) -> CodegenFollowUp {
     use de_editor_core::codegen::CodegenPhase;
     let property_panel_width = state.editor_ui.property_panel_width;
+    let ui = &mut state.editor_ui;
     let cg = &mut state.codegen;
     match action {
         CodegenAction::SelectFramework(fw) => {
@@ -118,6 +119,14 @@ pub fn apply_codegen_action(
             };
             cg.framework_scroll.scroll_by(delta, max, 0.0);
             CodegenFollowUp::None
+        }
+        CodegenAction::OpenInCodeView(fw) => {
+            ui.set_property_tab(de_editor_core::PropertyTab::Code);
+            if cg.select_framework(*fw) {
+                CodegenFollowUp::FrameworkChanged
+            } else {
+                CodegenFollowUp::None
+            }
         }
     }
 }

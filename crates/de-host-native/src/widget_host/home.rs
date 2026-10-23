@@ -4,8 +4,8 @@
 use super::WidgetHostNative;
 use de_editor_core::home_mcp_setup::home_mcp_manual_snippet;
 use de_editor_core::{AgentSettingsTab, FileAction, HomeCopyTarget, HomeHit, HomeTemplate};
-use de_editor_ui::widgets::{HomeSurface, TopBar, TOP_BAR_HEIGHT};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::widgets::HomeSurface;
+use de_editor_ui::Point2D;
 
 impl WidgetHostNative {
     pub fn home_visible(&self) -> bool {
@@ -174,15 +174,14 @@ impl WidgetHostNative {
         let next = home.hit_test(viewport_width, viewport_height, point);
         drop(home);
         // Home paints the window-control dots in the same strip as the
-        // editor TopBar; hovering them reveals their glyphs there too.
-        let strip = Rect::xywh(0.0, 0.0, viewport_width, TOP_BAR_HEIGHT);
-        let traffic = TopBar::traffic_cluster_rect(strip).contains(point);
+        // editor's left rail; hovering them reveals their glyphs there too.
+        let traffic = de_editor_ui::widgets::window_strip::window_controls_rect().contains(point);
         let ui = &mut self.editor_state.editor_ui;
-        if ui.home.hover == next && ui.topbar_traffic_hover == traffic {
+        if ui.home.hover == next && ui.window_control_hover == traffic {
             return Some(true);
         }
         ui.home.hover = next;
-        ui.topbar_traffic_hover = traffic;
+        ui.window_control_hover = traffic;
         self.mark_dirty();
         Some(true)
     }
@@ -205,6 +204,64 @@ impl WidgetHostNative {
         HomeSurface::for_editor_at(&self.editor_state, self.now_ms).is_some_and(|home| {
             home.window_drag_at(viewport_width, viewport_height, Point2D::new(x, y))
         })
+    }
+
+    /// Whether a press at `(x, y)` on the editor drags the window: the left
+    /// rail's window strip, or the canvas's top band where nothing sits —
+    /// no floating chrome, no open dropdown or panel, and no canvas node
+    /// (design content reaching the top of the canvas keeps its clicks).
+    pub fn editor_window_drag_at(
+        &self,
+        x: f32,
+        y: f32,
+        viewport_width: f32,
+        viewport_height: f32,
+    ) -> bool {
+        let point = Point2D::new(x, y);
+        if !de_editor_ui::widgets::host_canvas_geometry::window_drag_band_at(
+            &self.editor_state,
+            viewport_width,
+            viewport_height,
+            point,
+        ) {
+            return false;
+        }
+        if self.over_dropdown_overlay(x, y, viewport_width, viewport_height)
+            || self.over_topmost_panel(x, y, viewport_width, viewport_height)
+        {
+            return false;
+        }
+        // A selection's handles reach a few px outside its node, so a node
+        // sitting just under the band still owns its handle presses.
+        let (cx, cy, cw, ch) = de_editor_ui::widgets::host_canvas_geometry::canvas_region(
+            &self.editor_state,
+            viewport_width,
+            viewport_height,
+        );
+        if de_editor_ui::widgets::selection_handle_at_point(
+            de_editor_ui::Rect::xywh(cx, cy, cw, ch),
+            &self.layout_scene,
+            &self.editor_state,
+            point,
+        )
+        .is_some()
+        {
+            return false;
+        }
+        match de_editor_ui::widgets::host_canvas_geometry::canvas_doc_point(
+            &self.editor_state,
+            x,
+            y,
+            viewport_width,
+            viewport_height,
+        ) {
+            Some(doc_point) => self
+                .layout_scene
+                .node_path_at_doc_point(doc_point, self.editor_state.viewport.zoom)
+                .is_none(),
+            // The rail's strip — off the canvas, nothing to hit there.
+            None => true,
+        }
     }
 
     /// Queue Home's brief as a generation turn. Refused (returns false)

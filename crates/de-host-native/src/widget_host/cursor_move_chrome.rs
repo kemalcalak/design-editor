@@ -1,4 +1,4 @@
-//! `apply_cursor_move` tiers 7-8 and the final base tier — TopBar hover,
+//! `apply_cursor_move` tiers 7-8 and the final base tier — chrome hover,
 //! the single-shot chat cursor probe, and the toolbar / property / canvas
 //! hover fall-through.
 //!
@@ -11,30 +11,27 @@
 use super::cursor_move_ctx::CursorMoveCtx;
 use super::WidgetHostNative;
 use de_editor_ui::widgets::cursor_hover_flow as hover_flow;
+use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::{AIChatPlaceholder, PropertyPanel};
 use de_editor_ui::{Point2D, Rect};
 
 impl WidgetHostNative {
-    /// TopBar traffic-light cluster + chrome-button hover wash.
-    /// `None` — the TopBar did not consume the move.
-    pub(in crate::widget_host) fn cursor_move_topbar_tiers(
+    /// Window-control cluster + floating chrome hover wash (file pill and
+    /// canvas action group). `None` — the chrome did not consume the move.
+    pub(in crate::widget_host) fn cursor_move_chrome_tiers(
         &mut self,
         ctx: &mut CursorMoveCtx,
     ) -> Option<bool> {
         let (x, y) = (ctx.x, ctx.y);
+        let point = Point2D::new(x, y);
         let chat_surface_owns_point = ctx.chat_surface_owns_point;
-        // TopBar window-control cluster — hovering it reveals the
-        // close / minimise / maximise glyphs on the 3 dots.
+        // Window-control cluster — hovering it reveals the close /
+        // minimise / maximise glyphs on the 3 dots.
         {
-            use de_editor_ui::widgets::{TopBar, TOP_BAR_HEIGHT};
-            let tb_rect = Rect {
-                origin: Point2D::new(0.0, 0.0),
-                size: Point2D::new(self.last_viewport_w, TOP_BAR_HEIGHT),
-            };
             let over = !chat_surface_owns_point
-                && (TopBar::traffic_cluster_rect(tb_rect)).contains(Point2D::new(x, y));
-            if over != self.editor_state.editor_ui.topbar_traffic_hover {
-                self.editor_state.editor_ui.topbar_traffic_hover = over;
+                && de_editor_ui::widgets::window_strip::window_controls_rect().contains(point);
+            if over != self.editor_state.editor_ui.window_control_hover {
+                self.editor_state.editor_ui.window_control_hover = over;
                 self.mark_dirty();
                 if chat_surface_owns_point {
                     ctx.upper_hover_changed = true;
@@ -43,23 +40,22 @@ impl WidgetHostNative {
                 }
             }
         }
-        // TopBar chrome-button hover wash (sidebar / file-menu / figma /
-        // theme / locale / fullscreen / git / agent chip). Reuses the
-        // click hit-test so paint + hover can never drift.
+        // Chrome-button hover wash. Reuses the click hit-test so paint +
+        // hover can never drift.
         {
-            use de_editor_ui::widgets::{TopBar, TOP_BAR_HEIGHT};
-            let tb_rect = Rect {
-                origin: Point2D::new(0.0, 0.0),
-                size: Point2D::new(self.last_viewport_w, TOP_BAR_HEIGHT),
-            };
-            let mut top_bar = TopBar::for_editor_ui(&self.editor_state.editor_ui);
-            top_bar.chip_text_w = Some(self.topbar_chip_text_w(&top_bar));
             let new_hover = (!chat_surface_owns_point)
-                .then(|| self.topbar_hit_test(&top_bar, tb_rect, Point2D::new(x, y)))
+                .then(|| {
+                    canvas_geometry::chrome_hit_at(
+                        &self.editor_state,
+                        self.last_viewport_w,
+                        self.last_viewport_h,
+                        point,
+                    )
+                })
                 .flatten()
-                .map(de_editor_ui::widgets::editor_state_ext::topbar_button_hover);
+                .map(|hit| hit.button());
             let ui = &mut self.editor_state.editor_ui;
-            if ui.set_topbar_button_hover(new_hover, self.now_ms) {
+            if ui.set_chrome_button_hover(new_hover, self.now_ms) {
                 self.mark_dirty();
                 if chat_surface_owns_point {
                     ctx.upper_hover_changed = true;

@@ -8,7 +8,7 @@
 //!   placement rule (right-aligned above its anchor) that predates this
 //!   module, so it keeps its own geometry and shares only the chrome —
 //!   single-sourcing the look without moving a single pixel.
-//! - [`paint_tooltip`] adds the placement rule the top bar wants:
+//! - [`paint_tooltip`] adds the placement rule the floating chrome wants:
 //!   horizontally centred on the anchor, above or below it, clamped
 //!   into the viewport so a button at either window edge still paints
 //!   its whole tooltip.
@@ -38,7 +38,7 @@ pub const TOOLTIP_VIEWPORT_INSET: f32 = 4.0;
 pub enum TooltipPlacement {
     /// Above the anchor — for controls at the bottom of the window.
     Above,
-    /// Below the anchor — what the top bar uses.
+    /// Below the anchor — what the floating chrome uses.
     Below,
 }
 
@@ -47,7 +47,7 @@ pub enum TooltipPlacement {
 /// This is the bubble's own width, so it MUST be measured in the family the
 /// runs below paint with ([`text_metrics::CHROME_FONT_FAMILY`]). Measured
 /// family-blind, the bubble is born narrower than its label and the longest
-/// top-bar tooltip runs out past its own rounded edge.
+/// chrome tooltip runs out past its own rounded edge.
 pub fn tooltip_width(cx: &mut PaintCx<'_>, label: &str, shortcut: Option<&str>) -> f32 {
     let mut text = text_metrics::measure_chrome(cx.backend, label, TOOLTIP_FONT_SIZE);
     if let Some(shortcut) = shortcut {

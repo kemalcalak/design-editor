@@ -1,5 +1,5 @@
 use crate::theme::Theme;
-use crate::widgets::property_panel_inputs::TAB_HEIGHT;
+use crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
 use crate::{Point2D, Rect};
 use de_editor_core::FillType;
 use jian_widgets::components::select::{Select, SelectHit, SelectState};
@@ -27,9 +27,9 @@ pub fn fill_type_dropdown_rect(action_rect: Rect) -> Rect {
 }
 
 /// Visible part of the property rail where scrolling section overlays
-/// may paint. The pinned Design / Code tabs are deliberately excluded.
+/// may paint. The pinned header is deliberately excluded.
 pub fn fill_type_picker_viewport(panel_rect: Rect) -> Rect {
-    let top = panel_rect.origin.y + TAB_HEIGHT;
+    let top = panel_rect.origin.y + PANEL_HEADER_HEIGHT;
     let bottom = panel_rect.origin.y + panel_rect.size.y;
     Rect {
         origin: Point2D::new(panel_rect.origin.x, top),

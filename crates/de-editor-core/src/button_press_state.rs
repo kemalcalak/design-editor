@@ -8,7 +8,7 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ButtonPressTarget {
     Toolbar(crate::toolbar_state::ToolbarHover),
-    TopBar(crate::topbar_state::TopBarButton),
+    Chrome(crate::chrome_button_state::ChromeButton),
     StatusBar(crate::statusbar_state::StatusBarButton),
     ChatHeader(crate::chat_button_state::ChatHeaderButton),
     ChatFooter(crate::chat_button_state::ChatFooterButton),

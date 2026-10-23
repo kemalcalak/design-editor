@@ -15,7 +15,7 @@
 //! invented a palette would be a new way to be wrong about exactly the thing
 //! the chip was added to make visible.
 //!
-//! Three rules, borrowed from the top bar's tooltips because a user has
+//! Three rules, borrowed from the chrome's tooltips because a user has
 //! already learned them there:
 //!
 //! 1. **Dwell.** Nothing appears until the cursor has rested on the chip for
@@ -40,9 +40,9 @@ use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
 
 /// How long the cursor must rest on the chip before the card appears. The
-/// top bar's dwell, deliberately: two different waits for the same gesture in
+/// chrome's dwell, deliberately: two different waits for the same gesture in
 /// one window reads as lag rather than as design.
-pub const STYLE_CARD_DWELL_MS: u64 = crate::widgets::top_bar_tooltip::TOOLTIP_DWELL_MS;
+pub const STYLE_CARD_DWELL_MS: u64 = crate::widgets::chrome_tooltip::TOOLTIP_DWELL_MS;
 
 /// Widest the card is allowed to be. Past this the description stops reading
 /// as a caption on the chip and starts reading as a paragraph in the panel.

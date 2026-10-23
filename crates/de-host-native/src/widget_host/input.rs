@@ -66,7 +66,7 @@ impl WidgetHostNative {
             // nothing at all while ASCII still went through `apply_text`.
             || self.editor_state.editor_ui.scene_template_center.input_active()
             || self.editor_state.editor_ui.chat_model_picker.open
-            || self.editor_state.editor_ui.component_browser_open
+            || self.editor_state.editor_ui.component_browser_search_focused
             || self.editor_state.chat.focused
             || self.git_commit_focus_active()
             || self.git_remote_focus_active()
@@ -631,8 +631,8 @@ impl WidgetHostNative {
         if let Some(consumed) = self.cursor_move_status_align_picker_tiers(&mut ctx) {
             return consumed;
         }
-        // Tier 7 — TopBar traffic cluster + chrome-button hover wash.
-        if let Some(consumed) = self.cursor_move_topbar_tiers(&mut ctx) {
+        // Tier 7 — window-control cluster + chrome-button hover wash.
+        if let Some(consumed) = self.cursor_move_chrome_tiers(&mut ctx) {
             return consumed;
         }
         // Tier 7b — the left rail's slides tab. Above the base tier's

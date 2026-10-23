@@ -14,7 +14,7 @@ use super::{
 };
 use de_editor_core::host_press_transitions as core_press;
 use de_editor_ui::widgets::chat_click_flow;
-use de_editor_ui::widgets::{AIChatHit, AIChatPlaceholder, LayerPanelHit, Toolbar, TOP_BAR_HEIGHT};
+use de_editor_ui::widgets::{AIChatHit, AIChatPlaceholder, LayerPanelHit, Toolbar};
 use de_editor_ui::Point2D;
 
 impl WidgetHost {
@@ -85,7 +85,7 @@ impl WidgetHost {
         //    consumes all clicks (gaps + padding too) so it
         //    never falls through to the canvas for tool gaps
         //    that lie outside the chat panel.
-        let toolbar_rect = self.toolbar_rect(viewport_width);
+        let toolbar_rect = self.toolbar_rect(viewport_width, ctx.viewport_height);
         let toolbar = Toolbar::for_editor(&self.editor_state);
         if (toolbar_rect).contains(Point2D::new(x, y)) {
             if let Some(hit) = toolbar.hit_test(toolbar_rect, Point2D::new(x, y)) {
@@ -131,11 +131,23 @@ impl WidgetHost {
         if self.slides_panel_press(x, y, viewport_width, viewport_height) {
             return Some(true);
         }
+        // 2c. The Components / Images tabs fill the rail body the same way
+        //     (#30), on the rail's tier like native. A consumed component
+        //     press may queue an insert — drain it against this viewport
+        //     (web has no per-frame runner drain like the desktop loop).
+        if self.dispatch_images_tab_press(x, y, viewport_width, viewport_height) {
+            return Some(true);
+        }
+        if self.dispatch_component_browser_press(x, y, viewport_height) {
+            self.close_image_popovers_for_higher_overlay();
+            let _ = self.drain_component_browser_insert(viewport_width, viewport_height);
+            return Some(true);
+        }
         // 3. apply_click — LayerPanel + chat-defocus.
         //    Pre-seed a `layer_drag` candidate when the press lands
         //    on a Layer row so a subsequent move past the threshold
         //    promotes the gesture to a drag-to-reorder.
-        if self.editor_state.editor_ui.sidebar_open {
+        if self.layers_panel_visible() {
             let layer_rect = self.layer_panel_rect(viewport_height);
             let panel = self.layer_panel();
             if let Some(LayerPanelHit::Layer(node_id)) =
@@ -156,9 +168,9 @@ impl WidgetHost {
         //      that happens to share screen y (matches native order).
         {
             use de_editor_ui::widgets::{AlignToolbar, AlignToolbarHit};
-            let (acx, _, acw, ach) = self.canvas_region(viewport_width, viewport_height);
+            let (acx, acy, acw, ach) = self.canvas_region(viewport_width, viewport_height);
             let canvas_region = de_editor_ui::Rect {
-                origin: Point2D::new(acx, TOP_BAR_HEIGHT),
+                origin: Point2D::new(acx, acy),
                 size: Point2D::new(acw, ach),
             };
             if let Some(hit) = AlignToolbar::for_canvas_region(canvas_region, &self.editor_state)

@@ -339,8 +339,8 @@ impl WidgetHostNative {
                 true
             }
             flow::SlidesRelease::Present => {
-                // The same path the TopBar's Play button takes, so the
-                // action bar and the top bar cannot start two different
+                // The same path the canvas Play button takes, so the
+                // action bar and the canvas Play button cannot start two different
                 // kinds of presentation.
                 let (_x, _y, cw, ch) = self.canvas_region(viewport_w, viewport_h);
                 self.enter_preview((cw, ch));

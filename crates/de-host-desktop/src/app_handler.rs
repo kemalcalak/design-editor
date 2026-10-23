@@ -117,17 +117,16 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         // `NSWindow` — the native traffic-light buttons stay (with
         // their native hover glyphs + green-button tiling menu),
         // and rounded corners / shadow / edge-resize / key-window
-        // responsiveness all come for free. The TopBar insets its
-        // left cluster so the app icons clear the native buttons.
+        // responsiveness all come for free. The window strip above the
+        // left rail (and the file pill, when the rail is shut) clears them.
         // Windows / Linux drop decorations (custom dots cover them).
         #[cfg(target_os = "macos")]
         {
             use winit::platform::macos::WindowAttributesExtMacOS;
-            // Push the traffic lights down so their centre lines up with
-            // the `TopBar`'s app icon GLYPHS. The icon buttons paint their
-            // glyph centred at `TOP_BAR_HEIGHT / 2` = 20 px below the
-            // window top (the 28 px hit box top+8 is wider than the glyph
-            // and is NOT the visual centre). AppKit's default button centre
+            // Push the traffic lights down so their centre sits on the
+            // 40 px window strip's centre line (`WINDOW_STRIP_H / 2` = 20 px
+            // below the window top) — where the editor's strip and Home
+            // centre their own chrome. AppKit's default button centre
             // for a fullsize-content / transparent titlebar window is
             // `casement`'s `reposition_traffic_lights` lowers the button
             // by `inset` points from AppKit's default baseline. The

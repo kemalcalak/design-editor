@@ -38,7 +38,6 @@ impl WidgetHostNative {
             chat_drag: None,
             chat_resize: None,
             design_md_drag: None,
-            component_browser_drag: None,
             icon_picker_drag: None,
             image_adjustment_drag: None,
             image_crop_drag: None,
