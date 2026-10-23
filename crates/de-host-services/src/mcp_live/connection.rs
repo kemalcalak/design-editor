@@ -280,18 +280,19 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
         return write_json_rpc_response(stream, &response);
     }
     let mut state = request_snapshot(req_tx, wake_ui)?;
-    let response = crate::mcp_serve::process_message_with_applier(
+    let response = crate::mcp_serve::process_message_with_write_applier(
         &mut state,
         &req.body,
-        |tool_name, local_state, cmd| match request_apply(
+        |tool_name, local_state, write| match request_apply(
             req_tx,
             wake_ui,
             tool_name.to_string(),
-            cmd.clone(),
+            write.command.clone(),
+            unplaced_write(write),
         ) {
             Ok(ack) => {
                 if ack.applied {
-                    let _ = local_state.apply(cmd.clone());
+                    let _ = local_state.apply(write.command.clone());
                 }
                 ack.applied
             }
@@ -350,7 +351,7 @@ pub(super) fn process_lightweight_live_tool(
             if !is_write {
                 return false;
             }
-            match request_apply(req_tx, wake_ui, tool_name.to_string(), cmd.clone()) {
+            match request_apply(req_tx, wake_ui, tool_name.to_string(), cmd.clone(), None) {
                 Ok(ack) => ack.applied,
                 Err(e) => {
                     eprintln!("design-editor mcp: apply failed: {e}");

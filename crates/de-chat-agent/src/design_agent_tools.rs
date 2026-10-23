@@ -3,7 +3,10 @@
 //! Mirrors `chat_canvas_tools.rs` for the 15-tool design toolset (vs the
 //! 7-tool CRUD set). Schema definitions for every tool are derived from
 //! `mcp_serve::schemas::TOOL_SCHEMAS` — the same source the MCP server
-//! advertises — so the in-process and MCP surfaces stay byte-equal as JSON.
+//! advertises — so the in-process and MCP surfaces stay byte-equal as JSON,
+//! except for the root-placement wording (#37) the MCP host adds on top
+//! (`de_mcp::root_placement::advertise_root_placement`): this loop does not
+//! place new roots, so its agent is not told it does.
 //!
 //! The loop's design surface is `batch_design`, which accepts a sandboxed-JS
 //! `script` input (see `de_mcp::script_runner`) in addition to the `operations`
@@ -118,7 +121,8 @@ pub fn design_tool_level(name: &str) -> Option<&'static str> {
 
 /// Build tool definitions for the design agent by deriving them from
 /// `schemas::TOOL_SCHEMAS` — so the in-process schema is byte-equal to
-/// what the MCP server advertises (parity guarantee).
+/// what the MCP server advertises (parity guarantee), apart from the MCP
+/// host's root-placement wording (see the module doc).
 pub fn design_tool_defs() -> Vec<ChatToolDef> {
     DESIGN_TOOLS
         .iter()

@@ -98,8 +98,13 @@ fn stdio_eof_auto_finalizes_and_saves_the_file_document() {
     .expect("stdio session");
 
     let saved = load_editor_state(&path).expect("saved finalized document");
-    let root = &saved.active_children()[0];
-    let children = root.children().expect("screen children");
+    // The MCP write lands in front (#37), so find the screen by id.
+    let children = saved
+        .active_children()
+        .iter()
+        .find(|node| node.id_str() == "screen")
+        .and_then(|screen| screen.children())
+        .expect("screen children");
     assert_eq!(
         children.last().map(|node| node.id_str()),
         Some("nav"),

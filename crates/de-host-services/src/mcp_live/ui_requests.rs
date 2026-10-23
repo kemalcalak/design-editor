@@ -33,17 +33,30 @@ pub(super) fn request_list_pages(
     recv_with_timeout(ack_rx.recv_timeout(UI_ACK_TIMEOUT), "page-list")
 }
 
+/// The live UI applies `write.unplaced` instead of the placed command when
+/// its document moved on after the connection's snapshot (#37).
+pub(super) fn unplaced_write(write: &crate::mcp_serve::McpWrite) -> Option<Box<UnplacedWrite>> {
+    write.unplaced.map(|command| {
+        Box::new(UnplacedWrite {
+            revision: write.revision,
+            command: command.clone(),
+        })
+    })
+}
+
 pub(super) fn request_apply(
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
     tool_name: String,
     cmd: EditorCommand,
+    unplaced: Option<Box<UnplacedWrite>>,
 ) -> Result<ApplyAck, McpLiveError> {
     let (ack_tx, ack_rx) = mpsc::sync_channel(1);
     req_tx
         .send(UiRequest::Apply {
             tool_name,
             cmd,
+            unplaced,
             ack: ack_tx,
         })
         .map_err(|_| {
