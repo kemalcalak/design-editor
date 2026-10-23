@@ -10,7 +10,10 @@
 //! returns the source shape ids + the result polyline. The host
 //! commits that result back through an `EditorState` mutator
 //! (`replace_paths_with_polyline`) so the canonical tree is never
-//! edited directly.
+//! edited directly. The MCP `boolean_op` tool (`de-host-services`) runs
+//! the same computation and commits it through
+//! `EditorCommand::CommitBooleanResult`, which is why this module is not
+//! gated on `gl-host`.
 
 use crate::backend::skia::fit_path_to_rect;
 use de_editor_core::BooleanOp;

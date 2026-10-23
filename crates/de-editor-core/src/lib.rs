@@ -187,6 +187,8 @@ mod command_batch_page_tests;
 #[cfg(test)]
 mod command_batch_tests;
 #[cfg(test)]
+mod command_boolean_tests;
+#[cfg(test)]
 mod command_component_tests;
 #[cfg(test)]
 mod command_delete_tests;
