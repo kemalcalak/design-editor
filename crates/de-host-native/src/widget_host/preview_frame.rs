@@ -389,7 +389,29 @@ impl super::WidgetHostNative {
         let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
         let hit = PreviewDeviceSwitcher::hit_test(canvas, Point2D::new(x, y));
         self.editor_state.editor_ui.preview.switcher_pressed = hit;
+        // The release only activates when hover matches the press; a press
+        // with no move before it (touch, a first click) must still count.
+        if hit.is_some() {
+            self.editor_state.editor_ui.preview.switcher_hover = hit;
+        }
         hit.is_some()
+    }
+
+    /// Whether the device switcher paints under `(x, y)`. It paints in
+    /// every Preview mode except while a deck is presenting.
+    pub(crate) fn over_preview_switcher(
+        &self,
+        x: f32,
+        y: f32,
+        viewport_w: f32,
+        viewport_h: f32,
+    ) -> bool {
+        use de_editor_ui::widgets::PreviewDeviceSwitcher;
+        if self.preview.is_none() || self.preview_slideshow_active() {
+            return false;
+        }
+        let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
+        PreviewDeviceSwitcher::pill_rect(canvas).contains(Point2D::new(x, y))
     }
 
     /// Activate on release when the maintained hover matches the press.
