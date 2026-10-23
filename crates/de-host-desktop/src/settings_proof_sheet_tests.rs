@@ -58,7 +58,7 @@ fn shoot(host: &mut WidgetHostNative, name: &str) {
 fn with_gateway(host: &mut WidgetHostNative) {
     let settings = &mut host.editor_state_mut().editor_ui.agent_settings;
     let id = settings.add_builtin_agent_config(
-        "SeriAI gateway",
+        "Custom gateway",
         "sk-proof-1234567890abcdef3f9a",
         "gpt-5",
         BuiltinAgentKind::OpenAiCompat,
