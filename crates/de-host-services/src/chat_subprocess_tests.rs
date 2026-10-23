@@ -95,7 +95,6 @@ struct CodexHelpStub {
 #[cfg(unix)]
 impl CodexHelpStub {
     fn new(help_line: &str) -> Self {
-        use std::os::unix::fs::PermissionsExt;
         use std::sync::atomic::{AtomicU64, Ordering};
 
         static SEQ: AtomicU64 = AtomicU64::new(0);
@@ -110,9 +109,7 @@ impl CodexHelpStub {
         // stops leading with this directory, the host machine's Node will try
         // to parse the shell fixture below as JavaScript and the probe fails.
         let node = dir.join("node");
-        std::fs::write(&node, "#!/bin/sh\nexec /bin/sh \"$@\"\n").expect("write sibling Node stub");
-        std::fs::set_permissions(&node, std::fs::Permissions::from_mode(0o755))
-            .expect("make sibling Node stub executable");
+        crate::test_support::write_executable_stub(&node, "#!/bin/sh\nexec /bin/sh \"$@\"\n");
         let binary = dir.join("codex");
         let script = format!(
             "#!/usr/bin/env node\n\
@@ -120,9 +117,7 @@ impl CodexHelpStub {
              printf '%s\\n' '{}'\n",
             help_line
         );
-        std::fs::write(&binary, script).expect("write Codex help stub");
-        std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755))
-            .expect("make Codex help stub executable");
+        crate::test_support::write_executable_stub(&binary, &script);
         Self { dir, binary }
     }
 }

@@ -202,8 +202,6 @@ fn landing_replaces_the_refreshed_slice_and_selection_follows() {
 #[cfg(unix)]
 #[test]
 fn a_catalog_printed_by_a_real_cli_lands_in_the_picker() {
-    use std::os::unix::fs::PermissionsExt;
-
     let script = std::env::temp_dir().join(format!(
         "design-editor-model-catalog-refresh-{}-{}",
         std::process::id(),
@@ -212,12 +210,10 @@ fn a_catalog_printed_by_a_real_cli_lands_in_the_picker() {
             .expect("clock")
             .as_nanos()
     ));
-    std::fs::write(
+    crate::test_support::write_executable_stub(
         &script,
         "#!/bin/sh\nprintf 'gpt-5.6-sol\\ngpt-5.6-luna\\n'\n",
-    )
-    .expect("write");
-    std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+    );
 
     let mut refresh = ModelCatalogRefresh::new();
     let mut state = EditorState::default();
