@@ -113,19 +113,20 @@ fn family_available(family: &str, ui: &EditorUiState) -> bool {
         || ui.system_font_families.iter().any(matches)
 }
 
-fn family_stack_available(stack: &str, ui: &EditorUiState) -> bool {
-    split_font_family_stack(stack)
-        .iter()
-        .any(|family| family_available(family, ui))
+fn family_stack_available(stack: &str, available: &dyn Fn(&str) -> bool) -> bool {
+    split_font_family_stack(stack).iter().any(|family| {
+        let family = family.trim();
+        is_generic_or_system_font_alias(family) || available(family)
+    })
 }
 
 fn add_missing_stack(
     missing: &mut BTreeMap<String, MissingFontEntry>,
     stack: &str,
     run_count: u32,
-    ui: &EditorUiState,
+    available: &dyn Fn(&str) -> bool,
 ) {
-    if stack.trim().is_empty() || family_stack_available(stack, ui) {
+    if stack.trim().is_empty() || family_stack_available(stack, available) {
         return;
     }
     let Some(family) = primary_concrete_font_family(stack) else {
@@ -238,17 +239,27 @@ pub fn detect_missing_fonts(state: &EditorState) -> Option<MissingFontsPrompt> {
         return None;
     }
 
+    let entries = missing_font_entries(state, &|family| family_available(family, &state.editor_ui));
+    (!entries.is_empty()).then_some(MissingFontsPrompt { entries })
+}
+
+/// The document's missing families against an arbitrary availability test
+/// (`available` gets one concrete family name; generic aliases are always
+/// available). [`detect_missing_fonts`] answers it from the UI snapshots;
+/// a host without them (the MCP quality report) asks its font manager.
+pub fn missing_font_entries(
+    state: &EditorState,
+    available: &dyn Fn(&str) -> bool,
+) -> Vec<MissingFontEntry> {
     let plan = FontPlan::scan(&state.doc);
     let mut missing = BTreeMap::<String, MissingFontEntry>::new();
     for (stack, usage) in plan.families().filter(|(family, _)| !family.is_empty()) {
-        add_missing_stack(&mut missing, stack, usage.run_count, &state.editor_ui);
+        add_missing_stack(&mut missing, stack, usage.run_count, available);
     }
     for stack in component_override_font_family_stacks(state) {
-        add_missing_stack(&mut missing, &stack, 1, &state.editor_ui);
+        add_missing_stack(&mut missing, &stack, 1, available);
     }
-    let entries = missing.into_values().collect::<Vec<_>>();
-
-    (!entries.is_empty()).then_some(MissingFontsPrompt { entries })
+    missing.into_values().collect()
 }
 
 /// Re-check prompt entries against the current available-family snapshots.

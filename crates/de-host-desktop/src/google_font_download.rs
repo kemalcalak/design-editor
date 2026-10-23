@@ -71,6 +71,48 @@ pub(crate) fn ensure_family(
     })
 }
 
+/// Downloads running or failed in this process, keyed by lower-cased
+/// family — what `get_design_quality` reports as a family's status. The UI
+/// keeps its own per-row copy in `EditorUiState::font_downloads`.
+static TRACKED: std::sync::Mutex<std::collections::BTreeMap<String, FontDownloadStatus>> =
+    std::sync::Mutex::new(std::collections::BTreeMap::new());
+
+fn tracked(
+) -> std::sync::MutexGuard<'static, std::collections::BTreeMap<String, FontDownloadStatus>> {
+    TRACKED
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// The tracked state of `family`: downloading now, or the last failure.
+pub(crate) fn tracked_status(family: &str) -> Option<FontDownloadStatus> {
+    tracked().get(&family.trim().to_ascii_lowercase()).copied()
+}
+
+/// [`ensure_family`] against the user's store over HTTP, recording the
+/// family as downloading meanwhile and keeping a failure for the quality
+/// report.
+pub(crate) fn ensure_user_family(family: &str) -> Result<FontDownloadOk, FontDownloadError> {
+    let key = family.trim().to_ascii_lowercase();
+    tracked().insert(key.clone(), FontDownloadStatus::Downloading);
+    let result = FontStore::user()
+        .map_err(|e| FontDownloadError::OpenStore(e.to_string()))
+        .and_then(|store| ensure_family(&HttpFontTransport, &store, family));
+    let mut tracked = tracked();
+    match &result {
+        Ok(_) => {
+            tracked.remove(&key);
+        }
+        Err(error) if error.is_not_on_google() => {
+            tracked.insert(key, FontDownloadStatus::NotOnGoogle);
+        }
+        Err(_) => {
+            tracked.insert(key, FontDownloadStatus::Failed);
+        }
+    }
+    result
+}
+
 /// One finished request, as delivered to the UI loop.
 #[derive(Debug)]
 pub(crate) struct FontDownloadDone {
@@ -141,9 +183,7 @@ impl FontDownloads {
         // timeout and a size cap, and a dropped receiver only turns the
         // final send into a no-op.
         std::thread::spawn(move || {
-            let result = FontStore::user()
-                .map_err(|e| FontDownloadError::OpenStore(e.to_string()))
-                .and_then(|store| ensure_family(&HttpFontTransport, &store, &family));
+            let result = ensure_user_family(&family);
             let _ = tx.send(FontDownloadDone {
                 requested: family,
                 result,

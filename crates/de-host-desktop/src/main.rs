@@ -36,6 +36,7 @@ mod design_md_host;
 mod design_session;
 mod drag_cursor;
 mod figma_import_session;
+mod font_host_desktop;
 mod font_import_host;
 mod fonts;
 mod fonts_error;
@@ -157,6 +158,10 @@ enum DesktopEvent {
     /// repaints; the redraw's scan sees the worker count move and installs
     /// it.
     HomePreviewReady,
+    /// An MCP `load_fonts` download registered new faces. Refreshes the
+    /// font snapshots and missing-font rows and repaints, so the document
+    /// reflows with the real face.
+    FontsRegistered,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -588,6 +593,9 @@ fn main() {
         Ok(store) => store.rescan_and_register(),
         Err(err) => eprintln!("[fonts] skipping imported-font rescan: {err}"),
     }
+    // MCP `load_fonts` / `get_design_quality` ask this host about fonts in
+    // every mode (GUI, `--mcp`, `--serve-web`).
+    font_host_desktop::install();
     init_tracing();
     if let Some(modes) = conflicting_headless_modes(std::env::args_os().skip(1)) {
         eprintln!(
@@ -651,6 +659,14 @@ fn main() {
     de_host_services::home_preview::set_written_notifier(move || {
         if let Ok(proxy) = preview_proxy.lock() {
             let _ = proxy.send_event(DesktopEvent::HomePreviewReady);
+        }
+    });
+    // A download started by MCP `load_fonts` registers off the UI thread;
+    // wake the loop so the canvas reflows and the font lists refresh.
+    let fonts_proxy = std::sync::Mutex::new(mcp_wake_proxy.clone());
+    font_host_desktop::set_fonts_changed_notifier(move || {
+        if let Ok(proxy) = fonts_proxy.lock() {
+            let _ = proxy.send_event(DesktopEvent::FontsRegistered);
         }
     });
     app.mcp_wake_proxy = Some(mcp_wake_proxy);

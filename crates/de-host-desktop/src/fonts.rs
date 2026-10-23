@@ -25,6 +25,20 @@ pub(crate) const MAX_FONT_BYTES: usize = 16 * 1024 * 1024;
 const FONTS_SUBDIR: &str = "fonts";
 const INDEX_FILE: &str = "fonts/index.json";
 
+/// Serializes every read-modify-write of `index.json` in this process.
+/// Google Fonts downloads import from worker threads (the UI's and MCP's)
+/// while the UI thread may import or remove, and an unserialized
+/// load-modify-save would drop one writer's entries.
+static INDEX_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn index_guard() -> std::sync::MutexGuard<'static, ()> {
+    // A writer that panicked mid-save leaves at worst a stale index, which
+    // the next load tolerates, so a poisoned lock is still usable.
+    INDEX_LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 /// Where a stored face came from. Entries written before downloads existed
 /// carry no field and read as [`FontOrigin::Imported`].
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -90,6 +104,7 @@ impl FontStore {
     /// corrupt entry is dropped from the index (and logged), never fatal — a
     /// bad file must not block startup.
     pub fn rescan_and_register(&self) {
+        let _guard = index_guard();
         let index = self.load_index();
         let mut kept: Vec<FontIndexEntry> = Vec::with_capacity(index.fonts.len());
         let mut changed = false;
@@ -143,6 +158,7 @@ impl FontStore {
         bytes: Vec<u8>,
         origin: FontOrigin,
     ) -> Result<jian_skia::FontBlob, FontStoreError> {
+        let _guard = index_guard();
         if bytes.len() > MAX_FONT_BYTES {
             return Err(FontStoreError::TooLarge { bytes: bytes.len() });
         }
@@ -215,6 +231,7 @@ impl FontStore {
     /// Remove every imported face of `family` from the live registry and disk.
     /// Returns whether anything was removed.
     pub fn remove(&self, family: &str) -> bool {
+        let _guard = index_guard();
         let removed_live = jian_skia::remove_imported_font(family);
         let mut index = self.load_index();
         let before = index.fonts.len();
