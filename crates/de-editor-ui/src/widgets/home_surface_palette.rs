@@ -19,6 +19,10 @@ pub struct HomePalette {
     pub surface: Color,
     /// Selected / hovered rows and chips.
     pub subtle: Color,
+    /// Translucent hover wash for buttons whose feedback paints over
+    /// their icon: `text` at an alpha that lands within ~3/255 of `subtle`
+    /// over `surface`.
+    pub hover: Color,
     pub border: Color,
     pub text: Color,
     pub text_2: Color,
@@ -37,6 +41,7 @@ impl HomePalette {
             bg: hex(0x14, 0x15, 0x19),
             surface: hex(0x1B, 0x1C, 0x21),
             subtle: hex(0x22, 0x23, 0x2A),
+            hover: hex_alpha(0xED, 0xED, 0xF0, 0.04),
             border: hex(0x2B, 0x2D, 0x34),
             text: hex(0xED, 0xED, 0xF0),
             text_2: hex(0x9A, 0x9C, 0xA6),
@@ -58,6 +63,7 @@ impl HomePalette {
             bg: hex(0xF6, 0xF6, 0xF8),
             surface: hex(0xFC, 0xFC, 0xFD),
             subtle: hex(0xEE, 0xEF, 0xF2),
+            hover: hex_alpha(0x17, 0x18, 0x1C, 0.06),
             border: hex(0xE2, 0xE3, 0xE8),
             text: hex(0x17, 0x18, 0x1C),
             text_2: hex(0x5C, 0x5F, 0x69),
@@ -83,11 +89,15 @@ impl HomePalette {
 }
 
 const fn hex(r: u8, g: u8, b: u8) -> Color {
+    hex_alpha(r, g, b, 1.0)
+}
+
+const fn hex_alpha(r: u8, g: u8, b: u8, a: f32) -> Color {
     Color {
         r: r as f32 / 255.0,
         g: g as f32 / 255.0,
         b: b as f32 / 255.0,
-        a: 1.0,
+        a,
     }
 }
 
@@ -129,7 +139,10 @@ pub fn chrome_theme(mode: ThemeMode) -> Theme {
         secondary_foreground: p.text,
         input: p.border,
         ring: p.accent,
-        button_hover: p.subtle,
+        // Translucent, unlike `subtle`: the property panel and other action
+        // buttons paint this wash over their icon, and the pressed state
+        // scales its alpha.
+        button_hover: p.hover,
         row_selected: p.subtle,
         user_bubble: p.subtle,
         user_bubble_foreground: p.text,

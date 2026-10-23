@@ -374,3 +374,16 @@ fn a_local_pen_dev_document_loads() {
     );
     assert!(!loaded.loaded.value.children.is_empty());
 }
+
+#[test]
+fn the_short_summary_counts_missing_images() {
+    let mut report = super::PenDevReport::default();
+    report.note("shader fill");
+    report.note_missing_image("images/a.png");
+    report.note_missing_image("images/b.png");
+    assert_eq!(
+        report.summary(),
+        "shader fill ×1; missing images: images/a.png, images/b.png"
+    );
+    assert_eq!(report.short_summary(), "shader fill ×1; 2 missing images");
+}

@@ -43,7 +43,7 @@ fn wide_frame_matches_the_approved_columns() {
     let row_left = l.chips[0].origin.x;
     let row_right = right(l.chips[5]);
     assert!(((row_left - 340.0) - (1340.0 - row_right)).abs() < 1.0);
-    // Three import cards side by side, four Recent cards in a row.
+    // Four import cards side by side, four Recent cards in a row.
     assert!(l
         .imports
         .iter()
@@ -163,4 +163,16 @@ fn scrolling_moves_the_column_but_not_the_chrome() {
     assert_eq!(scrolled.mcp_card, still.mcp_card);
     let last = scrolled.recent_items.last().copied().unwrap();
     assert!(bottom(last) <= 600.0, "the last row is reachable");
+}
+
+#[test]
+fn import_cards_wrap_two_by_two_on_a_mid_width_column() {
+    // Wide enough not to stack, too narrow for four titled cards in a row.
+    let l = home_layout(input(1100.0, 0, RecentView::Grid));
+    let [a, b, c, d] = l.imports;
+    assert_eq!(a.origin.y, b.origin.y);
+    assert_eq!(c.origin.y, d.origin.y);
+    assert!(c.origin.y > bottom(a), "second row sits under the first");
+    assert_eq!(a.origin.x, c.origin.x);
+    assert_eq!(a.size.x, b.size.x);
 }

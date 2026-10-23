@@ -310,7 +310,8 @@ impl McpLiveServer {
                     let revision_before = state.document_revision();
                     let applied = state.apply(cmd);
                     if applied {
-                        let write_repairs = crate::mcp_serve::run_write_repairs_after_apply(state);
+                        let write_repairs = !crate::mcp_serve::writes_verbatim(&tool_name)
+                            && crate::mcp_serve::run_write_repairs_after_apply(state);
                         if let Some(ids_before) = ids_before {
                             self.register_mcp_generation(&ids_before, state);
                         }

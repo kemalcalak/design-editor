@@ -144,6 +144,10 @@ impl WidgetHost {
                 Some(ImportMenuChoice::Html) => {
                     self.apply_open_import(de_editor_core::figma_import_state::ImportSource::Html);
                 }
+                Some(ImportMenuChoice::PenDev) => {
+                    self.editor_state.editor_ui.pending_file_action =
+                        Some(de_editor_core::editor_ui_state::FileAction::ImportPenDev);
+                }
                 None => {
                     self.blur_text_inputs_on_blank_press();
                 }

@@ -235,6 +235,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "padding.short" => "Đệm",
         "dialog.penDevImportTitle" => "Đã nhập từ pen.dev",
         "dialog.penDevImportBody" => "Không thể chuyển một số phần của “{{name}}”:\n\n{{details}}\n\nPhần còn lại đã mở thành một tài liệu mới chưa lưu. Tệp gốc không bị thay đổi.",
+        "import.fromPenDev" => "Nhập từ pen.dev",
+        "home.import.penDev" => "Nhập từ pen.dev",
+        "home.import.penDevSub" => "Tệp .pen",
+        "dialog.penDevImportToast" => "Đã mở từ pen.dev. Không chuyển được: {{details}}",
         _ => return None,
     })
 }

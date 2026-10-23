@@ -235,6 +235,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "padding.short" => "Relleno",
         "dialog.penDevImportTitle" => "Importado de pen.dev",
         "dialog.penDevImportBody" => "Algunas partes de «{{name}}» no se pudieron importar:\n\n{{details}}\n\nEl resto se abrió como un documento nuevo sin guardar. El archivo original no se modifica.",
+        "import.fromPenDev" => "Importar desde pen.dev",
+        "home.import.penDev" => "Importar desde pen.dev",
+        "home.import.penDevSub" => "Archivo .pen",
+        "dialog.penDevImportToast" => "Abierto desde pen.dev. No importado: {{details}}",
         _ => return None,
     })
 }

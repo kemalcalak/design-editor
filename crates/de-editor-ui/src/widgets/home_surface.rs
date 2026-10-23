@@ -286,10 +286,11 @@ impl<'a> HomeSurface<'a> {
         if layout.composer.contains(point) {
             return Some(HomeHit::Sheet);
         }
-        const IMPORTS: [HomeHit; 3] = [
+        const IMPORTS: [HomeHit; 4] = [
             HomeHit::ImportFigma,
             HomeHit::ImportWeb,
             HomeHit::ImportScreenshot,
+            HomeHit::ImportPenDev,
         ];
         for (rect, hit) in layout.imports.iter().zip(IMPORTS) {
             if rect.contains(point) {

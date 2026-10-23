@@ -1,5 +1,5 @@
-//! The three import cards under the composer: Figma, a saved web page,
-//! and recreating a screenshot.
+//! The four import cards under the composer: Figma, a saved web page,
+//! recreating a screenshot, and a pen.dev design.
 
 use super::copy::tr;
 use super::paint::{draw_text, draw_text_weighted, outline};
@@ -10,7 +10,7 @@ use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::HomeHit;
 
-const CARDS: [(HomeHit, &str, &str); 3] = [
+const CARDS: [(HomeHit, &str, &str); 4] = [
     (
         HomeHit::ImportFigma,
         "home.import.figma",
@@ -21,6 +21,11 @@ const CARDS: [(HomeHit, &str, &str); 3] = [
         HomeHit::ImportScreenshot,
         "home.import.screenshot",
         "home.import.screenshotSub",
+    ),
+    (
+        HomeHit::ImportPenDev,
+        "home.import.penDev",
+        "home.import.penDevSub",
     ),
 ];
 
@@ -35,6 +40,9 @@ pub(super) fn paint_imports(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, lay
         match hit {
             HomeHit::ImportFigma => paint_figma_logo(cx.backend, glyph_at, 16.0, p.text_2),
             HomeHit::ImportWeb => draw_icon(cx.backend, Icon::Globe, glyph_at, 16.0, p.text_2, 1.6),
+            HomeHit::ImportPenDev => {
+                draw_icon(cx.backend, Icon::PenTool, glyph_at, 16.0, p.text_2, 1.6)
+            }
             _ => draw_icon(cx.backend, Icon::ImagePlus, glyph_at, 16.0, p.text_2, 1.6),
         }
         let x = rect.origin.x + 62.0;

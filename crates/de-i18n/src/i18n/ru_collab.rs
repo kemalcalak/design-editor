@@ -235,6 +235,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "padding.short" => "Отступ",
         "dialog.penDevImportTitle" => "Импортировано из pen.dev",
         "dialog.penDevImportBody" => "Некоторые части «{{name}}» не удалось перенести:\n\n{{details}}\n\nОстальное открыто как новый несохранённый документ. Исходный файл не изменён.",
+        "import.fromPenDev" => "Импорт из pen.dev",
+        "home.import.penDev" => "Импорт из pen.dev",
+        "home.import.penDevSub" => "Файл .pen",
+        "dialog.penDevImportToast" => "Открыто из pen.dev. Не перенесено: {{details}}",
         _ => return None,
     })
 }

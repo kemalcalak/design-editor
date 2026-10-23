@@ -235,6 +235,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "padding.short" => "ระยะใน",
         "dialog.penDevImportTitle" => "นำเข้าจาก pen.dev แล้ว",
         "dialog.penDevImportBody" => "บางส่วนของ “{{name}}” นำเข้าไม่ได้:\n\n{{details}}\n\nส่วนที่เหลือเปิดเป็นเอกสารใหม่ที่ยังไม่ได้บันทึก ไฟล์ต้นฉบับไม่ถูกเปลี่ยนแปลง",
+        "import.fromPenDev" => "นำเข้าจาก pen.dev",
+        "home.import.penDev" => "นำเข้าจาก pen.dev",
+        "home.import.penDevSub" => "ไฟล์ .pen",
+        "dialog.penDevImportToast" => "เปิดจาก pen.dev แล้ว ส่วนที่นำเข้าไม่ได้: {{details}}",
         _ => return None,
     })
 }

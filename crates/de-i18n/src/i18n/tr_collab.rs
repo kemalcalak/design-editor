@@ -235,6 +235,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "padding.short" => "Dolgu",
         "dialog.penDevImportTitle" => "pen.dev'den içe aktarıldı",
         "dialog.penDevImportBody" => "“{{name}}” dosyasının bazı kısımları aktarılamadı:\n\n{{details}}\n\nGeri kalanı kaydedilmemiş yeni bir belge olarak açıldı. Özgün dosya değiştirilmedi.",
+        "import.fromPenDev" => "pen.dev'den içe aktar",
+        "home.import.penDev" => "pen.dev'den içe aktar",
+        "home.import.penDevSub" => ".pen dosyası",
+        "dialog.penDevImportToast" => "pen.dev'den açıldı. Aktarılamayanlar: {{details}}",
         _ => return None,
     })
 }

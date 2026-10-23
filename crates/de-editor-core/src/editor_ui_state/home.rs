@@ -319,6 +319,7 @@ pub enum HomeHit {
     ImportFigma,
     ImportWeb,
     ImportScreenshot,
+    ImportPenDev,
     /// A Recent card or row.
     Recent(usize),
     /// One half of the grid / list toggle.
