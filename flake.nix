@@ -391,7 +391,10 @@
           postInstallNormalize = ''
             rm -f packages/node_modules/.bun/node_modules/{string-width,strip-ansi,wrap-ansi}
           '';
-          hash = "sha256-aY3Nr1+a1o7TojefRcozmntbdfrF2JRtOrRY8Hqs8rE=";
+          # Fixed-output hash of the installed node_modules: refresh it whenever
+          # packages/bun.lock or a workspace package.json changes (nix-check
+          # prints the right value on a mismatch).
+          hash = "sha256-nsXKmlpqX0afSx72qYHgQVv+rIY/fRiRXF8euC10bSE=";
         };
         webSdkPackages = pkgs.stdenvNoCC.mkDerivation {
           pname = "design-editor-web-sdk-packages";
