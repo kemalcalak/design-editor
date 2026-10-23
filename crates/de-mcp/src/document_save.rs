@@ -42,7 +42,15 @@ impl McpTool for SaveDocument {
                 ),
             );
         }
-        if let Err(e) = std::fs::write(&path, &self.document_payload) {
+        // `singleFile: "true"` keeps every image embedded, for sharing;
+        // the default is the folder layout (`<stem>.assets/`).
+        let single_file = args.get("singleFile").is_some_and(|value| value == "true");
+        let written = if single_file {
+            std::fs::write(&path, &self.document_payload)
+        } else {
+            de_pen_loader::asset_folder::write_document(&path, self.document_payload.clone())
+        };
+        if let Err(e) = written {
             return ToolOutcome::Err(
                 ToolErrorCode::ToolFailed,
                 format!("save document failed: {e}"),

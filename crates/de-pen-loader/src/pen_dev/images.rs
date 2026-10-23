@@ -59,7 +59,7 @@ fn resolve(url: &str, ctx: &mut Ctx<'_>) -> Option<String> {
     reference
 }
 
-fn data_url(mime: &str, bytes: &[u8]) -> String {
+pub(crate) fn data_url(mime: &str, bytes: &[u8]) -> String {
     let prefix = format!("data:{mime};base64,");
     let encoded_len = base64::encoded_len(bytes.len(), true).unwrap_or(0);
     let mut url = String::with_capacity(prefix.len().saturating_add(encoded_len));
@@ -70,7 +70,7 @@ fn data_url(mime: &str, bytes: &[u8]) -> String {
 
 /// A design file must not pull arbitrary files into the document: only
 /// plain relative paths below the document's folder are read.
-fn is_inside_document_folder(relative: &str) -> bool {
+pub(crate) fn is_inside_document_folder(relative: &str) -> bool {
     !relative.is_empty()
         && !relative.starts_with('/')
         && !relative.contains('\\')
@@ -80,7 +80,7 @@ fn is_inside_document_folder(relative: &str) -> bool {
             .all(|part| !part.is_empty() && part != "..")
 }
 
-fn mime_type(relative: &str) -> Option<&'static str> {
+pub(crate) fn mime_type(relative: &str) -> Option<&'static str> {
     let extension = relative.rsplit_once('.')?.1.to_ascii_lowercase();
     Some(match extension.as_str() {
         "png" => "image/png",

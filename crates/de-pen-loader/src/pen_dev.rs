@@ -17,7 +17,7 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
-mod images;
+pub(crate) mod images;
 mod nodes;
 mod paint;
 #[cfg(test)]

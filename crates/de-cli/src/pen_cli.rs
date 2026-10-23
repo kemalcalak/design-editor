@@ -45,14 +45,12 @@ pub(super) fn run_import_pen(pen_path: &str, out_path: &str) -> Result<String, C
         .map_err(|e| CliError::Document(format!("import {pen_path:?}: {e}")))?;
     let report = loaded.compatibility.pen_dev.unwrap_or_default();
     let document = loaded.loaded.value;
-    // Shared bitmaps go to the `images` table once, as in the Figma import;
-    // indented like an editor save so the result diffs line by line.
-    let mut value = serde_json::to_value(&document)
+    // Bitmaps land once each in `<out>.assets/`, the JSON indented like an
+    // editor save so the result diffs line by line.
+    let value = serde_json::to_value(&document)
         .map_err(|e| CliError::Payload(format!("serialize {out_path:?}: {e}")))?;
-    jian_ops_schema::image_table::externalize_images(&mut value);
-    let raw = serde_json::to_string_pretty(&value)
-        .map_err(|e| CliError::Payload(format!("serialize {out_path:?}: {e}")))?;
-    std::fs::write(out_path, raw).map_err(|e| CliError::Io(format!("write {out_path:?}: {e}")))?;
+    de_pen_loader::asset_folder::write_document_value(Path::new(out_path), value)
+        .map_err(|e| CliError::Io(format!("write {out_path:?}: {e}")))?;
     Ok(json!({
         "ok": true,
         "filePath": out_path,
@@ -99,7 +97,15 @@ mod tests {
         assert_eq!(result["unsupported"]["note"], 1);
         let written = std::fs::read_to_string(&out).unwrap();
         assert!(written.contains("\"layout\": \"horizontal\""));
-        assert!(written.contains("data:image/png;base64,iVBORw=="));
+        // The image lands in the output's asset folder, named by path.
+        let files: Vec<_> = std::fs::read_dir(dir.join("design.assets"))
+            .expect("asset folder")
+            .map(|entry| entry.expect("entry").path())
+            .collect();
+        assert_eq!(files.len(), 1);
+        assert_eq!(std::fs::read(&files[0]).unwrap(), [0x89, b'P', b'N', b'G']);
+        let name = files[0].file_name().unwrap().to_str().unwrap();
+        assert!(written.contains(&format!("\"design.assets/{name}\"")));
         let _ = std::fs::remove_dir_all(dir);
     }
 

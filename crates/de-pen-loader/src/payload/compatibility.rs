@@ -16,6 +16,9 @@ pub struct CompatibilityReport {
     /// The source was a pen.dev document converted on load. Such a file is
     /// an import source: it is never rewritten in place.
     pub pen_dev: Option<crate::pen_dev::PenDevReport>,
+    /// Asset-folder image paths ([`crate::asset_folder`]) whose files could
+    /// not be read; those images open as missing.
+    pub missing_images: Vec<String>,
 }
 
 impl CompatibilityReport {
