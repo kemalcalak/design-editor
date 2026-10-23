@@ -46,7 +46,7 @@
 //! unavailable and proceeds to call `batch_design` itself — the
 //! single-agent loop that is sufficient to benchmark.
 //!
-//! ## The `.op` dump
+//! ## The `.de` dump
 //!
 //! The loop mutates the SAME `EditorState.doc` (`PenDocument`) the
 //! orchestrator mode does, so the dump uses the IDENTICAL serialize path

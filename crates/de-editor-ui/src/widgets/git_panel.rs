@@ -79,7 +79,7 @@ pub enum GitPanelHit {
     /// The Commit button.
     Commit,
     /// The ready-view "Save milestone" button — save the live design to
-    /// the tracked `.op` + stage + commit (TS `commitMilestone`).
+    /// the tracked `.de` + stage + commit (TS `commitMilestone`).
     CommitMilestone,
     /// The Refresh button.
     Refresh,

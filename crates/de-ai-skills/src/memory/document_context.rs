@@ -115,8 +115,8 @@ mod tests {
 
     #[test]
     fn create_stamps_both_timestamps() {
-        let ctx = create_design_context(Some("/a.op".into()), "2026-05-17T00:00:00Z");
-        assert_eq!(ctx.document_path.as_deref(), Some("/a.op"));
+        let ctx = create_design_context(Some("/a.de".into()), "2026-05-17T00:00:00Z");
+        assert_eq!(ctx.document_path.as_deref(), Some("/a.de"));
         assert_eq!(ctx.created_at, "2026-05-17T00:00:00Z");
         assert_eq!(ctx.updated_at, "2026-05-17T00:00:00Z");
         assert!(ctx.design_system.palette.is_empty());

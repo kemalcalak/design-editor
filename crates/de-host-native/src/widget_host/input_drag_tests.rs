@@ -5,7 +5,7 @@ use super::{CreateDragState, HandleDragState, NodeDragState, RotateDragState, Wi
 use de_editor_core::{NodeId, PenNodeExt};
 use de_editor_ui::{widgets::SelectionHandle, Point2D, Rect};
 
-/// Seed a host's `editor_state` from a canonical `.op` JSON snippet.
+/// Seed a host's `editor_state` from a canonical `.de` JSON snippet.
 fn seed(host: &mut WidgetHostNative, json: &str) {
     let doc = jian_ops_schema::load_str(json)
         .expect("fixture JSON parses")

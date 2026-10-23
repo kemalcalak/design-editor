@@ -72,7 +72,7 @@ fn replace_editor_state_during_exit_animation_tears_down_immediately() {
 fn install_open_document_tears_down_preview() {
     let mut host = preview_host();
 
-    host.install_open_document(document(), None, Some("opened.op".to_string()));
+    host.install_open_document(document(), None, Some("opened.de".to_string()));
 
     assert_preview_runtime_gone(&host);
 }

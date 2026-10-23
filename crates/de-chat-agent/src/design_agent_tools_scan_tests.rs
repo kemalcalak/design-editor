@@ -8,7 +8,7 @@ use super::*;
 
 #[test]
 fn family_name_as_glyph_and_missing_glyph_are_echoed() {
-    // test0711-1.op regression: every icon shipped as
+    // test0711-1.de regression: every icon shipped as
     // iconFontName:"lucide" (family in the glyph field) → fallback dots.
     let nodes: Vec<PenNode> = serde_json::from_value(serde_json::json!([
         { "type": "frame", "id": "root", "name": "R", "width": 100, "height": 100,
@@ -208,7 +208,7 @@ fn missing_ring_wrapper_is_echoed_by_builtin_scan() {
 
 #[test]
 fn same_named_top_level_frames_are_echoed_once_per_name() {
-    // test0711-1-m3.op shape: model abandoned the original `Explore`
+    // test0711-1-m3.de shape: model abandoned the original `Explore`
     // (empty AppContent) and rebuilt everything in a second `Explore`.
     let nodes: Vec<PenNode> = serde_json::from_value(serde_json::json!([
         { "type": "frame", "id": "r1", "name": "Explore", "width": 390, "height": 844,
@@ -231,7 +231,7 @@ fn same_named_top_level_frames_are_echoed_once_per_name() {
 
 #[test]
 fn deck_back_layers_are_exempted_as_decorative_stack() {
-    // 0724-1-gm-3.op shape: a Flashcard Deck Stack under layout:none —
+    // 0724-1-gm-3.de shape: a Flashcard Deck Stack under layout:none —
     // Front Flashcard (0,0,338x124, has text children) with two
     // childless "peek" layers behind it (Back Layer 1 painted, Back
     // Layer 2 unpainted), both offset a few px and near-identical size.

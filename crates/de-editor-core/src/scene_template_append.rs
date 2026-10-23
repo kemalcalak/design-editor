@@ -49,7 +49,7 @@ pub struct TemplateBoards {
     image_thumbnails: Vec<(u64, Arc<[u8]>)>,
 }
 
-/// Parse a template's canonical `.op` source into namespaced boards.
+/// Parse a template's canonical `.de` source into namespaced boards.
 ///
 /// Canonical saved documents may carry their boards under `pages`, their
 /// selected page under `editorMeta.activePageIndex`, and externalized image

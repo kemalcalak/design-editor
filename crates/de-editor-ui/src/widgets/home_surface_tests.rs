@@ -33,15 +33,15 @@ fn recent_entries_drop_the_extension_and_abbreviate_the_home_folder() {
     let mut state = visible_state();
     state.editor_ui.recent_files = vec![
         RecentFile {
-            path: "/Users/kemal/dev/acme/design/acme-landing.op".into(),
+            path: "/Users/kemal/dev/acme/design/acme-landing.de".into(),
             modified_at: 10,
         },
         RecentFile {
-            path: "C:\\Users\\kemal\\Desktop\\deck.op".into(),
+            path: "C:\\Users\\kemal\\Desktop\\deck.de".into(),
             modified_at: 11,
         },
         RecentFile {
-            path: "/tmp/scratch.op".into(),
+            path: "/tmp/scratch.de".into(),
             modified_at: 12,
         },
     ];
@@ -61,11 +61,11 @@ fn a_recent_card_carries_its_installed_preview_stamp() {
     let mut state = visible_state();
     state.editor_ui.recent_files = vec![
         RecentFile {
-            path: "/tmp/with.op".into(),
+            path: "/tmp/with.de".into(),
             modified_at: 1,
         },
         RecentFile {
-            path: "/tmp/without.op".into(),
+            path: "/tmp/without.de".into(),
             modified_at: 2,
         },
     ];
@@ -73,7 +73,7 @@ fn a_recent_card_carries_its_installed_preview_stamp() {
         .editor_ui
         .home
         .preview_stamps
-        .insert("/tmp/with.op".into(), 42);
+        .insert("/tmp/with.de".into(), 42);
     let home = HomeSurface::for_editor(&state).unwrap();
     assert_eq!(home.recent[0].preview_stamp, Some(42));
     assert_eq!(home.recent[1].preview_stamp, None, "no preview: glyph");
@@ -190,7 +190,7 @@ fn the_column_under_the_top_bar_is_not_live() {
     let mut state = visible_state();
     state.editor_ui.recent_files = (0..8)
         .map(|i| RecentFile {
-            path: format!("/tmp/file-{i}.op"),
+            path: format!("/tmp/file-{i}.de"),
             modified_at: i,
         })
         .collect();
@@ -213,7 +213,7 @@ fn the_column_under_the_top_bar_is_not_live() {
 fn paint_draws_every_state_without_panicking() {
     let mut state = visible_state();
     state.editor_ui.recent_files = vec![RecentFile {
-        path: "/tmp/a.op".into(),
+        path: "/tmp/a.de".into(),
         modified_at: 1,
     }];
     for (popover, menu, view) in [

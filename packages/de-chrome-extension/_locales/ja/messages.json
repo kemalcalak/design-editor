@@ -14,7 +14,7 @@
     "message": "要素をキャプチャ"
   },
   "downloadButton": {
-    "message": ".op をダウンロード"
+    "message": ".de をダウンロード"
   },
   "designButton": {
     "message": "design.md を抽出"
@@ -122,10 +122,10 @@
     "message": "$1 は接続を受け付けましたが、$2 秒以内に応答しませんでした。処理中か停止している可能性があります。アプリを確認してからもう一度お試しください。"
   },
   "errorNoIngress": {
-    "message": "この Design Editor ビルドには拡張機能用の受け口がありません（$1）。アプリを更新するか、「.op をダウンロード」してそのファイルを Design Editor で開いてください"
+    "message": "この Design Editor ビルドには拡張機能用の受け口がありません（$1）。アプリを更新するか、「.de をダウンロード」してそのファイルを Design Editor で開いてください"
   },
   "errorTooLarge": {
-    "message": "このキャプチャは $1 MB を超えており、Design Editor のスナップショット受け口が受け付けません。「.op をダウンロード」してから、そのファイルを Design Editor で開いてください"
+    "message": "このキャプチャは $1 MB を超えており、Design Editor のスナップショット受け口が受け付けません。「.de をダウンロード」してから、そのファイルを Design Editor で開いてください"
   },
   "errorImport": {
     "message": "Design Editor がスナップショットを拒否しました: $1"

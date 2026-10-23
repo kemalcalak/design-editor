@@ -1,4 +1,4 @@
-//! pen.dev `.pen` (schema 2.9+) → canonical `.op` document conversion.
+//! pen.dev `.pen` (schema 2.9+) → canonical `.de` document conversion.
 //!
 //! pen.dev writes plain JSON close to the canonical schema, but with its own
 //! defaults and spellings: frames lay out horizontally unless told otherwise,

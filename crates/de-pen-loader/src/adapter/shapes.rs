@@ -250,7 +250,7 @@ pub(super) fn text_to_payload(n: &TextNode) -> NodePayload {
 /// Returns 0 when the field is absent so the renderer falls back
 /// to its default — keeps the payload free of duplicate defaults.
 ///
-/// Real `.op` files often emit `"fontWeight":"700"` as a JSON
+/// Real `.de` files often emit `"fontWeight":"700"` as a JSON
 /// STRING (the canonical untagged enum picks `Keyword(String)`
 /// when the JSON type is a string, even with numeric contents).
 /// Parse numeric keywords first, then fall back to lucide-style

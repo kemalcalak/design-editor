@@ -30,7 +30,7 @@ interface AppState {
   trusted: boolean;
   assembled?: Assembled;
   /** In-flight assembly, so the provider can await it instead of falling back
-   *  to the restricted placeholder when a trusted workspace opens a .op file
+   *  to the restricted placeholder when a trusted workspace opens a .de file
    *  before assembly finished. */
   assembling?: Promise<void>;
 }
@@ -160,7 +160,7 @@ function makeSpawn(logger: DaemonLogger, extensionRoot: string) {
     if (!binary) throw new Error("de-host-web-server binary not found; set design-editor.dev.daemonPath");
     return DaemonClient.spawn({
       command: [binary],
-      // The daemon's --file flag only understands .op JSON; a .fig source is
+      // The daemon's --file flag only understands .de JSON; a .fig source is
       // converted after boot (see bootAndMount), so start it with the
       // starter doc instead and deliver content via open-document.
       filePath: isFigPath(filePath) ? undefined : filePath,

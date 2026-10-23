@@ -3,12 +3,12 @@
 //! Sub-agent prompts ask models to prefer `$color-*` refs, but raw LLM
 //! output can still carry literal hex values. This pass persists refs in
 //! the generated subtree before `InsertSubtree`, so the property panel and
-//! saved `.op` file both see the authored `$variable` token.
+//! saved `.de` file both see the authored `$variable` token.
 //!
 //! Binding is **slot-aware**: a colour is matched only against variables whose
 //! family can legitimately fill the slot it was found in. Matching on colour
 //! distance alone silently rewrites a design's semantics — measured on
-//! `0808-gm-1.op`, where a 36px headline's near-white literal happened to equal
+//! `0808-gm-1.de`, where a 36px headline's near-white literal happened to equal
 //! `$--border`'s active-theme value and every card and section title in the
 //! document came back bound to the BORDER token. Nothing looked wrong (the two
 //! resolve to the same hex today), but the design was one theme flip — or one

@@ -43,10 +43,22 @@ fn due_requires_a_write_idle_time_and_new_revision() {
         last_write_at: None,
         finalized_at_revision: None,
         idle_after: Duration::from_secs(10),
+        session_roots: BTreeSet::new(),
     };
     assert!(!auto.due(now + Duration::from_secs(10), 7));
 
-    auto.note_write(now);
+    auto.note_write(now, &WriteScope::default());
+    assert!(
+        !auto.due(now + Duration::from_secs(10), 7),
+        "a write that created no root leaves nothing to finalize"
+    );
+    auto.note_write(
+        now,
+        &WriteScope {
+            new_roots: vec!["screen".to_string()],
+            ..WriteScope::default()
+        },
+    );
     assert!(!auto.due(now + Duration::from_secs(9), 7));
     assert!(auto.due(now + Duration::from_secs(10), 7));
 
@@ -83,7 +95,7 @@ fn disabled_env_keeps_stdio_eof_from_finalizing() {
     let _disable = EnvGuard::set(AUTO_FINALIZE_ENV, "0");
     let _idle = EnvGuard::set(AUTO_FINALIZE_IDLE_SECS_ENV, "0");
     let path = std::env::temp_dir().join(format!(
-        "design-editor-mcp-no-finalize-{}-{}.op",
+        "design-editor-mcp-no-finalize-{}-{}.de",
         std::process::id(),
         Instant::now().elapsed().as_nanos()
     ));

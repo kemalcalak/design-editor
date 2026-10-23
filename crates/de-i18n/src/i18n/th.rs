@@ -634,7 +634,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "a11y.aiChat" => "แชต AI",
         "designMd.emptyHint" => "นำเข้าไฟล์ .md เพื่อแนบบรีฟการออกแบบ",
         "componentBrowser.empty" => "ไม่พบคอมโพเนนต์",
-        "dialog.dropToOpen" => "วางเพื่อเปิด  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "วางเพื่อเปิด  ·  .de / .pen / .fig / .html / .zip",
         "text.weight.extralight" => "Extra Light",
         "text.weight.extrabold" => "Extra Bold",
         "interactions.title" => "การโต้ตอบ",

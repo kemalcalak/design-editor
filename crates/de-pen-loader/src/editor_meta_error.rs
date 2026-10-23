@@ -7,7 +7,7 @@
 //! `Display` reproduces the exact sentences the writers used to return as
 //! `String`, so host-side Save-As error dialogs keep their wording.
 
-/// Why a metadata-preserving rewrite of a canonical `.op` source failed.
+/// Why a metadata-preserving rewrite of a canonical `.de` source failed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EditorMetaWriteError {
     /// The source bytes are not a top-level JSON object, so there is no

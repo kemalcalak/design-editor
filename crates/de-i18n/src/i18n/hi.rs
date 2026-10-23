@@ -632,7 +632,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "a11y.aiChat" => "AI चैट",
         "designMd.emptyHint" => "डिज़ाइन ब्रीफ़ संलग्न करने के लिए .md फ़ाइल आयात करें",
         "componentBrowser.empty" => "कोई कंपोनेंट नहीं मिला",
-        "dialog.dropToOpen" => "खोलने के लिए छोड़ें  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "खोलने के लिए छोड़ें  ·  .de / .pen / .fig / .html / .zip",
         "text.weight.extralight" => "Extra Light",
         "text.weight.extrabold" => "Extra Bold",
         "interactions.title" => "इंटरैक्शन",

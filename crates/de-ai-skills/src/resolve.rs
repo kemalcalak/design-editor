@@ -307,7 +307,7 @@ mod tests {
         // the anti-slop skill must be substituted away.
         let opts = ResolveOptions {
             memory: crate::types::ResolveMemory {
-                generation_history: history("/a.op", 2),
+                generation_history: history("/a.de", 2),
                 ..Default::default()
             },
             ..Default::default()
@@ -329,7 +329,7 @@ mod tests {
         let opts = ResolveOptions {
             memory: crate::types::ResolveMemory {
                 document_context: Some(DesignContext::default()),
-                generation_history: history("/a.op", 3),
+                generation_history: history("/a.de", 3),
             },
             ..Default::default()
         };

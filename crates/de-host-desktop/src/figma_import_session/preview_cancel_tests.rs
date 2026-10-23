@@ -22,7 +22,7 @@ fn cmd_p_preview_cancels_late_figma_import_before_pump() {
     let baseline_path = app.current_path.clone();
 
     let import_source = temp_import_dir("preview-cancel");
-    let import_output = import_source.with_extension("op");
+    let import_output = import_source.with_extension(de_util::document_file::EXTENSION);
     let import_fig = import_source.with_extension("fig");
     let (tx, rx) = mpsc::channel();
     let mut imported_state = EditorState::starter();

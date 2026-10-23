@@ -156,7 +156,7 @@ pub(super) fn dispatch<S: Read + Write>(
     if let Some(done) = connection_ai_routes::serve_ai_route(stream, req, ctx, cors_origin)? {
         return Ok(done);
     }
-    // Offline `.fig` -> `.op` convert for the VS Code plugin: it can't parse
+    // Offline `.fig` -> `.de` convert for the VS Code plugin: it can't parse
     // fig-kiwi itself, so it POSTs the raw bytes here and boots the returned
     // document JSON through its normal open-document push. Conversion is
     // pure (no network, no state) so — unlike the image routes above — it
@@ -312,9 +312,11 @@ pub(super) fn dispatch<S: Read + Write>(
             &mut guard.editor,
             &req.body,
             |tool_name, editor, cmd| {
+                let baseline = crate::mcp_serve::WriteBaseline::for_tool(tool_name, editor);
                 let ok = editor.apply(cmd.clone());
-                if ok && !crate::mcp_serve::writes_verbatim(tool_name) {
-                    crate::mcp_serve::run_write_repairs_after_apply(editor);
+                if let Some(baseline) = baseline.filter(|_| ok) {
+                    let scope = baseline.scope_after(editor);
+                    crate::mcp_serve::run_write_repairs_after_apply(editor, &scope);
                 }
                 applied_any |= ok;
                 ok

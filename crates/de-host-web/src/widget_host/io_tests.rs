@@ -152,7 +152,7 @@ fn save_serializes_the_canonical_document_json() {
     assert!(json.contains("\"version\""));
     // And it round-trips through the same canonical loader the web
     // Open path uses.
-    let ingested = crate::file_actions::ingest_op_source(&json, host.editor_state())
+    let ingested = crate::file_actions::ingest_document_source(&json, host.editor_state())
         .expect("canonical round-trip parses");
     assert_eq!(
         ingested.state.doc.children.len(),
@@ -172,7 +172,7 @@ fn figma_preserve_geometry_survives_web_save_open_round_trip() {
     let parsed: serde_json::Value = serde_json::from_str(&json).expect("saved JSON");
     assert_eq!(parsed["editorMeta"]["preserveAuthoredGeometry"], true);
 
-    let ingested = crate::file_actions::ingest_op_source(&json, host.editor_state())
+    let ingested = crate::file_actions::ingest_document_source(&json, host.editor_state())
         .expect("canonical round-trip parses");
     assert_eq!(ingested.state.ui.active_page_index, 1);
     assert!(ingested.state.editor_ui.preserve_authored_geometry);
@@ -182,7 +182,7 @@ fn figma_preserve_geometry_survives_web_save_open_round_trip() {
 fn legacy_op_without_preserve_metadata_reopens_in_layout_mode() {
     let mut host = WidgetHost::new();
     // The previous document must not leak its Figma-import mode into an old
-    // `.op` that predates preserveAuthoredGeometry.
+    // `.de` that predates preserveAuthoredGeometry.
     host.editor_state.editor_ui.preserve_authored_geometry = true;
     let legacy = r#"{
       "version":"1.0.0",
@@ -194,7 +194,7 @@ fn legacy_op_without_preserve_metadata_reopens_in_layout_mode() {
       "editorMeta":{"activePageIndex":1}
     }"#;
 
-    let ingested = crate::file_actions::ingest_op_source(legacy, host.editor_state())
+    let ingested = crate::file_actions::ingest_document_source(legacy, host.editor_state())
         .expect("legacy canonical document parses");
     assert_eq!(ingested.state.ui.active_page_index, 1);
     assert!(!ingested.state.editor_ui.preserve_authored_geometry);
@@ -205,11 +205,11 @@ fn drain_file_action_clear_recent_matches_desktop_state_change() {
     let mut host = WidgetHost::new();
     host.editor_state.editor_ui.recent_files = vec![
         RecentFile {
-            path: "/tmp/a.op".to_string(),
+            path: "/tmp/a.de".to_string(),
             modified_at: 1,
         },
         RecentFile {
-            path: "/tmp/b.op".to_string(),
+            path: "/tmp/b.de".to_string(),
             modified_at: 2,
         },
     ];
@@ -265,18 +265,18 @@ fn open_recent_success_response_touches_local_recent_entry() {
     let mut host = WidgetHost::new();
     host.editor_state.editor_ui.recent_files = vec![
         RecentFile {
-            path: "/tmp/a.op".to_string(),
+            path: "/tmp/a.de".to_string(),
             modified_at: 1,
         },
         RecentFile {
-            path: "/tmp/b.op".to_string(),
+            path: "/tmp/b.de".to_string(),
             modified_at: 2,
         },
     ];
 
     let changed = crate::file_actions::apply_open_recent_response(
         host.editor_state_mut(),
-        "/tmp/b.op",
+        "/tmp/b.de",
         r#"{"ok":true,"version":3}"#,
         99,
     );
@@ -284,13 +284,13 @@ fn open_recent_success_response_touches_local_recent_entry() {
     assert!(changed);
     assert_eq!(
         host.editor_state.editor_ui.recent_files[0].path,
-        "/tmp/b.op"
+        "/tmp/b.de"
     );
     assert_eq!(host.editor_state.editor_ui.recent_files[0].modified_at, 99);
     assert_eq!(host.editor_state.editor_ui.recent_files.len(), 2);
     assert_eq!(
         host.editor_state.editor_ui.file_name_display.as_deref(),
-        Some("b.op")
+        Some("b.de")
     );
 }
 
@@ -298,13 +298,13 @@ fn open_recent_success_response_touches_local_recent_entry() {
 fn open_recent_stale_response_prunes_local_recent_entry() {
     let mut host = WidgetHost::new();
     host.editor_state.editor_ui.recent_files = vec![RecentFile {
-        path: "/tmp/missing.op".to_string(),
+        path: "/tmp/missing.de".to_string(),
         modified_at: 1,
     }];
 
     let changed = crate::file_actions::apply_open_recent_response(
         host.editor_state_mut(),
-        "/tmp/missing.op",
+        "/tmp/missing.de",
         r#"{"ok":false,"pruned":true,"error":"missing"}"#,
         99,
     );
@@ -321,7 +321,7 @@ fn ingest_preserves_app_preferences_from_the_previous_state() {
     host.editor_state.editor_ui.locale = de_editor_core::Locale::ZhCn;
     let json =
         crate::file_actions::serialize_document(host.editor_state()).expect("serialize succeeds");
-    let ingested = crate::file_actions::ingest_op_source(&json, host.editor_state())
+    let ingested = crate::file_actions::ingest_document_source(&json, host.editor_state())
         .expect("canonical parse succeeds");
     assert_eq!(ingested.state.editor_ui.theme_mode, ThemeMode::Light);
     assert_eq!(
@@ -335,19 +335,19 @@ fn save_file_name_falls_back_to_untitled() {
     let mut host = WidgetHost::new();
     assert_eq!(
         crate::file_actions::save_file_name(host.editor_state()),
-        "untitled.op"
+        "untitled.de"
     );
-    host.editor_state.editor_ui.file_name_display = Some("login.op".to_string());
+    host.editor_state.editor_ui.file_name_display = Some("login.de".to_string());
     assert_eq!(
         crate::file_actions::save_file_name(host.editor_state()),
-        "login.op"
+        "login.de"
     );
 }
 
 #[test]
 fn drop_kind_classifies_by_extension_case_insensitively() {
     use crate::file_actions::{drop_kind, DropKind};
-    assert_eq!(drop_kind("design.op"), DropKind::Document);
+    assert_eq!(drop_kind("design.de"), DropKind::Document);
     assert_eq!(drop_kind("Design.PEN"), DropKind::Document);
     assert_eq!(drop_kind("Mockup.FIG"), DropKind::Figma);
     assert_eq!(drop_kind("icon.svg"), DropKind::Svg);
@@ -384,7 +384,7 @@ fn install_ingested_state_preserves_live_chrome_and_clears_progress() {
     let mut host = WidgetHost::new();
     host.editor_state.editor_ui.theme_mode = ThemeMode::Light;
     host.editor_state.editor_ui.figma_import_in_progress = true;
-    host.editor_state.editor_ui.file_name_display = Some("old.op".to_string());
+    host.editor_state.editor_ui.file_name_display = Some("old.de".to_string());
     host.editor_state.chat.title = "Existing conversation".to_string();
 
     let mut incoming = de_editor_core::EditorState::starter();
@@ -423,22 +423,22 @@ fn unsaved_import_is_dirty_while_an_opened_document_install_stays_clean() {
 }
 
 #[test]
-fn opened_op_state_arms_missing_font_detection_through_ingest_install() {
+fn opened_document_state_arms_missing_font_detection_through_ingest_install() {
     let mut host = WidgetHost::new();
     let source = r#"{"version":"0.8.0","children":[
         {"type":"text","id":"t1","name":"Title","x":0,"y":0,"width":100,"height":24,
          "content":"Hello","fontFamily":"__WebOpenedOpMissingFont__"}
     ]}"#;
-    let mut ingested = crate::file_actions::ingest_op_source(source, host.editor_state())
-        .expect("canonical .op source");
-    ingested.state.editor_ui.file_name_display = Some("font-check.op".to_string());
+    let mut ingested = crate::file_actions::ingest_document_source(source, host.editor_state())
+        .expect("canonical .de source");
+    ingested.state.editor_ui.file_name_display = Some("font-check.de".to_string());
 
     host.install_ingested_state(ingested.state);
 
     assert!(host.editor_state.editor_ui.missing_fonts_pending_detect);
     assert_eq!(
         host.editor_state.editor_ui.file_name_display.as_deref(),
-        Some("font-check.op")
+        Some("font-check.de")
     );
 }
 

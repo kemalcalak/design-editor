@@ -1,6 +1,6 @@
 { integration = { __pkl_class = "Integration"; schemaVersion = 1; id = "design-editor"; systems = [
       "x86_64-linux"
-    ]; packages = { __pkl_class = "PackageOutputs"; sourceRuntime = "runtime"; prebuiltRuntime = "runtime-prebuilt"; webServer = "web-server"; skills = "skills"; }; executables = { __pkl_class = "Executables"; desktop = "design-editor"; cli = "op"; }; documentTemplate = "share/design-editor/default.op"; mcp = { stdio = { __pkl_class = "McpTransport"; kind = "stdio"; args = [
+    ]; packages = { __pkl_class = "PackageOutputs"; sourceRuntime = "runtime"; prebuiltRuntime = "runtime-prebuilt"; webServer = "web-server"; skills = "skills"; }; executables = { __pkl_class = "Executables"; desktop = "design-editor"; cli = "op"; }; documentTemplate = "share/design-editor/default.de"; mcp = { stdio = { __pkl_class = "McpTransport"; kind = "stdio"; args = [
           "--mcp"
           "{document}"
         ]; urlTemplate = null; launcherArgs = [ ]; loopbackOnly = true; }; http = { __pkl_class = "McpTransport"; kind = "http"; args = [ ]; urlTemplate = "http://127.0.0.1:{port}/mcp"; launcherArgs = [

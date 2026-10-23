@@ -17,7 +17,7 @@ const PAGE_ROW_HEIGHT: f32 = 32.0;
 const LAYER_ROW_HEIGHT: f32 = 28.0;
 const SECTION_GAP: f32 = 8.0;
 
-/// Build an `EditorState` from a canonical `.op` JSON string.
+/// Build an `EditorState` from a canonical `.de` JSON string.
 fn state_from(src: &str) -> EditorState {
     let doc = jian_ops_schema::load_str(src)
         .expect("layer-panel fixture parses")

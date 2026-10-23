@@ -234,7 +234,7 @@ fn native_mesh_gradient_is_actually_interpolated_not_flat() {
 
 #[test]
 fn linear_gradient_angle_zero_runs_bottom_to_top() {
-    // The canonical `.op` convention puts `angle = 0` at "from
+    // The canonical `.de` convention puts `angle = 0` at "from
     // bottom to top" (CSS `to-top`). Mirrors the TS renderer at
     // `pen-renderer/src/node-renderer.ts:155` which subtracts 90°
     // before projecting onto endpoints.

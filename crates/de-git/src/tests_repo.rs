@@ -23,8 +23,8 @@ fn discover_finds_a_repo_and_rejects_a_bare_dir() {
     let Some(tr) = TempRepo::new("discover-repo") else {
         return;
     };
-    tr.write("design.op", "{}");
-    let from_file = crate::GitRepo::discover(&tr.dir.join("design.op"))
+    tr.write("design.de", "{}");
+    let from_file = crate::GitRepo::discover(&tr.dir.join("design.de"))
         .expect("discover ok")
         .expect("repo found from a file path");
     assert!(from_file.workdir().exists());
@@ -39,7 +39,7 @@ fn status_tracks_untracked_then_clean_after_commit() {
     assert!(tr.repo.status().expect("status").is_clean());
 
     // A new file shows as untracked.
-    tr.write("design.op", "{\"v\":1}");
+    tr.write("design.de", "{\"v\":1}");
     let st = tr.repo.status().expect("status");
     assert_eq!(st.files.len(), 1);
     assert_eq!(st.files[0].state, ChangeState::Untracked);
@@ -60,7 +60,7 @@ fn stage_accepts_paths_through_symlinked_parent() {
     let link = unique_temp_dir("stage-symlink-link");
     std::os::unix::fs::symlink(&tr.dir, &link).expect("symlink workdir");
 
-    let doc = link.join("design.op");
+    let doc = link.join("design.de");
     std::fs::write(&doc, "{\"v\":1}").expect("write through symlink");
     tr.repo.stage(&[doc.as_path()]).expect("stage via symlink");
     let hash = tr.repo.commit("add design").expect("commit");
@@ -78,10 +78,10 @@ fn commit_shows_up_in_the_log() {
     // No commits yet → empty log, not an error.
     assert!(tr.repo.log(10).expect("log").is_empty());
 
-    tr.write("a.op", "1");
+    tr.write("a.de", "1");
     tr.repo.stage_all().expect("stage");
     tr.repo.commit("first design").expect("commit");
-    tr.write("a.op", "2");
+    tr.write("a.de", "2");
     tr.repo.stage_all().expect("stage");
     tr.repo.commit("tweak design").expect("commit");
 
@@ -99,7 +99,7 @@ fn branch_create_list_and_switch() {
     let Some(tr) = TempRepo::new("branch") else {
         return;
     };
-    tr.write("a.op", "1");
+    tr.write("a.de", "1");
     tr.repo.stage_all().expect("stage");
     tr.repo.commit("init").expect("commit");
 
@@ -128,18 +128,18 @@ fn restore_reverts_a_modified_file() {
     let Some(tr) = TempRepo::new("restore") else {
         return;
     };
-    tr.write("a.op", "committed");
+    tr.write("a.de", "committed");
     tr.repo.stage_all().expect("stage");
     tr.repo.commit("init").expect("commit");
 
     // Modify, then restore back to the committed (HEAD) content.
-    tr.write("a.op", "scratch edit");
+    tr.write("a.de", "scratch edit");
     assert!(!tr.repo.status().expect("status").is_clean());
     tr.repo
-        .restore(std::path::Path::new("a.op"), "HEAD")
+        .restore(std::path::Path::new("a.de"), "HEAD")
         .expect("restore");
     assert!(tr.repo.status().expect("status").is_clean());
-    let content = std::fs::read_to_string(tr.dir.join("a.op")).unwrap();
+    let content = std::fs::read_to_string(tr.dir.join("a.de")).unwrap();
     assert_eq!(content, "committed");
 }
 
@@ -154,11 +154,11 @@ fn restore_reverts_a_file_below_the_repository_root() {
         return;
     };
     std::fs::create_dir_all(tr.dir.join("designs")).expect("mkdir");
-    tr.write("designs/a.op", "committed");
+    tr.write("designs/a.de", "committed");
     tr.repo.stage_all().expect("stage");
     tr.repo.commit("init").expect("commit");
 
-    let absolute = tr.dir.join("designs").join("a.op");
+    let absolute = tr.dir.join("designs").join("a.de");
     std::fs::write(&absolute, "scratch edit").expect("write");
     assert!(!tr.repo.status().expect("status").is_clean());
 
@@ -172,20 +172,20 @@ fn restore_rolls_a_file_back_to_an_older_commit() {
     let Some(tr) = TempRepo::new("restore-commit") else {
         return;
     };
-    tr.write("a.op", "version one");
+    tr.write("a.de", "version one");
     tr.repo.stage_all().expect("stage");
     let v1 = tr.repo.commit("v1").expect("commit");
-    tr.write("a.op", "version two");
+    tr.write("a.de", "version two");
     tr.repo.stage_all().expect("stage");
     tr.repo.commit("v2").expect("commit");
 
     // Restore the working file to its content at the v1 commit —
     // matches the TS engine's `restoreFileFromCommit`.
     tr.repo
-        .restore(std::path::Path::new("a.op"), &v1)
+        .restore(std::path::Path::new("a.de"), &v1)
         .expect("restore from commit");
     assert_eq!(
-        std::fs::read_to_string(tr.dir.join("a.op")).unwrap(),
+        std::fs::read_to_string(tr.dir.join("a.de")).unwrap(),
         "version one"
     );
 }
@@ -232,7 +232,7 @@ fn create_and_switch_branch_in_one_step() {
     let Some(tr) = TempRepo::new("create-switch") else {
         return;
     };
-    tr.write("a.op", "1");
+    tr.write("a.de", "1");
     tr.repo.stage_all().expect("stage");
     tr.repo.commit("init").expect("commit");
 

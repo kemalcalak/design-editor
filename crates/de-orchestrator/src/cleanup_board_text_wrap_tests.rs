@@ -64,7 +64,7 @@ fn run_floor(sink: &mut VecDocSink, root_id: &str) -> bool {
 }
 
 /// The P2-c lesion card, mirrored from the measured
-/// `p2b-v4-pro-card.op`: a 1080×1440 board with no root padding, sitting at
+/// `p2b-v4-pro-card.de`: a 1080×1440 board with no root padding, sitting at
 /// canvas position (80, 40) exactly like the real file (the root's own x/y
 /// must never read as a floating-layer pin); a header section owning the
 /// 96px head gap (`[96, 80]` padding); an in-flow full-width `layout:none`

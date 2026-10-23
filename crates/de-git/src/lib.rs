@@ -35,7 +35,7 @@ mod worktree;
 
 pub use auth::{AuthStore, Credential};
 pub use branch::Branch;
-pub use candidates::CandidateOpFile;
+pub use candidates::CandidateDocument;
 pub use history::Commit;
 pub use merge::{
     ConflictBag, ConflictKind, ConflictStages, ConflictedFile, MergeOutcome, WorktreeMergeReport,

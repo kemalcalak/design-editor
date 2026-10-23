@@ -173,7 +173,7 @@ impl DesktopApp {
             self.request_redraw(true);
             return;
         }
-        // Drag-and-drop open. `.op` / `.pen` documents route
+        // Drag-and-drop open. `.de` / `.pen` documents route
         // through the canonical loader; `.fig` Figma exports
         // route through the background Figma import worker
         // (the parse + layout pass takes seconds for large
@@ -196,7 +196,7 @@ impl DesktopApp {
             }
         } else {
             eprintln!(
-                "design-editor: ignored dropped file (not .op / .pen / .fig / .html / .zip): {}",
+                "design-editor: ignored dropped file (not .de / .pen / .fig / .html / .zip): {}",
                 path.display()
             );
         }

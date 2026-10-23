@@ -14,7 +14,7 @@
     "message": "Element erfassen"
   },
   "downloadButton": {
-    "message": ".op herunterladen"
+    "message": ".de herunterladen"
   },
   "designButton": {
     "message": "design.md extrahieren"
@@ -122,10 +122,10 @@
     "message": "Design Editor unter $1 hat die Verbindung angenommen, aber innerhalb von $2 s nicht geantwortet. Die App ist möglicherweise beschäftigt oder hängt — prüfe sie und versuche es erneut."
   },
   "errorNoIngress": {
-    "message": "Dieser Design Editor-Build hat keinen Eingang für Erweiterungen ($1). Aktualisiere die App oder nutze „.op herunterladen“ und öffne die Datei in Design Editor"
+    "message": "Dieser Design Editor-Build hat keinen Eingang für Erweiterungen ($1). Aktualisiere die App oder nutze „.de herunterladen“ und öffne die Datei in Design Editor"
   },
   "errorTooLarge": {
-    "message": "Diese Erfassung ist größer als $1 MB und wird von Design Editors Momentaufnahme-Route abgelehnt. Nutze „.op herunterladen“ und öffne dann die Datei in Design Editor"
+    "message": "Diese Erfassung ist größer als $1 MB und wird von Design Editors Momentaufnahme-Route abgelehnt. Nutze „.de herunterladen“ und öffne dann die Datei in Design Editor"
   },
   "errorImport": {
     "message": "Design Editor hat die Momentaufnahme abgelehnt: $1"

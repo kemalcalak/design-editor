@@ -145,7 +145,7 @@ fn checked_settings_load_rejects_unknown_fields_at_every_settings_nesting_level(
             "recent",
             serde_json::json!({
                 "version":1,
-                "recent_files":[{"path":"/tmp/design.op","modified_at":1,"future":true}]
+                "recent_files":[{"path":"/tmp/design.de","modified_at":1,"future":true}]
             }),
         ),
         (
@@ -217,7 +217,7 @@ fn checked_settings_load_rejects_unknown_fields_at_every_settings_nesting_level(
 #[test]
 fn checked_settings_load_rejects_values_that_would_be_silently_normalized() {
     let too_many_recent = (0..=RECENT_FILE_CAP)
-        .map(|index| serde_json::json!({"path":format!("/tmp/{index}.op"),"modified_at":index}))
+        .map(|index| serde_json::json!({"path":format!("/tmp/{index}.de"),"modified_at":index}))
         .collect::<Vec<_>>();
     let cases = vec![
         ("theme", serde_json::json!({"version":1,"theme":"sepia"})),

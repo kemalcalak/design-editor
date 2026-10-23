@@ -72,7 +72,7 @@ fn write_template(home: &Path, name: &str, node_id: &str) {
     )
     .expect("write template metadata");
     std::fs::write(
-        dir.join("document.op"),
+        dir.join("document.de"),
         format!(
             r##"{{"version":"1.0.0","children":[{{"type":"frame","id":{node_id:?},"name":{name:?},"x":0,"y":0,"width":100,"height":100,"fill":[{{"type":"solid","color":"#ff0000"}}]}}]}}"##
         ),

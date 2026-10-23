@@ -139,7 +139,7 @@ mod tests {
         .expect("fixture parses")
         .value;
         let mut state = EditorState::from_document(doc);
-        state.editor_ui.file_name_display = Some("mobile.op".into());
+        state.editor_ui.file_name_display = Some("mobile.de".into());
         state.editor_ui.export_scale = 1.0;
         state
     }

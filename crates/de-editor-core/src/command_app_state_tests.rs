@@ -33,7 +33,7 @@ fn merge_app_state_adds_new_keys() {
     );
 }
 
-// (b) Pre-existing doc-root key is NEVER overwritten (old .op file compat).
+// (b) Pre-existing doc-root key is NEVER overwritten (old .de file compat).
 //
 // Contract change (deliberate): every incoming key being skipped is a
 // legitimate additive no-op, not a failure — `apply` now reports `true`

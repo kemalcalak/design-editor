@@ -32,6 +32,16 @@ impl McpTool for SaveDocument {
             );
         };
         let path = resolve_path(path);
+        if !de_util::document_file::is_document_path(&path) {
+            return ToolOutcome::Err(
+                ToolErrorCode::InvalidArgument,
+                format!(
+                    "filePath must name a {} document: {}",
+                    de_util::document_file::SUFFIX,
+                    path.display()
+                ),
+            );
+        }
         if let Err(e) = std::fs::write(&path, &self.document_payload) {
             return ToolOutcome::Err(
                 ToolErrorCode::ToolFailed,

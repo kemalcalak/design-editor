@@ -418,7 +418,7 @@ fn design_refine_layout_snapshot_reports_flowed_position_of_auto_layout_child() 
        "layout":"horizontal","alignItems":"center","padding":[0,16],"children":[
         {"type":"rectangle","id":"a","name":"A","width":40,"height":20},
         {"type":"rectangle","id":"b","name":"B","x":300,"y":10,"width":30,"height":18}]}]}"#;
-    let parsed = jian_ops_schema::load_str(src).expect("parse .op fixture");
+    let parsed = jian_ops_schema::load_str(src).expect("parse .de fixture");
     let state = EditorState::from_document(parsed.value);
 
     let tool = design_refine_snapshot(&state);
@@ -451,7 +451,7 @@ fn design_refine_layout_snapshot_lays_out_the_requested_page() {
     let src = r#"{"version":"1.0.0","children":[],"pages":[
       {"id":"p1","name":"One","children":[{"type":"frame","id":"other","x":0,"y":0,"width":10,"height":10}]},
       {"id":"p2","name":"Two","children":[{"type":"frame","id":"root","x":5,"y":7,"width":50,"height":40}]}]}"#;
-    let parsed = jian_ops_schema::load_str(src).expect("parse .op fixture");
+    let parsed = jian_ops_schema::load_str(src).expect("parse .de fixture");
     let state = EditorState::from_document(parsed.value);
     let tool = design_refine_snapshot(&state);
 

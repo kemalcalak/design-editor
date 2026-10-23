@@ -30,7 +30,7 @@ de-editor-core = { path = "../de-editor-core" }
 # `EditorCommand::InsertSubtree`. de-orchestrator already pulls this same path dep.
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 # `merge_library_into_state` — honors DESIGN_EDITOR_SMOKE_LIBRARY by loading a
-# harvested component library (.lib.op) into the doc before generation so the
+# harvested component library (.lib.de) into the doc before generation so the
 # generator can instantiate its reusable masters.
 de-pen-loader = { path = "../de-pen-loader" }
 # `batch_design_snapshot` + `BatchDesign` MCP tool — the program-mode
@@ -61,7 +61,7 @@ futures = "0.3"
 # `tokio` for the runtime that `Orchestrator::run` (async) runs on.
 # `rt-multi-thread` so the LLM HTTP client can spawn its own tasks.
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
-# Persist the produced PenDocument to a `.op` (canonical serde_json,
+# Persist the produced PenDocument to a `.de` (canonical serde_json,
 # same shape as `persistence::save_to_path`) when `DESIGN_EDITOR_SMOKE_OUT`
 # is set — lets the headless render / screenshot step pick up the result.
 serde_json = { workspace = true }

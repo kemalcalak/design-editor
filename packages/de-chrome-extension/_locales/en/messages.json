@@ -14,7 +14,7 @@
     "message": "Capture element"
   },
   "downloadButton": {
-    "message": "Download .op"
+    "message": "Download .de"
   },
   "designButton": {
     "message": "Extract design.md"
@@ -122,10 +122,10 @@
     "message": "Design Editor at $1 accepted the connection but did not answer within $2s. It may be busy or stuck — check the app, then try again."
   },
   "errorNoIngress": {
-    "message": "This Design Editor build has no extension ingress ($1). Update the app, or use Download .op and open the file in Design Editor."
+    "message": "This Design Editor build has no extension ingress ($1). Update the app, or use Download .de and open the file in Design Editor."
   },
   "errorTooLarge": {
-    "message": "This capture is larger than $1 MB, which Design Editor's snapshot route refuses. Use Download .op, then open the file in Design Editor."
+    "message": "This capture is larger than $1 MB, which Design Editor's snapshot route refuses. Use Download .de, then open the file in Design Editor."
   },
   "errorImport": {
     "message": "Design Editor refused the snapshot: $1"

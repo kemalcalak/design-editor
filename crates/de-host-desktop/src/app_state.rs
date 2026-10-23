@@ -378,7 +378,7 @@ impl DesktopApp {
         self.host.editor_state().is_dirty()
     }
 
-    /// Confirm the adjacent `.op` destination before disturbing any active
+    /// Confirm the adjacent `.de` destination before disturbing any active
     /// import. Cancel therefore leaves the current worker and document intact.
     pub(crate) fn begin_figma_import(&mut self, path: PathBuf) -> bool {
         if self
@@ -412,7 +412,7 @@ impl DesktopApp {
     }
 
     /// Open documents macOS delivered through the open-documents
-    /// Apple event — a Finder double-click, `open file.op`, or a file
+    /// Apple event — a Finder double-click, `open file.de`, or a file
     /// dropped on the Dock icon. macOS routes these out-of-band of
     /// argv; the `casement` winit fork captures them and this drains
     /// the buffer. The single-window editor opens the first supported
@@ -423,10 +423,10 @@ impl DesktopApp {
         {
             let mut opened = false;
             for path in winit::platform::macos::drain_opened_file_urls() {
-                let is_op = de_host_services::doc_io::is_supported_document(&path);
+                let is_document = de_host_services::doc_io::is_supported_document(&path);
                 let is_fig = de_host_services::doc_io::is_supported_figma_import(&path);
                 let is_html = de_host_services::doc_io::is_supported_html_import(&path);
-                if !is_op && !is_fig && !is_html {
+                if !is_document && !is_fig && !is_html {
                     continue;
                 }
                 if opened {
@@ -474,10 +474,10 @@ impl DesktopApp {
         };
         let mut opened = false;
         for path in paths {
-            let is_op = de_host_services::doc_io::is_supported_document(&path);
+            let is_document = de_host_services::doc_io::is_supported_document(&path);
             let is_fig = de_host_services::doc_io::is_supported_figma_import(&path);
             let is_html = de_host_services::doc_io::is_supported_html_import(&path);
-            if (!is_op && !is_fig && !is_html) || !path.is_file() {
+            if (!is_document && !is_fig && !is_html) || !path.is_file() {
                 continue;
             }
             // Single-window editor: the first forwarded document wins, the

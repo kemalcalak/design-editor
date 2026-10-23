@@ -75,7 +75,7 @@ fn tracked_picker_rows_use_shared_select_hit_protocol() {
     let state = state_with(GitPanelState {
         overflow_open: true,
         overflow_view: GitOverflowView::TrackedPicker,
-        candidate_files: vec![candidate("a.op"), candidate("b.op")],
+        candidate_files: vec![candidate("a.de"), candidate("b.de")],
         tracked_picker_selected: Some(0),
         ..open_repo()
     });
@@ -108,7 +108,7 @@ fn pressed_tracked_picker_row_uses_shared_select_feedback() {
     let state = state_with(GitPanelState {
         overflow_open: true,
         overflow_view: GitOverflowView::TrackedPicker,
-        candidate_files: vec![candidate("a.op"), candidate("b.op")],
+        candidate_files: vec![candidate("a.de"), candidate("b.de")],
         tracked_picker: select,
         ..open_repo()
     });

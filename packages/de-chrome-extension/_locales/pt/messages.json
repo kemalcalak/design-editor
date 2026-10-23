@@ -14,7 +14,7 @@
     "message": "Capturar elemento"
   },
   "downloadButton": {
-    "message": "Baixar .op"
+    "message": "Baixar .de"
   },
   "designButton": {
     "message": "Extrair design.md"
@@ -122,10 +122,10 @@
     "message": "O Design Editor em $1 aceitou a conexão, mas não respondeu em $2 s. Ele pode estar ocupado ou travado — verifique o aplicativo e tente novamente."
   },
   "errorNoIngress": {
-    "message": "Esta versão do Design Editor não tem entrada para extensões ($1). Atualize o aplicativo ou use “Baixar .op” e abra o arquivo no Design Editor"
+    "message": "Esta versão do Design Editor não tem entrada para extensões ($1). Atualize o aplicativo ou use “Baixar .de” e abra o arquivo no Design Editor"
   },
   "errorTooLarge": {
-    "message": "Esta captura é maior que $1 MB, e a rota de capturas do Design Editor a recusa. Use “Baixar .op” e abra o arquivo no Design Editor"
+    "message": "Esta captura é maior que $1 MB, e a rota de capturas do Design Editor a recusa. Use “Baixar .de” e abra o arquivo no Design Editor"
   },
   "errorImport": {
     "message": "O Design Editor recusou a captura: $1"

@@ -28,7 +28,7 @@ const ILLEGAL_NAME_CHARS: [char; 9] = ['/', '\\', ':', '*', '?', '"', '<', '>', 
 pub const MAX_NAME_COMPONENT_CHARS: usize = 60;
 
 /// Stem used when the document has never been named or saved. Matches
-/// the `untitled.op` convention the Save paths already use.
+/// the `untitled.de` convention the Save paths already use.
 const UNTITLED_STEM: &str = "untitled";
 
 /// Strip the characters a path cannot carry. Illegal characters and
@@ -86,7 +86,7 @@ pub fn document_export_stem(state: &EditorState) -> String {
     from_doc.unwrap_or_else(|| UNTITLED_STEM.to_string())
 }
 
-/// Drop a trailing `.op` (or whatever extension the bound file
+/// Drop a trailing `.de` (or whatever extension the bound file
 /// carries) from a display file name. Names without an extension, and
 /// dotfile-shaped names, come back unchanged.
 fn strip_extension(file_name: &str) -> &str {
@@ -207,7 +207,7 @@ mod tests {
                 {"type":"frame","id":"f2","width":100,"height":100}
             ]}"#,
         );
-        state.editor_ui.file_name_display = Some("0808-k3-2.op".to_string());
+        state.editor_ui.file_name_display = Some("0808-k3-2.de".to_string());
         state
     }
 
@@ -295,7 +295,7 @@ mod tests {
                 {"type":"frame","id":"f1","name":"a/b:c*d?e\"f<g>h|i","width":10,"height":10}
             ]}"#,
         );
-        state.editor_ui.file_name_display = Some("re:port/v2.op".to_string());
+        state.editor_ui.file_name_display = Some("re:port/v2.de".to_string());
         select(&mut state, "f1");
         assert_eq!(
             default_export_file_name(&state),
@@ -312,7 +312,7 @@ mod tests {
                 {{"type":"frame","id":"f1","name":"{long_node}","width":10,"height":10}}
             ]}}"#
         ));
-        state.editor_ui.file_name_display = Some(format!("{long_doc}.op"));
+        state.editor_ui.file_name_display = Some(format!("{long_doc}.de"));
         select(&mut state, "f1");
 
         let name = default_export_file_name(&state);
@@ -325,7 +325,7 @@ mod tests {
     #[test]
     fn a_node_named_like_the_document_does_not_stutter() {
         let mut state = sample_state();
-        state.editor_ui.file_name_display = Some("星图.op".to_string());
+        state.editor_ui.file_name_display = Some("星图.de".to_string());
         select(&mut state, "f1");
         assert_eq!(default_export_file_name(&state), "星图.png");
     }

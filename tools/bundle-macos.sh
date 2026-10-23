@@ -10,7 +10,7 @@
 # A bare/ad-hoc binary has no durable identity, so it is denied; a
 # bundle signed with the same Developer ID + bundle id as an
 # already-granted app inherits that grant. This is why the TS app can
-# commit a `.op` file on the Desktop and an unsigned dev build cannot.
+# commit a `.de` file on the Desktop and an unsigned dev build cannot.
 #
 # Usage: tools/bundle-macos.sh   (after `cargo build -p de-host-desktop --release`)
 # Then launch via LaunchServices so the app is its own TCC responsible

@@ -28,7 +28,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum McpServeError {
-    /// Loading, saving, or seeding the `.op` file this transport is backed
+    /// Loading, saving, or seeding the `.de` file this transport is backed
     /// by failed. A client fault when the path came from a tool call's
     /// `filePath`, a start-up fault when it came from argv.
     Document(String),

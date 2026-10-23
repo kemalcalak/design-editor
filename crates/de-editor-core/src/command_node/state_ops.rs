@@ -77,7 +77,7 @@ impl EditorState {
             let Some(parent) = walkers::find_node_mut(root, target_parent) else {
                 return Ok(false);
             };
-            let Some(children) = parent.children_mut() else {
+            let Some(children) = parent.children_mut_or_insert() else {
                 return Ok(false);
             };
             children.push(node);
@@ -453,7 +453,7 @@ impl EditorState {
             let Some(parent) = walkers::find_node_mut(root, parent_id) else {
                 return Ok(false);
             };
-            let Some(slot) = parent.children_mut() else {
+            let Some(slot) = parent.children_mut_or_insert() else {
                 return Ok(false);
             };
             slot.extend(nodes);
@@ -559,7 +559,7 @@ impl EditorState {
             let Some(parent) = walkers::find_node_mut(root, parent_id) else {
                 return Ok(None);
             };
-            let Some(slot) = parent.children_mut() else {
+            let Some(slot) = parent.children_mut_or_insert() else {
                 return Ok(None);
             };
             slot.extend(nodes);

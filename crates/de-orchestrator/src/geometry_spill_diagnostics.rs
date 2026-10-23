@@ -5,7 +5,7 @@ use super::*;
 /// A frame declaring a NUMERIC height but resolving MUCH taller — an
 /// oversized child inflated it (jian grows the parent instead of letting the
 /// child spill, so no edge ever crosses another and the width-overflow echo
-/// stays blind). Measured (GLM-5.2 test0711-1.op): a 300px image inside a
+/// stays blind). Measured (GLM-5.2 test0711-1.de): a 300px image inside a
 /// declared-42px "Avatar" strip blew the strip — and the whole header —
 /// to 300px. A generous slack keeps line-height rounding out of the report;
 /// a real defect overshoots by multiples.

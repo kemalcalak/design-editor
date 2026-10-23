@@ -1,6 +1,5 @@
 {
   "name": "@kemalcalak/design-editor-packages",
-  "version": "0.2.1",
   "private": true,
   "description": "Web SDK workspace for Design Editor (the Rust product lives in ../crates). Hosts the wasm-backed de-web-sdk viewer family plus the JS build glue that feeds the Rust web target.",
   "author": {
@@ -25,9 +24,7 @@
     "lint:fix": "oxlint --fix . && bun run check-extractor-sync:fix",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "generate-iconify-catalog": "node scripts/generate-iconify-catalog.mjs",
-    "sync-version": "node scripts/sync-version.mjs",
-    "sync-version:check": "node scripts/sync-version.mjs --check"
+    "generate-iconify-catalog": "node scripts/generate-iconify-catalog.mjs"
   },
   "devDependencies": {
     "@iconify-json/feather": "^1.2.1",

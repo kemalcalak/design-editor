@@ -14,7 +14,7 @@
     "message": "Tangkap elemen"
   },
   "downloadButton": {
-    "message": "Unduh .op"
+    "message": "Unduh .de"
   },
   "designButton": {
     "message": "Ekstrak design.md"
@@ -122,10 +122,10 @@
     "message": "Design Editor di $1 menerima koneksi tetapi tidak menjawab dalam $2 detik. Aplikasi mungkin sibuk atau macet — periksa aplikasinya, lalu coba lagi."
   },
   "errorNoIngress": {
-    "message": "Versi Design Editor ini tidak memiliki jalur masuk untuk ekstensi ($1). Perbarui aplikasi, atau gunakan “Unduh .op” lalu buka berkas di Design Editor"
+    "message": "Versi Design Editor ini tidak memiliki jalur masuk untuk ekstensi ($1). Perbarui aplikasi, atau gunakan “Unduh .de” lalu buka berkas di Design Editor"
   },
   "errorTooLarge": {
-    "message": "Tangkapan ini lebih besar dari $1 MB, dan rute cuplikan Design Editor menolaknya. Gunakan “Unduh .op”, lalu buka berkas di Design Editor"
+    "message": "Tangkapan ini lebih besar dari $1 MB, dan rute cuplikan Design Editor menolaknya. Gunakan “Unduh .de”, lalu buka berkas di Design Editor"
   },
   "errorImport": {
     "message": "Design Editor menolak cuplikan: $1"

@@ -85,7 +85,7 @@ pub struct KitComponent {
 }
 
 /// A bundle of reusable components — built-in or imported from a
-/// `.op` kit file (see `uikit_io.rs` for the import/export pipeline).
+/// `.de` kit file (see `uikit_io.rs` for the import/export pipeline).
 #[derive(Debug, Clone)]
 pub struct UIKit {
     pub id: String,

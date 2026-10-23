@@ -70,8 +70,6 @@ mod keyboard_scene_template;
 mod kit_io;
 mod kit_persistence;
 mod kit_persistence_error;
-mod legacy_op_upgrade;
-mod legacy_op_upgrade_error;
 mod macos_app;
 mod mcp_config_error;
 mod mcp_config_io;
@@ -231,7 +229,7 @@ struct DesktopApp {
     /// reused for every CursorHint::Rotate to avoid re-decoding
     /// the bitmap every move. None until the event loop is ready.
     rotate_cursor: Option<winit::window::CustomCursor>,
-    /// Path of the currently-open .pen/.op document; None when unsaved.
+    /// Path of the currently-open .pen/.de document; None when unsaved.
     current_path: Option<PathBuf>,
     /// At most one background document serialization / atomic write. Keeping
     /// saves serialized prevents an older snapshot from committing after a
@@ -370,7 +368,7 @@ struct DesktopApp {
     /// Connect), drained by `drain_acp_agent_connect`.
     acp_agent_connect_job: Option<acp_agent_probe_host::AcpAgentConnectJob>,
     /// Document to open once the window is ready — set from argv by
-    /// the file-association launch path (`design-editor X.op`).
+    /// the file-association launch path (`design-editor X.de`).
     initial_file: Option<PathBuf>,
     /// Native menu bar — kept alive for the process lifetime;
     /// `None` until `resumed` builds it (and always `None` on Linux,
@@ -453,11 +451,11 @@ struct DesktopApp {
 }
 
 /// Scan argv for a document to open on launch. This is the
-/// file-association entry point: once the `.op` / `.pen` association
+/// file-association entry point: once the `.de` / `.pen` association
 /// is registered (see `Cargo.toml`'s `[package.metadata.bundle]`),
 /// the OS launches this binary with the document path in argv —
-/// double-click on Windows / Linux, or `open file.op` from a shell
-/// on any platform. The first existing `.op` / `.pen` / `.fig`
+/// double-click on Windows / Linux, or `open file.de` from a shell
+/// on any platform. The first existing `.de` / `.pen` / `.fig`
 /// argument wins; flags (`--mcp`, …) never match the extension
 /// filter. `.fig` routes through the Figma import worker once the
 /// window is up (see `DesktopApp::apply_initial_file`).
@@ -602,19 +600,19 @@ fn main() {
     if tcc_selftest::run_cli_if_requested() {
         return;
     }
-    // `--render-shots <file.op> <out_dir> [scale]` renders node-only
+    // `--render-shots <file.de> <out_dir> [scale]` renders node-only
     // PNGs headless (model-design benchmark) and exits without a window.
     if render_cli::run_cli_if_requested() {
         return;
     }
-    // `--enrich-images <input.op> <output.op> [timeout_seconds]` runs the
+    // `--enrich-images <input.de> <output.de> [timeout_seconds]` runs the
     // production image-search session headlessly for batch artifacts.
     if image_enrich_cli::run_cli_if_requested() {
         return;
     }
     let initial_file = initial_file_from_argv();
     // Single-instance gate: when an editor is already running, a second launch
-    // (e.g. a `.op` double-click on Windows / Linux) forwards its document to
+    // (e.g. a `.de` double-click on Windows / Linux) forwards its document to
     // the running window and exits instead of opening a second editor.
     let primary = match single_instance::acquire(initial_file.as_deref()) {
         single_instance::Acquire::Forwarded => return,

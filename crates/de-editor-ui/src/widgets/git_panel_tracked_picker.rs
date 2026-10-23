@@ -2,7 +2,7 @@
 //! `GitPanelTrackedPicker` (`git-panel-tracked-picker.tsx`).
 //!
 //! Reached from the overflow `…` menu's "切换跟踪文件" entry. Lists the
-//! repo's `.op` candidates (host-enumerated into `candidate_files`), lets the
+//! repo's `.de` candidates (host-enumerated into `candidate_files`), lets the
 //! user pick one, and binds it as the tracked file (optionally opening it).
 //!
 //! Rendered as an overflow popover subview (`GitOverflowView::TrackedPicker`),
@@ -165,7 +165,7 @@ impl GitPanel<'_> {
             return;
         }
 
-        // Header — "{{count}} .op files in this repo:".
+        // Header — "{{count}} .de files in this repo:".
         let header = self
             .t("git.picker.heading")
             .replace("{{count}}", &self.state.candidate_files.len().to_string());
@@ -302,7 +302,7 @@ impl GitPanel<'_> {
         );
     }
 
-    /// Paint the empty-state card (no `.op` candidates).
+    /// Paint the empty-state card (no `.de` candidates).
     fn paint_picker_empty(&self, cx: &mut PaintCx<'_>, panel_rect: Rect) {
         let t = self.theme;
         let p = self.tracked_picker_panel(panel_rect);

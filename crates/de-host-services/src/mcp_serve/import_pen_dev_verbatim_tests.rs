@@ -6,8 +6,10 @@ use super::{load_editor_state, process_message, writes_verbatim};
 use de_editor_core::PenNodeExt;
 
 #[test]
-fn only_the_pen_dev_import_skips_the_write_repairs() {
+fn only_imports_and_history_steps_skip_the_write_repairs() {
     assert!(writes_verbatim("import_pen_dev"));
+    assert!(writes_verbatim("undo"));
+    assert!(writes_verbatim("redo"));
     assert!(!writes_verbatim("import_html"));
     assert!(!writes_verbatim("batch_design"));
 }
@@ -33,7 +35,7 @@ fn an_imported_phone_screen_keeps_its_own_children() {
             "children":[{"type":"text","id":"t","content":"Hello","fill":"#000000"}]}]}"##,
     )
     .expect("write pen");
-    let path = dir.join("doc.op");
+    let path = dir.join("doc.de");
     let mut state = de_editor_core::EditorState::new();
     let line = serde_json::json!({
         "jsonrpc": "2.0",

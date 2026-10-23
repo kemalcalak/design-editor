@@ -30,17 +30,17 @@ mod tests {
 
     #[test]
     fn names_are_stable_and_distinct_per_document() {
-        let a = home_thumbnail_file_name("/Users/me/a.op");
-        assert_eq!(a, home_thumbnail_file_name("/Users/me/a.op"));
-        assert_ne!(a, home_thumbnail_file_name("/Users/me/b.op"));
+        let a = home_thumbnail_file_name("/Users/me/a.de");
+        assert_eq!(a, home_thumbnail_file_name("/Users/me/a.de"));
+        assert_ne!(a, home_thumbnail_file_name("/Users/me/b.de"));
         assert!(a.ends_with(".png") && a.len() == 20);
     }
 
     #[test]
     fn a_new_preview_gets_a_new_image_id() {
-        let first = home_thumbnail_image_id("/a.op", 10);
-        assert_eq!(first, home_thumbnail_image_id("/a.op", 10));
-        assert_ne!(first, home_thumbnail_image_id("/a.op", 11));
-        assert_ne!(first, home_thumbnail_image_id("/b.op", 10));
+        let first = home_thumbnail_image_id("/a.de", 10);
+        assert_eq!(first, home_thumbnail_image_id("/a.de", 10));
+        assert_ne!(first, home_thumbnail_image_id("/a.de", 11));
+        assert_ne!(first, home_thumbnail_image_id("/b.de", 10));
     }
 }

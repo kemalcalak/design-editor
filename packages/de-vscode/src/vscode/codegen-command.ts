@@ -27,7 +27,7 @@ function framework(): Framework {
 async function activeDocJson(registry: SessionRegistry): Promise<string | undefined> {
   const session = registry.activeSession();
   if (!session) {
-    void vscode.window.showWarningMessage("Design Editor: open and focus a .op design first.");
+    void vscode.window.showWarningMessage("Design Editor: open and focus a .de design first.");
     return undefined;
   }
   const bytes = await session.backup();
@@ -122,7 +122,7 @@ export function registerChatParticipant(
   const handler: ChatHandler = async (request, _ctx, response, token) => {
     const session = registry.activeSession();
     if (!session) {
-      response.markdown("Open and focus a `.op` design first, then ask again.");
+      response.markdown("Open and focus a `.de` design first, then ask again.");
       return;
     }
     const docJson = new TextDecoder().decode(await session.backup());

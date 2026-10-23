@@ -382,7 +382,7 @@ fn file_mcp_applier_normalizes_mobile_document_before_save() {
         .expect("system clock")
         .as_nanos();
     let path = std::env::temp_dir().join(format!(
-        "design-editor-mcp-mobile-normalize-{}-{suffix}.op",
+        "design-editor-mcp-mobile-normalize-{}-{suffix}.de",
         std::process::id()
     ));
     let mut state = de_editor_core::EditorState::new();
@@ -718,10 +718,10 @@ fn read_only_stdio_session_leaves_the_file_byte_identical() {
     // A shipped template: loading and re-serialising it normalises values,
     // so any save during a read-only session shows up as changed bytes.
     let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../de-editor-core/assets/scene_templates/price-tier-card.op");
+        .join("../de-editor-core/assets/scene_templates/price-tier-card.de");
     let original = std::fs::read(&source).expect("read template");
     let path = std::env::temp_dir().join(format!(
-        "design-editor-mcp-read-only-{}-{}.op",
+        "design-editor-mcp-read-only-{}-{}.de",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -760,6 +760,6 @@ fn read_only_stdio_session_leaves_the_file_byte_identical() {
     let _ = std::fs::remove_file(&path);
     assert!(
         after == original,
-        "a read-only MCP session must not rewrite the .op file"
+        "a read-only MCP session must not rewrite the .de file"
     );
 }

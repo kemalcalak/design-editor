@@ -164,7 +164,7 @@ async function onDownload() {
   setBusy(true);
   try {
     const { text, meta } = await ensureCapture();
-    // Convert the raw snapshot into a ready-to-open `.op` document (the same
+    // Convert the raw snapshot into a ready-to-open `.de` document (the same
     // conversion `de import:snapshot` runs), so the download opens directly by
     // double-click with no CLI step.
     const converted = JSON.parse(getCore().snapshotToOpDocument(text, String(meta.title || '')));
@@ -179,8 +179,8 @@ async function onDownload() {
     const filename = getCore().opFilename(String(meta.title || ''));
     // `application/octet-stream`, NOT json: Chrome's download pipeline
     // second-guesses an unknown suffix against the blob's MIME type and
-    // rewrote `<title>.op` to `<title>.json`. A generic byte stream keeps
-    // the `.op` name the core built.
+    // rewrote `<title>.de` to `<title>.json`. A generic byte stream keeps
+    // the `.de` name the core built.
     const objectUrl = URL.createObjectURL(
       new Blob([converted.op], { type: 'application/octet-stream' }),
     );

@@ -634,7 +634,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "a11y.aiChat" => "AI チャット",
         "designMd.emptyHint" => ".md ファイルをインポートしてデザイン仕様を添付",
         "componentBrowser.empty" => "コンポーネントが見つかりません",
-        "dialog.dropToOpen" => "ドロップして開く  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "ドロップして開く  ·  .de / .pen / .fig / .html / .zip",
         "text.weight.extralight" => "Extra Light",
         "text.weight.extrabold" => "Extra Bold",
         "interactions.title" => "インタラクション",

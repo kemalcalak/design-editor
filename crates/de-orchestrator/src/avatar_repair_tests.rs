@@ -8,7 +8,7 @@ fn find_by_id<'a>(node: &'a PenNode, id: &str) -> Option<&'a PenNode> {
     node.children()?.iter().find_map(|c| find_by_id(c, id))
 }
 
-/// GLM-5.2 measured shape (test0711-2.op): an 88×44 pill holding a 44×44
+/// GLM-5.2 measured shape (test0711-2.de): an 88×44 pill holding a 44×44
 /// image — reads as an empty circle NEXT TO a square photo. The slot is
 /// squared + clipped and the image switches to fill both axes.
 #[test]

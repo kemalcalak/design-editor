@@ -521,7 +521,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "acp.localDesktopOnly" => "本地 Agent 仅在桌面应用中可用。",
         "figma.title" => "从 Figma 导入",
         "figma.dropFile" => "将 .fig 文件拖放到此处",
-        "dialog.dropToOpen" => "拖放以打开  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "拖放以打开  ·  .de / .pen / .fig / .html / .zip",
         "figma.orBrowse" => "或点击浏览",
         "figma.exportTip" => "从 Figma 导出：文件 → 保存本地副本 (.fig)",
         "figma.selectFigFile" => "请选择一个 .fig 文件",

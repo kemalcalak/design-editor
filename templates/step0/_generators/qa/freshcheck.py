@@ -9,8 +9,8 @@
 
 过期的来源有两个，第二个是这个工具存在的理由：
 
-  1. **文档变了**没重渲 —— 改了 .op 忘了刷预览，这个还算好想到；
-  2. **渲染器变了** —— .op 一个字节没动，但 design-editor 重新编译后
+  1. **文档变了**没重渲 —— 改了 .de 忘了刷预览，这个还算好想到；
+  2. **渲染器变了** —— .de 一个字节没动，但 design-editor 重新编译后
      文字栅格化的结果变了，落盘图就从此对不上了。2026-08-09 那次就是这样：
      minimal-keynote 的 01/03/08 帧文档内容与 HEAD 完全一致，渲染出来却和落
      盘 PNG 不一致，查到最后是二进制在 08-07 之后重建过。
@@ -150,7 +150,7 @@ def audit(templates: list[str], fix: bool) -> int:
     rows = []
     with tempfile.TemporaryDirectory() as tmp_root:
         for template in templates:
-            doc = DOCS / f"{template}.op"
+            doc = DOCS / f"{template}.de"
             tmp = pathlib.Path(tmp_root) / template
             tmp.mkdir(parents=True)
             count = len(boards(doc))
@@ -208,7 +208,7 @@ def audit(templates: list[str], fix: bool) -> int:
 
 def selftest() -> int:
     """渲染确定性自检 —— 这套方法的地基，不成立则本工具的结论全部作废。"""
-    sample = sorted(DOCS.glob("*.op"))[:3]
+    sample = sorted(DOCS.glob("*.de"))[:3]
     # 空样本要当失败报 —— 路径算错一级时 glob 落空，比对零个文件同样「全过」，
     # 那是自检里最坏的一种绿。
     if not sample:
@@ -239,7 +239,7 @@ def main(argv: list[str]) -> int:
         print(f"缺少渲染二进制 {BIN}；先 cargo build --release -p de-host-desktop",
               file=sys.stderr)
         return 2
-    templates = args or sorted(p.stem for p in DOCS.glob("*.op"))
+    templates = args or sorted(p.stem for p in DOCS.glob("*.de"))
     return audit(templates, fix)
 
 

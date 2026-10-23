@@ -60,7 +60,7 @@ fn no_thumbs_path(path: &Path) -> PathBuf {
         .file_stem()
         .and_then(|name| name.to_str())
         .unwrap_or("design-editor-tesla-blurup");
-    path.with_file_name(format!("{stem}-no-thumbs.op"))
+    path.with_file_name(format!("{stem}-no-thumbs.de"))
 }
 
 fn select_summary_page(state: &mut EditorState) -> usize {
@@ -282,8 +282,8 @@ fn deferred_thumbnail_binding_uses_the_final_source_string() {
 fn adjacent_output_uses_the_figma_source_stem() {
     let source = Path::new("/designs/Ant Design Open Source (Community).FIG");
     assert_eq!(
-        adjacent_op_base_path(source).unwrap(),
-        PathBuf::from("/designs/Ant Design Open Source (Community).op")
+        adjacent_document_base_path(source).unwrap(),
+        PathBuf::from("/designs/Ant Design Open Source (Community).de")
     );
 }
 
@@ -299,10 +299,10 @@ fn existing_adjacent_output_maps_replace_copy_and_cancel_choices() {
         Some(ImportOutputMode::CreateFixed)
     );
 
-    std::fs::write(dir.join("Design.op"), b"existing OP").expect("write existing OP");
+    std::fs::write(dir.join("Design.de"), b"existing document").expect("write existing document");
     assert_eq!(
         select_output_mode(&source, |_| ExistingOutputDecision::Replace).unwrap(),
-        Some(confirmed_replace_mode(&dir.join("Design.op")))
+        Some(confirmed_replace_mode(&dir.join("Design.de")))
     );
     assert_eq!(
         select_output_mode(&source, |_| ExistingOutputDecision::NumberedCopy).unwrap(),
@@ -317,15 +317,13 @@ fn existing_adjacent_output_maps_replace_copy_and_cancel_choices() {
 }
 
 #[test]
-fn adjacent_persist_atomically_replaces_the_fixed_sibling_op() {
+fn adjacent_persist_atomically_replaces_the_fixed_sibling_document() {
     let dir = temp_import_dir("adjacent-replace");
     std::fs::create_dir_all(&dir).expect("create import directory");
     let source = dir.join("Design.fig");
-    let output = dir.join("Design.op");
-    let stale_sidecar = de_host_services::doc_io::sidecar_path(&output);
+    let output = dir.join("Design.de");
     std::fs::write(&source, b"fig fixture").expect("write source marker");
     std::fs::write(&output, b"previous OP contents").expect("write prior OP");
-    std::fs::write(&stale_sidecar, b"stale editor metadata").expect("write stale sidecar");
 
     let imported = de_pen_loader::load_canonical(
         r#"{"version":"1.0.0","pages":[{"id":"figma-page-0","name":"Imported","children":[{"type":"frame","id":"latest","name":"Latest Version","layout":"vertical","children":[{"type":"rectangle","id":"content","name":"content"},{"type":"rectangle","id":"vector","name":"Vector"}]}]}],"children":[]}"#,
@@ -364,12 +362,8 @@ fn adjacent_persist_atomically_replaces_the_fixed_sibling_op() {
     ] if content.base.name.as_deref() == Some("content")
         && vector.base.name.as_deref() == Some("Vector")));
     assert!(
-        !dir.join("Design (1).op").exists(),
-        "re-import must reuse Design.op rather than create a numbered copy"
-    );
-    assert!(
-        !stale_sidecar.exists(),
-        "atomic replacement must remove the old destination sidecar"
+        !dir.join("Design (1).de").exists(),
+        "re-import must reuse Design.de rather than create a numbered copy"
     );
     assert!(std::fs::read_dir(&dir)
         .expect("read import directory")
@@ -387,9 +381,9 @@ fn declined_overwrite_publishes_the_next_numbered_copy() {
     let dir = temp_import_dir("adjacent-numbered");
     std::fs::create_dir_all(&dir).expect("create import directory");
     let source = dir.join("Design.fig");
-    let fixed = dir.join("Design.op");
-    let first_copy = dir.join("Design (1).op");
-    let expected = dir.join("Design (2).op");
+    let fixed = dir.join("Design.de");
+    let first_copy = dir.join("Design (1).de");
+    let expected = dir.join("Design (2).de");
     std::fs::write(&source, b"fig fixture").expect("write source marker");
     std::fs::write(&fixed, b"fixed original").expect("write fixed OP");
     std::fs::write(&first_copy, b"first copy").expect("write first numbered OP");
@@ -419,8 +413,8 @@ fn confirmed_overwrite_preserves_a_fixed_output_changed_during_conversion() {
     let dir = temp_import_dir("adjacent-replace-changed");
     std::fs::create_dir_all(&dir).expect("create import directory");
     let source = dir.join("Design.fig");
-    let fixed = dir.join("Design.op");
-    let expected = dir.join("Design (1).op");
+    let fixed = dir.join("Design.de");
+    let expected = dir.join("Design (1).de");
     std::fs::write(&source, b"fig fixture").expect("write source marker");
     std::fs::write(&fixed, b"version approved for replacement").expect("write fixed OP");
     let output_mode = select_output_mode(&source, |_| ExistingOutputDecision::Replace)
@@ -456,8 +450,8 @@ fn confirmed_overwrite_preserves_a_fixed_output_created_after_confirmation() {
     let dir = temp_import_dir("adjacent-replace-created");
     std::fs::create_dir_all(&dir).expect("create import directory");
     let source = dir.join("Design.fig");
-    let fixed = dir.join("Design.op");
-    let expected = dir.join("Design (1).op");
+    let fixed = dir.join("Design.de");
+    let expected = dir.join("Design (1).de");
     std::fs::write(&source, b"fig fixture").expect("write source marker");
     std::fs::write(&fixed, b"output shown by the dialog").expect("write fixed OP");
     let output_mode = select_output_mode(&source, |path| {
@@ -494,8 +488,8 @@ fn fixed_output_appearing_after_precheck_falls_back_to_a_numbered_copy() {
     let dir = temp_import_dir("adjacent-create-race");
     std::fs::create_dir_all(&dir).expect("create import directory");
     let source = dir.join("Design.fig");
-    let fixed = dir.join("Design.op");
-    let expected = dir.join("Design (1).op");
+    let fixed = dir.join("Design.de");
+    let expected = dir.join("Design (1).de");
     std::fs::write(&source, b"fig fixture").expect("write source marker");
     // `CreateFixed` represents the earlier no-file precheck. This file then
     // appears before publication, as another process or import could create it.
@@ -544,7 +538,8 @@ fn adjacent_save_failure_keeps_the_converted_state_available() {
 
 #[test]
 fn unadopted_completed_import_keeps_the_fixed_output() {
-    let output = temp_import_dir("unadopted-import").with_extension("op");
+    let output =
+        temp_import_dir("unadopted-import").with_extension(de_util::document_file::EXTENSION);
     std::fs::write(&output, b"completed replacement").expect("write replacement fixture");
 
     drop(PersistedFile::new(output.clone()));
@@ -571,7 +566,7 @@ fn failed_adjacent_save_installs_unsaved_import_and_requests_save_as() {
         }),
     };
     let mut host = WidgetHostNative::new();
-    let mut current_path = Some(PathBuf::from("/old/document.op"));
+    let mut current_path = Some(PathBuf::from("/old/document.de"));
     let reported = RefCell::new(None::<String>);
 
     let outcome = apply_completed_import(
@@ -600,7 +595,7 @@ fn failed_adjacent_save_installs_unsaved_import_and_requests_save_as() {
 
 #[test]
 fn completed_persisted_import_binds_current_path_and_display_name() {
-    let output = temp_import_dir("current-path").with_extension("op");
+    let output = temp_import_dir("current-path").with_extension(de_util::document_file::EXTENSION);
     let state = EditorState::starter();
     let prepared = PreparedImport {
         state,
@@ -634,7 +629,7 @@ fn completed_persisted_import_binds_current_path_and_display_name() {
 }
 
 /// Manual end-to-end smoke test for the desktop import persistence path.
-/// It converts every page and publishes the generated `.op` beside the source
+/// It converts every page and publishes the generated `.de` beside the source
 /// by atomically replacing the same fixed sibling used by the UI worker.
 #[test]
 #[ignore = "manual smoke — needs DE_FIG_ADJACENT_SMOKE pointing at a local .fig"]
@@ -653,7 +648,9 @@ fn fig_import_adjacent_smoke() {
     let completed = persist_import_next_to_source(
         prepared,
         &source,
-        confirmed_replace_mode(&adjacent_op_base_path(&source).expect("adjacent output path")),
+        confirmed_replace_mode(
+            &adjacent_document_base_path(&source).expect("adjacent output path"),
+        ),
         &CancellationToken::default(),
     );
     let output = completed
@@ -693,7 +690,7 @@ fn fig_import_bench() {
         .map(PathBuf::from)
         .unwrap_or_else(|| {
             PathBuf::from(format!(
-                "/private/tmp/design-editor-tesla-blurup-{}.op",
+                "/private/tmp/design-editor-tesla-blurup-{}.de",
                 std::process::id()
             ))
         });

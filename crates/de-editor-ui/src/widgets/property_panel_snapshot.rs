@@ -137,14 +137,14 @@ pub struct NodeSnapshot {
     /// single-fill `fill` / `fill_opacity` / `gradient_*` / `image_fill`
     /// fields above stay derived from `fills[0]` so the gradient /
     /// image / colour-variable subsystems (which key off the primary
-    /// fill) keep compiling unchanged. An old single-fill `.op` loads
+    /// fill) keep compiling unchanged. An old single-fill `.de` loads
     /// as exactly one entry.
     pub fills: Vec<FillSummary>,
     /// Path-only fill rule. `None` means this selection is not a Path;
     /// Path's absent schema value is surfaced as `Some(Nonzero)`.
     pub path_fill_rule: Option<jian_ops_schema::node::path::PathFillRule>,
     pub stroke: Option<SceneStroke>,
-    /// LinearGradient angle in degrees (canonical `.op` convention,
+    /// LinearGradient angle in degrees (canonical `.de` convention,
     /// 0° = bottom→top). `None` when the primary fill isn't a
     /// linear gradient — the Fill section hides the angle row in
     /// that case.

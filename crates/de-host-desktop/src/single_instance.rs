@@ -5,7 +5,7 @@
 //! double-clicked document path into the already-running window. Upstream
 //! winit (and the `casement` fork) has no equivalent, and on Windows / Linux
 //! the OS file-association launches a fresh process per double-click. Without
-//! this guard a second `.op` open would spawn a second editor window instead
+//! this guard a second `.de` open would spawn a second editor window instead
 //! of surfacing the file in the running one.
 //!
 //! Mechanism — deliberately free of platform `#[cfg]` and of any new
@@ -240,7 +240,7 @@ mod tests {
             }
         });
 
-        let path = std::env::temp_dir().join("single-instance-fixture.op");
+        let path = std::env::temp_dir().join("single-instance-fixture.de");
         assert!(
             forward_to_primary(addr, Some(&path)),
             "secondary should forward"

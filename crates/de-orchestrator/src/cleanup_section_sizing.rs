@@ -5,7 +5,7 @@ use super::*;
 
 /// A fixed-height vertical artboard's direct content sections are content-sized
 /// by default. A content-bearing `fill_container` child consumes the remaining
-/// main-axis space and creates the large blank tail seen in `0713-1-ds.op`.
+/// main-axis space and creates the large blank tail seen in `0713-1-ds.de`.
 ///
 /// Keep the repair deliberately shallow: horizontal cross-axis stretch (for
 /// example a desktop sidebar), nested layout contracts, explicit scroll

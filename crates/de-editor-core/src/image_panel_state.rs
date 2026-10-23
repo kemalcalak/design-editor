@@ -55,7 +55,7 @@ pub enum ImageAssetStatus {
     /// happens to exist here is still only a pointer, not the image
     /// content — sharing the document reproduces the exact "file is
     /// missing" report for anyone without that same path. See the
-    /// shared-.op portability audit, 2026-07-18.)
+    /// shared-.de portability audit, 2026-07-18.)
     LinkedLocal,
     /// Relative path with no document path to resolve against
     /// (TS "Relative image path cannot be resolved yet").

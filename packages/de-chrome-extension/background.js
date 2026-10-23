@@ -172,7 +172,7 @@ function dataUrl(text) {
 
 async function deliver(mode, text, meta, endpoint) {
   if (mode === 'download') {
-    // Same conversion as the popup: hand back a ready-to-open `.op` document,
+    // Same conversion as the popup: hand back a ready-to-open `.de` document,
     // not the raw snapshot. An empty capture surfaces as an actionable error
     // rather than a broken file.
     const converted = JSON.parse(getCore().snapshotToOpDocument(text, String(meta.title || '')));

@@ -10,7 +10,7 @@
 //! The session deliberately reuses the Figma session's `PreparedImport` /
 //! `PumpOutcome`, but NOT its error: the failure sets is different. HTML
 //! import has no page-selection stage, no cancellation token, and no adjacent
-//! `.op` publication (its next Save routes through Save As), while it does
+//! `.de` publication (its next Save routes through Save As), while it does
 //! have a case the Figma path cannot produce —
 //! [`HtmlImportError::NoImportableContent`], a parse that succeeded and
 //! yielded nothing paintable. Sharing one enum would have meant a union with

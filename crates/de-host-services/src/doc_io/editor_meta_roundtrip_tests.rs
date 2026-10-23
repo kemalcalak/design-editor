@@ -2,9 +2,9 @@ use super::{load_editor_state, load_editor_state_from_source, save_to_path};
 use de_editor_core::EditorState;
 use std::path::PathBuf;
 
-fn temp_op_path() -> PathBuf {
+fn temp_document_path() -> PathBuf {
     std::env::temp_dir().join(format!(
-        "design-editor-preserve-geometry-{}-{}.op",
+        "design-editor-preserve-geometry-{}-{}.de",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -32,7 +32,7 @@ fn authored_geometry_mode_survives_save_load_and_source_round_trips() {
     .value;
     let mut state = EditorState::from_document(document);
     state.editor_ui.preserve_authored_geometry = true;
-    let path = temp_op_path();
+    let path = temp_document_path();
 
     save_to_path(&state, &path).expect("save succeeds");
     let source = std::fs::read_to_string(&path).expect("saved source");
@@ -66,7 +66,7 @@ fn scenario_survives_save_load_and_ignores_an_unknown_tag() {
         .value,
     );
     state.editor_ui.scenario = Some(TemplateScene::Slides);
-    let path = temp_op_path();
+    let path = temp_document_path();
 
     save_to_path(&state, &path).expect("save succeeds");
     let source = std::fs::read_to_string(&path).expect("saved source");
@@ -131,7 +131,7 @@ fn source_without_geometry_metadata_keeps_legacy_normal_layout() {
 
 #[test]
 fn empty_file_keeps_the_source_parser_error() {
-    let path = temp_op_path();
+    let path = temp_document_path();
     std::fs::write(&path, []).expect("write empty fixture");
 
     let path_error = load_editor_state(&path, de_editor_core::Locale::EnUs)
@@ -145,7 +145,7 @@ fn empty_file_keeps_the_source_parser_error() {
 
 #[test]
 fn invalid_utf8_keeps_the_localized_load_error() {
-    let path = temp_op_path();
+    let path = temp_document_path();
     let bytes = vec![0xf0, 0x28, 0x8c, 0x28];
     std::fs::write(&path, &bytes).expect("write invalid UTF-8 fixture");
 

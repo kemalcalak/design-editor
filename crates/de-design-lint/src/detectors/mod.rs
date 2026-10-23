@@ -237,7 +237,7 @@ mod detect_all_tests {
 
     /// Reduced copy of the two affected artboards from the K3 deck. The
     /// fixture is intentionally self-contained so the test never reads the
-    /// external `.op` sample.
+    /// external `.de` sample.
     #[test]
     fn deck_fixture_reports_two_empty_panels_and_repairs_one_bar_group() {
         let mut document = deck_fixture();

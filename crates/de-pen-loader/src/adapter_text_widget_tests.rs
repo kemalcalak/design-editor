@@ -1,5 +1,5 @@
 //! Text / fixture / widget adapter tests — font size + weight
-//! resolution, gradient payloads, the shipped `.op` fixtures, clip
+//! resolution, gradient payloads, the shipped `.de` fixtures, clip
 //! semantics, styled text runs, and widget prop pass-through. Carved off
 //! `adapter_tests.rs` to keep every file under the 800-line cap.
 
@@ -7,7 +7,7 @@ use super::*;
 
 #[test]
 fn text_font_size_and_weight_flow_through() {
-    // login.op-style headline: 28pt, weight 700.
+    // login.de-style headline: 28pt, weight 700.
     let src = r##"{
       "version":"1.0.0","pages":[{"id":"p","name":"P","children":[
         {"type":"text","id":"hd","content":"Welcome Back",
@@ -34,7 +34,7 @@ fn text_keyword_weight_resolves() {
 
 #[test]
 fn numeric_string_font_weights_resolve() {
-    // pencil-demo.op authors weights as JSON strings — `"fontWeight":"700"`
+    // pencil-demo.de authors weights as JSON strings — `"fontWeight":"700"`
     // for headlines, `"600"` for navigation chrome, `"500"` etc. The
     // canonical schema picks `FontWeight::Keyword(String)` for every
     // JSON string, so the resolver has to parse numeric keywords back
@@ -205,7 +205,7 @@ fn line_uses_signed_bounds() {
 
 #[test]
 fn login_op_fixture_loads() {
-    let path = "/Users/kayshen/Desktop/login.op";
+    let path = "/Users/kayshen/Desktop/login.de";
     let Ok(bytes) = std::fs::read(path) else {
         return;
     };
@@ -230,7 +230,7 @@ fn login_op_fixture_loads() {
 
 #[test]
 fn pencil_demo_op_fixture_loads() {
-    let path = "/Users/kayshen/Desktop/pencil-demo.op";
+    let path = "/Users/kayshen/Desktop/pencil-demo.de";
     let Ok(bytes) = std::fs::read(path) else {
         return;
     };
@@ -249,7 +249,7 @@ fn pencil_demo_op_fixture_loads() {
         .sum();
     assert!(
         total_nodes > 10,
-        "pencil-demo.op should yield a substantial node tree, got {}",
+        "pencil-demo.de should yield a substantial node tree, got {}",
         total_nodes
     );
     // Any ellipse in the fixture must come out non-zero —

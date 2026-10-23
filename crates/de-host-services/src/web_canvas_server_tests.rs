@@ -44,7 +44,7 @@ fn write_temp_op(name: &str, body: &str) -> PathBuf {
 
 fn temp_op_file_name(name: &str, thread_name: &str) -> String {
     format!(
-        "design-editor-web-canvas-{}-{}-{}.op",
+        "design-editor-web-canvas-{}-{}-{}.de",
         sanitize_temp_file_component(name),
         std::process::id(),
         sanitize_temp_file_component(thread_name)
@@ -77,7 +77,7 @@ fn temp_op_file_name_sanitizes_windows_reserved_path_chars() {
             "{file_name} contains reserved path character {reserved:?}"
         );
     }
-    assert!(file_name.ends_with(".op"));
+    assert!(file_name.ends_with(".de"));
 }
 
 #[test]
@@ -575,14 +575,7 @@ fn post_file_save_writes_current_path_and_embedded_editor_meta() {
     let saved_json: serde_json::Value = serde_json::from_str(&saved).expect("saved json");
     assert_eq!(saved_json["editorMeta"]["activePageIndex"], 1);
     assert_eq!(saved_json["editorMeta"]["preserveAuthoredGeometry"], true);
-    let mut sidecar = path.clone();
-    sidecar.set_extension("op.opmeta");
-    assert!(
-        !sidecar.exists(),
-        "new saves should keep active page metadata inside the .op file"
-    );
     let _ = std::fs::remove_file(path);
-    let _ = std::fs::remove_file(sidecar);
 }
 
 #[test]

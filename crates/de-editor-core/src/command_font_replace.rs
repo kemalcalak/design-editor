@@ -1,7 +1,7 @@
 //! Whole-document font-family replacement.
 //!
 //! Font family values imported from HTML may be CSS fallback stacks, while
-//! Figma and native `.op` documents generally carry a single family. This
+//! Figma and native `.de` documents generally carry a single family. This
 //! module handles both shapes through one source-independent editor command.
 
 use crate::EditorState;

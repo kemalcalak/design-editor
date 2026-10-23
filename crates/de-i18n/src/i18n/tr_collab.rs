@@ -258,6 +258,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.close" => "Kapat",
         "updateModal.retry" => "Tekrar dene",
         "updateModal.releases" => "Sürüm sayfası",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}} bir Design Editor belgesi değil. Yalnızca .de dosyaları açılır; pen.dev .pen dosyaları içe aktarma olarak açılır.",
+        "dialog.loadErrorNotPenDev" => "{{name}} bir pen.dev dosyası değil, bu yüzden içe aktarılamaz.",
         _ => return None,
     })
 }

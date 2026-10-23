@@ -390,7 +390,7 @@ fn fetch_bytes_with_timeout(
         resolve(&slot, Err(WebAssetFetchError::RequestOpenFailed));
         return None;
     }
-    // These are JPEGs, `.op` documents, and UTF-8 JSON catalogs. ArrayBuffer is
+    // These are JPEGs, `.de` documents, and UTF-8 JSON catalogs. ArrayBuffer is
     // the one response mode that preserves every binary/text body byte-exactly.
     xhr.set_response_type(web_sys::XmlHttpRequestResponseType::Arraybuffer);
     // The assets live under the daemon's `/pkg/` route, so in managed mode the

@@ -1,4 +1,4 @@
-// CustomEditorProvider for .op files. Wires the tested cores (DaemonPool,
+// CustomEditorProvider for .de files. Wires the tested cores (DaemonPool,
 // PenSession, SessionRegistry, webview shell) to the VS Code custom-editor
 // lifecycle. This is the vscode-coupled glue layer — verified by the Task 12
 // integration smoke + manual matrix, not unit tests. The security-sensitive and
@@ -388,7 +388,7 @@ export class PenEditorProvider implements vscode.CustomEditorProvider<PenDocumen
       }
       // A fig doc's on-disk bytes are raw fig-kiwi, never JSON — pickRestartSource's
       // disk branch would decode them as text and hand the session garbage. Its
-      // latestDurable.json is always valid converted `.op` JSON (bootAndMount set
+      // latestDurable.json is always valid converted `.de` JSON (bootAndMount set
       // it from the conversion; every save/backup/revert since keeps it current),
       // so a fig restart always reopens from there, regardless of dirty state. Any
       // .fig edit made on disk during the crash window is picked up separately by
@@ -549,7 +549,7 @@ export class PenEditorProvider implements vscode.CustomEditorProvider<PenDocumen
     return vscode.Uri.joinPath(dir, name);
   }
   /** Where an implicit save (makeHost.writeFile) lands: a .fig doc redirects
-   *  to its sibling .op (the .fig source is never overwritten); everything
+   *  to its sibling .de (the .fig source is never overwritten); everything
    *  else saves back to its own uri. saveCustomDocumentAs is unaffected — a
    *  user-driven Save As keeps its explicit destination. */
   private saveTargetUri(document: PenDocument): vscode.Uri {
@@ -584,7 +584,7 @@ async function ensureParentDir(uri: vscode.Uri): Promise<void> {
 
 /** Atomic write: temp file + rename, so a crash mid-write can't truncate. */
 async function atomicWrite(uri: vscode.Uri, bytes: Uint8Array): Promise<void> {
-  const tmp = uri.with({ path: `${uri.path}.op-tmp` });
+  const tmp = uri.with({ path: `${uri.path}.de-tmp` });
   await vscode.workspace.fs.writeFile(tmp, bytes);
   await vscode.workspace.fs.rename(tmp, uri, { overwrite: true });
 }

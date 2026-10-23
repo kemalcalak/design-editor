@@ -8,9 +8,9 @@
 //!
 //! The writer owns the canonical document as an externalized JSON value. That
 //! form keeps one shared `images` table (and `imageThumbs`) while page records
-//! contain only `op-image:*` references. No public `.op` schema changes are
+//! contain only `op-image:*` references. No public `.de` schema changes are
 //! involved: [`full_document_json`](FigmaTempWriter::full_document_json) is an
-//! ordinary canonical `.op` document that the existing compatibility loader
+//! ordinary canonical `.de` document that the existing compatibility loader
 //! consumes on the main thread.
 
 use wasm_bindgen::prelude::*;
@@ -22,7 +22,7 @@ use serde::Serialize;
 ///
 /// Page metadata and document-global fields are retained, while node children
 /// and the image tables are stored in their own records. This is deliberately
-/// an internal storage shape, not a new public `.op` schema.
+/// an internal storage shape, not a new public `.de` schema.
 struct DocumentSkeleton<'a>(&'a serde_json::Value);
 
 impl Serialize for DocumentSkeleton<'_> {
@@ -259,7 +259,7 @@ impl FigmaTempWriter {
             .map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
-    /// Complete canonical `.op` JSON used by the existing eager install path.
+    /// Complete canonical `.de` JSON used by the existing eager install path.
     pub fn full_document_json(&self) -> Result<String, JsValue> {
         self.payload
             .full_document_json()
@@ -268,7 +268,7 @@ impl FigmaTempWriter {
 
     /// Document-global metadata plus page metadata, without page node trees or
     /// image payloads. This is an internal IndexedDB record used by the future
-    /// page-residency layer; it is not exposed as a `.op` file.
+    /// page-residency layer; it is not exposed as a `.de` file.
     pub fn skeleton_json(&self) -> Result<String, JsValue> {
         self.payload
             .skeleton_json()

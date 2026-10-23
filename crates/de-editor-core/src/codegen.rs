@@ -185,7 +185,7 @@ pub struct CodegenCacheEntry {
 pub struct CodegenState {
     /// Monotonic runtime lifetime of document-scoped codegen state.
     ///
-    /// This is intentionally not part of the `.op` document. Every document
+    /// This is intentionally not part of the `.de` document. Every document
     /// install/reset advances it, including paths that deliberately
     /// preserve the editor's broader document generation.
     #[doc(hidden)]

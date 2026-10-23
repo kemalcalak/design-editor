@@ -1,4 +1,4 @@
-//! Paint-only compatibility repairs for legacy generated `.op` files.
+//! Paint-only compatibility repairs for legacy generated `.de` files.
 //!
 //! Layout repair adjusts computed rectangles before payload conversion. This
 //! module handles authored helper strokes that should not paint as visible UI.

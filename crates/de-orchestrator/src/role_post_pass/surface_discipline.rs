@@ -98,7 +98,7 @@ fn walk_surface_color_discipline(node: &mut Value, is_root: bool, page_bg: Optio
             // provably invisible. A root grounded in anything else — a literal
             // hex, a gradient, no fill at all — makes `$--background` a
             // DISTINCT surface, and emptying it deletes an authored band
-            // (measured: 0808-gm-1.op's `#0A0A0A` page, whose two
+            // (measured: 0808-gm-1.de's `#0A0A0A` page, whose two
             // page-bg (#0F172A) sections lost their darker ground).
             node["fill"] = json!([]);
         } else if is_text_ref(&color) && is_container_kind(node) {

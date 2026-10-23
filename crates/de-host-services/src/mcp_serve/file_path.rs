@@ -23,18 +23,24 @@ pub fn process_message_for_file_path_arg(
     let Some(target) = target_file_call(line, current_path)? else {
         return Ok(None);
     };
-    if target.tool == "open_document" && !target.path.exists() {
+    // Only a `.de` path is created on demand; any other extension falls
+    // through to the load, which refuses it without leaving a stray file.
+    if target.tool == "open_document"
+        && !target.path.exists()
+        && de_util::document_file::is_document_path(&target.path)
+    {
         create_empty_document(&target.path)?;
     }
     let mut target_state = super::load_editor_state(&target.path)?;
     let mut applier_failed: Option<String> = None;
     let response =
         super::process_message_with_applier(&mut target_state, line, |tool_name, state, cmd| {
+            let baseline = super::WriteBaseline::for_tool(tool_name, state);
             if !state.apply(cmd.clone()) {
                 return false;
             }
-            if !super::writes_verbatim(tool_name) {
-                super::run_write_repairs_after_apply(state);
+            if let Some(baseline) = baseline {
+                super::run_write_repairs_after_apply(state, &baseline.scope_after(state));
             }
             if let Err(e) = super::save_editor_state(state, &target.path) {
                 applier_failed = Some(format!("save {} failed: {e}", target.path.display()));

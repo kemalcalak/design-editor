@@ -382,7 +382,7 @@ fn repair_image_hero_stack(
                 "height": "fill_container",
                 "children": [],
                 "fill": [{
-                    // .op convention: 0° flows left→right, 90° top→bottom.
+                    // .de convention: 0° flows left→right, 90° top→bottom.
                     "type": "linear_gradient",
                     "angle": 90,
                     "stops": [

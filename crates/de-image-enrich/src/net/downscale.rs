@@ -3,7 +3,7 @@
 //!
 //! A 24-megapixel photo dropped onto the canvas bloats every later
 //! operation: each scene rebuild clones + compares the node's base64
-//! `src`, every `.op` save serializes it, and the canvas decodes it to
+//! `src`, every `.de` save serializes it, and the canvas decodes it to
 //! a full-resolution GPU bitmap. Design work never needs more than a
 //! couple-thousand pixels on the longest edge, so we decode the source
 //! once, fit it inside [`MAX_EDGE`], and re-encode — effectively

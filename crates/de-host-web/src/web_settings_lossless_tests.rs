@@ -600,7 +600,7 @@ fn same_version_unknown_general_settings_remain_read_only() {
 #[test]
 fn general_values_that_would_be_normalized_remain_read_only() {
     let too_many_recent = (0..=RECENT_FILE_CAP)
-        .map(|index| serde_json::json!({"path":format!("/{index}.op"),"modified_at":index}))
+        .map(|index| serde_json::json!({"path":format!("/{index}.de"),"modified_at":index}))
         .collect::<Vec<_>>();
     let cases = vec![
         serde_json::json!({"version":1,"theme":"sepia"}),

@@ -30,8 +30,9 @@ mcp-debug-tools = ["de-mcp/debug-tools"]
 pinned-skia-binaries = ["skia-safe/no-compile"]
 
 # File-association metadata for `cargo-bundle` (`cargo bundle`). This
-# declares Design Editor as the OS-level handler for `.op` / `.pen`
-# documents: macOS writes `CFBundleDocumentTypes` into the `.app`
+# declares Design Editor as the OS-level handler for `.de` documents
+# and pen.dev `.pen` files (opened as an untitled import, never written
+# back): macOS writes `CFBundleDocumentTypes` into the `.app`
 # Info.plist, Windows registers the extensions, Linux emits a
 # `.desktop` MimeType entry. Once the association is registered the
 # OS launches this binary with the document path in argv, which
@@ -42,14 +43,18 @@ identifier = "com.kemalcalak.design-editor"
 icon = ["assets/icon.icns"]
 
 [[package.metadata.bundle.file_associations]]
-ext = "op"
+ext = "de"
 name = "Design Editor Document"
 role = "Editor"
 
+# pen.dev `.pen` — a secondary, import-only type (opened untitled, never
+# written back), hence role Viewer. cargo-bundle has no `rank` key;
+# `scripts/bundle-macos.sh` rewrites this entry with
+# `LSHandlerRank = Alternate` (and gives `.de` its exported UTI).
 [[package.metadata.bundle.file_associations]]
 ext = "pen"
-name = "Design Editor Document"
-role = "Editor"
+name = "pen.dev Document (import)"
+role = "Viewer"
 
 # Figma `.fig` binary exports — routes through the desktop's
 # background `figma_import_session` worker (see
@@ -79,6 +84,7 @@ de-host-native = { path = "../de-host-native", features = ["gl-host"] }
 # over Phases 2-5; de-host-desktop's serve-web dispatch + GUI residuals call into
 # it via `de_host_services::*`.
 de-host-services = { path = "../de-host-services" }
+de-util = { path = "../de-util" }
 # Accessibility (#67) — the platform-free `accesskit` core types
 # (`TreeUpdate` / `ActionRequest` / `ActivationHandler` …) used by the
 # desktop a11y adapter (`src/a11y.rs`). The OS-specific subclassing
@@ -87,7 +93,7 @@ de-host-services = { path = "../de-host-services" }
 # accesskit (0.24.x), so only one accesskit lives in the tree.
 accesskit = "0.24"
 # Phase 5 strangler reorg: the stdio MCP server (`mcp_serve.rs`) drives an
-# `de_editor_core::EditorState` (canonical `.op` document) instead of the
+# `de_editor_core::EditorState` (canonical `.de` document) instead of the
 # old shell-core `Document`.
 de-editor-core = { path = "../de-editor-core" }
 # Transport-free host state machines shared with web/native hosts.
@@ -128,7 +134,7 @@ de-ai-skills = { path = "../de-ai-skills" }
 # ACP client — the `AcpProvider` chat backend (`chat_acp.rs`) drives
 # third-party Agent Client Protocol agents through it.
 de-acp = { path = "../de-acp" }
-# Canonical `.op` (PenDocument) → shell `Document` loader / adapter.
+# Canonical `.de` (PenDocument) → shell `Document` loader / adapter.
 # Extracted out of this binary into a shared library crate so library
 # crates (de-host-native) can reuse the conversion;
 # `persistence.rs` keeps only the desktop-only `rfd` Save/Open + error
@@ -146,17 +152,17 @@ de-html = { path = "../de-html" }
 # currently-open document so the Git panel can show branch / status
 # / history and drive commits.
 de-git = { path = "../de-git" }
-# Structured node-level 3-way merge for `.op` documents — the in-app
+# Structured node-level 3-way merge for `.de` documents — the in-app
 # Git merge orchestrator feeds it the conflicting file's three index
 # stages so a merge conflict resolves per PenNode, not as raw text.
 de-opmerge = { path = "../de-opmerge" }
-# Canonical `.op` / `.pen` schema — all persistence + interop goes
+# Canonical `.de` schema — all persistence + interop goes
 # through `PenDocument` rather than the desktop's private DocPayload.
 # Falling back to the schema's `load_str` lets us open files saved by
 # the TS editor, Jian apps, or any tool that emits the canonical form.
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 # jian-core ships the taffy-backed `LayoutEngine` that is the
-# canonical flex solver for `.op` files. We reuse it (instead of
+# canonical flex solver for `.de` files. We reuse it (instead of
 # rolling our own) so layout stays bit-identical with what the TS
 # editor + future jian native runtime produce.
 jian-core = { path = "../../vendor/jian/crates/jian-core" }
@@ -188,7 +194,7 @@ winit = { package = "casement", path = "../../vendor/casement", default-features
   "wayland-csd-adwaita",
   "rwh_06",
 ] }
-# Document Save / Open (.pen / .op). Serialization lives in
+# Document Save / Open (.de; pen.dev .pen opens as an import). Serialization lives in
 # `src/persistence.rs` as a hand-rolled DTO so shell-core stays
 # serde-free (Color / Rect / Point2D come from glam + jian-core
 # which would otherwise need wrapper types). rfd pops the native

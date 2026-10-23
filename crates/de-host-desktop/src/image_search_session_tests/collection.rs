@@ -748,7 +748,7 @@ fn image_fields_preserve_search_generate_and_legacy_auto_modes() {
     );
 }
 
-/// Forensic: `DE_SLOT_PROBE=<path.op>` prints every slot the enrichment pass
+/// Forensic: `DE_SLOT_PROBE=<path.de>` prints every slot the enrichment pass
 /// would enqueue for a saved document, with the query it would search.
 #[test]
 #[ignore]

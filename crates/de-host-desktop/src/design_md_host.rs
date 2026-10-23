@@ -367,7 +367,7 @@ impl DesktopApp {
         true
     }
 
-    /// Generate a fresh design.md from the open `.op` document using
+    /// Generate a fresh design.md from the open `.de` document using
     /// the selected chat-panel model. Replaces any existing brief only
     /// after the model returns markdown.
     fn auto_generate_design_md(&mut self) -> bool {

@@ -9,7 +9,7 @@
 //!
 //! The document is serialized through the same document-only canonical
 //! writer `de_host_services::doc_io::save_document_to_path` wraps, so the
-//! registry string and the on-disk `document.op` are the same bytes by
+//! registry string and the on-disk `document.de` are the same bytes by
 //! construction. The preview is a single JPEG of the active page's first
 //! top-level node — deliberately not the shipped templates' collage
 //! contract, which is the factory bake pipeline's own.
@@ -113,7 +113,7 @@ fn save_template_from_state(
     let state = host.editor_state();
     let active_page_index = state.ui.active_page_index;
 
-    // Canonical `.op` JSON once, through the same document-only serializer
+    // Canonical `.de` JSON once, through the same document-only serializer
     // `save_document_to_path` wraps — the registry entry and the file the
     // store writes are the same bytes by construction.
     let mut buffer: Vec<u8> = Vec::new();

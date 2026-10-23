@@ -37,7 +37,7 @@ fn file_menu_recent_age_uses_web_host_time() {
     host.editor_state.editor_ui.locale = Locale::EnUs;
     host.editor_state.editor_ui.file_menu_open = true;
     host.editor_state.editor_ui.recent_files = vec![RecentFile {
-        path: "/tmp/demo.op".into(),
+        path: "/tmp/demo.de".into(),
         modified_at: 6_400,
     }];
     host.set_wall_now_secs(10_000);

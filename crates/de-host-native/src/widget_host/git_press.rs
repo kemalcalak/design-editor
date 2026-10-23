@@ -109,7 +109,7 @@ impl WidgetHostNative {
             }
             Some(GitPanelHit::CommitMilestone) => {
                 // Ready-view Save milestone — saves the live design to
-                // the tracked .op + stages + commits in one step, so it
+                // the tracked .de + stages + commits in one step, so it
                 // only needs a non-empty message (no pre-staged file).
                 if !panel.commit_input.text().trim().is_empty() {
                     panel.pending_action = Some(GitPanelAction::CommitMilestone);
@@ -238,7 +238,7 @@ impl WidgetHostNative {
                 panel.close_tracked_picker();
             }
             Some(GitPanelHit::OverflowSwitchTracked) => {
-                // Host enumerates the repo's `.op` candidates, then flips the
+                // Host enumerates the repo's `.de` candidates, then flips the
                 // subview to the tracked-file picker.
                 panel.overflow_menu.hover = None;
                 panel.open_tracked_picker();

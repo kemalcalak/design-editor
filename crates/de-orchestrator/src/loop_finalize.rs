@@ -262,7 +262,7 @@ pub(crate) fn fix_theme_variable_polarity(sink: &mut dyn crate::types::DocSink) 
             // thresholds below classify it correctly with no extra tuning.
             // They were missing from this list, which left a dark design's
             // `$--border` resolving to its stock-light slot (measured:
-            // 0808-gm-1.op kept `#E2E8F0` on a `#0A0A0A` page — a near-WHITE
+            // 0808-gm-1.de kept `#E2E8F0` on a `#0A0A0A` page — a near-WHITE
             // hairline, which the widget renderer then used as the tab
             // bar's background). The shadcn rename (B1) replaced the
             // `color-*` word set with slot names, so the list carries the

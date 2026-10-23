@@ -200,14 +200,17 @@
                 Type=Application
                 Icon=design-editor
                 Categories=Graphics;
-                MimeType=application/x-design-editor;
+                MimeType=application/x-design-editor;application/x-pen-dev;
               ''} $out/share/applications/design-editor.desktop
               install -Dm644 ${pkgs.writeText "design-editor.xml" ''
                 <?xml version="1.0" encoding="UTF-8"?>
                 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
                   <mime-type type="application/x-design-editor">
                     <comment>Design Editor Document</comment>
-                    <glob pattern="*.op"/>
+                    <glob pattern="*.de"/>
+                  </mime-type>
+                  <mime-type type="application/x-pen-dev">
+                    <comment>pen.dev Document (import)</comment>
                     <glob pattern="*.pen"/>
                   </mime-type>
                 </mime-info>
@@ -227,7 +230,7 @@
           name = "design-editor-runtime-${version}";
           paths = [nativePackage];
           postBuild = ''
-            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.op"
+            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.de"
           '';
         };
 
@@ -360,7 +363,7 @@
           '';
         };
 
-        defaultDocument = pkgs.writeText "design-editor-default-${version}.op" ''
+        defaultDocument = pkgs.writeText "design-editor-default-${version}.de" ''
           {
             "version": "${version}",
             "name": "Design Editor Nix Session",
@@ -412,7 +415,6 @@
               -e 's|^#!/usr/bin/env node$|#!${pkgs.nodejs_22}/bin/node|' {} +
             mkdir -p packages/de-web-sdk/wasm
             cp -R ${webSdkWasm}/. packages/de-web-sdk/wasm/
-            bun run --cwd packages sync-version:check
             bun run --cwd packages lint
             bun run --cwd packages/de-web-sdk typecheck
             bun run --cwd packages/de-web-sdk test
@@ -428,9 +430,23 @@
           installPhase = ''
             runHook preInstall
             mkdir -p $out
-            (cd packages/de-web-sdk && bun pm pack --destination $out)
-            (cd packages/de-web-sdk-react && bun pm pack --destination $out)
-            (cd packages/de-web-sdk-vue && bun pm pack --destination $out)
+            # package.json carries no version (Cargo.toml is the only copy).
+            # bun pm pack needs one, and resolves workspace:* ranges from the
+            # lockfile, which has none either: stamp both before packing.
+            for workspace in de-web-sdk de-web-sdk-react de-web-sdk-vue; do
+              (cd packages/$workspace && node -e '
+                const fs = require("fs");
+                const version = process.argv[1];
+                const manifest = JSON.parse(fs.readFileSync("package.json", "utf8"));
+                manifest.version = version;
+                for (const field of ["dependencies", "peerDependencies", "optionalDependencies"]) {
+                  for (const [name, range] of Object.entries(manifest[field] || {})) {
+                    if (range.startsWith("workspace:")) manifest[field][name] = version;
+                  }
+                }
+                fs.writeFileSync("package.json", JSON.stringify(manifest, null, 2) + "\n");
+              ' ${version} && bun pm pack --destination $out)
+            done
             runHook postInstall
           '';
         };
@@ -496,7 +512,7 @@
             rm -f "$out/bin/de"
             makeWrapper ${prebuiltCliPackage}/bin/de "$out/bin/de" \
               --set-default DESIGN_EDITOR_DESKTOP_BIN "$out/bin/design-editor"
-            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.op"
+            install -Dm644 ${defaultDocument} "$out/share/design-editor/default.de"
           '';
         };
 

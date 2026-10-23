@@ -374,7 +374,7 @@ pub(super) fn deck_rects_substantially_overlap(
 /// through the text whenever the two substantially overlap: a structural
 /// fact (an unfilled text-bearing card sitting over a solid-fill sibling of
 /// near-identical footprint always leaks), not a design-intent call, so it's
-/// safe to auto-repair. Measured: 0724-1-gm-3.op's Flashcard Deck Stack,
+/// safe to auto-repair. Measured: 0724-1-gm-3.de's Flashcard Deck Stack,
 /// where the front card's empty fill let "Back Layer 1"'s
 /// `$--accent` bleed across the whole card. `frame`/`rectangle` only
 /// (never `ellipse`) — a ring/donut sibling behind a centered label is a
@@ -403,7 +403,7 @@ pub(super) fn fix_deck_front_card_transparency(node: &mut Value) {
     // card (photo underneath, scrim in the middle, transparent content on
     // top) — the see-through front is the composition, not a leak. Filling
     // it would blot out the photo and its scrim entirely (measured:
-    // 0728-gm.op's three theme-list cards, where the model's deliberate
+    // 0728-gm.de's three theme-list cards, where the model's deliberate
     // photo + 3-stop alpha scrim + transparent content stack came back with
     // an opaque $--card lid and no visible image). Same rationale as
     // the ellipse exclusion above.

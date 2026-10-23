@@ -11,7 +11,7 @@
 //! model that authors the base first and the overlays after gets a page whose
 //! controls silently vanish under the artwork.
 //!
-//! Measured on `0808-k3-2.op`'s 星图 screen: a `layout:none` starfield
+//! Measured on `0808-k3-2.de`'s 星图 screen: a `layout:none` starfield
 //! container holding `[circle, compass label, zoom control, gyro pill]`. The
 //! 297px circle is `children[0]` — topmost — with an opaque radial gradient,
 //! so it paints over all three controls. Only the slivers falling outside the

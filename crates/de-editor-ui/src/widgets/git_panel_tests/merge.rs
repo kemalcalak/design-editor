@@ -9,7 +9,7 @@ use super::*;
 fn conflict_rows_open_a_file_diff_in_merge_mode() {
     let s = state_with(GitPanelState {
         merging: true,
-        conflicted_files: vec!["a.op".into(), "b.op".into()],
+        conflicted_files: vec!["a.de".into(), "b.de".into()],
         ..open_repo()
     });
     let panel = GitPanel::for_editor(&s).unwrap();
@@ -35,7 +35,7 @@ fn merge_resolution_view_maps_choices_and_actions() {
         merge_resolve: Some(MergeResolveState {
             branch: "feature".into(),
             files: vec![MergeResolveFile {
-                path: "doc.op".into(),
+                path: "doc.de".into(),
                 base: "{}".into(),
                 ours: "{}".into(),
                 theirs: "{}".into(),
@@ -77,7 +77,7 @@ fn merge_resolve_set_choice_clamps_structural_to_ours() {
     let mut state = MergeResolveState {
         branch: "feature".into(),
         files: vec![MergeResolveFile {
-            path: "doc.op".into(),
+            path: "doc.de".into(),
             base: "{}".into(),
             ours: "{}".into(),
             theirs: "{}".into(),

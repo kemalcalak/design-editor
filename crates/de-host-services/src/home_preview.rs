@@ -1,6 +1,6 @@
 //! Home's Recent previews: a small PNG overview of a document's active page
 //! (every top-level node, at its real position, fitted together like
-//! Pencil's dashboard), written whenever any save path writes the `.op` and
+//! Pencil's dashboard), written whenever any save path writes the `.de` and
 //! regenerated on demand when Home lists a file whose preview is missing or
 //! older than the file.
 //!
@@ -113,7 +113,7 @@ fn render_page_png(page: &ScenePage) -> Result<Vec<u8>, HomePreviewError> {
     )?)
 }
 
-/// Load the `.op` file and render its saved active page. The file is read
+/// Load the `.de` file and render its saved active page. The file is read
 /// into memory, not mapped: other writers (`save_document`, outside tools)
 /// rewrite it in place, which would fault a mapping mid-parse.
 pub fn render_document_png(doc_path: &Path) -> Result<Vec<u8>, HomePreviewError> {
@@ -141,7 +141,7 @@ fn blank_png() -> Result<Vec<u8>, HomePreviewError> {
 
 /// Install `bytes` as the preview at `target`, stamped with the document's
 /// modified time `doc_modified`. Written to a unique sibling and swapped in
-/// with the `.op` save's primitives, so Home never reads a half-written
+/// with the `.de` save's primitives, so Home never reads a half-written
 /// file, two processes never share a temp, and Windows replaces in place.
 pub fn write_preview(
     target: &Path,

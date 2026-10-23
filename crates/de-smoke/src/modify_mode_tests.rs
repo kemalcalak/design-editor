@@ -234,7 +234,7 @@ fn hash_is_stable_and_baseline_output_alias_is_rejected() {
         .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
         .collect();
     let path = std::env::temp_dir().join(format!(
-        "de-smoke-modify-alias-{}-{discriminator}.op",
+        "de-smoke-modify-alias-{}-{discriminator}.de",
         std::process::id(),
     ));
     std::fs::write(&path, br#"{"version":"1.0.0","children":[]}"#).unwrap();

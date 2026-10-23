@@ -51,11 +51,11 @@ fn hit_uses_shared_menu_state_protocol() {
         &ui,
         vec![
             RecentEntry {
-                name: "one.op".to_string(),
+                name: "one.de".to_string(),
                 age: "now".to_string(),
             },
             RecentEntry {
-                name: "two.op".to_string(),
+                name: "two.de".to_string(),
                 age: "now".to_string(),
             },
         ],
@@ -94,11 +94,11 @@ fn hit_uses_shared_menu_state_protocol() {
 fn two_recents() -> Vec<RecentEntry> {
     vec![
         RecentEntry {
-            name: "one.op".to_string(),
+            name: "one.de".to_string(),
             age: "now".to_string(),
         },
         RecentEntry {
-            name: "two.op".to_string(),
+            name: "two.de".to_string(),
             age: "now".to_string(),
         },
     ]
@@ -423,7 +423,7 @@ fn recent_columns_keep_an_exact_gap_before_the_right_aligned_age() {
 fn measured_truncation_stays_inside_its_budget() {
     let measure = |text: &str| text.chars().count() as f32 * 7.0;
     let output = truncate_to_width_measured(
-        "design-editor-super-long-project-file-name.op",
+        "design-editor-super-long-project-file-name.de",
         98.0,
         measure,
     );

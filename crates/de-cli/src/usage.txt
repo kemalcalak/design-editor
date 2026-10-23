@@ -7,13 +7,13 @@ USAGE:
   de help                                 show this message
 
 COMMON COMMANDS:
-  de start [--file path.op] [--port N]     launch the live editor (live canvas);
+  de start [--file path.de] [--port N]     launch the live editor (live canvas);
                                            op <tool> then drives the on-screen canvas
-  de start --web [--host H] [--file path.op]
+  de start --web [--host H] [--file path.de]
                                            serve the browser editor (wasm bundle +
                                            MCP) and open http://127.0.0.1:PORT;
                                            --host 0.0.0.0 binds for LAN/Docker
-  de start --headless [--file path.op]     run the windowless file-backed MCP server
+  de start --headless [--file path.de]     run the windowless file-backed MCP server
                                            (CI / display-less agents)
   de stop                                  stop the running editor / MCP server
   de install [--target T]                  install design-editor-skill for AI agents
@@ -71,10 +71,10 @@ COMMON COMMANDS:
   de layout [--parent P] [--depth N]      snapshot layout tree
   de find-space [--direction D] [--width W] [--height H]
   de import:svg <file.svg> [--x N] [--y N] [--parent P] [--page PAGE]
-  de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.op]
-  de import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.op]
-  de import:figma <file.fig> [--out output.op]
-  de import:pen <file.pen> [--out output.op]
+  de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.de]
+  de import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.de]
+  de import:figma <file.fig> [--out output.de]
+  de import:pen <file.pen> [--out output.de]
   de codegen:plan <plan-json|@file|->
   de codegen:submit <planId> <chunk-result|@file|->
   de codegen:assemble <planId> [--framework react]
@@ -85,7 +85,7 @@ GLOBAL FLAGS:
                   commands auto-discover the live editor via
                   ~/.design-editor/.de-mcp-port (verified with a JSON-RPC ping)
   --pretty        pretty-print JSON replies
-  --file <path>   `de start` document path; otherwise target .op file for
+  --file <path>   `de start` document path; otherwise target .de file for
                   tools that accept filePath (omit for the live canvas)
   --page <id>     target page ID for tools that support pageId
 

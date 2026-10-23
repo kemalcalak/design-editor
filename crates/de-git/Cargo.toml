@@ -12,6 +12,7 @@ description = "Git-backed version control for Design Editor documents"
 # under macOS TCC when the subprocess touched a sandboxed directory and
 # broke entirely on machines without git installed).
 [dependencies]
+de-util = { path = "../de-util" }
 # In-process libgit2. `vendored-libgit2` builds + statically links
 # libgit2 from source (cmake + cc), so the shipped binary carries its
 # own git engine. `vendored-openssl` keeps cross-arch macOS checks from

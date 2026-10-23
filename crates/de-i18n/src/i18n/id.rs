@@ -632,7 +632,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "a11y.aiChat" => "Obrolan AI",
         "designMd.emptyHint" => "Impor berkas .md untuk melampirkan brief desain",
         "componentBrowser.empty" => "Tidak ditemukan komponen",
-        "dialog.dropToOpen" => "Seret untuk membuka  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "Seret untuk membuka  ·  .de / .pen / .fig / .html / .zip",
         "text.weight.extralight" => "Extra Light",
         "text.weight.extrabold" => "Extra Bold",
         "interactions.title" => "Interaksi",

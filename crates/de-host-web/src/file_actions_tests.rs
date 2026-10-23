@@ -22,10 +22,27 @@ fn metadata_free_open_uses_first_nonempty_page_and_legacy_layout_mode() {
       ]
     }"#;
 
-    let ingested = ingest_op_source(source, &previous).expect("legacy document loads");
+    let ingested = ingest_document_source(source, &previous).expect("legacy document loads");
 
     assert_eq!(ingested.state.ui.active_page_index, 1);
     assert!(!ingested.state.editor_ui.preserve_authored_geometry);
+}
+
+#[test]
+fn opening_by_file_name_accepts_only_de_documents_and_pen_dev_imports() {
+    let previous = EditorState::new();
+    let canonical = r#"{"version":"1.0.0","children":[]}"#;
+    assert!(ingest_document_file(canonical, "Design.de", &previous).is_ok());
+    assert!(matches!(
+        ingest_document_file(canonical, "Design.op", &previous),
+        Err(DocumentIngestError::UnsupportedExtension { .. })
+    ));
+    assert!(matches!(
+        ingest_document_file(canonical, "Design.pen", &previous),
+        Err(DocumentIngestError::NotPenDevDocument { .. })
+    ));
+    assert!(matches!(drop_kind("Design.op"), DropKind::Unsupported));
+    assert!(matches!(drop_kind("Design.DE"), DropKind::Document));
 }
 
 #[test]
@@ -130,7 +147,7 @@ fn export_kit_document_builds_download_name_and_json() {
         .expect("export encodes")
         .expect("document has reusable components");
 
-    assert_eq!(export.file_name, "My Kit.op");
+    assert_eq!(export.file_name, "My Kit.de");
     let parsed: jian_ops_schema::PenDocument =
         serde_json::from_str(&export.json).expect("kit json");
     assert_eq!(parsed.name.as_deref(), Some("My Kit!"));
@@ -159,10 +176,10 @@ fn save_request_body_embeds_document_and_active_page_index() {
 
 #[test]
 fn parse_save_response_accepts_daemon_success() {
-    let saved = parse_save_response(r#"{"ok":true,"version":3,"fileName":"design.op"}"#)
+    let saved = parse_save_response(r#"{"ok":true,"version":3,"fileName":"design.de"}"#)
         .expect("save response");
 
-    assert_eq!(saved.file_name, "design.op");
+    assert_eq!(saved.file_name, "design.de");
     assert_eq!(saved.version, Some(3));
 }
 
@@ -458,7 +475,7 @@ fn export_download_file_name_joins_document_and_selected_node() {
     .expect("fixture JSON parses")
     .value;
     let mut state = EditorState::from_document(doc);
-    state.editor_ui.file_name_display = Some("0808-k3-2.op".to_string());
+    state.editor_ui.file_name_display = Some("0808-k3-2.de".to_string());
 
     assert_eq!(export_download_file_name(&state), "0808-k3-2.png");
 
@@ -468,6 +485,6 @@ fn export_download_file_name_joins_document_and_selected_node() {
 
     // A name the filesystem cannot carry is sanitized before it
     // reaches the download attribute.
-    state.editor_ui.file_name_display = Some("re:port/v2.op".to_string());
+    state.editor_ui.file_name_display = Some("re:port/v2.de".to_string());
     assert_eq!(export_download_file_name(&state), "re-port-v2-星图.png");
 }

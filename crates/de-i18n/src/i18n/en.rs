@@ -505,7 +505,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "acp.localDesktopOnly" => "Local agents are only available in the desktop app.",
         "figma.title" => "Import from Figma",
         "figma.dropFile" => "Drop a .fig file here",
-        "dialog.dropToOpen" => "Drop to open  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "Drop to open  ·  .de / .pen / .fig / .html / .zip",
         "figma.orBrowse" => "or click to browse",
         "figma.exportTip" => "Export from Figma: File → Save local copy (.fig)",
         "figma.selectFigFile" => "Please select a .fig file",

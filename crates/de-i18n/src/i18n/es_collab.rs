@@ -258,6 +258,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.close" => "Cerrar",
         "updateModal.retry" => "Reintentar",
         "updateModal.releases" => "Página de versiones",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}} no es un documento de Design Editor. Solo se abren archivos .de; los archivos .pen de pen.dev se abren como importación.",
+        "dialog.loadErrorNotPenDev" => "{{name}} no es un archivo de pen.dev, así que no se puede importar.",
         _ => return None,
     })
 }

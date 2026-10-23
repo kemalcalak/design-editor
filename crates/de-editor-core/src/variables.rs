@@ -11,7 +11,7 @@
 //!     (`Option<BTreeMap<String, VariableDefinition>>`) +
 //!     `EditorState.doc.themes` (`Option<BTreeMap<String,
 //!     Vec<String>>>`, axis-name → ordered value list). They
-//!     serialize with the `.op` file.
+//!     serialize with the `.de` file.
 //!   - **Transient** — the active-theme selection lives on
 //!     `EditorState.ui.variables.active_theme`. Rebuilt on load,
 //!     never serialized.

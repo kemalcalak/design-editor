@@ -1,7 +1,7 @@
 //! Interactive merge-conflict-resolution view for [`GitPanel`].
 //!
 //! Split out of `git_panel.rs` to keep that file under the repo's
-//! 800-line cap. When a branch merge conflicts entirely in `.op`
+//! 800-line cap. When a branch merge conflicts entirely in `.de`
 //! files this view replaces the panel body: each conflicting
 //! PenNode gets an Ours / Theirs choice, then "Apply" re-runs the
 //! merge with those choices and completes it.

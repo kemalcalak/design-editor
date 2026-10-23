@@ -178,7 +178,7 @@ impl GitPanel<'_> {
 
     /// Whether the "Save milestone" button can fire — a non-empty
     /// message (TS `canSubmit = commitMessage.trim().length > 0`). The
-    /// ready-view commit saves the live design to the tracked `.op` and
+    /// ready-view commit saves the live design to the tracked `.de` and
     /// commits it in one step, so it does NOT require a pre-staged file
     /// the way the classic staging body's Commit does.
     fn ready_can_commit(&self) -> bool {

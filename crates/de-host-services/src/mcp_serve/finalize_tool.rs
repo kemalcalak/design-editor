@@ -22,6 +22,14 @@
 //! The passes are idempotent; running the tool twice over an already-finalized
 //! document lands (near) zero repairs on the second call.
 //!
+//! ## Scope
+//!
+//! An explicit call finalizes every root on the active page, including
+//! designs the session did not make: the caller asked for it. The implicit
+//! paths are narrower (#107): per-write repairs touch only what the write
+//! created or changed, and file-mode auto-finalize only the roots the session
+//! created.
+//!
 //! ## Echo-only advisories
 //!
 //! - `section-structure-drift`: sibling nodes have inconsistent structure.

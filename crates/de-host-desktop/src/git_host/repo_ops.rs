@@ -62,7 +62,7 @@ impl DesktopApp {
     ///
     /// A clean merge advances the live branch — the document is
     /// reloaded from disk. A conflict whose files are all structured
-    /// `.op` documents opens the interactive resolution view; any
+    /// `.de` documents opens the interactive resolution view; any
     /// other conflict is reported in a dialog.
     pub(super) fn run_branch_merge(&mut self, other: &str) {
         // A clean merge reloads the document — confirm first so the
@@ -77,7 +77,7 @@ impl DesktopApp {
         match result {
             Ok(report) if report.outcome == de_git::MergeOutcome::Conflict => {
                 match build_merge_resolve(other, &report.conflicts, locale) {
-                    // Every conflicted file is a structured `.op` —
+                    // Every conflicted file is a structured `.de` —
                     // open the per-node resolution view.
                     Some(state) => {
                         self.host
@@ -479,7 +479,7 @@ impl DesktopApp {
     }
 
     /// Report a quarantined merge conflict — the live tree is
-    /// untouched, so this is informational, not an error. For `.op`
+    /// untouched, so this is informational, not an error. For `.de`
     /// files the three index stages are run through the structured
     /// node-level merge so the report names the conflicting
     /// PenNodes, not just the file.

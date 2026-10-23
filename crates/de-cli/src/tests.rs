@@ -96,7 +96,7 @@ fn parse_args_maps_install_and_uninstall_targets() {
 #[test]
 fn start_document_file_is_minimal_op_when_missing() {
     let dir = std::env::temp_dir().join(format!("de-cli-start-doc-{}", std::process::id()));
-    let path = dir.join("nested").join("session.op");
+    let path = dir.join("nested").join("session.de");
     let _ = std::fs::remove_dir_all(&dir);
 
     app_control_cli::ensure_document_file(&path).expect("ensure document file");
@@ -109,6 +109,40 @@ fn start_document_file_is_minimal_op_when_missing() {
         )
     );
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn ensure_document_file_refuses_non_document_extensions_without_writing() {
+    let dir = std::env::temp_dir().join(format!(
+        "design-editor-cli-extension-{}",
+        std::process::id()
+    ));
+    for name in ["session.op", "session.pen", "session"] {
+        let path = dir.join(name);
+        assert!(
+            app_control_cli::ensure_document_file(&path).is_err(),
+            "{name}"
+        );
+        assert!(!path.exists(), "{name} must not be created");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn import_out_paths_must_be_documents() {
+    for args in [
+        vec!["import:pen", "a.pen", "--out", "a.op"],
+        vec!["import:figma", "a.fig", "--out", "a.pen"],
+        vec!["import:snapshot", "a.json", "--out", "a.json"],
+    ] {
+        let args: Vec<String> = args.into_iter().map(String::from).collect();
+        assert!(parse_args(&args).is_err(), "{args:?}");
+    }
+    let args: Vec<String> = ["import:pen", "a.pen", "--out", "a.de"]
+        .into_iter()
+        .map(String::from)
+        .collect();
+    assert!(parse_args(&args).is_ok());
 }
 
 #[test]
@@ -276,8 +310,8 @@ fn parse_args_maps_ts_open_to_open_document() {
     );
 
     let with_path =
-        parse_args(&["open".to_string(), "/tmp/design.op".to_string()]).expect("parse open path");
-    let design_path = resolve_file_path_arg("/tmp/design.op");
+        parse_args(&["open".to_string(), "/tmp/design.de".to_string()]).expect("parse open path");
+    let design_path = resolve_file_path_arg("/tmp/design.de");
     assert_eq!(
         with_path.command,
         Command::ToolCall {
@@ -289,8 +323,8 @@ fn parse_args_maps_ts_open_to_open_document() {
 
 #[test]
 fn parse_args_maps_ts_save_to_save_document_tool() {
-    let p = parse_args(&["save".to_string(), "/tmp/copy.op".to_string()]).expect("parse save");
-    let copy_path = resolve_file_path_arg("/tmp/copy.op");
+    let p = parse_args(&["save".to_string(), "/tmp/copy.de".to_string()]).expect("parse save");
+    let copy_path = resolve_file_path_arg("/tmp/copy.de");
     assert_eq!(
         p.command,
         Command::ToolCall {
@@ -304,13 +338,13 @@ fn parse_args_maps_ts_save_to_save_document_tool() {
 fn parse_args_maps_ts_save_file_flag_to_source_document() {
     let p = parse_args(&[
         "save".to_string(),
-        "/tmp/copy.op".to_string(),
+        "/tmp/copy.de".to_string(),
         "--file".to_string(),
-        "/tmp/source.op".to_string(),
+        "/tmp/source.de".to_string(),
     ])
     .expect("parse save --file");
-    let copy_path = resolve_file_path_arg("/tmp/copy.op");
-    let source_path = resolve_file_path_arg("/tmp/source.op");
+    let copy_path = resolve_file_path_arg("/tmp/copy.de");
+    let source_path = resolve_file_path_arg("/tmp/source.de");
     assert_eq!(
         p.command,
         Command::ToolCall {

@@ -47,7 +47,7 @@ pub fn set_written_notifier(notify: impl Fn() + Send + Sync + 'static) {
     }
 }
 
-/// Queue a preview of the saved `.op` file at `doc_path` in the user's
+/// Queue a preview of the saved `.de` file at `doc_path` in the user's
 /// preview folder. Best-effort: a failure only means the card keeps its
 /// glyph.
 pub fn queue(doc_path: &Path) {

@@ -10,7 +10,7 @@ use crate::types::{Phase, SkillCategory, SkillTrigger};
 use crate::{design_agent_system_prompt_with_skills, resolve_skills, ResolveOptions};
 
 const LOGO_TAIL: &str = "PASS ONLY WHEN all four fusion tests and all three rendering predicates survive in the exported artifact; otherwise return the pure wordmark.";
-const SLIDES_TAIL: &str = "the target `.op` document everywhere in this API.";
+const SLIDES_TAIL: &str = "the target `.de` document everywhere in this API.";
 const DECK_PATTERNS_TAIL: &str = "a rectangle does not render its children, so the label inside a rectangle placeholder is invisible.";
 const DECK_CONTRACT_TAIL: &str =
     "**Formulaic titles** — \"From X to Y\", ad slogans, parallel phrasing on every page.";

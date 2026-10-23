@@ -1,6 +1,6 @@
 //! Typed failures for the two-stage `.fig` import session
 //! (`figma_import_session.rs`): the prepare worker, the convert worker, the
-//! staging write, and the publication of the generated `.op` beside the
+//! staging write, and the publication of the generated `.de` beside the
 //! source file.
 //!
 //! Style follows `de_orchestrator::OrchestratorError`: a plain enum plus a
@@ -50,12 +50,12 @@ pub(crate) enum FigmaImportError {
     PrepareWorkerSpawn(String),
     /// The convert worker thread would not spawn — same rationale.
     ConvertWorkerSpawn(String),
-    /// The import source path has no file name, so no sibling `.op` name can
+    /// The import source path has no file name, so no sibling `.de` name can
     /// be derived from it.
     SourceHasNoFileName,
-    /// The import source is itself a `.op`, so the adjacent output would
+    /// The import source is itself a `.de`, so the adjacent output would
     /// overwrite the input.
-    SourceAlreadyOp,
+    SourceAlreadyDocument,
     /// A candidate hidden staging path could not be probed for existence.
     StagingProbe { path: PathBuf, message: String },
     /// 100 staging-name candidates were all taken — the directory is either
@@ -69,7 +69,7 @@ pub(crate) enum FigmaImportError {
     /// Publishing the staged document to its final name failed (hard-link or
     /// atomic replace). The staged file is removed by the caller either way.
     Publish { path: PathBuf, message: String },
-    /// 10,000 `Name (N).op` candidates were all taken.
+    /// 10,000 `Name (N).de` candidates were all taken.
     OutputNamesExhausted { source_path: PathBuf },
     /// The adjacent-output guard could not read the destination's state.
     /// Carries [`OutputStateError`] so the shared leaf keeps one wording.
@@ -92,8 +92,8 @@ impl fmt::Display for FigmaImportError {
             FigmaImportError::SourceHasNoFileName => {
                 f.write_str("Figma import path has no file name")
             }
-            FigmaImportError::SourceAlreadyOp => {
-                f.write_str("Figma import source already has the .op extension")
+            FigmaImportError::SourceAlreadyDocument => {
+                f.write_str("Figma import source already has the .de extension")
             }
             FigmaImportError::StagingProbe { path, message } => write!(
                 f,

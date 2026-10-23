@@ -1,4 +1,4 @@
-//! Typed failures for the offline `.fig` → `.op` conversion endpoint
+//! Typed failures for the offline `.fig` → `.de` conversion endpoint
 //! (`figma_convert.rs`), which the VS Code extension POSTs raw Figma bytes to
 //! because it cannot parse fig-kiwi itself.
 //!

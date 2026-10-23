@@ -112,7 +112,7 @@ raw-window-handle = "0.6.2"
 # is gated outside wasm32 alongside the rest of the native stack.
 de-pen-loader = { path = "../de-pen-loader" }
 
-# The canonical `.op` schema — `WidgetHostNative` names
+# The canonical `.de` schema — `WidgetHostNative` names
 # `VariableScalar` when committing variable-row edits onto
 # `EditorState`. Already a transitive dep via de-editor-core.
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }

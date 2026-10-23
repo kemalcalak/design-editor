@@ -10,7 +10,7 @@
 //!    `run_loop` against a scripted loopback OpenAI-compat SSE server that
 //!    emits one `batch_design` tool call then stops. Proves the loop
 //!    transport wires end-to-end and the mutated `EditorState` carries the
-//!    inserted node — i.e. a real `.op` would be non-empty.
+//!    inserted node — i.e. a real `.de` would be non-empty.
 
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -249,7 +249,7 @@ fn loop_mode_against_mock_provider_produces_real_op() {
     );
 
     // The shared EditorState really carries the inserted frame — a dumped
-    // `.op` would be non-empty with the expected node.
+    // `.de` would be non-empty with the expected node.
     let guard = state.lock().unwrap();
     let children = guard.active_children();
     assert!(
@@ -257,17 +257,17 @@ fn loop_mode_against_mock_provider_produces_real_op() {
         "loop must have inserted a frame into the live EditorState"
     );
 
-    // Serialize via the SAME path main.rs uses for the `.op` dump and assert
+    // Serialize via the SAME path main.rs uses for the `.de` dump and assert
     // the produced document is non-empty and parses back.
     let json = serde_json::to_string_pretty(&guard.doc).expect("serialize doc");
     let reparsed: serde_json::Value = serde_json::from_str(&json).expect("dump re-parses");
     assert!(
         reparsed.get("children").is_some() || reparsed.get("pages").is_some(),
-        "dumped .op must carry a node tree"
+        "dumped .de must carry a node tree"
     );
     // The dump must actually mention the frame we created (non-empty design).
     assert!(
         json.contains("frame"),
-        "dumped .op must contain the inserted frame node"
+        "dumped .de must contain the inserted frame node"
     );
 }

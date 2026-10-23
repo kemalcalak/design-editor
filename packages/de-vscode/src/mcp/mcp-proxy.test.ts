@@ -55,7 +55,7 @@ class PoolStub {
   get active() {
     if (!this.current) return undefined;
     return {
-      filePath: "/a.op",
+      filePath: "/a.de",
       client: { baseUrl: this.current.baseUrl, handshake: { token: this.current.token } },
     };
   }

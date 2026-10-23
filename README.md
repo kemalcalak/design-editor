@@ -25,7 +25,7 @@
 - **Agents design live.** A built-in MCP server lets Claude Code and other agents build on the canvas while you watch.
 - **Bring your own model.** The in-app chat works with major providers, any OpenAI-compatible endpoint, or agents installed on your machine.
 - **Local-first.** No account, no cloud, no telemetry. Rust and Skia, on macOS and Windows.
-- **Design as code.** Open `.op` documents, Figma / SVG / web import, export to images, decks and React, SwiftUI, Flutter and more.
+- **Design as code.** Open `.de` documents, Figma / SVG / web import, export to images, decks and React, SwiftUI, Flutter and more.
 
 ## Where it comes from
 

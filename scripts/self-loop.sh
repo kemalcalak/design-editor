@@ -7,7 +7,7 @@
 # For each prompt N:
 #   1. GENERATE  de-smoke (orchestrator DIRECT by default; set
 #                DESIGN_EDITOR_SMOKE_LOOP=1 for the agentic loop)
-#                → <out>/<run>/pNN.op
+#                → <out>/<run>/pNN.de
 #   2. RENDER    design-editor --render-shots — the REAL jian-core
 #                (taffy) layout + jian-skia paint, the exact desktop canvas
 #                pipeline → <out>/<run>/pNN_shots/*.png
@@ -42,7 +42,7 @@ while IFS= read -r prompt; do
   case "$prompt" in ''|'#'*) continue ;; esac
   i=$((i + 1))
   tag=$(printf 'p%02d' "$i")
-  op="$OUT/$tag.op"
+  op="$OUT/$tag.de"
   printf '%s' "$prompt" >"$OUT/$tag.prompt"
   echo "== [$tag] ${prompt:0:80}..." >&2
 
@@ -80,7 +80,7 @@ row = {
     "auditIssues": -1,
 }
 try:
-    d = json.load(open(f"{out}/{tag}.op"))
+    d = json.load(open(f"{out}/{tag}.de"))
     def cnt(n):
         return 1 + sum(cnt(c) for c in n.get("children", []))
     roots = d.get("children") or d.get("pages", [{}])[0].get("children", [])

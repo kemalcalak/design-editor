@@ -58,13 +58,13 @@ pub fn scan_duplicate_root_issues(nodes: &[PenNode]) -> Vec<String> {
 /// Contract echo for broken icons: an `icon_font` whose `iconFontName` is
 /// missing, empty, or a FONT FAMILY name ("lucide" /
 /// "material symbols …") renders as the fallback dot — the model wrote the
-/// family into the glyph field (measured: test0711-1.op shipped every icon
+/// family into the glyph field (measured: test0711-1.de shipped every icon
 /// as `iconFontName:"lucide"` with no glyph anywhere). The intended glyph
 /// cannot be recovered deterministically, so this echoes the offending ids
 /// for the in-loop model to repair with `U()`.
 /// Hairline "activity ring" echo: a cluster of large concentric ellipses
 /// stroked ~1px reads as faint wireframe circles, not progress rings
-/// (measured: GLM-5.2 test0711-2.op stacked six 1px ellipses for the
+/// (measured: GLM-5.2 test0711-2.de stacked six 1px ellipses for the
 /// Today's Activity ring). Ring thickness is the model's design intent, so
 /// this echoes instead of auto-fixing.
 /// Inventory of still-empty named shells — the skeleton-first protocol's

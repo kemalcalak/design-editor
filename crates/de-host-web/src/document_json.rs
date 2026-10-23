@@ -19,7 +19,7 @@ impl Drop for ParsedDocumentJson {
     }
 }
 
-/// Parse `.op` JSON while preserving one shared allocation for each image
+/// Parse `.de` JSON while preserving one shared allocation for each image
 /// table payload. Thumbnail publication is deferred until the caller replaces
 /// the live host document through [`with_borrowed_parsed_document`].
 pub(crate) fn parse_document_json(json: &str) -> Result<ParsedDocumentJson, serde_json::Error> {

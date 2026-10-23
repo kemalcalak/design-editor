@@ -14,7 +14,7 @@
     "message": "Chụp phần tử"
   },
   "downloadButton": {
-    "message": "Tải .op"
+    "message": "Tải .de"
   },
   "designButton": {
     "message": "Trích xuất design.md"
@@ -122,10 +122,10 @@
     "message": "Design Editor tại $1 đã chấp nhận kết nối nhưng không phản hồi trong $2 giây. Ứng dụng có thể đang bận hoặc bị treo — hãy kiểm tra rồi thử lại."
   },
   "errorNoIngress": {
-    "message": "Bản dựng Design Editor này không có lối vào cho tiện ích ($1). Hãy cập nhật ứng dụng, hoặc dùng “Tải .op” rồi mở tệp trong Design Editor"
+    "message": "Bản dựng Design Editor này không có lối vào cho tiện ích ($1). Hãy cập nhật ứng dụng, hoặc dùng “Tải .de” rồi mở tệp trong Design Editor"
   },
   "errorTooLarge": {
-    "message": "Ảnh chụp này lớn hơn $1 MB, vượt mức mà tuyến ảnh chụp của Design Editor chấp nhận. Hãy dùng “Tải .op”, rồi mở tệp trong Design Editor"
+    "message": "Ảnh chụp này lớn hơn $1 MB, vượt mức mà tuyến ảnh chụp của Design Editor chấp nhận. Hãy dùng “Tải .de”, rồi mở tệp trong Design Editor"
   },
   "errorImport": {
     "message": "Design Editor đã từ chối ảnh chụp: $1"

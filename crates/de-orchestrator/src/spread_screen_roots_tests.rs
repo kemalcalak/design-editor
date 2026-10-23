@@ -87,7 +87,7 @@ fn two_unpositioned_overlapping_screens_are_spread() {
     );
 }
 
-/// De-identified reproduction of `0718-1-glm.op`: three cleanly-separated,
+/// De-identified reproduction of `0718-1-glm.de`: three cleanly-separated,
 /// single-nav screens ("Trips Overview" 402×864 / "Destination Detail"
 /// 402×844 / "Saved Places" 402×1155), all missing `x`/`y`, all resolving
 /// to the same (0, 0) origin — a canvas screenshot of this reads as

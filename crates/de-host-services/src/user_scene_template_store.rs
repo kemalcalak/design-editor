@@ -1,7 +1,7 @@
 //! Native loading for the process-wide saved scene-template registry.
 //!
 //! Saved templates live under `~/.design-editor/templates/<slug>/` as a
-//! canonical `document.op`, a `meta.json`, and an optional `preview.jpg`.
+//! canonical `document.de`, a `meta.json`, and an optional `preview.jpg`.
 //! The registry itself belongs to `de-editor-core` so every host can resolve
 //! a `user:` id, but reading the native user's directory belongs here: this
 //! crate is shared by the desktop GUI, stdio/HTTP MCP, and serve-web without
@@ -73,7 +73,7 @@ fn read_user_scene_templates(dir: &Path) -> std::io::Result<Vec<UserSceneTemplat
             );
             continue;
         };
-        let document = match std::fs::read_to_string(path.join("document.op")) {
+        let document = match std::fs::read_to_string(path.join("document.de")) {
             Ok(document) => document,
             Err(error) => {
                 eprintln!("[templates] {}: {error}", path.display());

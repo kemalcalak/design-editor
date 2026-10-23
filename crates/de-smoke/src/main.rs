@@ -166,7 +166,7 @@ async fn run_loop_mode(prompt: String) -> std::process::ExitCode {
     };
 
     // Image-fill post-loop step (DESIGN_EDITOR_SMOKE_FILL_IMAGES=1): resolve
-    // pending image-search queries to real URLs from Openverse BEFORE the `.op`
+    // pending image-search queries to real URLs from Openverse BEFORE the `.de`
     // is persisted so the saved document contains the filled `src` values.
     let image_config = image_fill::ImageFillConfig::from_env();
     // On a plain thread, never inline: the fetch bridge builds its own small
@@ -226,7 +226,7 @@ async fn main() -> std::process::ExitCode {
                    claude/claude-code: uses the logged-in claude CLI (model alias e.g. opus)\n\n\
                  common:\n\
                    DESIGN_EDITOR_ORCHESTRATOR_MODEL=<model>\n\
-                   DESIGN_EDITOR_SMOKE_OUT=<result.op>\n\
+                   DESIGN_EDITOR_SMOKE_OUT=<result.de>\n\
                    DESIGN_EDITOR_SMOKE_PIN_STYLE_GUIDE=<style guide name>\n\
                    DESIGN_EDITOR_SMOKE_VALIDATION=1"
             );
@@ -343,7 +343,7 @@ async fn main() -> std::process::ExitCode {
             EditorState::new()
         },
     };
-    // `DESIGN_EDITOR_SMOKE_LIBRARY=<path-to-.lib.op>` loads a harvested component
+    // `DESIGN_EDITOR_SMOKE_LIBRARY=<path-to-.lib.de>` loads a harvested component
     // library into the doc BEFORE generation so the generator can instantiate
     // its reusable masters (the AVAILABLE COMPONENTS manifest path). Unset =
     // today's behavior, byte-for-byte. A load error aborts the run loudly — a
@@ -352,7 +352,7 @@ async fn main() -> std::process::ExitCode {
         return code;
     }
 
-    // `DESIGN_EDITOR_SMOKE_AUDIT=<path.op>` — self-loop quality gate: load the
+    // `DESIGN_EDITOR_SMOKE_AUDIT=<path.de>` — self-loop quality gate: load the
     // doc, run the REAL-layout geometry diagnostics (the same detector family
     // the per-batch feedback uses), print a JSON report, exit. Zero LLM calls.
     // Exit code 0 = structurally clean, 1 = issues found. This is the
@@ -365,7 +365,7 @@ async fn main() -> std::process::ExitCode {
                 return std::process::ExitCode::from(3);
             }
         };
-        // Load through the compat loader (not raw serde) so a `.op`
+        // Load through the compat loader (not raw serde) so a `.de`
         // saved with the deduplicated `images` table audits with its
         // refs resolved instead of dangling `op-image:` strings.
         let doc: jian_ops_schema::PenDocument = match jian_ops_schema::load_str(&text) {
@@ -397,7 +397,7 @@ async fn main() -> std::process::ExitCode {
             // Chrome completeness / node-vocabulary / density metrics — the
             // dimensions raw geometry issues miss (see ab-g3 07-04 lesson).
             // Informational: exit code stays keyed on geometry issues alone.
-            // `None`: this standalone-audit branch loads an existing `.op`
+            // `None`: this standalone-audit branch loads an existing `.de`
             // straight off disk and never drives the orchestrator, so there
             // is no `RunSummary` to report subtask-completeness against —
             // the rubric's `completeness` section is omitted here (never a
@@ -596,7 +596,7 @@ async fn main() -> std::process::ExitCode {
 
     // Image-fill post step (DESIGN_EDITOR_SMOKE_FILL_IMAGES=1), the same one the
     // loop path runs: resolve pending image-search queries to real Openverse
-    // URLs BEFORE persisting, so the saved `.op` — and the render-shots pass
+    // URLs BEFORE persisting, so the saved `.de` — and the render-shots pass
     // that reads it — carries real pictures instead of grey placeholders.
     // Scoped thread for the same reason as the loop path: the fetch bridge
     // builds its own runtime and cannot be driven from this tokio main.
@@ -613,7 +613,7 @@ async fn main() -> std::process::ExitCode {
     // serde_json mirrors `persistence::save_to_path`. Saved regardless of
     // Ok/Err so a partial doc stays inspectable on failure.
     // A requested save that FAILS forces a non-zero exit below — a
-    // benchmark driver must not read "success" when no `.op` was written.
+    // benchmark driver must not read "success" when no `.de` was written.
     let save_failed = match std::env::var("DESIGN_EDITOR_SMOKE_OUT") {
         Ok(out_path) if !out_path.is_empty() => match serde_json::to_string_pretty(&sink.state.doc)
         {

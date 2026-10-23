@@ -4,19 +4,16 @@
 //! still resolves against `persistence` itself.
 
 use super::*;
-// `save_to_path` arrives via `super::*`; `sidecar_path` is only
-// needed for legacy-sidecar cleanup in tests, so import it directly.
-use de_host_services::doc_io::sidecar_path;
 
 /// A unique temp path under the OS temp dir for a round-trip test.
-fn temp_op_path(tag: &str) -> PathBuf {
+fn temp_document_path(tag: &str) -> PathBuf {
     let mut p = std::env::temp_dir();
     let pid = std::process::id();
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    p.push(format!("design-editor-test-{tag}-{pid}-{nanos}.op"));
+    p.push(format!("design-editor-test-{tag}-{pid}-{nanos}.de"));
     p
 }
 
@@ -24,8 +21,8 @@ fn temp_op_path(tag: &str) -> PathBuf {
 fn standalone_synchronous_save_as_success_rebinds_and_marks_saved() {
     let mut host = WidgetHostNative::new();
     host.editor_state_mut().mark_document_changed();
-    let target = PathBuf::from("standalone-copy.op");
-    let mut current_path = Some(PathBuf::from("old.op"));
+    let target = PathBuf::from("standalone-copy.de");
+    let mut current_path = Some(PathBuf::from("old.de"));
 
     let outcome = handle_save_as_with(
         &mut host,
@@ -39,7 +36,7 @@ fn standalone_synchronous_save_as_success_rebinds_and_marks_saved() {
     assert_eq!(current_path.as_deref(), Some(target.as_path()));
     assert_eq!(
         host.editor_state().editor_ui.file_name_display.as_deref(),
-        Some("standalone-copy.op")
+        Some("standalone-copy.de")
     );
     assert!(!host.editor_state().is_dirty());
 }
@@ -47,7 +44,7 @@ fn standalone_synchronous_save_as_success_rebinds_and_marks_saved() {
 #[test]
 fn standalone_synchronous_save_as_cancel_does_not_rebind() {
     let mut host = WidgetHostNative::new();
-    let original = PathBuf::from("old.op");
+    let original = PathBuf::from("old.de");
     let mut current_path = Some(original.clone());
 
     let outcome = handle_save_as_with(
@@ -65,7 +62,7 @@ fn standalone_synchronous_save_as_cancel_does_not_rebind() {
 #[test]
 fn standalone_synchronous_save_as_failure_does_not_rebind() {
     let mut host = WidgetHostNative::new();
-    let original = PathBuf::from("old.op");
+    let original = PathBuf::from("old.de");
     let mut current_path = Some(original.clone());
     let mut reported = false;
 
@@ -94,7 +91,7 @@ fn new_file_action_resets_to_starter_frame() {
     host.editor_state_mut().viewport.pan_x = -5000.0;
     host.editor_state_mut().viewport.pan_y = -5000.0;
     host.editor_state_mut().viewport.zoom = 0.2;
-    let mut current_path = Some(PathBuf::from("/tmp/old.op"));
+    let mut current_path = Some(PathBuf::from("/tmp/old.de"));
 
     let outcome = run_action(
         de_editor_core::editor_ui_state::FileAction::New,
@@ -150,7 +147,7 @@ fn new_file_action_preserves_builtin_agent_models() {
             "https://api.deepseek.com/v1",
         );
     host.editor_state_mut().rebuild_chat_models();
-    let mut current_path = Some(PathBuf::from("/tmp/old.op"));
+    let mut current_path = Some(PathBuf::from("/tmp/old.de"));
 
     let outcome = run_action(
         de_editor_core::editor_ui_state::FileAction::New,
@@ -199,7 +196,7 @@ fn opening_document_preserves_builtin_agent_models() {
         .any(|m| m.builtin_provider_id.as_deref() == Some(builtin_id.as_str())));
 
     let state_to_open = EditorState::new();
-    let path = temp_op_path("open-preserves-builtins");
+    let path = temp_document_path("open-preserves-builtins");
     save_to_path(&state_to_open, &path).expect("save succeeds");
     let mut current_path = None;
 
@@ -221,7 +218,6 @@ fn opening_document_preserves_builtin_agent_models() {
         .any(|m| m.builtin_provider_id.as_deref() == Some(builtin_id.as_str())));
 
     let _ = std::fs::remove_file(&path);
-    let _ = std::fs::remove_file(sidecar_path(&path));
 }
 
 #[test]
@@ -247,7 +243,7 @@ fn opening_op_preserves_font_catalog_and_detects_only_real_missing_families() {
     )
     .expect("fixture JSON parses")
     .value;
-    let path = temp_op_path("open-font-matching");
+    let path = temp_document_path("open-font-matching");
     save_to_path(&EditorState::from_document(doc), &path).expect("save succeeds");
     let mut current_path = None;
     assert!(open_path(&mut host, path.clone(), &mut current_path, None));
@@ -263,7 +259,6 @@ fn opening_op_preserves_font_catalog_and_detects_only_real_missing_families() {
     assert_eq!(entries[0].family, "__MissingOpFont__");
 
     let _ = std::fs::remove_file(&path);
-    let _ = std::fs::remove_file(sidecar_path(&path));
 }
 
 #[test]
@@ -274,7 +269,7 @@ fn opening_document_leaves_nothing_selected() {
 
     let mut state_to_open = EditorState::starter();
     state_to_open.set_single_selection(de_editor_core::NodeId::new("n10"));
-    let path = temp_op_path("open-clears-selection");
+    let path = temp_document_path("open-clears-selection");
     save_to_path(&state_to_open, &path).expect("save succeeds");
     let mut current_path = None;
 
@@ -284,7 +279,6 @@ fn opening_document_leaves_nothing_selected() {
     assert_eq!(host.editor_state().doc.children.len(), 1);
 
     let _ = std::fs::remove_file(&path);
-    let _ = std::fs::remove_file(sidecar_path(&path));
 }
 
 #[test]
@@ -306,7 +300,7 @@ fn selected_node_svg_export_routes_through_desktop_dispatch() {
     let mut state = EditorState::from_document(doc);
     state.editor_ui.export_format = de_editor_core::editor_ui_state::ExportFormat::Svg;
     state.set_single_selection(de_editor_core::NodeId::new("selected-card"));
-    let path = temp_op_path("desktop-selected-svg-route").with_extension("svg");
+    let path = temp_document_path("desktop-selected-svg-route").with_extension("svg");
 
     export_editor_state_to_path(&state, &path).expect("desktop SVG export succeeds");
 
@@ -345,7 +339,7 @@ fn opening_document_fits_and_centers_multiple_root_nodes() {
     .expect("fixture JSON parses")
     .value;
     let state_to_open = EditorState::from_document(doc);
-    let path = temp_op_path("open-centers-multi-root");
+    let path = temp_document_path("open-centers-multi-root");
     save_to_path(&state_to_open, &path).expect("save succeeds");
     let mut current_path = None;
 
@@ -375,7 +369,6 @@ fn opening_document_fits_and_centers_multiple_root_nodes() {
     );
 
     let _ = std::fs::remove_file(&path);
-    let _ = std::fs::remove_file(sidecar_path(&path));
 }
 
 #[test]
@@ -399,7 +392,7 @@ fn opening_document_fits_and_centers_fit_content_root() {
     .expect("fixture JSON parses")
     .value;
     let state_to_open = EditorState::from_document(doc);
-    let path = temp_op_path("open-centers-fit-content-root");
+    let path = temp_document_path("open-centers-fit-content-root");
     save_to_path(&state_to_open, &path).expect("save succeeds");
     let mut current_path = None;
 
@@ -424,7 +417,6 @@ fn opening_document_fits_and_centers_fit_content_root() {
     assert!((screen_center_y - canvas_h / 2.0).abs() < 0.5);
 
     let _ = std::fs::remove_file(&path);
-    let _ = std::fs::remove_file(sidecar_path(&path));
 }
 
 /// The export save dialog opens on `<document>-<node>.<ext>`, not a
@@ -442,7 +434,7 @@ fn export_dialog_default_name_joins_document_and_selected_node() {
     .expect("fixture JSON parses")
     .value;
     let mut state = EditorState::from_document(doc);
-    state.editor_ui.file_name_display = Some("0808-k3-2.op".to_string());
+    state.editor_ui.file_name_display = Some("0808-k3-2.de".to_string());
 
     // No selection — the document alone names the file.
     assert_eq!(export_dialog_default_name(&state), "0808-k3-2.png");

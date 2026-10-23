@@ -434,7 +434,7 @@ fn paint_recent_row(
 
 /// Truncate `s` so it fits `max_w` pixels at `font_size`, appending
 /// `…` when characters are dropped. Uses the backend's measurer so
-/// CJK glyph widths are honoured (a 13-px ASCII "pencil-demo.op" and
+/// CJK glyph widths are honoured (a 13-px ASCII "pencil-demo.de" and
 /// the equivalent CJK string have very different advances).
 ///
 /// `pub(crate)` (not private) — `screen_switcher_pills.rs` reuses it to

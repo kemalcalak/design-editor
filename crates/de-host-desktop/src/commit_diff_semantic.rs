@@ -2,7 +2,7 @@
 //! `diffDocuments` (`packages/pen-core/src/merge/node-diff.ts`) +
 //! `engineDiff` summary aggregation (`apps/desktop/git/git-engine.ts`).
 //!
-//! Both `.op` blobs are parsed as generic `serde_json::Value`, indexed by
+//! Both `.de` blobs are parsed as generic `serde_json::Value`, indexed by
 //! node `id`, and compared field-by-field with `children` stripped — exactly
 //! mirroring the TS `stripChildren` + `jsonEqual` path. Kept dependency-free
 //! of the canonical typed schema so a malformed/legacy file degrades to a

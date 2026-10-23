@@ -23,7 +23,7 @@ Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**;
 - **CLI:** `cargo build -p de-cli` → binary `de`
 - **MCP server:** built into the desktop/web host (`--mcp <path>`); crate `de-mcp`
 - **Iconify catalog (Rust assets):** from `packages/`: `bun run generate-iconify-catalog`
-- **Sync all managed versions:** `scripts/sync-version.sh` reads the canonical version from root `Cargo.toml`; verify without writing via `tools/check-version-sync.sh`
+- **Bump the product version:** `scripts/bump-version.sh X.Y.Z` edits root `Cargo.toml` (the only hand-edited copy) and refreshes `Cargo.lock`; commit both. Verify with `tools/check-version-sync.sh`.
 
 ## Architecture
 
@@ -31,7 +31,7 @@ Design Editor is an open-source, AI-native vector design tool (Design-as-Code). 
 
 ```text
 crates/
-├── de-editor-core/       Canonical `.op` (PenDocument) editor state + EditorCommand + design-variable resolution
+├── de-editor-core/       Canonical `.de` (PenDocument) editor state + EditorCommand + design-variable resolution
 ├── de-editor-ui/         Platform-free widgets + RenderBackend facade (wasm32-clean)
 ├── de-editor-host-core/  Transport-free host state machines shared by all hosts
 ├── de-host-native/       Native host lib (winit + skia-safe GL) — desktop
@@ -46,7 +46,7 @@ crates/
    de-smoke / …
 
 packages/
-├── de-web-sdk/           Read-only `.op` web viewer SDK (wraps the de-host-web wasm bundle)
+├── de-web-sdk/           Read-only `.de` web viewer SDK (wraps the de-host-web wasm bundle)
 ├── de-web-sdk-react/     React 19 adapter for de-web-sdk
 └── de-web-sdk-vue/       Vue 3 adapter for de-web-sdk
 ```

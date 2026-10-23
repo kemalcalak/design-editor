@@ -376,7 +376,7 @@ mod tests {
         );
         // Relative path resolved against the document dir — same
         // LinkedLocal treatment.
-        let doc = dir.join("doc.op");
+        let doc = dir.join("doc.de");
         assert_eq!(
             asset_status(
                 file.file_name().unwrap().to_str().unwrap(),

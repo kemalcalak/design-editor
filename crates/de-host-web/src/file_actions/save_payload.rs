@@ -51,7 +51,7 @@ impl From<SavePayloadError> for String {
 pub enum SavePayloadTarget {
     /// Compact request body consumed by `/api/file/save`.
     Daemon,
-    /// Canonical, image-table-externalized `.op` downloaded by the browser.
+    /// Canonical, image-table-externalized `.de` downloaded by the browser.
     BrowserDownload,
 }
 
@@ -109,11 +109,11 @@ pub fn serialize_document(state: &EditorState) -> Result<String, SavePayloadErro
 }
 
 /// Download file name for Save / Save As — the current display name when one
-/// is set (a previously opened file), else `untitled.op`.
+/// is set (a previously opened file), else `untitled.de`.
 pub fn save_file_name(state: &EditorState) -> String {
     match state.editor_ui.file_name_display.as_deref() {
         Some(name) if !name.trim().is_empty() => name.to_string(),
-        _ => "untitled.op".to_string(),
+        _ => de_util::document_file::UNTITLED_FILE_NAME.to_string(),
     }
 }
 
@@ -190,7 +190,7 @@ pub fn parse_save_response(response: &str) -> Result<SaveResponse, SavePayloadEr
         .get("fileName")
         .and_then(|v| v.as_str())
         .filter(|s| !s.trim().is_empty())
-        .unwrap_or("untitled.op")
+        .unwrap_or(de_util::document_file::UNTITLED_FILE_NAME)
         .to_string();
     let version = parsed.get("version").and_then(|value| value.as_u64());
     Ok(SaveResponse { file_name, version })
@@ -302,13 +302,13 @@ mod tests {
         state.mark_document_changed();
         assert!(state.is_dirty());
 
-        acknowledge_browser_download(&mut state, "download.op");
+        acknowledge_browser_download(&mut state, "download.de");
 
         assert!(!state.is_dirty());
         assert!(!state.editor_ui.document_dirty);
         assert_eq!(
             state.editor_ui.file_name_display.as_deref(),
-            Some("download.op")
+            Some("download.de")
         );
     }
 }

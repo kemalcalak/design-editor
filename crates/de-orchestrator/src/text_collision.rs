@@ -27,7 +27,7 @@
 //! with, so the premise "neither is readable" never holds for it. See
 //! [`WATERMARK_MAX_OPACITY`].
 //!
-//! Measured root cause (0724-1-gm-2.op, "今日词卡" stacked word-card
+//! Measured root cause (0724-1-gm-2.de, "今日词卡" stacked word-card
 //! preview): the front card's Chinese meaning resolves to y 708–728 and
 //! the back card's example sentence resolves to y 705–722 (68% of the
 //! smaller block's area) because both cards anchor their text near the

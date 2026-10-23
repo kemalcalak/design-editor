@@ -1,23 +1,23 @@
-//! Snapshot → `.op` document conversion.
+//! Snapshot → `.de` document conversion.
 //!
 //! The offline download path no longer hands the user the raw extractor
 //! snapshot (which then had to be converted with `de import:snapshot`). It
-//! produces a `.op` document — Design Editor's canonical `PenDocument` format —
+//! produces a `.de` document — Design Editor's canonical `PenDocument` format —
 //! that opens directly by double-click or drag-into-app, still fully offline.
 //!
 //! This mirrors `de-cli`'s `run_import_snapshot` (`html_cli.rs`) step for step:
 //! `import_snapshot_document` → refuse an empty document → serialize the
-//! resulting `PenDocument` to JSON. The serialized string IS the `.op` file.
+//! resulting `PenDocument` to JSON. The serialized string IS the `.de` file.
 //! The page title flows through `HtmlImportOptions::document_name` so the
 //! produced document carries a name.
 
 use de_html::HtmlImportOptions;
 use jian_ops_schema::node::PenNode;
 
-/// Outcome of converting one snapshot into a `.op` document.
+/// Outcome of converting one snapshot into a `.de` document.
 pub enum OpExport {
     /// The snapshot produced at least one node. `op` is the serialized
-    /// `PenDocument` JSON — the exact bytes to write to a `.op` file.
+    /// `PenDocument` JSON — the exact bytes to write to a `.de` file.
     Ready {
         op: String,
         node_count: usize,
@@ -28,10 +28,10 @@ pub enum OpExport {
     Failed { error: String },
 }
 
-/// Convert an extractor snapshot into a `.op` document.
+/// Convert an extractor snapshot into a `.de` document.
 ///
 /// `title`, when non-empty, becomes the document's name via
-/// [`HtmlImportOptions::document_name`], so the `.op` file opens with a
+/// [`HtmlImportOptions::document_name`], so the `.de` file opens with a
 /// meaningful title rather than an anonymous fallback.
 pub fn snapshot_to_op(snapshot_json: &str, title: Option<&str>) -> OpExport {
     let options = HtmlImportOptions {
@@ -58,7 +58,7 @@ pub fn snapshot_to_op(snapshot_json: &str, title: Option<&str>) -> OpExport {
         Ok(value) => value.to_string(),
         Err(error) => {
             return OpExport::Failed {
-                error: format!("serialize .op document: {error}"),
+                error: format!("serialize .de document: {error}"),
             };
         }
     };

@@ -150,4 +150,4 @@ Built boards are not a delivered deck. Export it:
 
 `pptx` is editable PowerPoint and the default; `html` is self-contained; `pdf`
 is one page per slide. The path argument is `outputPath` — `filePath` means
-the target `.op` document everywhere in this API.
+the target `.de` document everywhere in this API.

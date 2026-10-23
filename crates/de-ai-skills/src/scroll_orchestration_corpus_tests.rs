@@ -266,7 +266,7 @@ fn every_recipe_is_valid_schema_and_valid_runtime_vocabulary() {
             "children": [node]
         });
         let loaded = jian_ops_schema::load_str(&wrapped.to_string()).unwrap_or_else(|error| {
-            panic!("recipe #{recipe} is not a valid .op document subtree: {error}")
+            panic!("recipe #{recipe} is not a valid .de document subtree: {error}")
         });
         assert!(
             loaded.warnings.is_empty(),

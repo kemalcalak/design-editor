@@ -269,7 +269,7 @@ impl DesktopApp {
                     .to_string();
                 // Ready-view "Save milestone": snapshot the live design
                 // as a commit in one step — write the editor's current
-                // state to the tracked .op, stage that file, then commit
+                // state to the tracked .de, stage that file, then commit
                 // (the TS `commitMilestone` flow). stage_tracked is
                 // explicitly designed to refresh the index blob after a
                 // save, so a milestone captures exactly what's on screen.

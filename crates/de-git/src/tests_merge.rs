@@ -21,7 +21,7 @@ fn pull_classifies_up_to_date_then_fast_forward() {
 
     // Clone A seeds the remote with an initial commit.
     let (a_dir, a) = clone_for_test(&remote, "pull-a");
-    std::fs::write(a_dir.join("a.op"), "1").unwrap();
+    std::fs::write(a_dir.join("a.de"), "1").unwrap();
     a.stage_all().unwrap();
     a.commit("init").unwrap();
     a.run(&["push", "-u", "origin", "main"]).unwrap();
@@ -31,7 +31,7 @@ fn pull_classifies_up_to_date_then_fast_forward() {
     assert_eq!(b.pull().expect("pull"), MergeOutcome::AlreadyUpToDate);
 
     // A pushes a new commit; B's pull fast-forwards.
-    std::fs::write(a_dir.join("a.op"), "2").unwrap();
+    std::fs::write(a_dir.join("a.de"), "2").unwrap();
     a.stage_all().unwrap();
     a.commit("update").unwrap();
     a.push().unwrap();
@@ -55,7 +55,7 @@ fn pull_refuses_to_fast_forward_over_a_dirty_tree() {
         .expect("init bare remote");
 
     let (a_dir, a) = clone_for_test(&remote, "ff-dirty-a");
-    std::fs::write(a_dir.join("a.op"), "1").unwrap();
+    std::fs::write(a_dir.join("a.de"), "1").unwrap();
     a.stage_all().unwrap();
     a.commit("init").unwrap();
     a.run(&["push", "-u", "origin", "main"]).unwrap();
@@ -63,7 +63,7 @@ fn pull_refuses_to_fast_forward_over_a_dirty_tree() {
     let (b_dir, b) = clone_for_test(&remote, "ff-dirty-b");
 
     // A publishes a new commit — B *could* fast-forward.
-    std::fs::write(a_dir.join("a.op"), "2").unwrap();
+    std::fs::write(a_dir.join("a.de"), "2").unwrap();
     a.stage_all().unwrap();
     a.commit("update").unwrap();
     a.push().unwrap();
@@ -72,13 +72,13 @@ fn pull_refuses_to_fast_forward_over_a_dirty_tree() {
     // force-overwrite it, so the pull must refuse (WorkingTreeDirty)
     // rather than silently discard the local work — the data-loss
     // regression the libgit2 migration introduced + this guard fixes.
-    std::fs::write(b_dir.join("a.op"), "local-uncommitted").unwrap();
+    std::fs::write(b_dir.join("a.de"), "local-uncommitted").unwrap();
     assert!(
         matches!(b.pull(), Err(GitError::WorkingTreeDirty)),
         "a fast-forward over a dirty tree must be refused, not forced"
     );
     assert_eq!(
-        std::fs::read_to_string(b_dir.join("a.op")).unwrap(),
+        std::fs::read_to_string(b_dir.join("a.de")).unwrap(),
         "local-uncommitted",
         "the local uncommitted edit must survive the refused pull"
     );
@@ -101,7 +101,7 @@ fn pull_refuses_to_fast_forward_over_a_colliding_untracked_file() {
         .expect("init bare remote");
 
     let (a_dir, a) = clone_for_test(&remote, "ff-untracked-a");
-    std::fs::write(a_dir.join("a.op"), "1").unwrap();
+    std::fs::write(a_dir.join("a.de"), "1").unwrap();
     a.stage_all().unwrap();
     a.commit("init").unwrap();
     a.run(&["push", "-u", "origin", "main"]).unwrap();
@@ -109,22 +109,22 @@ fn pull_refuses_to_fast_forward_over_a_colliding_untracked_file() {
     let (b_dir, b) = clone_for_test(&remote, "ff-untracked-b");
 
     // A adds a NEW tracked file the fast-forward would bring down to B.
-    std::fs::write(a_dir.join("new.op"), "from-remote").unwrap();
+    std::fs::write(a_dir.join("new.de"), "from-remote").unwrap();
     a.stage_all().unwrap();
-    a.commit("add new.op").unwrap();
+    a.commit("add new.de").unwrap();
     a.push().unwrap();
 
     // B has an UNTRACKED file at that same path. A forced fast-forward
     // would clobber it, so the pull must refuse — the untracked-overwrite
     // data-loss case (git's "untracked working tree files would be
     // overwritten by merge").
-    std::fs::write(b_dir.join("new.op"), "local-untracked").unwrap();
+    std::fs::write(b_dir.join("new.de"), "local-untracked").unwrap();
     assert!(
         matches!(b.pull(), Err(GitError::WorkingTreeDirty)),
         "a fast-forward that would overwrite an untracked file must be refused"
     );
     assert_eq!(
-        std::fs::read_to_string(b_dir.join("new.op")).unwrap(),
+        std::fs::read_to_string(b_dir.join("new.de")).unwrap(),
         "local-untracked",
         "the untracked file must survive the refused pull"
     );
@@ -147,7 +147,7 @@ fn pull_refuses_to_fast_forward_over_an_untracked_dir_replaced_by_a_file() {
         .expect("init bare remote");
 
     let (a_dir, a) = clone_for_test(&remote, "ff-dir-a");
-    std::fs::write(a_dir.join("a.op"), "1").unwrap();
+    std::fs::write(a_dir.join("a.de"), "1").unwrap();
     a.stage_all().unwrap();
     a.commit("init").unwrap();
     a.run(&["push", "-u", "origin", "main"]).unwrap();
@@ -165,13 +165,13 @@ fn pull_refuses_to_fast_forward_over_an_untracked_dir_replaced_by_a_file() {
     // file, destroying the local work — the file↔directory collision the
     // exact-path check missed; the pull must refuse.
     std::fs::create_dir(b_dir.join("data")).unwrap();
-    std::fs::write(b_dir.join("data").join("local.op"), "local-work").unwrap();
+    std::fs::write(b_dir.join("data").join("local.de"), "local-work").unwrap();
     assert!(
         matches!(b.pull(), Err(GitError::WorkingTreeDirty)),
         "a fast-forward that replaces an untracked directory with a file must be refused"
     );
     assert_eq!(
-        std::fs::read_to_string(b_dir.join("data").join("local.op")).unwrap(),
+        std::fs::read_to_string(b_dir.join("data").join("local.de")).unwrap(),
         "local-work",
         "the untracked directory's file must survive the refused pull"
     );
@@ -195,7 +195,7 @@ fn pull_classifies_a_divergent_merge() {
 
     // A seeds the remote with a base commit.
     let (a_dir, a) = clone_for_test(&remote, "merge-a");
-    std::fs::write(a_dir.join("base.op"), "0").unwrap();
+    std::fs::write(a_dir.join("base.de"), "0").unwrap();
     a.stage_all().unwrap();
     a.commit("base").unwrap();
     a.run(&["push", "-u", "origin", "main"]).unwrap();
@@ -204,14 +204,14 @@ fn pull_classifies_a_divergent_merge() {
     let (b_dir, b) = clone_for_test(&remote, "merge-b");
 
     // A advances the remote with a change to one file.
-    std::fs::write(a_dir.join("a-side.op"), "a").unwrap();
+    std::fs::write(a_dir.join("a-side.de"), "a").unwrap();
     a.stage_all().unwrap();
     a.commit("a side").unwrap();
     a.push().unwrap();
 
     // B commits a *different* file locally without pulling first —
     // now the local branch and the remote have diverged.
-    std::fs::write(b_dir.join("b-side.op"), "b").unwrap();
+    std::fs::write(b_dir.join("b-side.de"), "b").unwrap();
     b.stage_all().unwrap();
     b.commit("b side").unwrap();
 
@@ -237,14 +237,14 @@ fn pull_with_local_commits_and_unchanged_upstream_is_up_to_date() {
         .expect("init bare remote");
 
     let (dir, repo) = clone_for_test(&remote, "ahead-clone");
-    std::fs::write(dir.join("base.op"), "0").unwrap();
+    std::fs::write(dir.join("base.de"), "0").unwrap();
     repo.stage_all().unwrap();
     repo.commit("base").unwrap();
     repo.run(&["push", "-u", "origin", "main"]).unwrap();
 
     // Commit locally WITHOUT pushing — the local branch is now ahead
     // of `origin/main`, which has not moved.
-    std::fs::write(dir.join("local.op"), "1").unwrap();
+    std::fs::write(dir.join("local.de"), "1").unwrap();
     repo.stage_all().unwrap();
     repo.commit("local only").unwrap();
 
@@ -262,11 +262,11 @@ fn merge_fast_forwards_then_reports_up_to_date() {
     let Some(tr) = TempRepo::new("merge-ff") else {
         return;
     };
-    tr.write("a.op", "1");
+    tr.write("a.de", "1");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("base").unwrap();
     tr.repo.create_and_switch_branch("feature").unwrap();
-    tr.write("a.op", "2");
+    tr.write("a.de", "2");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("feature work").unwrap();
     tr.repo.switch_branch("main").unwrap();
@@ -288,15 +288,15 @@ fn merge_creates_a_commit_on_divergence() {
     let Some(tr) = TempRepo::new("merge-div") else {
         return;
     };
-    tr.write("base.op", "0");
+    tr.write("base.de", "0");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("base").unwrap();
     tr.repo.create_and_switch_branch("feature").unwrap();
-    tr.write("feature.op", "f");
+    tr.write("feature.de", "f");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("feature").unwrap();
     tr.repo.switch_branch("main").unwrap();
-    tr.write("main.op", "m");
+    tr.write("main.de", "m");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("main").unwrap();
 
@@ -314,19 +314,19 @@ fn conflicting_merge_reports_conflict_then_aborts() {
     let Some(tr) = TempRepo::new("merge-conflict") else {
         return;
     };
-    tr.write("doc.op", "base");
+    tr.write("doc.de", "base");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("base").unwrap();
     tr.repo.create_and_switch_branch("feature").unwrap();
-    tr.write("doc.op", "feature version");
+    tr.write("doc.de", "feature version");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("feature").unwrap();
     tr.repo.switch_branch("main").unwrap();
-    tr.write("doc.op", "main version");
+    tr.write("doc.de", "main version");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("main").unwrap();
 
-    // Both branches changed `doc.op` → the merge conflicts.
+    // Both branches changed `doc.de` → the merge conflicts.
     assert_eq!(
         tr.repo.merge("feature").expect("merge"),
         MergeOutcome::Conflict
@@ -334,7 +334,7 @@ fn conflicting_merge_reports_conflict_then_aborts() {
     assert!(tr.repo.is_merging());
     assert_eq!(
         tr.repo.conflicted_files().expect("conflicts"),
-        vec!["doc.op".to_string()]
+        vec!["doc.de".to_string()]
     );
 
     // A second merge — of *any* ref — must be refused while the
@@ -373,11 +373,11 @@ fn worktree_merge_fast_forwards_into_a_clean_live_tree() {
     let Some(tr) = TempRepo::new("wt-merge-ff") else {
         return;
     };
-    tr.write("base.op", "0");
+    tr.write("base.de", "0");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("base").unwrap();
     tr.repo.create_and_switch_branch("feature").unwrap();
-    tr.write("feature.op", "f");
+    tr.write("feature.de", "f");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("feature").unwrap();
     tr.repo.switch_branch("main").unwrap();
@@ -390,8 +390,8 @@ fn worktree_merge_fast_forwards_into_a_clean_live_tree() {
     assert_eq!(report.outcome, MergeOutcome::FastForward);
     assert!(report.merged_commit.is_some());
     assert!(report.conflicts.is_empty());
-    // The live tree advanced — `feature.op` is now present.
-    assert!(tr.dir.join("feature.op").exists());
+    // The live tree advanced — `feature.de` is now present.
+    assert!(tr.dir.join("feature.de").exists());
     assert!(!tr.repo.is_merging());
     // The throwaway worktree was cleaned up.
     assert_eq!(worktree_count(&tr.repo), 1);
@@ -402,15 +402,15 @@ fn worktree_merge_creates_a_commit_on_divergence() {
     let Some(tr) = TempRepo::new("wt-merge-div") else {
         return;
     };
-    tr.write("base.op", "0");
+    tr.write("base.de", "0");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("base").unwrap();
     tr.repo.create_and_switch_branch("feature").unwrap();
-    tr.write("feature.op", "f");
+    tr.write("feature.de", "f");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("feature").unwrap();
     tr.repo.switch_branch("main").unwrap();
-    tr.write("main.op", "m");
+    tr.write("main.de", "m");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("main").unwrap();
 
@@ -423,8 +423,8 @@ fn worktree_merge_creates_a_commit_on_divergence() {
     assert!(report.merged_commit.is_some());
     assert!(report.conflicts.is_empty());
     // Both files are present in the live tree and it is not merging.
-    assert!(tr.dir.join("feature.op").exists());
-    assert!(tr.dir.join("main.op").exists());
+    assert!(tr.dir.join("feature.de").exists());
+    assert!(tr.dir.join("main.de").exists());
     assert!(!tr.repo.is_merging());
     assert_eq!(worktree_count(&tr.repo), 1);
 }
@@ -434,19 +434,19 @@ fn worktree_merge_quarantines_conflicts_and_keeps_the_live_tree_pristine() {
     let Some(tr) = TempRepo::new("wt-merge-conflict") else {
         return;
     };
-    tr.write("doc.op", "base");
+    tr.write("doc.de", "base");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("base").unwrap();
     tr.repo.create_and_switch_branch("feature").unwrap();
-    tr.write("doc.op", "feature version");
+    tr.write("doc.de", "feature version");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("feature").unwrap();
     tr.repo.switch_branch("main").unwrap();
-    tr.write("doc.op", "main version");
+    tr.write("doc.de", "main version");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("main").unwrap();
 
-    // Both branches changed `doc.op` → the merge conflicts, but the
+    // Both branches changed `doc.de` → the merge conflicts, but the
     // conflict is quarantined to the throwaway worktree.
     let report = tr
         .repo
@@ -455,15 +455,15 @@ fn worktree_merge_quarantines_conflicts_and_keeps_the_live_tree_pristine() {
     assert_eq!(report.outcome, MergeOutcome::Conflict);
     assert!(report.merged_commit.is_none());
     assert_eq!(report.conflicts.len(), 1);
-    assert_eq!(report.conflicts.files[0].path, "doc.op");
+    assert_eq!(report.conflicts.files[0].path, "doc.de");
     assert_eq!(report.conflicts.files[0].kind, ConflictKind::BothModified);
 
     // The live tree is pristine — no `MERGE_HEAD`, no markers, and
-    // `doc.op` still holds exactly the committed `main` content.
+    // `doc.de` still holds exactly the committed `main` content.
     assert!(!tr.repo.is_merging());
     assert!(tr.repo.status().expect("status").is_clean());
     assert_eq!(
-        std::fs::read_to_string(tr.dir.join("doc.op")).unwrap(),
+        std::fs::read_to_string(tr.dir.join("doc.de")).unwrap(),
         "main version"
     );
     assert_eq!(worktree_count(&tr.repo), 1);
@@ -474,11 +474,11 @@ fn worktree_merge_reports_up_to_date_for_an_ancestor() {
     let Some(tr) = TempRepo::new("wt-merge-utd") else {
         return;
     };
-    tr.write("base.op", "0");
+    tr.write("base.de", "0");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("base").unwrap();
     tr.repo.create_branch("feature").unwrap();
-    tr.write("main.op", "m");
+    tr.write("main.de", "m");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("ahead").unwrap();
 
@@ -498,16 +498,16 @@ fn worktree_merge_refuses_a_dirty_live_tree() {
     let Some(tr) = TempRepo::new("wt-merge-dirty") else {
         return;
     };
-    tr.write("base.op", "0");
+    tr.write("base.de", "0");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("base").unwrap();
     tr.repo.create_and_switch_branch("feature").unwrap();
-    tr.write("feature.op", "f");
+    tr.write("feature.de", "f");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("feature").unwrap();
     tr.repo.switch_branch("main").unwrap();
     // An uncommitted change in the live tree.
-    tr.write("scratch.op", "wip");
+    tr.write("scratch.de", "wip");
 
     let err = tr
         .repo
@@ -523,31 +523,31 @@ fn worktree_merge_resolver_auto_completes_a_conflict() {
     let Some(tr) = TempRepo::new("wt-merge-resolve") else {
         return;
     };
-    tr.write("doc.op", "base");
+    tr.write("doc.de", "base");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("base").unwrap();
     tr.repo.create_and_switch_branch("feature").unwrap();
-    tr.write("doc.op", "feature version");
+    tr.write("doc.de", "feature version");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("feature").unwrap();
     tr.repo.switch_branch("main").unwrap();
-    tr.write("doc.op", "main version");
+    tr.write("doc.de", "main version");
     tr.repo.stage_all().unwrap();
     tr.repo.commit("main").unwrap();
 
-    // The resolver supplies merged content for the conflicted `.op`
+    // The resolver supplies merged content for the conflicted `.de`
     // file — the otherwise-conflicting merge then completes cleanly.
     let report = tr
         .repo
         .merge_branch_isolated("feature", |path, _base, _ours, _theirs| {
-            (path == "doc.op").then(|| "resolved".to_string())
+            (path == "doc.de").then(|| "resolved".to_string())
         })
         .expect("merge");
     assert_eq!(report.outcome, MergeOutcome::Merge);
     assert!(report.conflicts.is_empty());
     assert!(!tr.repo.is_merging());
     assert_eq!(
-        std::fs::read_to_string(tr.dir.join("doc.op")).unwrap(),
+        std::fs::read_to_string(tr.dir.join("doc.de")).unwrap(),
         "resolved",
         "the resolver's content landed in the live tree"
     );

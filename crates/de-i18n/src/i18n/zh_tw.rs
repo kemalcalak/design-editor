@@ -490,7 +490,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "acp.localDesktopOnly" => "本機 Agent 僅在桌面應用中可用。",
         "figma.title" => "從 Figma 匯入",
         "figma.dropFile" => "將 .fig 檔案拖放至此處",
-        "dialog.dropToOpen" => "拖放以開啟  ·  .op / .pen / .fig / .html / .zip",
+        "dialog.dropToOpen" => "拖放以開啟  ·  .de / .pen / .fig / .html / .zip",
         "figma.orBrowse" => "或點擊瀏覽",
         "figma.exportTip" => "從 Figma 匯出：檔案 → 儲存本機副本 (.fig)",
         "figma.selectFigFile" => "請選擇一個 .fig 檔案",

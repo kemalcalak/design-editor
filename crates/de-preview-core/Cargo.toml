@@ -11,7 +11,7 @@ description = "Canvas Preview (Play) mode runtime — jian runtime integration, 
 # ids; effects/debug in later tasks) — a leaf crate so core/UI/FFI/hosts can
 # share the frozen contract without the Core → UI cycle.
 de-preview-contracts = { path = "../de-preview-contracts" }
-# The canonical `.op` / `.pen` schema — the `PenDocument` loader
+# The canonical `.de` schema — the `PenDocument` loader
 # converts from. Also used for screen projection and JSON serialization.
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 # jian-core ships the taffy-backed `LayoutEngine` + `Runtime` for preview

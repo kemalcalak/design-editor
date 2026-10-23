@@ -15,7 +15,10 @@ pub enum DropKind {
 /// Classify a file name for the drop / picker router.
 pub fn drop_kind(name: &str) -> DropKind {
     let lower = name.to_ascii_lowercase();
-    if lower.ends_with(".op") || lower.ends_with(".pen") {
+    let path = std::path::Path::new(&lower);
+    if de_util::document_file::is_document_path(path)
+        || de_util::document_file::is_pen_dev_path(path)
+    {
         DropKind::Document
     } else if lower.ends_with(".fig") {
         DropKind::Figma

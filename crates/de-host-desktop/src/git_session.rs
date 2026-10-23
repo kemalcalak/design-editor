@@ -1,4 +1,4 @@
-//! Git session — binds the open `.op` document to its repository.
+//! Git session — binds the open `.de` document to its repository.
 //!
 //! The Rust counterpart of the TS Electron app's `repo-session.ts`:
 //! whenever the desktop opens / creates / saves-as a document, the
@@ -200,7 +200,7 @@ impl GitSession {
     }
 
     /// Merge `other` into the current branch through the isolated
-    /// worktree orchestrator. A conflicting `.op` file is offered to
+    /// worktree orchestrator. A conflicting `.de` file is offered to
     /// the structured node-level merge ([`de_opmerge`]); when that
     /// resolves cleanly its merged tree is written back so the merge
     /// can complete without manual conflict resolution. `None` when
@@ -209,7 +209,7 @@ impl GitSession {
         let repo = self.repo.as_ref()?;
         Some(
             repo.merge_branch_isolated(other, |path, base, ours, theirs| {
-                if !path.ends_with(".op") {
+                if !de_util::document_file::is_document_path(std::path::Path::new(path)) {
                     return None;
                 }
                 // A whole-file add / delete (a missing ours or theirs
@@ -228,7 +228,7 @@ impl GitSession {
     }
 
     /// Re-run the branch merge applying the user's per-node ours /
-    /// theirs choices from `state`. The resolver runs each `.op`
+    /// theirs choices from `state`. The resolver runs each `.de`
     /// file's conflicts through [`de_opmerge::resolve_op_merge`] with
     /// those choices — a fully-decided file resolves cleanly so the
     /// merge can complete. `None` when the session is unbound.
@@ -239,7 +239,7 @@ impl GitSession {
         let repo = self.repo.as_ref()?;
         Some(
             repo.merge_branch_isolated(&state.branch, |path, base, ours, theirs| {
-                if !path.ends_with(".op") {
+                if !de_util::document_file::is_document_path(std::path::Path::new(path)) {
                     return None;
                 }
                 if ours.is_empty() || theirs.is_empty() {
@@ -314,7 +314,7 @@ mod tests {
         };
         git_config("user.email", "t@design-editor.dev");
         git_config("user.name", "OP Test");
-        let doc = dir.join("design.op");
+        let doc = dir.join("design.de");
         std::fs::write(&doc, "{}").unwrap();
 
         let mut session = GitSession::new();
@@ -334,7 +334,7 @@ mod tests {
         session.stage_tracked().expect("stage");
         assert_eq!(
             session.tracked_relpath().as_deref(),
-            Some("design.op"),
+            Some("design.de"),
             "the tracked path resolves relative to the repo root"
         );
         session.commit_staged("add design").expect("commit");

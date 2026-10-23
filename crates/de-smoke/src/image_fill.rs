@@ -1,6 +1,6 @@
 //! Post-loop image-fill step for the headless agentic loop.
 //!
-//! After the design loop completes and before the `.op` is persisted, optionally
+//! After the design loop completes and before the `.de` is persisted, optionally
 //! resolve pending image-search queries to real URLs from Openverse. Gated by
 //! `DESIGN_EDITOR_SMOKE_FILL_IMAGES=1` (default off).
 
@@ -57,7 +57,7 @@ fn resolve_judge() -> Option<OpenAiCompatVisionJudge> {
 /// Collects image-search targets (nodes with a query but empty `src`), fetches
 /// URLs sequentially with a delay, applies each, and logs the results. Never
 /// fails the run — a target whose search returns nothing is logged and skipped.
-/// Must be called AFTER the agent loop finishes but BEFORE the `.op` is saved.
+/// Must be called AFTER the agent loop finishes but BEFORE the `.de` is saved.
 pub fn fill_images(state: &mut EditorState, config: &ImageFillConfig, dump: bool) {
     if !config.enabled {
         return;
