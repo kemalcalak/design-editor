@@ -505,7 +505,7 @@ fn web_property_panel_layout_actions_write_selected_node() {
 }
 
 #[test]
-fn web_property_panel_padding_mode_gear_opens_and_selects_mode() {
+fn web_property_panel_alignment_popover_opens_and_sets_distribution() {
     let mut host = WidgetHost::new();
     seed(
         &mut host,
@@ -520,24 +520,31 @@ fn web_property_panel_padding_mode_gear_opens_and_selects_mode() {
     host.editor_state
         .set_single_selection(NodeId::new("text_group"));
 
-    let gear = point_for_action(&host, |action| {
-        matches!(action, PropertyPanelAction::TogglePaddingModePopover)
+    let button = point_for_action(&host, |action| {
+        matches!(action, PropertyPanelAction::ToggleLayoutAlignPopover)
     });
-    assert!(host.apply_press(gear.x, gear.y, VIEWPORT_W, VIEWPORT_H));
-    assert!(host.editor_state.editor_ui.padding_mode_popover_open);
+    assert!(host.apply_press(button.x, button.y, VIEWPORT_W, VIEWPORT_H));
+    assert!(host.editor_state.editor_ui.layout_align_popover_open);
 
-    let axis = point_for_action(&host, |action| {
+    let between = point_for_action(&host, |action| {
         matches!(
             action,
-            PropertyPanelAction::SetPaddingMode(PaddingEditMode::Axis)
+            PropertyPanelAction::SetLayoutJustify(LayoutJustifyValue::SpaceBetween)
         )
     });
-    assert!(host.apply_press(axis.x, axis.y, VIEWPORT_W, VIEWPORT_H));
+    assert!(host.apply_press(between.x, between.y, VIEWPORT_W, VIEWPORT_H));
     assert_eq!(
-        host.editor_state.editor_ui.padding_edit_mode,
-        Some(PaddingEditMode::Axis)
+        PropertyPanel::for_selection(&host.editor_state)
+            .expect("panel")
+            .snapshot
+            .layout_justify,
+        LayoutJustifyValue::SpaceBetween
     );
-    assert!(!host.editor_state.editor_ui.padding_mode_popover_open);
+    // Picking a row keeps the popover open for further tweaks; a press
+    // outside it closes it.
+    assert!(host.editor_state.editor_ui.layout_align_popover_open);
+    assert!(host.apply_press(4.0, VIEWPORT_H - 4.0, VIEWPORT_W, VIEWPORT_H));
+    assert!(!host.editor_state.editor_ui.layout_align_popover_open);
 }
 
 #[test]

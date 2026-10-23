@@ -146,7 +146,7 @@ impl WidgetHostNative {
         true
     }
 
-    pub(in crate::widget_host) fn dismiss_padding_mode_popover_on_press(
+    pub(in crate::widget_host) fn dismiss_layout_align_popover_on_press(
         &mut self,
         x: f32,
         y: f32,
@@ -155,7 +155,7 @@ impl WidgetHostNative {
     ) -> bool {
         use de_editor_ui::widgets::{PropertyPanel, PropertyPanelAction as A};
         use de_editor_ui::Point2D;
-        if !self.editor_state.editor_ui.padding_mode_popover_open
+        if !self.editor_state.editor_ui.layout_align_popover_open
             && !self.editor_state.editor_ui.stroke_mode_popover_open
         {
             return false;
@@ -164,30 +164,27 @@ impl WidgetHostNative {
         if let Some(panel) = PropertyPanel::for_selection(&self.editor_state) {
             let property_rect = self.property_rect(viewport_width, viewport_height);
             if let Some(action) = panel.hit_test_action(property_rect, Point2D::new(x, y)) {
-                if matches!(
-                    action,
-                    A::SetPaddingMode(_)
-                        | A::TogglePaddingModePopover
-                        | A::SetStrokeMode(_)
-                        | A::ToggleStrokeModePopover
-                ) {
+                if de_editor_ui::widgets::property_panel_flex::is_layout_align_popover_action(
+                    &action,
+                ) || matches!(action, A::SetStrokeMode(_) | A::ToggleStrokeModePopover)
+                {
                     self.apply_property_action(action);
                     return true;
                 }
             }
         }
-        self.editor_state.editor_ui.padding_mode_popover_open = false;
-        self.editor_state.editor_ui.padding_mode_popover_hover = None;
+        self.editor_state.editor_ui.layout_align_popover_open = false;
+        self.editor_state.editor_ui.layout_align_popover_hover = None;
         self.editor_state.editor_ui.stroke_mode_popover_open = false;
         self.editor_state.editor_ui.stroke_mode_popover_hover = None;
         self.mark_dirty();
         true
     }
 
-    /// Track the padding-mode popover row under the cursor so the open
-    /// popover paints a hover wash. Returns true when the hovered row
+    /// Track the alignment / stroke-mode popover row under the cursor so
+    /// the open popover paints a hover wash. Returns true when the hovered row
     /// changed (a repaint is due). No-op when the popover is closed.
-    pub(in crate::widget_host) fn update_padding_mode_popover_hover(
+    pub(in crate::widget_host) fn update_layout_align_popover_hover(
         &mut self,
         x: f32,
         y: f32,
@@ -195,35 +192,36 @@ impl WidgetHostNative {
     ) -> bool {
         use de_editor_ui::widgets::PropertyPanelAction as A;
         use de_editor_ui::Point2D;
-        if !self.editor_state.editor_ui.padding_mode_popover_open
+        if !self.editor_state.editor_ui.layout_align_popover_open
             && !self.editor_state.editor_ui.stroke_mode_popover_open
         {
             return false;
         }
-        let new_hover = panel.and_then(|panel| {
+        let hovered = panel.and_then(|panel| {
             let property_rect = self.property_rect(self.last_viewport_w, self.last_viewport_h);
-            match panel.hit_test_action(property_rect, Point2D::new(x, y)) {
-                Some(A::SetPaddingMode(mode)) => de_editor_core::PaddingEditMode::ALL
-                    .iter()
-                    .position(|m| *m == mode),
-                Some(A::SetStrokeMode(mode)) => de_editor_core::PaddingEditMode::ALL
-                    .iter()
-                    .position(|m| *m == mode),
-                _ => None,
-            }
+            panel.hit_test_action(property_rect, Point2D::new(x, y))
         });
-        let padding_changed = if self.editor_state.editor_ui.padding_mode_popover_open
-            && new_hover != self.editor_state.editor_ui.padding_mode_popover_hover
+        let align_hover = hovered
+            .as_ref()
+            .and_then(de_editor_ui::widgets::property_panel_flex::layout_align_popover_hover_row);
+        let stroke_hover = match hovered {
+            Some(A::SetStrokeMode(mode)) => de_editor_core::PaddingEditMode::ALL
+                .iter()
+                .position(|m| *m == mode),
+            _ => None,
+        };
+        let padding_changed = if self.editor_state.editor_ui.layout_align_popover_open
+            && align_hover != self.editor_state.editor_ui.layout_align_popover_hover
         {
-            self.editor_state.editor_ui.padding_mode_popover_hover = new_hover;
+            self.editor_state.editor_ui.layout_align_popover_hover = align_hover;
             true
         } else {
             false
         };
         let stroke_changed = if self.editor_state.editor_ui.stroke_mode_popover_open
-            && new_hover != self.editor_state.editor_ui.stroke_mode_popover_hover
+            && stroke_hover != self.editor_state.editor_ui.stroke_mode_popover_hover
         {
-            self.editor_state.editor_ui.stroke_mode_popover_hover = new_hover;
+            self.editor_state.editor_ui.stroke_mode_popover_hover = stroke_hover;
             true
         } else {
             false

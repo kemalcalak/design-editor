@@ -350,22 +350,11 @@ pub struct EditorUiState {
     pub property_tab: PropertyTab,
     /// Active flex-layout mode for the property panel's row.
     pub flex_layout: FlexLayout,
-    /// Padding-section edit mode pinned via the gear popover. `None`
-    /// re-derives the mode from the node's values each frame (TS
-    /// default); `Some(_)` keeps the user's pick. The pin is scoped to
-    /// [`Self::padding_edit_mode_anchor`] so it never leaks into the
-    /// next selection — the panel ignores it once the anchor differs.
-    pub padding_edit_mode: Option<PaddingEditMode>,
-    /// Node id (anchor) the [`Self::padding_edit_mode`] pin was set for.
-    /// Empty when unset. The property panel honours the pin only while
-    /// the current selection anchor still matches, so selecting another
-    /// node falls back to deriving the mode from that node's values.
-    pub padding_edit_mode_anchor: String,
-    /// Whether the padding-mode gear popover is open.
-    pub padding_mode_popover_open: bool,
-    /// Index (into `PaddingEditMode::ALL`) of the popover row under the
-    /// cursor while the gear popover is open — drives the hover wash.
-    pub padding_mode_popover_hover: Option<usize>,
+    /// Whether the Auto layout alignment popover is open.
+    pub layout_align_popover_open: bool,
+    /// Index (into the popover's Packed / Space between / Space around
+    /// rows) under the cursor while it is open — drives the hover wash.
+    pub layout_align_popover_hover: Option<usize>,
     /// Stroke-width edit mode pinned via the stroke-section gear.
     /// Scoped to [`Self::stroke_edit_mode_anchor`] like padding.
     pub stroke_edit_mode: Option<PaddingEditMode>,

@@ -222,7 +222,7 @@ pub fn action_button_rects_with_fill_picker(
     font_weight_picker_open: bool,
     export_scale_picker_open: bool,
     export_format_picker_open: bool,
-    padding_mode_popover_open: bool,
+    layout_align_popover_open: bool,
 ) -> Vec<(PropertyPanelAction, Rect)> {
     let x0 = panel_rect.origin.x;
     let w = panel_rect.size.x;
@@ -269,12 +269,10 @@ pub fn action_button_rects_with_fill_picker(
             w,
             visible.flex_layout_mode,
             visible.layout_justify,
-            padding_mode_popover_open,
+            layout_align_popover_open,
         );
-        y += crate::widgets::property_panel_flex::flex_section_height(
-            visible.flex_layout_mode,
-            visible.padding_edit_mode,
-        ) - SECTION_HEADER_HEIGHT;
+        y += crate::widgets::property_panel_flex::flex_section_height(visible.flex_layout_mode)
+            - SECTION_HEADER_HEIGHT;
     }
 
     if visible.size_options {

@@ -189,7 +189,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         );
         // Picker rows live in `rects` AFTER the dropdown rect, so
         // a row hit takes priority — `rev()` makes the picker rows
@@ -240,7 +240,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         )
         .into_iter()
         .filter(|(a, _)| {
@@ -293,7 +293,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         )
         .into_iter()
         .find_map(|(action, rect)| match action {
@@ -423,7 +423,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         )
         .iter()
         .position(|(_, r)| (*r).contains(point))

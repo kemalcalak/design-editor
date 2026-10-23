@@ -35,7 +35,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         )
     }
 
@@ -87,26 +87,26 @@ impl PropertyPanel {
             .is_some_and(|popup| popup.contains(point))
     }
 
-    /// Whether `point` falls inside the open padding-mode gear popup,
-    /// including its title and padded chrome.
-    pub fn padding_mode_popover_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
-        self.padding_mode_popover_contains_logical(panel_rect, point)
+    /// Whether `point` falls inside the open Auto layout alignment
+    /// popover, padding included.
+    pub fn layout_align_popover_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
+        self.layout_align_popover_contains_logical(panel_rect, point)
     }
 
-    fn padding_mode_popover_contains_logical(&self, panel_rect: Rect, point: Point2D) -> bool {
+    fn layout_align_popover_contains_logical(&self, panel_rect: Rect, point: Point2D) -> bool {
         use crate::widgets::property_panel::PropertyPanelAction as A;
 
-        if !self.padding_mode_popover_open || !self.point_in_design_popup_clip(panel_rect, point) {
+        if !self.layout_align_popover_open || !self.point_in_design_popup_clip(panel_rect, point) {
             return false;
         }
         self.popup_action_rects(panel_rect)
             .into_iter()
-            .find_map(|(action, gear)| {
-                matches!(action, A::TogglePaddingModePopover).then_some(gear)
+            .find_map(|(action, button)| {
+                matches!(action, A::ToggleLayoutAlignPopover).then_some(button)
             })
-            .map(|gear| {
-                crate::widgets::property_panel_mode_popover::mode_popover_rect_from_gear(
-                    gear,
+            .map(|button| {
+                crate::widgets::property_panel_flex::align_popover_rect_from_button(
+                    button,
                     panel_rect.size.x,
                 )
             })

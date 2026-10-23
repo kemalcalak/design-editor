@@ -230,6 +230,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "Google Fonts में नहीं है",
         "missingFonts.downloadFailed" => "डाउनलोड विफल — अपना कनेक्शन जांचें",
         "missingFonts.downloadedSection" => "Google Fonts से डाउनलोड किए गए",
+        "layout.packed" => "सघन",
+        "layout.auto" => "स्वतः",
+        "padding.short" => "पैडिंग",
         _ => return None,
     })
 }

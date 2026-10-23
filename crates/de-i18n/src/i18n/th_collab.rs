@@ -230,6 +230,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "ไม่มีใน Google Fonts",
         "missingFonts.downloadFailed" => "ดาวน์โหลดไม่สำเร็จ — ตรวจสอบการเชื่อมต่อ",
         "missingFonts.downloadedSection" => "ดาวน์โหลดจาก Google Fonts",
+        "layout.packed" => "ชิดกัน",
+        "layout.auto" => "อัตโนมัติ",
+        "padding.short" => "ระยะใน",
         _ => return None,
     })
 }

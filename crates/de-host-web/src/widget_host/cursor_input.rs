@@ -65,7 +65,7 @@ impl WidgetHost {
             || self.editor_state.editor_ui.export_scale_picker_open
             || self.editor_state.editor_ui.export_format_picker_open
             || self.editor_state.editor_ui.interaction_menu_open
-            || self.editor_state.editor_ui.padding_mode_popover_open
+            || self.editor_state.editor_ui.layout_align_popover_open
             || self.editor_state.editor_ui.stroke_mode_popover_open
             || self.editor_state.editor_ui.font_weight_picker_open
             || self.editor_state.editor_ui.font_picker.open
@@ -207,36 +207,38 @@ impl WidgetHost {
             ) {
                 return consumed;
             }
-            if self.editor_state.editor_ui.padding_mode_popover_open
+            if self.editor_state.editor_ui.layout_align_popover_open
                 || self.editor_state.editor_ui.stroke_mode_popover_open
             {
                 use de_editor_ui::widgets::PropertyPanelAction as A;
-                let new_hover = match panel.hit_test_action(property_rect, point) {
-                    Some(A::SetPaddingMode(mode)) | Some(A::SetStrokeMode(mode)) => {
-                        de_editor_core::PaddingEditMode::ALL
-                            .iter()
-                            .position(|candidate| *candidate == mode)
-                    }
+                let hovered = panel.hit_test_action(property_rect, point);
+                let align_hover = hovered.as_ref().and_then(
+                    de_editor_ui::widgets::property_panel_flex::layout_align_popover_hover_row,
+                );
+                let stroke_hover = match hovered {
+                    Some(A::SetStrokeMode(mode)) => de_editor_core::PaddingEditMode::ALL
+                        .iter()
+                        .position(|candidate| *candidate == mode),
                     _ => None,
                 };
                 let mut changed = false;
-                if self.editor_state.editor_ui.padding_mode_popover_open
-                    && new_hover != self.editor_state.editor_ui.padding_mode_popover_hover
+                if self.editor_state.editor_ui.layout_align_popover_open
+                    && align_hover != self.editor_state.editor_ui.layout_align_popover_hover
                 {
-                    self.editor_state.editor_ui.padding_mode_popover_hover = new_hover;
+                    self.editor_state.editor_ui.layout_align_popover_hover = align_hover;
                     changed = true;
                 }
                 if self.editor_state.editor_ui.stroke_mode_popover_open
-                    && new_hover != self.editor_state.editor_ui.stroke_mode_popover_hover
+                    && stroke_hover != self.editor_state.editor_ui.stroke_mode_popover_hover
                 {
-                    self.editor_state.editor_ui.stroke_mode_popover_hover = new_hover;
+                    self.editor_state.editor_ui.stroke_mode_popover_hover = stroke_hover;
                     changed = true;
                 }
                 if changed {
                     self.mark_dirty();
                 }
-                let over_popup = (self.editor_state.editor_ui.padding_mode_popover_open
-                    && panel.padding_mode_popover_contains(property_rect, point))
+                let over_popup = (self.editor_state.editor_ui.layout_align_popover_open
+                    && panel.layout_align_popover_contains(property_rect, point))
                     || (self.editor_state.editor_ui.stroke_mode_popover_open
                         && panel.stroke_mode_popover_contains(property_rect, point));
                 if over_popup {

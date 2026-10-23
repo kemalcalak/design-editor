@@ -165,7 +165,6 @@ impl Widget for PropertyPanel {
                 &edit_ctx,
                 &self.labels,
                 self.locale,
-                self.padding_edit_mode,
                 // The sizing boxes close the section when they follow.
                 !caps.size_options,
                 x,
@@ -355,11 +354,11 @@ impl Widget for PropertyPanel {
                 self.font_weight_picker_open,
                 self.export_scale_picker_open,
                 self.export_format_picker_open,
-                self.padding_mode_popover_open,
+                self.layout_align_popover_open,
             );
             if let Some(i) = self.action_hover {
                 if let Some((action, r)) = rects.get(i) {
-                    let wash = action_wash_rect(action, *r, &self.labels, self.locale, cx.backend);
+                    let wash = action_wash_rect(action, *r, &self.labels, cx.backend);
                     paint_button_feedback_wash(
                         cx.backend,
                         &self.theme,
@@ -381,8 +380,7 @@ impl Widget for PropertyPanel {
             if let Some(i) = self.action_pressed {
                 if self.action_hover != Some(i) {
                     if let Some((action, r)) = rects.get(i) {
-                        let wash =
-                            action_wash_rect(action, *r, &self.labels, self.locale, cx.backend);
+                        let wash = action_wash_rect(action, *r, &self.labels, cx.backend);
                         paint_button_feedback_wash(cx.backend, &self.theme, wash, 6.0, false, true);
                     }
                 }
@@ -478,17 +476,16 @@ impl Widget for PropertyPanel {
                 );
             }
         }
-        // Padding mode-selector popover — overlays the sections below
-        // the gear. Anchored off the flex section's body top (after its
-        // header), matching the y the action-rect walker passes to
-        // `push_flex_action_rects`.
-        if caps.flex_layout && self.padding_mode_popover_open {
-            crate::widgets::property_panel_flex::paint_padding_mode_popover(
+        // Alignment popover — overlays the sections below the Auto
+        // layout header. Anchored off the section body top, the same y
+        // the action walker passes to `push_flex_action_rects`.
+        if caps.flex_layout && self.layout_align_popover_open {
+            crate::widgets::property_panel_flex::paint_layout_align_popover(
                 cx,
                 &self.theme,
                 self.locale,
-                self.padding_edit_mode,
-                self.padding_mode_popover_hover,
+                &self.snapshot,
+                self.layout_align_popover_hover,
                 x,
                 flex_section_y + crate::widgets::property_panel_inputs::SECTION_HEADER_HEIGHT,
                 w,

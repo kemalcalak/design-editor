@@ -230,6 +230,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "Google Fonts 中没有此字体",
         "missingFonts.downloadFailed" => "下载失败，请检查网络连接",
         "missingFonts.downloadedSection" => "从 Google Fonts 下载的字体",
+        "layout.packed" => "紧凑",
+        "layout.auto" => "自动",
+        "padding.short" => "内边距",
         _ => return None,
     })
 }

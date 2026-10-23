@@ -340,3 +340,41 @@ fn codegen_action_press_sets_and_release_clears_pressed_button() {
     assert!(host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H));
     assert_eq!(host.editor_state().editor_ui.pressed_button, None);
 }
+
+#[test]
+fn alignment_popover_opens_from_the_auto_layout_header_and_sets_distribution() {
+    use de_editor_ui::widgets::property_panel_action::LayoutJustifyValue;
+    let mut host = WidgetHostNative::new();
+    seed(
+        &mut host,
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"frame","id":"f","name":"Frame",
+               "x":40,"y":40,"width":360,"height":240,
+               "layout":"vertical","gap":8,"children":[]}
+        ]}"##,
+    );
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("f"));
+
+    let button = point_for_action(&host, |action| {
+        matches!(action, PropertyPanelAction::ToggleLayoutAlignPopover)
+    });
+    assert!(host.apply_press(button.x, button.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    assert!(host.editor_state().editor_ui.layout_align_popover_open);
+
+    let between = point_for_action(&host, |action| {
+        matches!(
+            action,
+            PropertyPanelAction::SetLayoutJustify(LayoutJustifyValue::SpaceBetween)
+        )
+    });
+    assert!(host.apply_press(between.x, between.y, VIEWPORT_W, VIEWPORT_H));
+    host.apply_release_with_viewport(VIEWPORT_W, VIEWPORT_H);
+    let panel = PropertyPanel::for_selection(host.editor_state()).expect("panel");
+    assert_eq!(
+        panel.snapshot.layout_justify,
+        LayoutJustifyValue::SpaceBetween
+    );
+    assert!(host.editor_state().editor_ui.layout_align_popover_open);
+}

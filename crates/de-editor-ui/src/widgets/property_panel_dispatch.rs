@@ -489,10 +489,10 @@ pub fn apply_property_action(
             state.editor_ui.font_weight_picker_hover = None;
             Handled
         }
-        A::TogglePaddingModePopover => {
+        A::ToggleLayoutAlignPopover => {
             let ui = &mut state.editor_ui;
-            ui.padding_mode_popover_open = !ui.padding_mode_popover_open;
-            ui.padding_mode_popover_hover = None;
+            ui.layout_align_popover_open = !ui.layout_align_popover_open;
+            ui.layout_align_popover_hover = None;
             ui.stroke_mode_popover_open = false;
             ui.stroke_mode_popover_hover = None;
             ui.font_weight_picker_open = false;
@@ -504,24 +504,12 @@ pub fn apply_property_action(
             ui.close_color_variable_picker();
             Handled
         }
-        A::SetPaddingMode(mode) => {
-            // Scope the pin to the node it was set for so it can't leak
-            // into the next selection.
-            let anchor = state.selection.anchor.as_str().to_string();
-            state.editor_ui.padding_edit_mode = Some(*mode);
-            state.editor_ui.padding_edit_mode_anchor = anchor;
-            state.editor_ui.padding_mode_popover_open = false;
-            state.editor_ui.padding_mode_popover_hover = None;
-            state.commit_history();
-            let _ = state.set_selected_padding_mode_shape(*mode);
-            Handled
-        }
         A::ToggleStrokeModePopover => {
             let ui = &mut state.editor_ui;
             ui.stroke_mode_popover_open = !ui.stroke_mode_popover_open;
             ui.stroke_mode_popover_hover = None;
-            ui.padding_mode_popover_open = false;
-            ui.padding_mode_popover_hover = None;
+            ui.layout_align_popover_open = false;
+            ui.layout_align_popover_hover = None;
             ui.font_weight_picker_open = false;
             ui.close_font_picker();
             ui.close_fill_type_picker();

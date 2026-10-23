@@ -126,7 +126,7 @@ impl WidgetHostNative {
             || self.editor_state.editor_ui.compositing_picker.open
             || self.editor_state.editor_ui.effect_add_picker_open
             || self.editor_state.editor_ui.interaction_menu_open
-            || self.editor_state.editor_ui.padding_mode_popover_open
+            || self.editor_state.editor_ui.layout_align_popover_open
             || self.editor_state.editor_ui.stroke_mode_popover_open
             || self.editor_state.editor_ui.font_weight_picker_open
             || self.editor_state.editor_ui.font_picker.open
@@ -286,14 +286,14 @@ impl WidgetHostNative {
                 return Some(true);
             }
         }
-        // Padding-mode gear popover row hover (no-op when closed).
+        // Alignment / stroke-mode popover row hover (no-op when closed).
         let over_padding_or_stroke_popup = property_panel.is_some_and(|panel| {
-            (self.editor_state.editor_ui.padding_mode_popover_open
-                && panel.padding_mode_popover_contains(property_rect, point))
+            (self.editor_state.editor_ui.layout_align_popover_open
+                && panel.layout_align_popover_contains(property_rect, point))
                 || (self.editor_state.editor_ui.stroke_mode_popover_open
                     && panel.stroke_mode_popover_contains(property_rect, point))
         });
-        let padding_hover_changed = self.update_padding_mode_popover_hover(x, y, property_panel);
+        let padding_hover_changed = self.update_layout_align_popover_hover(x, y, property_panel);
         if over_padding_or_stroke_popup {
             let below_changed = self.clear_chat_and_lower_hover();
             return Some(padding_hover_changed || below_changed);

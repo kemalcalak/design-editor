@@ -4,7 +4,6 @@ use crate::pen_node_ext::PenNodeExt;
 use crate::state::EditorState;
 use crate::ui_draft::PropertyFocus;
 use crate::walkers::find_node_mut;
-use jian_ops_schema::node::container::Padding;
 use jian_ops_schema::node::PenNode;
 
 fn stroke_side_for_focus(focus: PropertyFocus) -> Option<crate::StrokeSide> {
@@ -276,56 +275,9 @@ impl EditorState {
                     &crate::LayoutPropValue::Number(value.max(0.0) as f64),
                 );
             }
-            PropertyFocus::PaddingTop
-            | PropertyFocus::PaddingRight
-            | PropertyFocus::PaddingBottom
-            | PropertyFocus::PaddingLeft => {
-                if !value.is_finite() {
-                    return false;
-                }
-                let mut values = self
-                    .selected_node()
-                    .map(container_padding_values)
-                    .unwrap_or([0.0; 4]);
-                let v = value.max(0.0) as f64;
-                // Fan the edit out to the sides the active mode binds
-                // together (TS: Single writes all four; Axis-V =
-                // top+bottom, Axis-H = right+left).
-                let mode = self.editor_ui.padding_edit_mode.unwrap_or_else(|| {
-                    crate::PaddingEditMode::from_values(
-                        values[0] as f32,
-                        values[1] as f32,
-                        values[2] as f32,
-                        values[3] as f32,
-                    )
-                });
-                match (mode, focus) {
-                    (crate::PaddingEditMode::Single, _) => values = [v; 4],
-                    (crate::PaddingEditMode::Axis, PropertyFocus::PaddingTop) => {
-                        values[0] = v;
-                        values[2] = v;
-                    }
-                    (crate::PaddingEditMode::Axis, PropertyFocus::PaddingRight) => {
-                        values[1] = v;
-                        values[3] = v;
-                    }
-                    _ => {
-                        let idx = match focus {
-                            PropertyFocus::PaddingTop => 0,
-                            PropertyFocus::PaddingRight => 1,
-                            PropertyFocus::PaddingBottom => 2,
-                            PropertyFocus::PaddingLeft => 3,
-                            _ => unreachable!(),
-                        };
-                        values[idx] = v;
-                    }
-                }
-                return self.cmd_set_node_layout_prop(
-                    &sel,
-                    "padding",
-                    &crate::LayoutPropValue::NumberArray(values.to_vec()),
-                );
-            }
+            // The shorthand `Pad` field is a string draft; it commits
+            // through `commit_padding_shorthand`, never as one number.
+            PropertyFocus::Padding => return false,
             _ => {}
         }
         let Some(node) = find_node_mut(self.active_children_mut(), &sel) else {
@@ -360,10 +312,7 @@ impl EditorState {
             | PropertyFocus::WidgetMax
             | PropertyFocus::WidgetStep
             | PropertyFocus::ImageTileScale
-            | PropertyFocus::PaddingTop
-            | PropertyFocus::PaddingRight
-            | PropertyFocus::PaddingBottom
-            | PropertyFocus::PaddingLeft
+            | PropertyFocus::Padding
             | PropertyFocus::StrokeTopWidth
             | PropertyFocus::StrokeRightWidth
             | PropertyFocus::StrokeBottomWidth
@@ -541,28 +490,21 @@ impl EditorState {
         crate::fills::set_primary_fill_type(node, fill_type)
     }
 
-    /// Normalise the selected node's padding to the canonical shape for
-    /// `mode` (TS `handleModeChange`): Single collapses to the top
-    /// value on all sides; Axis mirrors top→bottom and right→left;
-    /// Individual leaves the four values as-is.
-    pub fn set_selected_padding_mode_shape(&mut self, mode: crate::PaddingEditMode) -> bool {
+    /// Commit the `Pad` field's CSS shorthand draft (#83) to the anchor
+    /// node's padding. False when the draft does not parse or the
+    /// selection cannot be edited.
+    pub fn commit_padding_shorthand(&mut self, draft: &str) -> bool {
         let sel = self.selection.anchor.clone();
         if !sel.is_real() || !self.is_editable(&sel) {
             return false;
         }
-        let v = self
-            .selected_node()
-            .map(container_padding_values)
-            .unwrap_or([0.0; 4]);
-        let reshaped = match mode {
-            crate::PaddingEditMode::Single => [v[0]; 4],
-            crate::PaddingEditMode::Axis => [v[0], v[1], v[0], v[1]],
-            crate::PaddingEditMode::Individual => v,
+        let Some(values) = crate::padding_shorthand::parse_padding_shorthand(draft) else {
+            return false;
         };
         self.cmd_set_node_layout_prop(
             &sel,
             "padding",
-            &crate::LayoutPropValue::NumberArray(reshaped.to_vec()),
+            &crate::LayoutPropValue::NumberArray(values.to_vec()),
         )
     }
 
@@ -757,19 +699,4 @@ fn corner_radii_uniform(values: [f64; 4]) -> bool {
     values
         .iter()
         .all(|value| (*value - values[0]).abs() < f64::EPSILON)
-}
-
-fn container_padding_values(node: &PenNode) -> [f64; 4] {
-    let padding = match node {
-        PenNode::Frame(n) => n.container.padding.as_ref(),
-        PenNode::Group(n) => n.container.padding.as_ref(),
-        PenNode::Rectangle(n) => n.container.padding.as_ref(),
-        _ => None,
-    };
-    match padding {
-        Some(Padding::Uniform(v)) => [*v, *v, *v, *v],
-        Some(Padding::XY(v)) => [v[0], v[1], v[0], v[1]],
-        Some(Padding::LtrB(v)) => *v,
-        Some(Padding::Expression(_)) | None => [0.0; 4],
-    }
 }

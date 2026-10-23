@@ -299,10 +299,8 @@ impl EditorUiState {
         self.font_picker_import_hover = false;
         self.font_weight_picker_open = false;
         self.font_weight_picker_hover = None;
-        self.padding_edit_mode = None;
-        self.padding_edit_mode_anchor.clear();
-        self.padding_mode_popover_open = false;
-        self.padding_mode_popover_hover = None;
+        self.layout_align_popover_open = false;
+        self.layout_align_popover_hover = None;
         self.stroke_edit_mode = None;
         self.stroke_edit_mode_anchor.clear();
         self.stroke_mode_popover_open = false;

@@ -137,12 +137,8 @@ pub fn editable_input_rects(
             w,
             visible.flex_layout_mode,
             visible.layout_justify,
-            visible.padding_edit_mode,
         );
-        y += crate::widgets::property_panel_flex::flex_section_height(
-            visible.flex_layout_mode,
-            visible.padding_edit_mode,
-        );
+        y += crate::widgets::property_panel_flex::flex_section_height(visible.flex_layout_mode);
     }
     if visible.size_options {
         y += visible.size_section_lead_h();

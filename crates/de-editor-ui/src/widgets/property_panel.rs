@@ -191,12 +191,10 @@ pub struct PropertyPanel {
     /// Hovered weight-dropdown row index (when the dropdown is open).
     pub font_weight_picker_hover: Option<usize>,
     pub font_weight_picker_pressed: Option<usize>,
-    /// Resolved padding edit mode (UI pin or derived from the node's
-    /// values) + whether the gear popover is open.
-    pub padding_edit_mode: de_editor_core::PaddingEditMode,
-    pub padding_mode_popover_open: bool,
-    /// Hovered padding-mode popover row index (gear popover open).
-    pub padding_mode_popover_hover: Option<usize>,
+    /// Whether the Auto layout alignment popover is open.
+    pub layout_align_popover_open: bool,
+    /// Hovered alignment-popover row index (`property_panel_flex::JUSTIFY_ROWS`).
+    pub layout_align_popover_hover: Option<usize>,
     pub stroke_edit_mode: de_editor_core::PaddingEditMode,
     pub stroke_mode_popover_open: bool,
     /// Hovered stroke-mode popover row index (gear popover open).
@@ -338,7 +336,6 @@ impl PropertyPanel {
             component_button,
             flex_layout: caps.flex_layout,
             flex_layout_mode: self.snapshot.flex_layout,
-            padding_edit_mode: self.padding_edit_mode,
             layout_justify: self.snapshot.layout_justify,
             layout_align: self.snapshot.layout_align,
             size_options: caps.size_options,
@@ -396,35 +393,8 @@ pub(super) fn action_wash_rect(
     action: &PropertyPanelAction,
     r: Rect,
     labels: &sections::PropertyLabels,
-    locale: de_editor_core::Locale,
     backend: &mut dyn crate::RenderBackend,
 ) -> Rect {
-    // Layout-justify rows (space-between / space-around) paint a radio at
-    // `r.origin.x` and a 10px label RADIO_GUTTER further right, but the
-    // action rect spans the whole gap column. Hug the radio + label so the
-    // hover wash reads as a fit-content pill instead of a full-width bar.
-    if let PropertyPanelAction::SetLayoutJustify(v) = action {
-        // RADIO_GUTTER = 6 + RADIO_SIZE(13) — see `property_panel_flex`.
-        const RADIO_GUTTER: f32 = 19.0;
-        let key = match v {
-            LayoutJustifyValue::SpaceBetween => Some("layout.spaceBetween"),
-            LayoutJustifyValue::SpaceAround => Some("layout.spaceAround"),
-            // `Start` is the circle-only numeric row — its rect is already
-            // just the radio gutter, so leave it untouched.
-            _ => None,
-        };
-        if let Some(key) = key {
-            let label = de_i18n::translate(locale, key);
-            let content_right =
-                r.origin.x + RADIO_GUTTER + text_metrics::measure_chrome(backend, label, 10.0);
-            let left = r.origin.x - ACTION_WASH_PAD_X;
-            let right = (content_right + ACTION_WASH_PAD_X).min(r.origin.x + r.size.x);
-            return Rect {
-                origin: Point2D::new(left, r.origin.y),
-                size: Point2D::new((right - left).max(0.0), r.size.y),
-            };
-        }
-    }
     let size_label = match action {
         PropertyPanelAction::ToggleSizeFillWidth => Some(labels.fill_width),
         PropertyPanelAction::ToggleSizeFillHeight => Some(labels.fill_height),

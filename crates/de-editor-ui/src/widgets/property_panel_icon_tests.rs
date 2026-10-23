@@ -20,12 +20,6 @@ fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         component_button: crate::widgets::property_panel_visibility::ComponentButtonState::Create,
         flex_layout: caps.flex_layout,
         flex_layout_mode: panel.snapshot.flex_layout,
-        padding_edit_mode: de_editor_core::PaddingEditMode::from_values(
-            panel.snapshot.layout_padding.top,
-            panel.snapshot.layout_padding.right,
-            panel.snapshot.layout_padding.bottom,
-            panel.snapshot.layout_padding.left,
-        ),
         layout_justify: panel.snapshot.layout_justify,
         layout_align: panel.snapshot.layout_align,
         size_options: caps.size_options,

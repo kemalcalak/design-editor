@@ -222,9 +222,6 @@ pub struct VisibleSections {
     pub component_button: ComponentButtonState,
     pub flex_layout: bool,
     pub flex_layout_mode: de_editor_core::FlexLayout,
-    /// Resolved padding edit mode (UI pin or derived from values) —
-    /// drives the padding row count so all walkers agree.
-    pub padding_edit_mode: de_editor_core::PaddingEditMode,
     pub layout_justify: LayoutJustifyValue,
     pub layout_align: LayoutAlignValue,
     pub size_options: bool,
@@ -305,7 +302,6 @@ impl VisibleSections {
         component_button: ComponentButtonState::Create,
         flex_layout: true,
         flex_layout_mode: de_editor_core::FlexLayout::Free,
-        padding_edit_mode: de_editor_core::PaddingEditMode::Individual,
         layout_justify: LayoutJustifyValue::Start,
         layout_align: LayoutAlignValue::Start,
         size_options: true,

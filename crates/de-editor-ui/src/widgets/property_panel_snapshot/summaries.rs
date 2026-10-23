@@ -179,15 +179,13 @@ impl LayoutPaddingSummary {
         left: 0.0,
     };
 
-    pub fn value_for(self, focus: de_editor_core::PropertyFocus) -> Option<f32> {
-        use de_editor_core::PropertyFocus as F;
-        match focus {
-            F::PaddingTop => Some(self.top),
-            F::PaddingRight => Some(self.right),
-            F::PaddingBottom => Some(self.bottom),
-            F::PaddingLeft => Some(self.left),
-            _ => None,
-        }
+    /// The `Pad` field's CSS shorthand (`16`, `96 120`, `8 16 8 4`) —
+    /// the shortest form that parses back to these four sides.
+    pub fn shorthand(self) -> String {
+        de_editor_core::padding_shorthand::format_padding_shorthand(
+            [self.top, self.right, self.bottom, self.left],
+            crate::util::format_panel_number,
+        )
     }
 }
 

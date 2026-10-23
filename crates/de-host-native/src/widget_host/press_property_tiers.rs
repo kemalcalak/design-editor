@@ -122,7 +122,7 @@ impl WidgetHostNative {
 
         // 0c0a3. Padding mode-selector popover — outside-click dismiss.
         if !in_git_panel
-            && self.dismiss_padding_mode_popover_on_press(x, y, viewport_width, viewport_height)
+            && self.dismiss_layout_align_popover_on_press(x, y, viewport_width, viewport_height)
         {
             return Some(true);
         }

@@ -230,6 +230,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "Absente de Google Fonts",
         "missingFonts.downloadFailed" => "Échec du téléchargement — vérifiez votre connexion",
         "missingFonts.downloadedSection" => "Téléchargées depuis Google Fonts",
+        "layout.packed" => "Groupé",
+        "layout.auto" => "Auto",
+        "padding.short" => "Marge",
         _ => return None,
     })
 }

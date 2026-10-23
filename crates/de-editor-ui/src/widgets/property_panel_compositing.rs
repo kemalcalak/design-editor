@@ -415,7 +415,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         )
         .into_iter()
         .find_map(|(action, rect)| {

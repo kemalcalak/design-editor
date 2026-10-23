@@ -653,9 +653,7 @@ impl EditorUiState {
         self.last_canvas_click = None;
         self.entered_container = None;
         self.active_guides.clear();
-        self.padding_edit_mode = None;
-        self.padding_edit_mode_anchor = String::new();
-        self.padding_mode_popover_open = false;
+        self.layout_align_popover_open = false;
         self.stroke_edit_mode = None;
         self.stroke_edit_mode_anchor = String::new();
         self.stroke_mode_popover_open = false;

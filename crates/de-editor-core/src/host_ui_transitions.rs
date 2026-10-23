@@ -37,7 +37,7 @@ impl EditorUiState {
             self.image_fill_popover_open = false;
             self.close_font_picker();
             self.font_weight_picker_open = false;
-            self.padding_mode_popover_open = false;
+            self.layout_align_popover_open = false;
             self.stroke_mode_popover_open = false;
             self.export_scale_picker_open = false;
             self.export_format_picker_open = false;

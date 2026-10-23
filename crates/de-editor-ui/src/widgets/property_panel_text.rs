@@ -563,10 +563,7 @@ pub(crate) fn sections_top_before_text(
     y += INPUT_HEIGHT + 12.0;
     y += SECTION_GAP;
     if visible.flex_layout {
-        y += crate::widgets::property_panel_flex::flex_section_height(
-            visible.flex_layout_mode,
-            visible.padding_edit_mode,
-        );
+        y += crate::widgets::property_panel_flex::flex_section_height(visible.flex_layout_mode);
     }
     if visible.size_options {
         y += visible.size_section_lead_h();

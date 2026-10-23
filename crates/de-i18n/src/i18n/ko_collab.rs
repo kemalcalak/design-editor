@@ -232,6 +232,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "missingFonts.notOnGoogle" => "Google Fonts에 없음",
         "missingFonts.downloadFailed" => "다운로드 실패 — 연결을 확인하세요",
         "missingFonts.downloadedSection" => "Google Fonts에서 다운로드한 글꼴",
+        "layout.packed" => "묶음",
+        "layout.auto" => "자동",
+        "padding.short" => "패딩",
         _ => return None,
     })
 }

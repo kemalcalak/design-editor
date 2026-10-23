@@ -399,12 +399,9 @@ pub enum PropertyPanelAction {
     ToggleFontWeightPicker,
     /// User picked a named weight from the dropdown.
     SetFontWeight(FontWeightChoice),
-    /// User clicked the padding-section gear — host toggles
-    /// `editor_ui.padding_mode_popover_open`.
-    TogglePaddingModePopover,
-    /// User picked a padding edit mode in the gear popover — host pins
-    /// `editor_ui.padding_edit_mode` + reshapes the value.
-    SetPaddingMode(de_editor_core::PaddingEditMode),
+    /// User clicked the Auto layout header's alignment button — host
+    /// toggles `editor_ui.layout_align_popover_open`.
+    ToggleLayoutAlignPopover,
     /// User clicked the stroke-section gear — host toggles
     /// `editor_ui.stroke_mode_popover_open`.
     ToggleStrokeModePopover,
