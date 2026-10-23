@@ -39,14 +39,14 @@
 
 2. Install the Rust toolchain `stable-x86_64-pc-windows-msvc`:
 
-    - 2.1 Download `rustup-init.exe` from rustup.rs and run it. Execute the following in PowerShell. **Corresponds to `design-editor 0.8.4`**:
+    - 2.1 Download `rustup-init.exe` from rustup.rs and run it. Execute the following in PowerShell:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.2 Install wasm-bindgen-cli for WASM-to-JS binding generation. Execute the following in PowerShell. **Corresponds to `design-editor 0.8.4`**:
+    - 2.2 Install wasm-bindgen-cli for WASM-to-JS binding generation. Execute the following in PowerShell:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -157,4 +157,4 @@
     > 
     > If the page reports `/pkg/de_host_web.js` not found, the file is missing from `web-bundle/`.
 
-3. This document is written for `design-editor 0.8.4`. The rustup toolchain version `1.94`, wasm-bindgen-cli version `0.2.117`, and skia-bindings version `0.97.2` are aligned with this version — other versions may differ.
+3. The rustup toolchain `1.94`, wasm-bindgen-cli `0.2.117` and skia-bindings `0.97.2` match the versions pinned in `rust-toolchain.toml` and `Cargo.lock`. If those files name a different version, use theirs.

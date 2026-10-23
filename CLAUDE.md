@@ -23,7 +23,7 @@ Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**;
 - **CLI:** `cargo build -p de-cli` → binary `de`
 - **MCP server:** built into the desktop/web host (`--mcp <path>`); crate `de-mcp`
 - **Iconify catalog (Rust assets):** from `packages/`: `bun run generate-iconify-catalog`
-- **Sync all managed versions:** `scripts/sync-version.sh` reads the canonical version from root `Cargo.toml`; verify without writing via `tools/check-version-sync.sh`
+- **Bump the product version:** `scripts/bump-version.sh X.Y.Z` edits root `Cargo.toml` (the only hand-edited copy) and refreshes `Cargo.lock`; commit both. Verify with `tools/check-version-sync.sh`.
 
 ## Architecture
 

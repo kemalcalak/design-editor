@@ -450,11 +450,12 @@ app-icon it replaced is not used anywhere in the extension.
 
 ### Version
 
-`manifest.json` carries the product version, and `tools/check-version-sync.sh`
-fails if it drifts from `[workspace.package].version` in the root `Cargo.toml`.
-`scripts/sync-version.sh` does **not** rewrite it — the file is oxfmt-formatted
-and the version writer would reflow it — so a version bump means editing the
-`"version"` field here by hand. The check names the expected value.
+The committed `manifest.json` carries a fixed `0.0.0` placeholder so the
+directory loads unpacked. `scripts/package-extension.sh` writes the product
+version (`[workspace.package].version` in the root `Cargo.toml`) into the
+staged copy, so the store zip is always stamped with the release version and a
+version bump never touches this directory. `tools/check-version-sync.sh` fails
+if the placeholder is replaced by a real version.
 
 ## Publishing to the Chrome Web Store
 

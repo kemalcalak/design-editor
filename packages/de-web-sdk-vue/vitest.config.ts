@@ -2,9 +2,11 @@ import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { versionDefine } from '../scripts/workspace-version.mjs';
 const here = fileURLToPath(new URL('.', import.meta.url));
 export default defineConfig({
   plugins: [vue()],
+  define: versionDefine(),
   test: { environment: 'jsdom', globals: true },
   resolve: { alias: {
     '@kemalcalak/de-web-sdk': resolve(here, '../de-web-sdk/src/index.ts'),

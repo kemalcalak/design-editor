@@ -3,7 +3,8 @@ name: Release
 # Publishes a GitHub Release for every new workspace version that lands on
 # `main`. A push whose root `Cargo.toml` version already has a `v<version>`
 # tag does nothing, so ordinary merges never release; bumping the version
-# (`scripts/sync-version.sh`) in a PR is the only manual step.
+# (`scripts/bump-version.sh X.Y.Z`, which edits Cargo.toml and Cargo.lock) in
+# a PR is the only manual step.
 #
 # Assets (names must match `asset_name_for` in
 # crates/de-host-desktop/src/update_check.rs, which the in-app update check
