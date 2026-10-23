@@ -67,13 +67,15 @@ pub(crate) fn finalize_design_session_if_needed(
     if !session.is_design_loop() || session.loop_finalized() {
         return;
     }
-    let state = host.editor_state_mut();
-    de_orchestrator::apply_loop_finalize(state);
-    // Same promise-delivery marking the normal finalize op gets (see
-    // `execute_tool_requests` below) — an early-death run (429 / quota /
-    // abort / a session torn down mid-flight) is exactly the case that
-    // must not ship a silently blank scaffolded screen either.
-    de_orchestrator::unfilled_screens::finalize_and_mark_unfilled_screens(state);
+    let Some(run_baseline) = session.run_baseline() else {
+        return;
+    };
+    // Same finalize + promise-delivery marking the normal finalize op gets
+    // (see `execute_tool_requests` below), over the roots this run created
+    // only — an early-death run (429 / quota / abort / a session torn down
+    // mid-flight) is exactly the case that must not ship a silently blank
+    // scaffolded screen either.
+    de_orchestrator::agent_run_finalize::finalize_agent_run(host.editor_state_mut(), run_baseline);
     host.mark_editor_state_dirty();
     // Self-diagnostic (0718-1-k3-1 postmortem): the ONLY forensic trace
     // available after that incident was the chat transcript itself (no
@@ -241,8 +243,8 @@ fn execute_tool_requests(
     for req in requests {
         // Intercept the reserved loop-finalize op (Track-1 Step 4): the
         // agentic design loop sends this at loop end so the host runs the
-        // deterministic structural-quality backstop over the assembled live
-        // document — the same whole-doc subset of the orchestrator's Class-A
+        // deterministic structural-quality backstop over the screens this run
+        // created — the loop finalizer's subset of the orchestrator's Class-A
         // passes the orchestrator runs per subtask. Runs on the UI thread (the
         // owner of the live `EditorState`), like every other tool mutation.
         if req.name == de_ai::chat_provider::LOOP_FINALIZE_OP {
@@ -262,32 +264,37 @@ fn execute_tool_requests(
                 .and_then(|v| v.get("checkOnly").and_then(|b| b.as_bool()))
                 .unwrap_or(false);
             let state = host.editor_state_mut();
+            // Finalize, marking and both rosters cover only the roots this
+            // run created (#116). Design loops and their `spawn_agents`
+            // sub-loops carry the run's baseline; any other session falls
+            // back to the page as it is now, so it finalizes nothing.
+            let run_baseline = session
+                .run_baseline()
+                .cloned()
+                .unwrap_or_else(|| de_editor_core::write_scope::WriteBaseline::capture(state));
+            let run_baseline = &run_baseline;
             // The quality tally is a by-product of the REAL finalize only —
             // the `checkOnly` probe runs no repair pass, so it must report an
             // empty summary rather than inherit the last real run's numbers.
             let mut quality = de_orchestrator::RepairSummary::default();
             let unfilled = if check_only {
-                de_orchestrator::unfilled_screens::detect_unfilled_screens(state)
-                    .into_iter()
-                    .map(|hit| hit.name)
-                    .collect::<Vec<_>>()
+                de_orchestrator::agent_run_finalize::agent_run_screens(state, run_baseline).unfilled
             } else {
-                quality = de_orchestrator::apply_loop_finalize_counted(state);
-                let names =
-                    de_orchestrator::unfilled_screens::finalize_and_mark_unfilled_screens(state);
+                let finalized =
+                    de_orchestrator::agent_run_finalize::finalize_agent_run(state, run_baseline);
+                quality = finalized.quality;
                 session.mark_loop_finalized();
                 changed = true;
-                names
+                finalized.unfilled
             };
             // The full committed-screen roster (filled or not) — read
             // AFTER any finalize-side mutation above, so it reflects the
             // same document `unfilled` was computed against. Lets the loop
             // build the "you committed N screens (A/B/C); X is still empty"
             // contract line instead of a bare unfilled-names nudge.
-            let committed = de_orchestrator::unfilled_screens::list_screen_candidates(state)
-                .into_iter()
-                .map(|hit| hit.name)
-                .collect::<Vec<_>>();
+            let committed =
+                de_orchestrator::agent_run_finalize::agent_run_screens(state, run_baseline)
+                    .committed;
             let _ = req.ack.send(ChatToolResult {
                 content: serde_json::json!({
                     "success": true,

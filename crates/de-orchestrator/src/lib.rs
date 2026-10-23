@@ -58,6 +58,7 @@ mod variable_binding;
 pub mod variables;
 
 pub(crate) mod abandoned_duplicate_roots;
+pub mod agent_run_finalize;
 pub mod app_shell;
 pub mod append;
 pub(crate) mod avatar_repair;
@@ -140,6 +141,7 @@ pub mod concurrent;
 pub mod geometry_validation;
 pub(crate) mod hero_bleed;
 pub mod loop_finalize;
+pub mod loop_finalize_scoped;
 pub mod nav_issues;
 pub mod output_language;
 pub mod prompt;
@@ -230,6 +232,10 @@ pub use intent::classify_intent;
 pub use loop_finalize::{
     apply_loop_finalize, apply_loop_finalize_counted, record_loop_finalize_counted,
     RecordLoopFinalizeError, RecordedLoopFinalize,
+};
+pub use loop_finalize_scoped::{
+    apply_loop_finalize_for_roots, record_loop_finalize_for_roots, ScopedFinalize,
+    ScopedFinalizeError,
 };
 pub use mobile_reflow::{
     repair_mobile_trailing_nav_reflow, repair_mobile_trailing_nav_reflow_for_roots,

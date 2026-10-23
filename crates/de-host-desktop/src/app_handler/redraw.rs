@@ -96,8 +96,16 @@ impl DesktopApp {
             // parent — so drop the re-spawn while a batch is live (the
             // stash is still consumed above, so it can't fire later).
             if self.sub_agents.is_empty() {
-                self.sub_agents =
-                    crate::sub_agent_session::launch_sub_agents(&mut self.host, specs);
+                let run_baseline = self
+                    .current_chat
+                    .as_ref()
+                    .and_then(|parent| parent.run_baseline())
+                    .cloned();
+                self.sub_agents = crate::sub_agent_session::launch_sub_agents(
+                    &mut self.host,
+                    specs,
+                    run_baseline,
+                );
                 self.active_sub_agent = 0;
                 if !self.sub_agents.is_empty() {
                     self.redraw_dirty = true;

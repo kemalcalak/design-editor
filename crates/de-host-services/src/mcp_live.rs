@@ -308,7 +308,7 @@ impl McpLiveServer {
                     let ids_before = (tool_name == "batch_design")
                         .then(|| crate::design_agent_tools::collect_active_node_ids(state));
                     let revision_before = state.document_revision();
-                    let baseline = crate::mcp_serve::WriteBaseline::for_tool(&tool_name, state);
+                    let baseline = crate::mcp_serve::baseline_for_tool(&tool_name, state);
                     let applied = state.apply(cmd);
                     if applied {
                         let write_repairs = baseline.is_some_and(|baseline| {

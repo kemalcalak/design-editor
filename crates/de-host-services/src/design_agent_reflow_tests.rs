@@ -338,7 +338,7 @@ fn target_page_cleanup_and_feedback_do_not_touch_the_current_page() {
     let selection_before = state.selection.clone();
     let args = json!({
         "pageId": "p2",
-        "operations": "I(null,{\"type\":\"frame\",\"name\":\"Target Addition\",\"width\":100,\"height\":100})"
+        "operations": "I(\"target-header\",{\"type\":\"frame\",\"name\":\"Status Bar Rebuilt\",\"role\":\"status-bar\",\"width\":\"fill_container\",\"height\":44})"
     })
     .to_string();
 
@@ -363,8 +363,12 @@ fn target_page_cleanup_and_feedback_do_not_touch_the_current_page() {
         "the current page's duplicate status bar must not be cleaned by a target-page batch"
     );
     assert!(
-        find_by_name(&pages[1].children, "Status Bar Duplicate").is_none(),
-        "the target page's duplicate status bar must be cleaned"
+        find_by_name(&pages[1].children, "Status Bar Rebuilt").is_none(),
+        "the duplicate status bar the batch built on the target page must be cleaned"
+    );
+    assert!(
+        find_by_name(&pages[1].children, "Status Bar Duplicate").is_some(),
+        "a duplicate the batch did not build stays as authored (#116)"
     );
     assert!(
         result.content.contains("removed 1 extra status bar"),

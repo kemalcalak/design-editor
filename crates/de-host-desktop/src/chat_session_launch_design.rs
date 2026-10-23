@@ -333,8 +333,12 @@ pub(super) fn launch_design_loop_turn(
         root_seed_mobile,
         root_seed_continuation,
     );
-    *current_chat =
-        Some(ChatSession::start_with_tools(provider, req, Some(tool_rx)).into_design_loop());
+    // Captured before the worker starts, so the loop's finalize covers only
+    // the roots this run creates (#116).
+    let run_baseline = de_editor_core::write_scope::WriteBaseline::capture(host.editor_state());
+    *current_chat = Some(
+        ChatSession::start_with_tools(provider, req, Some(tool_rx)).into_design_loop(run_baseline),
+    );
     // Signal one agent running so the chat header shows "1/1 designing…"
     // and the canvas indicator pump registers frame glows.
     host.editor_state_mut().chat.agents_running = (1, 1);
