@@ -13,7 +13,7 @@ fn input(w: f32, recent: usize, view: RecentView) -> HomeLayoutInput<'static> {
         locale: Locale::EnUs,
         task: HomeFamily::LandingPage,
         size: HomeSize::Desktop1440,
-        model_label: "gpt-5 · SeriAI",
+        model_label: "gpt-5 · Gateway",
         usable_agent: true,
         recent_count: recent,
         recent_view: view,
