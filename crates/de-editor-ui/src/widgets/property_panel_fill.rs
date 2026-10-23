@@ -12,16 +12,17 @@ use crate::widgets::property_panel::NodeSnapshot;
 // module (split off for the 800-line cap). `stop_hex_rgb_only` is
 // re-exported so existing `property_panel_fill::stop_hex_rgb_only`
 // paths keep resolving.
+use crate::widgets::property_panel_color_variables::paint_color_variable_button;
+use crate::widgets::property_panel_fill_body::paint_fill_gradient_body;
 pub use crate::widgets::property_panel_fill_body::stop_hex_rgb_only;
-use crate::widgets::property_panel_fill_body::{paint_fill_gradient_body, paint_fill_solid_body};
 use crate::widgets::property_panel_fill_image_body::paint_fill_image_body;
 pub use crate::widgets::property_panel_fill_picker::{
     fill_type_at, fill_type_picker_hit, fill_type_picker_rect, fill_type_picker_viewport,
 };
 use crate::widgets::property_panel_fill_picker::{popup_anchor, tokens_from_theme, FILL_TYPES};
 use crate::widgets::property_panel_inputs::{
-    paint_section_divider, paint_section_label_with_add, INPUT_HEIGHT, INPUT_RADIUS, PAD_X,
-    SECTION_GAP,
+    paint_section_divider, paint_section_label_with_add, COLOR_VARIABLE_BUTTON_W, INPUT_HEIGHT,
+    INPUT_RADIUS, PAD_X, SECTION_GAP,
 };
 use crate::widgets::property_panel_layout::fill_body_height_with_stops;
 use crate::widgets::property_panel_sections::{EditContext, PropertyLabels};
@@ -33,62 +34,68 @@ use jian_ops_schema::node::path::PathFillRule;
 pub use jian_widgets::components::select::SelectHit;
 use jian_widgets::components::select::{Select, SelectItem, SelectState};
 
-const FILL_SWATCH_SIZE: f32 = 22.0;
-const FILL_HEAD_GAP: f32 = 6.0;
-const FILL_OPACITY_WIDTH: f32 = 50.0;
-const FILL_MOVE_WIDTH: f32 = 20.0;
-const FILL_REMOVE_WIDTH: f32 = 22.0;
+const FILL_SWATCH_SIZE: f32 = 16.0;
+/// Width of the leading swatch's hit strip (opens the colour picker).
+const FILL_SWATCH_HIT_W: f32 = 28.0;
+const FILL_VALUE_X: f32 = 30.0;
+const FILL_OPACITY_WIDTH: f32 = 48.0;
+const FILL_MENU_WIDTH: f32 = 24.0;
+const FILL_ROW_GAP: f32 = 4.0;
 
-/// Shared head-row geometry used by paint and every input/action walker.
+/// Shared single-row geometry (#83) used by paint and every input /
+/// action walker: one field holding swatch, value (mono hex or the
+/// fill type) and opacity, then the optional colour-variable button
+/// and the trailing `⋯` menu button.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct FillHeadRects {
+pub(crate) struct FillRowRects {
+    pub(crate) frame: Rect,
     pub(crate) swatch: Rect,
-    pub(crate) dropdown: Rect,
+    pub(crate) swatch_hit: Rect,
+    pub(crate) value: Rect,
     pub(crate) opacity: Rect,
-    pub(crate) move_up: Rect,
-    pub(crate) move_down: Rect,
-    pub(crate) remove: Rect,
+    pub(crate) variable: Option<Rect>,
+    pub(crate) menu: Rect,
 }
 
-pub(crate) fn fill_head_rects(x: f32, y: f32, width: f32) -> FillHeadRects {
-    let move_width = FILL_MOVE_WIDTH;
-    let remove_width = FILL_REMOVE_WIDTH;
+pub(crate) fn fill_row_rects(x: f32, y: f32, width: f32, show_variable: bool) -> FillRowRects {
     let right = x + width - PAD_X;
-    let remove = Rect {
-        origin: Point2D::new(right - remove_width, y),
-        size: Point2D::new(remove_width, INPUT_HEIGHT),
-    };
-    let move_down = Rect {
-        origin: Point2D::new(remove.origin.x - move_width, y),
-        size: Point2D::new(move_width, INPUT_HEIGHT),
-    };
-    let move_up = Rect {
-        origin: Point2D::new(move_down.origin.x - move_width, y),
-        size: Point2D::new(move_width, INPUT_HEIGHT),
-    };
-    let opacity = Rect {
-        origin: Point2D::new(move_up.origin.x - FILL_HEAD_GAP - FILL_OPACITY_WIDTH, y),
-        size: Point2D::new(FILL_OPACITY_WIDTH, INPUT_HEIGHT),
-    };
-    let swatch = Rect {
-        origin: Point2D::new(x + PAD_X, y + 2.0),
-        size: Point2D::new(FILL_SWATCH_SIZE, FILL_SWATCH_SIZE),
-    };
-    let dropdown_x = swatch.origin.x + swatch.size.x + FILL_HEAD_GAP;
-    let dropdown = Rect {
-        origin: Point2D::new(dropdown_x, y),
-        size: Point2D::new(
-            (opacity.origin.x - FILL_HEAD_GAP - dropdown_x).max(0.0),
+    let menu = Rect::xywh(right - FILL_MENU_WIDTH, y, FILL_MENU_WIDTH, INPUT_HEIGHT);
+    let variable = show_variable.then(|| {
+        Rect::xywh(
+            menu.origin.x - FILL_ROW_GAP - COLOR_VARIABLE_BUTTON_W,
+            y,
+            COLOR_VARIABLE_BUTTON_W,
+            INPUT_HEIGHT,
+        )
+    });
+    let field_right = variable.map_or(menu.origin.x, |v| v.origin.x) - FILL_ROW_GAP;
+    let field_x = x + PAD_X;
+    let field = Rect::xywh(field_x, y, (field_right - field_x).max(0.0), INPUT_HEIGHT);
+    let opacity = Rect::xywh(
+        field_right - FILL_OPACITY_WIDTH,
+        y,
+        FILL_OPACITY_WIDTH,
+        INPUT_HEIGHT,
+    );
+    let value_x = field_x + FILL_VALUE_X;
+    FillRowRects {
+        frame: field,
+        swatch: Rect::xywh(
+            field_x + 6.0,
+            y + (INPUT_HEIGHT - FILL_SWATCH_SIZE) / 2.0,
+            FILL_SWATCH_SIZE,
+            FILL_SWATCH_SIZE,
+        ),
+        swatch_hit: Rect::xywh(field_x, y, FILL_SWATCH_HIT_W, INPUT_HEIGHT),
+        value: Rect::xywh(
+            value_x,
+            y,
+            (opacity.origin.x - value_x).max(0.0),
             INPUT_HEIGHT,
         ),
-    };
-    FillHeadRects {
-        swatch,
-        dropdown,
         opacity,
-        move_up,
-        move_down,
-        remove,
+        variable,
+        menu,
     }
 }
 
@@ -109,7 +116,7 @@ pub fn fill_type_label(
         FillType::MeshGradient => "fill.mesh",
         // No dedicated TS-generated `fill.shader` key yet; the translate
         // fallback yields the key literal, acceptable for the render-only
-        // head-row label (v1 ships no shader authoring UI).
+        // row label (v1 ships no shader authoring UI).
         FillType::Shader => "fill.shader",
         FillType::Image => "fill.image",
     };
@@ -151,33 +158,20 @@ pub fn paint_fill_type_picker(
 }
 // ── Fill section ──────────────────────────────────────────────────
 
-/// Total height the body that follows fill `index`'s head row
-/// consumes. The primary fill (index 0) paints its full editable body
-/// (solid hex / gradient stops / image). A non-primary gradient /
-/// image fill renders head-row only (the gradient-stop / image-fill
-/// editors key off the primary fill), so it contributes no body. A
-/// Solid fill at any index always paints its hex row.
+/// Height of the body under fill `index`'s row. Only the primary fill
+/// (index 0) paints a gradient-stop or image editor (they key off the
+/// primary fill); every other fill, and a Solid fill at any index
+/// (its hex lives on the row, #83), is the row alone.
 pub fn fill_row_body_height(
-    fill_type: de_editor_core::FillType,
-    is_primary: bool,
-    primary_stop_count: usize,
-) -> f32 {
-    fill_content_body_height(fill_type, is_primary, primary_stop_count)
-        + crate::widgets::property_panel_compositing::COMPOSITING_ROW_HEIGHT
-}
-
-/// Height of only the type-specific body, before the common per-fill
-/// Blend dropdown. Exposed to the action walker so its trigger lands
-/// at exactly the same y as paint.
-pub(crate) fn fill_content_body_height(
     fill_type: de_editor_core::FillType,
     is_primary: bool,
     primary_stop_count: usize,
 ) -> f32 {
     use de_editor_core::FillType;
     match fill_type {
-        FillType::Solid => INPUT_HEIGHT + 6.0,
-        // Mesh + Shader join the gradient/image group: head-row only
+        // The hex lives on the row itself (#83), so Solid has no body.
+        FillType::Solid => 0.0,
+        // Mesh + Shader join the gradient/image group: row only
         // (mesh's per-vertex editor and shader authoring are both
         // deferred — shader is render-only in v1), so no body.
         FillType::LinearGradient
@@ -194,8 +188,8 @@ pub(crate) fn fill_content_body_height(
     }
 }
 
-/// Total height (px) one fill row consumes — its head row plus its
-/// body. Mirrors the y-walk in `paint_one_fill`.
+/// Total height (px) one fill consumes — its row plus its body.
+/// Mirrors the y-walk in `paint_one_fill`.
 pub fn fill_row_height(
     fill_type: de_editor_core::FillType,
     is_primary: bool,
@@ -204,10 +198,32 @@ pub fn fill_row_height(
     INPUT_HEIGHT + 6.0 + fill_row_body_height(fill_type, is_primary, primary_stop_count)
 }
 
-/// Vertical offset (px) of fill `index`'s head row relative to the
-/// first fill's head row — the sum of every prior fill row's height.
-/// `0.0` for `index == 0`. Used to anchor a fill row's type-picker
-/// overlay below its own dropdown.
+/// Each fill with the top y of its row, starting at `first_row_y` (the
+/// row under the section header). Paint and both walkers step through
+/// the fills with this, so a fill's body height moves every later row
+/// identically in all three.
+pub(crate) fn fill_row_tops<'a>(
+    fills: &'a [crate::widgets::property_panel_snapshot::FillSummary],
+    first_row_y: f32,
+    primary_stop_count: usize,
+) -> impl Iterator<
+    Item = (
+        usize,
+        &'a crate::widgets::property_panel_snapshot::FillSummary,
+        f32,
+    ),
+> + 'a {
+    let mut y = first_row_y;
+    fills.iter().enumerate().map(move |(index, fill)| {
+        let row_y = y;
+        y += fill_row_height(fill.fill_type, index == 0, primary_stop_count);
+        (index, fill, row_y)
+    })
+}
+
+/// Vertical offset (px) of fill `index`'s row relative to the first
+/// fill's row — the sum of every prior fill's height. `0.0` for
+/// `index == 0`.
 pub fn fill_row_offset(
     fills: &[crate::widgets::property_panel_snapshot::FillSummary],
     index: usize,
@@ -229,10 +245,7 @@ pub fn paint_fill_section(
     snapshot: &NodeSnapshot,
     edit: &EditContext<'_>,
     labels: &PropertyLabels,
-    _fill_type: de_editor_core::FillType,
-    _fill_picker_open: bool,
-    _fill_variable_ref: Option<&str>,
-    show_variable_button: bool,
+    visible: crate::widgets::property_panel_layout::VisibleSections,
     locale: de_editor_core::Locale,
     x: f32,
     y: f32,
@@ -245,7 +258,7 @@ pub fn paint_fill_section(
         paint_fill_rule_control(cx, theme, labels, rule, x, header_y, width);
     }
     let primary_stop_count = snapshot.gradient_stops.len();
-    for (index, fill) in snapshot.fills.iter().enumerate() {
+    for (index, fill, row_y) in fill_row_tops(&snapshot.fills, y, primary_stop_count) {
         y = paint_one_fill(
             cx,
             theme,
@@ -254,17 +267,15 @@ pub fn paint_fill_section(
             index,
             fill,
             index == 0,
-            // The colour-variable button only shows on the primary fill
-            // (the variable subsystem keys off `fills[0]`).
-            if index == 0 {
-                fill.variable_ref.as_deref()
-            } else {
-                None
-            },
-            index == 0 && show_variable_button,
+            // The same rules the input and action walkers apply, so the
+            // painted chip / button match the click targets.
+            fill.variable_ref
+                .as_deref()
+                .filter(|_| !visible.fill_hex_editable(index)),
+            visible.fill_row_shows_variable(index),
             locale,
             x,
-            y,
+            row_y,
             width,
             primary_stop_count,
         );
@@ -339,10 +350,11 @@ fn paint_fill_rule_control(
     }
 }
 
-/// Paint one fill row: head row (swatch + type dropdown + opacity% +
-/// ×) followed by its body (solid hex / gradient stops / image).
-/// Returns the y just past the body. Geometry mirrors
-/// `fill_row_height` / the layout walkers so paint + hit-test agree.
+/// Paint one fill row (#83): a single field — swatch, mono hex (or
+/// the fill type for gradient / image fills), opacity — then the
+/// colour-variable button and the `⋯` menu button, followed by the
+/// primary fill's gradient / image body. Returns the y just past the
+/// body. Geometry mirrors `fill_row_height` / the layout walkers.
 #[allow(clippy::too_many_arguments)]
 fn paint_one_fill(
     cx: &mut PaintCx<'_>,
@@ -360,293 +372,263 @@ fn paint_one_fill(
     width: f32,
     primary_stop_count: usize,
 ) -> f32 {
-    let mut y = y;
-    let fill_type = fill.fill_type;
-    let fill_color = fill.color;
-    let head = fill_head_rects(x, y, width);
-    let swatch_rect = head.swatch;
-    // Swatch icon depends on the fill type so the head row reads
-    // as a small preview of what's rendered below.
     use de_editor_core::FillType;
-    match fill_type {
-        FillType::Solid => {
-            cx.backend.fill_round_rect(swatch_rect, 4.0, fill_color);
-            cx.backend
-                .stroke_round_rect(swatch_rect, 4.0, theme.border, 1.0);
-        }
-        FillType::LinearGradient => {
-            // Visual stand-in for a horizontal black→white gradient
-            // by stacking two halves (skia gradients not yet on
-            // RenderBackend). Good enough as a thumbnail.
-            let half_w = swatch_rect.size.x / 2.0;
-            cx.backend.fill_round_rect(
-                Rect {
-                    origin: swatch_rect.origin,
-                    size: Point2D::new(half_w, swatch_rect.size.y),
-                },
-                4.0,
-                Color::BLACK,
-            );
-            cx.backend.fill_round_rect(
-                Rect {
-                    origin: Point2D::new(swatch_rect.origin.x + half_w, swatch_rect.origin.y),
-                    size: Point2D::new(swatch_rect.size.x - half_w, swatch_rect.size.y),
-                },
-                4.0,
-                Color::WHITE,
-            );
-            cx.backend
-                .stroke_round_rect(swatch_rect, 4.0, theme.border, 1.0);
-        }
-        FillType::RadialGradient => {
-            // Outer black ring + inner white oval — reads as a
-            // radial preview.
-            cx.backend.fill_round_rect(swatch_rect, 4.0, Color::BLACK);
-            let inset = 4.0;
-            cx.backend.fill_oval(
-                Rect {
-                    origin: Point2D::new(
-                        swatch_rect.origin.x + inset,
-                        swatch_rect.origin.y + inset,
-                    ),
-                    size: Point2D::new(
-                        swatch_rect.size.x - inset * 2.0,
-                        swatch_rect.size.y - inset * 2.0,
-                    ),
-                },
-                Color::WHITE,
-            );
-            cx.backend
-                .stroke_round_rect(swatch_rect, 4.0, theme.border, 1.0);
-        }
-        FillType::MeshGradient => {
-            // Four-quadrant preview reads as a corner mesh: the resolved
-            // first-vertex colour plus black/white/muted corners.
-            let hw = swatch_rect.size.x / 2.0;
-            let hh = swatch_rect.size.y / 2.0;
-            let quad = |ox: f32, oy: f32| Rect {
-                origin: Point2D::new(swatch_rect.origin.x + ox, swatch_rect.origin.y + oy),
-                size: Point2D::new(hw, hh),
-            };
-            cx.backend.fill_round_rect(quad(0.0, 0.0), 0.0, fill_color);
-            cx.backend.fill_round_rect(quad(hw, 0.0), 0.0, Color::WHITE);
-            cx.backend.fill_round_rect(quad(0.0, hh), 0.0, Color::BLACK);
-            cx.backend.fill_round_rect(quad(hw, hh), 0.0, theme.muted);
-            cx.backend
-                .stroke_round_rect(swatch_rect, 4.0, theme.border, 1.0);
-        }
-        FillType::Shader => {
-            // Render-only shader fill: preview as the resolved fallback
-            // colour (the shader's first colour uniform / mid-gray) so the
-            // head row still reads as a fill swatch.
-            cx.backend.fill_round_rect(swatch_rect, 4.0, fill_color);
-            cx.backend
-                .stroke_round_rect(swatch_rect, 4.0, theme.border, 1.0);
-        }
-        FillType::Image => {
-            cx.backend.fill_round_rect(swatch_rect, 4.0, theme.muted);
-            cx.backend
-                .stroke_round_rect(swatch_rect, 4.0, theme.border, 1.0);
-            draw_icon(
-                cx.backend,
-                Icon::ImagePlus,
-                Point2D::new(swatch_rect.origin.x + 3.0, swatch_rect.origin.y + 3.0),
-                16.0,
-                theme.muted_foreground,
-                1.4,
-            );
-        }
-    }
-    let dropdown_rect = head.dropdown;
-    // jian's SelectTrigger clips its value instead of ellipsizing it — see
-    // `text_metrics::fit_select_trigger_label`.
-    let fill_label = crate::widgets::text_metrics::fit_select_trigger_label(
-        cx.backend,
-        fill_type_label(locale, fill_type),
-        dropdown_rect,
-        12.0,
-    );
-    jian_widgets::components::select_trigger::SelectTrigger {
-        icon_paths: None,
-        label: &fill_label,
-        placeholder: "",
-        hovered: false,
-        pressed: false,
-        enabled: true,
-        font_size: 12.0,
-        bordered: true,
-    }
-    .paint(
-        cx.backend,
-        dropdown_rect,
-        &crate::widgets::button::tokens_from_theme(theme),
-    );
+    let fill_type = fill.fill_type;
+    let row = fill_row_rects(x, y, width, show_variable_button);
+    let hex_focus = PropertyFocus::FillHex(fill_index);
     let opacity_focus = PropertyFocus::FillOpacity(fill_index);
-    let pct_rect = head.opacity;
     cx.backend
-        .fill_round_rect(pct_rect, INPUT_RADIUS, theme.muted);
-    let opacity_focused = edit.focus == Some(opacity_focus);
-    if opacity_focused {
+        .fill_round_rect(row.frame, INPUT_RADIUS, theme.muted);
+    let field_focused = (edit.focus == Some(hex_focus) && fill_variable_ref.is_none())
+        || edit.focus == Some(opacity_focus);
+    if field_focused {
         cx.backend
-            .stroke_round_rect(pct_rect, INPUT_RADIUS, theme.primary, 1.5);
+            .stroke_round_rect(row.frame, INPUT_RADIUS, theme.primary, 1.5);
     }
-    let opacity_owned = ((fill.opacity * 100.0).round() as i32).to_string();
-    let pct_text = edit.value_for(opacity_focus, &opacity_owned);
-    let pct = TextLayout::single_run(
-        pct_text,
-        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
-        12.0,
-        (theme.foreground).to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    let pct_x = pct_rect.origin.x + 10.0;
-    if !edit.paint_input_view_at(
+    paint_fill_swatch(cx, theme, fill_type, fill.color, row.swatch);
+    let baseline = row.frame.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE;
+    match (fill_type, fill_variable_ref) {
+        (FillType::Solid, Some(name)) => {
+            paint_row_text(
+                cx,
+                theme,
+                &format!("${name}"),
+                text_metrics::CHROME_FONT_FAMILY,
+                row.value,
+                baseline,
+            );
+        }
+        (FillType::Solid, None) => {
+            // A canonical solid may carry alpha in its colour
+            // (`#RRGGBBAA`) as well as in the body's opacity; surface all
+            // eight digits so focusing and blurring cannot drop it.
+            let hex_owned = crate::util::color_to_hex_with_alpha(fill.color);
+            let hex_text = edit.value_for(hex_focus, &hex_owned);
+            if !edit.paint_mono_input_view_at(cx, theme, hex_focus, row.value, 12.0, 0.0, baseline)
+            {
+                paint_row_text(
+                    cx,
+                    theme,
+                    hex_text,
+                    text_metrics::MONO_FONT_FAMILY,
+                    row.value,
+                    baseline,
+                );
+            }
+        }
+        _ => {
+            paint_row_text(
+                cx,
+                theme,
+                fill_type_label(locale, fill_type),
+                text_metrics::CHROME_FONT_FAMILY,
+                row.value,
+                baseline,
+            );
+        }
+    }
+    paint_fill_opacity(
         cx,
         theme,
+        edit,
         opacity_focus,
-        Rect {
-            origin: Point2D::new(pct_x, pct_rect.origin.y),
-            size: Point2D::new(
-                (pct_rect.origin.x + pct_rect.size.x - 18.0 - pct_x).max(0.0),
-                pct_rect.size.y,
-            ),
-        },
-        12.0,
-        0.0,
-        pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
-    ) {
-        edit.paint_selection_at(
-            cx,
-            theme,
-            opacity_focus,
-            pct_text,
-            pct_x,
-            pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
-            12.0,
-            pct_rect.origin.x + pct_rect.size.x - 8.0,
-        );
-        cx.backend.draw_text(
-            &pct,
-            Point2D::new(
-                pct_x,
-                pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
-            ),
-        );
-        if let Some(pos) = edit.caret_at(opacity_focus) {
-            let w = text_metrics::measure_chrome(
-                cx.backend,
-                &pct_text[..pos.min(pct_text.len())],
-                12.0,
-            );
-            cx.backend.fill_rect(
-                Rect {
-                    origin: Point2D::new(pct_x + w, pct_rect.origin.y + 6.0),
-                    size: Point2D::new(1.5, pct_rect.size.y - 12.0),
-                },
-                theme.foreground,
-            );
-        }
-    }
-    let pct_unit = TextLayout::single_run(
-        "%",
-        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
-        12.0,
-        (theme.muted_foreground).to_jian(),
-        Point2D::new(0.0, 0.0),
+        fill.opacity,
+        row.opacity,
+        baseline,
     );
-    cx.backend.draw_text(
-        &pct_unit,
-        Point2D::new(
-            pct_rect.origin.x + pct_rect.size.x - 14.0,
-            pct_rect.origin.y + crate::widgets::property_panel_inputs::INPUT_TEXT_BASELINE,
-        ),
-    );
-    let move_icon_size = 12.0;
-    if fill_index > 0 {
-        draw_icon(
-            cx.backend,
-            Icon::ArrowUp,
-            Point2D::new(
-                head.move_up.origin.x + (head.move_up.size.x - move_icon_size) / 2.0,
-                head.move_up.origin.y + (head.move_up.size.y - move_icon_size) / 2.0,
-            ),
-            move_icon_size,
-            theme.muted_foreground,
-            1.4,
-        );
-    }
-    if fill_index + 1 < snapshot.fills.len() {
-        draw_icon(
-            cx.backend,
-            Icon::ArrowDown,
-            Point2D::new(
-                head.move_down.origin.x + (head.move_down.size.x - move_icon_size) / 2.0,
-                head.move_down.origin.y + (head.move_down.size.y - move_icon_size) / 2.0,
-            ),
-            move_icon_size,
-            theme.muted_foreground,
-            1.4,
-        );
+    if let Some(rect) = row.variable {
+        paint_color_variable_button(cx, theme, rect, fill_variable_ref.is_some());
     }
     draw_icon(
         cx.backend,
-        Icon::Close,
+        Icon::MoreHorizontal,
         Point2D::new(
-            head.remove.origin.x + (head.remove.size.x - 14.0) / 2.0,
-            head.remove.origin.y + (head.remove.size.y - 14.0) / 2.0,
+            row.menu.origin.x + (row.menu.size.x - 14.0) / 2.0,
+            row.menu.origin.y + (row.menu.size.y - 14.0) / 2.0,
         ),
         14.0,
         theme.muted_foreground,
         1.4,
     );
-    y += INPUT_HEIGHT + 6.0;
+    let body_y = y + INPUT_HEIGHT + 6.0;
+    // Gradient / image bodies key off the primary fill (the
+    // gradient-stop + image-fill editors operate on `fills[0]`), so
+    // only the primary fill paints them. Mesh + Shader have no inline
+    // editor (deferred; shader is render-only in v1).
     match fill_type {
-        FillType::Solid => {
-            paint_fill_solid_body(
-                cx,
-                theme,
-                edit,
-                fill_index,
-                fill_color,
-                fill_variable_ref,
-                show_variable_button,
-                x,
-                y,
-                width,
-            );
-        }
-        // Gradient / image bodies key off the primary fill (the
-        // gradient-stop + image-fill editors operate on `fills[0]`), so
-        // only the primary fill paints them; a non-primary gradient /
-        // image fill shows head-row only until retyped to Solid.
         FillType::LinearGradient if is_primary => {
-            paint_fill_gradient_body(cx, theme, edit, snapshot, locale, x, y, width, true);
+            paint_fill_gradient_body(cx, theme, edit, snapshot, locale, x, body_y, width, true);
         }
         FillType::RadialGradient if is_primary => {
-            paint_fill_gradient_body(cx, theme, edit, snapshot, locale, x, y, width, false);
+            paint_fill_gradient_body(cx, theme, edit, snapshot, locale, x, body_y, width, false);
         }
         FillType::Image if is_primary => {
-            paint_fill_image_body(cx, theme, snapshot, locale, x, y, width);
+            paint_fill_image_body(cx, theme, snapshot, locale, x, body_y, width);
         }
-        // Mesh + Shader have no inline body editor (per-vertex editing /
-        // shader authoring are deferred — shader is render-only in v1);
-        // both show head-row only, same as a non-primary gradient/image.
-        FillType::LinearGradient
-        | FillType::RadialGradient
-        | FillType::MeshGradient
-        | FillType::Shader
-        | FillType::Image => {}
+        _ => {}
     }
-    y += fill_content_body_height(fill_type, is_primary, primary_stop_count);
-    crate::widgets::property_panel_compositing::paint_fill_trigger(
+    body_y + fill_row_body_height(fill_type, is_primary, primary_stop_count)
+}
+
+/// One run of row text (hex, `$variable` or fill type), clipped to its
+/// slot with a trailing ellipsis.
+fn paint_row_text(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    text: &str,
+    family: &str,
+    slot: Rect,
+    baseline: f32,
+) {
+    let fitted =
+        text_metrics::fit_in_family(cx.backend, text, (slot.size.x - 6.0).max(0.0), 12.0, family);
+    let layout = TextLayout::single_run(
+        &fitted,
+        family,
+        12.0,
+        (theme.foreground).to_jian(),
+        Point2D::new(0.0, 0.0),
+    );
+    cx.backend
+        .draw_text(&layout, Point2D::new(slot.origin.x, baseline));
+}
+
+/// The row's opacity readout / input: `100%`, with the live draft and
+/// caret while focused.
+#[allow(clippy::too_many_arguments)]
+fn paint_fill_opacity(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    edit: &EditContext<'_>,
+    focus: PropertyFocus,
+    opacity: f32,
+    rect: Rect,
+    baseline: f32,
+) {
+    let owned = ((opacity * 100.0).round() as i32).to_string();
+    let text = edit.value_for(focus, &owned);
+    let text_x = rect.origin.x + 4.0;
+    // `%` follows the number (`100%`), capped at the slot's right edge.
+    let text_w =
+        text_metrics::measure_in_family(cx.backend, text, 12.0, text_metrics::MONO_FONT_FAMILY);
+    let unit_x = (text_x + text_w + 1.0).min(rect.origin.x + rect.size.x - 10.0);
+    if !edit.paint_mono_input_view_at(
         cx,
         theme,
-        fill.blend_mode.as_ref(),
-        locale,
-        x,
-        y,
-        width,
+        focus,
+        Rect::xywh(
+            text_x,
+            rect.origin.y,
+            (unit_x - 2.0 - text_x).max(0.0),
+            rect.size.y,
+        ),
+        12.0,
+        0.0,
+        baseline,
+    ) {
+        edit.paint_selection_at(cx, theme, focus, text, text_x, baseline, 12.0, unit_x);
+        let layout = TextLayout::single_run(
+            text,
+            text_metrics::MONO_FONT_FAMILY,
+            12.0,
+            (theme.foreground).to_jian(),
+            Point2D::new(0.0, 0.0),
+        );
+        cx.backend
+            .draw_text(&layout, Point2D::new(text_x, baseline));
+        if let Some(pos) = edit.caret_at(focus) {
+            let w = text_metrics::measure_in_family(
+                cx.backend,
+                &text[..pos.min(text.len())],
+                12.0,
+                text_metrics::MONO_FONT_FAMILY,
+            );
+            cx.backend.fill_rect(
+                Rect::xywh(text_x + w, rect.origin.y + 6.0, 1.5, rect.size.y - 12.0),
+                theme.foreground,
+            );
+        }
+    }
+    let unit = TextLayout::single_run(
+        "%",
+        text_metrics::MONO_FONT_FAMILY,
+        12.0,
+        (theme.muted_foreground).to_jian(),
+        Point2D::new(0.0, 0.0),
     );
-    y += crate::widgets::property_panel_compositing::COMPOSITING_ROW_HEIGHT;
-    y
+    cx.backend.draw_text(&unit, Point2D::new(unit_x, baseline));
+}
+
+/// Swatch preview per fill type, so the row reads as a small preview
+/// of what renders.
+fn paint_fill_swatch(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    fill_type: de_editor_core::FillType,
+    color: Color,
+    swatch: Rect,
+) {
+    use de_editor_core::FillType;
+    match fill_type {
+        FillType::Solid | FillType::Shader => {
+            // Shader fills preview their resolved fallback colour.
+            cx.backend.fill_round_rect(swatch, 3.0, color);
+        }
+        FillType::LinearGradient => {
+            // Two halves stand in for a black→white gradient (skia
+            // gradients are not on RenderBackend yet).
+            let half_w = swatch.size.x / 2.0;
+            cx.backend.fill_round_rect(
+                Rect::xywh(swatch.origin.x, swatch.origin.y, half_w, swatch.size.y),
+                3.0,
+                Color::BLACK,
+            );
+            cx.backend.fill_round_rect(
+                Rect::xywh(
+                    swatch.origin.x + half_w,
+                    swatch.origin.y,
+                    swatch.size.x - half_w,
+                    swatch.size.y,
+                ),
+                3.0,
+                Color::WHITE,
+            );
+        }
+        FillType::RadialGradient => {
+            cx.backend.fill_round_rect(swatch, 3.0, Color::BLACK);
+            let inset = 3.0;
+            cx.backend.fill_oval(
+                Rect::xywh(
+                    swatch.origin.x + inset,
+                    swatch.origin.y + inset,
+                    swatch.size.x - inset * 2.0,
+                    swatch.size.y - inset * 2.0,
+                ),
+                Color::WHITE,
+            );
+        }
+        FillType::MeshGradient => {
+            // Four quadrants read as a corner mesh.
+            let hw = swatch.size.x / 2.0;
+            let hh = swatch.size.y / 2.0;
+            let quad =
+                |ox: f32, oy: f32| Rect::xywh(swatch.origin.x + ox, swatch.origin.y + oy, hw, hh);
+            cx.backend.fill_round_rect(quad(0.0, 0.0), 0.0, color);
+            cx.backend.fill_round_rect(quad(hw, 0.0), 0.0, Color::WHITE);
+            cx.backend.fill_round_rect(quad(0.0, hh), 0.0, Color::BLACK);
+            cx.backend.fill_round_rect(quad(hw, hh), 0.0, theme.muted);
+        }
+        FillType::Image => {
+            cx.backend.fill_round_rect(swatch, 3.0, theme.background);
+            draw_icon(
+                cx.backend,
+                Icon::ImagePlus,
+                Point2D::new(swatch.origin.x + 2.0, swatch.origin.y + 2.0),
+                12.0,
+                theme.muted_foreground,
+                1.4,
+            );
+        }
+    }
+    cx.backend.stroke_round_rect(swatch, 3.0, theme.border, 1.0);
 }

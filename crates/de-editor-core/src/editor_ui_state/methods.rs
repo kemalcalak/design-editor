@@ -364,6 +364,26 @@ impl EditorUiState {
         self.toggle_fill_type_picker_for(0);
     }
 
+    /// Toggle fill `index`'s `⋯` menu and close the other inspector
+    /// popovers it would overlap.
+    pub fn toggle_fill_menu(&mut self, index: usize) {
+        self.fill_menu_open = if self.fill_menu_open == Some(index) {
+            None
+        } else {
+            Some(index)
+        };
+        self.close_fill_type_picker();
+        self.close_compositing_picker();
+        self.layout_align_popover_open = false;
+        self.layout_align_popover_hover = None;
+        self.stroke_mode_popover_open = false;
+        self.stroke_mode_popover_hover = None;
+        self.image_fill_popover_open = false;
+        self.close_font_picker();
+        self.font_weight_picker_open = false;
+        self.close_color_variable_picker();
+    }
+
     /// Toggle the fill-type dropdown for fill `index`. Opening on a
     /// different row than the one currently open re-targets the picker
     /// (stays open, new index); toggling the same row closes it.
@@ -653,9 +673,8 @@ impl EditorUiState {
         self.last_canvas_click = None;
         self.entered_container = None;
         self.active_guides.clear();
-        self.padding_edit_mode = None;
-        self.padding_edit_mode_anchor = String::new();
-        self.padding_mode_popover_open = false;
+        self.layout_align_popover_open = false;
+        self.fill_menu_open = None;
         self.stroke_edit_mode = None;
         self.stroke_edit_mode_anchor = String::new();
         self.stroke_mode_popover_open = false;

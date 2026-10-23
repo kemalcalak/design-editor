@@ -38,12 +38,6 @@ pub fn node_trigger_rects(x: f32, y: f32, width: f32) -> [(CompositingTarget, Re
     ]
 }
 
-/// Per-fill Blend trigger geometry, painted after that fill's
-/// type-specific body.
-pub fn fill_trigger_rect(x: f32, y: f32, width: f32) -> Rect {
-    Rect::xywh(x + PAD_X, y, width - PAD_X * 2.0, INPUT_HEIGHT)
-}
-
 fn blend_choices() -> [Option<BlendMode>; 16] {
     [
         None,
@@ -144,18 +138,16 @@ pub fn paint_fill_trigger(
     theme: &Theme,
     mode: Option<&BlendMode>,
     locale: de_editor_core::Locale,
-    x: f32,
-    y: f32,
-    width: f32,
+    rect: Rect,
 ) {
     let value = translated(locale, blend_key(mode));
     let label = trigger_label(locale, "fill.blendMode", value);
-    paint_trigger(cx, theme, fill_trigger_rect(x, y, width), &label);
+    paint_trigger(cx, theme, rect, &label);
 }
 
 const TRIGGER_FONT_SIZE: f32 = 11.0;
 
-fn paint_trigger(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, label: &str) {
+pub(crate) fn paint_trigger(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, label: &str) {
     // jian's SelectTrigger clips its value instead of ellipsizing it — see
     // `text_metrics::fit_select_trigger_label`.
     let label = crate::widgets::text_metrics::fit_select_trigger_label(
@@ -415,7 +407,7 @@ impl PropertyPanel {
             self.font_weight_picker_open,
             self.export_scale_picker_open,
             self.export_format_picker_open,
-            self.padding_mode_popover_open,
+            self.layout_align_popover_open,
         )
         .into_iter()
         .find_map(|(action, rect)| {

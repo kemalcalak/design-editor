@@ -111,6 +111,7 @@ pub mod missing_fonts;
 pub mod mutators;
 pub mod node_defaults;
 pub mod node_id;
+pub mod padding_shorthand;
 pub mod page_mutators;
 pub mod path_bounds;
 pub mod path_edit;

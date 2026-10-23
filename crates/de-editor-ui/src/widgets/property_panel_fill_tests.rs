@@ -256,6 +256,8 @@ fn fill_type_picker_hit_anchors_to_instance_toggle_action_rect() {
     );
     state.set_single_selection(NodeId::new("inst1"));
     let mut panel = panel_for(&state);
+    // The type trigger lives in the fill row's `⋯` menu (#83).
+    panel.fill_menu_open = Some(0);
     panel.fill_type_picker.open = true;
     panel.fill_type_picker_index = 0;
 
@@ -296,53 +298,67 @@ fn fill_type_picker_hit_anchors_to_instance_toggle_action_rect() {
     );
 }
 
+/// Action rects with fill row `index`'s `⋯` menu open — the menu is
+/// where Remove / Move / type / blend live since #83.
+fn actions_with_fill_menu(
+    panel: &mut PropertyPanel,
+    index: usize,
+) -> Vec<(PropertyPanelAction, Rect)> {
+    panel.fill_menu_open = Some(index);
+    sections::action_button_rects(
+        panel_rect(),
+        visible_for(panel),
+        &panel.snapshot.effects,
+        &panel.snapshot.fills,
+        &panel.snapshot.interactions,
+    )
+}
+
 #[test]
 fn stacked_fills_emit_add_and_per_index_remove_actions() {
     let mut state = selected_rect_state();
     assert!(state.add_selected_fill());
-    let panel = panel_for(&state);
+    let mut panel = panel_for(&state);
     assert_eq!(panel.snapshot.fills.len(), 2);
 
-    let actions: Vec<_> = sections::action_button_rects_with_fill_picker(
+    let closed: Vec<_> = sections::action_button_rects(
         panel_rect(),
         visible_for(&panel),
         &panel.snapshot.effects,
         &panel.snapshot.fills,
         &panel.snapshot.interactions,
-        false,
-        0,
-        false,
-        false,
-        false,
-        false,
-        false,
     )
     .into_iter()
     .map(|(action, _)| action)
     .collect();
-
-    assert!(actions.contains(&PropertyPanelAction::AddFill));
-    assert!(actions.contains(&PropertyPanelAction::RemoveFill(0)));
-    assert!(actions.contains(&PropertyPanelAction::RemoveFill(1)));
+    assert!(closed.contains(&PropertyPanelAction::AddFill));
+    assert!(closed.contains(&PropertyPanelAction::ToggleFillMenu(0)));
+    assert!(closed.contains(&PropertyPanelAction::ToggleFillMenu(1)));
+    assert!(
+        !closed
+            .iter()
+            .any(|a| matches!(a, PropertyPanelAction::RemoveFill(_))),
+        "remove lives in the closed `⋯` menu"
+    );
+    for index in 0..2 {
+        let open = actions_with_fill_menu(&mut panel, index);
+        assert!(open
+            .iter()
+            .any(|(a, _)| *a == PropertyPanelAction::RemoveFill(index)));
+    }
 }
 
 #[test]
 fn three_fill_rows_emit_exact_boundary_move_actions_in_row_order() {
     let state = selected_three_fill_state();
-    let panel = panel_for(&state);
+    let mut panel = panel_for(&state);
 
-    let moves: Vec<_> = sections::action_button_rects(
-        panel_rect(),
-        visible_for(&panel),
-        &panel.snapshot.effects,
-        &panel.snapshot.fills,
-        &panel.snapshot.interactions,
-    )
-    .into_iter()
-    .filter_map(|(action, _)| {
-        matches!(action, PropertyPanelAction::MoveFill { .. }).then_some(action)
-    })
-    .collect();
+    let moves: Vec<_> = (0..3)
+        .flat_map(|index| actions_with_fill_menu(&mut panel, index))
+        .filter_map(|(action, _)| {
+            matches!(action, PropertyPanelAction::MoveFill { .. }).then_some(action)
+        })
+        .collect();
 
     assert_eq!(
         moves,
@@ -357,31 +373,28 @@ fn three_fill_rows_emit_exact_boundary_move_actions_in_row_order() {
 }
 
 #[test]
-fn fill_move_action_rect_centres_hit_the_exact_emitted_actions() {
+fn fill_menu_rect_centres_hit_the_exact_emitted_actions_over_later_sections() {
     let state = selected_three_fill_state();
-    let panel = panel_for(&state);
-    let move_rects: Vec<_> = sections::action_button_rects(
-        panel_rect(),
-        visible_for(&panel),
-        &panel.snapshot.effects,
-        &panel.snapshot.fills,
-        &panel.snapshot.interactions,
-    )
-    .into_iter()
-    .filter(|(action, _)| matches!(action, PropertyPanelAction::MoveFill { .. }))
-    .collect();
-
-    assert_eq!(move_rects.len(), 4);
-    for (expected, rect) in move_rects {
-        let centre = Point2D::new(
-            rect.origin.x + rect.size.x / 2.0,
-            rect.origin.y + rect.size.y / 2.0,
-        );
-        assert_eq!(
-            panel.hit_test_action(panel_rect(), centre),
-            Some(expected),
-            "the painted move control's action rect must be its hit region"
-        );
+    let mut panel = panel_for(&state);
+    for index in 0..3 {
+        let menu_rects: Vec<_> = actions_with_fill_menu(&mut panel, index)
+            .into_iter()
+            .filter(|(action, _)| {
+                crate::widgets::property_panel_fill_menu::is_fill_menu_row(action)
+            })
+            .collect();
+        assert!(menu_rects.len() >= 3, "type, blend and remove at least");
+        for (expected, rect) in menu_rects {
+            let centre = Point2D::new(
+                rect.origin.x + rect.size.x / 2.0,
+                rect.origin.y + rect.size.y / 2.0,
+            );
+            assert_eq!(
+                panel.hit_test_action(panel_rect(), centre),
+                Some(expected),
+                "the open menu's targets win over the rows and sections beneath"
+            );
+        }
     }
 }
 

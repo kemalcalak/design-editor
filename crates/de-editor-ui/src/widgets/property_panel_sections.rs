@@ -208,6 +208,38 @@ impl<'a> EditContext<'a> {
         true
     }
 
+    /// [`Self::paint_input_view_at`] in the mono face, for the hex
+    /// fields whose unfocused value paints in [`text_metrics::MONO_FONT_FAMILY`].
+    ///
+    /// [`text_metrics::MONO_FONT_FAMILY`]: crate::widgets::text_metrics::MONO_FONT_FAMILY
+    #[allow(clippy::too_many_arguments)]
+    pub fn paint_mono_input_view_at(
+        &self,
+        cx: &mut PaintCx<'_>,
+        theme: &Theme,
+        focus: PropertyFocus,
+        rect: Rect,
+        font_size: f32,
+        pad_x: f32,
+        baseline_y: f32,
+    ) -> bool {
+        let Some(input) = self.input_at(focus) else {
+            return false;
+        };
+        crate::widgets::property_panel_text_input::paint_text_input_view_value_in_family(
+            cx,
+            theme,
+            input,
+            rect,
+            font_size,
+            pad_x,
+            baseline_y,
+            self.now_ms,
+            crate::widgets::text_metrics::MONO_FONT_FAMILY,
+        );
+        true
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub fn paint_selection_at(
         &self,

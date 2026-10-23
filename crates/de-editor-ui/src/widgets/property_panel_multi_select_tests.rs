@@ -1,6 +1,6 @@
 //! Multi-selection behaviour for `widgets::property_panel`: the
-//! aggregate snapshot, inert hit-testing, the reduced capability mask,
-//! and the selection-scoped padding-mode pin.
+//! aggregate snapshot, inert hit-testing and the reduced capability
+//! mask.
 
 use super::property_panel::PropertyPanel;
 use super::property_panel_test_support::{paint_and_count, state_from};
@@ -91,27 +91,4 @@ fn multi_select_panel_shows_even_when_all_zero_size() {
     assert!(panel.is_multi);
     assert_eq!(panel.snapshot.width, 0);
     assert_eq!(panel.snapshot.height, 0);
-}
-
-#[test]
-fn padding_pin_does_not_leak_into_a_different_selection() {
-    use de_editor_core::PaddingEditMode;
-    let mut state = state_from(
-        r#"{"version":"1.0.0","children":[
-          {"type":"frame","id":"a","name":"A","x":0,"y":0,"width":100,"height":100},
-          {"type":"frame","id":"b","name":"B","x":200,"y":0,"width":100,"height":100}
-        ]}"#,
-    );
-    // The user pins "Individual" padding mode for node A.
-    state.editor_ui.padding_edit_mode = Some(PaddingEditMode::Individual);
-    state.editor_ui.padding_edit_mode_anchor = "a".to_string();
-    // While A is selected the pin applies.
-    state.set_single_selection(NodeId::new("a"));
-    let panel_a = PropertyPanel::for_selection(&state).unwrap();
-    assert_eq!(panel_a.padding_edit_mode, PaddingEditMode::Individual);
-    // Selecting B must NOT inherit A's pin — B has no padding, so the
-    // panel derives Single. Regression for the leaked-padding-mode bug.
-    state.set_single_selection(NodeId::new("b"));
-    let panel_b = PropertyPanel::for_selection(&state).unwrap();
-    assert_eq!(panel_b.padding_edit_mode, PaddingEditMode::Single);
 }

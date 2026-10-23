@@ -14,6 +14,7 @@
 use crate::{Color, Point2D, Rect, TextLayout};
 
 mod action_feedback;
+mod alignment;
 mod menus;
 mod pickers;
 mod selection;

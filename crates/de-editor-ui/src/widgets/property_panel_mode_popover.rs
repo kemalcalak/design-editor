@@ -1,9 +1,9 @@
-//! Shared gear-anchored PaddingEditMode popover chrome.
+//! Gear-anchored PaddingEditMode popover chrome.
 //!
-//! The flex padding section and the stroke section both anchor a
-//! "Single / Axis / Individual" radio popover to a gear icon; the box
-//! geometry and the popover paint live here once, parameterized by
-//! each section's radio size/gutter.
+//! The stroke section anchors a "Single / Axis / Individual" radio
+//! popover to a gear icon; the box geometry and the popover paint live
+//! here, parameterized by the caller's radio size/gutter. The radio
+//! circle is shared with the Auto layout alignment popover.
 
 use crate::theme::Theme;
 use crate::widgets::PaintCx;

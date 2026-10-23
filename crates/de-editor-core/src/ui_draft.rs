@@ -45,11 +45,9 @@ pub enum PropertyFocus {
     SizeH,
     /// Container flex-layout gap in document px.
     LayoutGap,
-    /// Container padding values, shown in top/right/bottom/left order.
-    PaddingTop,
-    PaddingRight,
-    PaddingBottom,
-    PaddingLeft,
+    /// Container padding as one CSS-style shorthand draft (`16`,
+    /// `96 120`, `8 16 8 4`) — see `padding_shorthand`.
+    Padding,
     Opacity,
     /// One fill's `#RRGGBB` / `#RRGGBBAA` colour input — indexed into the node's
     /// `fill` list. The Fill section stacks one row per fill, so this
@@ -172,10 +170,6 @@ impl PropertyFocus {
                 | PropertyFocus::FillOpacity(_)
                 | PropertyFocus::ImageTileScale
                 | PropertyFocus::LayoutGap
-                | PropertyFocus::PaddingTop
-                | PropertyFocus::PaddingRight
-                | PropertyFocus::PaddingBottom
-                | PropertyFocus::PaddingLeft
                 | PropertyFocus::StrokeWidth
                 | PropertyFocus::StrokeTopWidth
                 | PropertyFocus::StrokeRightWidth

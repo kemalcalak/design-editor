@@ -39,6 +39,10 @@ use crate::{Rect, RenderBackend};
 /// Measurement has to name the same one.
 pub const CHROME_FONT_FAMILY: &str = "Manrope";
 
+/// Mono face for hex colour values in the property panel (#83) — the
+/// same JetBrains Mono Home uses for its endpoint and snippets.
+pub const MONO_FONT_FAMILY: &str = crate::widgets::home_surface::MONO;
+
 /// Painted width of `text` at `font_size` in the chrome font family.
 ///
 /// The drop-in replacement for `backend.measure_text(text, font_size)`.

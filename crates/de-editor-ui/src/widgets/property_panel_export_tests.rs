@@ -8,6 +8,7 @@ use de_editor_core::{EditorState, NodeId};
 fn export_format_picker_lists_svg_after_webp() {
     let mut state = EditorState::sample();
     state.set_single_selection(NodeId::new("n10"));
+    state.editor_ui.export_section_open = true;
     state.editor_ui.export_format_picker_open = true;
     let panel = PropertyPanel::for_selection(&state).expect("frame panel");
     let formats: Vec<_> = sections::action_button_rects_with_fill_picker(

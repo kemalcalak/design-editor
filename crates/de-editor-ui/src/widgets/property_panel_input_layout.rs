@@ -4,10 +4,9 @@
 //! and input-rect walker stay under the repository file-size cap.
 
 use crate::widgets::property_panel::{EffectSummary, FillSummary, PropertyPanelAction};
-use crate::widgets::property_panel_fill::{fill_head_rects, fill_row_body_height};
+use crate::widgets::property_panel_fill::{fill_row_rects, fill_row_tops};
 use crate::widgets::property_panel_inputs::{
-    COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, INPUT_HEIGHT, PAD_X, PANEL_HEADER_HEIGHT,
-    SECTION_GAP, SECTION_HEADER_HEIGHT,
+    COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, INPUT_HEIGHT, PAD_X, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::property_panel_layout::VisibleSections;
 use crate::widgets::property_panel_stroke::stroke_side_input_rects;
@@ -61,15 +60,16 @@ pub fn editable_input_rects(
     let usable_w = w - PAD_X * 2.0;
     let half_w = (usable_w - 8.0) / 2.0;
 
-    let mut y = panel_rect.origin.y;
-    y += PANEL_HEADER_HEIGHT;
-    if visible.create_component {
-        // Variant-aware: the instance pair adds a second button row.
-        y += crate::widgets::property_panel_inputs::create_component_block_height(
-            visible.component_button,
-        );
-    }
-    y += SECTION_HEADER_HEIGHT;
+    // Section origins come from the shared walk (#83); Interactions sits
+    // below every editable section, so its summary does not matter here.
+    let tops = crate::widgets::property_panel_section_tops::section_tops(
+        panel_rect.origin.y,
+        visible,
+        effects,
+        fills,
+        &crate::widgets::property_panel_interactions::InteractionSummary::default(),
+    );
+    let mut y = tops.position + SECTION_HEADER_HEIGHT;
     let x_rect = Rect {
         origin: Point2D::new(x0 + PAD_X, y),
         size: Point2D::new(half_w, INPUT_HEIGHT),
@@ -102,8 +102,7 @@ pub fn editable_input_rects(
         origin: Point2D::new(x0 + PAD_X, y),
         size: Point2D::new(half_w, INPUT_HEIGHT),
     };
-    let per_corner_expanded =
-        visible.corner_radius && visible.corner_per_corner && visible.corner_expand;
+    let per_corner_expanded = visible.corner_grid_expanded();
     let radius_rect =
         (visible.corner_radius && !per_corner_expanded).then_some(if visible.corner_per_corner {
             crate::widgets::property_panel_corner::uniform_and_toggle_rects(x0, y, w).0
@@ -125,60 +124,36 @@ pub fn editable_input_rects(
     }
     if per_corner_expanded {
         rects.extend(crate::widgets::property_panel_corner::input_rects(x0, y, w));
-        y += crate::widgets::property_panel_corner::CORNER_GRID_EXTRA_HEIGHT;
     }
-    y += 12.0;
-    y += SECTION_GAP;
     if visible.flex_layout {
         crate::widgets::property_panel_flex::push_flex_input_rects(
             &mut rects,
             x0,
-            y,
+            tops.flex + SECTION_HEADER_HEIGHT,
             w,
             visible.flex_layout_mode,
             visible.layout_justify,
-            visible.padding_edit_mode,
         );
-        y += crate::widgets::property_panel_flex::flex_section_height(
-            visible.flex_layout_mode,
-            visible.padding_edit_mode,
-        );
-    }
-    if visible.size_options {
-        y += visible.size_section_lead_h();
-        let check_h = crate::widgets::property_panel_inputs::size_check_row_height();
-        y += check_h * if visible.clip_content { 3.0 } else { 2.0 };
-        y += 12.0;
-        y += SECTION_GAP;
-    }
-    if visible.icon {
-        y += crate::widgets::property_panel_icon::icon_section_height();
     }
     if visible.text {
-        crate::widgets::property_panel_text::push_text_input_rects(&mut rects, x0, y, usable_w);
-        y += crate::widgets::property_panel_text::text_section_height();
-        y += SECTION_GAP;
+        crate::widgets::property_panel_text::push_text_input_rects(
+            &mut rects, x0, tops.text, usable_w,
+        );
     }
     if let Some(kind) = visible.widget {
         crate::widgets::property_panel_widget::push_widget_input_rects(
-            &mut rects, kind, x0, y, usable_w,
+            &mut rects,
+            kind,
+            x0,
+            tops.widget,
+            usable_w,
         );
-        y += crate::widgets::property_panel_widget::widget_section_height(kind);
-        y += SECTION_GAP;
-    }
-    if visible.image {
-        y += crate::widgets::property_panel_image_node::image_section_height_with_video(
-            visible.image_warning,
-            visible.video,
-        );
-        y += SECTION_GAP;
     }
     if visible.video {
-        crate::widgets::property_panel_video::push_video_input_rects(&mut rects, x0, y, w);
-        y += crate::widgets::property_panel_video::video_section_height();
+        crate::widgets::property_panel_video::push_video_input_rects(&mut rects, x0, tops.video, w);
     }
     if visible.opacity {
-        y += SECTION_HEADER_HEIGHT;
+        let mut y = tops.layer + SECTION_HEADER_HEIGHT;
         rects.push((
             PropertyFocus::Opacity,
             Rect {
@@ -216,47 +191,23 @@ pub fn editable_input_rects(
                     },
                 ));
             }
-            y += INPUT_HEIGHT;
         }
-        if visible.compositing {
-            y += crate::widgets::property_panel_compositing::COMPOSITING_ROW_HEIGHT;
-        }
-        y += 12.0;
-        y += SECTION_GAP;
     }
     if visible.fill {
-        y += SECTION_HEADER_HEIGHT;
-        let primary_stop_count = visible.gradient_stop_count;
-        for (fi, fill) in fills.iter().enumerate() {
+        let first_row_y = tops.fill + SECTION_HEADER_HEIGHT;
+        for (fi, fill, row_y) in fill_row_tops(fills, first_row_y, visible.gradient_stop_count) {
             let is_primary = fi == 0;
             let fill_type = fill.fill_type;
-            // Head row: per-fill opacity input (the `%` box).
-            rects.push((
-                PropertyFocus::FillOpacity(fi),
-                fill_head_rects(x0, y, w).opacity,
-            ));
-            y += INPUT_HEIGHT + 6.0;
+            // The row: opacity, plus the hex for a solid fill. A
+            // variable-bound primary fill paints a `$name` chip, not an
+            // editable hex.
+            let row = fill_row_rects(x0, row_y, w, visible.fill_row_shows_variable(fi));
+            rects.push((PropertyFocus::FillOpacity(fi), row.opacity));
+            if fill_type == FillType::Solid && visible.fill_hex_editable(fi) {
+                rects.push((PropertyFocus::FillHex(fi), row.value));
+            }
+            let y = row_y + INPUT_HEIGHT + 6.0;
             match fill_type {
-                FillType::Solid => {
-                    let show_var = is_primary
-                        && (visible.color_variable_count > 0 || visible.fill_variable_bound);
-                    let variable_w = if show_var {
-                        COLOR_VARIABLE_BUTTON_W + COLOR_VARIABLE_GAP
-                    } else {
-                        0.0
-                    };
-                    // A variable-bound primary fill paints a `$name` chip,
-                    // not an editable hex input.
-                    if !(is_primary && visible.fill_variable_bound) {
-                        rects.push((
-                            PropertyFocus::FillHex(fi),
-                            Rect {
-                                origin: Point2D::new(x0 + PAD_X, y),
-                                size: Point2D::new(usable_w - variable_w, INPUT_HEIGHT),
-                            },
-                        ));
-                    }
-                }
                 // Gradient / image bodies only paint editable inputs for
                 // the primary fill (they key off `fills[0]`).
                 FillType::LinearGradient if is_primary => {
@@ -286,20 +237,19 @@ pub fn editable_input_rects(
                         visible.gradient_stop_count,
                     );
                 }
-                // Mesh has no editable inputs (per-vertex editing deferred).
-                FillType::LinearGradient
+                // Solid edits on the row itself; Mesh has no editable
+                // inputs (per-vertex editing deferred).
+                FillType::Solid
+                | FillType::LinearGradient
                 | FillType::RadialGradient
                 | FillType::MeshGradient
                 | FillType::Shader
                 | FillType::Image => {}
             }
-            y += fill_row_body_height(fill_type, is_primary, primary_stop_count);
         }
-        y += 12.0;
-        y += SECTION_GAP;
     }
     if visible.stroke {
-        y += SECTION_HEADER_HEIGHT;
+        let y = tops.stroke + SECTION_HEADER_HEIGHT;
         let show_var = visible.color_variable_count > 0 || visible.stroke_variable_bound;
         let variable_w = if show_var {
             COLOR_VARIABLE_BUTTON_W + COLOR_VARIABLE_GAP
@@ -332,13 +282,9 @@ pub fn editable_input_rects(
             ));
         }
         rects.extend(stroke_side_input_rects(x0, y, w, visible.stroke_edit_mode));
-        y += crate::widgets::property_panel_stroke::stroke_section_body_height(
-            visible.stroke_edit_mode,
-        );
-        y += SECTION_GAP;
     }
     if visible.effects {
-        y += SECTION_HEADER_HEIGHT;
+        let mut y = tops.effects + SECTION_HEADER_HEIGHT;
         for (index, _) in effects.iter().enumerate() {
             let row = crate::widgets::property_panel_effects::effect_row_rects(x0, y, w);
             rects.push((PropertyFocus::EffectRadius(index), row.value));
@@ -349,19 +295,18 @@ pub fn editable_input_rects(
     rects
 }
 
-/// Push the Fill section's action rects (header "+", per-fill type
-/// dropdown / × / colour-swatch + gradient-stop /
-/// image-popover affordances) starting at `*y`'s row, returning the y
-/// just past the section's trailing 12 px gap (the caller adds the
-/// `SECTION_GAP`). Split out of `action_button_rects_with_fill_picker`
-/// for the 800-line cap; the y-walk mirrors `paint_one_fill`.
+/// Push the Fill section's action rects — header "+" (and fill-rule
+/// segments), each row's swatch / colour-variable / `⋯` targets, the
+/// primary fill's gradient-stop or image affordances, and the open
+/// `⋯` menu's rows — for the section starting at `y`. Split out of
+/// `action_button_rects_with_fill_picker` for the 800-line cap.
 pub(crate) fn push_fill_action_rects(
     out: &mut Vec<(PropertyPanelAction, Rect)>,
     panel_rect: Rect,
     visible: VisibleSections,
     fills: &[FillSummary],
-    mut y: f32,
-) -> f32 {
+    y: f32,
+) {
     let x0 = panel_rect.origin.x;
     let w = panel_rect.size.x;
     let usable_w = w - PAD_X * 2.0;
@@ -375,94 +320,40 @@ pub(crate) fn push_fill_action_rects(
             out.push((PropertyPanelAction::SetFillRule(rule), rect));
         }
     }
-    y += SECTION_HEADER_HEIGHT;
     let primary_stop_count = visible.gradient_stop_count;
-    // One row per fill — mirror `paint_one_fill`'s y-walk.
-    for (fi, fill) in fills.iter().enumerate() {
+    // One row per fill — the same row tops paint steps through.
+    let mut menu = None;
+    for (fi, fill, row_y) in fill_row_tops(fills, y + SECTION_HEADER_HEIGHT, primary_stop_count) {
         let is_primary = fi == 0;
         let fill_type = fill.fill_type;
-        // Head row: type dropdown + opacity + adjacent reorder / remove controls.
-        let head = fill_head_rects(x0, y, w);
-        let dropdown_rect = head.dropdown;
-        out.push((PropertyPanelAction::ToggleFillTypePicker(fi), dropdown_rect));
-        if fi > 0 {
+        let row = fill_row_rects(x0, row_y, w, visible.fill_row_shows_variable(fi));
+        // The swatch opens the colour picker for a solid fill (the hex
+        // focus hit-test runs after this, so a swatch click opens the
+        // picker instead of focusing). The primary fill's picker drives
+        // the colour-variable subsystem; other fills bind their own.
+        if fill_type == FillType::Solid && visible.fill_hex_editable(fi) {
+            let open = if is_primary {
+                PropertyPanelAction::OpenColorPicker(de_editor_core::ColorTarget::Fill)
+            } else {
+                PropertyPanelAction::OpenFillColorPicker(fi)
+            };
+            out.push((open, row.swatch_hit));
+        }
+        if let Some(rect) = row.variable {
             out.push((
-                PropertyPanelAction::MoveFill {
-                    from: fi,
-                    to: fi - 1,
-                },
-                head.move_up,
+                PropertyPanelAction::ToggleColorVariablePicker(de_editor_core::ColorTarget::Fill),
+                rect,
             ));
         }
-        if fi + 1 < fills.len() {
-            out.push((
-                PropertyPanelAction::MoveFill {
-                    from: fi,
-                    to: fi + 1,
-                },
-                head.move_down,
-            ));
+        out.push((PropertyPanelAction::ToggleFillMenu(fi), row.menu));
+        if visible.fill_menu == Some(fi) {
+            menu = Some((fi, row.menu));
         }
-        out.push((PropertyPanelAction::RemoveFill(fi), head.remove));
-        y += INPUT_HEIGHT + 6.0; // head row
-                                 // Body action rects, keyed off this fill's type.
+        let y = row_y + INPUT_HEIGHT + 6.0; // the body, under the row
         match fill_type {
-            FillType::Solid => {
-                // Solid body: leading swatch opens the colour picker
-                // (the hex-input focus hit-test runs after this, so a
-                // swatch click opens the picker instead of focusing).
-                if is_primary {
-                    let show_var = visible.color_variable_count > 0 || visible.fill_variable_bound;
-                    let variable_w = if show_var {
-                        COLOR_VARIABLE_BUTTON_W + COLOR_VARIABLE_GAP
-                    } else {
-                        0.0
-                    };
-                    let hex_w = usable_w - variable_w;
-                    if !visible.fill_variable_bound {
-                        out.push((
-                            PropertyPanelAction::OpenColorPicker(de_editor_core::ColorTarget::Fill),
-                            Rect {
-                                origin: Point2D::new(x0 + PAD_X, y),
-                                size: Point2D::new(
-                                    crate::widgets::property_panel_inputs::color_swatch_action_width(
-                                    ),
-                                    INPUT_HEIGHT,
-                                ),
-                            },
-                        ));
-                    }
-                    if show_var {
-                        let var_rect = Rect {
-                            origin: Point2D::new(x0 + PAD_X + hex_w + COLOR_VARIABLE_GAP, y),
-                            size: Point2D::new(COLOR_VARIABLE_BUTTON_W, INPUT_HEIGHT),
-                        };
-                        out.push((
-                            PropertyPanelAction::ToggleColorVariablePicker(
-                                de_editor_core::ColorTarget::Fill,
-                            ),
-                            var_rect,
-                        ));
-                    }
-                } else {
-                    // Non-primary solid: swatch opens a picker bound to
-                    // THIS fill (no colour-variable button — the variable
-                    // subsystem keys off the primary fill).
-                    out.push((
-                        PropertyPanelAction::OpenFillColorPicker(fi),
-                        Rect {
-                            origin: Point2D::new(x0 + PAD_X, y),
-                            size: Point2D::new(
-                                crate::widgets::property_panel_inputs::color_swatch_action_width(),
-                                INPUT_HEIGHT,
-                            ),
-                        },
-                    ));
-                }
-            }
             // Gradient / image bodies key off the primary fill, so only
-            // the primary fill emits their action rects (the non-primary
-            // head row's dropdown is enough to retype it).
+            // the primary fill emits their action rects (other fills are
+            // retyped from their `⋯` menu).
             FillType::Image if is_primary => {
                 out.push((
                     PropertyPanelAction::ToggleImageFillPopover,
@@ -507,25 +398,25 @@ pub(crate) fn push_fill_action_rects(
                     stop_y += INPUT_HEIGHT + 4.0;
                 }
             }
-            // Mesh emits no body action rects (per-vertex editing deferred).
-            FillType::LinearGradient
+            // Solid acts on the row itself; Mesh emits no body action
+            // rects (per-vertex editing deferred).
+            FillType::Solid
+            | FillType::LinearGradient
             | FillType::RadialGradient
             | FillType::MeshGradient
             | FillType::Shader
             | FillType::Image => {}
         }
-        let blend_y = y + crate::widgets::property_panel_fill::fill_content_body_height(
-            fill_type,
-            is_primary,
-            primary_stop_count,
-        );
-        out.push((
-            PropertyPanelAction::ToggleCompositingPicker(
-                crate::widgets::property_panel_action::CompositingTarget::FillBlend(fi),
-            ),
-            crate::widgets::property_panel_compositing::fill_trigger_rect(x0, blend_y, w),
-        ));
-        y += fill_row_body_height(fill_type, is_primary, primary_stop_count);
     }
-    y + 12.0 // trailing gap before the divider
+    // The open `⋯` menu overlays the rows below it, so its targets go
+    // after every row; `hit_test_action` also checks them first.
+    if let Some((index, button)) = menu {
+        crate::widgets::property_panel_fill_menu::push_fill_menu_action_rects(
+            out,
+            index,
+            fills.len(),
+            button,
+            w,
+        );
+    }
 }

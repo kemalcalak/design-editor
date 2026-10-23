@@ -95,7 +95,9 @@ pub fn create_component_block_height(
 ) -> f32 {
     use crate::widgets::property_panel_visibility::ComponentButtonState as S;
     match state {
-        S::Create | S::DetachComponent => CREATE_COMPONENT_BLOCK_H,
+        // Create component lives in the panel header since #83.
+        S::Create => 0.0,
+        S::DetachComponent => CREATE_COMPONENT_BLOCK_H,
         S::Instance {
             component_count,
             picker_open,

@@ -139,7 +139,7 @@ Mutators on `Document`:
 | LayerContextMenu  | Right-click overlay on layer rows + page tabs (Rename / Duplicate / Delete / Group / Ungroup / Lock / Hide; subset on page tabs)     | `layer_context_menu.rs`                                                                                                                 |
 | AgentSettings     | Cmd+, modal — up to 960×760, sidebar nav (Agents / MCP / Images / Fonts / System) + scrollable body; Agents is list + detail      | `agent_settings_panel.rs` + `agent_settings_{agents,i18n,images,mcp,system}*.rs`                                                         |
 | theme             | shadcn-dark palette tokens (incl. `canvas_surface`)                                                                                  | `theme.rs`                                                                                                                              |
-| i18n              | 15 canonical locale catalogs, 1,718 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
+| i18n              | 15 canonical locale catalogs, 1,721 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
 
 ## Theme + i18n
 
@@ -150,7 +150,7 @@ Mutators on `Document`:
 - 15 supported locales (matches TS dropdown order): EnUs / ZhCn / ZhTw / Ja / Ko / Fr / Es / De / Pt / Ru / Hi / Tr / Th / Vi / Id. Each carries a `display_name()` (English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Français / Español / Deutsch / Português / Русский / हिन्दी / Türkçe / ไทย / Tiếng Việt / Bahasa Indonesia).
 - File ▸ Language (the menu's footer globe) opens a `LocalePicker` dropdown under the file pill. Native applies a clicked locale immediately; web closes the picker but keeps the old locale while an uninstalled runtime catalog is pending, then mutates `Document.ui.locale` once the JSON is ready. Clicking outside (or the Globe again) closes silently. The picker paints as the top-most overlay so it covers chat / status / canvas.
 - Multi-script chrome strings (한국어 / हिन्दी / ไทย / Tiếng Việt) render against per-codepoint typeface lookups (`FontMgr::match_family_style_character` cached per `i32` in `NativeBackend`), with each string broken into contiguous-typeface segments before draw.
-- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,718 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,718-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
+- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,721 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,721-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
 
   **Adding a new key: put it in `<locale>_collab.rs` (the terminal overflow shard), in all 15 locales.** The main tables sit close to the repo's 800-line ceiling (`zh_cn.rs` and `en.rs` are 775 lines), so new entries do not belong there — the `_panel` shards exist precisely to absorb overflow and have room. Only edit a main or `_git` table when you are changing the wording of a key that already lives there. Then bump the expected count in `catalog_integrity_tests.rs` and run:
 
@@ -180,6 +180,7 @@ Click anywhere outside the panel closes it silently. Locale lookups for the row 
 - `property_input: TextInputState` — live keystrokes, caret, select-all, blink, and composition state accumulate here. `apply_text` is focus-aware:
   - Numeric focuses (Position / Size / Rotation / Opacity / StrokeWidth) gate `[0-9]`, leading `-`, and a single `.`.
   - Hex focuses (FillHex / StrokeHex) preserve a sticky `#` prefix, accept `[0-9a-fA-F]` only, and cap the draft at 7 chars (`#RRGGBB`). No select-all-on-focus — backspace removes one char at a time, typing appends one.
+  - `Padding` (the Auto layout `Pad` field, #83) takes digits, `.` and spaces: a CSS shorthand of 1–4 values (`16`, `96 120`, `8 16 4`, `8 16 8 4`), parsed / formatted by `de-editor-core/src/padding_shorthand.rs` and committed through `commit_padding_shorthand`.
 - `property_input_draft` / caret fields are legacy mirrors while older preset-name and compatibility paint paths are retired.
 
 Hex parsing is forgiving: `parse_hex_color` zero-pads 1-5 char inputs to 6 and expands CSS shorthand `#RGB` → `#RRGGBB`, so mid-edit commits don't visibly "reset" the colour.
@@ -194,22 +195,27 @@ PropertyPanelAction
 ├── ToggleSizeFillWidth / FillHeight
 ├── ToggleSizeHugWidth / HugHeight
 ├── ToggleSizeClipContent
-├── ToggleFillTypePicker             head-row dropdown
-└── SetFillType(FillType)            Solid / LinearGradient / RadialGradient / Image
+├── ToggleLayoutAlignPopover         Auto layout header button → 3×3 grid + Packed / Space between / Space around
+├── ToggleFillMenu(index)            a fill row's `⋯` menu
+├── ToggleFillTypePicker(index)      the menu's type trigger
+├── SetFillType { index, fill_type } Solid / LinearGradient / RadialGradient / Image / …
+└── ToggleExportSection              Export header "+" / "−"
 ```
 
-The hit-test walker `action_button_rects_with_fill_picker(panel_rect, visible, fill_picker_open)` lives in `property_panel_layout.rs` and emits one `Rect` per action. Same y-walk math as `editable_input_rects` so paint + hit-test stay in sync regardless of which sections are filtered.
+The hit-test walker `action_button_rects_with_fill_picker(panel_rect, visible, …)` lives in `property_panel_layout.rs` and emits one `Rect` per action. **Every y-walk starts each section at `section_tops(...)`** (`property_panel_section_tops.rs`, built from the `VisibleSections` height helpers: `component_block_h`, `position_section_h`, `size_section_h`, and the per-section height fns): the action walker, `editable_input_rects`, the text section's anchor walk and `PropertyPanel::paint`, which `debug_assert`s that each painted section ends at the next top. Fill rows step through `fill_row_tops`. Open popovers (the alignment popover, a fill `⋯` menu) win `hit_test_action` over the sections they overlap.
 
-### Fill-type dropdown
+### Fill rows and the `⋯` menu (#83)
 
-`FillType { Solid, LinearGradient, RadialGradient, Image }` lives on `Document.ui`. The Fill section head row paints `<swatch> <type-label ▾> <opacity%> <X>`; clicking the label opens an overlay popover with 4 rows. Body branches per type:
+Each fill is one row (`fill_row_rects`): swatch, hex in JetBrains Mono (`text_metrics::MONO_FONT_FAMILY`; a gradient / image fill shows its type instead), opacity, the colour-variable button on the primary fill, and a trailing `⋯`. The menu (`property_panel_fill_menu.rs`, `editor_ui.fill_menu_open`) holds the type and blend triggers, move up / down and remove; the fill-type and blend pickers anchor to those triggers through the action walker, so the menu stays open under them. A focused hex keeps the mono face because `BaselineAdjustingBackend` can override the family jian's `TextInputView` draws and measures with. Bodies under the primary fill:
 
-- **Solid** — hex input + caret.
+- **Solid** — none (the hex is on the row).
 - **LinearGradient** — Angle row + 色标 header + 2 default stops.
 - **RadialGradient** — 色标 header + 2 stops (no angle).
 - **Image** — trigger row (thumbnail + current mode name) opening a 220px popover (`property_panel_image_fill.rs`): mode toggle (Fill / Fit / Crop / Tile; Crop enables drag-to-reframe on canvas with edge clamping), Tile scale input, upload well, 7 color-adjust sliders + reset. Schema `ImageFillBody.transform` is honored by both skia and CanvasKit renderers.
 
-`fill_body_height(fill_type)` in `property_panel_layout.rs` returns the body height per variant; layout walkers thread it through `VisibleSections { …, fill_type }` so sections after Fill stay aligned with paint when the user flips type. Outside clicks close the picker via a dedicated swallow branch in `apply_press`, above all other property-panel hit-tests.
+`fill_body_height_with_stops(fill_type, stops)` returns the body height per variant. Outside clicks close the menu and pickers through the hosts' dismiss tiers in `apply_press`; Escape closes a picker first, then the menu.
+
+The rest of the compact panel (#83): Auto layout is the direction segments plus one `Gap | Pad` row, with alignment in the header popover (`property_panel_flex.rs`); Create component is an icon in the pinned header (`property_panel_header::create_component_rect`); an Interactions section with no action and the Export section (collapsed by default, `editor_ui.export_section_open`) are their header and "+".
 
 ### Per-NodeKind section filtering
 
@@ -223,7 +229,8 @@ The panel is a `property_panel_*.rs` family in `de-editor-ui/src/widgets/` (plus
 - `property_panel_sections.rs` — section paint routines + `PropertyLabels` + `EditContext`.
 - `property_panel_inputs.rs` — shared paint helpers (label / divider / input variants), layout constants, `format_color_hex`, `to_jian_color`.
 - `property_panel_layout.rs` — `VisibleSections` / `SizeFlags` / `fill_body_height` + the two layout walkers.
-- `property_panel_fill.rs` (+ `_fill_body`, `_fill_image_body`, `_fill_picker`) — fill-type label table, picker overlay, head row, body variants.
+- `property_panel_fill.rs` (+ `_fill_body`, `_fill_image_body`, `_fill_picker`, `_fill_menu`) — fill-type label table, picker overlay, the single fill row, body variants, the `⋯` menu.
+- `property_panel_section_tops.rs` — `section_tops`, the shared section origins every y-walk uses.
 - `property_panel_dispatch.rs` (+ `_support`), `property_panel_commit.rs`, `property_panel_layout_ops.rs` — the **host-shared** action dispatch / draft lifecycle / layout writers; see "Shared host logic" below. These are not paint code and are called by both hosts.
 
 Everything else (`_code*`, `_effects`, `_export`, `_stroke`, `_text`, `_typography`, `_image_*`, `_instance`, `_interactions`, `_icon`, `_compositing`, …) follows the same one-concern-per-file rule.
@@ -280,7 +287,7 @@ Native (`design-editor`) + web (`shell-web`) both dispatch the following P1 keyb
 | `ArrowUp/Down/Left/Right` | `apply_nudge(dx, dy)` | Translates selection by 1 doc px, or 10 with `Shift`.                                                                              |
 | `[`                       | `apply_reorder(Down)` | Swap with previous sibling (back in z-order).                                                                                      |
 | `]`                       | `apply_reorder(Up)`   | Swap with next sibling (forward in z-order).                                                                                       |
-| `Escape`                  | `apply_escape`        | One layer per press, in priority order: property-focus → locale picker → shape picker → fill-type picker → chat focus → selection. |
+| `Escape`                  | `apply_escape`        | One layer per press, in priority order: property-focus → locale picker → shape picker → fill-type picker → fill `⋯` menu → chat focus → selection. |
 | `Enter`                   | `apply_send`          | Commits property edit or sends chat.                                                                                               |
 
 The shared implementation of these lives in `de_editor_core::host_keyboard_transitions` + `host_escape_transitions`; the host `keyboard*.rs` files are the platform arms.

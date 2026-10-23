@@ -39,12 +39,7 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
         F::SizeW => panel.snapshot.width.to_string(),
         F::SizeH => panel.snapshot.height.to_string(),
         F::LayoutGap => format_panel_number(panel.snapshot.layout_gap),
-        F::PaddingTop | F::PaddingRight | F::PaddingBottom | F::PaddingLeft => panel
-            .snapshot
-            .layout_padding
-            .value_for(focus)
-            .map(format_panel_number)
-            .unwrap_or_else(|| "0".to_string()),
+        F::Padding => panel.snapshot.layout_padding.shorthand(),
         F::Rotation => (panel.snapshot.rotation_deg.round() as i32).to_string(),
         F::PositionR => {
             if property_panel_corner::radii_are_uniform(panel.snapshot.corner_radii) {
@@ -361,6 +356,9 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
         }
         PropertyFocus::VideoSrc => {
             let _ = state.set_selected_video_src(draft.trim());
+        }
+        PropertyFocus::Padding => {
+            let _ = state.commit_padding_shorthand(&draft);
         }
         _ => {
             if let Ok(value) = draft.trim().parse::<f32>() {
