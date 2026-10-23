@@ -16,7 +16,9 @@
 #   3. node --check every runtime .js, so a syntax error cannot ship.
 #   4. The drift/privacy guards: vendored extractor, service-worker import
 #      graph, 15 locale catalogs and bounded design evidence.
-#   5. Stage the runtime files — and only those — into a clean directory.
+#   5. Stage the runtime files — and only those — into a clean directory, and
+#      stamp the staged manifest with the Cargo workspace version (the
+#      committed manifest keeps a 0.0.0 placeholder).
 #   6. Add pt_BR and pt_PT as copies of pt (see below).
 #   7. Zip the STAGE ROOT and list what went in.
 #
@@ -57,7 +59,7 @@ for argument in "$@"; do
   case "${argument}" in
     --skip-tests) SKIP_TESTS=1 ;;
     -h|--help)
-      sed -n '2,48p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '2,47p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *) printf 'unknown option: %s\n' "${argument}" >&2; exit 2 ;;
@@ -153,6 +155,18 @@ locale_count="$(find "${STAGE_DIR}/_locales" -mindepth 1 -maxdepth 1 -type d | w
 [ "${locale_count}" = "15" ] || fail "expected 15 locale catalogs, staged ${locale_count}"
 printf '  ✓ %d runtime file(s) + %s locale catalogs\n' "${#RUNTIME_FILES[@]}" "${locale_count}"
 
+# The committed manifest carries a 0.0.0 placeholder; the product version
+# lives only in the root Cargo.toml.
+VERSION="$(sh "${WORKSPACE_ROOT}/scripts/workspace-version.sh")"
+node -e '
+  const fs = require("fs");
+  const [file, version] = process.argv.slice(1);
+  const manifest = JSON.parse(fs.readFileSync(file, "utf8"));
+  manifest.version = version;
+  fs.writeFileSync(file, JSON.stringify(manifest, null, 2) + "\n");
+' "${STAGE_DIR}/manifest.json" "${VERSION}"
+printf '  ✓ manifest stamped with %s\n' "${VERSION}"
+
 step 6 "Add pt_BR and pt_PT as copies of pt"
 for regional in pt_BR pt_PT; do
   cp -R "${STAGE_DIR}/_locales/pt" "${STAGE_DIR}/_locales/${regional}"
@@ -160,9 +174,7 @@ done
 printf '  ✓ pt_BR, pt_PT (manifest name/description only; the popup uses pt)\n'
 
 step 7 "Zip"
-VERSION="$(node -e 'process.stdout.write(require(process.argv[1]).version)' \
-  "${STAGE_DIR}/manifest.json")"
-[ -n "${VERSION}" ] || fail "manifest.json carries no version"
+[ -n "${VERSION}" ] || fail "Cargo.toml carries no workspace version"
 ARCHIVE="${DIST_DIR}/de-chrome-extension-${VERSION}.zip"
 rm -f "${ARCHIVE}"
 # `-X` drops the extra file attributes (uid/gid, macOS resource forks) that

@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 rustup.rs adresinden `rustup-init.exe` dosyasını indirin ve çalıştırın. PowerShell'de aşağıdaki komutları çalıştırın. **`design-editor 0.8.4` sürümüne karşılık gelir**:
+    - 2.3 rustup.rs adresinden `rustup-init.exe` dosyasını indirin ve çalıştırın. PowerShell'de aşağıdaki komutları çalıştırın:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 WASM-JS bağımlılık oluşturma için wasm-bindgen-cli'yi yükleyin. PowerShell'de aşağıdaki komutu çalıştırın. **`design-editor 0.8.4` sürümüne karşılık gelir**:
+    - 2.4 WASM-JS bağımlılık oluşturma için wasm-bindgen-cli'yi yükleyin. PowerShell'de aşağıdaki komutu çalıştırın:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -177,4 +177,4 @@
     > 
     > Sayfa `/pkg/de_host_web.js` bulunamadığını belirtiyorsa, `web-bundle/` dizininde dosya eksiktir.
 
-3. Bu belge `design-editor 0.8.4` sürümü için yazılmıştır. Rustup araç zinciri sürümü `1.94`、wasm-bindgen-cli sürümü `0.2.117` ve skia-bindings sürümü `0.97.2` bu sürüme görelidir — diğer sürümler farklı olabilir.
+3. Rustup araç zinciri `1.94`, wasm-bindgen-cli `0.2.117` ve skia-bindings `0.97.2`, `rust-toolchain.toml` ile `Cargo.lock` dosyalarında sabitlenen sürümlerdir. Bu dosyalarda farklı bir sürüm yazıyorsa onu kullanın.

@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 Unduh `rustup-init.exe` dari rustup.rs dan jalankan. Eksekusi perintah berikut di PowerShell. **Sesuai dengan `design-editor 0.8.4`**:
+    - 2.3 Unduh `rustup-init.exe` dari rustup.rs dan jalankan. Eksekusi perintah berikut di PowerShell:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Instal wasm-bindgen-cli untuk pembuatan binding WASM-JS. Eksekusi perintah berikut di PowerShell. **Sesuai dengan `design-editor 0.8.4`**:
+    - 2.4 Instal wasm-bindgen-cli untuk pembuatan binding WASM-JS. Eksekusi perintah berikut di PowerShell:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -177,4 +177,4 @@
     > 
     > Jika halaman melaporkan `/pkg/de_host_web.js` tidak ditemukan, file tersebut tidak ada di `web-bundle/`.
 
-3. Dokumen ini ditulis untuk versi `design-editor 0.8.4`. Versi toolchain rustup `1.94`、wasm-bindgen-cli `0.2.117` dan skia-bindings `0.97.2` selaras dengan versi ini — versi lain mungkin berbeda.
+3. Toolchain rustup `1.94`, wasm-bindgen-cli `0.2.117` dan skia-bindings `0.97.2` sesuai dengan versi yang dipatok di `rust-toolchain.toml` dan `Cargo.lock`. Jika berkas tersebut menyebut versi lain, gunakan versi itu.

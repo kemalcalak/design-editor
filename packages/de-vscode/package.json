@@ -2,7 +2,6 @@
   "name": "design-editor-vscode",
   "displayName": "Design Editor",
   "description": "Design Editor design-as-code integration for VS Code: .op file editing, MCP configuration, AI skills, and code generation.",
-  "version": "0.8.3",
   "publisher": "design-editor",
   "private": true,
   "license": "MIT",

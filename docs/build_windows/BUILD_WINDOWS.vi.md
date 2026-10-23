@@ -57,14 +57,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 Tải `rustup-init.exe` từ rustup.rs và chạy. Thực thi các lệnh sau trong PowerShell. **Tương ứng `design-editor 0.8.4`**:
+    - 2.3 Tải `rustup-init.exe` từ rustup.rs và chạy. Thực thi các lệnh sau trong PowerShell:
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Cài đặt wasm-bindgen-cli để tạo ràng buộc WASM-JS. Thực thi lệnh sau trong PowerShell. **Tương ứng `design-editor 0.8.4`**:
+    - 2.4 Cài đặt wasm-bindgen-cli để tạo ràng buộc WASM-JS. Thực thi lệnh sau trong PowerShell:
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -177,4 +177,4 @@
     > 
     > Nếu trang hiển thị không tìm thấy `/pkg/de_host_web.js`, file bị thiếu trong `web-bundle/`.
 
-3. Tài liệu này được viết cho phiên bản `design-editor 0.8.4`. Phiên bản chuỗi công cụ rustup `1.94`、wasm-bindgen-cli `0.2.117` và skia-bindings `0.97.2` được căn chỉnh theo phiên bản này — các phiên bản khác có thể khác biệt.
+3. Chuỗi công cụ rustup `1.94`, wasm-bindgen-cli `0.2.117` và skia-bindings `0.97.2` khớp với các phiên bản được cố định trong `rust-toolchain.toml` và `Cargo.lock`. Nếu các tệp đó ghi phiên bản khác, hãy dùng phiên bản đó.

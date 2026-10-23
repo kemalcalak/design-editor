@@ -412,7 +412,6 @@
               -e 's|^#!/usr/bin/env node$|#!${pkgs.nodejs_22}/bin/node|' {} +
             mkdir -p packages/de-web-sdk/wasm
             cp -R ${webSdkWasm}/. packages/de-web-sdk/wasm/
-            bun run --cwd packages sync-version:check
             bun run --cwd packages lint
             bun run --cwd packages/de-web-sdk typecheck
             bun run --cwd packages/de-web-sdk test

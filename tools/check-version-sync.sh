@@ -10,7 +10,7 @@ script_dir=$(CDPATH='' cd "$(dirname "$0")" && pwd -P)
 repo_root=$(CDPATH='' cd "$script_dir/.." && pwd -P)
 fixture_version=1.0.0
 
-for required_command in cargo jq bun rg; do
+for required_command in cargo jq rg; do
     if ! command -v "$required_command" >/dev/null 2>&1; then
         printf 'version-sync: required command not found: %s\n' "$required_command" >&2
         exit 1
@@ -301,7 +301,7 @@ validate_manifest_workspace_version() {
 validate_workspace_package_versions() {
     if ! metadata=$(cargo metadata --no-deps --format-version 1 --locked); then
         report_missing Cargo.lock \
-            'cargo metadata --locked failed; run scripts/sync-version.sh to refresh the lockfile'
+            'cargo metadata --locked failed; run scripts/bump-version.sh to refresh the lockfile'
         return
     fi
 
@@ -338,28 +338,52 @@ validate_workspace_package_versions() {
     done <<< "$package_rows"
 }
 
-validate_package_versions() {
-    package_status=0
-    package_output=$(cd packages && bun run sync-version:check 2>&1) || package_status=$?
-    if [[ "$package_status" -ne 0 ]]; then
-        printf '%s\n' "$package_output" >&2
-        report_missing packages \
-            'bun run sync-version:check failed; run scripts/sync-version.sh to repair package drift'
-    fi
+validate_package_manifests_carry_no_version() {
+    for manifest in packages/package.json packages/*/package.json; do
+        [[ -f "$manifest" ]] || continue
+        if jq -e 'has("version")' "$manifest" >/dev/null; then
+            line=$(rg --line-number --max-count 1 '^[[:space:]]*"version"[[:space:]]*:' \
+                "$manifest" | cut -d: -f1 || true)
+            printf '%s:%s: error: package manifests must not carry a version; build and packaging steps read it from Cargo.toml\n' \
+                "$manifest" "${line:-1}" >&2
+            errors=1
+        fi
+    done
+}
+
+validate_sdk_version_sources() {
+    for sdk in de-web-sdk de-web-sdk-react de-web-sdk-vue; do
+        require_statement "packages/$sdk/src/index.ts" \
+            'export const VERSION: string = __DE_VERSION__;' \
+            'SDK VERSION must come from the build-time __DE_VERSION__ define, not a literal'
+        for config in tsup.config.ts vitest.config.ts; do
+            require_regex "packages/$sdk/$config" 'define: versionDefine\(\)' \
+                "${config} must define __DE_VERSION__ from packages/scripts/workspace-version.mjs"
+        done
+    done
 }
 
 validate_chrome_extension_manifest_version() {
     manifest=packages/de-chrome-extension/manifest.json
     if [[ ! -f "$manifest" ]]; then
         report_missing "$manifest" \
-            'Chrome extension manifest is missing; it must exist and carry the Cargo workspace version'
+            'Chrome extension manifest is missing'
         return
     fi
     manifest_version=$(jq -r '.version' "$manifest")
-    if [[ "$manifest_version" != "$current_version" ]]; then
+    if [[ "$manifest_version" != 0.0.0 ]]; then
         report_missing "$manifest" \
-            "Chrome extension manifest version ${manifest_version} must match Cargo workspace version ${current_version}; edit the \"version\" field (scripts/sync-version.sh does not rewrite this file — see packages/de-chrome-extension/README.md)"
+            "Chrome extension manifest version must stay the 0.0.0 placeholder (found ${manifest_version}); scripts/package-extension.sh stamps the Cargo workspace version into the packaged copy"
     fi
+    require_regex packages/de-chrome-extension/scripts/package-extension.sh \
+        'scripts/workspace-version[.]sh' \
+        'Chrome extension packaging must stamp the Cargo workspace version'
+}
+
+validate_vscode_extension_version_stamp() {
+    require_regex .github/workflows/vscode-extension.yml \
+        'scripts/workspace-version[.]sh' \
+        'VS Code packaging must stamp the Cargo workspace version before vsce package'
 }
 
 validate_release_tag() {
@@ -428,8 +452,10 @@ validate_rust_product_version_producers() {
 }
 
 validate_workspace_package_versions
-validate_package_versions
+validate_package_manifests_carry_no_version
+validate_sdk_version_sources
 validate_chrome_extension_manifest_version
+validate_vscode_extension_version_stamp
 validate_release_tag
 validate_cli_bundle_version_template
 validate_rust_product_version_producers

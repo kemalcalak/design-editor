@@ -66,14 +66,14 @@
         git-fetch-with-cli = true
         ```
 
-    - 2.3 从 rustup\.rs 下载 `rustup-init.exe`，双击`rustup-init.exe`安装配置，PowerShell执行以下命令, **对应 `design-editor 0.8.4` 版本**
+    - 2.3 从 rustup\.rs 下载 `rustup-init.exe`，双击`rustup-init.exe`安装配置，PowerShell执行以下命令：
 
         ```powershell
         rustup toolchain install 1.94
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 安装 wasm‑bindgen‑cli，用于处理 WASM 与 JS 的绑定生成，PowerShell 执行以下命令, **对应 `design-editor 0.8.4` 版本**
+    - 2.4 安装 wasm‑bindgen‑cli，用于处理 WASM 与 JS 的绑定生成，PowerShell 执行以下命令：
 
         ```powershell
         cargo install -f wasm-bindgen-cli --version 0.2.117
@@ -186,5 +186,5 @@
     > 
     > 页面报找不到 `/pkg/de_host_web.js` 时，是文件夹没有 `web-bundle/de_host_web.js` 文件
 
-3. 本文档以 `design-editor 0.8.4` 版本编写，rustup 工具链版本 `1.94`、wasm-bindgen-cli 版本 `0.2.117`、skia-bindings 版本 `0.97.2` 均与该版本对齐，其他版本可能存在差异
+3. rustup 工具链 `1.94`、wasm-bindgen-cli `0.2.117`、skia-bindings `0.97.2` 对应 `rust-toolchain.toml` 与 `Cargo.lock` 中固定的版本；若这些文件中的版本不同，请以它们为准
 

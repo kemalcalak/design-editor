@@ -17,6 +17,8 @@ on:
       - 'packages/bun.lock'
       # build.mjs extracts the bundled AI skill from the CLI's asset.
       - 'crates/de-cli/assets/skill-bundle.json'
+      # The VSIX version is read from the workspace manifest.
+      - 'Cargo.toml'
       - '.github/workflows/vscode-extension.yml'
   pull_request:
     paths:
@@ -24,6 +26,7 @@ on:
       - 'packages/package.json'
       - 'packages/bun.lock'
       - 'crates/de-cli/assets/skill-bundle.json'
+      - 'Cargo.toml'
       - '.github/workflows/vscode-extension.yml'
 
 # One run per PR (or per branch push); a newer push to a PR cancels the
@@ -70,8 +73,11 @@ jobs:
 
       - name: Package .vsix
         working-directory: packages/de-vscode
+        # package.json carries no version; vsce needs one, so stamp the
+        # product version from the root Cargo.toml into this checkout only.
         run: |
-          version="$(node -p "require('./package.json').version")"
+          version="$(sh ../../scripts/workspace-version.sh)"
+          npm pkg set version="$version"
           bunx @vscode/vsce package --no-dependencies --allow-missing-repository \
             --out "design-editor-vscode-${version}.vsix"
           ls -la ./*.vsix

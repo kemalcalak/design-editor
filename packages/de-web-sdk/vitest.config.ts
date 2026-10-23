@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vitest/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { versionDefine } from '../scripts/workspace-version.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -29,5 +30,6 @@ function wasmStubPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [wasmStubPlugin()],
+  define: versionDefine(),
   test: { environment: 'jsdom', globals: true },
 });
