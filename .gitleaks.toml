@@ -1,0 +1,23 @@
+# gitleaks configuration, read by the `secrets` job in
+# .github/workflows/security.yml.
+#
+# Every entry here is a finding that was looked at and accepted. Add a reason
+# next to it; never allowlist a whole directory or rule.
+
+[extend]
+useDefault = true
+
+# All twelve findings of the first full-history scan (2026-10-23) were test
+# fixtures in the retired `op-*` crates, since deleted from the tree. They
+# only exist in old commits, so they can only be allowlisted by value. The
+# singular `[allowlist]` is deliberate: gitleaks-action v2.3.9 bundles
+# gitleaks 8.24, which predates `[[allowlists]]`.
+[allowlist]
+description = "Test fixtures in the retired op-* crates"
+regexTarget = "match"
+regexes = [
+  # JWKS / policy URLs on reserved .example hosts (op-auth-bridge, collab runtime tests).
+  '''auth(\.self-hosted)?\.example:\d+/api/v1/collab/(jwks|policy)''',
+  # Placeholder hex token_id in hosted-auth tests (op-auth-bridge, op-host-services).
+  '''token_id"\s*:\s*"(1234567890abcdef|0123456789abcdef){2}"''',
+]
