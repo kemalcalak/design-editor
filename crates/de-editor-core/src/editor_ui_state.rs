@@ -19,6 +19,7 @@ pub mod git_panel;
 pub mod groups;
 pub mod home;
 mod methods;
+mod modal_pointer;
 pub mod pickers;
 pub mod slides_panel_state;
 #[cfg(test)]

@@ -170,6 +170,15 @@ impl WidgetHostNative {
         if !self.home_visible() {
             return None;
         }
+        // A dialog Home opened (Settings, export, …) owns the pointer: step
+        // aside so the modal tier below takes the move, and drop whatever
+        // Home had lit up when the dialog opened (#86).
+        if self.editor_state.editor_ui.pointer_modal_open() {
+            if self.editor_state.editor_ui.clear_hover_behind_modal() {
+                self.mark_dirty();
+            }
+            return None;
+        }
         let point = Point2D::new(x, y);
         let home = HomeSurface::for_editor_at(&self.editor_state, self.now_ms)?;
         let next = home.hit_test(viewport_width, viewport_height, point);

@@ -281,3 +281,39 @@ fn the_title_strip_drags_the_window_except_over_controls() {
         "below the strip"
     );
 }
+
+#[test]
+fn a_dialog_over_home_keeps_the_cards_behind_it_unhovered() {
+    let mut host = host_with_home();
+    host.last_viewport_w = W;
+    host.last_viewport_h = H;
+    let card = layout(&host).mcp_card;
+    let point = center(card);
+    // Without a dialog the card takes the hover.
+    host.apply_cursor_move(point.x, point.y);
+    assert_eq!(
+        host.editor_state().editor_ui.home.hover,
+        Some(HomeHit::McpCard)
+    );
+
+    // Open Settings over Home: the card behind the scrim loses the hover
+    // and moving over it again must not bring it back.
+    host.editor_state_mut().editor_ui.agent_settings_open = true;
+    host.apply_cursor_move(point.x + 1.0, point.y);
+    assert_eq!(host.editor_state().editor_ui.home.hover, None);
+    let recent = center(layout(&host).open_file);
+    host.apply_cursor_move(recent.x, recent.y);
+    assert_eq!(host.editor_state().editor_ui.home.hover, None);
+    assert_eq!(
+        host.cursor_hint(recent.x, recent.y, W, H),
+        crate::widget_host::CursorHint::Default
+    );
+
+    // Closing the dialog hands the pointer back.
+    host.editor_state_mut().editor_ui.agent_settings_open = false;
+    host.apply_cursor_move(point.x, point.y);
+    assert_eq!(
+        host.editor_state().editor_ui.home.hover,
+        Some(HomeHit::McpCard)
+    );
+}

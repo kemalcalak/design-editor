@@ -29,7 +29,7 @@ impl WidgetHostNative {
     pub fn cursor_hint(&self, x: f32, y: f32, viewport_w: f32, viewport_h: f32) -> CursorHint {
         use de_editor_core::Tool;
         // Modal overlays — keep the pointer the OS default.
-        if self.editor_state.editor_ui.agent_settings_open
+        if self.editor_state.editor_ui.pointer_modal_open()
             || self.editor_state.ui.color_picker.is_some()
         {
             return CursorHint::Default;

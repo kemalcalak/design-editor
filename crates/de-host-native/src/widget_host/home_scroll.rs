@@ -15,7 +15,7 @@ impl WidgetHostNative {
     ) -> bool {
         // A modal Home opened scrolls itself (Settings ▸ MCP's agent list,
         // the Images and Fonts tabs); the column under it stays put.
-        if !self.home_visible() || self.editor_state.editor_ui.agent_settings_open {
+        if !self.home_visible() || self.editor_state.editor_ui.pointer_modal_open() {
             return false;
         }
         // The top bar stays pinned; the sidebar does not scroll.
