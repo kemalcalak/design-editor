@@ -233,6 +233,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "Bitişik",
         "layout.auto" => "Otomatik",
         "padding.short" => "Dolgu",
+        "dialog.penDevImportTitle" => "pen.dev'den içe aktarıldı",
+        "dialog.penDevImportBody" => "“{{name}}” dosyasının bazı kısımları aktarılamadı:\n\n{{details}}\n\nGeri kalanı kaydedilmemiş yeni bir belge olarak açıldı. Özgün dosya değiştirilmedi.",
         _ => return None,
     })
 }

@@ -236,6 +236,22 @@ fn resolve_number_or_expression(
 pub fn resolve_node_for_canvas(node: &mut PenNode, vars: Option<&Vars>, theme: &Theme) -> bool {
     let mut changed = false;
 
+    // A node's own `theme` (e.g. `{ "mode": "dark" }` on one board of a
+    // light document) overrides the inherited axes for its whole subtree.
+    let scoped_theme;
+    let theme = match node.base().theme.as_ref().filter(|own| !own.is_empty()) {
+        Some(own) => {
+            let mut merged = theme.clone();
+            merged.extend(
+                own.iter()
+                    .map(|(axis, value)| (axis.clone(), value.clone())),
+            );
+            scoped_theme = merged;
+            &scoped_theme
+        }
+        None => theme,
+    };
+
     // Opacity — `NumberOrExpression` on the shared base.
     if let Some(opacity) = node.base_mut().opacity.as_mut() {
         changed |= resolve_number_or_expression(opacity, vars, theme, 1.0);

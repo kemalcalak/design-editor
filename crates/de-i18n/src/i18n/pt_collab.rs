@@ -233,6 +233,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "Agrupado",
         "layout.auto" => "Auto",
         "padding.short" => "Recuo",
+        "dialog.penDevImportTitle" => "Importado do pen.dev",
+        "dialog.penDevImportBody" => "Algumas partes de “{{name}}” não puderam ser importadas:\n\n{{details}}\n\nO restante foi aberto como um novo documento não salvo. O arquivo original não foi alterado.",
         _ => return None,
     })
 }

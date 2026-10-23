@@ -235,6 +235,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "묶음",
         "layout.auto" => "자동",
         "padding.short" => "패딩",
+        "dialog.penDevImportTitle" => "pen.dev에서 가져옴",
+        "dialog.penDevImportBody" => "“{{name}}”의 일부를 가져오지 못했습니다:\n\n{{details}}\n\n나머지는 저장되지 않은 새 문서로 열렸습니다. 원본 파일은 변경되지 않았습니다.",
         _ => return None,
     })
 }

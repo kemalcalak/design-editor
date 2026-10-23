@@ -487,8 +487,6 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn opencode_catalog_query_kills_hung_process_tree_at_deadline() {
-        use std::os::unix::fs::PermissionsExt;
-
         let script = std::env::temp_dir().join(format!(
             "design-editor-opencode-models-{}-{}",
             std::process::id(),
@@ -497,12 +495,10 @@ mod tests {
                 .expect("clock")
                 .as_nanos()
         ));
-        std::fs::write(
+        crate::test_support::write_executable_stub(
             &script,
             "#!/bin/sh\nprintf 'anthropic/claude-test\\n'\nsleep 30\n",
-        )
-        .expect("write fake opencode");
-        std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+        );
 
         let started = Instant::now();
         let result = opencode_models_from_exe(&script, Duration::from_millis(100));

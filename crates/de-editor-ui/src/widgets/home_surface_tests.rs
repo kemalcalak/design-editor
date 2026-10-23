@@ -33,7 +33,7 @@ fn recent_entries_drop_the_extension_and_abbreviate_the_home_folder() {
     let mut state = visible_state();
     state.editor_ui.recent_files = vec![
         RecentFile {
-            path: "/Users/kemal/dev/seriai/design/seriai-landing.op".into(),
+            path: "/Users/kemal/dev/acme/design/acme-landing.op".into(),
             modified_at: 10,
         },
         RecentFile {
@@ -46,8 +46,8 @@ fn recent_entries_drop_the_extension_and_abbreviate_the_home_folder() {
         },
     ];
     let home = HomeSurface::for_editor(&state).unwrap();
-    assert_eq!(home.recent[0].name, "seriai-landing");
-    assert_eq!(home.recent[0].folder, "~/dev/seriai/design");
+    assert_eq!(home.recent[0].name, "acme-landing");
+    assert_eq!(home.recent[0].folder, "~/dev/acme/design");
     assert_eq!(home.recent[1].name, "deck");
     assert_eq!(home.recent[1].folder, "~\\Desktop");
     assert_eq!(home.recent[2].folder, "/tmp");

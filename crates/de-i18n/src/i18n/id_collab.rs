@@ -233,6 +233,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "Rapat",
         "layout.auto" => "Otomatis",
         "padding.short" => "Padding",
+        "dialog.penDevImportTitle" => "Diimpor dari pen.dev",
+        "dialog.penDevImportBody" => "Beberapa bagian “{{name}}” tidak dapat dibawa:\n\n{{details}}\n\nSisanya dibuka sebagai dokumen baru yang belum disimpan. File asli tidak diubah.",
         _ => return None,
     })
 }

@@ -233,6 +233,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "紧凑",
         "layout.auto" => "自动",
         "padding.short" => "内边距",
+        "dialog.penDevImportTitle" => "已从 pen.dev 导入",
+        "dialog.penDevImportBody" => "“{{name}}”中有部分内容无法导入：\n\n{{details}}\n\n其余内容已作为新的未保存文档打开。原文件未被修改。",
         _ => return None,
     })
 }

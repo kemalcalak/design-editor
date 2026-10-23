@@ -233,6 +233,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "Плотно",
         "layout.auto" => "Авто",
         "padding.short" => "Отступ",
+        "dialog.penDevImportTitle" => "Импортировано из pen.dev",
+        "dialog.penDevImportBody" => "Некоторые части «{{name}}» не удалось перенести:\n\n{{details}}\n\nОстальное открыто как новый несохранённый документ. Исходный файл не изменён.",
         _ => return None,
     })
 }

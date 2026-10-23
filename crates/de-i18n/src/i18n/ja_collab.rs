@@ -233,6 +233,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "詰める",
         "layout.auto" => "自動",
         "padding.short" => "余白",
+        "dialog.penDevImportTitle" => "pen.dev から読み込みました",
+        "dialog.penDevImportBody" => "“{{name}}” の一部を読み込めませんでした:\n\n{{details}}\n\n残りは未保存の新規ドキュメントとして開きました。元のファイルは変更されていません。",
         _ => return None,
     })
 }

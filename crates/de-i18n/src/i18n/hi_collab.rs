@@ -233,6 +233,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "सघन",
         "layout.auto" => "स्वतः",
         "padding.short" => "पैडिंग",
+        "dialog.penDevImportTitle" => "pen.dev से आयात किया गया",
+        "dialog.penDevImportBody" => "“{{name}}” के कुछ हिस्से नहीं लाए जा सके:\n\n{{details}}\n\nबाकी हिस्सा एक नए, बिना सहेजे दस्तावेज़ के रूप में खुला है। मूल फ़ाइल नहीं बदली गई है।",
         _ => return None,
     })
 }

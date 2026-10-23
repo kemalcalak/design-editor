@@ -233,6 +233,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "Gepackt",
         "layout.auto" => "Auto",
         "padding.short" => "Innen",
+        "dialog.penDevImportTitle" => "Aus pen.dev importiert",
+        "dialog.penDevImportBody" => "Einige Teile von „{{name}}“ konnten nicht übernommen werden:\n\n{{details}}\n\nDer Rest wurde als neues, ungespeichertes Dokument geöffnet. Die Originaldatei bleibt unverändert.",
         _ => return None,
     })
 }

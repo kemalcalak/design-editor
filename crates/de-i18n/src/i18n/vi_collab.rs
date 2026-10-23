@@ -233,6 +233,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.packed" => "Sát nhau",
         "layout.auto" => "Tự động",
         "padding.short" => "Đệm",
+        "dialog.penDevImportTitle" => "Đã nhập từ pen.dev",
+        "dialog.penDevImportBody" => "Không thể chuyển một số phần của “{{name}}”:\n\n{{details}}\n\nPhần còn lại đã mở thành một tài liệu mới chưa lưu. Tệp gốc không bị thay đổi.",
         _ => return None,
     })
 }

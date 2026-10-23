@@ -9,12 +9,16 @@ pub struct DocumentLoadReport {
     pub used_legacy_sidecar: bool,
     /// The declared schema is malformed or newer than this build can write.
     pub rewrite_blocked_by_schema_warning: bool,
+    /// The file was a pen.dev document converted on open. It stays an
+    /// import source: the editor binds no path to it and never rewrites it.
+    pub pen_dev_import: Option<de_pen_loader::pen_dev::PenDevReport>,
 }
 
 impl DocumentLoadReport {
     /// Whether a current-shape rewrite is both useful and known to be safe.
     pub fn needs_schema_upgrade(&self) -> bool {
         !self.rewrite_blocked_by_schema_warning
+            && self.pen_dev_import.is_none()
             && (self.normalized_legacy
                 || self.patched_legacy_version.is_some()
                 || self.inferred_editor_meta
