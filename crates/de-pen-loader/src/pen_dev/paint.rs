@@ -7,7 +7,7 @@
 
 use serde_json::{json, Map, Value};
 
-use super::nodes::Ctx;
+use super::nodes::{Ctx, Role};
 use super::{images, PenDevReport};
 
 /// Replace a node's pen.dev `fill` (one fill or a list, colours as strings)
@@ -22,15 +22,20 @@ pub(super) fn convert_fill_key(map: &mut Map<String, Value>, ctx: &mut Ctx<'_>) 
     }
 }
 
+/// pen.dev stacks fills bottom-up (the last one paints on top); the canonical
+/// stack is top-down like CSS backgrounds (`canvas_viewport_fill_layers.rs`
+/// paints it in reverse), so the order flips here.
 fn convert_fills(fills: Value, ctx: &mut Ctx<'_>) -> Vec<Value> {
     let items = match fills {
         Value::Array(items) => items,
         single => vec![single],
     };
-    items
+    let mut fills: Vec<Value> = items
         .into_iter()
         .filter_map(|fill| convert_fill(fill, ctx))
-        .collect()
+        .collect();
+    fills.reverse();
+    fills
 }
 
 fn convert_fill(fill: Value, ctx: &mut Ctx<'_>) -> Option<Value> {
@@ -71,11 +76,25 @@ fn convert_fill(fill: Value, ctx: &mut Ctx<'_>) -> Option<Value> {
 /// Fold pen.dev's `stroke` paint and its sibling `strokeWidth` /
 /// `strokeLinecap` / `strokeLinejoin` / `strokeAlignment` into one canonical
 /// `stroke` object.
-pub(super) fn convert_stroke(map: &mut Map<String, Value>, ctx: &mut Ctx<'_>) {
+///
+/// An instance patch merges key by key, so the canonical `stroke` object
+/// replaces the component's whole stroke: a patch of only the width (or
+/// only the paint) cannot be expressed and is reported.
+pub(super) fn convert_stroke(map: &mut Map<String, Value>, role: Role, ctx: &mut Ctx<'_>) {
     let width = map.remove("strokeWidth");
     let cap = map.remove("strokeLinecap");
     let join = map.remove("strokeLinejoin");
     let align = map.remove("strokeAlignment");
+    let partial_patch = role == Role::Patch
+        && (width.is_none() || !map.contains_key("stroke"))
+        && (map.contains_key("stroke")
+            || width.is_some()
+            || cap.is_some()
+            || join.is_some()
+            || align.is_some());
+    if partial_patch {
+        ctx.report.note("partial stroke override");
+    }
     let Some(stroke) = map.remove("stroke") else {
         return;
     };

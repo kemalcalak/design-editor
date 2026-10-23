@@ -23,11 +23,6 @@ pub(super) fn pen_default_out_path(pen_path: &str) -> String {
 /// Convert a pen.dev `.pen` into a new `.op`, inlining the image files it
 /// keeps in its folder. The source is never written.
 pub(super) fn run_import_pen(pen_path: &str, out_path: &str) -> Result<String, CliError> {
-    if Path::new(pen_path) == Path::new(out_path) {
-        return Err(CliError::Document(format!(
-            "import {pen_path:?}: --out must differ from the source; pen.dev files are never overwritten"
-        )));
-    }
     let src = std::fs::read_to_string(pen_path)
         .map_err(|e| CliError::Io(format!("read {pen_path:?}: {e}")))?;
     if de_pen_loader::pen_dev::sniff_pen_dev_version(&src).is_none() {
@@ -35,13 +30,20 @@ pub(super) fn run_import_pen(pen_path: &str, out_path: &str) -> Result<String, C
             "import {pen_path:?}: not a pen.dev document (schema 2.9 or later); open it directly instead"
         )));
     }
+    // Content, not path text: `./design.pen` and `design.pen` are the same
+    // file, and any other pen.dev document is off limits too.
+    if de_pen_loader::pen_dev::sniff_pen_dev_file(Path::new(out_path)).is_some() {
+        return Err(CliError::Document(format!(
+            "import {pen_path:?}: {out_path:?} is a pen.dev document; pen.dev files are never overwritten"
+        )));
+    }
     let assets = de_pen_loader::pen_dev::folder_assets(Path::new(pen_path));
     let loaded = de_pen_loader::payload::load_canonical_with_assets(&src, &assets)
         .map_err(|e| CliError::Document(format!("import {pen_path:?}: {e}")))?;
     let report = loaded.compatibility.pen_dev.unwrap_or_default();
     let document = loaded.loaded.value;
-    // Same on-disk form as the Figma import: shared bitmaps go to the
-    // `images` table once instead of once per referencing fill.
+    // Shared bitmaps go to the `images` table once, as in the Figma import;
+    // indented like an editor save so the result diffs line by line.
     let mut value = serde_json::to_value(&document)
         .map_err(|e| CliError::Payload(format!("serialize {out_path:?}: {e}")))?;
     jian_ops_schema::image_table::externalize_images(&mut value);
@@ -105,6 +107,16 @@ mod tests {
         std::fs::write(&pen, r#"{"version":"2.21","children":[]}"#).unwrap();
         let path = pen.to_str().unwrap();
         assert!(run_import_pen(path, path).is_err());
+        let dotted = format!("{}/./design.pen", dir.display());
+        assert!(
+            run_import_pen(path, &dotted).is_err(),
+            "same file, other spelling"
+        );
+        assert!(pen.exists());
+        assert_eq!(
+            std::fs::read_to_string(&pen).unwrap(),
+            r#"{"version":"2.21","children":[]}"#
+        );
         let op = dir.join("plain.op");
         std::fs::write(&op, r#"{"version":"1.0","children":[]}"#).unwrap();
         let out = dir.join("out.op");

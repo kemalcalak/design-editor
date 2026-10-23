@@ -223,6 +223,8 @@ fn load_into_host(
 
 /// Tell the user what a pen.dev import could not bring over (shader fills,
 /// notes, missing image files, …) instead of dropping it silently.
+/// Desktop only: the web host refuses pen.dev sources for now, because a
+/// browser upload carries no image folder (`ingest_op_source`).
 fn alert_pen_dev_losses(
     host: &WidgetHostNative,
     path: &std::path::Path,

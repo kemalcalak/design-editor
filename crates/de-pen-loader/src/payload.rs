@@ -368,19 +368,30 @@ pub fn load_canonical(
 pub fn load_canonical_with_compatibility(
     src: &str,
 ) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
-    load_canonical_with_assets(src, &crate::pen_dev::no_assets)
+    load_canonical_inner(src, None)
 }
 
-/// [`load_canonical_with_compatibility`] for a document that may be a pen.dev
-/// file: `assets` reads the image files it references next to it.
+/// [`load_canonical_with_compatibility`] for a file the user opened: a
+/// pen.dev source is converted (see [`crate::pen_dev`]) and `assets` reads
+/// the image files it keeps next to it. The plain entry points above never
+/// convert, so internal JSON round-trips and not-yet-wired surfaces keep
+/// their previous behaviour.
 pub fn load_canonical_with_assets(
     src: &str,
     assets: crate::pen_dev::AssetReader<'_>,
 ) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
+    load_canonical_inner(src, Some(assets))
+}
+
+fn load_canonical_inner(
+    src: &str,
+    assets: Option<crate::pen_dev::AssetReader<'_>>,
+) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
     // A pen.dev file can be valid canonical JSON with different defaults
-    // (frames lay out horizontally), so it must never take the as-is path.
-    let pen_dev_source = crate::pen_dev::sniff_pen_dev_version(src).is_some();
-    if !pen_dev_source {
+    // (frames lay out horizontally), so a converted one never takes the
+    // as-is path.
+    let assets = assets.filter(|_| crate::pen_dev::sniff_pen_dev_version(src).is_some());
+    if assets.is_none() {
         if let Some(loaded) = fast_load::try_load_preserve(src) {
             return Ok(CanonicalLoad {
                 loaded,
@@ -418,17 +429,16 @@ pub fn load_canonical_with_assets(
     }
 }
 
-/// Convert a pen.dev document in place; `None` for every other document.
-/// Runs before the legacy repairs, which finish the solid-colour and
-/// gradient spellings pen.dev shares with the older Pencil files.
+/// Convert a pen.dev document in place. `assets` is `Some` only when the
+/// caller asked for conversion and the source sniffed as pen.dev; every
+/// other document passes `None` and is left alone. Runs before the legacy repairs, which finish the
+/// solid-colour and gradient spellings pen.dev shares with older Pencil
+/// files.
 fn convert_pen_dev(
     value: &mut serde_json::Value,
-    assets: crate::pen_dev::AssetReader<'_>,
+    assets: Option<crate::pen_dev::AssetReader<'_>>,
 ) -> Option<crate::pen_dev::PenDevReport> {
-    if !crate::pen_dev::is_pen_dev_document(value) {
-        return None;
-    }
-    let report = crate::pen_dev::convert(value, assets);
+    let report = crate::pen_dev::convert(value, assets?);
     eprintln!(
         "[open] converted pen.dev {} document{}",
         report.source_version,
@@ -651,7 +661,7 @@ fn collect_viewport_writes_deep(
 
 fn load_canonical_deep(
     src: &str,
-    assets: crate::pen_dev::AssetReader<'_>,
+    assets: Option<crate::pen_dev::AssetReader<'_>>,
 ) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
     // Always use one stack-protected DOM for the deep compatibility pipeline.
     // Legacy repair and version patching must not depend on the presence of an

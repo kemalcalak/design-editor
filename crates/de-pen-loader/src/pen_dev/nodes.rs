@@ -24,9 +24,11 @@ const EDITOR_ONLY_KEYS: &[&str] = &["placeholder", "context", "metadata"];
 pub(super) struct Ctx<'a> {
     pub(super) assets: AssetReader<'a>,
     pub(super) report: &'a mut PenDevReport,
-    /// Relative image URL → data URL (`None` once known missing), so a
-    /// bitmap used by many fills is read and encoded once.
+    /// Relative image URL → `op-image:` reference (`None` once known
+    /// missing), so a bitmap used by many fills is read and encoded once.
     pub(super) images: HashMap<String, Option<String>>,
+    /// Table id → data URL, written to the document's `images` table.
+    pub(super) image_table: Map<String, Value>,
 }
 
 impl<'a> Ctx<'a> {
@@ -35,34 +37,57 @@ impl<'a> Ctx<'a> {
             assets,
             report,
             images: HashMap::new(),
+            image_table: Map::new(),
         }
     }
+}
+
+/// How a visited object is used: a node in the tree, or an instance's
+/// property patch (a `descendants` entry without `type`).
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Role {
+    Node,
+    Patch,
 }
 
 /// Convert a `children` array and everything below it. `parent_flow` says
 /// whether the owning node is an auto-layout frame (its children's `x` / `y`
 /// are ignored). Iterative so a deep design cannot overflow the stack.
 pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx: &mut Ctx<'_>) {
-    let mut stack: Vec<(&mut Value, bool)> = Vec::new();
+    let mut stack: Vec<(&mut Value, bool, Role)> = Vec::new();
     children.retain(|child| keep_child(child, ctx.report));
-    stack.extend(children.iter_mut().map(|child| (child, parent_flow)));
-    while let Some((node, in_flow)) = stack.pop() {
+    stack.extend(
+        children
+            .iter_mut()
+            .map(|child| (child, parent_flow, Role::Node)),
+    );
+    while let Some((node, in_flow, role)) = stack.pop() {
         let Value::Object(map) = node else {
             continue;
         };
-        convert_node(map, in_flow, ctx);
+        convert_node(map, in_flow, role, ctx);
         let flow = is_auto_layout(map);
         for (key, value) in map.iter_mut() {
             match (key.as_str(), value) {
                 ("children", Value::Array(kids)) => {
                     kids.retain(|child| keep_child(child, ctx.report));
-                    stack.extend(kids.iter_mut().map(|child| (child, flow)));
+                    stack.extend(kids.iter_mut().map(|child| (child, flow, Role::Node)));
                 }
-                // Instance overrides: a value with `type` replaces the
-                // descendant with a new node tree, one without patches its
-                // properties. Both use pen.dev spellings.
                 ("descendants", Value::Object(overrides)) => {
-                    stack.extend(overrides.values_mut().map(|value| (value, false)));
+                    overrides.retain(|_, value| keep_child(value, ctx.report));
+                    for value in overrides.values_mut() {
+                        // pen.dev replaces a descendant with an override that
+                        // has `type`; the canonical resolver only merges keys
+                        // (`ref_resolve::apply_overrides`), so the original
+                        // child's other fields survive underneath.
+                        let role = if value.get("type").is_some() {
+                            ctx.report.note("component child replacement (merged)");
+                            Role::Node
+                        } else {
+                            Role::Patch
+                        };
+                        stack.push((value, false, role));
+                    }
                 }
                 _ => {}
             }
@@ -81,10 +106,12 @@ fn keep_child(child: &Value, report: &mut PenDevReport) -> bool {
     }
 }
 
-fn convert_node(map: &mut Map<String, Value>, in_flow: bool, ctx: &mut Ctx<'_>) {
+fn convert_node(map: &mut Map<String, Value>, in_flow: bool, role: Role, ctx: &mut Ctx<'_>) {
+    // An absolutely positioned child is out of its parent's flow.
+    let absolute = map.get("layoutPosition").and_then(Value::as_str) == Some("absolute");
     match map.get("type").and_then(Value::as_str) {
         Some("frame") => apply_frame_defaults(map),
-        Some("path") => apply_path_view_box(map, in_flow, ctx.report),
+        Some("path") => apply_path_view_box(map, in_flow && !absolute, ctx.report),
         _ => {}
     }
     for key in EDITOR_ONLY_KEYS {
@@ -97,7 +124,7 @@ fn convert_node(map: &mut Map<String, Value>, in_flow: bool, ctx: &mut Ctx<'_>) 
     convert_layout_position(map);
     paint::convert_blend_mode(map, ctx.report);
     paint::convert_fill_key(map, ctx);
-    paint::convert_stroke(map, ctx);
+    paint::convert_stroke(map, role, ctx);
     paint::convert_effects(map, ctx.report);
 }
 
@@ -179,6 +206,7 @@ fn apply_path_view_box(map: &mut Map<String, Value>, in_flow: bool, report: &mut
         .or_else(|| map.get("d"))
         .and_then(Value::as_str);
     let Some((bx, by, bw, bh)) = geometry.and_then(de_editor_core::svg_path_data_bounds) else {
+        report.note("path viewBox");
         return;
     };
     let (bx, by, bw, bh) = (f64::from(bx), f64::from(by), f64::from(bw), f64::from(bh));

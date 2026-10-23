@@ -51,6 +51,7 @@ pub fn copy_clean_document_with_editor_meta_to_path(
             detail: error.to_string(),
         })?;
 
+    super::pen_dev::refuse_overwrite(target_path)?;
     let (tmp, file) = create_sibling_temp(target_path)?;
     let write_result = (|| {
         let mut writer = std::io::BufWriter::with_capacity(1024 * 1024, file);
@@ -110,6 +111,7 @@ pub fn copy_document_to_current_schema_path(
             path: source_path.display().to_string(),
             detail: error.to_string(),
         })?;
+    super::pen_dev::refuse_overwrite(target_path)?;
     let (tmp, file) = create_sibling_temp(target_path)?;
     let write_result = (|| {
         let mut writer = std::io::BufWriter::with_capacity(1024 * 1024, file);

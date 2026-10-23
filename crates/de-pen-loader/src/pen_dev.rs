@@ -113,10 +113,16 @@ impl PenDevReport {
     }
 }
 
-/// Cheap pre-parse check on the raw source: `Some(version)` when the
-/// document declares a pen.dev schema version this module converts.
+/// Decide from the raw source whether it is a pen.dev document this module
+/// converts: `Some(version)` for a top-level `version` of 2.9 or later with
+/// no `formatVersion` (the canonical v1 marker) in the same head. This one
+/// rule drives the loader, the save guard and the CLI, so they cannot
+/// disagree about a file.
 pub fn sniff_pen_dev_version(src: &str) -> Option<String> {
     let head = &src[..floor_char_boundary(src, VERSION_SNIFF_BYTES)];
+    if head.contains("\"formatVersion\"") {
+        return None;
+    }
     let after_key = &head[head.find("\"version\"")? + "\"version\"".len()..];
     let after_colon = after_key.trim_start().strip_prefix(':')?.trim_start();
     let quoted = after_colon.strip_prefix('"')?;
@@ -124,14 +130,22 @@ pub fn sniff_pen_dev_version(src: &str) -> Option<String> {
     is_pen_dev_version(version).then(|| version.to_owned())
 }
 
-/// Whether a parsed document is a pen.dev document this module converts.
-/// `formatVersion` marks a canonical v1 document, whatever its `version`.
-pub fn is_pen_dev_document(root: &Value) -> bool {
-    root.get("formatVersion").is_none()
-        && root
-            .get("version")
-            .and_then(Value::as_str)
-            .is_some_and(is_pen_dev_version)
+/// [`sniff_pen_dev_version`] on the head of a file; `None` when the file is
+/// missing or unreadable.
+pub fn sniff_pen_dev_file(path: &std::path::Path) -> Option<String> {
+    use std::io::Read as _;
+
+    let file = std::fs::File::open(path).ok()?;
+    let mut head = Vec::new();
+    file.take(VERSION_SNIFF_BYTES as u64)
+        .read_to_end(&mut head)
+        .ok()?;
+    let head = match std::str::from_utf8(&head) {
+        Ok(head) => head,
+        // The read may stop inside a multi-byte character.
+        Err(error) => std::str::from_utf8(&head[..error.valid_up_to()]).ok()?,
+    };
+    sniff_pen_dev_version(head)
 }
 
 fn is_pen_dev_version(version: &str) -> bool {
@@ -142,11 +156,12 @@ fn is_pen_dev_version(version: &str) -> bool {
 }
 
 /// Rewrite a parsed pen.dev document into canonical v1 JSON in place.
-/// Callers check [`is_pen_dev_document`] first; a non-pen.dev tree is left
-/// untouched and yields an empty report.
+/// Callers decide with [`sniff_pen_dev_version`] on the source text; a tree
+/// whose `version` is not a pen.dev one is left untouched.
 pub fn convert(root: &mut Value, assets: AssetReader<'_>) -> PenDevReport {
     let mut report = PenDevReport::default();
-    if !is_pen_dev_document(root) {
+    let declared = root.get("version").and_then(Value::as_str);
+    if !declared.is_some_and(is_pen_dev_version) {
         return report;
     }
     let Some(doc) = root.as_object_mut() else {
@@ -164,6 +179,15 @@ pub fn convert(root: &mut Value, assets: AssetReader<'_>) -> PenDevReport {
     let mut ctx = nodes::Ctx::new(assets, &mut report);
     if let Some(Value::Array(children)) = doc.get_mut("children") {
         nodes::convert_children(children, false, &mut ctx);
+    }
+    let image_table = std::mem::take(&mut ctx.image_table);
+    if !image_table.is_empty() {
+        let table = doc
+            .entry("images")
+            .or_insert_with(|| Value::Object(serde_json::Map::new()));
+        if let Value::Object(table) = table {
+            table.extend(image_table);
+        }
     }
     report
 }

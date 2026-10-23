@@ -42,7 +42,7 @@ pub fn load_editor_state_with_report(
                 .replace("{{detail}}", &error.to_string()),
         )
     })?;
-    let assets = super::pen_dev::document_assets(path);
+    let assets = de_pen_loader::pen_dev::folder_assets(path);
     let (state, embedded_meta, report) = parse_editor_state_source(src, locale, &assets)?;
     Ok(finish_loaded_state_with_report(
         state,

@@ -19,6 +19,9 @@ pub enum DocumentIngestError {
     HtmlProject(String),
     /// The HTML project parsed but produced no nodes.
     HtmlProjectEmpty,
+    /// The source is a pen.dev document; the browser cannot read the image
+    /// files it keeps next to itself, so it is not opened here yet (#72).
+    PenDevDocument { version: String },
 }
 
 impl std::fmt::Display for DocumentIngestError {
@@ -33,6 +36,10 @@ impl std::fmt::Display for DocumentIngestError {
             DocumentIngestError::HtmlProjectEmpty => {
                 write!(f, "HTML project contains no importable content")
             }
+            DocumentIngestError::PenDevDocument { version } => write!(
+                f,
+                "this is a pen.dev {version} document; open it in the desktop app or convert it with `de import:pen`"
+            ),
         }
     }
 }

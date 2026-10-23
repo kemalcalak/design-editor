@@ -1,43 +1,21 @@
-//! Filesystem side of the pen.dev import: reading a document's sibling
-//! image files, and refusing to write the canonical schema over a pen.dev
-//! file. The conversion itself is `de_pen_loader::pen_dev`.
+//! Save-side guard for the pen.dev import: refuse to write the canonical
+//! schema over a pen.dev file. The conversion, the image reader and the
+//! detection rule live in `de_pen_loader::pen_dev`.
 
-use std::io::Read as _;
 use std::path::Path;
 
 use super::DocIoError;
 
-/// How much of an existing save target is read to recognise a pen.dev file.
-const SNIFF_BYTES: u64 = 512;
-
-/// Reader for a document's sibling image files; see
-/// `de_pen_loader::pen_dev::folder_assets`.
-pub(super) fn document_assets(document: &Path) -> impl Fn(&str) -> Option<Vec<u8>> {
-    de_pen_loader::pen_dev::folder_assets(document)
-}
-
-/// Fail when `path` holds a pen.dev document. Every save funnels through
-/// here, so no transport (desktop, MCP `filePath`, CLI) can turn an import
-/// source into a canonical file in place.
+/// Fail when `path` holds a pen.dev document. Every `doc_io` writer (the
+/// streaming save and both clean-copy paths) calls this before staging, so
+/// no desktop or MCP save can turn an import source into a canonical file.
 pub(super) fn refuse_overwrite(path: &Path) -> Result<(), DocIoError> {
-    let Ok(file) = std::fs::File::open(path) else {
-        return Ok(());
-    };
-    let mut head = Vec::new();
-    if file.take(SNIFF_BYTES).read_to_end(&mut head).is_err() {
-        return Ok(());
-    }
-    let head = match std::str::from_utf8(&head) {
-        Ok(head) => head,
-        // The read may stop inside a multi-byte character.
-        Err(error) => std::str::from_utf8(&head[..error.valid_up_to()]).unwrap_or_default(),
-    };
-    if de_pen_loader::pen_dev::sniff_pen_dev_version(head).is_some() {
-        return Err(DocIoError::PenDevSourceReadOnly {
+    match de_pen_loader::pen_dev::sniff_pen_dev_file(path) {
+        Some(_) => Err(DocIoError::PenDevSourceReadOnly {
             path: path.display().to_string(),
-        });
+        }),
+        None => Ok(()),
     }
-    Ok(())
 }
 
 #[cfg(test)]
@@ -95,6 +73,25 @@ mod tests {
     }
 
     #[test]
+    fn a_clean_copy_cannot_land_on_a_pen_dev_file() {
+        let dir = temp_dir("clean-copy");
+        let source = dir.join("doc.op");
+        std::fs::write(&source, r#"{"version":"1.0","children":[]}"#).unwrap();
+        let pen = dir.join("design.pen");
+        let original = r#"{"version":"2.21","children":[]}"#;
+        std::fs::write(&pen, original).unwrap();
+        let err = super::super::copy_clean_document_with_editor_meta_to_path(
+            &source,
+            &pen,
+            de_pen_loader::EditorMeta::default(),
+        )
+        .expect_err("pen.dev target is refused");
+        assert!(matches!(err, DocIoError::PenDevSourceReadOnly { .. }));
+        assert_eq!(std::fs::read_to_string(&pen).unwrap(), original);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn canonical_files_can_still_be_overwritten() {
         let dir = temp_dir("canonical");
         let path = dir.join("doc.op");
@@ -111,7 +108,7 @@ mod tests {
         std::fs::write(&outside, b"secret").unwrap();
         #[cfg(unix)]
         std::os::unix::fs::symlink(&outside, dir.join("images/link.png")).unwrap();
-        let read = document_assets(&dir.join("design.pen"));
+        let read = de_pen_loader::pen_dev::folder_assets(&dir.join("design.pen"));
         #[cfg(unix)]
         assert_eq!(read("images/link.png"), None);
         std::fs::write(dir.join("images/ok.png"), b"ok").unwrap();

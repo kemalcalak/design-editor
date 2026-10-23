@@ -1,6 +1,6 @@
 use serde_json::{json, Value};
 
-use super::{convert, is_pen_dev_document, no_assets, sniff_pen_dev_version};
+use super::{convert, no_assets, sniff_pen_dev_version};
 use crate::payload::load_canonical_with_assets;
 
 fn pen(children: Value) -> Value {
@@ -35,10 +35,21 @@ fn version_sniff_takes_pen_dev_2_9_and_later_only() {
 
 #[test]
 fn format_version_marks_a_canonical_document() {
-    assert!(is_pen_dev_document(&json!({ "version": "2.21" })));
-    assert!(!is_pen_dev_document(
-        &json!({ "version": "2.21", "formatVersion": "1.0" })
-    ));
+    assert_eq!(
+        sniff_pen_dev_version(r#"{"version":"2.21","formatVersion":"1.0","children":[]}"#),
+        None
+    );
+}
+
+#[test]
+fn only_a_sniffed_source_is_converted_on_load() {
+    // A canonical document whose `version` reads 2.21 but carries
+    // `formatVersion` loads as canonical, without the pen.dev defaults.
+    let src = r#"{"version":"2.21","formatVersion":"1.0","children":[{"type":"frame","id":"f"}]}"#;
+    let loaded = load_canonical_with_assets(src, &no_assets);
+    if let Ok(loaded) = loaded {
+        assert!(loaded.compatibility.pen_dev.is_none());
+    }
 }
 
 #[test]
@@ -120,10 +131,12 @@ fn mixed_fill_lists_resolve_images_and_drop_shaders() {
     let report = convert(&mut doc, &png_reader);
     let fills = doc["children"][0]["fill"].as_array().unwrap();
     assert_eq!(fills.len(), 2);
-    assert_eq!(fills[0], json!({ "type": "solid", "color": "#141519" }));
-    assert_eq!(fills[1]["mode"], "fit");
-    assert_eq!(fills[1]["url"], "data:image/png;base64,iVBORw==");
-    assert!(fills[1].get("enabled").is_none());
+    // pen.dev paints the last fill on top; the canonical stack is top-first.
+    assert_eq!(fills[0]["mode"], "fit");
+    assert_eq!(fills[0]["url"], "op-image:pen-dev-0");
+    assert!(fills[0].get("enabled").is_none());
+    assert_eq!(fills[1], json!({ "type": "solid", "color": "#141519" }));
+    assert_eq!(doc["images"]["pen-dev-0"], "data:image/png;base64,iVBORw==");
     assert_eq!(
         report.missing_images,
         vec!["images/gone.png", "../outside.png"]
@@ -186,6 +199,25 @@ fn blend_modes_map_to_snake_case_or_are_reported() {
 }
 
 #[test]
+fn a_bitmap_used_by_many_fills_is_stored_once() {
+    let mut doc = pen(json!([
+        { "type": "frame", "id": "a", "fill": { "type": "image", "url": "images/a.png" } },
+        { "type": "frame", "id": "b", "fill": { "type": "image", "url": "./images/a.png" } },
+        { "type": "frame", "id": "c", "fill": { "type": "image", "url": "images/a.png" } }
+    ]));
+    convert(&mut doc, &png_reader);
+    assert_eq!(
+        doc["images"].as_object().unwrap().len(),
+        2,
+        "one per distinct url"
+    );
+    assert_eq!(
+        doc["children"][0]["fill"][0]["url"],
+        doc["children"][2]["fill"][0]["url"]
+    );
+}
+
+#[test]
 fn instance_overrides_use_canonical_spellings() {
     let (doc, _) = converted(
         json!([{ "type": "ref", "id": "i", "ref": "btn", "descendants": {
@@ -199,6 +231,47 @@ fn instance_overrides_use_canonical_spellings() {
         json!([{ "type": "solid", "color": "#FFFFFF" }])
     );
     assert_eq!(overrides["icon"]["layout"], "horizontal");
+}
+
+#[test]
+fn instance_overrides_the_canonical_merge_cannot_express_are_reported() {
+    let (doc, report) = converted(
+        json!([{ "type": "ref", "id": "i", "ref": "btn", "descendants": {
+            "swap": { "type": "text", "id": "t", "content": "new" },
+            "width-only": { "strokeWidth": 3 },
+            "paint-only": { "stroke": "#f00" },
+            "both": { "stroke": "#f00", "strokeWidth": 2 },
+            "gone": { "type": "note", "id": "n" }
+        }}]),
+    );
+    let overrides = doc["children"][0]["descendants"].as_object().unwrap();
+    assert!(
+        !overrides.contains_key("gone"),
+        "dropped kinds leave overrides too"
+    );
+    assert!(overrides["width-only"].get("strokeWidth").is_none());
+    assert_eq!(overrides["both"]["stroke"]["thickness"], 2);
+    assert_eq!(
+        report
+            .unsupported
+            .get("component child replacement (merged)"),
+        Some(&1)
+    );
+    assert_eq!(report.unsupported.get("partial stroke override"), Some(&2));
+    assert_eq!(report.unsupported.get("note"), Some(&1));
+}
+
+#[test]
+fn an_absolute_path_inside_auto_layout_still_honours_its_view_box() {
+    let (doc, report) = converted(json!([{ "type": "frame", "id": "row", "children": [
+        { "type": "path", "id": "p", "layoutPosition": "absolute", "x": 0, "y": 0,
+          "width": 50, "height": 50, "viewBox": [0, 0, 100, 100],
+          "geometry": "M50 0L100 0L100 100L50 100Z" }
+    ]}]));
+    let path = &doc["children"][0]["children"][0];
+    assert_eq!(path["x"], 25.0);
+    assert_eq!(path["width"], 25.0);
+    assert!(report.unsupported.is_empty());
 }
 
 #[test]
