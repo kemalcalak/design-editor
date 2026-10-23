@@ -36,6 +36,7 @@ mod design_md_host;
 mod design_session;
 mod drag_cursor;
 mod figma_import_session;
+mod font_host_desktop;
 mod font_import_host;
 mod fonts;
 mod fonts_error;
@@ -45,6 +46,8 @@ mod git_jobs;
 mod git_overflow_host;
 mod git_session;
 mod git_ssh_host;
+mod google_font_download;
+mod google_font_names;
 mod heap_pressure;
 mod home_previews;
 mod html_import_error;
@@ -155,6 +158,10 @@ enum DesktopEvent {
     /// repaints; the redraw's scan sees the worker count move and installs
     /// it.
     HomePreviewReady,
+    /// An MCP `load_fonts` download registered new faces. Refreshes the
+    /// font snapshots and missing-font rows and repaints, so the document
+    /// reflows with the real face.
+    FontsRegistered,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -330,6 +337,9 @@ struct DesktopApp {
     /// drained on the UI thread by `drain_forwarded_files`.
     forwarded_files: single_instance::ForwardQueue,
     iconify_job: Option<iconify_host::IconifyJob>,
+    /// Google Fonts downloads the user asked for (missing-fonts modal or
+    /// Settings Fonts tab), drained by the redraw pump.
+    font_downloads: google_font_download::FontDownloads,
     /// The `component_browser_open` value last written to
     /// `uikits.json` — `drain_kit_io` rewrites the store when the live
     /// value drifts (TS persists `browserOpen` on every toggle).
@@ -583,6 +593,13 @@ fn main() {
         Ok(store) => store.rescan_and_register(),
         Err(err) => eprintln!("[fonts] skipping imported-font rescan: {err}"),
     }
+    // MCP `load_fonts` / `get_design_quality` ask this host about fonts in
+    // the GUI and `--mcp` / `--mcp-http`, where this process paints. Not
+    // under `--serve-web`: the browser canvas registers fonts in CanvasKit,
+    // so a download here would report success the viewer never sees.
+    if !std::env::args_os().any(|arg| arg == OsStr::new("--serve-web")) {
+        font_host_desktop::install();
+    }
     init_tracing();
     if let Some(modes) = conflicting_headless_modes(std::env::args_os().skip(1)) {
         eprintln!(
@@ -646,6 +663,14 @@ fn main() {
     de_host_services::home_preview::set_written_notifier(move || {
         if let Ok(proxy) = preview_proxy.lock() {
             let _ = proxy.send_event(DesktopEvent::HomePreviewReady);
+        }
+    });
+    // A download started by MCP `load_fonts` registers off the UI thread;
+    // wake the loop so the canvas reflows and the font lists refresh.
+    let fonts_proxy = std::sync::Mutex::new(mcp_wake_proxy.clone());
+    font_host_desktop::set_fonts_changed_notifier(move || {
+        if let Ok(proxy) = fonts_proxy.lock() {
+            let _ = proxy.send_event(DesktopEvent::FontsRegistered);
         }
     });
     app.mcp_wake_proxy = Some(mcp_wake_proxy);

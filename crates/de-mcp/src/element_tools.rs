@@ -30,12 +30,16 @@ fn sanitize(s: &str) -> String {
         .collect()
 }
 
+/// Name prefix shared by every kit-component tool; hosts use it to
+/// decide whether a direct call needs the kit tools built.
+pub const ELEMENT_TOOL_PREFIX: &str = "insert_";
+
 /// The MCP tool name for a kit component: `insert_<comp_sanitized>`.
 /// v1 ships one starter kit so the kit prefix is dropped for terseness;
 /// a future imported-kits surface can fold the kit id back in once
 /// collisions are possible.
 pub fn element_tool_name(component_id: &str) -> String {
-    format!("insert_{}", sanitize(component_id))
+    format!("{ELEMENT_TOOL_PREFIX}{}", sanitize(component_id))
 }
 
 /// `insert_<comp>` MCP tool — instantiates one UIKit component onto

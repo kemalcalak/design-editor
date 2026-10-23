@@ -55,6 +55,35 @@ impl WidgetHostNative {
         self.editor_state.editor_ui.missing_fonts_import_row.take()
     }
 
+    /// Drain the Google Fonts downloads the user asked for (modal or
+    /// Settings Fonts tab). The desktop host starts one job per family.
+    pub fn take_font_download_requests(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.editor_state.editor_ui.font_download_requests)
+    }
+
+    /// Record a finished download (`None` = the family is now registered),
+    /// then refresh the font snapshots and the missing-font rows so a
+    /// downloaded family resolves and the canvas repaints with it.
+    pub fn finish_font_download(
+        &mut self,
+        family: &str,
+        failure: Option<de_editor_core::missing_fonts::FontDownloadStatus>,
+    ) {
+        de_editor_core::missing_fonts::finish_font_download(
+            &mut self.editor_state.editor_ui,
+            family,
+            failure,
+        );
+        self.refresh_imported_fonts();
+        self.refresh_missing_fonts_prompt();
+    }
+
+    /// Replace the Settings Fonts tab's "downloaded from Google Fonts" list.
+    pub fn set_downloaded_font_families(&mut self, families: Vec<String>) {
+        self.editor_state.editor_ui.downloaded_font_families = std::sync::Arc::new(families);
+        self.mark_dirty();
+    }
+
     /// Enumerate system fonts through the property picker's canonical routine,
     /// then detect missing document families. The pending flag remains the
     /// fallback if enumeration ever becomes asynchronous.
@@ -499,5 +528,82 @@ mod tests {
         assert!(host.dispatch_toolbar_action(de_editor_ui::widgets::ToolbarAction::Redo));
         assert!(host.editor_state().editor_ui.missing_fonts_prompt.is_none());
         assert!(!host.editor_state().editor_ui.missing_fonts_modal_open);
+    }
+
+    /// First point on the modal's row band (y = 90) that hits `want`.
+    fn point_hitting(
+        host: &WidgetHostNative,
+        want: de_editor_ui::widgets::MissingFontsHit,
+        y: f32,
+    ) -> Option<(de_editor_ui::Rect, Point2D)> {
+        let panel = MissingFontsPanel::for_editor(host.editor_state())?;
+        let rect = panel.rect(1200.0, 800.0);
+        let viewport = de_editor_ui::Rect::xywh(0.0, 0.0, 1200.0, 800.0);
+        (0..rect.size.x as i32)
+            .map(|dx| Point2D::new(rect.origin.x + dx as f32, rect.origin.y + y))
+            .find(|point| panel.hit_test(rect, viewport, *point) == want)
+            .map(|point| (rect, point))
+    }
+
+    #[test]
+    fn download_is_hidden_until_the_host_can_download() {
+        let host = host_with_missing_fonts(&["Montserrat"]);
+        assert!(point_hitting(
+            &host,
+            de_editor_ui::widgets::MissingFontsHit::Download(0),
+            90.0
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn download_press_queues_the_family_and_failure_offers_a_retry() {
+        use de_editor_core::missing_fonts::{font_download_status, FontDownloadStatus};
+        use de_editor_ui::widgets::MissingFontsHit;
+        // A real document, so re-detection after the failed download keeps
+        // the row (and the modal) alive.
+        let mut state = state_with_text("Montserrat");
+        state.editor_ui.system_fonts_loaded = true;
+        state.editor_ui.font_download_supported = true;
+        let mut host = WidgetHostNative::new();
+        *host.editor_state_mut() = state;
+        host.arm_missing_fonts_detection();
+        let viewport = de_editor_ui::Rect::xywh(0.0, 0.0, 1200.0, 800.0);
+
+        let (rect, point) =
+            point_hitting(&host, MissingFontsHit::Download(0), 90.0).expect("download button");
+        assert!(host.dispatch_missing_fonts_press(rect, viewport, point));
+        assert_eq!(host.take_font_download_requests(), vec!["Montserrat"]);
+        assert!(
+            point_hitting(&host, MissingFontsHit::Download(0), 90.0).is_none(),
+            "no second press while downloading"
+        );
+
+        host.finish_font_download("Montserrat", Some(FontDownloadStatus::Failed));
+        let ui = &host.editor_state().editor_ui;
+        assert_eq!(
+            font_download_status(ui, "Montserrat"),
+            Some(FontDownloadStatus::Failed)
+        );
+        assert!(point_hitting(&host, MissingFontsHit::Download(0), 90.0).is_some());
+    }
+
+    #[test]
+    fn download_all_queues_every_downloadable_row() {
+        use de_editor_ui::widgets::MissingFontsHit;
+        let mut host = host_with_missing_fonts(&["Montserrat", "Space Mono"]);
+        host.editor_state_mut().editor_ui.font_download_supported = true;
+        let viewport = de_editor_ui::Rect::xywh(0.0, 0.0, 1200.0, 800.0);
+        let panel = MissingFontsPanel::for_editor(host.editor_state()).expect("prompt");
+        let rect = panel.rect(1200.0, 800.0);
+        let y = rect.size.y - 30.0;
+        let (rect, point) =
+            point_hitting(&host, MissingFontsHit::DownloadAll, y).expect("download all");
+
+        assert!(host.dispatch_missing_fonts_press(rect, viewport, point));
+        assert_eq!(
+            host.take_font_download_requests(),
+            vec!["Montserrat", "Space Mono"]
+        );
     }
 }

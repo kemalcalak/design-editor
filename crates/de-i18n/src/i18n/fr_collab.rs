@@ -212,6 +212,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "Environnement (facultatif)",
         "settings.agents.notInstalledHint" => "Pas installé ?",
         "settings.agents.notTestedYet" => "Pas encore testé",
+        "missingFonts.download" => "Télécharger",
+        "missingFonts.downloadAll" => "Tout télécharger",
+        "missingFonts.downloading" => "Téléchargement…",
+        "missingFonts.retryDownload" => "Réessayer",
+        "missingFonts.notOnGoogle" => "Absente de Google Fonts",
+        "missingFonts.downloadFailed" => "Échec du téléchargement — vérifiez votre connexion",
+        "missingFonts.downloadedSection" => "Téléchargées depuis Google Fonts",
         _ => return None,
     })
 }

@@ -22,7 +22,18 @@ impl McpTool for GetDesignQuality {
 
     fn call(&self, _args: &BTreeMap<String, String>) -> ToolOutcome {
         let report = de_chat_agent::design_agent_tools::collect_design_quality(&self.state);
-        match serde_json::to_string(&report) {
+        // Font availability is host state (installed / downloaded faces),
+        // not document state, so it rides on the tool output rather than
+        // the design loop's shared report. A host that cannot tell (no font
+        // host installed) leaves the field out instead of claiming `[]`.
+        let font_issues = crate::font_host::installed().map(|host| host.font_issues(&self.state));
+        let report = serde_json::to_value(&report).map(|mut value| {
+            if let Some(issues) = font_issues {
+                value["fontIssues"] = serde_json::json!(issues);
+            }
+            value
+        });
+        match report.and_then(|value| serde_json::to_string(&value)) {
             Ok(json) => ToolOutcome::OkJson(json),
             Err(error) => ToolOutcome::Err(
                 de_mcp::ToolErrorCode::Internal,

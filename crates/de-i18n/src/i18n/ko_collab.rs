@@ -214,6 +214,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "환경 변수(선택)",
         "settings.agents.notInstalledHint" => "설치되지 않았나요?",
         "settings.agents.notTestedYet" => "아직 테스트 안 됨",
+        "missingFonts.download" => "다운로드",
+        "missingFonts.downloadAll" => "모두 다운로드",
+        "missingFonts.downloading" => "다운로드 중…",
+        "missingFonts.retryDownload" => "다시 시도",
+        "missingFonts.notOnGoogle" => "Google Fonts에 없음",
+        "missingFonts.downloadFailed" => "다운로드 실패 — 연결을 확인하세요",
+        "missingFonts.downloadedSection" => "Google Fonts에서 다운로드한 글꼴",
         _ => return None,
     })
 }

@@ -8,7 +8,7 @@
 //! request via pending flags and this module performs the IO — the same
 //! delegation shape `theme_preset_host` uses for `.optheme` files.
 
-use crate::fonts::{FontStore, MAX_FONT_BYTES};
+use crate::fonts::{FontOrigin, FontStore, MAX_FONT_BYTES};
 use de_host_native::WidgetHostNative;
 
 /// Drain a pending font import / removal. Blocking (rfd / disk IO),
@@ -136,6 +136,16 @@ fn remove_font(host: &mut WidgetHostNative, family: &str) {
     };
     store.remove(family);
     host.refresh_imported_fonts();
+    refresh_downloaded_fonts(host);
+}
+
+/// Re-read which stored families came from Google Fonts, for the Settings
+/// Fonts tab's downloaded section. An unreadable store lists none.
+pub(crate) fn refresh_downloaded_fonts(host: &mut WidgetHostNative) {
+    let families = FontStore::user()
+        .map(|store| store.families_from(FontOrigin::Google))
+        .unwrap_or_default();
+    host.set_downloaded_font_families(families);
 }
 
 /// A minimal native error dialog for font IO. `persistence`'s dialog is

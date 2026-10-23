@@ -212,6 +212,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.agents.envOptional" => "एनवायरनमेंट (वैकल्पिक)",
         "settings.agents.notInstalledHint" => "इंस्टॉल नहीं है?",
         "settings.agents.notTestedYet" => "अभी टेस्ट नहीं हुआ",
+        "missingFonts.download" => "डाउनलोड करें",
+        "missingFonts.downloadAll" => "सभी डाउनलोड करें",
+        "missingFonts.downloading" => "डाउनलोड हो रहा है…",
+        "missingFonts.retryDownload" => "फिर कोशिश करें",
+        "missingFonts.notOnGoogle" => "Google Fonts में नहीं है",
+        "missingFonts.downloadFailed" => "डाउनलोड विफल — अपना कनेक्शन जांचें",
+        "missingFonts.downloadedSection" => "Google Fonts से डाउनलोड किए गए",
         _ => return None,
     })
 }
