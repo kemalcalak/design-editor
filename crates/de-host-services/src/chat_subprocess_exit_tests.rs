@@ -47,8 +47,16 @@ exit 3
 
 /// A stand-in `agy` on disk. Returns the containing directory (for
 /// cleanup) and the executable path.
+///
+/// The stub is written by a short-lived `/bin/sh` child, never by this
+/// process. These tests spawn processes from many threads at once, and a
+/// `fork()` on another thread while this process held the stub open for
+/// write would carry that fd into the forked child until it `exec`s; an
+/// `execve` of the stub inside that window fails with `ETXTBSY` ("Text file
+/// busy") on Linux. With the write fd living only in the writer child,
+/// there is nothing for a concurrent fork to inherit.
 fn stub_cli(body: &str) -> (std::path::PathBuf, std::path::PathBuf) {
-    use std::os::unix::fs::PermissionsExt;
+    use std::io::Write;
     use std::sync::atomic::{AtomicU64, Ordering};
     // A counter, not just a timestamp: these tests run in parallel and
     // the clock is coarse enough that two of them collided on one
@@ -61,8 +69,23 @@ fn stub_cli(body: &str) -> (std::path::PathBuf, std::path::PathBuf) {
     ));
     std::fs::create_dir_all(&dir).expect("temp dir");
     let path = dir.join("agy");
-    std::fs::write(&path, body).expect("write stub");
-    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+    let mut writer = std::process::Command::new("/bin/sh")
+        .args(["-c", r#"cat > "$1" && chmod 755 "$1""#, "sh"])
+        .arg(&path)
+        .stdin(std::process::Stdio::piped())
+        .spawn()
+        .expect("spawn stub writer");
+    writer
+        .stdin
+        .take()
+        .expect("stub writer stdin")
+        .write_all(body.as_bytes())
+        .expect("write stub");
+    assert!(
+        writer.wait().expect("stub writer exit").success(),
+        "stub writer failed for {}",
+        path.display()
+    );
     (dir, path)
 }
 
@@ -85,7 +108,16 @@ fn read_test_pids(path: &std::path::Path) -> Vec<i32> {
 /// shell's `>` redirection creates the file before the pid write lands,
 /// so an existence check can hand the reader an empty file (observed
 /// under load as a ParseIntError on an "Empty" pid).
-fn wait_for_pid_file(path: &std::path::Path) {
+///
+/// Panics on the deadline: a stub that never ran (a failed spawn) never
+/// writes the file, so the turn is cancelled and its deltas reported —
+/// the failure names its cause instead of surfacing later as a missing
+/// pid file.
+fn wait_for_pid_file(
+    path: &std::path::Path,
+    cancel: &AtomicBool,
+    deltas: &mut impl Iterator<Item = ChatDelta>,
+) {
     let deadline = std::time::Instant::now() + Duration::from_secs(30);
     while std::time::Instant::now() < deadline {
         if std::fs::read_to_string(path).is_ok_and(|content| content.ends_with('\n')) {
@@ -93,6 +125,12 @@ fn wait_for_pid_file(path: &std::path::Path) {
         }
         std::thread::sleep(Duration::from_millis(10));
     }
+    cancel.store(true, std::sync::atomic::Ordering::Release);
+    let deltas: Vec<_> = deltas.collect();
+    panic!(
+        "stub never wrote {}; the turn yielded {deltas:?}",
+        path.display()
+    );
 }
 
 fn process_alive(pid: i32) -> bool {
@@ -127,25 +165,7 @@ fn assert_process_tree_reaped(pids: &[i32], context: &str) {
 
 /// Run one generation turn against a stand-in and return the error text
 /// the user would see.
-///
-/// Retries a spawn that races on `ETXTBSY`. Writing a stub and exec'ing
-/// it from many threads at once means one thread's still-open write fd
-/// can be inherited across another thread's `fork()` and briefly hold
-/// the freshly-written stub open for write, so `execve` reports "Text
-/// file busy". That is an artifact of the parallel write-then-exec
-/// harness, not the stderr-drain behaviour under test, and the window is
-/// microseconds — a retry clears it.
 fn turn_error(body: &str) -> String {
-    for _ in 0..16 {
-        let message = turn_error_once(body);
-        if !message.contains("Text file busy") && !message.contains("os error 26") {
-            return message;
-        }
-    }
-    turn_error_once(body)
-}
-
-fn turn_error_once(body: &str) -> String {
     let (dir, binary) = stub_cli(body);
     let provider = SubprocessProvider::for_cli_generation(CliName::Antigravity)
         .expect("antigravity has a subprocess template")
@@ -367,7 +387,7 @@ wait "$descendant"
         Arc::clone(&cancel),
     );
 
-    wait_for_pid_file(&pid_file);
+    wait_for_pid_file(&pid_file, &cancel, &mut deltas);
     let pids = read_test_pids(&pid_file);
     assert_eq!(pids.len(), 2, "leader and descendant pids");
 
@@ -414,7 +434,7 @@ wait "$descendant"
         Arc::clone(&cancel),
     );
 
-    wait_for_pid_file(&pid_file);
+    wait_for_pid_file(&pid_file, &cancel, &mut deltas);
     let pids = read_test_pids(&pid_file);
     assert_eq!(pids.len(), 2, "leader and descendant pids");
 

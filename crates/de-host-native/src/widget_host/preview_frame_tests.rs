@@ -468,3 +468,91 @@ fn tab_switch_animates_across_real_frames_through_the_production_paint_path() {
         "the settled opaque fill stack no longer needs an opacity layer"
     );
 }
+
+/// Viewport for the switcher tests: wide enough that the floating chrome
+/// halves sit clear of the centred device pill.
+const SWITCHER_VIEWPORT: (f32, f32) = (1400.0, 900.0);
+
+/// A phone screen parked far off the default viewport, so no edit-scene
+/// node sits under the switcher and only the pill itself can refuse a
+/// window drag.
+fn offscreen_phone_doc() -> jian_ops_schema::PenDocument {
+    load(
+        r##"{
+            "version": "1.0.0",
+            "children": [{
+                "type": "frame", "id": "screen", "x": 5000, "y": 5000,
+                "width": 390, "height": 844,
+                "fill": [{"type":"solid","color":"#ffffff"}],
+                "children": []
+            }]
+        }"##,
+    )
+}
+
+fn switcher_segment_centres(host: &WidgetHostNative) -> Vec<(PreviewDeviceKind, f32, f32)> {
+    let (viewport_w, viewport_h) = SWITCHER_VIEWPORT;
+    let canvas = host.preview_canvas_rect(viewport_w, viewport_h);
+    de_editor_ui::widgets::PreviewDeviceSwitcher::segment_rects(canvas)
+        .into_iter()
+        .map(|(kind, rect)| {
+            (
+                kind,
+                rect.origin.x + rect.size.x / 2.0,
+                rect.origin.y + rect.size.y / 2.0,
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn device_switcher_is_not_a_window_drag_handle() {
+    let _guard = test_lock();
+    let mut host = host_with_doc(offscreen_phone_doc());
+    let (viewport_w, viewport_h) = SWITCHER_VIEWPORT;
+    assert!(host.enter_preview((viewport_w, viewport_h)));
+    for (kind, x, y) in switcher_segment_centres(&host) {
+        assert!(
+            y < de_editor_ui::widgets::WINDOW_STRIP_H,
+            "the pill sits inside the window strip, so the carve-out matters"
+        );
+        assert!(
+            !host.editor_window_drag_at(x, y, viewport_w, viewport_h),
+            "a press on the {kind:?} segment must reach the switcher, not drag the window"
+        );
+    }
+    // The empty band beside the pill still drags the window.
+    let canvas = host.preview_canvas_rect(viewport_w, viewport_h);
+    let pill = de_editor_ui::widgets::PreviewDeviceSwitcher::pill_rect(canvas);
+    assert!(host.editor_window_drag_at(
+        pill.origin.x - 20.0,
+        pill.origin.y + pill.size.y / 2.0,
+        viewport_w,
+        viewport_h
+    ));
+}
+
+#[test]
+fn press_and_release_on_each_segment_switches_the_device() {
+    let _guard = test_lock();
+    let mut host = host_with_doc(offscreen_phone_doc());
+    let (viewport_w, viewport_h) = SWITCHER_VIEWPORT;
+    assert!(host.enter_preview((viewport_w, viewport_h)));
+    // The desktop runner asks `editor_window_drag_at` only while Home is
+    // hidden, then hands the press to `apply_press`; follow that order.
+    assert!(!host.home_visible());
+    // Phone last: the session starts on the inferred Phone, so every press
+    // is a real switch.
+    let mut segments = switcher_segment_centres(&host);
+    segments.sort_by_key(|(kind, _, _)| *kind == PreviewDeviceKind::Phone);
+    for (kind, x, y) in segments {
+        assert!(!host.editor_window_drag_at(x, y, viewport_w, viewport_h));
+        assert!(host.apply_press(x, y, viewport_w, viewport_h));
+        assert!(host.apply_release_with_viewport(viewport_w, viewport_h));
+        assert_eq!(host.editor_state.editor_ui.preview.device, Some(kind));
+        assert_eq!(
+            host.preview_device_frame.is_some(),
+            kind != PreviewDeviceKind::Canvas
+        );
+    }
+}

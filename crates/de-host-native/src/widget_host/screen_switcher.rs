@@ -45,8 +45,9 @@ impl super::WidgetHostNative {
         switcher.paint(&mut cx, canvas_rect, &self.theme);
     }
 
-    /// Press on a screen pill — arms it for release, mirroring
-    /// `preview_switcher_press`. Returns whether a pill was hit (the
+    /// Press on a screen pill — arms it for release, like
+    /// `preview_switcher_press` but without seeding hover, so a press with
+    /// no move before it does not navigate. Returns whether a pill was hit (the
     /// caller swallows the press either way while previewing, but the
     /// return value matches the sibling's contract for symmetry).
     pub(crate) fn screen_switcher_press(
