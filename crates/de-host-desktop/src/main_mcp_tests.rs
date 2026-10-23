@@ -521,3 +521,61 @@ fn default_live_mcp_port_matches_ts_and_cli_default() {
     // `de start` and `de <tool>` find each other out of the box.
     assert_eq!(DEFAULT_LIVE_MCP_PORT, 3100);
 }
+
+#[test]
+fn a_live_save_document_lists_the_file_on_home() {
+    use std::io::{Read, Write};
+    use std::net::TcpStream;
+    use std::sync::mpsc;
+    use std::time::{Duration, Instant};
+
+    // Previews stay off in this test binary (the services tests cover the
+    // save hook); this checks the hand-off to Home's Recent list.
+    let dir = std::env::temp_dir().join(format!("de-live-save-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("scratch dir");
+    let doc = dir.join("agent.op");
+    let doc_json = serde_json::to_string(&doc.to_string_lossy()).expect("path json");
+
+    let mut app = DesktopApp::new(None);
+    app.force_live_mcp_port = Some(0);
+    assert!(app.reconcile_mcp_server_from_settings());
+    let server = app.mcp_server.as_ref().expect("live MCP server");
+    let (port, token) = (server.port(), server.token().to_owned());
+    let body = format!(
+        r#"{{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{{"name":"save_document","arguments":{{"filePath":{doc_json}}}}}}}"#
+    );
+    let (tx, rx) = mpsc::channel();
+    std::thread::spawn(move || {
+        let mut stream = TcpStream::connect(("127.0.0.1", port)).expect("connect");
+        let req = format!(
+            "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Design-Editor-Token: {token}\r\nContent-Length: {}\r\n\r\n{body}",
+            body.len()
+        );
+        stream.write_all(req.as_bytes()).expect("write");
+        let mut out = String::new();
+        stream.read_to_string(&mut out).expect("read");
+        let _ = tx.send(out);
+    });
+
+    let path = doc.to_string_lossy().into_owned();
+    let started = Instant::now();
+    loop {
+        let _ = app.poll_mcp_server();
+        let listed = app.host.editor_state().editor_ui.recent_files.first();
+        if rx.try_recv().is_ok() || listed.is_some_and(|file| file.path == path) {
+            let _ = app.poll_mcp_server();
+            break;
+        }
+        assert!(started.elapsed() < Duration::from_secs(5), "save timed out");
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert_eq!(
+        app.host.editor_state().editor_ui.recent_files[0].path,
+        path,
+        "an agent's save joins Home's Recent list"
+    );
+    if let Some(server) = app.mcp_server.as_mut() {
+        server.stop();
+    }
+    let _ = std::fs::remove_dir_all(dir);
+}

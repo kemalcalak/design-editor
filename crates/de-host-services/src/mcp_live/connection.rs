@@ -256,6 +256,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     if let Some(response) =
         crate::mcp_serve::file_path::process_message_for_file_path_arg(None, &req.body)?
     {
+        report_saved_document(&req.body, &response, req_tx, wake_ui);
         return write_json_rpc_response(stream, &response);
     }
     // `debug_screenshot` against the LIVE canvas: route through the
@@ -301,7 +302,23 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
         },
     )?
     .unwrap_or_default();
+    report_saved_document(&req.body, &response, req_tx, wake_ui);
     write_json_rpc_response(stream, &response)
+}
+
+/// Tell the UI about a file a client just wrote with `save_document`, so
+/// the host can list it on Home (its preview is already queued).
+pub(super) fn report_saved_document(
+    line: &str,
+    response: &str,
+    req_tx: &Sender<UiRequest>,
+    wake_ui: &UiWake,
+) {
+    if let Some(path) = crate::mcp_serve::saved_document_path(line, response) {
+        if req_tx.send(UiRequest::DocumentSaved { path }).is_ok() {
+            wake_ui();
+        }
+    }
 }
 
 /// Dispatch live tools whose registry snapshot is independent of the full

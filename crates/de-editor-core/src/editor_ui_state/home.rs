@@ -389,6 +389,9 @@ pub struct HomeState {
     pub mcp_client: Option<String>,
     /// A sidebar template waiting for the fresh document it asked for.
     pub pending_template: Option<HomeTemplate>,
+    /// The stamp of each Recent file's installed preview, by path. The host
+    /// fills it as previews land; a Recent card without one shows a glyph.
+    pub preview_stamps: std::collections::BTreeMap<String, u64>,
 }
 
 impl Default for HomeState {
@@ -411,6 +414,7 @@ impl Default for HomeState {
             recent_view: RecentView::Grid,
             mcp_client: None,
             pending_template: None,
+            preview_stamps: std::collections::BTreeMap::new(),
         }
     }
 }

@@ -502,6 +502,9 @@ impl crate::DesktopApp {
             return false;
         }
 
+        // The file is on disk whichever document is open now, so its Home
+        // preview is due even for a stale acknowledgement.
+        crate::home_previews::queue_after_save(&path);
         let live_epoch = self.host.document_epoch();
         let live_generation = self.host.editor_state().document_generation();
         if live_epoch != document_epoch || live_generation != generation {

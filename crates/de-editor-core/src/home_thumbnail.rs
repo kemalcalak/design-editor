@@ -1,6 +1,6 @@
-//! Stable names for Home's Recent thumbnails. The desktop writes a small
-//! PNG of a document's active page after each save; Home looks it up by
-//! the same names, so the writer and the reader never disagree.
+//! Stable names for Home's Recent thumbnails. The hosts write a small PNG
+//! overview of a document's active page whenever it is saved; Home looks it
+//! up by the same names, so the writer and the reader never disagree.
 
 /// Names must be stable across runs and platforms (unlike `std`'s
 /// randomly seeded hasher), so they hash with the crate's FNV-1a.
@@ -13,13 +13,14 @@ pub fn home_thumbnail_file_name(path: &str) -> String {
 }
 
 /// The image-cache id a thumbnail is installed under. It folds in the
-/// document's last-touched time, so a re-saved document gets a fresh id
-/// and Home never shows the previous version's cached pixels.
-pub fn home_thumbnail_image_id(path: &str, modified_at: u64) -> u64 {
-    let mut key = Vec::with_capacity(path.len() + 9);
-    key.extend_from_slice(b"thumb:");
+/// preview's stamp (`HomeState::preview_stamps`), so a refreshed preview
+/// gets a fresh id and Home never shows the previous version's pixels.
+pub fn home_thumbnail_image_id(path: &str, stamp: u64) -> u64 {
+    const PREFIX: &[u8] = b"thumb:";
+    let mut key = Vec::with_capacity(PREFIX.len() + path.len() + size_of::<u64>());
+    key.extend_from_slice(PREFIX);
     key.extend_from_slice(path.as_bytes());
-    key.extend_from_slice(&modified_at.to_le_bytes());
+    key.extend_from_slice(&stamp.to_le_bytes());
     fnv1a(&key)
 }
 
@@ -36,7 +37,7 @@ mod tests {
     }
 
     #[test]
-    fn a_new_save_gets_a_new_image_id() {
+    fn a_new_preview_gets_a_new_image_id() {
         let first = home_thumbnail_image_id("/a.op", 10);
         assert_eq!(first, home_thumbnail_image_id("/a.op", 10));
         assert_ne!(first, home_thumbnail_image_id("/a.op", 11));

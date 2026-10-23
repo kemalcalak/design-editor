@@ -67,8 +67,13 @@ pub struct HomeRecent {
     pub name: String,
     /// The folder, `~`-abbreviated when it sits under the home dir.
     pub folder: String,
+    /// The folder's own name, which the list view leads the file name
+    /// with (`design / landing`, as Pencil does); empty at a root.
+    pub parent: String,
     /// Unix seconds when last touched.
     pub modified_at: u64,
+    /// The installed preview's stamp, when there is one.
+    pub preview_stamp: Option<u64>,
 }
 
 /// What the MCP card and its popover show.
@@ -135,7 +140,10 @@ impl<'a> HomeSurface<'a> {
                 .recent_files
                 .iter()
                 .take(RECENT_MAX)
-                .map(|file| recent_entry(&file.path, file.modified_at))
+                .map(|file| {
+                    let stamp = home.preview_stamps.get(&file.path).copied();
+                    recent_entry(&file.path, file.modified_at, stamp)
+                })
                 .collect(),
             mcp: HomeMcpView {
                 running: ui.agent_settings.mcp_server.running,
@@ -325,7 +333,7 @@ impl<'a> HomeSurface<'a> {
 
 /// Split a recent path into the name and `~`-abbreviated folder Home
 /// shows.
-fn recent_entry(path: &str, modified_at: u64) -> HomeRecent {
+fn recent_entry(path: &str, modified_at: u64, preview_stamp: Option<u64>) -> HomeRecent {
     let split = path.rfind(['/', '\\']);
     let (folder, file) = match split {
         Some(index) => (&path[..index], &path[index + 1..]),
@@ -338,11 +346,14 @@ fn recent_entry(path: &str, modified_at: u64) -> HomeRecent {
     let folder = home_dir_prefix(folder)
         .map(|rest| format!("~{rest}"))
         .unwrap_or_else(|| folder.to_string());
+    let parent = folder.rsplit(['/', '\\']).next().unwrap_or("").to_string();
     HomeRecent {
         path: path.to_string(),
         name: name.to_string(),
         folder,
+        parent,
         modified_at,
+        preview_stamp,
     }
 }
 

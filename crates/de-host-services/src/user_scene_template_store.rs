@@ -15,18 +15,7 @@ use de_editor_core::user_scene_templates::{
 
 const TEMPLATES_DIR: &str = "templates";
 
-#[cfg(test)]
-fn guard_user_config() {
-    let root = std::env::temp_dir().join(format!(
-        "de-host-services-test-config-{}",
-        std::process::id()
-    ));
-    de_config_store::redirect_user_root_for_tests(root);
-}
-
-#[cfg(not(test))]
-#[inline]
-fn guard_user_config() {}
+use crate::test_config_root::guard_user_config;
 
 /// Resolve the standard saved-template directory, creating it on first use.
 pub fn user_scene_templates_dir() -> std::io::Result<PathBuf> {
