@@ -153,7 +153,7 @@ fn topmost_design_panel_cursor_move_does_not_hover_toolbar_underneath() {
     let mut host = WidgetHost::new();
     host.last_viewport_w = W;
     host.last_viewport_h = H;
-    let toolbar_rect = host.toolbar_rect(W);
+    let toolbar_rect = host.toolbar_rect(W, H);
     let toolbar = Toolbar::for_editor(&host.editor_state);
     let mut point = None;
     let mut y = toolbar_rect.origin.y;
@@ -445,18 +445,18 @@ fn shape_picker_paints_and_row_press_selects_tool() {
     while probe < picker_rect.origin.y + picker_rect.size.y {
         if matches!(
             picker.hit_test(picker_rect, Point2D::new(x, probe)),
-            Some(ShapeChoice::Tool(Tool::Ellipse))
+            Some(ShapeChoice::Tool(Tool::Polygon))
         ) {
             row_y = Some(probe);
             break;
         }
         probe += 2.0;
     }
-    let row_y = row_y.expect("ellipse row present in the shape picker");
+    let row_y = row_y.expect("polygon row present in the shape menu");
 
     assert!(host.apply_press(x, row_y, W, H));
-    assert_eq!(host.editor_state.tool, Tool::Ellipse);
-    assert_eq!(host.editor_state.editor_ui.shape_tool, Tool::Ellipse);
+    assert_eq!(host.editor_state.tool, Tool::Polygon);
+    assert_eq!(host.editor_state.editor_ui.shape_tool, Tool::Polygon);
     assert!(!host.editor_state.editor_ui.shape_picker.open);
 }
 

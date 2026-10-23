@@ -7,11 +7,11 @@
 //! crate stays wasm32-clean — same discipline as `chrome_button_state`.
 
 /// Which status-bar control the cursor is over / clicked. The pill
-/// hosts a search-to-fit button and a `[- N% +]` zoom cluster.
+/// shows `[- N% +]`; the percentage frames the content.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StatusBarButton {
-    /// Magnifier — frames the page content within the viewport.
-    Search,
+    /// The percentage label — frames the page content within the viewport.
+    ZoomToFit,
     /// Minus — zooms the canvas out one step.
     ZoomOut,
     /// Plus — zooms the canvas in one step.

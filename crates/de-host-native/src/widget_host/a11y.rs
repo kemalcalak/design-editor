@@ -8,7 +8,6 @@
 //! `canvas_region` / `*_rect` helpers paint uses, so the a11y tree and
 //! the painted frame never drift.
 
-use super::helpers::{TOOLBAR_INSET_X, TOOLBAR_INSET_Y};
 use super::WidgetHostNative;
 use de_editor_ui::accessibility_regions::{self as a11y_regions, RegionPlacement};
 
@@ -42,8 +41,6 @@ impl WidgetHostNative {
             canvas_height: canvas_h,
             ai_chat_rect: self.ai_chat_rect(viewport_width, viewport_height),
             status_bar_rect: self.status_bar_rect(viewport_width, viewport_height),
-            toolbar_inset_x: TOOLBAR_INSET_X,
-            toolbar_inset_y: TOOLBAR_INSET_Y,
         };
         let layer_panel = self.layer_panel();
         a11y_regions::editor_tree_update(

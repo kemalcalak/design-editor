@@ -94,6 +94,16 @@ impl WidgetHostNative {
         if self.try_open_path_anchor_menu(x, y, viewport_w, viewport_h) {
             return true;
         }
+        // Right-click on the tool rail's Rectangle slot opens the shape menu.
+        if press_flow::press_toolbar_secondary(
+            &mut self.editor_state,
+            viewport_w,
+            viewport_h,
+            Point2D::new(x, y),
+        ) {
+            self.mark_dirty();
+            return true;
+        }
         if !self.layers_panel_visible() {
             // No layer panel to hit — the right press is blank chrome;
             // blur inputs like the sidebar-open fall-through below.

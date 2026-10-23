@@ -56,7 +56,7 @@ impl WidgetHostNative {
                 self.editor_state.editor_ui.pressed_button =
                     Some(de_editor_core::ButtonPressTarget::StatusBar(btn));
                 match btn {
-                    StatusBarButton::Search => self.zoom_to_fit(viewport_width, viewport_height),
+                    StatusBarButton::ZoomToFit => self.zoom_to_fit(viewport_width, viewport_height),
                     StatusBarButton::ZoomOut => {
                         self.status_bar_zoom(false, viewport_width, viewport_height)
                     }

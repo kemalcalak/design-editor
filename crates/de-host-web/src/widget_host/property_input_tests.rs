@@ -107,7 +107,7 @@ fn point_for_property_action(
 }
 
 fn point_for_toolbar_tool(host: &mut WidgetHost, want: Tool) -> (f32, f32) {
-    let rect = host.toolbar_rect(W);
+    let rect = host.toolbar_rect(W, H);
     let toolbar = Toolbar::for_editor(&host.editor_state);
     let mut y = rect.origin.y + 2.0;
     while y < rect.origin.y + rect.size.y {

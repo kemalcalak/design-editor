@@ -104,8 +104,8 @@ fn selected_hover_focus_keeps_child_hints_selection_handles_and_dimensions() {
             .iter()
             .filter(|color| **color == viewport.theme.primary)
             .count()
-            >= 8,
-        "single selection handles should still paint above hierarchy hover"
+            >= 4,
+        "single selection's corner handles should still paint above hierarchy hover"
     );
     assert!(
         backend.texts.iter().any(|text| text == "220 × 180"),

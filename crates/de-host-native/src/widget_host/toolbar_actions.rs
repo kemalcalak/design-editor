@@ -22,6 +22,14 @@ impl WidgetHostNative {
                 self.mark_dirty();
                 true
             }
+            // Same file action the shape menu's import row raised: the host
+            // loop owns the file picker.
+            ToolbarAction::ImportImage => {
+                self.editor_state.editor_ui.pending_file_action =
+                    Some(de_editor_core::editor_ui_state::FileAction::ImportImageOrSvg);
+                self.mark_dirty();
+                true
+            }
         }
     }
 }

@@ -28,9 +28,10 @@ use crate::{Point2D, Rect};
 /// asked for a little vertical spacing under the chat pill).
 pub const AICHAT_INSET_BOTTOM: f32 = 12.0;
 pub const AICHAT_INSET_LEFT: f32 = 12.0;
-pub const TOOLBAR_INSET_X: f32 = 12.0;
-/// The tool column starts below the file pill, which owns the canvas's
-/// top-left corner.
+pub const TOOLBAR_INSET_X: f32 = 16.0;
+/// Top clearance for the floating column under the file pill, which owns
+/// the canvas's top-left corner: the tool rail never rises above it, and
+/// the Variables panel opening beside the rail starts here.
 pub const TOOLBAR_INSET_Y: f32 = 64.0;
 /// Inset of the file pill and the canvas action group from the canvas's
 /// top edge and its left / right edges.
@@ -393,16 +394,23 @@ pub fn window_drag_band_at(
     if point.x < cx0 || point.x >= cx0 + cw {
         return false;
     }
-    !over_chrome(state, viewport_w, viewport_h, point) && !toolbar_rect_for(state).contains(point)
+    !over_chrome(state, viewport_w, viewport_h, point)
+        && !toolbar_rect_for(state, viewport_w, viewport_h).contains(point)
 }
 
-/// Floating vertical toolbar, inset from the canvas top-left. `toolbar_h`
-/// comes from the widget's own layout pass (it depends on how many tool
-/// slots are live), which is why it is a parameter rather than derived.
-pub fn toolbar_rect(state: &EditorState, toolbar_h: f32) -> Rect {
-    let (canvas_left, canvas_top) = canvas_origin(state);
+/// The floating tool rail: inset from the canvas's left edge and centred
+/// on its height, never rising into the file pill's band
+/// ([`TOOLBAR_INSET_Y`]). `toolbar_h` comes from the widget's own layout
+/// pass, which is why it is a parameter rather than derived.
+pub fn toolbar_rect(state: &EditorState, viewport_w: f32, viewport_h: f32, toolbar_h: f32) -> Rect {
+    let (canvas_left, canvas_top, _canvas_w, canvas_h) =
+        canvas_region(state, viewport_w, viewport_h);
+    let centred = canvas_top + (canvas_h - toolbar_h) / 2.0;
     Rect {
-        origin: Point2D::new(canvas_left + TOOLBAR_INSET_X, canvas_top + TOOLBAR_INSET_Y),
+        origin: Point2D::new(
+            canvas_left + TOOLBAR_INSET_X,
+            centred.max(canvas_top + TOOLBAR_INSET_Y),
+        ),
         size: Point2D::new(TOOLBAR_WIDTH, toolbar_h),
     }
 }
@@ -431,8 +439,8 @@ pub fn toolbar_layout_height(state: &EditorState) -> f32 {
 /// [`toolbar_rect`] measured against the live [`toolbar_layout_height`]
 /// — the form every hit-test / hover site wants (paint already has the
 /// height in hand from its own layout pass).
-pub fn toolbar_rect_for(state: &EditorState) -> Rect {
-    toolbar_rect(state, toolbar_layout_height(state))
+pub fn toolbar_rect_for(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
+    toolbar_rect(state, viewport_w, viewport_h, toolbar_layout_height(state))
 }
 
 /// Bottom-right floating StatusBar pill. `None` when the canvas is too

@@ -141,12 +141,12 @@ fn toolbar_height(toolbar: &Toolbar, dpi: f32) -> f32 {
         .y
 }
 
-/// Shape-picker dropdown rect — anchored to the right of the toolbar's
+/// Shape-menu rect — anchored to the right of the tool rail's
 /// shape slot, clamped so it never overhangs the canvas right edge.
 pub fn shape_picker_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
     let (cx0, _cy, cw, _ch) = canvas_region(state, viewport_w, viewport_h);
     let toolbar = Toolbar::for_editor(state);
-    let toolbar_rect = toolbar_rect(state, toolbar_height(&toolbar, 1.0));
+    let toolbar_rect = toolbar_rect(state, viewport_w, viewport_h, toolbar_height(&toolbar, 1.0));
     let slot = toolbar
         .shape_slot_rect(toolbar_rect)
         .unwrap_or(toolbar_rect);

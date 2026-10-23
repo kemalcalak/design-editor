@@ -42,6 +42,16 @@ impl WidgetHost {
         if self.try_open_path_anchor_menu(x, y, viewport_w, viewport_h) {
             return true;
         }
+        // Right-click on the tool rail's Rectangle slot opens the shape menu.
+        if de_editor_ui::widgets::press_flow::press_toolbar_secondary(
+            &mut self.editor_state,
+            viewport_w,
+            viewport_h,
+            Point2D::new(x, y),
+        ) {
+            self.mark_dirty();
+            return true;
+        }
         if !self.editor_state.editor_ui.sidebar_open {
             return self.blur_text_inputs_on_blank_press();
         }

@@ -30,8 +30,12 @@ fn prompt_center_padding_owns_cursor_and_clears_lower_hover() {
     // resize gutter now owns at the canvas floor — over bare canvas when
     // the panel is closed, which is what makes the control below
     // meaningful.
+    // Left of the zoom pill, which owns the canvas's bottom-right corner.
+    let zoom_pill = host
+        .status_bar_rect(VIEWPORT_W, VIEWPORT_H)
+        .expect("zoom pill visible");
     let point = Point2D::new(
-        panel.origin.x + panel.size.x - 24.0,
+        (panel.origin.x + panel.size.x - 24.0).min(zoom_pill.origin.x - 24.0),
         panel.origin.y + panel.size.y - 4.0,
     );
 

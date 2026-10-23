@@ -85,7 +85,7 @@ impl WidgetHost {
         //    consumes all clicks (gaps + padding too) so it
         //    never falls through to the canvas for tool gaps
         //    that lie outside the chat panel.
-        let toolbar_rect = self.toolbar_rect(viewport_width);
+        let toolbar_rect = self.toolbar_rect(viewport_width, ctx.viewport_height);
         let toolbar = Toolbar::for_editor(&self.editor_state);
         if (toolbar_rect).contains(Point2D::new(x, y)) {
             if let Some(hit) = toolbar.hit_test(toolbar_rect, Point2D::new(x, y)) {

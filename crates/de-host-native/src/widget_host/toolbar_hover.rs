@@ -21,8 +21,8 @@ impl WidgetHostNative {
     /// The viewport arguments are vestigial — the placement only needs
     /// the canvas origin — but the signature is part of this host's
     /// internal surface, so it stays.
-    pub(in crate::widget_host) fn toolbar_rect(&self, _viewport_w: f32, _viewport_h: f32) -> Rect {
-        canvas_geometry::toolbar_rect_for(&self.editor_state)
+    pub(in crate::widget_host) fn toolbar_rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
+        canvas_geometry::toolbar_rect_for(&self.editor_state, viewport_w, viewport_h)
     }
 
     /// Update the per-button hover wash on the vertical toolbar

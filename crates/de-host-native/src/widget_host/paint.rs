@@ -343,7 +343,12 @@ impl WidgetHostNative {
             .rect
             .size
             .y;
-        let toolbar_rect = canvas_geometry::toolbar_rect(&self.editor_state, toolbar_h);
+        let toolbar_rect = canvas_geometry::toolbar_rect(
+            &self.editor_state,
+            viewport_width,
+            viewport_height,
+            toolbar_h,
+        );
         if canvas_geometry::toolbar_fits(canvas_w) && !presenting && !workspace_visible {
             let mut cx = PaintCx {
                 backend: &mut *frame,

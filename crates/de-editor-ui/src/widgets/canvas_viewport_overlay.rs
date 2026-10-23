@@ -32,7 +32,7 @@ pub fn paint_selection_overlay(
     let right = world_rect.origin.x + world_rect.size.x;
     let top = world_rect.origin.y;
     let bottom = world_rect.origin.y + world_rect.size.y;
-    let stroke_w = 1.0;
+    let stroke_w = 1.5;
     let outline_color = if is_container {
         crate::Color {
             r: theme.primary.r,
@@ -72,23 +72,14 @@ pub fn paint_selection_overlay(
         return;
     }
 
-    // 8 handle anchors.
-    let mid_x = world_rect.origin.x + world_rect.size.x / 2.0;
-    let mid_y = world_rect.origin.y + world_rect.size.y / 2.0;
-    let anchors = [
-        (left, top),
-        (mid_x, top),
-        (right, top),
-        (right, mid_y),
-        (right, bottom),
-        (mid_x, bottom),
-        (left, bottom),
-        (left, mid_y),
-    ];
+    // Corner handles only (#30). The edge midpoints keep their resize hit
+    // zones (`canvas_viewport/hit_test.rs`) — a press on an edge still
+    // resizes it; they just don't paint a square.
+    let anchors = [(left, top), (right, top), (right, bottom), (left, bottom)];
 
-    let handle_size = 7.0;
+    let handle_size = 8.0;
     let half = handle_size / 2.0;
-    let radius = 1.0;
+    let radius = 1.5;
     let bg = crate::Color::WHITE;
     for (x, y) in anchors {
         let rect = Rect {
@@ -97,7 +88,7 @@ pub fn paint_selection_overlay(
         };
         cx.backend.fill_round_rect(rect, radius, bg);
         cx.backend
-            .stroke_round_rect(rect, radius, theme.primary, 1.0);
+            .stroke_round_rect(rect, radius, theme.primary, 1.5);
     }
 }
 

@@ -335,6 +335,31 @@ pub fn press_shape_picker(
     }
 }
 
+// ─── Tool rail secondary press ─────────────────────────────────────────
+
+/// A right press on the tool rail's shape slot toggles the shape menu.
+/// Returns whether the press landed there (the host then marks dirty and
+/// consumes it); any other right press on the rail falls through.
+pub fn press_toolbar_secondary(
+    state: &mut EditorState,
+    viewport_w: f32,
+    viewport_h: f32,
+    point: Point2D,
+) -> bool {
+    use crate::widgets::host_canvas_geometry::{canvas_region, toolbar_fits, toolbar_rect_for};
+    let (_x, _y, canvas_w, _h) = canvas_region(state, viewport_w, viewport_h);
+    if !toolbar_fits(canvas_w) || state.editor_ui.workspace.visible {
+        return false;
+    }
+    let rect = toolbar_rect_for(state, viewport_w, viewport_h);
+    let hit = crate::widgets::Toolbar::for_editor(state).secondary_hit_test(rect, point);
+    if hit != Some(crate::widgets::ToolbarHit::ToggleShapePicker) {
+        return false;
+    }
+    core_press::toggle_shape_picker(&mut state.editor_ui);
+    true
+}
+
 // ─── Floating chrome (file pill + canvas action group) ─────────────────
 
 /// Outcome of a chrome hit routed through the shared arms.

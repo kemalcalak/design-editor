@@ -237,14 +237,14 @@ fn status_bar_press_sets_and_release_clears_pressed_button() {
     let r = host
         .status_bar_rect(viewport_w, viewport_h)
         .expect("status bar visible at this size");
-    let x = r.origin.x + 5.0;
+    let x = r.origin.x + r.size.x / 2.0;
     let y = r.origin.y + r.size.y / 2.0;
 
     assert!(host.apply_press(x, y, viewport_w, viewport_h));
     assert_eq!(
         host.editor_state.editor_ui.pressed_button,
         Some(de_editor_core::ButtonPressTarget::StatusBar(
-            de_editor_core::StatusBarButton::Search
+            de_editor_core::StatusBarButton::ZoomToFit
         ))
     );
 

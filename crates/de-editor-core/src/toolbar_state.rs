@@ -18,6 +18,8 @@ pub enum ToolbarAction {
     Redo,
     ToggleVariablesPanel,
     ToggleDesignPanel,
+    /// Import an image or SVG file onto the canvas.
+    ImportImage,
 }
 
 /// Which toolbar item the cursor is over. `None` on
@@ -26,6 +28,6 @@ pub enum ToolbarAction {
 pub enum ToolbarHover {
     Tool(Tool),
     Action(ToolbarAction),
-    /// The shape slot (compound rect/ellipse/polygon/line/pen + chevron).
+    /// The shape slot (Rectangle / Polygon / Line).
     ShapeSlot,
 }

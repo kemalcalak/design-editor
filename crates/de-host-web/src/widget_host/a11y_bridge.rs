@@ -18,8 +18,6 @@
 use super::WidgetHost;
 use de_editor_ui::accessibility_regions::{self as a11y_regions, RegionPlacement};
 
-use super::{TOOLBAR_INSET_X, TOOLBAR_INSET_Y};
-
 impl WidgetHost {
     /// Assemble the accessibility tree for the current editor frame.
     ///
@@ -50,8 +48,6 @@ impl WidgetHost {
             canvas_height: canvas_h,
             ai_chat_rect: self.ai_chat_rect(viewport_width, viewport_height),
             status_bar_rect: self.status_bar_rect(viewport_width, viewport_height),
-            toolbar_inset_x: TOOLBAR_INSET_X,
-            toolbar_inset_y: TOOLBAR_INSET_Y,
         };
         let layer_panel = self.layer_panel();
         a11y_regions::editor_tree_update(

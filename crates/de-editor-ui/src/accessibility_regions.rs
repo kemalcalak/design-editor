@@ -22,6 +22,7 @@ use crate::accessibility::{assemble_tree_update, PlacedWidget};
 use crate::layout_scene::LayoutScene;
 use crate::widgets::host_canvas_geometry::{
     chrome_layout, layer_panel_rect as rail_body_rect, property_panel_rect as rail_rect,
+    toolbar_fits, toolbar_rect as rail_toolbar_rect,
 };
 use crate::widgets::{
     AIChatPlaceholder, CanvasActions, CanvasViewport, FilePill, LayerPanel, LayoutCx,
@@ -69,12 +70,6 @@ pub struct RegionPlacement {
     pub ai_chat_rect: Option<Rect>,
     /// Floating status pill rect, `None` when the canvas is too narrow.
     pub status_bar_rect: Option<Rect>,
-    /// Host toolbar inset from the canvas band's top-left corner (the
-    /// hosts own these constants, so they stay the single source of
-    /// truth rather than being re-spelled here).
-    pub toolbar_inset_x: f32,
-    /// Vertical half of [`Self::toolbar_inset_x`].
-    pub toolbar_inset_y: f32,
 }
 
 /// Assemble the accessibility tree for the current editor frame.
@@ -98,8 +93,6 @@ pub fn editor_tree_update(
         canvas_height,
         ai_chat_rect,
         status_bar_rect,
-        toolbar_inset_x,
-        toolbar_inset_y,
     } = placement;
 
     let window_bounds = Rect {
@@ -138,11 +131,8 @@ pub fn editor_tree_update(
         .rect
         .size
         .y;
-    let toolbar_rect = Rect {
-        origin: Point2D::new(canvas_left + toolbar_inset_x, toolbar_inset_y),
-        size: Point2D::new(TOOLBAR_WIDTH, toolbar_h),
-    };
-    let toolbar_visible = canvas_width > TOOLBAR_WIDTH + toolbar_inset_x * 2.0;
+    let toolbar_rect = rail_toolbar_rect(state, viewport_width, viewport_height, toolbar_h);
+    let toolbar_visible = toolbar_fits(canvas_width);
 
     // 6. AIChatPlaceholder — floating chat panel.
     let chat = AIChatPlaceholder::from_editor_at(state, now_ms);

@@ -58,16 +58,20 @@ impl WidgetHost {
         self.layers_content_rect(viewport_h)
     }
 
-    pub(in crate::widget_host) fn toolbar_rect(&mut self, _viewport_w: f32) -> Rect {
+    pub(in crate::widget_host) fn toolbar_rect(
+        &mut self,
+        viewport_w: f32,
+        viewport_h: f32,
+    ) -> Rect {
         self.refresh_layout_scene();
-        canvas_geometry::toolbar_rect_for(&self.editor_state)
+        canvas_geometry::toolbar_rect_for(&self.editor_state, viewport_w, viewport_h)
     }
 
     /// Per-button hover wash on the floating toolbar. Mirrors
     /// `de_host_native::widget_host::geometry::update_toolbar_hover`.
     /// Returns `true` if the hover state changed.
     pub(in crate::widget_host) fn update_toolbar_hover(&mut self, x: f32, y: f32) -> bool {
-        let rect = self.toolbar_rect(self.last_viewport_w);
+        let rect = self.toolbar_rect(self.last_viewport_w, self.last_viewport_h);
         let toolbar = Toolbar::for_editor(&self.editor_state);
         let new_hover = toolbar
             .hit_test(rect, Point2D::new(x, y))

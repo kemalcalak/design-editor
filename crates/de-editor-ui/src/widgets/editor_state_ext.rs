@@ -60,6 +60,7 @@ pub fn toolbar_action(a: crate::widgets::toolbar::ToolbarAction) -> de_editor_co
         W::Redo => O::Redo,
         W::ToggleVariablesPanel => O::ToggleVariablesPanel,
         W::ToggleDesignPanel => O::ToggleDesignPanel,
+        W::ImportImage => O::ImportImage,
     }
 }
 
