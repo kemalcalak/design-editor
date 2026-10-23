@@ -471,6 +471,11 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                 Some((settings.mcp_cli_enabled, settings.mcp_server.port))
             }
         };
+        // The update modal (#111) owns input while shown: keys, wheel and the
+        // other buttons must not reach the document hidden under it.
+        if self.update_modal_blocks(&event) {
+            return;
+        }
         match event {
             WindowEvent::CloseRequested => self.on_close_requested(event_loop),
             WindowEvent::Resized(size) => self.on_resized(event_loop, size),

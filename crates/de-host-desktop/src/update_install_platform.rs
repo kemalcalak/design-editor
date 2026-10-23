@@ -29,8 +29,8 @@ pub enum StagedUpdate {
 pub struct InstallTarget(PathBuf);
 
 /// Resolve the running installation, or `Unsupported` when this copy cannot
-/// update itself (a dev build outside a bundle, an unpublished platform, or
-/// a bundle in a folder the user cannot write to).
+/// update itself (a dev build outside a bundle or NSIS install, an
+/// unpublished platform, or a bundle in a folder the user cannot write to).
 pub fn install_target() -> Result<InstallTarget, UpdateFailure> {
     let exe = std::env::current_exe().map_err(|_| UpdateFailure::Unsupported)?;
     platform_target(&exe).map(InstallTarget)
@@ -51,9 +51,18 @@ fn platform_target(exe: &Path) -> Result<PathBuf, UpdateFailure> {
     Ok(bundle)
 }
 
+/// Only an NSIS install can take the silent setup: the installer writes
+/// `Uninstall.exe` next to the app, a `cargo run` build or a copied exe has
+/// none, and running the per-machine setup for those would install a second
+/// copy and relaunch the wrong one.
 #[cfg(target_os = "windows")]
 fn platform_target(exe: &Path) -> Result<PathBuf, UpdateFailure> {
-    Ok(exe.to_path_buf())
+    let installed = exe
+        .parent()
+        .is_some_and(|dir| dir.join("Uninstall.exe").is_file());
+    installed
+        .then(|| exe.to_path_buf())
+        .ok_or(UpdateFailure::Unsupported)
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
@@ -85,7 +94,10 @@ fn staged_bundle_path(target: &Path) -> PathBuf {
 pub fn stage(dmg: &Path, target: InstallTarget) -> Result<StagedUpdate, UpdateFailure> {
     use std::process::Command;
     let target = target.0;
-    let mount = std::env::temp_dir().join(format!("design-editor-update-{}", std::process::id()));
+    // The job folder holds only this download; mount beside it and drop the
+    // whole folder once the bundle is copied out.
+    let job_dir = dmg.parent().ok_or(UpdateFailure::Install)?.to_path_buf();
+    let mount = job_dir.join("mount");
     let _ = std::fs::create_dir_all(&mount);
     let attached = Command::new("hdiutil")
         .args([
@@ -122,8 +134,7 @@ pub fn stage(dmg: &Path, target: InstallTarget) -> Result<StagedUpdate, UpdateFa
         .args(["detach", "-quiet"])
         .arg(&mount)
         .status();
-    let _ = std::fs::remove_dir(&mount);
-    let _ = std::fs::remove_file(dmg);
+    let _ = std::fs::remove_dir_all(&job_dir);
     if copied.is_none() {
         let _ = std::fs::remove_dir_all(&staged);
         return Err(UpdateFailure::Install);
@@ -175,9 +186,10 @@ fn windows_relaunch_command(pid: u32, setup: &Path, exe: &Path) -> String {
     format!(
         "$ErrorActionPreference='SilentlyContinue'; Wait-Process -Id {pid}; \
          Start-Process -FilePath {} -ArgumentList '/S' -Verb RunAs -Wait; \
-         Remove-Item -LiteralPath {}; Start-Process -FilePath {}",
+         Remove-Item -LiteralPath {} -Recurse; Start-Process -FilePath {}",
         ps_quote(setup),
-        ps_quote(setup),
+        // The setup sits alone in its job folder; drop the folder with it.
+        ps_quote(setup.parent().unwrap_or(setup)),
         ps_quote(exe)
     )
 }
@@ -216,21 +228,28 @@ fn spawn_helper(staged: &StagedUpdate, pid: u32) -> std::io::Result<()> {
     use std::os::windows::process::CommandExt;
     const CREATE_NO_WINDOW: u32 = 0x0800_0000;
     const DETACHED_PROCESS: u32 = 0x0000_0008;
+    const CREATE_BREAKAWAY_FROM_JOB: u32 = 0x0100_0000;
     let StagedUpdate::Installer { setup, exe } = staged else {
         return Err(std::io::ErrorKind::Unsupported.into());
     };
-    std::process::Command::new("powershell.exe")
-        .args([
-            "-NoProfile",
-            "-NonInteractive",
-            "-WindowStyle",
-            "Hidden",
-            "-Command",
-        ])
-        .arg(windows_relaunch_command(pid, setup, exe))
-        .creation_flags(CREATE_NO_WINDOW | DETACHED_PROCESS)
-        .spawn()
-        .map(drop)
+    let spawn = |flags: u32| {
+        std::process::Command::new("powershell.exe")
+            .args([
+                "-NoProfile",
+                "-NonInteractive",
+                "-WindowStyle",
+                "Hidden",
+                "-Command",
+            ])
+            .arg(windows_relaunch_command(pid, setup, exe))
+            .creation_flags(flags)
+            .spawn()
+            .map(drop)
+    };
+    // A launcher may run the app in a kill-on-close job, which would take
+    // the helper down with us; leave the job when allowed, else stay in it.
+    spawn(CREATE_NO_WINDOW | DETACHED_PROCESS | CREATE_BREAKAWAY_FROM_JOB)
+        .or_else(|_| spawn(CREATE_NO_WINDOW | DETACHED_PROCESS))
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]

@@ -20,7 +20,10 @@ impl DesktopApp {
             self.update_prompt_shown = true;
             if let de_editor_core::UpdateStatus::Available { version } = &status {
                 let ui = &mut self.host.editor_state_mut().editor_ui;
-                if ui.update_modal.is_none() {
+                // Only where a release installer exists: elsewhere the
+                // offer could only end in "can't update itself".
+                let installable = crate::update_check::installer_asset_name(version).is_some();
+                if installable && ui.update_modal.is_none() {
                     ui.update_modal = Some(de_editor_core::UpdateModalState::new(
                         version.clone(),
                         de_editor_core::UpdatePhase::Offer,

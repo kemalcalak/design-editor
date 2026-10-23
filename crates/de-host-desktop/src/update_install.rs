@@ -109,8 +109,10 @@ impl UpdateJob {
 fn run(version: &str, tx: &Sender<JobEvent>, cancel: &AtomicBool) {
     match run_steps(version, tx, cancel) {
         Ok(staged) => {
-            let _ = tx.send(JobEvent::Phase(UpdatePhase::ReadyToRestart));
+            // Staged first: a poll landing between the two sends must never
+            // show Restart without the build it restarts into.
             let _ = tx.send(JobEvent::Staged(staged));
+            let _ = tx.send(JobEvent::Phase(UpdatePhase::ReadyToRestart));
         }
         Err(JobError::Failed(failure)) => {
             let _ = tx.send(JobEvent::Phase(UpdatePhase::Failed(failure)));
@@ -132,23 +134,38 @@ fn run_steps(
     let sums = fetch_text(&format!("{base}/SHA256SUMS.txt"))?;
     let expected = expected_sha256(&sums, &name).ok_or(UpdateFailure::Checksum)?;
 
-    let dest = std::env::temp_dir().join(&name);
-    let digest = download(&format!("{base}/{name}"), &dest, tx, cancel).inspect_err(|_| {
-        let _ = std::fs::remove_file(&dest);
-    })?;
+    // One folder per job: a cancelled worker still unwinding must not touch
+    // the file the next attempt is writing.
+    let dir = job_dir();
+    std::fs::create_dir_all(&dir).map_err(|_| UpdateFailure::Install)?;
+    let dest = dir.join(&name);
+    let discard = || {
+        let _ = std::fs::remove_dir_all(&dir);
+    };
+    let digest =
+        download(&format!("{base}/{name}"), &dest, tx, cancel).inspect_err(|_| discard())?;
 
     let _ = tx.send(JobEvent::Phase(UpdatePhase::Verifying));
     if hex(&digest) != expected {
-        let _ = std::fs::remove_file(&dest);
+        discard();
         return Err(UpdateFailure::Checksum.into());
     }
     if cancel.load(Ordering::SeqCst) {
-        let _ = std::fs::remove_file(&dest);
+        discard();
         return Err(JobError::Cancelled);
     }
 
     let _ = tx.send(JobEvent::Phase(UpdatePhase::Installing));
-    Ok(stage(&dest, target)?)
+    stage(&dest, target)
+        .inspect_err(|_| discard())
+        .map_err(JobError::from)
+}
+
+/// `<temp>/design-editor-update-<pid>-<n>`, unique per job in this process.
+fn job_dir() -> std::path::PathBuf {
+    static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+    let n = NEXT.fetch_add(1, Ordering::SeqCst);
+    std::env::temp_dir().join(format!("design-editor-update-{}-{n}", std::process::id()))
 }
 
 fn client(timeout: Duration) -> Result<reqwest::Client, UpdateFailure> {

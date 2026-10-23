@@ -5,8 +5,9 @@
 
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::{theme_for, translate};
+use crate::widgets::home_surface::estimate_width;
 use crate::widgets::panel_controls::{paint_accent_button, paint_neutral_button, ButtonSpec};
-use crate::widgets::text_metrics::{fit_chrome, measure_chrome, CHROME_FONT_FAMILY};
+use crate::widgets::text_metrics::{fit_chrome, CHROME_FONT_FAMILY};
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Color, Point2D, Rect, TextLayout};
 use de_editor_core::editor_ui_state::{
@@ -15,16 +16,18 @@ use de_editor_core::editor_ui_state::{
 use de_editor_core::{EditorState, EditorUiState};
 
 const CARD_W: f32 = 440.0;
-const CARD_H: f32 = 196.0;
 const PAD: f32 = 24.0;
 const RADIUS: f32 = 14.0;
 const TITLE_SIZE: f32 = 16.0;
 const BODY_SIZE: f32 = 13.0;
 const STATS_SIZE: f32 = 12.0;
 const LINE_H: f32 = 19.0;
+/// Vertical rhythm between the title, body, bar, stats and button rows.
+const SECTION_GAP: f32 = 12.0;
 const BAR_H: f32 = 6.0;
 const BUTTON_H: f32 = 32.0;
-const BUTTON_W: f32 = 112.0;
+const BUTTON_MIN_W: f32 = 88.0;
+const BUTTON_PAD_X: f32 = 14.0;
 const BUTTON_GAP: f32 = 8.0;
 const VIEWPORT_MARGIN: f32 = 16.0;
 
@@ -60,35 +63,81 @@ impl<'a> UpdateModal<'a> {
         })
     }
 
+    /// Centred card, as tall as this phase's content (#111 review: a fixed
+    /// height left a hole under button-less phases and clipped long copy).
     pub fn rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
         let w = CARD_W.min((viewport_w - VIEWPORT_MARGIN * 2.0).max(0.0));
+        let h = self.card_height(w - PAD * 2.0);
         Rect {
             origin: Point2D::new(
                 ((viewport_w - w) / 2.0).max(VIEWPORT_MARGIN),
-                ((viewport_h - CARD_H) / 2.0).max(VIEWPORT_MARGIN),
+                ((viewport_h - h) / 2.0).max(VIEWPORT_MARGIN),
             ),
-            size: Point2D::new(w, CARD_H),
+            size: Point2D::new(w, h),
         }
     }
 
+    /// Paint and hit-test both walk this one stack, top to bottom.
+    fn card_height(&self, inner_w: f32) -> f32 {
+        let mut h = PAD + TITLE_SIZE + SECTION_GAP;
+        h += self.body_lines(inner_w).len() as f32 * LINE_H;
+        if self.modal.progress().is_some() {
+            h += SECTION_GAP + BAR_H;
+        }
+        if matches!(self.modal.phase, UpdatePhase::Downloading { .. }) {
+            h += SECTION_GAP + STATS_SIZE;
+        }
+        if !self.modal.buttons().is_empty() {
+            h += SECTION_GAP * 2.0 + BUTTON_H;
+        }
+        h + PAD
+    }
+
     /// Button rects, right-aligned along the card's bottom edge, in the
-    /// phase's paint order.
+    /// phase's paint order. Each is as wide as its label (with a floor);
+    /// a row that would overflow the card shares the space equally.
     pub fn button_rects(&self, card: Rect) -> Vec<(UpdateModalButton, Rect)> {
         let buttons = self.modal.buttons();
+        let inner_w = card.size.x - PAD * 2.0;
+        let gaps = BUTTON_GAP * buttons.len().saturating_sub(1) as f32;
+        let mut widths: Vec<f32> = buttons
+            .iter()
+            .map(|b| {
+                (estimate_width(self.button_label(*b), BODY_SIZE) + BUTTON_PAD_X * 2.0)
+                    .max(BUTTON_MIN_W)
+            })
+            .collect();
+        if widths.iter().sum::<f32>() + gaps > inner_w && !widths.is_empty() {
+            let even = (inner_w - gaps) / widths.len() as f32;
+            widths.iter_mut().for_each(|w| *w = even);
+        }
         let y = card.origin.y + card.size.y - PAD - BUTTON_H;
         let mut x = card.origin.x + card.size.x - PAD;
         let mut out: Vec<_> = buttons
             .iter()
+            .zip(&widths)
             .rev()
-            .map(|button| {
-                x -= BUTTON_W;
-                let rect = Rect::xywh(x, y, BUTTON_W, BUTTON_H);
+            .map(|(button, w)| {
+                x -= w;
+                let rect = Rect::xywh(x, y, *w, BUTTON_H);
                 x -= BUTTON_GAP;
                 (*button, rect)
             })
             .collect();
         out.reverse();
         out
+    }
+
+    /// Body copy wrapped to `inner_w`. Uses the layout-time width estimate
+    /// so hit-test (no backend) and paint agree on the card height, and no
+    /// text is shaped on the 10 Hz download repaint.
+    fn body_lines(&self, inner_w: f32) -> Vec<String> {
+        wrap_estimated(&self.body_text(), inner_w, BODY_SIZE)
+    }
+
+    fn title(&self) -> String {
+        self.t("updateModal.title")
+            .replace("{{version}}", &format!("v{}", self.modal.version))
     }
 
     pub fn hit_test(&self, card: Rect, point: Point2D) -> UpdateModalHit {
@@ -112,7 +161,7 @@ impl<'a> UpdateModal<'a> {
             UpdatePhase::Offer => {
                 return self
                     .t("updateModal.offerBody")
-                    .replace("{{current}}", env!("CARGO_PKG_VERSION"))
+                    .replace("{{current}}", concat!("v", env!("CARGO_PKG_VERSION")))
             }
             UpdatePhase::Downloading { .. } => "updateModal.downloading",
             UpdatePhase::Verifying => "updateModal.verifying",
@@ -167,8 +216,8 @@ pub fn download_stats(received: u64, total: Option<u64>, bytes_per_sec: f64) -> 
     }
 }
 
-/// Greedy word wrap against the chrome font.
-fn wrap_lines(cx: &mut PaintCx<'_>, text: &str, max_w: f32, size: f32) -> Vec<String> {
+/// Greedy word wrap against the layout-time width estimate.
+fn wrap_estimated(text: &str, max_w: f32, size: f32) -> Vec<String> {
     let mut lines = Vec::new();
     let mut line = String::new();
     for word in text.split_whitespace() {
@@ -177,7 +226,7 @@ fn wrap_lines(cx: &mut PaintCx<'_>, text: &str, max_w: f32, size: f32) -> Vec<St
         } else {
             format!("{line} {word}")
         };
-        if !line.is_empty() && measure_chrome(cx.backend, &candidate, size) > max_w {
+        if !line.is_empty() && estimate_width(&candidate, size) > max_w {
             lines.push(std::mem::replace(&mut line, word.to_string()));
         } else {
             line = candidate;
@@ -207,7 +256,7 @@ impl Widget for UpdateModal<'_> {
 
     fn layout(&self, _cx: &LayoutCx) -> LayoutBox {
         LayoutBox {
-            rect: Rect::xywh(0.0, 0.0, CARD_W, CARD_H),
+            rect: Rect::xywh(0.0, 0.0, CARD_W, self.card_height(CARD_W - PAD * 2.0)),
         }
     }
 
@@ -219,40 +268,30 @@ impl Widget for UpdateModal<'_> {
 
         let x = rect.origin.x + PAD;
         let inner_w = rect.size.x - PAD * 2.0;
-        let title = self
-            .t("updateModal.title")
-            .replace("{{version}}", &format!("v{}", self.modal.version));
-        let title = fit_chrome(cx.backend, &title, inner_w, TITLE_SIZE);
-        draw(
-            cx,
-            &title,
-            TITLE_SIZE,
-            theme.foreground,
-            x,
-            rect.origin.y + PAD + TITLE_SIZE,
-        );
+        let title = fit_chrome(cx.backend, &self.title(), inner_w, TITLE_SIZE);
+        let mut y = rect.origin.y + PAD + TITLE_SIZE;
+        draw(cx, &title, TITLE_SIZE, theme.foreground, x, y);
+        y += SECTION_GAP;
 
-        let mut y = rect.origin.y + PAD + TITLE_SIZE + 26.0;
         let body_color = match self.modal.phase {
             UpdatePhase::Failed(_) => theme.destructive,
             _ => theme.muted_foreground,
         };
-        for line in wrap_lines(cx, &self.body_text(), inner_w, BODY_SIZE)
-            .iter()
-            .take(3)
-        {
-            draw(cx, line, BODY_SIZE, body_color, x, y);
+        for line in self.body_lines(inner_w) {
+            // Baseline sits a little above the line box's bottom.
+            draw(cx, &line, BODY_SIZE, body_color, x, y + LINE_H - 5.0);
             y += LINE_H;
         }
 
         if let Some(progress) = self.modal.progress() {
-            let bar_y = y - 2.0;
-            let track = Rect::xywh(x, bar_y, inner_w, BAR_H);
+            y += SECTION_GAP;
+            let track = Rect::xywh(x, y, inner_w, BAR_H);
             cx.backend.fill_round_rect(track, BAR_H / 2.0, theme.muted);
             if progress > 0.0 {
-                let fill = Rect::xywh(x, bar_y, (inner_w * progress).max(BAR_H), BAR_H);
+                let fill = Rect::xywh(x, y, (inner_w * progress).max(BAR_H), BAR_H);
                 cx.backend.fill_round_rect(fill, BAR_H / 2.0, theme.primary);
             }
+            y += BAR_H;
         }
         if let UpdatePhase::Downloading {
             received,
@@ -260,19 +299,19 @@ impl Widget for UpdateModal<'_> {
             bytes_per_sec,
         } = self.modal.phase
         {
+            y += SECTION_GAP + STATS_SIZE;
             draw(
                 cx,
                 &download_stats(received, total, bytes_per_sec),
                 STATS_SIZE,
                 theme.muted_foreground,
                 x,
-                y + BAR_H + 16.0,
+                y,
             );
         }
 
-        let rects = self.button_rects(rect);
-        let primary = rects.last().map(|(button, _)| *button);
-        for (button, button_rect) in rects {
+        let primary = self.modal.primary();
+        for (button, button_rect) in self.button_rects(rect) {
             let spec = ButtonSpec {
                 rect: button_rect,
                 radius: 8.0,
@@ -281,7 +320,7 @@ impl Widget for UpdateModal<'_> {
                 hovered: self.modal.hover == Some(button),
                 pressed: false,
             };
-            if Some(button) == primary && button != UpdateModalButton::Cancel {
+            if Some(button) == primary {
                 paint_accent_button(cx, theme, spec);
             } else {
                 paint_neutral_button(cx, theme, spec);
@@ -291,7 +330,7 @@ impl Widget for UpdateModal<'_> {
 
     fn access_node(&self) -> accesskit::Node {
         let mut node = accesskit::Node::new(accesskit::Role::Dialog);
-        node.set_label(self.t("updateModal.title"));
+        node.set_label(self.title());
         if matches!(
             self.modal.phase,
             UpdatePhase::Downloading { .. } | UpdatePhase::Verifying | UpdatePhase::Installing
@@ -362,6 +401,45 @@ mod tests {
             modal.hit_test(card, Point2D::new(1.0, 1.0)),
             UpdateModalHit::Outside
         );
+    }
+
+    #[test]
+    fn card_grows_with_its_content() {
+        let height = |phase| {
+            let state = state_with(phase);
+            let modal = UpdateModal::for_editor(&state).unwrap();
+            modal.rect(1200.0, 800.0).size.y
+        };
+        let installing = height(UpdatePhase::Installing);
+        let downloading = height(UpdatePhase::Downloading {
+            received: 1,
+            total: Some(2),
+            bytes_per_sec: 1.0,
+        });
+        // No buttons → no empty button row under "Installing…".
+        assert!(installing < downloading);
+    }
+
+    #[test]
+    fn long_labels_widen_buttons_but_stay_inside_the_card() {
+        let state = state_with(UpdatePhase::Failed(UpdateFailure::Checksum));
+        let modal = UpdateModal::for_editor(&state).unwrap();
+        let card = modal.rect(1200.0, 800.0);
+        let rects = modal.button_rects(card);
+        assert_eq!(rects.len(), 3);
+        assert!(rects[0].1.origin.x >= card.origin.x + PAD - 0.01);
+        for (button, rect) in &rects {
+            let label_w = estimate_width(modal.button_label(*button), BODY_SIZE);
+            assert!(rect.size.x >= BUTTON_MIN_W.min(label_w), "{button:?}");
+        }
+    }
+
+    #[test]
+    fn title_names_the_version_for_screen_readers() {
+        let state = state_with(UpdatePhase::Offer);
+        let modal = UpdateModal::for_editor(&state).unwrap();
+        assert!(modal.title().contains("v0.2.1"));
+        assert!(!modal.title().contains("{{"));
     }
 
     #[test]

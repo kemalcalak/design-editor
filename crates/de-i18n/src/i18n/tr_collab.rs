@@ -239,7 +239,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.updateButton" => "Güncelle",
         "settings.system.restartButton" => "Yeniden başlat",
         "updateModal.title" => "Design Editor {{version}} sürümüne güncelle",
-        "updateModal.offerBody" => "Sizde {{current}} var. Şimdi indirip kurulsun mu?",
+        "updateModal.offerBody" => "Sizde {{current}} var. Şimdi indirilip kurulsun mu?",
         "updateModal.downloading" => "İndiriliyor…",
         "updateModal.verifying" => "İndirme doğrulanıyor…",
         "updateModal.installing" => "Kuruluyor…",

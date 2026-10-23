@@ -623,7 +623,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.checking" => "Checking…",
         "settings.system.checkingDescription" => "Contacting the release server for the latest version.",
         "settings.system.updateAvailable" => "Update available",
-        "settings.system.updateAvailableDescription" => "Use Update to download and install it here.",
+        "settings.system.updateAvailableDescription" => "Click Update to download and install it here.",
         "settings.system.idle" => "Not checked yet",
         "settings.system.idleDescription" => "An update check runs automatically shortly after launch.",
         "settings.system.errorStatus" => "Check failed",

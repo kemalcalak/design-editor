@@ -3,11 +3,23 @@
 //! `editor_ui.update_modal`.
 
 use de_editor_core::{UpdateAction, UpdateFailure, UpdatePhase};
+use winit::event::{KeyEvent, MouseButton, WindowEvent};
 use winit::event_loop::ActiveEventLoop;
+use winit::keyboard::{Key, NamedKey};
 
 use crate::{update_check, update_install, DesktopApp};
 
 impl DesktopApp {
+    /// Whether `event` must be dropped because the update modal is shown.
+    /// Left clicks and pointer moves still go to the host (the modal's own
+    /// press / hover tiers), and Escape reaches its Escape rung.
+    pub(crate) fn update_modal_blocks(&self, event: &WindowEvent) -> bool {
+        if !self.host.editor_state().editor_ui.update_modal_visible() {
+            return false;
+        }
+        update_modal_blocks_event(event)
+    }
+
     /// Run the queued update action, if any. Returns `true` when state
     /// changed.
     pub(crate) fn drain_update_action(&mut self, event_loop: &ActiveEventLoop) -> bool {
@@ -101,5 +113,24 @@ impl DesktopApp {
             }
         }
         self.host.mark_editor_state_dirty();
+    }
+}
+
+fn update_modal_blocks_event(event: &WindowEvent) -> bool {
+    match event {
+        WindowEvent::KeyboardInput {
+            event:
+                KeyEvent {
+                    logical_key: Key::Named(NamedKey::Escape),
+                    ..
+                },
+            ..
+        } => false,
+        WindowEvent::KeyboardInput { .. }
+        | WindowEvent::MouseWheel { .. }
+        | WindowEvent::PinchGesture { .. }
+        | WindowEvent::Ime(_) => true,
+        WindowEvent::MouseInput { button, .. } => *button != MouseButton::Left,
+        _ => false,
     }
 }

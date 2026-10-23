@@ -87,15 +87,28 @@ impl UpdateModalState {
         }
     }
 
-    /// Buttons in paint order (left to right); the last one is primary.
+    /// Buttons in paint order (left to right).
     pub fn buttons(&self) -> &'static [UpdateModalButton] {
         use UpdateModalButton as B;
         match self.phase {
             UpdatePhase::Offer => &[B::Later, B::Update],
-            UpdatePhase::Downloading { .. } | UpdatePhase::Verifying => &[B::Cancel],
-            UpdatePhase::Installing => &[],
+            UpdatePhase::Downloading { .. } => &[B::Cancel],
+            // Verifying is a moment long and staging may already have begun;
+            // a Cancel there could strand a half-staged bundle.
+            UpdatePhase::Verifying | UpdatePhase::Installing => &[],
             UpdatePhase::ReadyToRestart => &[B::Later, B::Restart],
             UpdatePhase::Failed(_) => &[B::Releases, B::Close, B::Retry],
+        }
+    }
+
+    /// The accent (default) button, if the phase has one. Cancel is never
+    /// primary: stopping a download is not the action the modal invites.
+    pub fn primary(&self) -> Option<UpdateModalButton> {
+        match self.phase {
+            UpdatePhase::Offer => Some(UpdateModalButton::Update),
+            UpdatePhase::ReadyToRestart => Some(UpdateModalButton::Restart),
+            UpdatePhase::Failed(_) => Some(UpdateModalButton::Retry),
+            _ => None,
         }
     }
 
@@ -188,7 +201,7 @@ impl super::EditorUiState {
         }
     }
 
-    /// Escape on the modal: cancel a transfer, never interrupt staging,
+    /// Escape on the modal: cancel a transfer, never interrupt verification or staging,
     /// otherwise behave like the secondary "Later" / "Close" button.
     /// Returns `true` when the key was consumed.
     pub fn escape_update_modal(&mut self) -> bool {
@@ -196,10 +209,8 @@ impl super::EditorUiState {
             return false;
         };
         match modal.phase {
-            UpdatePhase::Downloading { .. } | UpdatePhase::Verifying => {
-                self.press_update_button(UpdateModalButton::Cancel)
-            }
-            UpdatePhase::Installing => {}
+            UpdatePhase::Downloading { .. } => self.press_update_button(UpdateModalButton::Cancel),
+            UpdatePhase::Verifying | UpdatePhase::Installing => {}
             UpdatePhase::Failed(_) => self.press_update_button(UpdateModalButton::Close),
             UpdatePhase::Offer | UpdatePhase::ReadyToRestart => {
                 self.press_update_button(UpdateModalButton::Later)
@@ -323,6 +334,7 @@ mod tests {
         let modal = |phase| UpdateModalState::new("1", phase);
         assert_eq!(modal(UpdatePhase::Offer).buttons(), &[B::Later, B::Update]);
         assert_eq!(modal(downloading()).buttons(), &[B::Cancel]);
+        assert!(modal(UpdatePhase::Verifying).buttons().is_empty());
         assert!(modal(UpdatePhase::Installing).buttons().is_empty());
         assert_eq!(
             modal(UpdatePhase::ReadyToRestart).buttons(),
@@ -332,6 +344,28 @@ mod tests {
             modal(UpdatePhase::Failed(UpdateFailure::Checksum)).buttons(),
             &[B::Releases, B::Close, B::Retry]
         );
+    }
+
+    #[test]
+    fn primary_is_the_inviting_action_and_never_cancel() {
+        let modal = |phase| UpdateModalState::new("1", phase);
+        assert_eq!(
+            modal(UpdatePhase::Offer).primary(),
+            Some(UpdateModalButton::Update)
+        );
+        assert_eq!(modal(downloading()).primary(), None);
+        assert_eq!(
+            modal(UpdatePhase::Failed(UpdateFailure::Network)).primary(),
+            Some(UpdateModalButton::Retry)
+        );
+        for phase in [
+            UpdatePhase::Offer,
+            UpdatePhase::ReadyToRestart,
+            downloading(),
+        ] {
+            let m = modal(phase);
+            assert!(m.primary().is_none_or(|p| m.buttons().contains(&p)));
+        }
     }
 
     #[test]
