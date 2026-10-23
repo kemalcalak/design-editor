@@ -369,3 +369,29 @@ fn inner_shadow_path_darkens_edges_not_center() {
         center.r()
     );
 }
+
+#[test]
+fn flat_svg_paths_fit_their_zero_height_or_width_box() {
+    // #106: an imported straight line (`M300 345h74`) gets a box with
+    // height 0. The fit used to skip scaling for any zero box side, so the
+    // line painted in raw path units — 74 px long, 300 px off its node.
+    let horizontal = skia_safe::utils::parse_path::from_svg("M300 345h74").unwrap();
+    let fitted = fit_path_to_rect(&horizontal, Rect::xywh(28.0, 29.0, 2.5, 0.0));
+    let b = fitted.compute_tight_bounds();
+    assert!((b.left() - 28.0).abs() < 1e-3, "{b:?}");
+    assert!((b.right() - 30.5).abs() < 1e-3, "{b:?}");
+    assert!(
+        (b.top() - 29.0).abs() < 1e-3 && b.height().abs() < 1e-3,
+        "{b:?}"
+    );
+
+    let vertical = skia_safe::utils::parse_path::from_svg("M40 10v50").unwrap();
+    let fitted = fit_path_to_rect(&vertical, Rect::xywh(5.0, 6.0, 0.0, 20.0));
+    let b = fitted.compute_tight_bounds();
+    assert!(
+        (b.left() - 5.0).abs() < 1e-3 && b.width().abs() < 1e-3,
+        "{b:?}"
+    );
+    assert!((b.top() - 6.0).abs() < 1e-3, "{b:?}");
+    assert!((b.bottom() - 26.0).abs() < 1e-3, "{b:?}");
+}

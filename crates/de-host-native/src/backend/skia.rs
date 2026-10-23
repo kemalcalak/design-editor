@@ -81,6 +81,10 @@ pub use image_diagnostics::{
     begin_image_paint_diagnostics, end_image_paint_diagnostics, image_paint_diagnostics_snapshot,
     ImagePaintDiagnostics,
 };
+// Only `boolean_ops` (gated on `gl-host`) and the tests reach the fit from
+// outside `path.rs`.
+#[cfg(any(test, feature = "gl-host"))]
+pub(crate) use path::fit_path_to_rect;
 
 /// Frame-scoped Jian-DrawOp adapter (spec v19 §5.2.1).
 ///

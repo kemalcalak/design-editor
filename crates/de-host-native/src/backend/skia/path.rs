@@ -719,20 +719,26 @@ fn has_multiple_close_commands(d: &str) -> bool {
     false
 }
 
-fn fit_path_to_rect(path: &skia_safe::Path, rect: Rect) -> skia_safe::Path {
+/// Scale + translate `path` so its tight bounds map onto `rect`. A flat
+/// path (a straight horizontal or vertical line) has no extent on one
+/// axis, so a zero box side on that axis is expected and must still fit
+/// the other axis; only a zero side the path actually spans falls back.
+pub(crate) fn fit_path_to_rect(path: &skia_safe::Path, rect: Rect) -> skia_safe::Path {
     let bounds = path.compute_tight_bounds();
+    let native_w = bounds.width();
+    let native_h = bounds.height();
+    let degenerate_side =
+        |side: f32, native: f32| side < 0.0 || (side == 0.0 && native.abs() > 0.01);
     if !bounds.is_finite()
         || !rect.size.x.is_finite()
         || !rect.size.y.is_finite()
-        || rect.size.x <= 0.0
-        || rect.size.y <= 0.0
+        || degenerate_side(rect.size.x, native_w)
+        || degenerate_side(rect.size.y, native_h)
     {
         let mut matrix = skia_safe::Matrix::new_identity();
         matrix.set_translate((rect.origin.x, rect.origin.y));
         return path.with_transform(&matrix);
     }
-    let native_w = bounds.width();
-    let native_h = bounds.height();
     let sx = if native_w.abs() > 0.01 {
         rect.size.x / native_w
     } else {

@@ -12,6 +12,7 @@
 //! (`replace_paths_with_polyline`) so the canonical tree is never
 //! edited directly.
 
+use crate::backend::skia::fit_path_to_rect;
 use de_editor_core::BooleanOp;
 use de_editor_ui::layout_scene::{regular_polygon_points, LayoutScene, NodeKind, SceneNode};
 use de_editor_ui::{Point2D, Rect};
@@ -172,38 +173,6 @@ fn build_svg_path(d: &str, bounds: Rect) -> Option<SkPath> {
         path.set_fill_type(skia_safe::PathFillType::EvenOdd);
     }
     Some(path)
-}
-
-/// Scale + translate `path` so its tight bounds map onto `rect` — a copy
-/// of the backend's `fit_path_to_rect` (the boolean layer can't reach the
-/// private backend fn), so boolean input geometry matches what is painted.
-fn fit_path_to_rect(path: &SkPath, rect: Rect) -> SkPath {
-    let bounds = path.compute_tight_bounds();
-    if !bounds.is_finite()
-        || !rect.size.x.is_finite()
-        || !rect.size.y.is_finite()
-        || rect.size.x <= 0.0
-        || rect.size.y <= 0.0
-    {
-        let mut matrix = Matrix::new_identity();
-        matrix.set_translate((rect.origin.x, rect.origin.y));
-        return path.with_transform(&matrix);
-    }
-    let sx = if bounds.width().abs() > 0.01 {
-        rect.size.x / bounds.width()
-    } else {
-        1.0
-    };
-    let sy = if bounds.height().abs() > 0.01 {
-        rect.size.y / bounds.height()
-    } else {
-        1.0
-    };
-    let tx = rect.origin.x - bounds.left() * sx;
-    let ty = rect.origin.y - bounds.top() * sy;
-    let mut matrix = Matrix::new_identity();
-    matrix.set_scale_translate((sx, sy), (tx, ty));
-    path.with_transform(&matrix)
 }
 
 fn apply_node_rotation(path: SkPath, node: &SceneNode) -> SkPath {
