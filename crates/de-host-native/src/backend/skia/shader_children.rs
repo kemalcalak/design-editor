@@ -19,13 +19,17 @@ use super::NativeBackend;
 
 impl NativeBackend {
     /// The runtime shader for `effect` with `uniforms` bound, or `None` when
-    /// skia rejects the program (the caller paints the fallback).
+    /// skia rejects the program (the caller paints the fallback). A child
+    /// named in `extra` binds that shader (an effect pass's capture);
+    /// another binds the frame texture or image its uniform names (#9,
+    /// #165).
     pub(super) fn make_runtime_shader(
         &mut self,
         effect: RuntimeEffect,
         uniforms: &[(&str, &[f32])],
         rect: Rect,
         local_matrix: &Matrix,
+        extra: &[(&str, Shader)],
     ) -> Option<Shader> {
         if effect.children().is_empty() {
             // `RuntimeEffect` is an RCHandle — this is a refcount bump,
@@ -39,25 +43,53 @@ impl NativeBackend {
             return builder.make_shader(local_matrix);
         }
         let box_size = fragment_box(rect, local_matrix);
+        let specs = de_editor_core::shader_textures::shader_child_specs(effect.source());
         let mut children = Vec::with_capacity(effect.children().len());
         for child in effect.children() {
             if child.ty() != ChildType::Shader {
                 // Colour-filter / blender children have no binding here.
                 return None;
             }
-            let image = uniforms
+            let mipmap = specs
                 .iter()
-                .find(|(name, _)| *name == child.name())
-                .and_then(|(_, values)| decode_image_id(values))
-                .and_then(|id| self.raster_image(id));
-            let shader = image
-                .and_then(|image| image_child(&image, box_size))
-                .unwrap_or_else(|| skia_safe::shaders::color(skia_safe::Color::TRANSPARENT));
+                .any(|spec| spec.name == child.name() && spec.mipmap);
+            let shader = match extra.iter().find(|(name, _)| *name == child.name()) {
+                Some((_, shader)) => Some(shader.clone()),
+                None => uniforms
+                    .iter()
+                    .find(|(name, _)| *name == child.name())
+                    .and_then(|(_, values)| decode_image_id(values))
+                    .and_then(|id| self.bound_child(id, box_size, mipmap)),
+            };
+            let shader =
+                shader.unwrap_or_else(|| skia_safe::shaders::color(skia_safe::Color::TRANSPARENT));
             children.push(ChildPtr::Shader(shader));
         }
         let data = skia_safe::Data::new_copy(&uniform_block(&effect, uniforms));
         effect.make_shader(data, &children, local_matrix)
     }
+}
+
+impl NativeBackend {
+    /// The child shader for id `id`: a frame texture first (#165), else a
+    /// resident image, stretched over `box_size`.
+    fn bound_child(&mut self, id: u64, box_size: (f32, f32), mipmap: bool) -> Option<Shader> {
+        if let Some(texture) = self.frame_texture(id) {
+            let image = texture.image.clone();
+            let tile = super::shader_textures::tile_mode(Some(texture.kind));
+            return stretched(&image, box_size)
+                .and_then(|m| super::shader_textures::texture_child(&image, tile, mipmap, &m));
+        }
+        let image = self.raster_image(id)?;
+        let matrix = stretched(&image, box_size)?;
+        super::shader_textures::texture_child(&image, skia_safe::TileMode::Clamp, mipmap, &matrix)
+    }
+}
+
+/// The matrix stretching `image` over `box_size`.
+fn stretched(image: &skia_safe::Image, box_size: (f32, f32)) -> Option<Matrix> {
+    let (w, h) = (image.width() as f32, image.height() as f32);
+    (w > 0.0 && h > 0.0).then(|| Matrix::scale((box_size.0 / w, box_size.1 / h)))
 }
 
 /// The node box in the program's `fragCoord` space: the painted rect
@@ -71,20 +103,6 @@ fn fragment_box(rect: Rect, local_matrix: &Matrix) -> (f32, f32) {
     } else {
         (rect.size.x, rect.size.y)
     }
-}
-
-/// `image` stretched over `box_size`, clamped at the edges.
-fn image_child(image: &skia_safe::Image, box_size: (f32, f32)) -> Option<Shader> {
-    let (w, h) = (image.width() as f32, image.height() as f32);
-    if w <= 0.0 || h <= 0.0 {
-        return None;
-    }
-    let matrix = Matrix::scale((box_size.0 / w, box_size.1 / h));
-    image.to_shader(
-        (skia_safe::TileMode::Clamp, skia_safe::TileMode::Clamp),
-        skia_safe::SamplingOptions::new(skia_safe::FilterMode::Linear, skia_safe::MipmapMode::None),
-        &matrix,
-    )
 }
 
 /// Whether `ty` is an integer uniform type (`int` .. `int4`).

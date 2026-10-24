@@ -11,7 +11,11 @@ use de_editor_ui::{Point2D, Rect};
 
 impl<'a> NativeFrameBackend<'a> {
     pub fn new(inner: &'a mut NativeBackend, canvas: &'a skia_safe::Canvas) -> Self {
-        Self { inner, canvas }
+        Self {
+            inner,
+            canvas,
+            redirects: Vec::new(),
+        }
     }
 
     /// Generation of the backend's installed-raster set. A cached

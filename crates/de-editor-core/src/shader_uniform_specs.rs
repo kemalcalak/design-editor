@@ -294,6 +294,25 @@ pub fn uniform_specs(
     out
 }
 
+/// Every `uniform shader` child `sksl` declares, in order, with whether
+/// its doc comment says `@sdf` and `@mipmap` (`shader_textures`).
+pub(crate) fn child_statements(sksl: &str) -> Vec<(&str, bool, bool)> {
+    let mut out = Vec::new();
+    if !sksl.contains("shader") {
+        return out;
+    }
+    for statement in uniform_statements(sksl) {
+        if statement.ty != "shader" {
+            continue;
+        }
+        let notes = Notes::parse(statement.comment);
+        for name in statement.names {
+            out.push((name, notes.sdf, notes.mipmap));
+        }
+    }
+    out
+}
+
 /// Whether `sksl` declares a `uniform float2 size;` (or `half2`): the
 /// layout scene binds the node size only into an existing `size` entry.
 pub fn declares_size(sksl: &str) -> bool {
@@ -353,6 +372,9 @@ struct Notes {
     color: bool,
     /// `@bool`: an `int` that holds a boolean.
     boolean: bool,
+    /// `@sdf` / `@mipmap` on a `uniform shader` child (#165).
+    sdf: bool,
+    mipmap: bool,
     canvas_bound: bool,
     default: Option<String>,
 }
@@ -393,7 +415,11 @@ impl Notes {
                     "max" => notes.max = value.parse().ok().or(notes.max),
                     "color" | "colour" => notes.color = true,
                     "bool" | "boolean" => notes.boolean = true,
-                    "time" | "mouse" | "resolution" => notes.canvas_bound = true,
+                    "sdf" => notes.sdf = true,
+                    "mipmap" => notes.mipmap = true,
+                    // `@internal`: bound by the import, not edited (an
+                    // image's `textureSize`, #165).
+                    "time" | "mouse" | "resolution" | "internal" => notes.canvas_bound = true,
                     "default" if !value.is_empty() => notes.default = Some(value.to_owned()),
                     _ => {}
                 }

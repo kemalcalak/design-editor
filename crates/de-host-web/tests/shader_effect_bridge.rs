@@ -39,10 +39,12 @@ fn run_node_module(javascript: &str, context: &str) {
 
 #[test]
 fn canvaskit_backend_overrides_the_shader_effect_layer() {
-    let backend = source("canvaskit/backend.rs");
+    // The effect items expand from a macro in a sibling (800-line cap).
+    let backend = source("canvaskit/backend.rs") + &source("canvaskit/shader_textures.rs");
     let bindings = source("canvaskit/bindings.rs");
     let ops = source("canvaskit/ops.rs");
     let bridge = source("op_ck_bridge.js");
+    assert!(backend.contains("shader_texture_items!()"));
     assert!(backend.contains("fn push_shader_effect_layer("));
     assert!(ops.contains("fn push_shader_effect_layer("));
     assert!(bindings.contains("js_name = pushShaderEffectLayer"));
@@ -146,4 +148,95 @@ assert(near(corner[0], 20) && near(corner[1], 15), `corner maps to node size: ${
 "#,
     );
     run_node_module(&javascript, "shader effect matrix helpers");
+}
+
+/// Shader textures (#165) in real CanvasKit: an SDF float image, a fill
+/// child bound to a frame texture, an effect pass sampling its backdrop
+/// and its own SDF, and an int uniform cast by `makeShader`.
+#[cfg(feature = "canvaskit")]
+#[test]
+fn shader_textures_bind_in_real_canvaskit() {
+    let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/canvaskit");
+    let quote = |path: std::path::PathBuf| {
+        serde_json::to_string(&path.to_string_lossy()).expect("path serializes")
+    };
+    let mut javascript = String::from(
+        "import { createRequire } from 'module';\nimport fs from 'fs';\n\
+         const require = createRequire(import.meta.url);\n",
+    );
+    javascript.push_str(&source("op_ck_bridge.js"));
+    javascript.push_str(&format!(
+        r#"
+const assert = (condition, message) => {{ if (!condition) throw new Error(message); }};
+const CanvasKitInit = require({js});
+const CK = await CanvasKitInit({{ wasmBinary: fs.readFileSync({wasm}) }});
+const read = (surface) => surface.makeImageSnapshot().readPixels(0, 0, {{
+  width: 40, height: 40, colorType: CK.ColorType.RGBA_8888, alphaType: CK.AlphaType.Unpremul, colorSpace: CK.ColorSpace.SRGB,
+}});
+const at = (pixels, x, y) => Array.from(pixels.slice((y * 40 + x) * 4, (y * 40 + x) * 4 + 4));
+const paint = (r, g, b) => {{ const p = new CK.Paint(); p.setColor(CK.Color(r, g, b, 1)); return p; }};
+
+// Tags and kinds mirror the Rust rules.
+const tags = opCkShaderChildTags('uniform shader object;\n/** @label S @sdf @mipmap */ uniform shader shape;');
+assert(tags.get('shape').sdf && tags.get('shape').mipmap && !tags.get('object').sdf, 'child tags');
+assert(opCkTextureKind(0xD8000000) === 2 && opCkTextureKind(0x12345678) === null, 'texture kinds');
+
+// A disc's field: about +20 texels at the centre, negative at a corner.
+const disc = CK.MakeSurface(40, 40);
+disc.getCanvas().clear(CK.TRANSPARENT);
+disc.getCanvas().drawOval(CK.XYWHRect(0, 0, 40, 40), paint(255, 255, 255));
+const sdf = opCkMakeSdfImage(CK, disc.makeImageSnapshot(), 1);
+assert(sdf && sdf.width() === 40, 'an SDF float image is made');
+
+// A fill reading the field through a frame texture child.
+const fillSksl = '/** @sdf */ uniform shader shape; half4 main(float2 p) {{ float d = shape.eval(p).r; return d > 0.0 ? half4(d / 40.0, 0.0, 0.0, 1.0) : half4(0.0, 1.0, 0.0, 1.0); }}';
+const fillEntry = opCkCreateRuntimeEffectCache(CK).get(fillSksl);
+const id = new Float32Array([1, 0, 0, 0xD800]);
+const shader = opCkMakeRuntimeShaderForRect(fillEntry, ['shape'], id, new Uint32Array([4]), 0, 0, 40, 40, CK,
+  () => ({{ image: sdf, kind: 2 }}));
+assert(shader, 'the fill shader builds');
+const fill = CK.MakeSurface(40, 40);
+const fillPaint = new CK.Paint();
+fillPaint.setShader(shader);
+fill.getCanvas().drawRect(CK.XYWHRect(0, 0, 40, 40), fillPaint);
+const fp = read(fill);
+assert(Math.abs(at(fp, 20, 20)[0] - 128) < 20 && at(fp, 20, 20)[1] < 16, `centre: ${{at(fp, 20, 20)}}`);
+assert(at(fp, 1, 1)[1] > 240, `corner: ${{at(fp, 1, 1)}}`);
+
+// An effect pass: node red on the left, backdrop blue, outline from its SDF.
+const main = CK.MakeSurface(40, 40);
+const canvas = main.getCanvas();
+canvas.clear(CK.TRANSPARENT);
+canvas.drawRect(CK.XYWHRect(0, 0, 40, 40), paint(0, 0, 255));
+const backdrop = main.makeImageSnapshot();
+const offscreen = main.makeSurface({{ width: 40, height: 40, colorType: CK.ColorType.RGBA_8888, alphaType: CK.AlphaType.Premul, colorSpace: CK.ColorSpace.SRGB }});
+offscreen.getCanvas().clear(CK.TRANSPARENT);
+offscreen.getCanvas().drawRect(CK.XYWHRect(0, 0, 20, 40), paint(255, 0, 0));
+const capture = offscreen.makeImageSnapshot();
+const effectSksl = 'uniform shader object; uniform shader background; /** @sdf */ uniform shader edge; half4 main(float2 p) {{ float d = edge.eval(p).r; return abs(d) < 1.5 ? half4(0.0, 1.0, 0.0, 1.0) : object.eval(p) + background.eval(p); }}';
+const effectEntry = opCkCreateRuntimeEffectCache(CK).get(effectSksl);
+assert(effectEntry, 'the effect compiles');
+const values = new Float32Array([2, 0, 0, 0xD400, 0, 0, 0, 0xD800]);
+const pass = {{ entry: effectEntry, x: 0, y: 0, w: 40, h: 40, names: ['background', 'edge'], values, arities: new Uint32Array([4, 4]) }};
+assert(opCkDrawShaderEffectPass(CK, canvas, pass, capture, 'object', 0, 0,
+  () => ({{ image: backdrop, kind: 1 }})), 'the effect pass draws');
+const ep = read(main);
+assert(at(ep, 10, 20)[0] > 240 && at(ep, 10, 20)[2] > 240, `node + backdrop: ${{at(ep, 10, 20)}}`);
+assert(at(ep, 30, 20)[2] > 240 && at(ep, 30, 20)[0] < 16, `backdrop only: ${{at(ep, 30, 20)}}`);
+assert(at(ep, 19, 20)[1] > 240 || at(ep, 20, 20)[1] > 240, `edge outline: ${{at(ep, 19, 20)}} ${{at(ep, 20, 20)}}`);
+
+// Integer uniforms: CanvasKit casts the float slots.
+const intSksl = 'uniform int steps; half4 main(float2 p) {{ return steps == 3 ? half4(1, 0, 0, 1) : half4(0, 1, 0, 1); }}';
+const intEntry = opCkCreateRuntimeEffectCache(CK).get(intSksl);
+const intShader = opCkMakeRuntimeShader(intEntry, ['steps'], new Float32Array([2.6]), new Uint32Array([1]));
+const ints = CK.MakeSurface(40, 40);
+const intPaint = new CK.Paint();
+intPaint.setShader(intShader);
+ints.getCanvas().drawRect(CK.XYWHRect(0, 0, 40, 40), intPaint);
+assert(at(read(ints), 5, 5)[0] > 240, `int uniform binds 3: ${{at(read(ints), 5, 5)}}`);
+"#,
+        js = quote(assets.join("canvaskit.js")),
+        wasm = quote(assets.join("canvaskit.wasm")),
+    ));
+    run_node_module(&javascript, "real CanvasKit shader textures");
 }
