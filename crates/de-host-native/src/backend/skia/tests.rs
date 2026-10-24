@@ -11,6 +11,8 @@ mod image_cache;
 mod shader;
 #[path = "tests/text_shaping.rs"]
 mod text_shaping;
+#[path = "tests/text_wrap_parity.rs"]
+mod text_wrap_parity;
 #[path = "tests/vector_paint.rs"]
 mod vector_paint;
 

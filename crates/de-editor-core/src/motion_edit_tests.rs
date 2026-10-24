@@ -21,7 +21,10 @@ fn add_writes_a_mount_fade_in() {
     let motion = simple(&state, 0);
     assert_eq!(motion.trigger, MotionTrigger::Mount);
     assert_eq!(motion.property, MotionProperty::Opacity);
-    assert_eq!((motion.from, motion.to), (0.0, 1.0));
+    assert_eq!(
+        (motion.from, motion.to),
+        (MotionStop::Number(0.0), MotionStop::Number(1.0))
+    );
     assert_eq!(motion.duration_ms, DEFAULT_MOTION_DURATION_MS);
     assert_eq!(motion.delay_ms, 0);
 }
@@ -46,7 +49,7 @@ fn trigger_property_and_values_edit_in_place() {
     assert!(state.set_selected_animation_property(0, MotionProperty::Rotation));
     assert_eq!(
         (simple(&state, 0).from, simple(&state, 0).to),
-        MotionProperty::Rotation.default_range()
+        MotionProperty::Rotation.default_stops(None)
     );
     assert!(state.set_selected_animation_value(0, MotionField::From, -90.0));
     assert!(state.set_selected_animation_value(0, MotionField::To, 45.5));
@@ -55,7 +58,10 @@ fn trigger_property_and_values_edit_in_place() {
     let motion = simple(&state, 0);
     assert_eq!(motion.trigger, MotionTrigger::InView);
     assert_eq!(motion.property, MotionProperty::Rotation);
-    assert_eq!((motion.from, motion.to), (-90.0, 45.5));
+    assert_eq!(
+        (motion.from, motion.to),
+        (MotionStop::Number(-90.0), MotionStop::Number(45.5))
+    );
     assert_eq!((motion.duration_ms, motion.delay_ms), (450, 120));
 }
 
@@ -158,7 +164,7 @@ fn a_shown_value_commits_back_unchanged() {
     let mut state = state_with_rect();
     assert!(state.add_selected_animation());
     assert!(state.set_selected_animation_property(0, MotionProperty::ScaleX));
-    let shown = format_motion_number(simple(&state, 0).from);
+    let shown = format_motion_number(simple(&state, 0).from.as_number().expect("number"));
     assert_eq!(shown, "0.8");
     let parsed: f64 = shown.parse().expect("number");
     assert!(
@@ -183,5 +189,64 @@ fn a_value_edit_keeps_keyframe_level_keys() {
     assert!(state.set_selected_animation_value(0, MotionField::From, 0.5));
     let animation = &state.selected_animations()[0];
     assert!(animation.keyframes[0].extra.contains_key("easing"));
-    assert_eq!(simple(&state, 0).from, 0.5);
+    assert_eq!(simple(&state, 0).from, MotionStop::Number(0.5));
+}
+
+/// #190: a Fill tween starts at the node's own solid fill and ends 20%
+/// darker; its From / To take hex colours, never numbers.
+#[test]
+fn a_fill_tween_edits_hex_colours() {
+    let mut state = state_with_rect();
+    assert!(state.set_selected_fill_hex_at(0, "#3B5BFD"));
+    assert!(state.add_selected_animation());
+    assert!(state.set_selected_animation_property(0, MotionProperty::Fill));
+    let motion = simple(&state, 0);
+    assert_eq!(motion.property, MotionProperty::Fill);
+    assert_eq!(motion.from, MotionStop::Color([0x3B, 0x5B, 0xFD, 255]));
+    assert_eq!(motion.to, MotionStop::Color([0x2F, 0x49, 0xCA, 255]));
+    let keyframes = &state.selected_animations()[0].keyframes;
+    assert_eq!(keyframes[0].values["fill"], serde_json::json!("#3B5BFD"));
+
+    assert!(state.set_selected_animation_color(0, MotionField::To, "#ff000080"));
+    assert_eq!(simple(&state, 0).to, MotionStop::Color([255, 0, 0, 0x80]));
+    assert_eq!(
+        state.selected_animations()[0].keyframes[1].values["fill"],
+        serde_json::json!("#FF000080")
+    );
+    assert!(!state.set_selected_animation_color(0, MotionField::From, "nope"));
+    assert!(!state.set_selected_animation_value(0, MotionField::From, 1.0));
+    assert!(state.set_selected_animation_value(0, MotionField::DurationMs, 150.0));
+    // A number property takes no colour.
+    assert!(state.set_selected_animation_property(0, MotionProperty::Opacity));
+    assert!(!state.set_selected_animation_color(0, MotionField::From, "#000000"));
+    assert_eq!(format_motion_color([1, 2, 3, 255]), "#010203");
+}
+
+/// A focus-and-blur shows `#FF0000` for an authored `#f00`; committing it
+/// back must not rewrite the keyframe (no undo step for a non-edit).
+#[test]
+fn an_unchanged_colour_does_not_rewrite_the_keyframe() {
+    let mut state = state_with_rect();
+    let node_id = state.selection.anchor.clone();
+    assert!(state.apply(EditorCommand::PatchNodeData {
+        node_id,
+        patch_json: r##"{"animations":[{"trigger":"hover","durationMs":150,
+            "keyframes":[{"offset":0,"values":{"fill":"#f00"}},
+                         {"offset":1,"values":{"fill":"#000000"}}]}]}"##
+            .into(),
+        page_id: None,
+    }));
+    assert!(!state.set_selected_animation_color(0, MotionField::From, "#FF0000"));
+    assert_eq!(
+        state.selected_animations()[0].keyframes[0].values["fill"],
+        serde_json::json!("#f00")
+    );
+}
+
+/// A near-black fill tweens lighter, so the two stops never match.
+#[test]
+fn a_near_black_fill_tweens_lighter() {
+    let (from, to) = MotionProperty::Fill.default_stops(None);
+    assert_eq!(from, MotionStop::Color([0, 0, 0, 255]));
+    assert_eq!(to, MotionStop::Color([51, 51, 51, 255]));
 }

@@ -50,6 +50,9 @@ impl WidgetHost {
                         // The footer offers no Git on the web (no git
                         // backend), so this is unreachable here.
                         FileMenuStep::Git => {}
+                        FileMenuStep::Present => {
+                            self.toggle_present();
+                        }
                     }
                     self.mark_dirty();
                     return;
@@ -91,6 +94,7 @@ impl WidgetHost {
                     | FileMenuChoice::Import
                     | FileMenuChoice::Undo
                     | FileMenuChoice::Redo
+                    | FileMenuChoice::Present
                     | FileMenuChoice::Tool(_) => return,
                 });
                 self.editor_state.editor_ui.file_menu_open = false;

@@ -248,6 +248,7 @@ pub fn action_state(state: &EditorState, chips: &[BoardChip]) -> SlidesActionSta
         selected_slides: selected_slide_count(state, chips),
         selected_export_supported: selected_slides_export_supported(),
         transition: state.slides_transition_kind(),
+        transition_duration_ms: state.slides_transition_duration(),
     }
 }
 
@@ -479,6 +480,13 @@ pub fn release(state: &mut EditorState, layout: &SlidesPanelLayout) -> SlidesRel
         SlidesPanelTarget::Transition(kind) => {
             let before = state.snapshot_for_history();
             if state.set_slides_transition(None, kind, None) {
+                state.history_push_past(before);
+            }
+            SlidesRelease::SetTransition
+        }
+        SlidesPanelTarget::TransitionDuration { longer } => {
+            let before = state.snapshot_for_history();
+            if state.step_slides_transition_duration(longer) {
                 state.history_push_past(before);
             }
             SlidesRelease::SetTransition

@@ -165,16 +165,36 @@ pub fn interaction_menu_rows(
 /// hangs off the panel's left side.
 pub(crate) const NARROW_ANCHOR_W: f32 = 40.0;
 
-/// The popover rect, dropping below `anchor`.
-pub fn interaction_menu_rect(anchor: Rect, row_count: usize) -> Rect {
+/// The visible part of the panel the popover must stay inside: the
+/// scrolling section viewport below the pinned header (the same bounds the
+/// fill-type picker uses).
+pub fn interaction_menu_viewport(panel_rect: Rect) -> Rect {
+    crate::widgets::property_panel_fill::fill_type_picker_viewport(panel_rect)
+}
+
+/// The popover rect for `anchor`, kept inside `viewport` (#190): below the
+/// anchor when it fits, else above it, else pinned to the viewport's
+/// bottom edge (a list taller than either side).
+pub fn interaction_menu_rect(anchor: Rect, row_count: usize, viewport: Rect) -> Rect {
     let h = row_count as f32 * INTERACTION_MENU_ROW_H + 8.0;
     let x = if anchor.size.x <= NARROW_ANCHOR_W {
         anchor.origin.x + anchor.size.x - INTERACTION_MENU_W
     } else {
         anchor.origin.x
     };
+    let top = viewport.origin.y;
+    let bottom = viewport.origin.y + viewport.size.y;
+    let below = anchor.origin.y + anchor.size.y;
+    let above = anchor.origin.y - h;
+    let y = if below + h <= bottom {
+        below
+    } else if above >= top {
+        above
+    } else {
+        (bottom - h).max(top)
+    };
     Rect {
-        origin: Point2D::new(x, anchor.origin.y + anchor.size.y),
+        origin: Point2D::new(x, y),
         size: Point2D::new(INTERACTION_MENU_W, h),
     }
 }
@@ -199,16 +219,18 @@ pub fn interaction_menu_row_rects(
         .collect()
 }
 
-/// Paint the popover anchored to `anchor`. `hover` highlights the row
-/// under the cursor, like the Effects add-menu.
+/// Paint the popover anchored to `anchor`, inside `viewport` (see
+/// [`interaction_menu_rect`]). `hover` highlights the row under the
+/// cursor, like the Effects add-menu.
 pub fn paint_interaction_menu(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
     anchor: Rect,
+    viewport: Rect,
     rows: &[(PropertyPanelAction, String)],
     hover: Option<usize>,
 ) {
-    let menu = interaction_menu_rect(anchor, rows.len());
+    let menu = interaction_menu_rect(anchor, rows.len(), viewport);
     cx.backend
         .fill_round_rect(menu, INPUT_RADIUS, theme.popover);
     cx.backend

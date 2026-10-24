@@ -299,7 +299,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.onLongPress" => "При долгом нажатии",
         "interactions.transition" => "Переход",
         "interactions.slide" => "Сдвиг",
-        "interactions.fade" => "Растворение",
+        "interactions.fade" => "Затухание",
         "motion.title" => "Анимация",
         "motion.onLoad" => "При загрузке",
         "motion.inView" => "При появлении",

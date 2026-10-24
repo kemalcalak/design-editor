@@ -81,7 +81,9 @@ thread_local! {
     static LAYOUT_MEASURE_BACKEND: Rc<dyn MeasureBackend> = make_measure_backend();
 }
 
-/// Real skia paragraph shaper — native + web-skia builds (`skia-measure`, default).
+/// Real skia paragraph shaper — native + web-skia builds (`skia-measure`, default),
+/// with wrapped one-style, simple-script text counted the way the canvas
+/// painter breaks it (`painter_wrap_measure`, #186).
 /// Wrapped in a memoizing cache: paragraph shaping is the dominant layout cost,
 /// and repeat reconversions (drag / resize / colour edits) re-measure identical
 /// text, so the cache turns those into hash lookups. (The estimate backend below
@@ -94,7 +96,7 @@ fn make_measure_backend() -> Rc<dyn MeasureBackend> {
     }
 
     Rc::new(crate::measure_cache::CachingMeasureBackend::new(Rc::new(
-        jian_skia::SkiaMeasure::new(),
+        crate::painter_wrap_measure::PainterWrapMeasure::new(),
     )))
 }
 
