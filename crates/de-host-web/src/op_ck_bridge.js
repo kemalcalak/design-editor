@@ -161,6 +161,7 @@ export function opCkCreateRuntimeEffectCache(CK) {
             effect,
             reflected,
             floatCount: Math.max(0, Math.trunc(Number(effect.getUniformFloatCount()) || 0)),
+            children: opCkShaderChildren(source),
           };
         }
       } catch (_error) {
@@ -173,9 +174,86 @@ export function opCkCreateRuntimeEffectCache(CK) {
   };
 }
 
+// Image children (#9): the names declared `uniform shader <name>;` in source
+// order, outside comments. CanvasKit binds children by position and exposes
+// no child reflection, so this mirrors `de_editor_core::shader_images`.
+export function opCkShaderChildren(sksl) {
+  const code = String(sksl).replace(/\/\*[\s\S]*?(?:\*\/|$)|\/\/[^\n]*/g, ' ');
+  const names = [];
+  for (const match of code.matchAll(/\buniform\s+shader\s+([A-Za-z_][A-Za-z0-9_]*)\s*;/g)) {
+    names.push(match[1]);
+  }
+  return names;
+}
+
+// The paint image id a child uniform carries as four 16-bit chunks, split
+// into the `(lo, hi)` u32 pair the image caches key on; null when the values
+// are not an encoded id (`de_editor_core::shader_images::decode_image_id`).
+export function opCkDecodeShaderImageId(values) {
+  if (!values || values.length !== 4) return null;
+  const chunks = Array.from(values, Number);
+  if (!chunks.every((chunk) => Number.isInteger(chunk) && chunk >= 0 && chunk <= 0xffff)) {
+    return null;
+  }
+  return { lo: chunks[0] + chunks[1] * 0x10000, hi: chunks[2] + chunks[3] * 0x10000 };
+}
+
+// One child shader per declared image child: the resident image stretched
+// over the `boxW` x `boxH` fragCoord box with clamped edges, else transparent
+// so the program still runs while the image decodes. `imageFor(lo, hi)`
+// returns the cached CanvasKit image or null. The caller deletes the shaders.
+export function opCkMakeShaderImageChildren(
+  CK,
+  entry,
+  uniformNames,
+  uniforms,
+  uniformArities,
+  boxW,
+  boxH,
+  imageFor,
+) {
+  const bindings = new Map();
+  let cursor = 0;
+  for (let index = 0; index < uniformNames.length; index++) {
+    const rawArity = Number(uniformArities[index]);
+    const arity = Number.isSafeInteger(rawArity) && rawArity >= 0 ? rawArity : 0;
+    const name = String(uniformNames[index]);
+    if (!bindings.has(name) && cursor + arity <= uniforms.length) {
+      bindings.set(name, uniforms.slice(cursor, cursor + arity));
+    }
+    cursor += arity;
+  }
+  return entry.children.map((child) => {
+    const id = opCkDecodeShaderImageId(bindings.get(child));
+    const image = id && imageFor ? imageFor(id.lo, id.hi) : null;
+    const imageW = image ? image.width() : 0;
+    const imageH = image ? image.height() : 0;
+    if (image && imageW > 0 && imageH > 0 && boxW > 0 && boxH > 0) {
+      const shader = image.makeShaderOptions(
+        CK.TileMode.Clamp,
+        CK.TileMode.Clamp,
+        CK.FilterMode.Linear,
+        CK.MipmapMode.None,
+        [boxW / imageW, 0, 0, 0, boxH / imageH, 0, 0, 0, 1],
+      );
+      if (shader) return shader;
+    }
+    return CK.Shader.MakeColor(CK.TRANSPARENT, CK.ColorSpace.SRGB);
+  });
+}
+
 // Bind the caller's name/value slices against CanvasKit's reflected uniform
 // slots. Unknown names and arity mismatches are ignored like native Skia.
-export function opCkMakeRuntimeShader(entry, uniformNames, uniforms, uniformArities, localMatrix = null) {
+// A program with image children needs one shader per child (`children`);
+// without them it fails and the caller paints the fallback.
+export function opCkMakeRuntimeShader(
+  entry,
+  uniformNames,
+  uniforms,
+  uniformArities,
+  localMatrix = null,
+  children = null,
+) {
   if (!entry) return null;
   try {
     const data = new Float32Array(entry.floatCount);
@@ -196,6 +274,10 @@ export function opCkMakeRuntimeShader(entry, uniformNames, uniforms, uniformArit
       for (let value = 0; value < arity; value++) {
         data[slot + value] = uniforms[valuesStart + value];
       }
+    }
+    if (entry.children && entry.children.length > 0) {
+      if (!children || children.length !== entry.children.length) return null;
+      return entry.effect.makeShaderWithChildren(data, children, localMatrix) || null;
     }
     return entry.effect.makeShader(data, localMatrix) || null;
   } catch (_error) {
@@ -237,6 +319,7 @@ export function opCkRuntimeEffectLocalMatrix(
   return [1, 0, x, 0, 1, y, 0, 0, 1];
 }
 
+// `CK` and `imageFor` are only needed for programs with image children.
 export function opCkMakeRuntimeShaderForRect(
   entry,
   uniformNames,
@@ -246,14 +329,25 @@ export function opCkMakeRuntimeShaderForRect(
   y,
   w,
   h,
+  CK = null,
+  imageFor = null,
 ) {
-  return opCkMakeRuntimeShader(
-    entry,
-    uniformNames,
-    uniforms,
-    uniformArities,
-    opCkRuntimeEffectLocalMatrix(uniformNames, uniforms, uniformArities, x, y, w, h),
+  const localMatrix = opCkRuntimeEffectLocalMatrix(uniformNames, uniforms, uniformArities, x, y, w, h);
+  if (!entry || !entry.children || entry.children.length === 0 || !CK) {
+    return opCkMakeRuntimeShader(entry, uniformNames, uniforms, uniformArities, localMatrix);
+  }
+  // The fragCoord box: the document-space `size` the local matrix scales
+  // from (its x scale is w / size.x), else the rect itself.
+  const boxW = w / localMatrix[0];
+  const boxH = h / localMatrix[4];
+  const children = opCkMakeShaderImageChildren(
+    CK, entry, uniformNames, uniforms, uniformArities, boxW, boxH, imageFor,
   );
+  try {
+    return opCkMakeRuntimeShader(entry, uniformNames, uniforms, uniformArities, localMatrix, children);
+  } finally {
+    for (const child of children) if (child && child.delete) child.delete();
+  }
 }
 
 // Build the row-major vertex lattice consumed by CanvasKit.MakeVertices.
@@ -730,6 +824,8 @@ export async function opCkInit(canvasId) {
       y,
       w,
       h,
+      CK,
+      (lo, hi) => imageCaches.fullImage(lo, hi),
     );
     if (!shader) {
       canvas.drawRRect(rrect, fillPaint(

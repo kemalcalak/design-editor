@@ -5,7 +5,7 @@ phase: [generation]
 trigger:
   keywords: [shader, glsl, sksl, generative, noise, grain, turbulence, feTurbulence, aurora]
 priority: 28
-budget: 820
+budget: 960
 category: knowledge
 ---
 
@@ -72,7 +72,11 @@ RULES:
   param name is fine). Any other signature fails to compile.
 - Pass the node's pixel size as a `float2 size` uniform when you need to
   normalise `fragCoord` (SkSL has no built-in resolution).
-- No external textures / images in v1 — colours + math only.
+- To sample an image, declare `uniform shader image0;` and bind
+  `uniforms: { image0: "<url>" }` — a `data:` / `https://` URL (same as
+  an image fill's `url`). `image0.eval(p)` returns the image stretched
+  over the node box in `fragCoord` space (premultiplied); it is
+  transparent until the image loads. Exports include it.
 - To animate, declare `uniform float time;` — the canvas binds elapsed
   seconds every frame (exports render at `time = 0`). Never put `time` in
   `uniforms`; keep motion slow, e.g. `sin(time * 0.5)`.
