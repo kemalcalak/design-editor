@@ -135,6 +135,27 @@ fn add_node_effect_appends_to_the_node() {
 }
 
 #[test]
+fn add_node_effect_inner_shadow_matches_the_effects_add_menu() {
+    let mut s = state_with(vec![rect("n1", "r", 0.0, 0.0, 40.0, 40.0)]);
+    assert!(s.apply(EditorCommand::AddNodeEffect {
+        node_id: id("n1"),
+        kind: "inner_shadow".into(),
+    }));
+    let mut menu = rect("n2", "r", 0.0, 0.0, 40.0, 40.0);
+    assert!(crate::fills::push_inner_shadow(&mut menu));
+    match (find_node(s.active_children(), &id("n1")).unwrap(), &menu) {
+        (PenNode::Rectangle(r), PenNode::Rectangle(m)) => {
+            assert_eq!(r.container.effects, m.container.effects);
+            assert!(matches!(
+                r.container.effects.as_deref(),
+                Some([jian_ops_schema::style::PenEffect::Shadow(b)]) if b.inner == Some(true)
+            ));
+        }
+        other => panic!("expected rects, got {other:?}"),
+    }
+}
+
+#[test]
 fn add_node_effect_rejects_unknown_kind() {
     let mut s = state_with(vec![rect("n1", "r", 0.0, 0.0, 10.0, 10.0)]);
     assert!(!s.apply(EditorCommand::AddNodeEffect {
