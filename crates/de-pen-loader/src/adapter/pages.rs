@@ -106,9 +106,11 @@ pub(super) fn compute_layout(root: &PenNode, out: &mut BTreeMap<String, [f32; 4]
     let Some(root_id) = taffy_roots.first() else {
         return;
     };
-    if engine.compute(*root_id, (root_w, root_h)).is_err() {
+    let Ok(text_widths) = engine.compute_with_text_widths(*root_id, (root_w, root_h)) else {
         return;
-    }
+    };
+    let mut wrapping = std::collections::HashSet::new();
+    collect_wrapping_text_ids(root, &mut wrapping);
     // Walk every node by SlotMap iteration, looking up its absolute
     // rect via `node_rect`. Keyed back by the schema id we stashed
     // in `tree.by_id` during insertion. `node_rect` already carries
@@ -117,18 +119,41 @@ pub(super) fn compute_layout(root: &PenNode, out: &mut BTreeMap<String, [f32; 4]
     // further adjustment here.
     for (id_str, node_key) in tree.by_id.iter() {
         if let Some(rect) = engine.node_rect(*node_key) {
+            // Wrapping text keeps the width layout measured and broke its
+            // lines at, not taffy's whole-pixel box: the painter wraps at
+            // the box width, and a pixel either way can move a line break
+            // the box height was sized for (#202).
+            let width = text_widths
+                .get(node_key)
+                .filter(|_| wrapping.contains(id_str.as_str()))
+                .copied()
+                .unwrap_or(rect.size.width);
             out.insert(
                 id_str.clone(),
-                [
-                    rect.origin.x,
-                    rect.origin.y,
-                    rect.size.width,
-                    rect.size.height,
-                ],
+                [rect.origin.x, rect.origin.y, width, rect.size.height],
             );
         }
     }
     crate::layout_repair::repair_fit_content_layout(root, out);
+}
+
+/// Ids of the text nodes the painter wraps (`textGrowth: fixed-width` or
+/// `fixed-width-and-height`, the same test as the text payload's
+/// `text_wrap`).
+fn collect_wrapping_text_ids<'a>(node: &'a PenNode, out: &mut std::collections::HashSet<&'a str>) {
+    use de_editor_core::pen_node_ext::PenNodeExt;
+    use jian_ops_schema::node::TextGrowth;
+    if let PenNode::Text(text) = node {
+        if matches!(
+            text.text_growth,
+            Some(TextGrowth::FixedWidth) | Some(TextGrowth::FixedWidthHeight)
+        ) {
+            out.insert(text.base.id.as_str());
+        }
+    }
+    for child in node.children().into_iter().flatten() {
+        collect_wrapping_text_ids(child, out);
+    }
 }
 
 /// This thread's layout text measure (shared, memoized). Hosts that run
@@ -137,3 +162,7 @@ pub(super) fn compute_layout(root: &PenNode, out: &mut BTreeMap<String, [f32; 4]
 pub fn layout_measure_backend() -> Rc<dyn MeasureBackend> {
     LAYOUT_MEASURE_BACKEND.with(Rc::clone)
 }
+
+#[cfg(test)]
+#[path = "pages_wrap_width_tests.rs"]
+mod wrap_width_tests;
