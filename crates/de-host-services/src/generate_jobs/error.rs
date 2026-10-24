@@ -1,4 +1,4 @@
-//! Typed failures of the MCP `generate` jobs (#10, #11).
+//! Typed failures of the MCP `generate` jobs (#10).
 
 use std::fmt;
 
@@ -9,23 +9,18 @@ pub enum GenerateJobError {
     /// No Images-tab profile and no OpenAI / Gemini chat key: nothing may be
     /// called, so nothing is written.
     NotConfigured,
-    /// No chat provider with a key for an LLM-backed job (SVG artwork).
-    NoChatProvider,
-    /// The configured provider cannot do this operation.
-    Unsupported {
-        operation: &'static str,
-        provider: &'static str,
-    },
     /// Too many generations still running in this process.
     Busy { limit: usize },
     /// A stock search found nothing usable.
     NoStockResult,
     /// An image provider call failed.
     Image(ImageGenerateError),
-    /// The source image could not be read or decoded.
-    Source(String),
-    /// Any other failure, already phrased for the client.
-    Failed(String),
+    /// The caller's deadline passed before or during the provider call.
+    TimedOut,
+    /// The worker panicked; its slot is released and the job reported failed.
+    Panicked,
+    /// The worker thread could not be started.
+    Spawn(String),
 }
 
 impl fmt::Display for GenerateJobError {
@@ -35,37 +30,19 @@ impl fmt::Display for GenerateJobError {
                 "no image provider configured: add an image generation profile in \
                  Settings > Images, or an OpenAI or Gemini API key in Settings > Agents",
             ),
-            GenerateJobError::NoChatProvider => f.write_str(
-                "no chat provider configured: add a built-in provider with an API key \
-                 in Settings > Agents",
-            ),
-            GenerateJobError::Unsupported {
-                operation,
-                provider,
-            } => write!(
-                f,
-                "{operation} is not supported by the {provider} image provider; \
-                 configure an OpenAI or Gemini image profile"
-            ),
             GenerateJobError::Busy { limit } => write!(
                 f,
                 "{limit} generations are already running; wait for one to finish"
             ),
             GenerateJobError::NoStockResult => f.write_str("no stock photo matched the query"),
             GenerateJobError::Image(error) => error.fmt(f),
-            GenerateJobError::Source(message) => write!(f, "source image: {message}"),
-            GenerateJobError::Failed(message) => f.write_str(message),
+            GenerateJobError::TimedOut => f.write_str("the generation ran out of time"),
+            GenerateJobError::Panicked => f.write_str("the generation failed unexpectedly"),
+            GenerateJobError::Spawn(message) => {
+                write!(f, "could not start the generation: {message}")
+            }
         }
     }
 }
 
 impl std::error::Error for GenerateJobError {}
-
-impl From<ImageGenerateError> for GenerateJobError {
-    fn from(error: ImageGenerateError) -> Self {
-        match error {
-            ImageGenerateError::NotConfigured => GenerateJobError::NotConfigured,
-            other => GenerateJobError::Image(other),
-        }
-    }
-}

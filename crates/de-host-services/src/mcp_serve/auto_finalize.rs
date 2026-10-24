@@ -152,6 +152,7 @@ impl AutoFinalize {
 
 pub(super) fn run(path: PathBuf) -> Result<(), McpServeError> {
     let mut state = super::load_editor_state(&path)?;
+    generate_tool::load_user_provider_settings(&mut state);
     let signals = install_shutdown_signals()?;
     let mut auto_finalize = AutoFinalize::from_env();
     let stdin = std::io::stdin();
@@ -195,7 +196,7 @@ pub(super) fn run_stdio_session<R: BufRead, W: Write>(
             Err(e) => return Err(McpServeError::Io(format!("stdin read: {e}"))),
         };
         if n == 0 {
-            generate_tool::finish_generations_and_save(state, path, GENERATION_DRAIN_WAIT);
+            generate_tool::wait_and_land_generations(state, path, GENERATION_DRAIN_WAIT);
             run_auto_finalize_and_save(auto_finalize, state, path, "stdin-eof")?;
             return Ok(());
         }
@@ -214,6 +215,7 @@ pub(super) fn run_stdio_session<R: BufRead, W: Write>(
 pub(super) fn run_http(path: PathBuf, port: u16) -> Result<(), McpServeError> {
     const HTTP_IO_TIMEOUT: Duration = Duration::from_secs(30);
     let mut state = super::load_editor_state(&path)?;
+    generate_tool::load_user_provider_settings(&mut state);
     let signals = install_shutdown_signals()?;
     let mut auto_finalize = AutoFinalize::from_env();
     let listener = std::net::TcpListener::bind(("127.0.0.1", port))
@@ -259,7 +261,7 @@ pub(super) fn run_http(path: PathBuf, port: u16) -> Result<(), McpServeError> {
             Err(error) => eprintln!("design-editor --mcp-http: accept: {error}"),
         }
     }
-    generate_tool::land_generations_and_save(&mut state, &path);
+    generate_tool::wait_and_land_generations(&mut state, &path, GENERATION_DRAIN_WAIT);
     run_auto_finalize_and_save(&mut auto_finalize, &mut state, &path, "shutdown")
 }
 

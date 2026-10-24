@@ -1,12 +1,14 @@
 //! MCP tool `enrich_images` — resolve unresolved image slots on the active
-//! page with real stock photos (Openverse, Wikimedia fallback).
+//! page with real stock photos (Openverse, Wikimedia fallback) or, for
+//! explicit `Generate` slots, images from the user's image provider.
 //!
 //! This is the in-process version of `design-editor --enrich-images` for
 //! MCP clients: it reuses the exact slot-detection predicates and write-back
 //! semantics of the desktop image-search session (both lifted into the shared
 //! `de-image-enrich` crate), but drives them synchronously on the calling
 //! thread through the `web_image_search` backend instead of the desktop's
-//! background job session. One search + one write-back per target.
+//! background job session. One search or generation + one write-back per
+//! target.
 //!
 //! ## Search and generate contract
 //!
@@ -20,9 +22,9 @@
 //! ## Blocking + timeout
 //!
 //! The tool blocks until every target is resolved, the `timeout_seconds`
-//! budget is spent, or no targets remain. Production provider ladders receive
-//! the remaining overall budget, so one slow Openverse/Wikimedia search cannot
-//! outlive the MCP deadline. Targets never started are reported as
+//! budget is spent, or no targets remain. Production searches and generations
+//! receive the remaining overall budget, so one slow provider cannot outlive
+//! the MCP deadline. Targets never started are reported as
 //! `unresolved`.
 //!
 //! ## Mutations ride the applier

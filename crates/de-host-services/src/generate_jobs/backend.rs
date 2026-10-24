@@ -1,24 +1,33 @@
 //! The provider seam behind `generate` jobs.
 //!
 //! [`GenerateBackend`] is what a job worker calls; tests inject a stub so no
-//! test ever reaches the network. [`ProviderBackend`] is production: the
-//! shared OpenAI / Gemini / Replicate / Atlas calls of
-//! `web_image_generate`, and the Openverse → Wikimedia stock ladder.
+//! test ever reaches the network. [`ProviderBackend`] is production: the same
+//! provider dispatch as the browser route (`web_image_generate::run_generate`
+//! — OpenAI / Gemini / Replicate / Atlas, result download, endpoint
+//! screening), and the Openverse → Wikimedia stock ladder.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use de_editor_core::agent_settings::{ImageGenProfile, ImageGenProvider};
+use de_editor_core::agent_settings::ImageGenProfile;
 
 use super::GenerateJobError;
-use crate::web_image_generate::{
-    generate_atlas, generate_gemini, generate_openai, generate_replicate, ImageGenerateError,
-};
-use crate::web_image_search::{
-    fetch_image_data_url, run_first_search_blocking_with_timeout, WebOpenverseCredentials,
-};
+use crate::web_image_generate::{run_generate, ImageGenerateError, WebImageGenerateRequest};
+use crate::web_image_search::{run_first_search_blocking_with_timeout, WebOpenverseCredentials};
 
 /// Wall-clock budget of one stock search.
 const STOCK_SEARCH_TIMEOUT: Duration = Duration::from_secs(60);
+
+/// Whether a profile's custom `base_url` must pass the browser route's SSRF
+/// screening. Off on the desktop (the user's own saved settings, the
+/// popover's trust tier); the `--serve-web` daemon turns it on, because its
+/// settings can carry browser-supplied profiles.
+static SCREEN_CUSTOM_ENDPOINTS: AtomicBool = AtomicBool::new(false);
+
+/// Screen custom image endpoints in this process from now on.
+pub fn screen_custom_endpoints() {
+    SCREEN_CUSTOM_ENDPOINTS.store(true, Ordering::Release);
+}
 
 /// One AI image request.
 #[derive(Clone)]
@@ -28,6 +37,9 @@ pub struct ImageJobRequest {
     pub width: Option<f64>,
     pub height: Option<f64>,
     pub profile: ImageGenProfile,
+    /// Overall cap on the provider call, for callers with their own deadline
+    /// (`enrich_images`); `None` keeps the providers' own timeouts.
+    pub timeout: Option<Duration>,
 }
 
 /// One stock-photo request.
@@ -49,7 +61,30 @@ pub struct ProviderBackend;
 
 impl GenerateBackend for ProviderBackend {
     fn generate_image(&self, request: &ImageJobRequest) -> Result<String, GenerateJobError> {
-        let url = crate::chat_runtime::block_on_anywhere(generate(request))?;
+        let custom_endpoint = SCREEN_CUSTOM_ENDPOINTS.load(Ordering::Acquire)
+            && request
+                .profile
+                .base_url
+                .as_deref()
+                .is_some_and(|base| !base.trim().is_empty());
+        let web_request = WebImageGenerateRequest {
+            prompt: request.prompt.clone(),
+            width: request.width,
+            height: request.height,
+            profile: request.profile.clone(),
+            custom_endpoint,
+        };
+        let url = crate::chat_runtime::block_on_anywhere(async {
+            match request.timeout {
+                Some(limit) => tokio::time::timeout(limit, run_generate(&web_request))
+                    .await
+                    .map_err(|_| GenerateJobError::TimedOut)?
+                    .map_err(GenerateJobError::from),
+                None => run_generate(&web_request)
+                    .await
+                    .map_err(GenerateJobError::from),
+            }
+        })?;
         // Inline renders (gpt-image b64, Gemini) can be several MB; shrink an
         // oversized one before it enters the document, as the popover does.
         Ok(de_image_enrich::net::downscale::maybe_downscale_data_url(&url).unwrap_or(url))
@@ -69,41 +104,11 @@ impl GenerateBackend for ProviderBackend {
     }
 }
 
-async fn generate(request: &ImageJobRequest) -> Result<String, ImageGenerateError> {
-    let client = provider_client()?;
-    let profile = &request.profile;
-    let (prompt, width, height) = (&request.prompt, request.width, request.height);
-    let url = match profile.provider {
-        ImageGenProvider::OpenAi | ImageGenProvider::Custom => {
-            generate_openai(&client, prompt, profile, width, height).await?
+impl From<ImageGenerateError> for GenerateJobError {
+    fn from(error: ImageGenerateError) -> Self {
+        match error {
+            ImageGenerateError::NotConfigured => GenerateJobError::NotConfigured,
+            other => GenerateJobError::Image(other),
         }
-        ImageGenProvider::Gemini => {
-            generate_gemini(&client, prompt, profile, width, height).await?
-        }
-        ImageGenProvider::Replicate => {
-            generate_replicate(&client, prompt, profile, width, height).await?
-        }
-        ImageGenProvider::Atlas => generate_atlas(&client, prompt, profile, width, height).await?,
-    };
-    if url.starts_with("data:") {
-        return Ok(url);
     }
-    // Remote result: embed it so the fill renders offline and saves into the
-    // document's asset folder like any other image.
-    fetch_image_data_url(&client, &url)
-        .await
-        .ok_or(ImageGenerateError::DownloadFailed)
-}
-
-/// The user's saved settings are operator-owned (the desktop's own trust
-/// tier), so the provider host dials with a plain client.
-pub(crate) fn provider_client() -> Result<reqwest::Client, ImageGenerateError> {
-    reqwest::Client::builder()
-        .use_rustls_tls()
-        .timeout(Duration::from_secs(180))
-        .user_agent(concat!("design-editor/", env!("CARGO_PKG_VERSION")))
-        .build()
-        .map_err(|e| ImageGenerateError::ClientBuild {
-            message: e.to_string(),
-        })
 }

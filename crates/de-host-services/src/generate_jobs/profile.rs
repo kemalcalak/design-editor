@@ -22,11 +22,9 @@ pub const GEMINI_FALLBACK_IMAGE_MODEL: &str = "gemini-2.5-flash-image";
 pub fn resolve_image_profile(
     settings: &AgentSettings,
 ) -> Result<ImageGenProfile, GenerateJobError> {
+    // The popover's own pick: the active profile, else the first one.
     if let Some(profile) = settings
-        .image_gen_profiles
-        .iter()
-        .find(|p| Some(&p.id) == settings.active_image_gen_profile_id.as_ref())
-        .or_else(|| settings.image_gen_profiles.first())
+        .active_image_gen_profile()
         .filter(|p| !p.api_key.trim().is_empty() && !p.model.trim().is_empty())
     {
         return Ok(profile.clone());
@@ -91,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn active_image_profile_wins_over_chat_keys() {
+    fn first_image_profile_wins_over_chat_keys() {
         let mut settings = AgentSettings::default();
         settings
             .builtin_agents
@@ -111,7 +109,7 @@ mod tests {
     }
 
     #[test]
-    fn openai_chat_key_falls_back_to_gpt_image() {
+    fn openai_chat_key_is_preferred_and_falls_back_to_gpt_image() {
         let mut settings = AgentSettings::default();
         settings
             .builtin_agents

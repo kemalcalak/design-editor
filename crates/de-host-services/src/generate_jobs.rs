@@ -1,9 +1,9 @@
 //! Background jobs behind the MCP `generate` tool (pen.dev `Generate`).
 //!
 //! Every generation is asynchronous, as on pen.dev: the tool call only does
-//! the bookkeeping (writes a `de:pending-image-…` fill, or keeps a
-//! `placeholder` frame) and returns; a worker thread runs the provider with
-//! the user's own key, and the result lands in the document later.
+//! the bookkeeping (writes a `de:pending-image-…` fill) and returns; a worker
+//! thread runs the provider with the user's own key, and the result lands in
+//! the document later.
 //!
 //! A job never touches a document itself. It finishes into a completion
 //! queue, and each host drains that queue into ordinary [`EditorCommand`]s at
@@ -11,8 +11,9 @@
 //!
 //! - the live desktop editor in `McpLiveServer::pump` (the job's listener
 //!   wakes the UI thread),
-//! - the file-backed `--mcp` / `--mcp-http` servers before each request and
-//!   once more, after a bounded wait, when the session ends,
+//! - the file-backed `--mcp` / `--mcp-http` servers before each request (and
+//!   each idle poll for http), and once more after a bounded wait for running
+//!   jobs when the session ends,
 //! - the `--serve-web` daemon before each MCP request and from the job's
 //!   listener.
 //!
@@ -30,25 +31,31 @@ mod error;
 pub(crate) mod landing;
 mod profile;
 
-pub use backend::{GenerateBackend, ImageJobRequest, ProviderBackend, StockJobRequest};
+pub use backend::{
+    screen_custom_endpoints, GenerateBackend, ImageJobRequest, ProviderBackend, StockJobRequest,
+};
 pub use error::GenerateJobError;
 pub use profile::{
     resolve_image_profile, GEMINI_FALLBACK_IMAGE_MODEL, OPENAI_FALLBACK_IMAGE_MODEL,
 };
 
 /// Prefix of the placeholder url a fill carries while its job runs
-/// (pen.dev's `pencil:pending-image-…`). The canvas paints an unknown url as
-/// the dashed image placeholder.
+/// (pen.dev's `pencil:pending-image-…`, hence a scheme of its own rather than
+/// the `placeholder://` sentinels). The canvas paints an unknown url as the
+/// dashed image placeholder.
 pub const PENDING_IMAGE_PREFIX: &str = "de:pending-image-";
 /// Concurrent provider calls one process allows.
 pub const MAX_RUNNING_JOBS: usize = 8;
 /// Finished job records kept for `get_generation_status`.
 const MAX_RECORDS: usize = 256;
-/// How long a finished background-transform result waits for the client to
-/// put its pending url on a node before it is dropped.
+/// How long a finished result waits for its pending url to appear in the
+/// document (the host may drain before it applied the call's own write, or
+/// the client may re-apply an undone one) before it is dropped.
 const UNPLACED_TTL: Duration = Duration::from_secs(600);
 /// Minimum gap between retries of results whose pending url was not placed.
 const UNPLACED_RETRY_GAP: Duration = Duration::from_millis(500);
+/// Results waiting for their pending url; the oldest go first past this.
+const MAX_UNPLACED: usize = 32;
 
 /// What a job produces, mirroring pen.dev's `Generate` types.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -58,11 +65,17 @@ pub enum GenerateKind {
 }
 
 impl GenerateKind {
+    pub const ALL: [GenerateKind; 2] = [GenerateKind::Ai, GenerateKind::Stock];
+
     pub fn as_str(self) -> &'static str {
         match self {
             GenerateKind::Ai => "ai",
             GenerateKind::Stock => "stock",
         }
+    }
+
+    pub fn parse(raw: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|kind| kind.as_str() == raw)
     }
 }
 
@@ -102,12 +115,15 @@ type Listener = Arc<dyn Fn() + Send + Sync>;
 struct Completion {
     pending_url: String,
     result: Result<String, GenerateJobError>,
+    finished_at: Instant,
 }
 
-struct Unplaced {
+/// A finished result on its way into the document, retried while its
+/// pending url is not found.
+struct Landing {
     pending_url: String,
     result: Result<String, ()>,
-    since: Instant,
+    finished_at: Instant,
 }
 
 #[derive(Default)]
@@ -116,7 +132,7 @@ struct Inner {
     running: usize,
     records: VecDeque<JobRecord>,
     completed: VecDeque<Completion>,
-    unplaced: Vec<Unplaced>,
+    unplaced: Vec<Landing>,
     last_unplaced_retry: Option<Instant>,
 }
 
@@ -185,31 +201,37 @@ impl GenerateJobs {
         Ok(JobTicket { id, pending_url })
     }
 
-    /// Run `work` for a reserved ticket on its own worker thread.
+    /// Run `work` for a reserved ticket on its own worker thread. A panicking
+    /// provider still releases its slot and reports the job failed.
     pub fn spawn(self: &Arc<Self>, ticket: JobTicket, work: JobWork) {
         let jobs = Arc::clone(self);
         let worker_ticket = ticket.clone();
         let spawned = std::thread::Builder::new()
             .name("de-generate-job".into())
             .spawn(move || {
-                let result = match &work {
-                    JobWork::Image(request) => jobs.backend.generate_image(request),
-                    JobWork::Stock(request) => jobs.backend.stock_image(request),
-                };
-                jobs.finish(&worker_ticket, result);
+                let result =
+                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| match &work {
+                        JobWork::Image(request) => jobs.backend.generate_image(request),
+                        JobWork::Stock(request) => jobs.backend.stock_image(request),
+                    }))
+                    .unwrap_or(Err(GenerateJobError::Panicked));
+                jobs.record_result(&worker_ticket, result);
+                jobs.notify_listener();
             });
         if let Err(error) = spawned {
-            self.finish(
-                &ticket,
-                Err(GenerateJobError::Failed(format!(
-                    "could not start generation: {error}"
-                ))),
-            );
+            // The caller may hold a host lock the listener takes (the web
+            // daemon's state), so this synchronous path never calls it.
+            self.record_result(&ticket, Err(GenerateJobError::Spawn(error.to_string())));
         }
     }
 
-    /// Record a job's result and queue its landing.
-    pub(crate) fn finish(&self, ticket: &JobTicket, result: Result<String, GenerateJobError>) {
+    /// Record a job's result and queue its landing, without calling the
+    /// listener (safe while the caller holds a host lock).
+    pub(crate) fn record_result(
+        &self,
+        ticket: &JobTicket,
+        result: Result<String, GenerateJobError>,
+    ) {
         {
             let mut inner = self.lock();
             inner.running = inner.running.saturating_sub(1);
@@ -222,9 +244,14 @@ impl GenerateJobs {
             inner.completed.push_back(Completion {
                 pending_url: ticket.pending_url.clone(),
                 result,
+                finished_at: Instant::now(),
             });
         }
         self.idle.notify_all();
+    }
+
+    /// Call the listener. Only from threads that hold no host lock.
+    fn notify_listener(&self) {
         let listener = self
             .listener
             .lock()
@@ -235,8 +262,9 @@ impl GenerateJobs {
         }
     }
 
-    /// Whether a drain would do anything: a finished job, or an unplaced
-    /// result due for a retry. Cheap; the live editor calls it every frame.
+    /// Whether a drain is due: a finished job, or a parked result whose retry
+    /// gap has passed (that retry may still find nothing). Cheap; the live
+    /// editor calls it every frame.
     pub fn has_landings(&self) -> bool {
         let inner = self.lock();
         !inner.completed.is_empty()
@@ -268,10 +296,10 @@ impl GenerateJobs {
         let mut still_unplaced = Vec::new();
         let entries = completed
             .into_iter()
-            .map(|completion| Unplaced {
+            .map(|completion| Landing {
                 pending_url: completion.pending_url,
                 result: completion.result.map_err(|_| ()),
-                since: Instant::now(),
+                finished_at: completion.finished_at,
             })
             .chain(unplaced);
         for entry in entries {
@@ -281,7 +309,7 @@ impl GenerateJobs {
                 entry.result.as_deref().map_err(|_| ()),
             );
             if landed.is_empty() {
-                if entry.since.elapsed() < UNPLACED_TTL {
+                if entry.finished_at.elapsed() < UNPLACED_TTL {
                     still_unplaced.push(entry);
                 }
             } else {
@@ -289,9 +317,39 @@ impl GenerateJobs {
             }
         }
         if !still_unplaced.is_empty() {
-            self.lock().unplaced.extend(still_unplaced);
+            {
+                let mut inner = self.lock();
+                inner.unplaced.extend(still_unplaced);
+                let overflow = inner.unplaced.len().saturating_sub(MAX_UNPLACED);
+                inner.unplaced.drain(..overflow);
+            }
+            // Drains that park results run at most once per retry gap, so
+            // this schedules at most one wake per gap.
+            self.schedule_retry_wake();
         }
         commands
+    }
+
+    /// Wake the host again once the retry gap has passed, so a parked result
+    /// lands even when nothing else redraws the editor.
+    fn schedule_retry_wake(&self) {
+        let Some(listener) = self
+            .listener
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .clone()
+        else {
+            return;
+        };
+        let spawned = std::thread::Builder::new()
+            .name("de-generate-retry".into())
+            .spawn(move || {
+                std::thread::sleep(UNPLACED_RETRY_GAP);
+                listener();
+            });
+        if spawned.is_err() {
+            eprintln!("design-editor mcp: could not schedule a generation retry");
+        }
     }
 
     /// Block until no job is running or `timeout` passes. `true` = idle.

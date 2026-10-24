@@ -34,9 +34,11 @@ impl GenerateBackend for Scripted {
             .lock()
             .unwrap()
             .push((request.prompt.clone(), request.width, request.height));
-        self.answer
-            .clone()
-            .ok_or_else(|| GenerateJobError::Failed("quota exceeded".into()))
+        self.answer.clone().ok_or_else(|| {
+            GenerateJobError::Image(crate::web_image_generate::ImageGenerateError::Provider(
+                "quota exceeded".into(),
+            ))
+        })
     }
 
     fn stock_image(&self, request: &StockJobRequest) -> Result<String, GenerateJobError> {
@@ -127,8 +129,13 @@ fn ai_generation_lands_as_the_node_image_fill_after_the_call() {
     );
     assert_eq!(value["status"], "pending");
     let fills = hero_fills(&state);
-    assert_eq!(fills.len(), 1, "the image becomes the fill: {fills:?}");
-    assert!(matches!(&fills[0], PenFill::Image(body) if body.url.as_str() == PNG));
+    assert_eq!(
+        fills.len(),
+        2,
+        "the image stacks on the solid fill: {fills:?}"
+    );
+    assert!(matches!(&fills[0], PenFill::Solid(_)));
+    assert!(matches!(&fills[1], PenFill::Image(body) if body.url.as_str() == PNG));
     let seen = backend.seen.lock().unwrap().clone();
     assert_eq!(seen, vec![("fern macro".into(), Some(1440.0), Some(800.0))]);
 }
@@ -151,7 +158,7 @@ fn stock_generation_uses_the_query() {
             ("query", "fern frond"),
         ],
     );
-    assert!(matches!(&hero_fills(&state)[0], PenFill::Image(body) if body.url.as_str() == PNG));
+    assert!(matches!(&hero_fills(&state)[1], PenFill::Image(body) if body.url.as_str() == PNG));
     assert_eq!(backend.seen.lock().unwrap()[0].0, "fern frond");
 }
 
@@ -164,7 +171,13 @@ fn a_failed_generation_drops_the_pending_fill_and_status_explains() {
         &jobs,
         &[("type", "ai"), ("nodeId", "hero"), ("prompt", "x")],
     );
-    assert!(hero_fills(&state).is_empty(), "pending fill removed");
+    let fills = hero_fills(&state);
+    assert_eq!(
+        fills.len(),
+        1,
+        "pending fill removed, solid kept: {fills:?}"
+    );
+    assert!(matches!(&fills[0], PenFill::Solid(_)));
     let status = GenerationStatusTool::for_test(Arc::clone(&jobs));
     let ToolOutcome::OkJson(json) =
         status.call(&args(&[("jobId", value["jobId"].as_str().unwrap())]))

@@ -443,9 +443,11 @@ impl ImageSearchBackend for GeneratingBackend {
             .lock()
             .unwrap()
             .push(target.prompt.clone().unwrap_or_default());
-        self.generated
-            .clone()
-            .ok_or_else(|| GenerateJobError::Failed("provider quota exceeded".into()))
+        self.generated.clone().ok_or_else(|| {
+            GenerateJobError::Image(crate::web_image_generate::ImageGenerateError::Provider(
+                "provider quota exceeded".into(),
+            ))
+        })
     }
 }
 

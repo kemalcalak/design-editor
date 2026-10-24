@@ -75,6 +75,8 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         // through the same version bump + SSE tick as an MCP write.
         let state = Arc::clone(&state);
         let hub = Arc::clone(&hub);
+        // Browser-supplied profiles live in this daemon's settings.
+        crate::generate_jobs::screen_custom_endpoints();
         crate::generate_jobs::GenerateJobs::global().set_listener(Some(Arc::new(move || {
             super::connection::land_generations(&state, &hub)
         })));

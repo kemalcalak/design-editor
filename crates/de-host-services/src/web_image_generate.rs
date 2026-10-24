@@ -165,7 +165,9 @@ pub(crate) fn run_generate_blocking(
     crate::chat_runtime::block_on_anywhere(run_generate(request))
 }
 
-async fn run_generate(request: &WebImageGenerateRequest) -> Result<String, ImageGenerateError> {
+pub(crate) async fn run_generate(
+    request: &WebImageGenerateRequest,
+) -> Result<String, ImageGenerateError> {
     let profile = &request.profile;
     // Screen browser-supplied custom endpoints before any dial; default
     // provider hosts are product constants and stay trusted.

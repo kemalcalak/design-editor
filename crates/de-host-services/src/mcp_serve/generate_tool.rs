@@ -4,9 +4,10 @@
 //! job, writes the job's `de:pending-image-…` url as the target's image fill
 //! (one `PatchNodeData` the host applies as usual) and returns at once. The
 //! provider runs on a worker thread with the user's own key, and the host
-//! lands the result later (see `crate::generate_jobs`). The client checks
-//! with a cheap read in a later call: the fill url is rewritten to the image,
-//! or disappears when the job failed; `get_generation_status` says why.
+//! lands the result later (see `crate::generate_jobs`). The client checks in
+//! a later call: `get_generation_status` reports the job, and the fill url is
+//! rewritten to the image, or disappears when the job failed (an image node's
+//! `src` becomes the failed-image placeholder instead).
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -16,8 +17,8 @@ use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
 use jian_ops_schema::node::PenNode;
 
 use crate::generate_jobs::{
-    landing, resolve_image_profile, GenerateJobs, GenerateKind, ImageJobRequest, JobStatus,
-    JobWork, StockJobRequest,
+    landing, resolve_image_profile, GenerateJobError, GenerateJobs, GenerateKind, ImageJobRequest,
+    JobStatus, JobWork, StockJobRequest, PENDING_IMAGE_PREFIX,
 };
 
 /// Longest prompt or query accepted.
@@ -79,13 +80,16 @@ impl McpTool for GenerateTool {
 
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
         let kind = match arg(args, &["type"]) {
-            Some("ai") => GenerateKind::Ai,
-            Some("stock") => GenerateKind::Stock,
-            Some(other) => {
-                return invalid(format!(
-                    "unknown generate type {other:?}: expected \"ai\" or \"stock\""
-                ))
-            }
+            Some(raw) => match GenerateKind::parse(raw) {
+                Some(kind) => kind,
+                None => {
+                    let known: Vec<&str> = GenerateKind::ALL.iter().map(|k| k.as_str()).collect();
+                    return invalid(format!(
+                        "unknown generate type {raw:?}: expected one of {}",
+                        known.join(", ")
+                    ));
+                }
+            },
             None => {
                 return ToolOutcome::Err(ToolErrorCode::MissingArgument, "type is required".into())
             }
@@ -130,6 +134,7 @@ impl McpTool for GenerateTool {
                     width: node.width_px(),
                     height: node.height_px(),
                     profile,
+                    timeout: None,
                 })
             }
             GenerateKind::Stock => JobWork::Stock(StockJobRequest {
@@ -142,14 +147,14 @@ impl McpTool for GenerateTool {
             Err(error) => return ToolOutcome::Err(ToolErrorCode::ToolFailed, error.to_string()),
         };
         let Some(patch) = landing::pending_patch(node, &ticket.pending_url) else {
-            let message = format!("node {node_id} cannot take an image fill");
-            self.jobs.finish(
-                &ticket,
-                Err(crate::generate_jobs::GenerateJobError::Failed(
-                    message.clone(),
-                )),
+            // Unreachable after `accepts_image` short of a serde failure;
+            // release the slot without waking any host.
+            self.jobs
+                .record_result(&ticket, Err(GenerateJobError::Panicked));
+            return ToolOutcome::Err(
+                ToolErrorCode::Internal,
+                format!("node {node_id} could not be serialized"),
             );
-            return invalid(message);
         };
         let json = serde_json::json!({
             "jobId": ticket.id,
@@ -157,9 +162,11 @@ impl McpTool for GenerateTool {
             "nodeId": node_id,
             "url": ticket.pending_url,
             "status": "pending",
-            "note": "The image lands after this call returns. Check the node's fill url in a later \
-                     call; it stays de:pending-image-… until the image arrives and disappears if \
-                     the generation failed (get_generation_status says why).",
+            "note": format!(
+                "The image lands after this call returns. Check in a later call with \
+                 get_generation_status; the node's fill url stays {PENDING_IMAGE_PREFIX}… until \
+                 the image arrives and the pending fill disappears if the generation failed."
+            ),
         })
         .to_string();
         self.jobs.spawn(ticket, work);
@@ -227,6 +234,14 @@ impl McpTool for GenerationStatusTool {
     }
 }
 
+/// File-backed servers load only the document; their image providers and
+/// Openverse credentials come from the user's saved settings, as in the app.
+pub(crate) fn load_user_provider_settings(state: &mut EditorState) {
+    let mut saved = EditorState::new();
+    crate::settings_io::load(&mut saved);
+    state.editor_ui.agent_settings = saved.editor_ui.agent_settings;
+}
+
 /// File-backed servers: land finished generations on `state` and save, so a
 /// result arrives on disk at the latest with the next request.
 pub(crate) fn land_generations_and_save(state: &mut EditorState, path: &std::path::Path) {
@@ -242,7 +257,7 @@ pub(crate) fn land_generations_and_save(state: &mut EditorState, path: &std::pat
 
 /// Before a file-backed session ends: give still-running generations up to
 /// `wait` to finish, then land them, so a paid result is not thrown away.
-pub(crate) fn finish_generations_and_save(
+pub(crate) fn wait_and_land_generations(
     state: &mut EditorState,
     path: &std::path::Path,
     wait: std::time::Duration,

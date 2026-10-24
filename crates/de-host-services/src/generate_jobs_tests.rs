@@ -30,11 +30,11 @@ impl GenerateBackend for ScriptedBackend {
     fn generate_image(&self, request: &ImageJobRequest) -> Result<String, GenerateJobError> {
         std::thread::sleep(self.delay);
         self.prompts.lock().unwrap().push(request.prompt.clone());
-        self.image
-            .lock()
-            .unwrap()
-            .clone()
-            .ok_or_else(|| GenerateJobError::Failed("provider said no".into()))
+        self.image.lock().unwrap().clone().ok_or_else(|| {
+            GenerateJobError::Image(crate::web_image_generate::ImageGenerateError::Provider(
+                "provider said no".into(),
+            ))
+        })
     }
 
     fn stock_image(&self, request: &StockJobRequest) -> Result<String, GenerateJobError> {
@@ -77,6 +77,7 @@ fn image_request() -> JobWork {
             base_url: None,
             test_status: de_editor_core::agent_settings::ImageTestStatus::Idle,
         },
+        timeout: None,
     })
 }
 
@@ -86,7 +87,9 @@ fn find<'a>(state: &'a EditorState, page: usize, id: &str) -> &'a PenNode {
 }
 
 fn fills(node: &PenNode) -> Vec<PenFill> {
-    landing::node_fills(node).cloned().unwrap_or_default()
+    de_editor_core::fills::node_fills(node)
+        .cloned()
+        .unwrap_or_default()
 }
 
 #[test]
@@ -221,4 +224,37 @@ fn gpt_image_models_get_their_own_request_body() {
     );
     assert_eq!(body["size"], "1024x1792");
     assert_eq!(body["response_format"], "url");
+}
+
+struct PanickingBackend;
+
+impl GenerateBackend for PanickingBackend {
+    fn generate_image(&self, _request: &ImageJobRequest) -> Result<String, GenerateJobError> {
+        panic!("provider bug");
+    }
+
+    fn stock_image(&self, _request: &StockJobRequest) -> Result<String, GenerateJobError> {
+        panic!("provider bug");
+    }
+}
+
+#[test]
+fn a_panicking_provider_releases_its_slot_and_fails_the_job() {
+    let jobs = GenerateJobs::new(Arc::new(PanickingBackend));
+    let ticket = jobs.reserve(GenerateKind::Ai, None).unwrap();
+    let id = ticket.id.clone();
+    jobs.spawn(ticket, image_request());
+    assert!(jobs.wait_idle(Duration::from_secs(5)), "slot released");
+    assert_eq!(
+        jobs.records(Some(&id))[0].status,
+        JobStatus::Failed(GenerateJobError::Panicked.to_string())
+    );
+}
+
+#[test]
+fn generate_kind_parses_its_own_names_only() {
+    for kind in GenerateKind::ALL {
+        assert_eq!(GenerateKind::parse(kind.as_str()), Some(kind));
+    }
+    assert_eq!(GenerateKind::parse("video"), None);
 }

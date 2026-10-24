@@ -83,18 +83,16 @@ pub(crate) fn generate_many_before(
     out
 }
 
-/// Production: one provider call for one slot. The slot's `imagePrompt`
-/// wins over its search query. A call that finishes after the deadline
-/// still lands — the money is spent — but no new one starts past it.
+/// Production: one provider call for one slot, capped at the run's
+/// remaining budget. The slot's `imagePrompt` wins over its search query.
 pub(crate) fn generate_slot_before(
     profile: ImageGenProfile,
     target: &ImageSearchTarget,
     deadline: Instant,
 ) -> Result<String, GenerateJobError> {
-    if Instant::now() >= deadline {
-        return Err(GenerateJobError::Failed(
-            "not started before the timeout".into(),
-        ));
+    let remaining = deadline.saturating_duration_since(Instant::now());
+    if remaining.is_zero() {
+        return Err(GenerateJobError::TimedOut);
     }
     let prompt = target
         .prompt
@@ -107,5 +105,6 @@ pub(crate) fn generate_slot_before(
         width: target.width,
         height: target.height,
         profile,
+        timeout: Some(remaining),
     })
 }
