@@ -237,6 +237,9 @@ impl<'a> Widget for FileMenu<'a> {
             (Icon::Upload, "tooltip.topbar.import", ""),
             (Icon::Undo, "toolbar.undo", "⌘Z"),
             (Icon::Redo, "toolbar.redo", "⌘⇧Z"),
+            // Cmd/Ctrl+Enter, bound by both hosts (#157); listed here so
+            // Windows, Linux and the browser show it too (#190).
+            (Icon::Play, "workspace.present", "⌘↩"),
         ]
         .into_iter()
         .enumerate()
@@ -302,6 +305,8 @@ fn paint_row(
         Point2D::new(x + PAD_X + ICON_SIZE + 10.0, y + ROW_HEIGHT / 2.0 + 5.0),
     );
     if !shortcut.is_empty() {
+        let shortcut = platform_chord(shortcut);
+        let shortcut = shortcut.as_ref();
         let sw = cx
             .backend
             .measure_text_family(shortcut, SHORTCUT_FONT, FONT_FAMILY);
@@ -358,6 +363,8 @@ fn paint_row_disabled(
         Point2D::new(x + PAD_X + ICON_SIZE + 10.0, y + ROW_HEIGHT / 2.0 + 5.0),
     );
     if !shortcut.is_empty() {
+        let shortcut = platform_chord(shortcut);
+        let shortcut = shortcut.as_ref();
         let sw = cx
             .backend
             .measure_text_family(shortcut, SHORTCUT_FONT, FONT_FAMILY);
@@ -481,4 +488,21 @@ fn paint_header(cx: &mut PaintCx<'_>, theme: &Theme, x: f32, y: f32, label: &str
 
 fn paint_divider(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, y: f32) -> f32 {
     menu_paint::paint_divider(cx, theme, rect, y, MENU_WIDTH, PAD_X, DIVIDER_GAP)
+}
+
+/// A row's chord as this platform spells it (#190): the macOS glyphs
+/// (`⌘⇧Z`, `⌘↩`) on macOS and in the browser (whose hosts take Cmd or
+/// Ctrl), `Ctrl+Shift+Z` / `Ctrl+Enter` on Windows and Linux, where both
+/// hosts bind the chord to Ctrl.
+pub(super) fn platform_chord(chord: &str) -> std::borrow::Cow<'_, str> {
+    if cfg!(any(target_os = "windows", target_os = "linux")) {
+        std::borrow::Cow::Owned(
+            chord
+                .replace('⌘', "Ctrl+")
+                .replace('⇧', "Shift+")
+                .replace('↩', "Enter"),
+        )
+    } else {
+        std::borrow::Cow::Borrowed(chord)
+    }
 }
