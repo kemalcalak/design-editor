@@ -92,12 +92,13 @@ fn absolute_position_and_disabled_nodes_map_to_canonical_fields() {
         { "type": "ellipse", "id": "dot", "layoutPosition": "absolute", "x": 4 },
         { "type": "text", "id": "t", "content": "hi", "enabled": false, "placeholder": true }
     ]}]));
+    // The absolute dot pen.dev paints first (behind) ends up last.
     let kids = &doc["children"][0]["children"];
-    assert_eq!(kids[0]["role"], "overlay");
-    assert!(kids[0].get("layoutPosition").is_none());
-    assert_eq!(kids[1]["visible"], false);
-    assert!(kids[1].get("enabled").is_none());
-    assert!(kids[1].get("placeholder").is_none());
+    assert_eq!(kids[1]["role"], "overlay");
+    assert!(kids[1].get("layoutPosition").is_none());
+    assert_eq!(kids[0]["visible"], false);
+    assert!(kids[0].get("enabled").is_none());
+    assert!(kids[0].get("placeholder").is_none());
 }
 
 #[test]
@@ -414,4 +415,36 @@ fn the_short_summary_counts_missing_images() {
         "shader fill ×1; missing images: images/a.png, images/b.png"
     );
     assert_eq!(report.short_summary(), "shader fill ×1; 2 missing images");
+}
+
+#[test]
+fn gradient_rotation_turns_clockwise_like_css() {
+    let gradient = |rotation: f64| {
+        json!({ "type": "gradient", "gradientType": "linear", "rotation": rotation,
+                "colors": [{ "color": "#000000", "position": 0 }, { "color": "#FFFFFF", "position": 1 }] })
+    };
+    let src = json!({ "version": "2.21", "children": [
+        { "type": "rectangle", "id": "down", "width": 10, "height": 10, "fill": gradient(180.0) },
+        { "type": "rectangle", "id": "right", "width": 10, "height": 10, "fill": gradient(270.0) },
+        { "type": "rectangle", "id": "left", "width": 10, "height": 10, "fill": gradient(90.0) },
+        { "type": "rectangle", "id": "up", "width": 10, "height": 10, "fill": gradient(0.0) }
+    ]})
+    .to_string();
+    let loaded = load_canonical_with_assets(&src, &no_assets).expect("loads");
+    let doc = serde_json::to_value(&loaded.loaded.value).unwrap();
+    let angles: Vec<f64> = doc["children"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|node| node["fill"][0]["angle"].as_f64().unwrap())
+        .collect();
+    // pen.dev: 0° up, counter-clockwise. Canonical: CSS, clockwise.
+    assert_eq!(angles, vec![180.0, 90.0, 270.0, 0.0]);
+
+    let mut doc = pen(json!([{ "type": "rectangle", "id": "sweep", "fill": {
+        "type": "gradient", "gradientType": "angular", "rotation": 90,
+        "colors": [{ "color": "#000000", "position": 0 }, { "color": "#FFFFFF", "position": 1 }]
+    }}]));
+    convert(&mut doc, &no_assets);
+    assert_eq!(doc["children"][0]["fill"][0]["rotation"], 270.0);
 }
