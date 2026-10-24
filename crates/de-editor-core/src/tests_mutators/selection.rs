@@ -167,4 +167,26 @@ fn replace_selected_icon_updates_icon_font_name_without_closing_over_color() {
     assert!(icon.fill.is_some(), "replacement preserves display color");
 }
 
+#[test]
+fn replace_selected_icon_keeps_the_icon_weight() {
+    use jian_ops_schema::node::{FontWeight, PenNode};
+    let mut s = sample();
+    let id = s
+        .insert_icon_font_node_at("house", "phosphor", 50.0, 50.0)
+        .expect("insert icon");
+    let Some(PenNode::IconFont(icon)) = crate::walkers::find_node_mut(s.active_children_mut(), &id)
+    else {
+        panic!("expected icon_font node");
+    };
+    icon.weight = Some(FontWeight::Number(700));
+
+    assert!(s.replace_selected_icon("gear", "phosphor", None));
+
+    let Some(PenNode::IconFont(icon)) = find_node(s.active_children(), &id) else {
+        panic!("expected icon_font node");
+    };
+    assert_eq!(icon.icon_font_name, "gear");
+    assert_eq!(icon.weight, Some(FontWeight::Number(700)));
+}
+
 // --- Delete ----------------------------------------------------------

@@ -249,6 +249,7 @@ fn icon_font_from_path(path: &PathNode, name: &str) -> IconFontNode {
         limits: path.limits,
         fill,
         stroke: None,
+        weight: None,
         state: path.state.clone(),
         bindings: path.bindings.clone(),
         events: path.events.clone(),

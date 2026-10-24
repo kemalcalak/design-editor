@@ -62,6 +62,26 @@ fn icon_font_fill_edit_reaches_the_scene() {
     );
 }
 
+/// `icon_font.weight` lands in the scene's `font_weight`, which the canvas
+/// hands to `paint_icon_font_node_weighted` (#4).
+#[test]
+fn icon_font_weight_reaches_the_scene() {
+    let weight_of = |weight: serde_json::Value| {
+        let state = state_with(serde_json::json!([{
+            "type": "icon_font", "id": "ic", "iconFontName": "house",
+            "iconFontFamily": "phosphor", "width": 24, "height": 24, "weight": weight
+        }]));
+        let scene = crate::editor_state_to_layout_scene(&state);
+        scene_node(&scene, "ic").font_weight
+    };
+    assert_eq!(weight_of(serde_json::json!(700)), 700);
+    assert_eq!(weight_of(serde_json::json!("700")), 700);
+    assert_eq!(weight_of(serde_json::json!("bold")), 700);
+    assert_eq!(weight_of(serde_json::json!("normal")), 400);
+    assert_eq!(weight_of(serde_json::json!(5000)), 1000, "clamped");
+    assert_eq!(weight_of(serde_json::Value::Null), 0, "absent = unset");
+}
+
 #[test]
 fn stroke_width_edit_reaches_the_scene_for_uniform_and_per_side() {
     // Uniform-thickness frame stroke.

@@ -243,7 +243,12 @@ pub mod scroll_flow;
 // Step 4 — icon glyph drawer for editor chrome (lucide-flavored line art).
 pub mod icon_catalog;
 pub mod icon_catalog_aliases;
+// Runtime-loaded Material Symbols + phosphor catalogs, and the family / weight
+// resolution every `icon_font` paint goes through (#4).
+pub mod icon_catalog_extended;
+pub mod icon_family;
 pub mod icons;
+mod icons_font_node;
 mod icons_import;
 mod icons_lookup;
 #[cfg(test)]

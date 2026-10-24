@@ -703,56 +703,7 @@ pub fn draw_icon_catalog_entry(
     );
 }
 
-/// Paint a canonical `icon_font` node by Iconify collection + name,
-/// scaled into `rect` with aspect preserved. Unknown names are left
-/// unpainted instead of rendering a misleading fallback glyph.
-pub fn paint_icon_font_node(
-    backend: &mut dyn RenderBackend,
-    family: &str,
-    name: &str,
-    rect: crate::Rect,
-    fill: Option<Color>,
-) {
-    let size = rect.size.x.min(rect.size.y).max(0.0);
-    if size <= 0.0 {
-        return;
-    }
-    let color = fill.unwrap_or(Color {
-        r: 0.39,
-        g: 0.45,
-        b: 0.55,
-        a: 1.0,
-    });
-    let top_left = Point2D::new(
-        rect.origin.x + (rect.size.x - size) / 2.0,
-        rect.origin.y + (rect.size.y - size) / 2.0,
-    );
-    let stroke_width = (size / 24.0 * 2.0).max(1.0);
-    let family = if family.trim().is_empty() {
-        "lucide"
-    } else {
-        family.trim()
-    };
-    if let Some(icon) = super::icon_catalog::lookup_icon(family, name) {
-        draw_icon_catalog_entry(backend, icon, top_left, size, color, stroke_width);
-    } else {
-        // Web only: the core catalog is fetched lazily, and historically only
-        // the icon picker asked for it — a document full of `icon_font` nodes
-        // painted unresolved dots forever unless the picker was opened. The
-        // paint that misses the catalog now requests the fetch itself (same
-        // seam the prompt-center and scene-template paints use); the install
-        // wakes a repaint and the glyphs resolve.
-        #[cfg(all(target_arch = "wasm32", feature = "runtime-icon-catalog"))]
-        if !super::icon_catalog::core_catalog_loaded() {
-            de_editor_core::web_assets::request(super::icon_catalog::ICONIFY_CORE_ROUTE);
-        }
-        if family == "lucide" {
-            if let Some(icon) = Icon::from_name(name) {
-                draw_icon(backend, icon, top_left, size, color, stroke_width);
-            }
-        }
-    }
-}
+pub use super::icons_font_node::{paint_icon_font_node, paint_icon_font_node_weighted};
 
 /// Lucide `palette.svg` — artist color-palette shape with paint-dot holes.
 /// Used in the AI chat bottom toolbar as a style/palette affordance.

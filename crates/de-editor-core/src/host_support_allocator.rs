@@ -231,6 +231,7 @@ impl EditorState {
             height: Some(SizingBehavior::Number(SIZE)),
             fill: Some(vec![default_icon_fill()]),
             stroke: None,
+            weight: None,
             state: None,
             bindings: None,
             events: None,
