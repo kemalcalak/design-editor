@@ -225,7 +225,9 @@ mod tests {
         assert_eq!(html.file_name, "mobile.html");
         assert_eq!(html.mime_type, "text/html; charset=utf-8");
         let tw = artifact(ExportFormat::HtmlTailwind);
-        assert!(String::from_utf8(tw.bytes).unwrap().contains("@tailwindcss/browser"));
+        assert!(String::from_utf8(tw.bytes)
+            .unwrap()
+            .contains("@tailwindcss/browser"));
     }
 
     #[test]

@@ -6,7 +6,9 @@
 use super::*;
 
 pub(super) fn load(src: &str) -> PenDocument {
-    jian_ops_schema::load_str(src).expect("fixture parses").value
+    jian_ops_schema::load_str(src)
+        .expect("fixture parses")
+        .value
 }
 
 pub(super) fn fixture(name: &str) -> PenDocument {
@@ -53,18 +55,30 @@ fn auto_layout_becomes_flex_and_only_overlays_are_absolute() {
     let html = css(&fixture("card"));
     assert!(html.contains("  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 12px;\n  padding: 24px 20px;"), "{html}");
     // The overlay badge keeps its offset; the in-flow title does not get one.
-    assert!(html.contains("position: absolute;\n  left: 292px;\n  top: 16px;"), "{html}");
+    assert!(
+        html.contains("position: absolute;\n  left: 292px;\n  top: 16px;"),
+        "{html}"
+    );
     assert_eq!(html.matches("position: absolute").count(), 1, "{html}");
     // fill_container: cross axis stretches, main axis shares the row.
-    assert!(html.contains("z-index: 3;\n  align-self: stretch;"), "{html}");
+    assert!(
+        html.contains("z-index: 3;\n  align-self: stretch;"),
+        "{html}"
+    );
     // A fixed main-axis size never shrinks.
-    assert!(html.contains(".swatch {\n  width: 40px;\n  height: 40px;\n  flex-shrink: 0;"), "{html}");
+    assert!(
+        html.contains(".swatch {\n  width: 40px;\n  height: 40px;\n  flex-shrink: 0;"),
+        "{html}"
+    );
 }
 
 #[test]
 fn variables_are_custom_properties_and_references_read_them() {
     let html = css(&fixture("card"));
-    assert!(html.contains(":root {\n  --brand: #3366ff;\n  --space: 16;\n}"), "{html}");
+    assert!(
+        html.contains(":root {\n  --brand: #3366ff;\n  --space: 16;\n}"),
+        "{html}"
+    );
     assert!(html.contains("color: var(--brand);"), "{html}");
     assert!(html.contains("gap: calc(var(--space) * 1px);"), "{html}");
 }
@@ -72,8 +86,14 @@ fn variables_are_custom_properties_and_references_read_them() {
 #[test]
 fn themed_variables_select_the_first_theme_value_by_default() {
     let html = css(&fixture("stack"));
-    assert!(html.contains("<html lang=\"en\" data-Mode=\"Light\">"), "{html}");
-    assert!(html.contains(":root[data-Mode=\"Light\"] {\n  --surface: #f8fafc;"), "{html}");
+    assert!(
+        html.contains("<html lang=\"en\" data-Mode=\"Light\">"),
+        "{html}"
+    );
+    assert!(
+        html.contains(":root[data-Mode=\"Light\"] {\n  --surface: #f8fafc;"),
+        "{html}"
+    );
     assert!(html.contains("background: var(--surface);"), "{html}");
 }
 
@@ -100,15 +120,27 @@ fn styled_segments_keep_their_style_and_links() {
         html.contains("See <a href=\"https://example.com/terms\" class=\"note-run\">terms</a><span class=\"note-run-2\"> &amp; more</span>"),
         "{html}"
     );
-    assert!(html.contains(".note-run {\n  color: rgb(37,99,235);\n  text-decoration: underline;\n}"), "{html}");
+    assert!(
+        html.contains(".note-run {\n  color: rgb(37,99,235);\n  text-decoration: underline;\n}"),
+        "{html}"
+    );
 }
 
 #[test]
 fn stack_children_share_one_cell_and_the_first_child_is_on_top() {
     let html = css(&fixture("stack"));
-    assert!(html.contains("  display: grid;\n  justify-items: center;\n  align-items: center;"), "{html}");
-    assert!(html.contains(".headline {\n  grid-area: 1 / 1;\n  position: relative;\n  z-index: 3;"), "{html}");
-    assert!(html.contains(".glow {\n  position: absolute;\n  left: 40px;\n  top: 20px;\n  z-index: 2;"), "{html}");
+    assert!(
+        html.contains("  display: grid;\n  justify-items: center;\n  align-items: center;"),
+        "{html}"
+    );
+    assert!(
+        html.contains(".headline {\n  grid-area: 1 / 1;\n  position: relative;\n  z-index: 3;"),
+        "{html}"
+    );
+    assert!(
+        html.contains(".glow {\n  position: absolute;\n  left: 40px;\n  top: 20px;\n  z-index: 2;"),
+        "{html}"
+    );
     assert!(html.contains(".backdrop {\n  grid-area: 1 / 1;\n  position: relative;\n  z-index: 1;\n  width: 100%;\n  height: 100%;"), "{html}");
 }
 
@@ -122,27 +154,42 @@ fn paint_maps_gradients_radii_blend_opacity_and_rotation() {
     assert!(html.contains("transform: rotate(15deg);"), "{html}");
     // The first fill is the top background layer.
     assert!(html.contains("background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%), linear-gradient(rgb(124,58,237), rgb(124,58,237));"), "{html}");
-    assert!(html.contains("text-shadow: 0 2px 4px rgba(0,0,0,0.4);"), "{html}");
+    assert!(
+        html.contains("text-shadow: 0 2px 4px rgba(0,0,0,0.4);"),
+        "{html}"
+    );
 }
 
 #[test]
 fn strokes_and_shadows_leave_the_layout_box_alone() {
     let html = css(&fixture("card"));
-    assert!(html.contains("outline: 1px solid rgb(229,231,235);\n  outline-offset: -1px;"), "{html}");
-    assert!(html.contains("box-shadow: 0 4px 12px 0 rgba(0,0,0,0.102);"), "{html}");
+    assert!(
+        html.contains("outline: 1px solid rgb(229,231,235);\n  outline-offset: -1px;"),
+        "{html}"
+    );
+    assert!(
+        html.contains("box-shadow: 0 4px 12px 0 rgba(0,0,0,0.102);"),
+        "{html}"
+    );
     assert!(!html.contains("border:"), "{html}");
 }
 
 #[test]
 fn text_growth_controls_wrapping() {
     let html = css(&fixture("card"));
-    assert!(html.contains("z-index: 4;\n  font-family: \"Helvetica\", sans-serif;"), "{html}");
+    assert!(
+        html.contains("z-index: 4;\n  font-family: \"Helvetica\", sans-serif;"),
+        "{html}"
+    );
     assert!(html.contains("white-space: pre;"), "{html}");
     assert!(html.contains("white-space: pre-wrap;"), "{html}");
     let doc = load(
         r#"{"version":"1.0","children":[{"type":"text","id":"t","content":"x","textGrowth":"auto","width":300,"height":40}]}"#,
     );
-    assert!(!css(&doc).contains("width: 300px"), "auto text ignores numbers");
+    assert!(
+        !css(&doc).contains("width: 300px"),
+        "auto text ignores numbers"
+    );
 }
 
 #[test]
@@ -158,7 +205,11 @@ fn layer_data_and_fragment_options() {
         },
     );
     assert!(!out.html.contains("<!DOCTYPE html>"), "{}", out.html);
-    assert!(out.html.contains("data-name=\"Card\" data-id=\"card\""), "{}", out.html);
+    assert!(
+        out.html.contains("data-name=\"Card\" data-id=\"card\""),
+        "{}",
+        out.html
+    );
 }
 
 #[test]
@@ -181,8 +232,19 @@ fn embedded_images_are_written_next_to_the_html() {
     );
     assert_eq!(out.assets.len(), 1);
     assert_eq!(out.assets[0].path, "assets/hero-photo.png");
-    assert!(out.html.contains("<img class=\"hero-photo\" src=\"assets/hero-photo.png\" alt=\"Hero Photo\">"), "{}", out.html);
-    assert!(out.html.contains("background: url(\"assets/hero-photo.png\") center / contain no-repeat;"), "{}", out.html);
+    assert!(
+        out.html.contains(
+            "<img class=\"hero-photo\" src=\"assets/hero-photo.png\" alt=\"Hero Photo\">"
+        ),
+        "{}",
+        out.html
+    );
+    assert!(
+        out.html
+            .contains("background: url(\"assets/hero-photo.png\") center / contain no-repeat;"),
+        "{}",
+        out.html
+    );
     assert!(out.html.contains("object-fit: cover;"), "{}", out.html);
     // The plain generator keeps the image inline.
     assert!(Html.generate(&doc).contains("src=\"data:image/png;base64,"));
@@ -199,8 +261,14 @@ fn hover_and_load_motion_survive_the_flex_export() {
     );
     let html = css(&doc);
     assert!(html.contains("data-de-motion-node=\"btn\""), "{html}");
-    assert!(html.contains("[data-de-motion-node=\"btn\"]:hover {"), "{html}");
-    assert!(html.contains("transition: opacity 150ms cubic-bezier(0.2,0,0,1);"), "{html}");
+    assert!(
+        html.contains("[data-de-motion-node=\"btn\"]:hover {"),
+        "{html}"
+    );
+    assert!(
+        html.contains("transition: opacity 150ms cubic-bezier(0.2,0,0,1);"),
+        "{html}"
+    );
 }
 
 #[test]

@@ -178,10 +178,7 @@ pub fn export_raster_request_body(state: &EditorState) -> Result<String, Documen
         ExportFormat::Png => "png",
         ExportFormat::Jpeg => "jpeg",
         ExportFormat::Webp => "webp",
-        ExportFormat::Svg
-        | ExportFormat::Pdf
-        | ExportFormat::Html
-        | ExportFormat::HtmlTailwind => {
+        ExportFormat::Svg | ExportFormat::Pdf | ExportFormat::Html | ExportFormat::HtmlTailwind => {
             return Err(DocumentExportError::RasterFormatUnsupported);
         }
     };

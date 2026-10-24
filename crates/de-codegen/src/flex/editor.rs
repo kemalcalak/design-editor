@@ -34,7 +34,10 @@ fn export_roots(state: &EditorState) -> Vec<PenNode> {
     if !selected.is_empty() {
         return selected;
     }
-    let index = state.ui.active_page_index.min(pages.len().saturating_sub(1));
+    let index = state
+        .ui
+        .active_page_index
+        .min(pages.len().saturating_sub(1));
     pages[index].to_vec()
 }
 
@@ -48,7 +51,8 @@ pub fn export_editor_html(
     let roots = export_roots(state);
     let mut scoped = state.doc.clone();
     scoped.pages = None;
-    scoped.children = de_editor_core::ref_resolve::resolve_refs_for_canvas_roots(&roots, &state.doc);
+    scoped.children =
+        de_editor_core::ref_resolve::resolve_refs_for_canvas_roots(&roots, &state.doc);
     export_html(&scoped, target, options)
 }
 

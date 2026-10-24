@@ -209,7 +209,9 @@ impl Printer {
 
 /// A single colour value (no layers, no images) can use `bg-[…]`.
 fn is_plain_color(v: &str) -> bool {
-    !v.contains("gradient") && !v.contains("url(") && (!v.contains(", ") || v.starts_with("color-mix("))
+    !v.contains("gradient")
+        && !v.contains("url(")
+        && (!v.contains(", ") || v.starts_with("color-mix("))
 }
 
 #[cfg(test)]
@@ -245,14 +247,23 @@ mod tests {
     #[test]
     fn values_without_utilities_are_arbitrary() {
         assert_eq!(
-            classes_of(&[("outline", "1px solid rgb(0,0,0)"), ("outline-offset", "-0.5px")]),
+            classes_of(&[
+                ("outline", "1px solid rgb(0,0,0)"),
+                ("outline-offset", "-0.5px")
+            ]),
             "[outline:1px_solid_rgb(0,0,0)] [outline-offset:-0.5px]"
         );
         assert_eq!(
-            classes_of(&[("background", "linear-gradient(90deg, rgb(255,0,0) 0%, rgb(0,0,255) 100%)")]),
+            classes_of(&[(
+                "background",
+                "linear-gradient(90deg, rgb(255,0,0) 0%, rgb(0,0,255) 100%)"
+            )]),
             "[background:linear-gradient(90deg,_rgb(255,0,0)_0%,_rgb(0,0,255)_100%)]"
         );
-        assert_eq!(classes_of(&[("color", "var(--ink)")]), "text-[color:var(--ink)]");
+        assert_eq!(
+            classes_of(&[("color", "var(--ink)")]),
+            "text-[color:var(--ink)]"
+        );
         assert_eq!(classes_of(&[("background", "var(--bg)")]), "bg-[var(--bg)]");
     }
 }

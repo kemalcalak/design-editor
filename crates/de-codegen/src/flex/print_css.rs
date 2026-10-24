@@ -49,7 +49,8 @@ impl Printer {
         }
         self.rules.push_str(&format!(".{name} {{\n"));
         for d in decls.iter() {
-            self.rules.push_str(&format!("  {}: {};\n", d.prop, d.value));
+            self.rules
+                .push_str(&format!("  {}: {};\n", d.prop, d.value));
         }
         self.rules.push_str("}\n");
         Some(name)
@@ -110,9 +111,7 @@ impl Printer {
         for run in runs {
             let text = html_escape(&run.text);
             let class = self.class_for(&format!("{hint}-run"), &run.decls);
-            let class_attr = class
-                .map(|c| format!(" class=\"{c}\""))
-                .unwrap_or_default();
+            let class_attr = class.map(|c| format!(" class=\"{c}\"")).unwrap_or_default();
             match (&run.href, class_attr.is_empty()) {
                 (Some(href), _) => out.push_str(&format!(
                     "<a href=\"{}\"{class_attr}>{text}</a>",

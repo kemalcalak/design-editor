@@ -291,7 +291,9 @@ pub(crate) fn apply_stroke(decls: &mut Decls, node: &PenNode) -> Vec<String> {
         .as_deref()
         .and_then(|fills| {
             fills.iter().find_map(|f| match f {
-                PenFill::Solid(b) => Some(color_alpha(&b.color, f64::from(b.opacity.unwrap_or(1.0)))),
+                PenFill::Solid(b) => {
+                    Some(color_alpha(&b.color, f64::from(b.opacity.unwrap_or(1.0))))
+                }
                 _ => None,
             })
         })

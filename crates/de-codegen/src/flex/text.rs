@@ -50,9 +50,7 @@ pub(crate) fn weight_css(w: &FontWeight) -> Option<String> {
 }
 
 /// The text's width / height props after `textGrowth` (auto ignores numbers).
-pub(crate) fn text_sizing(
-    t: &TextNode,
-) -> (Option<&SizingBehavior>, Option<&SizingBehavior>) {
+pub(crate) fn text_sizing(t: &TextNode) -> (Option<&SizingBehavior>, Option<&SizingBehavior>) {
     let (w, h) = (t.width.as_ref(), t.height.as_ref());
     fn unpin(s: Option<&SizingBehavior>) -> Option<&SizingBehavior> {
         s.filter(|s| matches!(s, SizingBehavior::Keyword(_)))

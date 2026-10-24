@@ -112,7 +112,10 @@ mod tests {
             assets.url("data:image/jpeg;base64,/9j/", "hero"),
             "assets/hero.jpg"
         );
-        assert_eq!(assets.url("https://x.test/a.png", "a"), "https://x.test/a.png");
+        assert_eq!(
+            assets.url("https://x.test/a.png", "a"),
+            "https://x.test/a.png"
+        );
         let files = assets.into_files();
         assert_eq!(files.len(), 2);
         assert_eq!(files[0].bytes[..4], [0x89, b'P', b'N', b'G']);

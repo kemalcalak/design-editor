@@ -120,7 +120,11 @@ fn theme_attrs(doc: &PenDocument) -> String {
 }
 
 /// Export the document's roots (the first page, else bare children).
-pub fn export_html(doc: &PenDocument, target: HtmlTarget, options: &HtmlExportOptions) -> HtmlExport {
+pub fn export_html(
+    doc: &PenDocument,
+    target: HtmlTarget,
+    options: &HtmlExportOptions,
+) -> HtmlExport {
     let resolved;
     let doc = if de_editor_core::ref_resolve::document_has_refs(doc) {
         resolved = de_editor_core::ref_resolve::resolve_refs_for_canvas(doc);
@@ -152,7 +156,9 @@ pub fn export_html(doc: &PenDocument, target: HtmlTarget, options: &HtmlExportOp
             if !printed.font_classes.is_empty() {
                 css.push_str("@layer base {\n");
                 for (class, family) in &printed.font_classes {
-                    css.push_str(&format!("  .{class} {{\n    font-family: {family};\n  }}\n"));
+                    css.push_str(&format!(
+                        "  .{class} {{\n    font-family: {family};\n  }}\n"
+                    ));
                 }
                 css.push_str("}\n");
             }

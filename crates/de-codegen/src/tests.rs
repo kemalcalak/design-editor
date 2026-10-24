@@ -370,7 +370,11 @@ fn html_motion_export_honours_authored_reduced_preference() {
 #[test]
 fn html_without_motion_has_no_extra_css() {
     let html = Html.generate(&empty_doc());
-    assert_eq!(html.matches("<style>").count(), 1, "only the layout block: {html}");
+    assert_eq!(
+        html.matches("<style>").count(),
+        1,
+        "only the layout block: {html}"
+    );
     assert!(!html.contains("data-de-motion-node"));
     assert!(!html.contains("@keyframes"));
 }

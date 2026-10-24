@@ -181,7 +181,10 @@ mod tests {
         assert_eq!(slug("Hero Card / Title"), "hero-card-title");
         assert_eq!(slug("  "), "");
         assert_eq!(font_family("Inter"), "\"Inter\", sans-serif");
-        assert_eq!(font_family("JetBrains Mono"), "\"JetBrains Mono\", monospace");
+        assert_eq!(
+            font_family("JetBrains Mono"),
+            "\"JetBrains Mono\", monospace"
+        );
         assert_eq!(font_family("Noto Serif"), "\"Noto Serif\", serif");
     }
 }

@@ -423,10 +423,7 @@ mod tests {
                 "<script>let ready = true;</script><main />",
             ),
             (Framework::Html, "<!doctype html><html></html>"),
-            (
-                Framework::HtmlTailwind,
-                "<div class=\"flex gap-2\"></div>",
-            ),
+            (Framework::HtmlTailwind, "<div class=\"flex gap-2\"></div>"),
             (Framework::Flutter, "class App extends StatelessWidget {}"),
             (
                 Framework::SwiftUi,

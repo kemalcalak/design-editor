@@ -119,7 +119,10 @@ fn html_targets_export_flex_layout_and_resolve_instances() {
         ],
     ));
     let code = tw["code"].as_str().unwrap();
-    assert!(code.contains("flex flex-col items-start gap-[8px]"), "{code}");
+    assert!(
+        code.contains("flex flex-col items-start gap-[8px]"),
+        "{code}"
+    );
     assert!(!code.contains("<!DOCTYPE html>"), "{code}");
     assert!(code.contains("data-name=\"Promo card\""), "{code}");
     assert!(codegen_export_targets().contains(&"html-tailwind"));

@@ -177,10 +177,8 @@ impl Walker<'_> {
                 el.tag = "img";
                 let src = self.assets.url(img.src.as_str(), &hint);
                 el.attrs.push(("src".into(), src));
-                el.attrs.push((
-                    "alt".into(),
-                    base.name.clone().unwrap_or_default(),
-                ));
+                el.attrs
+                    .push(("alt".into(), base.name.clone().unwrap_or_default()));
                 let fit = match img.object_fit {
                     Some(ImageFitMode::Fill) | None => "cover",
                     _ => image_object_fit(node).unwrap_or("cover"),
@@ -194,13 +192,16 @@ impl Walker<'_> {
             PenNode::IconFont(icon) => {
                 el.tag = "span";
                 el.attrs.push(("role".into(), "img".into()));
-                el.attrs.push(("aria-label".into(), icon.icon_font_name.clone()));
+                el.attrs
+                    .push(("aria-label".into(), icon.icon_font_name.clone()));
                 el.attrs
                     .push(("data-icon".into(), icon.icon_font_name.clone()));
                 if let Some(family) = icon.icon_font_family.as_deref() {
-                    el.attrs.push(("data-icon-family".into(), family.to_string()));
+                    el.attrs
+                        .push(("data-icon-family".into(), family.to_string()));
                     if family.to_ascii_lowercase().starts_with("material") {
-                        el.decls.set("font-family", font_family("Material Symbols Outlined"));
+                        el.decls
+                            .set("font-family", font_family("Material Symbols Outlined"));
                         el.content = Content::Text(vec![super::ir::Inline {
                             text: icon.icon_font_name.clone(),
                             decls: Decls::default(),
@@ -283,8 +284,7 @@ impl Walker<'_> {
     fn children(&mut self, children: &[PenNode], parent: Parent) -> Vec<Element> {
         let visible: Vec<&PenNode> = children.iter().filter(|c| !node_hidden(c)).collect();
         let overlap = visible.len() > 1
-            && (parent == Parent::Stack
-                || visible.iter().any(|c| is_absolute(c.base(), parent)));
+            && (parent == Parent::Stack || visible.iter().any(|c| is_absolute(c.base(), parent)));
         let count = visible.len();
         visible
             .into_iter()
@@ -309,8 +309,7 @@ fn first_solid(node: &PenNode) -> Option<PenFillColor> {
 fn svg(el: &mut Element, view_box: String, inner: String) {
     el.tag = "svg";
     el.attrs.push(("viewBox".into(), view_box));
-    el.attrs
-        .push(("preserveAspectRatio".into(), "none".into()));
+    el.attrs.push(("preserveAspectRatio".into(), "none".into()));
     el.decls.set("overflow", "visible");
     el.decls.set("display", "block");
     el.content = Content::Raw(inner);

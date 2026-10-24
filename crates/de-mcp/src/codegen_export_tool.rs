@@ -81,7 +81,8 @@ impl McpTool for CodegenExport {
         scoped.pages = None;
         // Instances resolve against the whole document: their components may
         // live on another page than the exported nodes.
-        scoped.children = de_editor_core::ref_resolve::resolve_refs_for_canvas_roots(&roots, &self.doc);
+        scoped.children =
+            de_editor_core::ref_resolve::resolve_refs_for_canvas_roots(&roots, &self.doc);
 
         let mut files = Map::new();
         let mut assets = Vec::new();

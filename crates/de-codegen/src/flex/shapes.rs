@@ -48,7 +48,9 @@ fn svg_stroke(node: &PenNode) -> String {
         .as_deref()
         .and_then(|fills| {
             fills.iter().find_map(|f| match f {
-                PenFill::Solid(b) => Some(color_alpha(&b.color, f64::from(b.opacity.unwrap_or(1.0)))),
+                PenFill::Solid(b) => {
+                    Some(color_alpha(&b.color, f64::from(b.opacity.unwrap_or(1.0))))
+                }
                 _ => None,
             })
         })
@@ -132,12 +134,17 @@ pub(crate) fn polygon_svg(node: &PenNode, p: &PolygonNode) -> (String, String) {
     let steps = if inner.is_some() { count * 2 } else { count };
     let points: Vec<String> = (0..steps)
         .map(|i| {
-            let angle = -std::f64::consts::FRAC_PI_2 + std::f64::consts::TAU * i as f64 / steps as f64;
+            let angle =
+                -std::f64::consts::FRAC_PI_2 + std::f64::consts::TAU * i as f64 / steps as f64;
             let r = match inner {
                 Some(ir) if i % 2 == 1 => ir,
                 _ => 1.0,
             };
-            format!("{},{}", n(50.0 + 50.0 * r * angle.cos()), n(50.0 + 50.0 * r * angle.sin()))
+            format!(
+                "{},{}",
+                n(50.0 + 50.0 * r * angle.cos()),
+                n(50.0 + 50.0 * r * angle.sin())
+            )
         })
         .collect();
     (
