@@ -546,6 +546,25 @@ impl WidgetHost {
         }
         false
     }
+
+    /// Shift+H / Shift+V — flip the selection (native parity:
+    /// `WidgetHostNative::apply_flip`). Returns true when `key` is one of
+    /// the two letters and no input owns the keyboard, so the keydown
+    /// router consumes it instead of switching tools.
+    pub(crate) fn apply_flip_shortcut(&mut self, key: &str) -> bool {
+        if self.input_active() {
+            return false;
+        }
+        let axis = match key.to_ascii_lowercase().as_str() {
+            "h" => de_editor_core::FlipAxis::Horizontal,
+            "v" => de_editor_core::FlipAxis::Vertical,
+            _ => return false,
+        };
+        if de_editor_core::flip_selection(&mut self.editor_state, axis) {
+            self.mark_dirty();
+        }
+        true
+    }
 }
 
 fn dispatch_web_copy(

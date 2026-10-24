@@ -99,8 +99,9 @@ pub(crate) fn fill_row_rects(x: f32, y: f32, width: f32, show_variable: bool) ->
     }
 }
 
-/// Display label for a fill-type variant (Solid / Gradient /
-/// Image), localised against `locale` via the `fill.*` keys.
+/// Display label for a fill-type variant (Solid / Linear / Radial /
+/// Mesh / Shader / Image), localised against `locale` via the `fill.*`
+/// keys.
 pub fn fill_type_label(
     locale: de_editor_core::Locale,
     t: de_editor_core::FillType,
@@ -110,20 +111,14 @@ pub fn fill_type_label(
         FillType::Solid => "fill.solid",
         FillType::LinearGradient => "fill.linear",
         FillType::RadialGradient => "fill.radial",
-        // No dedicated TS-generated `fill.mesh` key yet; the translate
-        // fallback yields the key literal, which is acceptable until the
-        // deferred per-vertex mesh editor UI lands.
         FillType::MeshGradient => "fill.mesh",
-        // No dedicated TS-generated `fill.shader` key yet; the translate
-        // fallback yields the key literal, acceptable for the render-only
-        // row label (v1 ships no shader authoring UI).
         FillType::Shader => "fill.shader",
         FillType::Image => "fill.image",
     };
     de_i18n::translate(locale, key)
 }
 
-/// Paint the fill-type picker overlay (4 rows). Called by
+/// Paint the fill-type picker overlay (one row per `FILL_TYPES`). Called by
 /// `PropertyPanel::paint` AFTER all other sections have painted
 /// so the dropdown overlays them.
 #[allow(clippy::too_many_arguments)]
@@ -171,9 +166,8 @@ pub fn fill_row_body_height(
     match fill_type {
         // The hex lives on the row itself (#83), so Solid has no body.
         FillType::Solid => 0.0,
-        // Mesh + Shader join the gradient/image group: row only
-        // (mesh's per-vertex editor and shader authoring are both
-        // deferred — shader is render-only in v1), so no body.
+        // Gradients, mesh (vertex grid), shader (preset row) and image
+        // bodies all key off the primary fill.
         FillType::LinearGradient
         | FillType::RadialGradient
         | FillType::MeshGradient
@@ -451,11 +445,17 @@ fn paint_one_fill(
         1.4,
     );
     let body_y = y + INPUT_HEIGHT + 6.0;
-    // Gradient / image bodies key off the primary fill (the
-    // gradient-stop + image-fill editors operate on `fills[0]`), so
-    // only the primary fill paints them. Mesh + Shader have no inline
-    // editor (deferred; shader is render-only in v1).
+    // Every body keys off the primary fill (the gradient-stop, mesh,
+    // shader-preset and image-fill editors operate on `fills[0]`), so
+    // only the primary fill paints one.
+    use crate::widgets::property_panel_fill_mesh_shader as mesh_shader;
     match fill_type {
+        FillType::MeshGradient if is_primary => {
+            mesh_shader::paint_fill_mesh_body(cx, theme, snapshot, x, body_y, width);
+        }
+        FillType::Shader if is_primary => {
+            mesh_shader::paint_fill_shader_body(cx, theme, snapshot, locale, x, body_y, width);
+        }
         FillType::LinearGradient if is_primary => {
             paint_fill_gradient_body(cx, theme, edit, snapshot, locale, x, body_y, width, true);
         }

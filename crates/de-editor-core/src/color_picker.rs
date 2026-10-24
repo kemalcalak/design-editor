@@ -106,6 +106,12 @@ impl EditorState {
         self.add_effect_to_selected(push_drop_shadow)
     }
 
+    /// Append a default inner shadow to the anchor node. Editable-gated
+    /// companion to [`Self::add_drop_shadow_to_selected`].
+    pub fn add_inner_shadow_to_selected(&mut self) -> bool {
+        self.add_effect_to_selected(crate::fills::push_inner_shadow)
+    }
+
     /// Append a default Gaussian layer-blur effect to the anchor node.
     /// Editable-gated companion to [`Self::add_drop_shadow_to_selected`].
     pub fn add_layer_blur_to_selected(&mut self) -> bool {

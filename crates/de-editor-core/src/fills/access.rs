@@ -86,7 +86,7 @@ pub(crate) fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStrok
 }
 
 /// Shared stroke accessor for reads.
-fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
+pub(crate) fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
     match node {
         PenNode::Frame(n) => n.container.stroke.as_ref(),
         PenNode::Group(n) => n.container.stroke.as_ref(),

@@ -260,6 +260,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.releases" => "Sürüm sayfası",
         "dialog.loadErrorUnsupportedExtension" => "{{name}} bir Design Editor belgesi değil. Yalnızca .de dosyaları açılır; pen.dev .pen dosyaları içe aktarma olarak açılır.",
         "dialog.loadErrorNotPenDev" => "{{name}} bir pen.dev dosyası değil, bu yüzden içe aktarılamaz.",
+        "stroke.inside" => "İçeride",
+        "stroke.center" => "Ortada",
+        "stroke.outside" => "Dışarıda",
+        "effects.addInnerShadow" => "İç gölge",
+        "image.stretch" => "Uzat",
+        "fill.presetNoise" => "Gürültü",
+        "fill.presetFade" => "Solma",
+        "fill.presetGlow" => "Parıltı",
         _ => return None,
     })
 }

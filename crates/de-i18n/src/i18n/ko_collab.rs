@@ -262,6 +262,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.releases" => "릴리스 페이지",
         "dialog.loadErrorUnsupportedExtension" => "{{name}}은(는) Design Editor 문서가 아닙니다. .de 파일만 열 수 있으며, pen.dev .pen 파일은 가져오기로 열립니다.",
         "dialog.loadErrorNotPenDev" => "{{name}}은(는) pen.dev 파일이 아니므로 가져올 수 없습니다.",
+        "stroke.inside" => "안쪽",
+        "stroke.center" => "가운데",
+        "stroke.outside" => "바깥쪽",
+        "effects.addInnerShadow" => "내부 그림자",
+        "image.stretch" => "늘이기",
+        "fill.presetNoise" => "노이즈",
+        "fill.presetFade" => "페이드",
+        "fill.presetGlow" => "글로우",
         _ => return None,
     })
 }

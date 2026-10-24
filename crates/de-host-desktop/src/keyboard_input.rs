@@ -322,6 +322,24 @@ impl DesktopApp {
                     }
                 }
             }
+            // Shift+H / Shift+V — flip the selection (#90). Ahead of the
+            // bare-letter arm below, which ignores Shift and would read
+            // them as H (Hand) / V (Select).
+            Key::Character(ref ch)
+                if !self.zoom_modifier
+                    && self.shift_modifier
+                    && !self.alt_modifier
+                    && !self.host.input_active_pub()
+                    && matches!(ch.to_lowercase().as_str(), "h" | "v") =>
+            {
+                let axis = if ch.eq_ignore_ascii_case("h") {
+                    de_editor_core::FlipAxis::Horizontal
+                } else {
+                    de_editor_core::FlipAxis::Vertical
+                };
+                let _ = self.host.apply_flip(axis);
+                consumed = true;
+            }
             // Single-letter tool switches (no modifier). Only
             // fire when no input is focused so typing in a
             // text node / chat / rename doesn't switch tools.

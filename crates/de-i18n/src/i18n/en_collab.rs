@@ -260,6 +260,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.releases" => "Releases page",
         "dialog.loadErrorUnsupportedExtension" => "{{name}} is not a Design Editor document. Only .de files open; pen.dev .pen files open as an import.",
         "dialog.loadErrorNotPenDev" => "{{name}} is not a pen.dev file, so it cannot be imported.",
+        "stroke.inside" => "Inside",
+        "stroke.center" => "Center",
+        "stroke.outside" => "Outside",
+        "effects.addInnerShadow" => "Inner shadow",
+        "image.stretch" => "Stretch",
+        "fill.presetNoise" => "Noise",
+        "fill.presetFade" => "Fade",
+        "fill.presetGlow" => "Glow",
         _ => return None,
     })
 }

@@ -21,25 +21,35 @@ pub(super) fn gradient_angle_of(node: &PenNode) -> Option<f32> {
     }
 }
 
-/// Resolved stops for the primary Linear / Radial gradient — empty
-/// list for Solid / Image / no-fill nodes.
+/// Resolved stops for the primary Linear / Radial gradient, or the
+/// vertices of a primary mesh gradient in stored order (their `offset`
+/// is 0: a vertex has a lattice position instead, and its colour is
+/// edited through the same `ColorTarget::GradientStop(i)`). Empty for
+/// Solid / Image / Shader / no-fill nodes.
 pub(super) fn gradient_stops_of(node: &PenNode) -> Vec<GradientStopSummary> {
     use jian_ops_schema::style::PenFill;
     let Some(first) = de_editor_core::fills::node_fills(node).and_then(|f| f.first()) else {
         return Vec::new();
     };
-    let raw = match first {
-        PenFill::LinearGradient(b) => &b.stops,
-        PenFill::RadialGradient(b) => &b.stops,
-        _ => return Vec::new(),
+    let summary = |offset: f32, hex: &str| GradientStopSummary {
+        offset: offset.clamp(0.0, 1.0),
+        hex: hex.to_string(),
+        color: color_from_hex(hex).unwrap_or(Color::BLACK),
     };
-    raw.iter()
-        .map(|s| GradientStopSummary {
-            offset: s.offset.clamp(0.0, 1.0),
-            hex: s.color.clone(),
-            color: color_from_hex(&s.color).unwrap_or(Color::BLACK),
-        })
-        .collect()
+    match first {
+        PenFill::LinearGradient(b) => b
+            .stops
+            .iter()
+            .map(|s| summary(s.offset, &s.color))
+            .collect(),
+        PenFill::RadialGradient(b) => b
+            .stops
+            .iter()
+            .map(|s| summary(s.offset, &s.color))
+            .collect(),
+        PenFill::MeshGradient(b) => b.stops.iter().map(|s| summary(0.0, &s.color)).collect(),
+        _ => Vec::new(),
+    }
 }
 
 /// Build one [`FillSummary`] per `PenFill` on the node, in authored

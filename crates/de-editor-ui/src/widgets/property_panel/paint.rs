@@ -163,6 +163,14 @@ impl Widget for PropertyPanel {
             y,
             w,
         );
+        crate::widgets::property_panel_flip::paint_flip_buttons(
+            cx,
+            &self.theme,
+            &self.snapshot,
+            x,
+            tops.position,
+            w,
+        );
         y = section_start(y, tops.flex, "position");
         let flex_section_y = y;
         if caps.flex_layout {

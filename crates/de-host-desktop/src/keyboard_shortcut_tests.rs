@@ -111,3 +111,31 @@ fn closing_settings_with_cmd_comma_does_not_leave_import_shortcuts_blocked() {
     app.handle_key_pressed(&Key::Character("f".into()), Some("f"));
     assert!(app.host.editor_state().editor_ui.figma_import_open);
 }
+
+#[test]
+fn shift_h_and_shift_v_flip_the_selection_instead_of_switching_tools() {
+    use de_editor_core::pen_node_ext::PenNodeExt;
+    let mut app = DesktopApp::new(None);
+    let tool_before = app.host.editor_state().tool;
+    {
+        let state = app.host.editor_state_mut();
+        state.active_children_mut().push(
+            serde_json::from_value(serde_json::json!({
+                "type": "rectangle", "id": "flip-me", "width": 40, "height": 20
+            }))
+            .expect("rect"),
+        );
+        state.set_single_selection(de_editor_core::NodeId::new("flip-me"));
+    }
+    app.shift_modifier = true;
+    app.handle_key_pressed(&Key::Character("H".into()), Some("H"));
+    app.handle_key_pressed(&Key::Character("V".into()), Some("V"));
+
+    let state = app.host.editor_state();
+    let base = state.active_children().last().expect("rect").base();
+    assert_eq!((base.flip_x, base.flip_y), (Some(true), Some(true)));
+    assert_eq!(
+        state.tool, tool_before,
+        "Shift+H / Shift+V must not switch tools"
+    );
+}

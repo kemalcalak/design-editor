@@ -96,6 +96,9 @@ pub fn updates_document(action: &PropertyPanelAction) -> bool {
             | PropertyPanelAction::SetFillBlendMode { .. }
             | PropertyPanelAction::SetImageFillMode(_)
             | PropertyPanelAction::ClearPageBackground
+            | PropertyPanelAction::SetStrokeAlign(_)
+            | PropertyPanelAction::FlipSelection(_)
+            | PropertyPanelAction::SetShaderPreset(_)
     )
 }
 
@@ -638,20 +641,10 @@ pub fn apply_property_action(
             state.editor_ui.toggle_effect_add_picker();
             Handled
         }
-        A::AddEffect(kind) => {
-            use crate::widgets::property_panel_snapshot::EffectKind;
-            match kind {
-                EffectKind::Shadow => {
-                    state.add_drop_shadow_to_selected();
-                }
-                EffectKind::LayerBlur => {
-                    state.add_layer_blur_to_selected();
-                }
-                EffectKind::BackgroundBlur => {
-                    state.add_background_blur_to_selected();
-                }
-            }
-            state.editor_ui.close_effect_add_picker();
+        // Effect adds and the #90 paint options (stroke alignment, flip,
+        // shader presets) live in a sibling (800-line cap).
+        A::AddEffect(_) | A::SetStrokeAlign(_) | A::FlipSelection(_) | A::SetShaderPreset(_) => {
+            crate::widgets::property_panel_dispatch_paint::apply_paint_option_action(state, action);
             Handled
         }
         A::SetEffectVisible(index, visible) => {

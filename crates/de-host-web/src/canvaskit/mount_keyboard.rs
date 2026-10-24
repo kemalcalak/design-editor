@@ -231,7 +231,11 @@ pub(super) fn register_keyboard_listeners(
                         // modifier (and on macOS yields special glyphs like ®/π),
                         // so an Alt+letter must not trip the bare-letter router.
                         // A resulting printable char still types via apply_text.
-                        if !evt.alt_key() && b.host.apply_tool_shortcut(key.as_str()) {
+                        // Shift+H / Shift+V flip the selection (#90)
+                        // before the tool router reads them as H / V.
+                        if !evt.alt_key() && shift && b.host.apply_flip_shortcut(key.as_str()) {
+                            consumed = true;
+                        } else if !evt.alt_key() && b.host.apply_tool_shortcut(key.as_str()) {
                             consumed = true;
                         } else if crate::event::ime::keydown_should_insert_text(
                             b.ime.as_ref().is_some_and(|ime| ime.owns_dom_focus()),

@@ -280,7 +280,7 @@ pub enum PropertyPanelAction {
     /// the chosen scale + format (pops the native Save dialog).
     ExportImageNow,
     /// User clicked the Effects section's "+" — host toggles the
-    /// three-kind add-menu.
+    /// effect-kind add-menu.
     ToggleEffectAddPicker,
     /// User picked an effect kind in the add-menu.
     AddEffect(crate::widgets::property_panel_snapshot::EffectKind),
@@ -414,6 +414,14 @@ pub enum PropertyPanelAction {
     /// User picked a stroke edit mode in the gear popover — host pins
     /// `editor_ui.stroke_edit_mode` + reshapes side widths.
     SetStrokeMode(de_editor_core::PaddingEditMode),
+    /// User picked Inside / Center / Outside in the Stroke section's
+    /// alignment row.
+    SetStrokeAlign(jian_ops_schema::style::StrokeAlign),
+    /// User clicked a flip button in the Position header — toggles the
+    /// mirror flag on every selected node.
+    FlipSelection(de_editor_core::FlipAxis),
+    /// User picked a preset in a primary shader fill's preset row.
+    SetShaderPreset(de_editor_core::ShaderPreset),
     /// User clicked the Widget section's `checked` toggle on a Switch
     /// / Checkbox node — host flips the literal `checked` bool to
     /// `new_value`.
