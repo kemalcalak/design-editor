@@ -34,7 +34,7 @@ fn declares_mouse_uniform_rejects_other_names_types_and_non_uniforms() {
 
 #[test]
 fn a_shader_without_the_uniform_gets_nothing_and_does_not_mark_the_frame() {
-    begin_frame(Some(Point2D::new(5.0, 5.0)));
+    begin_frame(Some(Point2D::new(5.0, 5.0)), false);
     assert_eq!(
         mouse_uniform_value("uniform half4 tint;", rect(0.0, 0.0, 10.0, 10.0), &[]),
         None
@@ -44,7 +44,7 @@ fn a_shader_without_the_uniform_gets_nothing_and_does_not_mark_the_frame() {
 
 #[test]
 fn the_pointer_is_node_local_screen_pixels_without_a_size_uniform() {
-    begin_frame(Some(Point2D::new(130.0, 70.0)));
+    begin_frame(Some(Point2D::new(130.0, 70.0)), false);
     assert_near(
         mouse_uniform_value(MOUSE_SHADER, rect(100.0, 50.0, 40.0, 40.0), &[]),
         [30.0, 20.0],
@@ -56,7 +56,7 @@ fn the_pointer_is_node_local_screen_pixels_without_a_size_uniform() {
 fn a_size_uniform_rescales_the_pointer_like_frag_coord() {
     // A 200x100 node painted at zoom 0.5: the box is 100x50 on screen and
     // the backends scale fragCoord back to document pixels.
-    begin_frame(Some(Point2D::new(60.0, 35.0)));
+    begin_frame(Some(Point2D::new(60.0, 35.0)), false);
     let size = [200.0, 100.0];
     assert_near(
         mouse_uniform_value(
@@ -70,7 +70,7 @@ fn a_size_uniform_rescales_the_pointer_like_frag_coord() {
 
 #[test]
 fn no_pointer_binds_the_idle_value() {
-    begin_frame(None);
+    begin_frame(None, false);
     assert_eq!(
         mouse_uniform_value(MOUSE_SHADER, rect(0.0, 0.0, 10.0, 10.0), &[]),
         Some(NO_POINTER)
@@ -83,7 +83,7 @@ fn no_pointer_binds_the_idle_value() {
 
 #[test]
 fn paints_after_the_canvas_frame_see_no_pointer() {
-    begin_frame(Some(Point2D::new(5.0, 5.0)));
+    begin_frame(Some(Point2D::new(5.0, 5.0)), false);
     end_frame();
     assert_eq!(
         mouse_uniform_value(MOUSE_SHADER, rect(0.0, 0.0, 10.0, 10.0), &[]),
@@ -93,7 +93,7 @@ fn paints_after_the_canvas_frame_see_no_pointer() {
 
 #[test]
 fn with_fixed_pointer_pins_the_pointer_and_restores_the_canvas_frame() {
-    begin_frame(Some(Point2D::new(5.0, 5.0)));
+    begin_frame(Some(Point2D::new(5.0, 5.0)), false);
     let pinned = with_fixed_pointer(None, || {
         mouse_uniform_value(MOUSE_SHADER, rect(0.0, 0.0, 10.0, 10.0), &[])
     });
@@ -113,7 +113,7 @@ fn a_rotated_node_sees_the_pointer_in_its_own_axes() {
     // Node box (0,0)-(100,100), pivot at its centre, rotated a quarter turn
     // clockwise. The screen point right of the centre is the node's local
     // point above the centre.
-    begin_frame(Some(Point2D::new(90.0, 50.0)));
+    begin_frame(Some(Point2D::new(90.0, 50.0)), false);
     let outer = enter_node_transform(NodeTransform {
         pop_scale: None,
         flip_x: false,
@@ -136,7 +136,7 @@ fn a_rotated_node_sees_the_pointer_in_its_own_axes() {
 fn the_inverse_undoes_flip_after_rotation_in_skia_order() {
     // Forward: screen = pivot + S_flip · R · (p - pivot). With flip_x and a
     // quarter turn, local (50,10) (above the centre) lands left of it.
-    begin_frame(Some(Point2D::new(10.0, 50.0)));
+    begin_frame(Some(Point2D::new(10.0, 50.0)), false);
     let outer = enter_node_transform(NodeTransform {
         pop_scale: None,
         flip_x: true,
@@ -153,7 +153,7 @@ fn the_inverse_undoes_flip_after_rotation_in_skia_order() {
 
 #[test]
 fn a_reveal_pop_scale_is_undone_about_the_pivot() {
-    begin_frame(Some(Point2D::new(60.0, 50.0)));
+    begin_frame(Some(Point2D::new(60.0, 50.0)), false);
     let outer = enter_node_transform(NodeTransform {
         pop_scale: Some(0.5),
         flip_x: false,
@@ -171,7 +171,7 @@ fn a_reveal_pop_scale_is_undone_about_the_pivot() {
 #[test]
 fn track_pointer_owes_a_repaint_only_for_a_change_with_a_listener_on_screen() {
     let mut stored = None;
-    begin_frame(None);
+    begin_frame(None, false);
     assert!(
         !track_pointer(&mut stored, Some(Point2D::new(1.0, 1.0))),
         "no pointer shader on screen: moves must not repaint"
@@ -185,4 +185,31 @@ fn track_pointer_owes_a_repaint_only_for_a_change_with_a_listener_on_screen() {
         track_pointer(&mut stored, None),
         "leaving the canvas repaints to the idle value"
     );
+}
+
+#[test]
+fn paints_outside_a_canvas_frame_do_not_mark_it() {
+    // Preview / thumbnails paint shaders without a canvas frame.
+    assert_eq!(
+        mouse_uniform_value(MOUSE_SHADER, rect(0.0, 0.0, 10.0, 10.0), &[]),
+        Some(NO_POINTER)
+    );
+    assert!(!pointer_shader_painted());
+    begin_frame(None, false);
+    end_frame();
+    mouse_uniform_value(MOUSE_SHADER, rect(0.0, 0.0, 10.0, 10.0), &[]);
+    assert!(!pointer_shader_painted());
+}
+
+#[test]
+fn a_partial_repaint_keeps_the_flag_an_earlier_strip_set() {
+    begin_frame(None, false);
+    mouse_uniform_value(MOUSE_SHADER, rect(0.0, 0.0, 10.0, 10.0), &[]);
+    end_frame();
+    // A second strip with no pointer shader must not hide the first one.
+    begin_frame(None, true);
+    end_frame();
+    assert!(pointer_shader_painted());
+    begin_frame(None, false);
+    assert!(!pointer_shader_painted(), "a full frame starts clean");
 }

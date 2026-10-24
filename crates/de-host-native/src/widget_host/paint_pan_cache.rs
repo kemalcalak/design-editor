@@ -207,7 +207,8 @@ impl WidgetHostNative {
             && self.node_drag.is_none()
             && self.marquee_drag.is_none()
             && self.editor_state.editor_ui.starter_ghost.is_none()
-            && self.editor_state.ui.text_editing.is_none();
+            && self.editor_state.ui.text_editing.is_none()
+            && !de_editor_ui::widgets::canvas_shader_pointer::pointer_shader_painted();
         if !rest_usable {
             self.pan_cache_restore = None;
             return false;

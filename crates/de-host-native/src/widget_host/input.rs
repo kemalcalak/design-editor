@@ -538,14 +538,19 @@ impl WidgetHostNative {
     /// Returns whether a repaint is owed (see
     /// `canvas_shader_pointer::track_pointer`).
     fn track_shader_pointer(&mut self, x: f32, y: f32) -> bool {
+        // Home (native only: the web build has none) and Play mode cover the
+        // editor canvas, so its shaders see no pointer there.
         let over_canvas = !self.home_visible()
+            && !self.editor_state.editor_ui.preview.mode
             && self.over_canvas(x, y, self.last_viewport_w, self.last_viewport_h);
         let next = over_canvas.then(|| de_editor_ui::Point2D::new(x, y));
         de_editor_ui::widgets::canvas_shader_pointer::track_pointer(&mut self.shader_pointer, next)
     }
 
-    /// The pointer left the window: pointer-reactive shaders fall back to
-    /// their idle value. Returns whether a repaint is owed.
+    /// The pointer left the canvas without a cursor move reaching the ladder
+    /// (window exit, or a move the desktop runner keeps for the layer panel):
+    /// pointer-reactive shaders fall back to their idle value. Returns whether
+    /// a repaint is owed.
     pub fn apply_cursor_left(&mut self) -> bool {
         de_editor_ui::widgets::canvas_shader_pointer::track_pointer(&mut self.shader_pointer, None)
     }

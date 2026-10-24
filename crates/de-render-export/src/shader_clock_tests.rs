@@ -70,10 +70,10 @@ fn mouse_shader_png() -> Vec<u8> {
 fn a_screenshot_renders_a_pointer_shader_at_the_idle_pointer() {
     use de_editor_ui::widgets::canvas_shader_pointer;
     use de_editor_ui::Point2D;
-    canvas_shader_pointer::begin_frame(None);
+    canvas_shader_pointer::begin_frame(None, false);
     let idle = mouse_shader_png();
     // A canvas frame left the pointer over the node: the export must not see it.
-    canvas_shader_pointer::begin_frame(Some(Point2D::new(4.0, 4.0)));
+    canvas_shader_pointer::begin_frame(Some(Point2D::new(4.0, 4.0)), false);
     let hovered = mouse_shader_png();
     assert_eq!(idle, hovered, "the canvas pointer leaked into the export");
     assert!(

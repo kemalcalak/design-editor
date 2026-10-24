@@ -250,7 +250,7 @@ fn paint_node_inner<'a>(
                 pop_scale,
                 flip_x: node.flip_x,
                 flip_y: node.flip_y,
-                rotation: if rotated { node.rotation } else { 0.0 },
+                rotation: node.rotation,
                 pivot,
             },
         );

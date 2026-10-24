@@ -6,16 +6,16 @@
 //! from the fragment to the pointer. Rotation, flips and the `size`
 //! normalisation the backends apply to `fragCoord` apply to `mouse` too.
 //!
-//! When the pointer is not over the canvas (over chrome, outside the
-//! window, or in an export / screenshot / thumbnail) the shader gets
-//! [`NO_POINTER`], a point far outside any node, so hover effects rest in
-//! their idle state.
+//! When the pointer is not over the canvas (over the rails, outside the
+//! window, Home or Play mode, or in an export / screenshot / thumbnail) the
+//! shader gets [`NO_POINTER`], a point far outside any node, so hover effects
+//! rest in their idle state.
 //!
 //! The canvas viewport sets the screen-space pointer once per painted frame
 //! ([`begin_frame`]); the node walker maps it through each node transform it
-//! pushes ([`enter_node_transform`]). Painting such a shader marks the frame,
-//! and hosts call [`track_pointer`] on every cursor move so a moving pointer
-//! repaints only while one is on screen.
+//! pushes ([`enter_node_transform`]). Painting such a shader inside a canvas
+//! frame marks the frame, and hosts call [`track_pointer`] on every cursor
+//! move so a moving pointer repaints only while one is on screen.
 
 use std::cell::Cell;
 
@@ -34,19 +34,30 @@ thread_local! {
     /// outside a canvas frame / when the pointer is off the canvas.
     static LOCAL_POINTER: Cell<Option<Point2D>> = const { Cell::new(None) };
     static POINTER_PAINTED: Cell<bool> = const { Cell::new(false) };
+    /// Inside a canvas frame. Only canvas paints mark [`POINTER_PAINTED`]:
+    /// preview, thumbnails and exports never see the pointer, so they must
+    /// not make the host repaint on pointer moves.
+    static IN_FRAME: Cell<bool> = const { Cell::new(false) };
 }
 
 /// Start a canvas frame with the pointer in screen space (`None` when it is
-/// off the canvas) and clear the flag the previous frame left behind.
-pub fn begin_frame(pointer: Option<Point2D>) {
+/// off the canvas). A full frame clears the flag the previous frame left
+/// behind; a partial repaint (`accumulate`, e.g. the pan cache's exposed
+/// strips) keeps it, so one strip without the shader cannot hide another
+/// strip's.
+pub fn begin_frame(pointer: Option<Point2D>, accumulate: bool) {
     LOCAL_POINTER.with(|local| local.set(pointer.filter(|p| p.is_finite())));
-    POINTER_PAINTED.with(|painted| painted.set(false));
+    IN_FRAME.with(|in_frame| in_frame.set(true));
+    if !accumulate {
+        POINTER_PAINTED.with(|painted| painted.set(false));
+    }
 }
 
-/// End a canvas frame: paints outside the canvas (thumbnails, exports) see
-/// no pointer. The painted flag stays for the host to read.
+/// End a canvas frame: later paints (thumbnails, preview, exports) see no
+/// pointer and do not mark the frame. The painted flag stays for the host.
 pub fn end_frame() {
     LOCAL_POINTER.with(|local| local.set(None));
+    IN_FRAME.with(|in_frame| in_frame.set(false));
 }
 
 /// Whether a pointer-reading shader was painted since the last
@@ -72,9 +83,11 @@ pub fn track_pointer(stored: &mut Option<Point2D>, next: Option<Point2D>) -> boo
 pub fn with_fixed_pointer<R>(pointer: Option<Point2D>, paint: impl FnOnce() -> R) -> R {
     let saved_pointer = LOCAL_POINTER.with(|local| local.replace(pointer));
     let saved_painted = POINTER_PAINTED.with(Cell::get);
+    let saved_in_frame = IN_FRAME.with(|in_frame| in_frame.replace(false));
     let result = paint();
     LOCAL_POINTER.with(|local| local.set(saved_pointer));
     POINTER_PAINTED.with(|painted| painted.set(saved_painted));
+    IN_FRAME.with(|in_frame| in_frame.set(saved_in_frame));
     result
 }
 
@@ -132,26 +145,16 @@ fn inverse_node_transform(point: Point2D, t: NodeTransform) -> Option<Point2D> {
 /// Whether `sksl` declares the mouse uniform as a 2-vector
 /// (`uniform float2 mouse;` / `uniform half2 mouse;`, any whitespace).
 pub fn declares_mouse_uniform(sksl: &str) -> bool {
-    let mut previous: [&str; 2] = ["", ""];
-    for token in sksl
-        .split(|c: char| c.is_whitespace() || c == ';')
-        .filter(|token| !token.is_empty())
-    {
-        if previous[0] == "uniform"
-            && matches!(previous[1], "float2" | "half2")
-            && token == MOUSE_UNIFORM
-        {
-            return true;
-        }
-        previous = [previous[1], token];
-    }
-    false
+    super::canvas_shader_clock::declares_uniform(sksl, &["float2", "half2"], MOUSE_UNIFORM)
 }
 
 /// The value to bind to [`MOUSE_UNIFORM`] for a shader painted into `rect`,
 /// or `None` when `sksl` does not declare it. `uniforms` are the bindings the
-/// backend receives: like the backends, the first 2-component `size` rescales
-/// the box to document pixels. A declaring shader marks the frame so the host
+/// backend receives: the first 2-component `size` rescales the box to
+/// document pixels, the same rule as native `runtime_shader_local_matrix`
+/// (`de-host-native` skia `gradient.rs`) and the web
+/// `opCkRuntimeEffectLocalMatrix` (`op_ck_bridge.js`); keep the three in
+/// sync. Inside a canvas frame a declaring shader marks the frame so the host
 /// repaints on pointer moves.
 pub fn mouse_uniform_value(
     sksl: &str,
@@ -161,7 +164,9 @@ pub fn mouse_uniform_value(
     if !declares_mouse_uniform(sksl) {
         return None;
     }
-    POINTER_PAINTED.with(|painted| painted.set(true));
+    if IN_FRAME.with(Cell::get) {
+        POINTER_PAINTED.with(|painted| painted.set(true));
+    }
     let Some(pointer) = LOCAL_POINTER.with(Cell::get) else {
         return Some(NO_POINTER);
     };
