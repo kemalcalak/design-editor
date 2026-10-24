@@ -95,6 +95,7 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
             match (key.as_str(), value) {
                 ("children", Value::Array(kids)) => {
                     kids.retain(|child| keep_child(child, ctx.report));
+                    paint_order_first_on_top(kids, flow);
                     stack.extend(
                         kids.iter_mut()
                             .map(|child| (child, flow, Role::Node, Rc::clone(&theme))),
@@ -119,6 +120,29 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
                 _ => {}
             }
         }
+    }
+}
+
+/// pen.dev paints a node's children in array order (the last on top); the
+/// canonical canvas paints the first on top (`children.iter().rev()`). The
+/// array also sets auto-layout flow order, so inside a flow parent only the
+/// absolutely positioned children change places: the list is reversed for
+/// paint order, then the flow children are put back in their own order in
+/// the slots they now hold. A free parent is reversed whole.
+fn paint_order_first_on_top(kids: &mut [Value], flow: bool) {
+    if kids.len() < 2 {
+        return;
+    }
+    kids.reverse();
+    if !flow {
+        return;
+    }
+    let in_flow =
+        |kid: &Value| kid.get("layoutPosition").and_then(Value::as_str) != Some("absolute");
+    let slots: Vec<usize> = (0..kids.len()).filter(|&i| in_flow(&kids[i])).collect();
+    let flow_kids: Vec<Value> = slots.iter().rev().map(|&i| kids[i].take()).collect();
+    for (slot, kid) in slots.into_iter().zip(flow_kids) {
+        kids[slot] = kid;
     }
 }
 

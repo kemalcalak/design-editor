@@ -92,12 +92,13 @@ fn absolute_position_and_disabled_nodes_map_to_canonical_fields() {
         { "type": "ellipse", "id": "dot", "layoutPosition": "absolute", "x": 4 },
         { "type": "text", "id": "t", "content": "hi", "enabled": false, "placeholder": true }
     ]}]));
+    // The absolute dot pen.dev paints first (behind) ends up last.
     let kids = &doc["children"][0]["children"];
-    assert_eq!(kids[0]["role"], "overlay");
-    assert!(kids[0].get("layoutPosition").is_none());
-    assert_eq!(kids[1]["visible"], false);
-    assert!(kids[1].get("enabled").is_none());
-    assert!(kids[1].get("placeholder").is_none());
+    assert_eq!(kids[1]["role"], "overlay");
+    assert!(kids[1].get("layoutPosition").is_none());
+    assert_eq!(kids[0]["visible"], false);
+    assert!(kids[0].get("enabled").is_none());
+    assert!(kids[0].get("placeholder").is_none());
 }
 
 #[test]
