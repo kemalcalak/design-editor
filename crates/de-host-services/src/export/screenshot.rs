@@ -32,6 +32,9 @@ pub struct CaptureSpec {
     /// Render scale (TS `opts.dpr`, default 1 headlessly). Clamped to
     /// the export pipeline's 0.5..=8 range.
     pub scale: f32,
+    /// Shader clock for this capture in ms (#8, validated by
+    /// `de_mcp::parse_time_ms_arg`); `None` captures at `time = 0`.
+    pub time_ms: Option<f64>,
 }
 
 /// One captured screenshot — PNG bytes (base64) + the doc-space
@@ -74,10 +77,11 @@ pub fn capture_scene(
     } else {
         0.0
     };
+    let time_ms = spec.time_ms.unwrap_or(0.0);
     let (actual_bounds, png) = match &spec.node_id {
         None => {
             let bounds: Rect = page_bounds(page).ok_or(ExportError::NothingToCapture)?;
-            let png = render(bounds, scale, padding, |canvas| {
+            let png = render(bounds, scale, padding, time_ms, |canvas| {
                 paint_nodes(canvas, &page.children);
             })?;
             (None, png)
@@ -91,7 +95,9 @@ pub fn capture_scene(
             let bounds = node_bounds(node).ok_or_else(|| ExportError::NodePaintsNothing {
                 node_id: node_id.clone(),
             })?;
-            let png = render(bounds, scale, padding, |canvas| paint_node(canvas, node))?;
+            let png = render(bounds, scale, padding, time_ms, |canvas| {
+                paint_node(canvas, node)
+            })?;
             (
                 Some((
                     bounds.origin.x,
@@ -118,9 +124,12 @@ fn render(
     bounds: Rect,
     scale: f32,
     padding: f32,
+    time_ms: f64,
     paint: impl FnOnce(&skia_safe::Canvas),
 ) -> Result<Vec<u8>, ExportError> {
-    super::render_raster_bytes(bounds, RasterFormat::Png, scale, padding, paint)
+    super::with_capture_time_ms(time_ms, || {
+        super::render_raster_bytes(bounds, RasterFormat::Png, scale, padding, paint)
+    })
 }
 
 #[cfg(test)]
@@ -153,6 +162,7 @@ mod tests {
                 node_id: None,
                 padding: 0.0,
                 scale: 1.0,
+                time_ms: None,
             },
         )
         .expect("capture");
@@ -176,6 +186,7 @@ mod tests {
                 node_id: Some("r2".into()),
                 padding: 4.0,
                 scale: 2.0,
+                time_ms: None,
             },
         )
         .expect("capture");
@@ -188,6 +199,7 @@ mod tests {
                 node_id: Some("ghost".into()),
                 padding: 0.0,
                 scale: 1.0,
+                time_ms: None,
             },
         )
         .unwrap_err();
@@ -207,10 +219,42 @@ mod tests {
                 node_id: None,
                 padding: 1.0e7,
                 scale: 1.0,
+                time_ms: None,
             },
         )
         .unwrap_err();
         assert!(err.to_string().contains("exceeds the size cap"), "{err}");
+    }
+
+    /// `timeMs` (#8) reaches the shader clock: a `fract(time)` shader
+    /// captured at 1.5 s differs from the default `time = 0` capture, and
+    /// an explicit `0` matches the default.
+    #[test]
+    fn capture_time_drives_time_driven_shader_fills() {
+        let scene = scene_with(vec![crate::export::test_support::time_shader_rect("s")]);
+        let at = |time_ms| {
+            capture_scene(
+                &scene,
+                &CaptureSpec {
+                    node_id: Some("s".into()),
+                    padding: 0.0,
+                    scale: 1.0,
+                    time_ms,
+                },
+            )
+            .expect("capture")
+            .png_base64
+        };
+        assert_eq!(at(None), at(Some(0.0)));
+        assert_ne!(at(None), at(Some(1_500.0)));
+    }
+
+    #[test]
+    fn the_wire_and_render_capture_time_ceilings_agree() {
+        assert_eq!(
+            de_mcp::MAX_CAPTURE_TIME_MS,
+            crate::export::MAX_CAPTURE_TIME_MS
+        );
     }
 
     #[test]
@@ -222,6 +266,7 @@ mod tests {
                 node_id: None,
                 padding: 0.0,
                 scale: 1.0,
+                time_ms: None,
             },
         )
         .unwrap_err();

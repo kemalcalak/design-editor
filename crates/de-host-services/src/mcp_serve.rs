@@ -635,6 +635,7 @@ pub use schemas::TOOL_SCHEMAS;
 pub use schemas::{DEBUG_TOOL_SCHEMAS, TOOL_SCHEMAS};
 use tools_list::tools_list_response;
 
+mod capture_time;
 pub(crate) mod screenshot_tool;
 use screenshot_tool::get_screenshot_snapshot;
 

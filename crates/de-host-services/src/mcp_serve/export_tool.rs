@@ -41,6 +41,12 @@ impl McpTool for ExportNodes {
     }
 
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
+        super::capture_time::at_requested_time(args, |_| self.export(args))
+    }
+}
+
+impl ExportNodes {
+    fn export(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
         // --- parse nodeIds (required, JSON array encoded as flat string) ---
         // The MCP wire layer delivers structured array values as a JSON
         // string in the flat BTreeMap; callers pass either a JSON-encoded

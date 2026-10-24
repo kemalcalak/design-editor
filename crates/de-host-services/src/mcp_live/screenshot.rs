@@ -63,6 +63,7 @@ pub fn capture_spec(req: &ScreenshotRequest) -> CaptureSpec {
         // (no `window.devicePixelRatio` headlessly).
         padding: req.padding.unwrap_or(0.0) as f32,
         scale: req.dpr.unwrap_or(1.0) as f32,
+        time_ms: req.time_ms,
     }
 }
 
@@ -87,6 +88,9 @@ fn success_response(id: &RequestId, req: &ScreenshotRequest, shot: &ScreenshotPn
     }
     if let Some(dpr) = req.dpr {
         meta.insert("dpr".into(), json!(dpr));
+    }
+    if let Some(time_ms) = req.time_ms {
+        meta.insert("timeMs".into(), json!(time_ms));
     }
     let text = serde_json::to_string_pretty(&Value::Object(meta)).unwrap_or_default();
     let content = json!([
@@ -170,18 +174,21 @@ mod tests {
         assert_eq!(meta["target"], "root");
         assert!(meta.get("nodeId").is_none(), "{meta}");
         assert!(meta.get("actualBounds").is_none(), "{meta}");
+        assert!(meta.get("timeMs").is_none(), "{meta}");
         assert!(v["result"].get("isError").is_none(), "{response}");
     }
 
     #[test]
     fn node_capture_threads_bounds_node_id_and_dpr_into_the_text_block() {
-        let body = call_body(r#"{"target":"node","nodeId":"n9","dpr":"2","padding":"4"}"#);
+        let body =
+            call_body(r#"{"target":"node","nodeId":"n9","dpr":"2","padding":"4","timeMs":"750"}"#);
         let response = maybe_serve(&body, true, |req| {
             assert_eq!(req.target, ScreenshotTarget::Node("n9".into()));
             let spec = capture_spec(&req);
             assert_eq!(spec.node_id.as_deref(), Some("n9"));
             assert_eq!(spec.padding, 4.0);
             assert_eq!(spec.scale, 2.0);
+            assert_eq!(spec.time_ms, Some(750.0));
             Ok::<_, String>(shot(Some((100.0, 50.0, 40.0, 30.0))))
         })
         .expect("intercepted");
@@ -192,6 +199,7 @@ mod tests {
         assert_eq!(meta["target"], "node");
         assert_eq!(meta["nodeId"], "n9");
         assert_eq!(meta["dpr"], 2.0);
+        assert_eq!(meta["timeMs"], 750.0);
         assert_eq!(
             meta["actualBounds"],
             serde_json::json!({ "x": 100.0, "y": 50.0, "w": 40.0, "h": 30.0 })
