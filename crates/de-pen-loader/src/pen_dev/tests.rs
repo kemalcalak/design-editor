@@ -440,4 +440,11 @@ fn gradient_rotation_turns_clockwise_like_css() {
         .collect();
     // pen.dev: 0° up, counter-clockwise. Canonical: CSS, clockwise.
     assert_eq!(angles, vec![180.0, 90.0, 270.0, 0.0]);
+
+    let mut doc = pen(json!([{ "type": "rectangle", "id": "sweep", "fill": {
+        "type": "gradient", "gradientType": "angular", "rotation": 90,
+        "colors": [{ "color": "#000000", "position": 0 }, { "color": "#FFFFFF", "position": 1 }]
+    }}]));
+    convert(&mut doc, &no_assets);
+    assert_eq!(doc["children"][0]["fill"][0]["rotation"], 270.0);
 }

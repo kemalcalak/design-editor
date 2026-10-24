@@ -108,3 +108,19 @@ fn a_patch_with_nothing_to_complete_it_is_still_reported() {
     }]));
     assert_eq!(report.unsupported.get("partial stroke override"), Some(&1));
 }
+
+#[test]
+fn a_nested_instance_patch_completes_from_its_component() {
+    let mut doc = json!({ "version": "2.21", "children": [badge(), {
+        "type": "frame", "id": "card", "reusable": true, "children": [
+            { "type": "ref", "id": "inner", "ref": "badge" }
+        ]
+    }, {
+        "type": "ref", "id": "copy", "ref": "card",
+        "descendants": { "inner": { "stroke": "#FF0000" } }
+    }]});
+    let report = convert(&mut doc, &no_assets);
+    let patch = &doc["children"][2]["descendants"]["inner"];
+    assert_eq!(patch["stroke"]["thickness"], 1.5);
+    assert!(!report.unsupported.contains_key("partial stroke override"));
+}

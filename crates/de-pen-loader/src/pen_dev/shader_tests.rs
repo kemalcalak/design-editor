@@ -209,7 +209,10 @@ fn a_themed_instance_resolves_the_component_shader_under_its_own_theme() {
             ]}
         ]},
         { "type": "ref", "id": "dark-copy", "ref": "screen", "theme": { "mode": "dark" } },
-        { "type": "ref", "id": "light-copy", "ref": "screen" }
+        { "type": "ref", "id": "light-copy", "ref": "screen" },
+        { "type": "frame", "id": "dark-page", "theme": { "mode": "dark" }, "children": [
+            { "type": "ref", "id": "nested-copy", "ref": "screen" }
+        ]}
     ]));
     convert(&mut doc, &reader);
     let screen = &doc["children"][0];
@@ -227,4 +230,7 @@ fn a_themed_instance_resolves_the_component_shader_under_its_own_theme() {
         "a shader without variables needs no patch"
     );
     assert!(doc["children"][2].get("descendants").is_none());
+    // A plain instance inside a themed frame takes that frame's theme.
+    let nested = &doc["children"][3]["children"][0]["descendants"];
+    assert_eq!(nested["scene"]["fill"][0]["uniforms"]["u_base"], "#101010");
 }

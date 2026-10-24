@@ -23,6 +23,9 @@ use std::collections::HashMap;
 
 use serde_json::{Map, Value};
 
+use super::paint::STROKE_KEYS;
+use super::variables;
+
 /// Keys the canonical `RefNode` keeps on the instance itself (its own
 /// fields, the common node base, and the pen.dev keys the node walk maps
 /// onto those or removes). Everything else is a root override.
@@ -89,15 +92,7 @@ pub(super) fn move_root_overrides(map: &mut Map<String, Value>) {
             patch.insert(key, value);
         }
     }
-    let descendants = map
-        .entry("descendants")
-        .or_insert_with(|| Value::Object(Map::new()));
-    if !descendants.is_object() {
-        *descendants = Value::Object(Map::new());
-    }
-    let Value::Object(descendants) = descendants else {
-        return;
-    };
+    let descendants = descendants_mut(map);
     match descendants.get_mut(&target) {
         Some(Value::Object(existing)) => {
             for (key, value) in patch {
@@ -110,37 +105,54 @@ pub(super) fn move_root_overrides(map: &mut Map<String, Value>) {
     }
 }
 
-/// pen.dev stroke keys, folded into one canonical `stroke` object.
-pub(super) const STROKE_KEYS: &[&str] = &[
-    "stroke",
-    "strokeWidth",
-    "strokeLinecap",
-    "strokeLinejoin",
-    "strokeAlignment",
-];
+/// The instance's `descendants` map, created (or replacing a malformed
+/// value) when missing.
+fn descendants_mut(map: &mut Map<String, Value>) -> &mut Map<String, Value> {
+    let descendants = map
+        .entry("descendants")
+        .or_insert_with(|| Value::Object(Map::new()));
+    if !descendants.is_object() {
+        *descendants = Value::Object(Map::new());
+    }
+    match descendants {
+        Value::Object(descendants) => descendants,
+        _ => unreachable!("replaced by an object above"),
+    }
+}
 
 /// Paint keys that can hold a shader paint.
 const PAINT_KEYS: &[&str] = &["fill", "stroke", "effect"];
 
-/// What the file says about nodes before any conversion: each node's own
-/// stroke keys, and each component's shader paints that read variables.
+/// What the file says about component nodes before any conversion: each
+/// node's own stroke keys, the component a nested instance points at, and
+/// each component's shader paints that read variables. Only nodes inside a
+/// component are indexed: instance patches never reach anything else.
 #[derive(Default)]
 pub(super) struct InstanceBases {
     strokes: HashMap<String, Map<String, Value>>,
+    /// Nested instance id → its `ref` target.
+    refs: HashMap<String, String>,
     /// Component id → `(node id, paint key, paint as written)`.
     themed_paints: HashMap<String, Vec<(String, &'static str, Value)>>,
 }
 
 impl InstanceBases {
-    /// Index the document's nodes. Iterative like the walk.
+    /// Index the document's components. Iterative like the walk; a
+    /// duplicate id keeps the first node indexed.
     pub(super) fn from_children(children: &[Value]) -> Self {
         let mut bases = Self::default();
-        let mut stack: Vec<&Value> = children.iter().collect();
-        while let Some(node) = stack.pop() {
+        let mut stack: Vec<(&Value, bool)> = children.iter().map(|kid| (kid, false)).collect();
+        while let Some((node, in_component)) = stack.pop() {
             let Value::Object(map) = node else {
                 continue;
             };
-            if let Some(id) = map.get("id").and_then(Value::as_str) {
+            let reusable = map.get("reusable").and_then(Value::as_bool) == Some(true);
+            let in_component = in_component || reusable;
+            if let Some(id) = map
+                .get("id")
+                .and_then(Value::as_str)
+                .filter(|_| in_component)
+            {
                 let keys: Map<String, Value> = STROKE_KEYS
                     .iter()
                     .filter_map(|key| Some(((*key).to_owned(), map.get(*key)?.clone())))
@@ -148,7 +160,13 @@ impl InstanceBases {
                 if !keys.is_empty() {
                     bases.strokes.entry(id.to_owned()).or_insert(keys);
                 }
-                if map.get("reusable").and_then(Value::as_bool) == Some(true) {
+                if let Some(target) = map.get("ref").and_then(Value::as_str) {
+                    bases
+                        .refs
+                        .entry(id.to_owned())
+                        .or_insert_with(|| target.to_owned());
+                }
+                if reusable {
                     let paints = themed_paints(node);
                     if !paints.is_empty() {
                         bases.themed_paints.insert(id.to_owned(), paints);
@@ -156,27 +174,32 @@ impl InstanceBases {
                 }
             }
             if let Some(Value::Array(kids)) = map.get("children") {
-                stack.extend(kids);
+                stack.extend(kids.iter().map(|kid| (kid, in_component)));
             }
         }
         bases
     }
 
     /// The stroke keys of the node a patch keyed `path` applies to: the last
-    /// segment of a pen.dev id path names that node.
+    /// segment of a pen.dev id path names that node. A nested instance
+    /// without a stroke of its own shows its component's.
     pub(super) fn stroke(&self, path: &str) -> Option<&Map<String, Value>> {
-        let id = path.rsplit('/').next().unwrap_or(path);
-        self.strokes.get(id)
+        let mut id = path.rsplit('/').next().unwrap_or(path);
+        // Bounded: a ref cycle must not loop.
+        for _ in 0..8 {
+            if let Some(keys) = self.strokes.get(id) {
+                return Some(keys);
+            }
+            id = self.refs.get(id)?;
+        }
+        None
     }
 
-    /// Give a themed instance its component's variable-driven shader paints
-    /// as patches, so they resolve under the instance's theme. A paint the
-    /// instance already overrides is left alone.
-    pub(super) fn add_themed_paints(&self, map: &mut Map<String, Value>) {
-        let themed = map
-            .get("theme")
-            .and_then(Value::as_object)
-            .is_some_and(|theme| !theme.is_empty());
+    /// Give an instance under a theme other than the document default its
+    /// component's variable-driven shader paints as patches, so they
+    /// resolve under the instance's theme. A paint the instance already
+    /// overrides is left alone.
+    pub(super) fn add_themed_paints(&self, map: &mut Map<String, Value>, themed: bool) {
         if !themed || map.get("type").and_then(Value::as_str) != Some("ref") {
             return;
         }
@@ -187,12 +210,7 @@ impl InstanceBases {
         else {
             return;
         };
-        let descendants = map
-            .entry("descendants")
-            .or_insert_with(|| Value::Object(Map::new()));
-        let Value::Object(descendants) = descendants else {
-            return;
-        };
+        let descendants = descendants_mut(map);
         for (id, key, paint) in paints {
             let patch = descendants
                 .entry(id.clone())
@@ -243,7 +261,7 @@ fn reads_variable_uniform(paint: &Value) -> bool {
                 .is_some_and(|uniforms| {
                     uniforms
                         .values()
-                        .any(|value| value.as_str().is_some_and(|text| text.starts_with('$')))
+                        .any(|value| value.as_str().and_then(variables::reference).is_some())
                 })
     };
     match paint {

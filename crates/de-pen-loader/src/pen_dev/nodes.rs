@@ -90,14 +90,20 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
         // Before the conversion, so the moved keys are converted below as
         // the instance patch they become.
         instances::move_root_overrides(map);
-        ctx.instance_bases.add_themed_paints(map);
+        ctx.instance_bases
+            .add_themed_paints(map, *theme != *root_theme);
         convert_node(map, in_flow, &role, &theme, ctx);
         let flow = is_auto_layout(map);
+        // Slot content on an instance and children in a patch fill a node
+        // whose layout is not known here: their order is left as written.
+        let reorder = role == Role::Node && map.get("type").and_then(Value::as_str) != Some("ref");
         for (key, value) in map.iter_mut() {
             match (key.as_str(), value) {
                 ("children", Value::Array(kids)) => {
                     kids.retain(|child| keep_child(child, ctx.report));
-                    paint_order_first_on_top(kids, flow);
+                    if reorder {
+                        paint_order_first_on_top(kids, flow);
+                    }
                     stack.extend(
                         kids.iter_mut()
                             .map(|child| (child, flow, Role::Node, Rc::clone(&theme))),

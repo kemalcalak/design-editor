@@ -8,7 +8,6 @@
 use serde_json::{json, Map, Value};
 
 use super::glsl::Stage;
-use super::instances::STROKE_KEYS;
 use super::nodes::{Ctx, Role};
 use super::variables::{self, Theme};
 use super::{images, shader, PenDevReport};
@@ -97,14 +96,23 @@ fn clockwise_rotation(obj: &mut Map<String, Value>) {
     }
 }
 
+/// pen.dev stroke keys, folded into one canonical `stroke` object.
+pub(super) const STROKE_KEYS: &[&str] = &[
+    "stroke",
+    "strokeWidth",
+    "strokeLinecap",
+    "strokeLinejoin",
+    "strokeAlignment",
+];
+
 /// Fold pen.dev's `stroke` paint and its sibling `strokeWidth` /
 /// `strokeLinecap` / `strokeLinejoin` / `strokeAlignment` into one canonical
 /// `stroke` object.
 ///
 /// An instance patch merges key by key, so the canonical `stroke` object
 /// replaces the component's whole stroke: a patch of only the width (or
-/// only the paint) takes the missing keys from the node it patches. One the
-/// file gives no stroke to complete it from is reported.
+/// only the paint) takes the missing keys from the node it patches. A
+/// partial patch with no source stroke to complete it is reported.
 pub(super) fn convert_stroke(
     map: &mut Map<String, Value>,
     role: &Role,
