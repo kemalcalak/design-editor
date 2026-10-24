@@ -701,10 +701,6 @@ mod page_paint_identity_tests;
 mod keyboard_shortcut_tests;
 
 #[cfg(test)]
-#[path = "editor_proof_sheet_tests.rs"]
-mod editor_proof_sheet_tests;
-
-#[cfg(test)]
 #[path = "settings_proof_sheet_tests.rs"]
 mod settings_proof_sheet_tests;
 

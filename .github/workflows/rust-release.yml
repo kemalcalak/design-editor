@@ -17,10 +17,8 @@ name: Release
 #   de-cli-linux-x86_64.tar.gz            standalone Linux `de` CLI
 #   SHA256SUMS.txt
 #
-# The two Linux archives are what flake.nix's `prebuilt` / `prebuilt-cli`
-# outputs download (version + hashes in nix/release-manifest.json, refreshed
-# after a release by scripts/update-nix-release-manifest.sh); they hold the
-# bare binary at the archive root. The in-app update check has no Linux asset.
+# The two Linux archives hold the bare binary at the archive root. The in-app
+# update check has no Linux asset.
 #
 # `workflow_dispatch` (on main) re-runs the same pipeline, e.g. after a
 # failed build: it still publishes only when the tag does not exist yet.
@@ -246,7 +244,7 @@ jobs:
             -fs HFS+ -format UDZO -ov \
             "$DMG"
 
-      # Linux: bare binaries in tarballs, the layout flake.nix unpacks.
+      # Linux: bare binaries in tarballs.
       - name: Package desktop and CLI archives (linux)
         if: runner.os == 'Linux'
         shell: bash
