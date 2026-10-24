@@ -269,7 +269,7 @@ fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         PenNode::NumberInput(n) => n.fill.as_ref(),
         PenNode::Progress(n) => n.fill.as_ref(),
         PenNode::Tabs(n) => n.fill.as_ref(),
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -305,7 +305,7 @@ pub(crate) fn node_stroke_css(node: &PenNode) -> Option<(String, f32)> {
         PenNode::NumberInput(n) => n.stroke.as_ref(),
         PenNode::Progress(n) => n.stroke.as_ref(),
         PenNode::Tabs(n) => n.stroke.as_ref(),
-        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }?;
     let width = match &stroke.thickness {
         StrokeThickness::Uniform(w) => *w,

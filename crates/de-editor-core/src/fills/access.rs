@@ -29,7 +29,7 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         PenNode::NumberInput(n) => n.fill.as_ref(),
         PenNode::Progress(n) => n.fill.as_ref(),
         PenNode::Tabs(n) => n.fill.as_ref(),
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -56,7 +56,7 @@ pub fn node_fills_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
         PenNode::NumberInput(n) => Some(n.fill.get_or_insert_with(Vec::new)),
         PenNode::Progress(n) => Some(n.fill.get_or_insert_with(Vec::new)),
         PenNode::Tabs(n) => Some(n.fill.get_or_insert_with(Vec::new)),
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -81,7 +81,7 @@ pub(crate) fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStrok
         PenNode::NumberInput(n) => Some(&mut n.stroke),
         PenNode::Progress(n) => Some(&mut n.stroke),
         PenNode::Tabs(n) => Some(&mut n.stroke),
-        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -106,7 +106,7 @@ pub(crate) fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
         PenNode::NumberInput(n) => n.stroke.as_ref(),
         PenNode::Progress(n) => n.stroke.as_ref(),
         PenNode::Tabs(n) => n.stroke.as_ref(),
-        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -117,7 +117,14 @@ pub(crate) fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
 /// effect-add path can skip the history snapshot for a target it
 /// can't mutate (avoids an empty undo + dirty state).
 pub fn node_supports_effects(node: &PenNode) -> bool {
-    !matches!(node, PenNode::IconFont(_) | PenNode::Ref(_))
+    !matches!(
+        node,
+        PenNode::IconFont(_)
+            | PenNode::Ref(_)
+            | PenNode::Note(_)
+            | PenNode::Context(_)
+            | PenNode::Prompt(_)
+    )
 }
 
 pub(super) fn node_effects_mut(node: &mut PenNode) -> Option<&mut Vec<PenEffect>> {
@@ -141,7 +148,7 @@ pub(super) fn node_effects_mut(node: &mut PenNode) -> Option<&mut Vec<PenEffect>
         PenNode::NumberInput(n) => Some(n.effects.get_or_insert_with(Vec::new)),
         PenNode::Progress(n) => Some(n.effects.get_or_insert_with(Vec::new)),
         PenNode::Tabs(n) => Some(n.effects.get_or_insert_with(Vec::new)),
-        PenNode::IconFont(_) | PenNode::Ref(_) => None,
+        PenNode::IconFont(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -174,7 +181,7 @@ pub(crate) fn node_fills_opt_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>
         PenNode::NumberInput(n) => n.fill.as_mut(),
         PenNode::Progress(n) => n.fill.as_mut(),
         PenNode::Tabs(n) => n.fill.as_mut(),
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -201,7 +208,7 @@ pub(crate) fn node_effects_opt_mut(node: &mut PenNode) -> Option<&mut Vec<PenEff
         PenNode::NumberInput(n) => n.effects.as_mut(),
         PenNode::Progress(n) => n.effects.as_mut(),
         PenNode::Tabs(n) => n.effects.as_mut(),
-        PenNode::IconFont(_) | PenNode::Ref(_) => None,
+        PenNode::IconFont(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -239,7 +246,7 @@ pub fn node_effects(node: &PenNode) -> &[jian_ops_schema::style::PenEffect] {
         PenNode::NumberInput(n) => n.effects.as_deref(),
         PenNode::Progress(n) => n.effects.as_deref(),
         PenNode::Tabs(n) => n.effects.as_deref(),
-        PenNode::IconFont(_) | PenNode::Ref(_) => None,
+        PenNode::IconFont(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     };
     slot.unwrap_or(&[])
 }

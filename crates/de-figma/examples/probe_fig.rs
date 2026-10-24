@@ -34,6 +34,9 @@ fn variant_name(n: &PenNode) -> &'static str {
         PenNode::Image(_) => "Image",
         PenNode::IconFont(_) => "IconFont",
         PenNode::Ref(_) => "Ref",
+        PenNode::Note(_) => "Note",
+        PenNode::Context(_) => "Context",
+        PenNode::Prompt(_) => "Prompt",
     }
 }
 
@@ -202,29 +205,7 @@ fn fmt_num(n: f64) -> String {
 
 fn type_str(n: &PenNode) -> &'static str {
     // Snake-case to mirror the JSON tags ("rectangle", "text", ...).
-    match n {
-        PenNode::Frame(_) => "frame",
-        PenNode::Group(_) => "group",
-        PenNode::Rectangle(_) => "rectangle",
-        PenNode::Ellipse(_) => "ellipse",
-        PenNode::Line(_) => "line",
-        PenNode::Polygon(_) => "polygon",
-        PenNode::Path(_) => "path",
-        PenNode::Text(_) => "text",
-        PenNode::TextInput(_) => "text_input",
-        PenNode::TextArea(_) => "text_area",
-        PenNode::Select(_) => "select",
-        PenNode::Switch(_) => "switch",
-        PenNode::Checkbox(_) => "checkbox",
-        PenNode::Slider(_) => "slider",
-        PenNode::RadioGroup(_) => "radio_group",
-        PenNode::NumberInput(_) => "number_input",
-        PenNode::Progress(_) => "progress",
-        PenNode::Tabs(_) => "tabs",
-        PenNode::Image(_) => "image",
-        PenNode::IconFont(_) => "icon_font",
-        PenNode::Ref(_) => "ref",
-    }
+    n.type_tag()
 }
 
 fn base_of(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
@@ -250,6 +231,7 @@ fn base_of(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
         PenNode::Image(x) => &x.base,
         PenNode::IconFont(x) => &x.base,
         PenNode::Ref(x) => &x.base,
+        PenNode::Note(x) | PenNode::Context(x) | PenNode::Prompt(x) => &x.base,
     }
 }
 

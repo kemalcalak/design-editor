@@ -214,7 +214,7 @@ fn width_behavior(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Tabs(n) => n.width.as_ref(),
         PenNode::Image(n) => n.width.as_ref(),
         PenNode::IconFont(n) => n.width.as_ref(),
-        PenNode::Line(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 

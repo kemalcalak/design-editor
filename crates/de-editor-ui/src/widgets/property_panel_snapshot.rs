@@ -48,6 +48,9 @@ fn node_kind_of(node: &PenNode) -> NodeKind {
         PenNode::Image(_) => NodeKind::Other("image".to_string()),
         PenNode::IconFont(_) => NodeKind::Other("icon_font".to_string()),
         PenNode::Ref(_) => NodeKind::Other("ref".to_string()),
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => {
+            NodeKind::Other(node.type_tag().to_string())
+        }
     }
 }
 

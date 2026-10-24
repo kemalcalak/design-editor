@@ -25,13 +25,13 @@ macro_rules! base_mut {
 pub(crate) fn node_base(node: &PenNode) -> &PenNodeBase {
     base_ref!(node; Frame, Group, Rectangle, Ellipse, Line, Polygon, Path, Text,
         TextInput, Image, IconFont, TextArea, Select, Switch, Checkbox, Slider,
-        RadioGroup, NumberInput, Progress, Tabs, Ref)
+        RadioGroup, NumberInput, Progress, Tabs, Ref, Note, Context, Prompt)
 }
 
 pub(crate) fn node_base_mut(node: &mut PenNode) -> &mut PenNodeBase {
     base_mut!(node; Frame, Group, Rectangle, Ellipse, Line, Polygon, Path, Text,
         TextInput, Image, IconFont, TextArea, Select, Switch, Checkbox, Slider,
-        RadioGroup, NumberInput, Progress, Tabs, Ref)
+        RadioGroup, NumberInput, Progress, Tabs, Ref, Note, Context, Prompt)
 }
 
 /// NOTE: the wildcard arm is a silent-drift surface. Unlike `base_ref!` /
@@ -80,7 +80,7 @@ pub(crate) fn node_width(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::NumberInput(node) => node.width.as_ref(),
         PenNode::Progress(node) => node.width.as_ref(),
         PenNode::Tabs(node) => node.width.as_ref(),
-        PenNode::Line(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -105,7 +105,7 @@ pub(crate) fn node_height(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::NumberInput(node) => node.height.as_ref(),
         PenNode::Progress(node) => node.height.as_ref(),
         PenNode::Tabs(node) => node.height.as_ref(),
-        PenNode::Line(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 

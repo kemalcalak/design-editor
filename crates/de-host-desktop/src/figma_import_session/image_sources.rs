@@ -241,6 +241,7 @@ fn visit_import_node(node: &jian_ops_schema::node::PenNode, f: &mut impl FnMut(&
             node.children.as_ref()
         }
         PenNode::Ref(node) => node.children.as_ref(),
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     };
     if let Some(children) = children {
         for child in children {

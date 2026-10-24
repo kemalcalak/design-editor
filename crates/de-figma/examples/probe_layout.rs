@@ -319,7 +319,7 @@ fn sizing(node: &PenNode) -> (Option<&SizingBehavior>, Option<&SizingBehavior>) 
         PenNode::Tabs(node) => (node.width.as_ref(), node.height.as_ref()),
         PenNode::Image(node) => (node.width.as_ref(), node.height.as_ref()),
         PenNode::IconFont(node) => (node.width.as_ref(), node.height.as_ref()),
-        PenNode::Line(_) | PenNode::Ref(_) => (None, None),
+        PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => (None, None),
     }
 }
 
@@ -357,31 +357,10 @@ fn base_of(node: &PenNode) -> &PenNodeBase {
         PenNode::Image(node) => &node.base,
         PenNode::IconFont(node) => &node.base,
         PenNode::Ref(node) => &node.base,
+        PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => &node.base,
     }
 }
 
 fn variant_name(node: &PenNode) -> &'static str {
-    match node {
-        PenNode::Frame(_) => "frame",
-        PenNode::Group(_) => "group",
-        PenNode::Rectangle(_) => "rectangle",
-        PenNode::Ellipse(_) => "ellipse",
-        PenNode::Line(_) => "line",
-        PenNode::Polygon(_) => "polygon",
-        PenNode::Path(_) => "path",
-        PenNode::Text(_) => "text",
-        PenNode::TextInput(_) => "text_input",
-        PenNode::TextArea(_) => "text_area",
-        PenNode::Select(_) => "select",
-        PenNode::Switch(_) => "switch",
-        PenNode::Checkbox(_) => "checkbox",
-        PenNode::Slider(_) => "slider",
-        PenNode::RadioGroup(_) => "radio_group",
-        PenNode::NumberInput(_) => "number_input",
-        PenNode::Progress(_) => "progress",
-        PenNode::Tabs(_) => "tabs",
-        PenNode::Image(_) => "image",
-        PenNode::IconFont(_) => "icon_font",
-        PenNode::Ref(_) => "ref",
-    }
+    node.type_tag()
 }

@@ -51,6 +51,9 @@ pub enum NodeKind {
     Progress,
     Tabs,
     Ref,
+    Note,
+    Context,
+    Prompt,
 }
 
 /// An active theme map — axis name → selected theme value. Mirrors the TS
@@ -90,6 +93,9 @@ pub fn node_kind(node: &PenNode) -> NodeKind {
         PenNode::Progress(_) => NodeKind::Progress,
         PenNode::Tabs(_) => NodeKind::Tabs,
         PenNode::Ref(_) => NodeKind::Ref,
+        PenNode::Note(_) => NodeKind::Note,
+        PenNode::Context(_) => NodeKind::Context,
+        PenNode::Prompt(_) => NodeKind::Prompt,
     }
 }
 
@@ -119,6 +125,9 @@ pub fn node_kind_str(node: &PenNode) -> &'static str {
         NodeKind::Progress => "progress",
         NodeKind::Tabs => "tabs",
         NodeKind::Ref => "ref",
+        NodeKind::Note => "note",
+        NodeKind::Context => "context",
+        NodeKind::Prompt => "prompt",
     }
 }
 
@@ -402,6 +411,7 @@ fn base(node: &PenNode) -> &jian_ops_schema::node::PenNodeBase {
         PenNode::Progress(n) => &n.base,
         PenNode::Tabs(n) => &n.base,
         PenNode::Ref(n) => &n.base,
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
     }
 }
 
@@ -430,7 +440,7 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         PenNode::NumberInput(n) => n.fill.as_ref(),
         PenNode::Progress(n) => n.fill.as_ref(),
         PenNode::Tabs(n) => n.fill.as_ref(),
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -456,7 +466,7 @@ fn stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
         PenNode::NumberInput(n) => n.stroke.as_ref(),
         PenNode::Progress(n) => n.stroke.as_ref(),
         PenNode::Tabs(n) => n.stroke.as_ref(),
-        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 

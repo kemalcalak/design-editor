@@ -306,7 +306,7 @@ fn node_fills_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
         PenNode::Progress(n) => n.fill.as_mut(),
         PenNode::Tabs(n) => n.fill.as_mut(),
         PenNode::IconFont(n) => n.fill.as_mut(),
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -330,7 +330,7 @@ fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStroke>> {
         PenNode::Progress(n) => Some(&mut n.stroke),
         PenNode::Tabs(n) => Some(&mut n.stroke),
         PenNode::IconFont(n) => Some(&mut n.stroke),
-        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
@@ -355,7 +355,7 @@ fn node_effects_mut(node: &mut PenNode) -> Option<&mut Vec<PenEffect>> {
         PenNode::Progress(n) => n.effects.as_mut(),
         PenNode::Tabs(n) => n.effects.as_mut(),
         PenNode::Image(n) => n.effects.as_mut(),
-        PenNode::IconFont(_) | PenNode::Ref(_) => None,
+        PenNode::IconFont(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
