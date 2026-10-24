@@ -1,0 +1,66 @@
+{
+  "version": "2.21",
+  "themes": { "mode": ["light", "dark"], "device": ["desktop", "mobile"] },
+  "variables": {
+    "ink": { "type": "color", "value": [
+      { "value": "#0F2B33", "theme": { "mode": "light" } },
+      { "value": "#E9F2F3", "theme": { "mode": "dark" } }
+    ] },
+    "font-head": { "type": "string", "value": "Inter" },
+    "size-data": { "type": "number", "value": [
+      { "value": 13, "theme": { "device": "desktop" } },
+      { "value": 12, "theme": { "device": "mobile" } }
+    ] },
+    "edge": { "type": "number", "value": [
+      { "value": 80, "theme": { "device": "desktop" } },
+      { "value": 20, "theme": { "device": "mobile" } }
+    ] },
+    "space-m": { "type": "number", "value": [
+      { "value": 20, "theme": { "device": "desktop" } },
+      { "value": 16, "theme": { "device": "mobile" } }
+    ] },
+    "radius-pill": { "type": "number", "value": 999 },
+    "icon-theme": { "type": "string", "value": [
+      { "value": "moon", "theme": { "mode": "light" } },
+      { "value": "sun", "theme": { "mode": "dark" } }
+    ] }
+  },
+  "children": [
+    {
+      "type": "frame", "id": "chip", "name": "Chip", "reusable": true,
+      "x": 0, "y": -200, "layout": "vertical", "padding": [8, "$edge"],
+      "cornerRadius": "$radius-pill", "fill": "$ink",
+      "children": [
+        { "type": "text", "id": "chip-label", "content": "Chip",
+          "fontFamily": "$font-head", "fontSize": "$size-data", "fill": "$ink" }
+      ]
+    },
+    {
+      "type": "frame", "id": "desktop", "name": "Desktop", "x": 0, "y": 0,
+      "width": 1440, "height": 900, "theme": { "mode": "light", "device": "desktop" },
+      "layout": "vertical", "gap": "$space-m", "padding": [48, "$edge", 72, "$edge"],
+      "fill": [{ "type": "shader", "url": "flow.glsl", "uniforms": { "u_ink": "$ink", "u_size": "$size-data" } }],
+      "children": [
+        { "type": "text", "id": "desktop-data", "content": "42",
+          "fontFamily": "$font-head", "fontSize": "$size-data", "fill": "$ink",
+          "letterSpacing": "$missing" },
+        { "type": "icon", "id": "desktop-toggle", "icon": "$icon-theme", "library": "lucide",
+          "width": 16, "height": 16, "fill": "$ink" },
+        { "type": "ref", "id": "desktop-chip", "ref": "chip" }
+      ]
+    },
+    {
+      "type": "frame", "id": "mobile", "name": "Mobile", "x": 1600, "y": 0,
+      "width": 390, "height": 844, "theme": { "mode": "dark", "device": "mobile" },
+      "layout": "vertical", "gap": "$space-m", "padding": [48, "$edge", 72, "$edge"],
+      "children": [
+        { "type": "text", "id": "mobile-data", "content": "42",
+          "fontFamily": "$font-head", "fontSize": "$size-data", "fill": "$ink" },
+        { "type": "icon", "id": "mobile-toggle", "icon": "$icon-theme", "library": "lucide",
+          "width": 16, "height": 16, "fill": "$ink" },
+        { "type": "ref", "id": "mobile-chip", "ref": "chip",
+          "descendants": { "chip-label": { "fontSize": "$size-data" } } }
+      ]
+    }
+  ]
+}

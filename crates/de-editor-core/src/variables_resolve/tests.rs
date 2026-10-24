@@ -296,3 +296,48 @@ fn a_node_theme_scopes_its_subtree() {
     let inner = &resolved.children[1].children().expect("children")[0];
     assert_eq!(color(inner), "#000000");
 }
+
+#[test]
+fn an_entry_naming_fewer_axes_matches_in_a_multi_axis_document() {
+    let doc = doc_from(
+        r##"{
+          "version": "1.0",
+          "themes": { "mode": ["light", "dark"], "device": ["desktop", "mobile"] },
+          "variables": {
+            "bg": { "type": "color", "value": [
+              { "value": "#FFFFFF", "theme": { "mode": "light" } },
+              { "value": "#000000", "theme": { "mode": "dark" } }
+            ]},
+            "space": { "type": "number", "value": [
+              { "value": 20, "theme": { "device": "desktop" } },
+              { "value": 16, "theme": { "device": "mobile" } },
+              { "value": 12, "theme": { "device": "mobile", "mode": "dark" } }
+            ]}
+          },
+          "children": [
+            { "type": "frame", "id": "phone", "theme": { "mode": "light", "device": "mobile" },
+              "gap": "$space", "fill": [{ "type": "solid", "color": "$bg" }] },
+            { "type": "frame", "id": "phone-dark", "theme": { "mode": "dark", "device": "mobile" },
+              "gap": "$space", "fill": [{ "type": "solid", "color": "$bg" }] }
+          ]
+        }"##,
+    );
+    let resolved = resolve_document_for_canvas(&doc, &Theme::new());
+    let read = |node: &PenNode| {
+        let PenNode::Frame(frame) = node else {
+            panic!("frame expected");
+        };
+        let gap = match frame.container.gap {
+            Some(NumberOrExpression::Number(gap)) => gap,
+            _ => panic!("gap resolved"),
+        };
+        let color = match frame.container.fill.as_deref() {
+            Some([PenFill::Solid(body)]) => body.color.clone(),
+            _ => panic!("solid fill expected"),
+        };
+        (gap, color)
+    };
+    assert_eq!(read(&resolved.children[0]), (16.0, "#FFFFFF".to_owned()));
+    // The entry naming both axes beats the device-only one.
+    assert_eq!(read(&resolved.children[1]), (12.0, "#000000".to_owned()));
+}
