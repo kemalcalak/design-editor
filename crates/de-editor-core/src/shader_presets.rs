@@ -148,12 +148,19 @@ pub fn set_primary_shader_preset(node: &mut PenNode, preset: ShaderPreset) -> bo
     true
 }
 
-fn first_color_uniform(body: &ShaderFillBody) -> Option<&str> {
+/// The shader body's first colour uniform (BTreeMap order), skipping
+/// image sources bound to a shader child: those are strings too but not
+/// colours. This is the colour the fill row's swatch, a type flip and a
+/// preset switch carry.
+pub fn first_color_uniform(body: &ShaderFillBody) -> Option<&str> {
+    let children = crate::shader_images::shader_children(body.sksl.as_deref().unwrap_or_default());
     body.uniforms
         .as_ref()?
-        .values()
-        .find_map(|value| match value {
-            ShaderUniformValue::Color(hex) => Some(hex.as_str()),
+        .iter()
+        .find_map(|(name, value)| match value {
+            ShaderUniformValue::Color(hex) if !children.contains(&name.as_str()) => {
+                Some(hex.as_str())
+            }
             _ => None,
         })
 }

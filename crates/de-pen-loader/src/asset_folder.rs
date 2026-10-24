@@ -92,15 +92,14 @@ pub fn externalize(root: &mut Value, folder: &str) -> Externalized {
                 .or_insert_with(|| store(payload, &prefix, &mut out))
                 .clone();
             *slot = path.unwrap_or_else(|| payload.clone());
-        } else if slot.starts_with("data:") {
-            if let Some(path) = by_payload.get(slot.as_str()) {
-                *slot = path.clone();
-            } else if let Some(path) = store(slot, &prefix, &mut out) {
-                by_payload.insert(std::mem::replace(slot, path.clone()), path);
-            }
-        } else if let Some(name) = slot.strip_prefix(&prefix) {
-            out.names.insert(name.to_owned());
+        } else {
+            externalize_inline(slot, &prefix, &mut by_payload, &mut out);
         }
+    });
+    // Shader image uniforms hold inline payloads or folder paths only: the
+    // `images` table never names them.
+    crate::asset_folder_shader::visit_shader_image_uniforms_mut(root, &mut |slot| {
+        externalize_inline(slot, &prefix, &mut by_payload, &mut out);
     });
     if let Some(Value::Object(mut thumbs)) = thumbs {
         for value in thumbs.values_mut() {
@@ -121,6 +120,25 @@ pub fn externalize(root: &mut Value, folder: &str) -> Externalized {
         }
     }
     out
+}
+
+/// Point an inline `data:` slot at its folder file (stored once per distinct
+/// payload), or record the file an existing folder path names.
+fn externalize_inline(
+    slot: &mut String,
+    prefix: &str,
+    by_payload: &mut HashMap<String, String>,
+    out: &mut Externalized,
+) {
+    if slot.starts_with("data:") {
+        if let Some(path) = by_payload.get(slot.as_str()) {
+            *slot = path.clone();
+        } else if let Some(path) = store(slot, prefix, out) {
+            by_payload.insert(std::mem::replace(slot, path.clone()), path);
+        }
+    } else if let Some(name) = slot.strip_prefix(prefix) {
+        out.names.insert(name.to_owned());
+    }
 }
 
 /// The relative path for a base64 image `data:` URL, recording its file.
@@ -210,6 +228,25 @@ pub fn resolve(root: &mut Value, assets: AssetReader<'_>) -> Vec<String> {
             .clone();
         match reference {
             Some(reference) => *slot = reference,
+            None => missing.push(slot.clone()),
+        }
+    });
+    // Shader image uniforms are plain strings in the schema, so they take
+    // the `data:` URL itself rather than an `op-image:` reference.
+    let mut inline: HashMap<String, Option<String>> = HashMap::new();
+    crate::asset_folder_shader::visit_shader_image_uniforms_mut(root, &mut |slot| {
+        if !is_asset_folder_path(slot) {
+            return;
+        }
+        let resolved = inline
+            .entry(slot.clone())
+            .or_insert_with(|| {
+                let relative = slot.trim_start_matches("./");
+                Some(data_url(mime_type(relative)?, &assets(relative)?))
+            })
+            .clone();
+        match resolved {
+            Some(data_url) => *slot = data_url,
             None => missing.push(slot.clone()),
         }
     });

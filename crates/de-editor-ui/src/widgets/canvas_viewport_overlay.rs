@@ -392,7 +392,9 @@ pub(crate) fn paint_gradient_rect(
 /// (see [`super::canvas_shader_clock`]), and one that declares
 /// `uniform float2 mouse;` the node-local pointer (see
 /// [`super::canvas_shader_pointer`]); both override an authored value of the
-/// same name the way the loader overrides `size`.
+/// same name the way the loader overrides `size`. Images bound to
+/// `uniform shader` children are made resident first
+/// (see [`super::canvas_shader_images`]).
 pub(crate) fn paint_shader_rect(
     cx: &mut PaintCx<'_>,
     shader: &SceneShader,
@@ -417,6 +419,7 @@ pub(crate) fn paint_shader_rect(
         uniforms.retain(|(name, _)| *name != MOUSE_UNIFORM);
         uniforms.push((MOUSE_UNIFORM, mouse.as_slice()));
     }
+    super::canvas_shader_images::prepare_shader_images(cx, &shader.sksl, &uniforms, rect);
     if let Some(radii) = corner_radii {
         cx.backend.fill_round_rect_shader_per_corner(
             rect,

@@ -74,3 +74,28 @@ fn shader_preset_needs_a_primary_shader_fill() {
     s.set_single_selection(NodeId::new("a"));
     assert!(!s.set_selected_shader_preset(ShaderPreset::Fade));
 }
+
+#[test]
+fn first_color_uniform_skips_image_children() {
+    // `a_img` sorts before `tint` but is an image source, not a colour.
+    let mut uniforms = std::collections::BTreeMap::new();
+    uniforms.insert(
+        "a_img".to_string(),
+        ShaderUniformValue::Color("data:image/png;base64,AA==".into()),
+    );
+    uniforms.insert(
+        "tint".to_string(),
+        ShaderUniformValue::Color("#ff0000".into()),
+    );
+    let body = ShaderFillBody {
+        preset: None,
+        sksl: Some(
+            "uniform shader a_img; uniform half4 tint; half4 main(float2 p){ return tint; }".into(),
+        ),
+        uniforms: Some(uniforms),
+        explain: None,
+        opacity: None,
+        blend_mode: None,
+    };
+    assert_eq!(first_color_uniform(&body), Some("#ff0000"));
+}

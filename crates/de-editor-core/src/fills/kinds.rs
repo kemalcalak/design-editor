@@ -155,12 +155,8 @@ fn fill_hex(fill: &PenFill) -> Option<&str> {
         PenFill::LinearGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::RadialGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::MeshGradient(body) => body.stops.first().map(|s| s.color.as_str()),
-        PenFill::Shader(body) => body.uniforms.as_ref().and_then(|u| {
-            u.values().find_map(|v| match v {
-                jian_ops_schema::style::ShaderUniformValue::Color(c) => Some(c.as_str()),
-                _ => None,
-            })
-        }),
+        // An image source bound to a shader child is not a colour.
+        PenFill::Shader(body) => crate::shader_presets::first_color_uniform(body),
         PenFill::Image(_) => None,
     }
 }

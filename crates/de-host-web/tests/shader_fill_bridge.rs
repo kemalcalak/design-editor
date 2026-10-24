@@ -398,3 +398,124 @@ entry.effect.delete();
         "variance drift: native={native_variance}, web={web_variance}"
     );
 }
+
+#[test]
+fn shader_children_and_image_ids_match_the_rust_cases() {
+    let mut javascript = source("op_ck_bridge.js");
+    javascript.push_str(
+        r#"
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+assert(
+  same(opCkShaderChildren('uniform shader photo; uniform half4 tint;\nuniform  shader\tmask ;'), ['photo', 'mask']),
+  'children are listed in declaration order',
+);
+assert(
+  same(opCkShaderChildren('// uniform shader gone;\n/* uniform shader alsoGone; */uniform shader kept;'), ['kept']),
+  'commented-out children are ignored',
+);
+assert(same(opCkShaderChildren('/* uniform shader x;'), []), 'an unterminated comment hides the rest');
+// Same cases as `declarations_glued_to_punctuation_still_count` in Rust.
+assert(same(opCkShaderChildren('}uniform shader a, b;'), ['a']), 'glued to a brace, first of a list');
+assert(same(opCkShaderChildren('uniform shader a\n'), ['a']), 'no semicolon');
+// u64::MAX and 0x0123_4567_89ab_cdef as four 16-bit chunks, lowest first.
+assert(same(opCkDecodeShaderImageId([65535, 65535, 65535, 65535]), { lo: 0xffffffff, hi: 0xffffffff }), 'max id');
+assert(same(opCkDecodeShaderImageId([0xcdef, 0x89ab, 0x4567, 0x0123]), { lo: 0x89abcdef, hi: 0x01234567 }), 'mixed id');
+assert(opCkDecodeShaderImageId([1, 2, 3]) === null, 'wrong arity');
+assert(opCkDecodeShaderImageId([1.5, 0, 0, 0]) === null, 'fractional chunk');
+assert(opCkDecodeShaderImageId([65536, 0, 0, 0]) === null, 'chunk out of range');
+"#,
+    );
+    run_node_module(&javascript, "shader children parse test");
+}
+
+#[test]
+fn a_program_with_children_fails_without_them_instead_of_binding_none() {
+    let mut javascript = source("op_ck_bridge.js");
+    javascript.push_str(
+        r#"
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+let withChildren = null;
+const effect = {
+  getUniformFloatCount: () => 0,
+  getUniformCount: () => 0,
+  makeShader: () => { throw new Error('a child program must not use makeShader'); },
+  makeShaderWithChildren: (data, children) => { withChildren = children; return { delete() {} }; },
+};
+const CK = { RuntimeEffect: { Make: () => effect } };
+const entry = opCkCreateRuntimeEffectCache(CK).get('uniform shader photo; half4 main(float2 p){ return photo.eval(p); }');
+assert(JSON.stringify(entry.children) === '["photo"]', 'the cache records the children');
+assert(opCkMakeRuntimeShader(entry, [], new Float32Array(0), new Uint32Array(0)) === null, 'no children: fallback');
+const child = { delete() {} };
+assert(opCkMakeRuntimeShader(entry, [], new Float32Array(0), new Uint32Array(0), null, [child]) !== null, 'children bind');
+assert(withChildren.length === 1 && withChildren[0] === child, 'the child reaches makeShaderWithChildren');
+"#,
+    );
+    run_node_module(&javascript, "shader children binding test");
+}
+
+#[cfg(feature = "canvaskit")]
+#[test]
+fn an_image_child_samples_the_cached_image_in_real_canvaskit() {
+    let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/canvaskit");
+    let canvas_kit_js = assets.join("canvaskit.js");
+    let canvas_kit_wasm = assets.join("canvaskit.wasm");
+    // Id (hi 7, lo 9) as the four 16-bit chunks the loader writes.
+    let photo = [9.0f32, 0.0, 7.0, 0.0];
+
+    let mut javascript = String::from(
+        "import { createRequire } from 'module';\nimport fs from 'fs';\n\
+         const require = createRequire(import.meta.url);\n",
+    );
+    javascript.push_str(&source("op_ck_bridge.js"));
+    javascript.push_str(&format!(
+        r#"
+const CanvasKitInit = require({canvas_kit_js});
+const CK = await CanvasKitInit({{ wasmBinary: fs.readFileSync({canvas_kit_wasm}) }});
+const sksl = 'uniform shader photo; uniform float2 size; half4 main(float2 p){{ return photo.eval(p); }}';
+const entry = opCkCreateRuntimeEffectCache(CK).get(sksl);
+if (!entry) throw new Error('CanvasKit rejected the image-child SkSL');
+const info = (width, height) => ({{
+  width, height,
+  colorType: CK.ColorType.RGBA_8888,
+  alphaType: CK.AlphaType.Unpremul,
+  colorSpace: CK.ColorSpace.SRGB,
+}});
+// 2x1 red | blue, cached under id (lo 9, hi 7).
+const image = CK.MakeImage(info(2, 1), new Uint8Array([255, 0, 0, 255, 0, 0, 255, 255]), 8);
+if (!image) throw new Error('CK.MakeImage failed');
+const imageFor = (lo, hi) => (lo === 9 && hi === 7 ? image : null);
+const render = (lookup) => {{
+  const surface = CK.MakeSurface(40, 20);
+  const canvas = surface.getCanvas();
+  canvas.clear(CK.Color(0, 0, 0, 0));
+  // `size` is half the rect: the image must still span the whole node.
+  const shader = opCkMakeRuntimeShaderForRect(
+    entry, ['photo', 'size'], new Float32Array([...{photo}, 20, 10]), new Uint32Array([4, 2]),
+    0, 0, 40, 20, CK, lookup,
+  );
+  if (!shader) throw new Error('CanvasKit rejected the image child');
+  const paint = new CK.Paint();
+  paint.setShader(shader);
+  canvas.drawRect(CK.LTRBRect(0, 0, 40, 20), paint);
+  surface.flush();
+  const pixels = canvas.readPixels(0, 0, info(40, 20));
+  paint.delete(); shader.delete(); surface.delete();
+  const at = (x, y) => Array.from(pixels.subarray((y * 40 + x) * 4, (y * 40 + x) * 4 + 4));
+  return [at(5, 10), at(35, 10)];
+}};
+const [left, right] = render(imageFor);
+if (!(left[0] > 200 && left[2] < 60 && left[3] === 255)) throw new Error('left is not red: ' + left);
+if (!(right[2] > 200 && right[0] < 60 && right[3] === 255)) throw new Error('right is not blue: ' + right);
+const [pending] = render(() => null);
+if (pending[3] !== 0) throw new Error('a missing image must sample transparent: ' + pending);
+image.delete();
+entry.effect.delete();
+"#,
+        canvas_kit_js = serde_json::to_string(&canvas_kit_js).expect("JS path serializes"),
+        canvas_kit_wasm = serde_json::to_string(&canvas_kit_wasm).expect("WASM path serializes"),
+        photo = serde_json::to_string(&photo).expect("id serializes"),
+    ));
+    run_node_module_output(&javascript, "real CanvasKit image child test")
+        .expect("Node is required for the real CanvasKit image child test");
+}

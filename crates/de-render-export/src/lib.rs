@@ -445,3 +445,6 @@ mod tests;
 
 #[cfg(test)]
 mod shader_clock_tests;
+
+#[cfg(test)]
+mod shader_image_tests;

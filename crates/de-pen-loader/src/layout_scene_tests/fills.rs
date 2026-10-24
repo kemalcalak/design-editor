@@ -189,6 +189,44 @@ fn shader_payload_without_color_uniform_falls_back_mid_gray() {
 }
 
 #[test]
+fn shader_image_uniform_becomes_a_registered_image_id() {
+    // A string bound to a `uniform shader` child is an image source (#9):
+    // it rides as the encoded paint image id, the registry resolves it back,
+    // and it never becomes the colour fallback.
+    let photo = "data:image/png;base64,c2hhZGVyLWltYWdlLWxvYWRlcg==";
+    let src = format!(
+        r##"{{
+      "version":"1.0.0","pages":[{{"id":"p","name":"P","children":[{{
+        "type":"rectangle","id":"r","width":100,"height":100,
+        "fill":[{{"type":"shader",
+                 "sksl":"uniform shader photo; uniform half4 tint; half4 main(float2 p){{ return photo.eval(p) * tint; }}",
+                 "uniforms":{{"photo":"{photo}","tint":"#00FF00","label":"not-a-child"}}}}]
+      }}]}}],"children":[]
+    }}"##
+    );
+    let scene = editor_state_to_layout_scene(&state_from(&src));
+    let s = scene.pages[0].children[0]
+        .shader
+        .as_ref()
+        .expect("scene shader");
+    let binding = s
+        .uniforms
+        .iter()
+        .find(|u| u.name == "photo")
+        .expect("photo");
+    let id = de_editor_core::shader_images::decode_image_id(&binding.values).expect("an id");
+    assert_eq!(id, jian_ops_schema::node::image_src::paint_image_id(photo));
+    assert_eq!(
+        de_editor_core::shader_images::image_source(id).as_deref(),
+        Some(photo)
+    );
+    // An undeclared string stays a (non-parsing) colour and binds nothing.
+    assert!(s.uniforms.iter().all(|u| u.name != "label"));
+    // The fallback is the colour uniform, not the image.
+    assert!(s.fallback.g > 0.99 && s.fallback.r < 0.01);
+}
+
+#[test]
 fn image_fill_mode_threads_into_scene_node() {
     let src = r##"{
       "version":"1.0.0","pages":[{"id":"p","name":"P","children":[{
