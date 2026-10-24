@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 
 /// Render all motion CSS for the HTML target. An empty string means the
 /// document has no visible node with a transition or animation declaration.
-pub(super) fn render(doc: &PenDocument) -> String {
+pub(crate) fn render(doc: &PenDocument) -> String {
     let mut animated = Vec::new();
     for node in root_nodes(doc) {
         collect_animated_nodes(node, &mut animated);
@@ -128,7 +128,7 @@ fn render_reduced_block(out: &mut String, nodes: &[&PenNode], media: bool) {
 }
 
 /// Inline CSS declarations attached to the generated element itself.
-pub(super) fn inline_style(node: &PenNode) -> String {
+pub(crate) fn inline_style(node: &PenNode) -> String {
     let (transition, animations) = node.motion_declarations();
     let mut style = String::new();
     if let Some(transition) = transition {
@@ -160,14 +160,19 @@ pub(super) fn inline_style(node: &PenNode) -> String {
 
 /// Stable selector attribute for an element with a motion declaration.
 pub(super) fn data_attribute(node: &PenNode) -> String {
+    match motion_attr_value(node) {
+        Some(id) => format!(" data-de-motion-node=\"{}\"", html_escape(&id)),
+        None => String::new(),
+    }
+}
+
+/// The `data-de-motion-node` value (unescaped) of an animated node.
+pub(crate) fn motion_attr_value(node: &PenNode) -> Option<String> {
     let (transition, animations) = node.motion_declarations();
     if transition.is_none() && animations.is_none_or(Vec::is_empty) {
-        return String::new();
+        return None;
     }
-    format!(
-        " data-de-motion-node=\"{}\"",
-        html_escape(&css_identifier(node.id_str()))
-    )
+    Some(css_identifier(node.id_str()))
 }
 
 fn keyframe_declarations(values: &BTreeMap<String, Value>) -> Vec<(String, String)> {

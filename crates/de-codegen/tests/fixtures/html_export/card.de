@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "name": "Card",
+  "variables": {
+    "brand": { "type": "color", "value": "#3366ff" },
+    "space": { "type": "number", "value": 16 }
+  },
+  "children": [
+    {
+      "type": "frame", "id": "card", "name": "Card", "x": 0, "y": 0,
+      "width": 320, "layout": "vertical", "gap": 12, "padding": [24, 20], "cornerRadius": 16,
+      "fill": [{ "type": "solid", "color": "#ffffff" }],
+      "stroke": { "thickness": 1, "align": "inside", "fill": [{ "type": "solid", "color": "#e5e7eb" }] },
+      "effects": [{ "type": "shadow", "offsetX": 0, "offsetY": 4, "blur": 12, "spread": 0, "color": "#0000001a" }],
+      "children": [
+        {
+          "type": "text", "id": "title", "name": "Title", "content": "Weekly report",
+          "fontFamily": "Helvetica", "fontSize": 20, "fontWeight": "700", "lineHeight": 1.2,
+          "fill": [{ "type": "solid", "color": "#111827" }]
+        },
+        {
+          "type": "text", "id": "body", "name": "Body",
+          "content": "Revenue grew in every region this week.",
+          "textGrowth": "fixed-width", "width": "fill_container",
+          "fontFamily": "Helvetica", "fontSize": 14, "lineHeight": 1.5,
+          "fill": [{ "type": "solid", "color": "$brand" }]
+        },
+        {
+          "type": "frame", "id": "row", "name": "Actions", "layout": "horizontal",
+          "width": "fill_container", "gap": "$space",
+          "justifyContent": "space_between", "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle", "id": "swatch", "name": "Swatch", "width": 40, "height": 40,
+              "cornerRadius": 8,
+              "fill": [{ "type": "linear_gradient", "angle": 90, "stops": [
+                { "offset": 0, "color": "#ff0000" }, { "offset": 1, "color": "#0000ff" }
+              ] }]
+            },
+            {
+              "type": "text", "id": "docs", "name": "Docs", "content": "Read the docs",
+              "fontFamily": "Helvetica", "fontSize": 14, "lineHeight": 1.2,
+              "fill": [{ "type": "solid", "color": "#2563eb" }],
+              "events": { "onTap": [{ "open_url": { "url": "'https://example.com/docs'" } }] },
+              "semantics": { "role": "link" }
+            }
+          ]
+        },
+        {
+          "type": "ellipse", "id": "badge", "name": "Badge", "role": "overlay",
+          "x": 292, "y": 16, "width": 12, "height": 12,
+          "fill": [{ "type": "solid", "color": "#ef4444" }]
+        }
+      ]
+    }
+  ]
+}
