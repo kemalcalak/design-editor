@@ -364,6 +364,8 @@ pub enum EditorCommand {
         source_path: Option<String>,
         source_hash: Option<String>,
     },
+    /// Link, re-sync or unlink a component library file (#15).
+    Library(crate::library_link::LibraryCommand),
     /// Instantiate a registered component onto the active page.
     InstantiateComponent { component_id: NodeId },
     /// Promote an active-page Frame / Group / Rectangle to a component.

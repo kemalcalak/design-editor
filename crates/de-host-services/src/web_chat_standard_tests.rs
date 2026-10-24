@@ -181,6 +181,7 @@ fn parse_standard_turn_body_reads_canvas_snapshot_fields() {
             preserve_authored_geometry: true,
             scenario: None,
             pinned_style_guide: None,
+            libraries: Vec::new(),
         })
     );
     assert_eq!(req.selected_ids, vec!["n1".to_string(), "n2".to_string()]);

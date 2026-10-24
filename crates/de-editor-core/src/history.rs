@@ -178,6 +178,7 @@ impl EditorState {
         let current = self.snapshot_for_history_with_anchor(Some(&previous));
         self.history.future.push_back(current);
         self.restore(previous);
+        self.reconcile_library_masters();
         true
     }
 
@@ -190,6 +191,7 @@ impl EditorState {
         let current = self.snapshot_for_history_with_anchor(Some(&next));
         self.history.past.push_back(current);
         self.restore(next);
+        self.reconcile_library_masters();
         true
     }
 }

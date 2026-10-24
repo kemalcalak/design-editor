@@ -724,6 +724,8 @@ pub struct EditorUiState {
     /// registry no longer carries is not an error — generation falls back to
     /// its own ranking.
     pub pinned_style_guide: Option<String>,
+    /// Linked component libraries (#15): persisted links + runtime status.
+    pub libraries: crate::library_link::LibraryLinks,
 
     // --- Component browser ------------------------------------------
     /// Whether the Components tab's search box owns the keyboard. The

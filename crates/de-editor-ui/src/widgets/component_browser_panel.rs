@@ -119,6 +119,8 @@ pub enum ComponentBrowserHit {
     ConfirmDeleteKit(String),
     /// The inline Cancel button — disarm the confirmation.
     CancelDeleteKit,
+    /// The Libraries section (#15): link, reload or unlink a library file.
+    Library(de_editor_core::LibraryPanelAction),
     /// The search box — give it the keyboard.
     FocusSearch,
     /// A category pill — set the active category filter.
@@ -201,7 +203,10 @@ impl<'a> ComponentBrowserPanel<'a> {
         if point.y <= panel.origin.y + HEADER_H {
             return None;
         }
-        if let Some(hover) = self.hover_kit_strip(panel, point) {
+        if let Some(hover) = self
+            .hover_kit_strip(panel, point)
+            .or_else(|| self.hover_library_strip(panel, point))
+        {
             return Some(hover);
         }
         for (rect, cat) in self.pill_rects(panel) {
@@ -231,6 +236,11 @@ impl<'a> ComponentBrowserPanel<'a> {
     /// occupies between the header and the category pills.
     pub(in crate::widgets) fn kit_strip_height(&self) -> f32 {
         KIT_ROW_H + self.imported_kits().len() as f32 * IMPORTED_ROW_H
+    }
+
+    /// The kit strip plus the Libraries section below it.
+    fn strips_height(&self) -> f32 {
+        self.kit_strip_height() + self.library_strip_height()
     }
 
     /// The kits the panel browses — built-in + imported, load order.
@@ -360,8 +370,7 @@ impl<'a> ComponentBrowserPanel<'a> {
         let left = panel.origin.x + PAD;
         let right = panel.origin.x + panel.size.x - PAD;
         let mut x = left;
-        let mut y =
-            panel.origin.y + HEADER_H + self.kit_strip_height() + (PILL_ROW_H - PILL_H) / 2.0;
+        let mut y = panel.origin.y + HEADER_H + self.strips_height() + (PILL_ROW_H - PILL_H) / 2.0;
         for &(cat, label_key) in pills {
             let label = self.t(label_key);
             let w = label.chars().count() as f32 * CHAR_W + PILL_PAD_X * 2.0;
@@ -386,7 +395,7 @@ impl<'a> ComponentBrowserPanel<'a> {
     fn pills_height(&self, panel: Rect) -> f32 {
         let lines = self.pill_rects(panel).last().map_or(1.0, |(last, _)| {
             let first_y =
-                panel.origin.y + HEADER_H + self.kit_strip_height() + (PILL_ROW_H - PILL_H) / 2.0;
+                panel.origin.y + HEADER_H + self.strips_height() + (PILL_ROW_H - PILL_H) / 2.0;
             ((last.origin.y - first_y) / (PILL_H + PILL_GAP)).round() + 1.0
         });
         PILL_ROW_H + (lines - 1.0) * (PILL_H + PILL_GAP)
@@ -397,11 +406,7 @@ impl<'a> ComponentBrowserPanel<'a> {
         Rect {
             origin: Point2D::new(
                 panel.origin.x + PAD,
-                panel.origin.y
-                    + HEADER_H
-                    + self.kit_strip_height()
-                    + self.pills_height(panel)
-                    + 8.0,
+                panel.origin.y + HEADER_H + self.strips_height() + self.pills_height(panel) + 8.0,
             ),
             size: Point2D::new(panel.size.x - PAD * 2.0, 28.0),
         }
@@ -409,7 +414,7 @@ impl<'a> ComponentBrowserPanel<'a> {
 
     /// Top edge of the (clipped) card grid region.
     fn grid_clip_top(&self, panel: Rect) -> f32 {
-        panel.origin.y + HEADER_H + self.kit_strip_height() + self.pills_height(panel) + SEARCH_H
+        panel.origin.y + HEADER_H + self.strips_height() + self.pills_height(panel) + SEARCH_H
     }
 
     /// How far the card grid can scroll for `count` cards in `panel`.
@@ -483,7 +488,10 @@ impl<'a> ComponentBrowserPanel<'a> {
         if self.search_rect(panel).contains(point) {
             return Some(ComponentBrowserHit::FocusSearch);
         }
-        if let Some(hit) = self.hit_test_kit_strip(panel, point) {
+        if let Some(hit) = self
+            .hit_test_kit_strip(panel, point)
+            .or_else(|| self.hit_test_library_strip(panel, point))
+        {
             return Some(hit);
         }
         for (rect, cat) in self.pill_rects(panel) {
@@ -565,6 +573,7 @@ impl<'a> ComponentBrowserPanel<'a> {
 
         // Kit-filter row + imported-kit management rows (sibling file).
         self.paint_kit_strip(cx, rect);
+        self.paint_library_strip(cx, rect);
 
         // Search field. The hosts route keyboard input to this filter
         // while it holds the focus (`component_browser_search_focused`).

@@ -208,6 +208,8 @@ pub fn set_file_name_display(state: &mut EditorState, path: Option<&std::path::P
     state.editor_ui.file_name_display = path
         .and_then(|p| p.file_name())
         .map(|n| n.to_string_lossy().into_owned());
+    // Relative library links follow the document to its new folder.
+    de_pen_loader::rebase_library_links(state, path);
 }
 
 /// Carry app-level preferences from the previously open document onto a

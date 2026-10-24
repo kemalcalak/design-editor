@@ -116,6 +116,7 @@ mod import_snapshot_tool_tests;
 mod insert_node_args;
 mod insert_node_data;
 pub mod json_serializer;
+pub mod library_tools;
 pub mod lint_tools;
 #[cfg(test)]
 mod lint_tools_tests;
@@ -238,6 +239,9 @@ pub use document_save::{save_document_snapshot, SaveDocument};
 pub use extra_read_tools::{get_node_children_snapshot, ChildRecord, GetNodeChildren};
 pub use guidelines_tools::{get_guidelines_snapshot, GetGuidelines};
 pub use json_serializer::{response_to_json, tool_response_to_json};
+pub use library_tools::{
+    add_library_snapshot, list_libraries_snapshot, remove_library_snapshot, LibraryTool,
+};
 pub use lint_tools::{lint_document_snapshot, LintDocument};
 pub use node_attr_tools::{
     add_node_effect_snapshot, remove_node_effect_snapshot, set_ellipse_arc_snapshot,

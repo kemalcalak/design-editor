@@ -133,6 +133,19 @@ pub(crate) fn drain_pending_kit_io<C: RepaintContext + 'static>(inner: &InnerRc<
         Some(KitIoRequest::Export) => export_kit_file(inner),
         None => {}
     }
+    // Libraries section Link / Reload (#15): a browser tab cannot read the
+    // linked files beside the document, so say where it works instead.
+    let mut b = inner.borrow_mut();
+    let ui = &mut b.host_mut().editor_state_mut().editor_ui;
+    if ui.libraries.request.take().is_some() {
+        ui.show_toast(
+            "componentBrowser.libraryNeedsDesktop",
+            Vec::new(),
+            de_editor_core::editor_toast::EditorToastLevel::Info,
+            crate::listener::now_ms_perf(),
+        );
+        let _ = b.repaint();
+    }
 }
 
 /// Component Browser → Import kit: hidden `.de` / `.json`

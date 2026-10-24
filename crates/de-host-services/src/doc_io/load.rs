@@ -83,11 +83,42 @@ fn read_editor_state_with_report(
     })?;
     let assets = de_pen_loader::pen_dev::folder_assets(path);
     let (state, embedded_meta, report) = parse_editor_state_source(src, locale, &assets)?;
-    Ok(finish_loaded_state_with_report(
-        state,
-        embedded_meta,
-        report,
-    ))
+    let mut loaded = finish_loaded_state_with_report(state, embedded_meta, report);
+    attach_libraries(&mut loaded, path);
+    Ok(loaded)
+}
+
+/// Resolve the opened file's linked libraries (#15) and re-read them from
+/// disk, so instances show the libraries' current masters. A pen.dev
+/// document's `imports` become links; it opens unbound, so they are kept
+/// absolute until the first save makes them relative. A library that
+/// cannot be read is reported in its status, never as an open error.
+fn attach_libraries(loaded: &mut LoadedEditorState, path: &std::path::Path) {
+    let state = &mut loaded.state;
+    match loaded.report.pen_dev_import.as_ref() {
+        Some(report) => {
+            let folder = path.parent();
+            let links = report
+                .imports
+                .iter()
+                .map(|import| {
+                    let file = de_pen_loader::resolve_library_path(folder, &import.path);
+                    de_editor_core::LibraryLink::new(
+                        de_pen_loader::library_link_path(None, &file),
+                        Some(import.alias.clone()),
+                    )
+                })
+                .collect();
+            state.editor_ui.libraries.set_links(links);
+        }
+        None => de_pen_loader::rebase_library_links(state, Some(path)),
+    }
+    if state.editor_ui.libraries.entries.is_empty() {
+        return;
+    }
+    for problem in de_pen_loader::sync_libraries(state) {
+        eprintln!("[open] library not available: {problem}");
+    }
 }
 
 pub fn load_editor_state_from_source(

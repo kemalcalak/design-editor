@@ -17,6 +17,8 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
+pub use imports::PenDevImport;
+
 mod glsl;
 mod glsl_bindings;
 mod glsl_error;
@@ -24,6 +26,7 @@ mod glsl_lex;
 mod glsl_preprocess;
 mod image_crop;
 pub(crate) mod images;
+mod imports;
 mod instances;
 mod mesh;
 mod nodes;
@@ -84,6 +87,8 @@ pub struct PenDevReport {
     pub unsupported: BTreeMap<&'static str, usize>,
     /// Relative image URLs that could not be read, in first-seen order.
     pub missing_images: Vec<String>,
+    /// The document's `imports`, which open as linked libraries.
+    pub imports: Vec<PenDevImport>,
 }
 
 impl PenDevReport {
@@ -199,10 +204,11 @@ pub fn convert(root: &mut Value, assets: AssetReader<'_>) -> PenDevReport {
         report.source_version = version;
     }
     doc.insert("version".to_owned(), Value::String("1.0".to_owned()));
-    // pen.dev's sync token and cross-file imports mean nothing here.
+    // pen.dev's sync token means nothing here; its imports become links.
     doc.remove("fileToken");
-    if doc.remove("imports").is_some() {
-        report.note("imported .pen libraries");
+    report.imports = imports::take_imports(doc);
+    if let Some(children) = doc.get_mut("children") {
+        imports::strip_alias_prefixes(children, &report.imports);
     }
     let variables = variables::Variables::from_document(doc);
     let instance_bases = match doc.get("children") {
