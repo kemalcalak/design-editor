@@ -11,8 +11,8 @@
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
+use de_editor_core::walkers::find_parent_and_index;
 use de_editor_core::{EditorState, NodeId, PenNodeExt};
-use jian_ops_schema::node::PenNode;
 use jian_ops_schema::variable::{VariableDefinition, VariableValue};
 use serde_json::{json, Value};
 
@@ -25,13 +25,13 @@ use super::{EditorCommand, McpTool, ToolOutcome};
 
 /// Write operations one script may run (the recorded-line cap of
 /// `batch_design` script mode).
-pub(crate) const MAX_WRITES: usize = super::script_runner::MAX_RECORDED_LINES;
+pub const MAX_WRITES: usize = super::script_runner::MAX_RECORDED_LINES;
 /// `TakeScreenshot` nodes per script.
-pub(crate) const MAX_SCREENSHOTS: usize = 8;
+pub const MAX_SCREENSHOTS: usize = 8;
 /// Nodes across all `Export` calls of one script.
-pub(crate) const MAX_EXPORT_NODES: usize = 32;
+pub const MAX_EXPORT_NODES: usize = 32;
 /// Bytes of `Print` output returned; later lines are counted, not kept.
-pub(crate) const MAX_PRINT_BYTES: usize = 256 * 1024;
+pub const MAX_PRINT_BYTES: usize = 256 * 1024;
 
 type Result<T> = std::result::Result<T, ExecuteError>;
 
@@ -56,12 +56,15 @@ pub(crate) struct ExecSession {
     pub(crate) printed: Vec<String>,
     printed_bytes: usize,
     pub(crate) dropped_print_lines: usize,
-    /// Ids returned by Insert / Copy / Replace, in call order.
+    /// Ids returned by Insert / Copy / Replace, in call order (Generate
+    /// fills an existing slot and is not listed).
     pub(crate) created: Vec<String>,
     pub(crate) shots: Vec<PendingShot>,
     pub(crate) exports: Vec<PendingExport>,
     export_nodes: usize,
     can_render: bool,
+    /// [`MAX_WRITES`]; a field so tests can reach the cap cheaply.
+    pub(crate) max_writes: usize,
     /// The layout of the sim at `layout_revision`; rebuilt after writes.
     layout: Option<(u64, Rc<LayoutIndex>)>,
     /// A copy of the sim shared by screenshots taken with no write between.
@@ -83,12 +86,14 @@ impl ExecSession {
             exports: Vec::new(),
             export_nodes: 0,
             can_render,
+            max_writes: MAX_WRITES,
             layout: None,
             frozen: None,
         }
     }
 
-    /// One host call. `args` is the JSON the prelude sent.
+    /// One host call. `args` is the JSON the prelude sent; the op names are
+    /// the `call("…")` names in `script_execute_prelude.rs`.
     pub(crate) fn dispatch(&mut self, op: &str, args: &Value) -> Result<Value> {
         match op {
             "insert" => self.write(|s| s.insert(args)),
@@ -116,16 +121,19 @@ impl ExecSession {
         }
     }
 
-    /// Run one write, counting it and remembering the first failure.
+    /// Run one write, counting it and remembering the first failure (a
+    /// write past the cap is a failed write too: catching it must not let
+    /// the script apply a truncated set of writes).
     fn write(&mut self, run: impl FnOnce(&mut Self) -> Result<Value>) -> Result<Value> {
-        if self.writes >= MAX_WRITES {
-            return Err(ExecuteError::LimitReached {
+        let outcome = if self.writes >= self.max_writes {
+            Err(ExecuteError::LimitReached {
                 what: "write operations",
-                max: MAX_WRITES,
-            });
-        }
-        self.writes += 1;
-        let outcome = run(self);
+                max: self.max_writes,
+            })
+        } else {
+            self.writes += 1;
+            run(self)
+        };
         if let Err(error) = &outcome {
             self.failed_write.get_or_insert_with(|| error.clone());
         }
@@ -151,16 +159,21 @@ impl ExecSession {
         binding
     }
 
-    /// Run `OP(args)` bound to a fresh name and return the created node's id.
-    fn create(&mut self, op: char, args: String) -> Result<Value> {
+    /// Run `OP(args)` bound to a fresh name and return the resulting node's
+    /// id.
+    fn bound(&mut self, op: char, args: String) -> Result<String> {
         let binding = self.next_binding();
         self.run_line(format!("{binding}={op}({args})"))?;
-        let id = self
-            .ctx
+        self.ctx
             .bindings
             .get(&binding)
             .cloned()
-            .ok_or_else(|| ExecuteError::NotFound(format!("{op}() created no node")))?;
+            .ok_or_else(|| ExecuteError::NotFound(format!("{op}() produced no node")))
+    }
+
+    /// [`Self::bound`] for an op that creates a node, listed in `created`.
+    fn create(&mut self, op: char, args: String) -> Result<Value> {
+        let id = self.bound(op, args)?;
         self.created.push(id.clone());
         Ok(json!(id))
     }
@@ -197,9 +210,10 @@ impl ExecSession {
     fn move_node(&mut self, args: &Value) -> Result<Value> {
         let path = self.existing_path(args, "Move")?;
         let parent = match args.get("parent") {
-            // No parent: stay under the current one (pen.dev).
-            None | Some(Value::Null) => match parent_of(self.ctx.sim.active_children(), &path) {
-                Some(id) => quote(&id),
+            // No parent: stay under the current one (pen.dev). Resolve the
+            // node first, so a slash path finds its real parent.
+            None | Some(Value::Null) => match self.place_of(&path).and_then(|(parent, _)| parent) {
+                Some(id) => quote(id.as_str()),
                 None => "null".to_string(),
             },
             other => parent_arg(other, "Move")?,
@@ -243,10 +257,12 @@ impl ExecSession {
         };
         let node = self.existing_path(args, "Generate")?;
         let prompt = str_arg(args, "prompt", "Generate")?;
-        self.create(
+        // The image fills an existing slot, so it is not a created node.
+        let id = self.bound(
             'G',
             format!("{}, {}, {}", quote(&node), quote(mode), quote(prompt)),
-        )
+        )?;
+        Ok(json!(id))
     }
 
     fn set_variables(&mut self, args: &Value) -> Result<Value> {
@@ -287,7 +303,12 @@ impl ExecSession {
     fn get(&self, args: &Value) -> Result<Value> {
         let path = str_arg(args, "path", "Get")?;
         let options = args.get("options").unwrap_or(&Value::Null);
-        let mut nodes = self.read_nodes(Some(path), options, true)?;
+        // A negative depth reads the whole subtree, like `read_nodes`.
+        let depth = options
+            .get("depth")
+            .and_then(Value::as_i64)
+            .and_then(|d| usize::try_from(d).ok());
+        let mut nodes = self.read_nodes(Some(path), options, depth)?;
         if nodes.is_empty() {
             return Err(ExecuteError::NotFound(format!(
                 "Get: node not found: {path}"
@@ -313,27 +334,28 @@ impl ExecSession {
             .and_then(Value::as_i64)
             .filter(|d| *d >= 0)
             .map(|d| d as usize);
-        // Whole subtrees: the visitor sees every node down to `depth`.
-        let nodes = self.read_nodes(path, options, false)?;
+        // One level past `depth`, so the deepest visited nodes still show
+        // `"children": "..."` without the whole subtree being read.
+        let nodes = self.read_nodes(path, options, max_depth.map(|d| d + 1))?;
         if let (Some(path), true) = (path, nodes.is_empty()) {
             return Err(ExecuteError::NotFound(format!(
                 "Get: node not found: {path}"
             )));
         }
         let first_index = path
-            .and_then(|path| sibling_index(self.ctx.sim.active_children(), path))
-            .unwrap_or(0);
+            .and_then(|path| self.place_of(path))
+            .map_or(0, |(_, index)| index);
         let layout = self.layout();
         Ok(visitor_entries(nodes, &layout, max_depth, first_index))
     }
 
     /// `read_nodes` against the sim: `path` (or the page roots), with the
-    /// `Get` options. `use_depth` applies `depth` as a children cut-off.
+    /// `Get` resolve options, children cut off below `depth` (`None` = all).
     fn read_nodes(
         &self,
         path: Option<&str>,
         options: &Value,
-        use_depth: bool,
+        depth: Option<usize>,
     ) -> Result<Vec<Value>> {
         let mut args = BTreeMap::new();
         if let Some(path) = path {
@@ -342,10 +364,8 @@ impl ExecSession {
         if let Some(page) = self.ctx.page_id.clone() {
             args.insert("pageId".to_string(), page);
         }
-        if use_depth {
-            if let Some(depth) = options.get("depth").and_then(Value::as_i64) {
-                args.insert("depth".to_string(), depth.max(0).to_string());
-            }
+        if let Some(depth) = depth {
+            args.insert("depth".to_string(), depth.to_string());
         }
         for key in [
             "resolveVariables",
@@ -357,8 +377,11 @@ impl ExecSession {
             }
         }
         let value = tool_json(&super::read_nodes_snapshot(&self.ctx.sim), &args, "Get")?;
-        Ok(match value.get("nodes") {
-            Some(Value::Array(nodes)) => nodes.clone(),
+        Ok(match value {
+            Value::Object(mut map) => match map.remove("nodes") {
+                Some(Value::Array(nodes)) => nodes,
+                _ => Vec::new(),
+            },
             _ => Vec::new(),
         })
     }
@@ -434,7 +457,9 @@ impl ExecSession {
     }
 
     fn print(&mut self, line: &str) {
-        if self.printed_bytes + line.len() > MAX_PRINT_BYTES {
+        // Once one line overflows, every later line is dropped too, so the
+        // kept output is a clean prefix.
+        if self.dropped_print_lines > 0 || self.printed_bytes + line.len() > MAX_PRINT_BYTES {
             self.dropped_print_lines += 1;
             return;
         }
@@ -537,7 +562,7 @@ impl ExecSession {
         Ok(Value::Null)
     }
 
-    /// `args.path`, which must name an existing node.
+    /// The id of the existing node `args.path` (or `args.nodeId`) names.
     fn existing_path(&self, args: &Value, call: &'static str) -> Result<String> {
         let key = if args.get("path").is_some() {
             "path"
@@ -545,8 +570,19 @@ impl ExecSession {
             "nodeId"
         };
         let path = str_arg(args, key, call)?;
-        self.require_node(path, call)?;
-        Ok(path.to_string())
+        // The node's own id: the DSL's C / M / D / G look ids up directly,
+        // so a slash path must not reach them.
+        find_node_by_path(self.ctx.sim.active_children(), path, &self.ctx.alias)
+            .map(|node| node.id_str().to_string())
+            .ok_or_else(|| ExecuteError::NotFound(format!("{call}: node not found: {path}")))
+    }
+
+    /// `(parent id, sibling index)` of the node `path` names; the parent is
+    /// `None` for a page root.
+    fn place_of(&self, path: &str) -> Option<(Option<NodeId>, usize)> {
+        let roots = self.ctx.sim.active_children();
+        let node = find_node_by_path(roots, path, &self.ctx.alias)?;
+        find_parent_and_index(roots, &NodeId::new(node.id_str()))
     }
 
     fn require_node(&self, path: &str, call: &'static str) -> Result<()> {
@@ -555,7 +591,7 @@ impl ExecSession {
             .ok_or_else(|| ExecuteError::NotFound(format!("{call}: node not found: {path}")))
     }
 
-    /// `(id, name)` of every node the script created that still exists.
+    /// `{id, type, name?}` of every node the script created that still exists.
     pub(crate) fn created_nodes(&self) -> Vec<Value> {
         let roots = self.ctx.sim.active_children();
         let mut seen = std::collections::BTreeSet::new();
@@ -585,7 +621,10 @@ fn tool_json(
         ToolOutcome::OkJson(raw) => serde_json::from_str(&raw)
             .map_err(|e| ExecuteError::Sandbox(format!("{call}: unreadable tool result: {e}"))),
         ToolOutcome::Ok(map) => Ok(json!(map)),
-        ToolOutcome::Err(_, message) => Err(ExecuteError::NotFound(format!("{call}: {message}"))),
+        ToolOutcome::Err(_, message) => Err(ExecuteError::BadArgument {
+            call,
+            detail: message,
+        }),
         _ => Err(ExecuteError::Sandbox(format!(
             "{call}: unexpected tool result shape"
         ))),
@@ -651,32 +690,6 @@ fn parent_arg(value: Option<&Value>, call: &'static str) -> Result<String> {
 
 fn quote(raw: &str) -> String {
     Value::String(raw.to_string()).to_string()
-}
-
-/// The id of `id`'s parent; `None` for a page root or an unknown id.
-fn parent_of(nodes: &[PenNode], id: &str) -> Option<String> {
-    for node in nodes {
-        if let Some(children) = node.children() {
-            if children.iter().any(|child| child.id_str() == id) {
-                return Some(node.id_str().to_string());
-            }
-            if let Some(found) = parent_of(children, id) {
-                return Some(found);
-            }
-        }
-    }
-    None
-}
-
-/// `id`'s position among its siblings.
-fn sibling_index(nodes: &[PenNode], id: &str) -> Option<usize> {
-    if let Some(index) = nodes.iter().position(|node| node.id_str() == id) {
-        return Some(index);
-    }
-    nodes
-        .iter()
-        .filter_map(|node| node.children())
-        .find_map(|children| sibling_index(children, id))
 }
 
 /// Theme axis values the themed `variables` use that `existing` does not

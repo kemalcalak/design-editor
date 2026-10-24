@@ -12,7 +12,7 @@ use super::batch_program_error::ProgramError;
 /// Everything an `execute` run or one of its host calls can refuse.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum ExecuteError {
-    /// No `script` argument, or nothing runnable after stripping fences.
+    /// Nothing runnable after stripping fences.
     EmptySource,
     /// The source exceeds `MAX_SCRIPT_BYTES`.
     SourceTooLarge { bytes: usize, max: usize },

@@ -69,7 +69,7 @@ Print(GetVariables())
 RULES
 
 - Name every node you insert; the result maps the created ids to those names.
-- Check layout with a visitor (`ctx.bounds`, `ctx.problems`) before reaching for a screenshot; take one screenshot of a finished section, not one per step (at most 8 per call).
+- Check layout with a visitor (`ctx.bounds`, `ctx.problems`) before reaching for a screenshot; take one screenshot of a finished section, not one per step (at most 8 screenshots per call).
 - Keep Print output compact: one positional row per node, JSON only for single values. Output past 256 KiB is dropped.
 - Limits per call: 256 KiB of source, 4096 writes, 32 exported nodes. HTML export is not here: use `codegen_export`.
 - Writes land exactly as written: no repair pass runs after `execute`.

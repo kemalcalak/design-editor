@@ -42,6 +42,9 @@ use super::script_runner::{strip_fences, MAX_SCRIPT_BYTES, MEMORY_LIMIT_BYTES};
 use super::{EditorCommand, ImageContent, McpTool, ToolErrorCode, ToolOutcome};
 
 pub use super::script_execute_error::ScriptRenderError;
+pub use super::script_execute_session::{
+    MAX_EXPORT_NODES, MAX_PRINT_BYTES, MAX_SCREENSHOTS, MAX_WRITES,
+};
 
 /// Wall-clock budget for one script, host calls included. Longer than
 /// `batch_design(script)`'s 2 s because reads resolve the layout.
@@ -58,7 +61,8 @@ pub enum ExportFormat {
 }
 
 /// One `Export` call: write `node_ids` as `format` under `output_path` (a
-/// directory; images are `<nodeId>.<ext>`, PDF is `export.pdf`).
+/// directory; images are `<nodeId>.<ext>` with `/` in instance paths turned
+/// into `_`, PDF is `export.pdf`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExportRequest {
     pub node_ids: Vec<String>,

@@ -481,3 +481,62 @@ fn empty_and_oversized_scripts_are_invalid_arguments() {
     assert_eq!(code, ToolErrorCode::InvalidArgument);
     assert!(message.contains("too large"), "{message}");
 }
+
+#[test]
+fn a_write_past_the_cap_counts_as_a_failed_write() {
+    let mut session = crate::script_execute_session::ExecSession::new(&sample(), None, false);
+    session.max_writes = 2;
+    let patch = serde_json::json!({"path": "n11", "data": {"name": "T"}});
+    assert!(session.dispatch("update", &patch).is_ok());
+    assert!(session.dispatch("update", &patch).is_ok());
+    let error = session
+        .dispatch("update", &patch)
+        .expect_err("over the cap");
+    assert!(
+        error.to_string().contains("too many write operations"),
+        "{error}"
+    );
+    assert!(
+        session.failed_write.is_some(),
+        "a caught cap error must still fail the run"
+    );
+}
+
+#[test]
+fn move_without_a_parent_keeps_a_slash_path_node_under_its_parent() {
+    let mut state = state_with(vec![frame(
+        "f1",
+        "Screen",
+        0.0,
+        0.0,
+        400.0,
+        400.0,
+        vec![
+            rect("r1", "A", 0.0, 0.0, 10.0, 10.0),
+            rect("r2", "B", 20.0, 0.0, 10.0, 10.0),
+        ],
+    )]);
+    let ran = run_ok(&state, r#"Move("f1/r2", undefined, 0);"#);
+    assert!(state.apply(ran.command.expect("command")));
+    let names: Vec<_> = state.active_children()[0]
+        .children()
+        .expect("children")
+        .iter()
+        .map(|n| n.base().name.clone().unwrap_or_default())
+        .collect();
+    assert_eq!(names, vec!["B", "A"]);
+    assert_eq!(
+        state.active_children().len(),
+        1,
+        "nothing moved to the root"
+    );
+}
+
+#[test]
+fn a_negative_get_depth_reads_the_whole_subtree() {
+    let ran = run_ok(
+        &sample(),
+        r#"const g = Get("n10", {depth: -1}).children.find(c => c.id === "n12"); Print(Array.isArray(g.children));"#,
+    );
+    assert_eq!(printed(&ran), vec!["true"]);
+}

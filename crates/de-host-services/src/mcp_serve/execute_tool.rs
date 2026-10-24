@@ -104,6 +104,39 @@ mod tests {
 
     use super::execute_snapshot;
 
+    /// The limits are spelled out in the tool description and the guide;
+    /// keep both in step with the constants that enforce them.
+    #[test]
+    fn documented_limits_match_the_constants() {
+        use de_mcp::script_execute::{
+            EXECUTE_BUDGET, MAX_EXPORT_NODES, MAX_PRINT_BYTES, MAX_SCREENSHOTS, MAX_WRITES,
+        };
+        use de_mcp::script_runner::MAX_SCRIPT_BYTES;
+        let schema = super::super::TOOL_SCHEMAS
+            .iter()
+            .find(|schema| schema.contains(r#""name":"execute""#))
+            .expect("execute schema");
+        let guide = de_ai_skills::guideline_for("execute").expect("execute guide");
+        let phrases = [
+            format!("{} s time limit", EXECUTE_BUDGET.as_secs()),
+            format!("{} KiB source", MAX_SCRIPT_BYTES / 1024),
+            format!("{MAX_WRITES} writes"),
+            format!("{MAX_SCREENSHOTS} screenshots"),
+            format!("{MAX_EXPORT_NODES} exported nodes"),
+            format!("{} KiB of Print output", MAX_PRINT_BYTES / 1024),
+        ];
+        for phrase in &phrases {
+            assert!(
+                schema.contains(phrase.as_str()),
+                "schema must say {phrase:?}"
+            );
+        }
+        for phrase in [&phrases[0], &phrases[2], &phrases[3], &phrases[4]] {
+            assert!(guide.contains(phrase.as_str()), "guide must say {phrase:?}");
+        }
+        assert!(guide.contains(&format!("{} KiB", MAX_PRINT_BYTES / 1024)));
+    }
+
     #[test]
     fn execute_returns_a_png_per_screenshot_and_its_writes() {
         let state = de_editor_core::EditorState::new();

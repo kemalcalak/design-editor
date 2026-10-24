@@ -47,13 +47,16 @@ impl LayoutIndex {
     fn walk(&mut self, nodes: &[SceneNode], parent: (f32, f32), clip: Option<Area>) {
         for node in nodes {
             let bounds = node.aggregate_bounds();
+            // A line can run left or up from its origin (negative size).
+            let (x0, x1) = (bounds.origin.x, bounds.origin.x + bounds.size.x);
+            let (y0, y1) = (bounds.origin.y, bounds.origin.y + bounds.size.y);
             self.boxes.insert(
                 node.id.clone(),
                 NodeBox {
-                    x: bounds.origin.x,
-                    y: bounds.origin.y,
-                    width: bounds.size.x,
-                    height: bounds.size.y,
+                    x: x0.min(x1),
+                    y: y0.min(y1),
+                    width: (x1 - x0).abs(),
+                    height: (y1 - y0).abs(),
                     parent_x: parent.0,
                     parent_y: parent.1,
                     problem: clip_problem(node, clip),
