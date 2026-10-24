@@ -427,6 +427,9 @@ pub enum PropertyPanelAction {
     /// User clicked the preset row's "Custom" cell: restore the custom
     /// program a preset pick replaced (#141).
     RestoreCustomShader,
+    /// User clicked a Rows / Columns `−` / `+` in a primary mesh
+    /// gradient's body (#142).
+    EditMeshLattice(de_editor_core::MeshLatticeEdit),
     /// User clicked the Widget section's `checked` toggle on a Switch
     /// / Checkbox node — host flips the literal `checked` bool to
     /// `new_value`.

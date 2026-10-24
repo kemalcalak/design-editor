@@ -101,6 +101,7 @@ pub fn updates_document(action: &PropertyPanelAction) -> bool {
             | PropertyPanelAction::FlipSelection(_)
             | PropertyPanelAction::SetShaderPreset(_)
             | PropertyPanelAction::RestoreCustomShader
+            | PropertyPanelAction::EditMeshLattice(_)
     )
 }
 
@@ -650,7 +651,8 @@ pub fn apply_property_action(
         | A::SetStrokeStyle(_)
         | A::FlipSelection(_)
         | A::SetShaderPreset(_)
-        | A::RestoreCustomShader => {
+        | A::RestoreCustomShader
+        | A::EditMeshLattice(_) => {
             crate::widgets::property_panel_dispatch_paint::apply_paint_option_action(state, action);
             Handled
         }

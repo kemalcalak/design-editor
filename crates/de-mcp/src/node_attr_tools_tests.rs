@@ -322,3 +322,37 @@ fn set_node_stroke_style_rejects_bad_input_and_strokeless_nodes() {
         },
     }));
 }
+
+/// #142: `inner_shadow` lands the Effects add menu's inset shadow; an
+/// unknown kind still names every accepted one.
+#[test]
+fn add_node_effect_accepts_inner_shadow() {
+    let tool = add_node_effect_snapshot();
+    let args = |kind: &str| {
+        BTreeMap::from([
+            ("node_id".to_string(), RECT_ID.to_string()),
+            ("kind".to_string(), kind.to_string()),
+        ])
+    };
+    let mut s = state_with_rect_node();
+    match tool.call(&args("inner_shadow")) {
+        ToolOutcome::OkWithCommand(_, command) => assert!(s.apply(command)),
+        other => panic!("expected a command, got {other:?}"),
+    }
+    let node = de_editor_core::walkers::find_node(s.active_children(), &NodeId::new(RECT_ID))
+        .expect("rect");
+    assert_eq!(
+        de_editor_core::fills::node_effects(node),
+        [jian_ops_schema::style::PenEffect::Shadow(
+            de_editor_core::fills::panel_shadow_body(Some(true))
+        )]
+    );
+
+    match tool.call(&args("glow")) {
+        ToolOutcome::Err(code, message) => {
+            assert_eq!(code, ToolErrorCode::InvalidArgument);
+            assert!(message.contains("inner_shadow"), "{message}");
+        }
+        other => panic!("expected InvalidArgument, got {other:?}"),
+    }
+}

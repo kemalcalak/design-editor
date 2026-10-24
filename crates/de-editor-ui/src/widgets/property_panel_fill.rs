@@ -453,7 +453,7 @@ fn paint_one_fill(
     use crate::widgets::property_panel_fill_mesh_shader as mesh_shader;
     match fill_type {
         FillType::MeshGradient if is_primary => {
-            mesh_shader::paint_fill_mesh_body(cx, theme, snapshot, x, body_y, width);
+            mesh_shader::paint_fill_mesh_body(cx, theme, snapshot, locale, x, body_y, width);
         }
         FillType::Shader if is_primary => {
             mesh_shader::paint_fill_shader_body(cx, theme, snapshot, locale, x, body_y, width);

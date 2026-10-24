@@ -287,6 +287,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "Precise",
         "settings.system.pencilSmoothingBalanced" => "Balanced",
         "settings.system.pencilSmoothingSmooth" => "Smooth",
+        "fill.meshRows" => "Rows",
+        "fill.meshColumns" => "Columns",
         "fill.angular" => "Angular",
         "layerMenu.booleanFrameHasLayers" => "Boolean operations can't apply to frames that contain layers",
         "fill.presetCustom" => "Custom",

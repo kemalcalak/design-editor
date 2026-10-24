@@ -120,6 +120,8 @@ pub mod property_panel_interactions;
 pub mod property_panel_layer;
 pub mod property_panel_layout;
 pub mod property_panel_layout_ops;
+#[cfg(test)]
+mod property_panel_mesh_lattice_tests;
 pub(crate) mod property_panel_mode_popover;
 #[cfg(test)]
 mod property_panel_multi_select_tests;
