@@ -166,7 +166,10 @@ impl WidgetHostNative {
             .git_panel_outer_rect(viewport_w, viewport_h)
             .is_some_and(|r| (r).contains(Point2D::new(x, y)));
         if self.is_resizing_panel()
-            || (!over_git_panel && self.panel_resize_hover(x, y, viewport_w).is_some())
+            || (!over_git_panel
+                && self
+                    .panel_resize_hover(x, y, viewport_w, viewport_h)
+                    .is_some())
         {
             return CursorHint::ResizeEw;
         }

@@ -135,7 +135,14 @@ fn web_does_not_paint_window_control_dots() {
     let strip_ovals = backend
         .ovals
         .iter()
-        .filter(|r| r.origin.x < 80.0 && r.origin.y < de_editor_ui::widgets::WINDOW_STRIP_H)
+        // The 12 px window-control dots, centred on the strip — not canvas
+        // content, which now runs under the top-left corner too (#86).
+        .filter(|r| {
+            r.origin.x < 80.0
+                && (r.size.x - 12.0).abs() < 0.01
+                && (r.origin.y + r.size.y / 2.0 - de_editor_ui::widgets::WINDOW_STRIP_H / 2.0).abs()
+                    < 0.01
+        })
         .count();
     assert_eq!(strip_ovals, 0);
 }

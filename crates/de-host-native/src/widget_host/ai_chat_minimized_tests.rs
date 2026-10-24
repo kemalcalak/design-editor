@@ -17,8 +17,9 @@ const VIEWPORT: (f32, f32) = (1200.0, 800.0);
 /// The card's width at this viewport, derived the way
 /// `pinned_chat` derives it — not a second copy of the constant.
 fn composer_card_width(host: &WidgetHostNative) -> f32 {
-    let (_cx0, _cy0, cw, _ch) = host.canvas_region(VIEWPORT.0, VIEWPORT.1);
-    COMPOSER_CARD_W.min((cw - AICHAT_INSET_LEFT * 2.0).max(0.0))
+    // The pill keeps its nominal width wherever the window has room for it.
+    let _ = host;
+    COMPOSER_CARD_W
 }
 
 /// RETIRED BEHAVIOUR (minimizing to a bar): the chat used to collapse
@@ -57,8 +58,8 @@ fn minimizing_on_the_agent_tab_leaves_the_pinned_rect_untouched() {
 }
 
 /// The composer card is what appears everywhere the rail is NOT on the
-/// Agent tab: a card docked at the canvas floor's bottom-left, at the
-/// card width — the spot the old minimized bar used to occupy.
+/// Agent tab: a pill docked at the canvas floor (#86: centred, and clear
+/// of the open left card and the zoom pill).
 #[test]
 fn the_composer_card_docks_at_the_canvas_floor_when_the_rail_is_on_layers() {
     let host = WidgetHostNative::new();
@@ -76,7 +77,16 @@ fn the_composer_card_docks_at_the_canvas_floor_when_the_rail_is_on_layers() {
         .ai_chat_rect(VIEWPORT.0, VIEWPORT.1)
         .expect("composer card placed");
 
-    assert_eq!(card.origin.x, cx0 + AICHAT_INSET_LEFT);
+    let _ = cx0;
+    let left_card = de_editor_ui::widgets::host_canvas_geometry::layer_panel_rect(
+        host.editor_state(),
+        VIEWPORT.1,
+    );
+    assert!(card.origin.x >= left_card.origin.x + left_card.size.x + AICHAT_INSET_LEFT);
+    let status = host
+        .status_bar_rect(VIEWPORT.0, VIEWPORT.1)
+        .expect("zoom pill");
+    assert!(card.origin.x + card.size.x <= status.origin.x);
     assert_eq!(card.origin.y + card.size.y, cy0 + ch - AICHAT_INSET_BOTTOM);
     assert_eq!(card.size.x, width);
     assert_eq!(card.size.y, height);
@@ -109,9 +119,12 @@ fn a_stale_drag_position_cannot_move_the_composer_card_off_the_canvas_floor() {
         .ai_chat_rect(VIEWPORT.0, VIEWPORT.1)
         .expect("card placed");
 
-    assert_eq!(card.origin.x, cx0 + AICHAT_INSET_LEFT);
+    let _ = cx0;
+    let fresh = WidgetHostNative::new()
+        .ai_chat_rect(VIEWPORT.0, VIEWPORT.1)
+        .expect("card placed");
+    assert_eq!(card.origin, fresh.origin, "the stale drag is ignored");
     assert_eq!(card.origin.y + card.size.y, cy0 + ch - AICHAT_INSET_BOTTOM);
-    assert_ne!(card.origin.x, 600.0, "the stale dragged x must be ignored");
 }
 
 /// RETIRED BEHAVIOUR (expand-on-click): clicking the minimized bar used

@@ -3,7 +3,8 @@
 //! The editor has no title bar (#30): the file pill floats at the canvas
 //! top-left and the action group at its top-right. Both widgets hit-test
 //! into this one enum so the shared press flow and the hover state treat
-//! them as a single chrome family.
+//! them as a single chrome family; the panel toggle above the tool rail
+//! (#86) joins them.
 
 /// A hit on the file pill or the canvas action group.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,6 +25,9 @@ pub enum ChromeHit {
     OpenExportDialog,
     /// Agent / MCP status chip — open the Agents & MCP settings.
     OpenAgentSettings,
+    /// The panel toggle above the tool rail (#86) — open / close the
+    /// left card.
+    TogglePanel,
 }
 
 impl ChromeHit {
@@ -39,6 +43,7 @@ impl ChromeHit {
             Self::OpenExportMenu => B::OpenExportMenu,
             Self::OpenExportDialog => B::OpenExportDialog,
             Self::OpenAgentSettings => B::OpenAgentSettings,
+            Self::TogglePanel => B::TogglePanel,
         }
     }
 }

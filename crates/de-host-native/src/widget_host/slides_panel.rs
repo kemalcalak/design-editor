@@ -35,10 +35,14 @@ impl WidgetHostNative {
     /// the rail's own chrome (tab row included) does not exist — the
     /// dock IS the column and the pinned chat owns its body — so no rail
     /// tier may claim a press or hover in that band.
+    ///
+    /// Editor v3 (#86): the left card is on screen while it is open and
+    /// while it slides shut, so it paints and keeps its content for the
+    /// whole motion.
     pub(in crate::widget_host) fn left_rail_visible(&self) -> bool {
         let ui = &self.editor_state.editor_ui;
         !de_editor_ui::widgets::host_canvas_geometry::workspace_docked(&self.editor_state)
-            && ui.sidebar_open
+            && (ui.sidebar_open || ui.panel_motion_active())
     }
 
     /// Canonical visible rect for rail content. Every paint, hit and scroll

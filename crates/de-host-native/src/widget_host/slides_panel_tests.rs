@@ -403,12 +403,14 @@ fn the_rail_resize_gutter_drags_narrower_as_well_as_wider() {
     // default 240 would simply sit on the clamp.
     host.editor_state.editor_ui.layer_panel_width = 320.0;
     let start = 320.0_f32;
-    host.apply_press(start, y, VW, VH);
+    // The card floats CARD_INSET in from the window edge (#86).
+    let edge = start + de_editor_ui::widgets::floating_panels::CARD_INSET;
+    host.apply_press(edge, y, VW, VH);
     assert!(
         host.is_resizing_panel(),
         "a press on the gutter starts a resize, not a slide click"
     );
-    host.apply_cursor_move(start - 40.0, y);
+    host.apply_cursor_move(edge - 40.0, y);
     assert_eq!(
         host.editor_state.editor_ui.layer_panel_width,
         start - 40.0,
@@ -419,8 +421,8 @@ fn the_rail_resize_gutter_drags_narrower_as_well_as_wider() {
 
     let mut host = host_with(Some(TemplateScene::Slides));
     host.editor_state.editor_ui.layer_panel_width = start;
-    host.apply_press(start, y, VW, VH);
-    host.apply_cursor_move(start + 40.0, y);
+    host.apply_press(edge, y, VW, VH);
+    host.apply_cursor_move(edge + 40.0, y);
     assert_eq!(
         host.editor_state.editor_ui.layer_panel_width,
         start + 40.0,
@@ -438,8 +440,9 @@ fn the_inner_half_of_the_gutter_starts_a_resize_too() {
     // Same reason as above: start wide of the 240 px floor.
     host.editor_state.editor_ui.layer_panel_width = 320.0;
     let start = 320.0_f32;
+    let edge = start + de_editor_ui::widgets::floating_panels::CARD_INSET;
     let y = de_editor_ui::widgets::WINDOW_STRIP_H + 200.0;
-    host.apply_press(start - 2.0, y, VW, VH);
+    host.apply_press(edge - 2.0, y, VW, VH);
     assert!(
         host.is_resizing_panel(),
         "a press 2 px inside the edge is still the gutter's"
@@ -448,7 +451,7 @@ fn the_inner_half_of_the_gutter_starts_a_resize_too() {
         host.editor_state.editor_ui.slides_panel.pressed, None,
         "the slides list must not also arm a row press"
     );
-    host.apply_cursor_move(start - 42.0, y);
+    host.apply_cursor_move(edge - 42.0, y);
     assert_eq!(
         host.editor_state.editor_ui.layer_panel_width,
         start - 40.0,

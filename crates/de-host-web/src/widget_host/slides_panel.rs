@@ -19,6 +19,14 @@ pub(in crate::widget_host) struct SlidesFrame {
 }
 
 impl WidgetHost {
+    /// Whether the left card is on screen (#86): open, or still sliding
+    /// shut — it keeps its content for the whole motion.
+    pub(in crate::widget_host) fn left_card_shown(&self) -> bool {
+        let ui = &self.editor_state.editor_ui;
+        !canvas_geometry::workspace_docked(&self.editor_state)
+            && (ui.sidebar_open || ui.panel_motion_active())
+    }
+
     fn slides_panel_rect(&self, viewport_h: f32) -> Rect {
         canvas_geometry::layer_panel_rect(&self.editor_state, viewport_h)
     }
@@ -28,7 +36,7 @@ impl WidgetHost {
         &self,
         viewport_h: f32,
     ) -> Option<SlidesPanelTabs> {
-        if !self.editor_state.editor_ui.sidebar_open {
+        if !self.left_card_shown() {
             return None;
         }
         flow::tab_row(&self.editor_state, self.slides_panel_rect(viewport_h))
@@ -38,7 +46,7 @@ impl WidgetHost {
     /// row when one shows.
     pub(in crate::widget_host) fn layers_content_rect(&self, viewport_h: f32) -> Rect {
         let panel = self.slides_panel_rect(viewport_h);
-        if !self.editor_state.editor_ui.sidebar_open {
+        if !self.left_card_shown() {
             return panel;
         }
         flow::layers_content_rect(&self.editor_state, panel)
@@ -50,7 +58,7 @@ impl WidgetHost {
         viewport_w: f32,
         viewport_h: f32,
     ) -> Option<SlidesFrame> {
-        if !self.editor_state.editor_ui.sidebar_open {
+        if !self.left_card_shown() {
             return None;
         }
         let panel = self.slides_panel_rect(viewport_h);

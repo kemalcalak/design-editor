@@ -125,10 +125,11 @@ fn property_panel_gap_press_commits_size_draft() {
     host.editor_state_mut().ui.property_focus = Some(PropertyFocus::SizeW);
     host.editor_state_mut().ui.property_input.set_text("321");
 
-    // Inside the right rail's edge padding — the input rows are inset
-    // from the panel edges, so 2 px from the viewport edge hits no
+    // Inside the properties card's edge padding — the input rows are
+    // inset from the card edges, so 2 px inside its right edge hits no
     // control at any section y.
-    assert!(host.apply_press(VW - 2.0, 400.0, VW, VH));
+    let card = host.property_rect(VW, VH);
+    assert!(host.apply_press(card.origin.x + card.size.x - 2.0, 400.0, VW, VH));
 
     let state = host.editor_state();
     assert!(

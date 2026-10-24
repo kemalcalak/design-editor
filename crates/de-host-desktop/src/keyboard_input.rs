@@ -269,6 +269,8 @@ impl DesktopApp {
                         "y" => consumed = self.host.apply_redo(),
                         "g" => consumed = self.host.apply_group(),
                         "j" => consumed = self.host.apply_toggle_chat(),
+                        // Cmd/Ctrl+\ — open / close the left panel (#86).
+                        "\\" => consumed = self.host.apply_toggle_panel(),
                         // Cmd/Ctrl+T — open a fresh chat tab (MT.3). Preserves
                         // existing tabs and leaves any in-flight run bound to its
                         // own tab. Gated after the `settings_focused` swallow like

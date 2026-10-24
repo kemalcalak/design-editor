@@ -171,6 +171,10 @@ pub fn base_animation_deadline_ms(
     if let Some(deadline) = state.editor_ui.workspace.entrance_deadline_ms(now_ms) {
         next = earliest(next, deadline);
     }
+    // The left card's open / close motion (#86) plays out on its own.
+    if let Some(deadline) = state.editor_ui.panel_motion_deadline_ms(now_ms) {
+        next = earliest(next, deadline);
+    }
     // Home's "Copied" acknowledgement reverts on its own clock.
     if let Some(deadline) = state.editor_ui.home.copied_deadline_ms(now_ms) {
         next = earliest(next, deadline);

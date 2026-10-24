@@ -7,8 +7,8 @@ use de_editor_ui::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
 use de_editor_ui::widgets::PropertyPanel;
 use de_editor_ui::{Point2D, Rect};
 
-/// The right rail runs from the window's top edge — no title bar (#30).
-const PROPERTY_PANEL_TOP: f32 = 0.0;
+/// The properties card starts under the action group (#86).
+const PROPERTY_PANEL_TOP: f32 = de_editor_ui::widgets::floating_panels::RIGHT_CARD_TOP;
 
 fn property_rect(host: &WidgetHost) -> Rect {
     de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
@@ -51,7 +51,8 @@ fn code_view_close_button_tracks_hover() {
 
     // The Code view's close button reports the tab it returns to.
     let panel_w = host.editor_state.editor_ui.property_panel_width;
-    let panel_x = host.last_viewport_w - panel_w;
+    let panel_x =
+        host.last_viewport_w - panel_w - de_editor_ui::widgets::floating_panels::CARD_INSET;
     let close = de_editor_ui::widgets::property_panel_header::close_rect(Rect::xywh(
         panel_x,
         PROPERTY_PANEL_TOP,
@@ -183,7 +184,7 @@ fn codegen_hover_tracks_idle_generate_button() {
     host.editor_state.editor_ui.property_tab = PropertyTab::Code;
 
     let pw = host.editor_state.editor_ui.property_panel_width;
-    let panel_x = host.last_viewport_w - pw;
+    let panel_x = host.last_viewport_w - pw - de_editor_ui::widgets::floating_panels::CARD_INSET;
     let (_, generate_rect) = property_panel_code::code_action_rects(
         panel_x,
         PROPERTY_PANEL_TOP + PANEL_HEADER_HEIGHT,
@@ -219,7 +220,9 @@ fn codegen_preview_drag_selects_code_text() {
     host.editor_state.codegen.phase = CodegenPhase::Complete;
     host.editor_state.codegen.code = "import React\nconst n = 1".into();
 
-    let panel_x = viewport_w - host.editor_state.editor_ui.property_panel_width;
+    let panel_x = viewport_w
+        - host.editor_state.editor_ui.property_panel_width
+        - de_editor_ui::widgets::floating_panels::CARD_INSET;
     let char_w = 11.0 * 0.55;
     let start = de_editor_ui::Point2D::new(panel_x + 66.0, PROPERTY_PANEL_TOP + 112.0);
     let end = de_editor_ui::Point2D::new(panel_x + 66.0 + char_w * 6.0, PROPERTY_PANEL_TOP + 112.0);
@@ -407,7 +410,9 @@ fn codegen_preview_wheel_scrolls_code_not_property_panel() {
         .collect::<Vec<_>>()
         .join("\n");
 
-    let panel_x = viewport_w - host.editor_state.editor_ui.property_panel_width;
+    let panel_x = viewport_w
+        - host.editor_state.editor_ui.property_panel_width
+        - de_editor_ui::widgets::floating_panels::CARD_INSET;
     assert!(host.apply_wheel(
         panel_x + 80.0,
         PROPERTY_PANEL_TOP + 112.0,

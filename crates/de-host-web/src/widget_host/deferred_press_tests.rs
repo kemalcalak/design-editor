@@ -310,13 +310,11 @@ fn font_weight_row_press_defers_selection_until_release() {
     let mut host = WidgetHost::new();
     host.editor_state = de_editor_core::EditorState::sample();
     host.editor_state.editor_ui.font_weight_picker_open = true;
-    let property_rect = Rect {
-        origin: Point2D::new(
-            1200.0 - host.editor_state.editor_ui.property_panel_width,
-            0.0,
-        ),
-        size: Point2D::new(host.editor_state.editor_ui.property_panel_width, 800.0),
-    };
+    let property_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+        &host.editor_state,
+        1200.0,
+        800.0,
+    );
     let panel = PropertyPanel::for_selection(&host.editor_state).unwrap();
     let before_weight = selected_font_weight(&host.editor_state);
     let (point, choice) = find_font_weight_action_point(&panel, property_rect, before_weight);

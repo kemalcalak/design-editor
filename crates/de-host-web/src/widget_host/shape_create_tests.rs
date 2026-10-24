@@ -9,6 +9,8 @@ const VIEWPORT_H: f32 = 800.0;
 #[test]
 fn frame_tool_drag_creates_and_keeps_a_frame() {
     let mut host = WidgetHost::new();
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.active_children_mut().clear();
     host.editor_state.clear_selection();
     host.editor_state.tool = Tool::Frame;
@@ -43,6 +45,8 @@ fn frame_tool_drag_creates_and_keeps_a_frame() {
 #[test]
 fn frame_tool_press_without_drag_does_not_flash_a_temporary_frame() {
     let mut host = WidgetHost::new();
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.active_children_mut().clear();
     host.editor_state.clear_selection();
     host.editor_state.tool = Tool::Frame;
@@ -62,6 +66,8 @@ fn frame_tool_press_without_drag_does_not_flash_a_temporary_frame() {
 #[test]
 fn text_tool_still_creates_on_press() {
     let mut host = WidgetHost::new();
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.active_children_mut().clear();
     host.editor_state.clear_selection();
     host.editor_state.tool = Tool::Text;
@@ -81,6 +87,8 @@ fn text_tool_still_creates_on_press() {
 #[test]
 fn text_tool_press_enters_editing_so_typing_updates_created_text() {
     let mut host = WidgetHost::new();
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.active_children_mut().clear();
     host.editor_state.clear_selection();
     host.editor_state.tool = Tool::Text;
@@ -109,6 +117,8 @@ fn text_tool_press_enters_editing_so_typing_updates_created_text() {
 #[test]
 fn text_tool_first_typing_burst_reuses_create_history_snapshot() {
     let mut host = WidgetHost::new();
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.active_children_mut().clear();
     host.editor_state.clear_selection();
     host.editor_state.tool = Tool::Text;

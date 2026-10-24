@@ -41,12 +41,9 @@ fn host_with_text_selection() -> WidgetHostNative {
     host
 }
 
-fn property_rect() -> Rect {
-    let width = 280.0;
-    Rect {
-        origin: Point2D::new(VIEWPORT_W - width, 0.0),
-        size: Point2D::new(width, VIEWPORT_H.max(0.0)),
-    }
+/// The properties card (#86: a floating card, not a full-height rail).
+fn property_rect(host: &WidgetHostNative) -> Rect {
+    host.property_rect(VIEWPORT_W, VIEWPORT_H)
 }
 
 /// Seed enough system families that the font list overflows its capped
@@ -81,7 +78,7 @@ fn font_picker_wheel_shrinks_offset_on_positive_delta() {
     host.editor_state_mut().editor_ui.toggle_font_picker();
     assert!(host.editor_state().editor_ui.font_picker.open);
 
-    let rect = property_rect();
+    let rect = property_rect(&host);
     let panel = PropertyPanel::for_selection(host.editor_state()).expect("text panel");
     let max = panel.font_picker_max_scroll(rect);
     assert!(
@@ -125,7 +122,7 @@ fn rail_popups_agree_on_wheel_direction() {
         .editor_ui
         .property_color_variable_picker_open = Some(de_editor_core::ColorTarget::Fill);
 
-    let rect = property_rect();
+    let rect = property_rect(&host);
     let panel = PropertyPanel::for_selection(host.editor_state()).expect("text panel");
     let layout = panel
         .color_variable_picker_layout(rect)
@@ -189,7 +186,7 @@ fn rail_popups_agree_on_wheel_direction() {
 #[test]
 fn rail_popups_agree_with_the_panel_behind_them() {
     let mut host = host_with_text_selection();
-    let rect = property_rect();
+    let rect = property_rect(&host);
     let panel = PropertyPanel::for_selection(host.editor_state()).expect("text panel");
     let max = (panel.content_height(rect) - rect.size.y).max(0.0);
     drop(panel);

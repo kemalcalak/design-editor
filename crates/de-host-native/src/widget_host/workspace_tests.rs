@@ -96,12 +96,14 @@ fn the_chat_tab_pins_the_chat_into_the_left_rail() {
     assert_eq!(host.editor_state().editor_ui.layer_panel_width, 320.0);
 
     let rect = host.ai_chat_rect(W, H).expect("the rail owns the chat");
-    let strip = de_editor_ui::widgets::WINDOW_STRIP_H;
+    // The left card floats (#86): inset from the window, under the chrome.
+    let card =
+        de_editor_ui::widgets::host_canvas_geometry::layer_panel_rect(host.editor_state(), H);
     let tab_row = de_editor_ui::widgets::SLIDES_TAB_ROW_HEIGHT;
-    assert_eq!(rect.origin.x, 0.0);
-    assert_eq!(rect.origin.y, strip + tab_row, "below the tab row");
+    assert_eq!(rect.origin.x, card.origin.x);
+    assert_eq!(rect.origin.y, card.origin.y + tab_row, "below the tab row");
     assert_eq!(rect.size.x, 320.0);
-    assert_eq!(rect.size.y, H - strip - tab_row);
+    assert_eq!(rect.size.y, card.size.y - tab_row);
 
     // Closing the left panel no longer removes the chat — the composer
     // card takes over at the canvas floor (the floating branch does
@@ -114,7 +116,10 @@ fn the_chat_tab_pins_the_chat_into_the_left_rail() {
     let width = de_editor_ui::widgets::host_canvas_geometry::COMPOSER_CARD_W;
     let height = de_editor_ui::widgets::AIChatPlaceholder::from_editor(host.editor_state())
         .composer_only_height(width);
-    assert_eq!(card.origin.x, 12.0, "canvas is full-width again");
+    assert!(
+        ((card.origin.x + card.size.x / 2.0) - W / 2.0).abs() < 1.0,
+        "the composer pill is centred at the floor (#86)"
+    );
     assert_eq!(card.origin.y + card.size.y, H - 12.0);
     assert_eq!(card.size, Point2D::new(width, height));
 

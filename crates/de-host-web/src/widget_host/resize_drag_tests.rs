@@ -15,6 +15,8 @@ fn seed(host: &mut WidgetHost) {
     .expect("fixture JSON parses")
     .value;
     host.editor_state = de_editor_core::EditorState::from_document(doc);
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.tool = Tool::Select;
     host.editor_state.set_single_selection(NodeId::new("box"));
     host.editor_state_dirty = true;
@@ -33,6 +35,8 @@ fn seed_container(host: &mut WidgetHost) {
     .expect("container fixture JSON parses")
     .value;
     host.editor_state = de_editor_core::EditorState::from_document(doc);
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.tool = Tool::Select;
     host.editor_state.set_single_selection(NodeId::new("box"));
     host.editor_state_dirty = true;
