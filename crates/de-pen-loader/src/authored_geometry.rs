@@ -51,6 +51,9 @@ fn size_of(node: &PenNode) -> (f32, f32) {
         PenNode::IconFont(n) => numeric_size(&n.width, &n.height),
         PenNode::Line(_) => (f32::NAN, f32::NAN),
         PenNode::Ref(_) => (0.0, 0.0),
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => {
+            numeric_size(&n.width, &n.height)
+        }
     }
 }
 
@@ -99,5 +102,6 @@ fn base_of(node: &PenNode) -> &PenNodeBase {
         PenNode::Image(n) => &n.base,
         PenNode::IconFont(n) => &n.base,
         PenNode::Ref(n) => &n.base,
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
     }
 }

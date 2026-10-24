@@ -21,9 +21,8 @@ use std::fmt::Write as _;
 
 use super::css;
 
-/// Painter default when a text node authored no size (mirrors
-/// `canvas_viewport_text.rs`).
-const DEFAULT_FONT_SIZE: f32 = 13.0;
+/// Painter default when a text node authored no size.
+const DEFAULT_FONT_SIZE: f32 = de_editor_core::text_defaults::FONT_SIZE;
 
 /// Painter default text colour for a fill-less text node.
 const DEFAULT_FILL: Color = Color {

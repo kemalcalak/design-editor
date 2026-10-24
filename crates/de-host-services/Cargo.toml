@@ -85,6 +85,17 @@ async-trait = "0.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
 base64 = "0.22"
+# MCP `generate` image transforms (#11): decode sources / encode cutouts
+# (same codec set the image-enrich ladder ships).
+image = { version = "0.25", default-features = false, features = [
+  "png",
+  "jpeg",
+  "webp",
+] }
+# Local, network-free bitmap tracing for `generate type:"vectorize-image"`.
+# MIT OR Apache-2.0; no I/O, no image decoding of its own. Pinned exactly:
+# the 1.0 line is still in alpha.
+vtracer = "=1.0.0-alpha.4"
 getrandom = "0.3"
 tracing = { workspace = true }
 signal-hook = "0.3"

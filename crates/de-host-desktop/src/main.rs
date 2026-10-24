@@ -721,6 +721,10 @@ mod settings_proof_sheet_tests;
 #[path = "preview_batch_proof_tests.rs"]
 mod preview_batch_proof_tests;
 
+#[cfg(test)]
+#[path = "note_proof_sheet_tests.rs"]
+mod note_proof_sheet_tests;
+
 // Serializes tests that touch the process-global `agent_indicators`
 // registry against tests that assert an exact animation deadline. The
 // registry is shared across every test in this binary running in

@@ -166,18 +166,11 @@ impl NativeBackend {
             })
     }
 
-    /// Render every shaped run in the layout via cached typefaces +
-    /// `Canvas::draw_str` (Step 4 perf fix — see comment on the
-    /// `typeface` / `cjk_typeface` fields).
-    ///
-    /// Two fast paths + one fallback:
-    ///   - run is ASCII-only → cached Roboto + draw_str
-    ///   - run contains non-ASCII → cached system CJK typeface +
-    ///     draw_str (PingFang / Noto CJK / etc.). PingFang covers
-    ///     Latin too, so mixed CJK + Latin runs render correctly.
-    ///   - the system has no CJK font (rare; Linux without Noto)
-    ///     → fall back to jian-skia's textlayout path so glyphs
-    ///     don't drop. Still slow on that branch, but functional.
+    /// Render every run in the layout as HarfBuzz-shaped glyph blobs from
+    /// the resolver's cache (`FontResolver::shape_run`): one blob per
+    /// typeface segment (named family, then per-codepoint fallback such as
+    /// a CJK system face), kerned word by word. Complex scripts go to the
+    /// Paragraph shaper instead.
     ///
     /// `layout.italic()` resolves a slanted face per codepoint; when
     /// the system serves no italic variant the glyphs are skewed
@@ -185,7 +178,7 @@ impl NativeBackend {
     #[tracing::instrument(skip(self, canvas, layout))]
     pub fn draw_text(&mut self, canvas: &skia_safe::Canvas, layout: &TextLayout, origin: Point2D) {
         // Serialize the whole text-run paint — typeface resolution plus glyph
-        // rasterization via `draw_str`, both DirectWrite-backed on Windows —
+        // rasterization, both DirectWrite-backed on Windows —
         // with every other font user, so a concurrent design-worker layout
         // measure can't race skia's Windows font backend. Reentrant, so this
         // is a no-op re-lock when the caller already holds it.
@@ -195,7 +188,7 @@ impl NativeBackend {
                 let jc = run.color;
                 if needs_complex_shaping(run.content.as_str()) {
                     // Arabic and friends need bidi reordering plus contextual
-                    // joining, neither of which `draw_str` performs. Hand the
+                    // joining, which the word shaper does not do. Hand the
                     // whole run to the cached Paragraph shaper; segmentation
                     // would defeat shaping anyway, since joining is decided
                     // across the run, not per typeface span.
@@ -216,15 +209,16 @@ impl NativeBackend {
                     );
                     continue;
                 }
-                let segments = self.font_resolver.segment_text(
+                // Shaped (kerned) glyph runs from the resolver, the same
+                // advances `measure_text_family_styled` reports, so wrapped
+                // lines paint at the widths they were broken at (#197).
+                let shaped = self.font_resolver.shape_run(
                     run.content.as_str(),
+                    run.font_size,
                     Some(&run.font_family),
                     run.font_weight,
                     italic,
                 );
-                if segments.is_empty() {
-                    continue;
-                }
                 let mut paint = skia_safe::Paint::new(
                     skia_safe::Color4f::new(
                         f32::from(jc.r()) / 255.0,
@@ -235,19 +229,16 @@ impl NativeBackend {
                     None,
                 );
                 paint.set_anti_alias(true);
-                // Synthetic bold for typefaces the system serves at one
-                // weight only (notably the bundled Roboto-Regular for
-                // ASCII at weight ≥600). Stroke width scales with size
-                // so 28pt headline gets the same visual weight relative
-                // to its glyph as 13pt body text.
+                // Synthetic bold for faces the system serves at one weight
+                // only (notably the bundled Roboto-Regular at weight >=600).
+                // Stroke width scales with size so a 28pt headline gets the
+                // same visual weight relative to its glyph as 13pt body text.
                 let want_bold = run.font_weight >= 600;
-                let mut x = origin.x + run.origin.x;
-                let y = origin.y + run.origin.y;
-                for segment in segments {
-                    let mut font = skia_safe::Font::new(&segment.typeface, run.font_size);
-                    if segment.synthetic_italic {
-                        font.set_skew_x(jian_skia::SYNTHETIC_ITALIC_SKEW);
-                    }
+                let at = (origin.x + run.origin.x, origin.y + run.origin.y);
+                for segment in &shaped.segments {
+                    let Some(blob) = &segment.blob else {
+                        continue;
+                    };
                     if want_bold && segment.synthetic_bold {
                         paint.set_style(skia_safe::PaintStyle::StrokeAndFill);
                         paint.set_stroke_width(run.font_size * 0.06);
@@ -255,12 +246,7 @@ impl NativeBackend {
                         paint.set_style(skia_safe::PaintStyle::Fill);
                         paint.set_stroke_width(0.0);
                     }
-                    canvas.draw_str(&segment.text, (x, y), &font, &paint);
-                    let (mut advance, _) = font.measure_str(&segment.text, None);
-                    if segment.synthetic_bold {
-                        advance *= jian_skia::SYNTHETIC_BOLD_WIDTH_FACTOR;
-                    }
-                    x += advance;
+                    canvas.draw_text_blob(blob, at, &paint);
                 }
             }
         });

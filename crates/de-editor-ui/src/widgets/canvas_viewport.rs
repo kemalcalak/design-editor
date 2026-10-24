@@ -300,27 +300,33 @@ impl<'a> Widget for CanvasViewport<'a> {
                     .draw_text(&label, Point2D::new(ghost.origin.x, ghost.origin.y - 6.0));
             }
             // In-progress frames (#16) show their sweep on the canvas only.
+            let dark = {
+                let bg = self.theme.background;
+                0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b < 0.5
+            };
             let child_hits = super::canvas_placeholder::with_overlay(|| {
-                super::canvas_viewport_paint::paint_scene_nodes_with_options_hiding(
-                    cx,
-                    &page.children,
-                    viewport_origin,
-                    viewport.zoom,
-                    edit_caret.clone(),
-                    cull,
-                    reveal_schedule,
-                    hovered_lookup,
-                    selected_lookup,
-                    self.pen_in_progress.as_deref(),
-                    hidden_drag_node,
-                    self.now_ms,
-                    generation_sets.as_ref().map(|sets| &sets.scan),
-                    generation_sets
-                        .as_ref()
-                        .map(|_| super::canvas_generation_scan::SKELETON_BLUE),
-                    generation_sets.as_ref().map(|sets| &sets.queued),
-                    self.fast_interaction,
-                )
+                super::canvas_annotation::with_annotations(dark, || {
+                    super::canvas_viewport_paint::paint_scene_nodes_with_options_hiding(
+                        cx,
+                        &page.children,
+                        viewport_origin,
+                        viewport.zoom,
+                        edit_caret.clone(),
+                        cull,
+                        reveal_schedule,
+                        hovered_lookup,
+                        selected_lookup,
+                        self.pen_in_progress.as_deref(),
+                        hidden_drag_node,
+                        self.now_ms,
+                        generation_sets.as_ref().map(|sets| &sets.scan),
+                        generation_sets
+                            .as_ref()
+                            .map(|_| super::canvas_generation_scan::SKELETON_BLUE),
+                        generation_sets.as_ref().map(|sets| &sets.queued),
+                        self.fast_interaction,
+                    )
+                })
             });
             paint_hits.merge_missing(child_hits);
             if let Some(overlay) = self.node_drag_overlay.as_ref() {
@@ -332,18 +338,20 @@ impl<'a> Widget for CanvasViewport<'a> {
                         overlay.target_origin_doc.x - current.origin.x,
                         overlay.target_origin_doc.y - current.origin.y,
                     );
-                    let _ = super::canvas_viewport_paint::paint_node_with_options(
-                        cx,
-                        &floating,
-                        viewport_origin,
-                        viewport.zoom,
-                        None,
-                        cull,
-                        reveal_schedule,
-                        None,
-                        None,
-                        None,
-                    );
+                    super::canvas_annotation::with_annotations(dark, || {
+                        let _ = super::canvas_viewport_paint::paint_node_with_options(
+                            cx,
+                            &floating,
+                            viewport_origin,
+                            viewport.zoom,
+                            None,
+                            cull,
+                            reveal_schedule,
+                            None,
+                            None,
+                            None,
+                        );
+                    });
                 }
             }
             if let Some(indicators) = indicators.as_ref() {

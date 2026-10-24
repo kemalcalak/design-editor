@@ -712,6 +712,13 @@ pub fn apply_property_action(
             let _ = state.set_selected_widget_checked(*new_value);
             Handled
         }
+        A::SetAnnotationKind(kind) => {
+            let before = state.snapshot_for_history();
+            if state.set_selected_annotation_kind(*kind) {
+                state.history_push_past(before);
+            }
+            Handled
+        }
         A::PickFillImage => {
             // Queue the file picker — each host drains this flag once
             // the event handler released the host borrow and writes the

@@ -20,6 +20,7 @@ pub mod agent_settings_button_state;
 pub mod agent_settings_connection;
 pub mod align;
 pub mod align_guides;
+mod annotation_edit;
 pub mod blank_starter;
 pub mod bridge_protocol;
 pub mod button_press_state;
@@ -181,6 +182,7 @@ pub fn svg_path_data_bounds(d: &str) -> Option<(f32, f32, f32, f32)> {
     ))
 }
 pub mod chrome_button_state;
+pub mod text_defaults;
 pub mod text_edit;
 pub mod text_input_focus;
 pub mod text_script;

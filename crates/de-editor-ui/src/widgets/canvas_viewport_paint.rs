@@ -22,6 +22,7 @@
 use crate::layout_scene::SceneNode;
 use crate::layout_scene::{Effect, NodeKind};
 use crate::polygon_geometry::polygon_node_points;
+use crate::widgets::canvas_annotation as annotation;
 use crate::widgets::canvas_viewport_fill_layers::{
     fill_layer_fallback_color, paint_clipped_fill_layers_with, paint_clipped_shape_rich_fill_layer,
     paint_fill_layers, paint_fill_layers_then_stroke,
@@ -509,6 +510,9 @@ fn paint_node_body<'a>(
                 world_rect,
                 node.fill,
             )
+        }
+        NodeKind::Other(tag) if annotation::is_annotation_tag(tag) => {
+            annotation::paint(cx, node, world_rect, viewport_origin, zoom, edit_caret);
         }
         NodeKind::Group | NodeKind::Other(_) => {
             // `clipContent` is container-level in the canonical schema

@@ -775,3 +775,23 @@ fn css_variables_emit_dark_class_block() {
     let dark_block = css.split(".dark").nth(1).expect(".dark block");
     assert!(dark_block.contains("--background: #0f172a;"), "css: {css}");
 }
+
+#[test]
+fn canvas_only_notes_stay_out_of_generated_code() {
+    let note: PenNode = serde_json::from_str(
+        r#"{"type":"note","id":"n11","x":0,"y":40,"width":200,"height":120,"content":"Ask legal"}"#,
+    )
+    .unwrap();
+    let doc = doc_with_nodes(vec![text("n10", 0.0, 0.0, 100.0, 24.0, "Hello"), note]);
+    let html = Html.generate(&doc);
+    assert!(html.contains("Hello"));
+    assert!(!html.contains("Ask legal"), "html: {html}");
+    let json = r#"[{"type":"frame","id":"f","children":[{"type":"prompt","id":"p"},{"type":"text","id":"t","content":"x"}]}]"#;
+    let stripped = strip_canvas_only_json(json);
+    assert!(!stripped.contains("\"prompt\""));
+    assert!(stripped.contains("\"t\""));
+    assert_eq!(
+        strip_canvas_only_json(r#"{"type":"context","id":"c"}"#),
+        "[]"
+    );
+}

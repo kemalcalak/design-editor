@@ -207,6 +207,7 @@ fn node_id(node: &PenNode) -> &str {
         PenNode::Image(n) => &n.base.id,
         PenNode::IconFont(n) => &n.base.id,
         PenNode::Ref(n) => &n.base.id,
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base.id,
     }
 }
 
@@ -233,35 +234,14 @@ fn node_name(node: &PenNode) -> Option<&str> {
         PenNode::Image(n) => &n.base,
         PenNode::IconFont(n) => &n.base,
         PenNode::Ref(n) => &n.base,
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
     };
     base.name.as_deref()
 }
 
 /// node_type_name returns the JSON tag string (same as TS `node.type`).
 fn node_type_name(node: &PenNode) -> &'static str {
-    match node {
-        PenNode::Frame(_) => "frame",
-        PenNode::Group(_) => "group",
-        PenNode::Rectangle(_) => "rectangle",
-        PenNode::Ellipse(_) => "ellipse",
-        PenNode::Line(_) => "line",
-        PenNode::Polygon(_) => "polygon",
-        PenNode::Path(_) => "path",
-        PenNode::Text(_) => "text",
-        PenNode::TextInput(_) => "text_input",
-        PenNode::TextArea(_) => "text_area",
-        PenNode::Select(_) => "select",
-        PenNode::Switch(_) => "switch",
-        PenNode::Checkbox(_) => "checkbox",
-        PenNode::Slider(_) => "slider",
-        PenNode::RadioGroup(_) => "radio_group",
-        PenNode::NumberInput(_) => "number_input",
-        PenNode::Progress(_) => "progress",
-        PenNode::Tabs(_) => "tabs",
-        PenNode::Image(_) => "image",
-        PenNode::IconFont(_) => "icon_font",
-        PenNode::Ref(_) => "ref",
-    }
+    node.type_tag()
 }
 
 fn node_width(node: &PenNode) -> Option<&SizingBehavior> {
@@ -383,6 +363,7 @@ fn node_opacity(node: &PenNode) -> Option<f64> {
         PenNode::Image(n) => &n.base,
         PenNode::IconFont(n) => &n.base,
         PenNode::Ref(n) => &n.base,
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
     };
     match &base.opacity {
         Some(NumberOrExpression::Number(v)) => Some(*v),

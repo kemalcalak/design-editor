@@ -67,6 +67,7 @@ impl WidgetHost {
             "p" => de_editor_core::Tool::Pen,
             "y" => de_editor_core::Tool::Polygon,
             "h" => de_editor_core::Tool::Hand,
+            "n" => de_editor_core::Tool::Note,
             _ => return false,
         };
         self.apply_set_tool(tool);

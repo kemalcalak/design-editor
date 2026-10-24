@@ -127,6 +127,7 @@ macro_rules! base_arms {
             PenNode::Progress(n) => &n.base,
             PenNode::Tabs(n) => &n.base,
             PenNode::Ref(n) => &n.base,
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
         }
     };
 }
@@ -155,6 +156,7 @@ macro_rules! events_arms {
             PenNode::Progress(n) => n.events.as_ref(),
             PenNode::Tabs(n) => n.events.as_ref(),
             PenNode::Ref(n) => n.events.as_ref(),
+            PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
         }
     };
 }
@@ -183,6 +185,7 @@ macro_rules! base_mut_arms {
             PenNode::Progress(n) => &mut n.base,
             PenNode::Tabs(n) => &mut n.base,
             PenNode::Ref(n) => &mut n.base,
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &mut n.base,
         }
     };
 }
@@ -287,6 +290,7 @@ impl PenNodeExt for PenNode {
             PenNode::NumberInput(n) => sizing_px(&n.width),
             PenNode::Progress(n) => sizing_px(&n.width),
             PenNode::Tabs(n) => sizing_px(&n.width),
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => sizing_px(&n.width),
             PenNode::Line(_) | PenNode::Ref(_) => None,
         }
     }
@@ -312,6 +316,7 @@ impl PenNodeExt for PenNode {
             PenNode::NumberInput(n) => sizing_px(&n.height),
             PenNode::Progress(n) => sizing_px(&n.height),
             PenNode::Tabs(n) => sizing_px(&n.height),
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => sizing_px(&n.height),
             PenNode::Line(_) | PenNode::Ref(_) => None,
         }
     }
@@ -338,6 +343,7 @@ impl PenNodeExt for PenNode {
             PenNode::NumberInput(n) => n.width = Some(v),
             PenNode::Progress(n) => n.width = Some(v),
             PenNode::Tabs(n) => n.width = Some(v),
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.width = Some(v),
             PenNode::Line(_) | PenNode::Ref(_) => {}
         }
     }
@@ -374,6 +380,7 @@ impl PenNodeExt for PenNode {
             PenNode::NumberInput(n) => n.height = Some(v),
             PenNode::Progress(n) => n.height = Some(v),
             PenNode::Tabs(n) => n.height = Some(v),
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.height = Some(v),
             PenNode::Line(_) | PenNode::Ref(_) => {}
         }
     }

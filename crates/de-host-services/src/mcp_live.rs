@@ -211,6 +211,9 @@ impl McpLiveServer {
         let quit_flag = Arc::new(AtomicBool::new(false));
         let server_quit = Arc::clone(&quit_flag);
         let wake_ui: UiWake = Arc::new(wake_ui);
+        // A finished `generate` job wakes the UI thread so `pump` lands it
+        // right away instead of on the next unrelated redraw.
+        crate::generate_jobs::GenerateJobs::global().set_listener(Some(Arc::clone(&wake_ui)));
         let client_identity = Arc::new(Mutex::new(None));
         let server_identity = Arc::clone(&client_identity);
         thread::Builder::new()
@@ -366,7 +369,25 @@ impl McpLiveServer {
                 Err(TryRecvError::Disconnected) => break,
             }
         }
+        self.land_generations(state, &mut outcome);
         outcome
+    }
+
+    /// Land finished `generate` jobs on the live document (their listener
+    /// woke this thread). Each landing is an ordinary command, so it undoes
+    /// and saves like any other MCP write.
+    fn land_generations(&self, state: &mut EditorState, outcome: &mut McpPumpOutcome) {
+        let revision_before = state.document_revision();
+        let landed = crate::generate_jobs::land_into(
+            crate::generate_jobs::GenerateJobs::global(),
+            state,
+            |state, command| state.apply(command),
+        );
+        if landed {
+            outcome.repaint = true;
+            outcome.layout_dirty = true;
+            outcome.document_edited |= state.document_revision() != revision_before;
+        }
     }
 
     /// Take the next extension design-analysis request for asynchronous

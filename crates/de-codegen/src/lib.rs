@@ -151,10 +151,43 @@ pub(crate) fn root_nodes(doc: &PenDocument) -> &[PenNode] {
     }
 }
 
-/// True when the node is explicitly hidden (`visible == false`).
-/// A missing `visible` flag means shown.
+/// True when the generators skip the node: explicitly hidden (`visible ==
+/// false`; a missing flag means shown) or canvas-only, such as a note (#12).
 pub(crate) fn node_hidden(node: &PenNode) -> bool {
-    node.base().visible == Some(false)
+    node.base().visible == Some(false) || node.is_canvas_only()
+}
+
+/// `nodes_json` without its canvas-only nodes (note / context / prompt,
+/// #12), at any depth. Unparsable input is returned unchanged.
+pub fn strip_canvas_only_json(nodes_json: &str) -> String {
+    let Ok(mut value) = serde_json::from_str::<serde_json::Value>(nodes_json) else {
+        return nodes_json.to_string();
+    };
+    if is_canvas_only_value(&value) {
+        return "[]".to_string();
+    }
+    strip_canvas_only_value(&mut value);
+    value.to_string()
+}
+
+/// Whether a node's JSON is a canvas-only kind (its `type` tag).
+pub fn is_canvas_only_value(value: &serde_json::Value) -> bool {
+    value
+        .get("type")
+        .and_then(serde_json::Value::as_str)
+        .is_some_and(|tag| jian_ops_schema::node::AnnotationKind::from_tag(tag).is_some())
+}
+
+/// Drop canvas-only nodes from every array under `value`, at any depth.
+pub fn strip_canvas_only_value(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Array(items) => {
+            items.retain(|item| !is_canvas_only_value(item));
+            items.iter_mut().for_each(strip_canvas_only_value);
+        }
+        serde_json::Value::Object(map) => map.values_mut().for_each(strip_canvas_only_value),
+        _ => {}
+    }
 }
 
 /// Document-space origin of the node (`base.x` / `base.y`, 0 default).
@@ -272,7 +305,12 @@ pub(crate) fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         PenNode::NumberInput(n) => n.fill.as_ref(),
         PenNode::Progress(n) => n.fill.as_ref(),
         PenNode::Tabs(n) => n.fill.as_ref(),
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_)
+        | PenNode::Image(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     }
 }
 
@@ -324,7 +362,12 @@ pub(crate) fn node_stroke(node: &PenNode) -> Option<&jian_ops_schema::style::Pen
         PenNode::NumberInput(n) => n.stroke.as_ref(),
         PenNode::Progress(n) => n.stroke.as_ref(),
         PenNode::Tabs(n) => n.stroke.as_ref(),
-        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Text(_)
+        | PenNode::Image(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     }
 }
 

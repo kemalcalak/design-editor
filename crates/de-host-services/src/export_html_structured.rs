@@ -160,7 +160,7 @@ struct Emitter {
 
 impl Emitter {
     fn emit(&mut self, node: &SceneNode) -> Result<(), ExportError> {
-        if node.hidden {
+        if node.hidden || de_editor_ui::canvas_only::is_canvas_only(node) {
             return Ok(());
         }
         if let Some(reason) = unexpressible(node) {

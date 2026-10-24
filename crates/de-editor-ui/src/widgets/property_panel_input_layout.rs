@@ -149,6 +149,15 @@ pub fn editable_input_rects(
             usable_w,
         );
     }
+    if let Some(kind) = visible.annotation {
+        crate::widgets::property_panel_annotation::push_annotation_input_rects(
+            &mut rects,
+            kind,
+            x0,
+            tops.annotation,
+            usable_w,
+        );
+    }
     if visible.video {
         crate::widgets::property_panel_video::push_video_input_rects(&mut rects, x0, tops.video, w);
     }

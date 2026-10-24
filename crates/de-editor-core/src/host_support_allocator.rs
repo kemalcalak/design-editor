@@ -47,10 +47,15 @@ impl EditorState {
             Tool::Slider => ("slider", "Slider"),
             Tool::Progress => ("progress", "Progress"),
             Tool::Tabs => ("tabs", "Tabs"),
+            Tool::Note => ("note", "Note"),
             // The Pencil builds its path on release (`pencil.rs`), not here.
             Tool::Select | Tool::Hand | Tool::Pencil => return Ok(None),
         };
-        let (width, height) = match crate::widget_default_size(kind) {
+        let default_size = crate::widget_default_size(kind).or_else(|| {
+            tool.keeps_default_size()
+                .then(|| crate::default_leaf_node_size(kind))
+        });
+        let (width, height) = match default_size {
             Some(size) => size,
             None => (
                 init_w.round().max(0.0) as i32,

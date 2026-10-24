@@ -134,6 +134,7 @@ fn process_message_with_auto_finalize(
     if let Some(response) = file_path::process_message_for_file_path_arg(Some(path), line)? {
         return Ok(Some(response));
     }
+    generate_tool::land_generations_and_save(state, path);
     let explicit_finalize =
         de_mcp::parse_tool_call(line.trim()).is_some_and(|call| call.tool == "finalize_design");
     let mut applier_failed: Option<String> = None;
@@ -664,8 +665,12 @@ pub(crate) mod boolean_op_tool;
 use boolean_op_tool::boolean_op_snapshot;
 pub(crate) mod font_tools;
 use font_tools::load_fonts_snapshot;
+pub(crate) mod enrich_images_generate;
 pub(crate) mod enrich_images_tool;
 use enrich_images_tool::enrich_images_snapshot;
+pub(crate) mod generate_tool;
+mod generate_tool_transforms;
+use generate_tool::{generate_snapshot, generation_status_snapshot};
 pub(crate) mod design_agent_run_error;
 pub(crate) mod design_agent_run_tool;
 use design_agent_run_tool::run_design_agent_snapshot;
@@ -685,6 +690,10 @@ mod enrich_images_tool_tests;
 mod finalize_tool_advisory_tests;
 #[cfg(test)]
 mod finalize_tool_tests;
+#[cfg(test)]
+mod generate_tool_tests;
+#[cfg(test)]
+mod generate_tool_transforms_tests;
 #[cfg(test)]
 mod import_pen_dev_verbatim_tests;
 #[cfg(test)]

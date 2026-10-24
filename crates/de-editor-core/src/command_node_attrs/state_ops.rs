@@ -39,7 +39,7 @@ impl EditorState {
     }
 
     /// `SetNodeText` — set the plain-text content of a Text node.
-    /// Rejects non-Text kinds (parity with shell-core).
+    /// Notes, contexts and prompts take it too (#12); other kinds are rejected.
     pub(crate) fn cmd_set_node_text(&mut self, node_id: &NodeId, text: &str) -> bool {
         if !node_id.is_real() {
             return false;
@@ -50,6 +50,10 @@ impl EditorState {
         match node {
             PenNode::Text(t) => {
                 t.content = TextContent::Plain(text.to_string());
+                true
+            }
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => {
+                n.content = Some(TextContent::Plain(text.to_string()));
                 true
             }
             _ => false,
@@ -143,6 +147,10 @@ impl EditorState {
                 t.font_size = Some(font_size as f64);
                 true
             }
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => {
+                n.font_size = Some(font_size as f64);
+                true
+            }
             _ => false,
         }
     }
@@ -159,6 +167,10 @@ impl EditorState {
         match node {
             PenNode::Text(t) => {
                 t.font_weight = Some(FontWeight::Number(font_weight as u32));
+                true
+            }
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => {
+                n.font_weight = Some(FontWeight::Number(font_weight as u32));
                 true
             }
             _ => false,

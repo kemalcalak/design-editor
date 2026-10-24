@@ -1,11 +1,11 @@
 //! Complex-script detection + base-direction resolution.
 //!
-//! Both paint backends keep a fast path that maps codepoints straight to
-//! glyphs (`Canvas::draw_str` on native, `canvas.drawText` on CanvasKit).
-//! That path does no bidi reordering and no contextual glyph selection, so
-//! it renders Arabic in storage order with isolated letterforms. It is
-//! still the right path for Latin and CJK, which are 1:1 cmap lookups —
-//! routing those through a shaper costs frame time for no visual gain.
+//! Both paint backends keep a fast path that shapes text word by word,
+//! left to right, from a cache (kerned since #197). That path does no bidi
+//! reordering and no joining across a run, so it would render Arabic in
+//! storage order with isolated letterforms. It is still the right path for
+//! Latin and CJK — a full paragraph shaper per run costs frame time for no
+//! visual gain.
 //!
 //! These predicates are the fork between the two paths. They live here, in
 //! the wasm32-clean core, so the native and web hosts make the identical
@@ -80,7 +80,7 @@ fn is_strong_rtl(c: char) -> bool {
 }
 
 /// Whether `text` needs a real shaping engine (bidi reordering and/or
-/// contextual glyph selection) rather than the 1:1 cmap fast path.
+/// contextual glyph selection) rather than the word-shaped fast path.
 pub fn needs_complex_shaping(text: &str) -> bool {
     text.chars().any(|c| {
         let cp = c as u32;

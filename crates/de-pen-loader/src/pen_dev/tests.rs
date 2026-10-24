@@ -118,9 +118,9 @@ fn unsupported_nodes_are_removed_and_reported() {
         ]}
     ]));
     let roots = doc["children"].as_array().unwrap();
-    assert_eq!(roots.len(), 1);
-    assert_eq!(roots[0]["children"].as_array().unwrap().len(), 1);
-    assert_eq!(report.unsupported.get("note"), Some(&1));
+    assert_eq!(roots.len(), 2, "a note is kept (#12)");
+    assert_eq!(roots[1]["children"].as_array().unwrap().len(), 1);
+    assert_eq!(report.unsupported.get("note"), None);
     assert_eq!(report.unsupported.get("browser node"), Some(&1));
     assert_eq!(report.unsupported.get("script node"), Some(&1));
 }
@@ -276,7 +276,7 @@ fn instance_overrides_the_canonical_merge_cannot_express_are_reported() {
             "width-only": { "strokeWidth": 3 },
             "paint-only": { "stroke": "#f00" },
             "both": { "stroke": "#f00", "strokeWidth": 2 },
-            "gone": { "type": "note", "id": "n" }
+            "gone": { "type": "browser", "id": "n" }
         }}]),
     );
     let overrides = doc["children"][0]["descendants"].as_object().unwrap();
@@ -295,7 +295,7 @@ fn instance_overrides_the_canonical_merge_cannot_express_are_reported() {
         .keys()
         .any(|feature| feature.contains("replacement")));
     assert_eq!(report.unsupported.get("partial stroke override"), Some(&2));
-    assert_eq!(report.unsupported.get("note"), Some(&1));
+    assert_eq!(report.unsupported.get("browser node"), Some(&1));
 }
 
 #[test]
@@ -363,7 +363,7 @@ fn a_pen_dev_document_loads_into_the_typed_schema() {
         .pen_dev
         .clone()
         .expect("converted as pen.dev");
-    assert_eq!(report.unsupported.get("note"), Some(&1));
+    assert_eq!(report.unsupported.get("note"), None, "notes import (#12)");
     assert!(
         !loaded.compatibility.needs_schema_upgrade(),
         "never rewritten in place"
@@ -382,7 +382,8 @@ fn a_pen_dev_document_loads_into_the_typed_schema() {
     assert!(home.container.stroke.is_some());
     assert_eq!(home.container.effects.as_ref().map(Vec::len), Some(1));
     let kids = home.children.as_ref().expect("children");
-    assert_eq!(kids.len(), 2, "the note is dropped");
+    assert_eq!(kids.len(), 3, "the note is kept (#12)");
+    assert!(kids[2].annotation().is_some(), "and stays a note");
     let jian_ops_schema::node::PenNode::IconFont(icon) = &kids[0] else {
         panic!("the icon converts to icon_font");
     };
@@ -566,4 +567,43 @@ fn a_shadow_blend_mode_reaches_the_scene() {
         Some(jian_ops_schema::style::BlendMode::Multiply),
         "round trip"
     );
+}
+
+#[test]
+fn notes_context_and_prompts_import_as_annotations() {
+    use jian_ops_schema::node::{AnnotationKind, TextAlign};
+    let src = json!({ "version": "2.21", "children": [
+        { "type": "note", "id": "n", "x": 10, "y": 20, "width": 240, "height": 160,
+          "content": "Open questions", "fontSize": 18, "textAlign": "center" },
+        { "type": "context", "id": "c", "width": 300, "height": 120, "content": "Brand voice" },
+        { "type": "prompt", "id": "p", "width": 280, "height": 140,
+          "content": "Write the hero copy", "model": "claude-opus" }
+    ]})
+    .to_string();
+    let loaded = load_canonical_with_assets(&src, &no_assets).expect("loads");
+    let report = loaded.compatibility.pen_dev.clone().expect("pen.dev");
+    assert!(report.unsupported.is_empty(), "{:?}", report.unsupported);
+    let kids = &loaded.loaded.value.children;
+    let found: Vec<_> = kids
+        .iter()
+        .map(|node| {
+            let (kind, body) = node.annotation().expect("annotation");
+            (kind, body.plain_content(), body.model.clone())
+        })
+        .collect();
+    assert!(found.contains(&(AnnotationKind::Note, "Open questions".into(), None)));
+    assert!(found.contains(&(AnnotationKind::Context, "Brand voice".into(), None)));
+    assert!(found.contains(&(
+        AnnotationKind::Prompt,
+        "Write the hero copy".into(),
+        Some("claude-opus".into())
+    )));
+    let note = kids
+        .iter()
+        .find(|n| n.annotation().is_some_and(|(_, b)| b.base.id == "n"))
+        .unwrap();
+    let (_, body) = note.annotation().unwrap();
+    assert_eq!(body.font_size, Some(18.0));
+    assert_eq!(body.text_align, Some(TextAlign::Center));
+    assert_eq!(body.base.x, Some(10.0));
 }

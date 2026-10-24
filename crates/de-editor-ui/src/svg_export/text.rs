@@ -20,7 +20,7 @@ use crate::{Color, ImageBlendMode, Rect};
 use std::fmt::Write as _;
 use std::sync::Arc;
 
-const TEXT_DEFAULT_FONT_SIZE: f32 = 13.0;
+const TEXT_DEFAULT_FONT_SIZE: f32 = de_editor_core::text_defaults::FONT_SIZE;
 const TEXT_DEFAULT_FILL: Color = Color {
     r: 0.08,
     g: 0.08,
