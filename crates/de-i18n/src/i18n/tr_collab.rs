@@ -343,6 +343,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.close" => "Kapat",
         "shader.apply" => "Uygula",
         "property.resetOverride" => "Geçersiz kılmayı sıfırla",
+        "componentBrowser.libraries" => "Kütüphaneler",
+        "componentBrowser.libraryNotLoaded" => "Yüklenmedi",
+        "componentBrowser.libraryMissing" => "Bulunamadı",
+        "componentBrowser.libraryInvalid" => "Okunamıyor",
+        "componentBrowser.linkLibrary" => "Kütüphane dosyası bağla",
+        "componentBrowser.libraryNeedsDesktop" => "Kütüphane dosyası bağlamak için masaüstü uygulaması gerekir",
         _ => return None,
     })
 }

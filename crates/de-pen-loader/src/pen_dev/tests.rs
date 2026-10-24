@@ -67,7 +67,7 @@ fn top_level_keys_become_canonical() {
     let report = convert(&mut doc, &no_assets);
     assert_eq!(doc, json!({ "version": "1.0", "children": [] }));
     assert_eq!(report.source_version, "2.21");
-    assert_eq!(report.unsupported.get("imported .pen libraries"), Some(&1));
+    assert_eq!(report.imports.len(), 1);
 }
 
 #[test]

@@ -90,6 +90,7 @@ mod tests {
                 preserve_authored_geometry: true,
                 scenario: None,
                 pinned_style_guide: None,
+                libraries: Vec::new(),
             })
         );
     }

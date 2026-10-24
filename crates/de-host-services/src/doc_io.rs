@@ -77,7 +77,7 @@ pub fn save_to_path(state: &EditorState, path: &std::path::Path) -> Result<(), D
     let thumbnails = jian_ops_schema::image_thumbs::capture_snapshot();
     save_document_with_thumbnails_to_path(
         &state.doc,
-        de_pen_loader::EditorMeta::from_state(state),
+        de_pen_loader::EditorMeta::for_document(state, path),
         &thumbnails,
         path,
     )
@@ -97,7 +97,7 @@ pub fn save_single_file_to_path(
     canonical_save::write_serializable_document_with_thumbnails(
         &mut source,
         &state.doc,
-        de_pen_loader::EditorMeta::from_state(state),
+        de_pen_loader::EditorMeta::for_document(state, path),
         &thumbnails,
     )?;
     write_document_bytes(&source, path)
@@ -208,6 +208,8 @@ pub fn set_file_name_display(state: &mut EditorState, path: Option<&std::path::P
     state.editor_ui.file_name_display = path
         .and_then(|p| p.file_name())
         .map(|n| n.to_string_lossy().into_owned());
+    // Relative library links follow the document to its new folder.
+    de_pen_loader::rebase_library_links(state, path);
 }
 
 /// Carry app-level preferences from the previously open document onto a

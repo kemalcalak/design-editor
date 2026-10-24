@@ -343,6 +343,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.close" => "Close",
         "shader.apply" => "Apply",
         "property.resetOverride" => "Reset override",
+        "componentBrowser.libraries" => "Libraries",
+        "componentBrowser.libraryNotLoaded" => "Not loaded",
+        "componentBrowser.libraryMissing" => "Missing",
+        "componentBrowser.libraryInvalid" => "Can't read",
+        "componentBrowser.linkLibrary" => "Link library file",
+        "componentBrowser.libraryNeedsDesktop" => "Linking library files needs the desktop app",
         _ => return None,
     })
 }

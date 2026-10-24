@@ -52,6 +52,7 @@ impl DocumentSyncRequest<'_> {
             // survive the merge.
             scenario: embedded.scenario,
             pinned_style_guide: embedded.pinned_style_guide,
+            libraries: embedded.libraries,
         }
     }
 }

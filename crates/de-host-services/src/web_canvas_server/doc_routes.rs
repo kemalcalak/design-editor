@@ -89,7 +89,7 @@ pub(super) fn preserve_web_canvas_preferences(previous: &EditorState, next: &mut
 }
 
 pub(super) fn set_file_name_display(state: &mut EditorState, path: &std::path::Path) {
-    state.editor_ui.file_name_display = path.file_name().map(|n| n.to_string_lossy().into_owned());
+    crate::doc_io::set_file_name_display(state, Some(path));
 }
 
 /// Apply a renderer selection push (`POST /api/mcp/selection`) to the live

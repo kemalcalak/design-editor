@@ -4,19 +4,11 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use de_editor_core::EditorState;
-use serde::Serialize;
 
 use super::{McpTool, ToolErrorCode, ToolOutcome};
 
 pub struct SaveDocument {
     document_payload: Vec<u8>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct EditorMeta {
-    active_page_index: usize,
-    preserve_authored_geometry: bool,
 }
 
 impl McpTool for SaveDocument {
@@ -84,9 +76,13 @@ pub fn save_document_snapshot(state: &EditorState) -> SaveDocument {
         &state.doc,
         &thumbnails,
         "editorMeta",
-        &EditorMeta {
-            active_page_index: state.ui.active_page_index,
-            preserve_authored_geometry: state.editor_ui.preserve_authored_geometry,
+        // The same metadata desktop Save writes, so an MCP save keeps the
+        // scenario, pinned style guide and library links too.
+        // The target is only known at call time, so library links are
+        // written absolute; the next open makes them relative again.
+        &de_pen_loader::EditorMeta {
+            libraries: de_pen_loader::links_for_document(state, None),
+            ..de_pen_loader::EditorMeta::from_state(state)
         },
     )
     .is_err()
