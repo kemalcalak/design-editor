@@ -119,7 +119,7 @@ fn unsupported_nodes_are_removed_and_reported() {
 }
 
 #[test]
-fn mixed_fill_lists_resolve_images_and_drop_shaders() {
+fn mixed_fill_lists_resolve_images_and_drop_unreadable_shaders() {
     let mut doc = pen(json!([{ "type": "frame", "id": "f", "fill": [
         "#141519",
         { "type": "image", "enabled": true, "url": "images/a.png", "mode": "contain" },
@@ -141,7 +141,11 @@ fn mixed_fill_lists_resolve_images_and_drop_shaders() {
         report.missing_images,
         vec!["images/gone.png", "../outside.png"]
     );
-    assert_eq!(report.unsupported.get("shader fill"), Some(&1));
+    // No `flow.glsl` next to the document: dropped and reported.
+    assert_eq!(
+        report.unsupported.get("shader fill (GLSL file missing)"),
+        Some(&1)
+    );
 }
 
 #[test]
@@ -184,7 +188,10 @@ fn shadows_and_blurs_become_canonical_effects() {
     );
     assert_eq!(effects.len(), 2);
     assert!(doc["children"][0].get("effect").is_none());
-    assert_eq!(report.unsupported.get("shader effect"), Some(&1));
+    assert_eq!(
+        report.unsupported.get("shader effect (GLSL file missing)"),
+        Some(&1)
+    );
 }
 
 #[test]
