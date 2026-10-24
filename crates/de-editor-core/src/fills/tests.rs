@@ -249,3 +249,57 @@ fn a_shader_image_uniform_is_not_taken_as_the_colour_when_converting() {
         other => panic!("expected a solid fill, got {other:?}"),
     }
 }
+
+fn primary(node: &PenNode) -> Option<PenFill> {
+    node_fills(node).and_then(|f| f.first()).cloned()
+}
+
+#[test]
+fn angular_round_trips_keep_stops_and_centre() {
+    let mut node = rect_node();
+    seed_linear_gradient(&mut node);
+
+    assert!(set_primary_fill_type(&mut node, FillType::AngularGradient));
+    match primary(&node) {
+        Some(PenFill::AngularGradient(body)) => {
+            assert_eq!(body.stops.len(), 3);
+            assert_eq!(body.opacity, Some(0.75));
+            assert_eq!(body.rotation, None);
+        }
+        other => panic!("expected AngularGradient, got {other:?}"),
+    }
+
+    // The Angle row writes the angular start rotation.
+    assert!(set_primary_gradient_angle(&mut node, 30.0));
+    assert!(matches!(
+        primary(&node),
+        Some(PenFill::AngularGradient(body)) if body.rotation == Some(30.0)
+    ));
+
+    // Angular → Radial keeps the centre; radius has no counterpart.
+    if let Some(PenFill::AngularGradient(body)) =
+        node_fills_mut(&mut node).and_then(|f| f.first_mut())
+    {
+        body.cx = Some(0.25);
+    }
+    assert!(set_primary_fill_type(&mut node, FillType::RadialGradient));
+    match primary(&node) {
+        Some(PenFill::RadialGradient(body)) => {
+            assert_eq!(body.cx, Some(0.25));
+            assert_eq!(body.stops.len(), 3);
+        }
+        other => panic!("expected RadialGradient, got {other:?}"),
+    }
+}
+
+#[test]
+fn angular_to_solid_carries_the_first_stop() {
+    let mut node = rect_node();
+    seed_linear_gradient(&mut node);
+    assert!(set_primary_fill_type(&mut node, FillType::AngularGradient));
+    assert!(set_primary_fill_type(&mut node, FillType::Solid));
+    match primary(&node) {
+        Some(PenFill::Solid(body)) => assert_eq!(body.color, "#ff0000"),
+        other => panic!("expected Solid, got {other:?}"),
+    }
+}

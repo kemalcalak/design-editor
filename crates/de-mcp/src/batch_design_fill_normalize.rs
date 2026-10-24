@@ -23,9 +23,19 @@ fn normalize_fill_item(value: &mut serde_json::Value) {
     // Normalize fill variant type names (hyphenated / camelCase → snake_case) BEFORE
     // any variant-specific code. GLM-5.3 occasionally emits `"linear-gradient"` (CSS
     // spelling) or `"linearGradient"` (camelCase) instead of the schema's
-    // `"linear_gradient"`. Map all six variants uniformly; leave unrecognized
+    // `"linear_gradient"`. Map all seven variants uniformly; leave unrecognized
     // values untouched so the schema still rejects genuinely wrong types.
     normalize_fill_type_name(obj);
+    // A conic gradient written with CSS / linear habits names its start
+    // angle `angle` or `from`; the body only knows `rotation`, and serde
+    // would drop the others silently.
+    if obj.get("type").and_then(serde_json::Value::as_str) == Some("angular_gradient")
+        && !obj.contains_key("rotation")
+    {
+        if let Some(angle) = obj.remove("angle").or_else(|| obj.remove("from")) {
+            obj.insert("rotation".into(), angle);
+        }
+    }
     // Bare "gradient" is ambiguous and unmappable — the model's ONLY way to
     // communicate a linear gradient without a type name is an angle + stops.
     // Map it ONLY when it has the linear gradient shape, leaving lone bare
@@ -112,7 +122,8 @@ fn normalize_gradient_stops(obj: &mut serde_json::Map<String, serde_json::Value>
 
 /// Normalize fill variant type name from hyphenated or camelCase to snake_case.
 /// Maps `linear-gradient` / `linearGradient` → `linear_gradient` and siblings
-/// for all six variants: solid, linear_gradient, radial_gradient, mesh_gradient,
+/// for all seven variants: solid, linear_gradient, radial_gradient,
+/// angular_gradient (also from `conic` / `sweep` spellings), mesh_gradient,
 /// shader, image. Unrecognized values are left untouched for the schema to reject.
 fn normalize_fill_type_name(obj: &mut serde_json::Map<String, serde_json::Value>) {
     let Some(type_value) = obj.get("type") else {
@@ -126,6 +137,9 @@ fn normalize_fill_type_name(obj: &mut serde_json::Map<String, serde_json::Value>
         "solid" => Some("solid"),
         "linear_gradient" | "lineargradient" => Some("linear_gradient"),
         "radial_gradient" | "radialgradient" => Some("radial_gradient"),
+        // CSS calls it conic, Skia sweep, Figma angular.
+        "angular_gradient" | "angulargradient" | "conic_gradient" | "conicgradient"
+        | "sweep_gradient" | "sweepgradient" => Some("angular_gradient"),
         "mesh_gradient" | "meshgradient" => Some("mesh_gradient"),
         "shader" => Some("shader"),
         "image" => Some("image"),

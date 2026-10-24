@@ -629,6 +629,7 @@ fn set_fill_blend(fill: &mut PenFill, blend: Option<BlendMode>) {
         PenFill::Solid(body) => body.blend_mode = blend,
         PenFill::LinearGradient(body) => body.blend_mode = blend,
         PenFill::RadialGradient(body) => body.blend_mode = blend,
+        PenFill::AngularGradient(body) => body.blend_mode = blend,
         PenFill::MeshGradient(body) => body.blend_mode = blend,
         PenFill::Shader(body) => body.blend_mode = blend,
         PenFill::Image(body) => body.blend_mode = blend,

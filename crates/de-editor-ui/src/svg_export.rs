@@ -6,6 +6,7 @@ use crate::layout_scene::{
 use crate::{Color, Rect};
 use std::fmt::Write as _;
 
+mod angular;
 mod image_metadata;
 #[path = "svg_export_rect.rs"]
 mod rect;
@@ -223,6 +224,22 @@ fn emit_gradient(out: &mut String, id: &str, gradient: &SceneGradient, bounds: R
             );
             emit_stops(out, stops, *opacity);
             out.push_str("</radialGradient>");
+        }
+        SceneGradient::Angular {
+            cx,
+            cy,
+            rotation_deg,
+            opacity,
+            stops,
+        } => {
+            let spec = angular::AngularSpec {
+                cx: *cx,
+                cy: *cy,
+                rotation_deg: *rotation_deg,
+                opacity: *opacity,
+                stops,
+            };
+            angular::emit_angular_pattern(out, id, &spec, bounds);
         }
         SceneGradient::Mesh {
             colors, opacity, ..

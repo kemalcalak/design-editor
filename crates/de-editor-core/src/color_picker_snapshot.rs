@@ -80,6 +80,7 @@ pub(crate) fn gradient_stop_hex(
     match fills.first()? {
         PenFill::LinearGradient(b) => b.stops.get(index).map(|s| s.color.clone()),
         PenFill::RadialGradient(b) => b.stops.get(index).map(|s| s.color.clone()),
+        PenFill::AngularGradient(b) => b.stops.get(index).map(|s| s.color.clone()),
         PenFill::MeshGradient(b) => b.stops.get(index).map(|s| s.color.clone()),
         _ => None,
     }

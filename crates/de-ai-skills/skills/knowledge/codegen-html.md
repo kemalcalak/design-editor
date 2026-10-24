@@ -46,6 +46,7 @@ Generate semantic HTML5 markup with CSS classes defined in a `<style>` block. No
 - Text fill → `color: #hex` or `color: var(--name)`
 - Linear gradient → `background: linear-gradient(Ndeg, color1 0%, color2 100%)`
 - Radial gradient → `background: radial-gradient(circle, color1 0%, color2 100%)`
+- Angular gradient → `background: conic-gradient(from {rotation}deg at {cx}% {cy}%, color1 0%, color2 100%)` (rotation 0 = 12 o'clock, clockwise)
 
 ## Border & Stroke Mapping
 

@@ -566,7 +566,7 @@ impl NativeBackend {
 
     /// Draw `path` with `shader`, or degrade to a solid first-stop
     /// fill when skia rejected the (degenerate) gradient.
-    fn draw_path_with_gradient(
+    pub(super) fn draw_path_with_gradient(
         &self,
         canvas: &skia_safe::Canvas,
         path: &skia_safe::Path,
