@@ -78,15 +78,19 @@ fn pump_runs_loop_finalize_backstop_against_live_state() {
     let provider = Box::new(FinalizeLoopProvider {
         executor: std::sync::Arc::new(executor),
     });
-    let mut current = Some(ChatSession::start_with_tools(
-        provider,
-        ChatRequest {
-            user_message: "build a header".into(),
-            max_output_tokens: 64,
-            ..Default::default()
-        },
-        Some(tool_rx),
-    ));
+    let run_baseline = de_editor_core::write_scope::WriteBaseline::capture(host.editor_state());
+    let mut current = Some(
+        ChatSession::start_with_tools(
+            provider,
+            ChatRequest {
+                user_message: "build a header".into(),
+                max_output_tokens: 64,
+                ..Default::default()
+            },
+            Some(tool_rx),
+        )
+        .with_run_baseline(run_baseline),
+    );
 
     for _ in 0..2000 {
         pump(&mut host, &mut current, None, None, (1200.0, 800.0));

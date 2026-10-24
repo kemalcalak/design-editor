@@ -37,8 +37,10 @@ use de_ai::chat_provider::{
     ChatDelta, ChatProvider, ChatRequest, ChatToolExecutor, ChatToolResult, EffortLevel,
     FinalizeReport, StopReason, ThinkingMode, UnfilledScreensReport,
 };
+use de_editor_core::write_scope::WriteBaseline;
 use de_editor_core::{EditorCommand, EditorState, NodeId, PenNodeExt};
 use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
+use de_orchestrator::agent_run_finalize::{agent_run_screens, finalize_agent_run};
 
 use super::design_agent_run_error::DesignAgentRunError;
 use crate::chat_builtin_http::{ConfiguredBuiltinProvider, DESIGN_LOOP_MAX_OUTPUT_TOKENS};
@@ -64,14 +66,23 @@ pub(crate) struct HeadlessDesignExecutor {
     state: Arc<Mutex<EditorState>>,
     root_seed_guard: Mutex<RootSeedGuard>,
     finalize_report: Mutex<Option<FinalizeReport>>,
+    /// The page before the loop ran: finalize and the screen reports cover
+    /// only the roots the loop created (#116).
+    run_baseline: WriteBaseline,
 }
 
 impl HeadlessDesignExecutor {
     pub(crate) fn new(state: Arc<Mutex<EditorState>>, brief: &str) -> Self {
+        let run_baseline = WriteBaseline::capture(
+            &state
+                .lock()
+                .expect("EditorState mutex poisoned before the loop started"),
+        );
         Self {
             state,
             root_seed_guard: Mutex::new(RootSeedGuard::from_prompt(brief)),
             finalize_report: Mutex::new(None),
+            run_baseline,
         }
     }
 
@@ -123,19 +134,14 @@ impl ChatToolExecutor for HeadlessDesignExecutor {
             .state
             .lock()
             .expect("EditorState mutex poisoned before finalize");
-        let quality = de_orchestrator::apply_loop_finalize_counted(&mut state);
-        let unfilled =
-            de_orchestrator::unfilled_screens::finalize_and_mark_unfilled_screens(&mut state);
-        let committed = de_orchestrator::unfilled_screens::list_screen_candidates(&state)
-            .into_iter()
-            .map(|hit| hit.name)
-            .collect::<Vec<_>>();
+        let finalized = finalize_agent_run(&mut state, &self.run_baseline);
+        let committed = agent_run_screens(&state, &self.run_baseline).committed;
         let report = FinalizeReport {
             screens: UnfilledScreensReport {
                 committed,
-                unfilled,
+                unfilled: finalized.unfilled,
             },
-            quality: crate::quality_credential::quality_summary_from_repairs(&quality),
+            quality: crate::quality_credential::quality_summary_from_repairs(&finalized.quality),
         };
         *self
             .finalize_report
@@ -149,17 +155,10 @@ impl ChatToolExecutor for HeadlessDesignExecutor {
             .state
             .lock()
             .expect("EditorState mutex poisoned before check_unfilled_screens");
-        let unfilled = de_orchestrator::unfilled_screens::detect_unfilled_screens(&state)
-            .into_iter()
-            .map(|hit| hit.name)
-            .collect();
-        let committed = de_orchestrator::unfilled_screens::list_screen_candidates(&state)
-            .into_iter()
-            .map(|hit| hit.name)
-            .collect();
+        let screens = agent_run_screens(&state, &self.run_baseline);
         UnfilledScreensReport {
-            committed,
-            unfilled,
+            committed: screens.committed,
+            unfilled: screens.unfilled,
         }
     }
 }

@@ -18,6 +18,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use de_ai::chat_provider::{ChatToolDef, ChatToolResult};
 use de_editor_core::pen_node_ext::PenNodeExt;
+use de_editor_core::write_scope::WriteBaseline;
 use de_editor_core::EditorState;
 use de_mcp::ToolRegistry;
 use jian_ops_schema::node::base::NumberOrExpression;
@@ -74,8 +75,8 @@ const MAX_CONTRAST_ISSUES: usize = 64;
 
 /// Collect the exact detect-only diagnostics used after a design-agent batch.
 ///
-/// Deliberately excludes the two repair calls in the post-batch path
-/// (`remove_nested_duplicate_status_bars` and mobile-nav reflow), making this
+/// Deliberately excludes the repair calls in the post-batch path
+/// (duplicate status bars, icon paths and mobile-nav reflow), making this
 /// safe for read-only MCP credentials and repeated polling.
 pub fn collect_design_quality(state: &EditorState) -> DesignQualityDiagnostics {
     let geometry_issues = de_orchestrator::geometry_validation::geometry_diagnostics(state);
@@ -207,6 +208,7 @@ pub fn execute_design_tool_with_root_seed_guard(
     let root_ids_before =
         should_track_root_seed_candidate(state, name, indicator_epoch, root_seed_guard.as_deref())
             .then(|| collect_active_top_level_node_ids(state));
+    let batch_baseline = (name == "batch_design").then(|| WriteBaseline::capture(state));
     let registry = design_tool_registry(state, name);
     let (mut result, mutated) = execute_with_registry(state, name, args_json, registry);
     if mutated && !result.is_error {
@@ -225,10 +227,24 @@ pub fn execute_design_tool_with_root_seed_guard(
         // repairs them in-process, instead of piling defects up for the loop-end
         // finalize. Deterministic analogue of Pencil's per-batch
         // snapshot_layout feedback.
-        let dup_bars_removed = remove_nested_duplicate_status_bars(state);
-        let icon_path_report = de_editor_core::icon_path_normalize::normalize_icon_paths(
+        //
+        // The repairs touch only what this batch wrote, like a bare-MCP write
+        // (#107, #116): the nav reflow on roots it created or added nodes
+        // into, duplicate status bars and icon paths among the nodes it
+        // created or changed. A board someone made next to the agent's
+        // screens stays as authored. The scope is read after the root seed
+        // guard, so its seeded chrome counts as written by this batch.
+        let scope = batch_baseline
+            .map(|baseline| baseline.scope_after(state))
+            .unwrap_or_default();
+        let dup_bars_removed =
+            remove_duplicate_status_bars(state, &|id| scope.is_new_or_extended_root(id), &|id| {
+                scope.touched.contains(id)
+            });
+        let icon_path_report = de_editor_core::icon_path_normalize::normalize_icon_paths_for_ids(
             state,
             de_editor_ui::widgets::icons::lucide_name_for_path_d,
+            |id| scope.touched.contains(id),
         );
         if icon_path_report != Default::default() {
             eprintln!(
@@ -242,7 +258,10 @@ pub fn execute_design_tool_with_root_seed_guard(
         // whole root and places the nav exactly outside the clipped artboard.
         // The orchestrator owns the narrow structural proof and only grows the
         // numeric root when the shell's real content actually needs it.
-        let mobile_nav_reflowed = de_orchestrator::repair_mobile_trailing_nav_reflow(state);
+        let mobile_nav_reflowed =
+            de_orchestrator::repair_mobile_trailing_nav_reflow_for_roots(state, |id| {
+                scope.is_new_or_extended_root(id)
+            });
         let mut layout_issues = de_orchestrator::geometry_validation::geometry_diagnostics(state);
         let effective_theme = de_editor_core::variables_resolve::effective_theme(
             &state.doc,
@@ -594,3 +613,7 @@ mod continuation_tests;
 #[cfg(test)]
 #[path = "mobile_normalize_tests.rs"]
 mod mobile_normalize_tests;
+
+#[cfg(test)]
+#[path = "design_agent_tools_scope_tests.rs"]
+mod scope_tests;

@@ -384,7 +384,8 @@ pub struct ChatToolResult {
 /// thread — implementations may block until the host replies.
 /// Reserved pseudo-tool name a [`ChatToolExecutor`] forwards over its tool
 /// channel to ask the host to run the agentic-loop structural backstop
-/// (`de_orchestrator::apply_loop_finalize`) against the live `EditorState`.
+/// (`de_orchestrator::agent_run_finalize::finalize_agent_run`) over the
+/// roots the run created in the live `EditorState`.
 /// Never a real model-visible tool — the loop sends it itself at loop end via
 /// [`ChatToolExecutor::finalize`].
 pub const LOOP_FINALIZE_OP: &str = "__loop_finalize";
@@ -507,8 +508,8 @@ pub trait ChatToolExecutor: Send + Sync {
     ///
     /// The default is a no-op: only the host executor that owns the live
     /// `EditorState` (desktop `UiChatToolExecutor`) forwards this over its tool
-    /// channel so the host can call `de_orchestrator::apply_loop_finalize`
-    /// against the live document. Scripted / read-only test executors and any
+    /// channel so the host can call `de_orchestrator::agent_run_finalize`
+    /// on the live document. Scripted / read-only test executors and any
     /// non-design tool executor inherit the no-op and are unaffected.
     ///
     /// Returns the promise-delivery report AFTER finalize ran and any still-

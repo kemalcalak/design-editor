@@ -25,7 +25,9 @@ fn pump_defers_loop_finalize_until_registered_reveals_drain() {
         "batch_design",
         r#"{"operations":"root=I(null,{type:'frame',name:'Header',width:1200,height:64})"}"#,
     );
-    let mut current = Some(ChatSession::from_channels(delta_rx, Some(tool_rx)).into_design_loop());
+    let run_baseline = de_editor_core::write_scope::WriteBaseline::capture(host.editor_state());
+    let mut current =
+        Some(ChatSession::from_channels(delta_rx, Some(tool_rx)).into_design_loop(run_baseline));
 
     // Deliver the batch synchronously, then queue finalize only after its ack.
     // This matches UiChatToolExecutor's blocking request order without relying

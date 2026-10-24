@@ -280,7 +280,9 @@ fn design_loop_preserves_text_tool_text_order_within_one_poll() {
     tx.send(ChatDelta::TextDelta("after".into())).unwrap();
     drop(tx);
 
-    let mut session = ChatSession::from_channels(rx, None).into_design_loop();
+    let mut session = ChatSession::from_channels(rx, None).into_design_loop(
+        de_editor_core::write_scope::WriteBaseline::capture(&de_editor_core::EditorState::new()),
+    );
     let poll = session.poll();
     assert_eq!(poll.text, "beforeafter");
     assert_eq!(poll.tool_calls.len(), 1);

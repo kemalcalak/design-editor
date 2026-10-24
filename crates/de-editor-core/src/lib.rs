@@ -174,6 +174,7 @@ pub mod variables_resolve;
 pub mod viewport;
 pub mod walkers;
 pub mod web_sync;
+pub mod write_scope;
 
 #[cfg(test)]
 mod command_allocator_tests;

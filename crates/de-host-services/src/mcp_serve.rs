@@ -78,7 +78,7 @@ pub(crate) use preview_hook::saved_document_path;
 use sniff::{sniff_id_raw, sniff_method};
 #[cfg(test)]
 use write_repairs::writes_verbatim;
-pub(crate) use write_repairs::{run_write_repairs_after_apply, WriteBaseline, WriteScope};
+pub(crate) use write_repairs::{baseline_for_tool, run_write_repairs_after_apply, WriteScope};
 
 /// Unwrap an MCP `tools/call` reply to the inner tool-result JSON text,
 /// so tests assert on the flat result fields directly. Strips an HTTP
@@ -140,7 +140,7 @@ fn process_message_with_auto_finalize(
     // File-backed mode has no live canvas for any tool call to animate; the
     // tool name only decides whether the write lands verbatim.
     let response = process_message_with_applier(state, line, |tool_name, state, cmd| {
-        let baseline = WriteBaseline::for_tool(tool_name, state);
+        let baseline = baseline_for_tool(tool_name, state);
         // `EditorState::apply` runs the pre-validate-then-mutate
         // discipline; `false` means the command rejected and the
         // document was NOT changed.
