@@ -19,8 +19,8 @@ fn a_background_child_makes_a_backdrop_pass() {
     assert!(samples_background(
         "uniform shader background; half4 main(float2 p) { return background.eval(p); }"
     ));
-    // Declaring both still samples the backdrop (v1 binds one texture).
-    assert!(samples_background(
+    // Declaring both is an object pass that also samples the backdrop.
+    assert!(!samples_background(
         "uniform shader object; uniform shader background; half4 main(float2 p) { return background.eval(p); }"
     ));
 }

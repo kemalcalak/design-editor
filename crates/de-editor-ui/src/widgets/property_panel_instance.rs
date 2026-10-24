@@ -75,15 +75,15 @@ pub(crate) fn block_rects(
     let mut row_y = y + CREATE_COMPONENT_PAD_TOP;
     let step = CREATE_COMPONENT_BTN_H + CREATE_COMPONENT_ROW_GAP;
     match state {
-        ComponentButtonState::Create | ComponentButtonState::DetachComponent => {
-            InstanceBlockRects {
-                swap_trigger: None,
-                first_option: None,
-                option_count: 0,
-                go_to_component: None,
-                detach_instance: None,
-            }
-        }
+        ComponentButtonState::Create
+        | ComponentButtonState::DetachComponent
+        | ComponentButtonState::InstanceOverride => InstanceBlockRects {
+            swap_trigger: None,
+            first_option: None,
+            option_count: 0,
+            go_to_component: None,
+            detach_instance: None,
+        },
         ComponentButtonState::Instance {
             component_count,
             picker_open,
@@ -123,6 +123,9 @@ pub(crate) fn action_rects(
         ComponentButtonState::Create => Vec::new(),
         ComponentButtonState::DetachComponent => {
             vec![(PropertyPanelAction::DetachComponent, primary)]
+        }
+        ComponentButtonState::InstanceOverride => {
+            vec![(PropertyPanelAction::ResetInstanceOverride, primary)]
         }
         ComponentButtonState::Instance { .. } => {
             let rows = block_rects(x, y, width, state);
@@ -185,6 +188,16 @@ pub fn paint_component_block(
             labels.detach_component,
             Icon::Diamond,
             COMPONENT_ACCENT,
+            true,
+            None,
+        ),
+        ComponentButtonState::InstanceOverride => paint_button(
+            cx,
+            theme,
+            row_rect(x, y + CREATE_COMPONENT_PAD_TOP, width),
+            labels.reset_override,
+            Icon::Undo,
+            INSTANCE_ACCENT,
             true,
             None,
         ),

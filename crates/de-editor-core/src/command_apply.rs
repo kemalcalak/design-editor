@@ -41,12 +41,12 @@ mod boolean;
 mod clipboard;
 mod helpers;
 
-pub(crate) use helpers::command_marks_document_dirty;
 use helpers::{
     apply_authored_subtree_on_page, apply_import_svg_on_active_page,
-    apply_insert_node_on_active_page, apply_kit_component_on_page, command_page_index,
-    parse_align_action, parse_tool, parse_variable_kind,
+    apply_insert_node_on_active_page, apply_kit_component_on_page, parse_align_action, parse_tool,
+    parse_variable_kind,
 };
+pub(crate) use helpers::{command_marks_document_dirty, command_page_index};
 
 impl EditorState {
     /// Apply a command using the caller's document-wide id policy.
@@ -138,6 +138,7 @@ impl EditorState {
                 }
                 changed
             }
+            cmd @ EditorCommand::EditInstanceDescendant { .. } => self.cmd_instance_edit(cmd),
             EditorCommand::DeleteNode { node_id, page_id } => {
                 let Some(target_page_index) = command_page_index(self, page_id.as_deref()) else {
                     return Ok(false);

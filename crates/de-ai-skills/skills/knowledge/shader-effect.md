@@ -23,17 +23,20 @@ SHAPE (one effects entry):
 effects: [{ type: "shader", sksl: "<SkSL source>", uniforms: { name: value } }]
 ```
 
-- The program samples ONE texture, declared as an SkSL child:
-  `uniform shader object;` = the node's own rendering (fill, stroke,
-  children, shadows), or `uniform shader background;` = what is painted
-  behind the node, clipped to its shape (the node paints on top).
+- Textures are SkSL children: `uniform shader object;` = the node's own
+  rendering (fill, stroke, children, shadows; the output replaces it),
+  `uniform shader background;` = what is painted behind the node. With
+  only `background` the node paints on top of the output. Both together
+  work too (glass on a distorted node), as do image children and
+  `/** @sdf */ uniform shader edge;` (red = signed distance to the
+  content's edge in px, positive inside; green/blue = its direction).
 - Entrypoint EXACTLY `half4 main(float2 p)`; `p` is in node pixels
   (0..width, 0..height). `uniform float2 size;` is bound to the node size.
 - `uniforms` work like a shader fill's (number, `[a,b]` vector, `"#hex"`
   colour). `uniform float time;` / `uniform float2 mouse;` are bound by the
   canvas (exports: `time = 0`, `mouse` far outside the node); never put
-  `size`, `time` or `mouse` in `uniforms`. No images: any other
-  `uniform shader` child reads transparent.
+  `size`, `time` or `mouse` in `uniforms`. An image child takes its
+  source in `uniforms`, as in a shader fill.
 - Order: `background` passes run first (before the node paints), in list
   order; `object` passes then run in list order over the node. Output is
   cropped to the node box.

@@ -50,6 +50,7 @@ mod batch_page;
 mod batch_program;
 mod batch_program_error;
 mod batch_program_exec_ops;
+mod batch_program_instance;
 pub mod batch_program_objects;
 mod batch_program_parse;
 #[cfg(test)]
@@ -145,6 +146,16 @@ mod root_placement_tests;
 pub mod scalar_vars;
 #[cfg(test)]
 mod scalar_vars_tests;
+#[cfg(feature = "script")]
+pub mod script_execute;
+#[cfg(feature = "script")]
+mod script_execute_error;
+#[cfg(feature = "script")]
+mod script_execute_prelude;
+#[cfg(feature = "script")]
+mod script_execute_session;
+#[cfg(feature = "script")]
+mod script_execute_tree;
 #[cfg(feature = "script")]
 pub mod script_runner;
 pub mod selected_ops_tools;
@@ -369,13 +380,14 @@ pub enum ToolResponse {
         /// (the flat map) — so read tools match TS's arbitrary-JSON
         /// shapes byte-for-byte. `None` ⇒ use the flat-map encoding.
         json: Option<String>,
-        /// When `Some`, the serializer emits an MCP `ImageContent` block
+        /// Each entry becomes one MCP `ImageContent` block
         /// (`{"type":"image","data":"<base64>","mimeType":"..."}`) in the
         /// `content[]` array BEFORE any text block (from `json` or
-        /// `result`). Tools like `get_screenshot` use this so MCP clients
-        /// (Copilot, Claude Code, …) receive the image as multimodal
-        /// content instead of a base64 string buried in JSON text.
-        image: Option<Box<ImageContent>>,
+        /// `result`). Tools like `get_screenshot` (one image) and `execute`
+        /// (one per `TakeScreenshot` node) use this so MCP clients
+        /// (Copilot, Claude Code, …) receive the images as multimodal
+        /// content instead of base64 strings buried in JSON text.
+        images: Vec<ImageContent>,
     },
     Err {
         id: RequestId,
@@ -436,6 +448,15 @@ pub enum ToolOutcome {
         mime_type: String,
         metadata_json: Option<String>,
     },
+    /// A nested-JSON result with any number of images and an optional
+    /// command: `execute` returns its `Print` lines and created ids as
+    /// `json`, one image per `TakeScreenshot` node, and its writes as one
+    /// command (`None` for a read-only script).
+    OkJsonWithImages {
+        json: String,
+        images: Vec<ImageContent>,
+        command: Option<EditorCommand>,
+    },
     Err(ToolErrorCode, String),
 }
 
@@ -477,28 +498,28 @@ impl ToolRegistry {
                 result,
                 command: None,
                 json: None,
-                image: None,
+                images: Vec::new(),
             },
             ToolOutcome::OkWithCommand(result, command) => ToolResponse::Ok {
                 id: call.id,
                 result,
                 command: Some(command),
                 json: None,
-                image: None,
+                images: Vec::new(),
             },
             ToolOutcome::OkJson(json) => ToolResponse::Ok {
                 id: call.id,
                 result: BTreeMap::new(),
                 command: None,
                 json: Some(json),
-                image: None,
+                images: Vec::new(),
             },
             ToolOutcome::OkJsonWithCommand(json, command) => ToolResponse::Ok {
                 id: call.id,
                 result: BTreeMap::new(),
                 command: Some(command),
                 json: Some(json),
-                image: None,
+                images: Vec::new(),
             },
             ToolOutcome::OkImageContent {
                 image_base64,
@@ -509,10 +530,21 @@ impl ToolRegistry {
                 result: BTreeMap::new(),
                 command: None,
                 json: metadata_json,
-                image: Some(Box::new(ImageContent {
+                images: vec![ImageContent {
                     data: image_base64,
                     mime_type,
-                })),
+                }],
+            },
+            ToolOutcome::OkJsonWithImages {
+                json,
+                images,
+                command,
+            } => ToolResponse::Ok {
+                id: call.id,
+                result: BTreeMap::new(),
+                command,
+                json: Some(json),
+                images,
             },
             ToolOutcome::Err(code, message) => ToolResponse::Err {
                 id: call.id,

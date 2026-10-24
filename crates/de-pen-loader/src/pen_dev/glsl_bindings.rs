@@ -62,6 +62,8 @@ pub(super) struct Bindings {
     pub(super) tagged_docs: BTreeSet<usize>,
     /// `uniform shader` children declared so far.
     children: BTreeSet<String>,
+    /// Whether the prelude declares the `object` child itself.
+    declare_object: bool,
     time: bool,
     mouse: bool,
 }
@@ -70,7 +72,6 @@ impl Bindings {
     pub(super) fn declare(
         &mut self,
         decl: &UniformDecl,
-        stage: Stage,
         values: &Map<String, Value>,
     ) -> Result<(), GlslError> {
         let mut declared = Vec::new();
@@ -137,29 +138,27 @@ impl Bindings {
                         (Some(int_vector(n)), renamed.clone(), Some(Slot::Int(n)))
                     }
                     "sampler2D" => {
-                        if notes.sdf {
-                            return Err(texture_error("@sdf textures are not supported"));
-                        }
-                        let source = value
-                            .and_then(Value::as_str)
-                            .map(str::to_owned)
-                            .or_else(|| notes.default.clone())
-                            .ok_or_else(|| texture_error("texture without a source"))?;
-                        let texture = match source.as_str() {
-                            "pencil:object" => Texture::Object,
-                            "pencil:background" => Texture::Background,
-                            _ => Texture::Image(source),
+                        // `@sdf` needs no source: the canvas binds the
+                        // node's field (`shader_textures`, #165).
+                        let texture = if notes.sdf {
+                            Texture::Sdf
+                        } else {
+                            let source = value
+                                .and_then(Value::as_str)
+                                .map(str::to_owned)
+                                .or_else(|| notes.default.clone())
+                                .ok_or_else(|| texture_error("texture without a source"))?;
+                            match source.as_str() {
+                                "pencil:object" => Texture::Object,
+                                "pencil:background" => Texture::Background,
+                                _ => Texture::Image(source),
+                            }
                         };
-                        let child = match (&texture, stage) {
-                            (Texture::Object, Stage::Effect) => "object".to_owned(),
-                            (Texture::Background, Stage::Effect) => "background".to_owned(),
-                            (Texture::Image(_), Stage::Fill) => renamed.clone(),
-                            (Texture::Image(_), Stage::Effect) => {
-                                return Err(texture_error("image textures in a shader effect"))
-                            }
-                            (_, Stage::Fill) => {
-                                return Err(texture_error("pencil:object texture in a shader fill"))
-                            }
+                        // The same children in fills and effects.
+                        let child = match &texture {
+                            Texture::Object => "object".to_owned(),
+                            Texture::Background => "background".to_owned(),
+                            Texture::Sdf | Texture::Image(_) => renamed.clone(),
                         };
                         self.uses.insert(
                             name.clone(),
@@ -210,24 +209,11 @@ impl Bindings {
         Ok(())
     }
 
-    /// SkSL effects sample one texture: the node or its backdrop.
-    pub(super) fn check_textures(&self, stage: Stage) -> Result<(), GlslError> {
-        if stage == Stage::Fill {
-            return Ok(());
-        }
-        let children: BTreeSet<&str> = self
-            .users
-            .iter()
-            .filter(|user| matches!(user.slot, Slot::Texture(_)))
-            .map(|user| user.sksl_name.as_str())
-            .collect();
-        if children.len() > 1 {
-            return Err(GlslError::Texture {
-                name: children.into_iter().collect::<Vec<_>>().join(", "),
-                reason: "a shader effect samples one texture (object or background)",
-            });
-        }
-        Ok(())
+    /// A pen.dev effect's output replaces the node, so every translated
+    /// effect is an object pass: it declares `object` even when it only
+    /// reads its backdrop or SDF (`shader_effects::samples_background`).
+    pub(super) fn finish_children(&mut self, stage: Stage) {
+        self.declare_object = stage == Stage::Effect && !self.children.contains("object");
     }
 
     /// Declarations every translated program starts with.
@@ -241,11 +227,28 @@ impl Bindings {
         if self.mouse {
             out.push_str("uniform float2 mouse;\n");
         }
+        if self.declare_object {
+            out.push_str("uniform shader object;\n");
+        }
         out.push_str("float4 pen_FragCoord;\nfloat4 pen_FragColor;\n");
         if self.uses.values().any(|u| matches!(u, Use::Sampler { .. })) {
             out.push_str(
                 "float2 pen_texel(float2 uv) { return float2(uv.x * size.x, (1.0 - uv.y) * size.y); }\n",
             );
+        }
+        let sdf = |u: &Use| {
+            matches!(
+                u,
+                Use::Sampler {
+                    texture: Texture::Sdf,
+                    ..
+                }
+            )
+        };
+        if self.uses.values().any(sdf) {
+            // The canvas field's gradient runs y down; GL texel space is
+            // y up.
+            out.push_str("float4 pen_sdf(half4 s) { return float4(s.r, s.g, -s.b, s.a); }\n");
         }
         out
     }
