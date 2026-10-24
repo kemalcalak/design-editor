@@ -315,6 +315,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "Escala Y",
         "motion.rotation" => "Rotación",
         "interactions.addAnimation" => "Animación",
+        "blendMode.linearBurn" => "Subexponer lineal",
+        "blendMode.linearDodge" => "Sobreexponer lineal",
         "shader.editCode" => "Código",
         "shader.compiles" => "Compila",
         "shader.compileError" => "Error de compilación",

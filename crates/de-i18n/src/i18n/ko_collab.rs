@@ -317,6 +317,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "크기 Y",
         "motion.rotation" => "회전",
         "interactions.addAnimation" => "애니메이션",
+        "blendMode.linearBurn" => "선형 번",
+        "blendMode.linearDodge" => "선형 닷지",
         "shader.editCode" => "코드",
         "shader.compiles" => "컴파일됨",
         "shader.compileError" => "컴파일 오류",

@@ -117,6 +117,7 @@ pub fn frame(
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 

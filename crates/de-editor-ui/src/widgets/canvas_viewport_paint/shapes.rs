@@ -10,6 +10,7 @@ use crate::widgets::canvas_viewport_fill_layers::{
     paint_svg_path_fill_layers, paint_svg_path_gradient,
 };
 use crate::widgets::canvas_viewport_overlay::{align_stroke_rect, scaled_non_uniform_corner_radii};
+use crate::widgets::canvas_viewport_stroke_paint::with_stroke_paint;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 
@@ -160,11 +161,12 @@ pub(super) fn paint_ellipse(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: 
                 cx.backend.fill_oval(world_rect, fill);
             }
         }
-        if let Some(stroke) = node.stroke {
+        with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
+            let Some(stroke) = node.stroke else { return };
             let w = stroke.width * zoom;
             let (rect, _) = align_stroke_rect(world_rect, 0.0, w, stroke.align);
-            cx.backend.stroke_oval(rect, stroke.color, w);
-        }
+            cx.backend.stroke_oval(rect, color, w);
+        });
         return;
     }
     let poly = arc.as_deref().expect("non-oval ellipse has arc geometry");
@@ -173,12 +175,13 @@ pub(super) fn paint_ellipse(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: 
             cx.backend.fill_polygon(poly, fill);
         }
     }
-    if let Some(stroke) = node.stroke {
+    with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
+        let Some(stroke) = node.stroke else { return };
         let w = stroke.width * zoom;
         if sweep.abs() >= 359.9 && inner > 0.001 {
             // Full ring — stroke the two concentric ovals so the
             // polygon's radial seam isn't drawn.
-            cx.backend.stroke_oval(world_rect, stroke.color, w);
+            cx.backend.stroke_oval(world_rect, color, w);
             let iw = world_rect.size.x * inner;
             let ih = world_rect.size.y * inner;
             let inner_rect = Rect {
@@ -188,11 +191,11 @@ pub(super) fn paint_ellipse(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: 
                 ),
                 size: Point2D::new(iw, ih),
             };
-            cx.backend.stroke_oval(inner_rect, stroke.color, w);
+            cx.backend.stroke_oval(inner_rect, color, w);
         } else {
-            cx.backend.stroke_polygon(poly, stroke.color, w);
+            cx.backend.stroke_polygon(poly, color, w);
         }
-    }
+    });
 }
 
 /// Push a children-clip for a `clipContent` container (root frames
@@ -278,8 +281,9 @@ pub(crate) fn paint_svg_path_node(
             );
         }
     }
-    if let Some(stroke) = node.stroke {
+    let width = node.stroke.map_or(0.0, |stroke| stroke.width * zoom);
+    with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
         cx.backend
-            .stroke_svg_path_in_rect(d, world_rect, stroke.color, stroke.width * zoom);
-    }
+            .stroke_svg_path_in_rect(d, world_rect, color, width);
+    });
 }

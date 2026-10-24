@@ -69,6 +69,11 @@ fn ensure_pump<C: RepaintContext + 'static>(inner: &Rc<RefCell<C>>, running: &Rc
     running.set(true);
     let inner = inner.clone();
     let running = running.clone();
+    // Next instant the overlay needs a frame. The pump keeps ticking on
+    // every animation frame but repaints only when that is due: 60 fps for
+    // overlays the last frame showed on screen, state changes otherwise
+    // (#17, `canvas_generation_visibility`).
+    let due = Rc::new(Cell::new(0_u64));
     crate::raf_pump::start(Rc::new(move || {
         let Ok(mut inner_mut) = inner.try_borrow_mut() else {
             // Another borrow is mid-flight (e.g. a DOM event) — that
@@ -78,13 +83,26 @@ fn ensure_pump<C: RepaintContext + 'static>(inner: &Rc<RefCell<C>>, running: &Rc
         // Advance the host clock so the paint pass sees time move —
         // reveal entrances and the breathing border are time-driven.
         let now = crate::listener::now_ms_perf();
-        let unix = crate::listener::now_unix_secs();
-        inner_mut.host_mut().set_clocks(now, unix);
-        let _ = inner_mut.repaint();
+        // Re-read every tick: a DOM-event repaint (a pan bringing a reveal
+        // into view) may have moved the overlay on screen since.
+        due.set(due.get().min(next_overlay_frame(now)));
+        if now >= due.get() {
+            let unix = crate::listener::now_unix_secs();
+            inner_mut.host_mut().set_clocks(now, unix);
+            let _ = inner_mut.repaint();
+            due.set(next_overlay_frame(now));
+        }
         let alive = de_editor_core::agent_indicators::is_active();
         if !alive {
             running.set(false);
         }
         alive
     }));
+}
+
+/// The overlay's next frame, or a slow tick while indicators linger with
+/// nothing scheduled (badges only).
+fn next_overlay_frame(now_ms: u64) -> u64 {
+    crate::widget_host::generation_overlay_deadline_ms(now_ms)
+        .unwrap_or(now_ms + crate::widget_host::OVERLAY_IDLE_TICK_MS)
 }

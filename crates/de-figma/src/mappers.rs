@@ -228,6 +228,8 @@ pub(crate) fn map_blend_mode(value: Option<&str>) -> Option<BlendMode> {
         "COLOR_BURN" => Some(BlendMode::ColorBurn),
         "HARD_LIGHT" => Some(BlendMode::HardLight),
         "EXCLUSION" => Some(BlendMode::Exclusion),
+        "LINEAR_BURN" => Some(BlendMode::LinearBurn),
+        "LINEAR_DODGE" => Some(BlendMode::LinearDodge),
         _ => None,
     }
 }

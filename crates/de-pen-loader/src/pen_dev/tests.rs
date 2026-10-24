@@ -102,6 +102,12 @@ fn absolute_position_and_disabled_nodes_map_to_canonical_fields() {
 }
 
 #[test]
+fn a_frame_keeps_its_placeholder_flag() {
+    let (doc, _) = converted(json!([{ "type": "frame", "id": "f", "placeholder": true }]));
+    assert_eq!(doc["children"][0]["placeholder"], true);
+}
+
+#[test]
 fn unsupported_nodes_are_removed_and_reported() {
     let (doc, report) = converted(json!([
         { "type": "note", "id": "n", "content": "todo" },
@@ -199,10 +205,14 @@ fn shadows_and_blurs_become_canonical_effects() {
 fn blend_modes_map_to_snake_case_or_are_reported() {
     let (doc, report) = converted(json!([
         { "type": "rectangle", "id": "a", "blendMode": "softLight" },
-        { "type": "rectangle", "id": "b", "blendMode": "linearBurn" }
+        { "type": "rectangle", "id": "b", "blendMode": "linearBurn" },
+        { "type": "rectangle", "id": "c", "blendMode": "linearDodge" },
+        { "type": "rectangle", "id": "d", "blendMode": "plusDarker" }
     ]));
     assert_eq!(doc["children"][0]["blendMode"], "soft_light");
-    assert!(doc["children"][1].get("blendMode").is_none());
+    assert_eq!(doc["children"][1]["blendMode"], "linear_burn");
+    assert_eq!(doc["children"][2]["blendMode"], "linear_dodge");
+    assert!(doc["children"][3].get("blendMode").is_none());
     assert_eq!(report.unsupported.get("blend mode"), Some(&1));
 }
 

@@ -1,4 +1,4 @@
-use super::{contain_rect, layer::to_skia_blend_mode, to_sk_rect, NativeBackend};
+use super::{blender::apply_blend, contain_rect, to_sk_rect, NativeBackend};
 use de_editor_ui::{ImageAdjustments, ImageBlendMode, ImageDrawMode, Point2D, Rect};
 
 const THUMB_CACHE_BYTE_BUDGET: usize = 4 * 1024 * 1024;
@@ -299,7 +299,7 @@ impl NativeBackend {
         }
         let mut paint = skia_safe::Paint::default();
         paint.set_anti_alias(true);
-        paint.set_blend_mode(to_skia_blend_mode(blend_mode));
+        apply_blend(&mut paint, blend_mode);
         // Node-level opacity dims the raster (rasters carry no fill
         // colour to bake the opacity into at scene-build).
         paint.set_alpha_f(opacity.clamp(0.0, 1.0));

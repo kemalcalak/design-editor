@@ -563,9 +563,13 @@ pub(crate) fn paint_agent_cursors(
     now_ms: u64,
     indicators: &AgentIndicators,
     style: de_editor_core::PencilCursorStyle,
-    viewport_center: Point2D,
+    canvas: Rect,
 ) {
     let silhouette = silhouette_for(style);
+    let viewport_center = Point2D::new(
+        canvas.origin.x + canvas.size.x / 2.0,
+        canvas.origin.y + canvas.size.y / 2.0,
+    );
     for sprite in cursor_sprites_with_idle_anchor(
         roots,
         indicators,
@@ -574,6 +578,12 @@ pub(crate) fn paint_agent_cursors(
         now_ms,
         Some(viewport_center),
     ) {
+        // A cursor in view keeps the 60 fps cadence (#17); the sprite
+        // reaches about 40 px from its tip.
+        let reach = Rect::xywh(sprite.pos.x - 40.0, sprite.pos.y - 40.0, 80.0, 80.0);
+        if sprite.alpha > 0.0 && super::canvas_generation_visibility::on_screen(reach, canvas) {
+            super::canvas_generation_visibility::mark_animating();
+        }
         paint_sprite(cx, &sprite, now_ms, &silhouette);
     }
 }

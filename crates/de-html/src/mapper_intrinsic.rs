@@ -236,6 +236,7 @@ mod tests {
             route: None,
             screen: None,
             breakpoint: None,
+            placeholder: None,
         })
     }
 

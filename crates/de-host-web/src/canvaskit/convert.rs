@@ -86,6 +86,9 @@ pub(super) fn image_blend_mode_code(mode: ImageBlendMode) -> u8 {
         ImageBlendMode::ColorBurn => 13,
         ImageBlendMode::HardLight => 14,
         ImageBlendMode::Exclusion => 15,
+        // No CanvasKit built-in: the bridge runs a runtime blender.
+        ImageBlendMode::LinearBurn => 16,
+        ImageBlendMode::LinearDodge => 17,
     }
 }
 

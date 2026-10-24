@@ -170,6 +170,7 @@ impl<'a> Widget for CanvasViewport<'a> {
         }
         // Time-driven shader fills read this frame's clock while painting.
         super::canvas_shader_clock::begin_frame(self.now_ms);
+        super::canvas_generation_visibility::begin_frame(self.cull_override.is_some());
         // A culled partial repaint (pan-cache strips / tiles) adds to the
         // frame's pointer-shader flag instead of resetting it.
         super::canvas_shader_pointer::begin_frame(self.pointer, self.cull_override.is_some());
@@ -291,26 +292,29 @@ impl<'a> Widget for CanvasViewport<'a> {
                 cx.backend
                     .draw_text(&label, Point2D::new(ghost.origin.x, ghost.origin.y - 6.0));
             }
-            let child_hits = super::canvas_viewport_paint::paint_scene_nodes_with_options_hiding(
-                cx,
-                &page.children,
-                viewport_origin,
-                viewport.zoom,
-                edit_caret.clone(),
-                cull,
-                reveal_schedule,
-                hovered_lookup,
-                selected_lookup,
-                self.pen_in_progress.as_deref(),
-                hidden_drag_node,
-                self.now_ms,
-                generation_sets.as_ref().map(|sets| &sets.scan),
-                generation_sets
-                    .as_ref()
-                    .map(|_| super::canvas_generation_scan::SKELETON_BLUE),
-                generation_sets.as_ref().map(|sets| &sets.queued),
-                self.fast_interaction,
-            );
+            // In-progress frames (#16) show their sweep on the canvas only.
+            let child_hits = super::canvas_placeholder::with_overlay(|| {
+                super::canvas_viewport_paint::paint_scene_nodes_with_options_hiding(
+                    cx,
+                    &page.children,
+                    viewport_origin,
+                    viewport.zoom,
+                    edit_caret.clone(),
+                    cull,
+                    reveal_schedule,
+                    hovered_lookup,
+                    selected_lookup,
+                    self.pen_in_progress.as_deref(),
+                    hidden_drag_node,
+                    self.now_ms,
+                    generation_sets.as_ref().map(|sets| &sets.scan),
+                    generation_sets
+                        .as_ref()
+                        .map(|_| super::canvas_generation_scan::SKELETON_BLUE),
+                    generation_sets.as_ref().map(|sets| &sets.queued),
+                    self.fast_interaction,
+                )
+            });
             paint_hits.merge_missing(child_hits);
             if let Some(overlay) = self.node_drag_overlay.as_ref() {
                 if let Some(node) = page.find(overlay.node_id.as_str()) {
@@ -344,10 +348,7 @@ impl<'a> Widget for CanvasViewport<'a> {
                     self.now_ms,
                     indicators,
                     self.pencil_cursor_style,
-                    Point2D::new(
-                        rect.origin.x + rect.size.x / 2.0,
-                        rect.origin.y + rect.size.y / 2.0,
-                    ),
+                    rect,
                 );
             }
             const HOVER: Color = Color {
