@@ -7,9 +7,13 @@
 //!
 //! Approximations: a shader layer writes its fallback colour (SVG cannot
 //! run SkSL), an image layer ignores colour adjustments and a crop
-//! transform (Crop paints like Fill), as the rect writer does.
+//! transform (Crop paints like Fill), as the rect writer does, and text
+//! decorations drop out of the clip in most SVG renderers.
 
-use super::{color_to_rgb, emit_gradient, emit_image_pattern, normalize_rect, svg_id, xml_escape};
+use super::{
+    color_to_rgb, emit_gradient, emit_image_pattern, normalize_rect, preserve_aspect_ratio, svg_id,
+    xml_escape,
+};
 use crate::layout_scene::{NodeKind, SceneFillLayer, SceneImageFit, SceneNode};
 use crate::text_fill_stack::text_needs_fill_stack;
 use crate::{Color, ImageBlendMode, Rect};
@@ -61,7 +65,7 @@ pub(super) fn emit_text_fill_defs(out: &mut String, n: &SceneNode, id: &str) {
     out.push_str("</clipPath>");
     let bounds = normalize_rect(n.bounds);
     for (index, layer) in n.fill_layers.iter().enumerate() {
-        let layer_id = format!("{id}-fill-{index}");
+        let layer_id = layer_def_id(id, index);
         match layer {
             SceneFillLayer::Gradient { gradient, .. } => {
                 emit_gradient(out, &format!("gradient-{layer_id}"), gradient, bounds);
@@ -97,15 +101,15 @@ fn emit_fill_stack(out: &mut String, n: &SceneNode) {
     // Canonical fills are front-to-back; SVG paints in document order.
     for (index, layer) in n.fill_layers.iter().enumerate().rev() {
         let blend = blend_style(layer.blend_mode());
-        let layer_id = format!("{id}-fill-{index}");
+        let layer_id = layer_def_id(&id, index);
         match layer {
-            SceneFillLayer::Solid { color, .. } => emit_rect(out, r, *color, &blend),
+            SceneFillLayer::Solid { color, .. } => emit_solid_layer(out, r, *color, &blend),
             SceneFillLayer::Shader { shader, .. } => {
                 let color = Color {
                     a: shader.fallback.a * shader.opacity.clamp(0.0, 1.0),
                     ..shader.fallback
                 };
-                emit_rect(out, r, color, &blend);
+                emit_solid_layer(out, r, color, &blend);
             }
             SceneFillLayer::Gradient { .. } => {
                 let _ = write!(
@@ -122,7 +126,7 @@ fn emit_fill_stack(out: &mut String, n: &SceneNode) {
     out.push_str("</g>");
 }
 
-fn emit_rect(out: &mut String, r: Rect, color: Color, blend: &str) {
+fn emit_solid_layer(out: &mut String, r: Rect, color: Color, blend: &str) {
     let _ = write!(
         out,
         r#"<rect x="{}" y="{}" width="{}" height="{}" fill="{}""#,
@@ -157,9 +161,7 @@ fn emit_image_layer(
             );
             return;
         }
-        SceneImageFit::Fit => "xMidYMid meet",
-        SceneImageFit::Crop | SceneImageFit::Fill => "xMidYMid slice",
-        SceneImageFit::Stretch => "none",
+        fit => preserve_aspect_ratio(fit),
     };
     let _ = write!(
         out,
@@ -170,6 +172,12 @@ fn emit_image_layer(
         r.size.y,
         xml_escape(src),
     );
+}
+
+/// Def id stem shared by a layer's gradient / pattern def and its use;
+/// `id` is the hex `svg_id`, so it cannot itself contain `-fill-`.
+fn layer_def_id(id: &str, index: usize) -> String {
+    format!("{id}-fill-{index}")
 }
 
 /// A stand-in image node carrying one image layer, for the shared tile

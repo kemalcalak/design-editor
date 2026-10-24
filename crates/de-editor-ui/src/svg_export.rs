@@ -533,12 +533,7 @@ fn emit_image(out: &mut String, n: &SceneNode) {
         );
         return;
     }
-    let preserve = match n.image_fit {
-        SceneImageFit::Fit => "xMidYMid meet",
-        SceneImageFit::Crop | SceneImageFit::Fill => "xMidYMid slice",
-        SceneImageFit::Stretch => "none",
-        SceneImageFit::Tile => unreachable!("tile images return above"),
-    };
+    let preserve = preserve_aspect_ratio(n.image_fit);
     let _ = write!(
         out,
         r#"<image id="{}" x="{}" y="{}" width="{}" height="{}" href="{}" preserveAspectRatio="{}" opacity="{}"{clip}/>"#,
@@ -551,6 +546,16 @@ fn emit_image(out: &mut String, n: &SceneNode) {
         preserve,
         n.opacity.clamp(0.0, 1.0)
     );
+}
+
+/// `preserveAspectRatio` for an image fit. Tile never reaches it (it writes
+/// a pattern); it maps like Fill only to keep the match total.
+fn preserve_aspect_ratio(fit: SceneImageFit) -> &'static str {
+    match fit {
+        SceneImageFit::Fit => "xMidYMid meet",
+        SceneImageFit::Crop | SceneImageFit::Fill | SceneImageFit::Tile => "xMidYMid slice",
+        SceneImageFit::Stretch => "none",
+    }
 }
 
 fn emit_image_pattern(out: &mut String, n: &SceneNode, src: &str, id: &str) {

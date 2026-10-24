@@ -139,6 +139,8 @@ fn a_gradient_fill_paints_under_a_glyph_mask() {
         composite < gradient && gradient < mask && mask < glyphs,
         "{ops:?}"
     );
+    // Overflow bands around the box take the solid fallback under the stack.
+    assert!(ops[composite..gradient].contains(&Op::FillRect), "{ops:?}");
     // Mask layer + stack layer both close after the glyphs.
     let closes = ops[glyphs..].iter().filter(|o| **o == Op::Restore).count();
     assert!(closes >= 2, "{ops:?}");

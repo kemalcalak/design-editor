@@ -10,15 +10,18 @@
 //! scale, exactly like the plain path, so wrap and caret geometry do not
 //! change. Runs with a fill of their own paint solid on top afterwards.
 //!
-//! Glyph ink that falls outside the node box gets no fill (the stack is
-//! sized to the box). Backends without pixel masks, and greeked text,
-//! keep the solid `fill` fallback.
+//! Glyph ink that falls outside the node box (overflow, or lines typed
+//! past a fixed height while editing) takes the solid `fill` fallback,
+//! since the stack is sized to the box. Backends without pixel masks, and
+//! greeked text, keep that solid fill for the whole node.
 
 use crate::layout_scene::SceneNode;
 use crate::text_fill_stack::text_needs_fill_stack;
 use crate::widgets::canvas_viewport::EditCaret;
 use crate::widgets::canvas_viewport_fill_layers::paint_fill_layers;
-use crate::widgets::canvas_viewport_text::{paint_text_node_pass, text_is_greeked, TextPass};
+use crate::widgets::canvas_viewport_text::{
+    paint_text_node_pass, text_is_greeked, TextPass, DEFAULT_INK,
+};
 use crate::widgets::PaintCx;
 use crate::{ImageBlendMode, Point2D, Rect};
 
@@ -50,8 +53,15 @@ pub(super) fn paint_text_in_viewport(
             paint_text_node_pass(cx, node, node.bounds, zoom, edit_caret, TextPass::Selection);
         });
     }
+    // The layer reaches past the node box so glyphs that overflow it (a
+    // line typed past a fixed height, auto-width text past its shrink
+    // floor) stay visible: the band outside the box takes the solid
+    // fallback ink, the box itself the real stack.
+    let margin = world_rect.size.x.abs().max(world_rect.size.y.abs());
+    let layer = inflate(world_rect, margin);
     cx.backend
-        .push_composite_layer(world_rect, 1.0, ImageBlendMode::Normal);
+        .push_composite_layer(layer, 1.0, ImageBlendMode::Normal);
+    paint_overflow_band(cx, node, world_rect, layer);
     paint_fill_layers(cx, node, world_rect, zoom);
     cx.backend.push_mask_source_layer(false);
     in_doc_space(cx, viewport_origin, zoom, |cx| {
@@ -61,9 +71,39 @@ pub(super) fn paint_text_in_viewport(
     // the second lands the cut stack on the backdrop.
     cx.backend.restore();
     cx.backend.restore();
-    in_doc_space(cx, viewport_origin, zoom, |cx| {
-        paint_text_node_pass(cx, node, node.bounds, zoom, edit_caret, TextPass::Overlay);
-    });
+    // Overlay carries own-fill runs, the IME underline and the caret; skip
+    // its layout pass when there is none of them.
+    if editing || node.text_runs.iter().any(|run| run.fill.is_some()) {
+        in_doc_space(cx, viewport_origin, zoom, |cx| {
+            paint_text_node_pass(cx, node, node.bounds, zoom, edit_caret, TextPass::Overlay);
+        });
+    }
+}
+
+fn inflate(rect: Rect, by: f32) -> Rect {
+    Rect {
+        origin: Point2D::new(rect.origin.x - by, rect.origin.y - by),
+        size: Point2D::new(rect.size.x + 2.0 * by, rect.size.y + 2.0 * by),
+    }
+}
+
+/// Fill `layer` minus `bx` with the node's solid fallback ink (four bands).
+fn paint_overflow_band(cx: &mut PaintCx<'_>, node: &SceneNode, bx: Rect, layer: Rect) {
+    let ink = node.fill.unwrap_or(DEFAULT_INK);
+    let (l, t) = (layer.origin.x, layer.origin.y);
+    let (r, b) = (l + layer.size.x, t + layer.size.y);
+    let (bl, bt) = (bx.origin.x, bx.origin.y);
+    let (br, bb) = (bl + bx.size.x, bt + bx.size.y);
+    for band in [
+        Rect::xywh(l, t, r - l, bt - t),
+        Rect::xywh(l, bb, r - l, b - bb),
+        Rect::xywh(l, bt, bl - l, bb - bt),
+        Rect::xywh(br, bt, r - br, bb - bt),
+    ] {
+        if band.size.x > 0.0 && band.size.y > 0.0 {
+            cx.backend.fill_rect(band, ink);
+        }
+    }
 }
 
 /// Run `paint` with document coordinates mapped onto the viewport.

@@ -83,6 +83,14 @@ impl TextPass {
     }
 }
 
+/// Ink of a text node with no fill.
+pub(crate) const DEFAULT_INK: Color = Color {
+    r: 0.08,
+    g: 0.08,
+    b: 0.08,
+    a: 1.0,
+};
+
 /// Mask coverage colour: only its alpha matters to `DstIn`.
 const MASK_INK: Color = Color {
     r: 1.0,
@@ -242,11 +250,11 @@ fn draw_slice(
     baseline_y: f32,
     letter_spacing: f32,
     justify_extra: f32,
-    ink: bool,
+    draw: bool,
 ) -> (f32, f32) {
     let jc = (style.color).to_jian();
     if letter_spacing.abs() < f32::EPSILON && justify_extra <= 0.0 {
-        if ink {
+        if draw {
             backend.draw_text(
                 &TextLayout::single_run(slice, family, style.font_size, jc, Point2D::ZERO)
                     .with_font_weight(style.weight)
@@ -270,7 +278,7 @@ fn draw_slice(
     for ch in slice.chars() {
         let mut buf = [0u8; 4];
         let s = ch.encode_utf8(&mut buf);
-        if ink {
+        if draw {
             backend.draw_text(
                 &TextLayout::single_run(s, family, style.font_size, jc, Point2D::ZERO)
                     .with_font_weight(style.weight)
@@ -353,8 +361,9 @@ pub(crate) fn paint_text_node(
     paint_text_node_pass(cx, node, world_rect, zoom, edit_caret, TextPass::Full);
 }
 
-/// [`paint_text_node`] restricted to one [`TextPass`]. Only `Full`
-/// greeks; the split passes run when the caller already chose real glyphs.
+/// Paint the parts of a text node `pass` selects. Only `Full` greeks:
+/// the split passes run only after the caller (`canvas_viewport_text_fill`)
+/// already chose real glyphs over the greeking bar.
 pub(crate) fn paint_text_node_pass(
     cx: &mut PaintCx<'_>,
     node: &SceneNode,
@@ -389,12 +398,7 @@ pub(crate) fn paint_text_node_pass(
     let paint_node = edit_node.as_ref().unwrap_or(node);
     let text = paint_node.text.as_deref().unwrap_or("");
     // Ink colour follows the resolved fill (defaults to near black).
-    let ink = node.fill.unwrap_or(Color {
-        r: 0.08,
-        g: 0.08,
-        b: 0.08,
-        a: 1.0,
-    });
+    let ink = node.fill.unwrap_or(DEFAULT_INK);
     // Greeking LOD: below ~3 device px of glyph height the text is an
     // unreadable smudge, but the full layout below (CJK wrap measuring,
     // per-line measures, per-run typeface segmentation) still costs the
