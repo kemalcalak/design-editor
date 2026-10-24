@@ -539,3 +539,31 @@ fn a_text_link_opens_its_url_on_tap() {
         "home"
     );
 }
+
+#[test]
+fn a_shadow_blend_mode_reaches_the_scene() {
+    let src = json!({ "version": "2.21", "children": [
+        { "type": "rectangle", "id": "card", "width": 10, "height": 10, "fill": "#FFFFFF",
+          "effect": { "type": "shadow", "color": "#0000FF", "offset": { "x": 4, "y": 4 },
+                      "blur": 0, "blendMode": "multiply" } }
+    ]})
+    .to_string();
+    let loaded = load_canonical_with_assets(&src, &no_assets).expect("loads");
+    let doc = serde_json::to_value(&loaded.loaded.value).unwrap();
+    assert_eq!(doc["children"][0]["effects"][0]["blendMode"], "multiply");
+    let shadows = crate::effects::shadows_from_canonical(&loaded.loaded.value.children[0]);
+    let scene = crate::effects::effects_from_payload(shadows);
+    let jian_scene::layout_scene::Effect::DropShadow(shadow) = scene[0] else {
+        panic!("a drop shadow");
+    };
+    assert_eq!(
+        shadow.blend_mode,
+        de_editor_core::render_backend::ImageBlendMode::Multiply
+    );
+    let back = crate::effects::effects_to_payload(&scene);
+    assert_eq!(
+        back[0].blend_mode,
+        Some(jian_ops_schema::style::BlendMode::Multiply),
+        "round trip"
+    );
+}

@@ -127,6 +127,12 @@ pub enum PropertyFocus {
         index: usize,
         field: crate::motion_edit::MotionField,
     },
+    /// The node-level `transition` duration (ms) in the Motion section
+    /// (#176).
+    TransitionDuration,
+    /// The address of `trigger`'s Open URL action in the Interactions
+    /// section (#176). Free text.
+    InteractionUrl(crate::interaction_edit::InteractionTrigger),
     /// One number field of a shader uniform row (#164): the float, or
     /// `component` of a vector, at row `index` of paint `target`.
     ShaderUniform {
@@ -170,6 +176,7 @@ impl PropertyFocus {
                 | PropertyFocus::WidgetTrailingIcon
                 | PropertyFocus::WidgetBindKey
                 | PropertyFocus::VideoSrc
+                | PropertyFocus::InteractionUrl(_)
         )
     }
 

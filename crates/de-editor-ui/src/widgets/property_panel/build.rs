@@ -178,6 +178,9 @@ impl PropertyPanel {
                 .iter()
                 .any(|n| n.id_str() == state.selection.anchor.as_str());
             let mut snapshot = NodeSnapshot::from_node(node, is_top_level);
+            // "Scroll to" targets need the page, not just the node (#176).
+            snapshot.interactions.sections =
+                crate::widgets::property_panel_interactions::document_section_targets(state);
             if !state.editor_ui.agent_settings.experimental_features_enabled {
                 // The Widget section is an experimental surface. Hide it
                 // unless opted in — the section's paint AND height both key

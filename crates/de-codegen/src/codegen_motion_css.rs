@@ -26,6 +26,7 @@ pub(super) fn render(doc: &PenDocument) -> String {
             for (index, animation) in animations.iter().enumerate() {
                 render_keyframes(&mut out, node.id_str(), index, animation);
             }
+            render_pointer_rules(&mut out, node.id_str(), animations);
         }
     }
     if doc.motion == Some(jian_ops_schema::motion::MotionPreference::Reduced) {
@@ -65,6 +66,51 @@ fn render_keyframes(out: &mut String, node_id: &str, index: usize, animation: &N
     out.push_str("}\n");
 }
 
+/// `hover` / `tap` animations (#155) play while the element is hovered /
+/// pressed: `:hover` / `:active` rules instead of the load-time list. CSS
+/// snaps back on leave / release instead of reversing, and an element
+/// that also has a load-time animation keeps it (its inline `animation`
+/// wins over these rules).
+fn render_pointer_rules(out: &mut String, node_id: &str, animations: &[NodeAnimation]) {
+    for (trigger, pseudo) in [
+        (MotionTrigger::Hover, "hover"),
+        (MotionTrigger::Tap, "active"),
+    ] {
+        let declarations = animation_list(node_id, animations, |t| t == trigger);
+        if !declarations.is_empty() {
+            out.push_str(&format!(
+                "{}:{pseudo} {{\n  animation: {declarations};\n}}\n",
+                selector(node_id)
+            ));
+        }
+    }
+}
+
+/// The CSS `animation` list of the animations `wanted` keeps, named by
+/// their index in the node's list.
+fn animation_list(
+    node_id: &str,
+    animations: &[NodeAnimation],
+    wanted: impl Fn(MotionTrigger) -> bool,
+) -> String {
+    animations
+        .iter()
+        .enumerate()
+        .filter(|(_, animation)| wanted(animation.trigger))
+        .map(|(index, animation)| {
+            format!(
+                "{} {}ms {} {}ms {} both",
+                animation_name(node_id, index),
+                animation.duration_ms,
+                easing_to_css(&animation.easing),
+                animation.delay_ms,
+                animation.iterations
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
 fn render_reduced_block(out: &mut String, nodes: &[&PenNode], media: bool) {
     if media {
         out.push_str("@media (prefers-reduced-motion: reduce) {\n");
@@ -98,22 +144,10 @@ pub(super) fn inline_style(node: &PenNode) -> String {
         ));
     }
     if let Some(animations) = animations.filter(|items| !items.is_empty()) {
-        let declarations = animations
-            .iter()
-            .enumerate()
-            .map(|(index, animation)| {
-                format!(
-                    "{} {}ms {} {}ms {} both",
-                    animation_name(node.id_str(), index),
-                    animation.duration_ms,
-                    easing_to_css(&animation.easing),
-                    animation.delay_ms,
-                    animation.iterations
-                )
-            })
-            .collect::<Vec<_>>()
-            .join(", ");
-        style.push_str(&format!(";animation:{declarations}"));
+        let declarations = animation_list(node.id_str(), animations, |t| !t.is_pointer());
+        if !declarations.is_empty() {
+            style.push_str(&format!(";animation:{declarations}"));
+        }
         if animations
             .iter()
             .any(|animation| animation.trigger == MotionTrigger::InView)

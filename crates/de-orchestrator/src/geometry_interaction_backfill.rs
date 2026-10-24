@@ -48,20 +48,25 @@ struct BackShapeFact {
 /// This is cleanup-only; preview's cloned-state fallback never calls it.
 pub(crate) fn wire_interaction_backfill(sink: &mut dyn DocSink) {
     let facts = interaction_backfill_facts(sink.state());
+    // Merged into each node's existing `events` (#176): a bare onTap patch
+    // would replace the block and drop sibling handlers.
     for target in facts.back_targets {
-        sink.apply(EditorCommand::PatchNodeData {
-            node_id: NodeId::new(target.node_id),
-            patch_json: r#"{"events":{"onTap":[{"pop":null}]}}"#.to_string(),
-            page_id: None,
-        });
+        crate::wire_screen_navigation::apply_on_tap(
+            sink,
+            &target.node_id,
+            de_editor_core::interaction_edit::pop_action(),
+        );
     }
     if let Some(route) = facts.detail_route {
         for target in facts.card_targets {
-            sink.apply(EditorCommand::PatchNodeData {
-                node_id: NodeId::new(target.node_id),
-                patch_json: crate::wire_screen_navigation::navigate_patch("push", &route),
-                page_id: None,
-            });
+            crate::wire_screen_navigation::apply_on_tap(
+                sink,
+                &target.node_id,
+                de_editor_core::interaction_edit::navigate_action(
+                    de_editor_core::interaction_edit::NavigateVerb::Push,
+                    &route,
+                ),
+            );
         }
     }
 }

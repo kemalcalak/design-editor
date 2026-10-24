@@ -311,6 +311,39 @@ fn html_motion_export_matches_the_golden_css() {
     assert!(html.contains("animation-timeline:view();animation-range:entry 0% entry 40%"));
 }
 
+/// #155: hover / tap animations play on `:hover` / `:active`, not on load.
+#[test]
+fn html_motion_export_plays_pointer_animations_on_hover_and_active() {
+    let doc = jian_ops_schema::load_str(
+        r#"{"version":"1.0","children":[
+          {"type":"rectangle","id":"btn","width":120,"height":40,"animations":[
+            {"trigger":"hover","keyframes":{"from":{"opacity":1},"to":{"opacity":0.8}},
+             "durationMs":150},
+            {"trigger":"tap","keyframes":{"from":{"scaleX":1},"to":{"scaleX":0.96}},
+             "durationMs":100,"easing":"linear"}
+          ]}
+        ]}"#,
+    )
+    .expect("pointer motion document")
+    .value;
+    let html = Html.generate(&doc);
+    let css = html_style_block(&html);
+    assert!(
+        css.contains(
+            "[data-de-motion-node=\"btn\"]:hover {\n  animation: de-btn-0 150ms cubic-bezier(0.2,0,0,1) 0ms 1 both;\n}"
+        ),
+        "{css}"
+    );
+    assert!(
+        css.contains("[data-de-motion-node=\"btn\"]:active {\n  animation: de-btn-1 100ms linear 0ms 1 both;\n}"),
+        "{css}"
+    );
+    assert!(
+        !html.contains(";animation:"),
+        "pointer animations must not run on load: {html}"
+    );
+}
+
 #[test]
 fn html_motion_export_honours_authored_reduced_preference() {
     let doc = jian_ops_schema::load_str(

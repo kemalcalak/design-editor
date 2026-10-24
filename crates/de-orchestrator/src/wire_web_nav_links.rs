@@ -23,11 +23,13 @@
 //! page, or of an unnamed wrapper directly under it), so a "Card Header"
 //! deep inside a section never turns its title into a link.
 
-use de_editor_core::{EditorCommand, NodeId, PenNodeExt};
+use de_editor_core::PenNodeExt;
 use jian_ops_schema::node::{PenNode, TextContent};
 
-use super::{identity_haystack, labels_match, navigate_patch, normalize_label, subtree_has_events};
+use super::{apply_on_tap, identity_haystack, labels_match, normalize_label, subtree_has_events};
 use crate::types::DocSink;
+use de_editor_core::interaction_edit::{navigate_action, scroll_to_action, NavigateVerb};
+use jian_ops_schema::events::Action;
 
 /// Roles that mark a website navigation surface.
 const SURFACE_ROLES: [&str; 6] = ["header", "footer", "navbar", "nav", "navigation", "menu"];
@@ -101,26 +103,19 @@ pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
         }
         patches
     };
-    for (node_id, patch_json) in patches {
-        sink.apply(EditorCommand::PatchNodeData {
-            node_id: NodeId::new(node_id),
-            patch_json,
-            page_id: None,
-        });
+    for (node_id, action) in patches {
+        apply_on_tap(sink, &node_id, action);
     }
 }
 
-/// The patch for a link labelled `label`: a page match wins over a
-/// section match; see [`single_match`] for ties.
-fn link_patch(label: &str, pages: &[Target], sections: &[Target]) -> Option<String> {
+/// The `onTap` action for a link labelled `label`: a page match wins
+/// over a section match; see [`single_match`] for ties.
+fn link_patch(label: &str, pages: &[Target], sections: &[Target]) -> Option<Action> {
     if let Some(path) = single_match(label, pages) {
-        return Some(navigate_patch("replace", path));
+        return Some(navigate_action(NavigateVerb::Replace, path));
     }
     let target = single_match(label, sections)?;
-    let patch = serde_json::json!({
-        "events": { "onTap": [ { "scroll_to": { "target": target, "alignment": "start" } } ] }
-    });
-    Some(patch.to_string())
+    Some(scroll_to_action(target))
 }
 
 /// The value of the one target `label` names. Exact (normalized) name

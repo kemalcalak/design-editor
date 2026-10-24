@@ -73,7 +73,23 @@ impl WidgetHostNative {
                         return Some(true);
                     }
                     de_editor_ui::widgets::InteractionMenuHit::Inside => return Some(true),
-                    de_editor_ui::widgets::InteractionMenuHit::Outside => {}
+                    de_editor_ui::widgets::InteractionMenuHit::Outside => {
+                        // A press on another row that opens the popover
+                        // (or on its own anchor) falls through to the
+                        // panel tier, whose toggle switches the popover to
+                        // that row (or closes it) in one click, as on web
+                        // (#176). Anything else dismisses and is swallowed.
+                        let opens_popover =
+                            matches!(
+                            panel.hit_test_action(property_rect, Point2D::new(x, y)),
+                            Some(de_editor_ui::widgets::PropertyPanelAction::ToggleInteractionMenu(
+                                _
+                            ))
+                        );
+                        if opens_popover {
+                            return None;
+                        }
+                    }
                 }
             }
             self.editor_state.editor_ui.close_interaction_menu();
