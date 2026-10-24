@@ -663,6 +663,32 @@ extern "C" {
         uniform_arities: &[u32],
         backdrop: bool,
     );
+    #[wasm_bindgen(method, js_name = captureShaderBackdrop)]
+    pub(super) fn capture_shader_backdrop(
+        this: &OpCk,
+        lo: u32,
+        hi: u32,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+    );
+    #[wasm_bindgen(method, js_name = beginShaderTexture)]
+    pub(super) fn begin_shader_texture(
+        this: &OpCk,
+        lo: u32,
+        hi: u32,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+    );
+    #[wasm_bindgen(method, js_name = endShaderTexture)]
+    pub(super) fn end_shader_texture(this: &OpCk, sdf: bool, sdf_scale: f32);
+    #[wasm_bindgen(method, js_name = hasShaderTexture)]
+    pub(super) fn has_shader_texture(this: &OpCk, lo: u32, hi: u32) -> bool;
+    #[wasm_bindgen(method, js_name = releaseShaderTexture)]
+    pub(super) fn release_shader_texture(this: &OpCk, lo: u32, hi: u32);
     #[wasm_bindgen(method)]
     pub(super) fn restore(this: &OpCk);
     #[wasm_bindgen(method)]

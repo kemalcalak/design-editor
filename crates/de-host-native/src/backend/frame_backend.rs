@@ -3,18 +3,11 @@
 //! closure body so widget code never sees the canvas borrow directly.
 //! Pulled out of `widget_host.rs` for the 800-line ceiling.
 
-use crate::backend::NativeBackend;
+pub use super::frame_redirect::NativeFrameBackend;
 use de_editor_ui::{
     Color, ImageAdjustments, ImageBlendMode, ImageDrawMode, Point2D, Rect, RenderBackend,
     TextBaselineRequest, TextLayout,
 };
-
-pub struct NativeFrameBackend<'a> {
-    // `pub(super)` so the offscreen-layer helpers in the sibling
-    // `frame_offscreen.rs` can reach the canvas + backend they wrap.
-    pub(super) inner: &'a mut NativeBackend,
-    pub(super) canvas: &'a skia_safe::Canvas,
-}
 
 impl<'a> RenderBackend for NativeFrameBackend<'a> {
     fn begin_frame(&mut self) {}
@@ -87,20 +80,8 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
         self.inner.push_backdrop_blur_layer(self.canvas, sigma);
     }
 
-    fn push_shader_effect_layer(
-        &mut self,
-        rect: Rect,
-        sksl: &str,
-        uniforms: &[(&str, &[f32])],
-        backdrop: bool,
-    ) {
-        self.inner
-            .push_shader_effect_layer(self.canvas, rect, sksl, uniforms, backdrop);
-    }
-
-    fn restore(&mut self) {
-        self.inner.restore(self.canvas);
-    }
+    // Effect passes and shader textures (#165); see `frame_redirect.rs`.
+    super::frame_redirect::shader_texture_items!();
 
     fn translate(&mut self, offset: Point2D) {
         self.inner.translate(self.canvas, offset);

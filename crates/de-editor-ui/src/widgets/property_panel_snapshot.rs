@@ -227,6 +227,9 @@ pub struct NodeSnapshot {
     /// through its merged display node — drives the purple badge +
     /// the Go-to-component / Detach-instance rows.
     pub is_instance: bool,
+    /// The selection is a node inside an instance with an override to
+    /// reset (#166).
+    pub instance_override: bool,
     /// True when the selection is a reusable COMPONENT definition —
     /// drives the purple badge + the Detach-component button.
     pub is_reusable: bool,

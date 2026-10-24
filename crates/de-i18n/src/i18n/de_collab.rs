@@ -342,6 +342,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Shader-Code",
         "shader.close" => "Schließen",
         "shader.apply" => "Anwenden",
+        "property.resetOverride" => "Überschreibung zurücksetzen",
         _ => return None,
     })
 }

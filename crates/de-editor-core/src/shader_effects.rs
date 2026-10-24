@@ -8,10 +8,12 @@
 //! so `time` and `mouse` bind as they do for fills; `size` is always the
 //! node size (an authored value is ignored).
 //!
-//! v1 samples one texture per effect: a program that declares `background`
-//! is a backdrop pass (its `object` child, if any, reads transparent), every
-//! other program is an object pass. Image children (#9) are not bound in
-//! effects yet and read transparent.
+//! A program that declares `background` but not `object` is a backdrop
+//! pass: its output is drawn over the backdrop and the node paints on top.
+//! Every other program is an object pass: its output replaces the node,
+//! and besides `object` it may sample `background`, images and an `@sdf`
+//! child of the rendered content (#165, `shader_textures`). Object passes
+//! chain in list order, each reading the previous one's output.
 
 use jian_ops_schema::style::{PenEffect, ShaderEffectBody, ShaderUniformValue};
 
@@ -53,10 +55,12 @@ pub fn default_shader_effect() -> PenEffect {
     })
 }
 
-/// Whether the effect program samples the backdrop (declares
-/// `uniform shader background;`). Every other program is an object pass.
+/// Whether the effect program is a backdrop pass: it declares
+/// `uniform shader background;` and not `object`. Every other program is
+/// an object pass.
 pub fn samples_background(sksl: &str) -> bool {
-    shader_children(sksl).contains(&BACKGROUND_CHILD)
+    let children = shader_children(sksl);
+    children.contains(&BACKGROUND_CHILD) && !children.contains(&OBJECT_CHILD)
 }
 
 #[cfg(test)]

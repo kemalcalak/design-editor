@@ -233,10 +233,10 @@ impl NativeBackend {
         fallback: Color,
     ) {
         let local_matrix = runtime_shader_local_matrix(rect, uniforms);
-        let shader = self
-            .shader_cache
-            .get_or_compile(sksl)
-            .and_then(|effect| self.make_runtime_shader(effect, uniforms, rect, &local_matrix));
+        let device = canvas.local_to_device_as_3x3();
+        let shader = self.shader_cache.get_or_compile(sksl).and_then(|effect| {
+            self.make_runtime_shader(effect, uniforms, rect, &local_matrix, &device, &[])
+        });
 
         let mut paint = skia_safe::Paint::default();
         paint.set_anti_alias(true);

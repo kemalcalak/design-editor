@@ -30,6 +30,7 @@ mod measure;
 mod mount;
 mod mount_keyboard;
 mod ops;
+mod shader_textures;
 mod stroke_style;
 #[cfg(test)]
 mod tests;
