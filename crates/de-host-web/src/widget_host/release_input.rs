@@ -70,6 +70,9 @@ impl WidgetHost {
         if self.release_create_drag() {
             return true;
         }
+        if self.apply_pencil_release() {
+            return true;
+        }
         if self.finish_image_crop_drag() {
             return true;
         }
@@ -147,6 +150,9 @@ impl WidgetHost {
             return true;
         }
         if self.release_create_drag() {
+            return true;
+        }
+        if self.apply_pencil_release() {
             return true;
         }
         if self.finish_image_crop_drag() {

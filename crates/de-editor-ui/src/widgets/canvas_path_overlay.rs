@@ -9,6 +9,10 @@
 //!   anchor/handle dots for a single selected Path under the Select
 //!   tool (TS paints it for any tool; interaction is Select-only).
 //!
+//! `paint_pencil_preview` draws the Pencil stroke (#88) while it is being
+//! dragged — the raw samples as a polyline; the fitted path replaces it on
+//! release.
+//!
 //! The Pen-tool edit mode keeps the pre-existing Rust "ghost handle"
 //! painting (unset handles paint as grabbable ghost dots — a
 //! deliberate superset of TS, which can only mint handles during
@@ -88,7 +92,9 @@ pub(super) fn paint_path_overlays(
         }
         return;
     }
-    if selected_count != 1 {
+    // The Pencil keeps its last stroke selected between strokes; anchor
+    // dots on it would clutter the next one. Switch to Select to edit.
+    if selected_count != 1 || matches!(tool, de_editor_core::Tool::Pencil) {
         return;
     }
     let Some(node) = selected_node else {
@@ -374,4 +380,22 @@ fn paint_ghost_edit_handles(
             dot(cx, ts(*p), 4.0, theme.background, theme.primary, 1.5);
         }
     }
+}
+
+/// The in-flight Pencil stroke: its samples (doc coords) joined in
+/// selection blue, the same ink as the pen preview.
+pub(super) fn paint_pencil_preview(
+    cx: &mut PaintCx<'_>,
+    points: &[Point2D],
+    canvas_rect: Rect,
+    viewport: &Viewport,
+) {
+    if points.len() < 2 {
+        return;
+    }
+    let pts: Vec<Point2D> = points
+        .iter()
+        .map(|p| to_screen_point(*p, canvas_rect, viewport))
+        .collect();
+    stroke_polyline(cx, &pts, SELECTION_BLUE, 1.5);
 }
