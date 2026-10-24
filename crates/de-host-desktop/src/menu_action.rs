@@ -168,6 +168,10 @@ impl DesktopApp {
                 }
                 false
             }
+            // Same call as the Cmd/Ctrl+Enter key arm; Home has no page.
+            A::Present => {
+                !self.host.home_visible() && self.host.toggle_present_with_cached_viewport()
+            }
             A::ToggleGitPanel => {
                 let opening = !self.host.editor_state().editor_ui.git_panel.open;
                 if opening {

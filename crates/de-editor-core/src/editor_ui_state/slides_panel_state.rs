@@ -88,6 +88,9 @@ pub enum SlidesPanelTarget {
     /// produced while that row is ENABLED, so a disabled row can neither
     /// be hovered nor activated.
     ExportSelectedSlides,
+    /// A cell of the action bar's Transition row (#158): set this slide
+    /// transition on the selected slides, or on the whole deck.
+    Transition(jian_ops_schema::motion::SlideTransitionKind),
 }
 
 impl LeftPanelTab {

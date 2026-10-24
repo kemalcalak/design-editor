@@ -352,6 +352,7 @@ impl PreviewSession {
         }
         let emitted = !self.runtime.dispatch_pointer(ev).is_empty();
         self.sync_toggle_progress();
+        self.sync_pointer_motion();
         let binding_changed =
             self.finish_binding_update(&binding_before) != crate::InvalidationKind::None;
         emitted || binding_changed
@@ -402,6 +403,7 @@ impl PreviewSession {
         }
         let events = self.runtime.dispatch_pointer(event);
         self.sync_toggle_progress();
+        self.sync_pointer_motion();
         events
     }
 

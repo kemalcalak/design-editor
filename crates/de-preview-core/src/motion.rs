@@ -74,6 +74,11 @@ struct MotionInner {
     fired_in_view: BTreeSet<String>,
     visible_in_view: BTreeSet<String>,
     animation_tracks: BTreeSet<(String, AnimationProperty)>,
+    /// `target:index` of every hover / tap animation whose pointer is on
+    /// its node (`motion_pointer`).
+    pointer_active: BTreeSet<String>,
+    /// Whether the document has any hover / tap animation, once known.
+    pointer_motion: Option<bool>,
 }
 
 #[derive(Clone, Default)]
@@ -99,6 +104,22 @@ impl PreviewMotionState {
         self.inner.borrow().lifecycle_started
     }
 
+    pub(crate) fn pointer_was_active(&self, key: &str) -> bool {
+        self.inner.borrow().pointer_active.contains(key)
+    }
+
+    pub(crate) fn set_pointer_active(&self, active: BTreeSet<String>) {
+        self.inner.borrow_mut().pointer_active = active;
+    }
+
+    pub(crate) fn pointer_motion_cached(&self) -> Option<bool> {
+        self.inner.borrow().pointer_motion
+    }
+
+    pub(crate) fn cache_pointer_motion(&self, found: bool) {
+        self.inner.borrow_mut().pointer_motion = Some(found);
+    }
+
     fn prune_tracks(&self, animation: &PreviewAnimationState) {
         self.inner
             .borrow_mut()
@@ -106,7 +127,7 @@ impl PreviewMotionState {
             .retain(|(target, property)| animation.has_active(target, property));
     }
 
-    fn track_budget_available(
+    pub(crate) fn track_budget_available(
         &self,
         animation: &PreviewAnimationState,
         target: &str,
@@ -120,7 +141,7 @@ impl PreviewMotionState {
             || inner.animation_tracks.len() < MOTION_TRACK_BUDGET
     }
 
-    fn remember_track(&self, target: &str, property: &AnimationProperty) {
+    pub(crate) fn remember_track(&self, target: &str, property: &AnimationProperty) {
         self.inner
             .borrow_mut()
             .animation_tracks
@@ -482,7 +503,7 @@ impl PreviewMotionState {
                 },
                 requested_at_ms: now_ms.saturating_add(declaration.delay_ms),
             };
-            if animation.start_immediate(request, base.clone(), Some(base), now_ms)
+            if animation.start_motion(request, base.clone(), Some(base), now_ms)
                 && animation.has_active(target, &property)
             {
                 self.remember_track(target, &property);
@@ -571,6 +592,7 @@ impl crate::session::PreviewSession {
             effective,
             self.last_now_ms,
         );
+        self.observe_pointer_motion(scene);
     }
 
     /// Re-read switch `checked` after runtime input so the intrinsic
@@ -638,7 +660,7 @@ fn toggle_timing(runtime: &jian_core::Runtime, target: &str) -> (u64, Easing) {
     }
 }
 
-fn node_declarations(
+pub(crate) fn node_declarations(
     runtime: &jian_core::Runtime,
     transitions_only: bool,
 ) -> Vec<(
@@ -711,7 +733,7 @@ fn scene_color(color: de_editor_ui::Color) -> String {
     }
 }
 
-fn easing_from_schema(easing: &jian_ops_schema::motion::Easing) -> Easing {
+pub(crate) fn easing_from_schema(easing: &jian_ops_schema::motion::Easing) -> Easing {
     match easing {
         jian_ops_schema::motion::Easing::Linear => Easing::Linear,
         jian_ops_schema::motion::Easing::Ease => Easing::Ease,
