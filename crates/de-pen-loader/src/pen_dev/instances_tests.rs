@@ -124,3 +124,49 @@ fn a_nested_instance_patch_completes_from_its_component() {
     assert_eq!(patch["stroke"]["thickness"], 1.5);
     assert!(!report.unsupported.contains_key("partial stroke override"));
 }
+
+#[test]
+fn an_instance_under_another_theme_resolves_the_component_values_there() {
+    let mut doc = json!({
+        "version": "2.21",
+        "themes": { "device": ["desktop", "mobile"] },
+        "variables": {
+            "title": { "type": "number", "value": [
+                { "value": 32, "theme": { "device": "desktop" } },
+                { "value": 22, "theme": { "device": "mobile" } }
+            ] },
+            "body": { "type": "number", "value": 16 }
+        },
+        "children": [
+            { "type": "frame", "id": "card", "reusable": true, "children": [
+                { "type": "text", "id": "heading", "content": "a", "fontSize": "$title" },
+                { "type": "text", "id": "copy", "content": "b", "fontSize": "$body" }
+            ]},
+            { "type": "frame", "id": "phone", "theme": { "device": "mobile" }, "children": [
+                { "type": "ref", "id": "card-on-phone", "ref": "card",
+                  "descendants": { "heading": { "fontSize": 40 } } },
+                { "type": "ref", "id": "plain-card-on-phone", "ref": "card" }
+            ]},
+            { "type": "ref", "id": "card-on-desktop", "ref": "card" }
+        ]
+    });
+    convert(&mut doc, &no_assets);
+    let card = doc["children"][0]["children"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|child| child["id"] == "heading")
+        .unwrap();
+    assert_eq!(card["fontSize"], 32);
+    let phone = doc["children"][1]["children"].as_array().unwrap();
+    let find = |id: &str| phone.iter().find(|child| child["id"] == id).unwrap();
+    // The instance's own override wins; the theme-free variable needs no patch.
+    assert_eq!(
+        find("card-on-phone")["descendants"]["heading"]["fontSize"],
+        40
+    );
+    let plain = &find("plain-card-on-phone")["descendants"];
+    assert_eq!(plain["heading"]["fontSize"], 22);
+    assert!(plain.get("copy").is_none());
+    assert!(doc["children"][2].get("descendants").is_none());
+}
