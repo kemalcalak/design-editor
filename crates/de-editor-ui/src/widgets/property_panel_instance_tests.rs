@@ -284,6 +284,50 @@ fn instance_panel_emits_go_to_component_and_detach_rows() {
     assert!(!actions.contains(&PropertyPanelAction::CreateComponent));
 }
 
+/// #166: a node inside an instance that carries an override offers one
+/// "Reset override" row, which restores the master's node.
+#[test]
+fn overridden_instance_child_offers_reset_override() {
+    let mut state = state_from(COMPONENT_DOC);
+    state.set_single_selection(NodeId::new("inst1__title"));
+    let panel = PropertyPanel::for_selection(&state).expect("panel builds");
+    assert!(panel.snapshot.instance_override);
+    let rect = Rect {
+        origin: Point2D::new(0.0, 0.0),
+        size: Point2D::new(280.0, 2000.0),
+    };
+    let actions: Vec<PropertyPanelAction> = super::property_panel_layout::action_button_rects(
+        rect,
+        super::property_panel_test_support::visible_for(&panel),
+        &panel.snapshot.effects,
+        &panel.snapshot.fills,
+        &panel.snapshot.interactions,
+    )
+    .into_iter()
+    .map(|(a, _)| a)
+    .collect();
+    assert!(actions.contains(&PropertyPanelAction::ResetInstanceOverride));
+    assert!(!actions.contains(&PropertyPanelAction::DetachInstance));
+
+    let _ = super::property_panel_dispatch::apply_instance_lifecycle_action(
+        &mut state,
+        &PropertyPanelAction::ResetInstanceOverride,
+    );
+    let Some(jian_ops_schema::node::PenNode::Ref(reference)) =
+        de_editor_core::walkers::find_node(state.active_children(), &NodeId::new("inst1"))
+    else {
+        panic!("inst1 stays a Ref");
+    };
+    let descendants = reference
+        .descendants
+        .as_ref()
+        .expect("top-level entry stays");
+    assert!(!descendants.contains_key("title"));
+    assert!(descendants.contains_key("card"));
+    let rebuilt = PropertyPanel::for_selection(&state).expect("panel rebuilds");
+    assert!(!rebuilt.snapshot.instance_override, "nothing left to reset");
+}
+
 #[test]
 fn reusable_panel_emits_detach_component_action() {
     let panel = panel_for("card");

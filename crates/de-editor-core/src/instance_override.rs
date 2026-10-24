@@ -28,8 +28,10 @@
 //! 3. [`EditorState::finish_instance_write`] diffs the display node's
 //!    top-level JSON before/after and restores the original `RefNode`.
 //!    Root changes route `INSTANCE_DIRECT_PROPS` onto the Ref base and
-//!    everything else to `descendants[ref.target]`; child changes all
-//!    route to `descendants[original child id]`.
+//!    everything else to `descendants[ref.target]`; child changes route
+//!    to the child's [`DescendantTarget`]: `descendants[id path]`
+//!    (`child`, `nested/leaf`), or in place inside instance-owned content
+//!    (a replacement subtree or slot children, #166).
 //!
 //! Host integration points (de-host-native): `apply_property_action`,
 //! `commit_property_focus_if_any`, `commit_effect_param_focus_if_any`,
@@ -48,6 +50,7 @@ use jian_ops_schema::node::PenNode;
 use jian_ops_schema::PenDocument;
 use serde_json::{Map, Value};
 
+use crate::instance_anchor::DescendantTarget;
 pub use crate::instance_child_override::{
     resolve_instance_display_node_for_anchor, split_instance_child_anchor,
 };
@@ -159,7 +162,7 @@ pub fn resolve_instance_display_node(doc: &PenDocument, ref_node: &PenNode) -> O
 pub struct InstanceWriteScope {
     ref_id: NodeId,
     display_id: NodeId,
-    target_id: String,
+    target: DescendantTarget,
     route_direct_props: bool,
     original_ref: PenNode,
     display_before: Map<String, Value>,
@@ -188,9 +191,9 @@ impl EditorState {
     /// never appear twice in the live tree. Must be paired with
     /// [`EditorState::finish_instance_write`].
     pub fn begin_instance_write(&mut self, anchor: &NodeId) -> Option<InstanceWriteScope> {
-        let (ref_id, target_id, mut display, route_direct_props) =
-            if let Some((ref_id, child_id)) = split_instance_child_anchor(anchor, &self.doc) {
-                let ref_node = find_node(self.active_children(), &ref_id)?;
+        let (ref_id, target, mut display, route_direct_props) =
+            if let Some(hit) = crate::instance_anchor::locate_anchor(&self.doc, anchor) {
+                let ref_node = find_node(self.active_children(), &hit.ref_id)?;
                 let base = ref_node.base();
                 if !matches!(ref_node, PenNode::Ref(_))
                     || !base.visible.unwrap_or(true)
@@ -198,12 +201,9 @@ impl EditorState {
                 {
                     return None;
                 }
-                (
-                    ref_id,
-                    child_id.as_str().to_string(),
-                    resolve_instance_display_node_for_anchor(&self.doc, anchor)?,
-                    false,
-                )
+                let mut display = hit.display;
+                display.base_mut().id = anchor.as_str().to_string();
+                (hit.ref_id, hit.target, display, false)
             } else {
                 let node = find_node(self.active_children(), anchor)?;
                 let PenNode::Ref(reference) = node else {
@@ -215,7 +215,9 @@ impl EditorState {
                 }
                 (
                     anchor.clone(),
-                    reference.target.clone(),
+                    DescendantTarget::Patch {
+                        key: reference.target.clone(),
+                    },
                     resolve_instance_display_node(&self.doc, node)?,
                     true,
                 )
@@ -240,7 +242,7 @@ impl EditorState {
         Some(InstanceWriteScope {
             ref_id,
             display_id,
-            target_id,
+            target,
             route_direct_props,
             original_ref,
             display_before,
@@ -269,7 +271,7 @@ impl EditorState {
         };
         let (updated, routed) = route_display_state(
             &scope.original_ref,
-            &scope.target_id,
+            &scope.target,
             scope.route_direct_props,
             &scope.display_before,
             slot,
@@ -295,7 +297,7 @@ impl EditorState {
                 snap,
                 &scope.ref_id,
                 &scope.display_id,
-                &scope.target_id,
+                &scope.target,
                 scope.route_direct_props,
                 &scope.original_ref,
                 &scope.display_before,
@@ -309,7 +311,7 @@ impl EditorState {
                 snap,
                 &scope.ref_id,
                 &scope.display_id,
-                &scope.target_id,
+                &scope.target,
                 scope.route_direct_props,
                 &scope.original_ref,
                 &scope.display_before,
@@ -320,7 +322,7 @@ impl EditorState {
                 snap,
                 &scope.ref_id,
                 &scope.display_id,
-                &scope.target_id,
+                &scope.target,
                 scope.route_direct_props,
                 &scope.original_ref,
                 &scope.display_before,
@@ -334,7 +336,7 @@ impl EditorState {
 /// identical direct-prop and descendants-override semantics.
 fn route_display_state(
     original_ref: &PenNode,
-    target_id: &str,
+    target: &DescendantTarget,
     route_direct_props: bool,
     before: &Map<String, Value>,
     display_after: &PenNode,
@@ -383,19 +385,10 @@ fn route_display_state(
         }
     }
     if !overrides.is_empty() {
-        let descendants = ref_map
-            .entry("descendants")
-            .or_insert_with(|| Value::Object(Map::new()));
-        if let Value::Object(descendants) = descendants {
-            let entry = descendants
-                .entry(target_id.to_string())
-                .or_insert_with(|| Value::Object(Map::new()));
-            if let Value::Object(existing) = entry {
-                for (key, value) in overrides {
-                    existing.insert(key, value);
-                }
-            }
-        }
+        target.write_patch(
+            crate::instance_descendants::descendants_mut(&mut ref_map),
+            overrides,
+        );
     }
     match serde_json::from_value::<PenNode>(Value::Object(ref_map)) {
         Ok(updated) if matches!(updated, PenNode::Ref(_)) => (updated, true),
@@ -407,7 +400,7 @@ fn repair_scope_snapshot(
     snapshot: &mut EditorSnapshot,
     ref_id: &NodeId,
     display_id: &NodeId,
-    target_id: &str,
+    target: &DescendantTarget,
     route_direct_props: bool,
     pre_scope_ref: &PenNode,
     display_before: &Map<String, Value>,
@@ -437,7 +430,7 @@ fn repair_scope_snapshot(
         }
         route_display_state(
             pre_scope_ref,
-            target_id,
+            target,
             route_direct_props,
             display_before,
             display_at_snapshot,

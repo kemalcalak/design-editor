@@ -63,7 +63,7 @@ pub(super) fn parse_variable_kind(s: &str) -> Option<VariableKind> {
     }
 }
 
-pub(super) fn command_page_index(state: &EditorState, page_id: Option<&str>) -> Option<usize> {
+pub(crate) fn command_page_index(state: &EditorState, page_id: Option<&str>) -> Option<usize> {
     let Some(raw) = page_id.map(str::trim).filter(|s| !s.is_empty()) else {
         return Some(
             state

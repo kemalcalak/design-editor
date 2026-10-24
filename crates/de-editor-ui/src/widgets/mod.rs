@@ -39,6 +39,7 @@ pub mod layer_context_menu;
 pub mod layer_panel;
 pub(crate) mod layer_panel_cache;
 mod layer_panel_hit;
+mod layer_panel_instance_rows;
 #[cfg(test)]
 mod layer_panel_label_tests;
 mod layer_panel_metrics;

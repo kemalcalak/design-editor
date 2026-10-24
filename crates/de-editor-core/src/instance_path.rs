@@ -9,10 +9,10 @@
 //! `U()` accept them and route the write as an instance override on the
 //! authored `Ref` (`descendants[childId]`), the way the property panel does.
 //!
-//! Writes take exactly two segments. A nested instance child
-//! (`outer/inner/leaf`) has no single authored `Ref` to receive the override,
-//! so it is reported but stays read-only, like the canvas
-//! (`split_instance_child_anchor`).
+//! `cmd_update_node` / `cmd_patch_node_data` route a two-segment path here.
+//! Nested paths (`outer/inner/leaf`) and replacements go through
+//! `EditorCommand::EditInstanceDescendant` (#166, `instance_edit.rs`), which
+//! `update_node` and `batch_design` use for every instance path.
 
 use crate::instance_override::split_instance_child_anchor;
 use crate::node_id::NodeId;

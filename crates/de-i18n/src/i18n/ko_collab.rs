@@ -344,6 +344,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "셰이더 코드",
         "shader.close" => "닫기",
         "shader.apply" => "적용",
+        "property.resetOverride" => "재정의 초기화",
         _ => return None,
     })
 }

@@ -251,13 +251,48 @@ fn apply_renames(nodes: &mut [PenNode], renames: &HashMap<String, String>) {
                 instance.descendants = Some(
                     overrides
                         .into_iter()
-                        .map(|(path, value)| (rename_id_path(&path, renames), value))
+                        .map(|(path, mut value)| {
+                            rename_refs_in_value(&mut value, renames);
+                            (rename_id_path(&path, renames), value)
+                        })
                         .collect(),
                 );
             }
         }
         if let Some(children) = node.children_mut() {
             apply_renames(children, renames);
+        }
+    }
+}
+
+/// Instances inside a replacement subtree or slot content (#166) keep
+/// their components too: their `ref` targets and own override paths follow
+/// the renames. The subtree's own ids render in the instance's id space and
+/// stay as written.
+fn rename_refs_in_value(value: &mut serde_json::Value, renames: &HashMap<String, String>) {
+    let serde_json::Value::Object(map) = value else {
+        return;
+    };
+    if map.get("type").and_then(serde_json::Value::as_str) == Some("ref") {
+        if let Some(serde_json::Value::String(target)) = map.get_mut("ref") {
+            if let Some(fresh) = renames.get(target.as_str()) {
+                *target = fresh.clone();
+            }
+        }
+        if let Some(serde_json::Value::Object(overrides)) = map.get_mut("descendants") {
+            let renamed: serde_json::Map<String, serde_json::Value> = std::mem::take(overrides)
+                .into_iter()
+                .map(|(path, mut entry)| {
+                    rename_refs_in_value(&mut entry, renames);
+                    (rename_id_path(&path, renames), entry)
+                })
+                .collect();
+            *overrides = renamed;
+        }
+    }
+    if let Some(serde_json::Value::Array(children)) = map.get_mut("children") {
+        for child in children {
+            rename_refs_in_value(child, renames);
         }
     }
 }
