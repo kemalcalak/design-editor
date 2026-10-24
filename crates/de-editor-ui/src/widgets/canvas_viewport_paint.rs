@@ -484,13 +484,18 @@ fn paint_node_body<'a>(
                 paint_node_stroke(cx, node, world_rect, zoom);
             }
         }
-        NodeKind::Other(tag) if tag == "icon_font" => crate::widgets::icons::paint_icon_font_node(
-            cx.backend,
-            node.font_family.as_str(),
-            node.text.as_deref().unwrap_or(""),
-            world_rect,
-            node.fill,
-        ),
+        NodeKind::Other(tag) if tag == "icon_font" => {
+            // `font_weight` carries the icon weight (0 = unset), like a text
+            // node's: `icon_family` says what each family does with it.
+            crate::widgets::icons::paint_icon_font_node_weighted(
+                cx.backend,
+                node.font_family.as_str(),
+                node.text.as_deref().unwrap_or(""),
+                node.font_weight,
+                world_rect,
+                node.fill,
+            )
+        }
         NodeKind::Group | NodeKind::Other(_) => {
             // `clipContent` is container-level in the canonical schema
             // (Frame / Group / Rectangle all carry it) — honour it on

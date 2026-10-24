@@ -278,6 +278,7 @@ impl EditorState {
         };
         let icon_id = format!("{family}:{icon_name}");
         match node {
+            // `weight` is left as is: a picker swap keeps the node's weight.
             PenNode::IconFont(n) => {
                 n.icon_font_name = icon_name.to_string();
                 n.icon_font_family = Some(family.to_string());

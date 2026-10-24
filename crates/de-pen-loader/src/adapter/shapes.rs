@@ -267,7 +267,7 @@ pub(super) fn text_to_payload(n: &TextNode) -> NodePayload {
 /// named weights. Stays in sync with `jian_core::layout::resolve_weight`.
 fn resolve_font_weight(w: Option<&FontWeight>) -> u16 {
     match w {
-        Some(FontWeight::Number(n)) => *n as u16,
+        Some(FontWeight::Number(n)) => (*n).min(u32::from(u16::MAX)) as u16,
         Some(FontWeight::Keyword(s)) => {
             if let Ok(n) = s.parse::<u16>() {
                 return n;
@@ -342,6 +342,9 @@ pub(super) fn icon_font_to_payload(n: &IconFontNode) -> NodePayload {
         .icon_font_family
         .clone()
         .unwrap_or_else(|| "lucide".to_string());
+    // Icon weight rides `font_weight` like a text node's (0 = unset);
+    // `icon_family` decides what each family does with it.
+    p.font_weight = resolve_font_weight(n.weight.as_ref()).min(1000);
     assign_first_fill(&mut p, n.fill.as_deref());
     p
 }

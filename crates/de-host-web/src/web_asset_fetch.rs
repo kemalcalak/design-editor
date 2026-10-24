@@ -334,6 +334,19 @@ fn install_fetched_asset(route: &str, bytes: Vec<u8>) -> bool {
         }
     }
 
+    // Extended icon families (Material Symbols, phosphor) arrive gzipped. Parse
+    // them BEFORE the route turns Ready (same reason as the locale catalogs:
+    // a Ready route is never fetched again, so a corrupt body must stay
+    // retryable), and register an empty body: nothing reads the raw bytes, so
+    // leaking the 2.5 MB of gzip would buy nothing.
+    if let Some(set) = de_editor_ui::ExtendedIconSet::for_route(route) {
+        if !de_editor_ui::install_extended_icon_catalog(set, &bytes) {
+            de_editor_core::web_assets::mark_failed(route);
+            return false;
+        }
+        return de_editor_core::web_assets::install(route, Vec::new());
+    }
+
     if !de_editor_core::web_assets::install(route, bytes) {
         return false;
     }

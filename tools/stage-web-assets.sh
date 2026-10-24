@@ -63,6 +63,10 @@ copy_dir "${UI_ASSETS}/scene_template_previews" "scene_template_previews"
 copy_dir "${CORE_ASSETS}/scene_templates" "scene_templates"
 # Core (lucide + feather) icon catalog — fetched when the icon panel opens.
 copy_file "${UI_ASSETS}/iconify-catalog-core.json" "iconify-catalog-core.json"
+# Extended icon families (#4), gzipped — fetched on the first glyph or icon
+# panel search that needs them (`icon_catalog_extended`).
+copy_file "${UI_ASSETS}/iconify-catalog-material-symbols.json.gz" "iconify-catalog-material-symbols.json.gz"
+copy_file "${UI_ASSETS}/iconify-catalog-phosphor.json.gz" "iconify-catalog-phosphor.json.gz"
 # The OFL design fonts the desktop binary embeds with `include_bytes!`. The
 # browser has no bundled fonts of its own, so without these a document using
 # e.g. Inter pops the missing-fonts modal and renders a fallback face; the web
