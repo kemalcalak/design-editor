@@ -205,9 +205,10 @@ pub enum BooleanOp {
     Exclude,
 }
 
-/// Raster export format. State enum ported from shell-core's
+/// Export dialog format. State enum ported from shell-core's
 /// `widgets/export_dialog::ExportFormat` (the widget render code stays
-/// in shell-core).
+/// in shell-core). `Html` / `HtmlTailwind` are the flex-layout code
+/// exports (#170); the rest render the canvas.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExportFormat {
     Png,
@@ -215,16 +216,25 @@ pub enum ExportFormat {
     Webp,
     Svg,
     Pdf,
+    Html,
+    HtmlTailwind,
 }
 
 impl ExportFormat {
-    pub const ALL: [ExportFormat; 5] = [
+    pub const ALL: [ExportFormat; 7] = [
         ExportFormat::Png,
         ExportFormat::Jpeg,
         ExportFormat::Webp,
         ExportFormat::Svg,
         ExportFormat::Pdf,
+        ExportFormat::Html,
+        ExportFormat::HtmlTailwind,
     ];
+
+    /// True for the HTML code exports (no raster scale applies).
+    pub fn is_html(self) -> bool {
+        matches!(self, ExportFormat::Html | ExportFormat::HtmlTailwind)
+    }
 
     pub fn label(self) -> &'static str {
         match self {
@@ -233,6 +243,8 @@ impl ExportFormat {
             ExportFormat::Webp => "WEBP",
             ExportFormat::Svg => "SVG",
             ExportFormat::Pdf => "PDF",
+            ExportFormat::Html => "HTML",
+            ExportFormat::HtmlTailwind => "Tailwind",
         }
     }
 
@@ -243,6 +255,7 @@ impl ExportFormat {
             ExportFormat::Webp => "webp",
             ExportFormat::Svg => "svg",
             ExportFormat::Pdf => "pdf",
+            ExportFormat::Html | ExportFormat::HtmlTailwind => "html",
         }
     }
 }

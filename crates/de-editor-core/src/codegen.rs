@@ -15,6 +15,8 @@ pub enum Framework {
     Vue,
     Svelte,
     Html,
+    /// HTML + Tailwind v4 utility classes (#170).
+    HtmlTailwind,
     Flutter,
     SwiftUi,
     Compose,
@@ -22,11 +24,12 @@ pub enum Framework {
 }
 
 impl Framework {
-    pub const ALL: [Framework; 8] = [
+    pub const ALL: [Framework; 9] = [
         Framework::React,
         Framework::Vue,
         Framework::Svelte,
         Framework::Html,
+        Framework::HtmlTailwind,
         Framework::Flutter,
         Framework::SwiftUi,
         Framework::Compose,
@@ -39,6 +42,7 @@ impl Framework {
             Framework::Vue => "vue",
             Framework::Svelte => "svelte",
             Framework::Html => "html",
+            Framework::HtmlTailwind => "html-tailwind",
             Framework::Flutter => "flutter",
             Framework::SwiftUi => "swiftui",
             Framework::Compose => "compose",
@@ -46,7 +50,11 @@ impl Framework {
         }
     }
 
+    /// Parse a wire token. `html-css` (pen.dev's name) is accepted for `html`.
     pub fn from_wire(s: &str) -> Option<Framework> {
+        if s == "html-css" {
+            return Some(Framework::Html);
+        }
         Framework::ALL.into_iter().find(|f| f.as_wire() == s)
     }
 
@@ -57,6 +65,7 @@ impl Framework {
             Framework::Vue => "Vue",
             Framework::Svelte => "Svelte",
             Framework::Html => "HTML",
+            Framework::HtmlTailwind => "HTML + Tailwind",
             Framework::Flutter => "Flutter",
             Framework::SwiftUi => "SwiftUI",
             Framework::Compose => "Compose",
@@ -71,6 +80,7 @@ impl Framework {
             Framework::Vue => "codegen-vue",
             Framework::Svelte => "codegen-svelte",
             Framework::Html => "codegen-html",
+            Framework::HtmlTailwind => "codegen-html-tailwind",
             Framework::Flutter => "codegen-flutter",
             Framework::SwiftUi => "codegen-swiftui",
             Framework::Compose => "codegen-compose",
@@ -399,6 +409,11 @@ mod tests {
             assert_eq!(Framework::from_wire(fw.as_wire()), Some(fw));
         }
         assert_eq!(Framework::from_wire("react"), Some(Framework::React));
+        assert_eq!(Framework::from_wire("html-css"), Some(Framework::Html));
+        assert_eq!(
+            Framework::from_wire("html-tailwind"),
+            Some(Framework::HtmlTailwind)
+        );
         assert_eq!(
             Framework::from_wire("react-native"),
             Some(Framework::ReactNative)

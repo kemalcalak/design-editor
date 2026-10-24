@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "name": "Stack",
+  "themes": { "Mode": ["Light", "Dark"] },
+  "variables": {
+    "surface": { "type": "color", "value": [
+      { "value": "#f8fafc", "theme": { "Mode": "Light" } },
+      { "value": "#0f172a", "theme": { "Mode": "Dark" } }
+    ] }
+  },
+  "children": [
+    {
+      "type": "frame", "id": "hero", "name": "Hero", "x": 0, "y": 0,
+      "width": 360, "height": 200, "layout": "none", "clipContent": true,
+      "justifyContent": "center", "alignItems": "center",
+      "fill": [{ "type": "solid", "color": "$surface" }],
+      "children": [
+        {
+          "type": "text", "id": "headline", "name": "Headline", "content": "Ship it",
+          "fontFamily": "Helvetica", "fontSize": 32, "fontWeight": 700, "lineHeight": 1.2,
+          "fill": [{ "type": "solid", "color": "#ffffff" }],
+          "effects": [{ "type": "shadow", "offsetX": 0, "offsetY": 2, "blur": 4, "spread": 0, "color": "#00000066" }]
+        },
+        {
+          "type": "rectangle", "id": "glow", "name": "Glow", "x": 40, "y": 20,
+          "width": 120, "height": 120, "rotation": 15,
+          "cornerRadius": [24, 0, 24, 0], "opacity": 0.8, "blendMode": "multiply",
+          "fill": [{ "type": "radial_gradient", "cx": 0.5, "cy": 0.5, "radius": 0.5, "stops": [
+            { "offset": 0, "color": "#f59e0b" }, { "offset": 1, "color": "#f59e0b00" }
+          ] }]
+        },
+        {
+          "type": "rectangle", "id": "backdrop", "name": "Backdrop",
+          "width": "fill_container", "height": "fill_container",
+          "fill": [
+            { "type": "linear_gradient", "angle": 180, "stops": [
+              { "offset": 0, "color": "#00000000" }, { "offset": 1, "color": "#00000099" }
+            ] },
+            { "type": "solid", "color": "#7c3aed" }
+          ]
+        }
+      ]
+    }
+  ]
+}
