@@ -81,26 +81,29 @@ pub fn effective_theme(doc: &PenDocument, active: &Theme) -> Theme {
     theme
 }
 
-/// Pick the concrete scalar from a themed list for the given theme
-/// (TS `resolveThemedValue`): the first entry whose theme map carries
-/// every active axis at the active value, else the FIRST entry.
+/// Pick the concrete scalar from a themed list for the given theme: the
+/// entry whose axes all hold the active values (the most specific one when
+/// several do, the earliest on a tie), else the FIRST entry. An entry may
+/// name fewer axes than the document has: in a `mode` × `device` document a
+/// `{ "device": "mobile" }` entry applies to both modes, as in pen.dev.
 fn resolve_themed_value<'a>(
     values: &'a [jian_ops_schema::variable::ThemedValue],
     theme: &Theme,
 ) -> Option<&'a VariableScalar> {
-    if !theme.is_empty() {
-        let hit = values.iter().find(|v| {
-            v.theme.as_ref().is_some_and(|t| {
-                theme
-                    .iter()
-                    .all(|(axis, expected)| t.get(axis) == Some(expected))
-            })
-        });
-        if let Some(hit) = hit {
-            return Some(&hit.value);
+    let mut best: Option<(usize, &VariableScalar)> = None;
+    for value in values {
+        let Some(axes) = value.theme.as_ref().filter(|axes| !axes.is_empty()) else {
+            continue;
+        };
+        let matches = axes
+            .iter()
+            .all(|(axis, wanted)| theme.get(axis) == Some(wanted));
+        if matches && best.is_none_or(|(len, _)| axes.len() > len) {
+            best = Some((axes.len(), &value.value));
         }
     }
-    values.first().map(|v| &v.value)
+    best.map(|(_, scalar)| scalar)
+        .or_else(|| values.first().map(|v| &v.value))
 }
 
 /// Whether the built-in semantic palette (shadcn dictionary, or the

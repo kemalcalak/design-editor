@@ -278,6 +278,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.dashDashed" => "Gestrichelt",
         "stroke.dashDotted" => "Gepunktet",
         "effects.addInnerShadow" => "Innerer Schatten",
+        "effects.addShader" => "Shader",
         "image.stretch" => "Strecken",
         "fill.presetNoise" => "Rauschen",
         "fill.presetFade" => "Verblassen",

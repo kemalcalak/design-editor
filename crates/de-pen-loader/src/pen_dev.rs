@@ -22,6 +22,9 @@ mod nodes;
 mod paint;
 #[cfg(test)]
 mod tests;
+mod variables;
+#[cfg(test)]
+mod variables_tests;
 
 /// Reads a sibling asset (an image fill's relative `url`) for the document
 /// being converted. Returns `None` when the file is missing or unreadable;
@@ -192,7 +195,8 @@ pub fn convert(root: &mut Value, assets: AssetReader<'_>) -> PenDevReport {
     if doc.remove("imports").is_some() {
         report.note("imported .pen libraries");
     }
-    let mut ctx = nodes::Ctx::new(assets, &mut report);
+    let variables = variables::Variables::from_document(doc);
+    let mut ctx = nodes::Ctx::new(assets, &mut report, variables);
     if let Some(Value::Array(children)) = doc.get_mut("children") {
         nodes::convert_children(children, false, &mut ctx);
     }

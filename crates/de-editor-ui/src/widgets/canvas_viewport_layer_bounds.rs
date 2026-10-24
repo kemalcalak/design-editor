@@ -165,7 +165,8 @@ fn subtree_visual_bounds(
                     return Err(());
                 }
             }
-            Effect::DropShadow(_) => {}
+            // A shader pass's output is cropped to the node box.
+            Effect::DropShadow(_) | Effect::Shader(_) => {}
         }
     }
 

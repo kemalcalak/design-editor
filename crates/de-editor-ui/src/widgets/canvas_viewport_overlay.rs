@@ -432,43 +432,57 @@ pub(crate) fn paint_shader_rect(
     corner_radius: f32,
     corner_radii: Option<[f32; 4]>,
 ) {
+    with_canvas_uniforms(&shader.sksl, &shader.uniforms, rect, |uniforms| {
+        super::canvas_shader_images::prepare_shader_images(cx, &shader.sksl, uniforms, rect);
+        if let Some(radii) = corner_radii {
+            cx.backend.fill_round_rect_shader_per_corner(
+                rect,
+                radii,
+                &shader.sksl,
+                uniforms,
+                shader.opacity,
+                shader.fallback,
+            );
+        } else {
+            cx.backend.fill_round_rect_shader(
+                rect,
+                corner_radius,
+                &shader.sksl,
+                uniforms,
+                shader.opacity,
+                shader.fallback,
+            );
+        }
+    });
+}
+
+/// Run `f` with the bindings a program painted into `rect` receives: the
+/// resolved `uniforms` plus the canvas clock (`time`) and node-local pointer
+/// (`mouse`) when `sksl` declares them, each overriding an authored value of
+/// the same name. Shared by shader fills and shader effects (#6).
+pub(crate) fn with_canvas_uniforms<R>(
+    sksl: &str,
+    uniforms: &[crate::layout_scene::SceneShaderUniform],
+    rect: Rect,
+    f: impl FnOnce(&[(&str, &[f32])]) -> R,
+) -> R {
     use super::canvas_shader_clock::{time_uniform_value, TIME_UNIFORM};
     use super::canvas_shader_pointer::{mouse_uniform_value, MOUSE_UNIFORM};
-    let time = time_uniform_value(&shader.sksl).map(|seconds| [seconds]);
-    let mut uniforms: Vec<(&str, &[f32])> = shader
-        .uniforms
+    let time = time_uniform_value(sksl).map(|seconds| [seconds]);
+    let mut bound: Vec<(&str, &[f32])> = uniforms
         .iter()
         .filter(|u| time.is_none() || u.name != TIME_UNIFORM)
         .map(|u| (u.name.as_str(), u.values.as_slice()))
         .collect();
     if let Some(time) = time.as_ref() {
-        uniforms.push((TIME_UNIFORM, time.as_slice()));
+        bound.push((TIME_UNIFORM, time.as_slice()));
     }
-    let mouse = mouse_uniform_value(&shader.sksl, rect, &uniforms);
+    let mouse = mouse_uniform_value(sksl, rect, &bound);
     if let Some(mouse) = mouse.as_ref() {
-        uniforms.retain(|(name, _)| *name != MOUSE_UNIFORM);
-        uniforms.push((MOUSE_UNIFORM, mouse.as_slice()));
+        bound.retain(|(name, _)| *name != MOUSE_UNIFORM);
+        bound.push((MOUSE_UNIFORM, mouse.as_slice()));
     }
-    super::canvas_shader_images::prepare_shader_images(cx, &shader.sksl, &uniforms, rect);
-    if let Some(radii) = corner_radii {
-        cx.backend.fill_round_rect_shader_per_corner(
-            rect,
-            radii,
-            &shader.sksl,
-            &uniforms,
-            shader.opacity,
-            shader.fallback,
-        );
-    } else {
-        cx.backend.fill_round_rect_shader(
-            rect,
-            corner_radius,
-            &shader.sksl,
-            &uniforms,
-            shader.opacity,
-            shader.fallback,
-        );
-    }
+    f(&bound)
 }
 
 /// Greedy line-wrap for canvas text nodes with explicit width.

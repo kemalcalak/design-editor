@@ -28,6 +28,7 @@ mod editor_meta;
 mod editor_meta_error;
 mod editor_scene;
 mod effects;
+pub mod effects_shader;
 mod layout_repair;
 mod layout_scene;
 mod legacy_payload_repair;

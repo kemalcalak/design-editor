@@ -1,11 +1,14 @@
 //! Node-tree walk for the pen.dev conversion: per-node defaults, layout
 //! position, visibility and path `viewBox`, plus removal of node kinds the
-//! canonical schema cannot hold. Paint lives in [`super::paint`].
+//! canonical schema cannot hold. Paint lives in [`super::paint`], variable
+//! references in [`super::variables`].
 
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use serde_json::{Map, Value};
 
+use super::variables::{self, Theme, Variables};
 use super::{paint, AssetReader, PenDevReport};
 
 /// pen.dev node kinds with no canonical equivalent. They are removed with
@@ -29,15 +32,21 @@ pub(super) struct Ctx<'a> {
     pub(super) images: HashMap<String, Option<String>>,
     /// Table id → data URL, written to the document's `images` table.
     pub(super) image_table: Map<String, Value>,
+    pub(super) variables: Variables,
 }
 
 impl<'a> Ctx<'a> {
-    pub(super) fn new(assets: AssetReader<'a>, report: &'a mut PenDevReport) -> Self {
+    pub(super) fn new(
+        assets: AssetReader<'a>,
+        report: &'a mut PenDevReport,
+        variables: Variables,
+    ) -> Self {
         Self {
             assets,
             report,
             images: HashMap::new(),
             image_table: Map::new(),
+            variables,
         }
     }
 }
@@ -52,26 +61,32 @@ pub(super) enum Role {
 
 /// Convert a `children` array and everything below it. `parent_flow` says
 /// whether the owning node is an auto-layout frame (its children's `x` / `y`
-/// are ignored). Iterative so a deep design cannot overflow the stack.
+/// are ignored). Iterative so a deep design cannot overflow the stack; each
+/// entry carries the theme its variable references resolve against.
 pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx: &mut Ctx<'_>) {
-    let mut stack: Vec<(&mut Value, bool, Role)> = Vec::new();
+    let mut stack: Vec<(&mut Value, bool, Role, Rc<Theme>)> = Vec::new();
+    let root_theme = Rc::new(ctx.variables.default_theme().clone());
     children.retain(|child| keep_child(child, ctx.report));
     stack.extend(
         children
             .iter_mut()
-            .map(|child| (child, parent_flow, Role::Node)),
+            .map(|child| (child, parent_flow, Role::Node, Rc::clone(&root_theme))),
     );
-    while let Some((node, in_flow, role)) = stack.pop() {
+    while let Some((node, in_flow, role, theme)) = stack.pop() {
         let Value::Object(map) = node else {
             continue;
         };
-        convert_node(map, in_flow, role, ctx);
+        let theme = variables::scoped_theme(map, &theme).map_or(theme, Rc::new);
+        convert_node(map, in_flow, role, &theme, ctx);
         let flow = is_auto_layout(map);
         for (key, value) in map.iter_mut() {
             match (key.as_str(), value) {
                 ("children", Value::Array(kids)) => {
                     kids.retain(|child| keep_child(child, ctx.report));
-                    stack.extend(kids.iter_mut().map(|child| (child, flow, Role::Node)));
+                    stack.extend(
+                        kids.iter_mut()
+                            .map(|child| (child, flow, Role::Node, Rc::clone(&theme))),
+                    );
                 }
                 ("descendants", Value::Object(overrides)) => {
                     overrides.retain(|_, value| keep_child(value, ctx.report));
@@ -86,7 +101,7 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
                         } else {
                             Role::Patch
                         };
-                        stack.push((value, false, role));
+                        stack.push((value, false, role, Rc::clone(&theme)));
                     }
                 }
                 _ => {}
@@ -106,7 +121,15 @@ fn keep_child(child: &Value, report: &mut PenDevReport) -> bool {
     }
 }
 
-fn convert_node(map: &mut Map<String, Value>, in_flow: bool, role: Role, ctx: &mut Ctx<'_>) {
+fn convert_node(
+    map: &mut Map<String, Value>,
+    in_flow: bool,
+    role: Role,
+    theme: &Theme,
+    ctx: &mut Ctx<'_>,
+) {
+    // First, so every conversion below sees concrete values.
+    variables::resolve_node(map, &ctx.variables, theme, ctx.report);
     // An absolutely positioned child is out of its parent's flow.
     let absolute = map.get("layoutPosition").and_then(Value::as_str) == Some("absolute");
     match map.get("type").and_then(Value::as_str) {

@@ -663,12 +663,18 @@ pub fn set_ellipse_arc_snapshot() -> SetEllipseArc {
 }
 
 /// First-party `add_node_effect` tool — append a visual effect
-/// (`shadow` / `inner_shadow` / `blur` / `background_blur`) to a node
-/// with default parameters.
+/// (`shadow` / `inner_shadow` / `blur` / `background_blur` / `shader`)
+/// to a node with default parameters.
 pub struct AddNodeEffect;
 
 /// The `kind` values `add_node_effect` accepts.
-const EFFECT_KINDS: [&str; 4] = ["shadow", "inner_shadow", "blur", "background_blur"];
+const EFFECT_KINDS: [&str; 5] = [
+    "shadow",
+    "inner_shadow",
+    "blur",
+    "background_blur",
+    "shader",
+];
 
 impl McpTool for AddNodeEffect {
     fn name(&self) -> &str {

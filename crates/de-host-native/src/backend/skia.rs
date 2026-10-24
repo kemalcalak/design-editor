@@ -76,6 +76,8 @@ mod image_diagnostics;
 mod layer;
 mod path;
 mod shader_children;
+mod shader_effect;
+mod shader_effect_source;
 mod shaped_text;
 mod stroke_style;
 mod text;
@@ -137,6 +139,10 @@ pub struct NativeBackend {
     /// cache above): compile-once-per-unique-source so per-frame
     /// repaints reuse the program instead of recompiling.
     shader_cache: jian_skia::ShaderCache,
+    /// Open shader-effect layers; see `shader_effect.rs`.
+    effect_layer_marks: std::cell::RefCell<Vec<shader_effect::EffectLayerMark>>,
+    /// Device-space wrappers of effect programs, keyed by source hash.
+    effect_sources: std::collections::HashMap<u64, String>,
 }
 
 /// One resident raster image and its LRU accounting. `covers_edge_px`
@@ -270,6 +276,8 @@ impl NativeBackend {
             svg_raster_cache_order: std::collections::VecDeque::new(),
             dot_point_buffer: Vec::new(),
             shader_cache: jian_skia::ShaderCache::new(),
+            effect_layer_marks: std::cell::RefCell::default(),
+            effect_sources: std::collections::HashMap::new(),
         };
         // Pre-warm the per-codepoint typeface cache with every CJK
         // glyph that appears in the chrome (top bar, layer panel,
@@ -683,11 +691,6 @@ impl NativeBackend {
             .backdrop(&filter)
             .backdrop_tile_mode(skia_safe::TileMode::Clamp);
         canvas.save_layer(&rec);
-    }
-
-    /// Pop the most recent save.
-    pub fn restore(&self, canvas: &skia_safe::Canvas) {
-        canvas.restore();
     }
 
     /// Restore the canvas state stack down to a specific count returned

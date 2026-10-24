@@ -278,6 +278,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.dashDashed" => "虚线",
         "stroke.dashDotted" => "点线",
         "effects.addInnerShadow" => "内阴影",
+        "effects.addShader" => "着色器",
         "image.stretch" => "拉伸",
         "fill.presetNoise" => "噪点",
         "fill.presetFade" => "渐隐",

@@ -37,6 +37,8 @@ pub mod resolver;
 #[cfg(test)]
 mod scroll_orchestration_corpus_tests;
 #[cfg(test)]
+mod shader_effect_corpus_tests;
+#[cfg(test)]
 mod shader_fill_corpus_tests;
 pub mod style_guide;
 pub mod types;

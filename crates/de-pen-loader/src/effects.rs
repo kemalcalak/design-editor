@@ -34,10 +34,10 @@ pub fn effects_to_payload(effects: &[Effect]) -> Vec<ShadowPayload> {
                 color: [s.color.r, s.color.g, s.color.b, s.color.a],
                 inner: s.inner,
             }),
-            // Layer blur and backdrop blur are both carried separately
-            // (`layer_blur_from_effects` / not yet round-tripped here) —
-            // this payload models drop shadows only.
-            Effect::Blur(_) | Effect::BackgroundBlur { .. } => None,
+            // Layer blur, backdrop blur and shader passes are all carried
+            // separately (`layer_blur` / `background_blur` /
+            // `shader_effects`) — this payload models drop shadows only.
+            Effect::Blur(_) | Effect::BackgroundBlur { .. } | Effect::Shader(_) => None,
         })
         .collect()
 }
@@ -114,7 +114,7 @@ fn shadow_payload_to_effect(s: &ShadowPayload) -> Effect {
 /// Frame / Group / Rectangle carry effects on their `container`
 /// style; the leaf shapes carry it directly. IconFont / Ref have
 /// none.
-fn canonical_node_effects(node: &PenNode) -> Option<&[PenEffect]> {
+pub(crate) fn canonical_node_effects(node: &PenNode) -> Option<&[PenEffect]> {
     match node {
         PenNode::Frame(n) => n.container.effects.as_deref(),
         PenNode::Group(n) => n.container.effects.as_deref(),
@@ -165,7 +165,7 @@ pub fn shadows_from_canonical(node: &PenNode) -> Vec<ShadowPayload> {
                 })
             }
             PenEffect::Shadow(_) => None,
-            PenEffect::Blur(_) | PenEffect::BackgroundBlur(_) => None,
+            PenEffect::Blur(_) | PenEffect::BackgroundBlur(_) | PenEffect::Shader(_) => None,
         })
         .collect()
 }

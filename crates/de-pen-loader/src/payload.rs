@@ -224,6 +224,9 @@ pub struct NodePayload {
     /// Gaussian backdrop-blur radius (doc px).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub background_blur: Option<f32>,
+    /// Visible SkSL shader effects (#6), in list order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub shader_effects: Vec<crate::effects_shader::ShaderEffectPayload>,
     /// Source URL (`data:image/...;base64,...` or file path) when the
     /// node is an `Image` — the canvas painter decodes the inline
     /// bytes and draws them with `RenderBackend::draw_image`. `None`

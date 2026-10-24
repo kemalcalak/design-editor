@@ -238,7 +238,8 @@ pub fn effects(list: &[Effect]) -> EffectCss {
                 }
                 let _ = write!(out.backdrop_filter, "blur({}px)", num(radius * 0.5));
             }
-            Effect::Blur(_) | Effect::BackgroundBlur { .. } => {}
+            // A shader effect forces the raster fallback (`unexpressible`).
+            Effect::Blur(_) | Effect::BackgroundBlur { .. } | Effect::Shader(_) => {}
         }
     }
     out

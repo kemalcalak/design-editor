@@ -435,8 +435,9 @@ impl EditorState {
     }
 
     /// `AddNodeEffect` — append a visual effect with default
-    /// parameters. `kind` is `"shadow"` / `"inner_shadow"` / `"blur"` /
-    /// `"background_blur"`; `inner_shadow` is the Effects add menu's body.
+    /// parameters. `kind` is `"shadow"` / `"inner_shadow"` (the Effects
+    /// add menu's body) / `"blur"` / `"background_blur"` / `"shader"` (the
+    /// default pixelate program, #6).
     /// Rejects an unknown kind or a node variant with no effects field
     /// (IconFont / Ref).
     pub(crate) fn cmd_add_node_effect(&mut self, node_id: &NodeId, kind: &str) -> bool {
@@ -462,6 +463,7 @@ impl EditorState {
                 radius: 10.0,
                 visible: None,
             }),
+            "shader" => crate::shader_effects::default_shader_effect(),
             _ => return false,
         };
         let Some(node) = find_node_mut(self.active_children_mut(), node_id) else {
@@ -560,6 +562,7 @@ impl EditorState {
         match effect {
             PenEffect::Shadow(body) => body.visible = Some(visible),
             PenEffect::Blur(body) | PenEffect::BackgroundBlur(body) => body.visible = Some(visible),
+            PenEffect::Shader(body) => body.visible = Some(visible),
         }
         true
     }

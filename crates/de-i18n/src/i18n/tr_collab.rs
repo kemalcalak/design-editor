@@ -278,6 +278,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.dashDashed" => "Kesikli",
         "stroke.dashDotted" => "Noktalı",
         "effects.addInnerShadow" => "İç gölge",
+        "effects.addShader" => "Gölgelendirici",
         "image.stretch" => "Uzat",
         "fill.presetNoise" => "Gürültü",
         "fill.presetFade" => "Solma",
