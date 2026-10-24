@@ -1,6 +1,6 @@
 //! Layer / fill compositing controls shared by paint and hit-test.
 //!
-//! BlendMode has 16 choices, so its popup uses two columns of eight
+//! BlendMode has 18 choices, so its popup uses two columns of nine
 //! rows. This keeps every mode reachable without adding a second
 //! scroll owner to the already-scrollable property rail.
 
@@ -38,7 +38,7 @@ pub fn node_trigger_rects(x: f32, y: f32, width: f32) -> [(CompositingTarget, Re
     ]
 }
 
-fn blend_choices() -> [Option<BlendMode>; 16] {
+fn blend_choices() -> [Option<BlendMode>; 18] {
     [
         None,
         Some(BlendMode::Darken),
@@ -53,7 +53,9 @@ fn blend_choices() -> [Option<BlendMode>; 16] {
         Some(BlendMode::Luminosity),
         Some(BlendMode::SoftLight),
         Some(BlendMode::ColorDodge),
+        Some(BlendMode::LinearDodge),
         Some(BlendMode::ColorBurn),
+        Some(BlendMode::LinearBurn),
         Some(BlendMode::HardLight),
         Some(BlendMode::Exclusion),
     ]
@@ -86,6 +88,8 @@ fn blend_key(mode: Option<&BlendMode>) -> &'static str {
         Some(BlendMode::ColorBurn) => "blendMode.colorBurn",
         Some(BlendMode::HardLight) => "blendMode.hardLight",
         Some(BlendMode::Exclusion) => "blendMode.exclusion",
+        Some(BlendMode::LinearBurn) => "blendMode.linearBurn",
+        Some(BlendMode::LinearDodge) => "blendMode.linearDodge",
     }
 }
 
@@ -505,20 +509,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn blend_popup_exposes_all_sixteen_modes_in_two_columns() {
+    fn blend_popup_exposes_all_eighteen_modes_in_two_columns() {
         let target = CompositingTarget::NodeBlend;
-        assert_eq!(row_count(target), 16);
+        assert_eq!(row_count(target), 18);
         let popup = popup_rect(
             Rect::xywh(20.0, 20.0, 100.0, 30.0),
             Rect::xywh(0.0, 0.0, 280.0, 500.0),
             target,
         );
-        assert_eq!(popup_rows(target), 8);
-        assert!(row_rect(popup, target, 15).is_some());
+        assert_eq!(popup_rows(target), 9);
+        assert!(row_rect(popup, target, 17).is_some());
+        assert!(matches!(
+            action_for_row(target, 17),
+            Some(PropertyPanelAction::SetNodeBlendMode(Some(
+                BlendMode::Exclusion
+            )))
+        ));
+        assert!(matches!(
+            action_for_row(target, 13),
+            Some(PropertyPanelAction::SetNodeBlendMode(Some(
+                BlendMode::LinearDodge
+            )))
+        ));
         assert!(matches!(
             action_for_row(target, 15),
             Some(PropertyPanelAction::SetNodeBlendMode(Some(
-                BlendMode::Exclusion
+                BlendMode::LinearBurn
             )))
         ));
     }
@@ -590,7 +606,7 @@ mod tests {
             PropertyPanel::compositing_picker_viewport(panel_rect),
             target,
         );
-        let last = row_rect(popup, target, 15).unwrap();
+        let last = row_rect(popup, target, 17).unwrap();
         let point = Point2D::new(last.origin.x + 5.0, last.origin.y + 5.0);
         assert_eq!(
             panel.hit_test_action(panel_rect, point),

@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "角丸",
         "slidesPanel.transitionNone" => "なし",
         "slidesPanel.transitionPush" => "プッシュ",
+        "blendMode.linearBurn" => "焼き込み（リニア）",
+        "blendMode.linearDodge" => "覆い焼き（リニア）",
         "shader.editCode" => "コード",
         "shader.compiles" => "コンパイル成功",
         "shader.compileError" => "コンパイルエラー",

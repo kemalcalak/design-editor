@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "รัศมีมุม",
         "slidesPanel.transitionNone" => "ไม่มี",
         "slidesPanel.transitionPush" => "ดัน",
+        "blendMode.linearBurn" => "เพิ่มความเข้มเชิงเส้น",
+        "blendMode.linearDodge" => "เพิ่มความสว่างเชิงเส้น",
         "shader.editCode" => "โค้ด",
         "shader.compiles" => "คอมไพล์ได้",
         "shader.compileError" => "คอมไพล์ผิดพลาด",

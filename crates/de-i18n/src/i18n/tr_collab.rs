@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "Köşe yarıçapı",
         "slidesPanel.transitionNone" => "Yok",
         "slidesPanel.transitionPush" => "İt",
+        "blendMode.linearBurn" => "Doğrusal yakma",
+        "blendMode.linearDodge" => "Doğrusal soldurma",
         "shader.editCode" => "Kod",
         "shader.compiles" => "Derleniyor",
         "shader.compileError" => "Derleme hatası",

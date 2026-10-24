@@ -256,6 +256,7 @@ fn named_frame_node(id: &str, name: &str) -> PenNode {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 

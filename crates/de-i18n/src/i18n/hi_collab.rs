@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "कोने की त्रिज्या",
         "slidesPanel.transitionNone" => "कोई नहीं",
         "slidesPanel.transitionPush" => "धकेलें",
+        "blendMode.linearBurn" => "लीनियर बर्न",
+        "blendMode.linearDodge" => "लीनियर डॉज",
         "shader.editCode" => "कोड",
         "shader.compiles" => "कंपाइल हुआ",
         "shader.compileError" => "कंपाइल त्रुटि",

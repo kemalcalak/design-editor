@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "Bo góc",
         "slidesPanel.transitionNone" => "Không",
         "slidesPanel.transitionPush" => "Đẩy",
+        "blendMode.linearBurn" => "Đốt tuyến tính",
+        "blendMode.linearDodge" => "Né tuyến tính",
         "shader.editCode" => "Mã",
         "shader.compiles" => "Biên dịch được",
         "shader.compileError" => "Lỗi biên dịch",

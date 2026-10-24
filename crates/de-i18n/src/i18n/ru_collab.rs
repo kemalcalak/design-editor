@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "Скругление",
         "slidesPanel.transitionNone" => "Нет",
         "slidesPanel.transitionPush" => "Сдвиг",
+        "blendMode.linearBurn" => "Линейный затемнитель",
+        "blendMode.linearDodge" => "Линейный осветлитель",
         "shader.editCode" => "Код",
         "shader.compiles" => "Компилируется",
         "shader.compileError" => "Ошибка компиляции",

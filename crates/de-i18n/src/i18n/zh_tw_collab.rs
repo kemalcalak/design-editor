@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "圓角",
         "slidesPanel.transitionNone" => "無",
         "slidesPanel.transitionPush" => "推入",
+        "blendMode.linearBurn" => "線性加深",
+        "blendMode.linearDodge" => "線性加亮",
         "shader.editCode" => "程式碼",
         "shader.compiles" => "編譯成功",
         "shader.compileError" => "編譯錯誤",

@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "Eckenradius",
         "slidesPanel.transitionNone" => "Keine",
         "slidesPanel.transitionPush" => "Schieben",
+        "blendMode.linearBurn" => "Linear nachbelichten",
+        "blendMode.linearDodge" => "Linear abwedeln",
         "shader.editCode" => "Code",
         "shader.compiles" => "Kompiliert",
         "shader.compileError" => "Kompilierfehler",

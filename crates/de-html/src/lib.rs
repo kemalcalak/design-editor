@@ -429,6 +429,7 @@ pub fn import_html_with_resources(
         route: None,
         screen: None,
         breakpoint: None,
+        placeholder: None,
     });
     warnings.extend(context.warnings);
     let mut nodes = vec![root];

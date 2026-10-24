@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "Corner radius",
         "slidesPanel.transitionNone" => "None",
         "slidesPanel.transitionPush" => "Push",
+        "blendMode.linearBurn" => "Linear burn",
+        "blendMode.linearDodge" => "Linear dodge",
         "shader.editCode" => "Code",
         "shader.compiles" => "Compiles",
         "shader.compileError" => "Compile error",

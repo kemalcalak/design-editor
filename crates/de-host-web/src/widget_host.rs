@@ -602,3 +602,16 @@ impl Default for WidgetHost {
         Self::new()
     }
 }
+
+/// Slow tick for the indicator pump while badges linger with nothing
+/// scheduled.
+pub(crate) const OVERLAY_IDLE_TICK_MS: u64 =
+    de_editor_ui::widgets::canvas_generation_visibility::OFFSCREEN_TICK_MS;
+
+/// The generation overlay's next frame (reveals, agent cursor, scan): the
+/// 60 fps cadence only for what the last canvas frame showed on screen
+/// (#17). The indicator pump repaints on this instead of every animation
+/// frame.
+pub(crate) fn generation_overlay_deadline_ms(now_ms: u64) -> Option<u64> {
+    de_editor_ui::widgets::canvas_generation_visibility::generation_deadline_ms(now_ms)
+}
