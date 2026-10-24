@@ -323,6 +323,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Mã shader",
         "shader.close" => "Đóng",
         "shader.apply" => "Áp dụng",
+        "property.resetOverride" => "Đặt lại ghi đè",
         _ => return None,
     })
 }

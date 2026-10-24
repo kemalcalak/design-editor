@@ -73,10 +73,12 @@ use super::{EditorCommand, ToolOutcome};
 use super::batch_program_exec_ops::{
     execute_copy, execute_image, execute_kit_instantiate, execute_replace,
 };
+use super::batch_program_instance::execute_instance_insert;
 use super::batch_program_parse::{parse_json_arg, parse_node_json, regex};
 use super::batch_program_resolve::{
-    count_forest, find_node_by_path, line_preview, lookup_id, parent_node_id, resolve_page_index,
-    resolve_parent_ref, resolve_path_expr, resolve_ref, strip_outer_quotes, with_page_id,
+    count_forest, find_instance_descendant, find_node_by_path, instance_edit_command, line_preview,
+    lookup_id, parent_node_id, resolve_page_index, resolve_parent_ref, resolve_path_expr,
+    resolve_ref, strip_outer_quotes, with_page_id,
 };
 
 /// Every fallible step of the executor fails with [`ProgramError`].
@@ -501,8 +503,19 @@ fn execute_insert(binding: &str, args: &str, ctx: &mut ProgramCtx) -> Result<()>
     let comma = find_top_level_char(args, ',')
         .ok_or_else(|| ProgramError::Syntax("Insert requires parent and node data".into()))?;
     let parent_raw = args[..comma].trim();
-    let parent = resolve_parent_ref(parent_raw, &ctx.bindings);
+    let parent = if parent_raw.contains('+') {
+        Some(resolve_path_expr(parent_raw, &ctx.bindings))
+    } else {
+        resolve_parent_ref(parent_raw, &ctx.bindings)
+    };
     let mut node = parse_node_json(&args[comma + 1..], ctx.post_process, parent.is_none())?;
+    if let Some(hit) = parent
+        .as_deref()
+        .filter(|path| find_node_by_path(ctx.sim.active_children(), path, &ctx.alias).is_none())
+        .and_then(|path| find_instance_descendant(&ctx.sim, path, &ctx.alias))
+    {
+        return execute_instance_insert(binding, node, &hit, ctx);
+    }
     delete_superseded_draft(binding, parent.as_deref(), &node, ctx);
 
     // TS auto-replace: a root-level frame insert replaces the first EMPTY
@@ -594,9 +607,16 @@ fn execute_update(args: &str, ctx: &mut ProgramCtx) -> Result<()> {
     let mut value = parse_json_arg(&args[comma + 1..])?;
     normalize_node_shape(&mut value);
     let Some(target) = find_node_by_path(ctx.sim.active_children(), &path, &ctx.alias) else {
-        return Err(ProgramError::NotFound(format!(
-            "Update target not found: {path}"
-        )));
+        let Some(hit) = find_instance_descendant(&ctx.sim, &path, &ctx.alias) else {
+            return Err(ProgramError::NotFound(format!(
+                "Update target not found: {path}"
+            )));
+        };
+        let edit = de_editor_core::InstanceEdit::Patch {
+            patch_json: value.to_string(),
+        };
+        let cmd = instance_edit_command(&hit, edit, ctx.page_id.clone());
+        return ctx.emit(cmd, &format!("Update failed for: {path}"));
     };
     let node_id = NodeId::new(target.id_str());
     // `batch_direct_ops` is shared with the non-program write paths and is

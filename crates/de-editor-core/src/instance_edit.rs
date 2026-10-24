@@ -62,6 +62,47 @@ impl EditorState {
         changed
     }
 
+    /// The instance and `descendants` key that hold an override for the
+    /// node behind a canvas anchor, `None` when the node shows the master
+    /// as it is (nothing to reset).
+    pub fn instance_override_at_anchor(&self, anchor: &NodeId) -> Option<(NodeId, String)> {
+        let hit = crate::instance_anchor::locate_anchor(&self.doc, anchor)?;
+        let PenNode::Ref(reference) = find_node(self.active_children(), &hit.ref_id)? else {
+            return None;
+        };
+        let key = hit.target.entry_key();
+        reference
+            .descendants
+            .as_ref()?
+            .contains_key(key)
+            .then(|| (hit.ref_id.clone(), key.to_string()))
+    }
+
+    /// Reset the override of the selected instance descendant (one undo
+    /// step), restoring the master's node. The selection stays on the
+    /// anchor when it still renders, else moves to the instance.
+    pub fn reset_selected_instance_override(&mut self) -> bool {
+        let anchor = self.selection.anchor.clone();
+        let Some((instance_id, key)) = self.instance_override_at_anchor(&anchor) else {
+            return false;
+        };
+        let before = self.snapshot_for_history();
+        let reset = self.apply(crate::EditorCommand::EditInstanceDescendant {
+            instance_id: instance_id.clone(),
+            path: key,
+            edit: InstanceEdit::Reset,
+            page_id: None,
+        });
+        if !reset {
+            return false;
+        }
+        self.history_push_past(before);
+        if crate::instance_anchor::locate_anchor(&self.doc, &anchor).is_none() {
+            self.set_single_selection(instance_id);
+        }
+        true
+    }
+
     /// Apply one instance-descendant edit on the active page. `false` when
     /// the instance or path does not resolve, the instance is locked or
     /// hidden, or the edit does not fit the node.

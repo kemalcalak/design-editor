@@ -206,6 +206,9 @@ pub enum PropertyPanelAction {
     /// User clicked "Detach instance" — host materializes the Ref
     /// into an independent subtree (TS `detachComponent` case 2).
     DetachInstance,
+    /// Reset the selected instance descendant to its master node (#166):
+    /// drops its `descendants` override.
+    ResetInstanceOverride,
     /// Open or close the selected Ref's component-target list.
     ToggleInstanceComponentPicker,
     /// Retarget the selected canonical Ref to another registered

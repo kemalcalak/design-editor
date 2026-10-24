@@ -323,6 +323,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "著色器程式碼",
         "shader.close" => "關閉",
         "shader.apply" => "套用",
+        "property.resetOverride" => "重設覆寫",
         _ => return None,
     })
 }

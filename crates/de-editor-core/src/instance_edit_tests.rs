@@ -204,3 +204,41 @@ fn unknown_paths_and_locked_instances_are_rejected() {
     }
     assert!(!edit(&mut state, "inst", "title", patch()));
 }
+
+#[test]
+fn reset_of_the_selected_descendant_is_one_undo_step() {
+    let mut state = state();
+    let frame = node(json!({"type":"frame","id":"hero","children":[
+        {"type":"text","id":"big","content":"Big"}]}));
+    assert!(edit(
+        &mut state,
+        "inst",
+        "slot",
+        InstanceEdit::Replace {
+            node: Box::new(frame)
+        }
+    ));
+    state.set_single_selection(NodeId::new("inst__big"));
+    assert_eq!(
+        state.instance_override_at_anchor(&NodeId::new("inst__big")),
+        Some((NodeId::new("inst"), "slot".to_string()))
+    );
+    assert_eq!(
+        state.instance_override_at_anchor(&NodeId::new("inst__title")),
+        None
+    );
+    let depth = state.history.past.len();
+    assert!(state.reset_selected_instance_override());
+    assert_eq!(state.history.past.len(), depth + 1);
+    assert_eq!(
+        rendered_text(&state, "inst__placeholder").as_deref(),
+        Some("Drop here")
+    );
+    assert_eq!(
+        state.selection.anchor.as_str(),
+        "inst",
+        "the reset node is gone, so the instance is selected"
+    );
+    assert!(state.undo());
+    assert_eq!(rendered_text(&state, "inst__big").as_deref(), Some("Big"));
+}

@@ -116,12 +116,10 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
                 ("descendants", Value::Object(overrides)) => {
                     overrides.retain(|_, value| keep_child(value, ctx.report));
                     for (path, value) in overrides.iter_mut() {
-                        // pen.dev replaces a descendant with an override that
-                        // has `type`; the canonical resolver only merges keys
-                        // (`ref_resolve::apply_overrides`), so the original
-                        // child's other fields survive underneath.
+                        // An override with `type` replaces the descendant with
+                        // a whole node tree (#166, canonical
+                        // `instance_descendants`): convert it as a node.
                         let role = if value.get("type").is_some() {
-                            ctx.report.note("component child replacement (merged)");
                             Role::Node
                         } else {
                             Role::Patch(path.clone())

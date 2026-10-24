@@ -50,6 +50,7 @@ mod batch_page;
 mod batch_program;
 mod batch_program_error;
 mod batch_program_exec_ops;
+mod batch_program_instance;
 pub mod batch_program_objects;
 mod batch_program_parse;
 #[cfg(test)]

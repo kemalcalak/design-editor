@@ -323,6 +323,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Код шейдера",
         "shader.close" => "Закрыть",
         "shader.apply" => "Применить",
+        "property.resetOverride" => "Сбросить переопределение",
         _ => return None,
     })
 }

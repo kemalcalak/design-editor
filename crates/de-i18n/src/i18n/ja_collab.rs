@@ -323,6 +323,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "シェーダーコード",
         "shader.close" => "閉じる",
         "shader.apply" => "適用",
+        "property.resetOverride" => "オーバーライドをリセット",
         _ => return None,
     })
 }

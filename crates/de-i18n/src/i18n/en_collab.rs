@@ -323,6 +323,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Shader code",
         "shader.close" => "Close",
         "shader.apply" => "Apply",
+        "property.resetOverride" => "Reset override",
         _ => return None,
     })
 }

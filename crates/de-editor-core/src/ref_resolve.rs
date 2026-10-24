@@ -34,7 +34,7 @@ use serde_json::{Map, Value};
 /// Build the render-only id used for a component instance child.
 /// Keep every producer and parser on this helper so the virtual-id
 /// convention cannot drift between canvas expansion and editing.
-pub(crate) fn instance_child_virtual_id(ref_id: &str, child_id: &str) -> String {
+pub fn instance_child_virtual_id(ref_id: &str, child_id: &str) -> String {
     format!("{ref_id}__{child_id}")
 }
 

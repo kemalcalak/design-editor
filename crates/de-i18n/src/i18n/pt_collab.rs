@@ -323,6 +323,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Código do shader",
         "shader.close" => "Fechar",
         "shader.apply" => "Aplicar",
+        "property.resetOverride" => "Redefinir substituição",
         _ => return None,
     })
 }

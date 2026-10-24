@@ -162,6 +162,13 @@ pub fn apply_instance_lifecycle_action(
                 select: None,
             }
         }
+        A::ResetInstanceOverride => {
+            let _ = state.reset_selected_instance_override();
+            InstanceLifecycleOutcome::Handled {
+                page_switched: false,
+                select: None,
+            }
+        }
         A::ToggleInstanceComponentPicker => {
             let anchor = state.selection.anchor.as_str().to_string();
             state.editor_ui.toggle_instance_component_picker(&anchor);
@@ -201,6 +208,7 @@ pub fn apply_property_action(
         A::GoToComponent
         | A::DetachInstance
         | A::DetachComponent
+        | A::ResetInstanceOverride
         | A::ToggleInstanceComponentPicker
         | A::SetInstanceComponent(_) => Handled,
         A::SetPropertyTab(tab) => {

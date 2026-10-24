@@ -21,7 +21,7 @@ use jian_ops_schema::PenDocument;
 /// instance really renders.
 pub fn split_instance_child_anchor(anchor: &NodeId, doc: &PenDocument) -> Option<(NodeId, NodeId)> {
     let hit = locate_anchor(doc, anchor)?;
-    Some((hit.ref_id, NodeId::new_opt(&hit.target.path())?))
+    Some((hit.ref_id, NodeId::new_opt(hit.target.path())?))
 }
 
 /// The located instance descendant behind a canvas anchor, with the
