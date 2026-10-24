@@ -8,8 +8,9 @@
 use serde_json::{json, Map, Value};
 
 use super::glsl::Stage;
+use super::instances::STROKE_KEYS;
 use super::nodes::{Ctx, Role};
-use super::variables::Theme;
+use super::variables::{self, Theme};
 use super::{images, shader, PenDevReport};
 
 /// Replace a node's pen.dev `fill` (one fill or a list, colours as strings)
@@ -91,18 +92,22 @@ fn convert_fill(
 ///
 /// An instance patch merges key by key, so the canonical `stroke` object
 /// replaces the component's whole stroke: a patch of only the width (or
-/// only the paint) cannot be expressed and is reported.
+/// only the paint) takes the missing keys from the node it patches. One the
+/// file gives no stroke to complete it from is reported.
 pub(super) fn convert_stroke(
     map: &mut Map<String, Value>,
-    role: Role,
+    role: &Role,
     theme: &Theme,
     ctx: &mut Ctx<'_>,
 ) {
+    if let Role::Patch(path) = role {
+        complete_stroke_patch(map, path, theme, ctx);
+    }
     let width = map.remove("strokeWidth");
     let cap = map.remove("strokeLinecap");
     let join = map.remove("strokeLinejoin");
     let align = map.remove("strokeAlignment");
-    let partial_patch = role == Role::Patch
+    let partial_patch = matches!(role, Role::Patch(_))
         && (width.is_none() || !map.contains_key("stroke"))
         && (map.contains_key("stroke")
             || width.is_some()
@@ -142,6 +147,29 @@ pub(super) fn convert_stroke(
         }
     }
     map.insert("stroke".to_owned(), Value::Object(out));
+}
+
+/// Fill a patch that names some stroke keys with the patched node's own
+/// values for the others, resolved under the patch's theme.
+fn complete_stroke_patch(
+    map: &mut Map<String, Value>,
+    path: &str,
+    theme: &Theme,
+    ctx: &mut Ctx<'_>,
+) {
+    if !STROKE_KEYS.iter().any(|key| map.contains_key(*key)) {
+        return;
+    }
+    let Some(base) = ctx.stroke_bases.get(path) else {
+        return;
+    };
+    let mut missing: Map<String, Value> = base
+        .iter()
+        .filter(|(key, _)| !map.contains_key(key.as_str()))
+        .map(|(key, value)| (key.clone(), value.clone()))
+        .collect();
+    variables::resolve_node(&mut missing, &ctx.variables, theme, ctx.report);
+    map.extend(missing);
 }
 
 /// pen.dev `strokeWidth`: a number, a `$variable`, or per-side
