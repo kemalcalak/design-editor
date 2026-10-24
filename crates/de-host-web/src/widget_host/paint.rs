@@ -32,10 +32,10 @@ impl WidgetHost {
     /// Backend-generic composition pass. Layer order matches the
     /// native shell so paint output is cross-platform identical:
     ///   1. background fill (+ document-import progress early-return)
-    ///   2. Left-rail strip (the floating chrome paints after the toolbar)
-    ///   3. LayerPanel (left rail, sidebar-gated)
-    ///   4. CanvasViewport (center band)
-    ///   5. PropertyPanel (right rail, selection-gated) + variables rail
+    ///   2. CanvasViewport (the whole window — #86 full-bleed)
+    ///   3. Left card (`paint_rail.rs`, floating over the canvas)
+    ///   4. —
+    ///   5. PropertyPanel (right card, selection-gated) + variables panel
     ///   6. Toolbar (floating column)
     ///   7. AIChatPlaceholder (floating, painted late so it sits
     ///      on top of toolbar)
@@ -274,7 +274,10 @@ impl WidgetHost {
             &self.layout_scene,
             self.now_ms,
         );
-        if let Some(panel) = property_panel.as_ref() {
+        if let Some(panel) = property_panel
+            .as_ref()
+            .filter(|_| !self.editor_state.editor_ui.preview.mode)
+        {
             let property_rect = canvas_geometry::property_panel_rect(
                 &self.editor_state,
                 viewport_width,
@@ -431,7 +434,10 @@ impl WidgetHost {
         // PropertyPanel overlays — painted after canvas floating
         // controls so the image-fill popover can cover the zoom
         // status pill when it extends into the canvas.
-        if let Some(panel) = property_panel.as_ref() {
+        if let Some(panel) = property_panel
+            .as_ref()
+            .filter(|_| !self.editor_state.editor_ui.preview.mode)
+        {
             let property_rect = canvas_geometry::property_panel_rect(
                 &self.editor_state,
                 viewport_width,

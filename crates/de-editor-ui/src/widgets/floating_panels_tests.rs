@@ -138,3 +138,38 @@ fn opening_runs_the_pill_into_the_card_and_then_pins_the_chat() {
         Some(PinnedChat::At(_))
     ));
 }
+
+#[test]
+fn the_composer_pill_keeps_off_the_properties_card_on_a_narrow_window() {
+    let (w, h) = (1024.0, 700.0);
+    let mut s = state(true);
+    s.editor_ui.slides_panel.tab = LeftPanelTab::Layers;
+    s.editor_ui.property_tab = de_editor_core::PropertyTab::Code;
+    let right = property_panel_rect(&s, w, h);
+    match pinned_chat(&s, w, h) {
+        Some(PinnedChat::Composer { x, width, .. }) => {
+            assert!(
+                x + width <= right.origin.x,
+                "pill {x}+{width} runs under the card at {}",
+                right.origin.x
+            );
+            let left = layer_panel_rect(&s, h);
+            assert!(x >= left.origin.x + left.size.x);
+        }
+        // Too little room between the cards: no pill, never an overlap.
+        Some(PinnedChat::Closed) => {}
+        other => panic!("composer-only chat expected, got {other:?}"),
+    }
+}
+
+#[test]
+fn preview_hides_the_cards_and_hands_their_area_to_the_canvas() {
+    let mut s = state(true);
+    let p = centre(layer_panel_rect(&s, H));
+    assert!(!over_canvas(&s, p.x, p.y, W, H));
+    s.editor_ui.preview.mode = true;
+    assert!(!left_card_on_screen(&s));
+    assert!(over_canvas(&s, p.x, p.y, W, H));
+    assert!(!toggle_panel(&mut s, 0), "the toggle is refused in Preview");
+    assert!(s.editor_ui.sidebar_open);
+}

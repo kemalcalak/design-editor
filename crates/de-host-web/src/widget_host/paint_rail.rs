@@ -41,6 +41,9 @@ impl WidgetHost {
         backend: &mut dyn RenderBackend,
         viewport_height: f32,
     ) {
+        if !self.left_card_shown() {
+            return;
+        }
         let card = canvas_geometry::layer_panel_rect(&self.editor_state, viewport_height);
         backend.stroke_round_rect(card, CARD_RADIUS, self.theme.border, 1.0);
     }
@@ -51,16 +54,15 @@ impl WidgetHost {
         viewport_height: f32,
         slides_panel: Option<&SlidesFrame>,
     ) {
-        // 3a. Slides tab — the same rail showing the deck's page
-        //     navigator instead of the layer tree.
+        // Slides tab — the same card showing the deck's page navigator
+        // instead of the layer tree.
         if let Some(slides) = slides_panel {
             self.paint_slides_panel(&mut *backend, slides);
         }
-        // 3a-1. Chat tab — the pinned chat owns the rail's BODY (it
-        //        paints in the ordinary chat pass below); the rail keeps
-        //        its card behind the panel and its tab row on top, and a
-        //        minimized chat carried in from a floating session is
-        //        expanded exactly like the native rail does.
+        // Chat tab — the pinned chat owns the card's BODY (it paints in the
+        // later chat pass of `paint.rs`); the card keeps its ground behind
+        // the panel and its tab row on top, and a minimized chat carried in
+        // from a floating session is expanded exactly like native does.
         let chat_owns_rail = slides_panel.is_none()
             && de_editor_ui::widgets::slides_panel_flow::chat_tab_active(&self.editor_state);
         if chat_owns_rail {
@@ -72,9 +74,9 @@ impl WidgetHost {
                 self.paint_slides_tab_row(backend, &tabs);
             }
         }
-        // 3a-2. Components / Images own the body too: the rail paints its
-        //        card and tab row; Images paints its body here, the
-        //        component browser later (mirrors the native rail).
+        // Components / Images own the body too: the card paints its tab
+        // row; Images paints its body here, the component browser later
+        // (mirrors native).
         let other_tab_owns_rail = slides_panel.is_none()
             && !chat_owns_rail
             && !de_editor_ui::widgets::slides_panel_flow::layers_tab_active(&self.editor_state);

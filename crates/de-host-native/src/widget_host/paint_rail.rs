@@ -9,7 +9,8 @@ use de_editor_ui::Point2D;
 
 impl WidgetHostNative {
     /// The left card (slides navigator, Pages + Layers tree, or a tab's
-    /// body). Painted AFTER the canvas: it floats over it (#86).
+    /// body). Painted AFTER the canvas: it floats over it (#86). Hidden
+    /// in Preview, like its input (`left_card_on_screen`).
     pub(in crate::widget_host) fn paint_left_rail(
         &mut self,
         frame: &mut NativeFrameBackend<'_>,

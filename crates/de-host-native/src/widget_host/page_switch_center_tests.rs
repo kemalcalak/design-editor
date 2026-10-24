@@ -85,7 +85,17 @@ fn page_row_switch_fits_new_page_after_cached_scene() {
         .layout_scene
         .content_bounds()
         .expect("the switched-to page has content");
-    let (_, _, canvas_w, canvas_h) = host.canvas_region(VIEWPORT_W, VIEWPORT_H);
+    // Fit frames into the canvas the floating cards leave uncovered (#86).
+    let area = de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(
+        host.editor_state(),
+        VIEWPORT_W,
+        VIEWPORT_H,
+    );
+    let (canvas_w, canvas_h) = (area.size.x, area.size.y);
+    let (centre_x, centre_y) = (
+        area.origin.x + area.size.x / 2.0,
+        area.origin.y + area.size.y / 2.0,
+    );
     let viewport = host.editor_state().viewport;
     let content_center_x = bounds.origin.x + bounds.size.x / 2.0;
     let content_center_y = bounds.origin.y + bounds.size.y / 2.0;
@@ -103,11 +113,11 @@ fn page_row_switch_fits_new_page_after_cached_scene() {
     );
 
     assert!(
-        (viewport.pan_x + content_center_x * viewport.zoom - canvas_w / 2.0).abs() < 0.01,
+        (viewport.pan_x + content_center_x * viewport.zoom - centre_x).abs() < 0.01,
         "new page must be horizontally centered: viewport={viewport:?}, bounds={bounds:?}"
     );
     assert!(
-        (viewport.pan_y + content_center_y * viewport.zoom - canvas_h / 2.0).abs() < 0.01,
+        (viewport.pan_y + content_center_y * viewport.zoom - centre_y).abs() < 0.01,
         "new page must be vertically centered: viewport={viewport:?}, bounds={bounds:?}"
     );
 }

@@ -354,15 +354,13 @@ impl WidgetHostNative {
     /// Cmd+\ — open / close the left panel with its motion (#86); the
     /// same path as the panel toggle and File ▸ Show / Hide panel.
     pub fn apply_toggle_panel(&mut self) -> bool {
-        if de_editor_ui::widgets::host_canvas_geometry::workspace_docked(&self.editor_state)
-            || self.editor_state.editor_ui.preview.mode
-        {
+        self.commit_variable_row_focus_if_any();
+        if !de_editor_ui::widgets::floating_panels::toggle_panel(
+            &mut self.editor_state,
+            self.now_ms,
+        ) {
             return false;
         }
-        self.commit_variable_row_focus_if_any();
-        self.editor_state
-            .editor_ui
-            .toggle_panel_animated(self.now_ms);
         self.mark_dirty();
         true
     }

@@ -216,8 +216,8 @@ impl WidgetHostNative {
         })
     }
 
-    /// Whether a press at `(x, y)` on the editor drags the window: the left
-    /// rail's window strip, or the canvas's top band where nothing sits —
+    /// Whether a press at `(x, y)` on the editor drags the window: the
+    /// canvas's top band where nothing sits —
     /// no floating chrome, no open dropdown or panel, and no canvas node
     /// (design content reaching the top of the canvas keeps its clicks).
     pub fn editor_window_drag_at(

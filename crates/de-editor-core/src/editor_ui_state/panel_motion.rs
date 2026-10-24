@@ -21,6 +21,8 @@ pub struct PanelMotion {
     pub from: f32,
     /// Eased reveal at the last tick.
     pub progress: f32,
+    /// The reveal this run heads for (`1.0` open, `0.0` shut).
+    pub to: f32,
 }
 
 fn ease_out_cubic(t: f32) -> f32 {
@@ -46,10 +48,12 @@ impl EditorUiState {
     pub fn toggle_panel_animated(&mut self, now_ms: u64) {
         let from = self.panel_reveal();
         self.sidebar_open = !self.sidebar_open;
+        let to = if self.sidebar_open { 1.0 } else { 0.0 };
         self.panel_motion = Some(PanelMotion {
             started_at_ms: now_ms,
             from,
             progress: from,
+            to,
         });
     }
 
@@ -60,6 +64,17 @@ impl EditorUiState {
             return false;
         };
         let target = if self.sidebar_open { 1.0 } else { 0.0 };
+        // Something wrote `sidebar_open` directly mid-motion (opening the
+        // Agent tab, say): re-aim from where the card is instead of
+        // jumping.
+        if motion.to != target {
+            *motion = PanelMotion {
+                started_at_ms: now_ms,
+                from: motion.progress,
+                progress: motion.progress,
+                to: target,
+            };
+        }
         let elapsed = now_ms.saturating_sub(motion.started_at_ms);
         let t = (elapsed as f32 / PANEL_MOTION_MS as f32).clamp(0.0, 1.0);
         motion.progress = motion.from + (target - motion.from) * ease_out_cubic(t);
@@ -132,5 +147,20 @@ mod tests {
         assert_eq!(ui.panel_reveal(), mid);
         ui.tick_panel_motion(60 + PANEL_MOTION_MS);
         assert_eq!(ui.panel_reveal(), 0.0);
+    }
+
+    #[test]
+    fn a_direct_open_mid_close_reverses_without_a_jump() {
+        let mut ui = EditorUiState::default();
+        ui.toggle_panel_animated(0);
+        ui.tick_panel_motion(100);
+        let mid = ui.panel_reveal();
+        assert!(!ui.sidebar_open && mid > 0.0 && mid < 1.0);
+        // e.g. `enter_chat_tab` opening the panel while it slides shut.
+        ui.sidebar_open = true;
+        ui.tick_panel_motion(100);
+        assert_eq!(ui.panel_reveal(), mid, "no jump on the re-aim frame");
+        ui.tick_panel_motion(100 + PANEL_MOTION_MS);
+        assert_eq!(ui.panel_reveal(), 1.0);
     }
 }

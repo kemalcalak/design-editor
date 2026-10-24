@@ -102,7 +102,6 @@ pub(super) fn port_field_rect(content: Rect) -> Rect {
     )
 }
 
-/// The endpoint line's baseline-row box inside the server card.
 /// Width of the Copy chip in `locale`: lead + the wider of its two labels
 /// ("Copy" / "Copied", so the acknowledgement never overflows either) +
 /// the trailing pad.

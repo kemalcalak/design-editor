@@ -22,9 +22,7 @@ impl WidgetHost {
     /// Whether the left card is on screen (#86): open, or still sliding
     /// shut — it keeps its content for the whole motion.
     pub(in crate::widget_host) fn left_card_shown(&self) -> bool {
-        let ui = &self.editor_state.editor_ui;
-        !canvas_geometry::workspace_docked(&self.editor_state)
-            && (ui.sidebar_open || ui.panel_motion_active())
+        de_editor_ui::widgets::floating_panels::left_card_on_screen(&self.editor_state)
     }
 
     fn slides_panel_rect(&self, viewport_h: f32) -> Rect {

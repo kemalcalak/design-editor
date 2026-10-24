@@ -240,14 +240,19 @@ fn clicking_a_row_frames_that_board() {
 
     assert_ne!(host.editor_state.viewport, before, "the camera moved");
     // The third board's centre is doc (4200 + 960, 540); framing it puts
-    // that point at the centre of the canvas region.
-    let (cx0, cy0, cw, ch) = host.canvas_region(VW, VH);
+    // that point at the centre of the canvas the cards leave uncovered (#86).
+    let area =
+        de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(&host.editor_state, VW, VH);
+    let (cx, cy) = (
+        area.origin.x + area.size.x / 2.0,
+        area.origin.y + area.size.y / 2.0,
+    );
     let viewport = host.editor_state.viewport;
     let screen_x = 5_160.0 * viewport.zoom + viewport.pan_x;
     let screen_y = 540.0 * viewport.zoom + viewport.pan_y;
     assert!(
-        (screen_x - cw / 2.0).abs() < 2.0 && (screen_y - ch / 2.0).abs() < 2.0,
-        "board 3 is centred in the canvas region ({cx0},{cy0},{cw},{ch}) — got ({screen_x},{screen_y})"
+        (screen_x - cx).abs() < 2.0 && (screen_y - cy).abs() < 2.0,
+        "board 3 is centred in the uncovered canvas ({area:?}) — got ({screen_x},{screen_y})"
     );
     assert!(
         host.editor_state.history.past.is_empty(),

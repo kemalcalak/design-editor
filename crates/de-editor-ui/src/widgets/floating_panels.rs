@@ -44,10 +44,29 @@ pub fn panel_reveal(state: &EditorState) -> f32 {
 }
 
 /// Whether any part of the left card is on screen: it is open or still
-/// sliding, and nothing hides it (the workspace dock owns the left column,
-/// a presentation hides the editing chrome).
+/// sliding shut, and nothing hides it (the workspace dock owns the left
+/// column; Preview hides the editing cards over its full-bleed stage).
+/// The one answer both hosts' paint and input read.
 pub fn left_card_on_screen(state: &EditorState) -> bool {
-    !workspace_docked(state) && !state.editor_ui.preview.mode && panel_reveal(state) > 0.0
+    let ui = &state.editor_ui;
+    !workspace_docked(state) && !ui.preview.mode && (ui.sidebar_open || ui.panel_motion_active())
+}
+
+/// Whether the properties card is on screen: something to inspect, and
+/// not hidden by the workspace dock or Preview.
+pub fn right_card_on_screen(state: &EditorState) -> bool {
+    !workspace_docked(state) && !state.editor_ui.preview.mode && state.right_rail_visible()
+}
+
+/// Open / close the left panel with its motion — the toggle, ⌘\ and
+/// File ▸ Show / Hide panel all land here. Refused (returns `false`)
+/// while the workspace dock owns the column or Preview hides the panels.
+pub fn toggle_panel(state: &mut EditorState, now_ms: u64) -> bool {
+    if workspace_docked(state) || state.editor_ui.preview.mode {
+        return false;
+    }
+    state.editor_ui.toggle_panel_animated(now_ms);
+    true
 }
 
 /// How far the left card is slid out of view, in px: its own width plus
@@ -115,15 +134,14 @@ pub fn over_floating_card(
     if workspace_docked(state) {
         return false;
     }
-    if left_card_on_screen(state) && left_card_rect(state, viewport_h).contains(point) {
+    if left_card_rect(state, viewport_h).contains(point) && left_card_on_screen(state) {
         return true;
     }
     if !state.editor_ui.preview.mode && panel_toggle_rect(state).contains(point) {
         return true;
     }
-    state.right_rail_visible()
-        && !state.editor_ui.preview.mode
-        && right_card_rect(state, viewport_w, viewport_h).contains(point)
+    // Rect first: the visibility test walks the selection.
+    right_card_rect(state, viewport_w, viewport_h).contains(point) && right_card_on_screen(state)
 }
 
 /// The part of the canvas no settled panel covers: right of the tool

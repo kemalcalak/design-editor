@@ -297,10 +297,9 @@ impl WidgetHostNative {
             &self.layout_scene,
             self.now_ms,
         );
-        if let Some(panel) = property_panel
-            .as_ref()
-            .filter(|_| !presenting && !workspace_visible)
-        {
+        if let Some(panel) = property_panel.as_ref().filter(|_| {
+            !presenting && !workspace_visible && !self.editor_state.editor_ui.preview.mode
+        }) {
             let property_rect = self.property_rect(viewport_width, viewport_height);
             de_editor_ui::widgets::floating_panels::paint_card(
                 &mut *frame,
@@ -463,10 +462,9 @@ impl WidgetHostNative {
         // 8.6. PropertyPanel overlays — painted after canvas floating
         //      controls so the image-fill popover can cover the zoom
         //      status pill when it extends into the canvas.
-        if let Some(panel) = property_panel
-            .as_ref()
-            .filter(|_| !presenting && !workspace_visible)
-        {
+        if let Some(panel) = property_panel.as_ref().filter(|_| {
+            !presenting && !workspace_visible && !self.editor_state.editor_ui.preview.mode
+        }) {
             let property_rect = self.property_rect(viewport_width, viewport_height);
             let mut cx = PaintCx {
                 backend: &mut *frame,

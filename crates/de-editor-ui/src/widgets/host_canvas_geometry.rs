@@ -179,21 +179,24 @@ pub fn pinned_chat(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Opt
 }
 
 /// The composer pill (#86): centred at the bottom of the window, clear of
-/// the open left card and of the zoom pill. While the panel motion runs
-/// it travels between that spot and the left card's composer slot, so
-/// the pill reads as growing into the panel.
+/// the left card, the properties card and the zoom pill. While the panel
+/// motion runs on the Agent tab it travels between that spot and the left
+/// card's composer slot, so the pill reads as growing into the panel; on
+/// any other tab it just keeps clear of the sliding card.
 fn composer_pill(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Option<PinnedChat> {
     let (cx0, cy0, cw, ch) = canvas_region(state, viewport_w, viewport_h);
-    // Room between the open card (or the window edge) and the zoom pill.
-    let left_edge = if state.editor_ui.sidebar_open && !state.editor_ui.panel_motion_active() {
-        {
-            let card = floating_panels::left_card_rect(state, viewport_h);
-            card.origin.x + card.size.x + AICHAT_INSET_LEFT
-        }
-    } else {
-        cx0 + AICHAT_INSET_LEFT
-    };
-    let right_edge = cx0 + cw - STATUS_BAR_WIDTH - STATUS_INSET * 2.0;
+    // Room between the left card (at its current slide) or the window
+    // edge, and the zoom pill or the properties card.
+    let card_edge = floating_panels::left_card_on_screen(state).then(|| {
+        let card = floating_panels::left_card_rect(state, viewport_h);
+        card.origin.x + card.size.x + AICHAT_INSET_LEFT
+    });
+    let left_edge = card_edge.unwrap_or(0.0).max(cx0 + AICHAT_INSET_LEFT);
+    let mut right_edge = cx0 + cw - STATUS_BAR_WIDTH - STATUS_INSET * 2.0;
+    if state.right_rail_visible() {
+        let card = floating_panels::right_card_rect(state, viewport_w, viewport_h);
+        right_edge = right_edge.min(card.origin.x - AICHAT_INSET_LEFT);
+    }
     let width = COMPOSER_CARD_W.min((right_edge - left_edge).max(0.0));
     if width < AI_CHAT_MINIMIZED_MIN_WIDTH_REF {
         return Some(PinnedChat::Closed);
@@ -323,7 +326,7 @@ pub fn property_panel_rect(state: &EditorState, viewport_w: f32, viewport_h: f32
     floating_panels::right_card_rect(state, viewport_w, viewport_h)
 }
 
-/// Where the floating chrome sits for this frame. Each half is `None` when
+/// Where the floating chrome sits for this frame. Each part is `None` when
 /// it does not paint: neither while the generation workspace owns the
 /// layout (it has its own header), the action group when the canvas is
 /// narrower than the group, and the file pill when it would run into the

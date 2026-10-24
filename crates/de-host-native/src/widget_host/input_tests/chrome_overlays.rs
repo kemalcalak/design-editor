@@ -332,7 +332,9 @@ fn status_bar_percentage_click_frames_content_in_viewport() {
     host.editor_state_mut().viewport.zoom = 0.2;
 
     let (vw, vh) = (1200.0, 800.0);
-    let (_, _, canvas_w, canvas_h) = host.canvas_region(vw, vh);
+    // Fit frames into the canvas the floating cards leave uncovered (#86).
+    let area =
+        de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(host.editor_state(), vw, vh);
     let r = host
         .status_bar_rect(vw, vh)
         .expect("status bar visible at this size");
@@ -346,8 +348,8 @@ fn status_bar_percentage_click_frames_content_in_viewport() {
 
     assert!(consumed, "percentage click must be consumed");
     let v = host.editor_state().viewport;
-    let expected_pan_x = canvas_w / 2.0 - 250.0;
-    let expected_pan_y = canvas_h / 2.0 - 200.0;
+    let expected_pan_x = area.origin.x + area.size.x / 2.0 - 250.0;
+    let expected_pan_y = area.origin.y + area.size.y / 2.0 - 200.0;
     assert!((v.zoom - 1.0).abs() < 1e-3, "zoom {}", v.zoom);
     assert!((v.pan_x - expected_pan_x).abs() < 1e-2, "pan_x {}", v.pan_x);
     assert!((v.pan_y - expected_pan_y).abs() < 1e-2, "pan_y {}", v.pan_y);
