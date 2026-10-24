@@ -59,7 +59,8 @@ pub fn capture(state: &EditorState, spec: &CaptureSpec) -> Result<ScreenshotPng,
 }
 
 /// Scene-level capture — split out so tests can drive a hand-built
-/// scene without an `EditorState`.
+/// scene without an `EditorState`. The capture time is `spec.time_ms`
+/// (`None` = time 0); it replaces any outer `with_capture_time_ms` scope.
 pub fn capture_scene(
     scene: &LayoutScene,
     spec: &CaptureSpec,

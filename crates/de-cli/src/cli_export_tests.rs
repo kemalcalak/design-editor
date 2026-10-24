@@ -75,6 +75,11 @@ fn time_ms_flag_maps_onto_export_and_export_frames() {
         let error = parse_args(&args(&argv)).unwrap_err().to_string();
         assert!(error.contains("--time-ms must be a number"), "{error}");
     }
+
+    let bare = parse_args(&args(&["export", "--output", "/tmp/x.png", "--time-ms"]))
+        .unwrap_err()
+        .to_string();
+    assert!(bare.contains("--time-ms needs a value"), "{bare}");
 }
 
 #[test]

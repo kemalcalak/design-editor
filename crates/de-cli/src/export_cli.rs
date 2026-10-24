@@ -54,8 +54,15 @@ pub(crate) fn map_export(flags: &Flags) -> Result<Command, CliError> {
 /// (`timeMs`, 0..=3600000) so the CLI and MCP callers hear the same error.
 fn time_ms_flag(flags: &Flags) -> Result<Option<String>, CliError> {
     let time_ms = flag_value(flags, "time-ms");
-    if let Some(value) = &time_ms {
-        parse_time_ms(value)?;
+    match &time_ms {
+        Some(value) => {
+            parse_time_ms(value)?;
+        }
+        // A bare `--time-ms` must not silently export at time 0.
+        None if flags.contains_key("time-ms") => {
+            return Err(CliError::usage("--time-ms needs a value in milliseconds"));
+        }
+        None => {}
     }
     Ok(time_ms)
 }

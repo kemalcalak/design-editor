@@ -74,8 +74,9 @@ pub fn paint_nodes(canvas: &Canvas, nodes: &[SceneNode]) {
 }
 
 /// Longest capture time accepted, in milliseconds: one hour, the period the
-/// canvas shader clock wraps at, so every time an agent can see on the live
-/// canvas is reachable and nothing past it is silently aliased.
+/// canvas shader clock wraps at (`canvas_shader_clock`'s private `WRAP_MS`),
+/// so every time the live canvas can show is reachable. The bound itself is
+/// inclusive; past it, callers get an error instead of a wrapped clock.
 pub const MAX_CAPTURE_TIME_MS: f64 = 60.0 * 60.0 * 1000.0;
 
 /// Run `render` with every export / screenshot paint inside it pinned to
