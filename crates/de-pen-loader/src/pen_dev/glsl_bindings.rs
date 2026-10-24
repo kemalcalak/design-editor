@@ -57,6 +57,9 @@ pub(super) struct Bindings {
     pub(super) uses: HashMap<String, Use>,
     /// Statement start → the SkSL declarations replacing it.
     pub(super) declarations: HashMap<usize, String>,
+    /// Doc comments (token indices) of boolean uniforms, which the emitter
+    /// tags `@bool`.
+    pub(super) tagged_docs: BTreeSet<usize>,
     /// `uniform shader` children declared so far.
     children: BTreeSet<String>,
     time: bool,
@@ -105,7 +108,18 @@ impl Bindings {
                 let colour = notes.color || value.is_some_and(Value::is_string);
                 match decl.ty.as_str() {
                     "float" => (Some("float"), renamed.clone(), Some(Slot::Float)),
-                    "int" => (Some("float"), format!("int({renamed})"), Some(Slot::Float)),
+                    "int" => (Some("int"), renamed.clone(), Some(Slot::Int(1))),
+                    // SkSL has no boolean uniforms: an int read through
+                    // `bool()`, tagged so the panel shows a switch.
+                    "bool" => (Some("int"), format!("bool({renamed})"), Some(Slot::Bool(1))),
+                    ty @ ("bvec2" | "bvec3" | "bvec4") => {
+                        let n = vector_len(ty);
+                        (
+                            Some(int_vector(n)),
+                            format!("bool{n}({renamed})"),
+                            Some(Slot::Bool(n)),
+                        )
+                    }
                     "vec3" if colour => {
                         (Some("float4"), format!("{renamed}.rgb"), Some(Slot::Colour))
                     }
@@ -120,11 +134,7 @@ impl Bindings {
                     }
                     ty @ ("ivec2" | "ivec3" | "ivec4") => {
                         let n = vector_len(ty);
-                        (
-                            Some(float_vector(n)),
-                            format!("int{n}({renamed})"),
-                            Some(Slot::Vector(n)),
-                        )
+                        (Some(int_vector(n)), renamed.clone(), Some(Slot::Int(n)))
                     }
                     "sampler2D" => {
                         if notes.sdf {
@@ -176,6 +186,17 @@ impl Bindings {
             };
             self.uses.insert(name.clone(), Use::Expr(expr));
             if let (Some(ty), Some(slot)) = (declaration, slot) {
+                if matches!(slot, Slot::Bool(1)) {
+                    // Tag it for the panel: in the author's doc comment
+                    // when it is the first one that comment describes,
+                    // else in a comment of its own.
+                    match decl.doc.filter(|_| declared.is_empty()) {
+                        Some(doc) => {
+                            self.tagged_docs.insert(doc);
+                        }
+                        None => declared.push("/** @bool */".to_owned()),
+                    }
+                }
                 declared.push(format!("uniform {ty} {renamed};"));
                 self.users.push(UserUniform {
                     glsl_name: name.clone(),
@@ -243,6 +264,14 @@ fn vector_len(ty: &str) -> usize {
         .last()
         .and_then(|c| c.to_digit(10))
         .map_or(4, |n| n as usize)
+}
+
+fn int_vector(n: usize) -> &'static str {
+    match n {
+        2 => "int2",
+        3 => "int3",
+        _ => "int4",
+    }
 }
 
 fn float_vector(n: usize) -> &'static str {
