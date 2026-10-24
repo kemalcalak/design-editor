@@ -28,6 +28,10 @@ pub(super) enum CropLoss {
     /// Cover / contain without a numeric node size or a readable bitmap
     /// size: fitted as stretch.
     Approximated,
+    /// Contain leaves room beside the crop. The canonical transform cannot
+    /// clip to the crop, so that room shows the rest of the bitmap where
+    /// pen.dev leaves it empty.
+    Letterbox,
 }
 
 /// The canonical `transform` object for a pen.dev crop, plus what was lost.
@@ -61,6 +65,9 @@ pub(super) fn canonical_transform(
                 };
                 kx = nw / (cw * scale);
                 ky = nh / (ch * scale);
+                if kx > 1.0 + 1e-9 || ky > 1.0 + 1e-9 {
+                    loss = Some(CropLoss::Letterbox);
+                }
             }
             _ => loss = Some(CropLoss::Approximated),
         }
@@ -131,9 +138,10 @@ mod tests {
         assert!(close(apply(&m, 1.0, 1.0), (1.0, 0.75)));
         // Contain fits it to 100×100, centred: the node's sides fall
         // outside the crop.
-        let (m, _) =
+        let (m, loss) =
             canonical_transform(&crop, Fit::Contain, Some([200.0, 100.0]), Some((200, 100)))
                 .unwrap();
+        assert_eq!(loss, Some(CropLoss::Letterbox));
         assert!(close(apply(&m, 0.25, 0.0), (0.5, 0.0)));
         assert!(close(apply(&m, 0.75, 1.0), (1.0, 1.0)));
     }

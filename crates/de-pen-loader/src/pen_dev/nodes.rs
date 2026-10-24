@@ -199,7 +199,7 @@ fn convert_node(
     paint::convert_blend_mode(map, ctx.report);
     paint::convert_fill_key(map, theme, ctx);
     paint::convert_stroke(map, role, theme, ctx);
-    include_stroke_in_layout(map, ctx.report);
+    include_stroke_in_layout(map, matches!(role, Role::Patch(_)), ctx.report);
     paint::convert_effects(map, theme, ctx);
 }
 
@@ -253,10 +253,18 @@ fn strip_sizing_fallback(map: &mut Map<String, Value>, axis: &str) {
 /// CSS `box-sizing: border-box`: the stroke takes room inside the frame, so
 /// the children sit inside padding plus stroke. The canonical layout ignores
 /// strokes, so the stroke's width per side is added to the padding.
-fn include_stroke_in_layout(map: &mut Map<String, Value>, report: &mut PenDevReport) {
-    if map.remove("layoutIncludeStroke").and_then(|v| v.as_bool()) != Some(true)
-        || !is_auto_layout(map)
-    {
+///
+/// An instance patch does not know the patched frame's layout, stroke or
+/// padding, so the flag is reported there instead.
+fn include_stroke_in_layout(map: &mut Map<String, Value>, patch: bool, report: &mut PenDevReport) {
+    let Some(flag) = map.remove("layoutIncludeStroke") else {
+        return;
+    };
+    if patch {
+        report.note("layoutIncludeStroke (instance override)");
+        return;
+    }
+    if flag.as_bool() != Some(true) || !is_auto_layout(map) {
         return;
     }
     let Some(thickness) = map.get("stroke").and_then(|stroke| stroke.get("thickness")) else {
@@ -269,7 +277,7 @@ fn include_stroke_in_layout(map: &mut Map<String, Value>, report: &mut PenDevRep
         _ => return,
     };
     let Some(padding) = padding_sides(map.get("padding")) else {
-        report.note("layoutIncludeStroke (variable padding)");
+        report.note("layoutIncludeStroke (padding not plain numbers)");
         return;
     };
     let sum: Vec<Value> = padding
@@ -303,8 +311,10 @@ fn padding_sides(padding: Option<&Value>) -> Option<[f64; 4]> {
 }
 
 /// pen.dev `href` makes a text a link. The canonical way to open a URL is
-/// a tap action (`open_url`, which the preview runs), plus the link role for
-/// accessibility and code export. Authored handlers or semantics win.
+/// a tap action (`open_url`), plus the link role for accessibility and code
+/// export. The preview runs `open_url` only in a document that declares the
+/// `network` capability; the import does not declare app capabilities.
+/// Authored handlers or semantics win.
 fn convert_link(map: &mut Map<String, Value>) {
     let Some(Value::String(href)) = map.remove("href") else {
         return;
@@ -312,8 +322,9 @@ fn convert_link(map: &mut Map<String, Value>) {
     if href.trim().is_empty() {
         return;
     }
-    // The action's `url` is an expression: a single-quoted string literal.
-    let literal = format!("'{}'", href.replace('\'', "%27"));
+    // The action's `url` is an expression: a single-quoted string literal,
+    // whose lexer reads `\\` and `\'` as escapes.
+    let literal = format!("'{}'", href.replace('\\', "\\\\").replace('\'', "\\'"));
     if let Value::Object(events) = map
         .entry("events")
         .or_insert_with(|| Value::Object(Map::new()))

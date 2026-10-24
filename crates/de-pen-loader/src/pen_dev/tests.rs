@@ -518,7 +518,7 @@ fn a_text_link_opens_its_url_on_tap() {
     assert!(link.get("href").is_none());
     assert_eq!(
         link["events"]["onTap"],
-        json!([{ "open_url": { "url": "'https://example.com/it%27s'" } }])
+        json!([{ "open_url": { "url": "'https://example.com/it\\'s'" } }])
     );
     assert_eq!(link["semantics"]["role"], "link");
     // An authored tap handler is kept.

@@ -171,7 +171,7 @@ fn layout_include_stroke_pads_the_frame_by_its_stroke() {
     assert_eq!(
         report
             .unsupported
-            .get("layoutIncludeStroke (variable padding)"),
+            .get("layoutIncludeStroke (padding not plain numbers)"),
         Some(&1)
     );
 }

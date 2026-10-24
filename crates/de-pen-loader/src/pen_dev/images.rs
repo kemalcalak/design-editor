@@ -39,8 +39,14 @@ pub(super) fn convert_image_fill(
                 // the matrix.
                 obj.insert("mode".to_owned(), Value::String("crop".to_owned()));
                 obj.insert("transform".to_owned(), transform);
-                if loss == Some(CropLoss::Approximated) {
-                    ctx.report.note("image crop (fitted as stretch)");
+                match loss {
+                    Some(CropLoss::Approximated) => {
+                        ctx.report.note("image crop (fitted as stretch)")
+                    }
+                    Some(CropLoss::Letterbox) => ctx
+                        .report
+                        .note("image crop (contain shows the rest of the image)"),
+                    _ => {}
                 }
             }
             Err(_) => ctx.report.note("image crop (invalid transform)"),
