@@ -98,9 +98,13 @@ pub fn brand_catalog_loaded() -> bool {
     BRAND_CATALOG.get().is_some()
 }
 
+/// Resolve `collection:name`. Both are canonicalised first (see
+/// `icon_family`): case-insensitive, spaces / underscores as hyphens, empty or
+/// alias families mapped to their canonical id (`ph` → `phosphor`).
 pub fn lookup_icon(collection: &str, name: &str) -> Option<&'static IconCatalogEntry> {
-    let collection = collection.trim();
-    let name = name.trim();
+    let collection = super::icon_family::canonical_family(collection);
+    let name = super::icon_family::canonical_name(name);
+    let (collection, name) = (collection.as_ref(), name.as_ref());
     if let Some(entry) = lookup_icon_exact(collection, name) {
         return Some(entry);
     }
@@ -123,8 +127,12 @@ pub fn lookup_icon(collection: &str, name: &str) -> Option<&'static IconCatalogE
     None
 }
 
-/// Exact `collection:name` lookup across the core and brand catalogs.
+/// Exact `collection:name` lookup across the core, extended and brand
+/// catalogs. An extended family loads (native) or is requested (web) here.
 fn lookup_icon_exact(collection: &str, name: &str) -> Option<&'static IconCatalogEntry> {
+    if super::icon_catalog_extended::ExtendedIconSet::for_collection(collection).is_some() {
+        return super::icon_catalog_extended::lookup_extended(collection, name);
+    }
     let key = format!("{collection}:{name}");
     if let Some(idx) = core_index().get(&key) {
         return core_catalog().get(*idx);
@@ -137,9 +145,9 @@ fn lookup_icon_exact(collection: &str, name: &str) -> Option<&'static IconCatalo
 }
 
 /// Identity of a cached [`search_icons`] result. The catalog itself
-/// (`core_catalog` + `BRAND_CATALOG`) is process-global and immutable
-/// once loaded, so `(query, limit, brand_catalog_loaded(),
-/// core_catalog_loaded())` fully determines the result — comparing it by value
+/// (`core_catalog` + `BRAND_CATALOG` + the extended sets) is process-global
+/// and immutable once loaded, so `(query, limit, brand_catalog_loaded(),
+/// core_catalog_loaded(), extended mask)` fully determines the result — comparing it by value
 /// (never a pointer/length shortcut) makes a stale-serving collision
 /// impossible regardless of which caller or document triggered the
 /// search, so this cache needs no per-document owner-scoping.
@@ -153,6 +161,8 @@ struct SearchCacheKey {
     limit: usize,
     brand_loaded: bool,
     core_loaded: bool,
+    /// `icon_catalog_extended::loaded_mask` — same reason as `core_loaded`.
+    extended_loaded: u8,
 }
 
 thread_local! {
@@ -172,14 +182,19 @@ thread_local! {
 
 pub fn search_icons(query: &str, limit: usize) -> Vec<&'static IconCatalogEntry> {
     let query = query.trim().to_lowercase();
+    // The picker searches every family: load (native) or request (web) the
+    // extended sets. A no-op once they are in.
+    super::icon_catalog_extended::request_all_extended_icon_catalogs();
     let brand_loaded = brand_catalog_loaded();
     let core_loaded = core_catalog_loaded();
+    let extended_loaded = super::icon_catalog_extended::loaded_mask();
     let hit = SEARCH_CACHE.with(|cell| {
         cell.borrow().as_ref().and_then(|(key, result)| {
             (key.query == query
                 && key.limit == limit
                 && key.brand_loaded == brand_loaded
-                && key.core_loaded == core_loaded)
+                && key.core_loaded == core_loaded
+                && key.extended_loaded == extended_loaded)
                 .then(|| result.clone())
         })
     });
@@ -195,6 +210,7 @@ pub fn search_icons(query: &str, limit: usize) -> Vec<&'static IconCatalogEntry>
                 limit,
                 brand_loaded,
                 core_loaded,
+                extended_loaded,
             },
             result.clone(),
         ));
@@ -237,15 +253,20 @@ fn search_icons_uncached(query: &str, limit: usize) -> Vec<&'static IconCatalogE
     out
 }
 
-/// Core (embedded) icons first, then brand logos if loaded. Both halves are
-/// `'static`, so the chained iterator yields `&'static IconCatalogEntry`.
+/// Core (embedded) icons first, then brand logos and the extended families,
+/// each if loaded. Every part is `'static`, so the chained iterator yields
+/// `&'static IconCatalogEntry`. The extended sets come last so adding them
+/// left the order of every earlier result unchanged.
 fn all_icons() -> impl Iterator<Item = &'static IconCatalogEntry> {
-    core_catalog().iter().chain(
-        BRAND_CATALOG
-            .get()
-            .into_iter()
-            .flat_map(|brands| brands.icons.iter()),
-    )
+    core_catalog()
+        .iter()
+        .chain(
+            BRAND_CATALOG
+                .get()
+                .into_iter()
+                .flat_map(|brands| brands.icons.iter()),
+        )
+        .chain(super::icon_catalog_extended::loaded_icons())
 }
 
 pub fn parse_iconify_body(body: &str, width: f32, height: f32) -> Option<ParsedIconBody> {
@@ -633,12 +654,14 @@ mod tests {
             limit: 20,
             brand_loaded: false,
             core_loaded: false,
+            extended_loaded: 0,
         };
         let b = SearchCacheKey {
             query: "arrow".into(),
             limit: 20,
             brand_loaded: false,
             core_loaded: true,
+            extended_loaded: 0,
         };
         assert!(a != b, "loading the core catalog must invalidate the cache");
     }

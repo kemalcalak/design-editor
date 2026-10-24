@@ -9,7 +9,8 @@
 //! (which is absolute) drops in without a second coordinate change.
 
 use de_editor_ui::layout_scene::{regular_polygon_points, SceneNode};
-use de_editor_ui::widgets::icon_catalog::{lookup_icon, IconRenderStyle};
+use de_editor_ui::widgets::icon_catalog::IconRenderStyle;
+use de_editor_ui::widgets::icon_family::{canonical_family, lookup_icon_weighted};
 use de_editor_ui::widgets::icons::Icon;
 use de_editor_ui::{Color, Point2D, Rect};
 use de_util::xml_escape::escape_xml;
@@ -51,17 +52,10 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
         size: Point2D::new(size, size),
     };
     let name = n.text.as_deref().unwrap_or("");
-    let family = {
-        let f = n.font_family.trim();
-        if f.is_empty() {
-            "lucide"
-        } else {
-            f
-        }
-    };
+    let family = canonical_family(&n.font_family);
     let tint = css::color(n.fill.unwrap_or(ICON_DEFAULT_FILL));
 
-    let (viewbox, paints) = resolve_glyph(family, name);
+    let (viewbox, paints, outline_units) = resolve_glyph(&family, name, n.font_weight);
     let mut style = String::new();
     css::place(&mut style, square);
 
@@ -77,6 +71,16 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
     );
     for (d, painted) in paints {
         match painted {
+            // A Material Symbols weight above 400 is the canvas's
+            // same-colour outline over the fill (`icons_font_node`).
+            IconRenderStyle::Fill if outline_units > 0.0 => {
+                let _ = write!(
+                    out,
+                    r#"<path d="{}" fill="{tint}" stroke="{tint}" stroke-width="{}"/>"#,
+                    escape_xml(&d),
+                    css::num(outline_units * viewbox / 24.0)
+                );
+            }
             IconRenderStyle::Fill => {
                 let _ = write!(
                     out,
@@ -92,14 +96,24 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
     out.push_str("</svg>");
 }
 
-/// Resolve a glyph to its viewBox extent plus its `d` strings.
-/// Mirrors the lookup ladder in `icons::paint_icon_font_node`:
+/// Resolve a glyph at `weight` to its viewBox extent, its `d` strings and
+/// the weight outline (24-unit glyph space, `0.0` = none).
+/// Mirrors the lookup ladder in `icons::paint_icon_font_node_weighted`:
 /// Iconify catalog first, then the chrome's built-in lucide table for
 /// the `lucide` collection, then the honest dot.
-fn resolve_glyph(family: &str, name: &str) -> (f32, Vec<(String, IconRenderStyle)>) {
-    if let Some(entry) = lookup_icon(family, name) {
+fn resolve_glyph(
+    family: &str,
+    name: &str,
+    weight: u16,
+) -> (f32, Vec<(String, IconRenderStyle)>, f32) {
+    if let Some(icon) = lookup_icon_weighted(family, name, weight) {
+        let entry = icon.entry;
         let viewbox = entry.width.max(entry.height).max(1.0);
-        return (viewbox, vec![(entry.d.clone(), entry.style)]);
+        return (
+            viewbox,
+            vec![(entry.d.clone(), entry.style)],
+            icon.outline_units,
+        );
     }
     if family == "lucide" {
         if let Some(icon) = Icon::from_name(name) {
@@ -108,12 +122,13 @@ fn resolve_glyph(family: &str, name: &str) -> (f32, Vec<(String, IconRenderStyle
                 .iter()
                 .map(|d| ((*d).to_string(), IconRenderStyle::Stroke))
                 .collect();
-            return (LUCIDE_VIEWBOX, paths);
+            return (LUCIDE_VIEWBOX, paths, 0.0);
         }
     }
     (
         LUCIDE_VIEWBOX,
         vec![(FALLBACK_ICON_D.to_string(), IconRenderStyle::Stroke)],
+        0.0,
     )
 }
 
@@ -348,3 +363,7 @@ fn fit_transform(d: &str, rect: Rect) -> String {
 fn normalize(r: Rect) -> Rect {
     de_editor_ui::scene_bounds::normalize_rect(r)
 }
+
+#[cfg(test)]
+#[path = "vector_tests.rs"]
+mod tests;

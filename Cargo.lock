@@ -1344,6 +1344,7 @@ dependencies = [
  "de-editor-core",
  "de-i18n",
  "de-util",
+ "flate2",
  "glam",
  "jian-core",
  "jian-ops-schema",

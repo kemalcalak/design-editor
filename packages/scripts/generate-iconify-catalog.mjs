@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
@@ -17,6 +18,15 @@ const CORE_SETS = new Set(['lucide', 'feather']);
 const OUT_DIR = fileURLToPath(new URL('../../crates/de-editor-ui/assets', import.meta.url));
 const OUT_CORE = path.join(OUT_DIR, 'iconify-catalog-core.json');
 const OUT_BRANDS = path.join(OUT_DIR, 'iconify-catalog-brands.json');
+// Extended families (#4), one file each so a document that only uses phosphor
+// never parses (or, on web, downloads) Material Symbols. Gzipped: as plain JSON
+// they are ~10 MB, which every native binary would embed; gzipped ~2.5 MB.
+const OUT_MATERIAL = path.join(OUT_DIR, 'iconify-catalog-material-symbols.json.gz');
+const OUT_PHOSPHOR = path.join(OUT_DIR, 'iconify-catalog-phosphor.json.gz');
+
+function writeGzipJson(file, value) {
+  fs.writeFileSync(file, zlib.gzipSync(JSON.stringify(value), { level: 9 }));
+}
 
 function attr(tag, name) {
   const match = tag.match(new RegExp(`\\b${name}="([^"]*)"`));
@@ -158,6 +168,76 @@ icons.sort((a, b) => {
   return setDelta || a.name.localeCompare(b.name);
 });
 
+// Resolve an Iconify name (icon or alias) to its body, or `undefined`. The
+// extended sets carry no alias transforms (rotate / flip), which this relies on.
+function iconifyBody(data, name) {
+  if (data.icons[name]) return data.icons[name];
+  const alias = data.aliases?.[name];
+  if (!alias || alias.rotate || alias.hFlip || alias.vFlip) return undefined;
+  return iconifyBody(data, alias.parent);
+}
+
+function entryFor(data, collection, name, sourceName) {
+  const icon = iconifyBody(data, sourceName);
+  if (!icon) return undefined;
+  const paths = pathsFromBody(icon.body);
+  if (paths.length === 0) return undefined;
+  return {
+    collection,
+    name,
+    width: icon.width ?? data.width ?? 24,
+    height: icon.height ?? data.height ?? 24,
+    style: styleFromBody(icon.body),
+    d: paths.join(' '),
+  };
+}
+
+// Material Symbols: Iconify ships the weight-400 masters, with the style as a
+// name suffix (`home-rounded`) and the unfilled (FILL 0) glyph as `-outline`.
+// Each style becomes its own collection named after the font family
+// (`material-symbols-outlined:home`), holding the FILL 0 glyph — what the
+// Material Symbols font paints by default — or the only glyph when an icon has
+// no separate unfilled form.
+const MATERIAL_STYLES = [
+  ['material-symbols-outlined', ['-outline', '']],
+  ['material-symbols-rounded', ['-outline-rounded', '-rounded']],
+  ['material-symbols-sharp', ['-outline-sharp', '-sharp']],
+];
+const MATERIAL_SUFFIX = /-(outline-rounded|outline-sharp|outline|rounded|sharp)$/;
+
+function materialIcons() {
+  const data = require('../node_modules/@iconify-json/material-symbols/icons.json');
+  const all = new Set([...Object.keys(data.icons), ...Object.keys(data.aliases ?? {})]);
+  const bases = new Set();
+  for (const name of all) bases.add(name.replace(MATERIAL_SUFFIX, ''));
+  const out = [];
+  for (const [collection, suffixes] of MATERIAL_STYLES) {
+    for (const base of [...bases].toSorted((a, b) => a.localeCompare(b))) {
+      for (const suffix of suffixes) {
+        const entry = entryFor(data, collection, base, `${base}${suffix}`);
+        if (entry) {
+          out.push(entry);
+          break;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+// Phosphor: the weights are Iconify name suffixes (`house-thin`, `-light`,
+// `-bold`, `-fill`; no suffix = regular), kept as-is so `phosphor:house-bold`
+// resolves directly and a numeric weight snaps onto one of them. Duotone is
+// left out: its second, translucent layer needs a two-tone paint the icon
+// renderer does not have.
+function phosphorIcons() {
+  const data = require('../node_modules/@iconify-json/ph/icons.json');
+  const names = [...Object.keys(data.icons), ...Object.keys(data.aliases ?? {})]
+    .filter((name) => !name.endsWith('-duotone'))
+    .toSorted((a, b) => a.localeCompare(b));
+  return names.map((name) => entryFor(data, 'phosphor', name, name)).filter(Boolean);
+}
+
 const coreIcons = icons.filter((icon) => CORE_SETS.has(icon.collection));
 const brandIcons = icons.filter((icon) => !CORE_SETS.has(icon.collection));
 
@@ -166,3 +246,9 @@ fs.writeFileSync(OUT_CORE, JSON.stringify({ icons: coreIcons }));
 fs.writeFileSync(OUT_BRANDS, JSON.stringify({ icons: brandIcons }));
 console.log(`wrote ${coreIcons.length} core icons to ${OUT_CORE}`);
 console.log(`wrote ${brandIcons.length} brand icons to ${OUT_BRANDS}`);
+const material = materialIcons();
+const phosphor = phosphorIcons();
+writeGzipJson(OUT_MATERIAL, { icons: material });
+writeGzipJson(OUT_PHOSPHOR, { icons: phosphor });
+console.log(`wrote ${material.length} Material Symbols icons to ${OUT_MATERIAL}`);
+console.log(`wrote ${phosphor.length} phosphor icons to ${OUT_PHOSPHOR}`);

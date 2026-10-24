@@ -345,6 +345,13 @@ fn install_fetched_asset(route: &str, bytes: Vec<u8>) -> bool {
             de_editor_ui::set_core_catalog(json);
         }
     }
+    // The extended icon families (Material Symbols, phosphor) arrive gzipped
+    // and are inflated + parsed into their own catalog, same install edge.
+    if let Some(set) = de_editor_ui::ExtendedIconSet::for_route(route) {
+        if let Some(gz) = de_editor_core::web_assets::installed_bytes(route) {
+            de_editor_ui::install_extended_icon_catalog(set, gz);
+        }
+    }
     true
 }
 

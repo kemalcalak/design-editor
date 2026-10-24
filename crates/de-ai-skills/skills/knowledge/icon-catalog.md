@@ -4,7 +4,7 @@ description: Icon usage rules and available icon names
 phase: [generation]
 trigger: null
 priority: 20
-budget: 1000
+budget: 1200
 category: base
 ---
 
@@ -23,6 +23,9 @@ ICONS — ALWAYS USE icon_font, NEVER `path` NODES:
 ```
 
 - Sizes: 14 / 20 / 24px. `fill` is the icon color (string or fill array).
+- `iconFontFamily` (default `lucide`): `lucide`, `feather`, `material-symbols-outlined`, `material-symbols-rounded`, `material-symbols-sharp`, `phosphor`. Stay in ONE family per design; lucide unless the brief asks for another.
+- Material Symbols names are the font's names with hyphens (`arrow-forward`, `shopping-cart`; `arrow_forward` also works). Phosphor names are phosphor's own (`house`, `magnifying-glass`, `gear`).
+- Weight: phosphor weights are name suffixes — `house-thin`, `house-light`, `house` (regular), `house-bold`, plus the solid `house-fill`. Lucide / feather / Material Symbols draw at their regular weight.
 - Icon-only buttons: `frame(w=44, h=44, layout=horizontal, alignItems=center, justifyContent=center)` containing one `icon_font`.
 - Use lucide names from the list below. NEVER invent names — unknown names fall back to a small circle on canvas. Old lucide names are invalid: more-horizontal→ellipsis, check-circle→circle-check, help-circle→circle-question-mark, grid→grid-3x3, edit→square-pen, sliders→sliders-vertical, bar-chart-2→chart-no-axes-column-increasing.
 
