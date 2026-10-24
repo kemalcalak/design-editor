@@ -331,6 +331,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.easeOut" => "이즈 아웃",
         "motion.easeInOut" => "이즈 인아웃",
         "motion.easeCustom" => "사용자 지정",
+        "motion.width" => "너비",
+        "motion.height" => "높이",
+        "motion.cornerRadius" => "모서리 반경",
         _ => return None,
     })
 }

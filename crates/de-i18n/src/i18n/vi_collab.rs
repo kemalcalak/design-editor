@@ -329,6 +329,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.easeOut" => "Mượt ra",
         "motion.easeInOut" => "Mượt vào-ra",
         "motion.easeCustom" => "Tùy chỉnh",
+        "motion.width" => "Chiều rộng",
+        "motion.height" => "Chiều cao",
+        "motion.cornerRadius" => "Bo góc",
         _ => return None,
     })
 }

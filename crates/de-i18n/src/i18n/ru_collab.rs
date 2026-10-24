@@ -329,6 +329,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.easeOut" => "Плавный выход",
         "motion.easeInOut" => "Плавные вход и выход",
         "motion.easeCustom" => "Своя",
+        "motion.width" => "Ширина",
+        "motion.height" => "Высота",
+        "motion.cornerRadius" => "Скругление",
         _ => return None,
     })
 }

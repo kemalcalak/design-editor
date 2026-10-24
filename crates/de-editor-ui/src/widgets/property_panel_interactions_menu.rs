@@ -45,6 +45,7 @@ fn trigger_label(locale: de_editor_core::Locale, trigger: InteractionTrigger) ->
 ///   (pop)", then — when `t` has an action — "Change to <trigger>" per
 ///   unauthored trigger and "Remove".
 /// - `MotionProperty(i)`: every animatable property.
+/// - `MotionTrigger(i)`: every motion trigger.
 /// - `TransitionEasing`: every easing the panel names.
 pub fn interaction_menu_rows(
     locale: de_editor_core::Locale,
@@ -133,6 +134,18 @@ pub fn interaction_menu_rows(
                 )
             })
             .collect(),
+        InteractionMenuTarget::MotionTrigger(index) => {
+            crate::widgets::property_panel_motion::MOTION_TRIGGERS
+                .into_iter()
+                .map(|trigger| {
+                    (
+                        PropertyPanelAction::SetAnimationTrigger { index, trigger },
+                        crate::widgets::property_panel_motion::trigger_label(locale, trigger)
+                            .to_string(),
+                    )
+                })
+                .collect()
+        }
         InteractionMenuTarget::TransitionEasing => MotionEasing::ALL
             .into_iter()
             .map(|easing| {
@@ -150,7 +163,7 @@ pub fn interaction_menu_rows(
 /// panel): the popover right-aligns to them. Wider ones are rows or the
 /// Motion property dropdown (left edge): it left-aligns, so it never
 /// hangs off the panel's left side.
-const NARROW_ANCHOR_W: f32 = 40.0;
+pub(crate) const NARROW_ANCHOR_W: f32 = 40.0;
 
 /// The popover rect, dropping below `anchor`.
 pub fn interaction_menu_rect(anchor: Rect, row_count: usize) -> Rect {

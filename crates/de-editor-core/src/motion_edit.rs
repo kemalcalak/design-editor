@@ -1,5 +1,6 @@
 //! Motion-section edits (#154): node `animations` with `mount` /
-//! `inView` triggers over the properties Preview plays without relayout.
+//! `inView` / `hover` / `tap` triggers (#155) over the properties Preview
+//! animates.
 //!
 //! The panel edits the common two-stop shape — one property tweened
 //! from a value to a value. Each write clones the node's `animations`,
@@ -15,9 +16,9 @@ use jian_ops_schema::motion::{Keyframe, MotionTrigger, NodeAnimation, NodeAnimat
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-/// The properties the Motion section offers — the P1 set Preview
-/// animates without relayout, minus the colour / radius ones a number
-/// field can't express.
+/// The properties the Motion section offers — the motion set Preview
+/// animates, minus the colour ones a number field can't express (`fill` /
+/// `stroke` stay MCP-authored and show as a custom row).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MotionProperty {
     Opacity,
@@ -26,16 +27,22 @@ pub enum MotionProperty {
     ScaleX,
     ScaleY,
     Rotation,
+    Width,
+    Height,
+    CornerRadius,
 }
 
 impl MotionProperty {
-    pub const ALL: [MotionProperty; 6] = [
+    pub const ALL: [MotionProperty; 9] = [
         MotionProperty::Opacity,
         MotionProperty::TranslateX,
         MotionProperty::TranslateY,
         MotionProperty::ScaleX,
         MotionProperty::ScaleY,
         MotionProperty::Rotation,
+        MotionProperty::Width,
+        MotionProperty::Height,
+        MotionProperty::CornerRadius,
     ];
 
     /// The keyframe key, as `ANIMATION_REGISTRY_PROPERTIES` names it.
@@ -47,6 +54,9 @@ impl MotionProperty {
             MotionProperty::ScaleX => "scaleX",
             MotionProperty::ScaleY => "scaleY",
             MotionProperty::Rotation => "rotation",
+            MotionProperty::Width => "width",
+            MotionProperty::Height => "height",
+            MotionProperty::CornerRadius => "cornerRadius",
         }
     }
 
@@ -63,6 +73,10 @@ impl MotionProperty {
             MotionProperty::TranslateY => (24.0, 0.0),
             MotionProperty::ScaleX | MotionProperty::ScaleY => (0.8, 1.0),
             MotionProperty::Rotation => (-15.0, 0.0),
+            // Sizes are absolute: a small grow the author then retypes.
+            MotionProperty::Width => (100.0, 120.0),
+            MotionProperty::Height => (40.0, 48.0),
+            MotionProperty::CornerRadius => (0.0, 12.0),
         }
     }
 }
@@ -229,7 +243,8 @@ impl EditorState {
         })
     }
 
-    /// Set the trigger (`mount` / `inView`) of the animation at `index`.
+    /// Set the trigger (`mount` / `inView` / `hover` / `tap`) of the
+    /// animation at `index`.
     pub fn set_selected_animation_trigger(&mut self, index: usize, trigger: MotionTrigger) -> bool {
         self.edit_selected_animations(|list| match list.get_mut(index) {
             Some(animation) if animation.trigger != trigger => {

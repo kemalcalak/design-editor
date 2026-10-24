@@ -81,6 +81,7 @@ mod interaction_state;
 mod invalidation;
 mod mode_transition;
 mod motion;
+mod motion_pointer;
 mod present;
 mod scene_helpers;
 mod session;
@@ -188,6 +189,8 @@ mod tests_interaction;
 mod tests_interaction_state;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_motion;
+#[cfg(all(test, not(target_os = "windows")))]
+mod tests_motion_pointer;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_multi_pointer;
 #[cfg(all(test, not(target_os = "windows")))]

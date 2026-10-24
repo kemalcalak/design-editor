@@ -84,15 +84,41 @@ fn rects_cover_add_dropdown_triggers_remove_and_four_inputs() {
     assert!(matches!(actions[0].0, PropertyPanelAction::AddAnimation));
     let dropdowns = actions
         .iter()
-        .filter(|(a, _)| matches!(a, PropertyPanelAction::ToggleInteractionMenu(_)))
+        .filter(|(a, _)| {
+            matches!(
+                a,
+                PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::MotionProperty(
+                    _
+                ))
+            )
+        })
         .count();
     // The custom row has no property dropdown.
     assert_eq!(dropdowns, 1);
+    // Every row has a trigger dropdown (#155: four triggers).
     let triggers = actions
         .iter()
-        .filter(|(a, _)| matches!(a, PropertyPanelAction::SetAnimationTrigger { .. }))
+        .filter(|(a, _)| {
+            matches!(
+                a,
+                PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::MotionTrigger(_))
+            )
+        })
         .count();
-    assert_eq!(triggers, 4);
+    assert_eq!(triggers, 2);
+    let rows = crate::widgets::property_panel_interactions::interaction_menu_rows(
+        de_editor_core::Locale::EnUs,
+        InteractionMenuTarget::MotionTrigger(1),
+        &[],
+        &summary,
+    );
+    assert_eq!(
+        rows.into_iter().map(|(a, _)| a).collect::<Vec<_>>(),
+        MOTION_TRIGGERS
+            .into_iter()
+            .map(|trigger| PropertyPanelAction::SetAnimationTrigger { index: 1, trigger })
+            .collect::<Vec<_>>()
+    );
     let inputs = motion_input_rects(&summary, 0.0, 0.0, 272.0);
     assert_eq!(inputs.len(), 4);
     // No input overlaps an action rect.

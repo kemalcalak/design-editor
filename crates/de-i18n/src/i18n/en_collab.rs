@@ -329,6 +329,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.easeOut" => "Ease out",
         "motion.easeInOut" => "Ease in-out",
         "motion.easeCustom" => "Custom",
+        "motion.width" => "Width",
+        "motion.height" => "Height",
+        "motion.cornerRadius" => "Corner radius",
         _ => return None,
     })
 }

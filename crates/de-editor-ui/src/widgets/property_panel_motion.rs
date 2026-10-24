@@ -5,14 +5,16 @@
 //! with its easing dropdown and remove, then its duration.
 //!
 //! Each animation the panel can express (one property, two stops) is
-//! three rows: the property dropdown + On load | In view + remove, then
-//! From | To, then Duration | Delay (ms). Any other shape is one row —
-//! "Custom animation" with its trigger segments and remove — so a
-//! hand-written or MCP-written declaration is never rewritten by
-//! accident. The section shows once the node has an animation (the
-//! first one comes from the Interactions "+"); its header "+" adds
-//! another fade-in. Writes live in
-//! `de_editor_core::motion_edit`.
+//! three rows: the property dropdown + the trigger dropdown (On load /
+//! In view / On hover / On tap, #155) + remove, then From | To, then
+//! Duration | Delay (ms). Any other shape is one row — "Custom animation"
+//! with its trigger dropdown and remove — so a hand-written or
+//! MCP-written declaration is never rewritten by accident.
+//!
+//! The section shows once the node has an animation or a transition
+//! (both are added from the Interactions "+"); its header "+" adds
+//! another fade-in. Writes live in `de_editor_core::motion_edit` and
+//! `transition_edit`.
 
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
@@ -76,9 +78,15 @@ pub(crate) fn motion_of(node: &PenNode) -> Vec<MotionSummary> {
 }
 
 const ROW_STEP: f32 = INPUT_HEIGHT + 6.0;
-const TRIGGER_SEGMENTS_W: f32 = 116.0;
+const TRIGGER_DROPDOWN_W: f32 = 116.0;
 const REMOVE_SIZE: f32 = 22.0;
-const TRIGGERS: [MotionTrigger; 2] = [MotionTrigger::Mount, MotionTrigger::InView];
+/// The triggers the trigger dropdown lists, in order.
+pub const MOTION_TRIGGERS: [MotionTrigger; 4] = [
+    MotionTrigger::Mount,
+    MotionTrigger::InView,
+    MotionTrigger::Hover,
+    MotionTrigger::Tap,
+];
 
 /// Rows the node-level transition takes (label + easing, then duration).
 const TRANSITION_ROWS: usize = 2;
@@ -127,7 +135,7 @@ fn transition_head(x: f32, y: f32, width: f32) -> (Rect, Rect) {
     (dropdown, head.remove)
 }
 
-/// The first row's parts: property dropdown, trigger segments, remove.
+/// The first row's parts: property dropdown, trigger dropdown, remove.
 struct HeadRow {
     dropdown: Rect,
     triggers: Rect,
@@ -143,9 +151,9 @@ fn head_row(x: f32, y: f32, width: f32) -> HeadRow {
         REMOVE_SIZE,
     );
     let triggers = Rect::xywh(
-        remove.origin.x - 4.0 - TRIGGER_SEGMENTS_W,
+        remove.origin.x - 4.0 - TRIGGER_DROPDOWN_W,
         y,
-        TRIGGER_SEGMENTS_W,
+        TRIGGER_DROPDOWN_W,
         INPUT_HEIGHT,
     );
     let dropdown = Rect::xywh(
@@ -220,13 +228,10 @@ pub(crate) fn push_motion_action_rects(
                 head.dropdown,
             ));
         }
-        let cells = crate::widgets::property_panel_segments::segment_rects(head.triggers, 2);
-        for (trigger, cell) in TRIGGERS.into_iter().zip(cells) {
-            out.push((
-                PropertyPanelAction::SetAnimationTrigger { index, trigger },
-                cell,
-            ));
-        }
+        out.push((
+            PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::MotionTrigger(index)),
+            head.triggers,
+        ));
         out.push((PropertyPanelAction::RemoveAnimation(index), head.remove));
     }
 }
@@ -364,6 +369,19 @@ pub fn property_label(locale: de_editor_core::Locale, property: MotionProperty) 
         MotionProperty::ScaleX => translate(locale, "motion.scaleX", "Scale X"),
         MotionProperty::ScaleY => translate(locale, "motion.scaleY", "Scale Y"),
         MotionProperty::Rotation => translate(locale, "motion.rotation", "Rotation"),
+        MotionProperty::Width => translate(locale, "motion.width", "Width"),
+        MotionProperty::Height => translate(locale, "motion.height", "Height"),
+        MotionProperty::CornerRadius => translate(locale, "motion.cornerRadius", "Corner radius"),
+    }
+}
+
+/// Display name of a motion trigger.
+pub fn trigger_label(locale: de_editor_core::Locale, trigger: MotionTrigger) -> &'static str {
+    match trigger {
+        MotionTrigger::Mount => translate(locale, "motion.onLoad", "On load"),
+        MotionTrigger::InView => translate(locale, "motion.inView", "In view"),
+        MotionTrigger::Hover => translate(locale, "interactions.onHover", "On hover"),
+        MotionTrigger::Tap => translate(locale, "interactions.onTap", "On tap"),
     }
 }
 
@@ -403,10 +421,6 @@ pub(crate) fn paint_motion_section(
     let motion = interactions.motion.as_slice();
     let title = translate(locale, "motion.title", "Motion");
     paint_section_label_with_add(cx, theme, title, x, y, width);
-    let triggers = [
-        translate(locale, "motion.onLoad", "On load"),
-        translate(locale, "motion.inView", "In view"),
-    ];
     if let Some(transition) = interactions.transition {
         paint_transition_head(
             cx,
@@ -436,14 +450,11 @@ pub(crate) fn paint_motion_section(
                 translate(locale, "motion.custom", "Custom animation"),
             ),
         }
-        let active = TRIGGERS.iter().position(|t| *t == summary.trigger());
-        crate::widgets::property_panel_segments::paint_segment_row(
+        paint_fitted_dropdown(
             cx,
             theme,
             head.triggers,
-            &triggers,
-            active,
-            11.0,
+            trigger_label(locale, summary.trigger()),
         );
         paint_remove(cx, theme, head.remove);
     }

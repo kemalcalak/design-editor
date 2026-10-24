@@ -329,6 +329,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.easeOut" => "นุ่มนวลออก",
         "motion.easeInOut" => "นุ่มนวลเข้า-ออก",
         "motion.easeCustom" => "กำหนดเอง",
+        "motion.width" => "ความกว้าง",
+        "motion.height" => "ความสูง",
+        "motion.cornerRadius" => "รัศมีมุม",
         _ => return None,
     })
 }

@@ -329,6 +329,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.easeOut" => "缓出",
         "motion.easeInOut" => "缓入缓出",
         "motion.easeCustom" => "自定义",
+        "motion.width" => "宽度",
+        "motion.height" => "高度",
+        "motion.cornerRadius" => "圆角",
         _ => return None,
     })
 }

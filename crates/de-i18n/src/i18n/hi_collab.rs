@@ -329,6 +329,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.easeOut" => "सहज अंत",
         "motion.easeInOut" => "सहज आरंभ-अंत",
         "motion.easeCustom" => "कस्टम",
+        "motion.width" => "चौड़ाई",
+        "motion.height" => "ऊंचाई",
+        "motion.cornerRadius" => "कोने की त्रिज्या",
         _ => return None,
     })
 }

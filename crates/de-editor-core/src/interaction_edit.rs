@@ -105,6 +105,9 @@ pub enum InteractionMenuTarget {
     Trigger(InteractionTrigger),
     /// The animated-property list of the Motion row at this index.
     MotionProperty(usize),
+    /// The trigger list (On load / In view / On hover / On tap) of the
+    /// Motion row at this index (#155).
+    MotionTrigger(usize),
     /// The easing list of the node-level `transition` row.
     TransitionEasing,
 }
