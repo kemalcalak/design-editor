@@ -455,6 +455,8 @@ pub enum PropertyPanelAction {
     /// / Checkbox node — host flips the literal `checked` bool to
     /// `new_value`.
     ToggleWidgetChecked(bool),
+    /// Turn the selected annotation into a note, context or prompt (#12).
+    SetAnnotationKind(jian_ops_schema::node::AnnotationKind),
     /// User clicked an Interactions row, the Interactions header "+" or
     /// a Motion row's property dropdown — host toggles the shared
     /// popover for that target (`editor_ui.interaction_menu_*`).

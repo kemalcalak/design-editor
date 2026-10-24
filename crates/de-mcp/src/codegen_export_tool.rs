@@ -2,8 +2,10 @@
 
 use std::collections::BTreeMap;
 
+use base64::Engine as _;
 use de_codegen::{
-    Codegen, Compose, CssVariables, Flutter, Html, React, ReactNative, Svelte, SwiftUi, Vue,
+    export_html_roots, Codegen, Compose, CssVariables, Flutter, HtmlExportOptions, HtmlTarget,
+    React, ReactNative, Svelte, SwiftUi, Vue,
 };
 use de_editor_core::codegen::Framework;
 use de_editor_core::walkers::find_node;
@@ -18,6 +20,8 @@ use super::{McpTool, ToolErrorCode, ToolOutcome};
 const CSS_VARIABLES: &str = "css-variables";
 /// Target used when the caller names none.
 const DEFAULT_TARGET: &str = "react";
+/// Where the HTML targets write extracted images, relative to the HTML.
+const HTML_ASSET_DIR: &str = "assets";
 
 pub struct CodegenExport {
     doc: PenDocument,
@@ -72,29 +76,63 @@ impl McpTool for CodegenExport {
             Ok(roots) => roots,
             Err(message) => return ToolOutcome::Err(ToolErrorCode::ToolFailed, message),
         };
-        let mut scoped = self.doc.clone();
-        scoped.pages = None;
-        scoped.children = roots.iter().map(|node| (*node).clone()).collect();
+        let roots: Vec<PenNode> = roots.iter().map(|node| (*node).clone()).collect();
+        let html_target = match framework {
+            Some(Framework::Html) => Some(HtmlTarget::Css),
+            Some(Framework::HtmlTailwind) => Some(HtmlTarget::Tailwind),
+            _ => None,
+        };
 
         let mut files = Map::new();
-        let code = match framework {
-            Some(Framework::React) => React.generate(&scoped),
-            Some(Framework::Vue) => Vue.generate(&scoped),
-            Some(Framework::Svelte) => Svelte.generate(&scoped),
-            Some(Framework::Html) => Html.generate(&scoped),
-            Some(Framework::Flutter) => Flutter.generate(&scoped),
-            Some(Framework::SwiftUi) => SwiftUi.generate(&scoped),
-            Some(Framework::Compose) => Compose.generate(&scoped),
-            Some(Framework::ReactNative) => ReactNative.generate(&scoped),
-            None => CssVariables.generate(&scoped),
+        let mut assets = Vec::new();
+        let code = if let Some(html_target) = html_target {
+            let options = match html_options(args) {
+                Ok(options) => options,
+                Err(message) => return ToolOutcome::Err(ToolErrorCode::InvalidArgument, message),
+            };
+            // Instances resolve against the whole document: their components
+            // may live on another page than the exported nodes.
+            let export = export_html_roots(&self.doc, &roots, html_target, &options);
+            assets = export.assets;
+            export.html
+        } else {
+            let mut scoped = self.doc.clone();
+            scoped.pages = None;
+            scoped.children =
+                de_editor_core::ref_resolve::resolve_refs_for_canvas_roots(&roots, &self.doc);
+            match framework {
+                Some(Framework::React) => React.generate(&scoped),
+                Some(Framework::Vue) => Vue.generate(&scoped),
+                Some(Framework::Svelte) => Svelte.generate(&scoped),
+                Some(Framework::Flutter) => Flutter.generate(&scoped),
+                Some(Framework::SwiftUi) => SwiftUi.generate(&scoped),
+                Some(Framework::Compose) => Compose.generate(&scoped),
+                Some(Framework::ReactNative) => ReactNative.generate(&scoped),
+                Some(Framework::Html | Framework::HtmlTailwind) => unreachable!("html above"),
+                None => CssVariables.generate(&scoped),
+            }
         };
         files.insert(format!("component.{}", extension(framework)), json!(code));
-        let out = json!({
+        let mut out = json!({
             "framework": target,
             "nodeCount": roots.len(),
             "code": code,
             "files": Value::Object(files),
         });
+        if !assets.is_empty() {
+            out["assets"] = Value::Array(
+                assets
+                    .iter()
+                    .map(|asset| {
+                        json!({
+                            "path": asset.path,
+                            "mimeType": asset.mime_type,
+                            "base64": base64::engine::general_purpose::STANDARD.encode(&asset.bytes),
+                        })
+                    })
+                    .collect(),
+            );
+        }
         ToolOutcome::OkJson(out.to_string())
     }
 }
@@ -150,6 +188,30 @@ impl CodegenExport {
     }
 }
 
+/// A boolean argument (`"true"` / `"false"`), `default` when absent.
+fn flag(args: &BTreeMap<String, String>, key: &str, default: bool) -> Result<bool, String> {
+    match args
+        .get(key)
+        .map(|v| v.trim().to_ascii_lowercase())
+        .as_deref()
+    {
+        None | Some("") => Ok(default),
+        Some("true" | "1") => Ok(true),
+        Some("false" | "0") => Ok(false),
+        Some(other) => Err(format!("{key} must be true or false, got {other:?}")),
+    }
+}
+
+/// The HTML targets' `scaffold` / `layerData` / `extractAssets` switches.
+fn html_options(args: &BTreeMap<String, String>) -> Result<HtmlExportOptions, String> {
+    Ok(HtmlExportOptions {
+        scaffold: flag(args, "scaffold", true)?,
+        layer_data: flag(args, "layerData", false)?,
+        asset_dir: flag(args, "extractAssets", true)?.then(|| HTML_ASSET_DIR.into()),
+        title: None,
+    })
+}
+
 fn non_empty(nodes: Vec<&PenNode>) -> Result<Vec<&PenNode>, String> {
     if nodes.is_empty() {
         Err("nothing to export: the target page is empty".into())
@@ -178,7 +240,7 @@ fn extension(framework: Option<Framework>) -> &'static str {
         Some(Framework::React | Framework::ReactNative) => "tsx",
         Some(Framework::Vue) => "vue",
         Some(Framework::Svelte) => "svelte",
-        Some(Framework::Html) => "html",
+        Some(Framework::Html | Framework::HtmlTailwind) => "html",
         Some(Framework::Flutter) => "dart",
         Some(Framework::SwiftUi) => "swift",
         Some(Framework::Compose) => "kt",

@@ -34,4 +34,10 @@ pub enum ComponentBrowserButton {
     Category(Option<ComponentCategory>),
     /// A component card, by its index into the filtered grid.
     Card(usize),
+    /// The Libraries header's Link button (#15).
+    LibraryLink,
+    /// The Libraries header's Reload button.
+    LibraryReload,
+    /// The Unlink button on a library row, by its index.
+    LibraryUnlink(usize),
 }

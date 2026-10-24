@@ -338,6 +338,7 @@ mod tests {
             (Framework::Vue, "vue"),
             (Framework::Svelte, "svelte"),
             (Framework::Html, "html"),
+            (Framework::HtmlTailwind, "html"),
             (Framework::Flutter, "dart"),
             (Framework::SwiftUi, "swift"),
             (Framework::Compose, "kt"),

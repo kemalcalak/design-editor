@@ -334,6 +334,9 @@ fn export_editor_state_to_path(
     use de_editor_core::scene_template_catalog::TemplateScene;
 
     let fmt = state.editor_ui.export_format;
+    if let Some(target) = de_codegen::html_target_for(fmt) {
+        return de_host_services::export::write_html_export(state, target, path);
+    }
     let scale = state.editor_ui.export_scale;
     // A single selected node scopes raster and SVG exports to that
     // subtree. PDF remains page-level.
@@ -368,6 +371,9 @@ fn export_editor_state_to_path(
             None => de_host_services::export::export_svg(&scene, path),
         },
         Fmt::Pdf => unreachable!("PDF returned before active-page scene construction"),
+        Fmt::Html | Fmt::HtmlTailwind => {
+            unreachable!("HTML returned before active-page scene construction")
+        }
     }
 }
 
@@ -439,6 +445,7 @@ pub fn run_action(
                 Fmt::Webp => ("WEBP", &["webp"]),
                 Fmt::Svg => ("SVG", &["svg"]),
                 Fmt::Pdf => ("PDF", &["pdf"]),
+                Fmt::Html | Fmt::HtmlTailwind => ("HTML", &["html"]),
             };
             let default_name = export_dialog_default_name(host.editor_state());
             if let Some(path) = pick_export_path(host, filter_label, filter_exts, &default_name) {

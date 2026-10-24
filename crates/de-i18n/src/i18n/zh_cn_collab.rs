@@ -342,7 +342,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "着色器代码",
         "shader.close" => "关闭",
         "shader.apply" => "应用",
+        "annotation.note" => "便签",
+        "annotation.context" => "上下文",
+        "annotation.prompt" => "提示词",
+        "annotation.content" => "内容",
+        "annotation.model" => "模型",
         "property.resetOverride" => "重置覆盖",
+        "componentBrowser.libraries" => "组件库",
+        "componentBrowser.libraryNotLoaded" => "未加载",
+        "componentBrowser.libraryMissing" => "缺失",
+        "componentBrowser.libraryInvalid" => "无法读取",
+        "componentBrowser.linkLibrary" => "链接组件库文件",
+        "componentBrowser.libraryNeedsDesktop" => "链接组件库文件需要桌面应用",
         _ => return None,
     })
 }

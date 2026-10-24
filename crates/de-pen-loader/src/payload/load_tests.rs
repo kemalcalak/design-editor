@@ -84,6 +84,7 @@ fn node_id(node: &PenNode) -> &str {
         PenNode::Progress(node) => &node.base.id,
         PenNode::Tabs(node) => &node.base.id,
         PenNode::Ref(node) => &node.base.id,
+        PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => &node.base.id,
     }
 }
 

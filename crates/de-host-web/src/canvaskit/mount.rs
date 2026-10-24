@@ -393,6 +393,7 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
                 crate::dom_io::drain_pending_file_action(&inner);
                 crate::dom_io::drain_pending_attachment_pick(&inner);
                 crate::dom_io::drain_pending_kit_io(&inner);
+                crate::dom_io::drain_pending_library_request(&inner);
                 crate::theme_preset_io::drain_pending_theme_preset_io(&inner);
                 crate::web_fonts::drain_font_requests(&inner);
                 crate::web_fonts::drain_missing_fonts_detection(&inner);

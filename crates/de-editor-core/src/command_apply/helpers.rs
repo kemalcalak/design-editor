@@ -48,6 +48,7 @@ pub(super) fn parse_tool(s: &str) -> Option<Tool> {
         "slider" => Some(Tool::Slider),
         "progress" => Some(Tool::Progress),
         "tabs" => Some(Tool::Tabs),
+        "note" => Some(Tool::Note),
         _ => None,
     }
 }

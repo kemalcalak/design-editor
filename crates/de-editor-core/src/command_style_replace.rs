@@ -433,7 +433,12 @@ fn node_fill_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
         PenNode::NumberInput(n) => n.fill.as_mut(),
         PenNode::Progress(n) => n.fill.as_mut(),
         PenNode::Tabs(n) => n.fill.as_mut(),
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Line(_)
+        | PenNode::Image(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     }
 }
 
@@ -457,7 +462,12 @@ fn node_stroke_mut(node: &mut PenNode) -> Option<&mut PenStroke> {
         PenNode::NumberInput(n) => n.stroke.as_mut(),
         PenNode::Progress(n) => n.stroke.as_mut(),
         PenNode::Tabs(n) => n.stroke.as_mut(),
-        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) => None,
+        PenNode::Text(_)
+        | PenNode::Image(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     }
 }
 

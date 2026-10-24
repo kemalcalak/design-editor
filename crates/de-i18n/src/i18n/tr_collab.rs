@@ -342,7 +342,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Gölgelendirici kodu",
         "shader.close" => "Kapat",
         "shader.apply" => "Uygula",
+        "annotation.note" => "Not",
+        "annotation.context" => "Bağlam",
+        "annotation.prompt" => "İstem",
+        "annotation.content" => "İçerik",
+        "annotation.model" => "Model",
         "property.resetOverride" => "Geçersiz kılmayı sıfırla",
+        "componentBrowser.libraries" => "Kütüphaneler",
+        "componentBrowser.libraryNotLoaded" => "Yüklenmedi",
+        "componentBrowser.libraryMissing" => "Bulunamadı",
+        "componentBrowser.libraryInvalid" => "Okunamıyor",
+        "componentBrowser.linkLibrary" => "Kütüphane dosyası bağla",
+        "componentBrowser.libraryNeedsDesktop" => "Kütüphane dosyası bağlamak için masaüstü uygulaması gerekir",
         _ => return None,
     })
 }

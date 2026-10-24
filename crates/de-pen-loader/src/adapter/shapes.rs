@@ -351,6 +351,49 @@ pub(super) fn icon_font_to_payload(n: &IconFontNode) -> NodePayload {
     p
 }
 
+/// Body font size of a note / context / prompt without an authored one.
+pub(crate) const ANNOTATION_FONT_SIZE: f32 = 14.0;
+
+/// `note` / `context` / `prompt`: an annotation the editor canvas paints as
+/// a sticky note. The kind tag is the node's `type`, the content is wrapped
+/// text, and a prompt's `model` rides the widget label.
+pub(super) fn annotation_to_payload(kind: AnnotationKind, n: &NoteNode) -> NodePayload {
+    let mut p = base_payload(&n.base, kind.tag());
+    p.text = Some(n.plain_content());
+    p.font_family = n.font_family.clone().unwrap_or_default();
+    p.font_size = n
+        .font_size
+        .map_or(ANNOTATION_FONT_SIZE, |size| size as f32)
+        .max(1.0);
+    p.font_weight = resolve_font_weight(n.font_weight.as_ref());
+    p.italic = matches!(
+        n.font_style,
+        Some(jian_ops_schema::node::TextFontStyle::Italic)
+    );
+    p.line_height = jian_ops_schema::node::text::canonical_line_height_multiplier(n.line_height)
+        .unwrap_or(0.0) as f32;
+    p.letter_spacing = n.letter_spacing.unwrap_or(0.0) as f32;
+    p.text_align = n
+        .text_align
+        .as_ref()
+        .map(text_align_keyword)
+        .unwrap_or("")
+        .to_string();
+    p.text_vertical_align = n
+        .text_align_vertical
+        .as_ref()
+        .map(text_vertical_align_keyword)
+        .unwrap_or("")
+        .to_string();
+    p.text_wrap = true;
+    p.widget = Some(crate::payload::WidgetPayload {
+        kind: kind.tag().to_string(),
+        label: n.model.clone().filter(|model| !model.trim().is_empty()),
+        ..Default::default()
+    });
+    p
+}
+
 pub(super) fn empty_group(base: &PenNodeBase, kind: &str) -> NodePayload {
     let mut p = base_payload(base, kind);
     p.children = Vec::new();

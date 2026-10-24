@@ -32,29 +32,7 @@ use crate::read_nodes::node_snapshot_value;
 /// use this so their output matches both the canonical `.de` JSON and the
 /// TS MCP (`rectangle`, not `rect`; `image`/`icon_font`/`ref`, not `other`).
 pub(crate) fn kind_label(node: &PenNode) -> &'static str {
-    match node {
-        PenNode::Frame(_) => "frame",
-        PenNode::Group(_) => "group",
-        PenNode::Rectangle(_) => "rectangle",
-        PenNode::Ellipse(_) => "ellipse",
-        PenNode::Polygon(_) => "polygon",
-        PenNode::Line(_) => "line",
-        PenNode::Text(_) => "text",
-        PenNode::Path(_) => "path",
-        PenNode::TextInput(_) => "text_input",
-        PenNode::TextArea(_) => "text_area",
-        PenNode::Select(_) => "select",
-        PenNode::Switch(_) => "switch",
-        PenNode::Checkbox(_) => "checkbox",
-        PenNode::Slider(_) => "slider",
-        PenNode::RadioGroup(_) => "radio_group",
-        PenNode::NumberInput(_) => "number_input",
-        PenNode::Progress(_) => "progress",
-        PenNode::Tabs(_) => "tabs",
-        PenNode::Image(_) => "image",
-        PenNode::IconFont(_) => "icon_font",
-        PenNode::Ref(_) => "ref",
-    }
+    node.type_tag()
 }
 
 /// The active page's top-level children, threading the single-page

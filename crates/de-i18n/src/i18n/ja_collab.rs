@@ -342,7 +342,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "シェーダーコード",
         "shader.close" => "閉じる",
         "shader.apply" => "適用",
+        "annotation.note" => "メモ",
+        "annotation.context" => "コンテキスト",
+        "annotation.prompt" => "プロンプト",
+        "annotation.content" => "内容",
+        "annotation.model" => "モデル",
         "property.resetOverride" => "オーバーライドをリセット",
+        "componentBrowser.libraries" => "ライブラリ",
+        "componentBrowser.libraryNotLoaded" => "未読み込み",
+        "componentBrowser.libraryMissing" => "見つかりません",
+        "componentBrowser.libraryInvalid" => "読み込めません",
+        "componentBrowser.linkLibrary" => "ライブラリファイルをリンク",
+        "componentBrowser.libraryNeedsDesktop" => "ライブラリのリンクにはデスクトップアプリが必要です",
         _ => return None,
     })
 }

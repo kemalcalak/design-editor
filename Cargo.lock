@@ -1620,6 +1620,7 @@ dependencies = [
 name = "de-mcp"
 version = "0.3.1"
 dependencies = [
+ "base64",
  "de-ai-skills",
  "de-codegen",
  "de-config-store",
@@ -1725,6 +1726,7 @@ name = "de-render-export"
 version = "0.3.1"
 dependencies = [
  "base64",
+ "de-codegen",
  "de-editor-core",
  "de-editor-ui",
  "de-host-native",

@@ -460,6 +460,16 @@ pub(super) fn export_image<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
         request_pdf_download(b.host().editor_state(), None);
         return;
     }
+    if let Some(html) = file_actions::export_html_document(b.host().editor_state()) {
+        if let Err(e) = crate::web_clipboard::download_bytes(
+            &file_name,
+            "text/html;charset=utf-8",
+            html.as_bytes(),
+        ) {
+            web_sys::console::error_1(&e);
+        }
+        return;
+    }
     let body = match file_actions::export_raster_request_body(b.host().editor_state()) {
         Ok(body) => body,
         Err(e) => {

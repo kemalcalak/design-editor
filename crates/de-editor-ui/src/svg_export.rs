@@ -326,7 +326,7 @@ fn own_paint_corners(n: &SceneNode) -> Option<Vec<glam::Vec2>> {
 }
 
 fn emit_node(out: &mut String, n: &SceneNode) {
-    if n.hidden {
+    if n.hidden || crate::canvas_only::is_canvas_only(n) {
         return;
     }
     let local_xform = node_transform(n);

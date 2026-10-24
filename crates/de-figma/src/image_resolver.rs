@@ -317,6 +317,7 @@ fn collect_node_refs(node: &PenNode, refs: &mut ReferencedImages) {
             tabs.children.as_ref()
         }
         PenNode::Ref(reference) => reference.children.as_ref(),
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     };
     if let Some(children) = children {
         for child in children {
@@ -487,6 +488,7 @@ fn patch_node(node: &mut PenNode, cache: &mut BlobCache) -> usize {
             tabs.children.as_mut()
         }
         PenNode::Ref(r) => r.children.as_mut(),
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     };
     if let Some(children) = children {
         for child in children {
