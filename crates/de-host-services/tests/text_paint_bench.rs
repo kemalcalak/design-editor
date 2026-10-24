@@ -32,17 +32,22 @@ fn text_heavy_document_frame_time() {
     let t = Instant::now();
     de_render_export::paint_nodes(canvas, &page.children);
     let first = t.elapsed();
-    let frames = 30;
-    let t = Instant::now();
-    for _ in 0..frames {
-        de_render_export::paint_nodes(canvas, &page.children);
-    }
-    let warm = t.elapsed() / frames;
+    // Median and best of single frames: the machine is shared, so the mean
+    // swings with other load.
+    let mut times: Vec<f64> = (0..60)
+        .map(|_| {
+            let t = Instant::now();
+            de_render_export::paint_nodes(canvas, &page.children);
+            t.elapsed().as_secs_f64() * 1e3
+        })
+        .collect();
+    times.sort_by(f64::total_cmp);
     println!(
-        "BENCH layout_cold={:.1}ms layout_warm={:.1}ms first_frame={:.1}ms warm_frame={:.2}ms ({w}x{h})",
+        "BENCH layout_cold={:.1}ms layout_warm={:.1}ms first_frame={:.1}ms warm_median={:.2}ms warm_best={:.2}ms ({w}x{h})",
         layout_cold.as_secs_f64() * 1e3,
         layout_warm.as_secs_f64() * 1e3,
         first.as_secs_f64() * 1e3,
-        warm.as_secs_f64() * 1e3,
+        times[times.len() / 2],
+        times[0],
     );
 }
