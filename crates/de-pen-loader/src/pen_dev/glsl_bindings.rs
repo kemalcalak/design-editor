@@ -57,6 +57,8 @@ pub(super) struct Bindings {
     pub(super) uses: HashMap<String, Use>,
     /// Statement start → the SkSL declarations replacing it.
     pub(super) declarations: HashMap<usize, String>,
+    /// `uniform shader` children declared so far.
+    children: BTreeSet<String>,
     time: bool,
     mouse: bool,
 }
@@ -71,6 +73,10 @@ impl Bindings {
         let mut declared = Vec::new();
         for name in &decl.names {
             let error = |reason| GlslError::Uniform {
+                name: name.clone(),
+                reason,
+            };
+            let texture_error = |reason| GlslError::Texture {
                 name: name.clone(),
                 reason,
             };
@@ -122,13 +128,13 @@ impl Bindings {
                     }
                     "sampler2D" => {
                         if notes.sdf {
-                            return Err(error("@sdf textures are not supported"));
+                            return Err(texture_error("@sdf textures are not supported"));
                         }
                         let source = value
                             .and_then(Value::as_str)
                             .map(str::to_owned)
                             .or_else(|| notes.default.clone())
-                            .ok_or_else(|| error("texture without a source"))?;
+                            .ok_or_else(|| texture_error("texture without a source"))?;
                         let texture = match source.as_str() {
                             "pencil:object" => Texture::Object,
                             "pencil:background" => Texture::Background,
@@ -139,10 +145,10 @@ impl Bindings {
                             (Texture::Background, Stage::Effect) => "background".to_owned(),
                             (Texture::Image(_), Stage::Fill) => renamed.clone(),
                             (Texture::Image(_), Stage::Effect) => {
-                                return Err(error("image textures in a shader effect"))
+                                return Err(texture_error("image textures in a shader effect"))
                             }
                             (_, Stage::Fill) => {
-                                return Err(error("pencil:object texture in a shader fill"))
+                                return Err(texture_error("pencil:object texture in a shader fill"))
                             }
                         };
                         self.uses.insert(
@@ -158,7 +164,11 @@ impl Bindings {
                             slot: Slot::Texture(texture),
                             default: notes.default.clone(),
                         });
-                        declared.push(format!("uniform shader {child};"));
+                        // Two samplers may read the same node / backdrop.
+                        let declaration = format!("uniform shader {child};");
+                        if self.children.insert(child) {
+                            declared.push(declaration);
+                        }
                         continue;
                     }
                     _ => return Err(error("unsupported uniform type")),
@@ -191,7 +201,7 @@ impl Bindings {
             .map(|user| user.sksl_name.as_str())
             .collect();
         if children.len() > 1 {
-            return Err(GlslError::Uniform {
+            return Err(GlslError::Texture {
                 name: children.into_iter().collect::<Vec<_>>().join(", "),
                 reason: "a shader effect samples one texture (object or background)",
             });

@@ -14,6 +14,7 @@
 //! missing value from the GLSL `@default`, else zero / black.
 
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use serde_json::{json, Map, Value};
 
@@ -26,7 +27,9 @@ use super::variables::Theme;
 #[derive(Default)]
 pub(super) struct ShaderCache {
     /// Relative path → source text (`None` once known missing).
-    sources: HashMap<String, Option<String>>,
+    sources: HashMap<String, Option<Rc<str>>>,
+    /// Image texture URL → `data:` URL (`None` once known missing).
+    images: HashMap<String, Option<String>>,
     /// SkSL → whether it compiled.
     #[cfg(feature = "sksl-check")]
     compiled: HashMap<String, bool>,
@@ -62,7 +65,7 @@ pub(super) fn convert(
     let translation = match glsl::translate(&source, stage, &values) {
         Ok(translation) => translation,
         Err(error) => {
-            ctx.report.note(error.label(stage == Stage::Effect));
+            ctx.report.note(error.label(stage));
             return None;
         }
     };
@@ -95,17 +98,19 @@ pub(super) fn convert(
 }
 
 /// The GLSL text at `url` (query and fragment ignored), read once.
-fn read_source(url: &str, ctx: &mut Ctx<'_>) -> Option<String> {
-    let path = url.split(['?', '#']).next().unwrap_or_default();
-    let relative = path.trim_start_matches("./").to_owned();
-    if let Some(cached) = ctx.shaders.sources.get(&relative) {
+fn read_source(url: &str, ctx: &mut Ctx<'_>) -> Option<Rc<str>> {
+    let relative = images::relative_path(url);
+    if let Some(cached) = ctx.shaders.sources.get(relative) {
         return cached.clone();
     }
-    let source = images::is_inside_document_folder(&relative)
-        .then(|| (ctx.assets)(&relative))
+    let source: Option<Rc<str>> = images::is_inside_document_folder(relative)
+        .then(|| (ctx.assets)(relative))
         .flatten()
-        .and_then(|bytes| String::from_utf8(bytes).ok());
-    ctx.shaders.sources.insert(relative, source.clone());
+        .and_then(|bytes| String::from_utf8(bytes).ok())
+        .map(Rc::from);
+    ctx.shaders
+        .sources
+        .insert(relative.to_owned(), source.clone());
     source
 }
 
@@ -144,10 +149,12 @@ fn resolve_values(uniforms: Option<Value>, theme: &Theme, ctx: &mut Ctx<'_>) -> 
 
 #[cfg(feature = "sksl-check")]
 fn compiles(sksl: &str, ctx: &mut Ctx<'_>) -> bool {
-    *ctx.shaders
-        .compiled
-        .entry(sksl.to_owned())
-        .or_insert_with(|| skia_safe::RuntimeEffect::make_for_shader(sksl, None).is_ok())
+    if let Some(&compiled) = ctx.shaders.compiled.get(sksl) {
+        return compiled;
+    }
+    let compiled = skia_safe::RuntimeEffect::make_for_shader(sksl, None).is_ok();
+    ctx.shaders.compiled.insert(sksl.to_owned(), compiled);
+    compiled
 }
 
 /// Without Skia (the CanvasKit web build, the CLI) the translation is
@@ -250,15 +257,14 @@ fn image_source(url: &str, ctx: &mut Ctx<'_>) -> Option<String> {
     if url.starts_with("data:") || url.starts_with("http://") || url.starts_with("https://") {
         return Some(url.to_owned());
     }
-    let path = url.split(['?', '#']).next().unwrap_or_default();
-    let relative = path.trim_start_matches("./");
-    let source = images::is_inside_document_folder(relative)
-        .then(|| images::mime_type(relative))
-        .flatten()
-        .and_then(|mime| Some(images::data_url(mime, &(ctx.assets)(relative)?)));
+    if let Some(cached) = ctx.shaders.images.get(url) {
+        return cached.clone();
+    }
+    let source = images::file_data_url(url, ctx.assets);
     if source.is_none() {
         ctx.report.note_missing_image(url);
     }
+    ctx.shaders.images.insert(url.to_owned(), source.clone());
     source
 }
 

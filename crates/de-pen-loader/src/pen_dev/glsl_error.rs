@@ -2,6 +2,8 @@
 
 use std::fmt;
 
+use super::glsl::Stage;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum GlslError {
     /// No `void main()` at the top level.
@@ -13,18 +15,17 @@ pub(crate) enum GlslError {
     Unsupported(&'static str),
     /// A uniform declaration the translation cannot bind.
     Uniform { name: String, reason: &'static str },
+    /// A `sampler2D` the target paint cannot bind.
+    Texture { name: String, reason: &'static str },
     /// Unbalanced `(` / `{` in the source.
     Unbalanced,
 }
 
 impl GlslError {
     /// Short report label for the import summary.
-    pub(crate) fn label(&self, effect: bool) -> &'static str {
-        let texture = matches!(
-            self,
-            GlslError::Uniform { reason, .. } if reason.contains("texture")
-        );
-        match (effect, texture) {
+    pub(crate) fn label(&self, stage: Stage) -> &'static str {
+        let texture = matches!(self, GlslError::Texture { .. });
+        match (stage == Stage::Effect, texture) {
             (false, false) => "shader fill (unsupported GLSL)",
             (false, true) => "shader fill (unsupported texture)",
             (true, false) => "shader effect (unsupported GLSL)",
@@ -39,7 +40,9 @@ impl fmt::Display for GlslError {
             GlslError::NoMain => write!(f, "no `void main()` entry point"),
             GlslError::Directive(line) => write!(f, "unsupported preprocessor line `{line}`"),
             GlslError::Unsupported(what) => write!(f, "unsupported GLSL: {what}"),
-            GlslError::Uniform { name, reason } => write!(f, "uniform `{name}`: {reason}"),
+            GlslError::Uniform { name, reason } | GlslError::Texture { name, reason } => {
+                write!(f, "uniform `{name}`: {reason}")
+            }
             GlslError::Unbalanced => write!(f, "unbalanced brackets"),
         }
     }

@@ -151,7 +151,33 @@ fn defines_and_gl_es_guards_are_preprocessed() {
     let src = "#version 100\n#ifdef GL_ES\nprecision mediump float;\n#endif\n#define PI 3.14159\n#define TAU (2.0 * PI)\nvoid main() { gl_FragColor = vec4(sin(TAU)); }";
     let sksl = translate(src, Stage::Fill, &Map::new()).unwrap().sksl;
     assert!(!sksl.contains('#'), "{sksl}");
-    assert!(sksl.contains("sin(((2.0 * (3.14159))))"), "{sksl}");
+    assert!(sksl.contains("sin(((2.0 * 3.14159)))"), "{sksl}");
+}
+
+#[test]
+fn directive_comments_and_single_token_defines_stay_valid() {
+    let src = "#ifdef GL_ES\nprecision mediump float;\n#endif // GL_ES\n#define PI 3.14159 // pi\n#define COLOR vec3\n#define OUT gl_FragColor\nstruct Ray { float time; vec2 size; };\nvoid main() { Ray r = Ray(PI, vec2(1.0)); COLOR c = COLOR(r.time + r.size.x); OUT = vec4(c, 1.0); }";
+    let sksl = translate(src, Stage::Fill, &Map::new()).unwrap().sksl;
+    assert!(!sksl.contains("// pi"), "{sksl}");
+    assert!(sksl.contains("Ray(3.14159, float2(1.0))"), "{sksl}");
+    assert!(
+        sksl.contains("float3 c = float3(r.pen_time + r.pen_size.x);"),
+        "{sksl}"
+    );
+    assert!(sksl.contains("pen_FragColor = float4(c, 1.0);"), "{sksl}");
+}
+
+#[test]
+fn two_samplers_on_the_node_share_one_child() {
+    let src = "uniform sampler2D a; uniform sampler2D b; void main() { gl_FragColor = texture2D(a, vec2(0.5)) + texture2D(b, vec2(0.5)); }";
+    let sksl = translate(
+        src,
+        Stage::Effect,
+        &values(json!({ "a": "pencil:object", "b": "pencil:object" })),
+    )
+    .unwrap()
+    .sksl;
+    assert_eq!(sksl.matches("uniform shader object;").count(), 1, "{sksl}");
 }
 
 #[test]
@@ -172,7 +198,7 @@ fn unsupported_sources_fail_with_a_reason() {
     );
     assert!(matches!(
         fill("uniform sampler2D tex; void main() { gl_FragColor = texture2D(tex, vec2(0.0)); }"),
-        GlslError::Uniform { .. }
+        GlslError::Texture { .. }
     ));
     assert!(matches!(
         fill("uniform mat3 m; void main() {}"),
@@ -217,7 +243,7 @@ fn node_textures_become_effect_children() {
         &values(json!({ "u_content": "pencil:object" })),
     )
     .unwrap_err()
-    .label(false);
+    .label(Stage::Fill);
     assert_eq!(label, "shader fill (unsupported texture)");
 }
 
@@ -246,6 +272,16 @@ fn image_textures_become_fill_image_children() {
 fn translated_fixtures_compile_in_skia() {
     let cases: Vec<(&str, Stage, Value)> = vec![
         (STRIPES, Stage::Fill, json!({})),
+        (
+            "#define PI 3.14159 // pi\n#define COLOR vec3\nstruct Ray { float time; vec2 size; };\nvoid main() { Ray r = Ray(PI, vec2(1.0)); COLOR c = COLOR(r.time + r.size.x); gl_FragColor = vec4(c, 1.0); }",
+            Stage::Fill,
+            json!({}),
+        ),
+        (
+            "uniform sampler2D a; uniform sampler2D b; void main() { gl_FragColor = texture2D(a, vec2(0.5)) + texture2D(b, vec2(0.5)); }",
+            Stage::Effect,
+            json!({ "a": "pencil:object", "b": "pencil:object" }),
+        ),
         (PIXELATE, Stage::Effect, json!({ "u_content": "pencil:object" })),
         (PIXELATE, Stage::Effect, json!({ "u_content": "pencil:background" })),
         (PIXELATE, Stage::Fill, json!({ "u_content": "images/a.png" })),

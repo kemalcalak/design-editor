@@ -147,7 +147,8 @@ fn preprocess(tokens: Vec<Token>) -> Result<Vec<Token>, GlslError> {
     let mut gl_es_depth = 0usize;
     for token in tokens {
         if token.kind == Kind::Directive {
-            let line = token.text.trim();
+            let line = directive_text(&token.text);
+            let line = line.as_str();
             let mut words = line.trim_start_matches('#').split_whitespace();
             match (words.next(), words.next()) {
                 (Some("version" | "extension" | "pragma"), _) => {}
@@ -171,6 +172,16 @@ fn preprocess(tokens: Vec<Token>) -> Result<Vec<Token>, GlslError> {
         return Err(GlslError::Directive("#ifdef GL_ES".to_owned()));
     }
     Ok(substitute(out, &defines))
+}
+
+/// A directive line without its comments (`#endif // GL_ES` → `#endif`).
+fn directive_text(raw: &str) -> String {
+    let body = raw.trim().trim_start_matches('#');
+    let kept: Vec<Token> = lex(body)
+        .into_iter()
+        .filter(|token| token.kind != Kind::Comment)
+        .collect();
+    format!("#{}", text(&kept).trim())
 }
 
 /// `#define NAME body` → `(NAME, body)`; `None` for a function-like macro.
@@ -198,9 +209,16 @@ fn substitute(tokens: Vec<Token>, defines: &HashMap<String, Vec<Token>>) -> Vec<
             .filter(|_| token.kind == Kind::Ident)
         {
             Some(body) => {
-                out.push(Token::new(Kind::Punct, "("));
+                // An expression keeps its precedence; a single token (a
+                // number, a type, `gl_FragColor`) must stay bare.
+                let wrap = body.iter().filter(|token| !token.is_trivia()).count() > 1;
+                if wrap {
+                    out.push(Token::new(Kind::Punct, "("));
+                }
                 out.extend(body.iter().cloned());
-                out.push(Token::new(Kind::Punct, ")"));
+                if wrap {
+                    out.push(Token::new(Kind::Punct, ")"));
+                }
             }
             None => out.push(token),
         }
@@ -469,7 +487,9 @@ impl Emitter<'_> {
             let after_dot =
                 prev_significant(self.tokens, i).is_some_and(|j| self.tokens[j].is_punct('.'));
             if after_dot {
-                self.sksl.push_str(&token.text);
+                // Swizzles and fields; a field spelled like a reserved name
+                // was renamed where its struct declares it.
+                self.sksl.push_str(&rename(&token.text));
                 i += 1;
                 continue;
             }
@@ -504,6 +524,9 @@ impl Emitter<'_> {
                 }
                 name => match self.bindings.uses.get(name) {
                     Some(Use::Expr(expr)) => {
+                        // A bare name or `name.rgb` needs no parentheses;
+                        // the generated calls and arithmetic all contain a
+                        // space.
                         let wrap = expr.contains(' ');
                         if wrap {
                             self.sksl.push('(');
