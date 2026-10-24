@@ -156,6 +156,44 @@ fn effects_add_menu_offers_inner_shadow() {
     assert_eq!(panel.snapshot.effects[0].kind, EffectKind::InnerShadow);
 }
 
+#[test]
+fn effects_add_menu_offers_a_shader_effect_without_amount_controls() {
+    let mut state = rect_state("");
+    state.editor_ui.toggle_effect_add_picker();
+    let add = reachable_without_menu(&state, &PropertyPanelAction::ToggleEffectAddPicker);
+    let menu = crate::widgets::property_panel_effects::effect_add_menu_rect(add);
+    let rows = crate::widgets::property_panel_effects::effect_add_menu_row_rects(menu);
+    let shader = PropertyPanelAction::AddEffect(EffectKind::Shader);
+    let (_, row) = rows.iter().find(|(a, _)| *a == shader).expect("shader row");
+    let panel = PropertyPanel::for_selection(&state).unwrap();
+    assert_eq!(
+        panel.hit_test_action(panel_rect(), center(*row)),
+        Some(shader.clone())
+    );
+
+    dispatch(&mut state, &shader);
+    match de_editor_core::node_effects(node(&state)) {
+        [PenEffect::Shader(body)] => {
+            assert_eq!(
+                body.sksl,
+                de_editor_core::shader_effects::DEFAULT_SHADER_EFFECT_SKSL
+            )
+        }
+        other => panic!("expected one shader effect, got {other:?}"),
+    }
+    let panel = PropertyPanel::for_selection(&state).unwrap();
+    assert_eq!(panel.snapshot.effects[0].kind, EffectKind::Shader);
+    // The row keeps eye + remove but has no slider to drag.
+    assert!(!actions(&state)
+        .1
+        .iter()
+        .any(|(a, _)| matches!(a, PropertyPanelAction::AdjustEffectParam { effect: 0, .. })));
+    assert!(actions(&state)
+        .1
+        .iter()
+        .any(|(a, _)| *a == PropertyPanelAction::RemoveEffect(0)));
+}
+
 /// Like [`reachable`] without the hit test, for a rect an open menu
 /// overlays.
 fn reachable_without_menu(state: &EditorState, action: &PropertyPanelAction) -> Rect {

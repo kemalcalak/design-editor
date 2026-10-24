@@ -275,7 +275,10 @@ impl NativeBackend {
 /// Map RuntimeEffect coordinates back into the node's document-space
 /// dimensions. Preset shaders receive an exact `float2 size` uniform;
 /// arbitrary shaders without a valid size still get node-local coordinates.
-fn runtime_shader_local_matrix(rect: Rect, uniforms: &[(&str, &[f32])]) -> skia_safe::Matrix {
+pub(super) fn runtime_shader_local_matrix(
+    rect: Rect,
+    uniforms: &[(&str, &[f32])],
+) -> skia_safe::Matrix {
     let mut matrix = skia_safe::Matrix::new_identity();
     let document_size = uniforms
         .iter()

@@ -58,6 +58,8 @@ mod hits;
 mod path_points;
 #[path = "canvas_viewport_paint/reveal.rs"]
 mod reveal;
+#[path = "canvas_viewport_paint/shader_effects.rs"]
+mod shader_effects;
 #[path = "canvas_viewport_paint/shapes.rs"]
 mod shapes;
 
@@ -310,23 +312,19 @@ fn paint_node_body<'a>(
         background_blur_sigma.filter(|_| world_rect.size.x > 0.0 && world_rect.size.y > 0.0)
     {
         cx.backend.save();
-        let radius = if node.kind == NodeKind::Ellipse {
-            world_rect.size.x.min(world_rect.size.y) / 2.0
-        } else {
-            node.corner_radius * zoom
-        };
-        if let Some(radii) = scaled_non_uniform_corner_radii(node, zoom) {
-            cx.backend.clip_round_rect_per_corner(world_rect, radii);
-        } else if radius > 0.5 {
-            cx.backend.clip_round_rect(world_rect, radius);
-        } else {
-            cx.backend.clip_rect(world_rect);
-        }
+        shader_effects::clip_node_silhouette(cx, node, world_rect, zoom);
         cx.backend.push_backdrop_blur_layer(sigma);
         true
     } else {
         false
     };
+    // Shader effects (#6): backdrop passes see the (blurred) backdrop; object
+    // passes open inside the composite layer so opacity and blend apply to
+    // their output. Gestures and sub-pixel nodes skip them like blur layers.
+    let shader_on = !options.fast_interaction
+        && world_rect.size.x.max(world_rect.size.y) * dpi_scale >= MIN_VISIBLE_EFFECT_DEVICE_PX;
+    let backdrop_shader_layers =
+        shader_effects::push_backdrop_shader_effects(cx, node, world_rect, zoom, shader_on);
 
     // Apply local group opacity and node-level blend together after the node's
     // own paint and descendants have assembled. Mask roots suppress authored
@@ -357,6 +355,9 @@ fn paint_node_body<'a>(
         cx.backend
             .push_composite_layer(bounds, node_composite_opacity, node_composite_mode);
     }
+    // Object passes close before the composite layer; backdrop passes after.
+    let object_shader_layers =
+        shader_effects::push_object_shader_effects(cx, node, world_rect, shader_on);
 
     // Gaussian layer blur (Figma "Layer blur"): capture the node's
     // whole rendered output — shadows, fill, stroke, children — into
@@ -652,9 +653,11 @@ fn paint_node_body<'a>(
                 if blur_sigma.is_some() {
                     cx.backend.restore();
                 }
+                shader_effects::restore_shader_effects(cx, object_shader_layers);
                 if node_composite_pushed {
                     cx.backend.restore();
                 }
+                shader_effects::restore_shader_effects(cx, backdrop_shader_layers);
                 if background_blur_pushed {
                     cx.backend.restore();
                     cx.backend.restore();
@@ -747,9 +750,11 @@ fn paint_node_body<'a>(
     if blur_sigma.is_some() {
         cx.backend.restore();
     }
+    shader_effects::restore_shader_effects(cx, object_shader_layers);
     if node_composite_pushed {
         cx.backend.restore();
     }
+    shader_effects::restore_shader_effects(cx, backdrop_shader_layers);
     if background_blur_pushed {
         cx.backend.restore();
         cx.backend.restore();

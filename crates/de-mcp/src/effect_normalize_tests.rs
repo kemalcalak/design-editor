@@ -212,3 +212,48 @@ fn nested_children_effects_are_normalized_too() {
     );
     parse_node(value).expect("deserializes");
 }
+
+#[test]
+fn shader_effect_source_aliases_move_to_sksl() {
+    let out = normalized(serde_json::json!({
+        "type": "frame",
+        "effects": [{
+            "type": "Shader",
+            "code": "uniform shader object; half4 main(float2 p) { return object.eval(p); }",
+            "visible": "true",
+        }],
+    }));
+    let shader = effect(&out);
+    assert_eq!(shader["type"], serde_json::json!("shader"));
+    assert!(shader["sksl"]
+        .as_str()
+        .is_some_and(|s| s.contains("object")));
+    assert!(shader.get("code").is_none());
+    assert_eq!(shader["visible"], serde_json::json!(true));
+    parse_node(out).expect("deserializes");
+}
+
+#[test]
+fn shader_effect_without_type_is_inferred_from_sksl() {
+    let out = normalized(serde_json::json!({
+        "type": "frame",
+        "effects": [{
+            "sksl": "uniform shader background; half4 main(float2 p) { return background.eval(p); }",
+        }],
+    }));
+    assert_eq!(effect(&out)["type"], serde_json::json!("shader"));
+    parse_node(out).expect("deserializes");
+}
+
+#[test]
+fn a_well_formed_shader_effect_is_unchanged() {
+    let authored = serde_json::json!({
+        "type": "frame",
+        "effects": [{
+            "type": "shader",
+            "sksl": "uniform shader object; half4 main(float2 p) { return object.eval(p); }",
+            "uniforms": { "amount": 4 },
+        }],
+    });
+    assert_eq!(normalized(authored.clone()), authored);
+}

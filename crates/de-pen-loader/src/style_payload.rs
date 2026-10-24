@@ -75,6 +75,7 @@ pub(crate) fn base_payload(base: &PenNodeBase, kind: &str) -> NodePayload {
         effects: Vec::new(),
         layer_blur: None,
         background_blur: None,
+        shader_effects: Vec::new(),
         image_src: None,
         video: None,
         image_fit: None,

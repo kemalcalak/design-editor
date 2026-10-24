@@ -45,7 +45,9 @@
 //! nothing expressible degrades on its own to a single full-slide
 //! image — the artifact this exporter replaced.
 
-use de_editor_ui::layout_scene::{NodeKind, SceneFillType, SceneImageFit, SceneNode, ScenePage};
+use de_editor_ui::layout_scene::{
+    Effect, NodeKind, SceneFillType, SceneImageFit, SceneNode, ScenePage,
+};
 use de_editor_ui::{ImageAdjustments, Point2D, Rect};
 
 use crate::export::ExportError;
@@ -257,6 +259,11 @@ fn unexpressible(n: &SceneNode) -> Option<&'static str> {
             }
         }
         SceneFillType::Solid | SceneFillType::Image => {}
+    }
+    if n.effects.iter().any(|e| matches!(e, Effect::Shader(_))) {
+        // An SkSL post-process (#6) has no CSS spelling; the raster keeps
+        // it (a backdrop pass sees only what the node itself paints).
+        return Some("sksl shader effect");
     }
     if matches!(n.kind, NodeKind::Ellipse)
         && (n.arc_start_angle.is_some() || n.arc_sweep_angle.is_some())

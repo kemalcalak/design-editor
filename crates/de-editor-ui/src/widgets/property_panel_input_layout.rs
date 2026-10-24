@@ -293,9 +293,11 @@ pub fn editable_input_rects(
     }
     if visible.effects {
         let mut y = tops.effects + SECTION_HEADER_HEIGHT;
-        for (index, _) in effects.iter().enumerate() {
+        for (index, effect) in effects.iter().enumerate() {
             let row = crate::widgets::property_panel_effects::effect_row_rects(x0, y, w);
-            rects.push((PropertyFocus::EffectRadius(index), row.value));
+            if effect.kind.has_amount() {
+                rects.push((PropertyFocus::EffectRadius(index), row.value));
+            }
             y += crate::widgets::property_panel_effects::EFFECT_ROW_HEIGHT
                 + crate::widgets::property_panel_effects::EFFECT_ROW_GAP;
         }

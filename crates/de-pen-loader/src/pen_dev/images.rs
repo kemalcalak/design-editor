@@ -41,7 +41,9 @@ fn resolve(url: &str, ctx: &mut Ctx<'_>) -> Option<String> {
     if let Some(cached) = ctx.images.get(url) {
         return cached.clone();
     }
-    let relative = url.trim_start_matches("./");
+    // A cache-busting query (`a.jpg?v=2`) or a fragment names the same file.
+    let path = url.split(['?', '#']).next().unwrap_or_default();
+    let relative = path.trim_start_matches("./");
     let data_url = if is_inside_document_folder(relative) {
         mime_type(relative).and_then(|mime| Some(data_url(mime, &(ctx.assets)(relative)?)))
     } else {

@@ -199,6 +199,23 @@ fn blend_modes_map_to_snake_case_or_are_reported() {
 }
 
 #[test]
+fn a_cache_busting_query_still_reads_the_file() {
+    let mut doc = pen(json!([
+        { "type": "frame", "id": "a", "fill": { "type": "image", "url": "images/a.png?v=2" } },
+        { "type": "frame", "id": "b", "fill": { "type": "image", "url": "images/a.png#top" } }
+    ]));
+    let report = convert(&mut doc, &png_reader);
+    assert!(
+        report.missing_images.is_empty(),
+        "{:?}",
+        report.missing_images
+    );
+    assert!(doc["children"][0]["fill"][0]["url"]
+        .as_str()
+        .is_some_and(|url| url.starts_with("op-image:")));
+}
+
+#[test]
 fn a_bitmap_used_by_many_fills_is_stored_once() {
     let mut doc = pen(json!([
         { "type": "frame", "id": "a", "fill": { "type": "image", "url": "images/a.png" } },
