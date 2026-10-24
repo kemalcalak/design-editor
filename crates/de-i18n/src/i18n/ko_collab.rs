@@ -344,6 +344,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "셰이더 코드",
         "shader.close" => "닫기",
         "shader.apply" => "적용",
+        "annotation.note" => "메모",
+        "annotation.context" => "컨텍스트",
+        "annotation.prompt" => "프롬프트",
+        "annotation.content" => "내용",
+        "annotation.model" => "모델",
         _ => return None,
     })
 }

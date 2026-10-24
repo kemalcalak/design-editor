@@ -180,6 +180,8 @@ pub struct NodeSnapshot {
     /// widget `PenNode` variants. Drives the Widget section's
     /// visibility + rows.
     pub widget: Option<WidgetSummary>,
+    /// Note / context / prompt fields, `Some` only for an annotation (#12).
+    pub annotation: Option<crate::widgets::property_panel_annotation::AnnotationSummary>,
     pub fill: Option<Color>,
     /// Primary solid-fill opacity in `[0.0, 1.0]` — the Fill
     /// section's `100 %` paints `fill_opacity * 100`.

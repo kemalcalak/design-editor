@@ -7,6 +7,10 @@ pub const DEFAULT_LEAF_NODE_SIZE: i32 = 100;
 pub const DEFAULT_TEXT_NODE_WIDTH: i32 = 48;
 pub const DEFAULT_TEXT_NODE_HEIGHT: i32 = 20;
 
+/// Default box of a sticky note / context / prompt annotation (#12).
+pub const DEFAULT_NOTE_WIDTH: i32 = 240;
+pub const DEFAULT_NOTE_HEIGHT: i32 = 160;
+
 /// Default `(width, height)` for a freshly-created flat leaf of `kind`.
 pub fn default_leaf_node_size(kind: &str) -> (i32, i32) {
     if let Some(size) = widget_default_size(kind) {
@@ -14,6 +18,7 @@ pub fn default_leaf_node_size(kind: &str) -> (i32, i32) {
     }
     match kind {
         "text" => (DEFAULT_TEXT_NODE_WIDTH, DEFAULT_TEXT_NODE_HEIGHT),
+        "note" | "context" | "prompt" => (DEFAULT_NOTE_WIDTH, DEFAULT_NOTE_HEIGHT),
         _ => (DEFAULT_LEAF_NODE_SIZE, DEFAULT_LEAF_NODE_SIZE),
     }
 }

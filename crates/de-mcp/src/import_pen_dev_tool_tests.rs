@@ -45,7 +45,7 @@ const DESIGN: &str = r##"{
       "children": [{ "type": "text", "id": "label", "content": "Go", "fill": "$accent" }] },
     { "type": "ref", "id": "use", "ref": "btn", "x": 200, "y": 0,
       "descendants": { "label": { "content": "Buy" } } },
-    { "type": "note", "id": "n", "content": "todo" }
+    { "type": "browser", "id": "n", "url": "https://example.com" }
   ]
 }"##;
 
@@ -71,7 +71,7 @@ fn imports_keep_instances_bound_and_existing_variables_untouched() {
         Some("bg")
     );
     assert_eq!(result.get("renamedIds").map(String::as_str), Some("1"));
-    assert!(result["notCarriedOver"].contains("note ×1"));
+    assert!(result["notCarriedOver"].contains("browser node ×1"));
 
     let [EditorCommand::SetVariables {
         variables,

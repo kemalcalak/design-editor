@@ -290,7 +290,8 @@ impl PenNodeExt for PenNode {
             PenNode::NumberInput(n) => sizing_px(&n.width),
             PenNode::Progress(n) => sizing_px(&n.width),
             PenNode::Tabs(n) => sizing_px(&n.width),
-            PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => sizing_px(&n.width),
+            PenNode::Line(_) | PenNode::Ref(_) => None,
         }
     }
 
@@ -315,7 +316,8 @@ impl PenNodeExt for PenNode {
             PenNode::NumberInput(n) => sizing_px(&n.height),
             PenNode::Progress(n) => sizing_px(&n.height),
             PenNode::Tabs(n) => sizing_px(&n.height),
-            PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => sizing_px(&n.height),
+            PenNode::Line(_) | PenNode::Ref(_) => None,
         }
     }
 
@@ -341,7 +343,8 @@ impl PenNodeExt for PenNode {
             PenNode::NumberInput(n) => n.width = Some(v),
             PenNode::Progress(n) => n.width = Some(v),
             PenNode::Tabs(n) => n.width = Some(v),
-            PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => {}
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.width = Some(v),
+            PenNode::Line(_) | PenNode::Ref(_) => {}
         }
     }
 
@@ -377,7 +380,8 @@ impl PenNodeExt for PenNode {
             PenNode::NumberInput(n) => n.height = Some(v),
             PenNode::Progress(n) => n.height = Some(v),
             PenNode::Tabs(n) => n.height = Some(v),
-            PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => {}
+            PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.height = Some(v),
+            PenNode::Line(_) | PenNode::Ref(_) => {}
         }
     }
 }

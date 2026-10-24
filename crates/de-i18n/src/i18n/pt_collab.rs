@@ -342,6 +342,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Código do shader",
         "shader.close" => "Fechar",
         "shader.apply" => "Aplicar",
+        "annotation.note" => "Nota",
+        "annotation.context" => "Contexto",
+        "annotation.prompt" => "Prompt",
+        "annotation.content" => "Conteúdo",
+        "annotation.model" => "Modelo",
         _ => return None,
     })
 }

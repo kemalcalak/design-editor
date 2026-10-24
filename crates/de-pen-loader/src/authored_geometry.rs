@@ -51,7 +51,9 @@ fn size_of(node: &PenNode) -> (f32, f32) {
         PenNode::IconFont(n) => numeric_size(&n.width, &n.height),
         PenNode::Line(_) => (f32::NAN, f32::NAN),
         PenNode::Ref(_) => (0.0, 0.0),
-        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => numeric_size(&n.width, &n.height),
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => {
+            numeric_size(&n.width, &n.height)
+        }
     }
 }
 

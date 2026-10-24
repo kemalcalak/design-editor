@@ -140,7 +140,11 @@ pub(crate) fn canonical_node_effects(node: &PenNode) -> Option<&[PenEffect]> {
         PenNode::Progress(n) => n.effects.as_deref(),
         PenNode::Tabs(n) => n.effects.as_deref(),
         PenNode::Image(n) => n.effects.as_deref(),
-        PenNode::IconFont(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::IconFont(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     }
 }
 

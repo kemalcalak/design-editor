@@ -206,6 +206,7 @@ pub fn build_leaf_node(
             limits: Default::default(),
         }),
         // Form-widget kinds (Phase D2) build their own default props.
+        "note" | "context" | "prompt" => build_annotation_node(kind, base, w, h)?,
         _ => return build_widget_node(kind, base, w, h),
     };
     Some(node)
@@ -311,6 +312,22 @@ fn build_widget_node(
     Some(node)
 }
 
+/// Build an empty `note` / `context` / `prompt` annotation of the given box.
+fn build_annotation_node(
+    kind: &str,
+    base: PenNodeBase,
+    w: SizingBehavior,
+    h: SizingBehavior,
+) -> Option<PenNode> {
+    let kind = jian_ops_schema::node::AnnotationKind::from_tag(kind)?;
+    Some(kind.into_node(jian_ops_schema::node::NoteNode {
+        base,
+        width: Some(w),
+        height: Some(h),
+        ..Default::default()
+    }))
+}
+
 /// The ten form-widget kind strings, in spec order. Single source of
 /// truth shared by [`kind_is_valid`] and the default-size table.
 pub const WIDGET_KINDS: [&str; 10] = [
@@ -334,4 +351,5 @@ pub fn kind_is_valid(kind: &str) -> bool {
         kind,
         "frame" | "group" | "rect" | "ellipse" | "polygon" | "star" | "line" | "text" | "path"
     ) || WIDGET_KINDS.contains(&kind)
+        || jian_ops_schema::node::AnnotationKind::from_tag(kind).is_some()
 }

@@ -145,6 +145,18 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
         F::WidgetLeadingIcon => widget_text(panel, |w| &w.leading_icon),
         F::WidgetTrailingIcon => widget_text(panel, |w| &w.trailing_icon),
         F::WidgetBindKey => widget_text(panel, |w| &w.bind_key),
+        F::AnnotationContent => panel
+            .snapshot
+            .annotation
+            .as_ref()
+            .map(|a| a.content.clone())
+            .unwrap_or_default(),
+        F::AnnotationModel => panel
+            .snapshot
+            .annotation
+            .as_ref()
+            .map(|a| a.model.clone())
+            .unwrap_or_default(),
         F::VideoSrc => panel
             .snapshot
             .video
@@ -387,6 +399,13 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
         }
         PropertyFocus::VideoSrc => {
             let _ = state.set_selected_video_src(draft.trim());
+        }
+        // Content keeps its spaces; only the model is trimmed.
+        PropertyFocus::AnnotationContent => {
+            let _ = state.set_selected_annotation_content(&draft);
+        }
+        PropertyFocus::AnnotationModel => {
+            let _ = state.set_selected_annotation_model(&draft);
         }
         PropertyFocus::Padding => {
             let _ = state.commit_padding_shorthand(&draft);

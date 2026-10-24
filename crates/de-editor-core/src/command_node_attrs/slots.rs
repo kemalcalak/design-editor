@@ -102,7 +102,11 @@ pub(crate) fn node_effects_slot(node: &mut PenNode) -> Option<&mut Option<Vec<Pe
         PenNode::NumberInput(n) => Some(&mut n.effects),
         PenNode::Progress(n) => Some(&mut n.effects),
         PenNode::Tabs(n) => Some(&mut n.effects),
-        PenNode::IconFont(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::IconFont(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     }
 }
 
@@ -128,7 +132,12 @@ pub(super) fn node_stroke_slot(node: &mut PenNode) -> Option<&mut Option<PenStro
         PenNode::NumberInput(n) => Some(&mut n.stroke),
         PenNode::Progress(n) => Some(&mut n.stroke),
         PenNode::Tabs(n) => Some(&mut n.stroke),
-        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Text(_)
+        | PenNode::Image(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     }
 }
 

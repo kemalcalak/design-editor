@@ -80,7 +80,8 @@ pub(crate) fn node_width(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::NumberInput(node) => node.width.as_ref(),
         PenNode::Progress(node) => node.width.as_ref(),
         PenNode::Tabs(node) => node.width.as_ref(),
-        PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => node.width.as_ref(),
+        PenNode::Line(_) | PenNode::Ref(_) => None,
     }
 }
 
@@ -105,7 +106,10 @@ pub(crate) fn node_height(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::NumberInput(node) => node.height.as_ref(),
         PenNode::Progress(node) => node.height.as_ref(),
         PenNode::Tabs(node) => node.height.as_ref(),
-        PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => {
+            node.height.as_ref()
+        }
+        PenNode::Line(_) | PenNode::Ref(_) => None,
     }
 }
 

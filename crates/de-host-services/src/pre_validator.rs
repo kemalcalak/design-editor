@@ -315,7 +315,11 @@ fn effects_from_pen_node(
         PenNode::Progress(n) => n.effects.as_deref(),
         PenNode::Tabs(n) => n.effects.as_deref(),
         PenNode::Image(n) => n.effects.as_deref(),
-        PenNode::IconFont(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::IconFont(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     };
     opt.unwrap_or(&[])
 }

@@ -189,7 +189,8 @@ pub(super) fn node_width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Tabs(n) => n.width.as_ref(),
         PenNode::Image(n) => n.width.as_ref(),
         PenNode::IconFont(n) => n.width.as_ref(),
-        PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.width.as_ref(),
+        PenNode::Line(_) | PenNode::Ref(_) => None,
     }
 }
 
@@ -214,7 +215,8 @@ pub(super) fn node_height_sizing(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Tabs(n) => n.height.as_ref(),
         PenNode::Image(n) => n.height.as_ref(),
         PenNode::IconFont(n) => n.height.as_ref(),
-        PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.height.as_ref(),
+        PenNode::Line(_) | PenNode::Ref(_) => None,
     }
 }
 

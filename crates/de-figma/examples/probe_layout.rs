@@ -319,7 +319,10 @@ fn sizing(node: &PenNode) -> (Option<&SizingBehavior>, Option<&SizingBehavior>) 
         PenNode::Tabs(node) => (node.width.as_ref(), node.height.as_ref()),
         PenNode::Image(node) => (node.width.as_ref(), node.height.as_ref()),
         PenNode::IconFont(node) => (node.width.as_ref(), node.height.as_ref()),
-        PenNode::Line(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => (None, None),
+        PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => {
+            (node.width.as_ref(), node.height.as_ref())
+        }
+        PenNode::Line(_) | PenNode::Ref(_) => (None, None),
     }
 }
 

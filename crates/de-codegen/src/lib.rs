@@ -148,10 +148,39 @@ pub(crate) fn root_nodes(doc: &PenDocument) -> &[PenNode] {
     }
 }
 
-/// True when the node is explicitly hidden (`visible == false`).
-/// A missing `visible` flag means shown.
+/// True when the generators skip the node: explicitly hidden (`visible ==
+/// false`; a missing flag means shown) or canvas-only, such as a note (#12).
 pub(crate) fn node_hidden(node: &PenNode) -> bool {
-    node.base().visible == Some(false)
+    node.base().visible == Some(false) || node.is_canvas_only()
+}
+
+/// `nodes_json` without its canvas-only nodes (note / context / prompt,
+/// #12), at any depth. Unparsable input is returned unchanged.
+pub fn strip_canvas_only_json(nodes_json: &str) -> String {
+    fn canvas_only(value: &serde_json::Value) -> bool {
+        value
+            .get("type")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|tag| jian_ops_schema::node::AnnotationKind::from_tag(tag).is_some())
+    }
+    fn strip(value: &mut serde_json::Value) {
+        match value {
+            serde_json::Value::Array(items) => {
+                items.retain(|item| !canvas_only(item));
+                items.iter_mut().for_each(strip);
+            }
+            serde_json::Value::Object(map) => map.values_mut().for_each(strip),
+            _ => {}
+        }
+    }
+    let Ok(mut value) = serde_json::from_str::<serde_json::Value>(nodes_json) else {
+        return nodes_json.to_string();
+    };
+    if canvas_only(&value) {
+        return "[]".to_string();
+    }
+    strip(&mut value);
+    value.to_string()
 }
 
 /// Document-space origin of the node (`base.x` / `base.y`, 0 default).
@@ -269,7 +298,12 @@ fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         PenNode::NumberInput(n) => n.fill.as_ref(),
         PenNode::Progress(n) => n.fill.as_ref(),
         PenNode::Tabs(n) => n.fill.as_ref(),
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Line(_)
+        | PenNode::Image(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     }
 }
 
@@ -305,7 +339,12 @@ pub(crate) fn node_stroke_css(node: &PenNode) -> Option<(String, f32)> {
         PenNode::NumberInput(n) => n.stroke.as_ref(),
         PenNode::Progress(n) => n.stroke.as_ref(),
         PenNode::Tabs(n) => n.stroke.as_ref(),
-        PenNode::Text(_) | PenNode::Image(_) | PenNode::Ref(_) | PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Text(_)
+        | PenNode::Image(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     }?;
     let width = match &stroke.thickness {
         StrokeThickness::Uniform(w) => *w,

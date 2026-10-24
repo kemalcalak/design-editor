@@ -101,6 +101,10 @@ impl WidgetHost {
         let Some(drag) = self.create_drag else {
             return false;
         };
+        if drag.tool.keeps_default_size() {
+            // A note keeps the size it was dropped at.
+            return false;
+        }
 
         let cur = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);
         let min_x = drag.start_doc_x.min(cur.x);

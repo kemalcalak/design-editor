@@ -342,6 +342,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "著色器程式碼",
         "shader.close" => "關閉",
         "shader.apply" => "套用",
+        "annotation.note" => "便利貼",
+        "annotation.context" => "上下文",
+        "annotation.prompt" => "提示詞",
+        "annotation.content" => "內容",
+        "annotation.model" => "模型",
         _ => return None,
     })
 }
