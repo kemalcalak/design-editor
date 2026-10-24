@@ -34,7 +34,22 @@ pub(crate) const MODEL_FONT: f32 = 12.0;
 const SIZE_MENU_W: f32 = 220.0;
 pub(crate) const SIZE_MENU_HEADER_H: f32 = 26.0;
 pub(crate) const SIZE_ROW_H: f32 = 32.0;
-const IMPORT_H: f32 = 64.0;
+pub(crate) const IMPORT_H: f32 = 64.0;
+/// Import card height when a title needs a second line; every card in
+/// the section takes it so the row keeps one height.
+pub(crate) const IMPORT_H_TALL: f32 = 80.0;
+/// Where an import card's text column starts, and the gap kept clear on
+/// its right: the text box is `card width - IMPORT_TEXT_X - IMPORT_TEXT_PAD_R`.
+pub(crate) const IMPORT_TEXT_X: f32 = 62.0;
+pub(crate) const IMPORT_TEXT_PAD_R: f32 = 16.0;
+pub(crate) const IMPORT_TITLE_FONT: f32 = 13.0;
+/// The import card titles, in card order (paint and layout share them).
+pub(crate) const IMPORT_TITLE_KEYS: [&str; 4] = [
+    "home.import.figma",
+    "home.import.web",
+    "home.import.screenshot",
+    "home.import.penDev",
+];
 const IMPORT_GAP: f32 = 12.0;
 /// Columns narrower than this stack the four import cards.
 const IMPORT_STACK_W: f32 = 720.0;
@@ -141,6 +156,22 @@ fn locale_button_width(locale: Locale) -> f32 {
 
 fn button_width(locale: Locale, key: &'static str) -> f32 {
     12.0 + 16.0 + 8.0 + estimate_width(tr(locale, key), 13.0) + 14.0
+}
+
+/// The import cards' shared height: tall enough for a two-line title as
+/// soon as any card's title (estimated, since layout has no renderer)
+/// overflows its text box. Paint measures for real and wraps or
+/// ellipsizes inside whatever height this picks, so a title never clips.
+fn import_card_height(locale: Locale, card_w: f32) -> f32 {
+    let text_w = card_w - IMPORT_TEXT_X - IMPORT_TEXT_PAD_R;
+    let wraps = IMPORT_TITLE_KEYS
+        .iter()
+        .any(|&key| estimate_width(tr(locale, key), IMPORT_TITLE_FONT) > text_w);
+    if wraps {
+        IMPORT_H_TALL
+    } else {
+        IMPORT_H
+    }
 }
 
 /// Resolve the full rect set (see `HomeLayout`).
@@ -274,21 +305,23 @@ pub fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
         // otherwise two rows of two.
         let per_row = if col_w >= IMPORT_ONE_ROW_W { 4 } else { 2 };
         let card_w = (col_w - (per_row - 1) as f32 * IMPORT_GAP) / per_row as f32;
+        let import_h = import_card_height(input.locale, card_w);
         for (i, slot) in imports.iter_mut().enumerate() {
             let (row, column) = (i / per_row, i % per_row);
             *slot = Rect::xywh(
                 col_x + column as f32 * (card_w + IMPORT_GAP),
-                y + row as f32 * (IMPORT_H + IMPORT_GAP),
+                y + row as f32 * (import_h + IMPORT_GAP),
                 card_w,
-                IMPORT_H,
+                import_h,
             );
         }
         let rows = imports.len().div_ceil(per_row);
-        y += rows as f32 * IMPORT_H + (rows - 1) as f32 * IMPORT_GAP;
+        y += rows as f32 * import_h + (rows - 1) as f32 * IMPORT_GAP;
     } else {
+        let import_h = import_card_height(input.locale, col_w);
         for slot in &mut imports {
-            *slot = Rect::xywh(col_x, y, col_w, IMPORT_H);
-            y += IMPORT_H + 10.0;
+            *slot = Rect::xywh(col_x, y, col_w, import_h);
+            y += import_h + 10.0;
         }
         y -= 10.0;
     }
