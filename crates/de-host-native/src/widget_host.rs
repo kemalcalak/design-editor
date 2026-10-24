@@ -232,6 +232,7 @@ mod settings_caret_tests;
 mod settings_dispatch;
 #[cfg(test)]
 mod shader_pointer_tests;
+mod shader_source_editor;
 mod shape_picker_press;
 #[cfg(test)]
 mod shortcut_surface_tests;

@@ -442,6 +442,9 @@ impl WidgetHost {
                 }
             }
         }
+        if self.drag_shader_uniform(x, &mut property_panel_probe) {
+            return true;
+        }
         if let Some(drag) = self.drag.as_mut() {
             let dx = x - drag.last_x;
             let dy = y - drag.last_y;

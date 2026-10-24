@@ -188,6 +188,9 @@ impl WidgetHost {
             // Canvas segment keeps the ordinary canvas wheel behaviour.
         }
         self.last_viewport_h = viewport_height;
+        if self.wheel_shader_source_editor(x, y, delta_y, viewport_width, viewport_height) {
+            return true;
+        }
         if self.try_scroll_missing_fonts_picker(x, y, delta_y, viewport_width, viewport_height) {
             return true;
         }
@@ -262,6 +265,9 @@ impl WidgetHost {
         viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
+        if self.wheel_shader_source_editor(x, y, dy, viewport_width, viewport_height) {
+            return true;
+        }
         if self.try_scroll_missing_fonts_picker(x, y, dy, viewport_width, viewport_height) {
             return true;
         }

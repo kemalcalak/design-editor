@@ -24,6 +24,7 @@ impl WidgetHostNative {
     ) {
         self.image_input_geometry = None;
         self.publish_viewport_geometry(viewport_width, viewport_height);
+        self.refresh_shader_checks();
         // Rotate the transcript-cache owner if the active chat session changed
         // since the last frame, BEFORE any resolve stores under it — the new
         // tab's build is then stamped with the fresh owner.
@@ -604,6 +605,10 @@ impl WidgetHostNative {
             let dlg = ExportDialog::centered(viewport_width, viewport_height);
             dlg.paint(&mut *frame, &self.theme, &self.editor_state.editor_ui);
         }
+
+        // 9z. Shader source editor (#164) — floats left of the properties
+        //     card, under the modals and the colour picker.
+        self.paint_shader_source_editor(frame, viewport_width, viewport_height);
 
         // 10a. Agent-settings modal — top-most overlay when open.
         self.paint_agent_settings_modal_overlay(frame, viewport_width, viewport_height);

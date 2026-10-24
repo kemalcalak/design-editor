@@ -315,6 +315,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "स्केल Y",
         "motion.rotation" => "घुमाव",
         "interactions.addAnimation" => "एनिमेशन",
+        "shader.editCode" => "कोड",
+        "shader.compiles" => "कंपाइल हुआ",
+        "shader.compileError" => "कंपाइल त्रुटि",
+        "shader.sourceTitle" => "शेडर कोड",
+        "shader.close" => "बंद करें",
+        "shader.apply" => "लागू करें",
         _ => return None,
     })
 }

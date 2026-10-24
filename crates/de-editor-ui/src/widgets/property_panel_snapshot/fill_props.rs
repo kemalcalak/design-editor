@@ -107,6 +107,13 @@ pub(super) fn fills_of(node: &PenNode) -> Vec<FillSummary> {
                 opacity,
                 blend_mode: de_editor_core::fill_blend_mode_at(node, index),
                 variable_ref: None,
+                shader: de_editor_core::shader_edit::shader_program(
+                    node,
+                    de_editor_core::ShaderTarget::Fill(index),
+                )
+                .map(|program| {
+                    crate::widgets::property_panel_shader_body::ShaderBody::of(program, None)
+                }),
             }
         })
         .collect()

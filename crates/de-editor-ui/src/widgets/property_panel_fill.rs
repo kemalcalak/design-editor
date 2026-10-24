@@ -456,7 +456,9 @@ fn paint_one_fill(
             mesh_shader::paint_fill_mesh_body(cx, theme, snapshot, locale, x, body_y, width);
         }
         FillType::Shader if is_primary => {
-            mesh_shader::paint_fill_shader_body(cx, theme, snapshot, locale, x, body_y, width);
+            mesh_shader::paint_fill_shader_body(
+                cx, theme, edit, snapshot, locale, x, body_y, width,
+            );
         }
         FillType::LinearGradient | FillType::RadialGradient | FillType::AngularGradient
             if is_primary =>

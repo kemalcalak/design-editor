@@ -153,6 +153,10 @@ impl WidgetHost {
                 .active_input(generate_configured)
                 .and_then(slice);
         }
+        if let Some(text) = de_editor_core::shader_source_editor::selected_text(&self.editor_state)
+        {
+            return Some(text.to_string());
+        }
         if eui.prompt_center.open {
             let input = match eui.prompt_center.focus {
                 de_editor_core::PromptCenterFocus::Search => &eui.prompt_center.search,

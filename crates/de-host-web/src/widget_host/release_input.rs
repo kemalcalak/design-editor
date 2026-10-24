@@ -123,6 +123,9 @@ impl WidgetHost {
         if self.effect_radius_drag.take().is_some() {
             return true;
         }
+        if self.end_shader_uniform_drag() {
+            return true;
+        }
         let was_dragging = self.drag.is_some();
         self.drag = None;
         was_dragging || pressed_released
@@ -197,6 +200,9 @@ impl WidgetHost {
             return true;
         }
         if self.effect_radius_drag.take().is_some() {
+            return true;
+        }
+        if self.end_shader_uniform_drag() {
             return true;
         }
         let was_dragging = self.drag.is_some();

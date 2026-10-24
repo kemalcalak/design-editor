@@ -1,4 +1,6 @@
-//! Compact Effects rows + the Effects add-menu.
+//! Compact Effects rows + the Effects add-menu. A shader effect's row is
+//! followed by its uniform rows and Code row (#164,
+//! `property_panel_shader_body`).
 
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
@@ -15,6 +17,22 @@ use de_editor_core::PropertyFocus;
 /// One input-height row per effect (#83), like the Fill and Stroke rows.
 pub const EFFECT_ROW_HEIGHT: f32 = crate::widgets::property_panel_inputs::INPUT_HEIGHT;
 pub const EFFECT_ROW_GAP: f32 = 6.0;
+
+/// Height of one effect: its row plus, for a shader effect, the uniform
+/// rows and the Code row. Every Effects walker steps by it.
+pub fn effect_block_height(effect: &EffectSummary) -> f32 {
+    EFFECT_ROW_HEIGHT
+        + EFFECT_ROW_GAP
+        + effect
+            .shader
+            .as_ref()
+            .map_or(0.0, crate::widgets::property_panel_shader_body::body_height)
+}
+
+/// Top of a shader effect's body, under its row at `row_y`.
+pub fn effect_body_y(row_y: f32) -> f32 {
+    row_y + EFFECT_ROW_HEIGHT + EFFECT_ROW_GAP
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct EffectRowRects {
@@ -69,6 +87,7 @@ pub fn paint_effects_section(
     labels: &PropertyLabels,
     effects: &[EffectSummary],
     edit: &EditContext<'_>,
+    locale: de_editor_core::Locale,
     x: f32,
     y: f32,
     width: f32,
@@ -79,7 +98,20 @@ pub fn paint_effects_section(
     } else {
         for (index, effect) in effects.iter().enumerate() {
             paint_effect_row(cx, theme, labels, effect, index, edit, x, row_y, width);
-            row_y += EFFECT_ROW_HEIGHT + EFFECT_ROW_GAP;
+            if let Some(body) = effect.shader.as_ref() {
+                crate::widgets::property_panel_shader_body::paint_body(
+                    cx,
+                    theme,
+                    edit,
+                    locale,
+                    de_editor_core::ShaderTarget::Effect(index),
+                    body,
+                    x,
+                    effect_body_y(row_y),
+                    width,
+                );
+            }
+            row_y += effect_block_height(effect);
         }
     }
     paint_section_divider(cx, theme, x, row_y, width);

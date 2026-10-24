@@ -1438,6 +1438,23 @@ export async function opCkInit(canvasId) {
       surface.flush();
     },
     clear(r, g, b, a) { canvas.clear(col(r, g, b, a)); },
+    // #164: the compiler message for `sksl`, or null when it compiles. Not
+    // cached: the host asks once per source and keeps the answer.
+    shaderCompileError(sksl) {
+      let message = null;
+      try {
+        const effect = CK.RuntimeEffect.Make(String(sksl), (error) => {
+          message = String(error);
+        });
+        if (effect) {
+          effect.delete();
+          return null;
+        }
+      } catch (error) {
+        message = String(error);
+      }
+      return message || 'SkSL compile failed';
+    },
 
     fillRect(x, y, w, h, r, g, b, a) { const p = fillPaint(r, g, b, a); canvas.drawRect(CK.LTRBRect(x, y, x + w, y + h), p); },
     strokeRect(x, y, w, h, r, g, b, a, sw) { const p = strokePaint(r, g, b, a, sw); canvas.drawRect(CK.LTRBRect(x, y, x + w, y + h), p); },

@@ -122,6 +122,10 @@ impl WidgetHost {
             panel.paint(&mut cx, panel_rect);
         }
 
+        // Shader source editor (#164) — floats left of the properties card,
+        // under the colour picker.
+        self.paint_shader_source_editor(&mut *backend, viewport_width, viewport_height);
+
         // Colour picker — floating overlay near the right rail
         // (native §10b').
         if let Some(state) = self.editor_state.ui.color_picker.clone() {

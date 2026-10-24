@@ -34,6 +34,15 @@ impl WidgetHost {
         if self.apply_image_panel_text(c) {
             return true;
         }
+        // The shader source editor (#164) owns the keyboard while focused.
+        if let Some(changed) =
+            de_editor_core::shader_source_editor::text(&mut self.editor_state, c, self.now_ms)
+        {
+            if changed {
+                self.mark_dirty();
+            }
+            return true;
+        }
         // The font picker is the next-highest text input. Route to it before
         // any stale settings, property, or canvas-text focus can consume the
         // character behind the overlay.
@@ -127,6 +136,15 @@ impl WidgetHost {
             return true;
         }
         if self.apply_image_panel_backspace() {
+            return true;
+        }
+        // The shader source editor (#164) owns the keyboard while focused.
+        if let Some(changed) =
+            de_editor_core::shader_source_editor::backspace(&mut self.editor_state, self.now_ms)
+        {
+            if changed {
+                self.mark_dirty();
+            }
             return true;
         }
         // Swallow Backspace in the font picker even when the query is empty,
@@ -234,6 +252,15 @@ impl WidgetHost {
         if self.apply_image_panel_send() {
             return true;
         }
+        // The shader source editor (#164) owns the keyboard while focused.
+        if let Some(changed) =
+            de_editor_core::shader_source_editor::newline(&mut self.editor_state, self.now_ms)
+        {
+            if changed {
+                self.mark_dirty();
+            }
+            return true;
+        }
         if self.exit_image_crop_edit() {
             return true;
         }
@@ -322,6 +349,16 @@ impl WidgetHost {
             return true;
         }
         if self.apply_image_panel_delete() {
+            return true;
+        }
+        // The shader source editor (#164) owns the keyboard while focused.
+        if let Some(changed) = de_editor_core::shader_source_editor::delete_forward(
+            &mut self.editor_state,
+            self.now_ms,
+        ) {
+            if changed {
+                self.mark_dirty();
+            }
             return true;
         }
         // The open font picker owns Delete. Its search draft handles

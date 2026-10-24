@@ -703,6 +703,8 @@ impl EditorUiState {
         self.layer_layers_h_scroll.offset = 0.0;
         self.collapsed_layers.clear();
         self.custom_shader_bodies.clear();
+        self.shader_editing.editor = None;
+        self.shader_editing.uniform_drag = None;
         self.last_revealed_layer_anchor = None;
         self.last_layer_click = None;
         self.last_canvas_click = None;

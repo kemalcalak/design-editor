@@ -315,6 +315,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "縮放 Y",
         "motion.rotation" => "旋轉",
         "interactions.addAnimation" => "動畫",
+        "shader.editCode" => "程式碼",
+        "shader.compiles" => "編譯成功",
+        "shader.compileError" => "編譯錯誤",
+        "shader.sourceTitle" => "著色器程式碼",
+        "shader.close" => "關閉",
+        "shader.apply" => "套用",
         _ => return None,
     })
 }

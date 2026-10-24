@@ -201,6 +201,7 @@ mod settings_caret;
 mod settings_caret_tests;
 #[cfg(test)]
 mod shader_pointer_tests;
+mod shader_source_editor;
 mod shape_create;
 #[cfg(test)]
 mod shape_create_tests;

@@ -327,6 +327,7 @@ impl Widget for PropertyPanel {
                 &self.labels,
                 &self.snapshot.effects,
                 &edit_ctx,
+                self.locale,
                 x,
                 y,
                 w,

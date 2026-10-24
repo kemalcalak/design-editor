@@ -26,6 +26,8 @@ mod slots;
 mod state_ops;
 mod widget_props;
 
+pub(crate) use slots::node_effects_slot;
+
 /// Which string-typed widget prop a `SetNodeWidgetText` edit targets.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WidgetTextField {

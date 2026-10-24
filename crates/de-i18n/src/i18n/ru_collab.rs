@@ -315,6 +315,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "Масштаб Y",
         "motion.rotation" => "Поворот",
         "interactions.addAnimation" => "Анимация",
+        "shader.editCode" => "Код",
+        "shader.compiles" => "Компилируется",
+        "shader.compileError" => "Ошибка компиляции",
+        "shader.sourceTitle" => "Код шейдера",
+        "shader.close" => "Закрыть",
+        "shader.apply" => "Применить",
         _ => return None,
     })
 }

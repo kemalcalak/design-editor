@@ -216,6 +216,13 @@ impl PropertyPanel {
         // toggle, otherwise clicking a row would just re-toggle.
         for (action, rect) in rects.into_iter().rev() {
             if (rect).contains(point) {
+                if let PropertyPanelAction::DragShaderUniform { target, index, .. } = &action {
+                    // A press jumps the slider to the pointer.
+                    if let Some(jumped) = self.shader_slider_action(*target, *index, rect, point.x)
+                    {
+                        return Some(jumped);
+                    }
+                }
                 if let PropertyPanelAction::AdjustEffectParam { effect, field, .. } = &action {
                     return Some(PropertyPanelAction::AdjustEffectParam {
                         effect: *effect,
@@ -327,6 +334,41 @@ impl PropertyPanel {
             }
             _ => None,
         })
+    }
+
+    /// The slider value under `x` for row `index` of shader paint
+    /// `target`, while that slider is being dragged (#164).
+    pub fn shader_uniform_drag_action(
+        &self,
+        panel_rect: Rect,
+        target: de_editor_core::ShaderTarget,
+        index: usize,
+        x: f32,
+    ) -> Option<PropertyPanelAction> {
+        if self.is_multi {
+            return None;
+        }
+        self.popup_action_rects(panel_rect)
+            .into_iter()
+            .find_map(|(action, rect)| match action {
+                PropertyPanelAction::DragShaderUniform {
+                    target: t,
+                    index: i,
+                    ..
+                } if t == target && i == index => self.shader_slider_action(target, index, rect, x),
+                _ => None,
+            })
+    }
+
+    fn shader_slider_action(
+        &self,
+        target: de_editor_core::ShaderTarget,
+        index: usize,
+        slider: Rect,
+        x: f32,
+    ) -> Option<PropertyPanelAction> {
+        let body = crate::widgets::property_panel_shader_body::body_for(&self.snapshot, target)?;
+        crate::widgets::property_panel_shader_body::drag_value(target, index, body, slider, x)
     }
 
     pub fn image_fill_popover_contains(&self, panel_rect: Rect, point: Point2D) -> bool {
