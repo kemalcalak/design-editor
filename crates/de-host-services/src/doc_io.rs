@@ -227,16 +227,12 @@ pub fn preserve_app_preferences(previous: &EditorState, next: &mut EditorState) 
     next.editor_ui.home.recent_view = previous.editor_ui.home.recent_view;
     next.editor_ui.home.mcp_agent = previous.editor_ui.home.mcp_agent;
     next.editor_ui.home.mcp_client = previous.editor_ui.home.mcp_client.clone();
-    next.editor_ui.font_import_supported = previous.editor_ui.font_import_supported;
-    next.editor_ui.batch_frame_export_supported = previous.editor_ui.batch_frame_export_supported;
-    next.editor_ui.scene_template_center.save_current_supported = previous
-        .editor_ui
-        .scene_template_center
-        .save_current_supported;
-    next.editor_ui.deck_html_export_supported = previous.editor_ui.deck_html_export_supported;
-    next.editor_ui.slide_thumbnails_supported = previous.editor_ui.slide_thumbnails_supported;
-    next.editor_ui.scene_template_generate_supported =
-        previous.editor_ui.scene_template_generate_supported;
+    // Every host capability flag (font import / download, batch export,
+    // …) as one list, so a newly added flag cannot be forgotten here (#161).
+    // `replace_editor_state` carries them again; this copy covers callers
+    // that build a state without going through that seam.
+    next.editor_ui
+        .carry_host_capabilities_from(&previous.editor_ui);
     next.editor_ui.system_fonts_loaded = previous.editor_ui.system_fonts_loaded;
     next.editor_ui.system_font_families = previous.editor_ui.system_font_families.clone();
     next.editor_ui.bundled_font_families = previous.editor_ui.bundled_font_families.clone();
@@ -399,6 +395,8 @@ mod tests {
     fn app_preferences_preserve_runtime_host_capabilities_and_fonts() {
         let mut previous = EditorState::new();
         previous.editor_ui.font_import_supported = true;
+        previous.editor_ui.font_download_supported = true;
+        previous.editor_ui.style_import_file_picker_supported = true;
         previous
             .editor_ui
             .scene_template_center
@@ -412,6 +410,11 @@ mod tests {
         preserve_app_preferences(&previous, &mut next);
 
         assert!(next.editor_ui.font_import_supported);
+        assert!(
+            next.editor_ui.font_download_supported,
+            "Open / New must keep the missing-font Download action (#161)"
+        );
+        assert!(next.editor_ui.style_import_file_picker_supported);
         assert!(
             next.editor_ui.scene_template_center.save_current_supported,
             "Open / New must keep the desktop-only Save As Template row"
