@@ -68,6 +68,7 @@ mod binding_overlay_apply;
 mod binding_sites;
 mod browse;
 pub mod browse_chrome;
+mod capture;
 mod debug_trace;
 pub mod device_frame;
 #[cfg(all(test, not(target_os = "windows")))]
@@ -118,6 +119,9 @@ pub use jian_ops_schema::motion::MotionPreference;
 /// Website-style browsing (#153): the address bar's content, a section
 /// link's page-scroll request, and the hover cursor shape.
 pub use browse::{BrowseAddress, PageScrollRequest, PreviewCursor};
+/// Scripted preview runs for headless capture (#156): the steps the MCP
+/// `capture_preview` tool runs before it renders a frame.
+pub use capture::{CaptureStep, CaptureStepError, MAX_CAPTURE_MS, STEP_SETTLE_MS};
 /// Typed failure domains for entering / re-solving a preview session
 /// (`PreviewSession::enter` + `app_mode::solve_roots`).
 pub use error::{PreviewEnterError, PreviewLayoutError};

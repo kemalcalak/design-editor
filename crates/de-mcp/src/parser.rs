@@ -532,6 +532,7 @@ fn structured_arg_allowed(tool: &str, key: &str) -> bool {
             | ("get_style_guide", "tags")
             | ("finalize_design", "root_ids")
             | ("enrich_images", "root_ids")
+            | ("capture_preview", "actions")
     )
 }
 

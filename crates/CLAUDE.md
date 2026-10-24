@@ -562,7 +562,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**140 static-schema tools** registered today. The authoritative list
+**141 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in
@@ -599,6 +599,11 @@ By category:
   / `paste_clipboard` / `set_active_tool` / `set_viewport` /
   `set_node_hidden|locked|collapsed` / `undo` / `redo`
   (`de-mcp/src/selected_ops_tools.rs` + `de-mcp/src/component_tools.rs`).
+- **Preview capture** — `capture_preview` (#156, `de-host-services/src/mcp_serve/capture_preview_tool.rs`):
+  builds a headless `PreviewSession` from the registration snapshot, runs `screen` + `actions`
+  (`tap` / `hover` / `navigate` / `back` / `wait`, each settling 400 ms; `de_preview_core::capture`
+  drives the clock frame by frame like a host), waits `timeMs`, and returns a PNG of the shown screen
+  root (or `nodeId`). The editor's own preview and the document are untouched.
 - **Path booleans** — `boolean_op` (`nodeIds` + `union|subtract|intersect|exclude`;
   `de-host-services/src/mcp_serve/boolean_op_tool.rs`). Runs the desktop
   canvas's own `de_host_native::boolean_ops::compute_boolean_op` on the snapshot
