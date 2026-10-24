@@ -79,6 +79,7 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     register_tool!("add_library", add_library_snapshot(doc));
     register_tool!("remove_library", remove_library_snapshot(doc));
     register_tool!("get_component", get_component_snapshot(doc));
+    register_tool!("execute", execute_snapshot(doc));
     register_tool!("batch_get", batch_get_snapshot(doc));
     register_tool!("read_nodes", read_nodes_snapshot(doc));
     register_tool!("codegen_export", codegen_export_snapshot(doc));

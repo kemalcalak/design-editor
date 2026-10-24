@@ -591,7 +591,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**147 static-schema tools** registered today. The authoritative list
+**148 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in
@@ -673,6 +673,8 @@ Read tools snapshot `Document` state at registration time. Write tools stay `&se
 
 **Resolved reads and clipping (#169), pen.dev's `Get` options.** `read_nodes` takes `resolveVariables` (computed values under the active theme, `variables_resolve::resolve_roots_for_canvas`), `resolveInstances` (refs expanded by the canvas expander, `de_editor_core::instance_path::expand_instances_with_paths`, which renames the virtual `ref__child` ids to `ref/child` paths) and `includePathGeometry` (path `d` / `anchors` are omitted by default); `nodeIds` also takes an instance path. Writes: `cmd_update_node` / `cmd_patch_node_data` route a two-segment `instance/child` id as an instance override (`apply_instance_override`, the property panel's route); `update_node` and `batch_design` `U()` / `R()` / `I()` take any instance path, nested ones included, through `EditInstanceDescendant` (#166). Structural patch keys are refused. `snapshot_layout` entries carry `problems: "partially clipped" | "fully clipped"` against the intersection of their `clipContent` ancestors' boxes (`de-mcp/src/layout_problems.rs`).
 
+**`execute`: read and write in one script (#168).** pen.dev's `execute` API over the QuickJS runtime `batch_design(script)` already embeds (`rquickjs`, feature `script`, native-only, so wasm builds are untouched; the same 64 MiB memory and 256 KiB source limits, a 10 s budget). `de-mcp/src/script_execute.rs` is the spine (tool, `ScriptRenderer` trait, result), `script_execute_session.rs` the host calls, `script_execute_tree.rs` the visitor tree (`ctx.bounds` parent-relative from the `snapshot_layout` layout, `ctx.problems` from `layout_problems.rs`), `script_execute_prelude.rs` the JS API. Writes go one by one through the `batch_design` DSL executor (`batch_program::execute_line` on a `ProgramCtx`), so reads see them and ids are the ones the host assigns; the recorded commands ship as one `EditorCommand::Batch` (one undo step). A throw, a caught failed write or the time limit returns an error and applies nothing. `TakeScreenshot` / `Export` record a copy of the state and render after success through `de-host-services/src/mcp_serve/execute_tool.rs` (images ride `ToolOutcome::OkJsonWithImages`, `ToolResponse::Ok.images`). `execute` writes verbatim (no write repairs) and is MCP-only: the in-app design agent's tool set is unchanged (#199). Guide: `get_guidelines` topic `execute` (`de-ai-skills/skills/knowledge/execute-script.md`).
+
 **Repairs and finalize touch only generated work (#107, #116).** A `de_editor_core::write_scope::WriteBaseline` captured before a write (or before a whole design-agent run) diffs into a `WriteScope`: roots created, roots extended, nodes created or changed. Bare-MCP writes (`mcp_serve::write_repairs`) and each design-agent `batch_design` repair only that scope; the agent's finalize and unfilled-screen marking (`de_orchestrator::agent_run_finalize`, used by the desktop session, its teardown backstop and `run_design_agent`) and file-mode auto-finalize cover only the roots the run or session created, through `de_orchestrator::loop_finalize_scoped`. Boards a person made or imported next to them stay as authored. An explicit `finalize_design` call still finalizes the whole page.
 
 `McpCommand::ReplaceNode.drop_children: bool` is a destructive-swap guard — replacing a container without explicit `drop_children=true` is refused at apply time so a Frame / Group can't silently lose its subtree.
@@ -713,6 +715,7 @@ batch_layered.rs             Layered design workflow
 batch_layered_guidelines.rs  Its guideline text (split off at the cap)
 scalar_vars.rs               Scalar + Color variables + create/delete/rename_variable
 script_runner.rs             Sandboxed JS runner behind `batch_design { script }`
+script_execute*.rs           The `execute` tool: read + write script, one undo step
 element_tools.rs             insert_<component> kit-component tools
 *_tests.rs                   Per-module sibling test files (800-line cap convention)
 mcp_tests.rs                 Cross-cutting: stdio dispatch, parser invariants

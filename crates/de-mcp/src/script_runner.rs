@@ -36,7 +36,7 @@ pub const MAX_RECORDED_LINES: usize = 4096;
 /// recorded `String`/`Vec` lives outside the JS heap the runtime limit
 /// governs).
 pub const MAX_RECORDED_BYTES: usize = 8 * 1024 * 1024;
-const MEMORY_LIMIT_BYTES: usize = 64 * 1024 * 1024;
+pub(crate) const MEMORY_LIMIT_BYTES: usize = 64 * 1024 * 1024;
 const EVAL_BUDGET: Duration = Duration::from_secs(2);
 
 /// Strip fences, enforce caps, eval, and return the recorded program.
@@ -674,7 +674,7 @@ fn strip_reasoning(text: &str) -> &str {
 ///    prose preamble ("Here's the design:") before the fence, so a
 ///    start-anchored strip missed it and passed the prose to the runtime.
 /// 3. No fence → the reasoning-stripped text is the script (bare-script case).
-fn strip_fences(text: &str) -> String {
+pub(crate) fn strip_fences(text: &str) -> String {
     let text = strip_reasoning(text).trim();
     if let Some(open) = text.find("```") {
         // Drop the ``` and any language tag on the fence line (```js).
