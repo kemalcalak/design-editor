@@ -143,7 +143,7 @@ fn registry() -> &'static Registry {
     REGISTRY.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
-/// Set once anything was registered, so documents without a single
+/// Set while the registry holds an entry, so documents without a single
 /// styled stroke never take the lock on the paint path.
 static ANY_REGISTERED: AtomicBool = AtomicBool::new(false);
 
@@ -165,10 +165,13 @@ pub fn register_node(id: &str, style: Option<StrokeRenderStyle>) {
             if registered(id).is_none() {
                 return;
             }
-            registry()
+            let mut map = registry()
                 .write()
-                .unwrap_or_else(|poisoned| poisoned.into_inner())
-                .remove(id);
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            map.remove(id);
+            if map.is_empty() {
+                ANY_REGISTERED.store(false, Ordering::Release);
+            }
         }
     }
 }

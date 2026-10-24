@@ -296,8 +296,11 @@ fn set_node_stroke_style_writes_and_clears() {
 #[test]
 fn set_node_stroke_style_rejects_bad_input_and_strokeless_nodes() {
     let tool = set_node_stroke_style_snapshot();
+    match tool.call(&stroke_style_args(&[])) {
+        ToolOutcome::Err(code, _) => assert_eq!(code, ToolErrorCode::MissingArgument),
+        other => panic!("expected MissingArgument, got {other:?}"),
+    }
     for pairs in [
-        &[][..],
         &[("cap", "pointy")][..],
         &[("join", "sharp")][..],
         &[("dash_pattern", "4 x")][..],

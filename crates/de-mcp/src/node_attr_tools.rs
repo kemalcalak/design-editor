@@ -348,17 +348,13 @@ impl McpTool for SetNodeStrokeStyle {
             Ok(v) => v,
             Err(e) => return e,
         };
-        match parse_stroke_style_args(args) {
-            Ok(style) => {
-                let mut out = BTreeMap::new();
-                out.insert("wrote".into(), "true".into());
-                ToolOutcome::OkWithCommand(
-                    out,
-                    EditorCommand::SetNodeStrokeStyle { node_id, style },
-                )
-            }
-            Err(message) => ToolOutcome::Err(ToolErrorCode::InvalidArgument, message),
-        }
+        let style = match parse_stroke_style_args(args) {
+            Ok(style) => style,
+            Err(e) => return e,
+        };
+        let mut out = BTreeMap::new();
+        out.insert("wrote".into(), "true".into());
+        ToolOutcome::OkWithCommand(out, EditorCommand::SetNodeStrokeStyle { node_id, style })
     }
 }
 
@@ -366,9 +362,15 @@ pub fn set_node_stroke_style_snapshot() -> SetNodeStrokeStyle {
     SetNodeStrokeStyle
 }
 
+fn invalid(message: String) -> ToolOutcome {
+    ToolOutcome::Err(ToolErrorCode::InvalidArgument, message)
+}
+
+// `ToolOutcome` is the shared MCP outcome type, as in `parse_opt_bool`.
+#[allow(clippy::result_large_err)]
 fn parse_stroke_style_args(
     args: &BTreeMap<String, String>,
-) -> Result<de_editor_core::fills::StrokeStyleWrite, String> {
+) -> Result<de_editor_core::fills::StrokeStyleWrite, ToolOutcome> {
     use jian_ops_schema::style::{StrokeCap, StrokeJoin};
     let mut style = de_editor_core::fills::StrokeStyleWrite::default();
     if let Some(raw) = args.get("cap") {
@@ -378,9 +380,9 @@ fn parse_stroke_style_args(
             "round" => StrokeCap::Round,
             "square" => StrokeCap::Square,
             _ => {
-                return Err(format!(
-                    "cap must be one of none / round / square, got {raw:?}"
-                ))
+                return Err(invalid(format!(
+                    "cap must be one of none (butt) / round / square, got {raw:?}"
+                )))
             }
         });
     }
@@ -390,9 +392,9 @@ fn parse_stroke_style_args(
             "round" => StrokeJoin::Round,
             "bevel" => StrokeJoin::Bevel,
             _ => {
-                return Err(format!(
+                return Err(invalid(format!(
                     "join must be one of miter / round / bevel, got {raw:?}"
-                ))
+                )))
             }
         });
     }
@@ -402,20 +404,30 @@ fn parse_stroke_style_args(
     if let Some(raw) = args.get("dash_offset") {
         match raw.trim().parse::<f32>() {
             Ok(v) if v.is_finite() => style.dash_offset = Some(v),
-            _ => return Err(format!("dash_offset must be a finite number, got {raw:?}")),
+            _ => {
+                return Err(invalid(format!(
+                    "dash_offset must be a finite number, got {raw:?}"
+                )))
+            }
         }
     }
     if style.is_empty() {
-        return Err("set at least one of cap / join / dash_pattern / dash_offset".into());
+        return Err(ToolOutcome::Err(
+            ToolErrorCode::MissingArgument,
+            "set at least one of cap / join / dash_pattern / dash_offset".into(),
+        ));
     }
     if !style.is_valid() {
-        return Err("dash_pattern lengths must be finite, non-negative and not all zero".into());
+        return Err(invalid(
+            "dash_pattern lengths must be finite, non-negative and not all zero".into(),
+        ));
     }
     Ok(style)
 }
 
 /// `"4 2"`, `"4,2"` or `"[4, 2]"`; `""`, `"none"` or `"solid"` clears.
-fn parse_dash_pattern(raw: &str) -> Result<Vec<f32>, String> {
+#[allow(clippy::result_large_err)]
+fn parse_dash_pattern(raw: &str) -> Result<Vec<f32>, ToolOutcome> {
     let trimmed = raw
         .trim()
         .trim_start_matches('[')
@@ -428,8 +440,11 @@ fn parse_dash_pattern(raw: &str) -> Result<Vec<f32>, String> {
         .split(|c: char| c == ',' || c.is_whitespace())
         .filter(|part| !part.is_empty())
         .map(|part| {
-            part.parse::<f32>()
-                .map_err(|_| format!("dash_pattern must be a list of numbers, got {raw:?}"))
+            part.parse::<f32>().map_err(|_| {
+                invalid(format!(
+                    "dash_pattern must be a list of numbers, got {raw:?}"
+                ))
+            })
         })
         .collect()
 }

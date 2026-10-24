@@ -571,16 +571,20 @@ export async function opCkInit(canvasId) {
   const cachedStrokePaint = new CK.Paint();
   const fillPaint = (r, g, b, a) => { const p = cachedFillPaint; p.setColor(col(r, g, b, a)); p.setAntiAlias(true); setPaintStyle(p, CK.PaintStyle.Fill); return p; };
   // A node's authored cap / join / dash (#89), set by `setStrokeStyle`
-  // while the Rust painter is inside that node and cleared after. `-1`
-  // keeps the default round cap / join below.
+  // while the Rust painter is inside that node and cleared after. Cap and
+  // join arrive as indices into the tables below (`canvaskit::stroke_style`).
   let strokeStyle = null;
   const STROKE_CAPS = [CK.StrokeCap.Butt, CK.StrokeCap.Round, CK.StrokeCap.Square];
   const STROKE_JOINS = [CK.StrokeJoin.Miter, CK.StrokeJoin.Round, CK.StrokeJoin.Bevel];
   const strokePaint = (r, g, b, a, w) => {
     const p = cachedStrokePaint; p.setColor(col(r, g, b, a)); p.setAntiAlias(true); setPaintStyle(p, CK.PaintStyle.Stroke); p.setStrokeWidth(w); p.setStrokeCap(CK.StrokeCap.Round); p.setStrokeJoin(CK.StrokeJoin.Round);
-    p.setPathEffect(strokeStyle ? strokeStyle.effect : null);
-    if (strokeStyle && strokeStyle.cap >= 0) p.setStrokeCap(STROKE_CAPS[strokeStyle.cap]);
-    if (strokeStyle && strokeStyle.join >= 0) p.setStrokeJoin(STROKE_JOINS[strokeStyle.join]);
+    // `clearStrokeStyle` resets the path effect, so unstyled chrome
+    // strokes skip these calls entirely.
+    if (strokeStyle) {
+      p.setPathEffect(strokeStyle.effect);
+      p.setStrokeCap(STROKE_CAPS[strokeStyle.cap]);
+      p.setStrokeJoin(STROKE_JOINS[strokeStyle.join]);
+    }
     return p;
   };
   // Dedicated (allocated + `.delete()`d) fill paint for the one call site

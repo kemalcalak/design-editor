@@ -39,15 +39,7 @@ pub(super) fn merge_stroke_style(
 /// The schema cap / join / dash of an SVG stroke style, lengths scaled
 /// into document px. Unknown keywords and unusable dash lists (`none`,
 /// percentages, negatives) are dropped, leaving the renderer default.
-fn svg_stroke_style_fields(
-    style: &SvgStrokeStyle,
-    scale: f64,
-) -> (
-    Option<StrokeCap>,
-    Option<StrokeJoin>,
-    Option<Vec<f32>>,
-    Option<f32>,
-) {
+fn svg_stroke_style_fields(style: &SvgStrokeStyle, scale: f64) -> crate::fills::StrokeStyleFields {
     let cap = match style.linecap.as_deref().map(str::trim) {
         Some("butt") => Some(StrokeCap::None),
         Some("round") => Some(StrokeCap::Round),
@@ -85,7 +77,12 @@ fn svg_stroke_style_fields(
                 .filter(|v| v.is_finite() && *v != 0.0)
                 .map(|v| (v * scale) as f32)
         });
-    (cap, join, dash, offset)
+    crate::fills::StrokeStyleFields {
+        cap,
+        join,
+        dash_pattern: dash,
+        dash_offset: offset,
+    }
 }
 
 pub(super) fn parse_svg_fill_rule(raw: &str) -> Option<PathFillRule> {
@@ -143,14 +140,14 @@ pub(super) fn resolve_svg_stroke(
     if width <= 0.0 {
         return None;
     }
-    let (cap, join, dash_pattern, dash_offset) = svg_stroke_style_fields(&ctx.stroke_style, scale);
+    let style = svg_stroke_style_fields(&ctx.stroke_style, scale);
     Some(PenStroke {
         thickness: StrokeThickness::Uniform(width),
         align: None,
-        join,
-        cap,
-        dash_pattern,
-        dash_offset,
+        join: style.join,
+        cap: style.cap,
+        dash_pattern: style.dash_pattern,
+        dash_offset: style.dash_offset,
         fill: Some(vec![solid_fill(&hex)]),
     })
 }

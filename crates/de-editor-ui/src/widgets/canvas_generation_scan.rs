@@ -294,6 +294,8 @@ pub(super) fn paint_queued_skeleton(
     zoom: f32,
     accent: Color,
 ) {
+    // Generation chrome, not the node's stroke: no authored dash / cap.
+    let _unstyled = de_editor_core::stroke_render_style::enter(None, 1.0);
     if bounds.size.x <= 0.0 || bounds.size.y <= 0.0 {
         return;
     }
@@ -317,6 +319,8 @@ pub(super) fn paint_generation_scan(
     now_ms: u64,
     accent: Color,
 ) {
+    // Generation chrome, not the node's stroke: no authored dash / cap.
+    let _unstyled = de_editor_core::stroke_render_style::enter(None, 1.0);
     if bounds.size.x <= 0.0 || bounds.size.y <= 0.0 {
         return;
     }

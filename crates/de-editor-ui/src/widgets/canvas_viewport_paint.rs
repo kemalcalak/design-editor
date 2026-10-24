@@ -150,6 +150,8 @@ fn paint_node_inner<'a>(
     // materialization: ghost box → real element.
     if let RevealPaintState::Active { elapsed_ms } = reveal_state {
         if elapsed_ms < REVEAL_WIREFRAME_MS && world_rect.size.x > 0.0 && world_rect.size.y > 0.0 {
+            // The ghost outline is chrome: no parent's dash / cap (#89).
+            let _unstyled = de_editor_core::stroke_render_style::enter(None, 1.0);
             let blue = super::canvas_generation_scan::SKELETON_BLUE;
             let t = elapsed_ms as f32 / REVEAL_WIREFRAME_MS as f32;
             // Brighten in fast, hold; the pop right after replaces it.
@@ -183,7 +185,11 @@ fn paint_node_inner<'a>(
     // This node's cap / join / dash for every stroke it paints (#89); a
     // child scopes its own, and the guard restores ours for the
     // container stroke painted after the children.
-    let _stroke_style = de_editor_core::stroke_render_style::enter_node(&node.id, zoom);
+    let _stroke_style = if node.stroke.is_some() {
+        de_editor_core::stroke_render_style::enter_node(&node.id, zoom)
+    } else {
+        de_editor_core::stroke_render_style::enter(None, zoom)
+    };
     let pop_scale = match reveal_state {
         RevealPaintState::Active { elapsed_ms } => {
             reveal_pop_scale(elapsed_ms.saturating_sub(REVEAL_WIREFRAME_MS))

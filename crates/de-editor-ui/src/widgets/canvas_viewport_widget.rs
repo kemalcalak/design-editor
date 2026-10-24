@@ -60,6 +60,9 @@ pub(crate) fn paint_widget_visual(
     if world_rect.size.x <= 0.0 || world_rect.size.y <= 0.0 {
         return false;
     }
+    // Widget glyphs (checkmark, knobs, chevrons) keep their own strokes;
+    // the node's authored dash / cap (#89) is not theirs.
+    let _unstyled = de_editor_core::stroke_render_style::enter(None, 1.0);
     let visual = authored_widget_visual(node);
     match w.kind.as_str() {
         "switch" => paint_switch(cx, node, w, &visual, world_rect, zoom),

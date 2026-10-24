@@ -99,12 +99,14 @@ pub(crate) fn stroke_style_summary(node: &PenNode) -> Option<StrokeStyleSummary>
     use jian_ops_schema::style::{StrokeCap, StrokeJoin};
     let fields = de_editor_core::fills::node_stroke_style(node)?;
     let width = de_editor_core::fills::node_stroke_width(node).unwrap_or(1.0) as f32;
-    // Today's per-primitive defaults: lines and paths stroke with round
-    // caps + joins, polygons with round joins, everything else with the
-    // skia defaults (butt cap, miter join).
+    // What both backends draw for an unset cap / join while a style is
+    // active (`canvaskit::stroke_style` sends the same per-primitive
+    // defaults): lines, paths and polygons stroke round, rects and ovals
+    // butt + miter.
     let (default_cap, default_join) = match node {
-        PenNode::Line(_) | PenNode::Path(_) => (StrokeCap::Round, StrokeJoin::Round),
-        PenNode::Polygon(_) => (StrokeCap::None, StrokeJoin::Round),
+        PenNode::Line(_) | PenNode::Path(_) | PenNode::Polygon(_) => {
+            (StrokeCap::Round, StrokeJoin::Round)
+        }
         _ => (StrokeCap::None, StrokeJoin::Miter),
     };
     Some(StrokeStyleSummary {

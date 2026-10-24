@@ -152,13 +152,13 @@ pub fn set_stroke_style(node: &mut PenNode, write: &StrokeStyleWrite) -> bool {
     }
     if let Some(pattern) = &write.dash_pattern {
         stroke.dash_pattern = (!pattern.is_empty()).then(|| pattern.clone());
-        if pattern.is_empty() {
-            // A solid stroke has no phase to keep.
-            stroke.dash_offset = None;
-        }
     }
     if let Some(offset) = write.dash_offset {
         stroke.dash_offset = (offset != 0.0).then_some(offset);
+    }
+    if stroke.dash_pattern.is_none() {
+        // A solid stroke has no phase to keep.
+        stroke.dash_offset = None;
     }
     before
         != (
@@ -178,6 +178,8 @@ pub fn set_stroke_dash_preset(node: &mut PenNode, preset: StrokeDashPreset) -> b
     let write = StrokeStyleWrite {
         cap: (preset == StrokeDashPreset::Dotted).then_some(StrokeCap::Round),
         dash_pattern: Some(preset.pattern(width as f32).unwrap_or_default()),
+        // A preset starts at phase 0, whatever offset an import carried.
+        dash_offset: Some(0.0),
         ..StrokeStyleWrite::default()
     };
     set_stroke_style(node, &write)

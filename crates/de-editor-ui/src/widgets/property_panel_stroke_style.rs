@@ -73,22 +73,11 @@ fn labelled_segments_rect(row: Rect) -> Rect {
     )
 }
 
-fn row_edits(row: StyleRow) -> Vec<StrokeStyleEdit> {
+fn row_edits(row: StyleRow) -> [StrokeStyleEdit; 3] {
     match row {
-        StyleRow::Cap => STROKE_CAPS
-            .iter()
-            .cloned()
-            .map(StrokeStyleEdit::Cap)
-            .collect(),
-        StyleRow::Join => STROKE_JOINS
-            .iter()
-            .cloned()
-            .map(StrokeStyleEdit::Join)
-            .collect(),
-        StyleRow::Dash => StrokeDashPreset::ALL
-            .into_iter()
-            .map(StrokeStyleEdit::Dash)
-            .collect(),
+        StyleRow::Cap => STROKE_CAPS.map(StrokeStyleEdit::Cap),
+        StyleRow::Join => STROKE_JOINS.map(StrokeStyleEdit::Join),
+        StyleRow::Dash => StrokeDashPreset::ALL.map(StrokeStyleEdit::Dash),
     }
 }
 
@@ -105,7 +94,8 @@ pub(crate) fn push_stroke_style_action_rects(
     for (i, row) in STYLE_ROWS.into_iter().enumerate() {
         let edits = row_edits(row);
         let segments = labelled_segments_rect(row_rect(x, top, width, i + 1));
-        for (edit, cell) in edits.into_iter().zip(segment_rects(segments, 3)) {
+        let cells = segment_rects(segments, edits.len());
+        for (edit, cell) in edits.into_iter().zip(cells) {
             out.push((PropertyPanelAction::SetStrokeStyle(edit), cell));
         }
     }
