@@ -103,7 +103,7 @@ impl WidgetHost {
         };
         if drag.tool.keeps_default_size() {
             // A note keeps the size it was dropped at.
-            return false;
+            return true;
         }
 
         let cur = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);

@@ -90,14 +90,20 @@ impl McpTool for CodegenPlan {
                 .or_else(|| self.pages.first()),
             None => self.pages.first(),
         };
-        let all_nodes: Vec<Value> = page
-            .map(|page| {
+        // Notes are canvas-only: the codegen agent never sees them (#12).
+        let mut all_nodes = Value::Array(
+            page.map(|page| {
                 page.roots
                     .iter()
                     .map(|node| node_snapshot_value(node, -1))
                     .collect()
             })
-            .unwrap_or_default();
+            .unwrap_or_default(),
+        );
+        de_codegen::strip_canvas_only_value(&mut all_nodes);
+        let Value::Array(all_nodes) = all_nodes else {
+            unreachable!("built as an array above")
+        };
         match create_plan(&plan, &all_nodes) {
             Ok(result) => ToolOutcome::OkJson(pretty(&result)),
             Err(message) => ToolOutcome::Err(

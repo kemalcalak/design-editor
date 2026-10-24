@@ -51,7 +51,7 @@ pub(crate) fn with_annotations<R>(dark: bool, paint: impl FnOnce() -> R) -> R {
 
 /// Whether a scene `kind` tag names an annotation.
 pub fn is_annotation_tag(tag: &str) -> bool {
-    crate::canvas_only::is_canvas_only_tag(tag)
+    jian_ops_schema::node::AnnotationKind::from_tag(tag).is_some()
 }
 
 /// Whether `node` is a note / context / prompt annotation.

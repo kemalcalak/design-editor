@@ -157,30 +157,34 @@ pub(crate) fn node_hidden(node: &PenNode) -> bool {
 /// `nodes_json` without its canvas-only nodes (note / context / prompt,
 /// #12), at any depth. Unparsable input is returned unchanged.
 pub fn strip_canvas_only_json(nodes_json: &str) -> String {
-    fn canvas_only(value: &serde_json::Value) -> bool {
-        value
-            .get("type")
-            .and_then(serde_json::Value::as_str)
-            .is_some_and(|tag| jian_ops_schema::node::AnnotationKind::from_tag(tag).is_some())
-    }
-    fn strip(value: &mut serde_json::Value) {
-        match value {
-            serde_json::Value::Array(items) => {
-                items.retain(|item| !canvas_only(item));
-                items.iter_mut().for_each(strip);
-            }
-            serde_json::Value::Object(map) => map.values_mut().for_each(strip),
-            _ => {}
-        }
-    }
     let Ok(mut value) = serde_json::from_str::<serde_json::Value>(nodes_json) else {
         return nodes_json.to_string();
     };
-    if canvas_only(&value) {
+    if is_canvas_only_value(&value) {
         return "[]".to_string();
     }
-    strip(&mut value);
+    strip_canvas_only_value(&mut value);
     value.to_string()
+}
+
+/// Whether a node's JSON is a canvas-only kind (its `type` tag).
+pub fn is_canvas_only_value(value: &serde_json::Value) -> bool {
+    value
+        .get("type")
+        .and_then(serde_json::Value::as_str)
+        .is_some_and(|tag| jian_ops_schema::node::AnnotationKind::from_tag(tag).is_some())
+}
+
+/// Drop canvas-only nodes from every array under `value`, at any depth.
+pub fn strip_canvas_only_value(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Array(items) => {
+            items.retain(|item| !is_canvas_only_value(item));
+            items.iter_mut().for_each(strip_canvas_only_value);
+        }
+        serde_json::Value::Object(map) => map.values_mut().for_each(strip_canvas_only_value),
+        _ => {}
+    }
 }
 
 /// Document-space origin of the node (`base.x` / `base.y`, 0 default).

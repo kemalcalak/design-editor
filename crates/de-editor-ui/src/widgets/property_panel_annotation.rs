@@ -19,6 +19,8 @@ use de_editor_core::PropertyFocus;
 
 /// One row's vertical advance (input + gap).
 const ROW_ADVANCE: f32 = INPUT_HEIGHT + 6.0;
+/// Space under the last row, above the divider.
+const BOTTOM_PAD: f32 = 12.0;
 const SEGMENT_FONT: f32 = 12.0;
 
 /// The selected annotation's editable fields.
@@ -52,7 +54,7 @@ fn text_rows(kind: AnnotationKind) -> &'static [PropertyFocus] {
 
 /// Section height without the trailing gap (callers add `SECTION_GAP`).
 pub fn annotation_section_height(kind: AnnotationKind) -> f32 {
-    SECTION_HEADER_HEIGHT + ROW_ADVANCE * (1 + text_rows(kind).len()) as f32 + 12.0
+    SECTION_HEADER_HEIGHT + ROW_ADVANCE * (1 + text_rows(kind).len()) as f32 + BOTTOM_PAD
 }
 
 fn segment_row_rect(x0: f32, top: f32, usable_w: f32) -> Rect {
@@ -168,7 +170,7 @@ pub fn paint_annotation_section(
         );
         y += ROW_ADVANCE;
     }
-    y += 12.0;
+    y += BOTTOM_PAD;
     paint_section_divider(cx, theme, x, y, width);
     y + SECTION_GAP
 }

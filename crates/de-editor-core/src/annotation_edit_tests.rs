@@ -65,3 +65,19 @@ fn a_note_is_edited_inline_like_text() {
     assert!(state.text_edit_commit());
     assert_eq!(body(&state).1.plain_content(), "Hi");
 }
+
+#[test]
+fn the_mcp_text_writers_reach_a_note() {
+    let mut state = with_note();
+    assert!(state.apply(crate::EditorCommand::SetNodeText {
+        node_id: NodeId::new("n1"),
+        text: "From MCP".into(),
+    }));
+    assert!(state.apply(crate::EditorCommand::SetNodeFontSize {
+        node_id: NodeId::new("n1"),
+        font_size: 18.0,
+    }));
+    let (_, note) = body(&state);
+    assert_eq!(note.plain_content(), "From MCP");
+    assert_eq!(note.font_size, Some(18.0));
+}

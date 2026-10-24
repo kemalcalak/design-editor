@@ -206,7 +206,9 @@ pub fn build_leaf_node(
             limits: Default::default(),
         }),
         // Form-widget kinds (Phase D2) build their own default props.
-        "note" | "context" | "prompt" => build_annotation_node(kind, base, w, h)?,
+        _ if jian_ops_schema::node::AnnotationKind::from_tag(kind).is_some() => {
+            build_annotation_node(kind, base, w, h)?
+        }
         _ => return build_widget_node(kind, base, w, h),
     };
     Some(node)
