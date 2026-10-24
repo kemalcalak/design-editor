@@ -11,7 +11,7 @@ category: domain
 
 INTERACTIVITY (state + bindings + events):
 
-MOTION — use a 200–500 ms `mount` fade-up for a hero or first content, and `inView` fade-up reveals for repeated cards with staggered `delayMs` (during `delayMs` the node shows keyframe 0); use the Material 3 easing tokens `standard`, `emphasized`, `emphasizedDecelerate`, or `emphasizedAccelerate`, and keep lifecycle motion separate from a scroll timeline.
+MOTION — use a 200–500 ms `mount` fade-up for a hero or first content, and `inView` fade-up reveals for repeated cards with staggered `delayMs` (during `delayMs` the node shows keyframe 0); use the Material 3 easing tokens `standard`, `emphasized`, `emphasizedDecelerate`, or `emphasizedAccelerate`, and keep lifecycle motion separate from a scroll timeline. For button and card feedback use `hover` (pointer over the node) or `tap` (while pressed) animations of 100–200 ms on `scaleX/Y`, `fill` or `opacity` (`width` / `height` also tween, resizing only the painted box); they play back on leave / release.
 
 STATE — declare reactive values on the node that owns them (`StateSchema`):
 

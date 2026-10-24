@@ -285,7 +285,10 @@ fn every_trigger_authored_keeps_the_header_add_for_animations() {
     );
     assert_eq!(
         rows.into_iter().map(|(a, _)| a).collect::<Vec<_>>(),
-        vec![PropertyPanelAction::AddAnimation]
+        vec![
+            PropertyPanelAction::AddAnimation,
+            PropertyPanelAction::AddTransition
+        ]
     );
 }
 
@@ -311,7 +314,7 @@ fn an_empty_node_has_no_motion_section() {
         .iter()
         .all(|(a, _)| !matches!(a, PropertyPanelAction::AddAnimation)));
     assert_eq!(
-        crate::widgets::property_panel_motion::motion_section_height(&summary.motion),
+        crate::widgets::property_panel_motion::motion_section_height(&summary),
         0.0
     );
 }
@@ -337,8 +340,12 @@ fn the_motion_section_starts_where_interactions_end() {
 // ── Popover rows ─────────────────────────────────────────────────────
 
 #[test]
-fn trigger_menu_lists_every_screen_path_then_back_then_remove() {
-    let summary = summary_with(TAP, vec![TapActionSummary::Pop]);
+fn trigger_menu_lists_screens_sections_url_back_change_to_then_remove() {
+    let mut summary = summary_with(TAP, vec![TapActionSummary::Pop]);
+    summary.sections = vec![SectionTarget {
+        id: "s1".into(),
+        name: "Pricing".into(),
+    }];
     let rows = interaction_menu_rows(
         de_editor_core::Locale::EnUs,
         InteractionMenuTarget::Trigger(TAP),
@@ -357,10 +364,65 @@ fn trigger_menu_lists_every_screen_path_then_back_then_remove() {
                 trigger: TAP,
                 path: "/profile".to_string()
             },
+            PropertyPanelAction::SetInteractionScrollTo {
+                trigger: TAP,
+                target: "s1".to_string()
+            },
+            PropertyPanelAction::SetInteractionOpenUrl(TAP),
             PropertyPanelAction::SetInteractionPop(TAP),
+            PropertyPanelAction::MoveInteraction {
+                from: TAP,
+                to: InteractionTrigger::Hover
+            },
+            PropertyPanelAction::MoveInteraction {
+                from: TAP,
+                to: InteractionTrigger::LongPress
+            },
             PropertyPanelAction::RemoveInteraction(TAP),
         ]
     );
+}
+
+#[test]
+fn scroll_to_and_open_url_parse_and_label() {
+    let node = node_from(
+        r#"{"type":"text","id":"t","content":"x","events":{
+            "onTap":[{"scroll_to":{"target":"s1","alignment":"start"}}],
+            "onLongPress":[{"open_url":{"url":"\"https://a.dev\""}}]}}"#,
+    );
+    let mut summary = interactions_of(&node, false);
+    summary.sections = vec![SectionTarget {
+        id: "s1".into(),
+        name: "Pricing".into(),
+    }];
+    assert_eq!(
+        summary.actions(TAP),
+        &[TapActionSummary::ScrollTo {
+            target: "s1".into()
+        }]
+    );
+    assert_eq!(
+        summary.open_url(InteractionTrigger::LongPress).as_deref(),
+        Some("https://a.dev")
+    );
+    let label = action_label(
+        de_editor_core::Locale::EnUs,
+        &summary,
+        TAP,
+        &summary.actions(TAP)[0],
+    );
+    assert_eq!(label, "Tap → Scroll to Pricing");
+    // The Open URL action carries a URL input row and no transition row.
+    let inputs = interaction_input_rects(&summary, 0.0, 0.0, 280.0);
+    assert_eq!(
+        inputs.iter().map(|(f, _)| *f).collect::<Vec<_>>(),
+        vec![de_editor_core::PropertyFocus::InteractionUrl(
+            InteractionTrigger::LongPress
+        )]
+    );
+    assert!(interaction_rects(&summary)
+        .iter()
+        .all(|(a, _)| !matches!(a, PropertyPanelAction::SetInteractionTransition { .. })));
 }
 
 #[test]
@@ -373,9 +435,10 @@ fn an_unauthored_trigger_menu_has_no_remove() {
     );
     assert_eq!(
         rows.into_iter().map(|(a, _)| a).collect::<Vec<_>>(),
-        vec![PropertyPanelAction::SetInteractionPop(
-            InteractionTrigger::LongPress
-        )]
+        vec![
+            PropertyPanelAction::SetInteractionOpenUrl(InteractionTrigger::LongPress),
+            PropertyPanelAction::SetInteractionPop(InteractionTrigger::LongPress)
+        ]
     );
 }
 
@@ -394,8 +457,24 @@ fn add_menu_lists_only_unauthored_triggers() {
             PropertyPanelAction::PickInteractionTrigger(TAP),
             PropertyPanelAction::PickInteractionTrigger(InteractionTrigger::LongPress),
             PropertyPanelAction::AddAnimation,
+            PropertyPanelAction::AddTransition,
         ]
     );
+    // A node that already has a transition is not offered a second one.
+    let mut with_transition = summary.clone();
+    with_transition.transition = Some(de_editor_core::transition_edit::TransitionSummary {
+        duration_ms: 200,
+        easing: None,
+    });
+    let rows = interaction_menu_rows(
+        de_editor_core::Locale::EnUs,
+        InteractionMenuTarget::AddTrigger,
+        &[],
+        &with_transition,
+    );
+    assert!(rows
+        .iter()
+        .all(|(a, _)| !matches!(a, PropertyPanelAction::AddTransition)));
 }
 
 #[test]

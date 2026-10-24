@@ -68,6 +68,7 @@ mod binding_overlay_apply;
 mod binding_sites;
 mod browse;
 pub mod browse_chrome;
+mod capture;
 mod debug_trace;
 pub mod device_frame;
 #[cfg(all(test, not(target_os = "windows")))]
@@ -80,10 +81,12 @@ mod interaction_state;
 mod invalidation;
 mod mode_transition;
 mod motion;
+mod motion_pointer;
 mod present;
 mod scene_helpers;
 mod session;
 mod session_paint;
+mod slide_paint;
 mod test_helpers;
 mod transition;
 mod ui_actions;
@@ -118,6 +121,9 @@ pub use jian_ops_schema::motion::MotionPreference;
 /// Website-style browsing (#153): the address bar's content, a section
 /// link's page-scroll request, and the hover cursor shape.
 pub use browse::{BrowseAddress, PageScrollRequest, PreviewCursor};
+/// Scripted preview runs for headless capture (#156): the steps the MCP
+/// `capture_preview` tool runs before it renders a frame.
+pub use capture::{CaptureStep, CaptureStepError, MAX_CAPTURE_MS, STEP_SETTLE_MS};
 /// Typed failure domains for entering / re-solving a preview session
 /// (`PreviewSession::enter` + `app_mode::solve_roots`).
 pub use error::{PreviewEnterError, PreviewLayoutError};
@@ -131,6 +137,8 @@ pub use present::PinnedPaint;
 /// [`PreviewSession::enter`] from a snapshot of the editor document.
 pub use session::PreviewSession;
 pub use session_paint::PreviewVideoOverlay;
+/// Present's slide-transition painter and its easing (#158).
+pub use slide_paint::eased_progress;
 
 /// Internal re-export: `input` overlays live widget state through the
 /// shared scene formatter helper.
@@ -184,6 +192,8 @@ mod tests_interaction;
 mod tests_interaction_state;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_motion;
+#[cfg(all(test, not(target_os = "windows")))]
+mod tests_motion_pointer;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_multi_pointer;
 #[cfg(all(test, not(target_os = "windows")))]

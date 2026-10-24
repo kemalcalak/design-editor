@@ -25,6 +25,7 @@ fn open_menu(selected: usize, supported: bool) -> SlidesActionLayout {
         export_menu_open: true,
         selected_slides: selected,
         selected_export_supported: supported,
+        transition: None,
     })
 }
 
@@ -134,6 +135,7 @@ fn a_short_rail_clamps_the_menu_to_the_list_top_rather_than_over_the_tabs() {
             export_menu_open: true,
             selected_slides: 1,
             selected_export_supported: true,
+            transition: None,
         },
     );
     let menu = l.menu.expect("still laid out");
@@ -290,5 +292,29 @@ fn the_list_band_stops_where_the_bar_starts() {
         last.origin.y + last.size.y <= scrolled.actions.bar.origin.y + 0.01,
         "the last thumbnail {last:?} is covered by the bar at {:?}",
         scrolled.actions.bar
+    );
+}
+
+/// #158: the Transition row sits in the bar above the buttons, one cell
+/// per kind, and lights the deck's shared kind.
+#[test]
+fn the_transition_row_is_four_cells_above_the_buttons() {
+    let l = bar(SlidesActionState {
+        transition: Some(SlideTransitionKind::Push),
+        ..SlidesActionState::default()
+    });
+    assert_eq!(l.transition_cells.len(), TRANSITION_KINDS.len());
+    for (kind, cell) in TRANSITION_KINDS.iter().zip(&l.transition_cells) {
+        assert!(cell.origin.y >= l.bar.origin.y);
+        assert!(cell.origin.y + cell.size.y <= l.present.origin.y);
+        assert_eq!(
+            l.button_at(centre(*cell)),
+            Some(SlidesPanelTarget::Transition(*kind))
+        );
+    }
+    assert_eq!(l.transition, Some(SlideTransitionKind::Push));
+    assert_eq!(
+        l.button_at(centre(l.present)),
+        Some(SlidesPanelTarget::Present)
     );
 }

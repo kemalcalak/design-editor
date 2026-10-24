@@ -274,6 +274,7 @@ pub fn common_props(figma: &FigValue, id: String) -> PenNodeBase {
         theme: None,
         transition: None,
         animations: None,
+        slide_transition: None,
         // Figma import never authors responsive size constraints.
         constraints: None,
     }
