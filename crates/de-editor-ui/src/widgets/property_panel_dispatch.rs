@@ -652,7 +652,9 @@ pub fn apply_property_action(
         | A::FlipSelection(_)
         | A::SetShaderPreset(_)
         | A::RestoreCustomShader
-        | A::EditMeshLattice(_) => {
+        | A::EditMeshLattice(_)
+        | A::DragShaderUniform { .. }
+        | A::OpenShaderSource(_) => {
             crate::widgets::property_panel_dispatch_paint::apply_paint_option_action(state, action);
             Handled
         }

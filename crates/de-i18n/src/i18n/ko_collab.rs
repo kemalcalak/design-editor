@@ -317,6 +317,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "크기 Y",
         "motion.rotation" => "회전",
         "interactions.addAnimation" => "애니메이션",
+        "shader.editCode" => "코드",
+        "shader.compiles" => "컴파일됨",
+        "shader.compileError" => "컴파일 오류",
+        "shader.sourceTitle" => "셰이더 코드",
+        "shader.close" => "닫기",
+        "shader.apply" => "적용",
         _ => return None,
     })
 }

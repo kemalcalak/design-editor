@@ -182,5 +182,8 @@ pub fn color_target(t: de_editor_core::ColorTarget) -> de_editor_core::ui_draft:
         de_editor_core::ColorTarget::EffectColor(i) => {
             de_editor_core::ui_draft::ColorTarget::EffectColor(i)
         }
+        de_editor_core::ColorTarget::ShaderUniform { target, index } => {
+            de_editor_core::ui_draft::ColorTarget::ShaderUniform { target, index }
+        }
     }
 }

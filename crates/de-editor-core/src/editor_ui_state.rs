@@ -675,6 +675,8 @@ pub struct EditorUiState {
     /// document, the stash stays. Cleared in `clear_document_derived`.
     pub custom_shader_bodies:
         std::collections::HashMap<NodeId, jian_ops_schema::style::ShaderFillBody>,
+    /// Shader source editor, slider drag and compile results (#164).
+    pub shader_editing: crate::shader_source_editor::ShaderEditingState,
     /// Ghost of the blank starter frame `(x, y, w, h)` in doc px. Set when a
     /// design prompt clears the pristine starter; the canvas keeps painting
     /// it until the generated design's sized root lands (or the turn ends),

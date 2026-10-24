@@ -296,6 +296,11 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
+        // A focused shader source editor (#164) closes, dropping its draft.
+        if de_editor_core::shader_source_editor::escape(&mut self.editor_state).is_some() {
+            self.mark_dirty();
+            return true;
+        }
         if self.editor_state.editor_ui.image_panel.search_open
             || self.editor_state.editor_ui.image_panel.generate_open
         {

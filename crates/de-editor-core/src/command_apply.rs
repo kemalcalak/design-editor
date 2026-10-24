@@ -418,6 +418,8 @@ impl EditorState {
                 index,
                 hex,
             } => self.cmd_set_effect_color(&node_id, index, &hex),
+            cmd @ (EditorCommand::SetShaderUniform { .. }
+            | EditorCommand::SetShaderSource { .. }) => self.cmd_shader(cmd),
 
             // --- Variables + themes --------------------------------
             EditorCommand::SetVariableColor { name, hex } => self.set_variable_color(&name, &hex),

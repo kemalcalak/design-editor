@@ -119,6 +119,7 @@ impl WidgetHostNative {
         cancelled |= self.image_adjustment_drag.take().is_some();
         cancelled |= self.image_crop_drag.take().is_some();
         cancelled |= self.effect_radius_drag.take().is_some();
+        cancelled |= self.end_shader_uniform_drag();
         cancelled |= self.code_selection_drag.take().is_some();
         cancelled |= self.chat_input_selection_drag.take().is_some();
         cancelled |= self.image_input_selection_drag.take().is_some();

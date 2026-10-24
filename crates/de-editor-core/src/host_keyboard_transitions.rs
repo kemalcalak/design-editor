@@ -551,6 +551,9 @@ pub fn select_all_focused_input(state: &mut EditorState, now_ms: u64) -> bool {
     if prompt_center_select_all(state, now_ms) {
         return true;
     }
+    if crate::shader_source_editor::select_all(state, now_ms).is_some() {
+        return true;
+    }
     if let Some(rename) = state.ui.layer_rename.as_mut() {
         rename.input.select_all();
         rename.input.touch(now_ms);

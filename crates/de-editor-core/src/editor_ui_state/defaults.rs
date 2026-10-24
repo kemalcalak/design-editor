@@ -207,6 +207,7 @@ impl Default for EditorUiState {
             pencil_cursor_style: PencilCursorStyle::default(),
             pencil_smoothing: PencilSmoothing::default(),
             custom_shader_bodies: Default::default(),
+            shader_editing: Default::default(),
             starter_ghost: None,
             canvas_drop_indicator: None,
             update_status: UpdateStatus::Idle,

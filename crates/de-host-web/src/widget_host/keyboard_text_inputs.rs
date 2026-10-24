@@ -46,6 +46,9 @@ impl WidgetHost {
             || self.git_branch_create_focus_active()
             || self.git_author_focus_active()
             || self.git_clone_input_active()
+            // The focused shader source editor (#164): tool letters, space-pan,
+            // clipboard chords and IME must reach it, not the canvas.
+            || de_editor_core::shader_source_editor::owns_keyboard(&self.editor_state)
     }
 
     /// Visible non-chat input ownership for clipboard routing. This mirrors
@@ -152,6 +155,10 @@ impl WidgetHost {
                 .image_panel
                 .active_input(generate_configured)
                 .and_then(slice);
+        }
+        if let Some(text) = de_editor_core::shader_source_editor::selected_text(&self.editor_state)
+        {
+            return Some(text.to_string());
         }
         if eui.prompt_center.open {
             let input = match eui.prompt_center.focus {

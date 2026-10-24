@@ -9,7 +9,8 @@
 //!   snapshot lists mesh vertices as the primary fill's stops.
 //! - **Shader**: one preset row (`de_editor_core::ShaderPreset`), plus a
 //!   trailing "Custom" cell when the node has a custom program on it or
-//!   stashed by a preset pick (#141).
+//!   stashed by a preset pick (#141); under it one row per user uniform
+//!   and the Code row (`property_panel_shader_body`, #164).
 
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
@@ -18,7 +19,9 @@ use crate::widgets::property_panel_fill_body::stop_hex_rgb_only;
 use crate::widgets::property_panel_inputs::{
     INPUT_HEIGHT, INPUT_RADIUS, INPUT_TEXT_BASELINE, PAD_X,
 };
+use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::property_panel_segments::{paint_segment_row, segment_rects};
+use crate::widgets::property_panel_shader_body as shader_body;
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
@@ -51,8 +54,14 @@ pub(crate) fn mesh_body_height(vertex_count: usize) -> f32 {
     rows as f32 * (INPUT_HEIGHT + MESH_ROW_GAP) - MESH_ROW_GAP + BODY_TRAILING_GAP
 }
 
-/// Body height under a primary shader fill: the preset row.
-pub(crate) fn shader_body_height() -> f32 {
+/// Body height under a primary shader fill with `uniform_rows` user
+/// uniforms: the preset row, the uniform rows and the Code row.
+pub(crate) fn shader_body_height(uniform_rows: usize) -> f32 {
+    shader_uniforms_offset() + shader_body::body_height_for_rows(uniform_rows)
+}
+
+/// Where the uniform rows start below the body top: under the preset row.
+fn shader_uniforms_offset() -> f32 {
     INPUT_HEIGHT + BODY_TRAILING_GAP
 }
 
@@ -115,6 +124,7 @@ fn shader_cell_count(custom: bool) -> usize {
 /// Action rects for the primary fill's mesh / shader body; nothing for
 /// any other fill type. Both stepper buttons are always targets: one at
 /// its limit is a no-op the host drops from history.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn push_mesh_shader_action_rects(
     out: &mut Vec<(PropertyPanelAction, Rect)>,
     fill_type: FillType,
@@ -123,6 +133,7 @@ pub(crate) fn push_mesh_shader_action_rects(
     width: f32,
     vertex_count: usize,
     shader_custom: bool,
+    shader: Option<&shader_body::ShaderBody>,
 ) {
     match fill_type {
         FillType::MeshGradient => {
@@ -158,6 +169,16 @@ pub(crate) fn push_mesh_shader_action_rects(
                 .map(PropertyPanelAction::SetShaderPreset)
                 .chain(shader_custom.then_some(PropertyPanelAction::RestoreCustomShader));
             out.extend(actions.zip(cells));
+            if let Some(body) = shader {
+                shader_body::push_action_rects(
+                    out,
+                    de_editor_core::ShaderTarget::Fill(0),
+                    body,
+                    x,
+                    body_y + shader_uniforms_offset(),
+                    width,
+                );
+            }
         }
         _ => {}
     }
@@ -294,11 +315,34 @@ fn paint_stepper_row(cx: &mut PaintCx<'_>, theme: &Theme, row: Rect, label: &str
     );
 }
 
-/// The preset row. A custom program highlights the "Custom" cell; with
-/// none offered it highlights nothing.
+/// Number fields of the primary shader fill's uniform rows.
+pub(crate) fn push_shader_input_rects(
+    out: &mut Vec<(de_editor_core::PropertyFocus, Rect)>,
+    shader: Option<&shader_body::ShaderBody>,
+    x: f32,
+    body_y: f32,
+    width: f32,
+) {
+    if let Some(body) = shader {
+        shader_body::push_input_rects(
+            out,
+            de_editor_core::ShaderTarget::Fill(0),
+            body,
+            x,
+            body_y + shader_uniforms_offset(),
+            width,
+        );
+    }
+}
+
+/// The preset row, then the uniform rows and the Code row. A custom
+/// program highlights the "Custom" cell; with none offered it highlights
+/// nothing.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn paint_fill_shader_body(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
+    edit: &EditContext<'_>,
     snapshot: &NodeSnapshot,
     locale: de_editor_core::Locale,
     x: f32,
@@ -324,6 +368,19 @@ pub(crate) fn paint_fill_shader_body(
         active,
         11.0,
     );
+    if let Some(body) = snapshot.fills.first().and_then(|fill| fill.shader.as_ref()) {
+        shader_body::paint_body(
+            cx,
+            theme,
+            edit,
+            locale,
+            de_editor_core::ShaderTarget::Fill(0),
+            body,
+            x,
+            body_y + shader_uniforms_offset(),
+            width,
+        );
+    }
 }
 
 #[cfg(test)]

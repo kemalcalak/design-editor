@@ -315,6 +315,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "Ölçek Y",
         "motion.rotation" => "Döndürme",
         "interactions.addAnimation" => "Animasyon",
+        "shader.editCode" => "Kod",
+        "shader.compiles" => "Derleniyor",
+        "shader.compileError" => "Derleme hatası",
+        "shader.sourceTitle" => "Gölgelendirici kodu",
+        "shader.close" => "Kapat",
+        "shader.apply" => "Uygula",
         _ => return None,
     })
 }

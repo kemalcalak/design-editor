@@ -57,7 +57,9 @@ fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         effects: caps.effects,
         export: caps.export,
         fill_type: panel.fill_type,
-        gradient_stop_count: panel.snapshot.gradient_stops.len(),
+        gradient_stop_count: crate::widgets::property_panel_shader_body::primary_body_items(
+            &panel.snapshot,
+        ),
         shader_custom: panel.snapshot.shader_custom_available,
         interactions: caps.interactions,
     }

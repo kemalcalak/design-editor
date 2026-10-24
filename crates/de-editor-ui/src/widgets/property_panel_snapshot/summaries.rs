@@ -212,6 +212,9 @@ pub struct FillSummary {
     /// primary (index 0) fill today (the variable subsystem keys off
     /// the primary fill); carried per-fill for forward compatibility.
     pub variable_ref: Option<String>,
+    /// A shader fill's uniform rows and compile state (#164); only the
+    /// primary fill paints them.
+    pub shader: Option<crate::widgets::property_panel_shader_body::ShaderBody>,
 }
 
 /// One gradient stop summary for the Fill section.
@@ -263,7 +266,7 @@ impl EffectKind {
 /// One effect's editable scalar parameters, formatted for the
 /// Effects section. Shadow uses all four; the blur kinds use `blur`
 /// as the radius and leave offset / spread at 0.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EffectSummary {
     pub kind: EffectKind,
     pub visible: bool,
@@ -274,6 +277,8 @@ pub struct EffectSummary {
     /// Effect colour — Shadow carries an authored hex string; the
     /// blur kinds don't have a colour field and use transparent.
     pub color: Color,
+    /// A shader effect's uniform rows and compile state (#164).
+    pub shader: Option<crate::widgets::property_panel_shader_body::ShaderBody>,
 }
 
 impl EffectSummary {
@@ -311,6 +316,7 @@ impl EffectSummary {
                     b: 0.0,
                     a: 0.25,
                 }),
+                shader: None,
             },
             PenEffect::Blur(b) => EffectSummary {
                 kind: EffectKind::LayerBlur,
@@ -320,6 +326,7 @@ impl EffectSummary {
                 blur: b.radius,
                 spread: 0.0,
                 color: Color::TRANSPARENT,
+                shader: None,
             },
             PenEffect::BackgroundBlur(b) => EffectSummary {
                 kind: EffectKind::BackgroundBlur,
@@ -329,6 +336,7 @@ impl EffectSummary {
                 blur: b.radius,
                 spread: 0.0,
                 color: Color::TRANSPARENT,
+                shader: None,
             },
             PenEffect::Shader(s) => EffectSummary {
                 kind: EffectKind::Shader,
@@ -338,6 +346,13 @@ impl EffectSummary {
                 blur: 0.0,
                 spread: 0.0,
                 color: Color::TRANSPARENT,
+                shader: Some(crate::widgets::property_panel_shader_body::ShaderBody::of(
+                    de_editor_core::ShaderProgram {
+                        sksl: Some(s.sksl.as_str()),
+                        uniforms: s.uniforms.as_ref(),
+                    },
+                    None,
+                )),
             },
         }
     }

@@ -36,6 +36,12 @@ impl WidgetHost {
             || self.chat_drag.is_some()
             || self.image_adjustment_drag.is_some()
             || self.effect_radius_drag.is_some()
+            || self
+                .editor_state
+                .editor_ui
+                .shader_editing
+                .uniform_drag
+                .is_some()
             || self.drag.is_some()
     }
 
