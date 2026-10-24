@@ -27,4 +27,6 @@ pub enum ChromeButton {
     OpenExportDialog,
     /// The agent / MCP status chip — opens the Agents & MCP settings.
     OpenAgentSettings,
+    /// The panel toggle above the tool rail — opens / closes the left card.
+    TogglePanel,
 }

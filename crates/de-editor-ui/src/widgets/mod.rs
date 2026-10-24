@@ -219,6 +219,7 @@ pub mod chrome_tooltip;
 pub mod cursor_hover_flow;
 pub mod drag_flow;
 mod drag_flow_index;
+pub mod floating_panels;
 pub mod host_canvas_geometry;
 pub mod host_frame_bookkeeping;
 pub mod host_overlay_geometry;
@@ -382,6 +383,7 @@ pub(crate) mod menu_paint;
 pub mod missing_fonts_flow;
 pub mod missing_fonts_panel;
 mod missing_fonts_row;
+pub mod panel_toggle;
 pub mod property_panel_color_variables;
 #[cfg(test)]
 mod property_panel_color_variables_tests;

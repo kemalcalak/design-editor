@@ -15,6 +15,10 @@ fn seed(host: &mut WidgetHostNative, json: &str) {
         .expect("fixture JSON parses")
         .value;
     *host.editor_state_mut() = de_editor_core::EditorState::from_document(doc);
+    // The canvas is full-bleed (#86) and the open left card floats over
+    // its left edge, where these fixtures author; shut the panel so the
+    // presses land on the canvas.
+    host.editor_state_mut().editor_ui.sidebar_open = false;
     host.mark_paint_dirty_for_test();
 }
 

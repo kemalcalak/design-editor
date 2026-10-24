@@ -12,20 +12,19 @@ impl WidgetHost {
     /// Returns true if hover state changed (caller should
     /// repaint). Mirrors the native host.
     pub fn update_layer_hover(&mut self, x: f32, y: f32, viewport_h: f32) -> bool {
-        use de_editor_ui::widgets::{LayerPanelHit, WINDOW_STRIP_H};
+        use de_editor_ui::widgets::LayerPanelHit;
         let sidebar_open = self.layers_panel_visible();
-        let panel_w = self.editor_state.editor_ui.layer_panel_width;
+        let over_card = de_editor_ui::widgets::host_canvas_geometry::layer_panel_rect(
+            &self.editor_state,
+            viewport_h,
+        )
+        .contains(Point2D::new(x, y));
         let blocked_by_overlay = self
             .chat_model_picker_rect(self.last_viewport_w, viewport_h)
             .is_some()
             || self.over_topmost_panel(x, y, self.last_viewport_w, viewport_h)
             || self.over_dropdown_overlay(x, y, self.last_viewport_w, viewport_h);
-        let (new_layer, new_page) = if sidebar_open
-            && !blocked_by_overlay
-            && y >= WINDOW_STRIP_H
-            && x >= 0.0
-            && x <= panel_w
-        {
+        let (new_layer, new_page) = if sidebar_open && !blocked_by_overlay && over_card {
             self.refresh_layout_scene();
             let layer_rect = self.layer_panel_rect(viewport_h);
             let panel = self.layer_panel();

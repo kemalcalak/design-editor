@@ -108,10 +108,11 @@ fn codegen_hover_tracks_idle_generate_button() {
     host.editor_state_mut().editor_ui.property_tab = PropertyTab::Code;
 
     let pw = host.editor_state().editor_ui.property_panel_width;
-    let panel_x = host.last_viewport_w - pw;
+    let card = host.property_rect(host.last_viewport_w, host.last_viewport_h);
+    let panel_x = card.origin.x;
     let (_, generate_rect) = property_panel_code::code_action_rects(
         panel_x,
-        PROPERTY_PANEL_TOP + PANEL_HEADER_HEIGHT,
+        card.origin.y + PANEL_HEADER_HEIGHT,
         pw,
         &host.editor_state().codegen,
     )
@@ -129,7 +130,7 @@ fn codegen_hover_tracks_idle_generate_button() {
         Some(CodegenHover::Generate)
     );
 
-    assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + PANEL_HEADER_HEIGHT));
+    assert!(host.apply_cursor_move(panel_x - 12.0, card.origin.y + PANEL_HEADER_HEIGHT));
     assert_eq!(host.editor_state().codegen.action_hover, None);
 }
 
@@ -150,10 +151,11 @@ fn codegen_preview_drag_selects_code_text() {
     host.editor_state_mut().codegen.phase = CodegenPhase::Complete;
     host.editor_state_mut().codegen.code = "import React\nconst n = 1".into();
 
-    let panel_x = viewport_w - host.editor_state().editor_ui.property_panel_width;
+    let card = host.property_rect(viewport_w, viewport_h);
+    let panel_x = card.origin.x;
     let char_w = 11.0 * 0.55;
-    let start = de_editor_ui::Point2D::new(panel_x + 66.0, PROPERTY_PANEL_TOP + 112.0);
-    let end = de_editor_ui::Point2D::new(panel_x + 66.0 + char_w * 6.0, PROPERTY_PANEL_TOP + 112.0);
+    let start = de_editor_ui::Point2D::new(panel_x + 66.0, card.origin.y + 112.0);
+    let end = de_editor_ui::Point2D::new(panel_x + 66.0 + char_w * 6.0, card.origin.y + 112.0);
 
     assert!(host.apply_press(start.x, start.y, viewport_w, viewport_h));
     assert!(host.apply_cursor_move(end.x, end.y));
@@ -187,10 +189,11 @@ fn codegen_preview_wheel_scrolls_code_not_property_panel() {
         .collect::<Vec<_>>()
         .join("\n");
 
-    let panel_x = viewport_w - host.editor_state().editor_ui.property_panel_width;
+    let card = host.property_rect(viewport_w, viewport_h);
+    let panel_x = card.origin.x;
     assert!(host.apply_wheel(
         panel_x + 80.0,
-        PROPERTY_PANEL_TOP + 112.0,
+        card.origin.y + 112.0,
         -160.0,
         viewport_w,
         viewport_h
@@ -219,20 +222,17 @@ fn code_view_close_button_tracks_hover() {
 
     // The Code view's close button reports the tab it returns to.
     let panel_w = host.editor_state().editor_ui.property_panel_width;
-    let panel_x = host.last_viewport_w - panel_w;
-    let close = de_editor_ui::widgets::property_panel_header::close_rect(de_editor_ui::Rect::xywh(
-        panel_x,
-        PROPERTY_PANEL_TOP,
-        panel_w,
-        host.last_viewport_h,
-    ));
+    let card = host.property_rect(host.last_viewport_w, host.last_viewport_h);
+    let panel_x = card.origin.x;
+    let _ = panel_w;
+    let close = de_editor_ui::widgets::property_panel_header::close_rect(card);
     assert!(host.apply_cursor_move(
         close.origin.x + close.size.x / 2.0,
         close.origin.y + close.size.y / 2.0
     ));
     assert!(host.editor_state().editor_ui.property_close_hover);
 
-    assert!(host.apply_cursor_move(panel_x - 12.0, PROPERTY_PANEL_TOP + 18.0));
+    assert!(host.apply_cursor_move(panel_x - 12.0, card.origin.y + 18.0));
     assert!(!host.editor_state().editor_ui.property_close_hover);
 }
 
@@ -333,9 +333,9 @@ fn right_rail_host_routing_tracks_design_selection_and_code_fallback() {
 
     let viewport_w = 1200.0;
     let viewport_h = 800.0;
-    let property_width = host.editor_state().editor_ui.property_panel_width;
-    let old_property_gutter_x = viewport_w - property_width;
-    let press_y = PROPERTY_PANEL_TOP + 180.0;
+    let card = host.property_rect(viewport_w, viewport_h);
+    let old_property_gutter_x = card.origin.x;
+    let press_y = card.origin.y + 180.0;
 
     let (canvas_left, _, canvas_width, _) = host.canvas_region(viewport_w, viewport_h);
     assert_eq!(
@@ -344,12 +344,13 @@ fn right_rail_host_routing_tracks_design_selection_and_code_fallback() {
         "empty Design selection must release the entire right rail to the canvas"
     );
     assert_eq!(
-        host.panel_resize_hover(old_property_gutter_x, press_y, viewport_w),
+        host.panel_resize_hover(old_property_gutter_x, press_y, viewport_w, viewport_h),
         None,
         "the former property-panel gutter must not remain interactive"
     );
 
-    let right_edge_x = viewport_w - 2.0;
+    // Just inside the card's right edge: canvas while the card is hidden.
+    let right_edge_x = card.origin.x + card.size.x - 2.0;
     assert!(host.over_canvas(right_edge_x, press_y, viewport_w, viewport_h));
     host.apply_press(right_edge_x, press_y, viewport_w, viewport_h);
     assert!(
@@ -362,10 +363,11 @@ fn right_rail_host_routing_tracks_design_selection_and_code_fallback() {
     host.editor_state_mut()
         .set_single_selection(NodeId::new("n-rail"));
     assert!(host.editor_state().right_rail_visible());
+    // The card floats (#86): the canvas keeps the whole window.
     let (selected_left, _, selected_width, _) = host.canvas_region(viewport_w, viewport_h);
-    assert_eq!(selected_left + selected_width, old_property_gutter_x);
+    assert_eq!(selected_left + selected_width, viewport_w);
     assert!(matches!(
-        host.panel_resize_hover(old_property_gutter_x, press_y, viewport_w),
+        host.panel_resize_hover(old_property_gutter_x, press_y, viewport_w, viewport_h),
         Some(crate::widget_host::PanelResizeKind::PropertyLeft)
     ));
     assert!(!host.over_canvas(right_edge_x, press_y, viewport_w, viewport_h));
@@ -377,9 +379,9 @@ fn right_rail_host_routing_tracks_design_selection_and_code_fallback() {
         "Code remains selection-independent"
     );
     let (code_left, _, code_width, _) = host.canvas_region(viewport_w, viewport_h);
-    assert_eq!(code_left + code_width, old_property_gutter_x);
+    assert_eq!(code_left + code_width, viewport_w);
     assert!(matches!(
-        host.panel_resize_hover(old_property_gutter_x, press_y, viewport_w),
+        host.panel_resize_hover(old_property_gutter_x, press_y, viewport_w, viewport_h),
         Some(crate::widget_host::PanelResizeKind::PropertyLeft)
     ));
 }

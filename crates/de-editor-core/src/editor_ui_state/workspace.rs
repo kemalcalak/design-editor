@@ -334,7 +334,12 @@ impl EditorUiState {
         if self.workspace.visible {
             return self.sidebar_open;
         }
-        self.sidebar_open && self.slides_panel.tab == LeftPanelTab::Chat
+        // While the left card slides (#86) the chat is the composer pill
+        // travelling between the canvas floor and the card's composer
+        // slot; it pins into the card once the card has landed.
+        self.sidebar_open
+            && self.slides_panel.tab == LeftPanelTab::Chat
+            && !self.panel_motion_active()
     }
 
     /// Whether the chat shows nothing but its composer, docked at the

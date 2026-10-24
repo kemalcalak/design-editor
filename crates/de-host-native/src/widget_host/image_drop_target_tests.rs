@@ -60,21 +60,23 @@ fn a_drop_over_bare_canvas_has_no_target_but_still_maps_to_a_doc_point() {
     assert_eq!(point, (1000.0, 700.0));
 }
 
-/// The canvas origin moves with the sidebar, so a point over the rail is not
-/// a canvas point at all — dropping there must not fill anything.
+/// The canvas runs under the floating left card (#86), but a point on the
+/// card is not a canvas point — dropping there must not fill anything.
 #[test]
 fn a_drop_over_the_left_rail_is_not_a_canvas_drop() {
     let mut host = seed(PLACEHOLDER);
     host.editor_state_mut().editor_ui.sidebar_open = true;
     host.mark_paint_dirty_for_test();
+    let card = de_editor_ui::widgets::host_canvas_geometry::layer_panel_rect(
+        host.editor_state(),
+        VIEWPORT_H,
+    );
+    let (x, y) = (card.origin.x + 20.0, 400.0);
     assert_eq!(
-        host.image_drop_target_at(10.0, 400.0, VIEWPORT_W, VIEWPORT_H),
+        host.image_drop_target_at(x, y, VIEWPORT_W, VIEWPORT_H),
         None
     );
-    assert_eq!(
-        host.canvas_doc_point(10.0, 400.0, VIEWPORT_W, VIEWPORT_H),
-        None
-    );
+    assert_eq!(host.canvas_doc_point(x, y, VIEWPORT_W, VIEWPORT_H), None);
 }
 
 /// Preview mode runs the design as an app; a file dropped on it must not

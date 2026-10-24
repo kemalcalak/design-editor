@@ -155,6 +155,10 @@ pub(super) fn register_keyboard_listeners(
                         b.host
                             .apply_keydown_shortcut(key.as_str(), is_mod, shift, evt.alt_key())
                 }
+                // Cmd/Ctrl+\ — open / close the left panel (#86).
+                "\\" if is_mod && !shift && !image_popover_open && !prompt_center_open => {
+                    consumed = b.host.apply_toggle_panel()
+                }
                 "d" | "D" if is_mod && !shift && !image_popover_open && !prompt_center_open => {
                     consumed = b.host.apply_duplicate()
                 }

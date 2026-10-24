@@ -20,16 +20,14 @@ impl WidgetHost {
         {
             return None;
         }
-        let pw = self.editor_state.editor_ui.property_panel_width;
-        let panel_x = self.last_viewport_w - pw;
-        if x < panel_x || x > self.last_viewport_w {
-            return None;
-        }
         let panel_rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
             &self.editor_state,
             self.last_viewport_w,
             self.last_viewport_h,
         );
+        if !panel_rect.contains(Point2D::new(x, y)) {
+            return None;
+        }
         de_editor_ui::widgets::PropertyPanel::for_selection(&self.editor_state)?
             .code_text_offset_at(panel_rect, Point2D::new(x, y))
     }

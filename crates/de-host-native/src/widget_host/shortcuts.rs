@@ -351,6 +351,20 @@ impl WidgetHostNative {
         self.dispatch_toolbar_action(de_editor_ui::widgets::ToolbarAction::ToggleDesignPanel)
     }
 
+    /// Cmd+\ — open / close the left panel with its motion (#86); the
+    /// same path as the panel toggle and File ▸ Show / Hide panel.
+    pub fn apply_toggle_panel(&mut self) -> bool {
+        self.commit_variable_row_focus_if_any();
+        if !de_editor_ui::widgets::floating_panels::toggle_panel(
+            &mut self.editor_state,
+            self.now_ms,
+        ) {
+            return false;
+        }
+        self.mark_dirty();
+        true
+    }
+
     /// Cmd+Shift+K — show the rail's Components tab with its search box
     /// focused (#30; the browser used to be a floating panel).
     pub fn apply_toggle_component_browser(&mut self) -> bool {

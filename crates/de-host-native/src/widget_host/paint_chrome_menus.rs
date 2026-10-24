@@ -36,13 +36,17 @@ impl WidgetHostNative {
         if let Some(layout) = chrome.actions {
             CanvasActions::for_editor_ui(ui).paint_layout(&mut cx, &layout);
         }
-        if !ui.sidebar_open {
-            paint_window_control_dots(
-                cx.backend,
-                de_editor_ui::widgets::window_strip::window_controls_rect(),
-                ui.window_control_hover,
-            );
+        if let Some(toggle) = chrome.panel_toggle {
+            de_editor_ui::widgets::panel_toggle::PanelToggle::for_editor_ui(ui)
+                .paint(&mut cx, toggle);
         }
+        // The window controls always float over the canvas's top-left
+        // corner (#86: the rail's window strip is gone).
+        paint_window_control_dots(
+            cx.backend,
+            de_editor_ui::widgets::window_strip::window_controls_rect(),
+            ui.window_control_hover,
+        );
     }
 
     /// Hover tooltip for whichever chrome button has been dwelt on long

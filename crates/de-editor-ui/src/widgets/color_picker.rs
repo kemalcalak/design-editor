@@ -54,7 +54,9 @@ impl ColorPicker {
             .anchor_x
             .map(|anchor_x| anchored_x(anchor_x, viewport_w))
             .unwrap_or_else(|| {
-                let right_rail_left = viewport_w - self.property_panel_width;
+                let right_rail_left = viewport_w
+                    - self.property_panel_width
+                    - crate::widgets::floating_panels::CARD_INSET;
                 (right_rail_left - PICKER_WIDTH - 8.0).max(8.0)
             });
         let mut y = self.state.anchor_y - PICKER_HEIGHT / 2.0;

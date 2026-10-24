@@ -421,10 +421,10 @@ fn align_toolbar_whole_card_wins_over_chat_surface() {
 #[test]
 fn moving_from_chat_into_status_clears_chat_and_lower_hover_in_one_event() {
     let mut host = WidgetHostNative::new();
-    // The maximized panel that covered the status bar is retired. The
-    // real overlap on the new contract is the composer card meeting
-    // the status bar at the canvas floor on a NARROW viewport — both
-    // dock to the floor, and the canvas is too slim to keep them apart.
+    // The maximized panel that covered the status bar is retired, and the
+    // composer pill now keeps clear of the zoom pill (#86) even on a
+    // NARROW viewport. Moving from the chat's hover onto the status bar
+    // still has to clear the chat and lower hovers in one event.
     let (viewport_w, viewport_h) = (700.0, 800.0);
     host.last_viewport_w = viewport_w;
     host.last_viewport_h = viewport_h;
@@ -435,7 +435,7 @@ fn moving_from_chat_into_status_clears_chat_and_lower_hover_in_one_event() {
     let expected = StatusBar::for_editor(host.editor_state())
         .control_at(status_rect, point)
         .expect("search control");
-    assert!(host.chat_panel_surface_contains(point.x, point.y, viewport_w, viewport_h));
+    assert!(!host.chat_panel_surface_contains(point.x, point.y, viewport_w, viewport_h));
     seed_chat_and_lower_hover(&mut host);
 
     assert!(host.apply_cursor_move(point.x, point.y));

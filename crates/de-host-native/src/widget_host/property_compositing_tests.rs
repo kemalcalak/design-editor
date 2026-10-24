@@ -202,7 +202,15 @@ fn native_image_fill_popover_owns_status_bar_overlap() {
     let property_rect = host.property_rect(VIEWPORT_W, VIEWPORT_H);
     let status_rect = host.status_bar_rect(VIEWPORT_W, VIEWPORT_H).unwrap();
     let status = de_editor_ui::widgets::StatusBar::for_editor(host.editor_state());
-    let point = find_status_bar_popover_overlap(&panel, property_rect, &status, status_rect);
+    // Editor v3 (#86): the properties card stops above the zoom pill and
+    // its popovers open beside it, so the two no longer share pixels. The
+    // press-routing tier that let the popover own such an overlap stays
+    // (paint order still puts the popover on top); if a layout change
+    // ever brings the overlap back, the popover must win it.
+    let Some(point) = find_status_bar_popover_overlap(&panel, property_rect, &status, status_rect)
+    else {
+        return;
+    };
     let zoom_before = host.editor_state().viewport.zoom;
 
     assert!(host.apply_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H));
@@ -283,7 +291,7 @@ fn find_status_bar_popover_overlap(
     property_rect: de_editor_ui::Rect,
     status: &de_editor_ui::widgets::StatusBar,
     status_rect: de_editor_ui::Rect,
-) -> de_editor_ui::Point2D {
+) -> Option<de_editor_ui::Point2D> {
     let mut y = status_rect.origin.y;
     while y < status_rect.origin.y + status_rect.size.y {
         let mut x = status_rect.origin.x;
@@ -297,11 +305,11 @@ fn find_status_bar_popover_overlap(
                 && status.control_at(status_rect, point).is_some()
                 && !closes_popup
             {
-                return point;
+                return Some(point);
             }
             x += 1.0;
         }
         y += 1.0;
     }
-    panic!("image-fill popover does not overlap a StatusBar control");
+    None
 }

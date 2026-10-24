@@ -15,7 +15,11 @@ fn maximizing_pinned_chat_keeps_its_column_geometry() {
         after, before,
         "the retired floating maximize flag cannot move the rail"
     );
-    assert_eq!(after.origin.x, 0.0);
+    // The left card floats CARD_INSET in from the window edge (#86).
+    assert_eq!(
+        after.origin.x,
+        de_editor_ui::widgets::floating_panels::CARD_INSET
+    );
     assert_eq!(after.size.x, host.editor_state.editor_ui.layer_panel_width);
 }
 

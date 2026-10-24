@@ -96,6 +96,14 @@ fn editor_proof_sheets() {
                 let mut h_ = host(theme, w, h, tab);
                 shoot(&mut h_, w, h, &format!("editor-{name}-{size}-{suffix}"));
             }
+            // Editor v3 (#86): the panel shut (composer pill at the floor)
+            // and mid-motion, half open.
+            let mut h_ = host(theme, w, h, LeftPanelTab::Chat);
+            h_.editor_state_mut().editor_ui.sidebar_open = false;
+            shoot(&mut h_, w, h, &format!("editor-closed-{size}-{suffix}"));
+            h_.editor_state_mut().editor_ui.toggle_panel_animated(0);
+            h_.set_now_ms(50);
+            shoot(&mut h_, w, h, &format!("editor-opening-{size}-{suffix}"));
             // Right panel: its foot (the Code chips) and the Code view.
             let mut h_ = host(theme, w, h, LeftPanelTab::Layers);
             h_.editor_state_mut().editor_ui.property_panel_scroll.offset = 10_000.0;

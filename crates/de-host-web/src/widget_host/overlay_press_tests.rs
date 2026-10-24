@@ -75,8 +75,8 @@ fn empty_design_selection_reclaims_property_rail_until_a_node_is_selected() {
         de_editor_core::PropertyTab::Design
     );
 
-    let property_width = host.editor_state.editor_ui.property_panel_width;
-    let property_rect = Rect::xywh(W - property_width, 0.0, property_width, H);
+    let property_rect =
+        de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(&host.editor_state, W, H);
     let (canvas_left, _, canvas_width, _) = host.canvas_region(W, H);
     assert!(
         (canvas_left + canvas_width - W).abs() < f32::EPSILON,
@@ -92,9 +92,10 @@ fn empty_design_selection_reclaims_property_rail_until_a_node_is_selected() {
 
     host.editor_state.set_single_selection(NodeId::new("n10"));
     let (selected_left, _, selected_width, _) = host.canvas_region(W, H);
+    // The properties card floats (#86): the canvas keeps the window.
     assert!(
-        (selected_left + selected_width - property_rect.origin.x).abs() < f32::EPSILON,
-        "a live selection must reserve exactly the PropertyPanel rail"
+        (selected_left + selected_width - W).abs() < f32::EPSILON,
+        "a live selection floats the properties card over the canvas"
     );
 
     let mut selected_backend = CaptureBackend::default();
@@ -486,11 +487,8 @@ fn color_picker_opens_from_swatch_press_and_paints() {
 
     let panel = PropertyPanel::for_selection(&host.editor_state)
         .expect("sample state selects a node so the right rail is up");
-    let pw = host.editor_state.editor_ui.property_panel_width;
-    let property_rect = Rect {
-        origin: Point2D::new(W - pw, 0.0),
-        size: Point2D::new(pw, H),
-    };
+    let property_rect =
+        de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(&host.editor_state, W, H);
     // Locate the fill/stroke swatch through the panel's own action
     // hit-test so the test doesn't bake in section layout math.
     let mut swatch = None;
