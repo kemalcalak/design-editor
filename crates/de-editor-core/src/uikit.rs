@@ -211,6 +211,7 @@ fn frame(
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     });
     if let Some(hex) = fill_hex {
         set_primary_fill_hex(&mut node, hex);

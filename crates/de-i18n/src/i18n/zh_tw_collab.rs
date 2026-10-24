@@ -315,6 +315,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "縮放 Y",
         "motion.rotation" => "旋轉",
         "interactions.addAnimation" => "動畫",
+        "blendMode.linearBurn" => "線性加深",
+        "blendMode.linearDodge" => "線性加亮",
         "shader.editCode" => "程式碼",
         "shader.compiles" => "編譯成功",
         "shader.compileError" => "編譯錯誤",

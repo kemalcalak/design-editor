@@ -106,25 +106,35 @@ fn next_animation_deadline_uses_focused_variable_row_input_anchor() {
 }
 
 #[test]
-fn next_animation_deadline_tracks_agent_reveals() {
+fn next_animation_deadline_ticks_slowly_for_unseen_agent_reveals() {
     let _guard = crate::agent_indicator_test_support::write();
     let epoch = de_editor_core::agent_indicators::begin();
     de_editor_core::agent_indicators::add_reveal(epoch, "n1", 1_400);
     let mut host = WidgetHostNative::new();
     host.set_now_ms(1_000);
 
-    assert_eq!(host.next_animation_deadline_ms(), Some(1_400));
+    // Nothing painted yet, so the reveal is not known to be on screen: the
+    // host waits for the slow overlay tick instead of the reveal's start
+    // (#17; the on-screen cadence is covered in canvas_generation_visibility).
+    assert_eq!(
+        host.next_animation_deadline_ms(),
+        Some(1_000 + de_editor_ui::widgets::canvas_generation_visibility::OFFSCREEN_TICK_MS)
+    );
     de_editor_core::agent_indicators::end_if_epoch(epoch);
 }
 
 #[test]
-fn next_animation_deadline_ticks_for_generating_frame_without_reveals() {
+fn next_animation_deadline_ticks_slowly_for_an_unseen_generating_frame() {
     let _guard = crate::agent_indicator_test_support::write();
     let epoch = de_editor_core::agent_indicators::begin();
     de_editor_core::agent_indicators::add_frame(epoch, "frame", "#4ECDC4", "Mochi");
     let mut host = WidgetHostNative::new();
     host.set_now_ms(1_000);
 
-    assert_eq!(host.next_animation_deadline_ms(), Some(1_016));
+    // Off screen (nothing painted yet) the scan ticks slowly (#17).
+    assert_eq!(
+        host.next_animation_deadline_ms(),
+        Some(1_000 + de_editor_ui::widgets::canvas_generation_visibility::OFFSCREEN_TICK_MS)
+    );
     de_editor_core::agent_indicators::end_if_epoch(epoch);
 }

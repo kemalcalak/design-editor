@@ -315,6 +315,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "Tỉ lệ Y",
         "motion.rotation" => "Xoay",
         "interactions.addAnimation" => "Hoạt ảnh",
+        "blendMode.linearBurn" => "Đốt tuyến tính",
+        "blendMode.linearDodge" => "Né tuyến tính",
         "shader.editCode" => "Mã",
         "shader.compiles" => "Biên dịch được",
         "shader.compileError" => "Lỗi biên dịch",

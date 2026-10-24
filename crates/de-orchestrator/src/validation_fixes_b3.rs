@@ -302,6 +302,7 @@ fn build_container_node(
             gestures: None,
             route: None,
             breakpoint: None,
+            placeholder: None,
         }),
     };
     Some(node)

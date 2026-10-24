@@ -315,6 +315,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "拡大縮小 Y",
         "motion.rotation" => "回転",
         "interactions.addAnimation" => "アニメーション",
+        "blendMode.linearBurn" => "焼き込み（リニア）",
+        "blendMode.linearDodge" => "覆い焼き（リニア）",
         "shader.editCode" => "コード",
         "shader.compiles" => "コンパイル成功",
         "shader.compileError" => "コンパイルエラー",

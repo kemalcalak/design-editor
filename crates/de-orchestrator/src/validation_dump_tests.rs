@@ -39,6 +39,7 @@ fn make_frame(id: &str, children: Option<Vec<PenNode>>) -> PenNode {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 
@@ -169,6 +170,7 @@ fn dump_width_height_number() {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(dump.contains("w=390"), "expected w=390 in {dump}");
@@ -202,6 +204,7 @@ fn dump_width_keyword_quoted() {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(
@@ -247,6 +250,7 @@ fn dump_layout_props() {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(
@@ -292,6 +296,7 @@ fn dump_corner_radius() {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(dump.contains("cr=8"), "expected cr=8 in {dump}");
@@ -328,6 +333,7 @@ fn dump_fill_color() {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(dump.contains("fill=\"#FF0000\""), "expected fill in {dump}");
@@ -372,6 +378,7 @@ fn dump_stroke() {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(
@@ -483,6 +490,7 @@ fn dump_exact_format_simple_tree() {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })];
     let dump = build_node_tree_dump(&state);
     let expected = "id=\"root\" type=frame w=390\n  id=\"lbl\" type=text text=\"Hello\"";
@@ -519,6 +527,7 @@ fn dump_opacity_omitted_at_1() {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(
@@ -548,6 +557,7 @@ fn dump_opacity_omitted_at_1() {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })];
     let dump2 = build_node_tree_dump(&state);
     assert!(

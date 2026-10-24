@@ -2,7 +2,7 @@
 
 type Lookup = fn(&str) -> Option<&'static str>;
 
-const KEYS: [&str; 29] = [
+const KEYS: [&str; 31] = [
     "page.background",
     "page.background.clear",
     "property.swapComponent",
@@ -28,6 +28,8 @@ const KEYS: [&str; 29] = [
     "blendMode.colorBurn",
     "blendMode.hardLight",
     "blendMode.exclusion",
+    "blendMode.linearBurn",
+    "blendMode.linearDodge",
     "maskType.none",
     "maskType.alpha",
     "maskType.vector",

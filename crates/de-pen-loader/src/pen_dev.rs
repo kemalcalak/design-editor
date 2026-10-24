@@ -22,6 +22,7 @@ mod glsl_bindings;
 mod glsl_error;
 mod glsl_lex;
 mod glsl_preprocess;
+mod image_crop;
 pub(crate) mod images;
 mod instances;
 mod mesh;

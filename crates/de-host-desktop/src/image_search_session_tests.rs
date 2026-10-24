@@ -124,6 +124,7 @@ fn frame_node(
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 

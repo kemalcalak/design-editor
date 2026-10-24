@@ -23,5 +23,6 @@ pub(super) fn frame(
         route: None,
         screen: None,
         breakpoint: None,
+        placeholder: None,
     })
 }

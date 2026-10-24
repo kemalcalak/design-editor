@@ -273,6 +273,10 @@ pub fn blend_mode(mode: ImageBlendMode) -> Option<&'static str> {
         ImageBlendMode::ColorBurn => "color-burn",
         ImageBlendMode::HardLight => "hard-light",
         ImageBlendMode::Exclusion => "exclusion",
+        // `plus-darker` is WebKit-only; other browsers ignore the
+        // declaration and paint source-over.
+        ImageBlendMode::LinearBurn => "plus-darker",
+        ImageBlendMode::LinearDodge => "plus-lighter",
     })
 }
 

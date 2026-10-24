@@ -315,6 +315,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "Skala Y",
         "motion.rotation" => "Rotasi",
         "interactions.addAnimation" => "Animasi",
+        "blendMode.linearBurn" => "Penggelapan linear",
+        "blendMode.linearDodge" => "Pencerahan linear",
         "shader.editCode" => "Kode",
         "shader.compiles" => "Terkompilasi",
         "shader.compileError" => "Galat kompilasi",

@@ -55,3 +55,32 @@ pub(super) fn reveal_paint_state(schedule: RevealSchedule<'_>, node_id: &str) ->
         elapsed_ms: elapsed,
     }
 }
+
+/// Record a revealing node that lies inside the viewport, so the host keeps
+/// the 60 fps cadence only for reveals someone can see (#17). The box is the
+/// node's untransformed rect; transforms only move it by a little.
+pub(super) fn note_reveal_on_screen(
+    state: RevealPaintState,
+    node: &crate::layout_scene::SceneNode,
+    origin: crate::Point2D,
+    zoom: f32,
+    cull: crate::Rect,
+) {
+    use crate::widgets::canvas_generation_visibility as visibility;
+    if matches!(state, RevealPaintState::Idle) {
+        return;
+    }
+    let rect = crate::Rect::xywh(
+        origin.x + node.bounds.origin.x * zoom,
+        origin.y + node.bounds.origin.y * zoom,
+        node.bounds.size.x * zoom,
+        node.bounds.size.y * zoom,
+    );
+    if !visibility::on_screen(rect, cull) {
+        return;
+    }
+    match state {
+        RevealPaintState::Pending => visibility::mark_pending(),
+        _ => visibility::mark_animating(),
+    }
+}

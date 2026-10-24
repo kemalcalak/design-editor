@@ -92,6 +92,8 @@ fn extended_canonical_blend_modes_map_to_scene_modes() {
         (BlendMode::ColorBurn, ImageBlendMode::ColorBurn),
         (BlendMode::HardLight, ImageBlendMode::HardLight),
         (BlendMode::Exclusion, ImageBlendMode::Exclusion),
+        (BlendMode::LinearBurn, ImageBlendMode::LinearBurn),
+        (BlendMode::LinearDodge, ImageBlendMode::LinearDodge),
     ] {
         assert_eq!(blend_mode_to_scene(Some(&canonical)), scene);
     }
@@ -129,4 +131,27 @@ fn layout_scene_carries_figma_image_fill_transform() {
         crop.image_transform,
         Some([0.9999718, 0.0, 0.00001408411, 0.0, 0.602706, 0.12054121])
     );
+}
+
+#[test]
+fn layout_scene_carries_frame_placeholder_and_rich_stroke_paint() {
+    let src = r##"{
+      "version":"1.0.0","pages":[{"id":"p","name":"P","children":[
+        {"type":"frame","id":"busy","width":100,"height":100,"placeholder":true,
+         "stroke":{"thickness":4,"fill":[{"type":"linear_gradient","angle":90,
+           "stops":[{"offset":0,"color":"#ff0000"},{"offset":1,"color":"#0000ff"}]}]},
+         "children":[]},
+        {"type":"frame","id":"done","width":100,"height":100,
+         "stroke":{"thickness":4,"fill":[{"type":"solid","color":"#000000"}]},
+         "children":[]}
+      ]}],"children":[]
+    }"##;
+    let scene = editor_state_to_layout_scene(&state_from(src));
+    let page = scene.active_page().unwrap();
+    let busy = page.find("busy").unwrap();
+    let done = page.find("done").unwrap();
+    assert!(busy.placeholder);
+    assert!(!done.placeholder);
+    assert_eq!(busy.stroke_fill_layers.len(), 1);
+    assert!(done.stroke.is_some() && done.stroke_fill_layers.is_empty());
 }

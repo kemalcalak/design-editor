@@ -409,6 +409,7 @@ fn map_placeholder(
         route: None,
         screen: None,
         breakpoint: None,
+        placeholder: None,
     });
     finish(context, node)
 }
