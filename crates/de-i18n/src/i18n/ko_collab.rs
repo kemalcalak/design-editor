@@ -288,6 +288,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "정밀",
         "settings.system.pencilSmoothingBalanced" => "균형",
         "settings.system.pencilSmoothingSmooth" => "부드럽게",
+        "fill.meshRows" => "행",
+        "fill.meshColumns" => "열",
         _ => return None,
     })
 }

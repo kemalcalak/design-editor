@@ -107,6 +107,7 @@ pub mod image_panel_state;
 pub mod ime_state;
 mod instance_child_override;
 pub mod instance_override;
+pub mod mesh_lattice;
 pub mod missing_fonts;
 pub mod mutators;
 pub mod node_defaults;
@@ -364,6 +365,7 @@ pub use instance_override::{
 pub use jian_ops_schema::node::MaskType;
 pub use jian_ops_schema::style::BlendMode;
 pub use jian_ops_schema::{DesignMdColor, DesignMdSpec, DesignMdTypography, PenDocument};
+pub use mesh_lattice::{MeshAxis, MeshLatticeEdit};
 pub use mutators::EditorStateInvariant;
 pub use node_defaults::{
     default_leaf_node_size, widget_default_size, DEFAULT_LEAF_NODE_SIZE, DEFAULT_TEXT_NODE_HEIGHT,

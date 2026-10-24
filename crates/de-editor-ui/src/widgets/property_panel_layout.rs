@@ -87,8 +87,8 @@ pub fn fill_body_height_with_stops(fill_type: FillType, stop_count: usize) -> f3
         FillType::Solid => 0.0,
         FillType::LinearGradient => INPUT_HEIGHT + 6.0 + stops_block + 6.0,
         FillType::RadialGradient => stops_block + 6.0,
-        // Mesh: the vertex grid (`stop_count` = vertices); Shader: the
-        // preset row (#90).
+        // Mesh: the Rows / Columns steppers plus the vertex grid
+        // (`stop_count` = vertices, #142); Shader: the preset row (#90).
         FillType::MeshGradient => {
             crate::widgets::property_panel_fill_mesh_shader::mesh_body_height(stop_count)
         }

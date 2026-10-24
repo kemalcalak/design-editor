@@ -424,6 +424,9 @@ pub enum PropertyPanelAction {
     FlipSelection(de_editor_core::FlipAxis),
     /// User picked a preset in a primary shader fill's preset row.
     SetShaderPreset(de_editor_core::ShaderPreset),
+    /// User clicked a Rows / Columns `−` / `+` in a primary mesh
+    /// gradient's body (#142).
+    EditMeshLattice(de_editor_core::MeshLatticeEdit),
     /// User clicked the Widget section's `checked` toggle on a Switch
     /// / Checkbox node — host flips the literal `checked` bool to
     /// `new_value`.
