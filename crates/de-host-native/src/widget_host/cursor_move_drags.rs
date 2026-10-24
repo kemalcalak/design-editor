@@ -86,6 +86,10 @@ impl WidgetHostNative {
             return Some(true);
         }
         if let Some(drag) = self.create_drag {
+            if self.editor_state.tool.keeps_default_size() {
+                // A note keeps the size it was dropped at.
+                return Some(true);
+            }
             let patch_scene = self.prepare_live_bounds_update();
             let cur = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);
             let min_x = drag.start_doc_x.min(cur.x);

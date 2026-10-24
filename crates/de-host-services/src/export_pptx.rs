@@ -210,7 +210,7 @@ impl Emitter<'_> {
     /// `is_board` marks the slide's own root frame, whose clipping is
     /// the slide edge PowerPoint already enforces.
     fn emit(&mut self, node: &SceneNode, alpha: f32, is_board: bool) -> Result<(), ExportError> {
-        if node.hidden {
+        if node.hidden || de_editor_ui::canvas_only::is_canvas_only(node) {
             return Ok(());
         }
         if let Some(reason) = unexpressible(node, is_board) {

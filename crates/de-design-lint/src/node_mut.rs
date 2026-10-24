@@ -181,6 +181,7 @@ fn base_mut(node: &mut PenNode) -> &mut jian_ops_schema::node::PenNodeBase {
         PenNode::Progress(n) => &mut n.base,
         PenNode::Tabs(n) => &mut n.base,
         PenNode::Ref(n) => &mut n.base,
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &mut n.base,
     }
 }
 

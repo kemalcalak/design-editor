@@ -121,6 +121,10 @@ pub enum PropertyFocus {
     WidgetStep,
     /// Image-node video source URL.
     VideoSrc,
+    /// Note / context / prompt content and a prompt's model (#12). Free
+    /// text, committed through `set_selected_annotation_*`.
+    AnnotationContent,
+    AnnotationModel,
     /// One numeric field (from / to / duration / delay) of the Motion
     /// section's animation at `index` (#154).
     MotionValue {
@@ -184,6 +188,8 @@ impl PropertyFocus {
                 | PropertyFocus::WidgetTrailingIcon
                 | PropertyFocus::WidgetBindKey
                 | PropertyFocus::VideoSrc
+                | PropertyFocus::AnnotationContent
+                | PropertyFocus::AnnotationModel
                 | PropertyFocus::InteractionUrl(_)
         )
     }

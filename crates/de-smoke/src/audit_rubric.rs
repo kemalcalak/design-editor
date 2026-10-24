@@ -255,6 +255,8 @@ fn node_kind(node: &PenNode) -> &'static str {
         PenNode::Image(_) => "image",
         PenNode::IconFont(_) => "icon_font",
         PenNode::Ref(_) => "ref",
+        // Canvas-only annotations (#12) are design notes, not vocabulary.
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => "annotation",
         // Widget-kind additions (text_area / select / switch / …) — count
         // them under one bucket; the rubric's vocabulary signal only needs
         // "beyond frame+text", not a per-widget census.

@@ -259,6 +259,9 @@ pub(super) fn kind_label(node: &PenNode) -> &'static str {
         PenNode::Image(_) => "Image",
         PenNode::IconFont(_) => "Icon",
         PenNode::Ref(_) => "Component",
+        PenNode::Note(_) => "Note",
+        PenNode::Context(_) => "Context",
+        PenNode::Prompt(_) => "Prompt",
     }
 }
 
@@ -286,6 +289,9 @@ pub(crate) fn icon_for_node(node: &PenNode) -> Icon {
         | PenNode::Tabs(_) => Icon::Square,
         PenNode::Image(_) => Icon::Square,
         PenNode::IconFont(_) => Icon::Square,
+        PenNode::Note(_) => Icon::StickyNote,
+        PenNode::Context(_) => Icon::FileText,
+        PenNode::Prompt(_) => Icon::Sparkles,
     }
 }
 

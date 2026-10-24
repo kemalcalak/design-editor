@@ -74,6 +74,7 @@ mod panel_controls;
 mod prompt_center_shared_flow_tests;
 pub mod property_panel;
 pub mod property_panel_action;
+pub mod property_panel_annotation;
 pub mod property_panel_code;
 pub mod property_panel_code_chips;
 pub mod property_panel_commit;
@@ -207,6 +208,7 @@ pub mod canvas_shader_clock;
 mod canvas_shader_images;
 mod canvas_shader_textures;
 // `pub` so both hosts can track the pointer for pointer-reactive shaders.
+pub mod canvas_annotation;
 mod canvas_placeholder;
 pub mod canvas_shader_pointer;
 pub mod canvas_text_edit;

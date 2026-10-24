@@ -41,6 +41,7 @@ fn take_node_state(node: &mut PenNode) -> Option<StateSchema> {
         PenNode::Image(n) => n.state.take(),
         PenNode::IconFont(n) => n.state.take(),
         PenNode::Ref(n) => n.state.take(),
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
     }
 }
 
