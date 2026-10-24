@@ -59,6 +59,7 @@ impl WidgetHost {
             last_viewport_h: 0.0,
             last_cursor_x: 0.0,
             last_cursor_y: 0.0,
+            shader_pointer: None,
             chat_panel_owner: de_editor_ui::widgets::AIChatPlaceholder::next_owner(),
             layer_panel_owner: de_editor_ui::widgets::LayerPanel::next_layer_panel_owner(),
             last_chat_session_index,

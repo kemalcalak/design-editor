@@ -270,6 +270,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.presetNoise" => "노이즈",
         "fill.presetFade" => "페이드",
         "fill.presetGlow" => "글로우",
+        "settings.system.pencilSmoothing" => "연필 스무딩",
+        "settings.system.pencilSmoothingPrecise" => "정밀",
+        "settings.system.pencilSmoothingBalanced" => "균형",
+        "settings.system.pencilSmoothingSmooth" => "부드럽게",
         _ => return None,
     })
 }

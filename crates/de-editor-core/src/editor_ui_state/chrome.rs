@@ -219,3 +219,48 @@ impl PencilCursorStyle {
         }
     }
 }
+
+/// How strongly the Pencil tool (#88) smooths a freehand stroke — the
+/// curve-fit tolerance (Settings > System > Pencil smoothing). The
+/// tolerance is in screen px and is divided by the zoom at fit time, so a
+/// stroke simplifies the same at every zoom level.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum PencilSmoothing {
+    /// Follows the hand closely; more anchors.
+    Precise,
+    #[default]
+    Balanced,
+    /// Fewest anchors; rounds off small wobbles.
+    Smooth,
+}
+
+impl PencilSmoothing {
+    pub const ALL: [PencilSmoothing; 3] = [
+        PencilSmoothing::Precise,
+        PencilSmoothing::Balanced,
+        PencilSmoothing::Smooth,
+    ];
+
+    /// Maximum distance (screen px) between the drawn samples and the
+    /// fitted curve.
+    pub fn tolerance_screen_px(self) -> f64 {
+        match self {
+            PencilSmoothing::Precise => 1.0,
+            PencilSmoothing::Balanced => 2.5,
+            PencilSmoothing::Smooth => 6.0,
+        }
+    }
+
+    /// Stable id for persistence.
+    pub fn id(self) -> &'static str {
+        match self {
+            PencilSmoothing::Precise => "precise",
+            PencilSmoothing::Balanced => "balanced",
+            PencilSmoothing::Smooth => "smooth",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|level| level.id() == id)
+    }
+}

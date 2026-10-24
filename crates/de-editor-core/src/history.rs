@@ -169,6 +169,9 @@ impl EditorState {
 
     /// Undo the last change. Returns false when the undo stack is empty.
     pub fn undo(&mut self) -> bool {
+        // A Pencil stroke still being drawn would otherwise commit on
+        // release over the restored document and clear the redo stack.
+        let _ = self.cancel_pencil_stroke();
         let Some(previous) = self.history.past.pop_back() else {
             return false;
         };
@@ -180,6 +183,7 @@ impl EditorState {
 
     /// Redo the last undone change. Returns false when redo is empty.
     pub fn redo(&mut self) -> bool {
+        let _ = self.cancel_pencil_stroke();
         let Some(next) = self.history.future.pop_back() else {
             return false;
         };

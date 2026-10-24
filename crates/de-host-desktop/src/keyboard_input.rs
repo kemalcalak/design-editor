@@ -350,6 +350,10 @@ impl DesktopApp {
                     "l" => self.host.apply_set_tool(de_editor_core::Tool::Line),
                     "t" => self.host.apply_set_tool(de_editor_core::Tool::Text),
                     "f" => self.host.apply_set_tool(de_editor_core::Tool::Frame),
+                    // Shift+P — the freehand Pencil (#88); bare P stays Pen.
+                    "p" if self.shift_modifier => {
+                        self.host.apply_set_tool(de_editor_core::Tool::Pencil)
+                    }
                     "p" => self.host.apply_set_tool(de_editor_core::Tool::Pen),
                     "y" => self.host.apply_set_tool(de_editor_core::Tool::Polygon),
                     "h" => self.host.apply_set_tool(de_editor_core::Tool::Hand),

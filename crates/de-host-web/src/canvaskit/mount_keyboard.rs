@@ -222,7 +222,7 @@ pub(super) fn register_keyboard_listeners(
                         }
                     }
                     // No Cmd/Ctrl held: a bare letter is first offered to the
-                    // single-key tool router (V/R/O/L/T/F/P/Y/H), which self-
+                    // single-key tool router (V/R/O/L/T/F/P/Y/H, Shift+P), which self-
                     // gates on no input owning the keyboard; every other letter
                     // (and any keystroke while a field is focused) types via
                     // apply_text.
@@ -240,7 +240,9 @@ pub(super) fn register_keyboard_listeners(
                             && b.host.apply_flip_shortcut(key.as_str())
                         {
                             consumed = true;
-                        } else if !evt.alt_key() && b.host.apply_tool_shortcut(key.as_str()) {
+                        } else if !evt.alt_key()
+                            && b.host.apply_tool_shortcut_with_shift(key.as_str(), shift)
+                        {
                             consumed = true;
                         } else if crate::event::ime::keydown_should_insert_text(
                             b.ime.as_ref().is_some_and(|ime| ime.owns_dom_focus()),

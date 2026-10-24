@@ -268,6 +268,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.presetNoise" => "Ruído",
         "fill.presetFade" => "Esmaecer",
         "fill.presetGlow" => "Brilho",
+        "settings.system.pencilSmoothing" => "Suavização do lápis",
+        "settings.system.pencilSmoothingPrecise" => "Preciso",
+        "settings.system.pencilSmoothingBalanced" => "Equilibrado",
+        "settings.system.pencilSmoothingSmooth" => "Suave",
         _ => return None,
     })
 }

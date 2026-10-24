@@ -203,6 +203,9 @@ impl AgentSettingsPanel<'_> {
                     SystemHit::SelectPencilCursor(style) => {
                         return AgentSettingsHit::SelectPencilCursor(style)
                     }
+                    SystemHit::SelectPencilSmoothing(level) => {
+                        return AgentSettingsHit::SelectPencilSmoothing(level)
+                    }
                     SystemHit::None => {}
                 }
             }

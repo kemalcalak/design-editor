@@ -77,6 +77,10 @@ impl WidgetHostNative {
         if matches!(self.editor_state.tool, Tool::Pen) {
             return Some(self.apply_pen_tool_press(x, y, viewport_width, viewport_height));
         }
+        // Pencil: freehand stroke (`pencil_press.rs`).
+        if matches!(self.editor_state.tool, Tool::Pencil) {
+            return Some(self.apply_pencil_press(doc_point));
+        }
 
         // Shape / Frame / Text tool: spawn a new node + drag.
         let pre_create = self.editor_state.snapshot_for_history();

@@ -268,6 +268,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.presetNoise" => "Nhiễu",
         "fill.presetFade" => "Mờ dần",
         "fill.presetGlow" => "Phát sáng",
+        "settings.system.pencilSmoothing" => "Làm mượt bút chì",
+        "settings.system.pencilSmoothingPrecise" => "Chính xác",
+        "settings.system.pencilSmoothingBalanced" => "Cân bằng",
+        "settings.system.pencilSmoothingSmooth" => "Mượt",
         _ => return None,
     })
 }

@@ -268,6 +268,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.presetNoise" => "นอยส์",
         "fill.presetFade" => "จางหาย",
         "fill.presetGlow" => "เรืองแสง",
+        "settings.system.pencilSmoothing" => "ความเรียบของดินสอ",
+        "settings.system.pencilSmoothingPrecise" => "แม่นยำ",
+        "settings.system.pencilSmoothingBalanced" => "สมดุล",
+        "settings.system.pencilSmoothingSmooth" => "เรียบ",
         _ => return None,
     })
 }
