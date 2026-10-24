@@ -32,6 +32,10 @@ impl DesktopApp {
         let Key::Named(named) = logical_key else {
             return false;
         };
+        // Cmd/Ctrl+Enter leaves Present through the editor table (#157).
+        if self.zoom_modifier && *named == NamedKey::Enter {
+            return false;
+        }
         match named {
             // Forward: the keys a remote clicker sends, plus the ones a hand
             // on the keyboard reaches for.

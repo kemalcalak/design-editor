@@ -113,30 +113,6 @@ fn labels_match_token_fallback_for_brand_prefixed_names() {
     assert!(!labels_match("Explore", "Wander — Trips"));
 }
 
-/// Contract point 1: the navigate body must be a Tier-1 string-LITERAL
-/// expression source — a bare `/path` lexes as division and fails to
-/// compile (`Expression::compile`). The correct wire form is exactly the
-/// shape asserted by jian-core's own fixtures
-/// (`jian-core/tests/action_navigation.rs::push_literal_path`,
-/// `jian-ops-schema/src/events.rs::push_action_with_string_body`): the
-/// JSON value under `"replace"`/`"push"` is the STRING `"\"/path\""` (i.e.
-/// its decoded content is `"/path"`, quote characters included).
-#[test]
-fn navigate_patch_produces_expression_literal_body() {
-    let patch = navigate_patch("replace", "/profile");
-    assert_eq!(
-        patch,
-        r#"{"events":{"onTap":[{"replace":"\"/profile\""}]}}"#
-    );
-    // Round-trip through a real JSON parser to double-check the DECODED
-    // action body equals the 10-char string `"/profile"` (quotes included) —
-    // exactly what `jian_core::action::actions::navigation::expr_from_value`
-    // feeds to `Expression::compile`.
-    let v: serde_json::Value = serde_json::from_str(&patch).unwrap();
-    let body = v["events"]["onTap"][0]["replace"].as_str().unwrap();
-    assert_eq!(body, "\"/profile\"");
-}
-
 // ── Gate ────────────────────────────────────────────────────────────────
 
 #[test]

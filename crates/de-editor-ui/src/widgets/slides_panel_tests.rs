@@ -467,6 +467,8 @@ fn panel_of(active: Option<usize>, hover: Option<SlidesPanelTarget>) -> SlidesPa
             export: "Export PDF",
             export_all: "Export all slides",
             export_selected: "Export selected slides (0)",
+            transition: "Transition",
+            transition_kinds: ["None", "Fade", "Slide", "Push"],
         },
     }
 }

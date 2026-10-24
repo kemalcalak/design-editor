@@ -478,3 +478,107 @@ fn a_motion_value_focus_hits_and_commits() {
         300
     );
 }
+
+/// A point on the panel that maps to `want` and lies outside the open
+/// popover.
+fn point_for_action_outside_menu(host: &WidgetHostNative, want: &PropertyPanelAction) -> Point2D {
+    let panel = PropertyPanel::for_selection(host.editor_state()).expect("property panel");
+    let rect = host.property_rect(VIEWPORT_W, VIEWPORT_H);
+    let mut y = rect.origin.y;
+    while y < rect.origin.y + rect.size.y {
+        let mut x = rect.origin.x;
+        while x < rect.origin.x + rect.size.x {
+            let point = Point2D::new(x, y);
+            if panel.hit_test_action(rect, point).as_ref() == Some(want)
+                && matches!(
+                    panel.interaction_menu_hit(rect, point),
+                    de_editor_ui::widgets::InteractionMenuHit::Outside
+                )
+            {
+                return point;
+            }
+            x += 3.0;
+        }
+        y += 3.0;
+    }
+    panic!("no point maps to {want:?} outside the popover");
+}
+
+/// #176: with one row's popover open, a press on another row switches
+/// the popover to that row in one click (it used to only close it).
+#[test]
+fn a_press_on_another_row_switches_the_popover_in_one_click() {
+    let mut host = WidgetHostNative::new();
+    seed(
+        &mut host,
+        r#"{ "version": "1.0.0", "children": [
+            {"type":"frame","id":"f1","name":"Frame","width":200,"height":120,
+             "events":{"onTap":[{"pop":null}],"onHoverEnter":[{"pop":null}]}}
+        ]}"#,
+    );
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("f1"));
+    let tap = InteractionMenuTarget::Trigger(InteractionTrigger::Tap);
+    let hover = InteractionMenuTarget::Trigger(InteractionTrigger::Hover);
+    // The Hover row's popover drops below it, so the Tap row above
+    // stays clickable.
+    host.apply_property_action(PropertyPanelAction::ToggleInteractionMenu(hover));
+    assert!(host.editor_state().editor_ui.interaction_menu_open);
+
+    let point =
+        point_for_action_outside_menu(&host, &PropertyPanelAction::ToggleInteractionMenu(tap));
+    assert!(host.apply_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H));
+    let ui = &host.editor_state().editor_ui;
+    assert!(ui.interaction_menu_open, "the popover stays open");
+    assert_eq!(ui.interaction_menu_target, tap);
+
+    // Its own row closes it, also in one click.
+    assert!(host.apply_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H));
+    assert!(!host.editor_state().editor_ui.interaction_menu_open);
+}
+
+#[test]
+fn open_url_and_transition_edits_round_trip_with_undo() {
+    let mut host = seeded_frame();
+    let tap = InteractionTrigger::Tap;
+    host.apply_property_action(PropertyPanelAction::SetInteractionOpenUrl(tap));
+    let state = host.editor_state_mut();
+    let focus = de_editor_core::PropertyFocus::InteractionUrl(tap);
+    state.ui.property_focus = Some(focus);
+    state.ui.property_input.set_text("https://example.com");
+    assert!(de_editor_ui::widgets::property_panel_commit::commit_property_focus(state));
+    assert_eq!(
+        node_events_json(&host, "f1")["events"]["onTap"][0]["open_url"]["url"],
+        "\"https://example.com\""
+    );
+
+    host.apply_property_action(PropertyPanelAction::MoveInteraction {
+        from: tap,
+        to: InteractionTrigger::LongPress,
+    });
+    let json = node_events_json(&host, "f1");
+    assert!(json["events"]["onTap"].is_null());
+    assert!(json["events"]["onLongPress"][0]["open_url"].is_object());
+
+    host.apply_property_action(PropertyPanelAction::AddTransition);
+    host.apply_property_action(PropertyPanelAction::SetTransitionEasing(
+        de_editor_core::transition_edit::MotionEasing::Linear,
+    ));
+    assert_eq!(
+        node_events_json(&host, "f1")["transition"]["easing"],
+        "linear"
+    );
+    let panel = PropertyPanel::for_selection(host.editor_state()).expect("panel");
+    let rect = host.property_rect(VIEWPORT_W, VIEWPORT_H);
+    assert!(panel
+        .motion_input_rects(rect)
+        .iter()
+        .any(|(f, _)| *f == de_editor_core::PropertyFocus::TransitionDuration));
+    assert!(host.editor_state_mut().undo());
+    assert_eq!(
+        node_events_json(&host, "f1")["transition"]["easing"],
+        "standard"
+    );
+    host.apply_property_action(PropertyPanelAction::RemoveTransition);
+    assert!(node_events_json(&host, "f1").get("transition").is_none());
+}

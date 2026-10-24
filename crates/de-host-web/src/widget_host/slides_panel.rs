@@ -302,6 +302,7 @@ impl WidgetHost {
             // drain streams the document to the daemon's PDF route. The
             // widget arm has only the repaint left.
             flow::SlidesRelease::ToggleExportMenu
+            | flow::SlidesRelease::SetTransition
             | flow::SlidesRelease::ExportAllSlides
             | flow::SlidesRelease::ExportSelectedSlides => {
                 self.mark_dirty();

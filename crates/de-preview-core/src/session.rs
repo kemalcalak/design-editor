@@ -604,7 +604,12 @@ impl PreviewSession {
     /// Clear a mouse/pen hover sample when the host moves outside the
     /// preview-owned surface. Returns whether the visual state changed.
     pub fn clear_hover(&mut self) -> bool {
-        self.interaction.clear_hover()
+        let cleared = self.interaction.clear_hover();
+        if cleared {
+            // The pointer left the preview: hover motion plays back.
+            self.sync_pointer_motion();
+        }
+        cleared
     }
 
     /// Resolve a node's authored visibility through the R5 Preview-only

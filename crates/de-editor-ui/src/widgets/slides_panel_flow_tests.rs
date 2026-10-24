@@ -178,6 +178,38 @@ fn clicking_a_row_activates_that_slide() {
     assert_eq!(deck.editor_ui.slides_panel.pressed, None);
 }
 
+/// #158: a Transition cell sets that transition on the whole deck (no
+/// slide selected), as one undo step, and lights up.
+#[test]
+fn a_transition_cell_sets_the_deck_transition_in_one_undo_step() {
+    use jian_ops_schema::motion::SlideTransitionKind;
+    let mut deck = deck_state(THREE_BOARDS);
+    let (_, layout) = laid_out(&deck);
+    let fade = layout.actions.transition_cells[1];
+    let point = Point2D::new(
+        fade.origin.x + fade.size.x / 2.0,
+        fade.origin.y + fade.size.y / 2.0,
+    );
+    assert_eq!(
+        press(&mut deck, &layout, point),
+        SlidesPress::Claimed(Some(SlidesPanelTarget::Transition(
+            SlideTransitionKind::Fade
+        )))
+    );
+    assert_eq!(release(&mut deck, &layout), SlidesRelease::SetTransition);
+    assert_eq!(
+        deck.slides_transition_kind(),
+        Some(SlideTransitionKind::Fade)
+    );
+    let (_, relaid) = laid_out(&deck);
+    assert_eq!(relaid.actions.transition, Some(SlideTransitionKind::Fade));
+    assert!(deck.undo());
+    assert_eq!(
+        deck.slides_transition_kind(),
+        Some(SlideTransitionKind::None)
+    );
+}
+
 #[test]
 fn a_press_off_the_rail_is_not_the_panels() {
     let mut deck = deck_state(THREE_BOARDS);
